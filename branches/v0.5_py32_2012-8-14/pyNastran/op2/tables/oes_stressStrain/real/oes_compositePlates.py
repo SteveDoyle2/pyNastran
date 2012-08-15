@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 
 import sys
 
@@ -130,7 +130,7 @@ class CompositePlateStressObject(stressObject):
         del self.ovmShear[dt]
 
     def getTransients(self):
-        k = self.o11.keys()
+        k = list(self.o11.keys())
         k.sort()
         return k
 
@@ -249,7 +249,7 @@ class CompositePlateStressObject(stressObject):
         words = ['   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      %s\n' %(von),
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n'  %(mises)]
 
-        eTypes = self.eType.values()
+        eTypes = list(self.eType.values())
         if 'CQUAD4' in eTypes or 'QUAD4LC' in eTypes:
             quadMsg = header+['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n']+words
             isQuad = True
@@ -264,10 +264,10 @@ class CompositePlateStressObject(stressObject):
             isTri = False
             triMsg = []
         ###
-        for eid,o11s in sorted(self.o11.iteritems()):
+        for eid,o11s in sorted(self.o11.items()):
             out = ''
             eType = self.eType[eid]
-            for iLayer in xrange(len(o11s)):
+            for iLayer in range(len(o11s)):
                 o11 = self.o11[eid][iLayer]
                 o22 = self.o22[eid][iLayer]
                 t12 = self.t12[eid][iLayer]
@@ -311,7 +311,7 @@ class CompositePlateStressObject(stressObject):
         words = ['   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      %s\n' %(von),
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n'  %(mises)]
 
-        eTypes = self.eType.values()        
+        eTypes = list(self.eType.values())
         if 'CQUAD4' in eTypes or 'QUAD4LC' in eTypes:
             quadWords = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n']+words
             isQuad = True
@@ -328,7 +328,7 @@ class CompositePlateStressObject(stressObject):
         ###
         
         msg = []
-        for dt,O11s in sorted(self.o11.iteritems()):
+        for dt,O11s in sorted(self.o11.items()):
             quadMsg = []
             triMsg = []
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
@@ -337,10 +337,10 @@ class CompositePlateStressObject(stressObject):
             if isTri:
                 triMsg = header + triWords
 
-            for eid,o11s in sorted(O11s.iteritems()):
+            for eid,o11s in sorted(O11s.items()):
                 out = ''
                 eType = self.eType[eid]
-                for iLayer in xrange(len(o11s)):
+                for iLayer in range(len(o11s)):
                     o11 = self.o11[dt][eid][iLayer]
                     o22 = self.o22[dt][eid][iLayer]
                     t12 = self.t12[dt][eid][iLayer]
@@ -386,9 +386,9 @@ class CompositePlateStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for eid,o11s in sorted(self.o11.iteritems()):
+        for eid,o11s in sorted(self.o11.items()):
             eType = self.eType[eid]
-            for iLayer in xrange(len(o11s)):
+            for iLayer in range(len(o11s)):
                 o11 = self.o11[eid][iLayer]
                 o22 = self.o22[eid][iLayer]
                 t12 = self.t12[eid][iLayer]
@@ -421,11 +421,11 @@ class CompositePlateStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,O11s in sorted(self.o11.iteritems()):
+        for dt,O11s in sorted(self.o11.items()):
             msg += "dt = %s\n" %(dt)
-            for eid,o11s in sorted(O11s.iteritems()):
+            for eid,o11s in sorted(O11s.items()):
                 eType = self.eType[eid]
-                for iLayer in xrange(len(o11s)):
+                for iLayer in range(len(o11s)):
                     o11 = self.o11[dt][eid][iLayer]
                     o22 = self.o22[dt][eid][iLayer]
                     t12 = self.t12[dt][eid][iLayer]
@@ -501,7 +501,7 @@ class CompositePlateStrainObject(strainObject):
         del self.evmShear[dt]
 
     def getTransients(self):
-        k = self.e11.keys()
+        k = list(self.e11.keys())
         k.sort()
         return k
 
@@ -618,7 +618,7 @@ class CompositePlateStrainObject(strainObject):
         words = ['   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      %s\n' %(von),
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n'  %(mises)]
 
-        eTypes = self.eType.values()
+        eTypes = list(self.eType.values())
         if 'CQUAD4' in eTypes or 'QUAD4LC' in eTypes:
             quadMsg = header+['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n']+words
             isQuad = True
@@ -633,10 +633,10 @@ class CompositePlateStrainObject(strainObject):
             isTri = False
             triMsg = []
         ###
-        for eid,e11s in sorted(self.e11.iteritems()):
+        for eid,e11s in sorted(self.e11.items()):
             out = ''
             eType = self.eType[eid]
-            for iLayer in xrange(len(e11s)):
+            for iLayer in range(len(e11s)):
                 e11 = self.e11[eid][iLayer]
                 e22 = self.e22[eid][iLayer]
                 e12 = self.e12[eid][iLayer]
@@ -681,7 +681,7 @@ class CompositePlateStrainObject(strainObject):
         words = ['   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      %s\n' %(von),
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n'  %(mises)]
 
-        eTypes = self.eType.values()        
+        eTypes = list(self.eType.values())
         if 'CQUAD4' in eTypes or 'QUAD4LC' in eTypes:
             quadWords = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n']+words
             isQuad = True
@@ -698,7 +698,7 @@ class CompositePlateStrainObject(strainObject):
         ###
         
         msg = []
-        for dt,e11s in sorted(self.e11.iteritems()):
+        for dt,e11s in sorted(self.e11.items()):
             quadMsg = []
             triMsg = []
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
@@ -707,10 +707,10 @@ class CompositePlateStrainObject(strainObject):
             if isTri:
                 triMsg = header + triWords
 
-            for eid,e11s in sorted(e11s.iteritems()):
+            for eid,e11s in sorted(e11s.items()):
                 out = ''
                 eType = self.eType[eid]
-                for iLayer in xrange(len(e11s)):
+                for iLayer in range(len(e11s)):
                     e11 = self.e11[dt][eid][iLayer]
                     e22 = self.e22[dt][eid][iLayer]
                     e12 = self.e12[dt][eid][iLayer]
@@ -756,9 +756,9 @@ class CompositePlateStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for eid,e11s in sorted(self.e11.iteritems()):
+        for eid,e11s in sorted(self.e11.items()):
             eType = self.eType[eid]
-            for iLayer in xrange(len(e11s)):
+            for iLayer in range(len(e11s)):
                 e11 = self.e11[eid][iLayer]
                 e22 = self.e22[eid][iLayer]
                 e12 = self.e12[eid][iLayer]
@@ -791,11 +791,11 @@ class CompositePlateStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,E11s in sorted(self.e11.iteritems()):
+        for dt,E11s in sorted(self.e11.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid,e11s in sorted(E11s.iteritems()):
+            for eid,e11s in sorted(E11s.items()):
                 eType = self.eType[eid]
-                for iLayer in xrange(len(e11s)):
+                for iLayer in range(len(e11s)):
                     e11 = self.e11[dt][eid][iLayer]
                     e22 = self.e22[dt][eid][iLayer]
                     e12 = self.e12[dt][eid][iLayer]

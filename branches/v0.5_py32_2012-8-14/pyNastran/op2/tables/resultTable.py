@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 import copy
 from numpy import array
@@ -461,7 +461,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             else:
                 data = self.readBlock()
                 if type(data) != type(self.data):
-                    msg = 'The function f=%s has a unicode error\n'%(f.__name__)
+                    msg = 'The function f=%s has a str error\n'%(f.__name__)
                     msg += ("type(self.data)=%s type(data)=%s"
                           % (type(self.data), type(data)))
                 sys.stdout.flush()
@@ -573,11 +573,11 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         data = self.data
         #print type(self.obj)
         (nTotal,iFormat) = self.obj.getLength()
-        iFormat = bytes(iFormat)
+
         n = 0
         #print  "strFormat = ",strFormat
         nEntries = len(data)//nTotal
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n+nTotal]
             out  = unpack(iFormat,eData)
             if debug:

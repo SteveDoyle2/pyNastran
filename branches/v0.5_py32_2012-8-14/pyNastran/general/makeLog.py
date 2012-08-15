@@ -44,7 +44,7 @@ def get_graphic_card_properties():
  
 if 0:
     dic = get_graphic_card_properties() 
-    for key, value in dic.iteritems():
+    for key, value in dic.items():
         print("%s : %s" %(key, value))
 
 def makeLog():
@@ -71,7 +71,7 @@ def makeLog():
     msg += "linux_distribution    = %s\n" %(str(platform.linux_distribution()))
     msg += "libc_ver              = %s\n" %(str(platform.libc_ver()))
     print msg
-    f = open('pyNastran.log','w')
+    f = open('pyNastran.log','w',encoding='utf-8')
     f.write(msg)
     f.close()
 

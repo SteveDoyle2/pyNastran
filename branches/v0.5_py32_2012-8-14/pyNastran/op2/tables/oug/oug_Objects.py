@@ -44,7 +44,7 @@ class fluxObject(scalarObject): # approachCode=1, tableCode=3, thermal=1
         del self.fluxes[dt]
 
     def getTransients(self):
-        k = self.fluxes.keys()
+        k = list(self.fluxes.keys())
         k.sort()
         return k
 
@@ -59,7 +59,7 @@ class fluxObject(scalarObject): # approachCode=1, tableCode=3, thermal=1
         @warning hasnt been tested...
         """
         msg = block3
-        for nodeID,flux in sorted(self.fluxes.iteritems()):
+        for nodeID,flux in sorted(self.fluxes.items()):
             grid = nodeID*10+deviceCode
             msg += pack('iffffff',grid,flux[0],flux[1],flux[2],0,0,0)
         ###
@@ -71,7 +71,7 @@ class fluxObject(scalarObject): # approachCode=1, tableCode=3, thermal=1
 
         msg = '---HEAT FLUX---\n'
         msg += '%-10s %-8s %-8s %-8s\n' %('NodeID','xFlux','yFlux','zFlux')
-        for nodeID,flux in sorted(self.fluxes.iteritems()):
+        for nodeID,flux in sorted(self.fluxes.items()):
             msg += '%10i ' %(nodeID)
 
             for val in flux:

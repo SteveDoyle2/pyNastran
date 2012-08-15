@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 from numpy import argsort
 
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject

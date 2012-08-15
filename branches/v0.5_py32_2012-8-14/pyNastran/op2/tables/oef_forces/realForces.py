@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 from struct import unpack
 
@@ -101,7 +101,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ff'
-        format1 = bytes(format1)
+
 
         while len(self.data)>=12: # 3*4
             eData     = self.data[0:12]
@@ -125,7 +125,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ff'
-        format1 = bytes(format1)
+
 
         while len(self.data)>=12: # 3*4
             eData     = self.data[0:12]
@@ -150,8 +150,8 @@ class RealForces(object):
         (format1,extract) = self.getOEF_FormatStart()
         #print self.codeInformation()
         formatAll = 'iffffffff'
-        format1 = bytes(format1)
-        formatAll = bytes(formatAll)
+
+
 
         while len(self.data)>=400: # 1+(10-1)*11=100 ->100*4 = 400
             #print "eType=%s" %(eType)
@@ -161,7 +161,7 @@ class RealForces(object):
             eid, = unpack(format1, eData)
             eid2 = extract(eid,dt)
 
-            for i in xrange(11):
+            for i in range(11):
                 eData     = self.data[0:36]
                 self.data = self.data[36: ]
                 #print "len(data) = ",len(eData)
@@ -191,7 +191,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffffffffffff'
-        format1 = bytes(format1)
+
 
         while len(self.data)>=68: # 17*4
             eData     = self.data[0:68]
@@ -215,7 +215,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'f'
-        format1 = bytes(format1)
+
 
         while len(self.data)>=8: # 2*4
             eData     = self.data[0:8]
@@ -239,7 +239,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
-        format1 = bytes(format1)
+
 
         while len(self.data)>=36: # 9*4
             eData     = self.data[0:36]
@@ -263,7 +263,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'fffffff'
-        format1 = bytes(format1)
+
 
         while len(self.data)>=36: # 9*4
             eData     = self.data[0:32]
@@ -287,7 +287,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
-        format1 = bytes(format1)
+
 
         while len(self.data)>=36: # 9*4
             eData     = self.data[0:36]
@@ -321,8 +321,8 @@ class RealForces(object):
         ###
 
         allFormat = 'fffffffff'
-        format1 = bytes(format1)
-        allFormat = bytes(allFormat)
+
+
 
         nTotal = 44+nNodes*36
         while len(self.data)>=nTotal:
@@ -342,7 +342,7 @@ class RealForces(object):
             #print "%s" %(self.ElementType(self.elementType)),dataIn
             self.obj.addNewElement(eid2,dt,dataIn)
 
-            for i in xrange(nNodes-1):
+            for i in range(nNodes-1):
                 eData     = self.data[0:36]
                 self.data = self.data[36: ]
                 dataIn = unpack(allFormat, eData)
@@ -361,7 +361,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += '6f'
-        format1 = bytes(format1)
+
 
         while len(self.data)>=28: # 7*4
             eData     = self.data[0:28]
@@ -385,7 +385,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
-        format1 = bytes(format1)
+
 
         while len(self.data)>=36: # 9*4
             eData     = self.data[0:36]
@@ -409,7 +409,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'i13f'
-        format1 = bytes(format1)
+
 
         while len(self.data)>=60: # 15*4
             eData     = self.data[0:60]
@@ -435,7 +435,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += '8s7f'
-        format1 = bytes(format1)
+
 
         while len(self.data)>=40: # 10*4
             eData     = self.data[0:40]
@@ -459,7 +459,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += '6f'
-        format1 = bytes(format1)
+
 
         while len(self.data)>=28: # 7*4
             eData     = self.data[0:28]
@@ -491,8 +491,8 @@ class RealForces(object):
             raise NotImplementedError(self.codeInformation())
 
         formatAll = 'i7f'
-        format1 = bytes(format1)
-        formatAll = bytes(formatAll)
+
+
 
         n = 16+32*nNodes
         while len(self.data)>=n:
@@ -507,7 +507,7 @@ class RealForces(object):
             dataIn = [eid2,parent,coord,icord]
 
             forces = []
-            for i in xrange(nNodes):
+            for i in range(nNodes):
                 eData     = self.data[0:32] # 8*4
                 self.data = self.data[32: ]
                 #print "i=%s len(data)=%s" %(i,len(eData))
@@ -540,8 +540,8 @@ class RealForces(object):
             raise NotImplementedError(self.codeInformation())
 
         formatAll = 'ifffiiifffffi'
-        format1 = bytes(format1)
-        formatAll = bytes(formatAll)
+
+
         n = 24+52*nNodes
         while len(self.data)>=n:
             eData     = self.data[0:24] # 6*4
@@ -555,7 +555,7 @@ class RealForces(object):
             dataIn = [eid2,parent,coord,icord,theta]
 
             forces = []
-            for i in xrange(nNodes):
+            for i in range(nNodes):
                 eData     = self.data[0:52] # 13*4
                 self.data = self.data[52: ]
                 #print "i=%s len(data)=%s" %(i,len(eData))

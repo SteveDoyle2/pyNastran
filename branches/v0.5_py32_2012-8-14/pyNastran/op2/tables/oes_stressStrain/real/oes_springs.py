@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 
 from .oes_objects import stressObject, strainObject
@@ -63,7 +63,7 @@ class CelasStressObject(stressObject):
         del self.stress[dt]
 
     def getTransients(self):
-        k = self.stress.keys()
+        k = list(self.stress.keys())
         k.sort()
         return k
 
@@ -100,9 +100,9 @@ class CelasStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,stress in sorted(self.stress.iteritems()):
+        for dt,stress in sorted(self.stress.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid,istress in sorted(stress.iteritems()):
+            for eid,istress in sorted(stress.items()):
                 msg += '%-6g %6s ' %(eid,self.eType[eid])
                 if abs(istress)<1e-6:
                     msg += '%10s ' %('0')
@@ -125,7 +125,7 @@ class CelasStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
         #print "self.code = ",self.code
-        for eid,istress in sorted(self.stress.iteritems()):
+        for eid,istress in sorted(self.stress.items()):
             #print "eid=",eid
             #print "eType",self.eType
             msg += '%-8i %6s ' %(eid,self.eType[eid])
@@ -168,7 +168,7 @@ class CelasStrainObject(strainObject):
         del self.strain[dt]
 
     def getTransients(self):
-        k = self.strain.keys()
+        k = list(self.strain.keys())
         k.sort()
         return k
 
@@ -204,7 +204,7 @@ class CelasStrainObject(strainObject):
             msg += '%8s ' %(header)
         msg += '\n'
 
-        for eid,strain in sorted(self.strain.iteritems()):
+        for eid,strain in sorted(self.strain.items()):
             #strain = self.strain[eid]
             msg += '%-8i %6s ' %(eid,self.eType[eid])
 

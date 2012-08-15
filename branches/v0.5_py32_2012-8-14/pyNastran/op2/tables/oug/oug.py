@@ -257,7 +257,7 @@ class OUG(object):
         #print self.printBlock(self.data)
         n = 0
         nEntries = len(self.data)//32
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = self.data[n:n+32]
             out = unpack('2i6f', eData)
             #nid = (out[0]-self.deviceCode)//10    ## @todo fix the deviceCode

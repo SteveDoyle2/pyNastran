@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 class ComplexRodForce(scalarObject): # 1-ROD, 3-TUBE, 10-CONROD
@@ -788,7 +788,7 @@ class ComplexCBARForce(scalarObject): # 34-CBAR
                  '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
 
         msg = []
-        for dt,bendA in sorted(self.bendingMomentA.iteritems()):
+        for dt,bendA in sorted(self.bendingMomentA.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
             for eid in sorted(bendA):

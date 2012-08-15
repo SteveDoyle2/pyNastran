@@ -401,7 +401,7 @@ class Subcase(object):
         key = self.update_param_name(key)
         #print("adding iSubcase=%s key=|%s| value=|%s| options=|%s| "
         #      "paramType=%s" %(self.id, key, value, options, paramType))
-        if isinstance(value, unicode) and value.isdigit():
+        if isinstance(value, str) and value.isdigit():
             value = int(value)
 
         (key, value, options) = self._simplify_data(key, value, options,
@@ -482,14 +482,14 @@ class Subcase(object):
         if sol in self.solCodeMap:  # reduces SOL 144 to SOL 101
             sol = self.solCodeMap[sol]
 
-        for (key, param) in self.params.iteritems():
+        for (key, param) in self.params.items():
             key = key.upper()
             (value, options, paramType) = param
             #msg = ("  -key=|%s| value=|%s| options=%s paramType=|%s|"
             #    % (key, value, options, paramType))
 
         thermal = 0
-        for (key, param) in self.params.iteritems():
+        for (key, param) in self.params.items():
             key = key.upper()
             (value, options, paramType) = param
             #msg = ("  *key=|%s| value=|%s| options=%s paramType=|%s|"
@@ -543,7 +543,7 @@ class Subcase(object):
         op2Params['thermal'] = thermal
         
         print("\nThe estimated results...")
-        for (key, value) in sorted(op2Params.iteritems()):
+        for (key, value) in sorted(op2Params.items()):
             if value is not None:
                 print("   key=|%s| value=|%s|" %(key, value))
         
@@ -626,7 +626,7 @@ class Subcase(object):
         """
         @note this is not integrated and probably never will be as it's not really that necessary
         """
-        print("keys = %s" %(sorted(self.params.keys())))
+        print("keys = %s" %(sorted(list(self.params.keys()))))
         if 'LOAD' in self.params:
             loadID = self.params['LOAD'][0]
             loadObj = mesh.loads[loadID]
@@ -682,7 +682,7 @@ class Subcase(object):
             msg = str(self)
         else:
             msg = 'SUBCASE %s\n' %(self.id)
-            for (key, param) in self.subcase_sorted(self.params.items()):
+            for (key, param) in self.subcase_sorted(list(self.params.items())):
                 if key in subcase0.params and subcase0.params[key] == param:
                     pass # dont write global subcase parameters
                 else:
@@ -767,7 +767,7 @@ class Subcase(object):
             msg += 'SUBCASE %s\n' %(self.id)
         ###
 
-        for (key, param) in self.subcase_sorted(self.params.items()):
+        for (key, param) in self.subcase_sorted(list(self.params.items())):
             if 'key' == 'BEGIN':
                 continue
             else:

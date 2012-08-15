@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 #pylint: disable=C0301,C0111,C0324,R0912,R0915,W0223,E1101
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 #import sys
 from struct import unpack
 
@@ -77,7 +77,7 @@ class OES(RealElementsStressStrain,ComplexElementsStressStrain):
         bufferWords = self.getBufferWords()
         
         data = self.getData(4)
-        bufferSize, = unpack(b'i',data)
+        bufferSize, = unpack('i',data)
         if self.makeOp2Debug:
             self.op2Debug.write('bufferSize=|%s|\n' % (str(bufferSize)))
 
@@ -191,7 +191,7 @@ class OES(RealElementsStressStrain,ComplexElementsStressStrain):
         #print self.printBlock(data) # on
         #print "16 block..."
         #self.printBlock(data)
-        bufferWords, = unpack(b'i',data[4:8])
+        bufferWords, = unpack('i',data[4:8])
         #print "bufferWords = ",bufferWords
         if self.makeOp2Debug:
             self.op2Debug.write('bufferWords=|%s|\n' % (str(bufferWords)))

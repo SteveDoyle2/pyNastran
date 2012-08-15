@@ -23,10 +23,10 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,R0902,R0904,R0914
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 #import sys
-from itertools import izip
+
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -120,7 +120,7 @@ class DOPTPRM(OptConstraint):
         nFields = len(fields)
         
         self.params = {}
-        for i in xrange(0,nFields, 2):
+        for i in range(0,nFields, 2):
             param = fields[i]
             val   = fields[i+1]
             self.params[param] = val
@@ -128,7 +128,7 @@ class DOPTPRM(OptConstraint):
     
     def rawFields(self):
         fields = ['DOPTPRM']
-        for param,val in sorted(self.params.iteritems()):
+        for param,val in sorted(self.params.items()):
             fields += [param, val]
         return fields
 
@@ -151,14 +151,14 @@ class DLINK(OptConstraint):
         self.IDv = []
         self.Ci  = []
         
-        for i in xrange(0, nFields, 2):
+        for i in range(0, nFields, 2):
             self.IDv.append(fields[i])
             self.Ci.append(fields[i+1])
         ###
 
     def rawFields(self):
         fields = ['DLINK',self.oid, self.ddvid, self.c0, self.cmult]
-        for (idv, ci) in izip(self.IDv, self.Ci):
+        for (idv, ci) in zip(self.IDv, self.Ci):
             fields += [idv, ci]
         return fields
 
@@ -166,7 +166,7 @@ class DLINK(OptConstraint):
         c0    = set_blank_if_default(self.c0, 0.)
         cmult = set_blank_if_default(self.cmult, 1.)
         fields = ['DLINK', self.oid, self.ddvid, c0, cmult]
-        for (idv, ci) in izip(self.IDv, self.Ci):
+        for (idv, ci) in zip(self.IDv, self.Ci):
             fields += [idv, ci]
         return fields
 
@@ -277,7 +277,7 @@ class DRESP2(OptConstraint):
                         'DESVAR' : [1,0],
                      }
         fields = []
-        for (key, valueList) in sorted(self.params.iteritems()):
+        for (key, valueList) in sorted(self.params.items()):
             fields2 = [key]+valueList
             try:
                 (i, j) = packLength[key]
@@ -328,7 +328,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             endFields.append(None)
             nFields += 1
         i = 0
-        for i in xrange(0,nFields,2):
+        for i in range(0,nFields,2):
             self.dvids.append(endFields[i])
             self.coeffs.append(endFields[i+1])
         if nFields%2==1:
@@ -348,7 +348,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
 
     def rawFields(self):
         fields = ['DVMREL1', self.oid, self.Type, self.Mid(), self.mpName, self.mpMin, self.mpMax, self.c0, None]
-        for (dvid, coeff) in izip(self.dvids, self.coeffs):
+        for (dvid, coeff) in zip(self.dvids, self.coeffs):
             fields.append(dvid)
             fields.append(coeff)
         return fields
@@ -357,7 +357,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         mpMax = set_blank_if_default(self.mpMax, 1e20)
         c0    = set_blank_if_default(self.c0, 0.)
         fields = ['DVMREL1', self.oid, self.Type, self.Mid(), self.mpName, self.mpMin, mpMax, c0, None]
-        for (dvid, coeff) in izip(self.dvids, self.coeffs):
+        for (dvid, coeff) in zip(self.dvids, self.coeffs):
             fields.append(dvid)
             fields.append(coeff)
         return fields
@@ -386,7 +386,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             endFields.append(None)
             nFields+=1
         i = 0
-        for i in xrange(0, nFields, 2):
+        for i in range(0, nFields, 2):
             self.dvids.append(endFields[i])
             self.coeffs.append(endFields[i+1])
         if nFields%2==1:
@@ -406,7 +406,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
     def rawFields(self):
         fields = ['DVPREL1',self.oid,self.Type,self.Pid(),self.pNameFid,self.pMin,self.pMax,self.c0,None]
-        for (dvid, coeff) in izip(self.dvids, self.coeffs):
+        for (dvid, coeff) in zip(self.dvids, self.coeffs):
             fields.append(dvid)
             fields.append(coeff)
         return fields
@@ -415,7 +415,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         pMax = set_blank_if_default(self.pMax, 1e20)
         c0   = set_blank_if_default(self.c0, 0.)
         fields = ['DVPREL1',self.oid,self.Type,self.Pid(),self.pNameFid,self.pMin,pMax,c0,None]
-        for (dvid, coeff) in izip(self.dvids, self.coeffs):
+        for (dvid, coeff) in zip(self.dvids, self.coeffs):
             fields.append(dvid)
             fields.append(coeff)
         return fields
@@ -473,7 +473,7 @@ class DVPREL2(OptConstraint):
         self.dvids = []
         self.dtables = []
         if iDesvar:
-            for i in xrange(10, iDesStop):
+            for i in range(10, iDesStop):
                 dvid = card.field(i)
                 if dvid:
                     self.dvids.append(dvid)
@@ -481,7 +481,7 @@ class DVPREL2(OptConstraint):
             ###
         ###
         if iDTable:
-            for i in xrange(iDTable+1, iEnd):
+            for i in range(iDTable+1, iEnd):
                 dtable = card.field(i)
                 if dtable:
                     assert dtable is not 'DTABLE'

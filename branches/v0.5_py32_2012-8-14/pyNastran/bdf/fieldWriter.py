@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,R0902,R0904,R0914,C0301
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 from numpy import allclose, isinf
 
@@ -34,7 +34,7 @@ def is_same(value1, value2):
     @note this method is used by almost every card when printing
     """
     #print "value=%s default=%s" %(value1,value2)
-    if isinstance(value1, unicode) or value1 is None:
+    if isinstance(value1, str) or value1 is None:
         if value1 == value2:
             return True
         return False
@@ -324,7 +324,7 @@ def printCard(fields, tol=0.):
         sys.stdout.flush()
         raise
     
-    for i in xrange(1, len(fields)):
+    for i in range(1, len(fields)):
         field = fields[i]
         try:
             out += print_field(field, tol=tol)
@@ -361,7 +361,7 @@ def print_int_card(fields, tol=0.):
         sys.stdout.flush()
         raise
     
-    for i in xrange(1, len(fields)):
+    for i in range(1, len(fields)):
         field = fields[i]
         try:
             out += "%8i" % (field) # balks if you have None or string fields

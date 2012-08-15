@@ -95,7 +95,7 @@ class OP4(FortranFile):
 #--------------------------------------------------------------------------
     def readOP4Ascii(self,op4Name,matrixNames=None,precision='default'):
         """matrixNames must be a list or None, but basically the same"""
-        f = open(op4Name,'r')
+        f = open(op4Name,'r',encoding='utf-8')
         matrices = {}
         name = 'dummyName'
 
@@ -952,7 +952,7 @@ class OP4(FortranFile):
         
         f.write(msg)
         msg = ''
-        for j,col in cols.iteritems():
+        for j,col in cols.items():
             print("***********")
             print("j=%s col=%s" %(j,col))
             #col.sort()
@@ -1064,7 +1064,7 @@ class OP4(FortranFile):
                 if Type in [1,2]:
                     #nValues = iEnd-iStart+1
                     #msg += pack('d'*nValues,A[iStart:iEnd+1,icol])
-                    for i,irow in enumerate(xrange(iStart,iEnd)):
+                    for i,irow in enumerate(range(iStart,iEnd)):
                         msg += pack('d',A[irow,icol])
                 
                 else: # complex
@@ -1115,7 +1115,7 @@ class OP4(FortranFile):
                 #i=0
                 if Type in [1,2]:
                     #print "iStart=%s iEnd=%s" %(iStart,iEnd)
-                    for i,irow in enumerate(xrange(iStart,iEnd)):
+                    for i,irow in enumerate(range(iStart,iEnd)):
                         if abs(A[irow,icol])>tol:
                             valueStr += '%23.16E' %(A[irow,icol])
                         else:
@@ -1235,7 +1235,7 @@ if __name__=='__main__':
     strings = matrices()
 
     isBigMat = True
-    f = open('ascii.op4','wb')
+    f = open('ascii.op4','w',encoding='utf-8')
     for fname in filenames:
         op4 = OP4()
         op4.endian = '>'
@@ -1244,7 +1244,7 @@ if __name__=='__main__':
             #f = open('binary.op4','wb')
 
         matrices = op4.readOP4(fname,matrixNames=matrixNames,precision='default')
-        print("keys = %s" %(matrices.keys()))
+        print("keys = list(%s" %(matrices.keys())))
         #print "#####################################################"
         print("fname=%s" %(fname))
         for name,(form,matrix) in sorted(matrices.items()):

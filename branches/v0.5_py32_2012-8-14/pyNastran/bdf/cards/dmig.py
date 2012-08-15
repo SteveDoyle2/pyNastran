@@ -23,9 +23,9 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,R0902,R0904,R0914
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-from itertools import izip
+
+
+
 from math import log
 #from math import (sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2,acosh,acos,asin,
 #                  asinh,atanh) #,atanh2   # going to be used by DEQATN
@@ -178,11 +178,11 @@ class NastranMatrix(BaseCard):
 
         #print "minLoops = ",minLoops
         #print "nLoops   = ",nLoops
-        for i in xrange(minLoops):
+        for i in range(minLoops):
             self.GCj.append((Gj,Cj))
 
         if self.isComplex():
-            for i in xrange(minLoops):
+            for i in range(minLoops):
                 n = 5+4*i
                 Gi = card.field(n)
                 Ci = card.field(n+1)
@@ -190,7 +190,7 @@ class NastranMatrix(BaseCard):
                 self.Real.append(card.field(n+2))
                 self.Complex.append(card.field(n+3))
         else:
-            for i in xrange(minLoops):
+            for i in range(minLoops):
                 n = 5+4*i
                 Gi = card.field(n)
                 Ci = card.field(n+1)
@@ -253,7 +253,7 @@ class NastranMatrix(BaseCard):
             nrows = 0
             ncols = 0
             if self.isComplex():
-                for (GCj, GCi, reali, complexi) in izip(self.GCj, self.GCi, self.Real, self.Complex):
+                for (GCj, GCi, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
                     i = rows[GCi]
                     j = cols[GCj]
                     nrows = max(i, nrows)
@@ -262,7 +262,7 @@ class NastranMatrix(BaseCard):
                     cols2.append(j)
                     data.append(complex(reali, complexi))
             else:
-                for (GCj, GCi) in izip(self.GCj, self.GCi):
+                for (GCj, GCi) in zip(self.GCj, self.GCi):
                     i = rows[GCi]
                     j = cols[GCj]
                     nrows = max(i,nrows)
@@ -291,13 +291,13 @@ class NastranMatrix(BaseCard):
         else:
             if self.isComplex():
                 M = zeros((i,j), dtype='complex128')
-                for (GCj, GCi, reali, complexi) in izip(self.GCj, self.GCi, self.Real, self.Complex):
+                for (GCj, GCi, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
                     i = rows[GCi]
                     j = cols[GCj]
                     M[i,j] = complex(reali,complexi)
             else:
                 M = zeros((i,j), dtype='float64')
-                for (GCj, GCi, reali) in izip(self.GCj, self.GCi, self.Real):
+                for (GCj, GCi, reali) in zip(self.GCj, self.GCi, self.Real):
                     i = rows[GCi]
                     j = cols[GCj]
                     M[i,j] = reali
@@ -345,11 +345,11 @@ class NastranMatrix(BaseCard):
         msg += self.printCard(fields)
 
         if self.isComplex():
-            for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
+            for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                 fields = [self.type, self.name, GCj[0], GCj[1], None, GCi[0], GCi[1], reali, imagi]
                 msg += self.printCard(fields)
         else:
-            for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
+            for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
                 fields = [self.type, self.name, GCj[0], GCj[1], None, GCi[0], GCi[1], reali, None]
                 msg += self.printCard(fields)
         return msg
@@ -474,7 +474,7 @@ class DMI(BaseCard):
                         #print "*i=%s j=%s value=%s" %(i1,j,realValue)
                         endI = fields[i+1]
                         #print "*i=%s endI=%s j=%s value=%s" %(i1,endI,j,realValue)
-                        for ii in xrange(i1, endI+1):
+                        for ii in range(i1, endI+1):
                             self.GCj.append(j)
                             self.GCi.append(ii)
                             self.Real.append(realValue)
@@ -544,11 +544,11 @@ class DMI(BaseCard):
         #msg += self.printCard(fields,size=16,isD=False)
 
         if self.isComplex():
-            for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
+            for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                 fields = [self.type, self.name, GCj, GCi, reali, imagi]
                 msg += self.printCard(fields)
         else:
-            for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
+            for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
                 fields = [self.type, self.name, GCj, GCi, reali]
                 msg += self.printCard(fields)
         return msg

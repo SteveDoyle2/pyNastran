@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 
 from .oes_objects import stressObject, strainObject
@@ -118,7 +118,7 @@ class RodStressObject(stressObject):
         del self.MS_torsion[dt]
 
     def getTransients(self):
-        k = self.axial.keys()
+        k = list(self.axial.keys())
         k.sort()
         return k
 
@@ -169,7 +169,7 @@ class RodStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,axial in sorted(self.axial.iteritems()):
+        for dt,axial in sorted(self.axial.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
@@ -210,7 +210,7 @@ class RodStressObject(stressObject):
         nWrite = nOut
         if nOut%2==1:
             nWrite = nOut-1
-        for i in xrange(0,nWrite,2):
+        for i in range(0,nWrite,2):
             #print i,out[i:]
             outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' %(tuple(out[i]+out[i+1]))
             msg.append(outLine)
@@ -229,7 +229,7 @@ class RodStressObject(stressObject):
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                  '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
         msg = []
-        for dt,axials in sorted(self.axial.iteritems()):
+        for dt,axials in sorted(self.axial.items()):
             dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
             header[2] = dtLine
             msg += header+words
@@ -248,7 +248,7 @@ class RodStressObject(stressObject):
             nWrite = nOut
             if nOut%2==1:
                 nWrite = nOut-1
-            for i in xrange(0,nWrite,2):
+            for i in range(0,nWrite,2):
                 outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' %(tuple(out[i]+out[i+1]))
                 msg.append(outLine)
 
@@ -369,7 +369,7 @@ class RodStrainObject(strainObject):
         del self.MS_torsion[dt]
 
     def getTransients(self):
-        k = self.axial.keys()
+        k = list(self.axial.keys())
         k.sort()
         return k
 
@@ -422,7 +422,7 @@ class RodStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,axial in sorted(self.axial.iteritems()):
+        for dt,axial in sorted(self.axial.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
@@ -463,7 +463,7 @@ class RodStrainObject(strainObject):
         nWrite = nOut
         if nOut%2==1:
             nWrite = nOut-1
-        for i in xrange(0,nWrite,2):
+        for i in range(0,nWrite,2):
             outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' %(tuple(out[i]+out[i+1]))
             msg.append(outLine)
         
@@ -481,7 +481,7 @@ class RodStrainObject(strainObject):
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                  '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']
         msg = []
-        for dt,axials in sorted(self.axial.iteritems()):
+        for dt,axials in sorted(self.axial.items()):
             dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
             header[2] = dtLine
             msg += header+words
@@ -498,7 +498,7 @@ class RodStrainObject(strainObject):
             nWrite = nOut
             if nOut%2==1:
                 nWrite = nOut-1
-            for i in xrange(0,nWrite,2):
+            for i in range(0,nWrite,2):
                 outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E   %8i   %13.6E  %10.4E %13.6E  %10.4E\n' %(tuple(out[i]+out[i+1]))
                 msg.append(outLine)
 

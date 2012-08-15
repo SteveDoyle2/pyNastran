@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 class RealRodForce(scalarObject): # 1-ROD, 3-TUBE, 10-CONROD
@@ -174,10 +174,10 @@ class RealCBeamForce(scalarObject): # 2-CBEAM
                  '   ELEMENT-ID  GRID   LENGTH    PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE         TORQUE\n']
         
         msg = []
-        for dt,bms in sorted(self.bendingMoment.iteritems()):
+        for dt,bms in sorted(self.bendingMoment.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg+= header+words
-            for eid,bm in sorted(bms.iteritems()):
+            for eid,bm in sorted(bms.items()):
                 for sd in sorted(bm):
                     nid = self.nodes[eid][sd]
                     bm1,bm2 = self.bendingMoment[dt][eid][sd]
@@ -207,7 +207,7 @@ class RealCBeamForce(scalarObject): # 2-CBEAM
         msg = header+['                                 F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                       '                    STAT DIST/   - BENDING MOMENTS -            - WEB  SHEARS -           AXIAL          TOTAL          WARPING\n',
                       '   ELEMENT-ID  GRID   LENGTH    PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE         TORQUE\n']
-        for eid,bm in sorted(self.bendingMoment.iteritems()):
+        for eid,bm in sorted(self.bendingMoment.items()):
             for sd in sorted(bm):
                 bm1,bm2 = self.bendingMoment[eid][sd]
                 ts1,ts2 = self.shear[eid][sd]
@@ -892,7 +892,7 @@ class RealCBARForce(scalarObject): # 34-CBAR
                  '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
                  '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
         msg = []
-        for dt,bm in sorted(self.bendingMomentA.iteritems()):
+        for dt,bm in sorted(self.bendingMomentA.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg+= header+words
             for eid in sorted(bm):

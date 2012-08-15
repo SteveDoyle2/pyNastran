@@ -23,10 +23,10 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,R0902,R0904,R0914
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
-from itertools import izip
+
 
 from numpy import array, cross, dot, transpose, zeros
 from numpy.linalg import norm
@@ -640,7 +640,7 @@ class CORD3G(Coord):  # not done
           of matrices is the opposite of the order in which they're
           applied to a vector)."
         """
-        for (rotation, theta) in izip(self.rotations, self.thetas):
+        for (rotation, theta) in zip(self.rotations, self.thetas):
             ct = cos(radians(theta))
             st = sin(radians(theta))
             if   rotation == 1:  p = dot(self.RotationX(ct, st), p)

@@ -23,10 +23,10 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=R0904,R0902
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
-from itertools import izip
+
 
 from pyNastran.bdf.fieldWriter import (printCard, set_default_if_blank,
                                        is_same)
@@ -50,7 +50,7 @@ class BaseCard(BDFCard):
         pass
 
     def isSameFields(self, fields1, fields2):
-        for (field1, field2) in izip(fields1, fields2):
+        for (field1, field2) in zip(fields1, fields2):
             if not is_same(field1, field2):
                 return False
             ###
@@ -322,7 +322,7 @@ def expandThru(fields):
     i=0
     while(i<nFields):
         if fields[i] == 'THRU':
-            for j in xrange(fields[i-1], fields[i+1]+1):
+            for j in range(fields[i-1], fields[i+1]+1):
                 out.append(j)
             ###
             i+=2
@@ -361,7 +361,7 @@ def expandThruBy(fields):
             minValue = fields[i-1]
             maxValue = fields[i+1]
             #print "minValue=%s maxValue=%s by=%s" %(minValue,maxValue,by)
-            for j in xrange(0,(maxValue-minValue)//by+1): # +1 is to include final point
+            for j in range(0,(maxValue-minValue)//by+1): # +1 is to include final point
                 value = minValue+by*j
                 out.append(value)
             ###
@@ -388,10 +388,10 @@ def expandThruExclude(self, fields):
     """
     fieldsOut = []
     nFields = len(fields)
-    for i in xrange(nFields):
+    for i in range(nFields):
         if fields[i] == 'THRU':
             storedList = []
-            for j in xrange(fields[i-1], fields[i+1]):
+            for j in range(fields[i-1], fields[i+1]):
                 storedList.append(fields[j])
             ###
         elif fields[i] == 'EXCLUDE':
@@ -502,7 +502,7 @@ def _subCollapse(fields, dn, dnMax=10000000):
     out = [fields[0]]
     nFields = len(fields)
 
-    for i in xrange(1, nFields):
+    for i in range(1, nFields):
         dn = fields[i]-fields[i-1]
         print("i=%s field[%s]=%s fields[%s]=%s dn=%s dnMax=%s" % (i, i, fields[i], i-1, fields[i-1], dn, dnMax))
         if dn != dnMax:

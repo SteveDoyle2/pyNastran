@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 from struct import unpack
 
@@ -84,7 +84,7 @@ class EPT(object):
         while len(data)>=16: # 4*4
             eData = data[:16]
             data  = data[16:]
-            out = unpack(b'i4sif',eData)
+            out = unpack('i4sif',eData)
             (sid,propSet,ID,value) = out
             #print "sid=%s propSet=%s ID=%s value=%s" %(sid,propSet,ID,value)
             prop = NSM(None,None,[sid,propSet,ID,value])
@@ -110,7 +110,7 @@ class EPT(object):
         while len(data)>=76: # 19*4
             eData = data[:76]
             data  = data[76:]
-            out = unpack(b'2i17f',eData)
+            out = unpack('2i17f',eData)
             #print "len(out) = ",len(out)
             #print out
             (pid,mid,a,I1,I2,J,nsm,fe,c1,c2,d1,d2,e1,e2,f1,f2,k1,k2,I12) = out
@@ -150,14 +150,14 @@ class EPT(object):
         while len(data)>=28: # 7*4 - ROD - shortest entry...could be buggy... ## @todo fix this
             eData = data[:28]
             data  = data[28:]
-            out = unpack(b'2i8s8sf',eData)
+            out = unpack('2i8s8sf',eData)
             (pid,mid,group,Type,value) = out
             Type = Type.strip()
             dataIn = [pid,mid,group,Type,value]
             #print "pid=%s mid=%s group=|%s| Type=|%s| value=%s" %(pid,mid,group,Type,value)
             expectedLength = validTypes[Type]
             iFormat = 'f'*expectedLength
-            iFormat = bytes(iFormat)
+
             dataIn += list(unpack(iFormat,data[:expectedLength*4]))
             
             data = data[expectedLength*4+4:]  ## @todo why do i need the +4???
@@ -180,22 +180,22 @@ class EPT(object):
         while len(data)>=1072: # 44+12*84+20
             eData = data[:20]
             data  = data[20:]
-            dataIn = list(unpack(b'4if',eData))
+            dataIn = list(unpack('4if',eData))
             #print "len(out) = ",len(out)
             #print out
             (pid,mid,nsegs,ccf,x) = dataIn
 
-            for i in xrange(12):
+            for i in range(12):
                 eData = data[64:]
                 data  = data[:64]
-                pack = unpack(b'16f',eData)
+                pack = unpack('16f',eData)
                 (so,xxb,a,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2) = pack
                 dataIn.append(pack)
             
             eData = data[:44]
             data  = data[44:]
 
-            dataIn = list(unpack(b'11f',eData))
+            dataIn = list(unpack('11f',eData))
             #(k1,k2,s1,s2,nsia,nsib,cwa,cwb,m1a,m2a,m1b,m2b,n1a,n2a,n1b,n2b) = pack
             
             prop = PBEAM(None,dataIn)
@@ -231,7 +231,7 @@ class EPT(object):
             isSymmetrical = 'NO'
             eData = data[:32]
             data  = data[32:]
-            out = unpack(b'2i3fi2f',eData)
+            out = unpack('2i3fi2f',eData)
             (pid,nLayers,z0,nsm,sb,ft,Tref,ge,) = out
             
             eData = data[:16*(nLayers)]
@@ -244,9 +244,9 @@ class EPT(object):
             #print "nLayers = ",nLayers
             assert 0<nLayers<100,'pid=%s nLayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' %(pid,nLayers,z0,nsm,sb,ft,Tref,ge)
 
-            for n in xrange(nLayers):
+            for n in range(nLayers):
                 #print "len(eData) = ",len(eData)
-                (mid,t,theta,sout) = unpack(b'i2fi',eData[0:16])
+                (mid,t,theta,sout) = unpack('i2fi',eData[0:16])
                 Mid.append(mid)
                 T.append(t)
                 Theta.append(theta)
@@ -286,7 +286,7 @@ class EPT(object):
         while len(data)>=16: # 4*4
             eData = data[:16]
             data  = data[16:]
-            out = unpack(b'i3f',eData)
+            out = unpack('i3f',eData)
             #(pid,k,ge,s) = out
             prop = PELAS(data=out)
             self.addOp2Property(prop)
@@ -303,7 +303,7 @@ class EPT(object):
         while len(data)>=44: # 11*4
             eData = data[:44]
             data  = data[44:]
-            out = unpack(b'i10f',eData)
+            out = unpack('i10f',eData)
             #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
             prop = PGAP(None,out)
             self.addOp2Property(prop)
@@ -321,9 +321,9 @@ class EPT(object):
         """
         n = 0
         nEntries = len(data)//8  # 2*4
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n+8]
-            out = unpack(b'ii',eData)
+            out = unpack('ii',eData)
             #out = (pid,mass)
             prop = PMASS(data=out)
             self.addOp2Property(prop)
@@ -339,7 +339,7 @@ class EPT(object):
         while len(data)>=24: # 6*4
             eData = data[:24]
             data  = data[24:]
-            out = unpack(b'2i4f',eData)
+            out = unpack('2i4f',eData)
             (pid,mid,a,j,c,nsm) = out
             prop = PROD(None,out)
             self.addOp2Property(prop)
@@ -353,7 +353,7 @@ class EPT(object):
         while len(data)>=24: # 6*4
             eData = data[:24]
             data  = data[24:]
-            out = unpack(b'2i4f',eData)
+            out = unpack('2i4f',eData)
             (pid,mid,t,nsm,f1,f2) = out
             prop = PSHEAR(data=out)
             self.addOp2Property(prop)
@@ -367,7 +367,7 @@ class EPT(object):
         while len(data)>=44: # 11*4
             eData = data[:44]
             data  = data[44:]
-            out = unpack(b'iifififfffi',eData)
+            out = unpack('iifififfffi',eData)
             (pid,mid1,t,mid2,bk,mid3,ts,nsm,z1,z2,mid4) = out
             prop = PSHELL(None,out)
 
@@ -387,7 +387,7 @@ class EPT(object):
         while len(data)>=28: # 7*4
             eData = data[:28]
             data  = data[28:]
-            (pid,mid,cid,inp,stress,isop,fctn) = unpack(b'6i4s',eData)
+            (pid,mid,cid,inp,stress,isop,fctn) = unpack('6i4s',eData)
             dataIn = [pid,mid,cid,inp,stress,isop,fctn]
             prop = PSOLID(None,dataIn)
             self.addOp2Property(prop)
@@ -408,7 +408,7 @@ class EPT(object):
         while len(data)>=20: # 5*4
             eData = data[:20]
             data  = data[20:] # or 24
-            (pid,mid,OD,t,nsm) = unpack(b'2i3f',eData)
+            (pid,mid,OD,t,nsm) = unpack('2i3f',eData)
             dataIn = [pid,mid,OD,t,nsm]
             prop = PTUBE(None,dataIn)
             self.addOp2Property(prop)
@@ -423,7 +423,7 @@ class EPT(object):
         while len(data)>=12: # 3*4
             eData = data[:12]
             data  = data[12:]
-            out = unpack(b'i2f',eData)
+            out = unpack('i2f',eData)
             #(pid,ce,cr) = out
             prop = PVISC(data=out)
             self.addOp2Property(prop)

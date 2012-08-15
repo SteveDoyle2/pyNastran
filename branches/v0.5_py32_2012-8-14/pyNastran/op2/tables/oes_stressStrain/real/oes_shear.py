@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 
 from .oes_objects import stressObject, strainObject
@@ -75,7 +75,7 @@ class ShearStressObject(stressObject):
         del self.margin[dt]
 
     def getTransients(self):
-        k = self.maxShear.keys()
+        k = list(self.maxShear.keys())
         k.sort()
         return k
 
@@ -127,7 +127,7 @@ class ShearStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,maxShears in sorted(self.maxShear.iteritems()):
+        for dt,maxShears in sorted(self.maxShear.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(maxShears):
                 maxShear = self.maxShear[dt][eid]
@@ -207,7 +207,7 @@ class ShearStrainObject(strainObject):
         del self.margin[dt]
 
     def getTransients(self):
-        k = self.maxShear.keys()
+        k = list(self.maxShear.keys())
         k.sort()
         return k
 
@@ -260,7 +260,7 @@ class ShearStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,maxShears in sorted(self.maxShear.iteritems()):
+        for dt,maxShears in sorted(self.maxShear.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(maxShears):
                 maxShear = self.maxShear[dt][eid]

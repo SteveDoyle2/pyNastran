@@ -22,10 +22,10 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 #import sys
-from itertools import izip
+
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -149,7 +149,7 @@ class EIGC(Method): ## not done
         self.iblkszs = []
         self.ksteps  = []
         self.NJIs    = []
-        for iRow in xrange(nRows):
+        for iRow in range(nRows):
             #NDJ_default = None
 
             self.alphaAjs.append(card.field(9+8*iRow  , 0.0))
@@ -178,7 +178,7 @@ class EIGC(Method): ## not done
             alphaOmega_default = 0.0
             LJ_default = 1.0
 
-        for iRow in xrange(nRows):
+        for iRow in range(nRows):
             NEj = card.field(9+7*iRow+5)
             NDJ_default = None
             if self.method=='INV':
@@ -199,7 +199,7 @@ class EIGC(Method): ## not done
     def rawMethod(self):
         fields = []
         if self.method in ['HESS', 'INV']:
-            for (alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj) in izip(
+            for (alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj) in zip(
                  self.alphaAjs, self.omegaAjs, self.alphaBjs, self.omegaBjs,
                  self.LJs, self.NEJs, self.NDJs):
                 alphaA = set_blank_if_default(alphaA, 0.0)
@@ -209,7 +209,7 @@ class EIGC(Method): ## not done
                 fields += [alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj, None]
             ###
         elif self.method=='CLAN':
-            for (alphaA, omegaA, mblksz, iblksz, kstep, Nj) in izip(
+            for (alphaA, omegaA, mblksz, iblksz, kstep, Nj) in zip(
                  self.alphaAjs, self.omegaAjs, self.mblkszs, self.iblkszs,
                  self.ksteps, self.NJIs):
                 alphaA = set_blank_if_default(alphaA, 0.0)
@@ -384,13 +384,13 @@ class EIGRL(Method):
 
     def rawFields(self):
         fields = ['EIGRL',self.sid,self.v1,self.v2,self.nd,self.msglvl,self.maxset,self.shfscl,self.norm]
-        for (option, value) in izip(self.options, self.values):
+        for (option, value) in zip(self.options, self.values):
             fields += [option+'='+str(value)]
         return fields
 
     def reprFields(self):
         msglvl = set_blank_if_default(self.msglvl, 0)
         fields = ['EIGRL',self.sid,self.v1,self.v2,self.nd,msglvl,self.maxset,self.shfscl,self.norm]
-        for (option, value) in izip(self.options, self.values):
+        for (option, value) in zip(self.options, self.values):
             fields += [option+'='+str(value)]
         return fields

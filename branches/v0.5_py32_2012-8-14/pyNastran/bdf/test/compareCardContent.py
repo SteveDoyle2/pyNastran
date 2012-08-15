@@ -22,9 +22,9 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-from itertools import izip, count
+
+
+from itertools import count
 
 from pyNastran.bdf.bdfInterface.BDF_Card import wipeEmptyFields
 from pyNastran.bdf.fieldWriter import print_field, printCard
@@ -44,7 +44,7 @@ def assert_fields(card1, card2):
                 printCard(fields1), printCard(fields2)))
         raise RuntimeError(msg)
 
-    for (i, field1, field2) in izip(count(), fields1, fields2):
+    for (i, field1, field2) in zip(count(), fields1, fields2):
         value1 = print_field(field1)
         value2 = print_field(field2)
         if value1 != value2:
@@ -121,7 +121,7 @@ def compare_card_content(fem1, fem2):
     for key in fem1.loads:
         loads1 = fem1.loads[key]
         loads2 = fem2.loads[key]
-        for (card1, card2) in izip(loads1, loads2):
+        for (card1, card2) in zip(loads1, loads2):
             assert_fields(card1, card2)
 
     for key in fem1.coords:
@@ -251,7 +251,7 @@ def compare_thermal_content(fem1, fem2):
     for key in fem1.bcs:
         BCs1 = fem1.bcs[key]
         BCs2 = fem2.bcs[key]
-        for (card1, card2) in izip(BCs1, BCs2):
+        for (card1, card2) in zip(BCs1, BCs2):
             assert_fields(card1, card2)
 
     for key in fem1.thermalMaterials:
@@ -346,7 +346,7 @@ def compare_aero_content(fem1, fem2):
     for key in fem1.aelinks:
         aelinks1 = fem1.aelinks[key]
         aelinks2 = fem2.aelinks[key]
-        for (card1, card2) in izip(aelinks1, aelinks2):
+        for (card1, card2) in zip(aelinks1, aelinks2):
             assert_fields(card1, card2)
 
     for key in fem1.aelists:
@@ -379,7 +379,7 @@ def compare_aero_content(fem1, fem2):
         card2 = fem2.flutters[key]
         assert_fields(card1, card2)
 
-    for i in xrange(len(fem1.mkaeros)):
+    for i in range(len(fem1.mkaeros)):
         card1 = fem1.mkaeros[i]
         card2 = fem2.mkaeros[i]
         assert_fields(card1, card2)

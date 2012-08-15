@@ -23,10 +23,10 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,R0902,R0904,R0914,W0231,R0201
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
-from itertools import izip
+
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -77,7 +77,7 @@ class LoadCombination(Load): # LOAD, DLOAD
             self.loadIDs = []
 
             # alternating of scale factor & load set ID
-            for i in xrange(0, nLoadFields, 2):
+            for i in range(0, nLoadFields, 2):
                 self.scaleFactors.append(loads[i  ])
                 self.loadIDs.append(     loads[i+1])
         else:
@@ -234,7 +234,7 @@ class SLOAD(Load):
 
         self.nids = []
         self.mags = []
-        for i in xrange(n):
+        for i in range(n):
             j = 2*i
             self.nids.append(fields[j  ])
             self.mags.append(fields[j+1])
@@ -252,7 +252,7 @@ class SLOAD(Load):
 
     def rawFields(self):
         fields = ['SLOAD', self.sid]
-        for (nid, mag) in izip(self.nids, self.mags):
+        for (nid, mag) in zip(self.nids, self.mags):
             fields += [self.Nid(nid), mag]
         return fields
 
@@ -279,7 +279,7 @@ class DLOAD(LoadCombination):
 
     def rawFields(self):
         fields = ['DLOAD', self.sid, self.scale]
-        for (scaleFactor, loadID) in izip(self.scaleFactors, self.loadIDs):
+        for (scaleFactor, loadID) in zip(self.scaleFactors, self.loadIDs):
             fields += [scaleFactor, self.LoadID(loadID)]
         return fields
 

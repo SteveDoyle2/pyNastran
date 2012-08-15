@@ -23,10 +23,10 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,R0902,R0904,R0914
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 from math import log, exp
-from itertools import izip
+
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -93,7 +93,7 @@ class FREQ1(FREQ):
         ndf = card.field(4, 1)
         
         self.freqs = []
-        for i in xrange(ndf):
+        for i in range(ndf):
             self.freqs.append(f1+i*df)
         ###
         self.cleanFreqs()
@@ -115,7 +115,7 @@ class FREQ2(FREQ):
         
         d = 1./nf*log(f2/f1)
         self.freqs = []
-        for i in xrange(nf):
+        for i in range(nf):
             self.freqs.append(f1*exp(i*d)) # 0 based index
         self.cleanFreqs()
 
@@ -171,7 +171,7 @@ class TSTEP(BaseCard):
 
     def rawFields(self):
         fields = ['TSTEP',self.sid]
-        for (n, dt, no) in izip(self.N, self.DT, self.NO):
+        for (n, dt, no) in zip(self.N, self.DT, self.NO):
             fields += [n,dt,no,None,None,None,None,None]
         return fields
 

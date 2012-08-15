@@ -43,7 +43,7 @@ class LoadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
         msg = header+['                                                     L O A D   V E C T O R\n',
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        for nodeID,translation in sorted(self.translations.iteritems()):
+        for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
@@ -68,10 +68,10 @@ class LoadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
 
-        for dt,translations in sorted(self.translations.iteritems()):
+        for dt,translations in sorted(self.translations.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
 
@@ -97,9 +97,9 @@ class LoadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
         #msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
         msg += self.writeHeader()
         
-        for dt,translations in sorted(self.translations.iteritems()):
+        for dt,translations in sorted(self.translations.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
                 (dx,dy,dz) = translation
@@ -124,7 +124,7 @@ class LoadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
         msg = '---LOAD VECTOR---\n'
         msg += self.writeHeader()
 
-        for nodeID,translation in sorted(self.translations.iteritems()):
+        for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
@@ -163,7 +163,7 @@ class ComplexLoadVectorObject(ComplexTableObject): # tableCode=11, approachCode=
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        for nodeID,translation in sorted(self.translations.iteritems()):
+        for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
@@ -204,10 +204,10 @@ class ComplexLoadVectorObject(ComplexTableObject): # tableCode=11, approachCode=
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         #return self._writeF06TransientBlock(words,header,pageStamp,pageNum,f,isMagPhase)
         msg = []
-        for dt,translations in sorted(self.translations.iteritems()):
+        for dt,translations in sorted(self.translations.items()):
             header[2] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
 
@@ -255,10 +255,10 @@ class ComplexLoadVectorObject(ComplexTableObject): # tableCode=11, approachCode=
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for freq,translations in sorted(self.translations.iteritems()):
+        for freq,translations in sorted(self.translations.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
 
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[freq][nodeID]
 
                 msg += '%-10i ' %(nodeID)
@@ -284,7 +284,7 @@ class ThermalVector(TableObject):
         msg = header+['                                              T E M P E R A T U R E   V E C T O R\n',
                ' \n',
                '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
-        for nodeID,translation in sorted(self.translations.iteritems()):
+        for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
@@ -309,10 +309,10 @@ class ThermalVector(TableObject):
                  ' \n',
                  '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
 
-        for dt,translations in sorted(self.translations.iteritems()):
+        for dt,translations in sorted(self.translations.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
 
@@ -338,9 +338,9 @@ class ThermalVector(TableObject):
         #msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
         msg += self.writeHeader()
         
-        for dt,translations in sorted(self.translations.iteritems()):
+        for dt,translations in sorted(self.translations.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
                 (dx,dy,dz) = translation
@@ -365,7 +365,7 @@ class ThermalVector(TableObject):
         msg = '---LOAD VECTOR---\n'
         msg += self.writeHeader()
 
-        for nodeID,translation in sorted(self.translations.iteritems()):
+        for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 

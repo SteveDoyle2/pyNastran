@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 #pylint: disable=C0103
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import os
 import sys
 #import time
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     debug = False
     failed_files = run_lots_of_files(files, debug=debug, xref=xref,
                                      check=check, cid=cid)
-    f = open('failedCases.in','wb')
+    f = open('failedCases.in','w',encoding='utf-8')
     for fname in failed_files:
         f.write('%s\n' %(fname))
     f.close()

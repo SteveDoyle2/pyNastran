@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=R0904,R0902
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 from numpy import array, cross
 
 from pyNastran.bdf.cards.loads.staticLoads import Moment, Force
@@ -49,7 +49,7 @@ class BDFMethods(object):
         I  = array([0., 0., 0.,  0.,  0., 0.,])
         cg = array([0., 0., 0.])
         mass = 0.
-        for element in self.elements.itervalues():
+        for element in self.elements.values():
             try:
                 p = element.Centroid()  # not really coded across the board
                 m = element.Mass()
@@ -76,7 +76,7 @@ class BDFMethods(object):
     def Mass(self):
         """Caclulates mass in the global coordinate system"""
         mass = 0.
-        for element in self.elements.itervalues():
+        for element in self.elements.values():
             m = element.Mass()
             mass += m
         return (mass)
@@ -91,7 +91,7 @@ class BDFMethods(object):
         """
         assert cid in self.coords, ('cannot resolve nodes to '
                                     'cid=|%s| b/c it doesnt exist' %(cid))
-        for nid,node in sorted(self.nodes.iteritems()):
+        for nid,node in sorted(self.nodes.items()):
             p = node.PositionWRT(self, cid)
             #p = node.Position(self)
             #print "p = ",p
@@ -109,7 +109,7 @@ class BDFMethods(object):
           hasnt been tested well...
         """
         debug = False
-        for (nid, nodeOld) in femOld.nodes.iteritems():
+        for (nid, nodeOld) in femOld.nodes.items():
             coord = femOld.node.cp
             (p, matrix) = coord.transformToGlobal(self.xyz, debug=debug)
             p2 = coord.transformToLocal(p,matrix, debug=debug)
@@ -124,7 +124,7 @@ class BDFMethods(object):
         @retval Forces the forces as a numpy array
         @warning not validated
         """
-        for (key, loadCase) in self.loads.iteritems():
+        for (key, loadCase) in self.loads.items():
             F = array([0., 0., 0.])
             #print "loadCase = ",loadCase
             for load in loadCase:
@@ -150,7 +150,7 @@ class BDFMethods(object):
         @warning not validated
         """
         p = array(p0)
-        for (key, loadCase) in self.loads.iteritems():
+        for (key, loadCase) in self.loads.items():
             M = array([0., 0., 0.])
             F = array([0., 0., 0.])
             #print "loadCase = ",loadCase

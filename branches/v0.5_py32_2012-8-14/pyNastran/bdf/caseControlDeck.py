@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=R0904,R0902,C0103
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 import copy
 from pyNastran.bdf.subcase import Subcase
@@ -43,10 +43,10 @@ class CaseControlDeck(object):
         """
         if log is None:
         #if 1:
-            from pyNastran.general.logger import dummyLogger
+            from pyNastran.general.logger import buildDummyLogger2
             word = 'debug'
-            loggerObj = dummyLogger()
-            log = loggerObj.startLog(word) # or info
+
+            log = buildDummyLogger2(word) # or info
         self.debug = False
         #self.debug = True
 
@@ -157,13 +157,13 @@ class CaseControlDeck(object):
                 msg = 'iToSubcase=|%s| does not exist' %(iToSubcase)
                 raise RuntimeError(msg)
             subcaseTo = self.subcases[iToSubcase]
-            for key,param in subcaseFrom.iteritems():
+            for key,param in subcaseFrom.items():
                 subcaseTo[key] = copy.deepcopy(param)
             ###
         ###
 
     def get_subcase_list(self):
-        return sorted(self.subcases.keys())
+        return sorted(list(self.subcases.keys()))
 
     def get_local_subcase_list(self):
         keyList = [key for key in self.subcases if key != 0] # skip the global
@@ -433,7 +433,7 @@ class CaseControlDeck(object):
         removes any unwanted data in the subcase...specifically the SUBCASE
         data member.  Otherwise it will print out after a key like stress.
         """
-        for (iSubcase, subcase) in sorted(self.subcases.iteritems()):
+        for (iSubcase, subcase) in sorted(self.subcases.items()):
             subcase.finish_subcase()
         ###
     ###
@@ -474,7 +474,7 @@ class CaseControlDeck(object):
     #    return self.__repr__()
 
     def crossReference(self, model):
-        for (iSubcase, subcase) in sorted(self.subcases.iteritems()):
+        for (iSubcase, subcase) in sorted(self.subcases.items()):
             subcase.crossReference(model)
 
     def get_op2_data(self):
@@ -482,7 +482,7 @@ class CaseControlDeck(object):
         returns the relevant op2 parameters required for a given subcase
         """
         cases = {}
-        for (iSubcase, subcase) in sorted(self.subcases.iteritems()):
+        for (iSubcase, subcase) in sorted(self.subcases.items()):
             if iSubcase != 0:
                 cases[iSubcase] = subcase.getOp2Data(self.sol,
                                                      self.solmap_toValue)
@@ -491,7 +491,7 @@ class CaseControlDeck(object):
     def __repr__(self):
         msg = ''
         subcase0 = self.subcases[0]
-        for (iSubcase, subcase) in sorted(self.subcases.iteritems()):
+        for (iSubcase, subcase) in sorted(self.subcases.items()):
             #if iSubcase==0:
             #print("iSubcase = %s" %(iSubcase))
             #print(subcase)

@@ -70,9 +70,9 @@ class Geometry1(object):
         #print "reading CORD1C"
         n = 0
         nEntries = len(data)//24
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n+24] # 6*4
-            (cid,one,two,g1,g2,g3) = unpack(b'iiiiii',eData)
+            (cid,one,two,g1,g2,g3) = unpack('iiiiii',eData)
             dataIn = [cid,g1,g2,g3]
             coord = CORD1C(None,None,dataIn)
             self.addCoord(coord)
@@ -87,9 +87,9 @@ class Geometry1(object):
         #print "reading CORD1R"
         n = 0
         nEntries = len(data)//24
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n+24] # 6*4
-            (cid,one,one,g1,g2,g3) = unpack(b'iiiiii',eData)
+            (cid,one,one,g1,g2,g3) = unpack('iiiiii',eData)
             dataIn = [cid,g1,g2,g3]
             coord = CORD1R(None,None,dataIn)
             self.addCoord(coord)
@@ -104,9 +104,9 @@ class Geometry1(object):
         #print "reading CORD1S"
         n = 0
         nEntries = len(data)//24
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n+24] # 6*4
-            (cid,three,one,g1,g2,g3) = unpack(b'iiiiii',eData)
+            (cid,three,one,g1,g2,g3) = unpack('iiiiii',eData)
             dataIn = [cid,g1,g2,g3]
             coord = CORD1S(None,dataIn)
             self.addCoord(coord,allowOverwrites=True)
@@ -121,9 +121,9 @@ class Geometry1(object):
         #print "reading CORD2C"
         n = 0
         nEntries = len(data)//52
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n+52] # 13*4
-            (cid,two,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3) = unpack(b'iiiifffffffff',eData)
+            (cid,two,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3) = unpack('iiiifffffffff',eData)
             #print "cid=%s two=%s two=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,two,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3)
             dataIn = [cid,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3]
             coord = CORD2C(None,dataIn)
@@ -139,9 +139,9 @@ class Geometry1(object):
         #print "reading CORD2R"
         n = 0
         nEntries = len(data)//52
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n+52] # 13*4
-            (cid,one,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3) = unpack(b'iiiifffffffff',eData)
+            (cid,one,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3) = unpack('iiiifffffffff',eData)
             dataIn = [cid,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3]
             #print "cid=%s one=%s two=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,one,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3)
             coord = CORD2R(None,dataIn)
@@ -157,9 +157,9 @@ class Geometry1(object):
         #print "reading CORD2S"
         n = 0
         nEntries = len(data)//52
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n+52] # 13*4
-            (cid,sixty5,eight,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3) = unpack(b'iiiifffffffff',eData)
+            (cid,sixty5,eight,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3) = unpack('iiiifffffffff',eData)
             #print "cid=%s sixty5=%s eight=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,sixty5,eight,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3)
             dataIn = [cid,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3]
             coord = CORD2S(dataIn)
@@ -176,9 +176,9 @@ class Geometry1(object):
         #print "reading CORD3G"
         n = 0
         nEntries = len(data)//16
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n+16] # 4*4
-            (cid,n1,n2,n3) = unpack(b'iiii',eData)
+            (cid,n1,n2,n3) = unpack('iiii',eData)
             dataIn = [cid,n1,n2,n3]
             coord = CORD3G(None,dataIn)
             self.addCoord(coord,allowOverwrites=True)
@@ -191,9 +191,9 @@ class Geometry1(object):
         #print "reading GRID"
         n = 0
         nEntries = len(data)//32
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n+32]
-            out = unpack(b'iifffiii',eData)
+            out = unpack('iifffiii',eData)
 
             (nID,cp,x1,x2,x3,cd,ps,seid) = out
             if cd>=0 and nID<10000000:

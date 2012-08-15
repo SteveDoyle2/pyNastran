@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,R0902,R0904,R0914
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 #import sys
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -63,7 +63,7 @@ class TableObj(object):
         i=0
         while i<nFields:
             pack = []
-            for j in xrange(nRepeated):
+            for j in range(nRepeated):
                 pack.append(fields[i+j])
             i+=nRepeated
             self.table.append(pack)
@@ -73,8 +73,8 @@ class TableObj(object):
         try:
             msg = ''
             #k = 0
-            for i in xrange(nFields):
-                for j in xrange(nRepeated):
+            for i in range(nFields):
+                for j in range(nRepeated):
                     try:
                         msg += '%-8g ' %(fields[i*nRepeated+j])
                     except TypeError:
@@ -97,7 +97,7 @@ class TableObj(object):
         fields2 = [] # remove extra ENDTs
         foundENDT = False
         for field in fields:
-            if isinstance(field, unicode) and 'ENDT' in field.upper():
+            if isinstance(field, str) and 'ENDT' in field.upper():
                 foundENDT = True
             else:
                 fields2.append(field)

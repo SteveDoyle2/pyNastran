@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 from struct import unpack
 
@@ -75,7 +75,7 @@ class MPT(object):
         while len(data)>=64: # 16*4
             eData = data[:64]
             data  = data[64:]
-            out = unpack(b'iffiiiififffffff',eData)
+            out = unpack('iffiiiififffffff',eData)
             (mid,T0,exp,form,tidkp,tidcp,tidcs,thresh,Type,ag1,ag2,ag3,ag4,ag5,ag6,ag7) = out
             mat = CREEP(None,out)
             self.addCreepMaterial(mat,allowOverwrites=True)
@@ -89,7 +89,7 @@ class MPT(object):
         while len(data)>=48: # 12*4
             eData = data[:48]
             data  = data[48:]
-            out = unpack(b'iffffffffffi',eData)
+            out = unpack('iffffffffffi',eData)
             (mid,E,G,nu,rho,A,TRef,ge,St,Sc,Ss,mcsid) = out
             mat = MAT1(None,out)
             self.addOp2Material(mat)
@@ -103,7 +103,7 @@ class MPT(object):
         while len(data)>=68: # 17*4
             eData = data[:68]
             data  = data[68:]
-            out = unpack(b'ifffffffffffffffi',eData)
+            out = unpack('ifffffffffffffffi',eData)
             (mid,g1,g2,g3,g4,g5,g6,rho,aj1,aj2,aj3,TRef,ge,St,Sc,Ss,mcsid) = out
             #print "MAT2 = ",out
             mat = MAT2(None,out)
@@ -123,7 +123,7 @@ class MPT(object):
         while len(data)>=64: # 16*4
             eData = data[:64]
             data  = data[64:]
-            out = unpack(b'iffffffffifffffi',eData)
+            out = unpack('iffffffffifffffi',eData)
             (mid,ex,eth,ez,nuxth,nuthz,nuzx,rho,gzx,blank,ax,ath,az,TRef,ge,blank) = out
             mat = MAT3(None,[mid,ex,eth,ez,nuxth,nuthz,nuzx,rho,gzx,ax,ath,az,TRef,ge])
             self.addOp2Material(mat)
@@ -137,7 +137,7 @@ class MPT(object):
         while len(data)>=44: # 11*4
             eData = data[:44]
             data  = data[44:]
-            out = unpack(b'iffffffffff',eData)
+            out = unpack('iffffffffff',eData)
             (mid,k,cp,rho,h,mu,hgen,refenth,tch,tdelta,qlat) = out
             mat = MAT4(None,out)
             self.addThermalMaterial(mat,allowOverwrites=True)
@@ -151,7 +151,7 @@ class MPT(object):
         while len(data)>=40: # 10*4
             eData = data[:40]
             data  = data[40:]
-            out = unpack(b'ifffffffff',eData)
+            out = unpack('ifffffffff',eData)
             (mid,k1,k2,k3,k4,k5,k6,cp,rho,hgen) = out
             mat = MAT5(None,out)
             self.addThermalMaterial(mat,allowOverwrites=True)
@@ -165,7 +165,7 @@ class MPT(object):
         while len(data)>=76: # 19*4
             eData = data[:76]
             data  = data[76:]
-            out = unpack(b'iffffffffffffffffff',eData)
+            out = unpack('iffffffffffffffffff',eData)
             (mid,E1,E2,nu12,G12,G1z,G2z,rho,a1,a2,TRef,Xt,Xc,Yt,Yc,S,ge,f12,strn) = out
             mat = MAT8(None,out)
             self.addOp2Material(mat)
@@ -180,7 +180,7 @@ class MPT(object):
         while len(data)>=140: # 35*4
             eData = data[:140]
             data  = data[140:]
-            out = unpack(b'iiiiiiiiiiiiiiiiiiiiiifffffffffiiii',eData)
+            out = unpack('iiiiiiiiiiiiiiiiiiiiiifffffffffiiii',eData)
             
             (mid,g1,g2,g3,g4,g5,g6,g7,g8,g9,g10,g11,g12,g13,g14,g15,g16,g17,g18,g19,g20,g21,
             rho,a1,a2,a3,a4,a5,a6,TRef,ge,blank1,blank2,blank3,blank4) = out
@@ -200,7 +200,7 @@ class MPT(object):
         while len(data)>=20: # 5*4
             eData = data[:20]
             data  = data[20:]
-            out = unpack(b'iffff',eData)
+            out = unpack('iffff',eData)
             (mid,bulk,rho,c,ge) = out
             mat = MAT10(None,out)
             self.addOp2Material(mat)
@@ -214,7 +214,7 @@ class MPT(object):
         while len(data)>=140: # 35*4
             eData = data[:140]
             data  = data[140:]
-            out1 = unpack(b'ifffffffiiifffffffffffffffffffffffi',eData)
+            out1 = unpack('ifffffffiiifffffffffffffffffffffffi',eData)
             (mid,a10,a01,d1,rho,alpha,tref,ge,sf,na,nd,kp,
              a20,a11,a02,d2,
              a30,a21,a12,a03,d3,
@@ -226,7 +226,7 @@ class MPT(object):
             if continueFlag:
                 eData = data[:32] # 7*4
                 data  = data[32:]            
-                out2 = unpack(b'iiiiiiii',eData)
+                out2 = unpack('iiiiiiii',eData)
                 (tab1,tab2,tab3,tab4,x1,x2,x3,tab5) = out2
                 data.append(out2)
             mat = MATHP(None,dataIn)
@@ -241,7 +241,7 @@ class MPT(object):
         while len(data)>=44: # 11*4
             eData = data[:44]
             data  = data[44:]
-            out = unpack(b'iiifiiffiii',eData)
+            out = unpack('iiifiiffiii',eData)
             (mid,tid,Type,h,yf,hr,limit1,limit2,a,b,c) = out
             dataIn = [mid,tid,Type,h,yf,hr,limit1,limit2]
             mat = MATS1(None,dataIn)
@@ -284,14 +284,14 @@ class MPT(object):
         while len(data)>=4: # 1*4
             eData = data[:4]
             data  = data[4:]
-            number, = unpack(b'i',eData)
+            number, = unpack('i',eData)
             
             iFormat = 'if'+str(number)+'f'
             eDataLen = len(strings)*4
             
             eData = data[:eDataLen]
             data = data[eDataLen:]
-            iFormat = bytes(iFormat)
+
             pack = list(unpack(iFormat,eData))
             packs = []
             
@@ -315,7 +315,7 @@ class MPT(object):
         while len(data)>=76: # 19*4
             eData = data[:76]
             data  = data[76:]
-            out = unpack(b'iifiiiiifffiiiffiff',eData)
+            out = unpack('iifiiiiifffiiiffiff',eData)
             #(sid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,maxR,rTolB) = out
             nlparm = NLPARM(None,out)
@@ -333,7 +333,7 @@ class MPT(object):
         while len(data)>=88: # 19*4
             eData = data[:88]
             data  = data[88:]
-            out = unpack(b'iifiiiiifffiiifiiiffff',eData)
+            out = unpack('iifiiiiifffiiifiiiffff',eData)
             #(sid,ndt,dt,no,kMethod,kStep,maxIter,conv,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,adjust,mStep,rb,maxR,uTol,rTolB) = out
             tstepnl = TSTEPNL(None,out)

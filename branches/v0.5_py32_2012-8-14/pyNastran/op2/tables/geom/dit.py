@@ -55,7 +55,7 @@ class DIT(object):
         #print "reading GUST"
         n = 0
         nEntries = len(data)//20 # 5*4
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n+20]
             out = unpack('iifff',eData)
             (sid,dload,wg,x0,V) = out

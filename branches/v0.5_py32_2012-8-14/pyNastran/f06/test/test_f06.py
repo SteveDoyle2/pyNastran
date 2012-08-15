@@ -61,7 +61,7 @@ def runLotsOfFiles(files, debug=True, saveCases=True, skipFiles=[],
         ###
     ###
     if saveCases:
-        f = open('failedCases.in','wb')
+        f = open('failedCases.in','w',encoding='utf-8')
         for f06file in failedCases:
             f.write('%s\n' %(f06file))
         f.close()

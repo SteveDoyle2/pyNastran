@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 from numpy import array
 from numpy.linalg import eigh
@@ -130,7 +130,7 @@ class SolidStressObject(stressObject):
                 self.o3[eid]  = {}
                 self.ovmShear[eid] = {}
                 n += 1
-                for j in xrange(nNodes):
+                for j in range(nNodes):
                     #print self.data[n]
                     (blank,nodeID,x,oxx,xy,txy,a,o1,lx,d1,d2,d3,pressure,ovmShear) = self.data[n]
                     (blank,blank, y,oyy,yz,tyz,b,o2,ly,d1,d2,d3,blank,blank) = self.data[n+1]
@@ -179,7 +179,7 @@ class SolidStressObject(stressObject):
         del self.o3[dt]
 
     def getTransients(self):
-        k = self.oxx.keys()
+        k = list(self.oxx.keys())
         k.sort()
         return k
 
@@ -358,7 +358,7 @@ class SolidStressObject(stressObject):
         tetraEids = []
         hexaEids  = []
         pentaEids = []
-        for eid,eType in sorted(self.eType.iteritems()):
+        for eid,eType in sorted(self.eType.items()):
             if eType=='CTETRA' or eType=='TETRA':
                 tetraEids.append(eid)
             elif eType=='CPENTA' or eType=='PENTA':
@@ -396,7 +396,7 @@ class SolidStressObject(stressObject):
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         msg = []
         (tetraMsg,pentaMsg,hexaMsg,tetraEids,hexaEids,pentaEids) = self.getF06_Header()
-        dts = self.oxx.keys()
+        dts = list(self.oxx.keys())
         for dt in dts:
             if tetraEids:
                 msg += self.writeElementTransient('CTETRA',4,tetraEids,dt,header,tetraMsg,f)
@@ -418,7 +418,7 @@ class SolidStressObject(stressObject):
         for eid in eids:
             #eType = self.eType[eid]
 
-            k = self.oxx[eid].keys()
+            k = list(self.oxx[eid].keys())
             k.remove('C')
             k.sort()
             msg.append('0  %8s           0GRID CS  %i GP\n' %(eid,nNodes) )
@@ -461,7 +461,7 @@ class SolidStressObject(stressObject):
         for eid in eids:
             #eType = self.eType[eid]
 
-            k = self.oxx[dt][eid].keys()
+            k = list(self.oxx[dt][eid].keys())
             k.remove('C')
             k.sort()
             msg.append('0  %8s           0GRID CS  %i GP\n' %(eid,nNodes))
@@ -510,7 +510,7 @@ class SolidStressObject(stressObject):
         for header in headers:
             msg += '%9s ' %(header)
         msg += '\n'
-        for eid,oxxNodes in sorted(self.oxx.iteritems()):
+        for eid,oxxNodes in sorted(self.oxx.items()):
             eType = self.eType[eid]
             for nid in sorted(oxxNodes):
                 oxx = self.oxx[eid][nid]
@@ -546,9 +546,9 @@ class SolidStressObject(stressObject):
             msg += '%9s ' %(header)
         msg += '\n'
 
-        for dt,oxxs in sorted(self.oxx.iteritems()):
+        for dt,oxxs in sorted(self.oxx.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid,oxxNodes in sorted(oxxs.iteritems()):
+            for eid,oxxNodes in sorted(oxxs.items()):
                 eType = self.eType[eid]
                 for nid in sorted(oxxNodes):
                     oxx = self.oxx[dt][eid][nid]
@@ -684,7 +684,7 @@ class SolidStrainObject(strainObject):
                 self.e3[eid]  = {}
                 self.evmShear[eid] = {}
                 n += 1
-                for j in xrange(nNodes):
+                for j in range(nNodes):
                     #print self.data[n]
                     (blank,nodeID,x,exx,xy,exy,a,e1,lx,d1,d2,d3,pressure,evmShear) = self.data[n]
                     (blank,blank, y,eyy,yz,eyz,b,e2,ly,d1,d2,d3,blank,blank) = self.data[n+1]
@@ -731,7 +731,7 @@ class SolidStrainObject(strainObject):
         del self.e3[dt]
 
     def getTransients(self):
-        k = self.exx.keys()
+        k = list(self.exx.keys())
         k.sort()
         return k
 
@@ -924,7 +924,7 @@ class SolidStrainObject(strainObject):
         tetraEids = []
         hexaEids  = []
         pentaEids = []
-        for eid,eType in sorted(self.eType.iteritems()):
+        for eid,eType in sorted(self.eType.items()):
             if eType=='CTETRA' or eType=='TETRA':
                 tetraEids.append(eid)
             elif eType=='CPENTA' or eType=='PENTA':
@@ -962,7 +962,7 @@ class SolidStrainObject(strainObject):
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         msg = []
         (tetraMsg,pentaMsg,hexaMsg,tetraEids,hexaEids,pentaEids) = self.getF06_Header()
-        dts = self.exx.keys()
+        dts = list(self.exx.keys())
         for dt in dts:
             if tetraEids:
                 msg += self.writeElementTransient('CTETRA',4,tetraEids,dt,header,tetraMsg,f)
@@ -984,7 +984,7 @@ class SolidStrainObject(strainObject):
         for eid in eids:
             #eType = self.eType[eid]
 
-            k = self.exx[eid].keys()
+            k = list(self.exx[eid].keys())
             k.remove('C')
             k.sort()
             msg.append('0  %8s           0GRID CS  %i GP\n' %(eid,nNodes) )
@@ -1028,7 +1028,7 @@ class SolidStrainObject(strainObject):
         for eid in eids:
             #eType = self.eType[eid]
 
-            k = self.exx[dt][eid].keys()
+            k = list(self.exx[dt][eid].keys())
             k.remove('C')
             k.sort()
             msgA  = '0  %8s           0GRID CS  %i GP\n' %(eid,nNodes)
@@ -1075,7 +1075,7 @@ class SolidStrainObject(strainObject):
         for header in headers:
             msg += '%9s ' %(header)
         msg += '\n'
-        for eid,oxxNodes in sorted(self.oxx.iteritems()):
+        for eid,oxxNodes in sorted(self.oxx.items()):
             eType = self.eType[eid]
             for nid in sorted(oxxNodes):
                 oxx = self.oxx[eid][nid]
@@ -1113,7 +1113,7 @@ class SolidStrainObject(strainObject):
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
-        for eid,exxNodes in sorted(self.exx.iteritems()):
+        for eid,exxNodes in sorted(self.exx.items()):
             eType = self.eType[eid]
             for nid in sorted(exxNodes):
                 exx = self.exx[eid][nid]
@@ -1146,9 +1146,9 @@ class SolidStrainObject(strainObject):
             msg2 += '%10s ' %(header)
         msg2 += '\n'
         msg.append(msg2)
-        for dt,exxs in sorted(self.exx.iteritems()):
+        for dt,exxs in sorted(self.exx.items()):
             msg.append('%s = %g\n' %(self.dataCode['name'],dt))
-            for eid,exxNodes in sorted(exxs.iteritems()):
+            for eid,exxNodes in sorted(exxs.items()):
                 eType = self.eType[eid]
                 msg2 = ''
                 for nid in sorted(exxNodes):

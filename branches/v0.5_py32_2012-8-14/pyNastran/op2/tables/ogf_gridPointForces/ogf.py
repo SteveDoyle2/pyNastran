@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 #import sys
 from struct import unpack
 
@@ -65,7 +65,7 @@ class OGF(object):
         #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
         data = self.getData(4)
-        bufferSize, = unpack(b'i',data)
+        bufferSize, = unpack('i',data)
         data = self.getData(4*50)
         #print self.printBlock(data)
         
@@ -168,7 +168,7 @@ class OGF(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'i8s6f'
-        format1 = bytes(format1)
+
 
         while len(self.data) >= 40:
             eData     = self.data[0:4*10]
@@ -186,7 +186,7 @@ class OGF(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'i8s12f'
-        format1 = bytes(format1)
+
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=64:
@@ -214,9 +214,9 @@ class OGF(object):
         #print self.printBlock(self.data)
         n = 0
         nEntries = len(self.data)//32
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = self.data[n:n+32]
-            out = unpack(b'2i6f', eData)
+            out = unpack('2i6f', eData)
             #nid = (out[0]-self.deviceCode)//10  ## @todo update...
             #print out
             n+=32

@@ -39,7 +39,7 @@ for in_file in [ 'test/mat_b_dn.op4' ,
                  'test/b_sample.op4',
                  ]:
     try:
-        op4fh = OP4(in_file, 'r')
+        op4fh = OP4(in_file, 'r',encoding='utf-8')
     except:
         print('Failed to get header of %s, ignoring.' % (in_file))
         continue

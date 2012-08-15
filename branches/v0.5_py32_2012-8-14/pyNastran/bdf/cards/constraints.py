@@ -23,9 +23,9 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=R0904,R0902
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-from itertools import izip, count
+
+
+from itertools import count
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expandThru
 
@@ -63,7 +63,7 @@ class constraintObject2(object):
     def crossReference(self, model):
         #return
         #addConstraints2 = {}
-        for key,addConstraint in sorted(self.addConstraints.iteritems()):
+        for key,addConstraint in sorted(self.addConstraints.items()):
             for i,spcID in enumerate(addConstraint.sets):
                 addConstraint.sets[i] = self._spc(spcID)
             ###
@@ -72,7 +72,7 @@ class constraintObject2(object):
         #self.addConstraints = addConstraints2
 
         constraints2 = {}
-        for key,constraints in sorted(self.constraints.iteritems()):
+        for key,constraints in sorted(self.constraints.items()):
             constraints2[key] = []
             for constraint in constraints:
                 constraints2[key].append( constraint.crossReference(model) )
@@ -93,7 +93,7 @@ class constraintObject2(object):
         constraints2 = {}
         referencedConstraints = {}
         # some of the ADDConstraint keys are MPCADDs/SPCADDs, some are not
-        for key,addConstraint in sorted(self.addConstraints.iteritems()):
+        for key,addConstraint in sorted(self.addConstraints.items()):
             constraints = []
             for i,spcID in enumerate(addConstraint.sets):
                 constraintIDs = addConstraint.getConstraintIDs()
@@ -117,12 +117,12 @@ class constraintObject2(object):
         ## reference MPCs
         
         constraints2 = {}
-        Keys = constraints.keys()
+        Keys = list(constraints.keys())
         nKeys = len(Keys)-1
-        for i in xrange(nKeys):
+        for i in range(nKeys):
             Key = Keys[i]
             constraints2[Key]
-            for j in xrange(nKeys):
+            for j in range(nKeys):
                 if i > j:                    
                     constraints2[Key].append(constraints[Key])
                 ###
@@ -137,11 +137,11 @@ class constraintObject2(object):
 
     def getConstraintIDs(self):
         IDs = []
-        for key,constraints in sorted(self.addConstraints.iteritems()):
+        for key,constraints in sorted(self.addConstraints.items()):
             conID = constraints.ConID()
             IDs.append(conID)
 
-        for key,constraints in sorted(self.constraints.iteritems()):
+        for key,constraints in sorted(self.constraints.items()):
             for constraint in constraints:
                 conID = constraint.ConID()
                 IDs.append(conID)
@@ -153,10 +153,10 @@ class constraintObject2(object):
     def __repr__(self):
         msg = ''
         # write the SPCADD/MPCADD cards
-        for key,addConstraint in sorted(self.addConstraints.iteritems()):
+        for key,addConstraint in sorted(self.addConstraints.items()):
             msg += str(addConstraint)
         
-        for key,constraints in sorted(self.constraints.iteritems()):
+        for key,constraints in sorted(self.constraints.items()):
             for constraint in constraints:
                 msg += str(constraint)
         return msg
@@ -182,7 +182,7 @@ class constraintObject(object):
     
     def getConstraintIDs(self):
         IDs = []
-        for key,constraints in sorted(self.constraints.iteritems()):
+        for key,constraints in sorted(self.constraints.items()):
             for constraint in constraints:
                 conID = constraint.ConID()
                 IDs.append(conID)
@@ -197,7 +197,7 @@ class constraintObject(object):
         #print "xref spcadds..."
         #print "spcadds = ",self.addConstraints
         if self.addConstraints:
-            for (key,addConstraint) in sorted(self.addConstraints.iteritems()):  # SPCADDs
+            for (key,addConstraint) in sorted(self.addConstraints.items()):  # SPCADDs
                 self.crossReference_AddConstraint(key,addConstraint)
             #print "spcadds2 = ",self.addConstraints
         else:
@@ -207,7 +207,7 @@ class constraintObject(object):
         # xrefs nodes...not done...
         #print "xref spc/spc1/spcd..."
         return
-        for key,constraints in sorted(self.constraints.iteritems()): # SPC, SPC1, SPCD
+        for key,constraints in sorted(self.constraints.items()): # SPC, SPC1, SPCD
             for constraint in constraints:
                 #constraint.crossR
                 pass
@@ -271,17 +271,17 @@ class constraintObject(object):
 
     def __repr__(self):
         msg = ''
-        for addID,spcadd in sorted(self.addConstraints.iteritems()):
+        for addID,spcadd in sorted(self.addConstraints.items()):
             msg += str(spcadd)  # this writes the SPC cards as well
         return msg
 
         msg = ''
         #print "repr %s" %(self.addConstraints)
         if self.addConstraints:
-            for addID,spcadd in sorted(self.addConstraints.iteritems()):
+            for addID,spcadd in sorted(self.addConstraints.items()):
                 msg += str(spcadd) # this writes the SPC cards as well
         else:
-            for key,constraintSets in sorted(self.constraints.iteritems()):
+            for key,constraintSets in sorted(self.constraints.items()):
                 for constraint in constraintSets:
                     msg += str(constraint)
                 ###
@@ -316,14 +316,14 @@ class SUPORT1(Constraint):
         
         self.IDs = []
         self.Cs  = []
-        for i in xrange(0, len(fields), 2):
+        for i in range(0, len(fields), 2):
             self.IDs.append(fields[i  ])
             self.Cs.append( fields[i+1])
         ###
 
     def rawFields(self):
         fields = ['SUPORT1', self.conid]
-        for ID,c in izip(self.IDs, self.Cs):
+        for ID,c in zip(self.IDs, self.Cs):
             fields += [ID,c]
         return fields
 
@@ -342,14 +342,14 @@ class SUPORT(Constraint):
         
         self.IDs = []
         self.Cs  = []
-        for i in xrange(0,len(fields),2):
+        for i in range(0,len(fields),2):
             self.IDs.append(fields[i  ])
             self.Cs.append( fields[i+1])
         ###
 
     def rawFields(self):
         fields = ['SUPORT']
-        for ID,c in izip(self.IDs,self.Cs):
+        for ID,c in zip(self.IDs,self.Cs):
             fields += [ID,c]
         return fields
 
@@ -371,7 +371,7 @@ class MPC(Constraint):
         nFields = len(fields)-1
         #print "fields = ",fields
         #print "nFields = ",nFields
-        for iField in xrange(2,nFields, 8):
+        for iField in range(2,nFields, 8):
             pack1 = [card.field(iField), card.field(iField+1, 0), card.field(iField+2, 0.)]
             #print "pack1 = ",pack1
             self.gids.append(       pack1[0])
@@ -398,7 +398,7 @@ class MPC(Constraint):
 
     def rawFields(self): # MPC
         fields = ['MPC', self.conid]
-        for (i, gid, constraint, enforced) in izip(count(), self.gids, self.constraints, self.enforced):
+        for (i, gid, constraint, enforced) in zip(count(), self.gids, self.constraints, self.enforced):
             #print [gid,constraint,enforced]
             fields += [gid, constraint, enforced]
             if i%2==1 and i>0:
@@ -457,7 +457,7 @@ class SPC(Constraint):
 
     def rawFields(self):
         fields = ['SPC', self.conid]
-        for (gid, constraint, enforced) in izip(self.gids, self.constraints, self.enforced):
+        for (gid, constraint, enforced) in zip(self.gids, self.constraints, self.enforced):
             fields += [gid, constraint, enforced]
         return fields
 
@@ -476,7 +476,7 @@ class SPCD(SPC):
 
     def rawFields(self):
         fields = ['SPCD', self.conid]
-        for (gid, constraint, enforced) in izip(self.gids, self.constraints, self.enforced):
+        for (gid, constraint, enforced) in zip(self.gids, self.constraints, self.enforced):
             fields += [gid, constraint, enforced]
         return fields
 
@@ -577,7 +577,7 @@ class ConstraintADD(Constraint):
             else:
                 #print 'dict'
                 #outSPCs += str(spcsets.conid)
-                for (key, spcset) in sorted(spcsets.iteritems()):
+                for (key, spcset) in sorted(spcsets.items()):
                     fieldSets.append(spcsets.conid)
                 ###
             ###

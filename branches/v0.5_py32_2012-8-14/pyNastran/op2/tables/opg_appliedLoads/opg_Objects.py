@@ -105,8 +105,8 @@ class AppliedLoadsObject(scalarObject): # approachCode=1, sortCode=0
         msg += '\n'
 
         msg += '-'*100+'\n'
-        for nodeID,forces in sorted(self.forces.iteritems()):
-            for i in xrange(len(forces)):
+        for nodeID,forces in sorted(self.forces.items()):
+            for i in range(len(forces)):
                 force  = forces[i]
                 moment = self.moments[nodeID][i]
                 source = self.sources[nodeID][i]

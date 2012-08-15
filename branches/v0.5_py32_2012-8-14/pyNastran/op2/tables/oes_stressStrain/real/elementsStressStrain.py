@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 #pylint: disable=C0103
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 from struct import unpack
 
 #91  -> PENTANL
@@ -48,7 +48,7 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '2i5f' # 1+2+5=8
-        format1 = bytes(format1)
+
         while len(self.data) >= 32: # 4*8
             #print self.printSection(40)
             eData     = self.data[0:32]
@@ -77,10 +77,10 @@ class RealElementsStressStrain(object):
         (nTotal,dataFormat) = self.obj.getLength()
         dataFormat = format1+dataFormat
         #print "nTotal=%s dataFormat=%s len(data)=%s" % (nTotal,dataFormat,len(self.data))
-        dataFormat = bytes(dataFormat)
+
         n = 0
         nEntries = len(self.data)//nTotal
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = self.data[n:n+nTotal]
             out = unpack(dataFormat, eData)
             #print "out = ",out
@@ -98,8 +98,8 @@ class RealElementsStressStrain(object):
         (n1,format1) = self.obj.getLength1()
         (n2,format2) = self.obj.getLength2()
         format1 = formatStart+format1
-        format1 = bytes(format1)
-        format2 = bytes(format2)
+
+
         while len(self.data) >= nTotal:
             eData     = self.data[0:n1]
             self.data = self.data[n1: ]
@@ -110,7 +110,7 @@ class RealElementsStressStrain(object):
             eid2 = extract(out[0], dt)
             self.obj.addNewEid(dt, eid2,out[1:])
             
-            for iNode in xrange(nNodes):
+            for iNode in range(nNodes):
                 eData     = self.data[0:n2]
                 self.data = self.data[n2: ]
                 out = unpack(format2, eData)
@@ -128,7 +128,7 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '16f'
-        format1 = bytes(format1)
+
         
         nNodes = 0 # centroid + 4 corner points
         #self.printSection(20)
@@ -158,10 +158,10 @@ class RealElementsStressStrain(object):
             self.obj.addNewEid('CQUAD4',dt, eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,maxShear1)
             self.obj.add(               dt, eid,'C',fd2,sx2,sy2,txy2,angle2,major2,minor2,maxShear2)
             
-            for nodeID in xrange(nNodes):   #nodes pts
+            for nodeID in range(nNodes):   #nodes pts
                 eData     = self.data[0:68] # 4*17
                 self.data = self.data[68: ]
-                out = unpack(b'i16f', eData[0:68])
+                out = unpack('i16f', eData[0:68])
                 (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
                       fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
 
@@ -188,7 +188,7 @@ class RealElementsStressStrain(object):
 
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '15f'
-        format1 = bytes(format1)
+
 
         while len(self.data) >= 64:
             #self.printBlock(self.data)
@@ -217,7 +217,7 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += "i4si"
-        format1 = bytes(format1)
+
         
         #nNodes = 5 # 1 centroid + 4 corner points
         #self.printSection(20)
@@ -248,7 +248,7 @@ class RealElementsStressStrain(object):
                 raise NotImplementedError('not supported....EType=%s eType=%s nNodes=%s numWide=%s' % (ElementType,self.elementType,nNodes,self.numWide))
 
             #print "len(data) = ",len(self.data)
-            for nodeID in xrange(nNodesExpected):   #nodes pts, +1 for centroid (???)
+            for nodeID in range(nNodesExpected):   #nodes pts, +1 for centroid (???)
                 #print "len(data)A = ",len(self.data)
                 eData     = self.data[0:4*21]  # for the stresses
                 self.data = self.data[4*21: ]
@@ -258,7 +258,7 @@ class RealElementsStressStrain(object):
                 #print "self.tableCode = ",self.tableCode
                 #print "len(data) = ",len(self.data)
                 
-                gridDevice, = unpack(b'i', eData[0:4])
+                gridDevice, = unpack('i', eData[0:4])
                 #print "gridDevice = ",gridDevice
                 if gridDevice == 0:
                     grid = 'C'
@@ -267,7 +267,7 @@ class RealElementsStressStrain(object):
                     grid = gridDevice
                 ###
 
-                out = unpack(b'20f', eData[4:4*21])
+                out = unpack('20f', eData[4:4*21])
                 (sxx, sxy, s1, a1, a2, a3, pressure, svm,
                  syy, syz, s2, b1, b2, b3,
                  szz, sxz, s3, c1, c2, c3) = out
@@ -313,7 +313,7 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '16f'
-        format1 = bytes(format1)
+
         
         while len(self.data) >= 68:  # 4*17
             eData     = self.data[0:68]
@@ -345,7 +345,7 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += "4s"
-        format1 = bytes(format1)
+
         
         nNodes = 4  # this is a minimum, it will be reset later
         nNodesExpected = 1
@@ -375,7 +375,7 @@ class RealElementsStressStrain(object):
             #    raise Exception('not supported....nNodes=%s' % (nNodes))
 
             #print "len(data) = ",len(self.data)
-            for nodeID in xrange(nNodesExpected):   #nodes pts, +1 for centroid (???)
+            for nodeID in range(nNodesExpected):   #nodes pts, +1 for centroid (???)
                 #print "len(data)A = ",len(self.data)
                 eData     = self.data[0:64]  # 4*16; for the stresses
                 self.data = self.data[64: ]
@@ -389,7 +389,7 @@ class RealElementsStressStrain(object):
                 #gridDevice, = unpack(b'i', eData[0:4])
                 #print "gridDevice = ",gridDevice
 
-                out = unpack(b'i15f', eData[:64])  # 18-3 = 15
+                out = unpack('i15f', eData[:64])  # 18-3 = 15
 
                 (gridGauss,  sxx, syy, szz, sxy, syz, sxz, se,
                    eps, ecs, exx, eyy, ezz, exy, eyz, exz) = out
@@ -465,7 +465,7 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += 'i7f'
-        format1 = bytes(format1)
+
         while len(self.data) >= 132: # (1+8*4)*4 = 33*4 = 132
             eData     = self.data[0:36]  # 4*9
             self.data = self.data[36: ]
@@ -475,10 +475,10 @@ class RealElementsStressStrain(object):
             #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
             self.obj.addNewEid(dt, eid,loc,rs,azs,As,ss,maxp,tmax,octs)
 
-            for i in xrange(3):
+            for i in range(3):
                 eData     = self.data[0:32] # 4*8
                 self.data = self.data[32: ]
-                out = unpack(b'i7f', eData)
+                out = unpack('i7f', eData)
                 (loc, rs, azs, As, ss, maxp, tmax, octs) = out
                 #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
                 self.obj.add(dt, eid,loc,rs,azs,As,ss,maxp,tmax,octs)
@@ -488,7 +488,7 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '6f'  # 1+6=7
-        format1 = bytes(format1)
+
         
         while len(self.data) >= 28:  # len(format1)*4 = 7*4 = 28
             eData     = self.data[0:28]
@@ -510,7 +510,7 @@ class RealElementsStressStrain(object):
         
         nStep = 52  #4*13
         format1 += '12f'  # 1+12=13
-        format1 = bytes(format1)
+
         assert 13 == self.numWide, 'numWide=%s not 13' % (self.numWide)
 
         while len(self.data)>=nStep:
@@ -536,7 +536,7 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '4s'
-        format1 = bytes(format1)
+
         
         while len(self.data) >= 456: # 2+16*7 = 114 -> 114*4 = 456
             eData = self.data[0:8]
@@ -547,11 +547,11 @@ class RealElementsStressStrain(object):
             #(eid,cType) = out
             cType = a+b+c+d
 
-            for i in xrange(7):
+            for i in range(7):
                 #print "len(self.data) = ",len(self.data)
                 eData = self.data[0:64]
                 self.data = self.data[64:]
-                out = unpack(b'i15f', eData)
+                out = unpack('i15f', eData)
                 assert len(out) == 16
                 (grid, sx, sy, sz, sxy, syz, sxz, se,
                  eps, ecs, ex, ey, ez, exy, eyz, exz) = out
@@ -576,7 +576,7 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '4s'
-        format1 = bytes(format1)
+
         
         while len(self.data) >= 584: # 2+16*9 = 146 -> 146*4 = 584
             eData = self.data[0:8]
@@ -586,11 +586,11 @@ class RealElementsStressStrain(object):
             #out = unpack('2i',eData)
             #(eid,cType) = out
 
-            for i in xrange(9):
+            for i in range(9):
                 #print "len(self.data) = ",len(self.data)
                 eData = self.data[0:64]
                 self.data = self.data[64:]
-                out = unpack(b'i15f', eData)
+                out = unpack('i15f', eData)
                 assert len(out) == 16
                 (grid,sx,sy,sz,sxy,syz,sxz,se,eps,ecs,ex,ey,ez,exy,eyz,exz) = out
                 #print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" % (eid,cType,sx,sy,sz,sxy,syz,sxz,se)
@@ -614,16 +614,16 @@ class RealElementsStressStrain(object):
 
         n1 = 24
         format1 = '4s5f'
-        format1 = bytes(format1)
+
         #print "len(data) = ",len(self.data)
         while len(self.data) >= nTotal:
             eData     = self.data[0:8]
             self.data = self.data[8: ]
-            (eid,gridA) = unpack(b'2i', eData)
+            (eid,gridA) = unpack('2i', eData)
             #print "eid=%s gridA=%s" % (eid,gridA)
 
-            for i in xrange(1):
-                for j in xrange(4): # c,d,e,f @ A;    c,d,e,f @ B
+            for i in range(1):
+                for j in range(4): # c,d,e,f @ A;    c,d,e,f @ B
                     eData     = self.data[0:n1]
                     self.data = self.data[n1: ]
                     out = unpack(format1, eData)
@@ -648,7 +648,7 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += 'i9f'
-        format1 = bytes(format1)
+
         
         while len(self.data) >= 44: # 2+17*5 = 87 -> 87*4 = 348
             eData     = self.data[0:44] # 4*11
@@ -680,7 +680,7 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '4si6f' # 1 + 4+1+6 = 12
-        format1 = bytes(format1)
+
         while len(self.data) >= 148:
             #if x==2:
             #    sys.exit('end of hyperQuad')
@@ -692,10 +692,10 @@ class RealElementsStressStrain(object):
             eid = extract(eid, dt)
             self.obj.addNewEid(dt,[eid,Type,sx,sy,sxy,angle,smj,smi])
             #print "eid=%s Type=%s\n***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" % (eid,Type,ID,sx,sy,sxy,angle,smj,smi)
-            for i in xrange(3):
+            for i in range(3):
                 eData     = self.data[0:28] # 4*7
                 self.data = self.data[28: ]
-                out = unpack(b'i6f', eData)
+                out = unpack('i6f', eData)
                 #(ID,sx,sy,sxy,angle,smj,smi) = out
                 self.obj.add(dt, eid, out)
                 #print "***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" % (ID,sx,sy,sxy,angle,smj,smi)
@@ -720,10 +720,10 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '16f' # 1+16 = 17
-        format1 = bytes(format1)
+
 
         while len(self.data) >= nTotal:
-            (eid,_) = unpack(b'i4s', self.data[0:8])
+            (eid,_) = unpack('i4s', self.data[0:8])
             self.data = self.data[8:]  # 2
             eid = extract(eid, dt)
             eData     = self.data[0:68] # 4*17
@@ -735,10 +735,10 @@ class RealElementsStressStrain(object):
             self.obj.addNewEid(eType,eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
             self.obj.add(            eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
 
-            for nodeID in xrange(nNodes):   #nodes pts
+            for nodeID in range(nNodes):   #nodes pts
                 eData     = self.data[0:68]
                 self.data = self.data[68: ]
-                out = unpack(b'i16f', eData)
+                out = unpack('i16f', eData)
                 (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
                       fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
 
@@ -791,10 +791,10 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '16f'
-        format1 = bytes(format1)
+
 
         while len(self.data) >= nTotal:
-            (eid,_) = unpack(b'i4s',self.data[0:8])
+            (eid,_) = unpack('i4s',self.data[0:8])
             self.data = self.data[8:]  # 2
             eid = extract(eid, dt)
             eData     = self.data[0:68]
@@ -806,10 +806,10 @@ class RealElementsStressStrain(object):
             self.obj.addNewEid(eType,dt, eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
             self.obj.add(            dt, eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
 
-            for nodeID in xrange(nNodes):   #nodes pts
+            for nodeID in range(nNodes):   #nodes pts
                 eData     = self.data[0:68]
                 self.data = self.data[68: ]
-                out = unpack(b'i16f', eData)
+                out = unpack('i16f', eData)
                 (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
                       fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
 

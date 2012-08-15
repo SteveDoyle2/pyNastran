@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 #import sys
 from struct import unpack
 
@@ -36,7 +36,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += '4f'
-        format1 = bytes(format1)
+
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=20: # 5*4
@@ -72,15 +72,15 @@ class ComplexForces(object):
         #print self.codeInformation()
         #nTotal = 16*11+1
         formatAll = 'i15f'
-        format1 = bytes(format1)
-        formatAll = bytes(formatAll)
+
+
         while len(self.data)>=708: # (16*11+1)*4 = 177*4
             eData     = self.data[0:4]
             self.data = self.data[4: ]
             eidTemp, = unpack(format1, eData)
             eid2  = extract(eidTemp,dt)
 
-            for i in xrange(11):
+            for i in range(11):
                 eData     = self.data[0:64]
                 self.data = self.data[64: ]
                 #print "len(data) = ",len(eData)
@@ -130,7 +130,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += '32f'
-        format1 = bytes(format1)
+
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=132: # 33*4
@@ -176,7 +176,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ff'
-        format1 = bytes(format1)
+
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=12: # 3*4
@@ -206,7 +206,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += '4f'
-        format1 = bytes(format1)
+
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=20: # 5*4
@@ -238,7 +238,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += '16f'
-        format1 = bytes(format1)
+
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data) >= 68: # 17*4
@@ -283,7 +283,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += '16f'
-        format1 = bytes(format1)
+
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=68: # 17*4
@@ -339,8 +339,8 @@ class ComplexForces(object):
         ###
             
         allFormat = '17f'
-        format1 = bytes(format1)
-        allFormat = bytes(allFormat)
+
+
         nTotal = 8+nNodes*68
         while len(self.data)>=nTotal:
             eData     = self.data[0:76]
@@ -379,7 +379,7 @@ class ComplexForces(object):
             #print "%s" %(self.ElementType(self.elementType)),dataIn
             self.obj.addNewElement(eid2,dt,dataIn)
 
-            for i in xrange(nNodes-1):  ## @todo fix crash...
+            for i in range(nNodes-1):  ## @todo fix crash...
                 eData     = self.data[0:68]
                 self.data = self.data[68: ]
                 out = unpack(allFormat, eData)
@@ -417,7 +417,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'i25f'
-        format1 = bytes(format1)
+
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=108: # 27*4
@@ -461,7 +461,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += '8s13f'
-        format1 = bytes(format1)
+
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=64: # 16*4
@@ -497,7 +497,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += '12f'
-        format1 = bytes(format1)
+
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=52: # 13*4
@@ -532,7 +532,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += '2i4s'
-        format1 = bytes(format1)
+
         isMagnitudePhase = self.isMagnitudePhase()
 
         if self.elementType in [191]:
@@ -541,7 +541,7 @@ class ComplexForces(object):
             raise NotImplementedError(self.codeInformation())
 
         formatAll = 'i13f'
-        formatAll = bytes(formatAll)
+
         n = 16+56*nNodes
         while len(self.data)>=n:
             eData     = self.data[0:16] # 8*4
@@ -555,7 +555,7 @@ class ComplexForces(object):
             dataIn = [eid2,parent,coord,icord]
 
             forces = []
-            for i in xrange(nNodes):
+            for i in range(nNodes):
                 eData     = self.data[0:56] # 14*4
                 self.data = self.data[56: ]
                 #print "i=%s len(data)=%s" %(i,len(eData))
@@ -598,7 +598,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ii4sii'
-        format1 = bytes(format1)
+
         isMagnitudePhase = self.isMagnitudePhase()
 
         if self.elementType in [189]: # VUQUAD
@@ -609,8 +609,8 @@ class ComplexForces(object):
             raise NotImplementedError(self.codeInformation())
 
         formatAll = 'i3f3i5fi3f3i5fi'
-        format1 = bytes(format1)
-        formatAll = bytes(formatAll)
+
+
         n = 24+100*nNodes
         while len(self.data)>=n:
             eData     = self.data[0:24] # 6*4
@@ -624,7 +624,7 @@ class ComplexForces(object):
             dataIn = [eid2,parent,coord,icord,theta]
 
             forces = []
-            for i in xrange(nNodes):
+            for i in range(nNodes):
                 eData     = self.data[0:100] # 13*4
                 self.data = self.data[100: ]
                 #print "i=%s len(data)=%s" %(i,len(eData))

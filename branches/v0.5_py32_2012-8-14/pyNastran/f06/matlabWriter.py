@@ -156,7 +156,7 @@ class MatlabWriter(object):
                Magnitude/Phase instead of Real/Imaginary (default=False; Real/Imag)
                Real objects don't use this parameter.
         """
-        f = open(mFileOutName,'wb')
+        f = open(mFileOutName,'w',encoding='utf-8')
 
         strLines = self.makeF06Header()
         lines = strLines.split('\n')
@@ -191,7 +191,7 @@ class MatlabWriter(object):
         f.write(subtitleMsg)
         f.write(iSubcaseMsg)
         
-        for iSubcase,result in sorted(self.eigenvalues.iteritems()): # goes first
+        for iSubcase,result in sorted(self.eigenvalues.items()): # goes first
             (subtitle,label) = self.iSubcaseNameMap[iSubcase]
             subtitle = subtitle.strip()
             header[0] = '     %s\n' %(subtitle)
@@ -201,7 +201,7 @@ class MatlabWriter(object):
             result.writeMatlab(nSubcase,f=f,isMagPhase=isMagPhase)
            #result.writeMatlab(f=f)
         
-        for iSubcase,result in sorted(self.eigenvectors.iteritems()): # has a special header
+        for iSubcase,result in sorted(self.eigenvectors.items()): # has a special header
             (subtitle,label) = self.iSubcaseNameMap[iSubcase]
             subtitle = subtitle.strip()
             header[0] = '     %s\n' %(subtitle)
@@ -243,7 +243,7 @@ class MatlabWriter(object):
                     ]
 
         if 1:
-            iSubcases = self.iSubcaseNameMap.keys()
+            iSubcases = list(self.iSubcaseNameMap.keys())
             for iSubcase in sorted(iSubcases):
                 (subtitle,label) = self.iSubcaseNameMap[iSubcase]
                 subtitle = subtitle.strip()
@@ -271,7 +271,7 @@ class MatlabWriter(object):
             ###
         if 0:
             for res in resTypes:
-                for iSubcase,result in sorted(res.iteritems()):
+                for iSubcase,result in sorted(res.items()):
                     (msg,pageNum) = result.writeMatlab(iSubcase,f=f,isMagPhase=False)
                     f.write(msg)
                     pageNum +=1

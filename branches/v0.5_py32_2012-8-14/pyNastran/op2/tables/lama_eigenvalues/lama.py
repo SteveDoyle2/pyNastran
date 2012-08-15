@@ -132,7 +132,7 @@ class LAMA(object):
 
         lama = RealEigenvalues(self.iSubcase)
         self.eigenvalues[self.iSubcase] = lama
-        for i in xrange(nModes):
+        for i in range(nModes):
             data = self.getData(28) # 4*7
             out = unpack('iifffff',data)
             #(iMode,order,eigen,omega,freq,mass,stiff) = out

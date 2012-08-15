@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,R0902,R0904,R0914
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 import copy
 
@@ -60,7 +60,7 @@ class BDFCard(object):
         """
         cardB = []
         for field in card:
-            if isinstance(field, unicode) and field.strip() == '':
+            if isinstance(field, str) and field.strip() == '':
                 field = None
             cardB.append(field)
 
@@ -113,7 +113,7 @@ class BDFCard(object):
         out = []
         
         d = 0
-        for n in xrange(i, j):
+        for n in range(i, j):
             if debug:
                 print("  default = %s" %(defaults[d]))
             value = self.field(n, defaults[d])
@@ -186,7 +186,7 @@ class BDFCard(object):
         
         cardBuilt = [fieldsOld[0]]
         
-        for i in xrange(1, minLength):
+        for i in range(1, minLength):
             fieldOld = fieldsOld[i]
             fieldNew = fieldsNew[i]
 
@@ -226,11 +226,11 @@ class BDFCard(object):
         
         if maxLength < len(cardBuilt):
             # the new card is longer than builtCard
-            for i in xrange(self.nfields, maxLength):
+            for i in range(self.nfields, maxLength):
                 cardBuilt.append(self.card[i])
         elif len(cardBuilt) < self.oldCard.nfields:
             # builtCard is shorter than the old card
-            for i in xrange(self.nfields, maxLength):
+            for i in range(self.nfields, maxLength):
                 cardBuilt.append(self.oldCard.field(i))
         #else: # same length
             #pass
@@ -261,7 +261,7 @@ def wipeEmptyFields(card):
     """
     cardB = []
     for field in card:
-        if isinstance(field, unicode) and field.strip() == '':
+        if isinstance(field, str) and field.strip() == '':
             field = None
         cardB.append(field)
 

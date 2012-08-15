@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=R0904,R0902,E1101,E1103
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 #import sys
 
 from numpy import matrix, zeros, ones, array, transpose, dot
@@ -648,7 +648,7 @@ class CBAR(LineElement):
             self.w3b = main[11]
         ###
         #print("offt = %s" %(self.offt))
-        if not isinstance(self.offt, unicode):
+        if not isinstance(self.offt, str):
             raise SyntaxError('invalid offt expected a string of length 3 '
                               'offt=|%s|' %(self.offt))
 
@@ -1098,7 +1098,7 @@ class CBEAM(CBAR):
             self.isOfft = True
             self.offt = 'GGG' # default
             self.bit = None
-        elif isinstance(field8, unicode):
+        elif isinstance(field8, str):
             self.isOfft = True
             self.bit = None
             self.offt = field8

@@ -93,7 +93,7 @@ class TableObject(scalarObject):  # displacement style table
         del self.rotations[dt]
 
     def getTransients(self):
-        k = self.translations.keys()
+        k = list(self.translations.keys())
         k.sort()
         return k
 
@@ -219,14 +219,14 @@ class TableObject(scalarObject):  # displacement style table
         if self.dt is not None:
             #return self.__reprTransient__()
 
-            for dt,translations in sorted(self.translations.iteritems()):
-                nodeIDs = translations.keys()
+            for dt,translations in sorted(self.translations.items()):
+                nodeIDs = list(translations.keys())
                 for nodeID in nodeIDs:
                     translations2[nodeID] = {}
                     rotations2[nodeID] = {}
 
-            for dt,translations in sorted(self.translations.iteritems()):
-                for nodeID,translation in sorted(translations.iteritems()):
+            for dt,translations in sorted(self.translations.items()):
+                for nodeID,translation in sorted(translations.items()):
                     rotation = self.rotations[dt][nodeID]
                     translations2[nodeID][dt] = translation
                     rotations2[nodeID][dt]    = rotation
@@ -254,7 +254,7 @@ class TableObject(scalarObject):  # displacement style table
         #    magPhase = 1
         #msg.append('fem.%s.isMagPhase = %s' %(name,magPhase))
 
-        nodes = self.translations.keys()
+        nodes = list(self.translations.keys())
         
         nodes.sort()
         #nNodes = len(nodes)
@@ -267,7 +267,7 @@ class TableObject(scalarObject):  # displacement style table
         spaceT = ' '*len(msgT)
         spaceR = ' '*len(msgR)
         i=0
-        for nodeID,translation in sorted(self.translations.iteritems()):
+        for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
             msgG += '%s' %(gridType)
@@ -299,8 +299,8 @@ class TableObject(scalarObject):  # displacement style table
         #print("transient!!!!")
         #msg = []
 
-        times = self.translations.keys()
-        nodes = self.translations[times[0]].keys()
+        times = list(self.translations.keys())
+        nodes = list(self.translations[times[0]].keys())
         times.sort()
         nodes.sort()
         #nNodes = len(nodes)
@@ -322,7 +322,7 @@ class TableObject(scalarObject):  # displacement style table
         msgR = 'fem.%s(%i).rotations.%s    = cell(1,%i);\n' %(name,iSubcase,dtName,nDt)
         #msgT = 'fem.%s(%i).translations.%s = zeros(%i,3);\n' %(name,iSubcase,dtName,n+1,nNodes)
         #msgR = 'fem.%s(%i).rotations.%s    = zeros(%i,3);\n' %(name,iSubcase,dtName,n+1,nNodes)
-        for n,(dt,translations) in enumerate(sorted(self.translations.iteritems())):
+        for n,(dt,translations) in enumerate(sorted(self.translations.items())):
             #msgT = 'fem.%s(%i).translations.%s(%i) = zeros(%i,3);\n' %(name,iSubcase,dtName,n+1,nNodes)
             #msgR = 'fem.%s(%i).rotations.%s(%i)    = zeros(%i,3);\n' %(name,iSubcase,dtName,n+1,nNodes)
 
@@ -330,7 +330,7 @@ class TableObject(scalarObject):  # displacement style table
             msgR += 'fem.%s(%i).rotations.%s(%i)    = [' %(name,iSubcase,dtName,n+1)
 
             i=0
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 #gridType = self.gridTypes[nodeID]
 
@@ -357,7 +357,7 @@ class TableObject(scalarObject):  # displacement style table
     def _writeF06Block(self,words,header,pageStamp,pageNum=1,f=None):
         msg = words
         #assert f is not None # remove
-        for nodeID,translation in sorted(self.translations.iteritems()):
+        for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
@@ -379,13 +379,13 @@ class TableObject(scalarObject):  # displacement style table
     def _writeF06TransientBlock(self,words,header,pageStamp,pageNum=1,f=None):
         msg = []
         #assert f is not None # remove
-        for dt,translations in sorted(self.translations.iteritems()):
+        for dt,translations in sorted(self.translations.items()):
             if isinstance(dt,float): # fix
                 header[1] = ' %s = %10.4E float %s\n' %(self.dataCode['name'],dt,self.analysisCode)
             else:
                 header[1] = ' %s = %10i integer %s\n' %(self.dataCode['name'],dt,self.analysisCode)
             msg += header+words
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
 
@@ -499,14 +499,14 @@ class TableObject(scalarObject):  # displacement style table
         Labels = []
         #print "nodeList = ",nodeList
         node0 = nodeList[0]
-        Xs = sorted(results[node0].keys())
+        Xs = sorted(list(results[node0].keys()))
 
         (fig,ax) = plt.subplots(1)
         #leg = plt.legend(loc='best', fancybox=True,alpha=0.5)
         for nodeID in nodeList: # translation/rotation
             result = results[nodeID]
             Ys = []
-            for dt,res in sorted(result.iteritems()):
+            for dt,res in sorted(result.items()):
                 if coord==3:
                     val = sqrt(res.dot(res))
                 else:
@@ -595,7 +595,7 @@ class ComplexTableObject(scalarObject):
         del self.rotations[dt]
 
     def getTransients(self):
-        k = self.translations.keys()
+        k = list(self.translations.keys())
         k.sort()
         return k
 
@@ -662,8 +662,8 @@ class ComplexTableObject(scalarObject):
         name = displacements
         """
         #msg = []
-        times = self.translations.keys()
-        nodes = self.translations[times[0]].keys()
+        times = list(self.translations.keys())
+        nodes = list(self.translations[times[0]].keys())
         times.sort()
         nodes.sort()
         #nNodes = len(nodes)
@@ -679,7 +679,7 @@ class ComplexTableObject(scalarObject):
         f.write(msgG)
         del msgG
 
-        for n,(dt,translations) in enumerate(sorted(self.translations.iteritems())):
+        for n,(dt,translations) in enumerate(sorted(self.translations.items())):
             #msgT = 'fem.%s(%i).translations.%s(%i) = zeros(%i,3);\n' %(name,iSubcase,dtName,n+1,nNodes)
             #msgR = 'fem.%s(%i).rotations.%s(%i)    = zeros(%i,3);\n' %(name,iSubcase,dtName,n+1,nNodes)
 
@@ -687,7 +687,7 @@ class ComplexTableObject(scalarObject):
             msgR = 'fem.%s(%i).rotations.%s(%i)    = [' %(name,iSubcase,dtName,n+1)
 
             i=0
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 (dx,dy,dz) = translation
                 (rx,ry,rz) = rotation
@@ -718,7 +718,7 @@ class ComplexTableObject(scalarObject):
         words += [' \n','      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
 
         msg = words
-        for nodeID,translation in sorted(self.translations.iteritems()):
+        for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
@@ -748,12 +748,12 @@ class ComplexTableObject(scalarObject):
 
         msg = []
         #assert f is not None
-        for dt,translations in sorted(self.translations.iteritems()):
+        for dt,translations in sorted(self.translations.items()):
             #print "dt = ",dt
             #sys.stdout.flush()
             header[2] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
 
@@ -803,14 +803,14 @@ class ComplexTableObject(scalarObject):
         i = 0
         Labels = []
         node0 = nodeList[0]
-        Xs = sorted(results[node0].keys())
+        Xs = sorted(list(results[node0].keys()))
 
         (fig,ax) = plt.subplots(1)
         leg = plt.legend(loc='best', fancybox=True,alpha=0.5)
         for nodeID in nodeList: # translation/rotation
             result = results[nodeID]
             Ys = []
-            for dt,res in sorted(result.iteritems()):
+            for dt,res in sorted(result.items()):
                 if coord==3:
                     val = sqrt(res.dot(res))
                 else:
@@ -870,7 +870,7 @@ def getPlotData(obj,nodeList,resultType,coord,markers,Title,hasLegend,Legend,xLa
     else:
         results = rotations
 
-    nodeListAll = results.keys()
+    nodeListAll = list(results.keys())
     if nodeList is None:
         nodeList = nodeListAll
 

@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=E1101,C0103
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 #import copy
 
@@ -45,7 +45,7 @@ class GetMethods(object):
         
     def getNodes(self):
         nodes = []
-        for (nid, node) in sorted(self.nodes.iteritems()):
+        for (nid, node) in sorted(self.nodes.items()):
             nodes.append(node)
         return nodes
 
@@ -124,7 +124,7 @@ class GetMethods(object):
                 nidToElementsMap[nid] = []
             ###
         ###
-        for (eid, element) in self.elements.iteritems(): # load the mapper
+        for (eid, element) in self.elements.items(): # load the mapper
             try:
                 # not supported for 0-D and 1-D elements
                 nids = element.nodeIDs()

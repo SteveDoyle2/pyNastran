@@ -23,9 +23,9 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,R0902,R0904,R0914
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-from itertools import izip
+
+
+
 
 from numpy import array, cross, allclose
 from numpy.linalg import norm
@@ -177,7 +177,7 @@ class LOAD(LoadCombination):
         scaleFactors = []
         loads  = []
         scale = self.scale
-        for (loadsPack, scaleFactorI) in izip(self.loadIDs, self.scaleFactors):
+        for (loadsPack, scaleFactorI) in zip(self.loadIDs, self.scaleFactors):
             scale2 = scaleFactorI*scale
             for load in loadsPack:
                 if (isinstance(load, Force)  or isinstance(load, Moment) or 
@@ -212,7 +212,7 @@ class LOAD(LoadCombination):
         typesFound = set()
         (scaleFactors, loads) = self.getReducedLoads()
 
-        for (scaleFactor, load) in izip(scaleFactors, loads):
+        for (scaleFactor, load) in zip(scaleFactors, loads):
             #print("*load = ",load)
             out = load.transformLoad()
             typesFound.add(load.__class__.__name__)
@@ -248,7 +248,7 @@ class LOAD(LoadCombination):
                 ###
             elif isinstance(load, PLOAD4):
                 (isLoad, nodes, vectors) = out
-                for (nid, vector) in izip(nodes, vectors):
+                for (nid, vector) in zip(nodes, vectors):
                     # not the same vector for all nodes
                     forceLoads[nid] = vector*scaleFactor
 
@@ -265,7 +265,7 @@ class LOAD(LoadCombination):
 
     def rawFields(self):
         fields = ['LOAD', self.sid, self.scale]
-        for (scaleFactor, loadID) in izip(self.scaleFactors, self.loadIDs):
+        for (scaleFactor, loadID) in zip(self.scaleFactors, self.loadIDs):
             fields += [scaleFactor, self.LoadID(loadID)]
         return fields
 
@@ -880,7 +880,7 @@ class PLOAD2(Load):
 
             if card.field(4)=='THRU':
                 #print "PLOAD2 %s %s" %(eids[0],eids[-1])
-                eids = [i for i in xrange(eids[0], eids[2]+1)]
+                eids = [i for i in range(eids[0], eids[2]+1)]
                 #print "found a THRU on PLOAD2"
                 #raise NotImplementedError('PLOAD2')
             ###
@@ -988,7 +988,7 @@ class PLOAD4(Load):
 
         vector = array(self.eid.Normal())
         vectors = []
-        for (nid, p) in izip(faceNodeIDs, self.pressures):
+        for (nid, p) in zip(faceNodeIDs, self.pressures):
             ## @warning only supports normal pressures
             vectors.append(vector*p*Area/n) # Force_i
             

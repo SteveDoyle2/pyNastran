@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import os
 from numpy import matrix
 
@@ -74,7 +74,7 @@ def deObscure(num):
     #vals = ['0','1']
     dictA = {}
     n = len(vals)
-    for i in xrange(n):
+    for i in range(n):
         dictA[vals[i]] = i
 
     print("n = ",n)
@@ -99,7 +99,7 @@ def obscure(num):
             #'0','1','2','3','4','5','6','7','8','9']  # 0,1,2,...
     dictA = {}
     n = len(vals)
-    for i in xrange(n):
+    for i in range(n):
         dictA[i] = vals[i]
 
     pack = []
@@ -126,14 +126,14 @@ def is_binary(filename):
     @attention: found @ http://bytes.com/topic/python/answers/21222-determine-file-type-binary-text on 6/08/2010
     @author: Trent Mick <TrentM@ActiveState.com>
     @author: Jorge Orpinel <jorge@orpinel.com>
-    @warning this may not work for unicode...
+    @warning this may not work for str...
     """
     fin = open(filename, 'rb')
     try:
         CHUNKSIZE = 1024
         while 1:
             chunk = fin.read(CHUNKSIZE)
-            if b'\0' in chunk: # found null byte
+            if '\0' in chunk: # found null byte
                 return True
             if len(chunk) < CHUNKSIZE:
                 break # done
@@ -156,9 +156,9 @@ def ListPrint(listA):
     msg = '['
     if isinstance(listA, matrix):
         (nrows, ncols) = listA.shape
-        for irow in xrange(nrows):
+        for irow in range(nrows):
             msg += '['
-            for icol in xrange(ncols):
+            for icol in range(ncols):
                 msg += '%-10g,' %(listA[irow, icol])
             msg = msg[:-1]
             msg += '],\n '
@@ -168,7 +168,7 @@ def ListPrint(listA):
     else:
         for a in listA:
             #print "a = ", a, type(a)
-            if isinstance(a, unicode):
+            if isinstance(a, str):
                 msg += ' %s,' % (str(a))
             elif a is None:
                 msg += ' None,'

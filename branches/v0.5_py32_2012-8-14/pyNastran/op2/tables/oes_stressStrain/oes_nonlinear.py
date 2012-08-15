@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 from math import isnan
 
@@ -81,7 +81,7 @@ class NonlinearQuadObject(stressObject):
         del self.ecs[dt]
 
     def getTransients(self):
-        k = self.oxx.keys()
+        k = list(self.oxx.keys())
         k.sort()
         return k
 
@@ -152,10 +152,10 @@ class NonlinearQuadObject(stressObject):
 #0 5.000E-05  -5.000000E-01  -4.484895E+01  -1.561594E+02                 -2.008336E-02   1.392609E+02   0.0            0.0
         msgE = {}
         msgT = {}
-        for (dt,Oxxs) in sorted(self.oxx.iteritems()):
+        for (dt,Oxxs) in sorted(self.oxx.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
 
-            for (eid,oxxs) in sorted(Oxxs.iteritems()):
+            for (eid,oxxs) in sorted(Oxxs.items()):
                 msgE[eid] = header+['      ELEMENT-ID = %8i\n' %(eid)]
                 if eid not in msgT:
                     msgT[eid] = []
@@ -184,7 +184,7 @@ class NonlinearQuadObject(stressObject):
             ###
         ###
         msg = []
-        for eid,e in sorted(msgE.iteritems()):
+        for eid,e in sorted(msgE.items()):
             msg += header+e+msgStart+msgT[eid]
             msg.append(pageStamp+str(pageNum)+'\n')
             pageNum+=1
@@ -233,7 +233,7 @@ class HyperelasticQuadObject(stressObject):
         del self.minorP[dt]
 
     def getTransients(self):
-        k = self.oxx.keys()
+        k = list(self.oxx.keys())
         k.sort()
         return k
 
@@ -273,10 +273,10 @@ class HyperelasticQuadObject(stressObject):
                #0       1     GAUS         1   7.318995E+00   6.367099E-01  -6.551054E+00   -31.4888    1.133173E+01   -3.376026E+00
                #                           2   1.097933E+01   4.149028E+00   6.278160E+00    30.7275    1.471111E+01    4.172537E-01
         
-        for dt,Oxxs in sorted(self.oxx.iteritems()):
+        for dt,Oxxs in sorted(self.oxx.items()):
             #header[-1] = '     LOAD STEP = %12.5E' %(dt)
             msg += header
-            for eid,oxxs in sorted(Oxxs.iteritems()):
+            for eid,oxxs in sorted(Oxxs.items()):
                 gauss = self.Type[eid]
                 oxx = self.oxx[dt][eid]
                 oyy = self.oyy[dt][eid]
@@ -285,7 +285,7 @@ class HyperelasticQuadObject(stressObject):
                 majorP = self.majorP[dt][eid]
                 minorP = self.minorP[dt][eid]
                 
-                for i in xrange(4): # 1,2,3,4
+                for i in range(4): # 1,2,3,4
                     if i == 0:
                         msg.append('0%8i %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' %(eid,gauss,i+1,oxx[i],oyy[i],txy[i],angle[i],majorP[i],minorP[i]))
                     else:
@@ -336,7 +336,7 @@ class NonlinearRodObject(stressObject):
         del self.linearTorsionalStress[dt]
 
     def getTransients(self):
-        k = self.axialStress.keys()
+        k = list(self.axialStress.keys())
         k.sort()
         return k
 
@@ -377,8 +377,8 @@ class NonlinearRodObject(stressObject):
                '                                         STRESS                             PLASTIC/NLELAST          STRAIN              STRESS\n']
         msgE = {}
         msgT = {}
-        for dt,axials in sorted(self.axialStress.iteritems()):
-            for eid,axial in sorted(axials.iteritems()):
+        for dt,axials in sorted(self.axialStress.items()):
+            for eid,axial in sorted(axials.items()):
                 eqs  = self.equivStress[dt][eid]
                 ts   = self.totalStrain[dt][eid]
                 epcs = self.effectivePlasticCreepStrain[dt][eid]
@@ -391,7 +391,7 @@ class NonlinearRodObject(stressObject):
                 msgT[eid].append('  %9.3E       %13.6E       %13.6E       %13.6E       %13.6E       %13.6E       %13.6E\n'%(dt,axial,eqs,ts,epcs,ecs,lts))
             ###
         ###
-        for eid,e in sorted(msgE.iteritems()):
+        for eid,e in sorted(msgE.items()):
             msg += header+[e]+msgStart+msgT[eid]
             msg.append(pageStamp+str(pageNum))
 

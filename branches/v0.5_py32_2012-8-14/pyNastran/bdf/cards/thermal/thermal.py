@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,R0902,R0904,R0914
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expandThruBy, collapseThruBy
@@ -129,7 +129,7 @@ class CHBDYE(ThermalElement):
         ## [1,2,3]
         
         # id-1 is for the 0 based python index
-        nodes = [enodes[id-1] for id in xrange(len(eid.nodes)) if id in sideIDs ]
+        nodes = [enodes[id-1] for id in range(len(eid.nodes)) if id in sideIDs ]
         return side
         
     def rawFields(self):

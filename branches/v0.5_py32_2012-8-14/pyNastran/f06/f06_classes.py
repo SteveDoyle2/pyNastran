@@ -36,7 +36,7 @@ class MaxDisplacement(object):
         msg = ['0                                                  MAXIMUM  DISPLACEMENTS',
                '  SUBCASE/',
                '  DAREA ID        T1             T2             T3             R1             R2             R3']
-        for sid,trans in sorted(self.translations.iteritems()):
+        for sid,trans in sorted(self.translations.items()):
             rot = self.rotations[sid]
             msg.append('0 %8i  %13.8E %13.8E %13.8E %13.8E %13.8E %13.8E' %(tuple([sid]+trans+rot)))
         msg.append(pageStamp+str(pageNum))

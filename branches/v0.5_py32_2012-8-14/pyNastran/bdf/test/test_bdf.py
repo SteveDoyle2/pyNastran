@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=W0612,C0103
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import os
 import sys
 import numpy
@@ -284,7 +284,7 @@ def compute(cards1, cards2):
 
 def get_element_stats(fem1, fem2):
     """verifies that the various element methods work"""
-    for (key, loads) in sorted(fem1.loads.iteritems()):
+    for (key, loads) in sorted(fem1.loads.items()):
         for load in loads:
             try:
                 allLoads = load.getLoads()
@@ -297,7 +297,7 @@ def get_element_stats(fem1, fem2):
                 raise
             
 
-    for (key, e) in sorted(fem1.elements.iteritems()):
+    for (key, e) in sorted(fem1.elements.items()):
         try:
             if isinstance(e, ShellElement):
                 a   = e.Area()
@@ -372,7 +372,7 @@ def get_element_stats(fem1, fem2):
     ###
 
 def get_matrix_stats(fem1, fem2):
-    for (key, dmig) in sorted(fem1.dmigs.iteritems()):
+    for (key, dmig) in sorted(fem1.dmigs.items()):
         try:
             if isinstance(dmig, NastranMatrix):
                 dmig.getMatrix()
@@ -400,7 +400,7 @@ def compare_params(fem1, fem2):
     compute(fem1.params, fem2.params)
 
 def print_points(fem1, fem2):
-    for (nid, n1) in sorted(fem1.nodes.iteritems()):
+    for (nid, n1) in sorted(fem1.nodes.items()):
         print("%s   xyz=%s  n1=%s  n2=%s" %(nid, n1.xyz, n1.Position(True),
                                             fem2.Node(nid).Position()))
         break

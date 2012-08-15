@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,C0302,R0902,R0904,R0914,W0201,W0611
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import os
 import sys
 import warnings
@@ -765,7 +765,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         dictOfVars = {'varName': 10}
         """
         self.dictOfVars = {}
-        for (key, value) in sorted(dictOfVars.iteritems()):
+        for (key, value) in sorted(dictOfVars.items()):
             assert len(key) <= 7, ('max length for key is 7; '
                                    'len(%s)=%s' %(key, len(key)))
             self.dictOfVars[key.upper()] = value
@@ -1027,7 +1027,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 #cardName = oldCardObj.field(0)
             ###
 
-            for iCard in xrange(nCards):
+            for iCard in range(nCards):
                 #print "----------------------------"
                 #if special:
                     #print "iCard = ",iCard

@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 
 from ..real.oes_objects import stressObject,strainObject #,array
@@ -65,7 +65,7 @@ class ComplexCelasStressObject(complexStressObject):
         del self.stress[dt]
 
     def getTransients(self):
-        k = self.stress.keys()
+        k = list(self.stress.keys())
         k.sort()
         return k
 
@@ -117,7 +117,7 @@ class ComplexCelasStressObject(complexStressObject):
 #                   1009       7.689395E+00 /  0.0                            1010       7.689395E+00 /  0.0
         msg = []
         isMagPhase = False
-        for dt,Stress in sorted(self.stress.iteritems()):
+        for dt,Stress in sorted(self.stress.items()):
             if isinstance(dt,float): # fix
                 header[1] = ' %s = %10.4E float %s\n' %(self.dataCode['name'],dt,self.analysisCode)
             else:
@@ -125,7 +125,7 @@ class ComplexCelasStressObject(complexStressObject):
             msg += header+words
 
             i = 0
-            for elementID,stress in sorted(Stress.iteritems()):
+            for elementID,stress in sorted(Stress.items()):
 
                 if isMagPhase:
                     stressr=abs(stressr); stressi=angle(stress,deg=True)
@@ -159,9 +159,9 @@ class ComplexCelasStressObject(complexStressObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,stress in sorted(self.stress.iteritems()):
+        for dt,stress in sorted(self.stress.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid,istress in sorted(stress.iteritems()):
+            for eid,istress in sorted(stress.items()):
                 msg += '%-6g %6s ' %(eid,self.eType[eid])
                 if abs(istress)<1e-6:
                     msg += '%10s ' %('0')
@@ -186,7 +186,7 @@ class ComplexCelasStressObject(complexStressObject):
             msg += '%10s ' %(header)
         msg += '\n'
         #print "self.code = ",self.code
-        for eid,istress in sorted(self.stress.iteritems()):
+        for eid,istress in sorted(self.stress.items()):
             #print "eid=",eid
             #print "eType",self.eType
             msg += '%-8i %6s ' %(eid,self.eType[eid])
@@ -225,7 +225,7 @@ class ComplexCelasStrainObject(complexStrainObject):
         del self.strain[dt]
 
     def getTransients(self):
-        k = self.strain.keys()
+        k = list(self.strain.keys())
         k.sort()
         return k
 
@@ -260,7 +260,7 @@ class ComplexCelasStrainObject(complexStrainObject):
             msg += '%8s ' %(header)
         msg += '\n'
 
-        for eid,strain in sorted(self.strain.iteritems()):
+        for eid,strain in sorted(self.strain.items()):
             #strain = self.strain[eid]
             msg += '%-8i %6s ' %(eid,self.eType[eid])
 

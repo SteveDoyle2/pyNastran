@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 from struct import unpack
 
@@ -34,7 +34,7 @@ from struct import unpack
 class DESTAB(object):
 
     def readDesvar(self,data):
-        out = unpack(b'ii4s4sfff',data[0:28])
+        out = unpack('ii4s4sfff',data[0:28])
         (idvid,dvid,label1,label2,vmin,vmax,delx) = out
         #print "ivid=%s dvid=%s label1=%s label2=%s vmax=%g vmin=%g delx=%g" %(idvid,dvid,label1,label2,vmin,vmax,delx)
         #self.readData(8)

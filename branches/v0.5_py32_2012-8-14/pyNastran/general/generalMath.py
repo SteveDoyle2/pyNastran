@@ -137,11 +137,11 @@ def printAnnotatedMatrix(A,rowNames=None,tol=1e-8):
     takes a list/dictionary and annotates the row number with that value
     indicies go from 0 to N
     """
-    if rowNames==None: rowNames=[i for i in xrange(A.shape[0])]
+    if rowNames==None: rowNames=[i for i in range(A.shape[0])]
     B = array(A)
     msg = ''
     (nr,nc) = B.shape
-    for i in xrange(nr):
+    for i in range(nr):
         rowName = str(rowNames[i])
         msg += '%-2s' %(rowName) +' '+ListPrint(B[i,:],tol)+'\n'
     return msg
@@ -150,7 +150,7 @@ def printMatrix(A,tol=1e-8):
     B = array(A)
     msg = ''
     (nr,nc) = B.shape
-    for i in xrange(nr):
+    for i in range(nr):
         msg += ListPrint(B[i,:],tol)+'\n'
     #for row in A:
     #    msg += ListPrint(row)+'\n'
@@ -208,7 +208,7 @@ def augmentedIdentity(A):
     #(ny,nx) = A.shape
     I = zeros([nx,ny],'d')
     
-    for i in xrange(nx):
+    for i in range(nx):
         if i==nx or i==ny:
             break
         I[i][i] = 1.

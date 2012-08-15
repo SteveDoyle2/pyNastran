@@ -30,7 +30,7 @@ from pyNastran.f06.test.test_f06 import runLotsOfFiles
 from pyNastran.general.general import getFilesOfType
 
 def parseSkippedCards(fname):
-    f = open(fname,'r')
+    f = open(fname,'r',encoding='utf-8')
     lines = f.readlines()
     f.close()
     
@@ -55,11 +55,11 @@ def parseSkippedCards(fname):
         ###
     
     filesToAnalyze = []
-    for (key,value) in sorted(results.iteritems()):
+    for (key,value) in sorted(results.items()):
         #print key,value
         filesToAnalyze.append(value)
     
-    f = open('newElements.in','wb')
+    f = open('newElements.in','w',encoding='utf-8')
     for fname in filesToAnalyze:
         f.write(fname+'\n')
     f.close()

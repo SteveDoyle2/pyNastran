@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 from struct import unpack
 
@@ -88,7 +88,7 @@ class ThermalElements(object):
             format1 = 'f8s5f' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
-        format1 = bytes(format1)
+
 
         while len(self.data)>=32: # 8*4
             eData     = self.data[0:32]
@@ -127,7 +127,7 @@ class ThermalElements(object):
             format1 = 'ffif' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
-        format1 = bytes(format1)
+
 
         while len(self.data)>=16: # 4*4
             eData     = self.data[0:16]
@@ -173,8 +173,8 @@ class ThermalElements(object):
             #eid = self.nonlinearFactor
         ###
         formatAll = 'iffffff'
-        format1 = bytes(format1)
-        formatAll = bytes(formatAll)
+
+
 
         n = 24+28*nNodes
         while len(self.data)>=n:
@@ -189,7 +189,7 @@ class ThermalElements(object):
             dataIn = [eid2,parent,coord,icord,theta]
 
             gradFluxes = []
-            for i in xrange(nNodes):
+            for i in range(nNodes):
                 eData     = self.data[0:28] # 7*4
                 self.data = self.data[28: ]
                 #print "i=%s len(data)=%s" %(i,len(eData))
@@ -231,8 +231,8 @@ class ThermalElements(object):
             #eid = self.nonlinearFactor
         ###
         formatAll = 'i6f'
-        format1 = bytes(format1)
-        formatAll = bytes(formatAll)
+
+
 
         n = 16+28*nNodes
         while len(self.data)>=n:
@@ -247,7 +247,7 @@ class ThermalElements(object):
             dataIn = [eid2,parent,coord,icord]
 
             gradFluxes = []
-            for i in xrange(nNodes):
+            for i in range(nNodes):
                 eData     = self.data[0:28] # 7*4
                 self.data = self.data[28: ]
                 #print "i=%s len(data)=%s" %(i,len(eData))
@@ -294,8 +294,8 @@ class ThermalElements(object):
             #eid = self.nonlinearFactor
         ###
         formatAll = 'i6f'
-        format1 = bytes(format1)
-        formatAll = bytes(formatAll)
+
+
 
         n = 8+28*nNodes
         while len(self.data)>=n:
@@ -310,7 +310,7 @@ class ThermalElements(object):
             dataIn = [eid2,parent]
 
             gradFluxes = []
-            for i in xrange(nNodes):
+            for i in range(nNodes):
                 eData     = self.data[0:7*4]
                 self.data = self.data[7*4: ]
                 #print "i=%s len(data)=%s" %(i,len(eData))
@@ -342,7 +342,7 @@ class ThermalElements(object):
             extract = self.extractSort2
             #eid = self.nonlinearFactor
         ###
-        format1 = bytes(format1)
+
 
         n = 36
         while len(self.data)>=n: # 10*4
@@ -399,7 +399,7 @@ class ThermalElements(object):
         else:
             raise NotImplementedError(self.codeInformation())
         ###
-        format1 = bytes(format1)
+
 
 
         while len(self.data)>=n: # 10*4

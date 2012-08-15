@@ -100,7 +100,7 @@ class EigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
         msg = []
         hasCycle = hasattr(self, 'modeCycle')
 
-        for i,(iMode,eigVals) in enumerate(sorted(self.translations.iteritems())):
+        for i,(iMode,eigVals) in enumerate(sorted(self.translations.items())):
             msg += header
             freq = self.eigrs[i]
             msg.append('%16s = %13E\n' %('EIGENVALUE',freq))
@@ -111,7 +111,7 @@ class EigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
                 msg.append('                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' %(iMode))
 
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
-            for nodeID,displacement in sorted(eigVals.iteritems()):
+            for nodeID,displacement in sorted(eigVals.items()):
                 rotation = self.rotations[iMode][nodeID]
                 gridType = self.gridTypes[nodeID]
                 (dx,dy,dz) = displacement
@@ -141,13 +141,13 @@ class EigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
             headerLine += '%10s ' %(header)
         headerLine += '\n'
 
-        for i,(iMode,eigVals) in enumerate(sorted(self.translations.iteritems())):
+        for i,(iMode,eigVals) in enumerate(sorted(self.translations.items())):
             freq = self.eigrs[i]
             msg += '%s = %g\n' %(name,iMode)
             msg += 'eigenvalueReal = %g\n' %(freq)
             #msg += 'eigenvalueReal = %f\n' %(freq)
             msg += headerLine
-            for nodeID,displacement in sorted(eigVals.iteritems()):
+            for nodeID,displacement in sorted(eigVals.items()):
                 rotation = self.rotations[iMode][nodeID]
                 gridType = self.gridTypes[nodeID]
                 (dx,dy,dz) = displacement
@@ -207,7 +207,7 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
         del self.rotations[dt]
 
     def getTransients(self):
-        k = self.translations.keys()
+        k = list(self.translations.keys())
         k.sort()
         return k
 
@@ -235,7 +235,7 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
     ###
 
     def modes(self):
-        return sorted(self.translations.keys())
+        return sorted(list(self.translations.keys()))
 
     def eigenvalues(self):
         return self.eigrs
@@ -256,13 +256,13 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
         """
         msg = []
         #print self.dataCode
-        for i,(iMode,eigVals) in enumerate(sorted(self.translations.iteritems())):
+        for i,(iMode,eigVals) in enumerate(sorted(self.translations.items())):
             msg += header
             freq = self.eigrs[i]
             msg.append('%16s = %12E\n' %('EIGENVALUE',freq))
             msg.append('                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' %(iMode))
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
-            for nodeID,translation in sorted(eigVals.iteritems()):
+            for nodeID,translation in sorted(eigVals.items()):
                 rotation = self.rotations[iMode][nodeID]
                 gridType = self.gridTypes[nodeID]
                 (dx,dy,dz) = translation
@@ -289,10 +289,10 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
             headerLine += '%10s ' %(header)
         headerLine += '\n'
 
-        for iMode,eigVals in sorted(self.translations.iteritems()):
+        for iMode,eigVals in sorted(self.translations.items()):
             msg += '%s = %s\n' %(name,iMode)
             msg += headerLine
-            for nodeID,translation in sorted(eigVals.iteritems()):
+            for nodeID,translation in sorted(eigVals.items()):
                 Type = self.gridTypes[nodeID]
                 
                 rotation = self.rotations[iMode][nodeID]
@@ -345,13 +345,13 @@ class ComplexEigenVectorObject(ComplexTableObject): # approachCode=2, sortCode=0
         self.rotations[iMode] = {}
 
     def eigenvalues(self):
-        return sorted(self.translations.keys())
+        return sorted(list(self.translations.keys()))
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         msg = []
         #print self.dataCode
         hasCycle = hasattr(self, 'modeCycle')
-        for i,(iMode,eigVals) in enumerate(sorted(self.translations.iteritems())):
+        for i,(iMode,eigVals) in enumerate(sorted(self.translations.items())):
             msg += header
             freq = self.eigrs[i]
             #freq = 0.0
@@ -361,7 +361,7 @@ class ComplexEigenVectorObject(ComplexTableObject): # approachCode=2, sortCode=0
             else:
                 msg.append('                                         C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' %(iMode))
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
-            for nodeID,displacement in sorted(eigVals.iteritems()):
+            for nodeID,displacement in sorted(eigVals.items()):
                 rotation = self.rotations[iMode][nodeID]
                 gridType = self.gridTypes[nodeID]
                 (dx,dy,dz) = displacement
@@ -393,10 +393,10 @@ class ComplexEigenVectorObject(ComplexTableObject): # approachCode=2, sortCode=0
         headerLine += '\n'
         name = self.dataCode['name']
 
-        for i,(iMode,eigVals) in enumerate(sorted(self.translations.iteritems())):
+        for i,(iMode,eigVals) in enumerate(sorted(self.translations.items())):
             msg += '%s = %g\n' %(name,iMode)
             msg += headerLine
-            for nodeID,translation in sorted(eigVals.iteritems()):
+            for nodeID,translation in sorted(eigVals.items()):
                 rotation = self.rotations[iMode][nodeID]
                 Type = self.gridTypes[nodeID]
                 #(dx,dy,dz) = displacement

@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,C0111,W0612,R0912,R0914,R0904,W0613,E1101
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 
 from pyNastran.bdf.fieldWriter import printCard
 
@@ -59,7 +59,7 @@ class WriteMesh(object):
         #print "eids = ",eids
         nextEID = max(eids)+1  # set the new ID
         msg = '$ELEMENTS\n'
-        for eid, element in sorted(self.elements.iteritems()):
+        for eid, element in sorted(self.elements.items()):
             if element.Is('CQUAD4'):
                 msg += element.writeAsCTRIA3(nextEID)
                 nextEID += 1
@@ -71,15 +71,15 @@ class WriteMesh(object):
 
     def write_DMIGs(self):
         msg = ''
-        for (name, dmig) in sorted(self.dmigs.iteritems()):
+        for (name, dmig) in sorted(self.dmigs.items()):
             msg += str(dmig)
-        for (name, dmi) in sorted(self.dmis.iteritems()):
+        for (name, dmi) in sorted(self.dmis.items()):
             msg += str(dmi)
-        for (name, dmij) in sorted(self.dmijs.iteritems()):
+        for (name, dmij) in sorted(self.dmijs.items()):
             msg += str(dmij)
-        for (name, dmiji) in sorted(self.dmijis.iteritems()):
+        for (name, dmiji) in sorted(self.dmijis.items()):
             msg += str(dmiji)
-        for (name, dmik) in sorted(self.dmiks.iteritems()):
+        for (name, dmik) in sorted(self.dmiks.items()):
             msg += str(dmik)
         return msg
 
@@ -130,7 +130,7 @@ class WriteMesh(object):
         fname = self.print_filename(outFileName)
         self.log.debug("***writing %s" %(fname))
         
-        outfile = open(outFileName,'wb')
+        outfile = open(outFileName,'w',encoding='utf-8')
         outfile.write(msg)
         outfile.close()
     
@@ -157,7 +157,7 @@ class WriteMesh(object):
         fname = self.print_filename(outFileName)
         self.log.debug("***writing %s" %(fname))
 
-        outfile = open(outFileName, 'wb')
+        outfile = open(outFileName, 'w',encoding='utf-8')
         outfile.write(msg)
         outfile.close()
 
@@ -182,7 +182,7 @@ class WriteMesh(object):
         fname = self.print_filename(outFileName)
         self.log.debug("***writing %s" % (fname))
 
-        outfile = open(outFileName, 'wb')
+        outfile = open(outFileName, 'w',encoding='utf-8')
         outfile.write(msg)
         outfile.close()
 
@@ -233,7 +233,7 @@ class WriteMesh(object):
         if self.params:
             msg += '$PARAMS\n'
         #print "self.nodes = ",self.nodes
-        for (key, param) in sorted(self.params.iteritems()):
+        for (key, param) in sorted(self.params.items()):
             #print "param = ",param
             msg += str(param)
         return msg
@@ -245,7 +245,7 @@ class WriteMesh(object):
             msg = ['$NODES\n']
             if self.gridSet:
                 msg.append(str(self.gridSet))
-            for (nid, node) in sorted(self.nodes.iteritems()):
+            for (nid, node) in sorted(self.nodes.items()):
                 msg.append(str(node))
 
         if 0:
@@ -265,7 +265,7 @@ class WriteMesh(object):
         msg = ''
 
         associatedNodes = set([])
-        for (eid, element) in self.elements.iteritems():
+        for (eid, element) in self.elements.items():
             print(element)
             associatedNodes = associatedNodes.union(set(element.nodeIDs()))
 
@@ -298,7 +298,7 @@ class WriteMesh(object):
         msg = []
         if self.elements:
             msg = ['$ELEMENTS\n']
-            for (eid, element) in sorted(self.elements.iteritems()):
+            for (eid, element) in sorted(self.elements.items()):
                 try:
                     msg.append(str(element))
                 except:
@@ -313,7 +313,7 @@ class WriteMesh(object):
         msg = []
         if self.rigidElements:
             msg += '$RIGID ELEMENTS\n'
-            for (eid, element) in sorted(self.rigidElements.iteritems()):
+            for (eid, element) in sorted(self.rigidElements.items()):
                 try:
                     msg.append(str(element))
                 except:
@@ -328,7 +328,7 @@ class WriteMesh(object):
         msg = ''
         if self.properties:
             msg += '$PROPERTIES\n'
-            for (pid, prop) in sorted(self.properties.iteritems()):
+            for (pid, prop) in sorted(self.properties.items()):
                 msg += str(prop)
         return msg
 
@@ -340,7 +340,7 @@ class WriteMesh(object):
             msg = ['$ELEMENTS_WITH_PROPERTIES\n']
 
         eidsWritten = []
-        for (pid, prop) in sorted(self.properties.iteritems()):
+        for (pid, prop) in sorted(self.properties.items()):
             eids = self.getElementIDsWithPID(pid)
 
             if eids:
@@ -387,11 +387,11 @@ class WriteMesh(object):
         msg = ''
         if self.materials:
             msg += '$MATERIALS\n'
-            for (mid, material) in sorted(self.materials.iteritems()):
+            for (mid, material) in sorted(self.materials.items()):
                 msg += str(material)
-            for (mid, material) in sorted(self.creepMaterials.iteritems()):
+            for (mid, material) in sorted(self.creepMaterials.items()):
                 msg += str(material)
-            for (mid, material) in sorted(self.materialDeps.iteritems()):
+            for (mid, material) in sorted(self.materialDeps.items()):
                 msg += str(material)
         return msg
 
@@ -400,7 +400,7 @@ class WriteMesh(object):
         msg = ''
         if self.thermalMaterials:
             msg += '$THERMAL MATERIALS\n'
-            for (mid, material) in sorted(self.thermalMaterials.iteritems()):
+            for (mid, material) in sorted(self.thermalMaterials.items()):
                 msg += str(material)
         return msg
 
@@ -419,9 +419,9 @@ class WriteMesh(object):
             if strSPC:
                 msg += strSPC
             else:
-                for (spcID, spcadd) in sorted(self.spcadds.iteritems()):
+                for (spcID, spcadd) in sorted(self.spcadds.items()):
                     msg += str(spcadd)
-                for (spcID, spcs) in sorted(self.spcs.iteritems()):
+                for (spcID, spcs) in sorted(self.spcs.items()):
                     for spc in spcs:
                         msg += str(spc)
                     ###
@@ -435,9 +435,9 @@ class WriteMesh(object):
             if strMPC:
                 msg += strMPC
             else:
-                for (mpcID, mpcadd) in sorted(self.mpcadds.iteritems()):
+                for (mpcID, mpcadd) in sorted(self.mpcadds.items()):
                     msg += str(mpcadd)
-                for (mpcID, mpcs) in sorted(self.mpcs.iteritems()):
+                for (mpcID, mpcs) in sorted(self.mpcs.items()):
                     for mpc in mpcs:
                         msg += str(mpc)
         return msg
@@ -447,7 +447,7 @@ class WriteMesh(object):
         msg = ''
         if self.loads:
             msg += '$LOADS\n'
-            for (key, loadcase) in sorted(self.loads.iteritems()):
+            for (key, loadcase) in sorted(self.loads.items()):
                 for load in loadcase:
                     try:
                         msg += str(load)
@@ -463,21 +463,21 @@ class WriteMesh(object):
         if (self.dconstrs or self.desvars or self.ddvals or self.dresps 
           or self.dvprels or self.dvmrels or self.doptprm or self.dlinks):
             msg += '$OPTIMIZATION\n'
-            for (ID, dconstr) in sorted(self.dconstrs.iteritems()):
+            for (ID, dconstr) in sorted(self.dconstrs.items()):
                 msg += str(dconstr)
-            for (ID, desvar) in sorted(self.desvars.iteritems()):
+            for (ID, desvar) in sorted(self.desvars.items()):
                 msg += str(desvar)
-            for (ID, ddval) in sorted(self.ddvals.iteritems()):
+            for (ID, ddval) in sorted(self.ddvals.items()):
                 msg += str(ddval)
-            for (ID, dlink) in sorted(self.dlinks.iteritems()):
+            for (ID, dlink) in sorted(self.dlinks.items()):
                 msg += str(dlink)
-            for (ID, dresp) in sorted(self.dresps.iteritems()):
+            for (ID, dresp) in sorted(self.dresps.items()):
                 msg += str(dresp)
-            for (ID, dvmrel) in sorted(self.dvmrels.iteritems()):
+            for (ID, dvmrel) in sorted(self.dvmrels.items()):
                 msg += str(dvmrel)
-            for (ID, dvprel) in sorted(self.dvprels.iteritems()):
+            for (ID, dvprel) in sorted(self.dvprels.items()):
                 msg += str(dvprel)
-            for (ID, equation) in sorted(self.dequations.iteritems()):
+            for (ID, equation) in sorted(self.dequations.items()):
                 msg += str(equation)
             if self.doptprm is not None:
                 msg += str(self.doptprm)
@@ -488,11 +488,11 @@ class WriteMesh(object):
         msg = ''
         if self.tables:
             msg += '$TABLES\n'
-            for (ID, table) in sorted(self.tables.iteritems()):
+            for (ID, table) in sorted(self.tables.items()):
                 msg += str(table)
         if self.randomTables:
             msg += '$RANDOM TABLES\n'
-            for (ID, table) in sorted(self.randomTables.iteritems()):
+            for (ID, table) in sorted(self.randomTables.items()):
                 msg += str(table)
         return msg
 
@@ -502,7 +502,7 @@ class WriteMesh(object):
         if (self.sets or self.setsSuper or self.asets or self.bsets or
             self.csets or self.qsets):
             msg += '$SETS\n'
-            for (ID, setObj) in sorted(self.sets.iteritems()):  # dict
+            for (ID, setObj) in sorted(self.sets.items()):  # dict
                 msg += str(setObj)
             for setObj in self.asets:  # list
                 msg += str(setObj)
@@ -512,7 +512,7 @@ class WriteMesh(object):
                 msg += str(setObj)
             for setObj in self.qsets:  # list
                 msg += str(setObj)
-            for (ID, setObj) in sorted(self.setsSuper.iteritems()):  # dict
+            for (ID, setObj) in sorted(self.setsSuper.items()):  # dict
                 msg += str(setObj)
         return msg
 
@@ -522,19 +522,19 @@ class WriteMesh(object):
         if (self.dareas or self.nlparms or self.frequencies or self.methods or
             self.cMethods or self.tsteps or self.tstepnls):
             msg += '$DYNAMIC\n'
-            for (ID, method) in sorted(self.methods.iteritems()):
+            for (ID, method) in sorted(self.methods.items()):
                 msg += str(method)
-            for (ID, cMethod) in sorted(self.cMethods.iteritems()):
+            for (ID, cMethod) in sorted(self.cMethods.items()):
                 msg += str(cMethod)
-            for (ID, darea) in sorted(self.dareas.iteritems()):
+            for (ID, darea) in sorted(self.dareas.items()):
                 msg += str(darea)
-            for (ID, nlparm) in sorted(self.nlparms.iteritems()):
+            for (ID, nlparm) in sorted(self.nlparms.items()):
                 msg += str(nlparm)
-            for (ID, tstep) in sorted(self.tsteps.iteritems()):
+            for (ID, tstep) in sorted(self.tsteps.items()):
                 msg += str(tstep)
-            for (ID, tstepnl) in sorted(self.tstepnls.iteritems()):
+            for (ID, tstepnl) in sorted(self.tstepnls.items()):
                 msg += str(tstepnl)
-            for (ID, freq) in sorted(self.frequencies.iteritems()):
+            for (ID, freq) in sorted(self.frequencies.items()):
                 msg += str(freq)
         return msg
         
@@ -544,21 +544,21 @@ class WriteMesh(object):
         if (self.aero or self.aeros or self.gusts or self.caeros 
         or self.paeros or self.trims):
             msg = '$AERO\n'
-            for (ID, caero) in sorted(self.caeros.iteritems()):
+            for (ID, caero) in sorted(self.caeros.items()):
                 msg += str(caero)
-            for (ID, paero) in sorted(self.paeros.iteritems()):
+            for (ID, paero) in sorted(self.paeros.items()):
                 msg += str(paero)
-            for (ID, spline) in sorted(self.splines.iteritems()):
+            for (ID, spline) in sorted(self.splines.items()):
                 msg += str(spline)
-            for (ID, trim) in sorted(self.trims.iteritems()):
+            for (ID, trim) in sorted(self.trims.items()):
                 msg += str(trim)
 
-            for (ID, aero) in sorted(self.aero.iteritems()):
+            for (ID, aero) in sorted(self.aero.items()):
                 msg += str(aero)
-            for (ID, aero) in sorted(self.aeros.iteritems()):
+            for (ID, aero) in sorted(self.aeros.items()):
                 msg += str(aero)
 
-            for (ID, gust) in sorted(self.gusts.iteritems()):
+            for (ID, gust) in sorted(self.gusts.items()):
                 msg += str(gust)
         return msg
 
@@ -568,19 +568,19 @@ class WriteMesh(object):
         if (self.aefacts or self.aeparams or self.aelinks or self.aelists or
             self.aestats or self.aesurfs):
             msg = '$AERO CONTROL SURFACES\n'
-            for (ID, aelinks) in sorted(self.aelinks.iteritems()):
+            for (ID, aelinks) in sorted(self.aelinks.items()):
                 for aelink in aelinks:
                     msg += str(aelink)
-            for (ID, aeparam) in sorted(self.aeparams.iteritems()):
+            for (ID, aeparam) in sorted(self.aeparams.items()):
                 msg += str(aeparam)
-            for (ID, aestat) in sorted(self.aestats.iteritems()):
+            for (ID, aestat) in sorted(self.aestats.items()):
                 msg += str(aestat)
 
-            for (ID, aelist) in sorted(self.aelists.iteritems()):
+            for (ID, aelist) in sorted(self.aelists.items()):
                 msg += str(aelist)
-            for (ID, aesurf) in sorted(self.aesurfs.iteritems()):
+            for (ID, aesurf) in sorted(self.aesurfs.items()):
                 msg += str(aesurf)
-            for (ID, aefact) in sorted(self.aefacts.iteritems()):
+            for (ID, aefact) in sorted(self.aefacts.items()):
                 msg += str(aefact)
         return msg
 
@@ -589,10 +589,10 @@ class WriteMesh(object):
         msg = []
         if (self.flfacts or self.flutters or self.mkaeros):
             msg = ['$FLUTTER\n']
-            for (ID, flfact) in sorted(self.flfacts.iteritems()):
+            for (ID, flfact) in sorted(self.flfacts.items()):
                 #if ID!=0:
                 msg.append(str(flfact))
-            for (ID, flutter) in sorted(self.flutters.iteritems()):
+            for (ID, flutter) in sorted(self.flutters.items()):
                 msg.append(str(flutter))
             for mkaero in self.mkaeros:
                 msg.append(str(mkaero))
@@ -607,16 +607,16 @@ class WriteMesh(object):
             # self.thermalProperties or
             msg = '$THERMAL\n'
 
-            for (key, phbdy) in sorted(self.phbdys.iteritems()):
+            for (key, phbdy) in sorted(self.phbdys.items()):
                 msg += str(phbdy)
 
             #for key,prop in sorted(self.thermalProperties.iteritems()):
             #    msg += str(prop)
-            for (key, prop) in sorted(self.convectionProperties.iteritems()):
+            for (key, prop) in sorted(self.convectionProperties.items()):
                 msg += str(prop)
 
             # BCs
-            for (key, bcs) in sorted(self.bcs.iteritems()):
+            for (key, bcs) in sorted(self.bcs.items()):
                 for bc in bcs: # list
                     msg += str(bc)
                 ###
@@ -628,7 +628,7 @@ class WriteMesh(object):
         msg = ''
         if len(self.coords) > 1:
             msg += '$COORDS\n'
-        for (ID, coord) in sorted(self.coords.iteritems()):
+        for (ID, coord) in sorted(self.coords.items()):
             if ID != 0:
                 msg += str(coord)
         return msg

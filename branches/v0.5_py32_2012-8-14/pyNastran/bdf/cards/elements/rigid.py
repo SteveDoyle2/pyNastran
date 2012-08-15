@@ -23,10 +23,10 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,R0902,R0904,R0914
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 #import sys
-from itertools import izip, count
+from itertools import count
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
@@ -191,11 +191,11 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
         if 0:
             fields2 = [self.eid]
-            for (i, gn, cn) in izip(count(), self.Gni, self.Cni):
+            for (i, gn, cn) in zip(count(), self.Gni, self.Cni):
                 fields+=[gn,cn]
             fields += self.buildTableLines(fields2, i=1, j=1)
 
-        for (i, gn, cn) in izip(count(), self.Gni, self.Cni):
+        for (i, gn, cn) in zip(count(), self.Gni, self.Cni):
             fields+=[gn, cn]
             if i%6==0:
                 fields += [None]
@@ -207,7 +207,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
         if 0:
             fields2 = ['UM']
-            for (i, gm, cm) in izip(count(), self.Gmi, self.Cmi):
+            for (i, gm, cm) in zip(count(), self.Gmi, self.Cmi):
                 #print "j=%s gmi=%s cmi=%s" %(j,gm,cm)
                 fields2 += [gm, cm]
             fields += self.buildTableLines(fields2, i=1, j=1)
@@ -216,7 +216,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         ## overly complicated loop to print the UM section
         fields += ['UM']
         j=1
-        for (i, gm, cm) in izip(count(), self.Gmi, self.Cmi):
+        for (i, gm, cm) in zip(count(), self.Gmi, self.Cmi):
             #print "j=%s gmi=%s cmi=%s" %(j,gm,cm)
             fields+=[gm, cm]
             if i>0 and j%3==0:
@@ -408,7 +408,7 @@ class RBE3(RigidElement):  # not done, needs testing badly
         if iUm:
             i = iUm+1
             #print "i=%s iUmStop=%s" %(i,iUmStop)
-            for j in xrange(i, iUmStop, 2):
+            for j in range(i, iUmStop, 2):
                 gmi = card.field(j)
                 if gmi is not None:
                     cmi = card.field(j+1)
@@ -459,7 +459,7 @@ class RBE3(RigidElement):  # not done, needs testing badly
         
         if self.Gmi and 0:
             fields2 = ['UM']
-            for (gmi,cmi) in izip(self.Gmi, self.Cmi):
+            for (gmi,cmi) in zip(self.Gmi, self.Cmi):
                 fields2 += [gmi, cmi]
             ###
             fields += self.buildTableLines(fields2, i=1, j=1)
@@ -469,7 +469,7 @@ class RBE3(RigidElement):  # not done, needs testing badly
         if self.Gmi:
             #print "Gmi = ",self.Gmi
             #print "Cmi = ",self.Cmi
-            for (gmi,cmi) in izip(self.Gmi, self.Cmi):
+            for (gmi,cmi) in zip(self.Gmi, self.Cmi):
                 fields+=[gmi, cmi]
             ###
         ###

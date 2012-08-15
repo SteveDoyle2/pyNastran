@@ -157,10 +157,10 @@ class F06Writer(object):
                False -> makes a StringIO object for testing (default=True)
         """
         if makeFile:
-            f = open(f06OutName,'wb')
+            f = open(f06OutName,'w',encoding='utf-8')
         else:
-            import StringIO
-            f = StringIO.StringIO()
+            import io
+            f = io.StringIO()
 
         #f.write(self.makeF06Header())
         pageStamp = self.makeStamp(self.Title)
@@ -171,7 +171,7 @@ class F06Writer(object):
         pageNum = 1
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n']
-        for iSubcase,result in sorted(self.eigenvalues.iteritems()): # goes first
+        for iSubcase,result in sorted(self.eigenvalues.items()): # goes first
             (subtitle,label) = self.iSubcaseNameMap[iSubcase]
             subtitle = subtitle.strip()
             header[0] = '     %s\n' %(subtitle)
@@ -184,7 +184,7 @@ class F06Writer(object):
             f.write(msg)
             pageNum +=1
         
-        for iSubcase,result in sorted(self.eigenvectors.iteritems()): # has a special header
+        for iSubcase,result in sorted(self.eigenvectors.items()): # has a special header
             (subtitle,label) = self.iSubcaseNameMap[iSubcase]
             subtitle = subtitle.strip()
             header[0] = '     %s\n' %(subtitle)
@@ -229,7 +229,7 @@ class F06Writer(object):
                     ]
 
         if 1:
-            iSubcases = self.iSubcaseNameMap.keys()
+            iSubcases = list(self.iSubcaseNameMap.keys())
             #print("self.iSubcaseNameMap = %s" %(self.iSubcaseNameMap))
             for iSubcase in sorted(iSubcases):
                 #print("***subcase = %s" %(iSubcase))
@@ -261,7 +261,7 @@ class F06Writer(object):
             ###
         if 0:
             for res in resTypes:
-                for iSubcase,result in sorted(res.iteritems()):
+                for iSubcase,result in sorted(res.items()):
                     (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f,isMagPhase=False)
                     if deleteObjects:
                         del result

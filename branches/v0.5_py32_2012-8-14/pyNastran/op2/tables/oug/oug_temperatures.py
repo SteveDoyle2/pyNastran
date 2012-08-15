@@ -82,7 +82,7 @@ class TemperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         del self.temperatures[dt]
 
     def getTransients(self):
-        k = self.temperatures.keys()
+        k = list(self.temperatures.keys())
         k.sort()
         return k
 
@@ -156,9 +156,9 @@ class TemperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         msg = '---TRANSIENT TEMPERATURE---\n'
         msg += self.writeHeader()
 
-        for dt,temperatures in sorted(self.temperatures.iteritems()):
+        for dt,temperatures in sorted(self.temperatures.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for nodeID,T in sorted(temperatures.iteritems()):
+            for nodeID,T in sorted(temperatures.items()):
                 gridType = self.gridTypes[nodeID]
                 msg += '%10s %8s ' %(nodeID,gridType)
 
@@ -176,7 +176,7 @@ class TemperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
                '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
         msg = []
         if self.nonlinearFactor is not None:
-            for dt,temperatures in sorted(self.temperatures.iteritems()):
+            for dt,temperatures in sorted(self.temperatures.items()):
                 dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
                 header[2] = dtLine
                 msg += header+words
@@ -201,7 +201,7 @@ class TemperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         ipack = []
         oldNodeID = -1
         oldGridType = None
-        for nodeID,T in sorted(temperatures.iteritems()):
+        for nodeID,T in sorted(temperatures.items()):
             gridType = self.gridTypes[nodeID]
 
             if oldNodeID+1 == nodeID and gridType == oldGridType:
@@ -243,7 +243,7 @@ class TemperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         msg = '---TEMPERATURE---\n'
         msg += self.writeHeader()
         #print "self.dataCode=",self.dataCode
-        for nodeID,T in sorted(self.temperatures.iteritems()):
+        for nodeID,T in sorted(self.temperatures.items()):
             gridType = self.gridTypes[nodeID]
             msg += '%10s %8s ' %(nodeID,gridType)
             #print "nodeID=%s T=%s" %(nodeID,T)

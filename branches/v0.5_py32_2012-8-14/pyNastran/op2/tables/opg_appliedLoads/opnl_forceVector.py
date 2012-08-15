@@ -44,7 +44,7 @@ class ForceVectorObject(TableObject): # tableCode=12, sortCode=0, thermal=0
         msg = header+['                                         N O N - L I N E A R - F O R C E   V E C T O R\n'
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        for nodeID,translation in sorted(self.translations.iteritems()):
+        for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
@@ -69,10 +69,10 @@ class ForceVectorObject(TableObject): # tableCode=12, sortCode=0, thermal=0
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
 
-        for dt,translations in sorted(self.translations.iteritems()):
+        for dt,translations in sorted(self.translations.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
 
@@ -98,9 +98,9 @@ class ForceVectorObject(TableObject): # tableCode=12, sortCode=0, thermal=0
         #msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
         msg += self.writeHeader()
         
-        for dt,translations in sorted(self.translations.iteritems()):
+        for dt,translations in sorted(self.translations.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
                 (dx,dy,dz) = translation
@@ -125,7 +125,7 @@ class ForceVectorObject(TableObject): # tableCode=12, sortCode=0, thermal=0
         msg = '---FORCE VECTOR---\n'
         msg += self.writeHeader()
 
-        for nodeID,translation in sorted(self.translations.iteritems()):
+        for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
@@ -164,7 +164,7 @@ class ComplexForceVectorObject(ComplexTableObject): # tableCode=12, approachCode
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        for nodeID,translation in sorted(self.translations.iteritems()):
+        for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
@@ -194,10 +194,10 @@ class ComplexForceVectorObject(ComplexTableObject): # tableCode=12, approachCode
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         msg = []
-        for dt,translations in sorted(self.translations.iteritems()):
+        for dt,translations in sorted(self.translations.items()):
             header[2] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
 
@@ -234,10 +234,10 @@ class ComplexForceVectorObject(ComplexTableObject): # tableCode=12, approachCode
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for freq,translations in sorted(self.translations.iteritems()):
+        for freq,translations in sorted(self.translations.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
 
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[freq][nodeID]
 
                 msg += '%-10i ' %(nodeID)

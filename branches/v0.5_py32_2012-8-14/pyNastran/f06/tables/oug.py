@@ -23,7 +23,7 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 #pylint: disable=E1101,W0612,R0201
-from itertools import izip
+
 
 from pyNastran.op2.tables.oug.oug_displacements import DisplacementObject, ComplexDisplacementObject
 from pyNastran.op2.tables.oug.oug_temperatures  import TemperatureObject
@@ -180,7 +180,7 @@ class OUG(object):
 
     def parseLineTemperature(self, sline, Format):
         out = []
-        for (entry, iFormat) in izip(sline, Format):
+        for (entry, iFormat) in zip(sline, Format):
             if entry is '':
                 return out
             #print "sline=|%r|\n entry=|%r| format=%r" %(sline,entry,iFormat)

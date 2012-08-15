@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 #pylint: disable=C0103,W0201,W0223,R0901,R0902,R0904
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import os
 import sys
 from numpy import array
@@ -412,7 +412,7 @@ class OP2(BDF,
         
         if self.makeOp2Debug:
             ## a developer debug file (largely unsupported)
-            self.op2Debug = open('debug.out','wb')
+            self.op2Debug = open('debug.out','w',encoding='utf-8')
         ## the byte position in the OP2
         self.n = self.op2.tell()
 
@@ -650,7 +650,7 @@ class OP2(BDF,
         int3 is the 3rd word in table=-3 and may be 
         elementType or something else depending on the table type
         """
-        (aCode, tCode, int3, iSubcase) = unpack(b'iiii', data[:16])
+        (aCode, tCode, int3, iSubcase) = unpack('iiii', data[:16])
         ## the local subcase ID
         self.iSubcase = iSubcase
         #print("iSubcase = %s" %(iSubcase))
@@ -708,7 +708,7 @@ class OP2(BDF,
         if iWordStop == None:
             #print("iWordStart=%s data[%s:%s]" %(iWordStart,iWordStart*4,(iWordStart+1)*4))
             ds = data[(iWordStart-1)*4:iWordStart*4]
-            iFormat = bytes(iFormat)
+
             return unpack(iFormat, ds)[0]
         #print("type(data) = ",type(data))
         ds = data[(iWordStart-1)*4:(iWordStop-1)*4]
@@ -820,7 +820,7 @@ class OP2(BDF,
         
         msg = '---ALL RESULTS---\n'
         for result in results:
-            for (iSubcase, res) in sorted(result.iteritems()):
+            for (iSubcase, res) in sorted(result.items()):
                 msg += 'iSubcase = %s\n' % (iSubcase)
                 try:
                     msg += str(res) + '\n'

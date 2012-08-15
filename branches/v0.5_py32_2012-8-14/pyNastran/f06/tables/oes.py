@@ -442,7 +442,7 @@ class OES(object):
                 line = self.infile.readline() # blank line
                 self.i+=3
 
-            for i in xrange(4):
+            for i in range(4):
                 line = self.infile.readline()[1:].strip().split()
                 sline = self.parseLine(line,[int,float, float,float,float, float,float,float, float]) # line 1
                 #data.append(sline)

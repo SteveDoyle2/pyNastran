@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 
 from .oes_objects import stressObject, strainObject
@@ -151,7 +151,7 @@ class PlateStressObject(stressObject):
         del self.ovmShear[dt]
 
     def getTransients(self):
-        k = self.oxx.keys()
+        k = list(self.oxx.keys())
         k.sort()
         return k
     
@@ -306,12 +306,12 @@ class PlateStressObject(stressObject):
         msg += '\n'
 
         #print self.oxx.keys()
-        for dt,oxxs in sorted(self.oxx.iteritems()):
+        for dt,oxxs in sorted(self.oxx.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid,oxxNodes in sorted(oxxs.iteritems()):
+            for eid,oxxNodes in sorted(oxxs.items()):
                 eType = self.eType[eid]
                 for nid in sorted(oxxNodes):
-                    for iLayer in xrange(len(self.oxx[dt][eid][nid])):
+                    for iLayer in range(len(self.oxx[dt][eid][nid])):
                         fd    = self.fiberCurvature[eid][nid][iLayer]
                         oxx   = self.oxx[   dt][eid][nid][iLayer]
                         oyy   = self.oyy[   dt][eid][nid][iLayer]
@@ -360,11 +360,11 @@ class PlateStressObject(stressObject):
         quadMsg  = None
         quad8Msg = None
         quadrMsg = None
-        eTypes = self.eType.values()
+        eTypes = list(self.eType.values())
         if 'CQUAD4' in eTypes:
             qkey = eTypes.index('CQUAD4')
-            kkey = self.eType.keys()[qkey]
-            ekey = self.oxx[kkey].keys()
+            kkey = list(self.eType.keys())[qkey]
+            ekey = list(self.oxx[kkey].keys())
             isBilinear=True
             quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+quadMsgTemp
             if len(ekey)==1:
@@ -376,8 +376,8 @@ class PlateStressObject(stressObject):
 
         if 'CQUADR' in eTypes:
             qkey = eTypes.index('CQUADR')
-            kkey = self.eType.keys()[qkey]
-            ekey = self.oxx[kkey].keys()
+            kkey = list(self.eType.keys())[qkey]
+            ekey = list(self.oxx[kkey].keys())
             isBilinear=True
             quadrMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n']+quadMsgTemp
             if len(ekey)==1:
@@ -445,9 +445,9 @@ class PlateStressObject(stressObject):
 
     def writeMatlab_Tri3(self,eid):
         msg = ''
-        oxxNodes = self.oxx[eid].keys()
+        oxxNodes = list(self.oxx[eid].keys())
         for nid in sorted(oxxNodes):
-            for iLayer in xrange(len(self.oxx[eid][nid])):
+            for iLayer in range(len(self.oxx[eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 oxx   = self.oxx[eid][nid][iLayer]
                 oyy   = self.oyy[eid][nid][iLayer]
@@ -494,11 +494,11 @@ class PlateStressObject(stressObject):
         quadMsg  = None
         quad8Msg = None
         quadrMsg = None
-        eTypes = self.eType.values()
+        eTypes = list(self.eType.values())
         if 'CQUAD4' in eTypes:
             qkey = eTypes.index('CQUAD4')
-            kkey = self.eType.keys()[qkey]
-            ekey = self.oxx[kkey].keys()
+            kkey = list(self.eType.keys())[qkey]
+            ekey = list(self.oxx[kkey].keys())
             isBilinear=True
             quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+quadMsgTemp
             if len(ekey)==1:
@@ -510,8 +510,8 @@ class PlateStressObject(stressObject):
 
         if 'CQUADR' in eTypes:
             qkey = eTypes.index('CQUADR')
-            kkey = self.eType.keys()[qkey]
-            ekey = self.oxx[kkey].keys()
+            kkey = list(self.eType.keys())[qkey]
+            ekey = list(self.oxx[kkey].keys())
             isBilinear=True
             quadrMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n']+quadMsgTemp
             if len(ekey)==1:
@@ -607,14 +607,14 @@ class PlateStressObject(stressObject):
         quad8Msg = None
         quadrMsg = None
 
-        eTypes = self.eType.values()
-        dts = self.oxx.keys()
+        eTypes = list(self.eType.values())
+        dts = list(self.oxx.keys())
         dt = dts[0]
         if 'CQUAD4' in eTypes:
             qkey = eTypes.index('CQUAD4')
-            kkey = self.eType.keys()[qkey]
+            kkey = list(self.eType.keys())[qkey]
             #print "qkey=%s kkey=%s" %(qkey,kkey)
-            ekey = self.oxx[dt][kkey].keys()
+            ekey = list(self.oxx[dt][kkey].keys())
             isBilinear=True
             quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+quadMsgTemp
             if len(ekey)==1:
@@ -626,8 +626,8 @@ class PlateStressObject(stressObject):
 
         if 'CQUADR' in eTypes:
             qkey = eTypes.index('CQUADR')
-            kkey = self.eType.keys()[qkey]
-            ekey = self.oxx[kkey].keys()
+            kkey = list(self.eType.keys())[qkey]
+            ekey = list(self.oxx[kkey].keys())
             isBilinear=True
             quadrMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n']+quadMsgTemp
             if len(ekey)==1:
@@ -655,7 +655,7 @@ class PlateStressObject(stressObject):
         (typesOut,orderedETypes) = self.getOrderedETypes(validTypes)
 
         msg = []
-        dts = self.oxx.keys()
+        dts = list(self.oxx.keys())
         dts.sort()
         for eType in typesOut:
             #print "eType = ",eType
@@ -714,11 +714,11 @@ class PlateStressObject(stressObject):
 
     def writeF06_Quad4_Bilinear(self,eid,n):
         msg = ''
-        k = self.oxx[eid].keys()
+        k = list(self.oxx[eid].keys())
         k.remove('C')
         k.sort()
         for nid in ['C']+k:
-            for iLayer in xrange(len(self.oxx[eid][nid])):
+            for iLayer in range(len(self.oxx[eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 oxx   = self.oxx[eid][nid][iLayer]
                 oyy   = self.oyy[eid][nid][iLayer]
@@ -745,11 +745,11 @@ class PlateStressObject(stressObject):
 
     def writeF06_Quad4_BilinearTransient(self,dt,eid,n):
         msg = ''
-        k = self.oxx[dt][eid].keys()
+        k = list(self.oxx[dt][eid].keys())
         k.remove('C')
         k.sort()
         for nid in ['C']+k:
-            for iLayer in xrange(len(self.oxx[dt][eid][nid])):
+            for iLayer in range(len(self.oxx[dt][eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 oxx   = self.oxx[dt][eid][nid][iLayer]
                 oyy   = self.oyy[dt][eid][nid][iLayer]
@@ -777,9 +777,9 @@ class PlateStressObject(stressObject):
 
     def writeF06_Tri3(self,eid):
         msg = ''
-        oxxNodes = self.oxx[eid].keys()
+        oxxNodes = list(self.oxx[eid].keys())
         for nid in sorted(oxxNodes):
-            for iLayer in xrange(len(self.oxx[eid][nid])):
+            for iLayer in range(len(self.oxx[eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 oxx   = self.oxx[eid][nid][iLayer]
                 oyy   = self.oyy[eid][nid][iLayer]
@@ -802,9 +802,9 @@ class PlateStressObject(stressObject):
 
     def writeF06_Tri3Transient(self,dt,eid):
         msg = ''
-        oxxNodes = self.oxx[dt][eid].keys()
+        oxxNodes = list(self.oxx[dt][eid].keys())
         for nid in sorted(oxxNodes):
-            for iLayer in xrange(len(self.oxx[dt][eid][nid])):
+            for iLayer in range(len(self.oxx[dt][eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 oxx   = self.oxx[dt][eid][nid][iLayer]
                 oyy   = self.oyy[dt][eid][nid][iLayer]
@@ -838,10 +838,10 @@ class PlateStressObject(stressObject):
         msg += '\n'
 
         #print self.oxx.keys()
-        for eid,oxxNodes in sorted(self.oxx.iteritems()):
+        for eid,oxxNodes in sorted(self.oxx.items()):
             eType = self.eType[eid]
             for nid in sorted(oxxNodes):
-                for iLayer in xrange(len(self.oxx[eid][nid])):
+                for iLayer in range(len(self.oxx[eid][nid])):
                     fd    = self.fiberCurvature[eid][nid][iLayer]
                     oxx   = self.oxx[eid][nid][iLayer]
                     oyy   = self.oyy[eid][nid][iLayer]
@@ -993,7 +993,7 @@ class PlateStrainObject(strainObject):
         del self.evmShear[dt]
 
     def getTransients(self):
-        k = self.exx.keys()
+        k = list(self.exx.keys())
         k.sort()
         return k
 
@@ -1154,11 +1154,11 @@ class PlateStrainObject(strainObject):
         tri6Msg  = None
         trirMsg  = None
 
-        eTypes = self.eType.values()
+        eTypes = list(self.eType.values())
         if 'CQUAD4' in eTypes:
             qkey = eTypes.index('CQUAD4')
-            kkey = self.eType.keys()[qkey]
-            ekey = self.exx[kkey].keys()
+            kkey = list(self.eType.keys())[qkey]
+            ekey = list(self.exx[kkey].keys())
             isBilinear=True
             quadMsg     = header+['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+quadMsgTemp
             if len(ekey)==1:
@@ -1167,8 +1167,8 @@ class PlateStrainObject(strainObject):
 
         if 'CQUAD8' in eTypes:
             qkey = eTypes.index('CQUAD8')
-            kkey = self.eType.keys()[qkey]
-            ekey = self.exx[kkey].keys()
+            kkey = list(self.eType.keys())[qkey]
+            ekey = list(self.exx[kkey].keys())
             isBilinear=True
             quad8Msg     = header+['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )        OPTION = BILIN  \n \n']+quadMsgTemp
             if len(ekey)==1:
@@ -1177,8 +1177,8 @@ class PlateStrainObject(strainObject):
 
         if 'CQUADR' in eTypes:
             qkey = eTypes.index('CQUADR')
-            kkey = self.eType.keys()[qkey]
-            ekey = self.exx[kkey].keys()
+            kkey = list(self.eType.keys())[qkey]
+            ekey = list(self.exx[kkey].keys())
             isBilinear=True
             quadrMsg     = header+['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n']+quadMsgTemp
             if len(ekey)==1:
@@ -1268,14 +1268,14 @@ class PlateStrainObject(strainObject):
         tri6Msg  = None
         trirMsg  = None
 
-        eTypes = self.eType.values()
+        eTypes = list(self.eType.values())
         if 'CQUAD4' in eTypes:
             ElemKey = eTypes.index('CQUAD4')
             #print qkey
-            eid = self.eType.keys()[ElemKey]
+            eid = list(self.eType.keys())[ElemKey]
             #print "self.oxx = ",self.oxx
             #print "eid=%s" %(eid)
-            dt = self.exx.keys()[0]
+            dt = list(self.exx.keys())[0]
             #print "dt=%s" %(dt)
             nLayers = len(self.exx[dt][eid])
             #print "elementKeys = ",elementKeys
@@ -1306,7 +1306,7 @@ class PlateStrainObject(strainObject):
         (typesOut,orderedETypes) = self.getOrderedETypes(validTypes)
 
         msg = []
-        dts = self.exx.keys()
+        dts = list(self.exx.keys())
         dts.sort()
         for eType in typesOut:
             eids = orderedETypes[eType]
@@ -1363,11 +1363,11 @@ class PlateStrainObject(strainObject):
 
     def writeF06_Quad4_Bilinear(self,eid,n):
         msg = ''
-        k = self.exx[eid].keys()
+        k = list(self.exx[eid].keys())
         k.remove('C')
         k.sort()
         for nid in ['C']+k:
-            for iLayer in xrange(len(self.exx[eid][nid])):
+            for iLayer in range(len(self.exx[eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 exx   = self.exx[eid][nid][iLayer]
                 eyy   = self.eyy[eid][nid][iLayer]
@@ -1394,11 +1394,11 @@ class PlateStrainObject(strainObject):
 
     def writeF06_Quad4_BilinearTransient(self,dt,eid,n):
         msg = ''
-        k = self.exx[dt][eid].keys()
+        k = list(self.exx[dt][eid].keys())
         k.remove('C')
         k.sort()
         for nid in ['C']+k:
-            for iLayer in xrange(len(self.exx[dt][eid][nid])):
+            for iLayer in range(len(self.exx[dt][eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 exx   = self.exx[dt][eid][nid][iLayer]
                 eyy   = self.eyy[dt][eid][nid][iLayer]
@@ -1426,9 +1426,9 @@ class PlateStrainObject(strainObject):
 
     def writeF06_Tri3(self,eid):
         msg = ''
-        k = self.exx[eid].keys()
+        k = list(self.exx[eid].keys())
         for nid in sorted(k):
-            for iLayer in xrange(len(self.exx[eid][nid])):
+            for iLayer in range(len(self.exx[eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 exx   = self.exx[eid][nid][iLayer]
                 eyy   = self.eyy[eid][nid][iLayer]
@@ -1454,7 +1454,7 @@ class PlateStrainObject(strainObject):
         exxNodes = self.exx[dt][eid]
         #k = exxNodes.keys()
         for nid in sorted(exxNodes):
-            for iLayer in xrange(len(self.exx[dt][eid][nid])):
+            for iLayer in range(len(self.exx[dt][eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 exx   = self.exx[dt][eid][nid][iLayer]
                 eyy   = self.eyy[dt][eid][nid][iLayer]
@@ -1486,10 +1486,10 @@ class PlateStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for eid,exxNodes in sorted(self.exx.iteritems()):
+        for eid,exxNodes in sorted(self.exx.items()):
             eType = self.eType[eid]
             for nid in sorted(exxNodes):
-                for iLayer in xrange(len(self.exx[eid][nid])):
+                for iLayer in range(len(self.exx[eid][nid])):
                     fd    = self.fiberCurvature[eid][nid][iLayer]
                     exx   = self.exx[eid][nid][iLayer]
                     eyy   = self.eyy[eid][nid][iLayer]
@@ -1523,12 +1523,12 @@ class PlateStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,exx in sorted(self.exx.iteritems()):
+        for dt,exx in sorted(self.exx.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid,exxNodes in sorted(exx.iteritems()):
+            for eid,exxNodes in sorted(exx.items()):
                 eType = self.eType[eid]
                 for nid in sorted(exxNodes):
-                    for iLayer in xrange(len(self.exx[dt][eid][nid])):
+                    for iLayer in range(len(self.exx[dt][eid][nid])):
                         fd    = self.fiberCurvature[eid][nid][iLayer]
                         exx   = self.exx[   dt][eid][nid][iLayer]
                         eyy   = self.eyy[   dt][eid][nid][iLayer]

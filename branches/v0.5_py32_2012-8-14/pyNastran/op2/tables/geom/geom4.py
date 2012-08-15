@@ -137,14 +137,14 @@ class Geometry4(object):
         #nData = len(data)  # 5*4
         if 1:
             eData = data[:12]
-            (eid,gn,cm,gm) = unpack(b'iiii',eData)
+            (eid,gn,cm,gm) = unpack('iiii',eData)
 
             eData = data[12:-4]
             nGm = len(eData)//4
             iFormat = 'i'*nGm
-            iFormat = bytes(iFormat)
+
             Gm = list(unpack(iFormat,eData))
-            alpha, = unpack(b'f',data[-4:])
+            alpha, = unpack('f',data[-4:])
         ###
         elem = RBE2(None,[eid,gn,cm,Gm,alpha])
         self.addRigidElement(elem)
@@ -191,9 +191,9 @@ class Geometry4(object):
         #self.skippedCardsFile.write('skipping SPC in GEOM4\n')
         n = 0
         nEntries = len(data)//20  # 5*4
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n+20]
-            (sid,ID,c,xxx,dx) = unpack(b'iiiif',eData)
+            (sid,ID,c,xxx,dx) = unpack('iiiif',eData)
 
             constraint = SPC(None,[sid,ID,c,dx])
             self.addConstraint_SPC(constraint)
@@ -207,9 +207,9 @@ class Geometry4(object):
         return
         n = 0
         nEntries = len(data)//20  # 5*4
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n+20]
-            (sid,c,thruFlag) = unpack(b'iifii',eData)
+            (sid,c,thruFlag) = unpack('iifii',eData)
 
             constraint = SPC1(None,[sid,g,f,n1,n2])
             self.addConstraint_SPC(constraint)
@@ -226,9 +226,9 @@ class Geometry4(object):
         #self.skippedCardsFile.write('skipping SPCD in GEOM4\n')
         n = 0
         nEntries = len(data)//20  # 5*4
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n+20]
-            (sid,ID,c,xxx,dx) = unpack(b'iiiif',eData)
+            (sid,ID,c,xxx,dx) = unpack('iiiif',eData)
 
             constraint = SPCD(None,[sid,ID,c,dx])
             self.addConstraint_SPC(constraint)
@@ -269,9 +269,9 @@ class Geometry4(object):
         #self.skippedCardsFile.write('skipping SUPORT in GEOM4\n')
         n = 0
         nEntries = len(data)//8  # 2*4
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n+8]
-            (sid,c) = unpack(b'ii',eData)
+            (sid,c) = unpack('ii',eData)
 
             suport = SUPORT(None,[sid,c])
             self.addSuport(suport)

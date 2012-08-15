@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 
 from .oes_objects import stressObject, strainObject
 from pyNastran.op2.op2Errors import InvalidCodeError
@@ -125,7 +125,7 @@ class BarStressObject(stressObject):
         del self.smin[dt]
 
     def getTransients(self):
-        k = self.s1.keys()
+        k = list(self.s1.keys())
         k.sort()
         return k
 
@@ -226,7 +226,7 @@ class BarStressObject(stressObject):
                 '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
               ]
 
-        for eid,S1s in sorted(self.s1.iteritems()):
+        for eid,S1s in sorted(self.s1.items()):
             eType = self.eType[eid]
             axial = self.axial[eid]
             #MSt = self.MSt[eid]
@@ -258,10 +258,10 @@ class BarStressObject(stressObject):
                 '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
               ]
         msg = []
-        for dt,S1s in sorted(self.s1.iteritems()):
+        for dt,S1s in sorted(self.s1.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header + words
-            for eid,S1 in sorted(S1s.iteritems()):
+            for eid,S1 in sorted(S1s.items()):
                 eType = self.eType[eid]
                 axial = self.axial[dt][eid]
                 #MSt = self.MSt[eid]
@@ -298,7 +298,7 @@ class BarStressObject(stressObject):
             msg += '%8s ' %(header)
         msg += '\n'
 
-        for eid,S1s in sorted(self.s1.iteritems()):
+        for eid,S1s in sorted(self.s1.items()):
             eType = self.eType[eid]
             axial = self.axial[eid]
             #MSt = self.MSt[eid]
@@ -346,9 +346,9 @@ class BarStressObject(stressObject):
             msg += '%8s ' %(header)
         msg += '\n'
 
-        for dt,S1ss in sorted(self.s1.iteritems()):
+        for dt,S1ss in sorted(self.s1.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid,S1s in sorted(S1ss.iteritems()):
+            for eid,S1s in sorted(S1ss.items()):
                 eType = self.eType[eid]
                 axial = self.axial[dt][eid]
                 #MSt = self.MSt[dt][eid]
@@ -487,7 +487,7 @@ class BarStrainObject(strainObject):
         del self.emin[dt]
 
     def getTransients(self):
-        k = self.e1.keys()
+        k = list(self.e1.keys())
         k.sort()
         return k
 
@@ -554,7 +554,7 @@ class BarStrainObject(strainObject):
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
                 '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
               ]
-        for eid,E1s in sorted(self.e1.iteritems()):
+        for eid,E1s in sorted(self.e1.items()):
             eType = self.eType[eid]
             axial = self.axial[eid]
             #MSt = self.MSt[eid]
@@ -587,10 +587,10 @@ class BarStrainObject(strainObject):
                 '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
               ]
         msg = []
-        for dt,E1s in sorted(self.e1.iteritems()):
+        for dt,E1s in sorted(self.e1.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header + words
-            for eid,e1s in sorted(E1s.iteritems()):
+            for eid,e1s in sorted(E1s.items()):
                 eType = self.eType[eid]
                 axial = self.axial[eid]
                 #MSt = self.MSt[eid]
@@ -628,7 +628,7 @@ class BarStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for eid,E1s in sorted(self.e1.iteritems()):
+        for eid,E1s in sorted(self.e1.items()):
             eType = self.eType[eid]
             axial = self.axial[eid]
             #MSt  = self.MS_tension[eid]
@@ -675,9 +675,9 @@ class BarStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,E1s in sorted(self.e1.iteritems()):
+        for dt,E1s in sorted(self.e1.items()):
             msg += "%s = %g\n" %(self.dataCode['name'],dt)
-            for eid,e1s in sorted(Els.iteritems()):
+            for eid,e1s in sorted(Els.items()):
                 eType = self.eType[eid]
                 axial = self.axial[dt][eid]
                 #MSt  = self.MS_tension[dt][eid]

@@ -144,7 +144,7 @@ class scalarObject(baseScalarObject):
         return bool(self.sortBits[1])
 
     def writeMatlabArgs(self,name,iSubcase,f):
-        for key,value,in sorted(self.dataCode.iteritems()):
+        for key,value,in sorted(self.dataCode.items()):
             if key is not 'log':
                 if isinstance(value,str):
                     value = "'%s'" %(value)
@@ -163,7 +163,7 @@ class scalarObject(baseScalarObject):
 
     def applyDataCode(self):
         self.log = self.dataCode['log']
-        for key,value in sorted(self.dataCode.iteritems()):
+        for key,value in sorted(self.dataCode.items()):
             if key is not 'log':
                 self.__setattr__(key,value)
                 #self.log.debug("  key=%s value=%s" %(key,value))
@@ -247,7 +247,7 @@ class scalarObject(baseScalarObject):
         msg += '\n'
         
         nModes = len(keyVals[0])
-        for i in xrange(nModes):
+        for i in range(nModes):
             for vals in keyVals:
                 msg += '%-10g ' %(vals[i])
             msg += '\n'

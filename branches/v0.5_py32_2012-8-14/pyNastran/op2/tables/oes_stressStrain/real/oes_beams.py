@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 
 from .oes_objects import stressObject, strainObject
 from pyNastran.op2.op2Errors import InvalidCodeError
@@ -90,7 +90,7 @@ class BeamStressObject(stressObject):
         del self.MS_compression[dt]
 
     def getTransients(self):
-        k = self.smax.keys()
+        k = list(self.smax.keys())
         k.sort()
         return k
 
@@ -217,10 +217,10 @@ class BeamStressObject(stressObject):
                  '                    STAT DIST/\n',
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
         msg = []
-        for dt,SMaxs in sorted(self.smax.iteritems()):
+        for dt,SMaxs in sorted(self.smax.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header + words
-            for eid,Smax in sorted(SMaxs.iteritems()):
+            for eid,Smax in sorted(SMaxs.items()):
                 msg.append('0  %8i\n' %(eid))
                 for i,nid in enumerate(self.grids[eid]):
                     xxb  = self.xxb[eid][i]
@@ -252,7 +252,7 @@ class BeamStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,smax in sorted(self.smax.iteritems()):
+        for dt,smax in sorted(self.smax.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(smax):
                 for i,nid in enumerate(self.grids[eid]):
@@ -369,7 +369,7 @@ class BeamStrainObject(strainObject):
         del self.MS_compression[dt]
 
     def getTransients(self):
-        k = self.smax.keys()
+        k = list(self.smax.keys())
         k.sort()
         return k
 
@@ -492,10 +492,10 @@ class BeamStrainObject(strainObject):
                  '                    STAT DIST/\n',
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
         msg = []
-        for dt,SMaxs in sorted(self.smax.iteritems()):
+        for dt,SMaxs in sorted(self.smax.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header + words
-            for eid,Smax in sorted(SMaxs.iteritems()):
+            for eid,Smax in sorted(SMaxs.items()):
                 msg.append('0  %8i\n' %(eid))
                 for i,nid in enumerate(self.grids[eid]):
                     xxb  = self.xxb[eid][i]

@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 from math import isnan
 
@@ -82,7 +82,7 @@ class StrainEnergyObject(scalarObject):
         del self.density[dt]
 
     def getTransients(self):
-        k = self.energy.keys()
+        k = list(self.energy.keys())
         k.sort()
         return k
 
@@ -122,11 +122,11 @@ class StrainEnergyObject(scalarObject):
     
     def __reprTransient__(self):
         msg  = '---Transient Strain Energy Object---\n'
-        for dt,Energy in sorted(self.energy.iteritems()):
+        for dt,Energy in sorted(self.energy.items()):
             msg += "%s = %s\n" %(self.dataCode['name'],dt)
             msg += "%-10s %-14s% -14s% -14s\n" %('EID','Energy','PercentTotal','Density')
             #print "dt=%s Energy=%s" %(dt,Energy)
-            for eid,energy in sorted(Energy.iteritems()):
+            for eid,energy in sorted(Energy.items()):
                 percent = self.percent[dt][eid]
                 density = self.density[dt][eid]
                 if isnan(density):
@@ -151,7 +151,7 @@ class StrainEnergyObject(scalarObject):
 
         msg  = '---Strain Energy Object---\n'
         msg += "%-10s %-14s% -14s% -14s\n" %('EID','Energy','PercentTotal','Density')
-        for eid,energy in sorted(self.energy.iteritems()):
+        for eid,energy in sorted(self.energy.items()):
             percent = self.percent[eid]
             density = self.density[eid]
             if isnan(density):

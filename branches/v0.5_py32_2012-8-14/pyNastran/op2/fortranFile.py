@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 #import sys
 from struct import unpack, pack
 
@@ -123,7 +123,7 @@ class FortranFile(object):
         data = self.op2.read(nData)
 
         iFormat = str(nInts)+'i'
-        iFormat = bytes(iFormat)
+
         ints = unpack(iFormat,data)
         if debug and self.makeOp2Debug:
             self.op2Debug.write('|%s|\n' % (str(ints)))
@@ -162,7 +162,7 @@ class FortranFile(object):
         """
         n = len(data)
         iFormat = str(n)+'s'
-        iFormat = bytes(iFormat)
+
         strings, = unpack(iFormat, data)
         return strings #.encode('utf-8')
 
@@ -172,7 +172,7 @@ class FortranFile(object):
         """
         n = len(data)
         iFormat = endian+str(n)+'s'
-        iFormat = bytes(iFormat)
+
         strings = unpack(iFormat, data)
         return strings
 
@@ -184,7 +184,7 @@ class FortranFile(object):
         nInts = n//4
         #print "nInts = ",nInts
         iFormat = str(nInts)+'i'
-        iFormat = bytes(iFormat)
+
         ints = unpack(iFormat, data[:nInts*4])
         return ints
 
@@ -195,7 +195,7 @@ class FortranFile(object):
         n = len(data)
         nInts = n//4
         iFormat = endian + str(nInts) + 'i'
-        iFormat = bytes(iFormat)
+
         ints = unpack(iFormat, data[:nInts*4])
         return ints
 
@@ -210,7 +210,7 @@ class FortranFile(object):
         #print "len(a) = ", len(a)
         
         iFormat = str(nLongs)+'l'
-        iFormat = bytes(iFormat)
+
         longs = unpack(iFormat, data[:nLongs*4])
         return longs
 
@@ -221,7 +221,7 @@ class FortranFile(object):
         n = len(data)
         nFloats = n//4
         iFormat = str(nFloats)+'f'
-        iFormat = bytes(iFormat)
+
         ints = unpack(iFormat, data[:nFloats*4])
         return ints
 
@@ -232,7 +232,7 @@ class FortranFile(object):
         n = len(data)
         nFloats = n//4
         iFormat = endian+str(nFloats)+'f'
-        iFormat = bytes(iFormat)
+
         ints = unpack(iFormat, data[:nFloats*4])
         return ints
 
@@ -243,7 +243,7 @@ class FortranFile(object):
         n = len(data)
         nDoubles = n//8
         iFormat = str(nDoubles)+'d'
-        iFormat = bytes(iFormat)
+
         ints = unpack(iFormat,data[:nDoubles*8])
         return ints
     
@@ -319,7 +319,7 @@ class FortranFile(object):
         """
         data2 = data[4*(n-1):4*(n-1)+4]
         iFormat = 'i'
-        iFormat = bytes(iFormat)
+
         return unpack(iFormat, data2)[0]
 
     def printSection(self,nBytes):
@@ -420,7 +420,7 @@ class FortranFile(object):
     def getNMarkers(self,nMarkers,rewind=False):
         """gets the next N markers, verifies they're correct"""
         markers = []
-        for iMarker in xrange(nMarkers):
+        for iMarker in range(nMarkers):
             tableCode = self.readHeader(None)
             markers.append(tableCode)
         ###
@@ -464,7 +464,7 @@ class FortranFile(object):
             raise EndOfFileError("data=('')")
         
         iFormat = 'i'
-        iFormat = bytes(iFormat)
+
         nValues, = unpack(iFormat, data)
         self.n += 4
         data = self.op2.read(nValues)
@@ -480,7 +480,7 @@ class FortranFile(object):
         """
         data = self.op2.read(4)
         iFormat = 'i'
-        iFormat = bytes(iFormat)
+
         nValues, = unpack(iFormat,data)
         self.n += 4
         data = self.op2.read(nValues)
@@ -502,7 +502,7 @@ class FortranFile(object):
             self.log.debug("found the end of the file...")
             return []
         iFormat = 'i'
-        iFormat = bytes(iFormat)
+
         nValues, = unpack(iFormat,data)
         self.n += 4
         data = self.op2.read(nValues)
@@ -511,7 +511,7 @@ class FortranFile(object):
 
         nInts = len(data)//4
         iFormat = str(nInts)+'i'
-        iFormat = bytes(iFormat)
+
         ints = unpack(iFormat,data)
         return [nValues]+list(ints)+[nValues]
 
@@ -523,7 +523,7 @@ class FortranFile(object):
         data = self.readBlock()
         nLetters = len(data)
         iFormat = str(nLetters) + 's'
-        iFormat = bytes(iFormat)
+
         word, = unpack(iFormat, data)
 
         #print "word = |%s|" % (word)
@@ -540,7 +540,7 @@ class FortranFile(object):
         data = self.readBlock()
         nInts = len(data)//4
         iFormat = str(nInts)+'i'
-        iFormat = bytes(iFormat)
+
         ints = unpack(iFormat, data)
         return ints
 
@@ -552,7 +552,7 @@ class FortranFile(object):
         data = self.readBlock()
         nFloats = len(data)//4
         iFormat = str(nFloats)+'f'
-        iFormat = bytes(iFormat)
+
         floats = unpack(iFormat, data)
         return floats
 
@@ -564,7 +564,7 @@ class FortranFile(object):
         data = self.readBlock()
         nDoubles = len(data)//8
         iFormat = str(nDoubles)+'d'
-        iFormat = bytes(iFormat)
+
         doubles = unpack(iFormat, data)
         return doubles
 

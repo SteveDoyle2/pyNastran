@@ -126,7 +126,7 @@ class GridPointStressesObject(scalarObject):
         del self.ovm[dt]
 
     def getTransients(self):
-        k = self.nx.keys()
+        k = list(self.nx.keys())
         k.sort()
         return k
     
@@ -146,7 +146,7 @@ class GridPointStressesObject(scalarObject):
               #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        for eKey,nxs in sorted(self.nx.iteritems()):
+        for eKey,nxs in sorted(self.nx.items()):
             eKey2 = eKey
             zero = '0'
             for iLoad,nx in enumerate(nxs):
@@ -186,8 +186,8 @@ class GridPointStressesObject(scalarObject):
               #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        for dt,Forces in sorted(self.forces.iteritems()):
-            for eKey,force in sorted(Forces.iteritems()):
+        for dt,Forces in sorted(self.forces.items()):
+            for eKey,force in sorted(Forces.items()):
                 zero = '0'
                 for iLoad,f in enumerate(force):
                     (f1,f2,f3) = f
@@ -318,7 +318,7 @@ class GridPointStressesVolumeObject(scalarObject):
         del self.ovm[dt]
 
     def getTransients(self):
-        k = self.nx.keys()
+        k = list(self.nx.keys())
         k.sort()
         return k
     
@@ -340,7 +340,7 @@ class GridPointStressesVolumeObject(scalarObject):
               #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        for eKey,nxs in sorted(self.nx.iteritems()):
+        for eKey,nxs in sorted(self.nx.items()):
             eKey2 = eKey
             zero = '0'
             for iLoad,nx in enumerate(nxs):
@@ -378,8 +378,8 @@ class GridPointStressesVolumeObject(scalarObject):
               #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        for dt,Forces in sorted(self.forces.iteritems()):
-            for eKey,force in sorted(Forces.iteritems()):
+        for dt,Forces in sorted(self.forces.items()):
+            for eKey,force in sorted(Forces.items()):
                 zero = '0'
                 for iLoad,f in enumerate(force):
                     (f1,f2,f3) = f

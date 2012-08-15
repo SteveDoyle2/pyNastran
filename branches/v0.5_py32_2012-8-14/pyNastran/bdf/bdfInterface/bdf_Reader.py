@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,R0902,R0904,R0914
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import os
 import sys
 
@@ -38,13 +38,13 @@ class BDFReader(object):
             #                   %(str(version)))
 
         if log is None:
-            from pyNastran.general.logger import dummyLogger
+            from pyNastran.general.logger import buildDummyLogger2
             if debug:
                 word = 'debug'
             else:
                 word = 'info'
-            loggerObj = dummyLogger()
-            log = loggerObj.startLog(word) # or info
+
+            log = buildDummyLogger2(word) # or info
         self.log = log
 
     def print_filename(self, filename):
@@ -75,7 +75,7 @@ class BDFReader(object):
             if not os.path.exists(infileName):
                 msg = "infileName=|%s| does not exist..." % (infileName)
                 raise IOError(msg)
-            infile = open(infileName, 'r')
+            infile = open(infileName, 'r',encoding='utf-8')
             self.infilesPack.append(infile)
             self.lineNumbers.append(0)
             self.isOpened[infileName] = True

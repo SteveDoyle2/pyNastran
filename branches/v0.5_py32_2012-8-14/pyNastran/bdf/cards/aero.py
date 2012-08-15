@@ -23,10 +23,10 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,R0902,R0904,R0914
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 #import sys
-from itertools import izip, count
+from itertools import count
 from numpy import array, pi
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -77,7 +77,7 @@ class AELINK(BaseCard):
         #print "aelink fields = ",fields
         assert len(fields)%2==0,'fields=%s' %(fields)
         #print "len(fields) = ",len(fields)
-        for i in xrange(0,len(fields),2):
+        for i in range(0,len(fields),2):
             independentLabel = fields[i]
             Ci               = fields[i+1]
             self.independentLabels.append(independentLabel)
@@ -89,7 +89,7 @@ class AELINK(BaseCard):
         fields = ['AELINK', self.id, self.label]
         #print "self.independentLabels = ",self.independentLabels
         #print "self.Cis = ",self.Cis
-        for (ivar, ival) in izip(self.independentLabels, self.Cis):
+        for (ivar, ival) in zip(self.independentLabels, self.Cis):
             fields += [ivar, ival]
         #print "AELINK fields = ",fields
         return fields
@@ -791,7 +791,7 @@ class MKAERO1(BaseCard):
             nFields = len(fields)-8
             self.machs  = []
             self.rFreqs = []
-            for i in xrange(1, 1+nFields):
+            for i in range(1, 1+nFields):
                 self.machs.append( card.field(i  ))
                 self.rFreqs.append(card.field(i+8))
         else:
@@ -839,7 +839,7 @@ class MKAERO2(BaseCard):
             nFields = len(fields)
             self.machs  = []
             self.rFreqs = []
-            for i in xrange(1, 1+nFields, 2):
+            for i in range(1, 1+nFields, 2):
                 self.machs.append( card.field(i  ))
                 self.rFreqs.append(card.field(i+1))
             ###
@@ -857,7 +857,7 @@ class MKAERO2(BaseCard):
 
     def rawFields(self):
         fields = ['MKAERO2']
-        for (i, mach, rfreq) in izip(count(), self.machs, self.rFreqs):
+        for (i, mach, rfreq) in zip(count(), self.machs, self.rFreqs):
             fields += [mach, rfreq]
         return fields
 
@@ -933,14 +933,14 @@ class PAERO2(BaseCard):
         self.thn = []
         fields = card.fields(9)
         nFields = len(fields)
-        for i in xrange(9, 9+nFields, 2):
+        for i in range(9, 9+nFields, 2):
             self.thi.append(card.field(i  ))
             self.thi.append(card.field(i+1))
         ###
 
     def rawFields(self):
         fields = ['PAERO2', self.pid, self.orient, self.width, self.AR, self.lrsb, self.lrib, self.lth1, self.lth2]
-        for (thi, thn) in izip(self.thi, self.thn):
+        for (thi, thn) in zip(self.thi, self.thn):
             fields += [thi, thn]
         return fields
 
@@ -1260,7 +1260,7 @@ class TRIM(BaseCard):
             while i<nFields: ## @todo doesnt support aeqr
                 label = fields[i]
                 ux = fields[i+1]
-                assert isinstance(label, unicode), 'TRIM card doesnt support AEQR field...iField=%s label=%s fields=%s' %(i,label,card.fields(0))
+                assert isinstance(label, str), 'TRIM card doesnt support AEQR field...iField=%s label=%s fields=%s' %(i,label,card.fields(0))
                 self.labels.append(label)
                 self.uxs.append(ux)
                 if i==2:
@@ -1274,7 +1274,7 @@ class TRIM(BaseCard):
 
     def rawFields(self):
         fields = ['TRIM', self.sid, self.mach, self.q]
-        for (i, label, ux) in izip(count(), self.labels, self.uxs):
+        for (i, label, ux) in zip(count(), self.labels, self.uxs):
             fields += [label, ux]
             if i==1:
                 fields += [self.aeqr]

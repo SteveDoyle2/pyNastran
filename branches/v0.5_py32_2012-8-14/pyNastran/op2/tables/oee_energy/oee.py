@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 from struct import unpack
 
@@ -50,14 +50,14 @@ class OEE(object):
         #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
         data = self.getData(4)
-        bufferSize, = unpack(b'i',data)
+        bufferSize, = unpack('i',data)
         data = self.getData(4*50)
         #print self.printBlock(data)
 
         aCode = self.getBlockIntEntry(data, 1)
         self.eTotal = self.parseApproachCode(data) # total energy of all elements in iSubcase/mode
         #print(self.printSection(100))
-        elementName, = unpack(b'8s',data[24:32])
+        elementName, = unpack('8s',data[24:32])
         #print("elementName = %s" %(elementName))
         try:
             elementName = elementName.decode('utf-8').strip() ## element name
@@ -157,7 +157,7 @@ class OEE(object):
 
         (format1,extract) = self.getOUG_FormatStart()  ## @todo change to OEE
         format1 += 'fff'
-        format1 = bytes(format1)
+
         
         while len(self.data)>=16: # 4*4
             eData     = self.data[0:16]
@@ -182,7 +182,7 @@ class OEE(object):
         dt = self.nonlinearFactor
 
         #(format1,extract) = self.getOUG_FormatStart()  ## @todo change to OEE
-        format1 = b'8s3f'
+        format1 = '8s3f'
 
         while len(self.data)>=16: # 5*4
             eData     = self.data[0:20]

@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 
 from .oes_objects import stressObject, strainObject
@@ -107,7 +107,7 @@ class TriaxStressObject(stressObject):
         del self.ovm[dt]
 
     def getTransients(self):
-        k = self.axial.keys()
+        k = list(self.axial.keys())
         k.sort()
         return k
 
@@ -178,7 +178,7 @@ class TriaxStressObject(stressObject):
               #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
 
         #out = []
-        for eid,radial in sorted(self.radial.iteritems()):
+        for eid,radial in sorted(self.radial.items()):
             for nid in sorted(radial):
                 rad   = self.radial[eid][nid]
                 azimuth  = self.azimuthal[eid][nid]
@@ -211,10 +211,10 @@ class TriaxStressObject(stressObject):
               #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
 
         msg = []
-        for dt,Radial in sorted(self.radial.iteritems()):
+        for dt,Radial in sorted(self.radial.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            for eid,radial in sorted(Radial.iteritems()):
+            for eid,radial in sorted(Radial.items()):
                 for nid in sorted(radial):
                     rad   = self.radial[dt][eid][nid]
                     azimuth  = self.azimuthal[dt][eid][nid]
@@ -296,7 +296,7 @@ class TriaxStrainObject(strainObject):
         del self.evm[dt]
 
     def getTransients(self):
-        k = self.axial.keys()
+        k = list(self.axial.keys())
         k.sort()
         return k
 
@@ -365,7 +365,7 @@ class TriaxStrainObject(strainObject):
               #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
 
         #out = []
-        for eid,radial in sorted(self.radial.iteritems()):
+        for eid,radial in sorted(self.radial.items()):
             for nid in sorted(radial):
                 rad   = self.radial[eid][nid]
                 azimuth  = self.azimuthal[eid][nid]
@@ -398,10 +398,10 @@ class TriaxStrainObject(strainObject):
               #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
 
         msg = []
-        for dt,Radial in sorted(self.radial.iteritems()):
+        for dt,Radial in sorted(self.radial.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            for eid,radial in sorted(Radial.iteritems()):
+            for eid,radial in sorted(Radial.items()):
                 for nid in sorted(radial):
                     rad   = self.radial[dt][eid][nid]
                     azimuth  = self.azimuthal[dt][eid][nid]

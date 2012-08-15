@@ -36,7 +36,7 @@ op4Path = pyNastran.op4.test.__path__[0]
 #print(op4Path)
 
 def pass_test1():
-    fh = cOP4(os.path.abspath('mat_b_dn.op4'),'r')
+    fh = cOP4(os.path.abspath('mat_b_dn.op4'),'r',encoding='utf-8')
     fh.print_header()
     #print fh.nmat = 9
     
@@ -47,7 +47,7 @@ def pass_test1():
     print(c)
 
 def failed_test1():
-    fh = cOP4('mat_b_dn.op4','r')
+    fh = cOP4('mat_b_dn.op4','r',encoding='utf-8')
     fh.print_header()
     #print fh.nmat = 9
     
@@ -57,7 +57,7 @@ def failed_test1():
     print(c)
 
 def pass_test2():
-    fh = cOP4(os.path.abspath('mat_b_dn.op4'),'r')
+    fh = cOP4(os.path.abspath('mat_b_dn.op4'),'r',encoding='utf-8')
     #print fh.nmat = 9
 
     # crash with "unnamed is sparse, skipping for now"
@@ -67,7 +67,7 @@ def pass_test2():
     print(c)
 
 def failed_test2():
-    fh = cOP4('mat_b_dn.op4','r')
+    fh = cOP4('mat_b_dn.op4','r',encoding='utf-8')
     #print fh.nmat = 9
 
     # ValueError:  need more than 8 values to unpack

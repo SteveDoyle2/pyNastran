@@ -42,7 +42,7 @@ class SPCForcesObject(TableObject):
         msg = header+['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        for nodeID,translation in sorted(self.translations.iteritems()):
+        for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
@@ -77,9 +77,9 @@ class SPCForcesObject(TableObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,translations in sorted(self.translations.iteritems()):
+        for dt,translations in sorted(self.translations.items()):
             msg += 'dt = %s' %(dt)
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 (Fx,Fy,Fz) = translation
                 (Mx,My,Mz) = rotation
@@ -112,7 +112,7 @@ class SPCForcesObject(TableObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for nodeID,translation in sorted(self.translations.iteritems()):
+        for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]
             (Fx,Fy,Fz) = translation
             (Mx,My,Mz) = rotation
@@ -146,7 +146,7 @@ class ComplexSPCForcesObject(ComplexTableObject):
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         raise RuntimeError('is this valid...')
-        for nodeID,translation in sorted(self.translations.iteritems()):
+        for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
@@ -187,9 +187,9 @@ class ComplexSPCForcesObject(ComplexTableObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,translations in sorted(self.translations.iteritems()):
+        for dt,translations in sorted(self.translations.items()):
             msg += 'dt = %s' %(dt)
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 msg += '%-8i ' %(nodeID)
                 vals = translation+rotation
@@ -219,7 +219,7 @@ class ComplexSPCForcesObject(ComplexTableObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for nodeID,translation in sorted(self.translations.iteritems()):
+        for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]
             (Fx,Fy,Fz) = translation
             (Mx,My,Mz) = rotation

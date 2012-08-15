@@ -23,12 +23,12 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 #pylint: disable=C0103
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 import sys
 import copy
 from math import sin, cos, radians
-from itertools import izip
+
 
 from numpy import zeros, transpose, array
 
@@ -284,7 +284,7 @@ class PCOMP(ShellProperty):
             tLast = None
 
             ## supports single ply per line
-            for i in xrange(9, 9+nplies*4, 4):
+            for i in range(9, 9+nplies*4, 4):
                 defaults = [midLast, tLast, 0.0, 'NO']
                 (mid, t, theta, sout) = card.fields(i, i+4, defaults)
                 ply = [mid, t, theta, sout]
@@ -327,7 +327,7 @@ class PCOMP(ShellProperty):
 
             self.plies = []
             #ply = [mid,t,theta,sout]
-            for (mid, t, theta, sout) in izip(Mid, T, Theta, Sout):
+            for (mid, t, theta, sout) in zip(Mid, T, Theta, Sout):
                 if sout == 1:  ## @todo not sure  0=NO,1=YES (most likely)
                     sout = 'YES'
                 elif sout == 0:
@@ -373,7 +373,7 @@ class PCOMP(ShellProperty):
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
 
-        for (field1, field2) in izip(fields1, fields2):
+        for (field1, field2) in zip(fields1, fields2):
             if not self.isSame(field1, field2):
                 return False
             ###
@@ -386,7 +386,7 @@ class PCOMP(ShellProperty):
         @param self the object pointer
         @param model a BDF object
         """
-        for iPly in xrange(len(self.plies)):
+        for iPly in range(len(self.plies)):
             mid = self.plies[iPly][0]
             #print mid
             self.plies[iPly][0] = model.Material(mid)  # mid
@@ -413,7 +413,7 @@ class PCOMP(ShellProperty):
         @retval mids the material IDs
         """
         mids = []
-        for iPly in xrange(len(self.plies)):
+        for iPly in range(len(self.plies)):
             mids.append(self.Mid(iPly))
         return mids
 
@@ -445,7 +445,7 @@ class PCOMP(ShellProperty):
         """
         if iPly == 'all': # get all layers
             t = 0.
-            for iply in xrange(len(self.plies)):
+            for iply in range(len(self.plies)):
                 t += self.Thickness(iply)
             ###
             if self.isSymmetrical():
@@ -485,7 +485,7 @@ class PCOMP(ShellProperty):
         """
         if iPly == 'all': # get all layers
             massPerArea = 0.
-            for iply in xrange(len(self.plies)):
+            for iply in range(len(self.plies)):
                 massPerArea += self.MassPerArea(iply)
             ###
             if self.isSymmetrical():
@@ -504,7 +504,7 @@ class PCOMP(ShellProperty):
     def D(self):
         D = zeros([3, 3])
         #isSym = self.isSymmetrical()
-        for iply in xrange(len(self.plies)):
+        for iply in range(len(self.plies)):
             theta = self.Theta(iply)
             #t    = self.Thickness(iply)
             mat   = self.Material(iply)

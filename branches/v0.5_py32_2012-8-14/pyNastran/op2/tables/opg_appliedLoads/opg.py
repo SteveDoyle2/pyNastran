@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 #import sys
 from struct import unpack
 
@@ -52,7 +52,7 @@ class OPG(object):
         #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
         data = self.getData(4)
-        bufferSize, = unpack(b'i',data)
+        bufferSize, = unpack('i',data)
         data = self.getData(4*50)
         
         #self.printBlock(data)
@@ -259,7 +259,7 @@ class OPG(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'i4s8f'
-        format1 = bytes(format1)
+
 
         while len(self.data) >= 44:
             eData     = self.data[0:44]
@@ -285,7 +285,7 @@ class OPG(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'i7f'
-        format1 = bytes(format1)
+
 
         while len(self.data) >= 36:
             eData     = self.data[0:36]
@@ -303,7 +303,7 @@ class OPG(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'i'
-        format1 = bytes(format1)
+
 
         #nTotal = self.numWide*4
         nTotal = 40 # same as dn
@@ -314,8 +314,8 @@ class OPG(object):
             (gridDevice,eid) = unpack(format1,data[0:8])
             nodeID = extract(gridDevice,dt)
             
-            source = unpack(b'8s',data[8:16])
-            (dx,dy,dz,rx,ry,rz) = unpack(b'6f',data[16:40])
+            source = unpack('8s',data[8:16])
+            (dx,dy,dz,rx,ry,rz) = unpack('6f',data[16:40])
             #print "source = |%s|" %(source)
             
             #print "nodeID=%s eid=%s source=|%s| dx=%-4i dy=%-4i dz=%-4i rx=%-4i ry=%-4i rz=%-4i" %(nodeID,eid,source,dx,dy,dz,rx,ry,rz)

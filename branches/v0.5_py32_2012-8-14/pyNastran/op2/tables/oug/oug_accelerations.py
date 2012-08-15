@@ -63,7 +63,7 @@ class AccelerationObject(TableObject): # approachCode=11, thermal=0
         msg = '---ACCELERATIONS---\n'
         msg += self.writeHeader()
 
-        for nodeID,translation in sorted(self.translations.iteritems()):
+        for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
@@ -85,9 +85,9 @@ class AccelerationObject(TableObject): # approachCode=11, thermal=0
         msg = '---TRANSIENT ACCELERATIONS---\n'
         msg += self.writeHeader()
         
-        for dt,translations in sorted(self.translations.iteritems()):
+        for dt,translations in sorted(self.translations.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
                 (dx,dy,dz) = translation
@@ -141,10 +141,10 @@ class ComplexAccelerationObject(ComplexTableObject): # tableCode=11, approachCod
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for freq,translations in sorted(self.translations.iteritems()):
+        for freq,translations in sorted(self.translations.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],freq)
 
-            for nodeID,translation in sorted(translations.iteritems()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[freq][nodeID]
 
                 msg += '%-10i ' %(nodeID)

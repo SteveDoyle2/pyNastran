@@ -97,7 +97,7 @@ class gridPointForcesObject(scalarObject):
         del self.elemName[dt]
 
     def getTransients(self):
-        k = self.forces.keys()
+        k = list(self.forces.keys())
         k.sort()
         return k
     
@@ -117,7 +117,7 @@ class gridPointForcesObject(scalarObject):
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
         zero = ' '
-        for eKey,Force in sorted(self.forces.iteritems()):
+        for eKey,Force in sorted(self.forces.items()):
             for iLoad,force in enumerate(Force):
                 (f1,f2,f3) = force
                 (m1,m2,m3) = self.moments[eKey][iLoad]
@@ -146,9 +146,9 @@ class gridPointForcesObject(scalarObject):
               #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        for dt,Forces in sorted(self.forces.iteritems()):
+        for dt,Forces in sorted(self.forces.items()):
             zero = ' '
-            for eKey,Force in sorted(Forces.iteritems()):
+            for eKey,Force in sorted(Forces.items()):
                 for iLoad,force in enumerate(Force):
                     (f1,f2,f3) = force
                     (m1,m2,m3) = self.moments[dt][eKey][iLoad]

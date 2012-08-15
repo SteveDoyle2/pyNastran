@@ -35,10 +35,10 @@ All beam properties are defined in this file.  This includes:
 All beams are LineProperty objects.
 Multi-segment beams are IntegratedLineProperty objects.
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+
 #import sys
-from itertools import izip, count
+from itertools import count
 from numpy import zeros, pi
 
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
@@ -979,7 +979,7 @@ class PBEAM(IntegratedLineProperty):
                 x += 16
 
             #print "  nMajor = ",nMajor
-            for nRepeated in xrange(1, nMajor):
+            for nRepeated in range(1, nMajor):
                 #print "  adding a major"
                 nStart = nRepeated*16+1  # field 17 is the first possible so
                 propFields = card.fields(nStart, nStart+16)
@@ -1051,7 +1051,7 @@ class PBEAM(IntegratedLineProperty):
         """
         rho  = self.Rho()
         massPerLs = []
-        for (area, nsm) in izip(self.A, self.nsm):
+        for (area, nsm) in zip(self.A, self.nsm):
             massPerLs.append(area*rho+nsm)
         massPerL = integratePositiveLine(self.xxb, massPerLs)
         return massPerL
@@ -1087,7 +1087,7 @@ class PBEAM(IntegratedLineProperty):
         fields = ['PBEAM', self.pid, self.Mid()]
 
         for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2,
-             f1, f2) in izip(self.so, self.xxb, self.A, self.i1, self.i2,
+             f1, f2) in zip(self.so, self.xxb, self.A, self.i1, self.i2,
             self.i12, self.j, self.nsm, self.c1, self.c2, self.d1, self.d2,
             self.e1, self.e2, self.f1, self.f2):
             fields += [so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
@@ -1103,7 +1103,7 @@ class PBEAM(IntegratedLineProperty):
         fields = ['PBEAM', self.pid, self.Mid()]
 
         i = 0
-        for (so,xxb,A,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2) in izip(
+        for (so,xxb,A,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2) in zip(
             self.so,self.xxb,self.A,self.i1,self.i2,self.i12,self.j,self.nsm,
             self.c1,self.c2,self.d1,self.d2,self.e1,self.e2,self.f1,self.f2):
 
@@ -1224,7 +1224,7 @@ class PBEAML(IntegratedLineProperty):
                 else: # other blocks, n>0 ???
                     #print "*2",
                     #print "dim = ",Dim
-                    if isinstance(dim, unicode):
+                    if isinstance(dim, str):
                         raise RuntimeError('nsm is a string...nsm=|%s|; fields=%s' %(dim,card.fields()))
                     self.nsm.append(dim)
                     if n > 0:
@@ -1246,7 +1246,7 @@ class PBEAML(IntegratedLineProperty):
                 #print "DimB = ",Dim
                 self.dim.append(Dim)
                 self.nsm.append(0.0)
-                if isinstance(self.nsm[0], unicode):
+                if isinstance(self.nsm[0], str):
                     msg = 'nsm is a string...nsm=|%s|' % (self.nsm)
                     raise RuntimeError(msg)
                 
@@ -1261,7 +1261,7 @@ class PBEAML(IntegratedLineProperty):
         """
         rho  = self.Rho()
         massPerLs = []
-        for (dim, nsm) in izip(self.dim, self.nsm):
+        for (dim, nsm) in zip(self.dim, self.nsm):
             a = self.areaL(dim)
             try:
                 massPerLs.append(a*rho+nsm)
@@ -1329,7 +1329,7 @@ class PBEAML(IntegratedLineProperty):
         msg = ''
         
         msg2 = 'Cut_%s = geompy.MakeCut(' % (iCut+1)
-        for (xxb, so, dim, nsm) in izip(self.xxb, self.so, self.dim, self.nsm):
+        for (xxb, so, dim, nsm) in zip(self.xxb, self.so, self.dim, self.nsm):
             msg  += self.CA_Section(iFace, iStart, self.dim)
             msg2 += 'Face_%i, ' % (iFace+1)
             iFace += 1
@@ -1346,7 +1346,7 @@ class PBEAML(IntegratedLineProperty):
         fields = ['PBEAML', self.pid, self.Mid(), self.group, self.Type, None, None, None, None]
         #print "self.nsm = ",self.nsm
         #print "xxb=%s so=%s dim=%s nsm=%s" %(self.xxb,self.so,self.dim,self.nsm)
-        for (i, xxb, so, dim, nsm) in izip(count(), self.xxb, self.so, self.dim, self.nsm):
+        for (i, xxb, so, dim, nsm) in zip(count(), self.xxb, self.so, self.dim, self.nsm):
             if i == 0:
                 fields += dim+[nsm]
             else:

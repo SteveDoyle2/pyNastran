@@ -24,7 +24,7 @@
 ## 
 import os
 import sys
-from itertools import izip
+
 
 from pyNastran.general.general import printBadPath
 
@@ -58,7 +58,7 @@ class F06(OES,OUG,OQG,F06Writer):
         if not os.path.exists(self.f06FileName):
             msg = 'cant find F06FileName=|%s|\n%s' %(self.f06FileName,printBadPath(self.f06FileName))
             raise RuntimeError(msg)
-        self.infile = open(self.f06FileName, 'r')
+        self.infile = open(self.f06FileName, 'r',encoding='utf-8')
         self.__initAlt__(debug,log)
 
         self.lineMarkerMap = {
@@ -126,7 +126,7 @@ class F06(OES,OUG,OQG,F06Writer):
 
           #'* * * END OF JOB * * *': self.end(),
          }
-        self.markers = self.markerMap.keys()
+        self.markers = list(self.markerMap.keys())
 
     def __initAlt__(self,debug=False,log=None):
         self.i = 0
@@ -210,13 +210,13 @@ class F06(OES,OUG,OQG,F06Writer):
         @param debug adds debug messages (True/False)
         """
         if log is None:
-            from pyNastran.general.logger import dummyLogger
+            from pyNastran.general.logger import buildDummyLogger2
             if debug:
                 word = 'debug'
             else:
                 word = 'info'
-            loggerObj = dummyLogger()
-            log = loggerObj.startLog(word) # or info
+
+            log = buildDummyLogger2(word) # or info
         self.log = log
 
     def getGridPointSingularities(self):  # @todo not done
@@ -502,7 +502,7 @@ class F06(OES,OUG,OQG,F06Writer):
 
     def parseLineGradientsFluxes(self,sline,Format):
         out = []
-        for entry,iFormat in izip(sline,Format):
+        for entry,iFormat in zip(sline,Format):
             if entry.strip() is '':
                 out.append(0.0)
             else:
@@ -538,7 +538,7 @@ class F06(OES,OUG,OQG,F06Writer):
         @param Format list of types [int,str,float,float,float] that maps to sline
         """
         out = []
-        for entry,iFormat in izip(sline,Format):
+        for entry,iFormat in zip(sline,Format):
             try:
                 entry2 = iFormat(entry)
             except:
@@ -550,7 +550,7 @@ class F06(OES,OUG,OQG,F06Writer):
     def parseLineBlanks(self,sline,Format):
         """allows blanks"""
         out = []
-        for entry,iFormat in izip(sline,Format):
+        for entry,iFormat in zip(sline,Format):
             if entry.strip():
                 entry2 = iFormat(entry)
             else:
@@ -604,7 +604,7 @@ class F06(OES,OUG,OQG,F06Writer):
         #data = [self.disp,self.SpcForces,self.stress,self.isoStress,self.barStress,self.solidStress,self.temperature]
         dataPack = [self.solidStress]
         for dataSet in dataPack:
-            for key,data in dataSet.iteritems():
+            for key,data in dataSet.items():
                 data.processF06Data()
         
     def isMarker(self,marker):
@@ -624,7 +624,7 @@ class F06(OES,OUG,OQG,F06Writer):
         return True
 
     def skip(self,iskip):
-        for i in xrange(iskip-1):
+        for i in range(iskip-1):
             self.infile.readline()
         self.i += iskip
         return self.infile.readline()

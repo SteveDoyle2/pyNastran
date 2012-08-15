@@ -212,7 +212,7 @@ class Octree(object):
         # Equation created by adding nodes with known branch directions
         # into the tree, and comparing results.
         # See DIRLOOKUP above for the corresponding return values and branch indices
-        for i in xrange(3):
+        for i in range(3):
             if vec1[i] <= vec2[i]:
                 result += (-4 / (i + 1) / 2)
             else:
@@ -248,7 +248,7 @@ if __name__ == "__main__":
 
     # Insert some random objects and time it
     Start = time.time()
-    for x in xrange(NUM_TEST_OBJECTS):
+    for x in range(NUM_TEST_OBJECTS):
         name = "Node__" + str(x)
         pos = (random.randrange(-4500.000, 4500.000), random.randrange(-4500.00, 4500.00), random.randrange(-4500.00, 4500.00))
         testOb = TestObject(name, pos)
@@ -263,7 +263,7 @@ if __name__ == "__main__":
 
     # Look up some random positions and time it
     Start = time.time()
-    for x in xrange(NUM_COLLISION_LOOKUPS):
+    for x in range(NUM_COLLISION_LOOKUPS):
         pos = (random.randrange(-4500.000, 4500.000), random.randrange(-4500.00, 4500.00), random.randrange(-4500.00, 4500.00))
         result = myTree.findPosition(myTree.root, pos)
         
