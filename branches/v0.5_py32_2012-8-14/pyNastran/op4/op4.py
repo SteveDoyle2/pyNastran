@@ -1244,7 +1244,7 @@ if __name__=='__main__':
             #f = open('binary.op4','wb')
 
         matrices = op4.readOP4(fname,matrixNames=matrixNames,precision='default')
-        print("keys = list(%s" %(matrices.keys())))
+        print("keys = %s" %(matrices.keys()))
         #print "#####################################################"
         print("fname=%s" %(fname))
         for name,(form,matrix) in sorted(matrices.items()):

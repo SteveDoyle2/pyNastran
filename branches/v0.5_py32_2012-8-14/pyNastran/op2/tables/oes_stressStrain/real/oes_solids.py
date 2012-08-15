@@ -512,7 +512,10 @@ class SolidStressObject(stressObject):
         msg += '\n'
         for eid,oxxNodes in sorted(self.oxx.items()):
             eType = self.eType[eid]
-            for nid in sorted(oxxNodes):
+            k = oxxNodes.keys()
+            k.remove('C')
+            k.sort()
+            for nid in ['C']+k:
                 oxx = self.oxx[eid][nid]
                 oyy = self.oyy[eid][nid]
                 ozz = self.ozz[eid][nid]
@@ -550,7 +553,10 @@ class SolidStressObject(stressObject):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid,oxxNodes in sorted(oxxs.items()):
                 eType = self.eType[eid]
-                for nid in sorted(oxxNodes):
+                k = oxxNodes.keys()
+                k.remove('C')
+                k.sort()
+                for nid in ['C']+k:
                     oxx = self.oxx[dt][eid][nid]
                     oyy = self.oyy[dt][eid][nid]
                     ozz = self.ozz[dt][eid][nid]
@@ -1077,7 +1083,10 @@ class SolidStrainObject(strainObject):
         msg += '\n'
         for eid,oxxNodes in sorted(self.oxx.items()):
             eType = self.eType[eid]
-            for nid in sorted(oxxNodes):
+            k = oxxNodes.keys()
+            k.remove('C')
+            k.sort()
+            for nid in ['C']+k:
                 oxx = self.oxx[eid][nid]
                 oyy = self.oyy[eid][nid]
                 ozz = self.ozz[eid][nid]
@@ -1115,7 +1124,10 @@ class SolidStrainObject(strainObject):
         msg += '\n'
         for eid,exxNodes in sorted(self.exx.items()):
             eType = self.eType[eid]
-            for nid in sorted(exxNodes):
+            k = exxNodes.keys()
+            k.remove('C')
+            k.sort()
+            for nid in ['C']+k:
                 exx = self.exx[eid][nid]
                 eyy = self.eyy[eid][nid]
                 ezz = self.ezz[eid][nid]
@@ -1151,7 +1163,10 @@ class SolidStrainObject(strainObject):
             for eid,exxNodes in sorted(exxs.items()):
                 eType = self.eType[eid]
                 msg2 = ''
-                for nid in sorted(exxNodes):
+                k = exxNodes.keys()
+                k.remove('C')
+                k.sort()
+                for nid in ['C']+k:
                     exx = self.exx[dt][eid][nid]
                     eyy = self.eyy[dt][eid][nid]
                     ezz = self.ezz[dt][eid][nid]

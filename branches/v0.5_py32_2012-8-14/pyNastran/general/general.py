@@ -133,7 +133,7 @@ def is_binary(filename):
         CHUNKSIZE = 1024
         while 1:
             chunk = fin.read(CHUNKSIZE)
-            if '\0' in chunk: # found null byte
+            if b'\0' in chunk: # found null byte
                 return True
             if len(chunk) < CHUNKSIZE:
                 break # done

@@ -47,7 +47,7 @@ def parse_table_names_from_F06(f06Name):
     return names
 
 def get_failed_files(filename):
-    infile = open(filename, 'r')
+    infile = open(filename, 'r', encoding='utf-8')
     lines = infile.readlines()
     infile.close()
     
@@ -91,7 +91,7 @@ def runLotsOfFiles(files ,makeGeom=True, writeBDF=False, writeF06=True,
         ###
     ###
     if saveCases:
-        f = open('failedCases.in','wb')
+        f = open('failedCases.in','w',encoding='utf-8')
         for op2file in failedCases:
             f.write('%s\n' %(op2file))
         f.close()
@@ -153,13 +153,6 @@ def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
         sys.exit('keyboard stop...')
     #except AddNewElementError:
     #    raise
-    except TapeCodeError: # the op2 is bad, not my fault
-        isPassed = True
-        if stopOnFailure:
-            raise
-        else:
-            isPassed = True
-        ###
     #except IOError: # missing file
         #pass
     #except AssertionError:
@@ -194,13 +187,6 @@ def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
     #    isPassed = True
     #except IndexError: # bad bdf
     #    isPassed = True
-    except IOError: # missing file
-        isPassed = False
-        raise
-    except ScientificCardParseError:  # bad value parsing
-        isPassed = True
-    except ParamParseError:
-        isPassed = True
     except:
         #print e
         print_exc(file=sys.stdout)
