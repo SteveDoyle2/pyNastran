@@ -401,5 +401,5 @@ def fKx(K, x):
     f = solve(K, x)
     return f
 
-
-runTruss()
+if __name__ == '__main__':
+    runTruss()
