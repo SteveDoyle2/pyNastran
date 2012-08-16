@@ -4,6 +4,7 @@ from __future__ import print_function
 import sys
 #from pyNastran.bdf.cards.constraints import constraintObject2
 
+
 class XrefMesh(object):
     """
     Links up the various cards in the BDF.
@@ -34,15 +35,14 @@ class XrefMesh(object):
             self._cross_reference_constraints()
             self._cross_reference_loads()
             #self.caseControlDeck.crossReference(self)
-        ###
-    
+
     def _cross_reference_constraints(self):
         """
         Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC cards.
         """
         #self.spcObject.crossReference(self)  # enable to output SPCs
         #self.mpcObject.crossReference(self)  # enable to output MPCs
-        
+
         #self.spcObject2 = constraintObject2()
         for spcadd in self.spcadds.itervalues():
             self.spcObject2.Add(spcadd)
@@ -60,7 +60,6 @@ class XrefMesh(object):
         #self.mpcObject2 = constraintObject2()
         #self.spcObject.crossReference(self)
 
-
     def _cross_reference_coordinates(self):
         """
         Links up all the coordinate cards to other coordinate cards and nodes
@@ -75,7 +74,7 @@ class XrefMesh(object):
         # We couldnt do it in the previous step b/c
         # the grid's coordinate system might have been
         # unresolved
-        for coord in self.coords.itervalues(): 
+        for coord in self.coords.itervalues():
             coord.resolveCid()
 
     def _cross_reference_aero(self):
@@ -133,7 +132,7 @@ class XrefMesh(object):
         Links the materials to materials (e.g. MAT1, CREEP)
         often this is a pass statement
         """
-        for mat in self.materials.itervalues(): # MAT1
+        for mat in self.materials.itervalues():  # MAT1
             try:
                 mat.crossReference(self)
             except:
@@ -141,7 +140,7 @@ class XrefMesh(object):
                 self.log.error(msg)
                 raise
 
-        for mat in self.materialDeps.itervalues(): # CREEP - depends on MAT1
+        for mat in self.materialDeps.itervalues():  # CREEP - depends on MAT1
             try:
                 mat.crossReference(self)
             except:
@@ -163,4 +162,3 @@ class XrefMesh(object):
                     msg = "Couldn't cross reference Load\n%s" % (str(load))
                     self.log.error(msg)
                     raise
-
