@@ -24,7 +24,7 @@ from .cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
                                    CTRIAX6, CTRIAR, ShellElement)
 from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR
 #------
-from .cards.elements.bush import   CBUSH, CBUSH1D, CBUSH2D
+from .cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from .cards.properties.bush import PBUSH, PBUSH1D
 #------
 from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
@@ -32,13 +32,13 @@ from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
 from .cards.properties.damper import (PVISC, PDAMP, PDAMP5, PDAMPT)
 #------
 from .cards.elements.bars import (CROD, CONROD, CTUBE, CBAR, CBEAM, CBEAM3,
-                                      CBEND, LineElement, RodElement)
+                                  CBEND, LineElement, RodElement)
 from .cards.properties.bars import (PROD, PTUBE, PBAR, PBARL,
-                                        PBEAM, PBEAML) # PBEND
+                                    PBEAM, PBEAML)  # PBEND
 #------
 
 from .cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4,
-                                  PointElement, PointMassElement) # CMASS5
+                                  PointElement, PointMassElement)  # CMASS5
 from .cards.properties.mass import (PMASS, NSM)
 
 #--------------------------------
@@ -62,8 +62,8 @@ from .cards.loads.staticLoads import (LOAD, GRAV, ACCEL1, FORCE,
                                       PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1)
 
 from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
-                                          MAT8, MAT9, MAT10,
-                                          MATHP, CREEP, MATS1)
+                              MAT8, MAT9, MAT10,
+                              MATHP, CREEP, MATS1)
 from .cards.methods import (EIGB, EIGC, EIGR, EIGP, EIGRL)
 from .cards.nodes import GRID, GRDSET, SPOINTs
 from .cards.optimization import (DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
@@ -76,22 +76,22 @@ from .cards.sets import (ASET, BSET, CSET, QSET,
 from .cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD)
 from .cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                     PHBDY, CONV, RADM, RADBC,)
-                                    
+
 
 from .cards.tables import (TABLED1, TABLED2, TABLED3,
                            TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                            TABLES1, TABLEST, TABRND1, TABRNDG, TIC)
 
 from pyNastran.bdf.caseControlDeck import CaseControlDeck
-from pyNastran.bdf.bdf_Methods     import BDFMethods
+from pyNastran.bdf.bdf_Methods import BDFMethods
 
 from .bdfInterface.getCard import GetMethods
 from .bdfInterface.addCard import AddMethods
-from .bdfInterface.BDF_Card   import BDFCard
+from .bdfInterface.BDF_Card import BDFCard
 from .bdfInterface.bdf_Reader import BDFReader
-from .bdfInterface.bdf_writeMesh   import WriteMesh
+from .bdfInterface.bdf_writeMesh import WriteMesh
 from .bdfInterface.bdf_cardMethods import CardMethods
-from .bdfInterface.crossReference  import XrefMesh
+from .bdfInterface.crossReference import XrefMesh
 
 
 class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
@@ -101,7 +101,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
     """
     modelType = 'nastran'
     isStructured = False
-    
+
     def __init__(self, debug=True, log=None, nCardLinesMax=1000):
         """
         Initializes the BDF object
@@ -122,7 +122,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ## useful in debugging errors in input
         self.debug = debug
         self._init_solution()
-        
+
         ## flag that allows for OpenMDAO-style optimization syntax to be used
         self.isDynamicSyntax = False
         ## lines that were rejected b/c they were for a card
@@ -137,129 +137,132 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
         ## the list of possible cards that will be parsed
         self.cardsToRead = set([
-        'PARAM',
-        'GRID', 'GRDSET', 'SPOINT', #'RINGAX',
+                               'PARAM',
+                               'GRID', 'GRDSET', 'SPOINT',  # 'RINGAX',
 
-        # elements
-        'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4', # 'CONM1',
-        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', #'CELAS5',
-        'CBUSH', 'CBUSH1D', 'CBUSH2D',
-        
-        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-        'CFAST',
-        
-        'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
-        'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
-        'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
-        'CTETRA', 'CPENTA', 'CHEXA',
-        'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
-        'CGAP',
-        
-        # rigid elements
-        'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3',
+                               # elements
+                               'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
+                               # 'CONM1',
+                               'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                               # 'CELAS5',
+                               'CBUSH', 'CBUSH1D', 'CBUSH2D',
 
-        # properties
-        'PMASS',
-        'PELAS', 'PGAP', 'PFAST',
-        'PBUSH', 'PBUSH1D',
-        'PDAMP', 'PDAMP5', 'PDAMPT',
-        'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBEAML',#'PBEAM3',
-        'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
-        'PSOLID', 'PLSOLID', 'PVISC',
-        
-        # creep materials
-        'CREEP',
+                               'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+                               'CFAST',
 
-        # materials
-        'MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MATHP',
-        #'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
-        'MATS1',
-         
-        # thermal materials
-        'MAT4', 'MAT5',
+                               'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
+                               'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
+                               'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
+                               'CTETRA', 'CPENTA', 'CHEXA',
+                               'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
+                               'CGAP',
 
-        # spc/mpc constraints
-        'SPC', 'SPCADD', 'SPC1', 'SPCD', 'SPCAX',
-        'MPC', 'MPCADD',
-        'SUPORT', 'SUPORT1',
+                               # rigid elements
+                               'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3',
 
-        # loads
-        'LOAD', 'LSEQ', 'RANDPS',
-        'DLOAD', 'SLOAD', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
-        'FORCE',  'FORCE1',  'FORCE2',
-        'MOMENT', 'MOMENT1', 'MOMENT2',
-        'GRAV', 'ACCEL1',
-        'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
-        'PLOADX1', 'RFORCE',
+                               # properties
+                               'PMASS',
+                               'PELAS', 'PGAP', 'PFAST',
+                               'PBUSH', 'PBUSH1D',
+                               'PDAMP', 'PDAMP5', 'PDAMPT',
+                               'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBEAML',
+                               # 'PBEAM3',
+                               'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
+                               'PSOLID', 'PLSOLID', 'PVISC',
 
-        # aero cards
-        'AERO', 'AEROS', 'GUST', 'FLUTTER', 'FLFACT', 'MKAERO1', 'MKAERO2',
-        'AEFACT', 'AELINK', 'AELIST', 'AEPARAM', 'AESTAT', 'AESURF',
-        'CAERO1', 'CAERO2', #'CAERO3', 'CAERO4', 'CAERO5',
-        'PAERO1', 'PAERO2', #'PAERO3', 'PAERO4', 'PAERO5',
-        'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',
-        #'SPLINE3', 'SPLINE6', 'SPLINE7',
-        'TRIM',
-        
-        # coords
-        'CORD1R', 'CORD1C', 'CORD1S',
-        'CORD2R', 'CORD2C', 'CORD2S',
-        
-        # temperature cards
-        'TEMP',#'TEMPD',
-        'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
-        'CHBDYE', 'CHBDYG', 'CHBDYP',
-        'PCONV', 'PCONVM', 'PHBDY',
-        'RADBC', 'CONV',  #'RADM',
-        
-        # dynamic cards
-        'DAREA', 'NLPARM', 'TSTEP', 'TSTEPNL',
+                               # creep materials
+                               'CREEP',
 
-        # frequencies
-        'FREQ', 'FREQ1', 'FREQ2',
-        
-        # direct matrix input cards
-        'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
-        'DEQATN',
-        
-        # optimization cards
-        'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2', 'DVPREL1', 'DVPREL2',
-        'DOPTPRM', 'DVMREL1', 'DLINK', 'DRESP3',
-        
-        # sets
-        'ASET',  'BSET',  'CSET',  'QSET', #'USET',
-        'ASET1', 'BSET1', 'CSET1', 'QSET1', #'USET1',
-        'SET1', 'SET3',
-        
-        # super-element sets
-        'SESET',
+                               # materials
+                               'MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MATHP',
+                               #'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
+                               'MATS1',
 
-        # tables
-        #'DTABLE', 'TABLEHT', 'TABRNDG',
-        'TABLED1', 'TABLED2', 'TABLED3',#'TABLED4',
-        'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
-        'TABLES1', 'TABLEST',
-        'TABRND1', 'TABRNDG',
-        
-        # initial conditions - sid (set ID)
-        #'TIC',  (in tables.py)
+                               # thermal materials
+                               'MAT4', 'MAT5',
 
-        # methods - @todo EIGRL not done???
-        'EIGB', 'EIGR', 'EIGRL',
-        
-        # cMethods - @todo EIGC not done???
-        'EIGC', 'EIGP',
-        
-        # other
-        'INCLUDE',  # '='
-        'ENDDATA',
-        ])
-        
+                               # spc/mpc constraints
+                               'SPC', 'SPCADD', 'SPC1', 'SPCD', 'SPCAX',
+                               'MPC', 'MPCADD',
+                               'SUPORT', 'SUPORT1',
+
+                               # loads
+                               'LOAD', 'LSEQ', 'RANDPS',
+                               'DLOAD', 'SLOAD', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
+                               'FORCE', 'FORCE1', 'FORCE2',
+                               'MOMENT', 'MOMENT1', 'MOMENT2',
+                               'GRAV', 'ACCEL1',
+                               'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
+                               'PLOADX1', 'RFORCE',
+
+                               # aero cards
+                               'AERO', 'AEROS', 'GUST', 'FLUTTER', 'FLFACT', 'MKAERO1', 'MKAERO2',
+                               'AEFACT', 'AELINK', 'AELIST', 'AEPARAM', 'AESTAT', 'AESURF',
+                               'CAERO1', 'CAERO2',  # 'CAERO3', 'CAERO4', 'CAERO5',
+                               'PAERO1', 'PAERO2',  # 'PAERO3', 'PAERO4', 'PAERO5',
+                               'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',
+                               #'SPLINE3', 'SPLINE6', 'SPLINE7',
+                               'TRIM',
+
+                               # coords
+                               'CORD1R', 'CORD1C', 'CORD1S',
+                               'CORD2R', 'CORD2C', 'CORD2S',
+
+                               # temperature cards
+                               'TEMP',  # 'TEMPD',
+                               'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
+                               'CHBDYE', 'CHBDYG', 'CHBDYP',
+                               'PCONV', 'PCONVM', 'PHBDY',
+                               'RADBC', 'CONV',  # 'RADM',
+
+                               # dynamic cards
+                               'DAREA', 'NLPARM', 'TSTEP', 'TSTEPNL',
+
+                               # frequencies
+                               'FREQ', 'FREQ1', 'FREQ2',
+
+                               # direct matrix input cards
+                               'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
+                               'DEQATN',
+
+                               # optimization cards
+                               'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2', 'DVPREL1', 'DVPREL2',
+                               'DOPTPRM', 'DVMREL1', 'DLINK', 'DRESP3',
+
+                               # sets
+                               'ASET', 'BSET', 'CSET', 'QSET',  # 'USET',
+                               'ASET1', 'BSET1', 'CSET1', 'QSET1',  # 'USET1',
+                               'SET1', 'SET3',
+
+                               # super-element sets
+                               'SESET',
+
+                               # tables
+                               #'DTABLE', 'TABLEHT', 'TABRNDG',
+                               'TABLED1', 'TABLED2', 'TABLED3',  # 'TABLED4',
+                               'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
+                               'TABLES1', 'TABLEST',
+                               'TABRND1', 'TABRNDG',
+
+                               # initial conditions - sid (set ID)
+                               #'TIC',  (in tables.py)
+
+                               # methods - @todo EIGRL not done???
+                               'EIGB', 'EIGR', 'EIGRL',
+
+                               # cMethods - @todo EIGC not done???
+                               'EIGC', 'EIGP',
+
+                               # other
+                               'INCLUDE',  # '='
+                               'ENDDATA',
+                               ])
+
         caseControlCards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
                                 'TEMP', 'TSTEPNL', 'INCLUDE'])
         self.uniqueBulkDataCards = self.cardsToRead.difference(
-                                                              caseControlCards)
-        
+            caseControlCards)
+
         ## / is the delete from restart card
         self.specialCards = ['DEQATN', '/']
         ## was playing around with an idea...does nothing for now...
@@ -302,78 +305,78 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.bdf_filename = None
         self.autoReject = False
         self.solmap_toValue = {
-                        
-                        'NONLIN'    : 101, #66 -> 101 per Reference 1
-                        'SESTATIC'  : 101,
-                        'SESTATICS' : 101,
-                        'SEMODES'   : 103,
-                        'BUCKLING'  : 105,
-                        'SEBUCKL'   : 105,
-                        'NLSTATIC'  : 106,
-                        'SEDCEIG'   : 107,
-                        'SEDFREQ'   : 108,
-                        'SEDTRAN'   : 109,
-                        'SEMCEIG'   : 110,
-                        'SEMFREQ'   : 111,
-                        'SEMTRAN'   : 112,
-                        'CYCSTATX'  : 114,
-                        'CYCMODE'   : 115,
-                        'CYCBUCKL'  : 116,
-                        'CYCFREQ'   : 118,
-                        'NLTRAN'    : 129,
-                        'AESTAT'    : 144,
-                        'FLUTTR'    : 145,
-                        'SEAERO'    : 146,
-                        'NLSCSH'    : 153,
-                        'NLTCSH'    : 159,
-                        'DBTRANS'   : 190,
-                        'DESOPT'    : 200,
-                        
-                        # guessing
-                        #'CTRAN'     : 115,
-                        'CFREQ'     : 118,
-                        
-                        # solution 200 names
-                        'STATICS'  : 101,
-                        'MODES'    : 103,
-                        'BUCK'     : 105,
-                        'DFREQ'    : 108,
-                        'MFREQ'    : 111,
-                        'MTRAN'    : 112,
-                        'DCEIG'    : 107,
-                        'MCEIG'    : 110,
-                        #'HEAT'     : None,
-                        #'STRUCTURE': None,
-                        #'DIVERGE'  : None,
-                        'FLUTTER'  : 145,
-                        'SAERO'    : 146,
-                       }
+
+            'NONLIN': 101,  # 66 -> 101 per Reference 1
+            'SESTATIC': 101,
+            'SESTATICS': 101,
+            'SEMODES': 103,
+            'BUCKLING': 105,
+            'SEBUCKL': 105,
+            'NLSTATIC': 106,
+            'SEDCEIG': 107,
+            'SEDFREQ': 108,
+            'SEDTRAN': 109,
+            'SEMCEIG': 110,
+            'SEMFREQ': 111,
+            'SEMTRAN': 112,
+            'CYCSTATX': 114,
+            'CYCMODE': 115,
+            'CYCBUCKL': 116,
+            'CYCFREQ': 118,
+            'NLTRAN': 129,
+            'AESTAT': 144,
+            'FLUTTR': 145,
+            'SEAERO': 146,
+            'NLSCSH': 153,
+            'NLTCSH': 159,
+            'DBTRANS': 190,
+            'DESOPT': 200,
+
+            # guessing
+            #'CTRAN'     : 115,
+            'CFREQ': 118,
+
+            # solution 200 names
+            'STATICS': 101,
+            'MODES': 103,
+            'BUCK': 105,
+            'DFREQ': 108,
+            'MFREQ': 111,
+            'MTRAN': 112,
+            'DCEIG': 107,
+            'MCEIG': 110,
+            #'HEAT'     : None,
+            #'STRUCTURE': None,
+            #'DIVERGE'  : None,
+            'FLUTTER': 145,
+            'SAERO': 146,
+        }
 
         self.rsolmap_toStr = {
-                     66  : 'NONLIN',
-                     101 : 'SESTSTATIC',  # linear static
-                     103 : 'SEMODES'   ,  # modal
-                     105 : 'BUCKLING'  ,  # buckling
-                     106 : 'NLSTATIC'  ,  # non-linear static
-                     107 : 'SEDCEIG'   ,  # direct complex frequency response
-                     108 : 'SEDFREQ'   ,  # direct frequency response
-                     109 : 'SEDTRAN'   ,  # direct transient response
-                     110 : 'SEMCEIG'   ,  # modal complex eigenvalue
-                     111 : 'SEMFREQ'   ,  # modal frequency response
-                     112 : 'SEMTRAN'   ,  # modal transient response
-                     114 : 'CYCSTATX'  , 
-                     115 : 'CYCMODE'   ,
-                     116 : 'CYCBUCKL'  ,
-                     118 : 'CYCFREQ'   ,
-                     129 : 'NLTRAN'    ,  # nonlinear transient
-                     144 : 'AESTAT'    ,  # static aeroelastic
-                     145 : 'FLUTTR'    ,  # flutter/aeroservoelastic
-                     146 : 'SEAERO'    ,  # dynamic aeroelastic
-                     153 : 'NLSCSH'    ,  # nonlinear static thermal
-                     159 : 'NLTCSH'    ,  # nonlinear transient thermal
-                     190 : 'DBTRANS'   ,
-                     200 : 'DESOPT'    ,  # optimization
-                   }
+            66: 'NONLIN',
+            101: 'SESTSTATIC',  # linear static
+            103: 'SEMODES',  # modal
+            105: 'BUCKLING',  # buckling
+            106: 'NLSTATIC',  # non-linear static
+            107: 'SEDCEIG',  # direct complex frequency response
+            108: 'SEDFREQ',  # direct frequency response
+            109: 'SEDTRAN',  # direct transient response
+            110: 'SEMCEIG',  # modal complex eigenvalue
+            111: 'SEMFREQ',  # modal frequency response
+            112: 'SEMTRAN',  # modal transient response
+            114: 'CYCSTATX',
+            115: 'CYCMODE',
+            116: 'CYCBUCKL',
+            118: 'CYCFREQ',
+            129: 'NLTRAN',  # nonlinear transient
+            144: 'AESTAT',  # static aeroelastic
+            145: 'FLUTTR',  # flutter/aeroservoelastic
+            146: 'SEAERO',  # dynamic aeroelastic
+            153: 'NLSCSH',  # nonlinear static thermal
+            159: 'NLTCSH',  # nonlinear transient thermal
+            190: 'DBTRANS',
+            200: 'DESOPT',  # optimization
+        }
         self._init_structural_defaults()
         self._init_aero_defaults()
         self._init_thermal_defaults()
@@ -395,7 +398,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ## used in solution 600, method
         self.solMethod = None
         ## the line with SOL on it, marks ???
-        self.iSolLine  = None
+        self.iSolLine = None
         self.caseControlDeck = CaseControlDeck([], self.log)
         #self.executive_control_lines = [self.sol]
 
@@ -429,18 +432,18 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         #self.random = {} # Case Control RANDOM = 100
 
         ## stores coordinate systems
-        self.coords = {0: CORD2R() }
+        self.coords = {0: CORD2R()}
 
         # constraints
         ## stores SUPORT1s
         #self.constraints = {} # suport1, anything else???
-        self.suports = [] # suport, suport1
+        self.suports = []  # suport, suport1
 
         ## stores SPCADD,SPC,SPC1,SPCD,SPCAX
         self.spcObject2 = constraintObject2()
         ## stores MPCADD,MPC
         self.mpcObject2 = constraintObject2()
-        
+
         self.spcs = {}
         self.spcadds = {}
 
@@ -449,7 +452,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
         # dynamic cards
         ## stores DAREA
-        self.dareas  = {}
+        self.dareas = {}
         ## stores NLPARM
         self.nlparms = {}
         ## stores TSTEPs
@@ -464,21 +467,21 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.dmijis = {}
         self.dmiks = {}
         self.dequations = {}
-        
+
         ## frequencies
         self.frequencies = {}
 
         # optimization
         self.dconstrs = {}
-        self.desvars  = {}
-        self.ddvals   = {}
-        self.dlinks   = {}
-        self.dresps   = {}
+        self.desvars = {}
+        self.ddvals = {}
+        self.dlinks = {}
+        self.dresps = {}
         ## stores DVPREL1, DVPREL2...might change to DVxRel
-        self.dvprels  = {}
-        self.dvmrels  = {}
+        self.dvprels = {}
+        self.dvmrels = {}
         self.doptprm = None
-        
+
         ## SETx
         self.sets = {}
         self.asets = []
@@ -487,14 +490,16 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.qsets = []
         ## SESETx
         self.setsSuper = {}
+
         ## tables
         self.tables = {}
         ## randomTables
         self.randomTables = {}
-        
-        ## methods
-        self.methods  = {} ## EIGB, EIGR, EIGRL
-        self.cMethods = {} ## EIGC, EIGP
+
+        ## EIGB, EIGR, EIGRL methods
+        self.methods = {}
+        # EIGC, EIGP methods
+        self.cMethods = {}
 
     def _init_aero_defaults(self):
         """
@@ -508,14 +513,14 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ## stores PAEROx
         self.paeros = {}
         ## stores AERO
-        self.aero   = {}
+        self.aero = {}
         ## stores AEROS
-        self.aeros  = {}
+        self.aeros = {}
 
         ## stores AEFACT
         self.aefacts = {}
         ## stores AELINK
-        self.aelinks  = {}
+        self.aelinks = {}
         ## stores AELIST
         self.aelists = {}
         ## stores AEPARAM
@@ -523,29 +528,29 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ## stores AESURF
         self.aesurfs = {}
         ## stores AESTAT
-        self.aestats  = {}
+        self.aestats = {}
 
         ## stores GUST cards
-        self.gusts    = {}
+        self.gusts = {}
         ## stores FLFACT
-        self.flfacts  = {}  # can this be simplified ???
+        self.flfacts = {}  # can this be simplified ???
         ## stores FLUTTER
         self.flutters = {}
         ## mkaeros
         self.mkaeros = []
         ## store SPLINE1,SPLINE2,SPLINE4,SPLINE5
-        self.splines  = {}
+        self.splines = {}
         ## stores TRIM
         self.trims = {}
-        
+
     def _init_thermal_defaults(self):
         """initializes some bdf parameters"""
         # BCs
         ## stores thermal boundary conditions - CONV,RADBC
-        self.bcs   = {}  # e.g. RADBC
+        self.bcs = {}  # e.g. RADBC
         ## defines the MAT4, MAT5, MATT4, etc. @todo verify MATT4
         self.thermalMaterials = {}
-        
+
         # elements
         # see self.elements
 
@@ -553,7 +558,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ## stores other thermal properties - unused ???
         #self.thermalProperties    = {}
         ## stores PHBDY
-        self.phbdys               = {}
+        self.phbdys = {}
         ## stores convection properties - PCONV, PCONVM ???
         self.convectionProperties = {}
 
@@ -571,7 +576,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self._set_infile(infilename, includeDir)
 
         fname = self.print_filename(self.bdf_filename)
-        self.log.debug('---starting BDF.readBDF of %s---' %(fname))
+        self.log.debug('---starting BDF.readBDF of %s---' % (fname))
         #self.log.info('xref=%s' %(xref))
         sys.stdout.flush()
 
@@ -586,7 +591,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         if self.debug:
             self.log.debug("***BDF.readBDF")
 
-        self.log.debug('---finished BDF.readBDF of %s---' %(fname))
+        self.log.debug('---finished BDF.readBDF of %s---' % (fname))
         sys.stdout.flush()
 
     def readBDF_Punch(self, infilename, includeDir=None, xref=True):
@@ -603,7 +608,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self._set_infile(infilename, includeDir)
 
         fname = self.print_filename(self.bdf_filename)
-        self.log.debug('---starting BDF.readBDF_Punch of %s---' %(fname))
+        self.log.debug('---starting BDF.readBDF_Punch of %s---' % (fname))
         #self.log.info('xref=%s' %(xref))
         sys.stdout.flush()
 
@@ -616,7 +621,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         if self.debug:
             self.log.debug("***BDF.readBDF_Punch")
 
-        self.log.debug('---finished BDF.readBDF_Punch of %s---' %(fname))
+        self.log.debug('---finished BDF.readBDF_Punch of %s---' % (fname))
         sys.stdout.flush()
 
     def _is_executive_control_deck(self, line):
@@ -638,17 +643,17 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             ###
         ###
 
-        if 0: # old method; breaks DMAP alters
-            while len(self._active_filenames) > 0: # keep going until finished
+        if 0:  # old method; breaks DMAP alters
+            while len(self._active_filenames) > 0:  # keep going until finished
                 lineIn = self.get_next_line()
                 #print(lineIn)
-                if lineIn == None:  # file was closed and a 2nd readCaseControl
+                if lineIn is None:  # file was closed and a 2nd readCaseControl
                     return          # was called
-    
+
                 line = lineIn.strip()
                 if self.debug:
                     (n) = self.get_line_number()
-                    self.log.debug("executiveLine[%s] = |%s|" %(n, line))
+                    self.log.debug("executiveLine[%s] = |%s|" % (n, line))
                 self.executive_control_lines.append(lineIn)
                 if 'CEND' in line.upper():
                     break
@@ -665,7 +670,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             if 'SOL ' in uline[:4]:
                 #print "line = ",uline
                 if ',' in uline:
-                    sline = uline.split(',') # SOL 600,method
+                    sline = uline.split(',')  # SOL 600,method
                     solValue = sline[0]
                     method = sline[1]
 
@@ -677,15 +682,15 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
                 #print "solValue = |%s|" %(solValue)
                 sol = solValue[3:].strip()
-                    
-                assert self.sol == None, ('cannot overwrite solution existing='
-                                        '|SOL %s| new =|%s|' %(self.sol,uline))
+
+                assert self.sol is None, ('cannot overwrite solution existing='
+                                          '|SOL %s| new =|%s|' % (self.sol, uline))
                 self.iSolLine = i
 
                 try:
                     self.update_solution(sol, method)
                 except:
-                    msg = ('update_solution failed...line=%s' %(uline))
+                    msg = ('update_solution failed...line=%s' % (uline))
                     raise RuntimeError(msg)
                 ###
             ###
@@ -719,17 +724,16 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         if self.sol == 600:
             ## solution 600 method modifier
             self.solMethod = method.strip()
-            self.log.debug("sol=%s method=%s" %(self.sol, self.solMethod))
-        else: # very common
+            self.log.debug("sol=%s method=%s" % (self.sol, self.solMethod))
+        else:  # very common
             self.solMethod = None
         ###
         #print "sol=%s method=%s" %(self.sol,self.solMethod)
-        
 
     def setDynamicSyntax(self, dictOfVars):
         """@see set_dynamic_syntax"""
         warnings.warn('setDynamicSyntax has been deprecated; use '
-                      'set_dynamic_syntax',DeprecationWarning, stacklevel=2)
+                      'set_dynamic_syntax', DeprecationWarning, stacklevel=2)
         self.set_dynamic_syntax(dictOfVars)
 
     def set_dynamic_syntax(self, dictOfVars):
@@ -743,7 +747,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.dictOfVars = {}
         for (key, value) in sorted(dictOfVars.iteritems()):
             assert len(key) <= 7, ('max length for key is 7; '
-                                   'len(%s)=%s' %(key, len(key)))
+                                   'len(%s)=%s' % (key, len(key)))
             self.dictOfVars[key.upper()] = value
         ###
         self.isDynamicSyntax = True
@@ -780,20 +784,20 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         #self.caseControlControlLines = []
 
         i = 0
-        while len(self._active_filenames)>0: # keep going until finished
+        while len(self._active_filenames) > 0:  # keep going until finished
         #while 'BEGIN BULK' not in line:
             lineIn = self.get_next_line()
             #print("lineIn = |%r|" % (lineIn))
             #print("lineIn = ", lineIn)
-            if lineIn == None:
-                return # file was closed and a 2nd readCaseControl was called
+            if lineIn is None:
+                return  # file was closed and a 2nd readCaseControl was called
             if not self._is_case_control_deck(lineIn):
-                self.linesPack = [lineIn]+self.linesPack
+                self.linesPack = [lineIn] + self.linesPack
             line = lineIn.strip().split('$')[0].strip()
             lineUpper = line.upper()
 
             (line, lineUpper) = self._checkForIncludeFile_CaseControlDeck(
-                                                      lineIn, line, lineUpper)
+                lineIn, line, lineUpper)
 
             #print "*line = |%s|" %(line)
             if 'BEGIN' in lineUpper and 'BULK' in lineUpper:
@@ -806,14 +810,14 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             i += 1
         #self.log.info("finished with Case Control Deck..")
         #print("self.case_controlLines = ",self.case_control_lines)
-        
+
         #for line in self.case_control_lines:
             #print "** line=|%r|" %(line)
 
         self.caseControlDeck = CaseControlDeck(self.case_control_lines,
                                                self.log)
         self.caseControlDeck.solmap_toValue = self.solmap_toValue
-        self.caseControlDeck.rsolmap_toStr  = self.rsolmap_toStr
+        self.caseControlDeck.rsolmap_toStr = self.rsolmap_toStr
 
         #print "done w/ case control..."
         #print '***********************'
@@ -837,7 +841,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             nextLine = self.get_next_line().strip().split('$')[0].strip()
             includeLines = [line]
             #print "^&*1",nextLine
-            while '\\' in nextLine or '/' in nextLine: # more includes
+            while '\\' in nextLine or '/' in nextLine:  # more includes
                 includeLines.append(nextLine)
                 nextLine = self.get_next_line().strip().split('$')[0].strip()
                 #print "^&*2",nextLine
@@ -875,7 +879,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         cardName = cardName.lstrip().rstrip(' *')
         #self.log.debug("_get_card_name cardName=|%s|" %(cardName))
         return cardName
-    
+
     def _is_reject(self, cardName):
         """Can the card be read"""
         #cardName = self._get_card_name(card)
@@ -887,7 +891,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             return False
         if cardName:
             if cardName not in self.rejectCount:
-                self.log.info("RejectCardName = |%s|" %(cardName))
+                self.log.info("RejectCardName = |%s|" % (cardName))
                 self.rejectCount[cardName] = 0
             self.rejectCount[cardName] += 1
         return True
@@ -908,7 +912,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             line = line.strip('\t\r\n ')
             cardLines2.append(line)
 
-        cardLines2[0] = cardLines2[0][7:].strip() # truncate the cardname
+        cardLines2[0] = cardLines2[0][7:].strip()  # truncate the cardname
         filename = ''.join(cardLines2)
         filename = filename.strip('"').strip("'")
         if ':' in filename:
@@ -935,7 +939,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.open_file(self.bdf_filename)
 
         #old_card_obj = BDFCard()
-        while len(self._active_filenames) > 0: # keep going until finished
+        while len(self._active_filenames) > 0:  # keep going until finished
             ## gets the cardLines
             (rawCard, card, cardName) = self._get_card(debug=False)
             #print "outcard = ",card
@@ -953,7 +957,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             #elif cardName is None:
                 #self.close_file()
                 #continue
-                
+
             passCard = False
             if self._is_special_card(cardName):
                 passCard = True
@@ -962,7 +966,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             elif not self._is_reject(cardName):
                 #print ""
                 #print "not a reject"
-                card = self.processCard(card) # parse the card into fields
+                card = self.processCard(card)  # parse the card into fields
                 #print "processedCard = ",card
             elif card[0].strip() == '':
                 #print "funny strip thing..."
@@ -977,12 +981,12 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             #print "card2 = ",ListPrint(card)
             #print "card = ",card
             #cardName = self._get_card_name(card)
-            
+
             if 'ENDDATA' in cardName:
                 #print cardName
-                break # exits while loop
+                break  # exits while loop
             #self.log.debug('cardName = |%s|' %(cardName))
-            
+
             #cardObj = BDFCard(card,oldCardObj)
             #if cardName in self.specialCards:
             #    cardObj = card
@@ -1011,14 +1015,14 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 #if self.foundEndData:
                 #    break
             ### iCard
-            if self.doneReading or len(self.linesPack[-1])==0:
+            if self.doneReading or len(self.linesPack[-1]) == 0:
                 #print("doneReading=%s len(pack)=%s"
                 #    %(self.doneReading, len(self.linesPack[-1])))
                 self.close_file()
             ###
             #oldCardObj = copy.deepcopy(cardObj) # used for =(*1) stuff
             #print ""
-            
+
             #print "self.linesPack[-1] = ",len(self.linesPack[-1])
             #print "self._active_filenames = ",self._active_filenames
         ### end of while loop
@@ -1029,7 +1033,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 #print node
             #for eid,element in self.elements.iteritems():
                 #print element
-            
+
             #self.log.debug("\n$REJECTS")
             #for reject in self.rejects:
                 #print printCard(reject)
@@ -1046,7 +1050,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
     def add_card(self, card, cardName, iCard=0, old_card_obj=None):
         """
-        adds a card object to the BDF object. 
+        adds a card object to the BDF object.
         @param self
           the object pointer
         @param card
@@ -1087,14 +1091,14 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
         try:
             if self.autoReject == True:
-                print('rejecting processed %s' %(card))
+                print('rejecting processed %s' % (card))
                 self.reject_cards.append(card)
             elif card == [] or cardName == '':
                 pass
-            elif cardName == 'DMIG': # not done...
-                if cardObj.field(2)=='UACCEL': # special DMIG card
+            elif cardName == 'DMIG':  # not done...
+                if cardObj.field(2) == 'UACCEL':  # special DMIG card
                     self.reject_cards.append(card)
-                elif cardObj.field(2)==0:
+                elif cardObj.field(2) == 0:
                     dmig = DMIG(cardObj)
                     self.addDMIG(dmig)
                 else:
@@ -1103,7 +1107,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                     dmig.addColumn(cardObj)
                 ###
             elif cardName == 'DMIJ':
-                if cardObj.field(2)==0:
+                if cardObj.field(2) == 0:
                     dmij = DMIJ(cardObj)
                     self.addDMIJ(dmij)
                 else:
@@ -1111,7 +1115,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                     dmij = self.dmijs[name]
                     dmij.addColumn(cardObj)
             elif cardName == 'DMIJI':
-                if cardObj.field(2)==0:
+                if cardObj.field(2) == 0:
                     dmiji = DMIJI(cardObj)
                     self.addDMIJI(dmiji)
                 else:
@@ -1119,7 +1123,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                     dmiji = self.dmijis[name]
                     dmiji.addColumn(cardObj)
             elif cardName == 'DMIK':
-                if cardObj.field(2)==0:
+                if cardObj.field(2) == 0:
                     dmik = DMIK(cardObj)
                     self.addDMIK(dmik)
                 else:
@@ -1127,7 +1131,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                     dmik = self.dmiks[name]
                     dmik.addColumn(cardObj)
             elif cardName == 'DMI':
-                if cardObj.field(2)==0:
+                if cardObj.field(2) == 0:
                     dmi = DMI(cardObj)
                     self.addDMI(dmi)
                 else:
@@ -1187,21 +1191,21 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 elem = CTRIAX6(cardObj)
                 self.addElement(elem)
 
-            elif cardName == 'CTETRA': # 4/10 nodes
+            elif cardName == 'CTETRA':  # 4/10 nodes
                 nFields = cardObj.nFields()
                 if   nFields == 7:
                     elem = CTETRA4(cardObj)  # 4+3
                 else:
-                    elem = CTETRA10(cardObj) # 10+3
+                    elem = CTETRA10(cardObj)  # 10+3
                 self.addElement(elem)
-            elif cardName == 'CHEXA': # 8/20 nodes
+            elif cardName == 'CHEXA':  # 8/20 nodes
                 nFields = cardObj.nFields()
                 if   nFields == 11:
                     elem = CHEXA8(cardObj)   # 8+3
                 else:
                     elem = CHEXA20(cardObj)  # 20+3
                 self.addElement(elem)
-            elif cardName == 'CPENTA': # 6/15 nodes
+            elif cardName == 'CPENTA':  # 6/15 nodes
                 nFields = cardObj.nFields()
                 if   nFields == 9:
                     elem = CPENTA6(cardObj)   # 6+3
@@ -1330,7 +1334,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             elif cardName == 'PCOMP':
                 prop = PCOMP(cardObj)
                 self.addProperty(prop)
-            elif cardName == 'PCOMPG': # hasnt been verified
+            elif cardName == 'PCOMPG':  # hasnt been verified
                 prop = PCOMPG(cardObj)
                 self.addProperty(prop)
             elif cardName == 'PSHEAR':
@@ -1359,7 +1363,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 prop = PELAS(cardObj)
                 self.addProperty(prop)
                 if cardObj.field(5):
-                    prop = PELAS(cardObj, 1) # makes 2nd PELAS card
+                    prop = PELAS(cardObj, 1)  # makes 2nd PELAS card
                     self.addProperty(prop)
             elif cardName == 'PVISC':
                 prop = PVISC(cardObj)
@@ -1411,10 +1415,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 prop = PDAMP(cardObj)
                 self.addProperty(prop)
                 if cardObj.field(3):
-                    prop = PDAMP(cardObj, 1) # makes 2nd PDAMP card
+                    prop = PDAMP(cardObj, 1)  # makes 2nd PDAMP card
                     self.addProperty(prop)
                 if cardObj.field(5):
-                    prop = PDAMP(cardObj, 1) # makes 3rd PDAMP card
+                    prop = PDAMP(cardObj, 1)  # makes 3rd PDAMP card
                     self.addProperty(prop)
 
             elif cardName == 'PDAMP5':
@@ -1424,7 +1428,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 elem = PGAP(cardObj)
                 self.addProperty(elem)
 
-            elif cardName == 'CREEP': # hasnt been verified
+            elif cardName == 'CREEP':  # hasnt been verified
                 creep = CREEP(cardObj)
                 # links up to MAT1, MAT2, MAT9 w/ same MID
                 self.addCreepMaterial(creep)
@@ -1528,7 +1532,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             elif cardName == 'RFORCE':
                 load = RFORCE(cardObj)
                 self.addLoad(load)
-
 
             elif cardName == 'LSEQ':
                 load = LSEQ(cardObj)
@@ -1643,7 +1646,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             elif cardName == 'SUPORT':  # pseudo-constraint
                 suport = SUPORT(cardObj)
                 self.addSuport(suport)
-            elif cardName == 'SUPORT1': # pseudo-constraint
+            elif cardName == 'SUPORT1':  # pseudo-constraint
                 suport1 = SUPORT1(cardObj)
                 self.addConstraint(suport1)
 
@@ -1917,7 +1920,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             elif cardName == 'TABLEST':
                 table = TABLEST(cardObj)
                 self.addTable(table)
-            
+
             # randomTables
             elif cardName == 'TABRND1':
                 table = TABRND1(cardObj)
@@ -1945,7 +1948,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 method = EIGP(cardObj)
                 self.addCMethod(method)
 
-
             elif cardName == 'PARAM':
                 param = PARAM(cardObj)
                 self.addParam(param)
@@ -1956,15 +1958,14 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 ## @warning cards with = signs in them
                 ## are not announced when they are rejected
                 if '=' not in card[0]:
-                    print('rejecting processed %s' %(card))
+                    print('rejecting processed %s' % (card))
                 self.reject_cards.append(card)
             ###
         except:
-            print("cardName = |%r|" %(cardName))
-            print("failed! Unreduced Card=%s\n" %(ListPrint(card)))
-            print("filename = %s\n" %(self.bdf_filename))
+            print("cardName = |%r|" % (cardName))
+            print("failed! Unreduced Card=%s\n" % (ListPrint(card)))
+            print("filename = %s\n" % (self.bdf_filename))
             sys.stdout.flush()
             raise
 
         return cardObj
-    
