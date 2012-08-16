@@ -30,8 +30,6 @@ class PanelBuckling(object):
             if isinstance(element, ShellElement):
                 Edges[eid] = []
                 self.shells[eid] = element
-            ###
-        ###
 
         on = True
         ## maps edges to elements
@@ -60,8 +58,7 @@ class PanelBuckling(object):
             for edge in edges:
                 Edges2[edge].append(eid)
                 #print "Edges2[edge=%s] = %s" %(edge,Edges2[edge])
-            ###
-        ###
+
         #print "Edges[edge=%s] = %s" %(edge,Edges2[edge]) # edges to elements
 
         self.buildEdgeCount(Edges, Edges2, Normals)
@@ -140,7 +137,7 @@ class PanelBuckling(object):
                 pass
 
             print "patch2 = ", patch
-        ###
+
         allEids = list(set(allEids))
 
         iLevel += 1
@@ -150,7 +147,7 @@ class PanelBuckling(object):
                 print "*eid=%s" % (eid)
                 patch = self.buildPatch(patch, iLevel, Edges, Edges2, eid)
                 print "patch = ", patch
-        ###
+
         iLevel -= 1
         print "------------"
         return patch
@@ -207,16 +204,13 @@ class PanelBuckling(object):
                             panelEids[touchingElement] = panelID
                         else:
                             print "    angle[%s,%s] = %g" % (eid, touchingElement, angle)
-                        ###
-                    ###
+
                 else:
                     print "  edgeCount = ", edgeCount
                     self.skippedEdges.append(edge)
-                ###
-            ###
+
             print ""
-            #sys.exit()
-        ###
+
         for edge in self.skippedEdges:
             elements = Edges2[edge]
             for eid in elements:

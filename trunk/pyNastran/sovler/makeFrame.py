@@ -175,7 +175,7 @@ def addRods(model, rods, mat1, i, A, J):
         #print conrod
         #Ke = model.Element(i+1).Stiffness(model)
         i += 1
-    ###
+
     return i
 
 
@@ -219,10 +219,8 @@ def buildGlobalStiffness(model):
                 #Kg[dof2,dof ] += Ke[k,j]
                 #Kg[dof2,dof2] += Ke[k,k]
                 #Kg[dof ,dof ] += Ke[j,j]
-            ###
-        ###
+
         print "K_global =\n", ListPrint(Kg)
-    ###
     print "K_global =\n", ListPrint(Kg)
     #print "K_global = \n",Kg
     return Kg, Dofs
@@ -246,8 +244,7 @@ def applyBoundaryConditions(model, Kg):
                 Kg = setCol(Kg, nid - 1, 0.)
             else:
                 nids.append(nid - 1)
-        ###
-    ###
+
     notNids = [nid - 1 for nid in allNodes if nid not in nids]
     #print "notNids =\n",notNids
     print "nids = ", nids
@@ -291,8 +288,7 @@ def getForces(model, Dofs):
                     Fvector[dof[1]] = F[1]
                     Fvector[dof[2]] = F[2]
                     print "FVector = ", Fvector
-            ###
-        ###
+
     print "Fvector = ", Fvector
     return Fvector
 
@@ -346,16 +342,15 @@ def solveKF(model, Kg, F, Dofs):
             constrainedDOFs[nid].append([dofs[1], i])
         else:
             freeDOFs[nid].append([dofs[1], i])
-        ###
+
         i += 1
 
         if '3' in BCs:
             constrainedDOFs[nid].append([dofs[1], i])
         else:
             freeDOFs[nid].append([dofs[1], i])
-        ###
+
         i += 1
-    ###
 
     nC = len(constrainedDOFs)
     nUC = len(freeDOFs)
@@ -383,8 +378,7 @@ def solveKF(model, Kg, F, Dofs):
                 j + 1, k + 1, dof, dof2, Kg[dof, dof2])
             Kff[j, k] = Kg[dof, dof2]
         Qf[j] = F[dof]
-        ###
-    ###
+
     qf = solve(Kff, Qf)
     q = zeros(model.nNodes() * 3, 'd')
 
