@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.bdf.fieldWriter import printCard
 
+
 class WriteMesh(object):
     def __init__(self):
         pass
@@ -33,7 +34,7 @@ class WriteMesh(object):
         """
         eids = self.elementIDs()
         #print "eids = ",eids
-        nextEID = max(eids)+1  # set the new ID
+        nextEID = max(eids) + 1  # set the new ID
         msg = '$ELEMENTS\n'
         for eid, element in sorted(self.elements.iteritems()):
             if element.Is('CQUAD4'):
@@ -93,7 +94,7 @@ class WriteMesh(object):
         @param outFileName the name to call the output bdf
         @param debug developer debug (unused)
         """
-        msg  = self.write_header()
+        msg = self.write_header()
         msg += self.write_params()
         msg += self.write_nodes()
 
@@ -104,22 +105,22 @@ class WriteMesh(object):
         msg += 'ENDDATA\n'
 
         fname = self.print_filename(outFileName)
-        self.log.debug("***writing %s" %(fname))
-        
-        outfile = open(outFileName,'wb')
+        self.log.debug("***writing %s" % (fname))
+
+        outfile = open(outFileName, 'wb')
         outfile.write(msg)
         outfile.close()
-    
+
     def writeBDF(self, outFileName='fem.out.bdf', debug=False):
         """
         Writes the bdf.  It groups the various sections together to make it
-        easy to find cards.  This method is slightly more stable than 
+        easy to find cards.  This method is slightly more stable than
         writeAsPatran due to the properties sometimes being a little funny.
         @param self the object pointer
         @param outFileName the name to call the output bdf
         @param debug developer debug (unused)
         """
-        msg  = self.write_header()
+        msg = self.write_header()
         msg += self.write_params()
         msg += self.write_nodes()
 
@@ -131,7 +132,7 @@ class WriteMesh(object):
         msg += 'ENDDATA\n'
 
         fname = self.print_filename(outFileName)
-        self.log.debug("***writing %s" %(fname))
+        self.log.debug("***writing %s" % (fname))
 
         outfile = open(outFileName, 'wb')
         outfile.write(msg)
@@ -145,7 +146,7 @@ class WriteMesh(object):
         @param debug developer debug (unused)
         @warning not tested in a long time
         """
-        msg  = self.write_header()
+        msg = self.write_header()
         msg += self.write_params()
         msg += self.write_nodes()
         msg += self.write_elements_as_CTRIA3()
@@ -167,7 +168,7 @@ class WriteMesh(object):
         Writes the executive and case control decks.
         @param self the object pointer
         """
-        msg  = self.write_executive_control_deck()
+        msg = self.write_executive_control_deck()
         msg += self.write_case_control_deck()
         return msg
 
@@ -177,17 +178,17 @@ class WriteMesh(object):
         @param self the object pointer
         """
         msg = '$EXECUTIVE CONTROL DECK\n'
-        
+
         if self.sol == 600:
             newSol = 'SOL 600,%s' % (self.solMethod)
         else:
             newSol = 'SOL %s' % (self.sol)
-        
+
         if self.iSolLine is not None:
             self.executive_control_lines[self.iSolLine] = newSol
 
         for line in self.executive_control_lines:
-            msg += line+'\n'
+            msg += line + '\n'
         return msg
 
     def write_case_control_deck(self):
@@ -250,7 +251,6 @@ class WriteMesh(object):
         #missingNodes = allNodes.difference(
         associatedNodes = list(associatedNodes)
 
-
         if associatedNodes:
             msg += '$ASSOCIATED NODES\n'
             if self.gridSet:
@@ -279,7 +279,7 @@ class WriteMesh(object):
                     msg.append(str(element))
                 except:
                     print('failed printing element...'
-                          'type=%s eid=%s' %(element.type,eid))
+                          'type=%s eid=%s' % (element.type, eid))
                     raise
                 ###
         return ''.join(msg)
@@ -294,7 +294,7 @@ class WriteMesh(object):
                     msg.append(str(element))
                 except:
                     print('failed printing element...'
-                          'type=%s eid=%s' %(element.type,eid))
+                          'type=%s eid=%s' % (element.type, eid))
                     raise
                 ###
         return ''.join(msg)
@@ -328,7 +328,7 @@ class WriteMesh(object):
                         msg.append(str(element))
                     except:
                         print('failed printing element...'
-                              'type=%s eid=%s' %(element.type,eid))
+                              'type=%s eid=%s' % (element.type, eid))
                         raise
                 ###
                 eidsWritten += eids
@@ -347,7 +347,7 @@ class WriteMesh(object):
                     msg.append(str(element))
                 except:
                     print('failed printing element...'
-                          'type=%s eid=%s' %(element.type, eid))
+                          'type=%s eid=%s' % (element.type, eid))
                     raise
                 ###
             ###
@@ -404,7 +404,7 @@ class WriteMesh(object):
                 ###
             ###
         ###
-        
+
         if self.mpcs or self.mpcadds:
             msg += '$MPCs\n'
             strMPC = str(self.mpcObject2)
@@ -429,15 +429,15 @@ class WriteMesh(object):
                         msg += str(load)
                     except:
                         print('failed printing load...type=%s key=%s'
-                            %(load.type, key))
+                              % (load.type, key))
                         raise
         return msg
 
     def write_optimization(self):
         """writes the optimization cards sorted by ID"""
         msg = ''
-        if (self.dconstrs or self.desvars or self.ddvals or self.dresps 
-          or self.dvprels or self.dvmrels or self.doptprm or self.dlinks):
+        if (self.dconstrs or self.desvars or self.ddvals or self.dresps
+            or self.dvprels or self.dvmrels or self.doptprm or self.dlinks):
             msg += '$OPTIMIZATION\n'
             for (ID, dconstr) in sorted(self.dconstrs.iteritems()):
                 msg += str(dconstr)
@@ -513,11 +513,11 @@ class WriteMesh(object):
             for (ID, freq) in sorted(self.frequencies.iteritems()):
                 msg += str(freq)
         return msg
-        
+
     def write_aero(self):
         """writes the aero cards"""
         msg = ''
-        if (self.aero or self.aeros or self.gusts or self.caeros 
+        if (self.aero or self.aeros or self.gusts or self.caeros
         or self.paeros or self.trims):
             msg = '$AERO\n'
             for (ID, caero) in sorted(self.caeros.iteritems()):
@@ -578,7 +578,7 @@ class WriteMesh(object):
         """writes the thermal cards"""
         msg = ''
         # PHBDY
-        
+
         if self.phbdys or self.convectionProperties or self.bcs:
             # self.thermalProperties or
             msg = '$THERMAL\n'
@@ -593,7 +593,7 @@ class WriteMesh(object):
 
             # BCs
             for (key, bcs) in sorted(self.bcs.iteritems()):
-                for bc in bcs: # list
+                for bc in bcs:  # list
                     msg += str(bc)
                 ###
             ###
@@ -624,7 +624,7 @@ class WriteMesh(object):
                     for field in reject_card:
                         if field is not None and '=' in field:
                             raise SyntaxError('cannot reject equal signed '
-                                          'cards\ncard=%s\n' %(reject_card))
+                                          'cards\ncard=%s\n' % (reject_card))
                     raise
 
         if self.rejects:
@@ -636,6 +636,5 @@ class WriteMesh(object):
                 for reject in reject_lines:
                     reject2 = reject.rstrip()
                     if reject2:
-                        msg += str(reject2)+'\n'
+                        msg += str(reject2) + '\n'
         return msg
-

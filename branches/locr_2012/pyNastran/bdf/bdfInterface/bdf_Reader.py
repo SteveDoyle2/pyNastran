@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 import sys
 
+
 class BDFReader(object):
     def __init__(self, debug, log):
         self.relpath = True
@@ -20,7 +21,7 @@ class BDFReader(object):
             else:
                 word = 'info'
             loggerObj = dummyLogger()
-            log = loggerObj.startLog(word) # or info
+            log = loggerObj.startLog(word)  # or info
         self.log = log
 
     def print_filename(self, filename):
@@ -40,7 +41,7 @@ class BDFReader(object):
 
     def open_file(self, infileName):
         """
-        Takes a filename and opens the file.  
+        Takes a filename and opens the file.
         This method is used in order to support INCLUDE files.
         """
         #print self.isOpened
@@ -56,11 +57,9 @@ class BDFReader(object):
             self.lineNumbers.append(0)
             self.isOpened[infileName] = True
             self.linesPack.append([])
-        ###
         else:
             pass
             #print "is already open...skipping"
-        ###
 
     def get_file_stats(self):
         """
@@ -68,7 +67,7 @@ class BDFReader(object):
         @param self the object pointer
         @retval lineNumber the active file's line number
         """
-        filename   = self._active_filenames[-1]
+        filename = self._active_filenames[-1]
         return (filename, self.get_line_number())
 
     def get_line_number(self):
@@ -125,7 +124,7 @@ class BDFReader(object):
         active_filename = self._active_filenames.pop()
         linesPack = self.linesPack.pop()
         self.isOpened[active_filename] = False
-        
+
         if len(self.linesPack) == 0:
             raise IOError('\nThe bdf closed unexpectedly...\n  an Executive '
                           'and Case Control Decks are required...'
@@ -140,8 +139,7 @@ class BDFReader(object):
             fnameB = self.print_filename(self.bdf_filename)
 
             self.log.debug("active_filename=|%s| infilename=%s len(pack)=%s\n"
-                         %(fnameA,fnameB,nlines))
-        ###
+                           % (fnameA, fnameB, nlines))
         #print "\n\n"
 
     def _set_infile(self, bdf_filename, includeDir=None):
@@ -156,9 +154,9 @@ class BDFReader(object):
           not used (not supported in Nastran)
         """
         ## automatically rejects every parsable card (default=False)
-        self.autoReject   = False
+        self.autoReject = False
         ## is the active file done reading
-        self.doneReading  = False
+        self.doneReading = False
         ## was an ENDDATA card found
         self.foundEndData = False
 
@@ -169,14 +167,14 @@ class BDFReader(object):
         ## the directory of the 1st BDF (include BDFs are relative to this one)
         self.includeDir = includeDir
         ## list of infile objects (needed for INCLUDE files)
-        self.infilesPack     = []
+        self.infilesPack = []
         ## list of lines from self.activeFilename that are stored
-        self.linesPack       = []
+        self.linesPack = []
         ## list of all open filenames
         self._active_filenames = []
         ## stores the line number of self.activefilename that the parser is on
         ## very helpful when debugging
-        self.lineNumbers     = []
+        self.lineNumbers = []
         ## dictionary that says whether self.bdf_filename is open/close
         ## (boolean)
         self.isOpened = {self.bdf_filename: False}
@@ -185,4 +183,3 @@ class BDFReader(object):
         self.cardCount = {}
         ## stores the cardCount of cards that have been rejected
         self.rejectCount = {}
-

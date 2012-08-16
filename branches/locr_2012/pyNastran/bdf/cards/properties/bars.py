@@ -24,27 +24,29 @@ from pyNastran.bdf.cards.baseCard import Property
 
 
 def IyyBeam(b, h):
-    return 1/12.*b*h**3
+    return 1 / 12. * b * h ** 3
+
 
 def IBeam(b, h):
-    f = 1/12.*b*h
-    
-    Iyy = f*h*h # 1/12.*b*h**3
-    Izz = f*b*b # 1/12.*h*b**3
+    f = 1 / 12. * b * h
+
+    Iyy = f * h * h  # 1/12.*b*h**3
+    Izz = f * b * b  # 1/12.*h*b**3
     Iyz = 0.
     return (Iyy, Izz, Iyz)
 
+
 def IBeamOffset(b, h, y, z):
-    A = b*h
-    f = 1./12.*A
-    
-    Iyy = f*h*h # 1/12.*b*h**3
-    Izz = f*b*b # 1/12.*h*b**3
+    A = b * h
+    f = 1. / 12. * A
+
+    Iyy = f * h * h  # 1/12.*b*h**3
+    Izz = f * b * b  # 1/12.*h*b**3
     Iyz = 0.
-    
-    Iyy += A*y*y
-    Izz += A*z*z
-    Iyz += A*y*z
+
+    Iyy += A * y * y
+    Izz += A * z * z
+    Iyz += A * y * z
     return (Iyy, Izz, Iyz)
 
 
@@ -63,13 +65,13 @@ def getInertiaRectangular(sections):
     Ay = 0.
     for section in sections:
         (b, h, x, y) = section
-        A = b*h
+        A = b * h
         As.append(A)
-        Ax += A*x
-        Ay += A*y
+        Ax += A * x
+        Ay += A * y
 
-    xCG = Ax/A
-    yCG = Ay/A
+    xCG = Ax / A
+    yCG = Ay / A
     Axx = 0.
     Ayy = 0.
     Axy = 0.
@@ -77,19 +79,18 @@ def getInertiaRectangular(sections):
         (b, h, x, y) = section
         #A = b*h
         #As.append(A)
-        Axx += As[i]*(x-xCG)**2
-        Ayy += As[i]*(y-yCG)**2
-        Axy += As[i]*(x-xCG)*(y-yCG)
-    Ixx = Axx/A
-    Iyy = Ayy/A
-    Ixy = Axy/A
+        Axx += As[i] * (x - xCG) ** 2
+        Ayy += As[i] * (y - yCG) ** 2
+        Axy += As[i] * (x - xCG) * (y - yCG)
+    Ixx = Axx / A
+    Iyy = Ayy / A
+    Ixy = Axy / A
     return (A, Ixx, Iyy, Ixy)
-
-       
 
 
 class LineProperty(Property):
     type = 'LineProperty'
+
     def __init__(self, card, data):
         self.Type = None
         self.dim = None
@@ -100,15 +101,19 @@ class LineProperty(Property):
         self.j = None
         self.nsm = None
         Property.__init__(self, card, data)
+
     def D_bending(self):
         pass
+
     def D_axial(self):
         pass
+
     def D_thermal(self):
         pass
+
     def D_shear(self):
         pass
-    
+
     def Rho(self):
         return self.mid.rho
 
@@ -139,7 +144,7 @@ class LineProperty(Property):
     def Nu(self):
         return self.mid.nu
 
-    def CA_Section(self,iFace,iStart,dims):
+    def CA_Section(self, iFace, iStart, dims):
         """
         ---msg1---
         H1=0.1
@@ -148,7 +153,7 @@ class LineProperty(Property):
         ---msg2---
         Face_1 = geompy.MakeFaceHW(H1, W1, 1)
         geompy.addToStudy( Face_1, 'Face_1' )
-        
+
         ---msg---
         H1=0.1
         W1=0.05
@@ -156,66 +161,68 @@ class LineProperty(Property):
         geompy.addToStudy( Face_1, 'Face_1' )
         """
         msg1 = ''
-        msg2 = 'Face_%s = geompy.MakeFaceHW(' % (iFace+1)
+        msg2 = 'Face_%s = geompy.MakeFaceHW(' % (iFace + 1)
         for (i, dim) in enumerate(dims):
-            msg1 += 'D%s = %s\n' % (iStart+i, dim)
-            msg2 += 'D%s,' % (iStart+i)
+            msg1 += 'D%s = %s\n' % (iStart + i, dim)
+            msg2 += 'D%s,' % (iStart + i)
         msg2 += '1)\n'
         msg2 += "geompy.addToStudy(Face_%i, 'Face_%i')\n" % (iFace, iFace)
-        return (msg1+msg2)
-            
+        return (msg1 + msg2)
+
     def IAreaL(self, dim):
         if self.Type == 'ROD':
             R = dim[0]
-            A = pi*R**2
-            Iyy = A*R**2/4.
+            A = pi * R ** 2
+            Iyy = A * R ** 2 / 4.
             Izz = Iyy
             Iyz = 0.
         elif self.Type == 'TUBE':
             R1 = dim[0]
             R2 = dim[1]
-            A1   = pi*R1**2
-            Iyy1 = A1*R1**2/4.
-            A2   = pi*R2**2
-            Iyy2 = A2*R2**2/4.
-            A   = A1-A2
-            Iyy = Iyy1-Iyy2
+            A1 = pi * R1 ** 2
+            Iyy1 = A1 * R1 ** 2 / 4.
+            A2 = pi * R2 ** 2
+            Iyy2 = A2 * R2 ** 2 / 4.
+            A = A1 - A2
+            Iyy = Iyy1 - Iyy2
             Izz = Iyy
             Iyz = 0.
 
         elif self.Type == 'I':
             sections = []
-            h1 = dim[5]                         #        d2
+            h1 = dim[5]  # d2
             w1 = dim[2]                         # |  ------------
-            y1 = dim[0]/2.-h1                   # |  |    A     | d5
+            y1 = dim[0] / 2. - h1                   # |  |    A     | d5
             sections.append([w1, h1, 0., y1])   # |  ------------
                                                 # |     >| |<--d3
             h3 = dim[4]                         # |      |B|
             w3 = dim[1]                         # | d1   | |
-            y3 = -dim[0]/2.+h3                  # |      | |
+            y3 = -dim[0] / 2. + h3                  # |      | |
             sections.append([w3, h3, 0., y1])   # |   ----------
                                                 # |   |   C    |  d5
-            h2 = dim[0]-h1-h3                   # |   ----------
-            w2 = dim[3]                         #         d1
+            h2 = dim[0] - h1 - h3                   # |   ----------
+            w2 = dim[3]  # d1
             sections.append([w2, h2, 0., 0.])
 
             (A, Iyy, Izz, Iyz) = getInertiaRectangular(sections)
             assert Iyz == 0.
 
-        elif self.Type == 'BAR':    #  *-------*
-            h1 = dim[1]           #  |       |
-            w1 = dim[0]           #  |       |h1
-            A = h1*w1             #  |       |
-            Iyy = 1/12.*w1*h1**3  #  *-------*          I_{xx}=\frac{bh^3}{12}
-            Izz = 1/12.*h1*w1**3  #      w1             I_{yy}=\frac{hb^3}{12}
-            Iyz = 0. ## @todo is the Ixy of a bar 0 ???
-            
+        elif self.Type == 'BAR':  # *-------*
+            h1 = dim[1]  # |       |
+            w1 = dim[0]  # |       |h1
+            A = h1 * w1  # |       |
+            ## *-------*          I_{xx}=\frac{bh^3}{12}
+            Iyy = 1 / 12. * w1 * h1 ** 3
+            ## w1             I_{yy}=\frac{hb^3}{12}
+            Izz = 1 / 12. * h1 * w1 ** 3  
+            Iyz = 0.  ## @todo is the Ixy of a bar 0 ???
+
         else:
             msg = 'Type=%s is not supported for %s class...' % (self.Type,
                                                                 self.type)
             raise NotImplementedError(msg)
         return (A, Iyy, Izz, Iyz)
-    
+
     def I1(self):
         return self.I1_I2()[0]
 
@@ -226,7 +233,7 @@ class LineProperty(Property):
         """
         BAR
             2
-            ^ 
+            ^
             |
         *---|--*
         |   |  |
@@ -240,8 +247,8 @@ class LineProperty(Property):
         """
         dim = self.dim
         if self.Type == 'BAR':
-            I1 = 1/12.*dim[0]*dim[1]**3
-            I2 = 1/12.*dim[1]*dim[0]**3
+            I1 = 1 / 12. * dim[0] * dim[1] ** 3
+            I2 = 1 / 12. * dim[1] * dim[0] ** 3
         return(I1, I2)
 
     def areaL(self, dim):
@@ -253,151 +260,151 @@ class LineProperty(Property):
         """
         try:
             if   self.Type == 'ROD':
-                A = pi*dim[0]**2
+                A = pi * dim[0] ** 2
             elif self.Type == 'TUBE':
-                A = pi*(dim[0]**2-dim[1]**2)
+                A = pi * (dim[0] ** 2 - dim[1] ** 2)
             elif self.Type == 'I':
                 h1 = dim[5]
                 w1 = dim[2]
-    
+
                 h3 = dim[4]
                 w3 = dim[1]
-    
-                h2 = dim[0]-h1-h3
+
+                h2 = dim[0] - h1 - h3
                 w2 = dim[3]
-                A = h1*w1+h2*w2+h3*w3
+                A = h1 * w1 + h2 * w2 + h3 * w3
             elif self.Type == 'CHAN':
                 h1 = dim[3]
                 w1 = dim[0]
-    
+
                 h3 = h1
                 w3 = w1
-                h2 = dim[1]-h1-h3
+                h2 = dim[1] - h1 - h3
                 w2 = dim[2]
-                A = h1*w1+h2*w2+h3*w3
+                A = h1 * w1 + h2 * w2 + h3 * w3
             elif self.Type == 'T':
                 h1 = dim[2]
                 w1 = dim[0]
-    
-                h2 = dim[1]-h1
+
+                h2 = dim[1] - h1
                 w2 = dim[3]
-                A = h1*w1+h2*w2
+                A = h1 * w1 + h2 * w2
             elif self.Type == 'BOX':
                 h1 = dim[2]
                 w1 = dim[0]
-    
-                h2 = dim[1]-2*h1
+
+                h2 = dim[1] - 2 * h1
                 w2 = dim[3]
-                A = 2*(h1*w1+h2*w2)
+                A = 2 * (h1 * w1 + h2 * w2)
             elif self.Type == 'BAR':
                 h1 = dim[1]
                 w1 = dim[0]
-                A = h1*w1
+                A = h1 * w1
             elif self.Type == 'CROSS':
                 h1 = dim[2]
                 w1 = dim[1]
-    
+
                 h2 = dim[3]
                 w2 = dim[0]
-                A = h1*w1+h2*w2
+                A = h1 * w1 + h2 * w2
             elif self.Type == 'H':
                 h1 = dim[2]
                 w1 = dim[1]
-    
+
                 h2 = dim[3]
                 w2 = dim[0]
-                A = h1*w1+h2*w2
+                A = h1 * w1 + h2 * w2
             elif self.Type == 'T1':
                 h1 = dim[0]
                 w1 = dim[2]
-    
+
                 h2 = dim[3]
                 w2 = dim[1]
-                A = h1*w1+h2*w2
+                A = h1 * w1 + h2 * w2
             elif self.Type == 'I1':
                 h2 = dim[2]
                 w2 = dim[1]
-    
-                h1 = dim[3]-h2
-                w1 = dim[0]+w2
-                A = h1*w1+h2*w2
+
+                h1 = dim[3] - h2
+                w1 = dim[0] + w2
+                A = h1 * w1 + h2 * w2
             elif self.Type == 'CHAN1':
                 h2 = dim[2]
                 w2 = dim[1]
-    
-                h1 = dim[3]-h2
-                w1 = dim[0]+w2
-                A = h1*w1+h2*w2
+
+                h1 = dim[3] - h2
+                w1 = dim[0] + w2
+                A = h1 * w1 + h2 * w2
             elif self.Type == 'Z':
                 h2 = dim[2]
                 w2 = dim[1]
-    
-                h1 = dim[3]-h2
+
+                h1 = dim[3] - h2
                 w1 = dim[0]
-                A = h1*w1+h2*w2
+                A = h1 * w1 + h2 * w2
             elif self.Type == 'CHAN2':
                 h2 = dim[1]
                 w2 = dim[3]
-    
-                h1 = dim[2]-h2
-                w1 = dim[0]*2
-                A = h1*w1+h2*w2
-    
+
+                h1 = dim[2] - h2
+                w1 = dim[0] * 2
+                A = h1 * w1 + h2 * w2
+
             elif self.Type == 'T2':
                 h1 = dim[3]
                 w1 = dim[1]
-    
-                h2 = h1-dim[2]
+
+                h2 = h1 - dim[2]
                 w2 = dim[0]
-                A = h1*w1+h2*w2
+                A = h1 * w1 + h2 * w2
             elif self.Type == 'BOX1':
                 h1 = dim[2]  # top
                 w1 = dim[0]
-                
-                h2 = dim[3] # btm
-                A1 = (h1+h2)*w1
-                
-                h3 = dim[1]-h1-h2  # left
+
+                h2 = dim[3]  # btm
+                A1 = (h1 + h2) * w1
+
+                h3 = dim[1] - h1 - h2  # left
                 w3 = dim[5]
-                
-                w4 = dim[4] # right
-                A2 = h3*(w3+w4)
-                A  = A1+A2
+
+                w4 = dim[4]  # right
+                A2 = h3 * (w3 + w4)
+                A = A1 + A2
             elif self.Type == 'HEXA':
                 hBox = dim[2]
                 wBox = dim[1]
-    
+
                 wTri = dim[0]
-                A = hBox*wBox - wTri*hBox
+                A = hBox * wBox - wTri * hBox
             elif self.Type == 'HAT':
-                w  = dim[1]      # constant width (note h is sometimes w)
+                w = dim[1]      # constant width (note h is sometimes w)
                 h1 = w           # horizontal lower bar
                 w1 = dim[3]
-                
-                h2 = dim[0]-2*w  # vertical bar
+
+                h2 = dim[0] - 2 * w  # vertical bar
                 w2 = w
-                
+
                 h3 = w           # half of top bar
-                w3 = dim[2]/2.
-                
-                A = 2*(h1*w1+h2*w2+h3*w3)  # symmetrical box
+                w3 = dim[2] / 2.
+
+                A = 2 * (h1 * w1 + h2 * w2 + h3 * w3)  # symmetrical box
             elif self.Type == 'HAT1':
                 w = dim[3]
-                
+
                 h0 = dim[4]         # btm bar
-                w0 = dim[0]/2.
-    
-                h2 = dim[1]-h0-2*w  # vertical bar
+                w0 = dim[0] / 2.
+
+                h2 = dim[1] - h0 - 2 * w  # vertical bar
                 w2 = w
-    
+
                 h3 = w              # top bar
-                w3 = dim[2]/2.
-    
+                w3 = dim[2] / 2.
+
                 h1 = w              # upper, horizontal lower bar (see HAT)
-                w1 = w0-w3
-                
-                A = 2*(h0*w0+h1*w1+h2*w2+h3*w3)
-                
+                w1 = w0 - w3
+
+                A = 2 * (h0 * w0 + h1 * w1 + h2 * w2 + h3 * w3)
+
             elif self.Type == 'DBOX':
                 #
                 #  |--2------5----
@@ -406,35 +413,36 @@ class LineProperty(Property):
                 #  |     |       |
                 #  |--4--|---7---|
                 #
-                
+
                 #0,1,2,6,11
                 #1,2,3,7,12
-                
+
                 hTotal = dim[11]
                 wTotal = dim[0]
-    
+
                 h2 = dim[6]
                 w2 = dim[3]
-    
+
                 h4 = dim[7]
                 w4 = w2
-    
-                h1 = hTotal-h2-h4
+
+                h1 = hTotal - h2 - h4
                 w1 = dim[3]
-                
+
                 h5 = dim[8]
-                w5 = wTotal-w2
-    
+                w5 = wTotal - w2
+
                 h7 = dim[9]
                 w7 = w5
-    
-                h6 = hTotal-h5-h7
+
+                h6 = hTotal - h5 - h7
                 w6 = dim[5]
-    
-                h3 = (h1+h6)/2.
+
+                h3 = (h1 + h6) / 2.
                 w3 = dim[4]
-                
-                A = h1*w1 +h2*w2 +h3*w3 +h4*w4 +h5*w5 +h6*w6 +h7*w7
+
+                A = (h1 * w1 + h2 * w2 + h3 * w3 + h4 * w4 +
+                     h5 * w5 + h6 * w6 + h7 * w7)
             else:
                 msg = 'Type=%s is not supported for %s class...' % (self.Type,
                                                                     self.type)
@@ -442,13 +450,15 @@ class LineProperty(Property):
         except IndexError as e:
             msg = 'There was an error extracting fields'
             msg += ' from a %s dim=%s for a %s' % (self.Type, dim, self.type)
-            msg += '-'*80+'\n'
+            msg += '-' * 80 + '\n'
             msg += 'Traceback:\n%s' % (e.message)
             raise IndexError(msg)
         return A
 
+
 class IntegratedLineProperty(LineProperty):
     type = 'IntegratedLineProperty'
+
     def __init__(self, card, data):
         self.xxb = None
         self.A = None
@@ -484,32 +494,33 @@ class IntegratedLineProperty(LineProperty):
         nsm = integratePositiveLine(self.xxb, self.nsm)
         return nsm
 
-        
+
 class PROD(LineProperty):
     type = 'PROD'
+
     def __init__(self, card=None, data=None):
         LineProperty.__init__(self, card, data)
 
         if card:
             self.pid = card.field(1)
             self.mid = card.field(2)
-            self.A   = card.field(3)
-            self.j   = card.field(4, 0.0)
-            self.c   = card.field(5, 0.0)
+            self.A = card.field(3)
+            self.j = card.field(4, 0.0)
+            self.c = card.field(5, 0.0)
             self.nsm = card.field(6, 0.0)
         else:
             self.pid = data[0]
             self.mid = data[1]
-            self.A   = data[2]
-            self.j   = data[3]
-            self.c   = data[4]
+            self.A = data[2]
+            self.j = data[3]
+            self.c = data[4]
             self.nsm = data[5]
         ###
 
     #def Radius(self):
         #"""assumes circular cross section - probably will remove this"""
         #return (self.A/pi)**0.5
-        
+
     def crossReference(self, model):
         self.mid = model.Material(self.mid)
 
@@ -524,13 +535,13 @@ class PROD(LineProperty):
     #def I12(self):
         #return 0.
 
-    def writeCodeAster(self, iCut, iFace, iStart): # PROD
+    def writeCodeAster(self, iCut, iFace, iStart):  # PROD
         msg = ''
         msg += "    POUTRE=_F(GROUP_MA='P%s', # PROD\n" % (self.pid)
         msg += "              SECTION='CERCLE',  # circular section\n"
         msg += "              CARA=('R')   # radius\n"
-        msg += "              VALE=(%g),),\n"  % (self.Radius())
-        
+        msg += "              VALE=(%g),),\n" % (self.Radius())
+
         #msg += "              SECTION='GENERALE',\n"
         #msg += "              CARA=('A','IY','IZ','JX')\n"
         #msg += "              VALE=(%g,  %g,  %g,  %g),\n"  %(self.Area(),self.I11(),self.I22(),self.J())
@@ -542,30 +553,32 @@ class PROD(LineProperty):
         fields = ['PROD', self.pid, self.Mid(), self.A, self.j, self.c,
                   self.nsm]
         return fields
-        
+
     def reprFields(self):
-        j   = set_blank_if_default(self.j, 0.0)
-        c   = set_blank_if_default(self.c, 0.0)
+        j = set_blank_if_default(self.j, 0.0)
+        c = set_blank_if_default(self.c, 0.0)
         nsm = set_blank_if_default(self.nsm, 0.0)
         fields = ['PROD', self.pid, self.Mid(), self.A, j, c, nsm]
         return fields
 
+
 class PTUBE(LineProperty):
     type = 'PTUBE'
+
     def __init__(self, card=None, data=None):
         LineProperty.__init__(self, card, data)
         if card:
             self.pid = card.field(1)
             self.mid = card.field(2)
             self.OD1 = card.field(3)
-            self.t   = card.field(4, self.OD1/2.)
+            self.t = card.field(4, self.OD1 / 2.)
             self.nsm = card.field(5, 0.0)
             self.OD2 = card.field(6, self.OD1)
         else:
             self.pid = data[0]
             self.mid = data[1]
             self.OD1 = data[2]
-            self.t   = data[3]
+            self.t = data[3]
             self.nsm = data[4]
             self.OD2 = self.OD1
             #self.OD2 = data[5]  ## @note quirk to this one...
@@ -574,35 +587,35 @@ class PTUBE(LineProperty):
         self.mid = model.Material(self.mid)
 
     def Area(self):
-        A = (self.area1()+self.area2())/2.
-        
+        A = (self.area1() + self.area2()) / 2.
+
         #A1 = pi*D1^2/4 - pi*((D1-2t)^2)/4
         #A2 = pi*D2^2/4 - pi*((D2-2t)^2)/4
         #A = A1+A2
-        
+
         #A = pi*D1*t/2 + pi*D2*t/2 - pi*t
         #A = pi*t*(D1/2 + D2/2 - t)
         #A = pi*t*( (D1+D2)/2.-t )
-        
+
         #A2 = pi*t*( (D1+D2)/2.-t )
-        
+
         #if A != A2:
             #msg = 'AREA method has problem in PTUBE Aold=%s != Anew=%s' %(A,A2)
             #raise RuntimeError(msg)
         return A
-        
+
     def area1(self):
         """@todo remove after verifying formula..."""
         Dout = self.OD1
-        Din  = Dout-2*self.t
-        A1 = pi/4.*(Dout*Dout-Din*Din)
+        Din = Dout - 2 * self.t
+        A1 = pi / 4. * (Dout * Dout - Din * Din)
         return A1
 
     def area2(self):
         """@todo remove after verifying formula..."""
         Dout = self.OD2
-        Din  = Dout-2*self.t
-        A2 = pi/4.*(Dout*Dout-Din*Din)
+        Din = Dout - 2 * self.t
+        A2 = pi / 4. * (Dout * Dout - Din * Din)
         return A2
 
     def massMatrix(self):
@@ -615,16 +628,18 @@ class PTUBE(LineProperty):
         fields = ['PTUBE', self.pid, self.Mid(), self.OD1, self.t, self.nsm,
                   self.OD2]
         return fields
-    
+
     def reprFields(self):
-        t   = set_blank_if_default(self.t, self.OD1/2.)
+        t = set_blank_if_default(self.t, self.OD1 / 2.)
         nsm = set_blank_if_default(self.nsm, 0.0)
         OD2 = set_blank_if_default(self.OD2, self.OD1)
         fields = ['PTUBE', self.pid, self.Mid(), self.OD1, t, nsm, OD2]
         return fields
-    
+
+
 class PBAR(LineProperty):
     type = 'PBAR'
+
     def __init__(self, card=None, data=None):
         """
         @todo
@@ -639,53 +654,55 @@ class PBAR(LineProperty):
             ## material ID -> use Mid()
             self.mid = card.field(2)
             ## Area -> use Area()
-            self.A   = card.field(3, 0.0)
+            self.A = card.field(3, 0.0)
             ## Izz -> use Izz()
-            self.i1  = card.field(4, 0.0)
+            self.i1 = card.field(4, 0.0)
             ## Iyy -> use Iyy()
-            self.i2  = card.field(5, 0.0)
+            self.i2 = card.field(5, 0.0)
             ## Polar Moment of Inertia J -> use J()
             # default=1/2(I1+I2) for SOL=600,otherwise 0.0
-            self.j   = card.field(6, 0.0)
+            self.j = card.field(6, 0.0)
             ## nonstructral mass -> use Nsm()
             self.nsm = card.field(7, 0.0)
 
-            self.C1  = card.field(9,  0.0)
-            self.C2  = card.field(10, 0.0)
-            self.D1  = card.field(11, 0.0)
-            self.D2  = card.field(12, 0.0)
-            self.E1  = card.field(13, 0.0)
-            self.E2  = card.field(14, 0.0)
-            self.F1  = card.field(15, 0.0)
-            self.F2  = card.field(16, 0.0)
+            self.C1 = card.field(9, 0.0)
+            self.C2 = card.field(10, 0.0)
+            self.D1 = card.field(11, 0.0)
+            self.D2 = card.field(12, 0.0)
+            self.E1 = card.field(13, 0.0)
+            self.E2 = card.field(14, 0.0)
+            self.F1 = card.field(15, 0.0)
+            self.F2 = card.field(16, 0.0)
 
-            self.K1  = card.field(17, 1e8) ## default=infinite
-            self.K2  = card.field(18, 1e8) ## default=infinite
+            ## default=infinite
+            self.K1 = card.field(17, 1e8)
+            ## default=infinite
+            self.K2 = card.field(18, 1e8)
             self.i12 = card.field(19, 0.0)
             if self.A == 0.0:
-                assert self.K1 == None
-                assert self.K2 == None
+                assert self.K1 is None
+                assert self.K2 is None
             ###
         else:
             self.pid = data[0]
             self.mid = data[1]
-            self.A   = data[2]
-            self.i1  = data[3]
-            self.i2  = data[4]
-            self.j   = data[5]
+            self.A = data[2]
+            self.i1 = data[3]
+            self.i2 = data[4]
+            self.j = data[5]
 
             self.nsm = data[6]
             #self.fe  = data[7] ## @todo not documented....
-            self.C1  = data[8]
-            self.C2  = data[9]
-            self.D1  = data[10]
-            self.D2  = data[11]
-            self.E1  = data[12]
-            self.E2  = data[13]
-            self.F1  = data[14]
-            self.F2  = data[15]
-            self.K1  = data[16]
-            self.K2  = data[17]
+            self.C1 = data[8]
+            self.C2 = data[9]
+            self.D1 = data[10]
+            self.D2 = data[11]
+            self.E1 = data[12]
+            self.E2 = data[13]
+            self.F1 = data[14]
+            self.F2 = data[15]
+            self.K1 = data[16]
+            self.K2 = data[17]
             self.i12 = data[18]
         ###
 
@@ -693,10 +710,10 @@ class PBAR(LineProperty):
         """
         \f[ \frac{m}{L} = \rho A+nsm \f]
         """
-        A   = self.Area()
+        A = self.Area()
         rho = self.Rho()
         nsm = self.Nsm()
-        return rho*A+nsm
+        return rho * A + nsm
 
     def crossReference(self, model):
         self.mid = model.Material(self.mid)
@@ -719,16 +736,16 @@ class PBAR(LineProperty):
     #def Iyz(self):
     #    return self.i12
 
-    def writeCodeAster(self): # PBAR
-        a  = self.Area()
+    def writeCodeAster(self):  # PBAR
+        a = self.Area()
         iy = self.I11()
         iz = self.I22()
-        j  = self.J()
+        j = self.J()
         msg = ''
         msg += "    POUTRE=_F(GROUP_MA='P%s', # PBAR\n" % (self.pid)
         msg += "              SECTION='GENERALE',\n"
         msg += "              CARA=('A','IY','IZ','JX')\n"
-        msg += "              VALE=(%g,  %g,  %g,  %g,)\n"  % (a, iy, iz, j)
+        msg += "              VALE=(%g,  %g,  %g,  %g,)\n" % (a, iy, iz, j)
         msg += "              ORIENTATION=(\n"
         msg += "                    CARA=('VECT_Y'),\n"
         msg += "                    VALE=(1.0,0.0,0.0,),),\n"
@@ -743,34 +760,35 @@ class PBAR(LineProperty):
 
     def reprFields(self):
         #A  = set_blank_if_default(self.A,0.0)
-        i1  = set_blank_if_default(self.i1, 0.0)
-        i2  = set_blank_if_default(self.i2, 0.0)
+        i1 = set_blank_if_default(self.i1, 0.0)
+        i2 = set_blank_if_default(self.i2, 0.0)
         i12 = set_blank_if_default(self.i12, 0.0)
-        j   = set_blank_if_default(self.j, 0.0)
+        j = set_blank_if_default(self.j, 0.0)
         nsm = set_blank_if_default(self.nsm, 0.0)
-        
-        C1  = set_blank_if_default(self.C1, 0.0)
-        C2  = set_blank_if_default(self.C2, 0.0)
 
-        D1  = set_blank_if_default(self.D1, 0.0)
-        D2  = set_blank_if_default(self.D2, 0.0)
+        C1 = set_blank_if_default(self.C1, 0.0)
+        C2 = set_blank_if_default(self.C2, 0.0)
 
-        E1  = set_blank_if_default(self.E1, 0.0)
-        E2  = set_blank_if_default(self.E2, 0.0)
+        D1 = set_blank_if_default(self.D1, 0.0)
+        D2 = set_blank_if_default(self.D2, 0.0)
 
-        F1  = set_blank_if_default(self.F1, 0.0)
-        F2  = set_blank_if_default(self.F2, 0.0)
-        
-        K1  = set_blank_if_default(self.K1, 1e8)
-        K2  = set_blank_if_default(self.K2, 1e8)
+        E1 = set_blank_if_default(self.E1, 0.0)
+        E2 = set_blank_if_default(self.E2, 0.0)
+
+        F1 = set_blank_if_default(self.F1, 0.0)
+        F2 = set_blank_if_default(self.F2, 0.0)
+
+        K1 = set_blank_if_default(self.K1, 1e8)
+        K2 = set_blank_if_default(self.K2, 1e8)
 
         #print "line3 = ",line3
-        
+
         fields = ['PBAR', self.pid, self.Mid(), self.A, i1, i2, j, nsm, None,
                   C1, C2, D1, D2, E1, E2, F1, F2,
                   K1, K2, i12]
 
         return fields
+
 
 class PBARL(LineProperty):
     """
@@ -778,40 +796,40 @@ class PBARL(LineProperty):
     """
     type = 'PBARL'
     validTypes = {
-        "ROD"   : 1, 
-        "TUBE"  : 2,
-        "I"     : 6,
-        "CHAN"  : 4,
-        "T"     : 4,
-        "BOX"   : 4,
-        "BAR"   : 2,
-        "CROSS" : 4,
-        "H"     : 4,
-        "T1"    : 4,
-        "I1"    : 4,
-        "CHAN1" : 4,
-        "Z"     : 4,
-        "CHAN2" : 4,
-        "T2"    : 4,
-        "BOX1"  : 6,
-        "HEXA"  : 3,
-        "HAT"   : 4,
-        "HAT1"  : 5,
-        "DBOX"  : 10, # was 12
-        } # for GROUP="MSCBML0"
+        "ROD": 1,
+        "TUBE": 2,
+        "I": 6,
+        "CHAN": 4,
+        "T": 4,
+        "BOX": 4,
+        "BAR": 2,
+        "CROSS": 4,
+        "H": 4,
+        "T1": 4,
+        "I1": 4,
+        "CHAN1": 4,
+        "Z": 4,
+        "CHAN2": 4,
+        "T2": 4,
+        "BOX1": 6,
+        "HEXA": 3,
+        "HAT": 4,
+        "HAT1": 5,
+        "DBOX": 10,  # was 12
+        }  # for GROUP="MSCBML0"
 
     def __init__(self, card=None, data=None):
         LineProperty.__init__(self, card, data)
         if card:
-            self.pid   = card.field(1)
-            self.mid   = card.field(2)
+            self.pid = card.field(1)
+            self.mid = card.field(2)
             self.group = card.field(3, 'MSCBMLO')
-            self.Type  = card.field(4)
+            self.Type = card.field(4)
 
             #nDim = len(self.dim)-1
             nDim = self.validTypes[self.Type]
-            self.dim = card.fields(9, 9+nDim+1)
-            self.nsm = card.field(9+nDim+1, 0.0)
+            self.dim = card.fields(9, 9 + nDim + 1)
+            self.nsm = card.field(9 + nDim + 1, 0.0)
 
             #self.dim = fields(9)
             if nDim > 0:
@@ -821,12 +839,12 @@ class PBARL(LineProperty):
             ###
             assert isinstance(self.nsm, float)
         else:
-            self.pid   = data[0]
-            self.mid   = data[1]
+            self.pid = data[0]
+            self.mid = data[1]
             self.group = data[2].strip()
-            self.Type  = data[3].strip()
-            self.dim   = list(data[4:-1])
-            self.nsm   = data[-1]
+            self.Type = data[3].strip()
+            self.dim = list(data[4:-1])
+            self.nsm = data[-1]
             #print "group = |%s|" %(self.group)
             #print "Type  = |%s|" %(self.Type)
             #print "dim = ",self.dim
@@ -835,17 +853,17 @@ class PBARL(LineProperty):
             #raise NotImplementedError('not finished...')
         if self.Type not in self.validTypes:
             msg = ('Invalid PBARL Type, Type=%s '
-                   'validTypes=%s' %(self.Type, self.validTypes.keys()))
+                   'validTypes=%s' % (self.Type, self.validTypes.keys()))
             raise RuntimeError(msg)
 
         if len(self.dim) != self.validTypes[self.Type]:
             msg = 'dim=%s len(dim)=%s Type=%s len(dimType)=%s' % (
-                   self.dim, len(self.dim), self.Type,
-                   self.validTypes[self.Type])
+                self.dim, len(self.dim), self.Type,
+                self.validTypes[self.Type])
             raise RuntimeError(msg)
 
         assert None not in self.dim
-            
+
     def crossReference(self, model):
         self.mid = model.Material(self.mid)
 
@@ -854,26 +872,29 @@ class PBARL(LineProperty):
 
     def Nsm(self):
         return self.nsm
-    
+
     def MassPerLength(self):
         """
         mass = L*(Area*rho+nsm)
         mass/L = Area*rho+nsm
         """
-        rho  = self.Rho()
+        rho = self.Rho()
         area = self.Area()
-        nsm  = self.Nsm()
-        return area*rho+nsm
+        nsm = self.Nsm()
+        return area * rho + nsm
 
     def I11(self):
         return None
+
     def I12(self):
         return None
+
     def J(self):
         return None
+
     def I22(self):
         return None
-    
+
     def writeCodeAster(self, iCut=0, iFace=0, iStart=0):  # PBARL
         msg = '# BAR Type=%s pid=%s\n' % (self.type, self.pid)
         msg2 = ''
@@ -883,24 +904,28 @@ class PBARL(LineProperty):
 
         (msg) += self.CA_Section(iFace, iStart, self.dim)
         iFace += 1
-        msg2 += 'Cut_%s = geompy.MakeCut(Face_%i, Face_%i)\n' % (iCut+1, iFace+1, iFace+2)
-        msg2 += "geompy.addToStudy(Cut_%i,  'Cut_%i')\n"  % (iCut+1, iCut+1)
+        msg2 += 'Cut_%s = geompy.MakeCut(Face_%i, Face_%i)\n' % (
+            iCut + 1, iFace + 1, iFace + 2)
+        msg2 += "geompy.addToStudy(Cut_%i,  'Cut_%i')\n" % (
+            iCut + 1, iCut + 1)
         iStart += len(self.dim)
-        return (msg+msg2, iCut, iFace, iStart)
+        return (msg + msg2, iCut, iFace, iStart)
 
     def rawFields(self):
         fields = ['PBARL', self.pid, self.Mid(), self.group, self.Type, None,
-                  None, None, None,]+self.dim+[self.nsm]
+                  None, None, None, ] + self.dim + [self.nsm]
         return fields
 
     def reprFields(self):
         group = set_blank_if_default(self.group, 'MSCBMLO')
         fields = ['PBARL', self.pid, self.Mid(), group, self.Type, None, None,
-                  None, None,]+self.dim+[self.nsm]
+                  None, None, ] + self.dim + [self.nsm]
         return fields
+
 
 class PBEAM(IntegratedLineProperty):
     type = 'PBEAM'
+
     def __init__(self, card=None, data=None):
         """
         @todo fix 0th entry of self.so, self.xxb
@@ -911,24 +936,24 @@ class PBEAM(IntegratedLineProperty):
             self.mid = card.field(2)
             #print "pid = ",self.pid
 
-            nFields = card.nFields()-1 # -1 for PBEAM field
+            nFields = card.nFields() - 1  # -1 for PBEAM field
 
-            self.so  = ['YES'] ## @todo what are these values (so[0],xxb[0])???
+            self.so = ['YES']  # @todo what are these values (so[0],xxb[0])???
             self.xxb = [0.]
-            self.A   = [card.field(3) ]
-            self.i1  = [card.field(4, 0.0) ]
-            self.i2  = [card.field(5, 0.0) ]
-            self.i12 = [card.field(6, 0.0) ]
-            self.j   = [card.field(7, 0.0) ]
-            self.nsm = [card.field(8, 0.0) ]
-            self.c1  = [card.field(9, 0.0) ]
-            self.c2  = [card.field(10, 0.0)]
-            self.d1  = [card.field(11, 0.0)]
-            self.d2  = [card.field(12, 0.0)]
-            self.e1  = [card.field(13, 0.0)]
-            self.e2  = [card.field(14, 0.0)]
-            self.f1  = [card.field(15, 0.0)]
-            self.f2  = [card.field(16, 0.0)]
+            self.A = [card.field(3)]
+            self.i1 = [card.field(4, 0.0)]
+            self.i2 = [card.field(5, 0.0)]
+            self.i12 = [card.field(6, 0.0)]
+            self.j = [card.field(7, 0.0)]
+            self.nsm = [card.field(8, 0.0)]
+            self.c1 = [card.field(9, 0.0)]
+            self.c2 = [card.field(10, 0.0)]
+            self.d1 = [card.field(11, 0.0)]
+            self.d2 = [card.field(12, 0.0)]
+            self.e1 = [card.field(13, 0.0)]
+            self.e2 = [card.field(14, 0.0)]
+            self.f1 = [card.field(15, 0.0)]
+            self.f2 = [card.field(16, 0.0)]
 
             #fields = card.fields(0)
             #print "fieldsPBEAM = ",fields
@@ -940,8 +965,8 @@ class PBEAM(IntegratedLineProperty):
             #print "  nFields = ",nFields
             #nFields = card.nFields()-16 # 17+16 (leading + trailing fields)
             # counting continuation cards
-            nMajor    = nFields // 16
-            nLeftover = nFields %  16
+            nMajor = nFields // 16
+            nLeftover = nFields % 16
             #print "  nMajor=%s nLeftover=%s" %(nMajor,nLeftover)
             if nLeftover == 0:
                 nMajor -= 1
@@ -949,63 +974,64 @@ class PBEAM(IntegratedLineProperty):
             if nMajor == 0:
                 nMajor = 1
 
-            x = (nMajor)*16+1
-            if card.field(x) in ['YES', 'YESA', 'NO']: # there is no footer
+            x = (nMajor) * 16 + 1
+            if card.field(x) in ['YES', 'YESA', 'NO']:  # there is no footer
                 nMajor += 1
                 x += 16
 
             #print "  nMajor = ",nMajor
             for nRepeated in xrange(1, nMajor):
                 #print "  adding a major"
-                nStart = nRepeated*16+1  # field 17 is the first possible so
-                propFields = card.fields(nStart, nStart+16)
+                ## field 17 is the first possible so
+                nStart = nRepeated * 16 + 1
+                propFields = card.fields(nStart, nStart + 16)
                 #print "propFields = ",propFields
 
                 #print "  so = ",propFields[0]
                 if propFields[0] not in [None, 'YES', 'YESA', 'NO']:
                     msg = "SO=%s for PBEAM pid=%s" % (propFields[0], self.pid)
                     raise RuntimeError(msg)
-                self.so.append( propFields[0])
+                self.so.append(propFields[0])
                 self.xxb.append(propFields[1])
-                self.A.append(  propFields[2])
-                self.i1.append( set_default_if_blank(propFields[3], 0.0))
-                self.i2.append( set_default_if_blank(propFields[4], 0.0))
+                self.A.append(propFields[2])
+                self.i1.append(set_default_if_blank(propFields[3], 0.0))
+                self.i2.append(set_default_if_blank(propFields[4], 0.0))
                 self.i12.append(set_default_if_blank(propFields[5], 0.0))
-                self.j.append(  set_default_if_blank(propFields[6], 0.0))
+                self.j.append(set_default_if_blank(propFields[6], 0.0))
                 self.nsm.append(set_default_if_blank(propFields[7], 0.0))
-                self.c1.append( set_default_if_blank(propFields[8], 0.0))
-                self.c2.append( set_default_if_blank(propFields[9], 0.0))
-                self.d1.append( set_default_if_blank(propFields[10], 0.0))
-                self.d2.append( set_default_if_blank(propFields[11], 0.0))
-                self.e1.append( set_default_if_blank(propFields[12], 0.0))
-                self.e2.append( set_default_if_blank(propFields[13], 0.0))
-                self.f1.append( set_default_if_blank(propFields[14], 0.0))
-                self.f2.append( set_default_if_blank(propFields[15], 0.0))
+                self.c1.append(set_default_if_blank(propFields[8], 0.0))
+                self.c2.append(set_default_if_blank(propFields[9], 0.0))
+                self.d1.append(set_default_if_blank(propFields[10], 0.0))
+                self.d2.append(set_default_if_blank(propFields[11], 0.0))
+                self.e1.append(set_default_if_blank(propFields[12], 0.0))
+                self.e2.append(set_default_if_blank(propFields[13], 0.0))
+                self.f1.append(set_default_if_blank(propFields[14], 0.0))
+                self.f2.append(set_default_if_blank(propFields[15], 0.0))
             #print("nRepeated = %s" %(nRepeated))
 
             # footer fields
-            self.k1   = card.field(x, 1.0)
+            self.k1 = card.field(x, 1.0)
 
             if self.k1 in ['YES', 'YESA', 'NO']:
                 msg = 'error reading PBEAM card pid=%s' % (self.pid)
                 raise RuntimeError(msg)
             #print "  k1 = ",self.k1
-            self.k2   = card.field(x+1, 1.0)
-            self.s1   = card.field(x+2, 0.0)
-            self.s2   = card.field(x+3, 0.0)
-            self.nsia = card.field(x+4, 0.0)
-            self.nsib = card.field(x+5, self.nsia)
-            self.cwa  = card.field(x+6, 0.0)
-            self.cwb  = card.field(x+7, self.cwa)
+            self.k2 = card.field(x + 1, 1.0)
+            self.s1 = card.field(x + 2, 0.0)
+            self.s2 = card.field(x + 3, 0.0)
+            self.nsia = card.field(x + 4, 0.0)
+            self.nsib = card.field(x + 5, self.nsia)
+            self.cwa = card.field(x + 6, 0.0)
+            self.cwb = card.field(x + 7, self.cwa)
 
-            self.m1a = card.field(x+8, 0.0)
-            self.m2a = card.field(x+9, self.m1a)
-            self.m1b = card.field(x+10, 0.0)
-            self.m2b = card.field(x+11, self.m1b)
-            self.n1a = card.field(x+12, 0.0)
-            self.n2a = card.field(x+13, self.n1a)
-            self.n1b = card.field(x+14, 0.0)
-            self.n2b = card.field(x+15, self.n1b)
+            self.m1a = card.field(x + 8, 0.0)
+            self.m2a = card.field(x + 9, self.m1a)
+            self.m1b = card.field(x + 10, 0.0)
+            self.m2b = card.field(x + 11, self.m1b)
+            self.n1a = card.field(x + 12, 0.0)
+            self.n2a = card.field(x + 13, self.n1a)
+            self.n1b = card.field(x + 14, 0.0)
+            self.n2b = card.field(x + 15, self.n1b)
         else:
             raise NotImplementedError('not supported')
         ###
@@ -1025,35 +1051,35 @@ class PBEAM(IntegratedLineProperty):
         mass = L*(Area*rho+nsm)
         mass/L = Area*rho+nsm
         """
-        rho  = self.Rho()
+        rho = self.Rho()
         massPerLs = []
         for (area, nsm) in izip(self.A, self.nsm):
-            massPerLs.append(area*rho+nsm)
+            massPerLs.append(area * rho + nsm)
         massPerL = integratePositiveLine(self.xxb, massPerLs)
         return massPerL
 
     def crossReference(self, model):
         self.mid = model.Material(self.mid)
 
-    def writeCodeAster(self): # PBEAM
-        a  = self.Area()
+    def writeCodeAster(self):  # PBEAM
+        a = self.Area()
         iy = self.I11()
         iz = self.I22()
-        j  = self.J()
+        j = self.J()
         msg = ''
         msg += "    POUTRE=_F(GROUP_MA='P%s', # PBEAM\n" % (self.pid)
         msg += "              SECTION='GENERALE',\n"
         msg += "              CARA=('A','IY','IZ','JX'), # area, moments of inertia\n"
-        msg += "              VALE=(%g,  %g,  %g,  %g),\n"  % (a, iy, iz, j)
+        msg += "              VALE=(%g,  %g,  %g,  %g),\n" % (a, iy, iz, j)
 
         msg += "              ORIENTATION=_F( \n"
-        msg += "                  CARA=('VECT_Y'), # direction of beam ???\n" # @todo is this correct
+        msg += "                  CARA=('VECT_Y'), # direction of beam ???\n"  # @todo is this correct
         msg += "                  VALE=(1.0,0.0,0.0,)"
-        
+
         if [self.n1a, self.n1b] != [0., 0.]:
             msg += "              \n),\n"
             msg += "              CARA=('AX','AY'), # shear centers\n"
-            msg += "              VALE=(%g, %g),\n"  % (self.n1a, self.n1b)
+            msg += "              VALE=(%g, %g),\n" % (self.n1a, self.n1b)
             msg += "             ),\n"
         else:
             msg += " )),\n"
@@ -1064,8 +1090,8 @@ class PBEAM(IntegratedLineProperty):
 
         for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2,
              f1, f2) in izip(self.so, self.xxb, self.A, self.i1, self.i2,
-            self.i12, self.j, self.nsm, self.c1, self.c2, self.d1, self.d2,
-            self.e1, self.e2, self.f1, self.f2):
+                             self.i12, self.j, self.nsm, self.c1, self.c2, self.d1, self.d2,
+                             self.e1, self.e2, self.f1, self.f2):
             fields += [so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
                        e1, e2, f1, f2]
         ###
@@ -1079,14 +1105,14 @@ class PBEAM(IntegratedLineProperty):
         fields = ['PBEAM', self.pid, self.Mid()]
 
         i = 0
-        for (so,xxb,A,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2) in izip(
-            self.so,self.xxb,self.A,self.i1,self.i2,self.i12,self.j,self.nsm,
-            self.c1,self.c2,self.d1,self.d2,self.e1,self.e2,self.f1,self.f2):
+        for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2, f1, f2) in izip(
+            self.so, self.xxb, self.A, self.i1, self.i2, self.i12, self.j, self.nsm,
+            self.c1, self.c2, self.d1, self.d2, self.e1, self.e2, self.f1, self.f2):
 
-            i1  = set_blank_if_default(i1, 0.0)
-            i2  = set_blank_if_default(i2, 0.0)
+            i1 = set_blank_if_default(i1, 0.0)
+            i2 = set_blank_if_default(i2, 0.0)
             i12 = set_blank_if_default(i12, 0.0)
-            j   = set_blank_if_default(j, 0.0)
+            j = set_blank_if_default(j, 0.0)
 
             nsm = set_blank_if_default(nsm, 0.0)
             c1 = set_blank_if_default(c1, 0.0)
@@ -1100,9 +1126,9 @@ class PBEAM(IntegratedLineProperty):
             f2 = set_blank_if_default(f2, 0.0)
 
             #print "  i = ",i
-            if i == 0: # the 1st 2 fields aren't written
-                fields +=          [A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
-                                    e1, e2, f1,f2]
+            if i == 0:  # the 1st 2 fields aren't written
+                fields += [A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
+                                    e1, e2, f1, f2]
             else:
                 fields += [so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
                                     e1, e2, f1, f2]
@@ -1111,7 +1137,7 @@ class PBEAM(IntegratedLineProperty):
         k2 = set_blank_if_default(self.k2, 1.0)
         s1 = set_blank_if_default(self.s1, 0.0)
         s2 = set_blank_if_default(self.s2, 0.0)
-        
+
         nsia = set_blank_if_default(self.nsia, 0.0)
         nsib = set_blank_if_default(self.nsib, self.nsia)
 
@@ -1135,80 +1161,82 @@ class PBEAM(IntegratedLineProperty):
 
         footer = [k1, k2, s1, s2, nsia, nsib, cwa, cwb,
                   m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b]
-        
+
         #if footer == [self.k1,None,None,None,None,None,None,None,   None,None,None,None,None,None,None,None]:
         #    footer = []
         fields += footer
         #print fields
         return fields
-        
+
+
 class PBEAML(IntegratedLineProperty):
     type = 'PBEAML'
     validTypes = {
-        "ROD"   : 1, 
-        "TUBE"  : 2,
-        "L"     : 4,
-        "I"     : 6,
-        "CHAN"  : 4,
-        "T"     : 4,
-        "BOX"   : 4,
-        "BAR"   : 2,
-        "CROSS" : 4,
-        "H"     : 4,
-        "T1"    : 4,
-        "I1"    : 4,
-        "CHAN1" : 4,
-        "Z"     : 4,
-        "CHAN2" : 4,
-        "T2"    : 4,
-        "BOX1"  : 6,
-        "HEXA"  : 3,
-        "HAT"   : 4,
-        "HAT1"  : 5,
-        "DBOX"  : 10, # was 12
-        } # for GROUP="MSCBML0"
+        "ROD": 1,
+        "TUBE": 2,
+        "L": 4,
+        "I": 6,
+        "CHAN": 4,
+        "T": 4,
+        "BOX": 4,
+        "BAR": 2,
+        "CROSS": 4,
+        "H": 4,
+        "T1": 4,
+        "I1": 4,
+        "CHAN1": 4,
+        "Z": 4,
+        "CHAN2": 4,
+        "T2": 4,
+        "BOX1": 6,
+        "HEXA": 3,
+        "HAT": 4,
+        "HAT1": 5,
+        "DBOX": 10,  # was 12
+        }  # for GROUP="MSCBML0"
+
     def __init__(self, card=None, data=None):
         IntegratedLineProperty.__init__(self, card, data)
         if card:
-            self.pid   = card.field(1)
-            self.mid   = card.field(2)
+            self.pid = card.field(1)
+            self.mid = card.field(2)
             self.group = card.field(3, 'MSCBMLO')
-            self.Type  = card.field(4)
+            self.Type = card.field(4)
 
             nDim = self.validTypes[self.Type]
             #nAll = nDim+1
 
             #nDim = len(self.dim)-1
             dimAll = card.fields(9)
-            
+
             self.dim = []
             Dim = []
             self.xxb = [0.]
             self.so = ['YES']
             self.nsm = []
-            
-            j = 0 # the dimension counter
-            n = 0 # there is no SO or XXB for the first section (n=0)
-            i = 9 # the index in the card
+
+            j = 0  # the dimension counter
+            n = 0  # there is no SO or XXB for the first section (n=0)
+            i = 9  # the index in the card
             #print "dimAll = ",dimAll,nDim,i
-            for (ii, dim) in enumerate(dimAll): ## ii is the counter starting from 9
-                if j < nDim: # the first block, n=0 ???
+            for (ii, dim) in enumerate(dimAll):  ## ii is the counter starting from 9
+                if j < nDim:  # the first block, n=0 ???
                     #print "*1"
                     Dim.append(dim)
                     j += 1
                     i += 1
-                else: # other blocks, n>0 ???
+                else:  # other blocks, n>0 ???
                     #print "*2",
                     #print "dim = ",Dim
                     if isinstance(dim, unicode):
-                        raise RuntimeError('nsm is a string...nsm=|%s|; fields=%s' %(dim,card.fields()))
+                        raise RuntimeError('nsm is a string...nsm=|%s|; fields=%s' % (dim, card.fields()))
                     self.nsm.append(dim)
                     if n > 0:
-                        so  = card.field(i+1, 'YES')
-                        xxb = card.field(i+2, 1.0  )
-                        self.so.append( so) # dimAll[i+1]
-                        self.xxb.append(xxb)  #dimAll[i+2]
-                    #j = 
+                        so = card.field(i + 1, 'YES')
+                        xxb = card.field(i + 2, 1.0)
+                        self.so.append(so)  # dimAll[i+1]
+                        self.xxb.append(xxb)  # dimAll[i+2]
+                    #j =
                     n += 1
                     i += 2
                     #print "Dim = ",Dim
@@ -1218,29 +1246,29 @@ class PBEAML(IntegratedLineProperty):
                 ###
                 #print("i=%s ii=%s j=%s Dim=%s" %(i, ii, j, Dim))
             ###
-            if j <= nDim: # if the last field is blank
+            if j <= nDim:  # if the last field is blank
                 #print "DimB = ",Dim
                 self.dim.append(Dim)
                 self.nsm.append(0.0)
                 if isinstance(self.nsm[0], unicode):
                     msg = 'nsm is a string...nsm=|%s|' % (self.nsm)
                     raise RuntimeError(msg)
-                
+
             ###
             #print("nsm = %s" %(self.nsm))
             #print self
-    
+
     def MassPerLength(self):
         """
         mass = L*(Area*rho+nsm)
         mass/L = Area*rho+nsm
         """
-        rho  = self.Rho()
+        rho = self.Rho()
         massPerLs = []
         for (dim, nsm) in izip(self.dim, self.nsm):
             a = self.areaL(dim)
             try:
-                massPerLs.append(a*rho+nsm)
+                massPerLs.append(a * rho + nsm)
             except:
                 msg = "PBEAML a*rho+nsm a=%s rho=%s nsm=%s" % (a, rho, nsm)
                 raise RuntimeError(msg)
@@ -1264,14 +1292,14 @@ class PBEAML(IntegratedLineProperty):
         @note what happens when there are 2 subcases?
         """
         self.mid = model.Material(self.mid)
-    
+
     def verify(self, model, iSubcase):
         if model.is_thermal_solution(iSubcase):
-            assert self.mid.type in ['MAT4','MAT5']
+            assert self.mid.type in ['MAT4', 'MAT5']
         else:
             assert self.mid.type in ['MAT1']
         ###
-    
+
     def _J(self):
         j = []
         for dims in self.dim:
@@ -1301,32 +1329,34 @@ class PBEAML(IntegratedLineProperty):
         i12 = None
         return i12
 
-    def writeCodeAster(self, iCut=0, iFace=0, iStart=0): # PBEAML
+    def writeCodeAster(self, iCut=0, iFace=0, iStart=0):  # PBEAML
         msg = ''
-        
-        msg2 = 'Cut_%s = geompy.MakeCut(' % (iCut+1)
+
+        msg2 = 'Cut_%s = geompy.MakeCut(' % (iCut + 1)
         for (xxb, so, dim, nsm) in izip(self.xxb, self.so, self.dim, self.nsm):
-            msg  += self.CA_Section(iFace, iStart, self.dim)
-            msg2 += 'Face_%i, ' % (iFace+1)
+            msg += self.CA_Section(iFace, iStart, self.dim)
+            msg2 += 'Face_%i, ' % (iFace + 1)
             iFace += 1
             iStart += len(self.dim)
-        
+
         msg2 = msg2[-2:]
         msg2 += ')\n'
-        
-        msg2 += "geompy.addToStudy(Cut_%i,  'Cut_%i')\n"  % (iCut+1, iCut+1)
+
+        msg2 += "geompy.addToStudy(Cut_%i,  'Cut_%i')\n" % (
+            iCut + 1, iCut + 1)
         iCut += 1
-        return (msg+msg2, iCut, iFace, iStart)
+        return (msg + msg2, iCut, iFace, iStart)
 
     def rawFields(self):
-        fields = ['PBEAML', self.pid, self.Mid(), self.group, self.Type, None, None, None, None]
+        fields = ['PBEAML', self.pid, self.Mid(), self.group,
+            self.Type, None, None, None, None]
         #print "self.nsm = ",self.nsm
         #print "xxb=%s so=%s dim=%s nsm=%s" %(self.xxb,self.so,self.dim,self.nsm)
         for (i, xxb, so, dim, nsm) in izip(count(), self.xxb, self.so, self.dim, self.nsm):
             if i == 0:
-                fields += dim+[nsm]
+                fields += dim + [nsm]
             else:
-                fields += [xxb, so]+dim+[nsm]
+                fields += [xxb, so] + dim + [nsm]
             ###
         ###
         #print self.printCard(fields)
@@ -1339,19 +1369,21 @@ class PBEAML(IntegratedLineProperty):
         fields[3] = group
         return fields
 
-class PBEAM3(LineProperty): # not done, cleanup
+
+class PBEAM3(LineProperty):  # not done, cleanup
     type = 'PBEAM3'
+
     def __init__(self, card=None, data=None):
         LineProperty.__init__(self, card, data)
         if card:
             self.pid = card.field(1)
             self.mid = card.field(2)
 
-            self.A   = card.field(3)
-            self.iz  = card.field(4)
-            self.iy  = card.field(5)
+            self.A = card.field(3)
+            self.iz = card.field(4)
+            self.iy = card.field(5)
             self.iyz = card.field(6, 0.0)
-            self.j   = card.field(7, self.iy+self.iz)
+            self.j = card.field(7, self.iy + self.iz)
             self.nsm = card.field(8, 0.0)
 
             self.cy = card.field(9)
@@ -1362,8 +1394,7 @@ class PBEAM3(LineProperty): # not done, cleanup
             self.dz = card.field(14)
             self.fy = card.field(15)
             self.fz = card.field(16)
-            
-            
+
             # more...
         ###
         else:
@@ -1379,11 +1410,13 @@ class PBEAM3(LineProperty): # not done, cleanup
 
     def reprFields(self):
         raise NotImplementedError('not done...')
-        fields = ['PBEAM3', self.pid, self.Mid(),] # other
+        fields = ['PBEAM3', self.pid, self.Mid(), ]  # other
         return fields
+
 
 class PBEND(LineProperty):
     type = 'PBEND'
+
     def __init__(self, card=None, data=None):
         LineProperty.__init__(self, card, data)
         if card:
@@ -1404,7 +1437,7 @@ class PBEND(LineProperty):
                 # line2
                 ## The r,z locations from the geometric centroid for stress
                 ## data recovery.
-                self.c1 = card.field(9) 
+                self.c1 = card.field(9)
                 self.c2 = card.field(10)
                 self.d1 = card.field(11)
                 self.d2 = card.field(12)
@@ -1413,7 +1446,7 @@ class PBEND(LineProperty):
                 self.f1 = card.field(15)
                 self.f2 = card.field(16)
 
-                # line 3 
+                # line 3
                 ## Shear stiffness factor K in K*A*G for plane 1 and plane 2.
                 self.k1 = card.field(17)
                 self.k2 = card.field(18)
@@ -1432,11 +1465,11 @@ class PBEND(LineProperty):
                 self.t = card.field(5)
                 ## Internal pressure
                 self.p = card.field(6)
-                
+
                 # line3
                 self.nsm = card.field(19)
-                self.rc  = card.field(20)
-                self.zc  = card.field(21)
+                self.rc = card.field(20)
+                self.zc = card.field(21)
             else:
                 raise RuntimeError('Area/FSI on CBEND must be defined...')
             ## Bend radius of the line of centroids
@@ -1465,7 +1498,7 @@ class PBEND(LineProperty):
         self.mid = model.Material(self.mid)
 
     def reprFields(self):
-        fields = ['PBEND', self.pid, self.Mid(),] # other
+        fields = ['PBEND', self.pid, self.Mid(), ]  # other
         if self.beamType == 1:
             fields += [self.A, self.i1, self.i2, self.j, self.rb, self.thetab,
                        self.c1, self.c2, self.d1, self.d2, self.e1, self.e2, self.f1, self.f2,
@@ -1476,4 +1509,3 @@ class PBEND(LineProperty):
         else:
             raise ValueError('only beamType=1 and 2 supported')
         return fields
-

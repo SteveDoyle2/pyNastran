@@ -42,16 +42,16 @@ class NastranIO(object):
         self.isCentroidal = isCentroidal
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
-        
+
         #skipReading = self.removeOldGeometry(bdfFileName)
         #if skipReading:
             #return
         if bdfFileName is None:
-            self.grid       = vtk.vtkUnstructuredGrid()
+            self.grid = vtk.vtkUnstructuredGrid()
             self.gridResult = vtk.vtkFloatArray()
             #self.emptyResult = vtk.vtkFloatArray()
             #self.vectorResult = vtk.vtkFloatArray()
-            self.grid2      = vtk.vtkUnstructuredGrid()
+            self.grid2 = vtk.vtkUnstructuredGrid()
             self.scalarBar.VisibilityOff()
             return
         else:
@@ -67,7 +67,7 @@ class NastranIO(object):
             self.resultCases = {}
             self.nCases = 0
             try:
-                if hasattr(self,caseKeys):
+                if hasattr(self, caseKeys):
                     del self.caseKeys
                 del self.iCase
                 del self.iSubcaseNameMap
@@ -83,14 +83,14 @@ class NastranIO(object):
         self.modelType = model.modelType
         model.readBDF(bdfFileName, includeDir=dirname)
 
-        nNodes    = model.nNodes()
+        nNodes = model.nNodes()
         nElements = model.nElements()
-        nCAeros   = model.nCAeros()
+        nCAeros = model.nCAeros()
         self.nNodes = nNodes
         self.nElements = nElements
 
         #print "nNodes = ",self.nNodes
-        print("nElements = %i" %(self.nElements))
+        print("nElements = %i" % (self.nElements))
 
         #self.aQuadGrid.Allocate(nElements+nNodes, 1000)
 
@@ -104,7 +104,7 @@ class NastranIO(object):
         self.gridResult.SetNumberOfComponents(self.nElements)
         #self.gridResult.Allocate(self.nNodes,1000)
 
-        self.grid2.Allocate(nCAeros+nCONM2, 1000)
+        self.grid2.Allocate(nCAeros + nCONM2, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
@@ -114,13 +114,13 @@ class NastranIO(object):
         #elem.SetNumberOfPoints(nNodes)
         if 0:
             i = 0
-            fraction = 1./nNodes # so you can color the nodes by ID
+            fraction = 1. / nNodes  # so you can color the nodes by ID
             for (nid, node) in sorted(model.nodes.iteritems()):
                 #print "i = ",i
                 point = node.Position()
                 #print "point = ",point
                 points.InsertPoint(i, *point)
-                self.gridResult.InsertNextValue(i*fraction)
+                self.gridResult.InsertNextValue(i * fraction)
                 #print str(element)
 
                 #elem = vtk.vtkVertex()
@@ -142,28 +142,28 @@ class NastranIO(object):
 
         j = 0
         points2 = vtk.vtkPoints()
-        points2.SetNumberOfPoints(nCAeros*4+nCONM2)
+        points2.SetNumberOfPoints(nCAeros * 4 + nCONM2)
         for (eid, element) in sorted(model.caeros.iteritems()):
             if (isinstance(element, CAERO1) or isinstance(element, CAERO3) or
                 isinstance(element, CAERO4) or isinstance(element, CAERO5)):
                 cpoints = element.Points()
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, j)
-                elem.GetPointIds().SetId(1, j+1)
-                elem.GetPointIds().SetId(2, j+2)
-                elem.GetPointIds().SetId(3, j+3)
-                points2.InsertPoint(j,   *cpoints[0])
-                points2.InsertPoint(j+1, *cpoints[1])
-                points2.InsertPoint(j+2, *cpoints[2])
-                points2.InsertPoint(j+3, *cpoints[3])
+                elem.GetPointIds().SetId(1, j + 1)
+                elem.GetPointIds().SetId(2, j + 2)
+                elem.GetPointIds().SetId(3, j + 3)
+                points2.InsertPoint(j, *cpoints[0])
+                points2.InsertPoint(j + 1, *cpoints[1])
+                points2.InsertPoint(j + 2, *cpoints[2])
+                points2.InsertPoint(j + 3, *cpoints[3])
                 self.grid2.InsertNextCell(elem.GetCellType(),
                                           elem.GetPointIds())
                 j += 4
             #elif isinstance(element,CAERO2): # cylinder
                 #pass
             else:
-                print("skipping %s" %(element.type))
-                
+                print("skipping %s" % (element.type))
+
         self.mapElements(points, points2, self.nidMap, model, j)
 
     def mapElements(self, points, points2, nidMap, model, j):
@@ -179,7 +179,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
-                self.grid.InsertNextCell(elem.GetCellType(), 
+                self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
             elif isinstance(element, CTRIA6):
                 nodeIDs = element.nodeIDs()
@@ -214,7 +214,7 @@ class NastranIO(object):
                 #                           nidMap[nodeIDs[a[2]]] )
                 #raise RuntimeError(msg)
                 #sys.stdout.flush()
-                
+
                 #elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                 #elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 #elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
@@ -290,10 +290,10 @@ class NastranIO(object):
                 nodeIDs = element.nodeIDs()
                 if None not in nodeIDs:
                     elem = vtkQuadraticWedge()
-                    elem.GetPointIds().SetId(6,  nidMap[nodeIDs[6]])
-                    elem.GetPointIds().SetId(7,  nidMap[nodeIDs[7]])
-                    elem.GetPointIds().SetId(8,  nidMap[nodeIDs[8]])
-                    elem.GetPointIds().SetId(9,  nidMap[nodeIDs[9]])
+                    elem.GetPointIds().SetId(6, nidMap[nodeIDs[6]])
+                    elem.GetPointIds().SetId(7, nidMap[nodeIDs[7]])
+                    elem.GetPointIds().SetId(8, nidMap[nodeIDs[8]])
+                    elem.GetPointIds().SetId(9, nidMap[nodeIDs[9]])
                     elem.GetPointIds().SetId(10, nidMap[nodeIDs[10]])
                     elem.GetPointIds().SetId(11, nidMap[nodeIDs[11]])
                     elem.GetPointIds().SetId(12, nidMap[nodeIDs[12]])
@@ -327,8 +327,8 @@ class NastranIO(object):
                 #print "nodeIDs = ",nodeIDs
                 if None not in nodeIDs:
                     elem = vtkQuadraticHexahedron()
-                    elem.GetPointIds().SetId(8,  nidMap[nodeIDs[8]])
-                    elem.GetPointIds().SetId(9,  nidMap[nodeIDs[9]])
+                    elem.GetPointIds().SetId(8, nidMap[nodeIDs[8]])
+                    elem.GetPointIds().SetId(9, nidMap[nodeIDs[9]])
                     elem.GetPointIds().SetId(10, nidMap[nodeIDs[10]])
                     elem.GetPointIds().SetId(11, nidMap[nodeIDs[11]])
                     elem.GetPointIds().SetId(12, nidMap[nodeIDs[12]])
@@ -361,12 +361,12 @@ class NastranIO(object):
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
             ###
-            elif isinstance(element, CONM2): # not perfectly located
+            elif isinstance(element, CONM2):  # not perfectly located
                 del self.eidMap[eid]
                 i -= 1
 
-                nid  = element.Nid()
-                c    = element.Centroid()
+                nid = element.Nid()
+                c = element.Centroid()
                 elem = vtk.vtkVertex()
                 #elem = vtk.vtkSphere()
                 #elem.SetRadius(1.0)
@@ -382,7 +382,7 @@ class NastranIO(object):
                 del self.eidMap[eid]
                 i -= 1
 
-                print("skipping %s" %(element.type))
+                print("skipping %s" % (element.type))
             i += 1
         ###
         self.grid.SetPoints(points)
@@ -397,7 +397,6 @@ class NastranIO(object):
         self.grid2.Update()
         print("updated grid")
 
-
     def loadNastranResults(self, op2FileName, dirname, isNodal, isCentroidal):
         #self.gridResult.SetNumberOfComponents(self.nElements)
         self.TurnTextOn()
@@ -407,7 +406,7 @@ class NastranIO(object):
         op2 = OP2(op2FileName, debug=True)
         op2.readOP2()
         #print op2.printResults()
-        
+
         #case = op2.displacements[1]
         #print "case = ",case
         #for nodeID,translation in sorted(case.translations.iteritems()):
@@ -417,10 +416,10 @@ class NastranIO(object):
         cases = {}
         subcaseIDs = op2.iSubcaseNameMap.keys()
         self.iSubcaseNameMap = op2.iSubcaseNameMap
-        
+
         nElements = len(self.eidMap)
         #print "nElements = ",nElements
-        nidsSet = False # set to False to disable nodeIDs
+        nidsSet = False  # set to False to disable nodeIDs
         eidsSet = True
         for subcaseID in subcaseIDs:
             if nidsSet:
@@ -434,14 +433,14 @@ class NastranIO(object):
                 eids = zeros(nElements, 'd')
                 for (eid, eid2) in self.eidMap.iteritems():
                     eids[eid2] = eid
-               
+
                 eKey = (subcaseID, 'isElementOn', 1, 'centroid', '%.0g')
                 cases[(subcaseID, 'Element_ID', 1, 'centroid', '%.0f')] = eids
-                cases[eKey] = zeros(nElements) # is the element supported
+                cases[eKey] = zeros(nElements)  # is the element supported
                 eidsSet = True
-            
+
             if False:
-                if subcaseID in op2.displacements: # not correct?
+                if subcaseID in op2.displacements:  # not correct?
                     case = op2.displacements[subcaseID]
                     key = (subcaseID, 'DisplacementX', 3, 'node', '%g')
                     #cases[key] = case.translations
@@ -468,17 +467,17 @@ class NastranIO(object):
         #print "caseKeys = ",self.caseKeys
         #print "type(caseKeys) = ",type(self.caseKeys)
         self.iCase = -1
-        self.nCases = len(self.resultCases)-1 # number of keys in dictionary
-        self.cycleResults() # start at nCase=0
+        self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
+        self.cycleResults()  # start at nCase=0
 
     def fillStressCase(self, cases, op2, subcaseID, eKey, nElements):
         oxx = zeros(nElements)
         oyy = zeros(nElements)
         ozz = zeros(nElements)
 
-        o1  = zeros(nElements)
-        o2  = zeros(nElements)
-        o3  = zeros(nElements)
+        o1 = zeros(nElements)
+        o2 = zeros(nElements)
+        o3 = zeros(nElements)
         ovm = zeros(nElements)
 
         vmWord = 'N/A'
@@ -489,13 +488,13 @@ class NastranIO(object):
                 cases[eKey][eid2] = 1.
                 #print "bar eid=%s" %(eid)
 
-                axial   = case.axial[eid]
+                axial = case.axial[eid]
                 torsion = case.torsion[eid]
 
                 oxx[eid2] = axial
                 oyy[eid2] = torsion
 
-                o1[eid2]  = max(axial, torsion)  # not really
+                o1[eid2] = max(axial, torsion)  # not really
                 #oyy[eid2] = torsion
                 #o2[eid2] = 0.  #(o1i+o3i)/2.
                 o3[eid2] = min(axial, torsion)
@@ -512,9 +511,9 @@ class NastranIO(object):
 
                 #print "bar eid=%s" %(eid)
                 oxxi = case.axial[eid]
-                o1i  = max(case.smax[eid])
-                o3i  = min(case.smin[eid])
-                
+                o1i = max(case.smax[eid])
+                o3i = min(case.smin[eid])
+
                 oxx[eid2] = oxxi
                 #oyy[eid2] = oyyi
                 #ozz[eid2] = ozzi
@@ -547,7 +546,6 @@ class NastranIO(object):
                 o2i = max(case.minorP[eid]['C'])
                 o3i = min(case.majorP[eid]['C'], min(case.minorP[eid]['C']))
                 ovmi = max(case.ovmShear[eid]['C'])
-
 
                 oxx[eid2] = oxxi
                 oyy[eid2] = oyyi
@@ -596,7 +594,5 @@ class NastranIO(object):
         cases[(subcaseID, 'Stress1', 1, 'centroid', '%.3f')] = o1
         cases[(subcaseID, 'Stress2', 1, 'centroid', '%.3f')] = o2
         cases[(subcaseID, 'Stress3', 1, 'centroid', '%.3f')] = o3
-        cases[(subcaseID, vmWord,    1, 'centroid', '%.3f')] = ovm
+        cases[(subcaseID, vmWord, 1, 'centroid', '%.3f')] = ovm
         return cases
-    
-

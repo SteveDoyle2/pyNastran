@@ -7,6 +7,7 @@ testPath = pyNastran.__path__[0]
 #print("testPath = %s" %(testPath))
 from pyNastran.bdf.test.test_bdf import runBDF, run_all_files_in_folder
 
+
 class Tester(unittest.TestCase):
 
     def runBDF(self, folder, bdfFilename, xref=False, cid=None,
@@ -44,6 +45,6 @@ class BDF_Test(Tester):
         folder = os.path.abspath(os.path.join(testPath, 'bdf', 'test', 'unit'))
         self.runBDF(folder, bdfFilename)
         #self.runBDF(folder, bdfFilename, xref=True) ## PBEAML is not supported
-    
-if __name__=='__main__':
+
+if __name__ == '__main__':
     unittest.main()

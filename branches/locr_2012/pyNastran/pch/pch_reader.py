@@ -1,24 +1,24 @@
 import os
 import sys
 
+
 class PCH(object):
     def __init__(self):
         pass
-    
-    def readPCH(self,pchName):
+
+    def readPCH(self, pchName):
         self.pchName = pchName
-        pch = open(self.pchName,'r')
+        pch = open(self.pchName, 'r')
 
         for line in pch.readline()[:72]:
-            #print line
             headerLines = []
             while '$' in line:
                 headerLines.append(line)
                 line = pch.readline()[:72]
-            print "***line = ",line
+            print "***line = ", line
             for line in headerLines:
                 print line
-            
+
             # read the headers
             headers = {}
             for line in headerLines:
@@ -27,19 +27,19 @@ class PCH(object):
                 if '=' in line:
                     i = line.index('=')
                     key = line[1:i].strip()
-                    value = value=line[i+1:].strip()
+                    value = value = line[i + 1:].strip()
                 else:
                     key = line[1:72].strip()
                     value = None
                 if key:
                     headers[key] = value
-                    print "key=|%s| value=|%s|" %(key,value)
-            
-            if 'REAL OUTPUT' in headers:  #MAGNITUDE-PHASE OUTPUT
+                    print "key=|%s| value=|%s|" % (key, value)
+
+            if 'REAL OUTPUT' in headers:  # MAGNITUDE-PHASE OUTPUT
                 print "real",
                 if 'DISPLACEMENTS' in headers:
                     print "displacements"
-                    print pch.readline().strip(),'***'
+                    print pch.readline().strip(), '***'
                     line = readRealTable(pch, line)
                 elif 'VELOCITY' in headers:
                     print "velocity"
@@ -56,13 +56,12 @@ class PCH(object):
             else:
                 raise NotImplementedError(headers.keys())
             sys.exit('done')
-            ###
-            
-            
 
-            if line == '': # end of file
+
+            if line == '':  # end of file
                 break
-                
+
+
 def readRealTable(pch, line):
     """
     reads displacemnt, velocity, acceleration, spc/mpc forces,
@@ -75,9 +74,9 @@ def readRealTable(pch, line):
     lines = []
     while '$' not in line:
         line = pch.readline()
-        print "?|%s|" %(line)
+        print "?|%s|" % (line)
         lines.append(line)
-    
+
     print '\n'.join(lines)
     return line
 

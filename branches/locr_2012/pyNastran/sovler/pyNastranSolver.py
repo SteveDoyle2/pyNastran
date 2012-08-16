@@ -14,6 +14,7 @@ from pyNastran.op2.tables.oug.oug_displacements import DisplacementObject
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject
 from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import MPCForcesObject
 
+
 def partition_sparse(Is, Js, Vs):
     I2 = []
     J2 = []
@@ -23,30 +24,28 @@ def partition_sparse(Is, Js, Vs):
             I2.append(i)
             J2.append(j)
             V2.append(v)
-        ###
-    ###
     return(I2, J2, V2)
+
 
 def getDOF_Set(nAll, dofs):
     dofsAll = set([i for i in xrange(nAll)])
     dofs = list(dofsAll.difference(set(dofs)))
     return dofs
-    
+
+
 def partition_dense_symmetric(A, dofs):
     nAll = A.shape[0]
     dofs = getDOF_Set(nAll, dofs)
     dofs.sort()
     n = len(dofs)
-    A2 = zeros((n, n),'float64')
+    A2 = zeros((n, n), 'float64')
     for (i, dofI) in enumerate(dofs):
         for (j, dofJ) in enumerate(dofs):
             v = A[dofI, dofJ]
             if abs(v) >= 1e-8:
                 A2[i, j] = v
-            ###
-        ###
-    ###
     return(A2)
+
 
 def partition_dense_vector(F, dofs):
     nAll = F.shape[0]
@@ -60,9 +59,8 @@ def partition_dense_vector(F, dofs):
         v = F[dofI]
         if abs(v) >= 1e-8:
             F2[i] = v
-        ###
-    ###
     return(F2)
+
 
 def partition_sparse_vector(F, dofs):
     dofs.sort()
@@ -74,9 +72,8 @@ def partition_sparse_vector(F, dofs):
         if abs(v) >= 1e-8:
             F2i.append(i)
             F2v.append(v)
-        ###
-    ###
     return(F2i, F2v)
+
 
 def departition_dense_vector(n, IsVs):
     V = zeros(n)
@@ -84,40 +81,40 @@ def departition_dense_vector(n, IsVs):
         (Is, Vs) = IV
         for (i, v) in izip(Is, Vs):
             V[i] = v
-        ###
-    ###
     return(V)
-    
+
+
 def reverseDict(A):
     B = {}
     for (key, value) in A.iteritems():
         B[value] = key
     return B
 
+
 class Solver(F06, OP2):
     """
     Solves SOL 101
-    
+
     Progress:
       - Solves a 2D problem using matrix partitioning.of the SPC set
       - 3D works, but is disabled for testing
-    
+
     TODO:
       - Need to combine solved displacements with original known
         displacements to create displacement set
       - Calculate Stress/Strain
       - Write the OP2
-    
+
     Case Control
       LOAD,SPC,TITLE,LABEL
-      
+
     Bulk Data:
       GRID,CORDx
       CONROD,CROD,PROD
       MAT1
       LOAD,FORCE
       SPC,SPC1
-    
+
     Results:
       @todo DISPLACEMENT solver results
       @todo STRESS solver results
@@ -131,7 +128,7 @@ class Solver(F06, OP2):
         self.nUm = 0
 
         # displacments
-        self.U  = []
+        self.U = []
         self.Us = []
         self.Um = []
 
@@ -139,15 +136,15 @@ class Solver(F06, OP2):
         self.iUs = []
         self.iUm = []
 
-    def solve(self, K, F): # can be overwritten
+    def solve(self, K, F):  # can be overwritten
         """solves \f$ [K]{x} = {F}\f$ for \f${x}\f$"""
         print("--------------")
-        print("Kaa_norm = \n"+str(K/250000.))
+        print("Kaa_norm = \n" + str(K / 250000.))
         print("--------------")
         print("Fa = ", F)
         assert max(F) != min(F), 'no load is applied...'
         print("--------------")
-        
+
         #asdf
         return solve(K, F)
 
@@ -166,22 +163,21 @@ class Solver(F06, OP2):
         for case in analysisCases:
             print(case)
             (value, options) = case.getParameter('STRESS')
-            print("STRESS value   = %s" %(value))
-            print("STRESS options = %s" %(options))
+            print("STRESS value   = %s" % (value))
+            print("STRESS options = %s" % (options))
 
             if case.hasParameter('TEMPERATURE(INITIAL)'):
                 (value, options) = case.getParameter('TEMPERATURE(INITIAL)')
-                print('value   = %s' %(value))
-                print('options = %s' %(options))
+                print('value   = %s' % (value))
+                print('options = %s' % (options))
                 raise NotImplementedError('TEMPERATURE(INITIAL) not supported')
                 #integrate(B.T*E*alpha*dt*Ads)
             #sys.exit('starting case')
             self.runCase(model, case)
-        ###
 
     def runCase(self, model, case):
-        sols = {101:self.runSOL101}
-        
+        sols = {101: self.runSOL101}
+
         iSubcase = case.id
         if model.sol in sols:
             if case.hasParameter('TITLE'):
@@ -196,44 +192,42 @@ class Solver(F06, OP2):
 
             sols[model.sol](model, case)
         else:
-            raise NotImplementedError('model.sol=%s not in %s' %(model.sol,sols.keys()))
-        ###
+            raise NotImplementedError('model.sol=%s not in %s' %
+                                      (model.sol, sols.keys()))
 
     def buildNidComponentToID(self, model):
-        i=0
+        i = 0
         nidComponentToID = {}
         for (nid, node) in sorted(model.nodes.iteritems()):  # GRIDs
             for ps in node.ps:
                 if self.is3D or ps in ['1', '2']:
-                    self.iUs.append(i+int(ps)-1)
+                    self.iUs.append(i + int(ps) - 1)
                     self.Us.append(0.0)
-                elif ps=='5' and not(self.is3D):  # 4 or 5
-                    self.iUs.append(i+2)
+                elif ps == '5' and not(self.is3D):  # 4 or 5
+                    self.iUs.append(i + 2)
                     self.Us.append(0.0)
-            ###
+
             if self.is3D:
                 nidComponentToID[(nid, 1)] = i
-                nidComponentToID[(nid, 2)] = i+1
-                nidComponentToID[(nid, 3)] = i+2
-                nidComponentToID[(nid, 4)] = i+3
-                nidComponentToID[(nid, 5)] = i+4
-                nidComponentToID[(nid, 6)] = i+5
+                nidComponentToID[(nid, 2)] = i + 1
+                nidComponentToID[(nid, 3)] = i + 2
+                nidComponentToID[(nid, 4)] = i + 3
+                nidComponentToID[(nid, 5)] = i + 4
+                nidComponentToID[(nid, 6)] = i + 5
                 i += 6
             else:
                 nidComponentToID[(nid, 1)] = i
-                nidComponentToID[(nid, 2)] = i+1
+                nidComponentToID[(nid, 2)] = i + 1
                #nidComponentToID[(nid, 4)] = i+2 # torsion
-                nidComponentToID[(nid, 5)] = i+2 # bending - can pick one moment
-                i+=3
+                nidComponentToID[(nid, 5)] = i + \
+                    2  # bending - can pick one moment
+                i += 3
             #print('iUs[%i] = %s' %(nid,self.iUs))
-            ###
-        ###
+
         if model.spoints:
-            for nid in sorted(model.spoints.spoints): # SPOINTS
+            for nid in sorted(model.spoints.spoints):  # SPOINTS
                 nidComponentToID[(nid, 1)] = i
                 i += 1
-            ###
-        ###
         return(nidComponentToID, i)
 
     def build_Kgg_Fg(self, model, case, nidComponentToID, i):
@@ -249,30 +243,30 @@ class Solver(F06, OP2):
         Kgg = zeros((i, i), 'float64')
         #Mgg = zeros((i, i))
 
-        Fg  = self.assembleForces(model, case, Fg, nidComponentToID)
+        Fg = self.assembleForces(model, case, Fg, nidComponentToID)
         Kgg = self.assembleGlobalStiffness(model, Kgg, nidComponentToID, Fg)
         return(Kgg, Fg, isSPC, isMPC)
 
     def runSOL101(self, model, case):
         #print("case = ", case)
-        assert model.sol == 101, 'model.sol=%s is not 101' %(model.sol)
+        assert model.sol == 101, 'model.sol=%s is not 101' % (model.sol)
 
         ## define IDs of grid point components in matrices
 
         self.is3D = True
         #self.is3D = False
-        
+
         (Ua, n) = self.setupSOL101(model, case)
         print("------------------------\n")
         print("Ua = ", Ua)
         print("Us = ", self.Us)
-        
-        dofsA = getDOF_Set(n,self.iUs)
+
+        dofsA = getDOF_Set(n, self.iUs)
         dofsA.sort()
         U = zeros(n, 'float64')
         print("U = ", U)
         print("iUs   = ", self.iUs)
-        
+
         ## @todo handle MPCs
         for (i, iu) in enumerate(self.iUs):
             U[iu] = self.Us[i]
@@ -281,13 +275,13 @@ class Solver(F06, OP2):
         print("*U = ", U)
         print("dofsA = ", dofsA)
 
-        self.storeDisplacements(model,U,case)
+        self.storeDisplacements(model, U, case)
         self.writeDisplacements(case)
         q = U
-        for eid,elem in model.elements.iteritems():
-            elem.displacementStress(model,q,self.nidComponentToID)
+        for eid, elem in model.elements.iteritems():
+            elem.displacementStress(model, q, self.nidComponentToID)
 
-    def storeDisplacements(self,model,U,case):
+    def storeDisplacements(self, model, U, case):
         self.iSubcases = []
         #self.log = None
         analysisCode = 1
@@ -296,14 +290,14 @@ class Solver(F06, OP2):
         isSort1 = False
         dt = None
 
-        dataCode = {'log':self.log, 'analysisCode':analysisCode,
-                    'deviceCode':1, 'tableCode':1, 'sortCode':0,
-                    'sortBits':[0, 0, 0], 'numWide':8, 'tableName':'OUG',
-                    'nonlinearFactor':None}
+        dataCode = {'log': self.log, 'analysisCode': analysisCode,
+                    'deviceCode': 1, 'tableCode': 1, 'sortCode': 0,
+                    'sortBits': [0, 0, 0], 'numWide': 8, 'tableName': 'OUG',
+                    'nonlinearFactor': None}
         #print "headers = %s" %(headers)
 
         disp = DisplacementObject(dataCode, isSort1, iSubcase, dt=False)
-        
+
         data = []
 
         i = 0
@@ -313,12 +307,12 @@ class Solver(F06, OP2):
             if node.type == 'GRID':
                 line.append('G')
             else:
-                raise NotImplementedError('node.type=%s' %(node.type))
+                raise NotImplementedError('node.type=%s' % (node.type))
             if self.is3D:
-                line += U[i:i+6] # 1,2,3,4,5,6
+                line += U[i:i + 6]  # 1,2,3,4,5,6
                 i += 6
             else:
-                line += [U[i], U[i+1], 0., 0., U[i+2], 0.] # 1,2,5
+                line += [U[i], U[i + 1], 0., 0., U[i + 2], 0.]  # 1,2,5
                 i += 3
             #print("line = ",line)
             data.append(line)
@@ -337,7 +331,7 @@ class Solver(F06, OP2):
 
         (self.IDtoNidComponents) = reverseDict(self.nidComponentToID)
         print("IDtoNidComponents = ", self.IDtoNidComponents)
-        print("Kgg =\n"+printAnnotatedMatrix(Kgg, self.IDtoNidComponents))
+        print("Kgg =\n" + printAnnotatedMatrix(Kgg, self.IDtoNidComponents))
         #print("Kgg = \n", Kgg)
         #print("iSize = ", i)
 
@@ -345,11 +339,11 @@ class Solver(F06, OP2):
         #sys.exit('verify Kgg')
 
         Kaa = partition_dense_symmetric(Kgg, self.iUs)
-        print("Kaa = \n%s" %(printMatrix(Kaa)))
+        print("Kaa = \n%s" % (printMatrix(Kaa)))
         #print("Kaa.shape = ",Kaa.shape)
 
         #sys.exit('verify Kaa')
-        Fa  = partition_dense_vector(Fg, self.iUs)
+        Fa = partition_dense_vector(Fg, self.iUs)
         #print("Kaa = \n%s" %(printMatrix(Kaa)))
 
         print("Fg = ", Fg)
@@ -367,7 +361,7 @@ class Solver(F06, OP2):
 
         #Kaa = partition_dense_matrix(Kgg,iFree)
         Kaa0 = Kaa
-        Fa0  = Fa
+        Fa0 = Fa
 
         if isSPC:
            #Fs  = partition_dense_vector(Fg,self.iUs)
@@ -376,37 +370,36 @@ class Solver(F06, OP2):
             Kss = partition_dense_matrix(Kgg, self.iUs)
 
         if isMPC:
-            Fm  = partition_dense_vector(Fg, self.iUm)
+            Fm = partition_dense_vector(Fg, self.iUm)
             Cam = partition_dense_matrix(MPCgg, iFree)
             Cma = partition_dense_matrix(MPCgg, self.iUm)
 
-            Kaa1 = Cam*Kmm*Cma
-            Kaa2 = Cam*Kma + Kam*Cma
+            Kaa1 = Cam * Kmm * Cma
+            Kaa2 = Cam * Kma + Kam * Cma
             assert Cam.transpose() == Cma
 
-            Kma = partition_dense_matrix(Kgg, self.iUm, iFree)    
+            Kma = partition_dense_matrix(Kgg, self.iUm, iFree)
             Kam = Kma.transpose()
             Kmm = partition_dense_matrix(Kgg, self.iUm)
             if isSPC:
                 Kms = partition_dense_matrix(Kgg, self.iUm, self.iUs)
                 Ksm = Kms.transpose()
-            ###
-        ###
-        Fa  = Fa0 #+ Cam*Fm
-        Kaa = Kaa0#+Kaa1+Kaa2
+
+        Fa = Fa0  # + Cam*Fm
+        Kaa = Kaa0  # +Kaa1+Kaa2
 
         Ua = self.solve(Kaa, Fa)
         #self.Um = Kma*Ua
-        
+
         return(Ua, i)
 
     def assembleGlobalStiffness(self, model, Kgg, Dofs, F):
         for (eid, elem) in sorted(model.elements.iteritems()):  # CROD, CONROD
-        
+
             # nIJV is the position of the values of K in the dof
             (K, nIJV, Fg, nGrav) = elem.Stiffness(model, self.gravLoad,
                                                   self.is3D)
-            print("K[%s] = \n%s" %(eid, K))
+            print("K[%s] = \n%s" % (eid, K))
             (Ki, Kj) = K.shape
             ij = 0
             nij2 = []
@@ -430,8 +423,7 @@ class Solver(F06, OP2):
                     Kgg[ii, jj] += kij
 
                     #ij += 1
-                ###
-            ###
+
         if 0:
             # n is (nid,componentID), IJV is the (ith,jth,value) in K
             #(n,IJV) = elem.nIJV()
@@ -443,8 +435,7 @@ class Solver(F06, OP2):
                 #KggI.append(i)
                 #KggJ.append(j)
                 #KggV.append(v)
-            ###
-        ###
+
         return Kgg
 
     def applySPCs2(self, model, case, nidComponentToID):
@@ -484,7 +475,7 @@ class Solver(F06, OP2):
                         i = nidComponentToID(key)
                         self.iUs.append(i)
                         self.Us.append(0.0)
-                    ###
+
                 elif isinstance(spc, SPC1):
                     ps = spc.constraints
                     #print "ps = |%s|" %(ps)
@@ -501,21 +492,18 @@ class Solver(F06, OP2):
                             if i not in self.iUs:
                                 self.iUs.append(i)
                                 self.Us.append(0.0)
-                            ###
-                        ###
-                    ###
+
                 else:
-                    raise NotImplementedError('Invalid SPC...spc=\n%s' %(spc))
-                ###
-            ###
+                    raise NotImplementedError('Invalid SPC...spc=\n%s' % (spc))
+
             print("iUs = ", self.iUs)
             print("Us  = ", self.Us)
             sys.exit('stopping in applySPCs')
-        ###
+
         print("iUs = ", self.iUs)
         print("Us  = ", self.Us)
         return (isSPC)
-    
+
     def applyMPCs(self, model, case, nidComponentToID):
         isMPC = False
         if case.hasParameter('MPC'):
@@ -530,7 +518,7 @@ class Solver(F06, OP2):
 
             for mpc in mpcset:
                 print(mpc, type(mpc))
-            
+
             msg = 'MPCs are not supported...stopping in applyMPCs'
             raise NotImplementedError(msg)
         return (isMPC)
@@ -542,7 +530,7 @@ class Solver(F06, OP2):
                                                                    'LOAD')
         print("loadID = ", loadID)
         LoadSet = model.Load(loadID)
-        
+
         self.gravLoad = array([0., 0., 0.])
         for loadSet in LoadSet:
             print(loadSet)
@@ -580,8 +568,7 @@ class Solver(F06, OP2):
                         Fg[Dofs[(nid, 5)]] += moment[2]
                     if abs(moment[2]) > 0. and self.is3D:
                         Fg[Dofs[(nid, 6)]] += moment[2]
-                ###
-            ###
+
         if not self.is3D:
             self.gravLoad = array([self.gravLoad[0], self.gravLoad[1]])
         print("Fg  = ", Fg)
@@ -610,65 +597,50 @@ class Solver(F06, OP2):
                     f06.write(result.writeF06(header, pageStamp, pageNum))
                 if 'PLOT' in options:
                     op2.write(result.writeOP2(self.Title, self.Subtitle))
-                ###
-            ###
-        ###
 
         if case.hasParameter('SPCFORCES'):
             (value, options) = case.getParameter('SPCFORCES')
             if options is not []:
-                SPCForces = Ksa*Ua + Kss*Us
+                SPCForces = Ksa * Ua + Kss * Us
                 if isMPC:
-                    SPCForces += Ksm*Um
-                ###
+                    SPCForces += Ksm * Um
+
                 result = SPCForcesObject(dataCode, transient)
                 result.addF06Data()
-
                 if 'PRINT' in options:
                     f06.write(result.writeF06(header, pageStamp, pageNum))
                 if 'PLOT' in options:
                     op2.write(result.writeOP2(Title, Subtitle))
-                ###
-            ###
-        ###
 
         if case.hasParameter('MPCFORCES'):
             if options is not []:
                 (value, options) = case.getParameter('MPCFORCES')
-                MPCForces = Kma*Ua + Kmm*Um
+                MPCForces = Kma * Ua + Kmm * Um
                 if isSPC:
-                    MPCForces += Kms*Us
-                ###
+                    MPCForces += Kms * Us
+
                 result = MPCForcesObject(dataCode, transient)
                 result.addF06Data()
-
                 if 'PRINT' in options:
                     f06.write(result.writeF06(header, pageStamp, pageNum))
                 if 'PLOT' in options:
                     f06.write(result.writeOP2(Title, Subtitle))
-                ###
-            ###
-        ###
 
         if case.hasParameter('GPFORCE'):
             if options is not []:
                 (value, options) = case.getParameter('GPFORCE')
-                AppliedLoads = Kaa*Ua
+                AppliedLoads = Kaa * Ua
                 if isSPC:
-                    AppliedLoads += Kas*Us
+                    AppliedLoads += Kas * Us
                 if isMPC:
-                    AppliedLoads += Kam*Um
-                ###
+                    AppliedLoads += Kam * Um
+
                 result = AppliedLoadsObject(dataCode, transient)
                 result.addF06Data()
-
                 if 'PRINT' in options:
                     f06.write(result.writeF06(header, pageStamp, pageNum))
                 if 'PLOT' in options:
                     op2.write(result.writeOP2(Title, Subtitle))
-                ###
-            ###
-        ###
 
         if case.hasParameter('STRAIN'):
             if options is not []:
@@ -676,67 +648,64 @@ class Solver(F06, OP2):
 
                 for (eid, elem) in sorted(model.elements()):
                     pass
-                ###
+
                 result = xxxObject(dataCode, transient)
                 result.addF06Data()
-
                 if 'PRINT' in options:
                     f06.write(result.writeF06(header, pageStamp, pageNum))
                 if 'PLOT' in options:
                     op2.write(result.writeOP2(Title, Subtitle))
-                ###
-            ###
-        ###
-    
+
+
 def get_cards():
     cardsToRead = set([
-    'PARAM',
-    'GRID','GRDSET',
+                      'PARAM',
+                      'GRID', 'GRDSET',
 
-    # elements
-    'CONM1','CONM2','CMASS1','CMASS2','CMASS3','CMASS4',
-    'CELAS1','CELAS2','CELAS3','CELAS4',
-    
-    'CBAR','CROD','CTUBE','CBEAM','CONROD','CBEND',
-    'CTRIA3','CTRIA6',
-    'CQUAD4','CQUAD8',
-    'CTETRA','CPENTA','CHEXA',
-    'CSHEAR',
-    
-    # rigid elements - represent as MPCs???
-    #'RBAR','RBAR1','RBE1','RBE2','RBE3',
+                      # elements
+                      'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
+                      'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
 
-    # properties
-    'PELAS',
-    'PROD','PBAR','PBARL','PBEAM','PBEAML','PTUBE','PBEND',
-    'PSHELL','PCOMP','PSHEAR', #'PCOMPG',
-    'PSOLID',
+                      'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CONROD', 'CBEND',
+                      'CTRIA3', 'CTRIA6',
+                      'CQUAD4', 'CQUAD8',
+                      'CTETRA', 'CPENTA', 'CHEXA',
+                      'CSHEAR',
 
-    # materials
-    'MAT1','MAT2','MAT8',
+                      # rigid elements - represent as MPCs???
+                      #'RBAR','RBAR1','RBE1','RBE2','RBE3',
 
-    # spc/mpc constraints
-    'SPC','SPC1','SPCADD',
-    #'MPC','MPCADD',
+                      # properties
+                      'PELAS',
+                      'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PTUBE', 'PBEND',
+                      'PSHELL', 'PCOMP', 'PSHEAR',  # 'PCOMPG',
+                      'PSOLID',
 
-    # loads
-    'LOAD',
-    'FORCE','FORCE1','FORCE2',
-    'PLOAD','PLOAD1','PLOAD2','PLOAD4',
-    'MOMENT','MOMENT1','MOMENT2',
-    'GRAV',
+                      # materials
+                      'MAT1', 'MAT2', 'MAT8',
 
-    # coords
-    'CORD1R','CORD1C','CORD1S',
-    'CORD2R','CORD2C','CORD2S',
-    
-    # other
-    'INCLUDE',
-    'ENDDATA',
-    ])
+                      # spc/mpc constraints
+                      'SPC', 'SPC1', 'SPCADD',
+                      #'MPC','MPCADD',
+
+                      # loads
+                      'LOAD',
+                      'FORCE', 'FORCE1', 'FORCE2',
+                      'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
+                      'MOMENT', 'MOMENT1', 'MOMENT2',
+                      'GRAV',
+
+                      # coords
+                      'CORD1R', 'CORD1C', 'CORD1S',
+                      'CORD2R', 'CORD2C', 'CORD2S',
+
+                      # other
+                      'INCLUDE',
+                      'ENDDATA',
+                      ])
     return cardsToRead
 
-if __name__=='__main__':
+if __name__ == '__main__':
     bdfName = sys.argv[1]
     s = Solver()
     s.run(bdfName)

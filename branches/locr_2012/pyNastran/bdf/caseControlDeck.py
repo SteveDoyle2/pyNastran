@@ -6,6 +6,7 @@ import copy
 from pyNastran.bdf.subcase import Subcase
 from pyNastran.bdf.errors import ParamParseError
 
+
 class CaseControlDeck(object):
     def __init__(self, lines, log=None):
         """
@@ -22,13 +23,13 @@ class CaseControlDeck(object):
             from pyNastran.general.logger import dummyLogger
             word = 'debug'
             loggerObj = dummyLogger()
-            log = loggerObj.startLog(word) # or info
+            log = loggerObj.startLog(word)  # or info
         self.debug = False
         #self.debug = True
 
         self.log = log
         self.lines = lines
-        self.subcases = {0:Subcase(id=0)}
+        self.subcases = {0: Subcase(id=0)}
         self._read(self.lines)
 
     def hasParameter(self, iSubcase, paramName):
@@ -83,7 +84,7 @@ class CaseControlDeck(object):
     def get_subcase_parameter(self, iSubcase, paramName):
         if self.hasSubcase(iSubcase):
             return self.subcases[iSubcase].getParameter(paramName.upper())
-        raise RuntimeError('iSubcase=%s does not exist...' %(iSubcase))
+        raise RuntimeError('iSubcase=%s does not exist...' % (iSubcase))
 
     def has_subcase(self, iSubcase):
         """
@@ -103,13 +104,16 @@ class CaseControlDeck(object):
           this...is this True???
         """
         if self.hasSubcase(iSubcase):
-            sys.stderr.write('subcase=%s already exists...skipping\n' %(iSubcase))
-        self.copy_subcase(iFromSubcase=0, iToSubcase=iSubcase,overwriteSubcase=True)
+            sys.stderr.write('subcase=%s already exists...skipping\n' %
+                             (iSubcase))
+        self.copy_subcase(iFromSubcase=0, iToSubcase=iSubcase,
+                          overwriteSubcase=True)
         #self.subcases[iSubcase] = Subcase(id=iSubcase)
 
     def delete_subcase(self, iSubcase):
         if not self.hasSubcase(iSubcase):
-            sys.stderr.write('subcase %s doesnt exist...skipping\n' %(iSubcase))
+            sys.stderr.write('subcase %s doesnt exist...skipping\n' %
+                             (iSubcase))
         del self.subcases[iSubcase]
 
     def copy_subcase(self, iFromSubcase, iToSubcase, overwriteSubcase=True):
@@ -121,7 +125,7 @@ class CaseControlDeck(object):
         @param overwriteSubcase NULLs iToSubcase before copying iFromSubcase
         """
         if not self.hasSubcase(iFromSubcase):
-            msg = 'iFromSubcase=|%s| does not exist' %(iFromSubcase)
+            msg = 'iFromSubcase=|%s| does not exist' % (iFromSubcase)
             raise RuntimeError(msg)
         subcaseFrom = self.subcases[iFromSubcase]
         if overwriteSubcase:
@@ -130,24 +134,22 @@ class CaseControlDeck(object):
             self.subcases[iToSubcase] = subcaseTo
         else:
             if not self.has_subcase(iToSubcase):
-                msg = 'iToSubcase=|%s| does not exist' %(iToSubcase)
+                msg = 'iToSubcase=|%s| does not exist' % (iToSubcase)
                 raise RuntimeError(msg)
             subcaseTo = self.subcases[iToSubcase]
-            for key,param in subcaseFrom.iteritems():
+            for key, param in subcaseFrom.iteritems():
                 subcaseTo[key] = copy.deepcopy(param)
-            ###
-        ###
 
     def get_subcase_list(self):
         return sorted(self.subcases.keys())
 
     def get_local_subcase_list(self):
-        keyList = [key for key in self.subcases if key != 0] # skip the global
+        keyList = [key for key in self.subcases if key != 0]  # skip the global
         return sorted(keyList)
 
     def update_solution(self, iSubcase, sol):
         """sol = STATICS, FLUTTER, MODAL, etc."""
-        self.add_parameter_to_local_subcase(iSubcase, 'ANALYSIS %s' %(sol))
+        self.add_parameter_to_local_subcase(iSubcase, 'ANALYSIS %s' % (sol))
 
     def add_parameter_to_global_subcase(self, param):
         """
@@ -159,7 +161,7 @@ class CaseControlDeck(object):
         subcaseList = self.get_subcase_list()
         for iSubcase in subcaseList:
             self._add_parameter_to_subcase(key, value, options, paramType,
-                                        iSubcase)
+                                           iSubcase)
 
     def add_parameter_to_local_subcase(self, iSubcase, param):
         (j, key, value, options, paramType) = self._parse_data_from_user(param)
@@ -168,7 +170,7 @@ class CaseControlDeck(object):
     def _parse_data_from_user(self, param):
         if '\n' in param or '\r' in param or '\t' in param:
             msg = 'doesnt support embedded endline/tab characters\n'
-            msg += '  param = |%r|' %(param)
+            msg += '  param = |%r|' % (param)
             raise SyntaxError(msg)
         #self.read([param])
         lines = self.clean_lines([param])
@@ -182,8 +184,6 @@ class CaseControlDeck(object):
             line = line.strip(' \n\r').split('$')[0].rstrip()
             if line:
                 lines2.append(line)
-            ###
-        ###
         #for line in lines2:
             #print "L2 = ",line
         return lines2
@@ -207,24 +207,25 @@ class CaseControlDeck(object):
             lines2 = [line]
             while ',' in lines[i][-1]:
                 #print "lines[%s] = %s" %(i,lines[i])
-                i+=1
+                i += 1
                 lines2.append(lines[i])
-                if i>10000:
-                    msg =  'There are too many lines in case control deck.\n'
+                if i > 10000:
+                    msg = 'There are too many lines in case control deck.\n'
                     msg += 'Assuming an infinite loop was found.'
                     raise RuntimeError(msg)
             (j, key, value, options, paramType) = self._parse_entry(lines2)
-            i+=1
+            i += 1
             #print ""
             #print "key=|%s| value=|%s| options=|%s| paramType=%s" %(key,value,options,paramType)
-            iSubcase = self._addParameterToSubcase(key, value, options, paramType, iSubcase)
+            iSubcase = self._addParameterToSubcase(
+                key, value, options, paramType, iSubcase)
             #print "--------------"
             if i == 10000:
                 msg = 'too many lines in Case Control Deck < 10000...'
                 raise RuntimeError(msg)
         ###
         #print "done with while loop...\n"
-        
+
         #print str(self)
         self.finish_subcases()
     ###
@@ -243,7 +244,7 @@ class CaseControlDeck(object):
             It's easier with examples:
 
             paramType = SUBCASE-type
-              SUBCASE 1              ->   paramName=SUBCASE  value=1            options=[] 
+              SUBCASE 1              ->   paramName=SUBCASE  value=1            options=[]
             paramType = STRESS-type
               STRESS       = ALL     ->   paramName=STRESS    value=ALL         options=[]
               STRAIN(PLOT) = 5       ->   paramName=STRAIN    value=5           options=[PLOT]
@@ -269,15 +270,15 @@ class CaseControlDeck(object):
         @retval paramType see brief
         """
         i = 0
-        options   = []
-        value     = None
-        key       = None
+        options = []
+        value = None
+        key = None
         paramType = None
 
         line = lines[i]
         #print line
         #print "*****lines = ", lines
-        
+
         equalsCount = 0
         for letter in line:
             if letter == '=':
@@ -289,7 +290,7 @@ class CaseControlDeck(object):
             line2 = line.replace('=', '')
             sline = line2.split()
             if len(sline) != 2:
-                msg = "trying to parse |%s|..." %(line)
+                msg = "trying to parse |%s|..." % (line)
                 raise RuntimeError(msg)
             (key, iSubcase) = sline
             #print "key=|%s| iSubcase=|%s|" %(key,iSubcase)
@@ -301,25 +302,26 @@ class CaseControlDeck(object):
             try:
                 eIndex = line.index('=')
             except:
-                msg  = "cannot find an = sign in LABEL/SUBTITLE/TITLE line\n"
-                msg += "line = |%s|" %(lineUpper.strip())
+                msg = "cannot find an = sign in LABEL/SUBTITLE/TITLE line\n"
+                msg += "line = |%s|" % (lineUpper.strip())
                 raise RuntimeError(msg)
 
-            key   = line[0:eIndex].strip()
-            value = line[eIndex+1:].strip()
+            key = line[0:eIndex].strip()
+            value = line[eIndex + 1:].strip()
             options = []
             paramType = 'STRING-type'
-        elif equalsCount == 1: # STRESS
+        elif equalsCount == 1:  # STRESS
             if '=' in line:
                 (key, value) = line.strip().split('=')
             else:
-                msg = 'expected item of form "name = value"   line=|%r|' %(line.strip())
+                msg = 'expected item of form "name = value"   line=|%r|' % (
+                    line.strip())
                 raise RuntimeError(msg)
 
             key = key.strip()
             value = value.strip()
             if self.debug:
-                self.log.debug("key=|%s| value=|%s|" %(key, value))
+                self.log.debug("key=|%s| value=|%s|" % (key, value))
             paramType = 'STRESS-type'
 
             if '(' in key:  # comma may be in line - STRESS-type
@@ -330,40 +332,40 @@ class CaseControlDeck(object):
 
                 # handle TEMPERATURE(INITIAL) and TEMPERATURE(LOAD) cards
                 if key == 'TEMPERATURE' or key == 'TEMP':
-                    key = 'TEMPERATURE(%s)' %(options[0])
+                    key = 'TEMPERATURE(%s)' % (options[0])
                     options = []
                 #print "key=|%s| options=%s" %(key,options)
 
-            elif ' ' in key and ',' in value: # SET-type
+            elif ' ' in key and ',' in value:  # SET-type
                 (key, ID) = key.split()
-                key = key+' '+ID
+                key = key + ' ' + ID
 
                 if self.debug:
-                    self.log.debug('SET-type key=%s ID=%s' %(key, ID))
-                fivalues = value.rstrip(' ,').split(',') # float/int values
+                    self.log.debug('SET-type key=%s ID=%s' % (key, ID))
+                fivalues = value.rstrip(' ,').split(',')  # float/int values
 
                 ## @todo should be more efficient multiline reader...
                 # read more lines....
                 if line[-1].strip() == ',':
-                    i+=1
+                    i += 1
                     #print "rawSETLine = |%r|" %(lines[i])
                     while 1:
-                        if ','== lines[i].strip()[-1]:
+                        if ',' == lines[i].strip()[-1]:
                             fivalues += lines[i][:-1].split(',')
-                        else: # last case
+                        else:  # last case
                             fivalues += lines[i].split(',')
                             #print "fivalues last = i=%s |%r|" %(i,lines[i])
-                            i+=1
+                            i += 1
                             break
-                        i+=1
+                        i += 1
                     ###
                 ###
                 #print "len(fivalues) = ",len(fivalues)
                 value = fivalues
 
-                options = ID # needed a place to put it...
+                options = ID  # needed a place to put it...
                 paramType = 'SET-type'
-            elif ',' in value: # STRESS-type; special TITLE = stuffA,stuffB
+            elif ',' in value:  # STRESS-type; special TITLE = stuffA,stuffB
                 #print 'A ??? line = ',line
                 #raise RuntimeError(line)
                 pass
@@ -372,19 +374,18 @@ class CaseControlDeck(object):
                 pass
             ###
         ### = in line
-        elif lineUpper.startswith('BEGIN'): # begin bulk
+        elif lineUpper.startswith('BEGIN'):  # begin bulk
             try:
                 (key, value) = lineUpper.split(' ')
             except:
-                msg = 'excepted "BEGIN BULK" found=|%r|' %(line)
+                msg = 'excepted "BEGIN BULK" found=|%r|' % (line)
                 raise RuntimeError(msg)
             paramType = 'BEGIN_BULK-type'
-        elif 'PARAM' in lineUpper: # param
+        elif 'PARAM' in lineUpper:  # param
             sline = line.split(',')
             if len(sline) != 3:
-                raise ParamParseError("trying to parse |%s|..." %(line))
+                raise ParamParseError("trying to parse |%s|..." % (line))
             (key, value, options) = sline
-            ###
             paramType = 'CSV-type'
         elif ' ' not in line:
             key = line.strip()
@@ -392,7 +393,7 @@ class CaseControlDeck(object):
             options = None
             paramType = 'KEY-type'
         else:
-            msg = 'generic catch all...line=|%r|' %(line)
+            msg = 'generic catch all...line=|%r|' % (line)
             #print 'C ??? line = ',line
             #raise RuntimeError(msg)
             key = ''
@@ -400,7 +401,7 @@ class CaseControlDeck(object):
             options = None
             paramType = 'KEY-type'
         ###
-        i+=1
+        i += 1
         #print "done with ",key
         return (i, key, value, options, paramType)
 
@@ -411,18 +412,16 @@ class CaseControlDeck(object):
         """
         for (iSubcase, subcase) in sorted(self.subcases.iteritems()):
             subcase.finish_subcase()
-        ###
-    ###
 
     def _addParameterToSubcase(self, key, value, options, paramType, iSubcase):
         """internal method"""
         if self.debug:
-            a = 'key=|%s|'       %(key)
-            b = 'value=|%s|'     %(value)
-            c = 'options=|%s|'   %(options)
-            d = 'paramType=|%s|' %(paramType)
-            msg = "_adding iSubcase=%s %-12s %-12s %-12s %-12s" %(iSubcase, a,
-                                                                  b, c, d)
+            a = 'key=|%s|' % (key)
+            b = 'value=|%s|' % (value)
+            c = 'options=|%s|' % (options)
+            d = 'paramType=|%s|' % (paramType)
+            msg = "_adding iSubcase=%s %-12s %-12s %-12s %-12s" % (iSubcase, a,
+                                                                   b, c, d)
             self.log.debug(msg)
 
         if key == 'SUBCASE':
@@ -431,23 +430,21 @@ class CaseControlDeck(object):
             iSubcase = value
             #print "value=", value
             self.copy_subcase(iFromSubcase=0, iToSubcase=iSubcase,
-                             overwriteSubcase=True)
+                              overwriteSubcase=True)
             if self.debug:
-                msg = "copied subcase iFromSubcase=%s to iToSubcase=%s" %(0, iSubcase)
+                msg = "copied subcase iFromSubcase=%s to iToSubcase=%s" % (
+                    0, iSubcase)
                 self.log.debug(msg)
-        elif iSubcase not in self.subcases: # initialize new subcase
+        elif iSubcase not in self.subcases:  # initialize new subcase
             #self.iSubcase += 1 # is handled in the read code
-            msg = 'iSubcase=%s is not a valid subcase...' %(iSubcase)
+            msg = 'iSubcase=%s is not a valid subcase...' % (iSubcase)
             raise RuntimeError(msg)
 
         subcase = self.subcases[iSubcase]
-        subcase._add_data(key,value,options,paramType)
-        
+        subcase._add_data(key, value, options, paramType)
+
         #print "\n%s\n" %(self.subcases[iSubcase])
         return iSubcase
-
-    #def __str__(self):
-    #    return self.__repr__()
 
     def crossReference(self, model):
         for (iSubcase, subcase) in sorted(self.subcases.iteritems()):
@@ -468,22 +465,10 @@ class CaseControlDeck(object):
         msg = ''
         subcase0 = self.subcases[0]
         for (iSubcase, subcase) in sorted(self.subcases.iteritems()):
-            #if iSubcase==0:
-            #print("iSubcase = %s" %(iSubcase))
-            #print(subcase)
-            #print("********")
             msg += subcase.write_subcase(subcase0)
-            #msg += str(subcase)
-            #else:
-            #    msg += subcase.writeSubcase(subcase0)
-            #print "\n"
-            #break
         if len(self.subcases) == 1:
             msg += 'BEGIN BULK\n'
-        #print msg
         return msg
-    ###
-###
 
     #def parseParam(self,param):
     #    """
@@ -494,42 +479,43 @@ class CaseControlDeck(object):
     #    #param2 = [''.join(param)]
     #    #print 'param2 = ',param2
 
+
 def test1():
     lines = ['SPC=2',
              'MPC =3',
              'STRESS= ALL',
-             'DISPLACEMENT(PLOT,PUNCH) = 8',]
+             'DISPLACEMENT(PLOT,PUNCH) = 8', ]
     deck = CaseControlDeck(lines)
-    print("has SPC  True  = %s" %(deck.has_parameter(0, 'SPC')))
-    print("has sPC  True  = %s" %(deck.has_parameter(0, 'sPC')))
-    print("has junk False = %s" %(deck.has_parameter(0, 'JUNK')))
-    
-    print("getSubcaseParameter(MPC) 3 = ", deck.get_subcase_parameter(0, 'MPC'))
+    print("has SPC  True  = %s" % (deck.has_parameter(0, 'SPC')))
+    print("has sPC  True  = %s" % (deck.has_parameter(0, 'sPC')))
+    print("has junk False = %s" % (deck.has_parameter(0, 'JUNK')))
+
+    print("getSubcaseParameter(MPC) 3 = ", deck.get_subcase_parameter(
+        0, 'MPC'))
     deck.add_parameter_to_global_subcase('GPFORCE = 7')
     print("")
     print(deck)
     deck.create_new_subcase(1)
     deck.create_new_subcase(2)
     print(deck)
-    
+
     deck.addParameterToLocalSubcase(1, 'STRAIN = 7')
     #print "-----added----"
 
     out = deck.getSubcaseParameter(0, 'GPFORCE')
-    print("getSubcaseParameter(STRAIN) 7 = %s" %(out))
+    print("getSubcaseParameter(STRAIN) 7 = %s" % (out))
 
     deck.addParameterToLocalSubcase(1, 'ANALYSIS = SAERO')
     deck.addParameterToLocalSubcase(2, 'ANALYSIS = STATIC')
     print("-----added2----")
     out = deck.getSubcaseParameter(2, 'ANALYSIS')
-    print("getSubcaseParameter(ANALYSIS) = %s" %(out))
-    
+    print("getSubcaseParameter(ANALYSIS) = %s" % (out))
 
     deck.addParameterToLocalSubcase(1, 'SET 1 = 100')
     deck.addParameterToLocalSubcase(1, 'SET 2 = 200')
     print(deck)
-    
-if __name__=='__main__':
+
+if __name__ == '__main__':
     test1()
     lines = [
         'SUBCASE 1',
@@ -550,10 +536,10 @@ if __name__=='__main__':
         ]
     deck = CaseControlDeck(lines)
     deck.createNewSubcase(2)
-    deck.addParameterToLocalSubcase(1,'SET 2 = 11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,1000000000000000000000000000000000000000000000000000000,33')
-    print(deck+'\n\n')
+    deck.addParameterToLocalSubcase(1, 'SET 2 = 11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,1000000000000000000000000000000000000000000000000000000,33')
+    print(deck + '\n\n')
 
     deck2 = CaseControlDeck(['ACCELERATION(PLOT,PRINT,PHASE) = ALL',
                              'DISPLACEMENT(PLOT,PRINT,PHASE) = ALL',
                              'BEGIN BULK'])
-    print('\n\n'+deck2)
+    print('\n\n' + deck2)

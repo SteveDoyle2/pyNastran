@@ -2,21 +2,22 @@
 import sys
 import warnings
 
+
 class Subcase(object):
     solCodeMap = {
-                  1:  101,
-                 21:  101,
-                 24:  101,
-                 26:  101,
-                 61:  101,
-                 64:  106,  # correct
-                 66:  106,  # correct
-                 68:  106,  # correct
-                 76:  101,
-                 99:  129,  # correct
-                144:  101,  # correct
-                187:  101,
-             }
+        1: 101,
+        21: 101,
+        24: 101,
+        26: 101,
+        61: 101,
+        64: 106,  # correct
+        66: 106,  # correct
+        68: 106,  # correct
+        76: 101,
+        99: 129,  # correct
+        144: 101,  # correct
+        187: 101,
+    }
 
     def __init__(self, id=0):
         self.id = id
@@ -29,18 +30,18 @@ class Subcase(object):
         the stressCode and reduce it to what the element can
         return.  For example, for an isotropic CQUAD4
         the fiber field doesnt mean anything.
-        
+
         BAR       - no von mises/fiber
         ISOTROPIC - no fiber
-        
+
         @todo how does the MATERIAL bit get turned on?  I'm assuming it's element dependent...
         """
         stressCode = 0
-        if 'VONMISES'  in options:
+        if 'VONMISES' in options:
             stressCode += 1
         if key == 'STRAIN':
-            stressCode += 10 # 2+8=10 - fields 2 and 4
-        if 'FIBER'     in options:
+            stressCode += 10  # 2+8=10 - fields 2 and 4
+        if 'FIBER' in options:
             stressCode += 4
         #if 'MATERIAL' in options:
         #    stressCode += 16  material coord (1) vs element (0)
@@ -49,9 +50,9 @@ class Subcase(object):
     def get_format_code(self, options, value):
         """@todo not done..."""
         formatCode = 0
-        if 'REAL'  in options:
+        if 'REAL' in options:
             formatCode += 1
-        if 'IMAG'  in options:
+        if 'IMAG' in options:
             formatCode += 2
         if 'PHASE' in options:
             formatCode += 4
@@ -62,9 +63,9 @@ class Subcase(object):
         sortCode = 0
         if 'COMPLEX' in options:
             sortCode += 1
-        if 'SORT2'   in options:
+        if 'SORT2' in options:
             sortCode += 2
-        if 'RANDOM'  in options:
+        if 'RANDOM' in options:
             sortCode += 4
         return sortCode
 
@@ -72,7 +73,7 @@ class Subcase(object):
         deviceCode = 0
         if 'PRINT' in options:
             deviceCode += 1
-        if 'PLOT'  in options:
+        if 'PLOT' in options:
             deviceCode += 2
         if 'PUNCH' in options:
             deviceCode += 4
@@ -80,7 +81,7 @@ class Subcase(object):
         #if deviceCode==0:
         #    deviceCode=1  # PRINT
         return deviceCode
-        
+
     def get_analysis_code(self, sol):
         """
         8 - post-buckling (maybe 7 depending on NLPARM???)
@@ -92,215 +93,215 @@ class Subcase(object):
         @todo verify
         """
         codes = {
-                 101: 1,  # staics
-                 103: 2,  # modes
-                 105: 7,  # pre-buckling
-                 106: 10, # nonlinear statics
-                 107: 9,  # complex eigenvalues
-                 108: 5,  # frequency
-                 111: 5,
-                 112: 6,
-                 114: 1,
-                 115: 2,
-                 116: 7,
-                 118: 5,
-                 129: 6, # nonlinear
-                 144: 1, # static aero
-                 145: 1, # 
-                 146: 1, # flutter
-                 153: 10,
-                 159: 6,  # transient thermal
-                 }
+            101: 1,  # staics
+            103: 2,  # modes
+            105: 7,  # pre-buckling
+            106: 10,  # nonlinear statics
+            107: 9,  # complex eigenvalues
+            108: 5,  # frequency
+            111: 5,
+            112: 6,
+            114: 1,
+            115: 2,
+            116: 7,
+            118: 5,
+            129: 6,  # nonlinear
+            144: 1,  # static aero
+            145: 1,
+            146: 1,  # flutter
+            153: 10,
+            159: 6,  # transient thermal
+        }
         #print "sol=%s" %(sol)
         approachCode = codes[sol]
         #print 'approachCode = ',approachCode
         return approachCode
-        
+
     def get_table_code(self, sol, tableName, options):
         if tableName in ['VECTOR', 'PRESSURE']:
-            tableName = 'DISPLACEMENT' # equivalent tables...
+            tableName = 'DISPLACEMENT'  # equivalent tables...
 
         key = (sol, tableName)
-        tables = { #SOL, tableName      tableCode
+        tables = {  # SOL, tableName      tableCode
 
-                  (101,'ACCELERATION'): 11,
-                  (103,'ACCELERATION'): 11,
-                  (106,'ACCELERATION'): 11,
-                  (107,'ACCELERATION'): 11,
-                  (108,'ACCELERATION'): 11,
-                  (129,'ACCELERATION'): 11,
+            (101, 'ACCELERATION'): 11,
+                  (103, 'ACCELERATION'): 11,
+                  (106, 'ACCELERATION'): 11,
+                  (107, 'ACCELERATION'): 11,
+                  (108, 'ACCELERATION'): 11,
+                  (129, 'ACCELERATION'): 11,
                  #(144,'ACCELERATION'): 11,
-                  (145,'ACCELERATION'): 11,
-                  (146,'ACCELERATION'): 11,
+                  (145, 'ACCELERATION'): 11,
+                  (146, 'ACCELERATION'): 11,
 
 
-                  (101,'DISPLACEMENT'): 1,
-                  (103,'DISPLACEMENT'): 7, # VECTOR
-                  (105,'DISPLACEMENT'): 7,
-                  (106,'DISPLACEMENT'): 1,
-                  (107,'DISPLACEMENT'): 7,
-                  (108,'DISPLACEMENT'): 1,
-                  (109,'DISPLACEMENT'): 1,
-                  (111,'DISPLACEMENT'): 7,
-                  (112,'DISPLACEMENT'): 1,
-                  (129,'DISPLACEMENT'): 7,
+                  (101, 'DISPLACEMENT'): 1,
+                  (103, 'DISPLACEMENT'): 7,  # VECTOR
+                  (105, 'DISPLACEMENT'): 7,
+                  (106, 'DISPLACEMENT'): 1,
+                  (107, 'DISPLACEMENT'): 7,
+                  (108, 'DISPLACEMENT'): 1,
+                  (109, 'DISPLACEMENT'): 1,
+                  (111, 'DISPLACEMENT'): 7,
+                  (112, 'DISPLACEMENT'): 1,
+                  (129, 'DISPLACEMENT'): 7,
                  #(144,'DISPLACEMENT'): 1,
-                  (145,'DISPLACEMENT'): 1,
-                  (146,'DISPLACEMENT'): 1,
+                  (145, 'DISPLACEMENT'): 1,
+                  (146, 'DISPLACEMENT'): 1,
 
-                  (101,'ESE'):          18, # energy
-                  (103,'ESE'):          18, # energy
-                  (105,'ESE'):          18, # energy
-                  (106,'ESE'):          18, # energy
-                  (107,'ESE'):          18, # energy
-                  (108,'ESE'):          18, # energy
-                  (109,'ESE'):          18, # energy
-                  (110,'ESE'):          18, # energy
-                  (111,'ESE'):          18, # energy
-                  (112,'ESE'):          18, # energy
-                  (145,'ESE'):          18, # energy
-                  (146,'ESE'):          18, # energy
+                  (101, 'ESE'): 18,  # energy
+                  (103, 'ESE'): 18,  # energy
+                  (105, 'ESE'): 18,  # energy
+                  (106, 'ESE'): 18,  # energy
+                  (107, 'ESE'): 18,  # energy
+                  (108, 'ESE'): 18,  # energy
+                  (109, 'ESE'): 18,  # energy
+                  (110, 'ESE'): 18,  # energy
+                  (111, 'ESE'): 18,  # energy
+                  (112, 'ESE'): 18,  # energy
+                  (145, 'ESE'): 18,  # energy
+                  (146, 'ESE'): 18,  # energy
 
-                  (101,'FORCE'):        3, # ???
-                  (103,'FORCE'):        3, # ???
-                  (105,'FORCE'):        3, # ???
-                  (106,'FORCE'):        3, # ???
-                  (107,'FORCE'):        4, # ???
-                  (108,'FORCE'):        3, # ???
-                  (111,'FORCE'):        3, # ???
-                  (112,'FORCE'):        3, # ???
-                  (129,'FORCE'):        3, # ???
-                  (145,'FORCE'):        3, # ???
-                  (146,'FORCE'):        3, # ???
+                  (101, 'FORCE'): 3,  # ???
+                  (103, 'FORCE'): 3,  # ???
+                  (105, 'FORCE'): 3,  # ???
+                  (106, 'FORCE'): 3,  # ???
+                  (107, 'FORCE'): 4,  # ???
+                  (108, 'FORCE'): 3,  # ???
+                  (111, 'FORCE'): 3,  # ???
+                  (112, 'FORCE'): 3,  # ???
+                  (129, 'FORCE'): 3,  # ???
+                  (145, 'FORCE'): 3,  # ???
+                  (146, 'FORCE'): 3,  # ???
 
-                  (101,'GPFORCE'):      19,
-                  (105,'GPFORCE'):      19,
-                  (106,'GPFORCE'):      19,
-                  (107,'GPFORCE'):      19,
-                  (108,'GPFORCE'):      19,
-                  (111,'GPFORCE'):      19,
-                  (112,'GPFORCE'):      19,
-                  (129,'GPFORCE'):      19,
-                  (145,'GPFORCE'):      19,
-                  (146,'GPFORCE'):      19,
+                  (101, 'GPFORCE'): 19,
+                  (105, 'GPFORCE'): 19,
+                  (106, 'GPFORCE'): 19,
+                  (107, 'GPFORCE'): 19,
+                  (108, 'GPFORCE'): 19,
+                  (111, 'GPFORCE'): 19,
+                  (112, 'GPFORCE'): 19,
+                  (129, 'GPFORCE'): 19,
+                  (145, 'GPFORCE'): 19,
+                  (146, 'GPFORCE'): 19,
 
-                  (101,'GPSTRESS'):     20,
-                  (105,'GPSTRESS'):     20,
-                  (106,'GPSTRESS'):     20,
-                  (107,'GPSTRESS'):     20,
-                  (108,'GPSTRESS'):     20,
-                  (111,'GPSTRESS'):     20,
-                  (112,'GPSTRESS'):     20,
-                  (129,'GPSTRESS'):     20,
-                  (145,'GPSTRESS'):     20,
-                  (146,'GPSTRESS'):     20,
+                  (101, 'GPSTRESS'): 20,
+                  (105, 'GPSTRESS'): 20,
+                  (106, 'GPSTRESS'): 20,
+                  (107, 'GPSTRESS'): 20,
+                  (108, 'GPSTRESS'): 20,
+                  (111, 'GPSTRESS'): 20,
+                  (112, 'GPSTRESS'): 20,
+                  (129, 'GPSTRESS'): 20,
+                  (145, 'GPSTRESS'): 20,
+                  (146, 'GPSTRESS'): 20,
 
-                  (101,'GPSTRAIN'):     21,
-                  (105,'GPSTRAIN'):     21,
-                  (106,'GPSTRAIN'):     21,
-                  (107,'GPSTRAIN'):     21,
-                  (108,'GPSTRAIN'):     21,
-                  (111,'GPSTRAIN'):     21,
-                  (112,'GPSTRAIN'):     21,
-                  (129,'GPSTRAIN'):     21,
-                  (145,'GPSTRAIN'):     21,
-                  (146,'GPSTRAIN'):     21,
+                  (101, 'GPSTRAIN'): 21,
+                  (105, 'GPSTRAIN'): 21,
+                  (106, 'GPSTRAIN'): 21,
+                  (107, 'GPSTRAIN'): 21,
+                  (108, 'GPSTRAIN'): 21,
+                  (111, 'GPSTRAIN'): 21,
+                  (112, 'GPSTRAIN'): 21,
+                  (129, 'GPSTRAIN'): 21,
+                  (145, 'GPSTRAIN'): 21,
+                  (146, 'GPSTRAIN'): 21,
 
-                  (101,'MPCFORCES'):    3,
-                  (103,'MPCFORCES'):    3,
-                  (106,'MPCFORCES'):    3,
-                  (108,'MPCFORCES'):    3,
-                  (112,'MPCFORCES'):    3,
-                  (129,'MPCFORCES'):    3,
+                  (101, 'MPCFORCES'): 3,
+                  (103, 'MPCFORCES'): 3,
+                  (106, 'MPCFORCES'): 3,
+                  (108, 'MPCFORCES'): 3,
+                  (112, 'MPCFORCES'): 3,
+                  (129, 'MPCFORCES'): 3,
                  #(144,'MPCFORCES'):    3,
-                  (145,'MPCFORCES'):    3,
-                  (146,'MPCFORCES'):    3,
+                  (145, 'MPCFORCES'): 3,
+                  (146, 'MPCFORCES'): 3,
 
-                  (101,'OLOAD'):        2,
-                  (103,'OLOAD'):        2,
-                  (105,'OLOAD'):        2,
-                  (106,'OLOAD'):        2,
-                  (107,'OLOAD'):        2,
-                  (108,'OLOAD'):        2,
-                  (111,'OLOAD'):        2,
-                  (112,'OLOAD'):        2,
-                  (129,'OLOAD'):        2,
+                  (101, 'OLOAD'): 2,
+                  (103, 'OLOAD'): 2,
+                  (105, 'OLOAD'): 2,
+                  (106, 'OLOAD'): 2,
+                  (107, 'OLOAD'): 2,
+                  (108, 'OLOAD'): 2,
+                  (111, 'OLOAD'): 2,
+                  (112, 'OLOAD'): 2,
+                  (129, 'OLOAD'): 2,
                  #(144,'OLOAD'):        2,
-                  (145,'OLOAD'):        2,
-                  (146,'OLOAD'):        2,
+                  (145, 'OLOAD'): 2,
+                  (146, 'OLOAD'): 2,
 
-                  (101,'SPCFORCES'):    3,
-                  (103,'SPCFORCES'):    3,
-                  (105,'SPCFORCES'):    3,
-                  (106,'SPCFORCES'):    3,
-                  (107,'SPCFORCES'):    3,
-                  (108,'SPCFORCES'):    3,
-                  (110,'SPCFORCES'):    3,
-                  (111,'SPCFORCES'):    3,
-                  (112,'SPCFORCES'):    3,
-                  (129,'SPCFORCES'):    3,
+                  (101, 'SPCFORCES'): 3,
+                  (103, 'SPCFORCES'): 3,
+                  (105, 'SPCFORCES'): 3,
+                  (106, 'SPCFORCES'): 3,
+                  (107, 'SPCFORCES'): 3,
+                  (108, 'SPCFORCES'): 3,
+                  (110, 'SPCFORCES'): 3,
+                  (111, 'SPCFORCES'): 3,
+                  (112, 'SPCFORCES'): 3,
+                  (129, 'SPCFORCES'): 3,
                  #(144,'SPCFORCES'):    3,
-                  (145,'SPCFORCES'):    3,
-                  (146,'SPCFORCES'):    3,
+                  (145, 'SPCFORCES'): 3,
+                  (146, 'SPCFORCES'): 3,
 
-                  (101,'STRAIN'):       5,# 5/20/21 ???
-                  (105,'STRAIN'):       5,
-                  (106,'STRAIN'):       5,
-                  (107,'STRAIN'):       5,
-                  (108,'STRAIN'):       5,
-                  (110,'STRAIN'):       5,
-                  (111,'STRAIN'):       5,
-                  (112,'STRAIN'):       5,
-                  (129,'STRAIN'):       5,
-                  (145,'STRAIN'):       5,
-                  (146,'STRAIN'):       5,
+                  (101, 'STRAIN'): 5,  # 5/20/21 ???
+                  (105, 'STRAIN'): 5,
+                  (106, 'STRAIN'): 5,
+                  (107, 'STRAIN'): 5,
+                  (108, 'STRAIN'): 5,
+                  (110, 'STRAIN'): 5,
+                  (111, 'STRAIN'): 5,
+                  (112, 'STRAIN'): 5,
+                  (129, 'STRAIN'): 5,
+                  (145, 'STRAIN'): 5,
+                  (146, 'STRAIN'): 5,
 
-                  (101,'STRESS'):       5,# 5/20/21 ???
-                  (103,'STRESS'):       5,
-                  (105,'STRESS'):       5,
-                  (106,'STRESS'):       5,
-                  (107,'STRESS'):       5,
-                  (108,'STRESS'):       5,
-                  (111,'STRESS'):       5,
-                  (112,'STRESS'):       5,
-                  (129,'STRESS'):       5,
-                  (145,'STRESS'):       5,
-                  (146,'STRESS'):       5,
+                  (101, 'STRESS'): 5,  # 5/20/21 ???
+                  (103, 'STRESS'): 5,
+                  (105, 'STRESS'): 5,
+                  (106, 'STRESS'): 5,
+                  (107, 'STRESS'): 5,
+                  (108, 'STRESS'): 5,
+                  (111, 'STRESS'): 5,
+                  (112, 'STRESS'): 5,
+                  (129, 'STRESS'): 5,
+                  (145, 'STRESS'): 5,
+                  (146, 'STRESS'): 5,
 
-                  (145,'SVECTOR'):      14,
+                  (145, 'SVECTOR'): 14,
 
-                  (101,'FLUX'):         4,
-                  (103,'FLUX'):         4,
-                  (106,'FLUX'):         4,
-                  (112,'FLUX'):         4,
-                  (108,'FLUX'):         4,
-                  (153,'FLUX'):         4,
-                  (159,'FLUX'):         4,
+                  (101, 'FLUX'): 4,
+                  (103, 'FLUX'): 4,
+                  (106, 'FLUX'): 4,
+                  (112, 'FLUX'): 4,
+                  (108, 'FLUX'): 4,
+                  (153, 'FLUX'): 4,
+                  (159, 'FLUX'): 4,
 
-                  (101,'THERMAL'):      3, # 3/4 ???
-                  (159,'THERMAL'):      3, # 3/4 ???
+                  (101, 'THERMAL'): 3,  # 3/4 ???
+                  (159, 'THERMAL'): 3,  # 3/4 ???
 
-                  (101,'VELOCITY'):    10,
-                  (103,'VELOCITY'):    10,
-                  (106,'VELOCITY'):    10,
-                  (107,'VELOCITY'):    10,
-                  (108,'VELOCITY'):    10,
-                  (111,'VELOCITY'):    10,
-                  (112,'VELOCITY'):    10,
-                  (129,'VELOCITY'):    10,
+                  (101, 'VELOCITY'): 10,
+                  (103, 'VELOCITY'): 10,
+                  (106, 'VELOCITY'): 10,
+                  (107, 'VELOCITY'): 10,
+                  (108, 'VELOCITY'): 10,
+                  (111, 'VELOCITY'): 10,
+                  (112, 'VELOCITY'): 10,
+                  (129, 'VELOCITY'): 10,
                  #(144,'VELOCITY'):    10,
-                  (145,'VELOCITY'):    10,
-                  (146,'VELOCITY'):    10,
+                  (145, 'VELOCITY'): 10,
+                  (146, 'VELOCITY'): 10,
 
-                  (101,'VUGRID'):    10,
+                  (101, 'VUGRID'): 10,
 
                  }
-        print("key=%s" %(str(key)))
+        print("key=%s" % (str(key)))
         if key not in tables:
             raise KeyError(key)
         tableCode = tables[key]
         return tableCode
-        
+
     def hasParameter(self, paramName):
         warnings.warn('hasParameter has been deprecated; use has_parameter',
                       DeprecationWarning, stacklevel=2)
@@ -330,12 +331,12 @@ class Subcase(object):
     def get_parameter(self, paramName):
         paramName = self.update_param_name(paramName)
         if paramName not in self.params:
-            raise KeyError('%s doesnt exist in subcase=%s in the case control deck.' %(paramName, self.id))
+            raise KeyError('%s doesnt exist in subcase=%s in the case control deck.' % (paramName, self.id))
         return self.params[paramName][0:2]
 
     def update_param_name(self, paramName):
         """
-        takes an abbreviated name and expands it so the user can type DISP or 
+        takes an abbreviated name and expands it so the user can type DISP or
         DISPLACEMENT and get the same answer
         @todo not a complete list
         @warning fully tested yet...
@@ -365,8 +366,6 @@ class Subcase(object):
         elif paramName.startswith('THER'):  paramName = 'THERMAL'
         elif paramName.startswith('VECT'):  paramName = 'VECTOR'
         elif paramName.startswith('VELO'):  paramName = 'VELOCITY'
-
-
 
         #elif paramName.startswith('DFRE'):  paramName = 'D'
         #elif paramName.startswith('TEMP'):  paramName = 'TEMPERATURE'  # handled in caseControlDeck.py
@@ -399,11 +398,11 @@ class Subcase(object):
                     values2.append(ivalue)
                 ###
             ###
-            
+
             ## @todo expand values with THRU and EXCLUDE
             ## @todo sort values
             ## @todo collapse values when printing
-            
+
             #print "values2 = ",values2
             options = int(options)
             return (key, values2, options)
@@ -430,12 +429,12 @@ class Subcase(object):
 
     def get_op2_data(self, sol, solmap_toValue):
         self.sol = sol
-        label = 'SUBCASE %s' %(self.id)
-        op2Params = {'iSubcase':None, 'tables':[], 'analysisCodes':[], 
-                     'deviceCodes':[], 'sortCodes':[], 'tableCodes':[],
-                     'label':label,'subtitle':None, 'title':None,
-                     'formatCodes':[], 'stressCodes':[], 'thermal':None}
-        
+        label = 'SUBCASE %s' % (self.id)
+        op2Params = {'iSubcase': None, 'tables': [], 'analysisCodes': [],
+                     'deviceCodes': [], 'sortCodes': [], 'tableCodes': [],
+                     'label': label, 'subtitle': None, 'title': None,
+                     'formatCodes': [], 'stressCodes': [], 'thermal': None}
+
         results = ['DISPLACEMENT', 'EKE', 'EDE', 'ELSDCON', 'ENTHALPY',
                    'EQUILIBRIUM', 'ESE', 'FLUX', 'FORCE', 'GPFORCE', 'GPKE',
                    'GPSDCON', 'GPSTRAIN', 'GPSTRESS', 'HOUTPUT', 'MODALKE',
@@ -449,11 +448,11 @@ class Subcase(object):
         if self.sol == 200 or 'ANALYSIS' in self.params:
             param = self.params['ANALYSIS']
             (value, options, paramType) = param
-            
+
             sol = solmap_toValue[value.upper()]
-            print("***value=%s sol=%s" %(value, sol))
+            print("***value=%s sol=%s" % (value, sol))
         else:  # leaves SOL the same
-            sol  = self.sol
+            sol = self.sol
         ###
         if sol in self.solCodeMap:  # reduces SOL 144 to SOL 101
             sol = self.solCodeMap[sol]
@@ -479,24 +478,24 @@ class Subcase(object):
             elif key == 'TEMPERATURE':
                 thermal = 1
             elif key in results:
-                sortCode   = self.get_sort_code(options, value)
+                sortCode = self.get_sort_code(options, value)
                 deviceCode = self.get_device_code(options, value)
-                
+
                 if key in ['STRESS', 'STRAIN']:
                     stressCode = self.get_stress_code(key, options, value)
                     op2Params['stressCodes'].append(stressCode)
                 else:
                     op2Params['stressCodes'].append(0)
                 ###
-                
-                formatCode   = self.get_format_code(options, value)
-                tableCode    = self.get_table_code(sol, key, options)
+
+                formatCode = self.get_format_code(options, value)
+                tableCode = self.get_table_code(sol, key, options)
                 analysisCode = self.get_analysis_code(sol)
-                
-                approachCode = analysisCode*10 + deviceCode
-                tCode        = tableCode*1000 + sortCode
+
+                approachCode = analysisCode * 10 + deviceCode
+                tCode = tableCode * 1000 + sortCode
                 op2Params['tables'].append(key)
-                                
+
                 op2Params['analysisCodes'].append(analysisCode)
                 #op2Params['approachCodes'].append(approachCode)
                 op2Params['deviceCodes'].append(deviceCode)
@@ -507,7 +506,7 @@ class Subcase(object):
 
             #elif key in ['ADACT', 'ADAPT', 'AERCONFIG', 'TITLE', 'SUBTITLE',
             #             'LABEL', 'LOAD', 'SUPORT', 'SUPORT1', 'MPC', 'SPC',
-            #            'TSTEPNL', 'NLPARM', 'TRIM', 'GUST', 'METHOD', 
+            #            'TSTEPNL', 'NLPARM', 'TRIM', 'GUST', 'METHOD',
             #            'DESOBJ', 'DESSUB', 'FMETHOD', 'SEALL']:
             else:
                 op2Params[key.lower()] = value
@@ -517,12 +516,11 @@ class Subcase(object):
             ###
         ###
         op2Params['thermal'] = thermal
-        
+
         print("\nThe estimated results...")
         for (key, value) in sorted(op2Params.iteritems()):
             if value is not None:
-                print("   key=|%s| value=|%s|" %(key, value))
-        
+                print("   key=|%s| value=|%s|" % (key, value))
 
     def print_param(self, key, param, printBeginBulk=True):
         """
@@ -532,38 +530,38 @@ class Subcase(object):
         msg = ''
         #msg += 'id=%s   ' %(self.id)
         (value, options, paramType) = param
-        
+
         spaces = ''
         if self.id > 0:
             spaces = '    '
 
         if paramType == 'SUBCASE-type':
             if self.id > 0:
-                msg += 'SUBCASE %s\n' %(self.id)
+                msg += 'SUBCASE %s\n' % (self.id)
             ###
             #else:  global subcase ID=0 and is not printed
             #    pass
         elif paramType == 'KEY-type':
             #print "KEY-TYPE:  |%s|" %(value)
             assert value is not None, param
-            msg += spaces + '%s\n' %(value)
+            msg += spaces + '%s\n' % (value)
         elif paramType == 'STRING-type':
-            msg += spaces+'%s = %s\n' %(key, value)
+            msg += spaces + '%s = %s\n' % (key, value)
         elif paramType == 'CSV-type':
-            msg += spaces+'%s,%s,%s\n' %(key, value, options)
+            msg += spaces + '%s,%s,%s\n' % (key, value, options)
         elif paramType == 'STRESS-type':
             sOptions = ','.join(options)
             #print("sOptions = |%s|" %(sOptions))
             #print("STRESSTYPE key=%s value=%s options=%s"
             #    %(key, value, options))
             if len(sOptions) > 0:
-                msg += '%s(%s) = %s\n' %(key, sOptions, value)
+                msg += '%s(%s) = %s\n' % (key, sOptions, value)
             else:
-                msg += '%s = %s\n' %(key, value)
+                msg += '%s = %s\n' % (key, value)
             msg = spaces + msg
 
         elif paramType == 'BEGIN_BULK-type':
-            msg += '%s %s\n' %(key, value)
+            msg += '%s %s\n' % (key, value)
             if 'BEGIN BULK' not in msg:
                 msg = spaces + msg
             elif printBeginBulk:
@@ -573,24 +571,24 @@ class Subcase(object):
             ###
         elif paramType == 'SET-type':
             ## @todo collapse data...not written yet
-            starter = 'SET %s = ' %(options)
+            starter = 'SET %s = ' % (options)
             msg2 = spaces + starter
             nChars = len(msg2)
-            
+
             i = 0
             while i < len(value):
                 #print "type(value[i]) = ",type(value[i])
-                newString = '%s, ' %(value[i])
+                newString = '%s, ' % (value[i])
                 #print "newString[%i] = |%s|" %(i,newString)
-                if len(msg2+newString) > 70:
-                    msg += msg2+'\n'
-                    msg2 = ' '*nChars+newString
+                if len(msg2 + newString) > 70:
+                    msg += msg2 + '\n'
+                    msg2 = ' ' * nChars + newString
                 else:
                     msg2 += newString
                 ###
                 i += 1
             ###
-            msg += msg2.rstrip(' \n,')+'\n'
+            msg += msg2.rstrip(' \n,') + '\n'
         else:
             # SET-type is not supported yet...
             raise NotImplementedError((key, param))
@@ -602,7 +600,7 @@ class Subcase(object):
         """
         @note this is not integrated and probably never will be as it's not really that necessary
         """
-        print("keys = %s" %(sorted(self.params.keys())))
+        print("keys = %s" % (sorted(self.params.keys())))
         if 'LOAD' in self.params:
             loadID = self.params['LOAD'][0]
             loadObj = mesh.loads[loadID]
@@ -636,9 +634,9 @@ class Subcase(object):
             gustID = self.params['GUST'][0]
             gustObj = mesh.gusts[gustID]
             gustObj.crossReference(mesh)
-        if 'DLOAD' in self.params: # ???
+        if 'DLOAD' in self.params:  # ???
             pass
-    
+
     def finish_subcase(self):
         """
         Removes the subcase parameter from the subcase to avoid printing it in
@@ -657,10 +655,10 @@ class Subcase(object):
         if self.id == 0:
             msg = str(self)
         else:
-            msg = 'SUBCASE %s\n' %(self.id)
+            msg = 'SUBCASE %s\n' % (self.id)
             for (key, param) in self.subcase_sorted(self.params.items()):
                 if key in subcase0.params and subcase0.params[key] == param:
-                    pass # dont write global subcase parameters
+                    pass  # dont write global subcase parameters
                 else:
                     if 'key' == 'BEGIN':
                         continue
@@ -675,7 +673,7 @@ class Subcase(object):
                         #print ""
                     ###
                 ###
-        
+
         ## self.id>0 and 'BEGIN' in self.params used to prevent printing of
         ## BEGIN BULK multiple times
         if self.id > 0 and 'BEGIN' in self.params:
@@ -695,19 +693,19 @@ class Subcase(object):
         """
         # presort the list to put all the SET cards next to each other
         listA.sort()
-        
-        i = 0 # needed in case the loop doesnt execute
-        iSet = None # index of first SET card in the deck
-        setDict    = {} 
+
+        i = 0  # needed in case the loop doesnt execute
+        iSet = None  # index of first SET card in the deck
+        setDict = {}
         listBefore = []
-        listAfter  = []
-        setKeys    = []
+        listAfter = []
+        setKeys = []
         for (i, entry) in enumerate(listA):
             key = entry[0]
             if 'SET' in key[0:3]:
-                if key == 'SET': # handles "SET = ALL"
+                if key == 'SET':  # handles "SET = ALL"
                     key = 0
-                else: # handles "SET 100 = 1,2,3"
+                else:  # handles "SET 100 = 1,2,3"
                     sline = key.split(' ')
                     key = int(sline[1])
 
@@ -719,17 +717,17 @@ class Subcase(object):
                 listBefore.append(entry)
                 if iSet:
                     break
-        
+
         # grab the other entries
-        listAfter = listA[i+1:]
-        
+        listAfter = listA[i + 1:]
+
         # write the SET cards in a sorted order
         setList = []
         for key in sorted(setKeys):
             setList.append(setDict[key])
-        
+
         # combine all the cards
-        listB = listBefore+setList+listAfter
+        listB = listBefore + setList + listAfter
         return listB
 
     def __repr__(self):
@@ -740,7 +738,7 @@ class Subcase(object):
         #msg = "-------SUBCASE %s-------\n" %(self.id)
         msg = ''
         if self.id > 0:
-            msg += 'SUBCASE %s\n' %(self.id)
+            msg += 'SUBCASE %s\n' % (self.id)
         ###
 
         for (key, param) in self.subcase_sorted(self.params.items()):
@@ -754,7 +752,6 @@ class Subcase(object):
                 #print ""
             ###
         ###
-        if self.id > 0 and 'BEGIN' in self.params: # prevents 2 BEGIN BULKs
+        if self.id > 0 and 'BEGIN' in self.params:  # prevents 2 BEGIN BULKs
             msg += self.print_param('BEGIN', self.params['BEGIN'])
         return msg
-
