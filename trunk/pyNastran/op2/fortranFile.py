@@ -6,6 +6,7 @@ from struct import unpack, pack
 from pyNastran.op2.op2Errors import (InvalidMarkerError, InvalidMarkersError,
                                      ZeroBufferError, EndOfFileError)
 
+
 class FortranFile(object):
     def __init__(self):
         ## the endian of the processor (typically '<' for Windows/Linux/Mac,
@@ -14,7 +15,7 @@ class FortranFile(object):
         self.endian = '<'
         ## currently does nothing
         self.bufferSize = 65535
-    
+
     def setEndian(self, endian='<'):
         """
         sets the endian
@@ -39,7 +40,7 @@ class FortranFile(object):
         ints = self.readFullIntBlock()
         #print("header ints = %s" % (repr(ints)))
         #self.n += 12*4
-        
+
         if len(ints) == 5:
             #print "   buffer block..."
             ## flag to help know if a buffer was found
@@ -47,25 +48,24 @@ class FortranFile(object):
             ints = self.readFullIntBlock()
             if debug and self.makeOp2Debug:
                 self.op2Debug.write('bufferBlock = |%s|\n' % (str(ints)))
-            
+
         elif len(ints) == 0:
             return None
-        
+
         if not(ints[0] == ints[2] == 4):
-            msg  = "pyNastran reading failed because an improperly formatted (or unsupported) table is in the OP2.\n"
+            msg = "pyNastran reading failed because an improperly formatted (or unsupported) table is in the OP2.\n"
             msg += "If you remove the offending table (make sure you're using PARAM,POST,-1 first) the code should work.\n"
-            msg += "header ints=(%s) expected=%s\n" % (str(ints[0:5]), expected)
+            msg += "header ints=(%s) expected=%s\n" % (
+                str(ints[0:5]), expected)
             msg += 'tableName=|%s|' % (self.tableName)
             raise InvalidMarkerError(msg)
-        
-        
+
         #if ints[1]==2:  # buffer???
         #    ints = self.readFullIntBlock()
         #    print("bufferInts1=%s" % (ints))
         #    ints = self.readFullIntBlock()
         #    print("bufferInts2=%s" % (ints))
         #print("marker=%s" % (ints[1]))
-            
         if debug and self.makeOp2Debug:
             self.op2Debug.write('[4,%s,4]\n' % (ints[1]))
         return ints[1]
@@ -87,24 +87,24 @@ class FortranFile(object):
     #    words = self.getStrings(data)
     #    return ''.join(words)
 
-    def readInts(self,nInts,debug=True):
+    def readInts(self, nInts, debug=True):
         """
         reads a list of nIntegers
         @param self the object pointer
         @param nInts the number of ints to read
         @debug developer debug combined with makeOp2Debug
         """
-        nData = 4*nInts
+        nData = 4 * nInts
         #print "nData = ",nData
         data = self.op2.read(nData)
 
-        iFormat = str(nInts)+'i'
+        iFormat = str(nInts) + 'i'
         iFormat = bytes(iFormat)
-        ints = unpack(iFormat,data)
+        ints = unpack(iFormat, data)
         if debug and self.makeOp2Debug:
             self.op2Debug.write('|%s|\n' % (str(ints)))
 
-        self.n+=nData
+        self.n += nData
         return ints
 
     def readDoubles(self, nData, debug=True):
@@ -137,17 +137,17 @@ class FortranFile(object):
         unpacks a data set into a series of characters
         """
         n = len(data)
-        iFormat = str(n)+'s'
+        iFormat = str(n) + 's'
         iFormat = bytes(iFormat)
         strings, = unpack(iFormat, data)
-        return strings #.encode('utf-8')
+        return strings  # .encode('utf-8')
 
     def getStrings2(self, data, endian):
         """
         unpacks a data set into a series of characters
         """
         n = len(data)
-        iFormat = endian+str(n)+'s'
+        iFormat = endian + str(n) + 's'
         iFormat = bytes(iFormat)
         strings = unpack(iFormat, data)
         return strings
@@ -157,11 +157,11 @@ class FortranFile(object):
         unpacks a data set into a series of ints
         """
         n = len(data)
-        nInts = n//4
+        nInts = n // 4
         #print "nInts = ",nInts
-        iFormat = str(nInts)+'i'
+        iFormat = str(nInts) + 'i'
         iFormat = bytes(iFormat)
-        ints = unpack(iFormat, data[:nInts*4])
+        ints = unpack(iFormat, data[:nInts * 4])
         return ints
 
     def getInts2(self, data, endian, debug=True):
@@ -169,10 +169,10 @@ class FortranFile(object):
         unpacks a data set into a series of ints
         """
         n = len(data)
-        nInts = n//4
+        nInts = n // 4
         iFormat = endian + str(nInts) + 'i'
         iFormat = bytes(iFormat)
-        ints = unpack(iFormat, data[:nInts*4])
+        ints = unpack(iFormat, data[:nInts * 4])
         return ints
 
     def getLongs(self, data):
@@ -180,14 +180,14 @@ class FortranFile(object):
         unpacks a data set into a series of longs
         """
         n = len(data)
-        nLongs = n//4
+        nLongs = n // 4
         #print "nLongs = ", nLongs
         #a = pack('l', 200)
         #print "len(a) = ", len(a)
-        
-        iFormat = str(nLongs)+'l'
+
+        iFormat = str(nLongs) + 'l'
         iFormat = bytes(iFormat)
-        longs = unpack(iFormat, data[:nLongs*4])
+        longs = unpack(iFormat, data[:nLongs * 4])
         return longs
 
     def getFloats(self, data):
@@ -195,10 +195,10 @@ class FortranFile(object):
         unpacks a data set into a series of floats
         """
         n = len(data)
-        nFloats = n//4
-        iFormat = str(nFloats)+'f'
+        nFloats = n // 4
+        iFormat = str(nFloats) + 'f'
         iFormat = bytes(iFormat)
-        ints = unpack(iFormat, data[:nFloats*4])
+        ints = unpack(iFormat, data[:nFloats * 4])
         return ints
 
     def getFloats2(self, data, endian):
@@ -206,10 +206,10 @@ class FortranFile(object):
         unpacks a data set into a series of floats
         """
         n = len(data)
-        nFloats = n//4
-        iFormat = endian+str(nFloats)+'f'
+        nFloats = n // 4
+        iFormat = endian + str(nFloats) + 'f'
         iFormat = bytes(iFormat)
-        ints = unpack(iFormat, data[:nFloats*4])
+        ints = unpack(iFormat, data[:nFloats * 4])
         return ints
 
     def getDoubles(self, data):
@@ -217,12 +217,12 @@ class FortranFile(object):
         unpacks a data set into a series of doubles
         """
         n = len(data)
-        nDoubles = n//8
-        iFormat = str(nDoubles)+'d'
+        nDoubles = n // 8
+        iFormat = str(nDoubles) + 'd'
         iFormat = bytes(iFormat)
-        ints = unpack(iFormat,data[:nDoubles*8])
+        ints = unpack(iFormat, data[:nDoubles * 8])
         return ints
-    
+
     def printBlock(self, data, nMax=200):
         """
         prints a data set in int/float/double/string format to
@@ -234,11 +234,11 @@ class FortranFile(object):
         #if nData>nMax:
             #print("oops!  too much data...limiting to %s bytes.  nData=%s" % (nMax,nData))
             #data2 = data[:nMax]
-        
+
         msg = ''
-        ints    = self.getInts(data2)
+        ints = self.getInts(data2)
         #longs   = self.getLongs(data2)
-        floats  = self.getFloats(data2)
+        floats = self.getFloats(data2)
         #doubles = self.getDoubles(data2)
         strings = self.getStrings(data2)
         msg += "n       = %s\n" % (self.n)
@@ -247,7 +247,7 @@ class FortranFile(object):
         msg += "floats  = %s\n" % (str(floats))
         #msg += "doubles = %s\n" % (str(doubles))
         msg += "strings = |%r|\n" % (strings)
-        msg += "nWords  = %s\n" % (len(data)//4)
+        msg += "nWords  = %s\n" % (len(data) // 4)
         #msg += "tell    = %s\n" % (self.op2.tell())
         return msg
 
@@ -258,47 +258,47 @@ class FortranFile(object):
         @note this is a great function for debugging
         """
         msg = ''
-        ints    = self.getInts2(data,endian)
+        ints = self.getInts2(data, endian)
         #longs   = self.getLongs(data)
-        floats  = self.getFloats2(data,endian)
+        floats = self.getFloats2(data, endian)
         #doubles = self.getDoubles(data)
-        strings = self.getStrings2(data,endian)
+        strings = self.getStrings2(data, endian)
         msg += "ints    = %s\n" % (str(ints))
         #msg += "longs  = %s\n" % (longs)
         msg += "floats  = %s\n" % (str(floats))
         #msg += "doubles = %s\n" % (doubles)
         msg += "strings = |b%r|\n" % (''.join(strings))
-        msg += "nWords  = %s\n" % (len(data)//4)
+        msg += "nWords  = %s\n" % (len(data) // 4)
         #msg += "tell    = %s\n" % (self.op2.tell())
         return msg
 
-    def getData(self,n):
+    def getData(self, n):
         """
         gets a data set of length N
         """
-        if n<=0:
+        if n <= 0:
             raise ZeroBufferError()
 
         #assert self.op2.tell()==self.n,'tell=%s n=%s' % (self.op2.tell(),self.n)
         data = self.op2.read(n)
-        self.n+=n
+        self.n += n
         #print "n =",n
         #assert self.op2.tell()==self.n,'tell=%s n=%s' % (self.op2.tell(),self.n)
         return data
 
-    def readData(self,n):
+    def readData(self, n):
         return self.getData(n)
 
     def getBlockIntEntry(self, data, n):
         """
         given a data set, grabs the nth word and casts it as an integer
         """
-        data2 = data[4*(n-1):4*(n-1)+4]
+        data2 = data[4 * (n - 1):4 * (n - 1) + 4]
         iFormat = 'i'
         iFormat = bytes(iFormat)
         return unpack(iFormat, data2)[0]
 
-    def printSection(self,nBytes):
+    def printSection(self, nBytes):
         """
         prints data, but doesn't move the cursor
         @param self the object pointer
@@ -310,8 +310,8 @@ class FortranFile(object):
         msg = self.printBlock(data)
         self.op2.seek(self.n)
         return msg
-    
-    def printSection2(self,nBytes,endian):
+
+    def printSection2(self, nBytes, endian):
         """
         prints data, but doesn't move the cursor
         @param self the object pointer
@@ -320,64 +320,65 @@ class FortranFile(object):
         @note this the BEST function when adding new cards/tables/debugging
         """
         data = self.op2.read(nBytes)
-        msg = self.printBlock2(data,endian)
+        msg = self.printBlock2(data, endian)
         self.op2.seek(self.n)
         return msg
-    
-    def skip(self,n):
+
+    def skip(self, n):
         """skips nBits"""
         self.n += n
         self.op2.seek(self.n)
 
-    def scan(self,n):
+    def scan(self, n):
         """same as skip, but actually reads the data instead of using seek"""
         self.op2.read(n)
-        self.n+=n
+        self.n += n
 
-    def getTableCode(self,expected=None,debug=True):
-        tableCode = self.readHeader(expected,debug)
+    def getTableCode(self, expected=None, debug=True):
+        tableCode = self.readHeader(expected, debug)
         return tableCode
 
-    def getMarker(self,expected=None,debug=True):
-        tableCode = self.readHeader(expected,debug)
+    def getMarker(self, expected=None, debug=True):
+        tableCode = self.readHeader(expected, debug)
         return tableCode
-        
-    def readMarker(self,expected=None):
+
+    def readMarker(self, expected=None):
         return self.getMarker(expected)
-        
-    def readMarkers(self,markers,tableName=None,debug=False,printErrorOnFailure=True):
+
+    def readMarkers(self, markers, tableName=None, debug=False, printErrorOnFailure=True):
         """
         Reads a set of predefined markers e.g. [-3,1,0]
         and makes sure it is correct.
-        
+
         A marker (e.g. a -3) is a series of 3 integers [4,-3,4].  Typically 3
         markers are put together (e.g. [-3,1,0]) such that the integers are
-        [4,-3,4, 4,1,4, 4,0,4] to mark important parts of the table. 
-        
+        [4,-3,4, 4,1,4, 4,0,4] to mark important parts of the table.
+
         Markers will "increment" during table reading, such that the first marker
         is [-1,1,0], then [-2,1,0], etc.  Tables will end (or really the next table starts)
         when a [-1,1,0] or a [0,1,0] marker is found.
-        
+
         # Verify the following statement...
-        Occassionally, buffer markers will be embedded inside the 
+        Occassionally, buffer markers will be embedded inside the
         marker [-3,1,0], (e.g. [4,2^16,4] <- the default BUFFSIZE), which make
         reading the marker more difficult.
         """
         #print("markers = ",markers)
         foundMarkers = []
         for marker in markers:
-            tableCode = self.readHeader(marker,debug)
+            tableCode = self.readHeader(marker, debug)
             #if tableCode==2:
             #    tableCode = self.readHeader(marker,debug)
 
             #print("tableCode=",tableCode)
-            if tableCode==None:
+            if tableCode is None:
                 return
-            if marker!=tableCode:
+            if marker != tableCode:
                 msg = ''
                 if printErrorOnFailure:
-                    msg  = '\nmarkers=%s foundMarkers=%s\n' % (markers,foundMarkers)
-                    msg += 'tableName=%s found=%s expected=%s leftover=%s' % (tableName,tableCode,marker,self.printSection(40))
+                    msg = '\nmarkers=%s foundMarkers=%s\n' % (
+                        markers, foundMarkers)
+                    msg += 'tableName=%s found=%s expected=%s leftover=%s' % (tableName, tableCode, marker, self.printSection(40))
                     #print(msg)
                 raise InvalidMarkersError(msg)
             foundMarkers.append(marker)
@@ -385,15 +386,15 @@ class FortranFile(object):
         ###
         msg = ''
         for i in markers:
-            msg += '[4,'+str(i)+',4] + '
+            msg += '[4,' + str(i) + ',4] + '
         if self.makeOp2Debug:
-            self.op2Debug.write(msg[:-3]+'\n')
+            self.op2Debug.write(msg[:-3] + '\n')
         if debug:
             self.log.debug("@markers = %s" % (markers))
             self.log.debug("")
         ###
 
-    def getNMarkers(self,nMarkers,rewind=False):
+    def getNMarkers(self, nMarkers, rewind=False):
         """gets the next N markers, verifies they're correct"""
         markers = []
         for iMarker in xrange(nMarkers):
@@ -401,24 +402,24 @@ class FortranFile(object):
             markers.append(tableCode)
         ###
         if rewind:
-            self.n -= 12*nMarkers
+            self.n -= 12 * nMarkers
             self.op2.seek(self.n)
-            
+
         return markers
 
-    def isTableDone(self,expectedMarkers):
-        markers = self.getNMarkers(len(expectedMarkers),rewind=True)
+    def isTableDone(self, expectedMarkers):
+        markers = self.getNMarkers(len(expectedMarkers), rewind=True)
         #print "getMarkers = ",markers
-        
-        if markers==[-1,7]:
+
+        if markers == [-1, 7]:
             return True
-        elif markers==expectedMarkers:
+        elif markers == expectedMarkers:
             #sys.exit(expectedMarkers)
             return False
         else:
-            raise RuntimeError('this should never happen...invalid markers...expected=%s markers=%s' % (expectedMarkers,markers))
+            raise RuntimeError('this should never happen...invalid markers...expected=%s markers=%s' % (expectedMarkers, markers))
 
-    def goto(self,n):
+    def goto(self, n):
         """
         jumps to position n in the file
         @param self the object pointer
@@ -426,7 +427,7 @@ class FortranFile(object):
         @note n>0
         """
         #print "goto n = |%s|" % (n)
-        assert n>0
+        assert n > 0
         self.n = n
         self.op2.seek(n)
 
@@ -438,13 +439,13 @@ class FortranFile(object):
         data = self.op2.read(4)
         if len(data) == 0:
             raise EndOfFileError("data=('')")
-        
+
         iFormat = 'i'
         iFormat = bytes(iFormat)
         nValues, = unpack(iFormat, data)
         self.n += 4
         data = self.op2.read(nValues)
-        self.n += nValues+4
+        self.n += nValues + 4
         self.goto(self.n)
         return data
 
@@ -457,10 +458,10 @@ class FortranFile(object):
         data = self.op2.read(4)
         iFormat = 'i'
         iFormat = bytes(iFormat)
-        nValues, = unpack(iFormat,data)
+        nValues, = unpack(iFormat, data)
         self.n += 4
         data = self.op2.read(nValues)
-        self.n += nValues+4
+        self.n += nValues + 4
         self.goto(self.n)
 
     def readFullIntBlock(self):
@@ -479,19 +480,19 @@ class FortranFile(object):
             return []
         iFormat = 'i'
         iFormat = bytes(iFormat)
-        nValues, = unpack(iFormat,data)
+        nValues, = unpack(iFormat, data)
         self.n += 4
         data = self.op2.read(nValues)
-        self.n += nValues+4
+        self.n += nValues + 4
         self.goto(self.n)
 
-        nInts = len(data)//4
-        iFormat = str(nInts)+'i'
+        nInts = len(data) // 4
+        iFormat = str(nInts) + 'i'
         iFormat = bytes(iFormat)
-        ints = unpack(iFormat,data)
-        return [nValues]+list(ints)+[nValues]
+        ints = unpack(iFormat, data)
+        return [nValues] + list(ints) + [nValues]
 
-    def readStringBlock(self,debug=True):
+    def readStringBlock(self, debug=True):
         """
         reads a fortran formatted block
         assumes that the data is made up of characters only
@@ -514,8 +515,8 @@ class FortranFile(object):
         assumes that the data is made up of integers only
         """
         data = self.readBlock()
-        nInts = len(data)//4
-        iFormat = str(nInts)+'i'
+        nInts = len(data) // 4
+        iFormat = str(nInts) + 'i'
         iFormat = bytes(iFormat)
         ints = unpack(iFormat, data)
         return ints
@@ -526,8 +527,8 @@ class FortranFile(object):
         assumes that the data is made up of floats only
         """
         data = self.readBlock()
-        nFloats = len(data)//4
-        iFormat = str(nFloats)+'f'
+        nFloats = len(data) // 4
+        iFormat = str(nFloats) + 'f'
         iFormat = bytes(iFormat)
         floats = unpack(iFormat, data)
         return floats
@@ -538,8 +539,8 @@ class FortranFile(object):
         assumes that the data is made up of doubles only
         """
         data = self.readBlock()
-        nDoubles = len(data)//8
-        iFormat = str(nDoubles)+'d'
+        nDoubles = len(data) // 8
+        iFormat = str(nDoubles) + 'd'
         iFormat = bytes(iFormat)
         doubles = unpack(iFormat, data)
         return doubles
@@ -563,7 +564,7 @@ class FortranFile(object):
         n = self.n
         try:
             #print ""
-            self.readMarkers([0,2],debug)
+            self.readMarkers([0, 2], debug)
             word = self.readStringBlock(debug)
             #print("*word = |%r|" % (word))
 
@@ -588,38 +589,38 @@ class FortranFile(object):
             ###
         ###
 
-    def skipNextTable(self,bufferSize=10000):
+    def skipNextTable(self, bufferSize=10000):
         """
         skips a table
         @todo fix bugs
         """
-        tableName = self.readTableName(rewind=False) # GEOM1
+        tableName = self.readTableName(rewind=False)  # GEOM1
         self.tableInit(tableName)
         self.log.debug("skippingTable |%s|" % (tableName))
         self.log.debug("self.n = %s" % (self.n))
 
         self.readMarkers([-1, 7], tableName)
-        
-        dataPack = (4,1,4,  4,0,4,  4,0,4)  # marks the end of the table
-        binaryData = pack('9i',*dataPack)
+
+        dataPack = (4, 1, 4, 4, 0, 4, 4, 0, 4)  # marks the end of the table
+        binaryData = pack('9i', *dataPack)
         #[1,0,0] marks the end of the table
-        
+
         i = 0
         error = 80
         n = self.n
         endIndex = -1
         data = "dummy"
-        while endIndex== -1 and len(data)>0:
-            data     = self.op2.read(bufferSize+error)
+        while endIndex == -1 and len(data) > 0:
+            data = self.op2.read(bufferSize + error)
             endIndex = data.find(binaryData)
-            
-            self.op2.seek(n+i*bufferSize)
-            i+=1
-        
+
+            self.op2.seek(n + i * bufferSize)
+            i += 1
+
         #print "i = ",i
-        assert endIndex>0,'couldnt find the end of the table'
-        self.n = self.n+(i-1)*bufferSize + endIndex # 36 so it gets to the end of the table markersNext=[0] or [2]
-        
+        assert endIndex > 0, 'couldnt find the end of the table'
+        self.n = self.n + (i - 1) * bufferSize + endIndex  # 36 so it gets to the end of the table markersNext=[0] or [2]
+
         n = self.n
         self.n += 36  ## @todo sometimes this is needed
         #ints = self.readIntBlock()
@@ -632,9 +633,9 @@ class FortranFile(object):
         #self.printSection(200)
         marker = self.getMarker()
         #print "marker = ",marker
-        if marker==2:
+        if marker == 2:
             isAnotherTable = True
-        else:# marker=0
+        else:  # marker=0
             isAnotherTable = False
         isAnotherTable = True
         ###
@@ -643,7 +644,7 @@ class FortranFile(object):
         self.op2.seek(self.n)
         self.log.debug("self.n = %s" % (self.n))
         self.log.debug("---table %s is skipped---" % (tableName))
-        
+
         return isAnotherTable
 
     def hasMoreTables(self):
@@ -652,11 +653,11 @@ class FortranFile(object):
             marker1 = self.getMarker('[4,0,4]')
             marker2 = self.getMarker('[4,0,4] or [4,2,4]')
 
-            marker = [marker1,marker2]
+            marker = [marker1, marker2]
             #print "marker = ",marker
-            if marker==[0,2]:
+            if marker == [0, 2]:
                 isAnotherTable = True
-            else:# marker=0
+            else:  # marker=0
                 isAnotherTable = False
             ###
             #print "isAnotherTable = ",isAnotherTable
@@ -665,4 +666,3 @@ class FortranFile(object):
         except IndexError:
             isAnotherTable = False
         return isAnotherTable
-    
