@@ -39,5 +39,4 @@ Subpackages
 .. toctree::
 
     pyNastran.f06.tables
-    pyNastran.f06.test
 

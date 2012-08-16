@@ -17,11 +17,5 @@ dmap Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`spike` Module
--------------------
 
-.. automodule:: pyNastran.bdf.dmap.spike
-    :members:
-    :undoc-members:
-    :show-inheritance:
 

@@ -49,10 +49,4 @@ sovler Package
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
-
-.. toctree::
-
-    pyNastran.sovler.test
 

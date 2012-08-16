@@ -48,6 +48,5 @@ Subpackages
 
     pyNastran.op2.resultObjects
     pyNastran.op2.tables
-    pyNastran.op2.test
     pyNastran.op2.writer
 

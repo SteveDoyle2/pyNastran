@@ -49,10 +49,5 @@ general Package
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
 
-.. toctree::
-
-    pyNastran.general.test
 

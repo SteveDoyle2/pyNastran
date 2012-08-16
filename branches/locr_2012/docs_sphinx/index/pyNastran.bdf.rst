@@ -65,5 +65,4 @@ Subpackages
     pyNastran.bdf.bdfInterface
     pyNastran.bdf.cards
     pyNastran.bdf.dmap
-    pyNastran.bdf.test
 
