@@ -8,6 +8,7 @@ http://docs.scipy.org/doc/numpy/reference/distutils.html
 import numpy
 from Cython.Distutils import build_ext
 
+
 def configuration(parent_package='', top_path=None):
     """ Function used to build our configuration.
     """
