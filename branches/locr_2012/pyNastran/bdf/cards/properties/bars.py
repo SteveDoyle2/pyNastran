@@ -707,7 +707,7 @@ class PBAR(LineProperty):
         ###
 
     def MassPerLength(self):
-        """
+        r"""
         \f[ \frac{m}{L} = \rho A+nsm \f]
         """
         A = self.Area()

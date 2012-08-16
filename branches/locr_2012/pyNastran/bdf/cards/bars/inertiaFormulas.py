@@ -318,11 +318,11 @@ def T():
 
 
 def Ixx(sections):
-    """
+    r"""
     from http://en.wikipedia.org/wiki/Second_moment_of_area
-    J_{xx} = \frac{1}{12} \sum_{i = 1}^{n-1} ( y_i^2 + y_i y_{i+1} + y_{i+1}^2 ) a_i
-    J_{yy} = \frac{1}{12} \sum_{i = 1}^{n-1} ( x_i^2 + x_i x_{i+1} + x_{i+1}^2 ) a_i
-    J_{xy} = \frac{1}{24} \sum_{i = 1}^{n-1} ( x_i y_{i+1} + 2 x_i y_i + 2 x_{i+1} y_{i+1} + x_{i+1} y_i ) a_i
+    \f[ J_{xx} = \frac{1}{12} \sum_{i = 1}^{n-1} ( y_i^2 + y_i y_{i+1} + y_{i+1}^2 ) a_i \f]
+    \f[ J_{yy} = \frac{1}{12} \sum_{i = 1}^{n-1} ( x_i^2 + x_i x_{i+1} + x_{i+1}^2 ) a_i \f]
+    \f[ J_{xy} = \frac{1}{24} \sum_{i = 1}^{n-1} ( x_i y_{i+1} + 2 x_i y_i + 2 x_{i+1} y_{i+1} + x_{i+1} y_i ) a_i \f]
     """
     h = Symbol('h')
     b = Symbol('b')

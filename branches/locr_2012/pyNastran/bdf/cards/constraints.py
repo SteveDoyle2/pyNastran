@@ -622,7 +622,7 @@ class SPCADD(ConstraintADD):
 
 
 class MPCADD(ConstraintADD):
-    """
+    r"""
     Defines a multipoint constraint equation of the form
     \f$ \Sigma_j A_j u_j =0 \f$ where \f$ u_j \f$ represents
     degree-of-freedom \f$ C_j \f$ at grid or scalar point \f$ G_j \f$.

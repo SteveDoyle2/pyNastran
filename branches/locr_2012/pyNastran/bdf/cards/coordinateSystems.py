@@ -36,7 +36,7 @@ class Coord(BaseCard):
         return self.cid
 
     def setup(self, debug=False):
-        """
+        r"""
         \f[ e_{13}  = e_3 - e_1                \f]
         \f[ e_{12}  = e_2 - e_1                \f]
         \f[ k       = \frac{e_{12}}{|e_{12}|}  \f]
@@ -129,7 +129,7 @@ class Coord(BaseCard):
         #print "k = %s" %(self.k)
         #print "e13 = %s" %(e13)
     def transformToLocal(self, p, matrix, debug=False):
-        """
+        r"""
         Transforms the global point p to the local coordinate system
         @param self
           the object pointer
@@ -184,7 +184,7 @@ class Coord(BaseCard):
         return v / normV
 
     def T(self):
-        """
+        r"""
         Returns the 6x6 transformation
         \f[ \large  [\lambda] = [B_{ij}] \f]
 
@@ -222,7 +222,7 @@ class RectangularCoord(object):
 
 
 class CylindricalCoord(object):
-    """
+    r"""
     \f[ r        = \sqrt(x^2+y^2)      \f]
     \f[ \theta   = tan^-1(\frac{y}{x}) \f]
     \f[ z        = z                   \f]
@@ -238,7 +238,7 @@ class CylindricalCoord(object):
     @see refman.pdf
     """
     def coordToXYZ(self, p):
-        """
+        r"""
         @code
         y       R
         |     /
@@ -264,7 +264,7 @@ class CylindricalCoord(object):
 
 
 class SphericalCoord(object):
-    """
+    r"""
     \f[ r = \rho = \sqrt(x^2+y^2+z^2)  \f]
     \f[ \theta   = tan^-1(\frac{y}{x}) \f]
     \f[ \phi     = cos^-1(\frac{z}{r}) \f]
@@ -396,7 +396,7 @@ class Cord2x(Coord):
         ###
 
     def transformToGlobal(self, p, resolveAltCoord=True, debug=False):
-        """
+        r"""
         Transforms a point from the local coordinate system to the reference
         coordinate frames "global" coordinate system.
 

@@ -9,7 +9,7 @@ from pyNastran.general.generalMath import Area
 
 
 def Volume4(n1, n2, n3, n4):
-    """
+    r"""
     V = (a-d) * ((b-d) x (c-d))/6   where x is cross and * is dot
     \f[ \large V = {(a-d) \dot \left( (b-d) \times (c-d) \right) }{6} \f]
     """
@@ -386,7 +386,7 @@ class CTETRA4(SolidElement):
         return zeta
 
     def Jacobian(self):
-        """
+        r"""
         \f[ \large   [J] =
           \left[
           \begin{array}{ccc}

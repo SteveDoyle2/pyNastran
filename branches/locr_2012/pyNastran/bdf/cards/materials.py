@@ -156,7 +156,7 @@ class MAT1(Material):
         return self.nu
 
     def set_E_G_nu(self, card):
-        """
+        r"""
         \f[ \large G = \frac{E}{2 (1+\nu)} \f]
         """
         #self.E  = card.field(2)
@@ -835,7 +835,7 @@ class MAT10(Material):
         ###
 
     def getBulkRhoC(self, card):
-        """
+        r"""
         \f[ \large bulk = c^2 \rho \f]
         """
         bulk = card.field(2)

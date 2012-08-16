@@ -33,7 +33,7 @@ class AEFACT(BaseCard):
 
 
 class AELINK(BaseCard):
-    """
+    r"""
     Defines relationships between or among AESTAT and AESURF entries, such that:
     \f[ u^D + \Sigma_{i=1}^n C_i u_i^I = 0.0\f]
     AELINK ID LABLD LABL1 C1 LABL2 C2 LABL3 C3

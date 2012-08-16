@@ -19,7 +19,7 @@ class ShellProperty(Property):
         Property.__init__(self, card, data)
 
     def S(self):
-        """"
+        r""""
         Calculates the compliance matrix for a lamina
         \f[ \large [Q] = [S]^{-1}  \f]
         @todo finish...if necessary...
@@ -28,7 +28,7 @@ class ShellProperty(Property):
         return Q.inv()
 
     def ABDH(self):
-        """
+        r"""
         tranforms load to strain/bending curvature taken at \f$ z=0 \f$
         \f[ \large  \left[
           \begin{array}{c}
@@ -96,7 +96,7 @@ class ShellProperty(Property):
         H = H * 5. / 4.
 
     def Qall(self, thetad):
-        """
+        r"""
         Caculates the laminate tranformation  stiffness \f$ [Q]_{all} \f$
         \f[ \large  [Q]_{all} = [T]^{-1} [Q] [R][T][R]^{-1}  \f]
         \f[ \large  [Q]_{all} = [T]^{-1} [Q] [T]^{-T}        \f]
@@ -129,7 +129,7 @@ class ShellProperty(Property):
         return array([Q11a, Q12a, Q22a, Q16a, Q26a, Q66a, Q44a, Q55a, Q45a])
 
     def Q(self):
-        """"
+        r""""
         Calculates the stiffness matrix \f$ [Q] \f$ for a lamina
         @todo is this done?
         p. 114 "Introduction to Composite Material Design"
@@ -148,7 +148,7 @@ class ShellProperty(Property):
         return Qout
 
     def T(self, theta):
-        """
+        r"""
         calculates the Transformation matricies \$ [T] \$ and  \f$ [T]^{-1} \f$
         @param self           the object pointer
         @param theta          in radians...
@@ -725,7 +725,7 @@ class PSHELL(ShellProperty):
         return self.nsm
 
     def MassPerArea(self):
-        """
+        r"""
         calculates mass per area
         \f[ \large  \frac{mass}{A} = nsm + \rho t \f]
         """

@@ -137,7 +137,7 @@ class Solver(F06, OP2):
         self.iUm = []
 
     def solve(self, K, F):  # can be overwritten
-        """solves \f$ [K]{x} = {F}\f$ for \f${x}\f$"""
+        r"""solves \f$ [K]{x} = {F}\f$ for \f${x}\f$"""
         print("--------------")
         print("Kaa_norm = \n" + str(K / 250000.))
         print("--------------")

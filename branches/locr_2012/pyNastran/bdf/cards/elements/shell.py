@@ -41,7 +41,7 @@ class ShellElement(Element):
         return self.pid.MassPerArea()
 
     def Mass(self):
-        """
+        r"""
         \f[ \large  mass = \frac{mass}{area} area  \f]
         """
         return self.pid.MassPerArea() * self.Area()
@@ -69,7 +69,7 @@ class TriShell(ShellElement):
         return Triangle_AreaCentroidNormal([n0, n1, n2])
 
     def Area(self):
-        """
+        r"""
         returns the normal vector
         \f[ \large A = \frac{1}{2} (n_0-n_1) \cross (n_0-n_2)  \f]
         """
@@ -80,7 +80,7 @@ class TriShell(ShellElement):
         return area
 
     def Normal(self):
-        """
+        r"""
         returns the normal vector
         \f[ \large a = (n_0-n_1) \cross (n_0-n_2)  \f]
         \f[ \large n = \frac{n}{norm(N)}           \f]
@@ -91,7 +91,7 @@ class TriShell(ShellElement):
         return Normal(a, b)
 
     def Centroid(self, debug=False):
-        """
+        r"""
         returns the centroid
         \f[ \large CG = \frac{1}{3} (n_0+n_1+n_2)  \f]
         """
@@ -274,7 +274,7 @@ class CTRIA6(TriShell):
         return Triangle_AreaCentroidNormal([n1, n2, n3])
 
     def Area(self):
-        """
+        r"""
         returns the normal vector
         \f[ \large A = \frac{1}{2} (n_0-n_1) \cross (n_0-n_2)  \f]
         """
@@ -285,7 +285,7 @@ class CTRIA6(TriShell):
         return area
 
     def Normal(self):
-        """
+        r"""
         returns the normal vector
         \f[ \large a = (n_0-n_1) \cross (n_0-n_2)  \f]
         \f[ \large n = \frac{n}{norm(N)}           \f]
@@ -296,7 +296,7 @@ class CTRIA6(TriShell):
         return Normal(a, b)
 
     def Centroid(self, debug=False):
-        """
+        r"""
         returns the centroid
         \f[ \large CG = \frac{1}{3} (n_1+n_2+n_3)  \f]
         """
@@ -441,7 +441,7 @@ class CTRIAX6(TriShell):
         self.th = card.field(10, 0.0)
 
     def Area(self):
-        """
+        r"""
         returns the normal vector
         \f[ \large A = \frac{1}{2} (n_0-n_1) \cross (n_0-n_2)  \f]
         """
@@ -549,7 +549,7 @@ class QuadShell(ShellElement):
         return centroid
 
     def Area(self):
-        """
+        r"""
         \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
         where a and b are the quad's cross node point vectors
         """
@@ -701,7 +701,7 @@ class CSHEAR(QuadShell):
         return centroid
 
     def Area(self):
-        """
+        r"""
         \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
         where a and b are the quad's cross node point vectors
         """
@@ -1038,7 +1038,7 @@ class CQUAD8(QuadShell):
     ###
 
     def Area(self):
-        """
+        r"""
         \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
         where a and b are the quad's cross node point vectors
         """

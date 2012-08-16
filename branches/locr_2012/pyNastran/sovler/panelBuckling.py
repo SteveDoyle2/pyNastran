@@ -245,7 +245,7 @@ class PanelBuckling(object):
         print "done building panels!!!"
 
     def Angle(self, nEid, nTouch):
-        """
+        r"""
         \f[ a \dot b = cos(\theta) * |a| * |b| \f]
         if |a|=|b|=1. (unit vectors)
         \f[ a \dot b = cos(\theta) \f]

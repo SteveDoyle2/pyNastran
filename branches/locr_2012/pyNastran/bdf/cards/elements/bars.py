@@ -21,13 +21,13 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         self.pid = model.Property(self.pid)
 
     def Rho(self):
-        """returns the material density  \f$ \rho \f$"""
+        r"""returns the material density  \f$ \rho \f$"""
         #print str(self.pid),type(self.pid)
         #raise NotImplementedMethodError('implement self.Rho() for %s' %(self.type))
         return self.pid.mid.rho
 
     def Length(self):
-        """
+        r"""
         Returns the length of the element
         \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
         @param self the object pointer
@@ -36,7 +36,7 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         return L
 
     def Mass(self):
-        """
+        r"""
         returns the mass of the element
         \f[ \large  mass = \left( \rho A + nsm \right) L  \f]
         """
@@ -58,35 +58,35 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         raise NotImplementedError('implement self.Area() for %s' % (self.type))
 
     def E(self):
-        """returns the Young's Modulus  \f$ E \f$"""
+        r"""returns the Young's Modulus  \f$ E \f$"""
         return self.pid.mid.E()
 
     def G(self):
-        """returns the Shear Modulus   \f$ G \f$"""
+        r"""returns the Shear Modulus   \f$ G \f$"""
         return self.pid.mid.G()
 
     def J(self):
-        """returns the Polar Moment of Inertia.   \f$ J \f$"""
+        r"""returns the Polar Moment of Inertia.   \f$ J \f$"""
         return self.pid.J()
 
     def I11(self):
-        """returns the Moment of Inertia.   \f$ I_{11} \f$"""
+        r"""returns the Moment of Inertia.   \f$ I_{11} \f$"""
         return self.pid.I11()
 
     def I22(self):
-        """returns the Moment of Inertia.   \f$ I_{22} \f$"""
+        r"""returns the Moment of Inertia.   \f$ I_{22} \f$"""
         return self.pid.I22()
 
     def I12(self):
-        """returns the Moment of Inertia.   \f$ I_{12} \f$"""
+        r"""returns the Moment of Inertia.   \f$ I_{12} \f$"""
         return self.pid.I12()
 
     def Nu(self):
-        """returns Poisson's Ratio  \f$ \nu \f$"""
+        r"""returns Poisson's Ratio  \f$ \nu \f$"""
         return self.pid.mid.nu
 
     def Rho(self):
-        """returns the material density  \f$ \rho \f$"""
+        r"""returns the material density  \f$ \rho \f$"""
         #print str(self.pid),type(self.pid)
         #raise NotImplementedMethodError('implement self.Rho() for %s' %(self.type))
         return self.pid.mid.rho
@@ -100,7 +100,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         return self.pid.MassPerLength()
 
     def Mass(self):
-        """
+        r"""
         returns the mass of the element
 
         \f[ \large  mass = \left( \rho A + nsm \right) L  \f]
@@ -114,7 +114,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         self.pid = model.Property(self.pid)
 
     def Length(self):
-        """
+        r"""
         Returns the length of the element
         \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
         @param self the object pointer
@@ -123,7 +123,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         return L
 
     def k_Axial(self):
-        """
+        r"""
         Returns the axial stiffness matrix.
 
         \f[ \large   k_{Axial} = \frac{AE}{2L}
@@ -144,7 +144,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         return kMag * K
 
     def k_Torsion(self):  # not done
-        """
+        r"""
         Returns the torsional stiffness matrix.
 
         \f[ \large   k_{Axial} = \frac{L}{GJ}
@@ -168,7 +168,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         return kMag * K
 
     def k_Bending(self):
-        """
+        r"""
         Returns the bending stiffness matrix.
 
         \f[ \large  k_{Bending} = \frac{EI}{L^3}
@@ -241,7 +241,7 @@ class CROD(RodElement):
         return massPerLength
 
     def Rmatrix(self, model, is3D):
-        """
+        r"""
         where   \f$ [R]_{ij} \f$ is the tranformation matrix
         \f[ \large  [R]_{ij} \left[
           \begin{array}{ccc}
@@ -514,7 +514,7 @@ class CONROD(RodElement):
         return self.A
 
     def J(self):
-        """returns the Polar Moment of Inertia.   \f$ J \f$"""
+        r"""returns the Polar Moment of Inertia.   \f$ J \f$"""
         return self.j
 
     def Nsm(self):
@@ -522,19 +522,19 @@ class CONROD(RodElement):
         return self.nsm
 
     def E(self):
-        """returns the Young's Modulus  \f$ E \f$"""
+        r"""returns the Young's Modulus  \f$ E \f$"""
         return self.mid.E()
 
     def G(self):
-        """returns the Shear Modulus   \f$ G \f$"""
+        r"""returns the Shear Modulus   \f$ G \f$"""
         return self.mid.G()
 
     def Nu(self):
-        """returns Poisson's Ratio  \f$ \nu \f$"""
+        r"""returns Poisson's Ratio  \f$ \nu \f$"""
         return self.mid.nu
 
     def Rho(self):
-        """returns the material density  \f$ \rho \f$"""
+        r"""returns the material density  \f$ \rho \f$"""
         return self.mid.rho
 
     def writeCodeAster(self):

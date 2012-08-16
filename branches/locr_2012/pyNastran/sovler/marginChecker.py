@@ -177,7 +177,7 @@ class MarginChecker(object):
                 self.caseNames[case], nid, minMargin)
 
     def checkVonMises(self, vmFactors=[[1.]], caseNames=['Case1'], Fty=100.):
-        """
+        r"""
         currently only handles von mises stress for solid elements...
         @param self the object pointer
         @param vmFactors @see self.__init__
@@ -213,7 +213,7 @@ class MarginChecker(object):
                 self.caseNames[case], eid, minMargin)
 
     def processPlateStress(self):
-        """
+        r"""
         \f[ \sigma_v = \sqrt{\sigma_1^2- \sigma_1\sigma_2+ \sigma_2^2 + 3\sigma_{12}^2} \f]
         ovm^2 = o1^2 - o1*o2 + o2^2 + 3*o12^2
         """

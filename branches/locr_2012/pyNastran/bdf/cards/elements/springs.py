@@ -14,7 +14,7 @@ class SpringElement(Element):
         Element.__init__(self, card, data)
 
     def Length_noXref(self, n1=None, n2=None):
-        """
+        r"""
         Returns the length of a bar/rod/beam element
         \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
         @param self the object pointer
@@ -78,7 +78,7 @@ class SpringElement(Element):
         return K
 
     def Length(self):
-        """
+        r"""
         Returns the length of a bar/rod/beam element
         \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
         @param self the object pointer

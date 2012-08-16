@@ -302,7 +302,7 @@ class TabularLoad(BaseCard):
 
 
 class TLOAD1(TabularLoad):
-    """
+    r"""
     Transient Response Dynamic Excitation, Form 1
     Defines a time-dependent dynamic load or enforced motion of the form:
     \f[ {P(t)} = {A} \cdot F(t-\tau) \f]
@@ -379,7 +379,7 @@ class TLOAD1(TabularLoad):
 
 
 class TLOAD2(TabularLoad):
-    """
+    r"""
     Transient Response Dynamic Excitation, Form 1
     Defines a time-dependent dynamic load or enforced motion of the form:
     \f[ {P(t)} = {A} \cdot F(t-\tau) \f]
@@ -513,7 +513,7 @@ class RFORCE(Load):
 
 
 class RLOAD1(TabularLoad):
-    """
+    r"""
     Defines a frequency-dependent dynamic load of the form
     for use in frequency response problems.
     RLOAD1 SID EXCITEID DELAY DPHASE TC TD TYPE
@@ -584,7 +584,7 @@ class RLOAD1(TabularLoad):
 
 
 class RLOAD2(TabularLoad):
-    """
+    r"""
     Defines a frequency-dependent dynamic load of the form
     for use in frequency response problems.
 
@@ -664,7 +664,7 @@ class RandomLoad(BaseCard):
 
 
 class RANDPS(RandomLoad):
-    """
+    r"""
     Power Spectral Density Specification
     Defines load set power spectral density factors for use in random analysis
     having the frequency dependent form:
