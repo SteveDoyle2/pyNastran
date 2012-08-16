@@ -1,9 +1,10 @@
 import vtk
 
+
 class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
-    def __init__(self,ren,parent=None):
-        self.AddObserver("MiddleButtonPressEvent",self.middleButtonPressEvent)
-        self.AddObserver("MiddleButtonReleaseEvent",self.middleButtonReleaseEvent)
+    def __init__(self, ren, parent=None):
+        self.AddObserver("MiddleButtonPressEvent", self.middleButtonPressEvent)
+        self.AddObserver("MiddleButtonReleaseEvent", self.middleButtonReleaseEvent)
         self.pipeline = ren['pipeline']
         self.cam = ren['camera']
 
@@ -22,7 +23,7 @@ class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
         #print "type(camera) = ",camera
         return camera
         #return self.pipeline.rend.getActiveCamera()
-        
+
     #def leftButtonPressEvent(self,obj,event):
     #    print "Left Button pressed"
     #    self.LeftButtonDown()
@@ -32,38 +33,38 @@ class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
     #    print "Right Button pressed"
     #    self.OnRightButtonDown()
     #    return
-    
+
     #def rightButtonReleaseEvent(self,obj,event):
     #    print "Right Button released"
     #    self.OnRightButtonUp()
     #    return
 
-    def middleButtonPressEvent(self,obj,event):
+    def middleButtonPressEvent(self, obj, event):
         print "Middle Button pressed"
         self.OnMiddleButtonDown()
         return
 
-    def middleButtonReleaseEvent(self,obj,event):
+    def middleButtonReleaseEvent(self, obj, event):
         print "Middle Button released"
         self.OnMiddleButtonUp()
         return
 
-    def onChar(self,obj,event):
+    def onChar(self, obj, event):
         rwi = obj
         key = rwi.GetKeySym()
-        print "*Pressed %s" %(key)
-        
+        print "*Pressed %s" % (key)
+
         #renderer = self.ren
         camera = self.getActiveCamera()
         #print "type(camera) = ",type(camera)
-        if key=='m': # zooming in
+        if key == 'm':  # zooming in
             camera.Zoom(1.1)
             self.Update()
-        elif key=='M': # zooming out
+        elif key == 'M':  # zooming out
             camera.Zoom(0.9)
             self.Update()
-        elif key=='d': # draw edges
-            if self.pipeline.isEdges==False:
+        elif key == 'd':  # draw edges
+            if self.pipeline.isEdges == False:
                 return
             prop = self.pipeline.edgeActor.GetProperty()
             #print '\n'.join(dir(prop))
@@ -82,10 +83,10 @@ class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
             self.pipeline.edgeActor.Modified()
 
         # Roll
-        elif key=='o': # counter-clockwise
+        elif key == 'o':  # counter-clockwise
             camera.Roll(5.)
             self.Update()
-        elif key=='O': # clockwise
+        elif key == 'O':  # clockwise
             camera.Roll(-5.)
             self.Update()
 
@@ -113,43 +114,42 @@ class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
             #camera.Pitch(-5.)
             #self.Update()
 
-        elif key=='x': # set x-axis
-            camera.SetFocalPoint(0.,0.,0.)
-            camera.SetViewUp(  0.,0., 1.)
-            camera.SetPosition(1.,0., 0.)
-            self.pipeline.rend.ResetCamera()
-            self.Update()
-        elif key=='X': # set x-axis
-            camera.SetFocalPoint(0.,0.,0.)
-            camera.SetViewUp(   0.,0.,-1.)
-            camera.SetPosition(-1.,0., 0.)
-            self.pipeline.rend.ResetCamera()
-            self.Update()
-
-
-        elif key=='y': # set y-axis
-            camera.SetFocalPoint(0.,0.,0.)
-            camera.SetViewUp(    0.,0.,1.)
-            camera.SetPosition(  0.,1.,0.)
-            self.pipeline.rend.ResetCamera()
-            self.Update()
-        elif key=='Y': # set y-axis
+        elif key == 'x':  # set x-axis
             camera.SetFocalPoint(0., 0., 0.)
-            camera.SetViewUp(    0., 0.,-1.)
-            camera.SetPosition(  0.,-1., 0.)
+            camera.SetViewUp(0., 0., 1.)
+            camera.SetPosition(1., 0., 0.)
+            self.pipeline.rend.ResetCamera()
+            self.Update()
+        elif key == 'X':  # set x-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., -1.)
+            camera.SetPosition(-1., 0., 0.)
             self.pipeline.rend.ResetCamera()
             self.Update()
 
-        elif key=='z': # set z-axis
-            camera.SetFocalPoint(0.,0.,0.)
-            camera.SetViewUp(    0.,1.,0.)
-            camera.SetPosition(  0.,0.,1.)
+        elif key == 'y':  # set y-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., 1.)
+            camera.SetPosition(0., 1., 0.)
             self.pipeline.rend.ResetCamera()
             self.Update()
-        elif key=='Z': # set z-axis
-            camera.SetFocalPoint(0.,0., 0.)
-            camera.SetViewUp(   0., -1.,0.)
-            camera.SetPosition( 0., 0.,-1.)
+        elif key == 'Y':  # set y-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., -1.)
+            camera.SetPosition(0., -1., 0.)
+            self.pipeline.rend.ResetCamera()
+            self.Update()
+
+        elif key == 'z':  # set z-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 1., 0.)
+            camera.SetPosition(0., 0., 1.)
+            self.pipeline.rend.ResetCamera()
+            self.Update()
+        elif key == 'Z':  # set z-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., -1., 0.)
+            camera.SetPosition(0., 0., -1.)
             self.pipeline.rend.ResetCamera()
             self.Update()
 
@@ -178,5 +178,3 @@ class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
             #camera.Pan()
             #self.pipeline.rend.ResetCamera()
             #self.Update()
-
-

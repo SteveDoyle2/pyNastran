@@ -6,6 +6,7 @@ import wx
 ID_SAVEAS = 803
 ID_ABOUT = 3
 
+
 class MyPopupMenu(wx.Menu):
     def __init__(self, parent):
         super(MyPopupMenu, self).__init__()
@@ -25,27 +26,31 @@ class MyPopupMenu(wx.Menu):
 
     def OnClose(self, e):
         self.parent.Close()
-        
+
+
 class Example(wx.Frame):
     def __init__(self, *args, **kwargs):
-        super(Example, self).__init__(*args, **kwargs) 
+        super(Example, self).__init__(*args, **kwargs)
         self.InitUI()
-        
+
     def InitUI(self):
         # max undo count
         self.count = 5
-        
+
         menubar = wx.MenuBar()
         vbox = wx.BoxSizer(wx.VERTICAL)
 
         # file menu
         fileMenu = wx.Menu()
-        fileMenu.Append(wx.ID_NEW,  '&New','does nothing')
-        fileMenu.Append(wx.ID_OPEN, '&Load BDF','Loads a BDF')
-        fileMenu.Append(wx.ID_OPEN, 'Load OP2 &Results','Loads a OP2 - does nothing')
-        fileMenu.Append(wx.ID_SAVE, '&Save','does nothing')
-        exitButton = fileMenu.Append(wx.ID_EXIT, 'E&xit pyNastran','Exits the program')
-        exitButton.SetBitmap(wx.Image('icons/texit.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+        fileMenu.Append(wx.ID_NEW, '&New', 'does nothing')
+        fileMenu.Append(wx.ID_OPEN, '&Load BDF', 'Loads a BDF')
+        fileMenu.Append(wx.ID_OPEN, 'Load OP2 &Results',
+                        'Loads a OP2 - does nothing')
+        fileMenu.Append(wx.ID_SAVE, '&Save', 'does nothing')
+        exitButton = fileMenu.Append(
+            wx.ID_EXIT, 'E&xit pyNastran', 'Exits the program')
+        exitButton.SetBitmap(wx.Image(
+            'icons/texit.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
         #print "exitButton = ",'\n'.join(dir(exitButton))
         #print "exitButton = ",help(exitButton.SetBitmap)
 
@@ -65,12 +70,12 @@ class Example(wx.Frame):
 
         # view menu
         viewMenu = wx.Menu()
-        
-        self.shst = viewMenu.Append(wx.ID_ANY, 'Show statusbar', 
-            'Show Statusbar', kind=wx.ITEM_CHECK)
-        self.shtl = viewMenu.Append(wx.ID_ANY, 'Show toolbar', 
-            'Show Toolbar', kind=wx.ITEM_CHECK)
-            
+
+        self.shst = viewMenu.Append(wx.ID_ANY, 'Show statusbar',
+                                    'Show Statusbar', kind=wx.ITEM_CHECK)
+        self.shtl = viewMenu.Append(wx.ID_ANY, 'Show toolbar',
+                                    'Show Toolbar', kind=wx.ITEM_CHECK)
+
         viewMenu.Check(self.shst.GetId(), True)
         viewMenu.Check(self.shtl.GetId(), True)
 
@@ -88,25 +93,30 @@ class Example(wx.Frame):
         menubar.Append(viewMenu, '&View')
         menubar.Append(helpMenu, '&Help')
         self.SetMenuBar(menubar)
-        
+
         # toolbar at top - toggles
         self.toolbar1 = wx.ToolBar(self)
         #self.toolbar1.AddLabelTool(wx.ID_ANY, '', wx.Bitmap('icons/new.png'))
-        self.toolbar1.AddLabelTool(wx.ID_OPEN, '', wx.Bitmap('icons/topen.png'))
-        self.toolbar1.AddLabelTool(ID_SAVEAS,  '', wx.Bitmap('icons/tsave.png'))
+        self.toolbar1.AddLabelTool(
+            wx.ID_OPEN, '', wx.Bitmap('icons/topen.png'))
+        self.toolbar1.AddLabelTool(
+            ID_SAVEAS, '', wx.Bitmap('icons/tsave.png'))
         self.Bind(wx.EVT_TOOL, self.OnSaveAsFile, id=ID_SAVEAS)
-        self.Bind(wx.EVT_TOOL, self.OnOpenBDF,    id=wx.ID_OPEN)
+        self.Bind(wx.EVT_TOOL, self.OnOpenBDF, id=wx.ID_OPEN)
         #self.toolbar1.AddSeparator()
-        tundo = self.toolbar1.AddLabelTool(wx.ID_UNDO, '', wx.Bitmap('icons/tundo.png'))
+        tundo = self.toolbar1.AddLabelTool(
+            wx.ID_UNDO, '', wx.Bitmap('icons/tundo.png'))
         #self.toolbar1.AddSeparator()
-        tredo = self.toolbar1.AddLabelTool(wx.ID_REDO, '', wx.Bitmap('icons/tredo.png'))
+        tredo = self.toolbar1.AddLabelTool(
+            wx.ID_REDO, '', wx.Bitmap('icons/tredo.png'))
         self.toolbar1.EnableTool(wx.ID_REDO, False)
-        
+
         self.toolbar1.Realize()
 
         # toolbar 2
         toolbar2 = wx.ToolBar(self)
-        qtool = toolbar2.AddLabelTool(wx.ID_EXIT, '', wx.Bitmap('icons/texit.png'))
+        qtool = toolbar2.AddLabelTool(
+            wx.ID_EXIT, '', wx.Bitmap('icons/texit.png'))
         toolbar2.Realize()
 
         vbox.Add(self.toolbar1, 0, wx.EXPAND)
@@ -114,10 +124,8 @@ class Example(wx.Frame):
         self.Bind(wx.EVT_TOOL, self.OnQuit, qtool)
         self.Bind(wx.EVT_TOOL, self.OnUndo, tundo)
         self.Bind(wx.EVT_TOOL, self.OnRedo, tredo)
-        self.SetSizer(vbox)        
+        self.SetSizer(vbox)
 
-        
-        
         # status bar at bottom - toggles
         self.statusbar = self.CreateStatusBar()
         self.statusbar.SetStatusText('Ready')
@@ -127,7 +135,7 @@ class Example(wx.Frame):
         self.SetTitle('pyNastran')
         self.Centre()
         self.Show(True)
-        
+
     def OnRightDown(self, e):
         self.PopupMenu(MyPopupMenu(self), e.GetPosition())
 
@@ -170,39 +178,40 @@ class Example(wx.Frame):
             'code.google.com/p/pynastran/',
             '',
             'Controls',
-              'X/x - snap to x axis',
-              'Y/y - snap to axis',
-              'Z/z - snap to axis',
-              '',
-              'left arrow  - pan left',
-              'right arrow - pan right',
-              'up arrow    - pan up',
-              'down arrow   - pan down',
-              '',
-              'm/M /tscale up/scale down',
-              'p   /tproject point (not done)',
-              'f   /tfly to rotation point (not done)',
-              'q/e /texit (to disable)',
-              'o/O /trotate counter-clockwise/clockwise 5 degrees',
-              'w   /twireframe',
-              's   /tsurface',
-              'i   /ttake a screenshot (image, not done)',]
+            'X/x - snap to x axis',
+            'Y/y - snap to axis',
+            'Z/z - snap to axis',
+            '',
+            'left arrow  - pan left',
+            'right arrow - pan right',
+            'up arrow    - pan up',
+            'down arrow   - pan down',
+            '',
+            'm/M /tscale up/scale down',
+            'p   /tproject point (not done)',
+            'f   /tfly to rotation point (not done)',
+            'q/e /texit (to disable)',
+            'o/O /trotate counter-clockwise/clockwise 5 degrees',
+            'w   /twireframe',
+            's   /tsurface',
+            'i   /ttake a screenshot (image, not done)', ]
 
         dlg = wx.MessageDialog(self, '\n'.join(about), 'About',
-                 wx.OK | wx.ICON_INFORMATION)
+                               wx.OK | wx.ICON_INFORMATION)
         dlg.ShowModal()
         dlg.Destroy()
-  
+
     def OnLoadBDF(self, event):
         """ Open a file"""
         #print "OnOpen..."
         self.dirname = ''
-        dlg = wx.FileDialog(self, "Choose a file", self.dirname, "", "*.*", wx.OPEN)
+        dlg = wx.FileDialog(
+            self, "Choose a file", self.dirname, "", "*.*", wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             self.filename = dlg.GetFilename()
             self.dirname = dlg.GetDirectory()
             fname = os.path.join(self.dirname, self.filename)
-            print "fname = ",fname
+            print "fname = ", fname
             #f = open(fname, 'r')
             #self.control.SetValue(f.read())
             #print f
@@ -210,24 +219,26 @@ class Example(wx.Frame):
         dlg.Destroy()
 
     def OnSaveAsFile(self, event):
-        wcd='All files(*)|*|pyNastran Database (*.pndb)|*.pndb|'
+        wcd = 'All files(*)|*|pyNastran Database (*.pndb)|*.pndb|'
         dir = os.getcwd()
         save_dlg = wx.FileDialog(self, message='Save file as...', defaultDir=dir, defaultFile='',
-                        wildcard=wcd, style=wx.SAVE | wx.OVERWRITE_PROMPT)
+                                 wildcard=wcd, style=wx.SAVE | wx.OVERWRITE_PROMPT)
         if save_dlg.ShowModal() == wx.ID_OK:
             path = save_dlg.GetPath()
             try:
-                print "save path = ",path
+                print "save path = ", path
             except IOError, error:
-                dlg = wx.MessageDialog(self, 'Error saving file\n' + str(error))
+                dlg = wx.MessageDialog(
+                    self, 'Error saving file\n' + str(error))
                 #dlg.ShowModal()
         save_dlg.Destroy()
 
     def OnQuit(self, e):
         self.Close()
 
+
 def main():
-    
+
     ex = wx.App(0)
     Example(None)
     #Example(title='pyNastran GUI')
@@ -236,4 +247,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
