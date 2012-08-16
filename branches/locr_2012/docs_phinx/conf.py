@@ -295,12 +295,14 @@ epub_copyright = u'2012, Steven Doyle, Al Danial'
 #epub_tocdup = True
 
 # Convert comments from doxygen style to spnix/reStructuredText 
-regex_param = re.compile("@param (\w+)") # substitute with "\n:param \\1:"
-regex_see   = re.compile("@see (\w+)")   # substitute with "\nsee :func:`\\1`"
+regex_param = re.compile("@param (\w+)")
+regex_see   = re.compile("@see (\w+)")
+regex_math  = re.compile("\\\\f\\[(.*)\\\\f\\]")
 
 substitutions = (("@retval", ":returns:"), ("@note", "\n.. note::"),
                  ("@warning", "\n.. warning::"), ("@todo", "\n.. todo::"),
-                 ("@raise", ":raises:"), ("@deprecated", "\n.. deprecated::"))
+                 ("@raise", ":raises:"), ("@deprecated", "\n.. deprecated::"),
+                 ("@code","\n::\n\n"), ("@endcode", "\n"))
 
 # adding some new lines (thus empty strings to lines list ) is necessary
 # for some of  doxygen style  comments to render correcty in sphinx
@@ -312,6 +314,8 @@ def convert_doxygen_comments(app, what, name, obj, options, lines):
     res_lines = []
     for line in lines:
         new_line = regex_param.sub("\n:param \\1:", line)
+        new_line = regex_math.sub("\n.. math:: \\1", new_line)
+        
         for old_str, new_str in substitutions:
             new_line = new_line.replace(old_str, new_str)
         if "@see" in new_line:
