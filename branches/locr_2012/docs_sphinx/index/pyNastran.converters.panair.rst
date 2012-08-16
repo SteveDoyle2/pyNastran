@@ -4,6 +4,8 @@ panair Package
 :mod:`panairGrid` Module
 ------------------------
 
+.. inheritance-diagram:: pyNastran.converters.panair.panairGrid
+
 .. automodule:: pyNastran.converters.panair.panairGrid
     :members:
     :undoc-members:
@@ -11,6 +13,8 @@ panair Package
 
 :mod:`panairGridPatch` Module
 -----------------------------
+
+.. inheritance-diagram:: pyNastran.converters.panair.panairGridPatch
 
 .. automodule:: pyNastran.converters.panair.panairGridPatch
     :members:
@@ -20,6 +24,8 @@ panair Package
 :mod:`panairIO` Module
 ----------------------
 
+.. inheritance-diagram:: pyNastran.converters.panair.panairIO
+
 .. automodule:: pyNastran.converters.panair.panairIO
     :members:
     :undoc-members:
@@ -27,6 +33,8 @@ panair Package
 
 :mod:`panairWrite` Module
 -------------------------
+
+.. inheritance-diagram:: pyNastran.converters.panair.panairWrite
 
 .. automodule:: pyNastran.converters.panair.panairWrite
     :members:

@@ -4,6 +4,8 @@ complex Package
 :mod:`elementsStressStrain` Module
 ----------------------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.complex.elementsStressStrain
+
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.complex.elementsStressStrain
     :members:
     :undoc-members:
@@ -11,6 +13,8 @@ complex Package
 
 :mod:`oes_bars` Module
 ----------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.complex.oes_bars
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.complex.oes_bars
     :members:
@@ -20,6 +24,8 @@ complex Package
 :mod:`oes_plates` Module
 ------------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.complex.oes_plates
+
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.complex.oes_plates
     :members:
     :undoc-members:
@@ -28,6 +34,8 @@ complex Package
 :mod:`oes_rods` Module
 ----------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.complex.oes_rods
+
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.complex.oes_rods
     :members:
     :undoc-members:
@@ -35,6 +43,8 @@ complex Package
 
 :mod:`oes_springs` Module
 -------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.complex.oes_springs
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.complex.oes_springs
     :members:

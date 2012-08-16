@@ -32,11 +32,15 @@ sys.path.append(os.path.dirname(os.getcwd()))
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage',
               'sphinx.ext.pngmath', 'sphinx.ext.viewcode',
-              'sphinx.ext.todo']
+              'sphinx.ext.todo', 'sphinx.ext.graphviz',
+              'sphinx.ext.inheritance_diagram' ]
 
-#display todos
+# display todos
 todo_include_todos=True
 
+# inheritance diagram should have size determined by graphviz
+# with layout from top to bottom (default is left to right)
+inheritance_graph_attrs = dict(size='""')
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -298,6 +302,7 @@ epub_copyright = u'2012, Steven Doyle, Al Danial'
 regex_param = re.compile("@param (\w+)")
 regex_see   = re.compile("@see (\w+)")
 regex_math  = re.compile("\\\\f\\[(.*)\\\\f\\]")
+regex_math_inline  = re.compile("\\\\f\$ *(.*?) *\\\\f\$")
 
 substitutions = (("@retval", ":returns:"), ("@note", "\n.. note::"),
                  ("@warning", "\n.. warning::"), ("@todo", "\n.. todo::"),
@@ -313,9 +318,22 @@ substitutions = (("@retval", ":returns:"), ("@note", "\n.. note::"),
 def convert_doxygen_comments(app, what, name, obj, options, lines):
     res_lines = []
     for line in lines:
+        #function parameters
         new_line = regex_param.sub("\n:param \\1:", line)
-        new_line = regex_math.sub("\n.. math:: \\1", new_line)
         
+        #latex mathematics
+        new_line = regex_math.sub("\n.. math:: \\1", new_line)
+        new_line = regex_math_inline.sub(" :math:`\\1`", new_line)
+        
+        #multiline latex mathematics: begining of block
+        if "\\f[" in new_line and "\\f]" not in new_line:
+            new_line = new_line.replace("\\f[", "\n.. math::\n\n")
+            
+        #multiline latex mathematics: end of block
+        if "\\f]" in new_line and "\\f[" not in new_line:
+            new_line = new_line.replace("\\f]", "\n\n")
+        
+        #simple subsitutions    
         for old_str, new_str in substitutions:
             new_line = new_line.replace(old_str, new_str)
         if "@see" in new_line:

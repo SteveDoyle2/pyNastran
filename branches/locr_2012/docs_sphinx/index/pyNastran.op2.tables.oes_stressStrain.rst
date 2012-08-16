@@ -4,6 +4,8 @@ oes_stressStrain Package
 :mod:`oes` Module
 -----------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.oes
+
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.oes
     :members:
     :undoc-members:
@@ -12,6 +14,8 @@ oes_stressStrain Package
 :mod:`oes_nonlinear` Module
 ---------------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.oes_nonlinear
+
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.oes_nonlinear
     :members:
     :undoc-members:
@@ -19,6 +23,8 @@ oes_stressStrain Package
 
 :mod:`oesnlxr` Module
 ---------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.oesnlxr
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.oesnlxr
     :members:

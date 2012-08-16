@@ -4,6 +4,8 @@ oug Package
 :mod:`oug` Module
 -----------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oug.oug
+
 .. automodule:: pyNastran.op2.tables.oug.oug
     :members:
     :undoc-members:
@@ -11,6 +13,8 @@ oug Package
 
 :mod:`oug_Objects` Module
 -------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oug.oug_Objects
 
 .. automodule:: pyNastran.op2.tables.oug.oug_Objects
     :members:
@@ -20,6 +24,8 @@ oug Package
 :mod:`oug_accelerations` Module
 -------------------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oug.oug_accelerations
+
 .. automodule:: pyNastran.op2.tables.oug.oug_accelerations
     :members:
     :undoc-members:
@@ -27,6 +33,8 @@ oug Package
 
 :mod:`oug_displacements` Module
 -------------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oug.oug_displacements
 
 .. automodule:: pyNastran.op2.tables.oug.oug_displacements
     :members:
@@ -36,6 +44,8 @@ oug Package
 :mod:`oug_eigenvectors` Module
 ------------------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oug.oug_eigenvectors
+
 .. automodule:: pyNastran.op2.tables.oug.oug_eigenvectors
     :members:
     :undoc-members:
@@ -44,6 +54,8 @@ oug Package
 :mod:`oug_temperatures` Module
 ------------------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oug.oug_temperatures
+
 .. automodule:: pyNastran.op2.tables.oug.oug_temperatures
     :members:
     :undoc-members:
@@ -51,6 +63,8 @@ oug Package
 
 :mod:`oug_velocities` Module
 ----------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oug.oug_velocities
 
 .. automodule:: pyNastran.op2.tables.oug.oug_velocities
     :members:

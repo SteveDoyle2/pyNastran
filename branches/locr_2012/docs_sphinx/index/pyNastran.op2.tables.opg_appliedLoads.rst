@@ -4,6 +4,8 @@ opg_appliedLoads Package
 :mod:`opg` Module
 -----------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.opg_appliedLoads.opg
+
 .. automodule:: pyNastran.op2.tables.opg_appliedLoads.opg
     :members:
     :undoc-members:
@@ -11,6 +13,8 @@ opg_appliedLoads Package
 
 :mod:`opg_Objects` Module
 -------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.opg_appliedLoads.opg_Objects
 
 .. automodule:: pyNastran.op2.tables.opg_appliedLoads.opg_Objects
     :members:
@@ -20,6 +24,8 @@ opg_appliedLoads Package
 :mod:`opg_loadVector` Module
 ----------------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.opg_appliedLoads.opg_loadVector
+
 .. automodule:: pyNastran.op2.tables.opg_appliedLoads.opg_loadVector
     :members:
     :undoc-members:
@@ -27,6 +33,8 @@ opg_appliedLoads Package
 
 :mod:`opnl_forceVector` Module
 ------------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.opg_appliedLoads.opnl_forceVector
 
 .. automodule:: pyNastran.op2.tables.opg_appliedLoads.opnl_forceVector
     :members:

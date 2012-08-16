@@ -4,6 +4,8 @@ real Package
 :mod:`elementsStressStrain` Module
 ----------------------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.real.elementsStressStrain
+
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.elementsStressStrain
     :members:
     :undoc-members:
@@ -11,6 +13,8 @@ real Package
 
 :mod:`oes_bars` Module
 ----------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.real.oes_bars
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_bars
     :members:
@@ -20,6 +24,8 @@ real Package
 :mod:`oes_beams` Module
 -----------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.real.oes_beams
+
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_beams
     :members:
     :undoc-members:
@@ -27,6 +33,8 @@ real Package
 
 :mod:`oes_compositePlates` Module
 ---------------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates
     :members:
@@ -36,6 +44,8 @@ real Package
 :mod:`oes_objects` Module
 -------------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.real.oes_objects
+
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_objects
     :members:
     :undoc-members:
@@ -43,6 +53,8 @@ real Package
 
 :mod:`oes_plates` Module
 ------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.real.oes_plates
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_plates
     :members:
@@ -52,6 +64,8 @@ real Package
 :mod:`oes_rods` Module
 ----------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.real.oes_rods
+
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_rods
     :members:
     :undoc-members:
@@ -59,6 +73,8 @@ real Package
 
 :mod:`oes_shear` Module
 -----------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.real.oes_shear
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_shear
     :members:
@@ -68,6 +84,8 @@ real Package
 :mod:`oes_solids` Module
 ------------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.real.oes_solids
+
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_solids
     :members:
     :undoc-members:
@@ -76,6 +94,8 @@ real Package
 :mod:`oes_springs` Module
 -------------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.real.oes_springs
+
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_springs
     :members:
     :undoc-members:
@@ -83,6 +103,8 @@ real Package
 
 :mod:`oes_triax` Module
 -----------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.real.oes_triax
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_triax
     :members:

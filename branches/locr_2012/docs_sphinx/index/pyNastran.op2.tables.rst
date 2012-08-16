@@ -4,6 +4,8 @@ tables Package
 :mod:`destab` Module
 --------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.destab
+
 .. automodule:: pyNastran.op2.tables.destab
     :members:
     :undoc-members:
@@ -11,6 +13,8 @@ tables Package
 
 :mod:`ept` Module
 -----------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.ept
 
 .. automodule:: pyNastran.op2.tables.ept
     :members:
@@ -20,6 +24,8 @@ tables Package
 :mod:`mpt` Module
 -----------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.mpt
+
 .. automodule:: pyNastran.op2.tables.mpt
     :members:
     :undoc-members:
@@ -28,6 +34,8 @@ tables Package
 :mod:`r1tab` Module
 -------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.r1tab
+
 .. automodule:: pyNastran.op2.tables.r1tab
     :members:
     :undoc-members:
@@ -35,6 +43,8 @@ tables Package
 
 :mod:`resultTable` Module
 -------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.resultTable
 
 .. automodule:: pyNastran.op2.tables.resultTable
     :members:

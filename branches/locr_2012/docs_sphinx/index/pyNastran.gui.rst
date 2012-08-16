@@ -4,6 +4,8 @@ gui Package
 :mod:`actionsControl` Module
 ----------------------------
 
+.. inheritance-diagram:: pyNastran.gui.actionsControl
+
 .. automodule:: pyNastran.gui.actionsControl
     :members:
     :undoc-members:
@@ -11,6 +13,8 @@ gui Package
 
 :mod:`box` Module
 -----------------
+
+.. inheritance-diagram:: pyNastran.gui.box
 
 .. automodule:: pyNastran.gui.box
     :members:
@@ -20,6 +24,8 @@ gui Package
 :mod:`demoGui` Module
 ---------------------
 
+.. inheritance-diagram:: pyNastran.gui.demoGui
+
 .. automodule:: pyNastran.gui.demoGui
     :members:
     :undoc-members:
@@ -27,6 +33,8 @@ gui Package
 
 :mod:`gui` Module
 -----------------
+
+.. inheritance-diagram:: pyNastran.gui.gui
 
 .. automodule:: pyNastran.gui.gui
     :members:
@@ -36,6 +44,8 @@ gui Package
 :mod:`guiPanel` Module
 ----------------------
 
+.. inheritance-diagram:: pyNastran.gui.guiPanel
+
 .. automodule:: pyNastran.gui.guiPanel
     :members:
     :undoc-members:
@@ -44,6 +54,8 @@ gui Package
 :mod:`mouseStyle` Module
 ------------------------
 
+.. inheritance-diagram:: pyNastran.gui.mouseStyle
+
 .. automodule:: pyNastran.gui.mouseStyle
     :members:
     :undoc-members:
@@ -51,6 +63,8 @@ gui Package
 
 :mod:`nastranIO` Module
 -----------------------
+
+.. inheritance-diagram:: pyNastran.gui.nastranIO
 
 .. automodule:: pyNastran.gui.nastranIO
     :members:

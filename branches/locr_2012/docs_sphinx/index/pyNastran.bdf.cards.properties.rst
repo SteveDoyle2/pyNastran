@@ -4,6 +4,8 @@ properties Package
 :mod:`bars` Module
 ------------------
 
+.. inheritance-diagram:: pyNastran.bdf.cards.properties.bars
+
 .. automodule:: pyNastran.bdf.cards.properties.bars
     :members:
     :undoc-members:
@@ -11,6 +13,8 @@ properties Package
 
 :mod:`bush` Module
 ------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.properties.bush
 
 .. automodule:: pyNastran.bdf.cards.properties.bush
     :members:
@@ -20,6 +24,8 @@ properties Package
 :mod:`damper` Module
 --------------------
 
+.. inheritance-diagram:: pyNastran.bdf.cards.properties.damper
+
 .. automodule:: pyNastran.bdf.cards.properties.damper
     :members:
     :undoc-members:
@@ -27,6 +33,8 @@ properties Package
 
 :mod:`mass` Module
 ------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.properties.mass
 
 .. automodule:: pyNastran.bdf.cards.properties.mass
     :members:
@@ -36,6 +44,8 @@ properties Package
 :mod:`properties` Module
 ------------------------
 
+.. inheritance-diagram:: pyNastran.bdf.cards.properties.properties
+
 .. automodule:: pyNastran.bdf.cards.properties.properties
     :members:
     :undoc-members:
@@ -44,6 +54,8 @@ properties Package
 :mod:`shell` Module
 -------------------
 
+.. inheritance-diagram:: pyNastran.bdf.cards.properties.shell
+
 .. automodule:: pyNastran.bdf.cards.properties.shell
     :members:
     :undoc-members:
@@ -51,6 +63,8 @@ properties Package
 
 :mod:`springs` Module
 ---------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.properties.springs
 
 .. automodule:: pyNastran.bdf.cards.properties.springs
     :members:

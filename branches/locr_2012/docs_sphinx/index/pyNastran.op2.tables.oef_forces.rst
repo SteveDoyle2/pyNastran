@@ -4,6 +4,8 @@ oef_forces Package
 :mod:`complexForces` Module
 ---------------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.complexForces
+
 .. automodule:: pyNastran.op2.tables.oef_forces.complexForces
     :members:
     :undoc-members:
@@ -11,6 +13,8 @@ oef_forces Package
 
 :mod:`oef` Module
 -----------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.oef
 
 .. automodule:: pyNastran.op2.tables.oef_forces.oef
     :members:
@@ -20,6 +24,8 @@ oef_forces Package
 :mod:`oef_Objects` Module
 -------------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.oef_Objects
+
 .. automodule:: pyNastran.op2.tables.oef_forces.oef_Objects
     :members:
     :undoc-members:
@@ -27,6 +33,8 @@ oef_forces Package
 
 :mod:`oef_complexForceObjects` Module
 -------------------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.oef_complexForceObjects
 
 .. automodule:: pyNastran.op2.tables.oef_forces.oef_complexForceObjects
     :members:
@@ -36,6 +44,8 @@ oef_forces Package
 :mod:`oef_forceObjects` Module
 ------------------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.oef_forceObjects
+
 .. automodule:: pyNastran.op2.tables.oef_forces.oef_forceObjects
     :members:
     :undoc-members:
@@ -43,6 +53,8 @@ oef_forces Package
 
 :mod:`oef_thermalObjects` Module
 --------------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.oef_thermalObjects
 
 .. automodule:: pyNastran.op2.tables.oef_forces.oef_thermalObjects
     :members:
@@ -52,6 +64,8 @@ oef_forces Package
 :mod:`realForces` Module
 ------------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.realForces
+
 .. automodule:: pyNastran.op2.tables.oef_forces.realForces
     :members:
     :undoc-members:
@@ -59,6 +73,8 @@ oef_forces Package
 
 :mod:`thermal_elements` Module
 ------------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.thermal_elements
 
 .. automodule:: pyNastran.op2.tables.oef_forces.thermal_elements
     :members:

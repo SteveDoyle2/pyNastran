@@ -4,6 +4,8 @@ loads Package
 :mod:`loads` Module
 -------------------
 
+.. inheritance-diagram:: pyNastran.bdf.cards.loads.loads
+
 .. automodule:: pyNastran.bdf.cards.loads.loads
     :members:
     :undoc-members:
@@ -11,6 +13,8 @@ loads Package
 
 :mod:`staticLoads` Module
 -------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.loads.staticLoads
 
 .. automodule:: pyNastran.bdf.cards.loads.staticLoads
     :members:

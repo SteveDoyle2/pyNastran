@@ -4,6 +4,8 @@ converters Package
 :mod:`toCodeAster` Module
 -------------------------
 
+.. inheritance-diagram:: pyNastran.converters.toCodeAster
+
 .. automodule:: pyNastran.converters.toCodeAster
     :members:
     :undoc-members:

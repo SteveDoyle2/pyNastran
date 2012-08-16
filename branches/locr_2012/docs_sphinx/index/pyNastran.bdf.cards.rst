@@ -4,6 +4,8 @@ cards Package
 :mod:`aero` Module
 ------------------
 
+.. inheritance-diagram:: pyNastran.bdf.cards.aero
+
 .. automodule:: pyNastran.bdf.cards.aero
     :members:
     :undoc-members:
@@ -11,6 +13,8 @@ cards Package
 
 :mod:`baseCard` Module
 ----------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.baseCard
 
 .. automodule:: pyNastran.bdf.cards.baseCard
     :members:
@@ -20,6 +24,8 @@ cards Package
 :mod:`constraints` Module
 -------------------------
 
+.. inheritance-diagram:: pyNastran.bdf.cards.constraints
+
 .. automodule:: pyNastran.bdf.cards.constraints
     :members:
     :undoc-members:
@@ -27,6 +33,8 @@ cards Package
 
 :mod:`coordinateSystems` Module
 -------------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.coordinateSystems
 
 .. automodule:: pyNastran.bdf.cards.coordinateSystems
     :members:
@@ -36,6 +44,8 @@ cards Package
 :mod:`dmig` Module
 ------------------
 
+.. inheritance-diagram:: pyNastran.bdf.cards.dmig
+
 .. automodule:: pyNastran.bdf.cards.dmig
     :members:
     :undoc-members:
@@ -43,6 +53,8 @@ cards Package
 
 :mod:`dynamic` Module
 ---------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.dynamic
 
 .. automodule:: pyNastran.bdf.cards.dynamic
     :members:
@@ -52,6 +64,8 @@ cards Package
 :mod:`materials` Module
 -----------------------
 
+.. inheritance-diagram:: pyNastran.bdf.cards.materials
+
 .. automodule:: pyNastran.bdf.cards.materials
     :members:
     :undoc-members:
@@ -59,6 +73,8 @@ cards Package
 
 :mod:`methods` Module
 ---------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.methods
 
 .. automodule:: pyNastran.bdf.cards.methods
     :members:
@@ -68,6 +84,8 @@ cards Package
 :mod:`nodes` Module
 -------------------
 
+.. inheritance-diagram:: pyNastran.bdf.cards.nodes
+
 .. automodule:: pyNastran.bdf.cards.nodes
     :members:
     :undoc-members:
@@ -75,6 +93,8 @@ cards Package
 
 :mod:`optimization` Module
 --------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.optimization
 
 .. automodule:: pyNastran.bdf.cards.optimization
     :members:
@@ -84,6 +104,8 @@ cards Package
 :mod:`params` Module
 --------------------
 
+.. inheritance-diagram:: pyNastran.bdf.cards.params
+
 .. automodule:: pyNastran.bdf.cards.params
     :members:
     :undoc-members:
@@ -92,6 +114,8 @@ cards Package
 :mod:`sets` Module
 ------------------
 
+.. inheritance-diagram:: pyNastran.bdf.cards.sets
+
 .. automodule:: pyNastran.bdf.cards.sets
     :members:
     :undoc-members:
@@ -99,6 +123,8 @@ cards Package
 
 :mod:`tables` Module
 --------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.tables
 
 .. automodule:: pyNastran.bdf.cards.tables
     :members:

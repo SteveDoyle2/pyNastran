@@ -4,6 +4,8 @@ oqg_constraintForces Package
 :mod:`oqg` Module
 -----------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oqg_constraintForces.oqg
+
 .. automodule:: pyNastran.op2.tables.oqg_constraintForces.oqg
     :members:
     :undoc-members:
@@ -12,6 +14,8 @@ oqg_constraintForces Package
 :mod:`oqg_mpcForces` Module
 ---------------------------
 
+.. inheritance-diagram:: pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces
+
 .. automodule:: pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces
     :members:
     :undoc-members:
@@ -19,6 +23,8 @@ oqg_constraintForces Package
 
 :mod:`oqg_spcForces` Module
 ---------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces
 
 .. automodule:: pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces
     :members:

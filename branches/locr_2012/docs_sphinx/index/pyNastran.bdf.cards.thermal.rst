@@ -4,6 +4,8 @@ thermal Package
 :mod:`loads` Module
 -------------------
 
+.. inheritance-diagram:: pyNastran.bdf.cards.thermal.loads
+
 .. automodule:: pyNastran.bdf.cards.thermal.loads
     :members:
     :undoc-members:
@@ -11,6 +13,8 @@ thermal Package
 
 :mod:`thermal` Module
 ---------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.thermal.thermal
 
 .. automodule:: pyNastran.bdf.cards.thermal.thermal
     :members:
