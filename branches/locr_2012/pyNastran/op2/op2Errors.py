@@ -14,7 +14,10 @@ class EndOfFileError(RuntimeError):
     pass
 
 
-class TapeCodeError(RuntimeError):
+class InvalidAnalysisCodeError(InvalidCodeError):
+    pass
+
+class InvalidATFSCodeError(InvalidCodeError):
     pass
 
 

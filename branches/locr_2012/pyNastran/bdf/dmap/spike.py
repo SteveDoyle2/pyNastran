@@ -16,7 +16,7 @@ frogdogv = frogv + dogv
 
 #f21 = open('bar_modes_lam.nas','wb')
 #f22 = open('bar_modes_mpf.nas','wb')
-#ASSIGN OUTPUT4=’bar_modes_lam.nas’,STATUS=unknown,UNIT=21
+#ASSIGN OUTPUT4='bar_modes_lam.nas',STATUS=unknown,UNIT=21
 
 #SOL 101
 #f21.write(a)

@@ -78,7 +78,7 @@ def makeTruss2():
 
     force = ['FORCE', loadID, 2, None, 1000., 0., 1., 0.]
     model.add_card(force, 'FORCE')
-    model.write('conrod.bdf')
+    ##model.write('conrod.bdf') todo: model has no write method
     print "done"
     return model
 
@@ -395,8 +395,8 @@ def solveKF(model, Kg, F, Dofs):
 
 def fKx(K, x):
     """
-    {F} = [K]{x}
-    {x} = [K]^-1 {F}
+    \f[ {F} = [K]{x} \f]
+    \f[ {x} = [K]^-1 {F} \f]
     """
     f = solve(K, x)
     return f

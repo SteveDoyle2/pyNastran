@@ -2,9 +2,9 @@ import sys
 from struct import unpack
 
 from pyNastran.op2.op2Errors import InvalidAnalysisCodeError, InvalidATFSCodeError
-from elementsStressStrain import ElementsStressStrain
+from pyNastran.op2.tables.oes_stressStrain.real.elementsStressStrain import RealElementsStressStrain
 
-class OESNLXR(ElementsStressStrain):
+class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
     """Table of stresses/strains"""
 
     def readTable_OESNLXR(self):

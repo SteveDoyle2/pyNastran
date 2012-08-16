@@ -2,7 +2,7 @@
 
 import sys
 import numpy as np
-from cop4 import OP4
+from op4 import OP4
 from pyNastran.op4.op4 import OP4 as pyOP4
 from pyNastran.general.generalMath import printMatrix
 

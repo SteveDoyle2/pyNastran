@@ -363,23 +363,23 @@ class OP4(FortranFile):
                 if matrixNames is None or name in matrixNames:  # save the matrix
                     matrices[name] = (form, matrix)
 
-           #print "not f.closed = ",not self.op4.closed,form,name
-           # if not self.op4.closed or form is not None:
-           #     data = self.op4.read(4); self.n+=4
-           #     if len(data)==0:
-           #         break
-           #     (recordLength,) = unpack(self.endian+'i',data)
-           #     print("RL = %s" %(recordLength))
-           #     if recordLength==24:
-           #         self.n-=4; self.op4.seek(self.n)
-           #     else:
-           #         data = self.op4.read(4)
-           #         if len(data)==0:
-           #             break
-           #         (recordLength2,) = unpack(self.endian+'i',data)
-           #         assert recordLength2==24
-           #         self.op4.seek(self.n)
-           #
+            #print "not f.closed = ",not self.op4.closed,form,name
+            # if not self.op4.closed or form is not None:
+            #     data = self.op4.read(4); self.n+=4
+            #     if len(data)==0:
+            #         break
+            #     (recordLength,) = unpack(self.endian+'i',data)
+            #     print("RL = %s" %(recordLength))
+            #     if recordLength==24:
+            #         self.n-=4; self.op4.seek(self.n)
+            #     else:
+            #         data = self.op4.read(4)
+            #         if len(data)==0:
+            #             break
+            #         (recordLength2,) = unpack(self.endian+'i',data)
+            #         assert recordLength2==24
+            #         self.op4.seek(self.n)
+            #
             i += 1
         return matrices
 
@@ -467,8 +467,8 @@ class OP4(FortranFile):
                 self.endian + '4i8s', data)
             #print "nrows=%s ncols=%s form=%s Type=%s name=%s" %(nrows,ncols,form,Type,name)
         else:
-            msg = recordLength, self.printBlock(data))
-            raise NotImplementedError('recordLength=%s\n%s' % (msg)
+            msg = recordLength, self.printBlock(data)
+            raise NotImplementedError('recordLength=%s\n%s' % (msg))
 
         name = name.strip()
         if 0:

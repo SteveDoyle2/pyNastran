@@ -1,6 +1,6 @@
 from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpretValue
 from pyNastran.bdf.errors import InvalidSubcaseParseError, ParamParseError
-from pyNastran.bdf.caseControlDeck import CaseControlDeck
+#from pyNastran.bdf.caseControlDeck import CaseControlDeck
 
 
 def parseSetSline(listA):
@@ -36,7 +36,6 @@ def parseSetSline(listA):
                 print "vals = ", vals
             else:
                 print "sline = ", sline
-                asdf
         else:
             #print "spot = %s" %(spot)
             if '/' in spot:

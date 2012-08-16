@@ -805,47 +805,47 @@ class RealElementsStressStrain(object):
             #self.dn += 348
         ###
         ###
-       # elif self.numWide==77:
-       #     while len(self.data) >= 308: # 2+15*5 = 77 -> 77*4 = 308
-       #         (eid,_) = unpack(b'i4s',self.data[0:8])
-       #         self.data = self.data[8:]  # 2
-       #         eData     = self.data[0:62] # 4*15
-       #         self.data = self.data[62: ]
-       #
-       #         out = unpack(b'i14f', eData)  # 15
-       #         (grid,fd1,sx1r,sx11,sy1r,sy11,txy1r,txy11,
-       #               fd2,sx2r,sx21,sy2r,sy21,txy2r,txy21) = out
-       #
-       #         for nodeID in xrange(nNodes):   #nodes pts
-       #             eData     = self.data[0:4*15]
-       #             self.data = self.data[4*15: ]
-       #             out = unpack(b'i14f', eData)
-       #             (grid,fd1,sx1r,sx11,sy1r,sy11,txy1r,txy11,
-       #                   fd2,sx2r,sx21,sy2r,sy21,txy2r,txy21) = out
-       #         ###
-       #     ###
-       # ###
-       # elif self.numWide==47:
-       #     while len(self.data) >= 188: # 2+9*5 = 47 -> 47*4 = 188
-       #         (eid,_) = unpack(b'i4s',self.data[0:8])
-       #         self.data = self.data[8:]  # 2
-       #         eData     = self.data[0:36] # 4*9
-       #         self.data = self.data[36: ]
-       #
-       #         out = unpack(b'i8f', eData)  # 9
-       #         (grid,fd1,sx1,sy1,txy1,
-       #               fd2,sx2,sy2,txy2) = out
-       #
-       #         for nodeID in xrange(nNodes):   #nodes pts
-       #             eData     = self.data[0:36] # 4*9
-       #             self.data = self.data[36: ]
-       #             out = unpack(b'i8f', eData)
-       #             (grid,fd1,sx1,sy1,txy1,
-       #                   fd2,sx2,sy2,txy2) = out
-       #             ###
-       #         ###
-       #     ###
-       # ###
-       # else:
-       #     raise NotImplementedError('invalid numWide')
+        # elif self.numWide==77:
+        #     while len(self.data) >= 308: # 2+15*5 = 77 -> 77*4 = 308
+        #         (eid,_) = unpack(b'i4s',self.data[0:8])
+        #         self.data = self.data[8:]  # 2
+        #         eData     = self.data[0:62] # 4*15
+        #         self.data = self.data[62: ]
+        #
+        #         out = unpack(b'i14f', eData)  # 15
+        #         (grid,fd1,sx1r,sx11,sy1r,sy11,txy1r,txy11,
+        #               fd2,sx2r,sx21,sy2r,sy21,txy2r,txy21) = out
+        #
+        #         for nodeID in xrange(nNodes):   #nodes pts
+        #             eData     = self.data[0:4*15]
+        #             self.data = self.data[4*15: ]
+        #             out = unpack(b'i14f', eData)
+        #             (grid,fd1,sx1r,sx11,sy1r,sy11,txy1r,txy11,
+        #                   fd2,sx2r,sx21,sy2r,sy21,txy2r,txy21) = out
+        #         ###
+        #     ###
+        # ###
+        # elif self.numWide==47:
+        #     while len(self.data) >= 188: # 2+9*5 = 47 -> 47*4 = 188
+        #         (eid,_) = unpack(b'i4s',self.data[0:8])
+        #         self.data = self.data[8:]  # 2
+        #         eData     = self.data[0:36] # 4*9
+        #         self.data = self.data[36: ]
+        #
+        #          out = unpack(b'i8f', eData)  # 9
+        #         (grid,fd1,sx1,sy1,txy1,
+        #               fd2,sx2,sy2,txy2) = out
+        #
+        #         for nodeID in xrange(nNodes):   #nodes pts
+        #             eData     = self.data[0:36] # 4*9
+        #             self.data = self.data[36: ]
+        #             out = unpack(b'i8f', eData)
+        #             (grid,fd1,sx1,sy1,txy1,
+        #                   fd2,sx2,sy2,txy2) = out
+        #             ###
+        #         ###
+        #     ###
+        # ###
+        # else:
+        #     raise NotImplementedError('invalid numWide')
 

@@ -4,7 +4,7 @@ from pyNastran.op2.writer.ougWriter import Ougv1Writer
 
 
 class Op2Writer(Ougv1Writer, Oes1Writer):
-    self.hollerith = pack('i', 584)  # assumes a 128 character string
+    hollerith = pack('i', 584)  # assumes a 128 character string
 
     def pack(self, format, *vals):
         return [str(val) for val in vals]
@@ -32,7 +32,7 @@ class Op2Writer(Ougv1Writer, Oes1Writer):
         #self.writeOGF1()
         self.writeOES1()  # stress
 
-    def printHeader(word, nChars):
+    def printHeader(self, word, nChars):
         self.deviceCode = 1  # print the OP2...
 
         self.writeStringBlock(word, nChars)
@@ -92,7 +92,7 @@ class Op2Writer(Ougv1Writer, Oes1Writer):
         tCode = sortCode * 1000 + tableCode
         return tCode
 
-    def aCode_tCode(approachCode, tableCode, sortCode):
+    def aCode_tCode(self, approachCode, tableCode, sortCode):
         aCode = self.combineApproachDeviceCodes(approachCode)
         tCode = self.combineTableDeviceCodes(tableCode, sortCode)
         return (aCode, tCode)

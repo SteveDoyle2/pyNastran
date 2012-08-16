@@ -16,3 +16,6 @@ class ScientificCardParseError(CardParseError):
 
 class CardInstantiationError(RuntimeError):
     pass
+
+class InvalidSubcaseParseError(SyntaxError):
+    pass
