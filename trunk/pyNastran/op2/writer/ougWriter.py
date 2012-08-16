@@ -1,15 +1,16 @@
 from struct import pack
 
+
 class Ougv1Writer(object):
     def writeOUGV1(self):
         msg = ''
-        self.deviceCode = 1 # print the OP2...
+        self.deviceCode = 1  # print the OP2...
 
         self.writeStringBlock('OUGV1', 8)
 
         msg += self.writeMarkers([-1, 7])
         out = [101, 0, 4136, 0, 0, 0, 1]  ## @todo what this is - DMAP -> "no def or month,year,one,one"...huh???
-        msg += pack('iiiiiii',*out)
+        msg += pack('iiiiiii', *out)
 
         msg += self.writeMarkers([-2, 1, 0])
 
@@ -20,7 +21,7 @@ class Ougv1Writer(object):
             msg += self.writeMarkers([self.iTable, 1, 0])
             msg += self.writeOUG_displacements(iSubcase, data)
             self.iTable -= 1
-        
+
         data = self.temperatures
         for iSubcase in data:
             msg += self.writeMarkers([self.iTable, 1, 0])
@@ -45,8 +46,8 @@ class Ougv1Writer(object):
         #    msg += writeMarkers([iTable,1,0])
         #    msg += self.writeOUG_temperatures(iSubcase,iTable)
         #    iTable-=1
-        
-        msg += self.writeMarkers([self.iTable-1, 1, 0])
+
+        msg += self.writeMarkers([self.iTable - 1, 1, 0])
         #self.displacements = {}
         #self.temperatures  = {}
 
@@ -58,42 +59,41 @@ class Ougv1Writer(object):
         msg = ''
         disp = data[iSubcase]
         self.writeMarkers([146, 584])
-        
+
         lsdvmn = iSubcase  ## @todo is this correct???
 
-        if disp.dt==None:
+        if disp.dt is None:
             approachCode = 1  # statics
             five = lsdvmn
-            FiveSixSeven = [lsdvmn,0,0] # fields five,six,seven
+            FiveSixSeven = [lsdvmn, 0, 0]  # fields five,six,seven
         else:
             approachCode = 6  # transient
-            FiveSixSeven = [disp.dt,0,0] # fields five,six,seven
+            FiveSixSeven = [disp.dt, 0, 0]  # fields five,six,seven
         ###
 
-        tableCode  = 1  ## statics
-        sortCode   = 0
-        randomCode = 0 # 8 @todo no idea...
-        formatCode = 1 # 9 - Real numbers
-        numWide    = 7 # 10
-        #thermal   = 0 # 23
-        (aCode,tCode) = self.aCode_tCode(approachCode, tableCode, sortCode)
+        tableCode = 1  # statics
+        sortCode = 0
+        randomCode = 0  # 8 @todo no idea...
+        formatCode = 1  # 9 - Real numbers
+        numWide = 7  # 10
+        #thermal = 0 # 23
+        (aCode, tCode) = self.aCode_tCode(approachCode, tableCode, sortCode)
 
         #12345
-        zero = pack('i',0)
-        msg += pack('iiii', aCode, tCode, 0, iSubcase) # 1,2,3,4
-        msg += pack('iii', *FiveSixSeven) # 5,6,7
-        msg += pack('iii', randomCode, formatCode, numWide) # 8,9,10
+        zero = pack('i', 0)
+        msg += pack('iiii', aCode, tCode, 0, iSubcase)  # 1,2,3,4
+        msg += pack('iii', *FiveSixSeven)  # 5,6,7
+        msg += pack('iii', randomCode, formatCode, numWide)  # 8,9,10
 
         #22-11 = 11
-        msg += zero*11
+        msg += zero * 11
 
-        msg += pack('i',thermal)
+        msg += pack('i', thermal)
 
         #51-23 = 28
-        msg += zero*28
+        msg += zero * 28
         msg += self.packTitle(iSubcase)
-        
+
         msg += data[iSubcase].writeOp2('', self.deviceCode)
         #msg += pack('i',4) # data length...
         return msg
-
