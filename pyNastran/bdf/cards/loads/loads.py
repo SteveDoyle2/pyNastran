@@ -7,9 +7,11 @@ from itertools import izip
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 
+
 class Load(BaseCard):
     """defines the DefaultLoad class"""
     type = 'DefLoad'
+
     def __init__(self, card, data):
         self.cid = None
         self.nodes = None
@@ -30,7 +32,7 @@ class Load(BaseCard):
             return [node.nid for node in nodes]
 
 
-class LoadCombination(Load): # LOAD, DLOAD
+class LoadCombination(Load):  # LOAD, DLOAD
     def __init__(self, card, data):
         Load.__init__(self, card, data)
 
@@ -39,12 +41,12 @@ class LoadCombination(Load): # LOAD, DLOAD
             self.sid = card.field(1)
 
             ## overall scale factor
-            self.scale  = card.field(2)
+            self.scale = card.field(2)
 
-            loads = card.fields(3) # temp list
+            loads = card.fields(3)  # temp list
             nLoadFields = len(loads)
             #nLoads  = nLoadFields/2
-            assert nLoadFields%2 == 0
+            assert nLoadFields % 2 == 0
 
             ## individual scale factors (corresponds to loadIDs)
             self.scaleFactors = []
@@ -54,16 +56,15 @@ class LoadCombination(Load): # LOAD, DLOAD
 
             # alternating of scale factor & load set ID
             for i in xrange(0, nLoadFields, 2):
-                self.scaleFactors.append(loads[i  ])
-                self.loadIDs.append(     loads[i+1])
+                self.scaleFactors.append(loads[i])
+                self.loadIDs.append(loads[i + 1])
         else:
             self.sid = data[0]
             self.scale = data[1]
             self.scaleFactors = data[2]
-            self.loadIDs      = data[3]
+            self.loadIDs = data[3]
             assert len(data) == 4, '%s data=%s' % (self.type, data)
         ###
-
 
     def crossReference(self, model):
         loadIDs2 = []
@@ -71,7 +72,7 @@ class LoadCombination(Load): # LOAD, DLOAD
             loadID2 = model.Load(loadID)
             loadIDs2.append(loadID2)
         self.loadIDs = loadIDs2
-    
+
     def LoadID(self, lid):
         if isinstance(lid, int):
             return lid
@@ -106,7 +107,7 @@ class LoadCombination(Load): # LOAD, DLOAD
         ##print("self.lid = ",load.lid)
         #asdf
         #return load.lid
-    
+
     def getLoads(self):
         """@note requires a cross referenced load"""
         loads = []
@@ -118,15 +119,16 @@ class LoadCombination(Load): # LOAD, DLOAD
         return loads
 
 
-class LSEQ(BaseCard): # Requires LOADSET in case control deck
+class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     """
     Defines a sequence of static load sets
     @todo how does this work...
     """
     type = 'LSEQ'
+
     def __init__(self, card=None, data=None):
         if card:
-            self.sid  = card.field(1)
+            self.sid = card.field(1)
             self.exciteID = card.field(2)
             self.lid = card.field(3)
             self.tid = card.field(4)
@@ -160,18 +162,18 @@ class LSEQ(BaseCard): # Requires LOADSET in case control deck
         else:
             return lid.sid
         raise RuntimeError(lid)
-        
+
     def getLoads(self):
         return self.lid
- 
+
     def Lid(self):
         if isinstance(self.lid, int):
             return self.lid
         else:
             return self.LoadID(self.lid)
-            raise NotImplementedError('LSEQ '+str(self.lid)+
-                                      '\n%s' %(type(self.lid)))
-        
+            raise NotImplementedError('LSEQ ' + str(self.lid) +
+                                      '\n%s' % (type(self.lid)))
+
     def Tid(self):
         if self.tid is None:
             return None
@@ -186,24 +188,26 @@ class LSEQ(BaseCard): # Requires LOADSET in case control deck
     def reprFields(self):
         return self.rawFields()
 
+
 class SLOAD(Load):
     """
     Static Scalar Load
     Defines concentrated static loads on scalar or grid points.
-    
+
     @note Can be used in statics OR dynamics.
 
     If Si refers to a grid point, the load is applied to component T1 of the
     displacement coordinate system (see the CD field on the GRID entry).
     """
     type = 'SLOAD'
+
     def __init__(self, card=None, data=None):
         ## load ID
         self.sid = card.field(1)
-        
+
         fields = card.fields(2)
-        n = len(fields)//2
-        if len(fields)%2 == 1:
+        n = len(fields) // 2
+        if len(fields) % 2 == 1:
             n += 1
             msg = 'missing last magnitude on SLOAD card=%s' % (card.fields())
             raise RuntimeError(msg)
@@ -211,9 +215,9 @@ class SLOAD(Load):
         self.nids = []
         self.mags = []
         for i in xrange(n):
-            j = 2*i
-            self.nids.append(fields[j  ])
-            self.mags.append(fields[j+1])
+            j = 2 * i
+            self.nids.append(fields[j])
+            self.mags.append(fields[j + 1])
         ###
 
     def crossReference(self, model):
@@ -235,11 +239,10 @@ class SLOAD(Load):
     def reprFields(self):
         return self.rawFields()
 
-#---------------------------------------------------------------------
-# DLOAD loads
 
 class DLOAD(LoadCombination):
     type = 'DLOAD'
+
     def __init__(self, card=None, data=None):
         LoadCombination.__init__(self, card, data)
 
@@ -262,6 +265,7 @@ class DLOAD(LoadCombination):
     def reprFields(self):
         return self.rawFields()
 
+
 class DAREA(BaseCard):
     """
     Defines scale (area) factors for static and dynamic loads. In dynamic
@@ -271,28 +275,31 @@ class DAREA(BaseCard):
     DAREA 3   6   2 8.2 15 1  10.1
     """
     type = 'DAREA'
+
     def __init__(self, card=None, nOffset=0, data=None):
         if card:
             nOffset *= 3
-            self.sid   = card.field(1)
-            self.p     = card.field(2+nOffset)
-            self.c     = card.field(3+nOffset)
-            self.scale = card.field(4+nOffset)
+            self.sid = card.field(1)
+            self.p = card.field(2 + nOffset)
+            self.c = card.field(3 + nOffset)
+            self.scale = card.field(4 + nOffset)
         else:
-            self.sid   = data[0]
-            self.p     = data[1]
-            self.c     = data[2]
+            self.sid = data[0]
+            self.p = data[1]
+            self.c = data[2]
             self.scale = data[3]
-            assert len(data)==4, 'data = %s' %(data)
+            assert len(data) == 4, 'data = %s' % (data)
         ###
-        
+
     def rawFields(self):
         fields = ['DAREA', self.sid, self.p, self.c, self.scale]
         return fields
 
+
 class TabularLoad(BaseCard):
     def __init__(self, card, data):
         pass
+
 
 class TLOAD1(TabularLoad):
     """
@@ -302,6 +309,7 @@ class TLOAD1(TabularLoad):
     for use in transient response analysis.
     """
     type = 'TLOAD1'
+
     def __init__(self, card=None, data=None):
         TabularLoad.__init__(self, card, data)
         ## load ID
@@ -369,6 +377,7 @@ class TLOAD1(TabularLoad):
                   self.Tid(), us0, vs0]
         return fields
 
+
 class TLOAD2(TabularLoad):
     """
     Transient Response Dynamic Excitation, Form 1
@@ -377,40 +386,41 @@ class TLOAD2(TabularLoad):
     for use in transient response analysis.
     """
     type = 'TLOAD2'
+
     def __init__(self, card=None, data=None):
         TabularLoad.__init__(self, card, data)
         ## load ID
         ## SID must be unique for all TLOAD1, TLOAD2, RLOAD1, RLOAD2, and ACSRCE entries.
         self.sid = card.field(1)
-        
+
         self.exciteID = card.field(2)
-        self.delay = card.field(3,0)
-        
+        self.delay = card.field(3, 0)
+
         ## Defines the type of the dynamic excitation. (Integer; character
         ## or blank; Default = 0)
-        self.Type = card.field(4,0)
-        
+        self.Type = card.field(4, 0)
+
         ## Time constant. (Real >= 0.0)
-        if self.delay==0:
-            self.T1 = card.field(5,0.)
+        if self.delay == 0:
+            self.T1 = card.field(5, 0.)
         else:
             self.T1 = card.field(5)
         ## Time constant. (Real; T2 > T1)
-        self.T2 = card.field(6,self.T1)
+        self.T2 = card.field(6, self.T1)
         ## Frequency in cycles per unit time. (Real >= 0.0; Default = 0.0)
-        self.frequency = card.field(7,0.)
+        self.frequency = card.field(7, 0.)
         ## Phase angle in degrees. (Real; Default = 0.0)
-        self.phase = card.field(8,0.)
+        self.phase = card.field(8, 0.)
         ## Exponential coefficient. (Real; Default = 0.0)
-        self.c = card.field(9,0.)
+        self.c = card.field(9, 0.)
         ## Growth coefficient. (Real; Default = 0.0)
-        self.b = card.field(10,0.)
+        self.b = card.field(10, 0.)
         ## Factor for initial displacements of the enforced degrees-of-freedom.
         ## (Real; Default = 0.0)
-        self.us0 = card.field(11,0.)
+        self.us0 = card.field(11, 0.)
         ## Factor for initial velocities of the enforced degrees-of-freedom
         ## (Real; Default = 0.0)
-        self.vs0 = card.field(12,0.)
+        self.vs0 = card.field(12, 0.)
 
         if   self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
             self.Type = 'LOAD'
@@ -444,19 +454,21 @@ class TLOAD2(TabularLoad):
         #self.Type = card.field(4,0)
         #self.T1 = card.field(5,0.)
         #self.T2 = card.field(6,self.T1)
-        frequency = set_blank_if_default(self.frequency,0.)
-        phase = set_blank_if_default(self.phase,0.)
-        c = set_blank_if_default(self.c,0.)
-        b = set_blank_if_default(self.b,0.)
+        frequency = set_blank_if_default(self.frequency, 0.)
+        phase = set_blank_if_default(self.phase, 0.)
+        c = set_blank_if_default(self.c, 0.)
+        b = set_blank_if_default(self.b, 0.)
 
         us0 = set_blank_if_default(self.us0, 0.0)
         vs0 = set_blank_if_default(self.vs0, 0.0)
-        fields = ['TLOAD2', self.sid, self.exciteID, self.delay, self.Type, 
-                  self.T1, self.T2,self.frequency, phase, c, b, us0, vs0]
+        fields = ['TLOAD2', self.sid, self.exciteID, self.delay, self.Type,
+                  self.T1, self.T2, self.frequency, phase, c, b, us0, vs0]
         return fields
+
 
 class RFORCE(Load):
     type = 'RFORCE'
+
     def __init__(self, card=None, data=None):
         if card:
             self.sid = card.field(1)
@@ -467,14 +479,14 @@ class RFORCE(Load):
             self.r2 = card.field(6, 0.)
             self.r3 = card.field(7, 0.)
             self.method = card.field(8, 1)
-            self.racc   = card.field(9, 0.)
-            self.mb     = card.field(10, 0)
-            self.idrf   = card.field(11, 0)
+            self.racc = card.field(9, 0.)
+            self.mb = card.field(10, 0)
+            self.idrf = card.field(11, 0)
         else:
-            self.sid   = data[0]
-            print("PLOADX1 = %s" %(data))
+            self.sid = data[0]
+            print("PLOADX1 = %s" % (data))
             raise NotImplementedError('PLOADX1')
-    
+
     def crossReference(self, model):
         #self.nid = model.Element(self.nid)
         #self.cid = model.Coord(self.cid)
@@ -491,13 +503,14 @@ class RFORCE(Load):
 
     def reprFields(self):
         #method = set_blank_if_default(self.method,1)
-        racc = set_blank_if_default(self.racc,0.)
-        mb = set_blank_if_default(self.mb,0)
-        idrf = set_blank_if_default(self.idrf,0)
+        racc = set_blank_if_default(self.racc, 0.)
+        mb = set_blank_if_default(self.mb, 0)
+        idrf = set_blank_if_default(self.idrf, 0)
         fields = ['RFORCE', self.sid, self.nid, self.cid, self.scale,
                   self.r1, self.r2, self.r3, self.method, racc,
                   mb, idrf]
         return fields
+
 
 class RLOAD1(TabularLoad):
     """
@@ -509,15 +522,16 @@ class RLOAD1(TabularLoad):
     RLOAD1 5   3                     1
     """
     type = 'RLOAD1'
+
     def __init__(self, card=None, data=None):
         TabularLoad.__init__(self, card, data)
-        self.sid      = card.field(1)  # was sid
+        self.sid = card.field(1)  # was sid
         self.exciteID = card.field(2)
-        self.delay    = card.field(3)
-        self.dphase   = card.field(4)
-        self.tc    = card.field(5, 0)
-        self.td    = card.field(6, 0)
-        self.Type  = card.field(7, 'LOAD')
+        self.delay = card.field(3)
+        self.dphase = card.field(4)
+        self.tc = card.field(5, 0)
+        self.td = card.field(6, 0)
+        self.Type = card.field(7, 'LOAD')
 
         if   self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
             self.Type = 'LOAD'
@@ -536,7 +550,7 @@ class RLOAD1(TabularLoad):
             self.tc = model.Table(self.tc)
         if self.td:
             self.td = model.Table(self.td)
-    
+
     #def LoadID(self, lid):
         #return self.Lid()
 
@@ -568,26 +582,28 @@ class RLOAD1(TabularLoad):
                   self.Tc(), self.Td(), Type]
         return fields
 
+
 class RLOAD2(TabularLoad):
     """
     Defines a frequency-dependent dynamic load of the form
     for use in frequency response problems.
-    
+
     \f[ \large \left{ P(f)  \right}  = \left{A\right} * B(f)
         e^{  i \left{ \phi(f) + \theta - 2 \pi f \tau \right} } \f]
     RLOAD2 SID EXCITEID DELAY DPHASE TB TP TYPE
     RLOAD2 5   3                     1
     """
     type = 'RLOAD2'
+
     def __init__(self, card=None, data=None):
         TabularLoad.__init__(self, card, data)
-        self.sid      = card.field(1)
+        self.sid = card.field(1)
         self.exciteID = card.field(2)
-        self.delay    = card.field(3)
-        self.dphase   = card.field(4)
-        self.tb    = card.field(5, 0)
-        self.tp    = card.field(6, 0)
-        self.Type  = card.field(7, 'LOAD')
+        self.delay = card.field(3)
+        self.dphase = card.field(4)
+        self.tb = card.field(5, 0)
+        self.tp = card.field(6, 0)
+        self.Type = card.field(7, 'LOAD')
 
         if self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
             self.Type = 'LOAD'
@@ -606,7 +622,7 @@ class RLOAD2(TabularLoad):
             self.tb = model.Table(self.tb)
         if self.tp:
             self.tp = model.Table(self.tp)
-    
+
     def getLoads(self):
         return [self]
 
@@ -641,12 +657,11 @@ class RLOAD2(TabularLoad):
                   self.Tb(), self.Tp(), Type]
         return fields
 
-#---------------------------------------------------------------------
-# RANDOM loads
 
 class RandomLoad(BaseCard):
     def __init__(self, card, data):
         pass
+
 
 class RANDPS(RandomLoad):
     """
@@ -656,30 +671,31 @@ class RANDPS(RandomLoad):
     \f[ S_{jk}(F) = (X+iY)G(F) \f]
     """
     type = 'RANDPS'
+
     def __init__(self, card=None, data=None):
         if card:
             ## Random analysis set identification number. (Integer > 0)
             ## Defined by RANDOM in the Case Control Deck.
             self.sid = card.field(1)
-            
+
             ## Subcase identification number of the excited load set.
             ## (Integer > 0)
-            self.j   = card.field(2)
-            
+            self.j = card.field(2)
+
             ## Subcase identification number of the applied load set.
             ## (Integer >= 0; K >= J)
-            self.k   = card.field(3)
-            
+            self.k = card.field(3)
+
             ## Components of the complex number. (Real)
-            self.x   = card.field(4)
-            self.y   = card.field(5)
+            self.x = card.field(4)
+            self.y = card.field(5)
             ## Identification number of a TABRNDi entry that defines G(F).
             self.tid = card.field(6, 0)
 
     def crossReference(self, model):
         if self.tid:
             self.tid = model.Table(self.tid)
-    
+
     def getLoads(self):
         return [self]
 
@@ -697,4 +713,3 @@ class RANDPS(RandomLoad):
 
     def reprFields(self):
         return self.rawFields()
-

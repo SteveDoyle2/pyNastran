@@ -6,10 +6,11 @@ from math import log
 #from math import (sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2,acosh,acos,asin,
 #                  asinh,atanh) #,atanh2   # going to be used by DEQATN
 
-from numpy import zeros #average
+from numpy import zeros  # average
 from scipy.sparse import coo_matrix
 
 from pyNastran.bdf.cards.baseCard import BaseCard
+
 
 def ssq(*listA):
     """
@@ -18,8 +19,9 @@ def ssq(*listA):
     """
     out = 0.
     for x in listA:
-        out += x*x
+        out += x * x
     return out
+
 
 def sum2(*listA):
     """
@@ -28,41 +30,47 @@ def sum2(*listA):
     """
     return sum(listA)
 
-def mod(x,y):
+
+def mod(x, y):
     """
     x%y
     @note used for DEQATN
     """
-    return x%y
+    return x % y
 
-def logx(x,y):
+
+def logx(x, y):
     """
     log base x of y
     @note used for DEQATN
     """
-    log(y,x)
+    log(y, x)
 
-def dim(x,y):
+
+def dim(x, y):
     """
     @note used for DEQATN
     """
-    return x-min(x,y)
+    return x - min(x, y)
 
-def db(p,pref):
+
+def db(p, pref):
     """
     sound pressure in decibels
     would capitalize it, but you wouldnt be able to call the function...
     """
-    return 20.*log(p/pref)
+    return 20. * log(p / pref)
 
-class DEQATN(BaseCard):# needs work...
+
+class DEQATN(BaseCard):  # needs work...
     type = 'DEQATN'
-    def __init__(self,card=None,data=None):
+
+    def __init__(self, card=None, data=None):
         newCard = ''
         foundNone = False
         for field in card.card:
             if foundNone is False and field is not None:
-                newCard += field+','
+                newCard += field + ','
                 foundNone = True
             elif foundNone is True and field is not None:
                 newCard += field
@@ -74,29 +82,30 @@ class DEQATN(BaseCard):# needs work...
             #line0 = ''.join(card.card)
         line0 = newCard
         self.eqID = line0[8:16]
-        
-        assert len(self.eqID)==8,'len(eqID)==%s' %(len(self.eqID))
+
+        assert len(self.eqID) == 8, 'len(eqID)==%s' % (len(self.eqID))
         eq = line0[16:]
-        eq = eq.replace(' ','').lower()
-        (self.name,self.eq) = eq.split('=')
+        eq = eq.replace(' ', '').lower()
+        (self.name, self.eq) = eq.split('=')
         #print("EQ = %s" %(self.eq))
-        
-    def evaluate(self,args):
+
+    def evaluate(self, args):
         #eqLow = self.eq.lower()
         #eval(self.eq)
         pass
 
     def __repr__(self):
-        eq = self.name+'='+self.eq
+        eq = self.name + '=' + self.eq
         eqLine = eq[0:56]
         eq = eq[56:]
-        fields = ['DEQATN  ','%8s'%(self.eqID), eqLine]
+        fields = ['DEQATN  ', '%8s' % (self.eqID), eqLine]
 
         if len(eq):
             eqLine = eq[0:72]
             eq = eq[72:]
-            fields += ['        '+eqLine]
+            fields += ['        ' + eqLine]
         return ''.join(fields)
+
 
 class NastranMatrix(BaseCard):
     """
@@ -107,28 +116,28 @@ class NastranMatrix(BaseCard):
         #zero
 
         ## 4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
-        self.ifo   = int(card.field(3))
+        self.ifo = int(card.field(3))
         ## 1-Real, Single Precision; 2=Real,Double Precision; 3=Complex, Single; 4=Complex, Double
-        self.tin   = int(card.field(4))
+        self.tin = int(card.field(4))
         ## 0-Set by cell precision
-        self.tout  = int(card.field(5,0))
-        
+        self.tout = int(card.field(5, 0))
+
         self.polar = card.field(6)
-        self.ncol  = card.field(8)
+        self.ncol = card.field(8)
 
         self.GCj = []
         self.GCi = []
         self.Real = []
         if self.isComplex():
             self.Complex = []
-    
+
     def writeCodeAster(self):
         """
         assume set 1 = MAAX1,MAAX2, etc. and 100/n % on each
         """
-        
+
         # for real combination
-        comm =  'K_Mtx_AB=COMB_MATR_ASSE(COMB_R=(\n'
+        comm = 'K_Mtx_AB=COMB_MATR_ASSE(COMB_R=(\n'
         comm += '    _F(MATR_ASSE = K_Mtx_A,COEF_R = 1.),\n'
         comm += '    _F(MATR_ASSE = K_Mtx_B,COEF_R = 1.)));\n'
 
@@ -140,44 +149,45 @@ class NastranMatrix(BaseCard):
         comm = 'K_Mtx=ASSE_MATRICE(MATR_ELEM=ElMtx_K,NUME_DDL=%s,);'
         return comm
 
-    def addColumn(self,card=None,data=None):
+    def addColumn(self, card=None, data=None):
         #print "hi column"
         Gj = card.field(2)
         Cj = card.field(3)
-        
+
         nFields = card.nFields()
-        nLoops = (nFields-5)//4
-        minLoops = nLoops-1
-        if minLoops<=0:
+        nLoops = (nFields - 5) // 4
+        minLoops = nLoops - 1
+        if minLoops <= 0:
             minLoops = 1
         #assert nFields <= 8,'nFields=%s' %(nFields)
 
         #print "minLoops = ",minLoops
         #print "nLoops   = ",nLoops
         for i in xrange(minLoops):
-            self.GCj.append((Gj,Cj))
+            self.GCj.append((Gj, Cj))
 
         if self.isComplex():
             for i in xrange(minLoops):
-                n = 5+4*i
+                n = 5 + 4 * i
                 Gi = card.field(n)
-                Ci = card.field(n+1)
-                self.GCi.append((Gi,Ci))
-                self.Real.append(card.field(n+2))
-                self.Complex.append(card.field(n+3))
+                Ci = card.field(n + 1)
+                self.GCi.append((Gi, Ci))
+                self.Real.append(card.field(n + 2))
+                self.Complex.append(card.field(n + 3))
         else:
             for i in xrange(minLoops):
-                n = 5+4*i
+                n = 5 + 4 * i
                 Gi = card.field(n)
-                Ci = card.field(n+1)
-                self.GCi.append((Gi,Ci))
-                self.Real.append(card.field(n+2))
-        
-        assert len(self.GCj)==len(self.GCi),'(len(GCj)=%s len(GCi)=%s' %(len(self.GCj),len(self.GCi))
+                Ci = card.field(n + 1)
+                self.GCi.append((Gi, Ci))
+                self.Real.append(card.field(n + 2))
+
+        assert len(self.GCj) == len(self.GCi), '(len(GCj)=%s len(GCi)=%s' % (
+            len(self.GCj), len(self.GCi))
         #if self.isComplex():
             #self.Complex(card.field(v)
 
-    def getMatrix(self,isSparse=False):
+    def getMatrix(self, isSparse=False):
         """
         builds the Matrix
         @param self the object pointer
@@ -187,26 +197,26 @@ class NastranMatrix(BaseCard):
         @retval cols dictionary of keys=columnID, values=(Grid,Component) for the matrix
         @warning isSparse WILL fail
         """
-        i=0
+        i = 0
         rows = {}
         rowsReversed = {}
         for GCi in self.GCi:
             if GCi not in rows:
                 rows[GCi] = i
                 rowsReversed[i] = GCi
-                i+=1
+                i += 1
         #nRows = len(rows2)
 
-        j=0
+        j = 0
         cols = {}
         colsReversed = {}
         for GCj in self.GCj:
             if GCj not in cols:
                 cols[GCj] = j
                 colsReversed[j] = GCj
-                j+=1
+                j += 1
         #nCols = len(cols2)
-        
+
         #A = ss.lil_matrix((3,3), dtype='d') # double precision
 
         #rows=[]; cols=[]; data=[]
@@ -241,8 +251,8 @@ class NastranMatrix(BaseCard):
                 for (GCj, GCi) in izip(self.GCj, self.GCi):
                     i = rows[GCi]
                     j = cols[GCj]
-                    nrows = max(i,nrows)
-                    ncols = max(j,ncols)
+                    nrows = max(i, nrows)
+                    ncols = max(j, ncols)
                     rows2.append(i)
                     cols2.append(j)
                 data = self.Real
@@ -252,57 +262,58 @@ class NastranMatrix(BaseCard):
             #print(rows2)
 
             #print("nrows=%s ncols=%s" %(nrows, ncols))
-            if self.ifo in [1,6]:
-                nrows = max(nrows,ncols)
+            if self.ifo in [1, 6]:
+                nrows = max(nrows, ncols)
                 ncols = nrows
             #print("nrows=%s ncols=%s" %(nrows, ncols))
-            
+
             dType = self.getDType(self.tin)
             #A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType) # test
-            M = coo_matrix( (data, (self.GCi, self.GCj)), shape=(nrows,ncols), dtype=dType)
+            M = coo_matrix((data, (self.GCi, self.GCj)),
+                           shape=(nrows, ncols), dtype=dType)
             #M = coo_matrix( (data,(self.GCi,self.GCj)),shape=(i,j)) # old
             #M = coo_matrix( (data,(self.GCi,self.GCj)),shape=(nrows,ncols))
             #print M.todense()
             #print M
         else:
             if self.isComplex():
-                M = zeros((i,j), dtype='complex128')
+                M = zeros((i, j), dtype='complex128')
                 for (GCj, GCi, reali, complexi) in izip(self.GCj, self.GCi, self.Real, self.Complex):
                     i = rows[GCi]
                     j = cols[GCj]
-                    M[i,j] = complex(reali,complexi)
+                    M[i, j] = complex(reali, complexi)
             else:
-                M = zeros((i,j), dtype='float64')
+                M = zeros((i, j), dtype='float64')
                 for (GCj, GCi, reali) in izip(self.GCj, self.GCi, self.Real):
                     i = rows[GCi]
                     j = cols[GCj]
-                    M[i,j] = reali
+                    M[i, j] = reali
                 ###
             ###
         #print(M)
-        return (M,rowsReversed,colsReversed)
+        return (M, rowsReversed, colsReversed)
 
-    def rename(self,newName):
+    def rename(self, newName):
         self.name = newName
 
     def isReal(self):
         return not self.isComplex()
 
     def isComplex(self):
-        if self.tin in [3,4]:
+        if self.tin in [3, 4]:
             return True
         return False
 
-    def getDType(self,Type):
-        if Type==1:
+    def getDType(self, Type):
+        if Type == 1:
             dType = 'float32'
-        elif Type==2:
+        elif Type == 2:
             dType = 'float64'
-        elif Type==3:
+        elif Type == 3:
             dType = 'complex64'
-        elif Type==4:
+        elif Type == 4:
             dType = 'complex128'
-        elif Type==0:
+        elif Type == 0:
             if self.isComplex():
                 dType = 'complex128'
             else:
@@ -315,18 +326,21 @@ class NastranMatrix(BaseCard):
         """
         @todo support double precision
         """
-        msg = '\n$'+'-'*80
-        msg += '\n$ %s Matrix %s\n' %(self.type, self.name)
-        fields = [self.type, self.name, 0, self.ifo, self.tin, self.tout, self.polar, None, self.ncol]
+        msg = '\n$' + '-' * 80
+        msg += '\n$ %s Matrix %s\n' % (self.type, self.name)
+        fields = [self.type, self.name, 0, self.ifo, self.tin,
+                  self.tout, self.polar, None, self.ncol]
         msg += self.printCard(fields)
 
         if self.isComplex():
             for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
-                fields = [self.type, self.name, GCj[0], GCj[1], None, GCi[0], GCi[1], reali, imagi]
+                fields = [self.type, self.name, GCj[0], GCj[1],
+                          None, GCi[0], GCi[1], reali, imagi]
                 msg += self.printCard(fields)
         else:
             for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
-                fields = [self.type, self.name, GCj[0], GCj[1], None, GCi[0], GCi[1], reali, None]
+                fields = [self.type, self.name, GCj[0], GCj[1],
+                          None, GCi[0], GCi[1], reali, None]
                 msg += self.printCard(fields)
         return msg
 
@@ -338,8 +352,10 @@ class DMIG(NastranMatrix):
     entries. A column entry is required for each column with nonzero elements.
     """
     type = 'DMIG'
+
     def __init__(self, card=None, data=None):
         NastranMatrix.__init__(self, card, data)
+
 
 class DMIJ(NastranMatrix):
     """
@@ -354,8 +370,10 @@ class DMIJ(NastranMatrix):
     or DMI.
     """
     type = 'DMIJ'
-    def __init__(self,card=None,data=None):
-        NastranMatrix.__init__(self,card,data)
+
+    def __init__(self, card=None, data=None):
+        NastranMatrix.__init__(self, card, data)
+
 
 class DMIJI(NastranMatrix):
     """
@@ -369,8 +387,10 @@ class DMIJI(NastranMatrix):
     CAERO2, or a CAERO1, 3, 4 or 5 use DMIJ or DMI.
     """
     type = 'DMIJI'
+
     def __init__(self, card=None, data=None):
         NastranMatrix.__init__(self, card, data)
+
 
 class DMIK(NastranMatrix):
     """
@@ -382,40 +402,43 @@ class DMIK(NastranMatrix):
     entry is required for each column with nonzero elements.
     """
     type = 'DMIK'
-    def __init__(self,card=None,data=None):
-        NastranMatrix.__init__(self,card,data)
+
+    def __init__(self, card=None, data=None):
+        NastranMatrix.__init__(self, card, data)
+
 
 class DMI(BaseCard):
     type = 'DMI'
-    def __init__(self,card=None,data=None):
+
+    def __init__(self, card=None, data=None):
         self.name = card.field(1)
         #zero
-        
+
         ## Form of the matrix:  1=Square (not symmetric); 2=Rectangular;
         ## 3=Diagonal (m=nRows,n=1);  4=Lower Triangular; 5=Upper Triangular;
         ## 6=Symmetric; 8=Identity (m=nRows, n=m)
-        self.form  = int(card.field(3))
-        
+        self.form = int(card.field(3))
+
         ## 1-Real, Single Precision; 2=Real,Double Precision;
         ## 3=Complex, Single; 4=Complex, Double
-        self.tin   = int(card.field(4))
-        
+        self.tin = int(card.field(4))
+
         ## 0-Set by cell precision
-        self.tout  = int(card.field(5, 0))
-        
+        self.tout = int(card.field(5, 0))
+
         self.nRows = int(card.field(7))
         self.nCols = int(card.field(8))
 
         self.GCj = []
         self.GCi = []
         self.Real = []
-        
+
         if self.isComplex():
             self.Complex = []
 
     def addColumn(self, card=None, data=None):
 
-        if not self.isComplex(): # real
+        if not self.isComplex():  # real
             self.readReal(card)
 
     def readReal(self, card):
@@ -427,13 +450,13 @@ class DMI(BaseCard):
         fields = card.fields(3)
 
         # Real, starts at A(i1,j), goes to A(i2,j) in a column
-        while i<len(fields):
+        while i < len(fields):
             i1 = fields[i]
             #print "i1 = ",i1
-            if isinstance(i1,int):
-                i+=1
+            if isinstance(i1, int):
+                i += 1
                 isDoneReadingFloats = False
-                while not isDoneReadingFloats and i<len(fields):
+                while not isDoneReadingFloats and i < len(fields):
                     #print "i=%s len(fields)=%s" %(i,len(fields))
                     realValue = fields[i]
                     if isinstance(realValue, int):
@@ -443,26 +466,26 @@ class DMI(BaseCard):
                         self.GCi.append(i1)
                         self.Real.append(realValue)
                         #print "i=%s j=%s value=%s" %(i1,j,realValue)
-                        i+=1
+                        i += 1
                     else:
                         #print "*i=%s j=%s value=%s type=%s" %(i1,j,realValue,type(realValue))
                         realValue = self.Real[-1]
                         #print "*i=%s j=%s value=%s" %(i1,j,realValue)
-                        endI = fields[i+1]
+                        endI = fields[i + 1]
                         #print "*i=%s endI=%s j=%s value=%s" %(i1,endI,j,realValue)
-                        for ii in xrange(i1, endI+1):
+                        for ii in xrange(i1, endI + 1):
                             self.GCj.append(j)
                             self.GCi.append(ii)
                             self.Real.append(realValue)
                         ###
                         #print "i = ",3+i
                         #print 'field i=',fields[i]
-                        i+=1
+                        i += 1
                         isDoneReadingFloats = True
                     ###
             ###
 
-    def readComplex(self,card):
+    def readComplex(self, card):
         msg = 'complex matrices not supported in the DMI reader...'
         raise NotImplementedError(msg)
         ## column number
@@ -473,37 +496,37 @@ class DMI(BaseCard):
         fields = card.fields(3)
 
         # Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
-        while i<len(fields):
+        while i < len(fields):
             i1 = fields[i]
-            i+=1
+            i += 1
             isDoneReadingFloats = False
             asdf
-            while not isDoneReadingFloats and i<len(fields):
+            while not isDoneReadingFloats and i < len(fields):
                 #print("i=%s len(fields)=%s" %(i, len(fields)))
                 realValue = fields[i]
                 if isinstance(floatValue, int):
                     isDoneReadingFloats = True
                 elif isinstance(realValue, float):
-                    complexValue = fields[i+1]
+                    complexValue = fields[i + 1]
                     self.GCj.append(j)
                     self.GCi.append(i1)
                     self.Real.append(realValue)
                     self.Complex.append(complexValue)
-                    i+=2
+                    i += 2
                 else:
                     asdf
                 ###
             ### while floats
         ### while fields
 
-    def rename(self,newName):
+    def rename(self, newName):
         self.name = newName
 
     def isReal(self):
         return not self.isComplex()
 
     def isComplex(self):
-        if self.tin in [3,4]:
+        if self.tin in [3, 4]:
             return True
         return False
 
@@ -513,9 +536,10 @@ class DMI(BaseCard):
         DMI cap, I assume this is entries and not matrices.
         @todo support double precision
         """
-        msg = '\n$'+'-'*80
-        msg += '\n$ %s Matrix %s\n' %(self.type,self.name)
-        fields = [self.type, self.name, 0, self.form, self.tin, self.tout, None, self.nRows, self.nCols]
+        msg = '\n$' + '-' * 80
+        msg += '\n$ %s Matrix %s\n' % (self.type, self.name)
+        fields = [self.type, self.name, 0, self.form, self.tin,
+                  self.tout, None, self.nRows, self.nCols]
         msg += self.printCard(fields)
         #msg += self.printCard(fields,size=16,isD=False)
 
@@ -528,4 +552,3 @@ class DMI(BaseCard):
                 fields = [self.type, self.name, GCj, GCi, reali]
                 msg += self.printCard(fields)
         return msg
-    
