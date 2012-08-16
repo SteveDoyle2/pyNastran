@@ -92,7 +92,7 @@ class FortranFile(object):
         reads a list of nIntegers
         @param self the object pointer
         @param nInts the number of ints to read
-        @debug developer debug combined with makeOp2Debug
+        @param debug for developer: debug combined with makeOp2Debug
         """
         nData = 4 * nInts
         #print "nData = ",nData
@@ -112,7 +112,7 @@ class FortranFile(object):
         reads a list of nDoubles
         @param self the object pointer
         @param nData the number of doubles to read
-        @debug developer debug combined with makeOp2Debug
+        @param debug for developer: debug combined with makeOp2Debug
         """
         data = self.op2.read(nData)
         self.n += nData
