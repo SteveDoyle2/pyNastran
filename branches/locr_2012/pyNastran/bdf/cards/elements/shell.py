@@ -71,7 +71,7 @@ class TriShell(ShellElement):
     def Area(self):
         r"""
         returns the normal vector
-        \f[ \large A = \frac{1}{2} (n_0-n_1) \cross (n_0-n_2)  \f]
+        \f[ \large A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)  \f]
         """
         (n0, n1, n2) = self.nodePositions()
         a = n0 - n1
@@ -82,7 +82,7 @@ class TriShell(ShellElement):
     def Normal(self):
         r"""
         returns the normal vector
-        \f[ \large a = (n_0-n_1) \cross (n_0-n_2)  \f]
+        \f[ \large a = (n_0-n_1) \times (n_0-n_2)  \f]
         \f[ \large n = \frac{n}{norm(N)}           \f]
         """
         (n0, n1, n2) = self.nodePositions()
@@ -276,7 +276,7 @@ class CTRIA6(TriShell):
     def Area(self):
         r"""
         returns the normal vector
-        \f[ \large A = \frac{1}{2} (n_0-n_1) \cross (n_0-n_2)  \f]
+        \f[ \large A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)  \f]
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         a = n1 - n2
@@ -287,7 +287,7 @@ class CTRIA6(TriShell):
     def Normal(self):
         r"""
         returns the normal vector
-        \f[ \large a = (n_0-n_1) \cross (n_0-n_2)  \f]
+        \f[ \large a = (n_0-n_1) \times (n_0-n_2)  \f]
         \f[ \large n = \frac{n}{norm(N)}           \f]
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
@@ -443,7 +443,7 @@ class CTRIAX6(TriShell):
     def Area(self):
         r"""
         returns the normal vector
-        \f[ \large A = \frac{1}{2} (n_0-n_1) \cross (n_0-n_2)  \f]
+        \f[ \large A = \frac{1}{2} (n_0-n_1) times (n_0-n_2)  \f]
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         a = n1 - n3

@@ -40,9 +40,9 @@ class Coord(BaseCard):
         \f[ e_{13}  = e_3 - e_1                \f]
         \f[ e_{12}  = e_2 - e_1                \f]
         \f[ k       = \frac{e_{12}}{|e_{12}|}  \f]
-        \f[ j_{dir} = k \cross e_{13}          \f]
+        \f[ j_{dir} = k \times e_{13}          \f]
         \f[ j = \frac{j_{dir}}{|j_{dir}|}      \f]
-        \f[ i = j \cross k                     \f]
+        \f[ i = j \times k                     \f]
         """
         try:
             assert len(self.e1) == 3, self.e1
