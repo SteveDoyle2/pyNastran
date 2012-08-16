@@ -100,9 +100,8 @@ class MarginChecker(object):
 
                 self.cleanStress(i, op2, subcaseID)
                 i += 1
-                ###
+
             del op2  # makes sure that unneeded data is not stored to save memory
-        ###
 
     def cleanStress(self, i, op2, subcaseID):
         self.cleanSolidStress(i, op2, subcaseID)
@@ -158,8 +157,7 @@ class MarginChecker(object):
                     deflection += trans
                 #print "deflection[%s][%s][%s] = %s" %(icase,jfact,nid,str(deflection))
                 deflectionDict[icase][nid] = deflection
-            ###
-        ###
+
         deflectionMargin = {}
         for nid in nodesList:
             minDeflectMargins = []
@@ -170,7 +168,7 @@ class MarginChecker(object):
                     print "nid=%s normT=%s" % (nid, normT)
                 defMargin = (self.maxDeflection - normT) / self.maxDeflection  # -1
                 minDeflectMargins.append(defMargin)
-            ###
+
             minMargin = min(minDeflectMargins)
             case = minDeflectMargins.index(minMargin)
 
@@ -236,9 +234,8 @@ class MarginChecker(object):
                     nodeList = stress.o1[eid].keys()
                     for nid in sorted(nodeList):
                         stress_principal[nid] = array([0., 0., 0.])
-                    ###
+
                     stressPrincipal[eid] = stress_principal  # gets all the nodes
-                ###
                 StressPrincipal = stressPrincipal  # stores all the eids
                 break
             stressP.append(StressPrincipal)
@@ -265,8 +262,6 @@ class MarginChecker(object):
 
                         #ov = sqrt((o1-o2)**2+(o2-o3)**2+(o1-o3)**2)
                         #ov = sqrt((o[0]-o[1])**2+(o[1]-o[2])**2+(o[0]-o[2])**2)
-                    ###
-                ###
 
         for icase, vmFactor in enumerate(self.vmFactors):
             print "icase = ", icase
@@ -287,8 +282,7 @@ class MarginChecker(object):
                                oyy + 3 * txy ** 2)  # 2d stress
                     eidResults.append(ovm)
                 stressP[icase][eid] = min(eidResults)
-            ###
-        ###
+
         return (stressP, eidList)
 
     def processSolidStress(self):  # stressP[icase][eid] = min(eidResults)
@@ -306,9 +300,8 @@ class MarginChecker(object):
                     nodeList = stress.oxx[eid].keys()
                     for nid in sorted(nodeList):
                         stress_principal[nid] = array([0., 0., 0., 0., 0., 0.])
-                    ###
                     stressPrincipal[eid] = stress_principal  # gets all the nodes
-                ###
+
                 StressPrincipal = stressPrincipal  # stores all the eids
                 break
             stressP.append(StressPrincipal)
@@ -338,8 +331,6 @@ class MarginChecker(object):
 
                         #ov = sqrt((o1-o2)**2+(o2-o3)**2+(o1-o3)**2)
                         #ov = sqrt((o[0]-o[1])**2+(o[1]-o[2])**2+(o[0]-o[2])**2)
-                    ###
-                ###
 
         del o
         for icase, vmFactor in enumerate(self.vmFactors):
@@ -360,8 +351,7 @@ class MarginChecker(object):
                     print "ovm = %s" % (ovm)
                     eidResults.append(ovm)
                 stressP[icase][eid] = min(eidResults)
-            ###
-        ###
+
         return (stressP, eidList)
 
     def rainflow(self):

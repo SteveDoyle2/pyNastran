@@ -174,7 +174,6 @@ class Solver(F06, OP2):
                 #integrate(B.T*E*alpha*dt*Ads)
             #sys.exit('starting case')
             self.runCase(model, case)
-        ###
 
     def runCase(self, model, case):
         sols = {101: self.runSOL101}
@@ -195,7 +194,6 @@ class Solver(F06, OP2):
         else:
             raise NotImplementedError('model.sol=%s not in %s' %
                                       (model.sol, sols.keys()))
-        ###
 
     def buildNidComponentToID(self, model):
         i = 0
@@ -208,7 +206,7 @@ class Solver(F06, OP2):
                 elif ps == '5' and not(self.is3D):  # 4 or 5
                     self.iUs.append(i + 2)
                     self.Us.append(0.0)
-            ###
+
             if self.is3D:
                 nidComponentToID[(nid, 1)] = i
                 nidComponentToID[(nid, 2)] = i + 1
@@ -225,8 +223,7 @@ class Solver(F06, OP2):
                     2  # bending - can pick one moment
                 i += 3
             #print('iUs[%i] = %s' %(nid,self.iUs))
-            ###
-        ###
+
         if model.spoints:
             for nid in sorted(model.spoints.spoints):  # SPOINTS
                 nidComponentToID[(nid, 1)] = i
@@ -387,8 +384,7 @@ class Solver(F06, OP2):
             if isSPC:
                 Kms = partition_dense_matrix(Kgg, self.iUm, self.iUs)
                 Ksm = Kms.transpose()
-            ###
-        ###
+
         Fa = Fa0  # + Cam*Fm
         Kaa = Kaa0  # +Kaa1+Kaa2
 
@@ -427,8 +423,7 @@ class Solver(F06, OP2):
                     Kgg[ii, jj] += kij
 
                     #ij += 1
-                ###
-            ###
+
         if 0:
             # n is (nid,componentID), IJV is the (ith,jth,value) in K
             #(n,IJV) = elem.nIJV()
@@ -440,8 +435,7 @@ class Solver(F06, OP2):
                 #KggI.append(i)
                 #KggJ.append(j)
                 #KggV.append(v)
-            ###
-        ###
+
         return Kgg
 
     def applySPCs2(self, model, case, nidComponentToID):
@@ -481,7 +475,7 @@ class Solver(F06, OP2):
                         i = nidComponentToID(key)
                         self.iUs.append(i)
                         self.Us.append(0.0)
-                    ###
+
                 elif isinstance(spc, SPC1):
                     ps = spc.constraints
                     #print "ps = |%s|" %(ps)
@@ -498,17 +492,14 @@ class Solver(F06, OP2):
                             if i not in self.iUs:
                                 self.iUs.append(i)
                                 self.Us.append(0.0)
-                            ###
-                        ###
-                    ###
+
                 else:
                     raise NotImplementedError('Invalid SPC...spc=\n%s' % (spc))
-                ###
-            ###
+
             print("iUs = ", self.iUs)
             print("Us  = ", self.Us)
             sys.exit('stopping in applySPCs')
-        ###
+
         print("iUs = ", self.iUs)
         print("Us  = ", self.Us)
         return (isSPC)
@@ -577,8 +568,7 @@ class Solver(F06, OP2):
                         Fg[Dofs[(nid, 5)]] += moment[2]
                     if abs(moment[2]) > 0. and self.is3D:
                         Fg[Dofs[(nid, 6)]] += moment[2]
-                ###
-            ###
+
         if not self.is3D:
             self.gravLoad = array([self.gravLoad[0], self.gravLoad[1]])
         print("Fg  = ", Fg)
@@ -607,9 +597,6 @@ class Solver(F06, OP2):
                     f06.write(result.writeF06(header, pageStamp, pageNum))
                 if 'PLOT' in options:
                     op2.write(result.writeOP2(self.Title, self.Subtitle))
-                ###
-            ###
-        ###
 
         if case.hasParameter('SPCFORCES'):
             (value, options) = case.getParameter('SPCFORCES')
@@ -617,17 +604,13 @@ class Solver(F06, OP2):
                 SPCForces = Ksa * Ua + Kss * Us
                 if isMPC:
                     SPCForces += Ksm * Um
-                ###
+
                 result = SPCForcesObject(dataCode, transient)
                 result.addF06Data()
-
                 if 'PRINT' in options:
                     f06.write(result.writeF06(header, pageStamp, pageNum))
                 if 'PLOT' in options:
                     op2.write(result.writeOP2(Title, Subtitle))
-                ###
-            ###
-        ###
 
         if case.hasParameter('MPCFORCES'):
             if options is not []:
@@ -635,17 +618,13 @@ class Solver(F06, OP2):
                 MPCForces = Kma * Ua + Kmm * Um
                 if isSPC:
                     MPCForces += Kms * Us
-                ###
+
                 result = MPCForcesObject(dataCode, transient)
                 result.addF06Data()
-
                 if 'PRINT' in options:
                     f06.write(result.writeF06(header, pageStamp, pageNum))
                 if 'PLOT' in options:
                     f06.write(result.writeOP2(Title, Subtitle))
-                ###
-            ###
-        ###
 
         if case.hasParameter('GPFORCE'):
             if options is not []:
@@ -655,17 +634,13 @@ class Solver(F06, OP2):
                     AppliedLoads += Kas * Us
                 if isMPC:
                     AppliedLoads += Kam * Um
-                ###
+
                 result = AppliedLoadsObject(dataCode, transient)
                 result.addF06Data()
-
                 if 'PRINT' in options:
                     f06.write(result.writeF06(header, pageStamp, pageNum))
                 if 'PLOT' in options:
                     op2.write(result.writeOP2(Title, Subtitle))
-                ###
-            ###
-        ###
 
         if case.hasParameter('STRAIN'):
             if options is not []:
@@ -673,17 +648,13 @@ class Solver(F06, OP2):
 
                 for (eid, elem) in sorted(model.elements()):
                     pass
-                ###
+
                 result = xxxObject(dataCode, transient)
                 result.addF06Data()
-
                 if 'PRINT' in options:
                     f06.write(result.writeF06(header, pageStamp, pageNum))
                 if 'PLOT' in options:
                     op2.write(result.writeOP2(Title, Subtitle))
-                ###
-            ###
-        ###
 
 
 def get_cards():
