@@ -400,11 +400,11 @@ class Cord2x(Coord):
         Transforms a point from the local coordinate system to the reference
         coordinate frames "global" coordinate system.
 
-        \f[ \large [p_{global}]_{1x3} =
-            [p_{local} -p_{origin}]_{1x3}[\Beta_{ij}]_{3x3}  \f]
+        \f[ \large [p_{global}]_{1\times 3} =
+            [p_{local} -p_{origin}]_{1\times 3}[\beta_{ij}]_{3\times 3}  \f]
 
-        where   \f$ [\Beta]_{ij} \f$ is the transformation matrix
-        \f[ \large  [\Beta]_{ij} \left[
+        where   \f$ [\beta]_{ij} \f$ is the transformation matrix
+        \f[ \large  [\beta]_{ij} \left[
           \begin{array}{ccc}
               g_x \cdot i  &  g_x \cdot j  &  g_x \cdot k    \\
               g_y \cdot i  &  g_y \cdot j  &  g_y \cdot k    \\

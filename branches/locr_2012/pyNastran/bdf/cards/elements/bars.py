@@ -245,9 +245,9 @@ class CROD(RodElement):
         where   \f$ [R]_{ij} \f$ is the tranformation matrix
         \f[ \large  [R]_{ij} \left[
           \begin{array}{ccc}
-              g_x \dot e_x & g_x \dot e_y &  g_x \dot e_z    \\
-              g_y \dot e_x & g_y \dot e_y &  g_y \dot e_z    \\
-              g_z \dot e_x & g_z \dot e_y &  g_z \dot e_z
+              g_x \cdot e_x & g_x \cdot e_y &  g_x \cdot e_z    \\
+              g_y \cdot e_x & g_y \cdot e_y &  g_y \cdot e_z    \\
+              g_z \cdot e_x & g_z \cdot e_y &  g_z \cdot e_z
           \end{array} \right]
         \f]
         """

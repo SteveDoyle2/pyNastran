@@ -517,8 +517,8 @@ class RLOAD1(TabularLoad):
     Defines a frequency-dependent dynamic load of the form
     for use in frequency response problems.
     RLOAD1 SID EXCITEID DELAY DPHASE TC TD TYPE
-    \f[ \large \left{ P(f)  \right}  = \left{A\right} [ C(f)+iD(f)]
-        e^{  i \left{\theta - 2 \pi f \tau \right} } \f]
+    \f[ \large \left\{ P(f)  \right\}  = \left\{A\right\} [ C(f)+iD(f)]
+        e^{  i \left\{\theta - 2 \pi f \tau \right\} } \f]
     RLOAD1 5   3                     1
     """
     type = 'RLOAD1'
@@ -588,8 +588,8 @@ class RLOAD2(TabularLoad):
     Defines a frequency-dependent dynamic load of the form
     for use in frequency response problems.
 
-    \f[ \large \left{ P(f)  \right}  = \left{A\right} * B(f)
-        e^{  i \left{ \phi(f) + \theta - 2 \pi f \tau \right} } \f]
+    \f[ \large \left\{ P(f)  \right\}  = \left\{A\right\} * B(f)
+        e^{  i \left\{ \phi(f) + \theta - 2 \pi f \tau \right\} } \f]
     RLOAD2 SID EXCITEID DELAY DPHASE TB TP TYPE
     RLOAD2 5   3                     1
     """

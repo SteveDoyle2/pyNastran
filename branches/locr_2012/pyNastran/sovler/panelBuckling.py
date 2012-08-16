@@ -246,9 +246,9 @@ class PanelBuckling(object):
 
     def Angle(self, nEid, nTouch):
         r"""
-        \f[ a \dot b = cos(\theta) * |a| * |b| \f]
+        \f[ a \cdot b = cos(\theta) * |a| * |b| \f]
         if |a|=|b|=1. (unit vectors)
-        \f[ a \dot b = cos(\theta) \f]
+        \f[ a \cdot b = cos(\theta) \f]
         """
         d = dot(nEid, nTouch)
         if d >= 1.0:  # python is stupid...

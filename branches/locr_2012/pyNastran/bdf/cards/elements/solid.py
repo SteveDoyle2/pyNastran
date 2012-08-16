@@ -11,7 +11,7 @@ from pyNastran.general.generalMath import Area
 def Volume4(n1, n2, n3, n4):
     r"""
     V = (a-d) * ((b-d) x (c-d))/6   where x is cross and * is dot
-    \f[ \large V = {(a-d) \dot \left( (b-d) \times (c-d) \right) }{6} \f]
+    \f[ \large V = \frac{(a-d) \cdot \left( (b-d) \times (c-d) \right) }{6} \f]
     """
     V = dot((n1 - n4), cross(n2 - n4, n3 - n4)) / 6.
     return V
