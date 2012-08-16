@@ -22,7 +22,7 @@ class BDFMethods(object):
         http://en.wikipedia.org/wiki/Moment_of_inertia#Moment_of_inertia_tensor
         """
                  #Ixx Iyy Izz, Ixy, Ixz Iyz
-        I  = array([0., 0., 0.,  0.,  0., 0.,])
+        I = array([0., 0., 0., 0., 0., 0., ])
         cg = array([0., 0., 0.])
         mass = 0.
         for element in self.elements.itervalues():
@@ -30,23 +30,23 @@ class BDFMethods(object):
                 p = element.Centroid()  # not really coded across the board
                 m = element.Mass()
                 (x, y, z) = p
-                x2 = x*x
-                y2 = y*y
-                z2 = z*z
-                I[0] += m*(y2+z2)  # Ixx
-                I[1] += m*(x2+z2)  # Iyy
-                I[2] += m*(x2+y2)  # Izz
-                I[3] -= m*x*y      # Ixy
-                I[4] -= m*x*z      # Ixz
-                I[5] -= m*y*z      # Iyz
+                x2 = x * x
+                y2 = y * y
+                z2 = z * z
+                I[0] += m * (y2 + z2)  # Ixx
+                I[1] += m * (x2 + z2)  # Iyy
+                I[2] += m * (x2 + y2)  # Izz
+                I[3] -= m * x * y      # Ixy
+                I[4] -= m * x * z      # Ixz
+                I[5] -= m * y * z      # Iyz
                 mass += m
-                cg += m*p
+                cg += m * p
             except:
                 self.log().warning("could not get inertia for element"
-                                   "...\n%s" %(element))
+                                   "...\n%s" % (element))
             ###
         ###
-        cg = cg/mass
+        cg = cg / mass
         return (mass, cg, I)
 
     def Mass(self):
@@ -70,37 +70,33 @@ class BDFMethods(object):
           the element IDs to flip to the common direction (default=None -> all)
         @param flipStarter
           should the staring element be flipped (default=False)
-        
+
         @todo
           finish method...think i need to build a edge list...
           that'd be a lot easier to loop through stuff...
         """
         raise NotImplementedError()
-        normals   = {}
+        normals = {}
         validNids = set([])
         isCorrectNormal = set([])
 
         allEids = eids
-        if allEids == None:
+        if allEids is None:
             allEids = self.elements.keys()
-        ###
         setAllEids = set(allEids)
-
 
         if flipStarter:
             elem = self.Element(starterEid)
             elem.flipNormal()
         normals[starterEid] = elem.Normal()
-        
+
         for eid in allEids:
             element = self.elements[eid]
             if isinstance(element, ShellElement):
                 elem = self.Element(starterEid)
                 normals[starterEid] = elem.Normal()
                 validNids = validNids.union(set(elem.nodeIDs()))
-            ###
-        ###
-        
+
         ## clean up the elements that will be considered
         elemsToCheck = set([])
         nidToEidMap = self.getNodeIDToElementIDsMap()
@@ -113,24 +109,20 @@ class BDFMethods(object):
                     eids2 = []
                     if eid in setAllEids:
                         eids2.append(eid)
-                    ###
                     elemsToCheck = elemsToCheck.union(set(eids2))
                 nidToEidMap[nid] = eids2
-            ###
-        ###
-        
+
         ## starts with the starter element, loops thru adjacent elements
         ## and checks to see if the normal is 'close' to the elements
         ## normal from before
         goEid = starterEid
-        
+
         # no recursion to avoid recursion limit
         while 1:
             elem = self.Element(goEid)
             nids = elem.getNodeIDs()
             normals = self._getAdjacentNormals(nids, nidToEidMap)
             normal = normals[goEid]
-        ###
 
     def _getAdjacentElements(self, nids, nidToEidMap):
         """
@@ -138,7 +130,7 @@ class BDFMethods(object):
         """
         raise NotImplementedError()
         normals = {}
-        #for nid in 
+        #for nid in
 
     def resolveGrids(self, cid=0):
         """
@@ -149,13 +141,10 @@ class BDFMethods(object):
         requires another fem
         """
         assert cid in self.coords, ('cannot resolve nodes to '
-                                    'cid=|%s| b/c it doesnt exist' %(cid))
-        for nid,node in sorted(self.nodes.iteritems()):
+                                    'cid=|%s| b/c it doesnt exist' % (cid))
+        for nid, node in sorted(self.nodes.iteritems()):
             p = node.PositionWRT(self, cid)
-            #p = node.Position(self)
-            #print "p = ",p
             node.UpdatePosition(self, p, cid)
-        ###
 
     def unresolveGrids(self, femOld):
         """
@@ -171,9 +160,8 @@ class BDFMethods(object):
         for (nid, nodeOld) in femOld.nodes.iteritems():
             coord = femOld.node.cp
             (p, matrix) = coord.transformToGlobal(self.xyz, debug=debug)
-            p2 = coord.transformToLocal(p,matrix, debug=debug)
+            p2 = coord.transformToLocal(p, matrix, debug=debug)
             self.nodes[nid].UpdatePosition(self, p2, coord.cid)
-        ###
 
     def sumForces(self):
         """
@@ -189,17 +177,14 @@ class BDFMethods(object):
             for load in loadCase:
                 #print "load = ",load
                 if isinstance(load, Force):
-                    f = load.mag*load.xyz
-                    #print "f = ",f
+                    f = load.mag * load.xyz
                     F += f
-                ###
-            self.log.info("case=%s F=%s\n\n" %(key, F))
-        ###
+            self.log.info("case=%s F=%s\n\n" % (key, F))
         return F
 
     def sumMoments(self, p0):
         """
-        Sums applied forces & moments about a reference point p0 
+        Sums applied forces & moments about a reference point p0
         for all load cases.
         Considers FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2.
 
@@ -216,19 +201,14 @@ class BDFMethods(object):
             for load in loadCase:
                 #print "load = ",load
                 if isinstance(load, Force):
-                    f = load.mag*load.xyz
+                    f = load.mag * load.xyz
                     node = self.Node(load.node)
-                    #print "node = ",node
                     r = node.Position() - p
-                    m = cross(r,f)
-                    #print "m    = ",m
+                    m = cross(r, f)
                     M += m
                     F += f
                 elif isinstance(load, Moment):
-                    m = load.mag*load.xyz
+                    m = load.mag * load.xyz
                     M += m
-                ###
-            print("case=%s F=%s M=%s\n\n" %(key, F, M))
-        ###
+            print("case=%s F=%s M=%s\n\n" % (key, F, M))
         return (M, F)
-

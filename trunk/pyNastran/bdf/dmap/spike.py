@@ -3,11 +3,11 @@ a = 1
 b = 2
 c = double(3.)
 d = 4.
-intval    = a + b
-floatval  = c + d
+intval = a + b
+floatval = c + d
 floatval2 = a + c
 
-dogv  = 'dog'
+dogv = 'dog'
 frogv = 'frog'
 frogdogv = frogv + dogv
 

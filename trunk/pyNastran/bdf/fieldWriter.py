@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import sys
 from numpy import allclose, isinf
 
+
 def is_same(value1, value2):
     """
     checks to see if 2 values are the same
@@ -15,11 +16,12 @@ def is_same(value1, value2):
             return True
         return False
     elif (value1 == value2 or type(value1) == type(value2) and
-         not isinf(value1) and allclose(value1, value2)):
+          not isinf(value1) and allclose(value1, value2)):
         #print "value=%s value2=%s same=%s" %(value1, value2, True)
         return True
     #print "value1=%s value2=%s same=%s" %(value1, value2, False)
     return False
+
 
 def set_blank_if_default(value, default):
     """
@@ -35,6 +37,7 @@ def set_blank_if_default(value, default):
         return None
     return value
 
+
 def set_default_if_blank(value, default):
     """
     used when initializing a card and the default value isnt set
@@ -43,6 +46,7 @@ def set_default_if_blank(value, default):
     if value is None or value == '':
         return default
     return value
+
 
 def print_scientific_8(value):
     """
@@ -54,10 +58,10 @@ def print_scientific_8(value):
     pythonValue = '%8.11e' % (value)
     #print "pythonValue = ",pythonValue
     (svalue, sExponent) = pythonValue.strip().split('e')
-    exponent = int(sExponent) # removes 0s
+    exponent = int(sExponent)  # removes 0s
     #print "svalue=%s exponent=%s" %(svalue,exponent)
-    
-    if abs(value)<0.01:
+
+    if abs(value) < 0.01:
         sign = '-'
     else:
         sign = '+'
@@ -66,37 +70,38 @@ def print_scientific_8(value):
 
     value2 = float(svalue)
     #lenSValue = len(svalue)
-    
-    lenSExp  = len(sExp2)+1 # the plus 1 is for the sign
-    leftover = 8-lenSExp
-    
+
+    lenSExp = len(sExp2) + 1  # the plus 1 is for the sign
+    leftover = 8 - lenSExp
+
     #svalue2 = svalue.strip('0')
-    
+
     if value < 0:
         #print "sExp2 = ",sExp2
-        Format = "%%1.%sf" % (leftover-3)
+        Format = "%%1.%sf" % (leftover - 3)
     else:
         #print "greater..."
-        Format = "%%1.%sf" % (leftover-2)
+        Format = "%%1.%sf" % (leftover - 2)
 
     #print("Format = ",Format)
     svalue3 = Format % (value2)
     #print("svalue3 = ",svalue3)
     svalue4 = svalue3.strip('0')
-    field = "%8s" % (svalue4 + sign +sExp2)
+    field = "%8s" % (svalue4 + sign + sExp2)
     #print("fieldA = ", field)
 
     #print("Format=%s svalue4=%s sExp2=%s" %(Format,svalue4,sExp2))
     #field = "%8s" %(svalue4 + sign +sExp2)
     #print("fieldB = ",field)
-    
+
     #if '+' in field and '-' in field:
     #print("scientific...value=%s field=%s" %(value, field))
     return field
 
+
 def print_float_8(value, tol=0.):
     """
-    Prints a float in nastran 8-character width syntax using the 
+    Prints a float in nastran 8-character width syntax using the
     highest precision possbile.
     @todo bad for small values...positive or negative...
     @warning hasnt really be tested for tolerancing
@@ -118,7 +123,7 @@ def print_float_8(value, tol=0.):
                 #print "A"
                 #print value
                 field = print_scientific_8(value)
-                field2 = "%8.7f" % (value) # small value
+                field2 = "%8.7f" % (value)  # small value
                 field2 = field2.strip('0 ')
 
                 #if 'e' not in field:
@@ -160,7 +165,7 @@ def print_float_8(value, tol=0.):
                 field = "%8.2f" % (value)
             elif value < 1000000.:
                 field = "%8.1f" % (value)
-            else: # big value
+            else:  # big value
                 #print "big"
                 field = "%8.1f" % (value)
                 if field.index('.') < 8:
@@ -183,11 +188,11 @@ def print_float_8(value, tol=0.):
             elif value > -0.01:  # -0.001
                 #print "tiny"
                 field = print_scientific_8(value)
-                field2 = "%8.6f" % (value) # small value
+                field2 = "%8.6f" % (value)  # small value
                 field2 = field2.strip('0 ')
 
                 # get rid of the first minus sign, add it on afterwards
-                field1 = '-'+field.strip(' 0-').replace('-', 'e-')
+                field1 = '-' + field.strip(' 0-').replace('-', 'e-')
 
                 #print "value=%s field=%s field1=%s field2=%s" %(value,
                 #                                   field[1:], field1,field2)
@@ -243,8 +248,9 @@ def print_float_8(value, tol=0.):
     #print len(field)
     #print "value=|%s| field=|%s|\n" %(value, field)
     assert len(field) == 8, ('value=|%s| field=|%s| is not 8 characters '
-                             'long, its %s' %(value, field, len(field)))
+                             'long, its %s' % (value, field, len(field)))
     return field
+
 
 def print_field(value, tol=0.):
     """
@@ -281,6 +287,7 @@ def print_field(value, tol=0.):
     #    return self.printCard_16(fields)
     ###
 
+
 def printCard(fields, tol=0.):
     """
     Prints a nastran-style card with 8-character width fields.
@@ -296,10 +303,10 @@ def printCard(fields, tol=0.):
     try:
         out = '%-8s' % (fields[0])
     except:
-        print("ERROR!  fields=%s" %(fields))
+        print("ERROR!  fields=%s" % (fields))
         sys.stdout.flush()
         raise
-    
+
     for i in xrange(1, len(fields)):
         field = fields[i]
         try:
@@ -308,20 +315,19 @@ def printCard(fields, tol=0.):
         except:
             print("bad fields = %s" % (fields))
             raise
-        if i % 8 == 0: # allow 1+8 fields per line
+        if i % 8 == 0:  # allow 1+8 fields per line
             #print "-------------------------"
             #print "out = ***\n%s***" %(out)
             #print "fields = ",fields[:i+1]
             out = out.rstrip(' ')
             #print "out[-1] = |%r|" %(out[-1])
-            if out[-1] == '\n': # empty line
+            if out[-1] == '\n':  # empty line
                 out += '+'
             out += '\n        '
-        ###
-    ###
     #print "out = ",out
-    out = out.rstrip(' \n+')+'\n'  # removes blank lines at the end of cards
+    out = out.rstrip(' \n+') + '\n'  # removes blank lines at the end of cards
     return out
+
 
 def print_int_card(fields, tol=0.):
     """
@@ -336,21 +342,20 @@ def print_int_card(fields, tol=0.):
         print("ERROR!  fields=%s" % (fields))
         sys.stdout.flush()
         raise
-    
+
     for i in xrange(1, len(fields)):
         field = fields[i]
         try:
-            out += "%8i" % (field) # balks if you have None or string fields
+            out += "%8i" % (field)  # balks if you have None or string fields
         except:
             print("bad fields = %s" % (fields))
             raise
-        if i % 8 == 0: # allow 1+8 fields per line
+        if i % 8 == 0:  # allow 1+8 fields per line
             out = out.rstrip(' ')
             out += '\n        '
-        ###
-    ###
-    out = out.rstrip(' \n+')+'\n'  # removes blank lines at the end of cards
+    out = out.rstrip(' \n+') + '\n'  # removes blank lines at the end of cards
     return out
+
 
 def main():
     #print printField(1e20)
@@ -360,26 +365,36 @@ def main():
     #print printField(8.17272e-6)
     #print printField(10300000.0)
     #print printField(-10300000.0)
-    if 1: # works
+    if 1:  # works
         print_field(-0.021004)
 
-        field = print_field(1e20);       assert '   1.+20' == field,'|%s|' %(field)
-        field = print_field(-.723476);   assert '-.723476' == field,'|%s|' %(field)
-        field = print_field(125000. );   assert ' 125000.' == field,'|%s|' %(field)
-        field = print_field(12500000.);  assert '  1.25+7' == field,'|%s|' %(field)
-        field = print_field(47.77267);   assert '47.77267' == field,'|%s|' %(field)
-        field = print_field(.001);       assert '    .001' == field,'|%s|' %(field)
-        field = print_field(.0000001);   assert '.0000001' == field,'|%s|' %(field)
-        field = print_field(-5.007e-3);  assert '-5.007-3' == field,'|%s|' %(field)
-        field = print_field(-0.0748662); assert '-.074866' == field,'|%s|' %(field)
-        field = print_field(-999999.);   assert '-999999.' == field,'|%s|' %(field)
-    field = print_field(7.4851e-4);  assert '7.4851-4' == field,'|%s|' %(field)
+        field = print_field(1e20)
+        assert '   1.+20' == field, '|%s|' % (field)
+        field = print_field(-.723476)
+        assert '-.723476' == field, '|%s|' % (field)
+        field = print_field(125000.)
+        assert ' 125000.' == field, '|%s|' % (field)
+        field = print_field(12500000.)
+        assert '  1.25+7' == field, '|%s|' % (field)
+        field = print_field(47.77267)
+        assert '47.77267' == field, '|%s|' % (field)
+        field = print_field(.001)
+        assert '    .001' == field, '|%s|' % (field)
+        field = print_field(.0000001)
+        assert '.0000001' == field, '|%s|' % (field)
+        field = print_field(-5.007e-3)
+        assert '-5.007-3' == field, '|%s|' % (field)
+        field = print_field(-0.0748662)
+        assert '-.074866' == field, '|%s|' % (field)
+        field = print_field(-999999.)
+        assert '-999999.' == field, '|%s|' % (field)
+    field = print_field(7.4851e-4)
+    assert '7.4851-4' == field, '|%s|' % (field)
 
     #print(printField(12500000.))
     #print(printField(47.77267))
     #print(printField(.0000001))
     #print(printField(-5.007e-3))
-    
 
     #print(printField(1.60665017692e-09))
     #print(printField(3.22614998029e-08))
