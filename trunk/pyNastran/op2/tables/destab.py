@@ -9,37 +9,37 @@ from struct import unpack
 
 class DESTAB(object):
 
-    def readDesvar(self,data):
-        out = unpack(b'ii4s4sfff',data[0:28])
-        (idvid,dvid,label1,label2,vmin,vmax,delx) = out
+    def readDesvar(self, data):
+        out = unpack(b'ii4s4sfff', data[0:28])
+        (idvid, dvid, label1, label2, vmin, vmax, delx) = out
         #print "ivid=%s dvid=%s label1=%s label2=%s vmax=%g vmin=%g delx=%g" %(idvid,dvid,label1,label2,vmin,vmax,delx)
         #self.readData(8)
 
     def readTable_DesTab(self):
         self.tableName = 'DESTAB'
-        tableName = self.readTableName(rewind=False) # DESTAB
+        tableName = self.readTableName(rewind=False)  # DESTAB
         self.tableInit(tableName)
         #print "tableName = |%r|" %(tableName)
 
-        self.readMarkers([-1,7],'DESTAB')
+        self.readMarkers([-1, 7], 'DESTAB')
         ints = self.readIntBlock()
         #print "*ints = ",ints
 
-        self.readMarkers([-2,1,0],'DESTAB')
+        self.readMarkers([-2, 1, 0], 'DESTAB')
         bufferWords = self.getMarker()
         #print "bufferWords = ",bufferWords
-        word = self.readStringBlock() # DESTAB
+        word = self.readStringBlock()  # DESTAB
         #print "word = |%s|" %(word)
 
         iTable = -3
         #imax   = -244
-        
-        while bufferWords: # read until bufferWords=0
-            self.readMarkers([iTable,1,0],'DESTAB')
+
+        while bufferWords:  # read until bufferWords=0
+            self.readMarkers([iTable, 1, 0], 'DESTAB')
             nOld = self.n
             bufferWords = self.getMarker()
             #print "bufferWords = ",bufferWords
-            if bufferWords==0: # maybe read new buffer...
+            if bufferWords == 0:  # maybe read new buffer...
                 self.goto(nOld)
                 break
             data = self.readBlock()
@@ -53,5 +53,3 @@ class DESTAB(object):
         #print "1-bufferWords = ",bufferWords,bufferWords*4
 
         #print self.printSection(300)
-        #sys.exit('asdf')
-
