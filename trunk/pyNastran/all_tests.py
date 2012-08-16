@@ -17,6 +17,7 @@ from pyNastran.op4.test.op4_test import OP4_Test
 #gui - just tests the imports
 #import pyNastran.gui.gui
 
+
 class AllTests(TestFieldWriter, BDF_Test, OP2_Test, TestCoords, OP4_Test):
     pass
 
