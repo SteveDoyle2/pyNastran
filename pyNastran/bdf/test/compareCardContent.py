@@ -5,19 +5,20 @@ from itertools import izip, count
 from pyNastran.bdf.bdfInterface.BDF_Card import wipeEmptyFields
 from pyNastran.bdf.fieldWriter import print_field, printCard
 
+
 def assert_fields(card1, card2):
     try:
         fields1 = wipeEmptyFields(card1.reprFields())
         fields2 = wipeEmptyFields(card2.reprFields())
     except:
-        print("card1 = \n%s" %(card1))
-        print("card2 = \n%s" %(card2))
+        print("card1 = \n%s" % (card1))
+        print("card2 = \n%s" % (card2))
         raise
-    
+
     if len(fields1) != len(fields2):
         msg = ('len(fields1)=%s len(fields2)=%s\n%r\n%r\n%s\n%s'
-              %(len(fields1), len(fields2), fields1, fields2,
-                printCard(fields1), printCard(fields2)))
+               % (len(fields1), len(fields2), fields1, fields2,
+                  printCard(fields1), printCard(fields2)))
         raise RuntimeError(msg)
 
     for (i, field1, field2) in izip(count(), fields1, fields2):
@@ -26,38 +27,39 @@ def assert_fields(card1, card2):
         if value1 != value2:
             msg = 'value1 != value2\n'
             msg += ('cardName=%s ID=%s i=%s field1=%r field2=%r value1=%r '
-                    'value2=%r\n%r\n%r' % (fields1[0], fields1[1], i, 
+                    'value2=%r\n%r\n%r' % (fields1[0], fields1[1], i,
                                            field1, field2, value1, value2,
                                            fields1, fields2))
             raise RuntimeError(msg)
 
+
 def compare_card_content(fem1, fem2):
-    assert len(fem1.params)         == len(fem2.params)
-    assert len(fem1.nodes)          == len(fem2.nodes)
-    assert len(fem1.elements)       == len(fem2.elements)
-    assert len(fem1.rigidElements)  == len(fem2.rigidElements)
-    assert len(fem1.properties)     == len(fem2.properties)
-    assert len(fem1.materials)      == len(fem2.materials)
+    assert len(fem1.params) == len(fem2.params)
+    assert len(fem1.nodes) == len(fem2.nodes)
+    assert len(fem1.elements) == len(fem2.elements)
+    assert len(fem1.rigidElements) == len(fem2.rigidElements)
+    assert len(fem1.properties) == len(fem2.properties)
+    assert len(fem1.materials) == len(fem2.materials)
     assert len(fem1.creepMaterials) == len(fem2.creepMaterials)
-    assert len(fem1.loads)          == len(fem2.loads)
-    assert len(fem1.coords)         == len(fem2.coords)
-    assert len(fem1.spcs)           == len(fem2.spcs)
-    assert len(fem1.spcadds)        == len(fem2.spcadds)
-    assert len(fem1.mpcs)           == len(fem2.mpcs)
-    assert len(fem1.mpcadds)        == len(fem2.mpcadds)
-    assert len(fem1.dareas)         == len(fem2.dareas)
-    assert len(fem1.nlparms)        == len(fem2.nlparms)
-    assert len(fem1.tsteps)         == len(fem2.tsteps)
-    assert len(fem1.tstepnls)       == len(fem2.tstepnls)
-    assert len(fem1.dmigs)          == len(fem2.dmigs)
-    assert len(fem1.dequations)     == len(fem2.dequations)
-    assert len(fem1.frequencies)    == len(fem2.frequencies)
-    assert len(fem1.sets)           == len(fem2.sets)
-    assert len(fem1.setsSuper)      == len(fem2.setsSuper)
-    assert len(fem1.tables)         == len(fem2.tables)
-    assert len(fem1.randomTables)   == len(fem2.randomTables)
-    assert len(fem1.methods)        == len(fem2.methods), 'len(fem1.methods)=%s len(fem2.methods)=%s' %(len(fem1.methods), len(fem2.methods))
-    assert len(fem1.cMethods)       == len(fem2.cMethods), 'len(fem1.cMethods)=%s len(fem2.cMethods)=%s' %(len(fem1.cMethods), len(fem2.cMethods))
+    assert len(fem1.loads) == len(fem2.loads)
+    assert len(fem1.coords) == len(fem2.coords)
+    assert len(fem1.spcs) == len(fem2.spcs)
+    assert len(fem1.spcadds) == len(fem2.spcadds)
+    assert len(fem1.mpcs) == len(fem2.mpcs)
+    assert len(fem1.mpcadds) == len(fem2.mpcadds)
+    assert len(fem1.dareas) == len(fem2.dareas)
+    assert len(fem1.nlparms) == len(fem2.nlparms)
+    assert len(fem1.tsteps) == len(fem2.tsteps)
+    assert len(fem1.tstepnls) == len(fem2.tstepnls)
+    assert len(fem1.dmigs) == len(fem2.dmigs)
+    assert len(fem1.dequations) == len(fem2.dequations)
+    assert len(fem1.frequencies) == len(fem2.frequencies)
+    assert len(fem1.sets) == len(fem2.sets)
+    assert len(fem1.setsSuper) == len(fem2.setsSuper)
+    assert len(fem1.tables) == len(fem2.tables)
+    assert len(fem1.randomTables) == len(fem2.randomTables)
+    assert len(fem1.methods) == len(fem2.methods), 'len(fem1.methods)=%s len(fem2.methods)=%s' % (len(fem1.methods), len(fem2.methods))
+    assert len(fem1.cMethods) == len(fem2.cMethods), 'len(fem1.cMethods)=%s len(fem2.cMethods)=%s' % (len(fem1.cMethods), len(fem2.cMethods))
 
     for key in fem1.params:
         card1 = fem1.params[key]
@@ -190,6 +192,7 @@ def compare_card_content(fem1, fem2):
     compare_aero_content(fem1, fem2)
     compare_thermal_content(fem1, fem2)
 
+
 def compare_matrices(fem1, fem2):
     for key in fem1.dmigs:
         card1 = fem1.dmigs[key]
@@ -219,9 +222,9 @@ def compare_matrices(fem1, fem2):
 
 
 def compare_thermal_content(fem1, fem2):
-    assert len(fem1.bcs)                  == len(fem2.bcs)
-    assert len(fem1.thermalMaterials)     == len(fem2.thermalMaterials)
-    assert len(fem1.phbdys)               == len(fem2.phbdys)
+    assert len(fem1.bcs) == len(fem2.bcs)
+    assert len(fem1.thermalMaterials) == len(fem2.thermalMaterials)
+    assert len(fem1.phbdys) == len(fem2.phbdys)
     assert len(fem1.convectionProperties) == len(fem2.convectionProperties)
 
     for key in fem1.bcs:
@@ -247,10 +250,10 @@ def compare_thermal_content(fem1, fem2):
 
 def compare_optimization_content(fem1, fem2):
     assert len(fem1.dconstrs) == len(fem2.dconstrs)
-    assert len(fem1.desvars)  == len(fem2.desvars)
-    assert len(fem1.ddvals)   == len(fem2.ddvals)
-    assert len(fem1.dresps)   == len(fem2.dresps)
-    assert len(fem1.dvprels)  == len(fem2.dvprels)
+    assert len(fem1.desvars) == len(fem2.desvars)
+    assert len(fem1.ddvals) == len(fem2.ddvals)
+    assert len(fem1.dresps) == len(fem2.dresps)
+    assert len(fem1.dvprels) == len(fem2.dvprels)
 
     for key in fem1.dconstrs:
         card1 = fem1.dconstrs[key]
@@ -277,22 +280,23 @@ def compare_optimization_content(fem1, fem2):
         card2 = fem2.dvprels[key]
         assert_fields(card1, card2)
 
+
 def compare_aero_content(fem1, fem2):
-    assert len(fem1.caeros)   == len(fem2.caeros)
-    assert len(fem1.paeros)   == len(fem2.paeros)
-    assert len(fem1.aero)     == len(fem2.aero)
-    assert len(fem1.aeros)    == len(fem2.aeros)
+    assert len(fem1.caeros) == len(fem2.caeros)
+    assert len(fem1.paeros) == len(fem2.paeros)
+    assert len(fem1.aero) == len(fem2.aero)
+    assert len(fem1.aeros) == len(fem2.aeros)
     assert len(fem1.aeparams) == len(fem2.aeparams)
-    assert len(fem1.aelinks)  == len(fem2.aelinks)
-    assert len(fem1.aelists)  == len(fem2.aelists)
-    assert len(fem1.aesurfs)  == len(fem2.aesurfs)
-    assert len(fem1.aestats)  == len(fem2.aestats)
-    assert len(fem1.gusts)    == len(fem2.gusts)
-    assert len(fem1.flfacts)  == len(fem2.flfacts)
+    assert len(fem1.aelinks) == len(fem2.aelinks)
+    assert len(fem1.aelists) == len(fem2.aelists)
+    assert len(fem1.aesurfs) == len(fem2.aesurfs)
+    assert len(fem1.aestats) == len(fem2.aestats)
+    assert len(fem1.gusts) == len(fem2.gusts)
+    assert len(fem1.flfacts) == len(fem2.flfacts)
     assert len(fem1.flutters) == len(fem2.flutters)
-    assert len(fem1.mkaeros)  == len(fem2.mkaeros)
-    assert len(fem1.splines)  == len(fem2.splines)
-    assert len(fem1.trims)    == len(fem2.trims)
+    assert len(fem1.mkaeros) == len(fem2.mkaeros)
+    assert len(fem1.splines) == len(fem2.splines)
+    assert len(fem1.trims) == len(fem2.trims)
 
     for key in fem1.caeros:
         card1 = fem1.caeros[key]
@@ -369,4 +373,3 @@ def compare_aero_content(fem1, fem2):
         card1 = fem1.trims[key]
         card2 = fem2.trims[key]
         assert_fields(card1, card2)
-

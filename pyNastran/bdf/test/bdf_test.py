@@ -12,28 +12,28 @@ from pyNastran.general.general import getFilesOfType
 
 if __name__ == '__main__':
     # works
-    files  = getFilesOfType('tests', '.bdf')
+    files = getFilesOfType('tests', '.bdf')
     files += getFilesOfType('tests', '.dat')
-    
+
     foldersFile = 'tests/foldersRead.txt'
 
     iSubcases = []
-    debug     = False
+    debug = False
 
     saveCases = True
     regenerate = True
     stopOnFailure = False
 
     if regenerate:
-        files2  = getAllFiles(foldersFile, '.bdf')
+        files2 = getAllFiles(foldersFile, '.bdf')
         files2 += getAllFiles(foldersFile, '.nas')
         files2 += getAllFiles(foldersFile, '.dat')
         files2 += files
     else:
         files2 = get_failed_files('failedCases.in')
     files = files2
-    
-    skipFiles = [] # giant
+
+    skipFiles = []  # giant
 
     nStart = 0
     nStop = 10000
@@ -42,16 +42,15 @@ if __name__ == '__main__':
     except:
         pass
 
-    print("nFiles = %s" %(len(files)))
+    print("nFiles = %s" % (len(files)))
     cid = None
     check = True
     xref = False
     debug = False
     failed_files = run_lots_of_files(files, debug=debug, xref=xref,
                                      check=check, cid=cid)
-    f = open('failedCases.in','wb')
+    f = open('failedCases.in', 'wb')
     for fname in failed_files:
-        f.write('%s\n' %(fname))
+        f.write('%s\n' % (fname))
     f.close()
     sys.exit('final stop...')
-    
