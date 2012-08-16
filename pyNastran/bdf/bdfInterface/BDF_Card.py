@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import sys
 import copy
 
+
 class BDFCard(object):
     def __init__(self, card=None, oldCardObj=None, debug=False):
         self.debug = debug
@@ -48,8 +49,8 @@ class BDFCard(object):
             i += 1
         #print "i=%s iMax=%s"%(i,iMax)
         #print "cardC = ",cardB[:iMax+1],'\n'
-        
-        return cardB[:iMax+1]
+
+        return cardB[:iMax + 1]
 
     def __repr__(self):
         """
@@ -80,23 +81,23 @@ class BDFCard(object):
         if defaults is None:
             defaults = []
         if j is None:
-            if self.nfields == None:
+            if self.nfields is None:
                 return [None]
             j = self.nfields
-        
+
         if defaults == []:
-            defaults = [None]*(j-i+1)
+            defaults = [None] * (j - i + 1)
         out = []
-        
+
         d = 0
         for n in xrange(i, j):
             if debug:
-                print("  default = %s" %(defaults[d]))
+                print("  default = %s" % (defaults[d]))
             value = self.field(n, defaults[d])
             if debug:
-                print("  self.field(%s) = %s" %(n, self.field(n)))
+                print("  self.field(%s) = %s" % (n, self.field(n)))
             out.append(value)
-            d+=1
+            d += 1
         ###
         return out
 
@@ -117,7 +118,7 @@ class BDFCard(object):
     def replaceExpression(self, fieldNew, fieldOld,
                           replaceChar='=', replaceChar2=''):
         """used for nastran = format"""
-        fieldNew = fieldNew.replace(replaceChar, str(fieldOld)+replaceChar2)
+        fieldNew = fieldNew.replace(replaceChar, str(fieldOld) + replaceChar2)
         typeOld = type(fieldOld)
         if isinstance(fieldOld, int) or isinstance(fieldOld, float):
             fieldNew = typeOld(eval(fieldNew))
@@ -142,37 +143,37 @@ class BDFCard(object):
         if self.nfields == 1 and self.oldCard.nfields > 1:
             #self.nfields = self.oldCard.nfields
             #self.applyOldFields(self,cardCount=1)
-            cardCount = self.oldCard.cardCount+cardCount
+            cardCount = self.oldCard.cardCount + cardCount
             if self.debug:
-                print("newCount = %s" %(cardCount))
+                print("newCount = %s" % (cardCount))
             self.card = copy.deepcopy(self.oldCard.cardTextOld)
             self.nfields = len(self.card)
             self.oldCard.nfields = len(self.oldCard.card)
-            
+
             if self.debug:
-                print("oldCard = %s" %(self.oldCard))
-                print("selfCard = %s" %(self.card))
+                print("oldCard = %s" % (self.oldCard))
+                print("selfCard = %s" % (self.card))
             #stop = True
 
         fieldsNew = self.fields()
         fieldsOld = self.oldCard.fields()
-        
+
         maxLength = max(self.nFields(), self.oldCard.nFields())
         minLength = min(self.nFields(), self.oldCard.nFields())
-        
+
         cardBuilt = [fieldsOld[0]]
-        
+
         for i in xrange(1, minLength):
             fieldOld = fieldsOld[i]
             fieldNew = fieldsNew[i]
 
-            a = "|%s|" %(fieldNew)
+            a = "|%s|" % (fieldNew)
             if '*' in fieldNew:
-                newChar = '+%s*' %(cardCount+1)
+                newChar = '+%s*' % (cardCount + 1)
                 fieldNew = self.replaceExpression(fieldNew, fieldOld,
                                                   '*', newChar)
             elif '/' in fieldNew:
-                newChar = '-%s*' %(cardCount+1)
+                newChar = '-%s*' % (cardCount + 1)
                 fieldNew = self.replaceExpression(fieldNew, fieldOld,
                                                   '/', newChar)
             elif '==' == fieldNew:
@@ -181,25 +182,27 @@ class BDFCard(object):
             elif '=' in fieldNew:
                 if fieldNew == '=':
                     fieldNew = fieldOld
-                elif fieldNew == '==': # handle this in the max length section
+                elif fieldNew == '==':  # handle this in the max length section
                     pass
-                else: # replace = with str(expression)
+                else:  # replace = with str(expression)
                     fieldNew = self.replaceExpression(fieldNew, fieldOld)
                 ###
             elif '' == fieldNew:
                 fieldNew = fieldOld
             else:
-                b = "|%s|" %(fieldNew)
-                c = "|%s|" %(fieldOld)
-                print("i=%s fieldStart %-10s fieldNew %-10s fieldOld %-10s" %(i, a, b, c))
+                b = "|%s|" % (fieldNew)
+                c = "|%s|" % (fieldOld)
+                print("i=%s fieldStart %-10s fieldNew %-10s fieldOld %-10s" %
+                     (i, a, b, c))
                 raise RuntimeError('unhandled case...')
             if self.debug:
-                b = "|%s|" %(fieldNew)
-                c = "|%s|" %(fieldOld)
-                print("i=%s fieldStart %-10s fieldNew %-10s fieldOld %-10s" %(i, a, b, c))
+                b = "|%s|" % (fieldNew)
+                c = "|%s|" % (fieldOld)
+                print("i=%s fieldStart %-10s fieldNew %-10s fieldOld %-10s" %
+                     (i, a, b, c))
             cardBuilt.append(fieldNew)
             i += 1
-        
+
         if maxLength < len(cardBuilt):
             # the new card is longer than builtCard
             for i in xrange(self.nfields, maxLength):
@@ -210,18 +213,19 @@ class BDFCard(object):
                 cardBuilt.append(self.oldCard.field(i))
         #else: # same length
             #pass
-        
+
         if self.debug:
-            print("cardBuilt = %s" %(cardBuilt))
+            print("cardBuilt = %s" % (cardBuilt))
         self.card = cardBuilt
         self.nfields = len(self.card)
-        
+
         if stop:
             sys.exit("stopping in applyOldFields")
 
     def getOldField(self, i):
         """used for nastran = format"""
         return self.oldCard.field(i)
+
 
 def wipeEmptyFields(card):
     """
@@ -247,4 +251,4 @@ def wipeEmptyFields(card):
         if cardB[i] is not None:
             iMax = i
         i += 1
-    return cardB[:iMax+1]
+    return cardB[:iMax + 1]

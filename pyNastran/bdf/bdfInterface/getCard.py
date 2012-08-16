@@ -6,6 +6,7 @@ import sys
 
 from pyNastran.bdf.cards.nodes import SPOINT
 
+
 class GetMethods(object):
     def __init__(self):
         pass
@@ -15,10 +16,10 @@ class GetMethods(object):
 
     def nNodes(self):
         return len(self.nodes)
-        
+
     def nodeIDs(self):
         return self.nodes.keys()
-        
+
     def getNodes(self):
         nodes = []
         for (nid, node) in sorted(self.nodes.iteritems()):
@@ -56,7 +57,7 @@ class GetMethods(object):
         #print "nids",nids
         nodes = []
         for nid in nids:
-            nodes.append(self.Node(nid,allowEmptyNodes))
+            nodes.append(self.Node(nid, allowEmptyNodes))
         return nodes
 
     #--------------------
@@ -92,15 +93,15 @@ class GetMethods(object):
           support elements with missing nodes (e.g. CQUAD8 with missing nodes)
         """
         nidToElementsMap = {}
-        for nid in self.nodes: # initalize the mapper
+        for nid in self.nodes:  # initalize the mapper
             nidToElementsMap[nid] = []
 
-        if self.spoints: # SPOINTs
-            for nid in sorted(self.spoints.spoints): # SPOINTs
+        if self.spoints:  # SPOINTs
+            for nid in sorted(self.spoints.spoints):  # SPOINTs
                 nidToElementsMap[nid] = []
             ###
         ###
-        for (eid, element) in self.elements.iteritems(): # load the mapper
+        for (eid, element) in self.elements.iteritems():  # load the mapper
             try:
                 # not supported for 0-D and 1-D elements
                 nids = element.nodeIDs()
@@ -124,9 +125,9 @@ class GetMethods(object):
         for eid in self.elementIDs():
             element = self.Element(eid)
             #print dir(element)
-            if hasattr(element,'pid'):
+            if hasattr(element, 'pid'):
                 pid = element.Pid()
-                if pid==0: # CONM2
+                if pid == 0:  # CONM2
                     continue
                 pidToEidsMap[pid].append(eid)
             ###
@@ -148,12 +149,12 @@ class GetMethods(object):
             prop = self.Property(pid)
             if prop.type == 'PCOMP':
                 mids = prop.Mids()
-                
+
                 for mid in mids:
                     if pid not in midToPidsMap[mid]:
                         midToPidsMap[mid].append(pid)
-            else: # PCOMP
-                if hasattr(prop,'mid') and prop.Mid() in mids:
+            else:  # PCOMP
+                if hasattr(prop, 'mid') and prop.Mid() in mids:
                     if pid not in midToPidsMap[mid]:
                         midToPidsMap[mid].append(pid)
                 ###
@@ -184,7 +185,7 @@ class GetMethods(object):
             return self.properties[pid]
         except KeyError:
             raise KeyError('pid=%s not found.  Allowed Pids=%s'
-                        % (pid,self.propertyIDs()))
+                           % (pid, self.propertyIDs()))
         ###
 
     def Properties(self, pids):
@@ -204,7 +205,7 @@ class GetMethods(object):
         return self.materials.keys()
 
     def materialIDs(self):
-        return self.materials.keys()+self.thermalMaterials.keys()
+        return self.materials.keys() + self.thermalMaterials.keys()
 
     def thermalMaterialIDs(self):
         return self.thermalMaterials.keys()
@@ -215,7 +216,7 @@ class GetMethods(object):
         elif mid in self.thermalMaterials:
             return self.thermalMaterials[mid]
         else:
-            raise KeyError('Invalid Material ID:  mid=%s' %(mid))
+            raise KeyError('Invalid Material ID:  mid=%s' % (mid))
 
     def StructuralMaterial(self, mid):
         return self.materials[mid]
@@ -234,11 +235,11 @@ class GetMethods(object):
 
     def Load(self, sid):
         #print 'sid=%s self.loads=%s' %(sid,(self.loads.keys()))
-        assert isinstance(sid, int), 'sid=%s is not an integer\n' %(sid)
+        assert isinstance(sid, int), 'sid=%s is not an integer\n' % (sid)
         if sid in self.loads:
             load = self.loads[sid]
         else:
-            raise KeyError('cannot find LoadID=|%s|.' %(sid))
+            raise KeyError('cannot find LoadID=|%s|.' % (sid))
         return load
 
     def Grav(self, sid):
@@ -354,4 +355,3 @@ class GetMethods(object):
     def DMIG(self, dname):
         return self.dmig[dname]
     #--------------------
-
