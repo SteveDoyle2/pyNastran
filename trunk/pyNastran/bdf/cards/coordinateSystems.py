@@ -11,8 +11,10 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, BDFCard
 from pyNastran.general.general import ListPrint
 
+
 class Coord(BaseCard):
     type = 'COORD'
+
     def __init__(self, card, data):
         """
         Defines a general CORDxx object
@@ -28,7 +30,7 @@ class Coord(BaseCard):
         self.e1 = None
         self.e2 = None
         self.e3 = None
-    
+
     def Cid(self):
         """returns the coordinate ID"""
         return self.cid
@@ -43,29 +45,29 @@ class Coord(BaseCard):
         \f[ i = j \cross k                     \f]
         """
         try:
-            assert len(self.e1)==3, self.e1
-            assert len(self.e2)==3, self.e2
-            assert len(self.e3)==3, self.e3
+            assert len(self.e1) == 3, self.e1
+            assert len(self.e2) == 3, self.e2
+            assert len(self.e3) == 3, self.e3
             ## e_{13}
-            e13 = self.e3-self.e1
+            e13 = self.e3 - self.e1
             ## e_{12}
-            e12 = self.e2-self.e1
+            e12 = self.e2 - self.e1
             #print "e13 = %s" %(e13)
             #print "e12 = %s" %(e12)
         except TypeError:
             msg = ''
-            msg += "\ntype = %s\n" %(self.type)
-            msg += "\ncid  = %s\n" %(self.Cid())
-            msg += "e1 = %s\n" %(self.e1)
-            msg += "e2 = %s\n" %(self.e2)
-            msg += "e3 = %s\n" %(self.e3)
+            msg += "\ntype = %s\n" % (self.type)
+            msg += "\ncid  = %s\n" % (self.Cid())
+            msg += "e1 = %s\n" % (self.e1)
+            msg += "e2 = %s\n" % (self.e2)
+            msg += "e3 = %s\n" % (self.e3)
             raise TypeError(msg)
-        
+
         #print self
         #print "e1 = ",self.e1
         #print "e2 = ",self.e2
         #print "e3 = ",self.e3
-        
+
         try:
 
             ## k = (G3 cross G1) normalized
@@ -74,14 +76,14 @@ class Coord(BaseCard):
             self.j = self.normalize(cross(self.k, e13))
         except RuntimeError:
             print("---InvalidUnitVectorError---")
-            print("Cp  = %s" %(self.Cid()))
-            print("e1  = %s" %(self.e1))
-            print("e2  = %s" %(self.e2))
-            print("e3  = %s" %(self.e3))
-            print("e13 = %s" %(e13))
-            print("e12 = %s" %(e12))
+            print("Cp  = %s" % (self.Cid()))
+            print("e1  = %s" % (self.e1))
+            print("e2  = %s" % (self.e2))
+            print("e3  = %s" % (self.e3))
+            print("e13 = %s" % (e13))
+            print("e12 = %s" % (e12))
             print("k = norm(e12)")
-            print("k   = %s\n" %(self.k))
+            print("k   = %s\n" % (self.k))
             print("j = norm(cross(k,e13))")
             raise
         try:
@@ -89,32 +91,31 @@ class Coord(BaseCard):
             self.i = cross(self.j, self.k)
         except RuntimeError:
             print("---InvalidUnitVectorError---")
-            print("Cp  = %s" %(self.Cid()))
-            print("e1  = %s" %(self.e1))
-            print("e2  = %s" %(self.e2))
-            print("e3  = %s" %(self.e3))
-            print("e13 = %s" %(e13))
-            print("e12 = %s" %(e12))
+            print("Cp  = %s" % (self.Cid()))
+            print("e1  = %s" % (self.e1))
+            print("e2  = %s" % (self.e2))
+            print("e3  = %s" % (self.e3))
+            print("e13 = %s" % (e13))
+            print("e12 = %s" % (e12))
             print("k = norm(e12)")
-            print("k   = %s\n" %(self.k))
+            print("k   = %s\n" % (self.k))
             print("j = norm(cross(k,e13))")
-            print("j   = %s" %(self.j))
+            print("j   = %s" % (self.j))
             raise
-        
+
         if debug:
-            print("Cp = %s" %(self.Cid()))
-            print("e1 = %s" %(self.e1))
-            print("e2 = %s" %(self.e2))
-            print("e3 = %s" %(self.e3))
+            print("Cp = %s" % (self.Cid()))
+            print("e1 = %s" % (self.e1))
+            print("e2 = %s" % (self.e2))
+            print("e3 = %s" % (self.e3))
             print('-----')
-            print("e13 = %s" %(e13))
-            print("e12 = %s" %(e12))
+            print("e13 = %s" % (e13))
+            print("e12 = %s" % (e12))
             print('-----')
-            print("i   = %s"   %(self.i))
-            print("j   = %s"   %(self.j))
-            print("k   = %s\n" %(self.k))
+            print("i   = %s" % (self.i))
+            print("j   = %s" % (self.j))
+            print("k   = %s\n" % (self.k))
             print('-----')
-        
 
         #except TypeError:
         #    msg  = 'There is a problem handling these lines:\n'
@@ -125,10 +126,8 @@ class Coord(BaseCard):
         #    msg += 'e3=%s Type=%s\n' %(self.e3,type(self.e3))
         #    #print msg
         #    raise CoordTypeError(msg)
-
         #print "k = %s" %(self.k)
         #print "e13 = %s" %(e13)
-
     def transformToLocal(self, p, matrix, debug=False):
         """
         Transforms the global point p to the local coordinate system
@@ -159,13 +158,13 @@ class Coord(BaseCard):
           methods are ok.
         """
         #pGlobal = self.transformToGlobal(p, debug=False)
-        pCoord = dot(p-self.e1, transpose(matrix))
+        pCoord = dot(p - self.e1, transpose(matrix))
         pLocal = self.XYZtoCoord(pCoord)
         if debug:
-            print("p      = %s"   %(p))
-            print("p-e1   = %s"   %(p-self.e1))
-            print("pLocal = %s\n" %(pLocal))
-            print("pCoord = %s"   %(pCoord))
+            print("p      = %s" % (p))
+            print("p-e1   = %s" % (p - self.e1))
+            print("pLocal = %s\n" % (pLocal))
+            print("pCoord = %s" % (pCoord))
         return pLocal
         #return pGlobal
 
@@ -180,18 +179,18 @@ class Coord(BaseCard):
           nNorm v has been normalized
         """
         normV = norm(v)
-        if not normV>0.:
-            raise RuntimeError('v=%s norm(v)=%s' %(v, normV))
-        return v/normV
+        if not normV > 0.:
+            raise RuntimeError('v=%s norm(v)=%s' % (v, normV))
+        return v / normV
 
     def T(self):
         """
-        Returns the 6x6 transformation 
+        Returns the 6x6 transformation
         \f[ \large  [\lambda] = [B_{ij}] \f]
 
         \f[
-        [T] = 
-        \left[ 
+        [T] =
+        \left[
           \begin{array}{cc}
           \lambda  & 0 \\
           0  & \lambda \\
@@ -199,8 +198,8 @@ class Coord(BaseCard):
         \right
         \f]
         """
-        (a, matrix)  = self.transformToGlobal(self.e1)
-        t = zeros((6,6)) # transformation matrix
+        (a, matrix) = self.transformToGlobal(self.e1)
+        t = zeros((6, 6))  # transformation matrix
         t[0:2, 0:2] = matrix
         t[3:5, 3:5] = matrix
         return t
@@ -211,13 +210,16 @@ class Coord(BaseCard):
     #def resolveCid(self):
         #pass
 
+
 class RectangularCoord(object):
     def coordToXYZ(self, p):
         #print("p = %s" %(p))
         #print("e1 = %s" %(self.e1))
-        return p+self.e1
+        return p + self.e1
+
     def XYZtoCoord(self, p):
         return p
+
 
 class CylindricalCoord(object):
     """
@@ -239,25 +241,25 @@ class CylindricalCoord(object):
         """
         @code
         y       R
-        |     / 
+        |     /
         |   /
         | / theta
         *------------x
         @endcode
-        
+
         \f[ \large x = R \cos(\theta) \f]
         \f[ \large y = R \sin(\theta) \f]
         """
         R = p[0]
         theta = radians(p[1])
-        x = R*cos(theta)
-        y = R*sin(theta)
-        return array([x, y, p[2]])+self.e1
+        x = R * cos(theta)
+        y = R * sin(theta)
+        return array([x, y, p[2]]) + self.e1
 
     def XYZtoCoord(self, p):
         (x, y, z) = p
         theta = degrees(atan2(y, x))
-        R = sqrt(x*x+y*y)
+        R = sqrt(x * x + y * y)
         return array([R, theta, z])
 
 
@@ -280,21 +282,22 @@ class SphericalCoord(object):
     def coordToXYZ(self, p):
         R = p[0]
         theta = radians(p[1])
-        phi   = radians(p[2])
-        x = R*cos(theta)*sin(phi)
-        y = R*sin(theta)*sin(phi)
-        z = R*cos(phi)
-        return array([x, y, z])+self.e1
+        phi = radians(p[2])
+        x = R * cos(theta) * sin(phi)
+        y = R * sin(theta) * sin(phi)
+        z = R * cos(phi)
+        return array([x, y, z]) + self.e1
 
     def XYZtoCoord(self, p):
         (x, y, z) = p
-        R = sqrt(x*x+y*y+z*z)
+        R = sqrt(x * x + y * y + z * z)
         theta = degrees(atan2(y, x))
         if R > 0:
-            phi = degrees(acos(z/R))
+            phi = degrees(acos(z / R))
         else:
             phi = 0.
         return array([R, theta, phi])
+
 
 class Cord2x(Coord):
     def __init__(self, card, data):
@@ -309,23 +312,23 @@ class Cord2x(Coord):
 
         if card:
             ## coordinate system ID
-            self.cid  = card.field(1)
+            self.cid = card.field(1)
             ## reference coordinate system ID
             self.rid = card.field(2, 0)
 
             ## origin in a point relative to the rid coordinate system
-            self.e1 = array( card.fields(3,  6, [0., 0., 0.]) )
+            self.e1 = array(card.fields(3, 6, [0., 0., 0.]))
             ## z-axis in a point relative to the rid coordinate system
-            self.e2 = array( card.fields(6,  9, [0., 0., 0.]) )
+            self.e2 = array(card.fields(6, 9, [0., 0., 0.]))
             ## a point on the xz-plane relative to the rid coordinate system
-            self.e3 = array( card.fields(9, 12, [0., 0., 0.]) )
+            self.e3 = array(card.fields(9, 12, [0., 0., 0.]))
         else:
             self.cid = data[0]
             self.rid = data[1]
-            self.e1  = array(data[2:5])
-            self.e2  = array(data[5:8])
-            self.e3  = array(data[8:11])
-            assert len(data) == 11, 'data = %s' %(data)
+            self.e1 = array(data[2:5])
+            self.e2 = array(data[5:8])
+            self.e3 = array(data[8:11])
+            assert len(data) == 11, 'data = %s' % (data)
         ###
         assert len(self.e1) == 3
         assert len(self.e2) == 3
@@ -333,7 +336,7 @@ class Cord2x(Coord):
         if self.rid == 0:
             self.isResolved = True
         self.setup()
-    
+
     def resolveCid(self):
         """
         Turns the coordinate system from being a coordinate system of
@@ -343,7 +346,7 @@ class Cord2x(Coord):
         levels of coordinate systems and resolves them in order to resolve
         it's coordinate frame.  So, if a coordinate system is of type 2, this
         will effectively set rid to 0 with a type 2.
-        
+
         This should handle any number of coordinate systems or coordinate
         system types assuming there is no circular references.
         """
@@ -351,8 +354,8 @@ class Cord2x(Coord):
         #print self.rid
         #print "cid=%s rid=%s"%(self.cid, self.Rid())
         if self.cid == 0 or isinstance(self.rid, int) or self.rid.isResolved:
-            return # rid=0 so already resolved
-        elif self.rid.isResolved == False: # rid
+            return  # rid=0 so already resolved
+        elif self.rid.isResolved == False:  # rid
             #msg  = 'there is a circular reference between Coord %s and Coord %s' %(self.cid,self.Rid()
             #assert self.rid.isCrossReferenced==False,msg)
             #print "  resolving cid=%s rid=%s" %(self.cid,self.Rid())
@@ -362,15 +365,15 @@ class Cord2x(Coord):
         ## coordinate system. rid may be in a different coordinate system
         ## than cid
         self.isResolved = True
-        self.e1,matrix  = self.transformToGlobal(self.e1)
+        self.e1, matrix = self.transformToGlobal(self.e1)
 
         ## the axes are normalized, so assume they're points and
         ## resolve them in the XYZ system, but dont subtract e1 off
         ## (hence the False)
-        self.e1,matrix = self.rid.transformToGlobal(self.e1) # origin
-        i, matrix      = self.rid.transformToGlobal(self.i, False)
-        j, matrix      = self.rid.transformToGlobal(self.j, False)
-        k, matrix      = self.rid.transformToGlobal(self.k, False)
+        self.e1, matrix = self.rid.transformToGlobal(self.e1)  # origin
+        i, matrix = self.rid.transformToGlobal(self.i, False)
+        j, matrix = self.rid.transformToGlobal(self.j, False)
+        k, matrix = self.rid.transformToGlobal(self.k, False)
 
         ## the axes are global, so now we put them in the cid
         self.i = i
@@ -395,20 +398,20 @@ class Cord2x(Coord):
     def transformToGlobal(self, p, resolveAltCoord=True, debug=False):
         """
         Transforms a point from the local coordinate system to the reference
-        coordinate frames "global" coordinate system.  
+        coordinate frames "global" coordinate system.
 
-        \f[ \large [p_{global}]_{1x3} = 
+        \f[ \large [p_{global}]_{1x3} =
             [p_{local} -p_{origin}]_{1x3}[\Beta_{ij}]_{3x3}  \f]
-        
+
         where   \f$ [\Beta]_{ij} \f$ is the transformation matrix
-        \f[ \large  [\Beta]_{ij} \left[ 
+        \f[ \large  [\Beta]_{ij} \left[
           \begin{array}{ccc}
               g_x \cdot i  &  g_x \cdot j  &  g_x \cdot k    \\
               g_y \cdot i  &  g_y \cdot j  &  g_y \cdot k    \\
               g_z \cdot i  &  g_z \cdot j  &  g_z \cdot k
           \end{array} \right]
-        \f] 
-        
+        \f]
+
         \f$ g  \f$ is the global directional vector (e.g. \f$ g_x = [1,0,0]\f$)
         \f$ ijk \f$ is the ith direction in the local coordinate system
         @warning
@@ -418,8 +421,8 @@ class Cord2x(Coord):
           and PositionWRT
         """
         if debug:
-            print("p = %s"    %(p))
-            print("p-e1 = %s" %(p-self.e1))
+            print("p = %s" % (p))
+            print("p-e1 = %s" % (p - self.e1))
 
         if not self.isResolved:
             self.resolveCid()
@@ -433,12 +436,12 @@ class Cord2x(Coord):
             #print("p* = %s" %(p))
             p = self.coordToXYZ(p)
         #p2 = p-self.eo
-        
+
         # Bij = Bip*j
         i = self.i
         j = self.j
         k = self.k
-        if isinstance(self.rid, int): # rid=0
+        if isinstance(self.rid, int):  # rid=0
             gx = array([1., 0., 0.])
             gy = array([0., 1., 0.])
             gz = array([0., 0., 1.])
@@ -447,25 +450,25 @@ class Cord2x(Coord):
             gy = self.rid.j
             gz = self.rid.k
         ###
-        
+
         matrix = array([[dot(gx, i), dot(gy, i), dot(gz, i)],
                         [dot(gx, j), dot(gy, j), dot(gz, j)],
                         [dot(gx, k), dot(gy, k), dot(gz, k)]])
-        p2 = dot(p-self.e1, matrix)
-        p3 = p2+self.e1
-        
+        p2 = dot(p - self.e1, matrix)
+        p3 = p2 + self.e1
+
         if debug:
-            print("Cp = ",self.Cid())
-            print("gx = %s" %(gx))
-            print("gy = %s" %(gy))
-            print("gz = %s" %(gz))
-            print("p = %s" %(ListPrint(p)))
-            print("matrix = \n",matrix)
-            print("e1 = %s" %(ListPrint(self.e1)))
-            print("p2 = %s" %(ListPrint(p2)))
+            print("Cp = ", self.Cid())
+            print("gx = %s" % (gx))
+            print("gy = %s" % (gy))
+            print("gz = %s" % (gz))
+            print("p = %s" % (ListPrint(p)))
+            print("matrix = \n", matrix)
+            print("e1 = %s" % (ListPrint(self.e1)))
+            print("p2 = %s" % (ListPrint(p2)))
             print('------------------------')
-            print("p3 = %s\n" %(ListPrint(p3)))
-        
+            print("p3 = %s\n" % (ListPrint(p3)))
+
         #print str(self)
         if isinstance(self.rid, int):
             return (p3, matrix)
@@ -483,35 +486,40 @@ class Cord2x(Coord):
 
 class Cord1x(Coord):
     rid = 0  # used only for transform to global
+
     def __init__(self, card, nCoord, data):
         Coord.__init__(self, card, data)
 
         self.isResolved = False
         if nCoord is not None:
-            assert nCoord == 0 or nCoord==1, 'nCoord=|%s|' %(nCoord)
+            assert nCoord == 0 or nCoord == 1, 'nCoord=|%s|' % (nCoord)
             nCoord *= 4  # 0 if the 1st coord, 4 if the 2nd
 
             ## the coordinate ID
-            self.cid = card.field(1+nCoord)
+            self.cid = card.field(1 + nCoord)
             ## a Node at the origin
-            self.g1 = card.field(2+nCoord)
+            self.g1 = card.field(2 + nCoord)
             ## a Node on the z-axis
-            self.g2 = card.field(3+nCoord)
+            self.g2 = card.field(3 + nCoord)
             ## a Node on the xz-plane
-            self.g3 = card.field(4+nCoord)
+            self.g3 = card.field(4 + nCoord)
         else:
             self.cid = data[0]
             self.g1 = data[1]
             self.g2 = data[2]
             self.g3 = data[3]
-            assert len(data) == 4, 'data = %s' %(data)
+            assert len(data) == 4, 'data = %s' % (data)
         ###
         assert self.g1 != self.g2
         assert self.g1 != self.g3
         assert self.g2 != self.g3
 
-        self.e1=None; self.e2=None; self.e3=None
-        self.i=None;  self.j=None;  self.k=None
+        self.e1 = None
+        self.e2 = None
+        self.e3 = None
+        self.i = None
+        self.j = None
+        self.k = None
 
     def crossReference(self, model):
         """
@@ -562,6 +570,7 @@ class Cord1x(Coord):
         grids = [self.G1(), self.G2(), self.G3()]
         return grids
 
+
 class CORD3G(Coord):  # not done
     """
     Defines a general coordinate system using three rotational angles as
@@ -573,6 +582,7 @@ class CORD3G(Coord):  # not done
     CORD3G 100 E313   EQN  110      111      112      0
     """
     type = 'CORD3G'
+
     def __init__(self, card=[0, 0, 0, 0, 0, 0, 0], data=None):
         """
         Intilizes the CORD3G
@@ -585,22 +595,23 @@ class CORD3G(Coord):  # not done
         Coord.__init__(self, card, data)
 
         self.cid = card.field(1)
-        method   = card.field(2)
-        self.methodES  = method[0]
+        method = card.field(2)
+        self.methodES = method[0]
         self.methodInt = int(method[1:])
         assert self.methodES in ['E', 'S']
         assert 0 < self.methodInt < 1000
 
-        self.form   = card.field(3, 'EQN')
+        self.form = card.field(3, 'EQN')
         self.thetas = card.field(4, 7)
-        assert len(self.thetas) == 3, 'thetas=%s' %(self.thetas)
+        assert len(self.thetas) == 3, 'thetas=%s' % (self.thetas)
         self.cidRef = card.field(7)
 
-        assert self.form in ['EQN', 'TABLE'] # EQN for DEQATN, TABLE for TABLE3D
-    
+        # EQN for DEQATN, TABLE for TABLE3D
+        assert self.form in ['EQN', 'TABLE']
+
     def crossReference(self, model):
         self.cidRef = model.Coord(self.cidRef)
-    
+
     def CidRef(self):
         if isinstance(self.cidRef, int):
             return self.cidRef
@@ -611,41 +622,46 @@ class CORD3G(Coord):  # not done
         @warning not done, just setting up how you'd do this
         @note per http://en.wikipedia.org/wiki/Euler_angles
          "This means for example that a convention named (YXZ) is the result
-          of performing first an intrinsic Z rotation, followed by X and 
-          Y rotations, in the moving axes (Note: the order of multiplication 
+          of performing first an intrinsic Z rotation, followed by X and
+          Y rotations, in the moving axes (Note: the order of multiplication
           of matrices is the opposite of the order in which they're
           applied to a vector)."
         """
         for (rotation, theta) in izip(self.rotations, self.thetas):
             ct = cos(radians(theta))
             st = sin(radians(theta))
-            if   rotation == 1:  p = dot(self.RotationX(ct, st), p)
-            elif rotation == 2:  p = dot(self.RotationY(ct, st), p)
-            elif rotation == 3:  p = dot(self.RotationZ(ct, st), p)
+            if   rotation == 1:
+                p = dot(self.RotationX(ct, st), p)
+            elif rotation == 2:
+                p = dot(self.RotationY(ct, st), p)
+            elif rotation == 3:
+                p = dot(self.RotationZ(ct, st), p)
         return p
 
     def RotationX(self, ct, st):
-        matrix = array([[ 1.,  0.,  0.],
-                        [ ct,  0., -st],
-                        [-st,  0.,  ct]])
+        matrix = array([[1., 0., 0.],
+                        [ct, 0., -st],
+                        [-st, 0., ct]])
         return matrix
 
     def RotationY(self, ct, st):
-        matrix = array([[ ct,  0., st],
-                        [ 0.,  1., 0.],
-                        [-st,  0., ct]])
+        matrix = array([[ct, 0., st],
+                        [0., 1., 0.],
+                        [-st, 0., ct]])
         return matrix
 
     def RotationZ(self, ct, st):
-        matrix = array([[ ct, st,  0.],
-                        [-st, ct,  0.],
-                        [  0., 0., 1.]])
+        matrix = array([[ct, st, 0.],
+                        [-st, ct, 0.],
+                        [0., 0., 1.]])
         return matrix
 
     def rawFields(self):
-        method = self.methodES+str(self.methodInt)
-        fields = ['CORD3G', self.cid, method, self.form]+self.thetas+[self.CidRef()]
+        method = self.methodES + str(self.methodInt)
+        fields = ['CORD3G', self.cid, method, self.form
+                 ] + self.thetas + [self.CidRef()]
         return fields
+
 
 class CORD1R(Cord1x, RectangularCoord):
     type = 'CORD1R'
@@ -667,8 +683,9 @@ class CORD1R(Cord1x, RectangularCoord):
         Cord1x.__init__(self, card, nCoord, data)
 
     def rawFields(self):
-        fields = ['CORD1R', self.cid]+self.NodeIDs()
+        fields = ['CORD1R', self.cid] + self.NodeIDs()
         return fields
+
 
 class CORD1C(Cord1x, CylindricalCoord):
     type = 'CORD1C'
@@ -687,13 +704,14 @@ class CORD1C(Cord1x, CylindricalCoord):
           on 1 card)
         @param data
           a list version of the fields (1 CORD1R only)
-        
+
         """
         Cord1x.__init__(self, card, nCoord, data)
 
     def rawFields(self):
-        fields = ['CORD1C', self.cid]+self.NodeIDs()
+        fields = ['CORD1C', self.cid] + self.NodeIDs()
         return fields
+
 
 class CORD1S(Cord1x, SphericalCoord):
     type = 'CORD1S'
@@ -716,13 +734,14 @@ class CORD1S(Cord1x, SphericalCoord):
         Cord1x.__init__(self, card, nCoord, data)
 
     def rawFields(self):
-        fields = ['CORD1S', self.cid]+self.NodeIDs()
+        fields = ['CORD1S', self.cid] + self.NodeIDs()
         return fields
 
 
 class CORD2R(Cord2x, RectangularCoord):
     type = 'CORD2R'
-    def __init__(self, card=None, data=[0,0,  0.,0.,0.,  0.,0.,1., 1.,0.,0.]):
+
+    def __init__(self, card=None, data=[0, 0, 0., 0., 0., 0., 0., 1., 1., 0., 0.]):
         """
         Intilizes the CORD2R
         @param self
@@ -734,15 +753,17 @@ class CORD2R(Cord2x, RectangularCoord):
         """
         #print card
         Cord2x.__init__(self, card, data)
-        
+
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
-        fields = ['CORD2R', self.cid, rid] +list(self.e1)+list(self.e2)+list(self.e3)
+        fields = ['CORD2R', self.cid, rid] + list(self.e1) + list(
+            self.e2) + list(self.e3)
         return fields
 
 
 class CORD2S(Cord2x, SphericalCoord):
     type = 'CORD2S'
+
     def __init__(self, card=None, data=None):
         """
         Intilizes the CORD2R
@@ -757,11 +778,14 @@ class CORD2S(Cord2x, SphericalCoord):
 
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
-        fields = ['CORD2S', self.cid, rid] +list(self.e1)+list(self.e2)+list(self.e3)
+        fields = ['CORD2S', self.cid, rid] + list(self.e1) + list(
+            self.e2) + list(self.e3)
         return fields
+
 
 class CORD2C(Cord2x, CylindricalCoord):
     type = 'CORD2C'
+
     def __init__(self, card=None, data=None):
         """
         Intilizes the CORD2C
@@ -776,5 +800,6 @@ class CORD2C(Cord2x, CylindricalCoord):
 
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
-        fields = ['CORD2C', self.cid, rid] +list(self.e1)+list(self.e2)+list(self.e3)
+        fields = ['CORD2C', self.cid, rid] + list(self.e1) + list(
+            self.e2) + list(self.e3)
         return fields
