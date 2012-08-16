@@ -6,9 +6,11 @@ from itertools import izip
 from pyNastran.bdf.cards.baseCard import BaseCard, expandThru
 from pyNastran.bdf.fieldWriter import print_int_card
 
+
 class Set(BaseCard):
     """Generic Class all SETx cards inherit from"""
     type = 'Set'
+
     def __init__(self, card, data):
         ## Unique identification number. (Integer > 0)
         self.sid = None
@@ -31,6 +33,7 @@ class Set(BaseCard):
     def __repr__(self):
         return print_int_card(self.reprFields())
 
+
 class SetSuper(Set):
     """Generic Class all Superelement SETx cards inherit from."""
     def __init__(self, card, data):
@@ -39,6 +42,7 @@ class SetSuper(Set):
         self.seid = None
         ## list of IDs in the SESETx
         self.IDs = None
+
 
 class ABCQSet(Set):
     """
@@ -58,11 +62,11 @@ class ABCQSet(Set):
         fields = card.fields(1)
         for i in xrange(0, fields, 2):
             self.IDs.append(fields[i])
-            self.components.append(str(fields[i+1]))
+            self.components.append(str(fields[i + 1]))
 
     def rawFields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        fields = [self.type] # ASET, BSET
+        fields = [self.type]  # ASET, BSET
         for (ID, comp) in izip(self.IDs, self.components):
             fields += [ID, comp]
         return fields
@@ -71,6 +75,7 @@ class ABCQSet(Set):
         fields = self.rawFields()
         return self.printCard(fields)
 
+
 class ASET(ABCQSet):
     """
     Defines degrees-of-freedom in the analysis set (a-set).
@@ -78,8 +83,10 @@ class ASET(ABCQSet):
     ASET 16  2  23  3516 1   4
     """
     type = 'ASET'
-    def __init__(self, card=None, data=None): ## @todo doesnt support data
+
+    def __init__(self, card=None, data=None):  ## @todo doesnt support data
         ABCQSet.__init__(self, card, data)
+
 
 class BSET(ABCQSet):
     """
@@ -89,8 +96,10 @@ class BSET(ABCQSet):
     ASET 16  2  23  3516 1   4
     """
     type = 'BSET'
-    def __init__(self, card=None, data=None): ## @todo doesnt support data
+
+    def __init__(self, card=None, data=None):  ## @todo doesnt support data
         ABCQSet.__init__(self, card, data)
+
 
 class CSET(ABCQSet):
     """
@@ -100,8 +109,10 @@ class CSET(ABCQSet):
     ASET 16  2  23  3516 1   4
     """
     type = 'CSET'
-    def __init__(self, card=None, data=None): ## @todo doesnt support data
+
+    def __init__(self, card=None, data=None):  ## @todo doesnt support data
         ABCQSet.__init__(self, card, data)
+
 
 class QSET(ABCQSet):
     """
@@ -111,8 +122,10 @@ class QSET(ABCQSet):
     QSET 16  2  23  3516 1   4
     """
     type = 'QSET'
-    def __init__(self, card=None, data=None): ## @todo doesnt support data
+
+    def __init__(self, card=None, data=None):  ## @todo doesnt support data
         ABCQSet.__init__(self, card, data)
+
 
 class ABQSet1(Set):
     """
@@ -123,7 +136,7 @@ class ABQSet1(Set):
     ID8 ID9
     ASET1 C ID1 'THRU' ID2
     """
-    def __init__(self, card=None, data=None): ## @todo doesnt support data
+    def __init__(self, card=None, data=None):  ## @todo doesnt support data
         Set.__init__(self, card, data)
         ## Component number. (Integer zero or blank for scalar points or any
         ## unique combination of the Integers 1 through 6 for grid points with
@@ -135,12 +148,13 @@ class ABQSet1(Set):
 
     def rawFields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        fields = [self.type, self.components]+self.IDs
+        fields = [self.type, self.components] + self.IDs
         return fields
 
     def __repr__(self):
         fields = self.rawFields()
         return self.printCard(fields)
+
 
 class ASET1(ABQSet1):
     """
@@ -150,13 +164,17 @@ class ASET1(ABQSet1):
     ASET1 C ID1 'THRU' ID2
     """
     type = 'ASET1'
+
     def __init__(self, card=None, data=None):
         ABQSet1.__init__(self, card, data)
 
+
 class BSET1(ABQSet1):
     type = 'BSET1'
+
     def __init__(self, card=None, data=None):
         ABQSet1.__init__(self, card, data)
+
 
 class CSET1(Set):
     """
@@ -167,12 +185,12 @@ class CSET1(Set):
     CSET1 C ID1 'THRU' ID2
     CSET1,,'ALL'
     """
-    def __init__(self, card=None, data=None): ## @todo doesnt support data
+    def __init__(self, card=None, data=None):  ## @todo doesnt support data
         Set.__init__(self, card, data)
 
         ## Identifiers of grids points. (Integer > 0)
         self.IDs = []
-        if card.field(2)=='ALL':
+        if card.field(2) == 'ALL':
             self.components = '123456'
         else:
             self.components = str(card.field(1))
@@ -181,12 +199,13 @@ class CSET1(Set):
 
     def rawFields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        fields = [self.type, self.components]+self.IDs
+        fields = [self.type, self.components] + self.IDs
         return fields
 
     def __repr__(self):
         fields = self.rawFields()
         return self.printCard(fields)
+
 
 class QSET1(ABQSet1):
     """
@@ -194,8 +213,10 @@ class QSET1(ABQSet1):
     reduction or component mode synthesis.
     """
     type = 'QSET1'
+
     def __init__(self, card=None, data=None):
         ABQSet1.__init__(self, card, data)
+
 
 class SET1(Set):
     """
@@ -208,7 +229,8 @@ class SET1(Set):
     17 57
     """
     type = 'SET1'
-    def __init__(self, card=None, data=None): ## @todo doesnt support data
+
+    def __init__(self, card=None, data=None):  ## @todo doesnt support data
         Set.__init__(self, card, data)
         ## Unique identification number. (Integer > 0)
         self.sid = card.field(1)
@@ -223,7 +245,7 @@ class SET1(Set):
         i = 0
         if isinstance(fields[0], str) and fields[0].upper() == 'SKIN':
             self.isSkin = True
-            i+=1
+            i += 1
         self.IDs = expandThru(fields[i:])
         self.cleanIDs()
 
@@ -238,6 +260,7 @@ class SET1(Set):
         fields += self.SetIDs()
         return fields
 
+
 class SET3(Set):
     """
     Defines a list of grids, elements or points.
@@ -246,11 +269,12 @@ class SET3(Set):
     SET3 1 POINT 11 12
     """
     type = 'SET1'
-    def __init__(self, card=None, data=None): ## @todo doesnt support data
+
+    def __init__(self, card=None, data=None):  ## @todo doesnt support data
         Set.__init__(self, card, data)
         ## Unique identification number. (Integer > 0)
         self.sid = card.field(1)
-        
+
         ## Set description (Character). Valid options are 'GRID', 'ELEM',
         ## 'POINT' and 'PROP'.
         self.desc = card.field(2).upper()
@@ -265,39 +289,41 @@ class SET3(Set):
         self.cleanIDs()
 
     def IsGrid(self):
-        if self.desc=='GRID':
+        if self.desc == 'GRID':
             return True
         return False
 
     def IsPoint(self):
-        if self.desc=='POINT':
+        if self.desc == 'POINT':
             return True
         return False
 
     def IsProperty(self):
-        if self.desc=='PROP':
+        if self.desc == 'PROP':
             return True
         return False
 
     def IsElement(self):
-        if self.desc=='ELEM':
+        if self.desc == 'ELEM':
             return True
         return False
-    
+
     def rawFields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        fields = ['SET3', self.sid, self.desc]+self.SetIDs()
+        fields = ['SET3', self.sid, self.desc] + self.SetIDs()
         return fields
 
     def __repr__(self):
-        fields = ['SET3', self.sid, self.desc]+self.SetIDs()
+        fields = ['SET3', self.sid, self.desc] + self.SetIDs()
         return self.printCard(fields)
+
 
 class SESET(SetSuper):
     """
     Defines interior grid points for a superelement.
     """
     type = 'SESET'
+
     def __init__(self, card=None, data=None):
         SetSuper.__init__(self, card, data)
         self.seid = card.field(1, 0)
@@ -310,16 +336,18 @@ class SESET(SetSuper):
         self.cleanIDs()
 
     def rawFields(self):
-        fields = ['SESET', self.seid]+self.SetIDs()
+        fields = ['SESET', self.seid] + self.SetIDs()
         return fields
 
-class SEQSEP(SetSuper): # not integrated...is this an SESET ???
+
+class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
     """
     Used with the CSUPER entry to define the correspondence of the
     exterior grid points between an identical or mirror-image superelement
     and its primary superelement.
     """
     type = 'SEQSEP'
+
     def __init__(self, card=None, data=None):
         SetSuper.__init__(self, card, data)
         ## Identification number for secondary superelement. (Integer >= 0).
@@ -336,10 +364,11 @@ class SEQSEP(SetSuper): # not integrated...is this an SESET ???
 
     def rawFields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        fields = ['SEQSEP',self.ssid,self.psid]+self.SetIDs()
+        fields = ['SEQSEP', self.ssid, self.psid] + self.SetIDs()
         return fields
 
-class RADSET(Set): # not integrated
+
+class RADSET(Set):  # not integrated
     """
     Specifies which radiation cavities are to be included for
     radiation enclosure analysis.
@@ -347,6 +376,7 @@ class RADSET(Set): # not integrated
            ICAVITY9 -etc.-
     """
     type = 'RADSET'
+
     def __init__(self, card=None, data=None):
         Set.__init__(self, card, data)
         self.seid = card.field(1)
@@ -361,9 +391,8 @@ class RADSET(Set): # not integrated
     def addRadsetObject(self, radset):
         self.IDs += radset.IDs
         self.cleanIDs()
-        
+
     def rawFields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        fields = ['RADSET',self.seid]+self.SetIDs()
+        fields = ['RADSET', self.seid] + self.SetIDs()
         return fields
-
