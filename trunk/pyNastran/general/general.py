@@ -3,18 +3,20 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 from numpy import matrix
 
+
 def printBadPath(path):
     msg = ''
     fullpath = os.path.abspath(path)
     while fullpath:
         if os.path.exists(fullpath):
-            msg += 'passed:  %s\n' %(fullpath)
+            msg += 'passed:  %s\n' % (fullpath)
         else:
-            msg += 'failed:  %s\n' %(fullpath)
+            msg += 'failed:  %s\n' % (fullpath)
         fullpath = os.path.dirname(fullpath)
     return msg
 
-def getFilesOfType(dirname,extension='.txt',maxSize=100.):
+
+def getFilesOfType(dirname, extension='.txt', maxSize=100.):
     """
     gets all the files in the specified directory with a given extension
     @param dirname the directory name
@@ -24,17 +26,13 @@ def getFilesOfType(dirname,extension='.txt',maxSize=100.):
     files = os.listdir(dirname)
     files2 = []
     for fname in files:
-        (f,ext) = os.path.splitext(fname)
-        #print f
-        #print ext
+        (f, ext) = os.path.splitext(fname)
         if extension in ext:
-            f = os.path.join(dirname,fname)
-            if os.path.getsize(f)/(1024.*1024.) <= maxSize: # convert to MB
+            f = os.path.join(dirname, fname)
+            if os.path.getsize(f) / (1024. * 1024.) <= maxSize:  # convert to MB
                 files2.append(f)
-            ###
-        ###
-    ###
     return files2
+
 
 def deObscure(num):
     """
@@ -43,24 +41,25 @@ def deObscure(num):
     which helps to do Mat12345678 when there's an 8 character limit on variable names.
     """
     print("***")
-    print("type(num) = ",type(num))
+    print("type(num) = ", type(num))
     num.reverse()
-    vals = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
-            'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',]
+    vals = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ]
     #vals = ['0','1']
     dictA = {}
     n = len(vals)
     for i in xrange(n):
         dictA[vals[i]] = i
 
-    print("n = ",n)
+    print("n = ", n)
     val = 0
-    for i,letter in enumerate(reversed(num)):
-        print("letter = ",letter)
-        val += dictA[letter]*n**i
-        print("factor = ",dictA[letter]*n**i)
-    print("val = ",val)
+    for i, letter in enumerate(reversed(num)):
+        print("letter = ", letter)
+        val += dictA[letter] * n ** i
+        print("factor = ", dictA[letter] * n ** i)
+    print("val = ", val)
     return val
+
 
 def obscure(num):
     """
@@ -69,8 +68,8 @@ def obscure(num):
     which helps to do Mat12345678 when there's an 8 character limit on variable names.
     """
     lenNum = len(str(num))
-    vals = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
-            'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',]
+    vals = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ]
     #vals = ['0','1']
             #'0','1','2','3','4','5','6','7','8','9']  # 0,1,2,...
     dictA = {}
@@ -82,9 +81,9 @@ def obscure(num):
     i = 0
     while num > 0:
         print("num = %s" % (num))
-        print("factor = %s" % (num%n))
-        var = dictA[num%n]
-        num = num/n
+        print("factor = %s" % (num % n))
+        var = dictA[num % n]
+        num = num / n
         pack.append(var)
         i += 1
         if i == 100:
@@ -93,7 +92,7 @@ def obscure(num):
     print('')
     print("%s > %s" % (lenNum, len(pack)))
     return pack
-    
+
 
 def is_binary(filename):
     """
@@ -109,14 +108,15 @@ def is_binary(filename):
         CHUNKSIZE = 1024
         while 1:
             chunk = fin.read(CHUNKSIZE)
-            if b'\0' in chunk: # found null byte
+            if b'\0' in chunk:  # found null byte
                 return True
             if len(chunk) < CHUNKSIZE:
-                break # done
-    finally: # no need for ???
+                break  # done
+    finally:  # no need for ???
         fin.close()
 
     return False
+
 
 def ListPrint(listA):
     """
@@ -127,7 +127,6 @@ def ListPrint(listA):
     """
     if len(listA) == 0:
         return '[]'
-    ###
 
     msg = '['
     if isinstance(listA, matrix):
@@ -135,12 +134,11 @@ def ListPrint(listA):
         for irow in xrange(nrows):
             msg += '['
             for icol in xrange(ncols):
-                msg += '%-10g,' %(listA[irow, icol])
+                msg += '%-10g,' % (listA[irow, icol])
             msg = msg[:-1]
             msg += '],\n '
         msg = msg[:-1]
         msg += ']'
-
     else:
         for a in listA:
             #print "a = ", a, type(a)
@@ -166,7 +164,7 @@ def ListPrint(listA):
     ###
     return msg
 
-if __name__=='__main__':
+if __name__ == '__main__':
     n = 99999999
     o = obscure(n)
     print(''.join(o))
