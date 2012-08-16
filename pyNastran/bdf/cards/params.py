@@ -4,10 +4,12 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.bdf.cards.baseCard import BaseCard
 
+
 class PARAM(BaseCard):
     type = 'PARAM'
+
     def __init__(self, card):
-        self.key   = card.field(1)
+        self.key = card.field(1)
         self.value = card.field(2)
 
     #def isSameCard(self, param, debug=False):
