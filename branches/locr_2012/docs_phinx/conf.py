@@ -11,7 +11,9 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os.path
+import sys
+import os.path
+import re
 sys.path.append(os.path.dirname(os.getcwd()))
 
 
@@ -29,7 +31,11 @@ sys.path.append(os.path.dirname(os.getcwd()))
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage',
-              'sphinx.ext.pngmath', 'sphinx.ext.viewcode']
+              'sphinx.ext.pngmath', 'sphinx.ext.viewcode',
+              'sphinx.ext.todo']
+
+#display todos
+todo_include_todos=True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -287,3 +293,41 @@ epub_copyright = u'2012, Steven Doyle, Al Danial'
 
 # Allow duplicate toc entries.
 #epub_tocdup = True
+
+# Convert comments from doxygen style to spnix/reStructuredText 
+regex_param = re.compile("@param (\w+)") # substitute with "\n:param \\1:"
+regex_see   = re.compile("@see (\w+)")   # substitute with "\nsee :func:`\\1`"
+
+substitutions = (("@retval", ":returns:"), ("@note", "\n.. note::"),
+                 ("@warning", "\n.. warning::"), ("@todo", "\n.. todo::"),
+                 ("@raise", ":raises:"), ("@deprecated", "\n.. deprecated::"))
+
+# adding some new lines (thus empty strings to lines list ) is necessary
+# for some of  doxygen style  comments to render correcty in sphinx
+# todo: @attention
+#@author
+#@debug
+#@code @endcode: pyNastran.bdf.cards.coordinateSystems.CylindricalCoord.coordToXYZ
+def convert_doxygen_comments(app, what, name, obj, options, lines):
+    res_lines = []
+    for line in lines:
+        new_line = regex_param.sub("\n:param \\1:", line)
+        for old_str, new_str in substitutions:
+            new_line = new_line.replace(old_str, new_str)
+        if "@see" in new_line:
+            # sphinx automatically treats http://... as link
+            if "http" in new_line: 
+                new_line = new_line.replace("@see", "see") 
+            elif "pdf" in new_line: ## todo: what is refman.pdf?
+                new_line = new_line.replace("@see", "see")
+            elif "import logging" in new_line: ## todo: what is that?
+                new_line = new_line.replace("@see", "see")
+            else:
+                new_line = regex_see.sub("\nsee :func:`\\1`", new_line)
+            
+        res_lines += new_line.splitlines()
+    lines[:] = res_lines
+
+
+def setup(app):
+    app.connect('autodoc-process-docstring', convert_doxygen_comments) 
