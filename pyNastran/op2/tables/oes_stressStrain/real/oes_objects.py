@@ -4,10 +4,12 @@ from numpy import argsort
 
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
+
 class OES_Object(scalarObject):
     def __init__(self, dataCode, iSubcase):
         scalarObject.__init__(self, dataCode, iSubcase)
-        self.log.debug("starting OES...elementName=%s iSubcase=%s" %(self.elementName,self.iSubcase))
+        self.log.debug("starting OES...elementName=%s iSubcase=%s" %
+                       (self.elementName, self.iSubcase))
         #print self.dataCode
 
     def isCurvatureOld(self):
@@ -16,11 +18,11 @@ class OES_Object(scalarObject):
         return False
 
     def isCurvature(self):
-        if self.sCode in [0,1,14,15,16,17,27,30,31]: # fiber distance
+        if self.sCode in [0, 1, 14, 15, 16, 17, 27, 30, 31]:  # fiber distance
             return False
-        elif self.sCode in [10,11,26,]: # fiber curvature
+        elif self.sCode in [10, 11, 26, ]:  # fiber curvature
             return True
-        raise NotImplementedError('add sCode=%s' %(self.sCode))
+        raise NotImplementedError('add sCode=%s' % (self.sCode))
 
     def isFiberDistance(self):
         return not(self.isCurvature())
@@ -43,7 +45,7 @@ class OES_Object(scalarObject):
         """
         @param validTypes list of valid element types
                e.g. ['CTRIA3','CTRIA6','CQUAD4','CQUAD8']
-        
+
         @retval TypesOut the ordered list of types
         @retval orderedETypes dictionary of Type-IDs to write
         """
@@ -52,21 +54,20 @@ class OES_Object(scalarObject):
         #validTypes = ['CTRIA3','CTRIA6','CQUAD4','CQUAD8']
         for eType in validTypes:
             orderedETypes[eType] = []
-        for eid,eType in sorted(self.eType.items()):
+        for eid, eType in sorted(self.eType.items()):
             #print "eType = ",eType
-            assert eType in validTypes, 'unsupported eType=%s' %(eType)
+            assert eType in validTypes, 'unsupported eType=%s' % (eType)
             orderedETypes[eType].append(eid)
-        ###
-        
+
         minVals = []
         for eType in validTypes:
             vals = orderedETypes[eType]
             #print "len(%s) = %s" %(eType,len(vals))
-            if len(vals)==0:
+            if len(vals) == 0:
                 minVals.append(-1)
             else:
                 minVals.append(min(vals))
-            
+
         #print "minVals = ",minVals
         argList = argsort(minVals)
 
@@ -78,7 +79,8 @@ class OES_Object(scalarObject):
         #print "argList    = %s" %(argList)
         #print "TypesOut   = %s" %(TypesOut)
         #print "orderedETypes.keys = %s" %(orderedETypes.keys())
-        return (TypesOut,orderedETypes)
+        return (TypesOut, orderedETypes)
+
 
 class stressObject(OES_Object):
     def __init__(self, dataCode, iSubcase):
@@ -91,7 +93,8 @@ class stressObject(OES_Object):
         #print "dataCode=",self.dataCode
         self.elementName = self.dataCode['elementName']
         if dt is not None:
-            self.log.debug("updating stress...%s=%s elementName=%s" %(self.dataCode['name'], dt, self.elementName))
+            self.log.debug("updating stress...%s=%s elementName=%s" %
+                           (self.dataCode['name'], dt, self.elementName))
             self.dt = dt
             self.addNewTransient(dt)
         ###
@@ -101,7 +104,7 @@ class stressObject(OES_Object):
 
     def isStress(self):
         return False
-    
+
 
 class strainObject(OES_Object):
     def __init__(self, dataCode, iSubcase):
@@ -114,13 +117,13 @@ class strainObject(OES_Object):
         self.elementName = self.dataCode['elementName']
         #assert dt>=0.
         if dt is not None:
-            self.log.debug("updating strain...%s=%s elementName=%s" %(self.dataCode['name'], dt, self.elementName))
+            self.log.debug("updating strain...%s=%s elementName=%s" %
+                           (self.dataCode['name'], dt, self.elementName))
             self.dt = dt
             self.addNewTransient()
-        ###
 
     def isStress(self):
         return False
-    
+
     def isStrain(self):
         return True
