@@ -247,10 +247,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                                # initial conditions - sid (set ID)
                                #'TIC',  (in tables.py)
 
-                               # methods - @todo EIGRL not done???
+                               ## methods - @todo EIGRL not done???
                                'EIGB', 'EIGR', 'EIGRL',
 
-                               # cMethods - @todo EIGC not done???
+                               ## cMethods - @todo EIGC not done???
                                'EIGC', 'EIGP',
 
                                # other
@@ -640,8 +640,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 self.executive_control_lines.append(line)
             else:
                 emptyLines += 1
-            ###
-        ###
 
         if 0:  # old method; breaks DMAP alters
             while len(self._active_filenames) > 0:  # keep going until finished
@@ -657,8 +655,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 self.executive_control_lines.append(lineIn)
                 if 'CEND' in line.upper():
                     break
-                ###
-            ###
+
         self._parse_executive_control_deck()
 
     def _parse_executive_control_deck(self):
@@ -692,9 +689,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 except:
                     msg = ('update_solution failed...line=%s' % (uline))
                     raise RuntimeError(msg)
-                ###
-            ###
-        ###
+
         #print("sol = ", sol)
 
     def updateSolution(self, sol, method=None):
@@ -727,7 +722,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             self.log.debug("sol=%s method=%s" % (self.sol, self.solMethod))
         else:  # very common
             self.solMethod = None
-        ###
+
         #print "sol=%s method=%s" %(self.sol,self.solMethod)
 
     def setDynamicSyntax(self, dictOfVars):
@@ -749,7 +744,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             assert len(key) <= 7, ('max length for key is 7; '
                                    'len(%s)=%s' % (key, len(key)))
             self.dictOfVars[key.upper()] = value
-        ###
+
         self.isDynamicSyntax = True
 
     def _is_case_control_deck(self, line):
@@ -858,7 +853,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         else:
             #print "appending |%r|" %(lineIn)
             self.case_control_lines.append(lineIn)
-        ###
+
         return (line, lineUpper)
 
     def _get_card_name(self, cardLines):
@@ -1005,7 +1000,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                     #special = True
                 #print "nCards = ",nCards
                 #cardName = oldCardObj.field(0)
-            ###
 
             for iCard in xrange(nCards):
                 #print "----------------------------"
@@ -1014,12 +1008,12 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 self.add_card(card, cardName, iCard=0, old_card_obj=None)
                 #if self.foundEndData:
                 #    break
-            ### iCard
+
             if self.doneReading or len(self.linesPack[-1]) == 0:
                 #print("doneReading=%s len(pack)=%s"
                 #    %(self.doneReading, len(self.linesPack[-1])))
                 self.close_file()
-            ###
+
             #oldCardObj = copy.deepcopy(cardObj) # used for =(*1) stuff
             #print ""
 
@@ -1039,7 +1033,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 #print printCard(reject)
                 #print ''.join(reject)
             self.log.debug("***read_bulk_data_deck")
-        ###
+
 
     def addCard(self, card, cardName, iCard=0, oldCardObj=None):
         """@see add_card"""
@@ -1105,7 +1099,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                     name = cardObj.field(1)
                     dmig = self.dmigs[name]
                     dmig.addColumn(cardObj)
-                ###
+
             elif cardName == 'DMIJ':
                 if cardObj.field(2) == 0:
                     dmij = DMIJ(cardObj)
@@ -1390,7 +1384,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 if cardObj.field(7) is not None:
                     prop = PMASS(cardObj, nOffset=3)
                     self.addProperty(prop)
-                ###
+
             elif cardName == 'PLSOLID':
                 prop = PLSOLID(cardObj)
                 self.addProperty(prop)
@@ -1868,21 +1862,21 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 if cardObj.field(5):
                     coord = CORD1R(cardObj, nCoord=1)
                     self.addCoord(coord)
-                ###
+
             elif cardName == 'CORD1C':
                 coord = CORD1C(cardObj)
                 self.addCoord(coord)
                 if cardObj.field(5):
                     coord = CORD1C(cardObj, nCoord=1)
                     self.addCoord(coord)
-                ###
+
             elif cardName == 'CORD1S':
                 coord = CORD1S(cardObj)
                 self.addCoord(coord)
                 if cardObj.field(5):
                     coord = CORD1S(cardObj, nCoord=1)
                     self.addCoord(coord)
-                ###
+
             #elif cardName == 'CORD3G':
             #    coord = CORD3G(cardObj)
             #    self.addCoord(coord)
