@@ -30,7 +30,6 @@ Subpackages
     pyNastran.converters
     pyNastran.f06
     pyNastran.general
-    pyNastran.gui
     pyNastran.mesh
     pyNastran.op2
     pyNastran.op4
