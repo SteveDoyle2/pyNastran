@@ -155,6 +155,9 @@ class MAT1(Material):
     def Nu(self):
         return self.nu
 
+    def Rho(self):
+        return self.rho
+
     def set_E_G_nu(self, card):
         """
         \f[ \large G = \frac{E}{2 (1+\nu)} \f]

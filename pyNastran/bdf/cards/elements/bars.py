@@ -106,7 +106,13 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         \f[ \large  mass = \left( \rho A + nsm \right) L  \f]
         """
         L = self.Length()
-        mass = (self.Rho() * self.Area() + self.Nsm()) * L
+        try:
+            mass = (self.Rho() * self.Area() + self.Nsm()) * L
+        except TypeError:
+            msg = 'TypeError on eid=%s pid=%s:\n' % (self.eid, self.Pid())
+            msg += 'rho = %s\narea = %s\nnsm = %s\nL = %s' % (self.Rho(), self.Area(), self.Nsm(), L)
+            raise TypeError(msg)
+            
         return mass
 
     def crossReference(self, model):
