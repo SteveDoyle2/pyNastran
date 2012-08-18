@@ -1,7 +1,8 @@
 from itertools import izip
 from numpy import array, dot
 
-from pyNastran.bdf.bdf import BDF, printCard
+from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.fieldWriter import printCard
 
 
 class NastranMesh(BDF):

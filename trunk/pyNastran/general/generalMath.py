@@ -97,8 +97,6 @@ def isListRanged(a, List, b):
     for x in List:
         if not isFloatRanged(a, x, b):
             return False
-        ###
-    ###
     return True
 
 
@@ -110,13 +108,11 @@ def isFloatRanged(a, x, b):
     if not a < x:
         if not allclose(x, a):
             return False
-        ###
-    ###
+
     if not x < b:
         if not allclose(x, b):
             return False
-        ###
-    ###
+
     return True
 
 
@@ -183,9 +179,7 @@ def ListPrint(listA, tol=1e-8):
             except TypeError:
                 print("a = |%s|" % (a))
                 raise
-            ###
-        ###
-    ###
+
     msg = msg[:-1]
     msg += ' ]'
     return msg
