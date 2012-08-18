@@ -150,7 +150,6 @@ class PanairWrite(object):
             msg3 += patch.quickSummary(totalPoints, totalPanels)
             totalPanels += patch.nPanels()
             totalPoints += patch.nPoints()
-        ###
 
         msg2 += '0  case       alpha          beta      mag(f-s-v)\n'
         msg2 += ' ------    ----------    ----------   -----------\n'

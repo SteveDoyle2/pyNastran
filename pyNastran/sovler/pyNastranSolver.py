@@ -64,7 +64,7 @@ def partition_dense_vector(F, dofs):
 
 def partition_sparse_vector(F, dofs):
     dofs.sort()
-    n = len(dofs)
+    #n = len(dofs)
     F2i = []
     F2v = []
     for (i, dofI) in enumerate(dofs):

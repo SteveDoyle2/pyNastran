@@ -213,7 +213,6 @@ class PanairGrid(PanairGridHelper, PanairWrite):
             #print ListPrint(point2)
             points.append(point1)
             points.append(point2)
-        ###
 
         if nRemainder:
             n += 1
@@ -470,7 +469,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
                     X[i][j] = x
                     Y[i][j] = y
                     Z[i][j] = z
-            ###
+
             #for i,point in enumerate(points):
             #    x[i][j] = point[0]
             #    y[i][j] = point[1]
@@ -809,7 +808,6 @@ class PanairGrid(PanairGridHelper, PanairWrite):
                     break
                 #print "new section...name=%s line - %s" %(sectionName,line)
             section.append(line)
-        ###
 
         # end section
         section.append(line)
@@ -848,7 +846,6 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         pointI = 0
         #for (name,panel) in sorted(self.panels.iteritems()):
         for name, panel in sorted(self.patches.iteritems()):
-        #if 1:
             #panel = self.patches[2]
             (pointsI, pointi) = panel.getPoints()
             (elementsI) = panel.getElements(pointI)
@@ -858,7 +855,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
             pointI += pointi
             #break
             #print "name=%s len(AllElements)=%s len(allPoints)=%s" %(name,len(elements),len(points))
-        ###
+
         #for point in points:
             #print point
         return points, elements

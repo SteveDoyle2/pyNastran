@@ -16,8 +16,6 @@ def convertToFloat(svalues):
         values.append(float(value))
     return values
 
-#------------------------------------------------------------------
-
 
 class Cart3DAsciiReader(object):
     modelType = 'cart3d'
@@ -76,8 +74,7 @@ class Cart3DAsciiReader(object):
             else:
                 outerNodes[iNode] = [node[0], -node[1], node[2]]
                 isInnerNode[iNode] = False
-            ###
-        ###
+
         return (yZeroNodes, outerNodes, isInnerNode)
 
     def makeFullModel(self, nodes, elements, regions, loads):
@@ -101,8 +98,6 @@ class Cart3DAsciiReader(object):
                 nodes[maxNode + iNode2] = outerNodes[iNode]
                 nodes2Map[iNode] = maxNode + iNode2
                 iNode2 += 1
-            ###
-        ###
 
         # based on the conversion (nodes2map) object, renumber each element
         # stick the result in the location for the new element
@@ -132,7 +127,6 @@ class Cart3DAsciiReader(object):
             elements[eMissing] = element2
             regions[eMissing] = region
             iMissing += 1
-        ###
 
         for i in xrange(1, len(elements)):
             assert i in elements, 'i=%s is not in elements...' % (i)
@@ -154,8 +148,7 @@ class Cart3DAsciiReader(object):
                     del Cp[iNode]  # assume loads=0
                 except:
                     pass
-                ###
-            ###
+
         sys.stdout.flush()
 
         for (iElement, element) in elements.items():
@@ -164,13 +157,12 @@ class Cart3DAsciiReader(object):
             for (i, node) in enumerate(element):
                 if node not in nodes:
                     inNodeList[i] = False
-                ###
+
             if False in inNodeList:
                 #print iElement,element,inNodeList,type(iElement)
                 del elements[iElement]
                 del regions[iElement]
-            ###
-        ###
+
         assert len(nodes) != nNodesStart
         self.log.info('---finished makeHalfModel---')
         return (nodes, elements, regions, Cp)
@@ -192,13 +184,12 @@ class Cart3DAsciiReader(object):
             for (i, node) in enumerate(element):
                 if node not in nodes:
                     inNodeList[i] = False
-                ###
+
             if False in inNodeList:
                 #print iElement,element,inNodeList,type(iElement)
                 del elements[iElement]
                 del regions[iElement]
-            ###
-        ###
+
         #assert len(nodes)!=nNodesStart
         self.log.info('---finished makeMirrorModel---')
 
@@ -319,7 +310,6 @@ class Cart3DAsciiReader(object):
                 z = data.pop(0)
                 points[p + 1] = array([float(x), float(y), float(z)])
                 p += 1
-            ###
 
         maxX = self.getMax(points, 0)
         maxY = self.getMax(points, 1)
@@ -398,7 +388,7 @@ class Cart3DAsciiReader(object):
                 while len(data) > 0:
                     data.pop()
                     r += 1
-        ###
+
         return regions
 
     def readResults(self, i, infile):

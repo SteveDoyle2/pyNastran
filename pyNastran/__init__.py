@@ -16,7 +16,7 @@ if dev:
     print("changes = %s" %(changes))
     #client.update('./examples/pysvn')
 else:
-    revision = 'dev877'
+    revision = 'dev1040'
 
 __author__  = 'Steven Doyle, Al Danials'
 __email__   = 'mesheb82@gmail.com'
@@ -25,5 +25,5 @@ __copyright__   = 'Copyright 2011-2012, pyNastran; %s' %(__author__)
 __license__     = 'LGPLv3'
 __releaseDate__ = '2012/8/??'
 __releaseDate2__ = 'AUGUST ??, 2012'
-__version__     = '0.5.r%s' %(revision)
+__version__     = '0.6.r%s' %(revision)
 __website__     = 'http://code.google.com/p/pynastran/'

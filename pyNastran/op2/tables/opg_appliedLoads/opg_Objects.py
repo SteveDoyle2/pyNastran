@@ -21,18 +21,6 @@ class AppliedLoadsObject(scalarObject):  # approachCode=1, sortCode=0
             self.moments = {dt: []}
             self.add = self.addTransient
 
-    def updateDt(self):
-        """
-        this method is called if the object
-        already exits and a new time step is found
-        """
-        assert dt >= 0.
-        self.dt = dt
-        self.eids[dt] = []
-        self.sources[dt] = []
-        self.forces[dt] = []
-        self.moments[dt] = []
-
     def addNode(self, nodeID, eid, source, v1, v2, v3, v4, v5, v6):
         msg = "nodeID=%s eid=%s source=|%s| v1=%i v2=%i v3=%i v4=%i v5=%i v6=%i" % (nodeID, eid, source, v1, v2, v3, v4, v5, v6)
         assert 0 < nodeID < 1000000000, msg
