@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from .thermal import ThermalCard
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from ..baseCard import expandThru, expandThruBy, collapseThruBy
+from ..baseCard import expand_thru, expand_thru_by, collapse_thru_by
 
 
 class ThermalLoadDefault(ThermalCard):
@@ -34,7 +34,7 @@ class QBDY1(ThermalLoad):
             self.qFlux = card.field(2)
             eids = card.fields(3)
             ## CHBDYj element identification numbers (Integer)
-            self.eids = expandThru(eids)  ## @warning should this use expandThruBy ???
+            self.eids = expand_thru(eids)  ## @warning should this use expand_thru_by ???
         else:
             self.sid = data[0]
             self.qFlux = data[1]
@@ -57,7 +57,7 @@ class QBDY1(ThermalLoad):
         return fields
 
     def reprFields(self):
-        eids = collapseThruBy(self.eids)
+        eids = collapse_thru_by(self.eids)
         fields = ['QBDY1', self.sid, self.qFlux] + list(eids) + [self.qFlux]
         return fields
 
@@ -120,7 +120,7 @@ class QBDY3(ThermalLoad):
             self.cntrlnd = card.field(3, 0)
             eids = card.fields(4)
             ## CHBDYj element identification numbers
-            self.eids = expandThruBy(eids)
+            self.eids = expand_thru_by(eids)
         else:
             self.sid = data[0]
             self.Q0 = data[1]
@@ -150,7 +150,7 @@ class QBDY3(ThermalLoad):
 
     def reprFields(self):
         cntrlnd = set_blank_if_default(self.cntrlnd, 0)
-        eids = collapseThruBy(self.Eids())
+        eids = collapse_thru_by(self.Eids())
         eids.sort()
         fields = ['QBDY3', self.sid, self.Q0, cntrlnd] + eids
         return fields
@@ -181,7 +181,7 @@ class QHBDY(ThermalLoad):
             self.grids = card.fields(5)
 
             ## Grid point identification of connected grid points. (Integer > 0 or blank)
-            self.grids = expandThruBy(self.grids)
+            self.grids = expand_thru_by(self.grids)
         else:
             self.sid = data[0]
             self.flag = data[1]

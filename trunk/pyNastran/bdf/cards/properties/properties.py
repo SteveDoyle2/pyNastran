@@ -350,3 +350,4 @@ class PCONEAX(Property):  # not done
         fields = ['PCONEAX', self.pid, self.Mid(), self.group, self.Type]
         raise NotImplementedError('not supported')
         return fields
+
