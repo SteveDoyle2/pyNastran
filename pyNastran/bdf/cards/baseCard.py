@@ -412,6 +412,8 @@ def condense(valueList):
     and delta values for condensing a SET card.
     @see build_thru
     """
+    if len(valueList) == 1:
+        return [[valueList[0], valueList[0], 1]]
     valueList.sort()
     packs = []
     
@@ -451,7 +453,7 @@ def build_thru(packs, maxDV=None):
     [1,1001,1] represents 1001 values and will be written as [1,THRU,1001]..
 
     @param packs
-      list of packs (list of 3 values: [first, last,delta] )
+      list of packs (list of 3 values: [first, last, delta] )
     @param maxDV
       integer defining the max allowable delta between two values
       (default=None; no limit)
@@ -490,5 +492,7 @@ if __name__ == '__main__':
     1,THRU,10
     1,3,THRU,19,15
     """
-    collapseThru([1, 2, 3, 4, 5, 10])
-    collapseThru([1, 3, 4, 5, 6, 17])
+    print(collapse_thru([1, 2, 3, 4, 5, 10]))
+    print(collapse_thru([1, 3, 4, 5, 6, 17]))
+    print(collapse_thru([1,2,3,4,5]))
+    print(collapse_thru([5]))

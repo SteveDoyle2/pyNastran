@@ -55,4 +55,5 @@ def makeLog():
     f.write(msg)
     f.close()
 
-makeLog()
+if __name__=='__main__':
+    makeLog()

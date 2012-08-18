@@ -78,7 +78,7 @@ def makeTruss2():
 
     force = ['FORCE', loadID, 2, None, 1000., 0., 1., 0.]
     model.add_card(force, 'FORCE')
-    model.write('conrod.bdf')
+    model.writeBDF('conrod.bdf')
     print "done"
     return model
 
@@ -157,7 +157,7 @@ def makeTruss():
 
     force = ['FORCE', loadID, 3, None, 100., 1., 0., 0.]
     model.add_card(force, 'FORCE')
-    model.write('frame.bdf')
+    model.writeBDF('frame.bdf')
     print "done"
     return model
 
@@ -402,4 +402,5 @@ def fKx(K, x):
     return f
 
 
-runTruss()
+if __name__ == '__main__':
+    runTruss()

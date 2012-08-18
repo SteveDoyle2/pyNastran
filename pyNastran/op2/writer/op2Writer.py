@@ -4,7 +4,7 @@ from pyNastran.op2.writer.ougWriter import Ougv1Writer
 
 
 class Op2Writer(Ougv1Writer, Oes1Writer):
-    self.hollerith = pack('i', 584)  # assumes a 128 character string
+    hollerith = pack('i', 584)  # assumes a 128 character string
 
     def pack(self, format, *vals):
         return [str(val) for val in vals]
