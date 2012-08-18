@@ -34,7 +34,7 @@ from .cards.properties.damper import (PVISC, PDAMP, PDAMP5, PDAMPT)
 from .cards.elements.bars import (CROD, CONROD, CTUBE, CBAR, CBEAM, CBEAM3,
                                   CBEND, LineElement, RodElement)
 from .cards.properties.bars import (PROD, PTUBE, PBAR, PBARL,
-                                    PBEAM, PBEAML)  # PBEND
+                                    PBEAM, PBEAML, PBCOMP)  # PBEND
 #------
 
 from .cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4,
@@ -139,6 +139,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.cardsToRead = set([
                                'PARAM',
                                'GRID', 'GRDSET', 'SPOINT',  # 'RINGAX',
+                               'POINT',
 
                                # elements
                                'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
@@ -168,7 +169,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                                'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBEAML',
                                # 'PBEAM3',
                                'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
-                               'PSOLID', 'PLSOLID', 'PVISC',
+                               'PSOLID', 'PLSOLID', 'PVISC','PRAC2D','PRAC3D',
 
                                # creep materials
                                'CREEP',
@@ -407,6 +408,9 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.params = {}
         ## stores SPOINT, GRID cards
         self.nodes = {}
+        ## stores POINT cards
+        self.points = {}
+        
         self.spoints = None
         ## stores GRIDSET card
         self.gridSet = None
@@ -1144,6 +1148,9 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 self.addNode(node)
             elif cardName == 'GRDSET':
                 self.gridSet = GRDSET(cardObj)
+            #elif cardName == 'POINT':
+            #    point = POINT(cardObj)
+            #    self.addPoint(point)
 
             #elif cardName == 'RINGAX':
             #    node = RINGAX(cardObj)
@@ -1347,6 +1354,9 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             elif cardName == 'PBEAM':
                 prop = PBEAM(cardObj)
                 self.addProperty(prop)
+            elif cardName == 'PBCOMP':
+                prop = PBCOMP(cardObj)
+                self.addProperty(prop)
             #elif cardName == 'PBEAM3':
             #    prop = PBEAM3(cardObj)
             #    self.addProperty(prop)
@@ -1421,6 +1431,12 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             elif cardName == 'PGAP':
                 elem = PGAP(cardObj)
                 self.addProperty(elem)
+            elif cardName == 'PRAC2D':
+                prop = PRAC2D(cardObj)
+                self.addProperty(prop)
+            elif cardName == 'PRAC3D':
+                prop = PRAC3D(cardObj)
+                self.addProperty(prop)
 
             elif cardName == 'CREEP':  # hasnt been verified
                 creep = CREEP(cardObj)

@@ -51,7 +51,8 @@ class OGF(object):
         self.addDataParameter(data,'formatCode', 'i', 9, False)
         ## approach code ???
         self.addDataParameter(data,'appCode', 'i', 9, False)
-        ## number of words per entry in record; @note is this needed for this table ???
+        ## number of words per entry in record
+        ## @note is this needed for this table ???
         self.addDataParameter(data,'numWide', 'i', 10, False)
         ## Data Value 1
         self.addDataParameter(data,'value1', 'i', 11, False)

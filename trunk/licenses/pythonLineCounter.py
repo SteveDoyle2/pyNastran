@@ -55,12 +55,12 @@ def countLines(fnames=[]):
         return y                                     -> code
                                                      -> blank
     print f(5)                                       -> code
-    if fnames==[]:             # 1st line            -> code + comment line
-        fnames = sys.argv[1:]  ## @todo finish code  -> code + doxygen marker
+    if fnames==[]:             # 1st line            -> code + comment line   -> code
+        fnames = sys.argv[1:]  ## @todo finish code  -> code + doxygen marker -> code
     ###                                              -> formatting line
                                                      -> blank
     ## standard doxygen                              -> doxygen line
-    comment_lines = 0          ## standard doxygen   -> code + doxygen line
+    comment_lines = 0          ## standard doxygen   -> code + doxygen line -> code
     blank_lines = 0                                  -> code
                                                      -> blank
     code_lines = 0                                   -> code
@@ -78,6 +78,7 @@ def countLines(fnames=[]):
     header_lines = 0
     format_lines = 0
     doxygen_lines = 0
+    bad_doxygen_lines = 0
     quote_lines = 0
     doxygen_starter_lines = 0
     
@@ -163,6 +164,9 @@ def countLines(fnames=[]):
                 if n3==1:
                     format_lines += 1
                     print input_file_name, "###"
+                elif n==1 and '@' in line and '<' not in line:
+                    bad_doxygen_lines += 1
+                    print input_file_name, "****bad****",i
                 elif n2==1 and '@' in line:
                     doxygen_starter_lines += 1
                 elif n2==1:
@@ -184,6 +188,7 @@ def countLines(fnames=[]):
     print "Comment lines: " + str(comment_lines)
     print "Doxygen start: " + str(doxygen_starter_lines)
     print "Doxygen lines: " + str(doxygen_lines)
+    print "Bad Doxy lines " + str(bad_doxygen_lines)
     print "Blank lines:   " + str(blank_lines)
     print "Format lines:  " + str(format_lines)
 

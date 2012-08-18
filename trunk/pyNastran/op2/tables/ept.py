@@ -66,7 +66,6 @@ class EPT(object):
             #print "sid=%s propSet=%s ID=%s value=%s" %(sid,propSet,ID,value)
             prop = NSM(None, None, [sid, propSet, ID, value])
             #self.addOp2Property(prop)
-        ###
 
 # NSM1
 # NSML1
@@ -92,7 +91,6 @@ class EPT(object):
                 e1, e2, f1, f2, k1, k2, I12) = out
             prop = PBAR(None, out)
             self.addOp2Property(prop)
-        ###
 
     def readPBARL(self, data):
         """
@@ -143,7 +141,6 @@ class EPT(object):
             prop = PBARL(None, dataIn)
             self.addOp2Property(prop)
             #print self.printSection(20)
-        ###
 
 # PBCOMP
 
@@ -178,7 +175,6 @@ class EPT(object):
             prop = PBEAM(None, dataIn)
             self.addOp2Property(prop)
             #sys.exit('ept-PBEAM')
-        ###
 
 # PBEAML
 
@@ -232,14 +228,12 @@ class EPT(object):
                 Theta.append(theta)
                 Sout.append(sout)
                 eData = eData[16:]
-            ###
 
             dataIn = [pid, z0, nsm, sb, ft, Tref, ge,
                       isSymmetrical, Mid, T, Theta, Sout]
             #print "PCOMP = %s" %(dataIn)
             prop = PCOMP(None, dataIn)
             self.addOp2Property(prop)
-        ###
 
 # PCOMPA
 # PCONEAX
@@ -271,7 +265,6 @@ class EPT(object):
             #(pid,k,ge,s) = out
             prop = PELAS(data=out)
             self.addOp2Property(prop)
-        ###
 
 # PFAST
 # PELAST
@@ -288,7 +281,6 @@ class EPT(object):
             #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
             prop = PGAP(None, out)
             self.addOp2Property(prop)
-        ###
 
 # PHBDY
 # PINTC
@@ -309,7 +301,6 @@ class EPT(object):
             prop = PMASS(data=out)
             self.addOp2Property(prop)
             n += 8
-        ###
         data = data[n:]
 
     def readPROD(self, data):
@@ -324,7 +315,6 @@ class EPT(object):
             (pid, mid, a, j, c, nsm) = out
             prop = PROD(None, out)
             self.addOp2Property(prop)
-        ###
 
     def readPSHEAR(self, data):
         """
@@ -338,7 +328,6 @@ class EPT(object):
             (pid, mid, t, nsm, f1, f2) = out
             prop = PSHEAR(data=out)
             self.addOp2Property(prop)
-        ###
 
     def readPSHELL(self, data):
         """
@@ -357,8 +346,6 @@ class EPT(object):
                 self.bigProperties[pid] = prop
             else:
                 self.addOp2Property(prop)
-            ###
-        ###
 
     def readPSOLID(self, data):
         """
@@ -372,7 +359,6 @@ class EPT(object):
             dataIn = [pid, mid, cid, inp, stress, isop, fctn]
             prop = PSOLID(None, dataIn)
             self.addOp2Property(prop)
-        ###
 
 # PSOLIDL
 # PTRIA6
@@ -393,7 +379,6 @@ class EPT(object):
             dataIn = [pid, mid, OD, t, nsm]
             prop = PTUBE(None, dataIn)
             self.addOp2Property(prop)
-        ###
 
 # PSET
 # PVAL
@@ -408,7 +393,6 @@ class EPT(object):
             #(pid,ce,cr) = out
             prop = PVISC(data=out)
             self.addOp2Property(prop)
-        ###
 
 # PWELD
 # PWSEAM
