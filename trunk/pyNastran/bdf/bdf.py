@@ -166,8 +166,9 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                                'PELAS', 'PGAP', 'PFAST',
                                'PBUSH', 'PBUSH1D',
                                'PDAMP', 'PDAMP5', 'PDAMPT',
-                               'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBEAML',
-                               # 'PBEAM3',
+                               'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBCOMP',
+                               'PBEAML', # 'PBEAM3',
+                               
                                'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
                                'PSOLID', 'PLSOLID', 'PVISC','PRAC2D','PRAC3D',
 

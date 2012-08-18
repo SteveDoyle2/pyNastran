@@ -53,4 +53,4 @@ if __name__ == '__main__':
     for fname in failed_files:
         f.write('%s\n' % (fname))
     f.close()
-    sys.exit('final stop...')
+    sys.exit('finished...')

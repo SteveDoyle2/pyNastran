@@ -36,7 +36,7 @@ PBEAM   (done)
 PBEAML  (disabled)
 PBEAM3
 
-PBCOMP
+PBCOMP  (done)
 PBRSECT
 PBMSECT
 

@@ -51,7 +51,7 @@ PBEAM   (done)
 PBEAML  (done)
 PBEAM3
 
-PBCOMP
+PBCOMP  (partial)
 PBRSECT
 PBMSECT
 

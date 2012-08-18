@@ -932,7 +932,7 @@ class PBCOMP(LineProperty):
             ## Property ID
             self.pid = card.field(1)
             self.mid = card.field(2)
-            self.area = card.field(3, 0.0)
+            self.A = card.field(3, 0.0)
             self.i1 = card.field(4, 0.0)
             self.i2 = card.field(5, 0.0)
             self.i12 = card.field(6, 0.0)
@@ -951,26 +951,30 @@ class PBCOMP(LineProperty):
             self.mids = []
 
             fields = card.fields(17)
-            nrows = fields//8
-            if fields % 8 > 0:
+            nfields = len(fields)
+            nrows = nfields // 8
+            if nfields % 8 > 0:
                 nrows += 1
             
             for row in xrange(nrows):
-                i = 8*row
+                i = 8*row + 17
                 yi = card.field(i)
                 zi = card.field(i+1)
                 ci = card.field(i+2, 0.0)
-                mid = fields[i + 3]
+                mid = card.field(i+3, self.mid)
                 self.y.append(yi)
                 self.z.append(zi)
                 self.c.append(ci)
                 self.mids.append(mid)
             
+    def MassPerLength(self):
+        return self.nsm+self.mid.Rho()*self.A
+
     def crossReference(self, model):
         self.mid = model.Material(self.mid)
 
     def rawFields(self):
-        fields = ['PBCOMP', self.pid, self.Mid(), self.area, self.i1, self.i2,
+        fields = ['PBCOMP', self.pid, self.Mid(), self.A, self.i1, self.i2,
              self.i12, self.j, self.nsm, self.k1, self.k2, self.m1, self.m2,
              self.n1, self.n2, self.symopt, None]
         for (yi, zi, ci, mid) in zip(self.y,self.z,self.c,self.mids):
@@ -978,7 +982,7 @@ class PBCOMP(LineProperty):
         return fields
                 
     def reprFields(self):
-        area = set_blank_if_default(self.area, 0.0)
+        area = set_blank_if_default(self.A, 0.0)
         j = set_blank_if_default(self.j, 0.0)
         i1 = set_blank_if_default(self.i1, 0.0)
         i2 = set_blank_if_default(self.i2, 0.0)
