@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import BaseCard, expandThruBy, collapseThruBy
+from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru_by, collapse_thru_by
 
 
 class ThermalCard(BaseCard):
@@ -121,7 +121,7 @@ class CHBDYE(ThermalElement):
         return fields
 
     def reprFields(self):
-        #eids = collapseThruBy(self.eids)  ## @todo is this done
+        #eids = collapse_thru_by(self.eids)  ## @todo is this done
         fields = ['CHBDYE', self.eid, self.eid2, self.side, self.iViewFront,
                   self.iViewBack, self.radMidFront, self.radMidBack]
         return fields
@@ -497,7 +497,7 @@ class RADBC(ThermalBC):
 
         eids = card.fields(4)
         ## CHBDYi element identification number
-        self.eids = expandThruBy(eids)
+        self.eids = expand_thru_by(eids)
 
     def crossReference(self, model):
         for i, eid in enumerate(self.eids):
@@ -520,7 +520,7 @@ class RADBC(ThermalBC):
 
     def reprFields(self):
         cntrlnd = set_blank_if_default(self.cntrlnd, 0)
-        eids = collapseThruBy(self.Eids())
+        eids = collapse_thru_by(self.Eids())
         fields = ['RADBC', self.nodamb, self.famb, cntrlnd] + eids
         return fields
 

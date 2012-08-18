@@ -8,7 +8,7 @@ from numpy.linalg import norm
 
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from ..baseCard import BaseCard, expandThru, expandThruBy
+from ..baseCard import BaseCard, expand_thru, expand_thru_by
 
 
 class LOAD(LoadCombination):
@@ -363,7 +363,7 @@ class ACCEL1(BaseCard):
         self.N = array(card.fields(4, 7, [0., 0., 0.]))
         assert max(abs(self.N)) > 0.
         ## nodes to apply the acceleration to
-        self.nodes = expandThruBy(card.fields(9))
+        self.nodes = expand_thru_by(card.fields(9))
 
     def crossReference(self, model):
         self.cid = model.Coord(self.cid)
@@ -927,7 +927,7 @@ class PLOAD4(Load):
             if card.field(7) == 'THRU' and card.field(8):  # plates
                 eid2 = card.field(8)
                 if eid2:
-                    self.eids = expandThru([self.eid, 'THRU', eid2])
+                    self.eids = expand_thru([self.eid, 'THRU', eid2])
 
                 self.g1 = None
                 self.g34 = None
