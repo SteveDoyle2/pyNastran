@@ -524,17 +524,6 @@ class PROD(LineProperty):
     def crossReference(self, model):
         self.mid = model.Material(self.mid)
 
-    #def I11(self):
-        #"""@todo whats the proper formula to use for a ROD"""
-        #return self.j/2.
-
-    #def I22(self):
-        #"""@todo whats the proper formula to use for a ROD"""
-        #return self.j/2.
-
-    #def I12(self):
-        #return 0.
-
     def writeCodeAster(self, iCut, iFace, iStart):  # PROD
         msg = ''
         msg += "    POUTRE=_F(GROUP_MA='P%s', # PROD\n" % (self.pid)

@@ -45,7 +45,7 @@ class OUG(object):
             self.displacements[iSubcase] = disp
         self.iSubcases.append(iSubcase)
 
-    def getComplexDisplacement(self):  # @todo: make a complexDisplacement object
+    def getComplexDisplacement(self):
         """
           BACKWARD WHIRL
                                                                                                                  SUBCASE 2

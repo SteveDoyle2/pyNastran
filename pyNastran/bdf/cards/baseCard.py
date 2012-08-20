@@ -14,7 +14,8 @@ class BaseCard(BDFCard):
     #    pass
 
     def writeCodeAster(self):
-        return '# skipping %s  because writeCodeAster is not implemented\n' % (self.type)
+        return ('# skipping %s  because writeCodeAster is not implemented\n'
+                % self.type)
 
     def writeCodeAsterLoad(self, model, gridWord='node'):
         return '# skipping %s (lid=%s) because writeCodeAsterLoad is not implemented\n' % (self.type, self.lid)
@@ -293,7 +294,7 @@ class Element(BaseCard):
 
     def Jacobian(self):
         msg = 'Jacobian not implemented for %s' % (
-            self.self.__class__.__name__)
+            self.__class__.__name__)
         raise NotImplementedError(msg)
 
     def stiffnessMatrix(self):
@@ -344,17 +345,21 @@ def expand_thru_by(fields):
     while(i < nFields):
         if fields[i] == 'THRU':
             by = 1
+            byCase = False
             if i + 2 < nFields and fields[i + 2] == 'BY':
                 by = fields[i + 3]
             else:
                 by = 1
+                byCase = True
             minValue = fields[i - 1]
             maxValue = fields[i + 1]
-            #print "minValue=%s maxValue=%s by=%s" %(minValue,maxValue,by)
-            for j in xrange(0, (maxValue - minValue) // by + 1):  # +1 is to include final point
-                value = minValue + by * j
+            maxR = int((maxValue - minValue) // by + 1) # max range value
 
-            if by == 1:  # null/standard case
+            for j in xrange(0, maxR):  # +1 is to include final point
+                value = minValue + by * j
+                out.append(value)
+
+            if byCase:  # null/standard case
                 i += 2
             else:     # BY case
                 i += 3
@@ -391,14 +396,24 @@ def expand_thru_exclude(self, fields):
 
 
 def collapse_thru_by(fields):
+    assert 'THRU' not in fields, fields
     fields.sort()
     packs = condense(fields)
     fields2 = build_thru(packs)
     #assert fields == expand_thru_by(fields2)  # why doesn't this work?
-    return fields
+    return fields2
+
+def collapse_thru_by_float(fields):
+    assert 'THRU' not in fields, fields
+    fields.sort()
+    packs = condense(fields)
+    fields2 = build_thru_float(packs)
+    #assert fields == expand_thru_by(fields2)  # why doesn't this work?
+    return fields2
 
 
 def collapse_thru(fields):
+    assert 'THRU' not in fields, fields
     fields.sort()
     packs = condense(fields)
     fields2 = build_thru(packs, maxDV=1)
@@ -441,7 +456,7 @@ def condense(valueList):
     if dvOld == dv:
         packs.append([firstVal,val,dv])
     else:
-        packs.append([firstVal,val,dvOld])
+        packs.append([firstVal, val, dvOld])
     return packs
 
 
@@ -463,9 +478,13 @@ def build_thru(packs, maxDV=None):
         if firstVal == lastVal:
             fields.append(firstVal)
         elif dv == 1:
-            if lastVal - firstVal > 1:
+            if lastVal - firstVal > 2:
                 fields.append(firstVal)
                 fields.append('THRU')
+                fields.append(lastVal)
+            elif lastVal - firstVal == 2:
+                fields.append(firstVal)
+                fields.append(firstVal + 1)
                 fields.append(lastVal)
             else:
                 fields.append(firstVal)
@@ -486,13 +505,30 @@ def build_thru(packs, maxDV=None):
                     fields.append(v)
     return fields
 
+def build_thru_float(packs, maxDV=None):
+    """
+    Takes a pack [1,7,2] and converts it into fields used by a SET card.
+    The values correspond to the first value, last value, and delta in the
+    list.  This means that [1,1001,2] represents 500 values.
+    [1,1001,1] represents 1001 values and will be written as [1,THRU,1001]..
 
-if __name__ == '__main__':
+    @param packs
+      list of packs (list of 3 values: [first, last, delta] )
+    @param maxDV
+      integer defining the max allowable delta between two values
+      (default=None; no limit)
     """
-    1,THRU,10
-    1,3,THRU,19,15
-    """
-    print(collapse_thru([1, 2, 3, 4, 5, 10]))
-    print(collapse_thru([1, 3, 4, 5, 6, 17]))
-    print(collapse_thru([1,2,3,4,5]))
-    print(collapse_thru([5]))
+    fields = []
+    for (firstVal, lastVal, dv) in packs:
+        if lastVal - firstVal > 4*dv:
+            fields.append(firstVal)
+            fields.append('THRU')
+            fields.append(lastVal)
+            fields.append('BY')
+            fields.append(dv)
+        else:
+            nv = int(round((lastVal-firstVal)/dv))+1
+            for i in xrange(nv):
+                v = firstVal + i*dv
+                fields.append(v)
+    return fields

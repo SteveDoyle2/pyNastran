@@ -19,10 +19,17 @@ This code was written entirely in Python and should install easily.
 
 Overall Notes
    - more PEP-8
+
 Overall BDF
+   - SET-type cards now simplify their output, so [1,2,3,4,5] is written as [1,THRU,5]
+     this includes SET1, SET2, SET3, QBDY3, etc.
+   - fixed bug when parsing THRU cards
+
+
 BDF API Additions
+
 BDF Bug Fixes:
-Removed BDF
+   - DDVAL card did not write out
 
 Added BDF
    - *** SET2,PEALST,TIC,DMI,CONM1
@@ -49,7 +56,6 @@ Added F06 Writer
 
 Overall GUI
 Added GUI
-   - CQUADR, CTRIAR
 GUI Bug Fixes
 
 

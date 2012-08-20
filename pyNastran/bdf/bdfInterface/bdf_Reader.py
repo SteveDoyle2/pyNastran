@@ -37,7 +37,6 @@ class BDFReader(object):
             return os.path.relpath(filename)
         else:
             return filename
-        ###
 
     def open_file(self, infileName):
         """

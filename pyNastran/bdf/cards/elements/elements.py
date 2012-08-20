@@ -25,11 +25,11 @@ class CFAST(Element):
 
         #if self.Type=='PROP': # PSHELL/PCOMP  ida & idb
 
-    def crossReference(self, model):  # @todo xref
+    def crossReference(self, model):
         self.pid = model.Property(self.pid)
-        #self.gs = model.Node(self.gs)
-        #self.ga = model.Node(self.ga)
-        #self.gb = model.Node(self.gb)
+        self.gs = model.Node(self.gs)
+        self.ga = model.Node(self.ga)
+        self.gb = model.Node(self.gb)
 
     def rawFields(self):
         fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb, self.gs, self.ga, self.gb,

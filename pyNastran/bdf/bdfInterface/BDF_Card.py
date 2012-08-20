@@ -47,8 +47,6 @@ class BDFCard(object):
             if cardB[i] is not None:
                 iMax = i
             i += 1
-        #print "i=%s iMax=%s"%(i,iMax)
-        #print "cardC = ",cardB[:iMax+1],'\n'
 
         return cardB[:iMax + 1]
 
