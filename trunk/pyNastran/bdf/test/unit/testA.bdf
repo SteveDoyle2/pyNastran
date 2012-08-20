@@ -36,6 +36,17 @@ PBCOMP  5       9       12.                                             P51
 +57     -0.866  -1.1547 .125                                            P58
 +58     -1.2247 0.0     .125                                            P59
 +59     -0.866  1.1547  .125
+$PBARL    1       1       	rod
+$	.3
+$PBARL   9       1               bar
+$	5.0	40.0
+$PBARL    6666    10              BAR      
+$+       5.5     3.0
+$PBARL    6       10              DBOX     
+$+       5.5     3.0     2.75    1.45    2.4
+$+
+$PBARL	2	1		cross
+$	.4	.1	.6	.1
 PCOMPG   2      -2.885          58.      STRN
          1001    795    .17     45.001   YES
          1002    796    5.      .001     YES
@@ -142,7 +153,7 @@ QBDY3   33      20.0            1       thru    8
 QBDY3         34     20.               1    THRU       7      BY       2
               10    THRU      40      BY       5      42      45    THRU
               48
-QBDY3         34     20.               1       2       3       4       5
+QBDY3         35     20.               1       2       3       4       5
                6       7       8
 QBDY3,500,50000.0,,10,THRU,60,BY,10
 PLOAD4       510     101      5.                            THRU     112
@@ -169,6 +180,8 @@ $THERMAL
 $CHBDYP,21,,,,,110,111
 $OPTIMIZATION
 DCONSTR        1      16-999999.1000000.
+DDVAL	10	0.1	0.5	
+	1.0	THRU	100. 	BY	1.0
 DRESP2,1,LBUCK,5,3
 ,DESVAR,101,3,4,5,1,205,209
 ,,201

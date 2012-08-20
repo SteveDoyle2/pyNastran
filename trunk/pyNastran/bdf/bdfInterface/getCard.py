@@ -157,9 +157,6 @@ class GetMethods(object):
                 if hasattr(prop, 'mid') and prop.Mid() in mids:
                     if pid not in midToPidsMap[mid]:
                         midToPidsMap[mid].append(pid)
-                ###
-            ###
-        ###
         return (midToPidsMap)
 
     def Element(self, eid):
@@ -186,7 +183,6 @@ class GetMethods(object):
         except KeyError:
             raise KeyError('pid=%s not found.  Allowed Pids=%s'
                            % (pid, self.propertyIDs()))
-        ###
 
     def Properties(self, pids):
         properties = []

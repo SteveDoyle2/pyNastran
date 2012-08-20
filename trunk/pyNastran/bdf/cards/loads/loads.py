@@ -1,7 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914,W0231,R0201
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
+#import sys
 from itertools import izip
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -161,7 +161,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             return self.LoadID(lid[0])
         else:
             return lid.sid
-        raise RuntimeError(lid)
+        #raise RuntimeError(lid)
 
     def getLoads(self):
         return self.lid
@@ -171,8 +171,8 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             return self.lid
         else:
             return self.LoadID(self.lid)
-            raise NotImplementedError('LSEQ ' + str(self.lid) +
-                                      '\n%s' % (type(self.lid)))
+            #raise NotImplementedError('LSEQ ' + str(self.lid) +
+            #                          '\n%s' % (type(self.lid)))
 
     def Tid(self):
         if self.tid is None:
@@ -288,7 +288,7 @@ class DAREA(BaseCard):
             self.p = data[1]
             self.c = data[2]
             self.scale = data[3]
-            assert len(data) == 4, 'data = %s' % (data)
+            assert len(data) == 4, 'data = %s' % data
         ###
 
     def rawFields(self):
@@ -348,7 +348,7 @@ class TLOAD1(TabularLoad):
         elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
             self.Type = 'ACCE'
         else:
-            msg = 'invalid TLOAD1 type  Type=|%s|' % (self.Type)
+            msg = 'invalid TLOAD1 type  Type=|%s|' % self.Type
             raise RuntimeError(msg)
 
     def getLoads(self):
@@ -433,7 +433,7 @@ class TLOAD2(TabularLoad):
         elif self.Type in [5, 6, 7, 12, 13]:
             pass
         else:
-            msg = 'invalid TLOAD1 type  Type=|%s|' % (self.Type)
+            msg = 'invalid TLOAD1 type  Type=|%s|' % self.Type
             raise RuntimeError(msg)
 
     def getLoads(self):
@@ -462,7 +462,7 @@ class TLOAD2(TabularLoad):
         us0 = set_blank_if_default(self.us0, 0.0)
         vs0 = set_blank_if_default(self.vs0, 0.0)
         fields = ['TLOAD2', self.sid, self.exciteID, self.delay, self.Type,
-                  self.T1, self.T2, self.frequency, phase, c, b, us0, vs0]
+                  self.T1, self.T2, frequency, phase, c, b, us0, vs0]
         return fields
 
 
@@ -484,7 +484,7 @@ class RFORCE(Load):
             self.idrf = card.field(11, 0)
         else:
             self.sid = data[0]
-            print("PLOADX1 = %s" % (data))
+            print("PLOADX1 = %s" % data)
             raise NotImplementedError('PLOADX1')
 
     def crossReference(self, model):
@@ -542,7 +542,7 @@ class RLOAD1(TabularLoad):
         elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
             self.Type = 'ACCE'
         else:
-            msg = 'invalid RLOAD1 type  Type=|%s|' % (self.Type)
+            msg = 'invalid RLOAD1 type  Type=|%s|' % self.Type
             raise RuntimeError(msg)
 
     def crossReference(self, model):
@@ -614,7 +614,7 @@ class RLOAD2(TabularLoad):
         elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
             self.Type = 'ACCE'
         else:
-            msg = 'invalid RLOAD2 type  Type=|%s|' % (self.Type)
+            msg = 'invalid RLOAD2 type  Type=|%s|' % self.Type
             raise RuntimeError(msg)
 
     def crossReference(self, model):

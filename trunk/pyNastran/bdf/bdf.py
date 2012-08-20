@@ -136,132 +136,132 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.case_control_lines = []
 
         ## the list of possible cards that will be parsed
-        self.cardsToRead = set([
-                               'PARAM',
-                               'GRID', 'GRDSET', 'SPOINT',  # 'RINGAX',
-                               'POINT',
+        self.cardsToRead = {
+            'PARAM',
+            'GRID', 'GRDSET', 'SPOINT',  # 'RINGAX',
+            'POINT',
 
-                               # elements
-                               'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
-                               # 'CONM1',
-                               'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                               # 'CELAS5',
-                               'CBUSH', 'CBUSH1D', 'CBUSH2D',
+            # elements
+            'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
+            # 'CONM1',
+            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+            # 'CELAS5',
+            'CBUSH', 'CBUSH1D', 'CBUSH2D',
 
-                               'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-                               'CFAST',
+            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+            'CFAST',
 
-                               'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
-                               'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
-                               'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
-                               'CTETRA', 'CPENTA', 'CHEXA',
-                               'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
-                               'CGAP',
+            'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
+            'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
+            'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
+            'CTETRA', 'CPENTA', 'CHEXA',
+            'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
+            'CGAP',
 
-                               # rigid elements
-                               'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3',
+            # rigid elements
+            'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3',
 
-                               # properties
-                               'PMASS',
-                               'PELAS', 'PGAP', 'PFAST',
-                               'PBUSH', 'PBUSH1D',
-                               'PDAMP', 'PDAMP5', 'PDAMPT',
-                               'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBCOMP',
-                               'PBEAML', # 'PBEAM3',
-                               
-                               'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
-                               'PSOLID', 'PLSOLID', 'PVISC','PRAC2D','PRAC3D',
+            # properties
+            'PMASS',
+            'PELAS', 'PGAP', 'PFAST',
+            'PBUSH', 'PBUSH1D',
+            'PDAMP', 'PDAMP5', 'PDAMPT',
+            'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBCOMP',
+            'PBEAML', # 'PBEAM3',
 
-                               # creep materials
-                               'CREEP',
+            'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
+            'PSOLID', 'PLSOLID', 'PVISC','PRAC2D','PRAC3D',
 
-                               # materials
-                               'MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MATHP',
-                               #'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
-                               'MATS1',
+            # creep materials
+            'CREEP',
 
-                               # thermal materials
-                               'MAT4', 'MAT5',
+            # materials
+            'MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MATHP',
+            #'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
+            'MATS1',
 
-                               # spc/mpc constraints
-                               'SPC', 'SPCADD', 'SPC1', 'SPCD', 'SPCAX',
-                               'MPC', 'MPCADD',
-                               'SUPORT', 'SUPORT1',
+            # thermal materials
+            'MAT4', 'MAT5',
 
-                               # loads
-                               'LOAD', 'LSEQ', 'RANDPS',
-                               'DLOAD', 'SLOAD', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
-                               'FORCE', 'FORCE1', 'FORCE2',
-                               'MOMENT', 'MOMENT1', 'MOMENT2',
-                               'GRAV', 'ACCEL1',
-                               'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
-                               'PLOADX1', 'RFORCE',
+            # spc/mpc constraints
+            'SPC', 'SPCADD', 'SPC1', 'SPCD', 'SPCAX',
+            'MPC', 'MPCADD',
+            'SUPORT', 'SUPORT1',
 
-                               # aero cards
-                               'AERO', 'AEROS', 'GUST', 'FLUTTER', 'FLFACT', 'MKAERO1', 'MKAERO2',
-                               'AEFACT', 'AELINK', 'AELIST', 'AEPARAM', 'AESTAT', 'AESURF',
-                               'CAERO1', 'CAERO2',  # 'CAERO3', 'CAERO4', 'CAERO5',
-                               'PAERO1', 'PAERO2',  # 'PAERO3', 'PAERO4', 'PAERO5',
-                               'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',
-                               #'SPLINE3', 'SPLINE6', 'SPLINE7',
-                               'TRIM',
+            # loads
+            'LOAD', 'LSEQ', 'RANDPS',
+            'DLOAD', 'SLOAD', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
+            'FORCE', 'FORCE1', 'FORCE2',
+            'MOMENT', 'MOMENT1', 'MOMENT2',
+            'GRAV', 'ACCEL1',
+            'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
+            'PLOADX1', 'RFORCE',
 
-                               # coords
-                               'CORD1R', 'CORD1C', 'CORD1S',
-                               'CORD2R', 'CORD2C', 'CORD2S',
+            # aero cards
+            'AERO', 'AEROS', 'GUST', 'FLUTTER', 'FLFACT', 'MKAERO1', 'MKAERO2',
+            'AEFACT', 'AELINK', 'AELIST', 'AEPARAM', 'AESTAT', 'AESURF',
+            'CAERO1', 'CAERO2',  # 'CAERO3', 'CAERO4', 'CAERO5',
+            'PAERO1', 'PAERO2',  # 'PAERO3', 'PAERO4', 'PAERO5',
+            'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',
+            #'SPLINE3', 'SPLINE6', 'SPLINE7',
+            'TRIM',
 
-                               # temperature cards
-                               'TEMP',  # 'TEMPD',
-                               'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
-                               'CHBDYE', 'CHBDYG', 'CHBDYP',
-                               'PCONV', 'PCONVM', 'PHBDY',
-                               'RADBC', 'CONV',  # 'RADM',
+            # coords
+            'CORD1R', 'CORD1C', 'CORD1S',
+            'CORD2R', 'CORD2C', 'CORD2S',
 
-                               # dynamic cards
-                               'DAREA', 'NLPARM', 'TSTEP', 'TSTEPNL',
+            # temperature cards
+            'TEMP',  # 'TEMPD',
+            'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
+            'CHBDYE', 'CHBDYG', 'CHBDYP',
+            'PCONV', 'PCONVM', 'PHBDY',
+            'RADBC', 'CONV',  # 'RADM',
 
-                               # frequencies
-                               'FREQ', 'FREQ1', 'FREQ2',
+            # dynamic cards
+            'DAREA', 'NLPARM', 'TSTEP', 'TSTEPNL',
 
-                               # direct matrix input cards
-                               'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
-                               'DEQATN',
+            # frequencies
+            'FREQ', 'FREQ1', 'FREQ2',
 
-                               # optimization cards
-                               'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2', 'DVPREL1', 'DVPREL2',
-                               'DOPTPRM', 'DVMREL1', 'DLINK', 'DRESP3',
+            # direct matrix input cards
+            'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
+            'DEQATN',
 
-                               # sets
-                               'ASET', 'BSET', 'CSET', 'QSET',  # 'USET',
-                               'ASET1', 'BSET1', 'CSET1', 'QSET1',  # 'USET1',
-                               'SET1', 'SET3',
+            # optimization cards
+            'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2', 'DVPREL1', 'DVPREL2',
+            'DOPTPRM', 'DVMREL1', 'DLINK', 'DRESP3',
 
-                               # super-element sets
-                               'SESET',
+            # sets
+            'ASET', 'BSET', 'CSET', 'QSET',  # 'USET',
+            'ASET1', 'BSET1', 'CSET1', 'QSET1',  # 'USET1',
+            'SET1', 'SET3',
 
-                               # tables
-                               #'DTABLE', 'TABLEHT', 'TABRNDG',
-                               'TABLED1', 'TABLED2', 'TABLED3',  # 'TABLED4',
-                               'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
-                               'TABLES1', 'TABLEST',
-                               'TABRND1', 'TABRNDG',
+            # super-element sets
+            'SESET',
 
-                               # initial conditions - sid (set ID)
-                               #'TIC',  (in tables.py)
+            # tables
+            #'DTABLE', 'TABLEHT', 'TABRNDG',
+            'TABLED1', 'TABLED2', 'TABLED3',  # 'TABLED4',
+            'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
+            'TABLES1', 'TABLEST',
+            'TABRND1', 'TABRNDG',
 
-                               ## methods - @todo EIGRL not done???
-                               'EIGB', 'EIGR', 'EIGRL',
+            # initial conditions - sid (set ID)
+            #'TIC',  (in tables.py)
 
-                               ## cMethods - @todo EIGC not done???
-                               'EIGC', 'EIGP',
+            ## methods - @todo EIGRL not done???
+            'EIGB', 'EIGR', 'EIGRL',
 
-                               # other
-                               'INCLUDE',  # '='
-                               'ENDDATA',
-                               ])
+            ## cMethods - @todo EIGC not done???
+            'EIGC', 'EIGP',
 
-        caseControlCards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
-                                'TEMP', 'TSTEPNL', 'INCLUDE'])
+            # other
+            'INCLUDE',  # '='
+            'ENDDATA',
+            }
+
+        caseControlCards = {'FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
+                            'TEMP', 'TSTEPNL', 'INCLUDE'}
         self.uniqueBulkDataCards = self.cardsToRead.difference(
             caseControlCards)
 
@@ -269,14 +269,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.specialCards = ['DEQATN', '/']
         ## was playing around with an idea...does nothing for now...
         self.cardsToWrite = self.cardsToRead
-
-    def disableCards(self, cards):
-        """
-        @see disable_cards
-        """
-        warnings.warn('disableCards has been deprecated; use disable_cards',
-                      DeprecationWarning, stacklevel=2)
-        self.disable_cards(cards)
 
     def disable_cards(self, cards):
         """
@@ -581,7 +573,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self._set_infile(infilename, includeDir)
 
         fname = self.print_filename(self.bdf_filename)
-        self.log.debug('---starting BDF.readBDF of %s---' % (fname))
+        self.log.debug('---starting BDF.readBDF of %s---' % fname)
         #self.log.info('xref=%s' %(xref))
         sys.stdout.flush()
 
@@ -596,7 +588,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         if self.debug:
             self.log.debug("***BDF.readBDF")
 
-        self.log.debug('---finished BDF.readBDF of %s---' % (fname))
+        self.log.debug('---finished BDF.readBDF of %s---' % fname)
         sys.stdout.flush()
 
     def readBDF_Punch(self, infilename, includeDir=None, xref=True):
@@ -613,7 +605,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self._set_infile(infilename, includeDir)
 
         fname = self.print_filename(self.bdf_filename)
-        self.log.debug('---starting BDF.readBDF_Punch of %s---' % (fname))
+        self.log.debug('---starting BDF.readBDF_Punch of %s---' % fname)
         #self.log.info('xref=%s' %(xref))
         sys.stdout.flush()
 
@@ -626,7 +618,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         if self.debug:
             self.log.debug("***BDF.readBDF_Punch")
 
-        self.log.debug('---finished BDF.readBDF_Punch of %s---' % (fname))
+        self.log.debug('---finished BDF.readBDF_Punch of %s---' % fname)
         sys.stdout.flush()
 
     def _is_executive_control_deck(self, line):
@@ -641,7 +633,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         while emptyLines < 50 and 'CEND' not in line.upper()[:4]:
             line = self.infilesPack[-1].readline()
             line = line.rstrip('\n\r\t ')
-            if(len(line) > 0):
+            if len(line) > 0:
                 self.executive_control_lines.append(line)
             else:
                 emptyLines += 1
@@ -692,7 +684,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 try:
                     self.update_solution(sol, method)
                 except:
-                    msg = ('update_solution failed...line=%s' % (uline))
+                    msg = ('update_solution failed...line=%s' % uline)
                     raise RuntimeError(msg)
 
         #print("sol = ", sol)
@@ -891,7 +883,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             return False
         if cardName:
             if cardName not in self.rejectCount:
-                self.log.info("RejectCardName = |%s|" % (cardName))
+                self.log.info("RejectCardName = |%s|" % cardName)
                 self.rejectCount[cardName] = 0
             self.rejectCount[cardName] += 1
         return True

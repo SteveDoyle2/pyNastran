@@ -118,9 +118,8 @@ class QBDY3(ThermalLoad):
             self.Q0 = card.field(2)
             ## Control point for thermal flux load. (Integer > 0; Default = 0)
             self.cntrlnd = card.field(3, 0)
-            eids = card.fields(4)
             ## CHBDYj element identification numbers
-            self.eids = expand_thru_by(eids)
+            self.eids = expand_thru_by(card.fields(4))
         else:
             self.sid = data[0]
             self.Q0 = data[1]
@@ -145,14 +144,15 @@ class QBDY3(ThermalLoad):
     def rawFields(self):
         eids = self.Eids()
         eids.sort()
-        fields = ['QBDY3', self.sid, self.Q0, self.cntrlnd] + eids
+        fields = ['QBDY3', self.sid, self.Q0, self.cntrlnd
+                 ] + collapse_thru_by(eids)
         return fields
 
     def reprFields(self):
         cntrlnd = set_blank_if_default(self.cntrlnd, 0)
-        eids = collapse_thru_by(self.Eids())
+        eids = self.Eids()
         eids.sort()
-        fields = ['QBDY3', self.sid, self.Q0, cntrlnd] + eids
+        fields = ['QBDY3', self.sid, self.Q0, cntrlnd] + collapse_thru_by(eids)
         return fields
 
 
