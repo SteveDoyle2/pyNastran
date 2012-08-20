@@ -31,8 +31,6 @@ Free Software Foundation, Inc.,
 
 #define  MAX(a,b)              ((a) >  (b)) ? (a)  : (b)
 void get_file_suffix(char *file, char *ext);
-
-//-----------------------------------------------------------------------
 /* constants {{{1
    would like to have the constant arrays below defined in op4.h
    but they cause 'multiple definition' errors
@@ -1554,6 +1552,60 @@ printf("op4_wrt_trailer loc=%ld\n", ftell(fp));
         fwrite(&RL,                BYTES_PER_WORD,     1, fp);
     }
     return 1;
+} /* 1}}} */
+void strings_in_list( /* {{{1 */
+                     int  n_terms   ,     /* in  length of list[]            */
+                     int *list      ,     /* in                              */
+                     int *n_str     ,     /* out number of strings in list[] */
+                     int *start_ind ,     /* out index of 1st string terms   */
+                     int *str_len   ,     /* out length of each string       */
+                     int *max_length)     /* out longest string in list[]    */
+     /*  list[] contains non-negative integers in ascending order, eg:
+      *     n_terms = 7
+      *     list[0..6]  =  2, 5, 6, 7, 10, 12, 13
+      *  This routine counts the number of blocks of consecutive terms
+      *  and also returns the length of the longest string.  In the example
+      *  the strings are   (2)  (5,6,7)  (10)  (12,13)
+      *  so:
+      *      n_str                   = 4 
+      *      start_ind[0..(n_str-1)] =  0, 1, 4, 5
+      *      str_len[  0..(n_str-1)] =  1, 3, 1, 2
+      *      max_length              = 3
+      */
+{
+int DEBUG = 0;
+    int i, length_current;
+
+    *n_str         = 0;
+    *max_length    = 0;
+    length_current = 0;
+    if (n_terms > 0) {
+        length_current    = 1;
+        start_ind[*n_str] = 0;
+        str_len[  *n_str] = length_current;
+        ++(*n_str);
+    } else {
+        return;
+    }
+    for (i = 1; i < n_terms; i++) {
+        if (list[i] != (list[i-1] + 1)) {
+            length_current    = 1;
+            start_ind[*n_str] = i;
+            str_len[  *n_str] = length_current;
+if (DEBUG) {
+printf("list[%d]=%d  list[%d]=%d  nstr=%d   len=%d\n", 
+i, list[i], i-1, list[i-1], *n_str, str_len[*n_str]);
+}
+            ++(*n_str);
+        } else {
+            ++length_current;
+            str_len[*n_str-1] = length_current;
+if (DEBUG) {
+printf("           nstr=%d   len=%d\n", *n_str-1, str_len[*n_str-1]);
+}
+        }
+        *max_length = MAX(*max_length, length_current);
+    }
 } /* 1}}} */
 
 int    flip_bytes_int(int x) {  /* {{{1 */
