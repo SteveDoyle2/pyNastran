@@ -16,7 +16,7 @@ def printBadPath(path):
     return msg
 
 
-def getFilesOfType(dirname, extension='.txt', maxSize=100.):
+def get_files_of_type(dirname, extension='.txt', maxSize=100.):
     """
     gets all the files in the specified directory with a given extension
     @param dirname the directory name

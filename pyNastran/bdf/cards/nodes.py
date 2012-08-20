@@ -19,8 +19,8 @@ class Node(BaseCard):
     def __init__(self, card, data):
         assert card is None or data is None
 
-    def crossReference(self, model):
-        msg = '%s hasnt implemented a crossReference method' % (self.type)
+    def cross_reference(self, model):
+        msg = '%s hasnt implemented a cross_reference method' % (self.type)
         raise NotImplementedError(msg)
 
     def Cp(self):
@@ -76,22 +76,17 @@ class SPOINT(Node):
         Node.__init__(self, card=None, data=None)
         self.nid = nid
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
     def Position(self):
         return array([0., 0., 0.])
 
     def rawFields(self):
-        """
-        @todo support THRU in output
-        """
-        #print("SPOINT")
         if isinstance(self.nid, int):
-            fields = ['SPOINT'] + [self.nid]
-        else:
-            #print "self.nid = ",self.nid
             fields = ['SPOINT'] + self.nid
+        else:
+            fields = ['SPOINT'] + collapse_thru(self.nid)
         return fields
 
 
@@ -130,7 +125,7 @@ class SPOINTs(Node):
         #print('old=%s new=%s' %(self.spoints,sList))
         self.spoints = self.spoints.union(set(sList))
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
     def createSPOINTi(self):
@@ -172,7 +167,7 @@ class GRDSET(Node):
         ## Superelement ID
         self.seid = card.field(8, 0)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.cp = model.Coord(self.cp)
         self.cd = model.Coord(self.cd)
         #self.seid = model.SuperElement(self.seid)
@@ -316,7 +311,7 @@ class GRID(Node):
         p2 = coordB.transformToLocal(p, matrix, debug=debug)
         return p2
 
-    def crossReference(self, model, grdset=None):
+    def cross_reference(self, model, grdset=None):
         """
         the gridset object will only update the fields that have not been set
         """
@@ -425,7 +420,7 @@ class POINT(Node):
         p2 = coordB.transformToLocal(p, matrix, debug=debug)
         return p2
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.cp = model.Coord(self.cp)
 
     def rawFields(self):

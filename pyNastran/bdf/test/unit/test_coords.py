@@ -134,7 +134,7 @@ class TestCoords(unittest.TestCase):
         mesh.add_card(card, card[0])
         card = mesh.processCard(coord)
         mesh.add_card(card, card[0])
-        mesh.crossReference()
+        mesh.cross_reference()
 
         g = mesh.Node(20143)
         #print(g.Position(debug=False))
@@ -164,7 +164,7 @@ class TestCoords(unittest.TestCase):
             if debug:
                 print(coordObj)
 
-        mesh.crossReference()
+        mesh.cross_reference()
 
         for (i, grid) in enumerate(gridsExpected):
             (cid, x, y, z) = grid

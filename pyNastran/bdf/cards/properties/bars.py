@@ -521,7 +521,7 @@ class PROD(LineProperty):
         #"""assumes circular cross section - probably will remove this"""
         #return (self.A/pi)**0.5
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def writeCodeAster(self, iCut, iFace, iStart):  # PROD
@@ -572,7 +572,7 @@ class PTUBE(LineProperty):
             self.OD2 = self.OD1
             #self.OD2 = data[5]  ## @note quirk to this one...
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def Area(self):
@@ -704,7 +704,7 @@ class PBAR(LineProperty):
         nsm = self.Nsm()
         return rho * A + nsm
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def Area(self):
@@ -853,7 +853,7 @@ class PBARL(LineProperty):
 
         assert None not in self.dim
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def Area(self):
@@ -959,7 +959,7 @@ class PBCOMP(LineProperty):
     def MassPerLength(self):
         return self.nsm+self.mid.Rho()*self.A
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def rawFields(self):
@@ -1132,7 +1132,7 @@ class PBEAM(IntegratedLineProperty):
         massPerL = integratePositiveLine(self.xxb, massPerLs)
         return massPerL
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def writeCodeAster(self):  # PBEAM
@@ -1359,7 +1359,7 @@ class PBEAML(IntegratedLineProperty):
     #def Mid(self):
     #    return self.mid
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         """
         @warning For structural problems, PBEAML entries must reference a MAT1 material entry
         @warning For heat-transfer problems, the MID must reference a MAT4 or MAT5 material entry.
@@ -1479,7 +1479,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
         """@warning nsm field not supported fully on PBEAM3 card"""
         return self.nsm
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def reprFields(self):
@@ -1568,7 +1568,7 @@ class PBEND(LineProperty):
         #raise RuntimeError(self.nsm[0])
         #return self.nsm
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def reprFields(self):

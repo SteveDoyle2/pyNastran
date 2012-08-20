@@ -66,7 +66,7 @@ class LoadCombination(Load):  # LOAD, DLOAD
             assert len(data) == 4, '%s data=%s' % (self.type, data)
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         loadIDs2 = []
         for loadID in self.loadIDs:
             loadID2 = model.Load(loadID)
@@ -149,7 +149,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         #    return [node.nid for node in nodes]
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.lid = model.Load(self.lid)
         if self.tid:
             self.tid = model.Load(self.tid)
@@ -220,7 +220,7 @@ class SLOAD(Load):
             self.mags.append(fields[j + 1])
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         for (i, nid) in enumerate(self.nids):
             self.nids[i] = model.Node(nid)
         ###
@@ -246,7 +246,7 @@ class DLOAD(LoadCombination):
     def __init__(self, card=None, data=None):
         LoadCombination.__init__(self, card, data)
 
-    #def crossReference(self, model):
+    #def cross_reference(self, model):
     #    for (i, sid) in enumerate(self.sids):
     #        self.sids[i] = model.Load(sid)
     #    ###
@@ -354,7 +354,7 @@ class TLOAD1(TabularLoad):
     def getLoads(self):
         return [self]
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         if self.tid:
             self.tid = model.Table(self.tid)
 
@@ -439,7 +439,7 @@ class TLOAD2(TabularLoad):
     def getLoads(self):
         return [self]
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
         # delay
         # exciteID
@@ -454,10 +454,10 @@ class TLOAD2(TabularLoad):
         #self.Type = card.field(4,0)
         #self.T1 = card.field(5,0.)
         #self.T2 = card.field(6,self.T1)
-        frequency = set_blank_if_default(self.frequency, 0.)
-        phase = set_blank_if_default(self.phase, 0.)
-        c = set_blank_if_default(self.c, 0.)
-        b = set_blank_if_default(self.b, 0.)
+        frequency = set_blank_if_default(self.frequency, 0.0)
+        phase = set_blank_if_default(self.phase, 0.0)
+        c = set_blank_if_default(self.c, 0.0)
+        b = set_blank_if_default(self.b, 0.0)
 
         us0 = set_blank_if_default(self.us0, 0.0)
         vs0 = set_blank_if_default(self.vs0, 0.0)
@@ -487,7 +487,7 @@ class RFORCE(Load):
             print("PLOADX1 = %s" % data)
             raise NotImplementedError('PLOADX1')
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         #self.nid = model.Element(self.nid)
         #self.cid = model.Coord(self.cid)
         pass
@@ -545,7 +545,7 @@ class RLOAD1(TabularLoad):
             msg = 'invalid RLOAD1 type  Type=|%s|' % self.Type
             raise RuntimeError(msg)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         if self.tc:
             self.tc = model.Table(self.tc)
         if self.td:
@@ -617,7 +617,7 @@ class RLOAD2(TabularLoad):
             msg = 'invalid RLOAD2 type  Type=|%s|' % self.Type
             raise RuntimeError(msg)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         if self.tb:
             self.tb = model.Table(self.tb)
         if self.tp:
@@ -692,7 +692,7 @@ class RANDPS(RandomLoad):
             ## Identification number of a TABRNDi entry that defines G(F).
             self.tid = card.field(6, 0)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         if self.tid:
             self.tid = model.Table(self.tid)
 

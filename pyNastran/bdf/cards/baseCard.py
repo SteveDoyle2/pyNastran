@@ -47,9 +47,9 @@ class BaseCard(BDFCard):
         """prints a card object"""
         return printCard(fields, tol)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         #self.mid = model.Material(self.mid)
-        msg = "%s needs to implement the 'crossReference' method" % (self.type)
+        msg = "%s needs to implement the 'cross_reference' method" % (self.type)
         raise NotImplementedError(msg)
 
     def buildTableLines(self, fields, nStart=1, nEnd=0):
@@ -147,7 +147,7 @@ class Property(BaseCard):
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
 
@@ -166,7 +166,7 @@ class Material(BaseCard):
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
     def Mid(self):

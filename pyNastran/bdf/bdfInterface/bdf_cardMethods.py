@@ -126,9 +126,8 @@ class CardMethods(object):
         #    i+=1
         #    iline = self.lines[i].rstrip()
 
-        sCardName = iline[0:8].strip()  # trying to find if it's blank...
-        isNotDone = len(iline) > 0 and (
-                                        iline.strip()[0] in ['*', '+', ',']
+        sCardName = iline[0:8].rstrip()  # trying to find if it's blank...
+        isNotDone = len(iline) > 0 and (iline.rstrip()[0] in ['*', '+', ',','\t']
                                         or sCardName == ''
                                         or not sCardName[0].isalpha())
 
@@ -177,8 +176,7 @@ class CardMethods(object):
             #if '\t' in slot0:
             #    slot0 = slot0.expandtabs()
             #sCardName = slot0.strip()  # trying to find if it's blank...
-            isNotDone = len(iline) > 0 and (
-                                            iline.strip()[0] in ['*', '+', ',']
+            isNotDone = len(iline) > 0 and (iline.rstrip()[0] in ['*', '+', ',','\t']
                                             or sCardName == ''
                                             or not sCardName[0].isalpha())
             if debug:

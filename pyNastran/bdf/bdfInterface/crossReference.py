@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 import sys
+import warnings
 #from pyNastran.bdf.cards.constraints import constraintObject2
 
 
@@ -16,6 +17,13 @@ class XrefMesh(object):
         pass
 
     def crossReference(self, xref=True):
+        """
+        @see cross_reference
+        """
+        warnings.warn('crossReference is deprecated; use cross_reference')
+        self.cross_reference(xref)
+
+    def cross_reference(self, xref=True):
         """
         Links up all the cards to the cards they reference
         """
@@ -34,14 +42,14 @@ class XrefMesh(object):
             self._cross_reference_aero()
             self._cross_reference_constraints()
             self._cross_reference_loads()
-            #self.caseControlDeck.crossReference(self)
+            #self.caseControlDeck.cross_reference(self)
 
     def _cross_reference_constraints(self):
         """
         Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC cards.
         """
-        #self.spcObject.crossReference(self)  # enable to output SPCs
-        #self.mpcObject.crossReference(self)  # enable to output MPCs
+        #self.spcObject.cross_reference(self)  # enable to output SPCs
+        #self.mpcObject.cross_reference(self)  # enable to output MPCs
 
         #self.spcObject2 = constraintObject2()
         for spcadd in self.spcadds.itervalues():
@@ -58,7 +66,7 @@ class XrefMesh(object):
             for mpc in mpcs:
                 self.mpcObject2.append(mpc)
         #self.mpcObject2 = constraintObject2()
-        #self.spcObject.crossReference(self)
+        #self.spcObject.cross_reference(self)
 
     def _cross_reference_coordinates(self):
         """
@@ -67,7 +75,7 @@ class XrefMesh(object):
         # CORD2x: links the rid to coordinate systems
         # CORD1x: links g1,g2,g3 to grid points
         for coord in self.coords.itervalues():
-            coord.crossReference(self)
+            coord.cross_reference(self)
 
         # CORD1x: Since the grid points were already referenced,
         # we can now resolve the coordinate systems.
@@ -82,10 +90,10 @@ class XrefMesh(object):
         Links up all the aero cards
         """
         for caero in self.caeros.itervalues():
-            caero.crossReference(self)
+            caero.cross_reference(self)
 
         for spline in self.splines.itervalues():
-            spline.crossReference(self)
+            spline.cross_reference(self)
 
     def _cross_reference_nodes(self):
         """
@@ -94,7 +102,7 @@ class XrefMesh(object):
         gridSet = self.gridSet
         for n in self.nodes.itervalues():
             try:
-                n.crossReference(self, gridSet)
+                n.cross_reference(self, gridSet)
             except:
                 self.log.error("Couldn't cross reference GRID.\n%s" % (str(n)))
                 raise
@@ -109,7 +117,7 @@ class XrefMesh(object):
         """
         for elem in self.elements.itervalues():
             try:
-                elem.crossReference(self)
+                elem.cross_reference(self)
             except:
                 msg = "Couldn't cross reference Element.\n%s" % (str(elem))
                 self.log.error(msg)
@@ -121,7 +129,7 @@ class XrefMesh(object):
         """
         for prop in self.properties.itervalues():
             try:
-                prop.crossReference(self)
+                prop.cross_reference(self)
             except:
                 msg = "Couldn't cross reference Property.\n%s" % (str(prop))
                 self.log.error(msg)
@@ -134,7 +142,7 @@ class XrefMesh(object):
         """
         for mat in self.materials.itervalues():  # MAT1
             try:
-                mat.crossReference(self)
+                mat.cross_reference(self)
             except:
                 msg = "Couldn't cross reference Material\n%s" % (str(mat))
                 self.log.error(msg)
@@ -142,7 +150,7 @@ class XrefMesh(object):
 
         for mat in self.materialDeps.itervalues():  # CREEP - depends on MAT1
             try:
-                mat.crossReference(self)
+                mat.cross_reference(self)
             except:
                 msg = "Couldn't cross reference Material\n%s" % (str(mat))
                 self.log.error(msg)
@@ -156,7 +164,7 @@ class XrefMesh(object):
             #self.log.debug("lid=%s sid=%s" %(lid,sid))
             for load in sid:
                 try:
-                    load.crossReference(self)
+                    load.cross_reference(self)
                 except:
                     self.log.error("lid=%s sid=%s" % (lid, sid))
                     msg = "Couldn't cross reference Load\n%s" % (str(load))

@@ -584,7 +584,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self._read_case_control_deck(self.bdf_filename)
         self._read_bulk_data_deck()
 
-        self.crossReference(xref=xref)
+        self.cross_reference(xref=xref)
         if self.debug:
             self.log.debug("***BDF.readBDF")
 
@@ -614,7 +614,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             self.log.debug("*BDF.readBDF_Punch")
         self._read_bulk_data_deck()
         #self.close_file()
-        self.crossReference(xref=xref)
+        self.cross_reference(xref=xref)
         if self.debug:
             self.log.debug("***BDF.readBDF_Punch")
 

@@ -410,7 +410,7 @@ class CSSCHD(BaseCard):
             self.lSchd = data[4]  # AEFACT
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.aesid = model.AESurf(self.aesid)
         self.lAlpha = model.AEFact(self.lAlpha)
         self.lMach = model.AEFact(self.lMach)
@@ -503,7 +503,7 @@ class CAERO1(BaseCard):
             return self.pid
         return self.pid.pid
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.pid = model.PAero(self.pid)
         self.cp = model.Coord(self.cp)
 
@@ -610,7 +610,7 @@ class CAERO2(BaseCard):
             return self.lsb
         return self.lsb.sid
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.pid = model.PAero(self.pid)  # links to PAERO2
         self.cp = model.Coord(self.cp)
         #self.lsb = model.AeFact(self.lsb) # not added
@@ -1036,7 +1036,7 @@ class SPLINE1(Spline):
             return self.setg
         return self.setg.sid
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.caero = model.CAero(self.caero)
         self.setg = model.Set(self.setg)
 
@@ -1090,7 +1090,7 @@ class SPLINE2(Spline):
             raise NotImplementedError('not supported')
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.caero = model.CAero(self.caero)
         self.setg = model.Set(self.setg)
 
@@ -1179,7 +1179,7 @@ class SPLINE4(Spline):
             return self.setg
         return self.setg.sid
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.caero = model.CAero(self.caero)
         self.setg = model.Set(self.setg)
         self.aelist = model.AEList(self.aelist)
@@ -1254,7 +1254,7 @@ class SPLINE5(Spline):
             return self.setg
         return self.setg.sid
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.caero = model.CAero(self.caero)
         self.setg = model.Set(self.setg)
         self.aelist = model.AEList(self.aelist)

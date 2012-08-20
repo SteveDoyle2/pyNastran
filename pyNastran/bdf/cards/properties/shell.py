@@ -338,7 +338,7 @@ class PCOMP(ShellProperty):
         return False
 
     def isSameCard(self, prop, debug=False):
-        if self.type != self.prop.type:
+        if self.type != prop.type:
             return False
         fields2 = [prop.nsm, prop.sb, prop.ft, prop.TRef, prop.ge, prop.lam]
         fields1 = [self.nsm, self.sb, self.ft, self.TRef, self.ge, self.lam]
@@ -356,7 +356,7 @@ class PCOMP(ShellProperty):
                 return False
         return True
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         """
         links the material ID to the materials
         @param self the object pointer
@@ -739,7 +739,7 @@ class PSHELL(ShellProperty):
     def D(self):
         return self.mid().Dplate()
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         if self.mid1:
             self.mid1 = model.Material(self.mid1)
         if self.mid2 and self.mid2 != -1:
