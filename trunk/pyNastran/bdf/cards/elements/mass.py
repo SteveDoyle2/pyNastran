@@ -58,7 +58,7 @@ class CMASS1(PointMass):
     def Mass(self):
         return self.pid.mass
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         #self.g1 = model.Node(self.g1)
         #self.g2 = model.Node(self.g2)
         self.pid = model.Property(self.pid)
@@ -130,7 +130,7 @@ class CMASS2(PointMassElement):
         c = (p1 + p2) / f
         return c
 
-    def crossReference(self, mesh):
+    def cross_reference(self, mesh):
         if isinstance(self.g1, int):
             self.g1 = mesh.Node(self.g1)
         if isinstance(self.g2, int):
@@ -198,7 +198,7 @@ class CMASS3(PointMassElement):
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
-    def crossReference(self, mesh):
+    def cross_reference(self, mesh):
         """
         links up the propertiy ID
         """
@@ -245,7 +245,7 @@ class CMASS4(PointMassElement):
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
-    def crossReference(self, mesh):
+    def cross_reference(self, mesh):
         """
         """
         #self.s1 = mesh.Node(self.s1)
@@ -351,7 +351,7 @@ class CONM1(PointMass):
             return self.cid
         return self.cid.cid
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nid = model.Node(self.nid)
         self.cid = model.Coord(self.cid)
 
@@ -445,7 +445,7 @@ class CONM2(PointMassElement):  ## @todo not done
             X2 = self.nid.Position() + dx
         return X2
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         if self.Cid() != -1:
             self.cid = model.Coord(self.cid)
         self.nid = model.Node(self.nid)

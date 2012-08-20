@@ -35,7 +35,7 @@ class PELAS(SpringProperty):
             self.s = data[3]
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         #if self.sol in [108,129]:
             #self.pid = self.pelasts[self.pid]
         pass
@@ -105,7 +105,7 @@ class PELAST(SpringProperty):
         ## force vs. displacement relationship. (Integer > 0; Default = 0)
         self.tknid = card.field(4, 0)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.pid = model.Property(self.pid)
         if self.tkid > 0:
             self.tkid = model.Table(self.tkid)

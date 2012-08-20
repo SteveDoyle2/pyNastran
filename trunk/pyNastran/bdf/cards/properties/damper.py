@@ -13,7 +13,7 @@ class DamperProperty(Property):
         Property.__init__(self, card, data)
         pass
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
 
@@ -31,7 +31,7 @@ class PVISC(DamperProperty):
             self.cr = data[2]
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
     def rawFields(self):
@@ -89,7 +89,7 @@ class PDAMP5(DamperProperty):
             self.mid = data[1]
             self.b = data[2]
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def Mid(self):
@@ -120,7 +120,7 @@ class PDAMPT(DamperProperty):
             self.pid = data[0]
             self.tbid = data[1]
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.tbid = model.Table(self.tbid)
 
     def Tbid(self):

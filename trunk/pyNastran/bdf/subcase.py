@@ -592,36 +592,36 @@ class Subcase(object):
         if 'LOAD' in self.params:
             loadID = self.params['LOAD'][0]
             loadObj = mesh.loads[loadID]
-            loadObj.crossReference(mesh)
+            loadObj.cross_reference(mesh)
         if 'SUPORT' in self.params:
             pass
         if 'MPC' in self.params:
             #mpcID = self.params['MPC'][0]
             #mpcObj = mesh.mpcs[mpcID]
-            #mpcObj.crossReference(mesh)
+            #mpcObj.cross_reference(mesh)
             pass
         if 'SPC' in self.params:
             #spcID = self.params['SPC'][0]
             #print "SPC ID = ",spcID
             #spcObj = mesh.spcObject
-            #spcObj.crossReference(spcID,mesh)
+            #spcObj.cross_reference(spcID,mesh)
             pass
         if 'TSTEPNL' in self.params:
             tstepnlID = self.params['TSTEPNL'][0]
             tstepnlObj = mesh.tstepnl[tstepnlID]
-            tstepnlObj.crossReference(mesh)
+            tstepnlObj.cross_reference(mesh)
         if 'NLPARM' in self.params:
             nlparmID = self.params['NLPARM'][0]
             nlparmObj = mesh.nlparms[nlparmID]
-            nlparmObj.crossReference(mesh)
+            nlparmObj.cross_reference(mesh)
         if 'TRIM' in self.params:
             trimID = self.params['TRIM'][0]
             trimObj = mesh.trims[trimID]
-            trimObj.crossReference(mesh)
+            trimObj.cross_reference(mesh)
         if 'GUST' in self.params:
             gustID = self.params['GUST'][0]
             gustObj = mesh.gusts[gustID]
-            gustObj.crossReference(mesh)
+            gustObj.cross_reference(mesh)
         if 'DLOAD' in self.params:  # ???
             pass
 

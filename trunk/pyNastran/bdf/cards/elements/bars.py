@@ -16,7 +16,7 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
     def __init__(self, card, data):
         Element.__init__(self, card, data)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes)
         self.pid = model.Property(self.pid)
 
@@ -298,7 +298,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
             
         return mass
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes)
         self.pid = model.Property(self.pid)
 
@@ -495,7 +495,7 @@ class CONROD(RodElement):
         assert len(self.nodes) == 2
         #print self.nodes
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes)
         self.mid = model.Material(self.mid)
 
@@ -702,7 +702,7 @@ class CBAR(LineElement):
         #if self.eid==14100238:
             #print "g0=%s x1=%s x2=%s x3=%s" %(self.g0,self.x1,self.x2,self.x3)
 
-    def crossReference(self, mesh):
+    def cross_reference(self, mesh):
         """
         set g0-ga to x1,x2,x3
         """
@@ -718,7 +718,7 @@ class CBAR(LineElement):
 
     #def updateNodes(self,nodes):
     #    """@todo maybe improve"""
-    #    self.crossReference(self,nodes)
+    #    self.cross_reference(self,nodes)
 
     def Ga(self):
         if isinstance(self.ga, int):
@@ -964,7 +964,7 @@ class CBEAM3(CBAR):
             raise NotImplementedError(data)
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.ga = model.Node(self.ga)
         self.gb = model.Node(self.gb)
         self.gc = model.Node(self.gc)
@@ -1127,7 +1127,7 @@ class CBEAM(CBAR):
             field8 = set_blank_if_default(self.bit, 0.0)
         return field8
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.ga = model.Node(self.ga)
         self.gb = model.Node(self.gb)
         self.pid = model.Property(self.pid)

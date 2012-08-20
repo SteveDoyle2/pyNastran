@@ -89,7 +89,7 @@ class CBUSH(BushElement):
             return self.cid
         return self.cid.cid
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes)
         #self.pid = model.Property(self.pid)
         self.cid = model.Coord(self.cid)
@@ -133,7 +133,7 @@ class CBUSH1D(BushElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 2
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes)
         self.pid = model.Property(self.pid)
         self.cid = model.Coord(self.cid)
@@ -185,7 +185,7 @@ class CBUSH2D(BushElement):
                   nodeIDs[0], self.Cid(), self.plane, self.sptid]
         return fields
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes)
         #self.pid = model.Property(self.pid)
         self.cid = model.Coord(self.cid)

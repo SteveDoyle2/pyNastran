@@ -12,7 +12,7 @@ class RigidElement(Element):
     #def __repr__(self):
         #fields = [self.type, self.eid]
         #return self.printCard(fields)
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
 

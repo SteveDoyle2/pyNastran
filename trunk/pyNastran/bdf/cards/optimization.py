@@ -333,7 +333,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             print(str(self))
             raise RuntimeError('invalid DVMREL1...')
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def Mid(self):
@@ -395,7 +395,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             print(str(self))
             raise RuntimeError('invalid DVPREL1...')
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.pid = model.Property(self.pid)
 
     def Pid(self):
@@ -496,7 +496,7 @@ class DVPREL2(OptConstraint):
 
     #def EqID(self):
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         """@todo add support for DEQATN cards to finish DVPREL2 xref"""
         self.pid = model.Property(self.pid)
         #self.eqID = model.DEquation(self.eqID)

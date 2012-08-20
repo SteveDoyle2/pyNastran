@@ -332,8 +332,7 @@ class SESET(SetSuper):
         ## (0 < Integer < 1000000; G1 < G2)
         self.IDs = []
 
-        fields = card.fields(2)
-        self.IDs = expand_thru(fields)
+        self.IDs = expand_thru(card.fields(2))
         self.cleanIDs()
 
     def rawFields(self):
@@ -385,8 +384,7 @@ class RADSET(Set):  # not integrated
         ## (0 < Integer < 1000000; G1 < G2)
         self.IDs = []
 
-        fields = card.fields(2)
-        self.IDs = expand_thru(fields)
+        self.IDs = expand_thru(card.fields(2))
         self.cleanIDs()
 
     def addRadsetObject(self, radset):

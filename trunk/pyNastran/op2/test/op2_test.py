@@ -1,7 +1,7 @@
 import os
 import sys
 from pyNastran.op2.test.test_op2 import get_failed_files,runLotsOfFiles
-from pyNastran.general.general import getFilesOfType
+from pyNastran.general.general import get_files_of_type
 
 def parseSkippedCards(fname):
     f = open(fname,'r')
@@ -35,7 +35,7 @@ def parseSkippedCards(fname):
     f.close()
     return filesToAnalyze
 
-def getAllFiles(foldersFile,fileType):
+def get_all_files(foldersFile,fileType):
     f = open(foldersFile,'r')
     lines = f.readlines()
     files2 = []
@@ -45,14 +45,14 @@ def getAllFiles(foldersFile,fileType):
         if moveDir and moveDir[0] != '#':
             print("moveDir = %s" %(moveDir))
             assert os.path.exists(moveDir),'%s doesnt exist' %(moveDir)
-            files2 += getFilesOfType(moveDir,fileType,maxSize=100.)
+            files2 += get_files_of_type(moveDir,fileType,maxSize=100.)
         ###
     ###
     return files2
 
 if __name__=='__main__':
     # works
-    files = getFilesOfType('tests','.op2')
+    files = get_files_of_type('tests','.op2')
     
     foldersFile = 'tests/foldersRead.txt'
 
@@ -73,7 +73,7 @@ if __name__=='__main__':
     if getSkipCards:
         files2 = parseSkippedCards('skippedCards.out')
     elif regenerate:
-        files2 = getAllFiles(foldersFile,'.op2')
+        files2 = get_all_files(foldersFile,'.op2')
         files2 += files
     else:
         files2 = get_failed_files('failedCases.in')

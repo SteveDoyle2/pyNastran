@@ -49,7 +49,7 @@ class ShellElement(Element):
     def flipNormal(self):
         raise NotImplementedError('flipNormal undefined for %s' % (self.type))
 
-    def crossReference(self, mesh):
+    def cross_reference(self, mesh):
         self.nodes = mesh.Nodes(self.nodes)
         self.pid = mesh.Property(self.pid)
 
@@ -457,7 +457,7 @@ class CTRIAX6(TriShell):
     def Nsm(self):
         raise AttributeError('CTRIAX6 does not have a non-structural mass')
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes)
         self.mid = model.Material(self.mid)
 

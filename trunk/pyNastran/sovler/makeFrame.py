@@ -295,7 +295,7 @@ def getForces(model, Dofs):
 
 def runTruss():
     model = makeTruss2()
-    model.crossReference()
+    model.cross_reference()
     #for id,e in model.elements.iteritems():
     #    print "K = \n",e.Stiffness(model),'\n'
 

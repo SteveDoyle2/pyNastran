@@ -40,7 +40,7 @@ class QBDY1(ThermalLoad):
             self.qFlux = data[1]
             self.eids = data[2:]
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.eids = model.Elements(self.eids)
 
     def Eid(self):
@@ -83,7 +83,7 @@ class QBDY2(ThermalLoad):  # not tested
             self.eid = data[1]
             self.qFlux = data[2]
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.eid = model.Element(self.eid)
 
     def Eid(self):
@@ -126,7 +126,7 @@ class QBDY3(ThermalLoad):
             self.cntrlnd = data[2]
             self.eids = list(data[3:])
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         for i, eid in enumerate(self.eids):
             self.eids[i] = model.Element(eid)
 
@@ -189,7 +189,7 @@ class QHBDY(ThermalLoad):
             self.af = data[3]
             self.grids = data[4:]
 
-    #def crossReference(self,model):
+    #def cross_reference(self,model):
     #    pass
 
     def rawFields(self):
@@ -232,7 +232,7 @@ class TEMP(ThermalLoad):
         for (gid, temp) in self.tempObj.temperatures.iteritems():
             self.temperatures[gid] = temp
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
     def rawFields(self):
@@ -280,7 +280,7 @@ class TEMPD(ThermalLoadDefault):
         for (lid, tempd) in self.tempdObj.temperatures.iteritems():
             self.temperatures[lid] = tempd
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
     def reprFields(self):

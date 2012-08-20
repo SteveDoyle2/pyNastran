@@ -427,9 +427,9 @@ class CaseControlDeck(object):
         #print "\n%s\n" %(self.subcases[isubcase])
         return isubcase
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         for (iSubcase, subcase) in sorted(self.subcases.iteritems()):
-            subcase.crossReference(model)
+            subcase.cross_reference(model)
 
     def get_op2_data(self):
         """
