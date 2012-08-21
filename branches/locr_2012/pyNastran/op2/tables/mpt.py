@@ -57,7 +57,6 @@ class MPT(object):
                 Type, ag1, ag2, ag3, ag4, ag5, ag6, ag7) = out
             mat = CREEP(None, out)
             self.addCreepMaterial(mat, allowOverwrites=True)
-        ###
 
     def readMAT1(self, data):
         """
@@ -71,7 +70,6 @@ class MPT(object):
             (mid, E, G, nu, rho, A, TRef, ge, St, Sc, Ss, mcsid) = out
             mat = MAT1(None, out)
             self.addOp2Material(mat)
-        ###
 
     def readMAT2(self, data):
         """
@@ -91,8 +89,6 @@ class MPT(object):
                 self.bigMaterials[mid] = mat
             else:
                 self.addOp2Material(mat)
-            ###
-        ###
 
     def readMAT3(self, data):
         """
@@ -108,7 +104,6 @@ class MPT(object):
             mat = MAT3(None, [mid, ex, eth, ez, nuxth, nuthz,
                               nuzx, rho, gzx, ax, ath, az, TRef, ge])
             self.addOp2Material(mat)
-        ###
 
     def readMAT4(self, data):
         """
@@ -122,7 +117,6 @@ class MPT(object):
             (mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
             mat = MAT4(None, out)
             self.addThermalMaterial(mat, allowOverwrites=True)
-        ###
 
     def readMAT5(self, data):
         """
@@ -136,7 +130,6 @@ class MPT(object):
             (mid, k1, k2, k3, k4, k5, k6, cp, rho, hgen) = out
             mat = MAT5(None, out)
             self.addThermalMaterial(mat, allowOverwrites=True)
-        ###
 
     def readMAT8(self, data):
         """
@@ -151,7 +144,6 @@ class MPT(object):
                 TRef, Xt, Xc, Yt, Yc, S, ge, f12, strn) = out
             mat = MAT8(None, out)
             self.addOp2Material(mat)
-        ###
 
     def readMAT9(self, data):
         """
@@ -173,7 +165,6 @@ class MPT(object):
             #print "dataIn = ",dataIn
             mat = MAT9(None, dataIn)
             self.addOp2Material(mat)
-        ###
 
     def readMAT10(self, data):
         """
@@ -187,7 +178,6 @@ class MPT(object):
             (mid, bulk, rho, c, ge) = out
             mat = MAT10(None, out)
             self.addOp2Material(mat)
-        ###
 
 # MAT11 - unused
 
@@ -214,7 +204,6 @@ class MPT(object):
                 data.append(out2)
             mat = MATHP(None, dataIn)
             self.addOp2Material(mat)
-        ###
 
     def readMATS1(self, data):
         """
@@ -229,7 +218,6 @@ class MPT(object):
             dataIn = [mid, tid, Type, h, yf, hr, limit1, limit2]
             mat = MATS1(None, dataIn)
             self.addMaterialDependence(mat, allowOverwrites=True)
-        ###
 
     def readMATT1(self, data):
         self.skippedCardsFile.write('skipping MATT1 in MPT\n')
@@ -286,7 +274,6 @@ class MPT(object):
 
             #mat = RADM(None,packs)
             #self.addOp2Material(mat)
-        ###
 
 # RADMT
 
@@ -303,7 +290,6 @@ class MPT(object):
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,maxR,rTolB) = out
             nlparm = NLPARM(None, out)
             self.addNLParm(nlparm)
-        ###
 
     def readNLPCI(self, data):
         self.skippedCardsFile.write('skipping NLPCI in MPT\n')
@@ -321,4 +307,3 @@ class MPT(object):
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,adjust,mStep,rb,maxR,uTol,rTolB) = out
             tstepnl = TSTEPNL(None, out)
             self.addTSTEPNL(tstepnl)
-        ###

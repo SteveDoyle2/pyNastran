@@ -25,11 +25,11 @@ class CFAST(Element):
 
         #if self.Type=='PROP': # PSHELL/PCOMP  ida & idb
 
-    def crossReference(self, model):  # @todo xref
+    def cross_reference(self, model):
         self.pid = model.Property(self.pid)
-        #self.gs = model.Node(self.gs)
-        #self.ga = model.Node(self.ga)
-        #self.gb = model.Node(self.gb)
+        self.gs = model.Node(self.gs)
+        self.ga = model.Node(self.ga)
+        self.gb = model.Node(self.gb)
 
     def rawFields(self):
         fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb, self.gs, self.ga, self.gb,
@@ -80,7 +80,7 @@ class CGAP(Element):
             self.cid = data[8]
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.ga = model.Node(self.ga)
         self.gb = model.Node(self.gb)
         if self.g0:
@@ -108,7 +108,7 @@ class CrackElement(Element):
     def __init__(self, card, data):
         pass
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes)
         self.pid = model.Property(self.pid)
 

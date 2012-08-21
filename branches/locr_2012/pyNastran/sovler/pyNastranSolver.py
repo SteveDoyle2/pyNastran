@@ -64,7 +64,7 @@ def partition_dense_vector(F, dofs):
 
 def partition_sparse_vector(F, dofs):
     dofs.sort()
-    n = len(dofs)
+    #n = len(dofs)
     F2i = []
     F2v = []
     for (i, dofI) in enumerate(dofs):
@@ -110,10 +110,10 @@ class Solver(F06, OP2):
 
     Bulk Data:
       GRID,CORDx
-      CONROD,CROD,PROD
+      CONROD, CROD, PROD
       MAT1
-      LOAD,FORCE
-      SPC,SPC1
+      LOAD, FORCE
+      SPC, SPC1
 
     Results:
       @todo DISPLACEMENT solver results
@@ -162,12 +162,12 @@ class Solver(F06, OP2):
         #print analysisCases
         for case in analysisCases:
             print(case)
-            (value, options) = case.getParameter('STRESS')
+            (value, options) = case.get_parameter('STRESS')
             print("STRESS value   = %s" % (value))
             print("STRESS options = %s" % (options))
 
             if case.hasParameter('TEMPERATURE(INITIAL)'):
-                (value, options) = case.getParameter('TEMPERATURE(INITIAL)')
+                (value, options) = case.get_parameter('TEMPERATURE(INITIAL)')
                 print('value   = %s' % (value))
                 print('options = %s' % (options))
                 raise NotImplementedError('TEMPERATURE(INITIAL) not supported')
@@ -181,11 +181,11 @@ class Solver(F06, OP2):
         iSubcase = case.id
         if model.sol in sols:
             if case.hasParameter('TITLE'):
-                (self.Title, options) = case.getParameter('TITLE')
+                (self.Title, options) = case.get_parameter('TITLE')
             else:
                 self.Title = 'pyNastran Default Title'
             if case.hasParameter('SUBTITLE'):
-                (self.Subtitle, options) = case.getParameter('SUBTITLE')
+                (self.Subtitle, options) = case.get_parameter('SUBTITLE')
             else:
                 self.Subtitle = 'DEFAULT'
             self.iSubcaseNameMap[iSubcase] = [self.Title, self.Subtitle]
@@ -282,6 +282,9 @@ class Solver(F06, OP2):
             elem.displacementStress(model, q, self.nidComponentToID)
 
     def storeDisplacements(self, model, U, case):
+        """
+        fills the displacement object
+        """
         self.iSubcases = []
         #self.log = None
         analysisCode = 1
@@ -441,7 +444,7 @@ class Solver(F06, OP2):
     def applySPCs2(self, model, case, nidComponentToID):
         if case.hasParameter('SPC'):
             # get the value, 1 is the options (SPC has no options)
-            spcID = case.getParameter('SPC')[0]
+            spcID = case.get_parameter('SPC')[0]
             SpcSet = model.SPC(spcID)
 
             for spcSet in SpcSet:
@@ -457,7 +460,7 @@ class Solver(F06, OP2):
             isSPC = True
             spcs = model.spcObject2.constraints
             # get the value, 1 is the options (SPC has no options)
-            spcID = case.getParameter('SPC')[0]
+            spcID = case.get_parameter('SPC')[0]
             print("SPC = ", spcID)
             #print model.spcObject2.constraints
             spcset = spcs[spcID]
@@ -510,7 +513,7 @@ class Solver(F06, OP2):
             isMPC = True
             mpcs = model.mpcObject2.constraints
             # get the value, 1 is the options (MPC has no options)
-            mpcID = case.getParameter('MPC')[0]
+            mpcID = case.get_parameter('MPC')[0]
             print("******")
             print(model.mpcObject2.constraints)
             print("mpcID = ", mpcID)
@@ -526,7 +529,7 @@ class Solver(F06, OP2):
     def assembleForces(self, model, case, Fg, Dofs):
         """very similar to writeCodeAster loads"""
         #print(model.loads)
-        (loadID, junk) = model.caseControlDeck.getSubcaseParameter(case.id,
+        (loadID, junk) = model.caseControlDeck.get_subcase_parameter(case.id,
                                                                    'LOAD')
         print("loadID = ", loadID)
         LoadSet = model.Load(loadID)
@@ -585,7 +588,7 @@ class Solver(F06, OP2):
         pageNum = 1
 
         if case.hasParameter('DISPLACEMENT'):
-            (value, options) = case.getParameter('DISPLACEMENT')
+            (value, options) = case.get_parameter('DISPLACEMENT')
             if options is not []:
                 UgSeparate = [[Ua, iUa], [Us, iUs], [Um, iUm]]
                 Ug = departition_dense_vector(UgSeparate)
@@ -599,7 +602,7 @@ class Solver(F06, OP2):
                     op2.write(result.writeOP2(self.Title, self.Subtitle))
 
         if case.hasParameter('SPCFORCES'):
-            (value, options) = case.getParameter('SPCFORCES')
+            (value, options) = case.get_parameter('SPCFORCES')
             if options is not []:
                 SPCForces = Ksa * Ua + Kss * Us
                 if isMPC:
@@ -614,7 +617,7 @@ class Solver(F06, OP2):
 
         if case.hasParameter('MPCFORCES'):
             if options is not []:
-                (value, options) = case.getParameter('MPCFORCES')
+                (value, options) = case.get_parameter('MPCFORCES')
                 MPCForces = Kma * Ua + Kmm * Um
                 if isSPC:
                     MPCForces += Kms * Us
@@ -628,7 +631,7 @@ class Solver(F06, OP2):
 
         if case.hasParameter('GPFORCE'):
             if options is not []:
-                (value, options) = case.getParameter('GPFORCE')
+                (value, options) = case.get_parameter('GPFORCE')
                 AppliedLoads = Kaa * Ua
                 if isSPC:
                     AppliedLoads += Kas * Us
@@ -644,7 +647,7 @@ class Solver(F06, OP2):
 
         if case.hasParameter('STRAIN'):
             if options is not []:
-                (value, options) = case.getParameter('STRAIN')
+                (value, options) = case.get_parameter('STRAIN')
 
                 for (eid, elem) in sorted(model.elements()):
                     pass

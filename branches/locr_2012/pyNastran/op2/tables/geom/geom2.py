@@ -132,11 +132,9 @@ class Geometry2(object):
                            w2a, w3a, w1b, w2b, w3b], [f, g0]]
             else:
                 raise RuntimeError('invalid f value...f=%s' % (f))
-            ###
             elem = CBAR(None, dataIn)
             self.addOp2Element(elem)
             n += 64
-        ###
         data = data[n:]
 
     def readCBARAO(self, data):
@@ -177,11 +175,9 @@ class Geometry2(object):
                           [f, g0]]
             else:
                 raise RuntimeError('invalid f value...f=%s' % (f))
-            ###
             elem = CBEAM(None, dataIn)
             self.addOp2Element(elem)
             n += 72
-        ###
         data = data[n:]
 
     def readCBEAMP(self, data):
@@ -228,7 +224,6 @@ class Geometry2(object):
             elem = CDAMP1(None, out)
             self.addOp2Element(elem)
             n += 24
-        ###
         data = data[n:]
 
     def readCDAMP2(self, data):
@@ -245,7 +240,6 @@ class Geometry2(object):
             elem = CDAMP2(None, out)
             self.addOp2Element(elem)
             n += 24
-        ###
         data = data[n:]
 
     def readCDAMP3(self, data):
@@ -262,7 +256,6 @@ class Geometry2(object):
             elem = CDAMP3(None, out)
             self.addOp2Element(elem)
             n += 16
-        ###
         data = data[n:]
 
     def readCDAMP4(self, data):
@@ -279,7 +272,6 @@ class Geometry2(object):
             elem = CDAMP4(None, out)
             self.addOp2Element(elem)
             n += 16
-        ###
         data = data[n:]
 
     def readCDAMP5(self, data):
@@ -296,7 +288,6 @@ class Geometry2(object):
             elem = CDAMP5(None, out)
             self.addOp2Element(elem)
             n += 16
-        ###
         data = data[n:]
 
 # CDUM2
@@ -320,7 +311,6 @@ class Geometry2(object):
             (eid, pid, g1, g2, c1, c2) = out
             elem = CELAS1(None, out)
             self.addOp2Element(elem)
-        ###
 
     def readCELAS2(self, data):
         """
@@ -334,7 +324,6 @@ class Geometry2(object):
             (eid, k, g1, g2, c1, c2, ge, s) = out
             elem = CELAS2(None, out)
             self.addOp2Element(elem)
-        ###
 
     def readCELAS3(self, data):
         """
@@ -348,7 +337,6 @@ class Geometry2(object):
             (eid, pid, s1, s2) = out
             elem = CELAS3(None, out)
             self.addOp2Element(elem)
-        ###
 
     def readCELAS4(self, data):
         """
@@ -364,7 +352,6 @@ class Geometry2(object):
             elem = CELAS4(None, out)
             self.addOp2Element(elem)
             n += 16
-        ###
         data = data[n:]
 
 # CFAST
@@ -398,7 +385,6 @@ class Geometry2(object):
             elem = CGAP(None, dataIn)
             self.addOp2Element(elem)
             n += 36
-        ###
         data = data[n:]
 
 # CHACAB
@@ -421,7 +407,6 @@ class Geometry2(object):
                       g1, g2, g3, g4, g5, g6, g7, g8]
             elem = CHBDYG(None, dataIn)
             self.addOp2Element(elem)
-        ###
 
     def readCHBDYP(self, data):
         self.skippedCardsFile.write('skipping CHBDYP in GEOM2\n')
@@ -446,7 +431,6 @@ class Geometry2(object):
             else:
                 elem = CHEXA8(None, dataIn)
             self.addOp2Element(elem)
-        ###
 
 # CHEXA20F
 # CHEXAFD
@@ -468,7 +452,6 @@ class Geometry2(object):
             elem = CMASS1(None, out)
             self.addOp2Element(elem)
             n += 24
-        ###
         data = data[n:]
 
     def readCMASS2(self, data):
@@ -485,7 +468,6 @@ class Geometry2(object):
             elem = CMASS2(None, out)
             self.addOp2Element(elem)
             n += 24
-        ###
         data = data[n:]
 
     def readCMASS3(self, data):
@@ -502,7 +484,6 @@ class Geometry2(object):
             elem = CMASS3(None, out)
             self.addOp2Element(elem)
             n += 16
-        ###
         data = data[n:]
 
     def readCMASS4(self, data):
@@ -519,7 +500,6 @@ class Geometry2(object):
             elem = CMASS4(None, out)
             self.addOp2Element(elem)
             n += 16
-        ###
         data = data[n:]
 
     def readCMFREE(self, data):
@@ -543,7 +523,6 @@ class Geometry2(object):
             elem = CONM1(None, out)
             self.addOp2Element(elem)
             n += 96
-        ###
         data = data[n:]
 
     def readCONM2(self, data):
@@ -558,7 +537,6 @@ class Geometry2(object):
             (eid, g, cid, m, x1, x2, x3, i1, i2a, i2b, i3a, i3b, i3c) = out
             elem = CONM2(None, out)
             self.addOp2Element(elem)
-        ###
 
     def readCONROD(self, data):
         """
@@ -572,7 +550,6 @@ class Geometry2(object):
             (eid, n1, n2, mid, a, j, c, nsm) = out
             elem = CONROD(None, out)
             self.addOp2Element(elem)
-        ###
 
     def readCONV(self, data):
         """
@@ -592,7 +569,6 @@ class Geometry2(object):
                       [wt1, wt2, wt3, wt5, wt6, wt7, wt8]]
             elem = CONV(None, dataIn)
             self.addOp2Element(elem)
-        ###
 
     def readCONVM(self, data):
         """
@@ -610,7 +586,6 @@ class Geometry2(object):
                       [ta1, ta2, ta3]]
             elem = CONVM(None, dataIn)
             self.addOp2Element(elem)
-        ###
 
 # CPENP
 
@@ -635,7 +610,6 @@ class Geometry2(object):
                 elem = CPENTA6(None, dataIn)
             self.addOp2Element(elem)
             n += 68
-        ###
         data = data[n:]
 
 # CPENPR
@@ -665,7 +639,6 @@ class Geometry2(object):
             elem = Element(None, data)
             self.addOp2Element(elem)
             n += 44
-        ###
         data = data[n:]
 
     def readCQUAD4(self, data):
@@ -692,7 +665,6 @@ class Geometry2(object):
             elem = Element(None, dataInit)
             self.addOp2Element(elem)
             n += 56
-        ###
         data = data[n:]
 
 # CQUAD4FD
@@ -716,7 +688,6 @@ class Geometry2(object):
             elem = CQUAD8(None, out)
             self.addOp2Element(elem)
             n += 64
-        ###
         data = data[n:]
 
 # CQUAD9FD
@@ -754,7 +725,6 @@ class Geometry2(object):
             elem = CROD(None, out)
             self.addOp2Element(elem)
             n += 16
-        ###
         data = data[n:]
 
 # CRROD
@@ -774,7 +744,6 @@ class Geometry2(object):
             elem = CSHEAR(None, out)
             self.addOp2Element(elem)
             n += 24
-        ###
         data = data[n:]
 
 # CSLOT3
@@ -806,7 +775,6 @@ class Geometry2(object):
             dataIn = [eid, pid, n1, n2, n2, n3, n4]
             elem = CTETRA4(None, dataIn)
             self.addOp2Element(elem)
-        ###
 
     def readCTETRA(self, data):
         """
@@ -829,7 +797,6 @@ class Geometry2(object):
                 elem = CTETRA4(None, dataIn)
             self.addOp2Element(elem)
             n += 48
-        ###
         data = data[n:]
 
 # CTETPR
@@ -853,7 +820,6 @@ class Geometry2(object):
             dataIn = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]
             elem = CTRIA3(None, dataIn)
             self.addOp2Element(elem)
-        ###
 
 # CTRIAFD
 
@@ -874,7 +840,6 @@ class Geometry2(object):
             elem = CTRIA6(None, out)
             self.addOp2Element(elem)
             n += 52
-        ###
         data = data[n:]
 
 # CTRIA6FD
@@ -905,7 +870,6 @@ class Geometry2(object):
             elem = CTUBE(None, out)
             self.addOp2Element(elem)
             n += 16
-        ###
         data = data[n:]
 
     def readCVISC(self, data):
@@ -920,7 +884,6 @@ class Geometry2(object):
             elem = CVISC(None, out)
             self.addOp2Element(elem)
             n += 16
-        ###
         data = data[n:]
 
     def readCWELD(self, data):  # 105
@@ -953,7 +916,6 @@ class Geometry2(object):
             (nid) = unpack(b'i', eData)
             spoint = SPOINTs(None, [nid])
             self.addSPoint(spoint)
-        ###
 
 # VUBEAM
 # VUHEXA

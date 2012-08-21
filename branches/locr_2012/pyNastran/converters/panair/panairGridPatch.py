@@ -369,10 +369,7 @@ class PanairPatch(object):
                     y1 = self.y[r][c]
                     z1 = self.z[r][c]
                     points += self.writePoint([x1, y1, z1])
-                ###
                 nPointsLeft -= 2
-            ###
-        ###
         return header + points
 
     def writePoints(self, point1, point2):

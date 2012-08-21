@@ -380,7 +380,7 @@ class Cord2x(Coord):
         self.j = j
         self.k = k
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         """
         Links self.rid to a coordinate system.
         @param self  the object pointer
@@ -521,7 +521,7 @@ class Cord1x(Coord):
         self.j = None
         self.k = None
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         """
         Links self.rid to a coordinate system.
         @param self  the object pointer
@@ -609,7 +609,7 @@ class CORD3G(Coord):  # not done
         # EQN for DEQATN, TABLE for TABLE3D
         assert self.form in ['EQN', 'TABLE']
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.cidRef = model.Coord(self.cidRef)
 
     def CidRef(self):

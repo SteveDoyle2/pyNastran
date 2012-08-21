@@ -11,7 +11,7 @@ class PointProperty(Property):
     def __init__(self, card, data):
         Property.__init__(self, card, data)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
 

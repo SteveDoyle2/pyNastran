@@ -521,19 +521,8 @@ class PROD(LineProperty):
         #"""assumes circular cross section - probably will remove this"""
         #return (self.A/pi)**0.5
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
-
-    #def I11(self):
-        #"""@todo whats the proper formula to use for a ROD"""
-        #return self.j/2.
-
-    #def I22(self):
-        #"""@todo whats the proper formula to use for a ROD"""
-        #return self.j/2.
-
-    #def I12(self):
-        #return 0.
 
     def writeCodeAster(self, iCut, iFace, iStart):  # PROD
         msg = ''
@@ -583,7 +572,7 @@ class PTUBE(LineProperty):
             self.OD2 = self.OD1
             #self.OD2 = data[5]  ## @note quirk to this one...
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def Area(self):
@@ -715,7 +704,7 @@ class PBAR(LineProperty):
         nsm = self.Nsm()
         return rho * A + nsm
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def Area(self):
@@ -864,7 +853,7 @@ class PBARL(LineProperty):
 
         assert None not in self.dim
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def Area(self):
@@ -922,6 +911,91 @@ class PBARL(LineProperty):
                   None, None, ] + self.dim + [self.nsm]
         return fields
 
+
+class PBCOMP(LineProperty):
+    type = 'PBCOMP'
+
+    def __init__(self, card=None, data=None):
+        LineProperty.__init__(self, card, data)
+        if card:
+            ## Property ID
+            self.pid = card.field(1)
+            self.mid = card.field(2)
+            self.A = card.field(3, 0.0)
+            self.i1 = card.field(4, 0.0)
+            self.i2 = card.field(5, 0.0)
+            self.i12 = card.field(6, 0.0)
+            self.j = card.field(7, 0.0)
+            self.nsm = card.field(8, 0.0)
+            self.k1 = card.field(9, 1.0)
+            self.k2 = card.field(10, 1.0)
+            self.m1 = card.field(11, 0.0)
+            self.m2 = card.field(12, 0.0)
+            self.n1 = card.field(13, 0.0)
+            self.n2 = card.field(14, 0.0)
+            self.symopt = card.field(15, 0)
+            self.y = []
+            self.z = []
+            self.c = []
+            self.mids = []
+
+            fields = card.fields(17)
+            nfields = len(fields)
+            nrows = nfields // 8
+            if nfields % 8 > 0:
+                nrows += 1
+            
+            for row in xrange(nrows):
+                i = 8*row + 17
+                yi = card.field(i)
+                zi = card.field(i+1)
+                ci = card.field(i+2, 0.0)
+                mid = card.field(i+3, self.mid)
+                self.y.append(yi)
+                self.z.append(zi)
+                self.c.append(ci)
+                self.mids.append(mid)
+            
+    def MassPerLength(self):
+        return self.nsm+self.mid.Rho()*self.A
+
+    def cross_reference(self, model):
+        self.mid = model.Material(self.mid)
+
+    def rawFields(self):
+        fields = ['PBCOMP', self.pid, self.Mid(), self.A, self.i1, self.i2,
+             self.i12, self.j, self.nsm, self.k1, self.k2, self.m1, self.m2,
+             self.n1, self.n2, self.symopt, None]
+        for (yi, zi, ci, mid) in zip(self.y,self.z,self.c,self.mids):
+            fields += [yi, zi, ci, mid, None, None, None, None]
+        return fields
+                
+    def reprFields(self):
+        area = set_blank_if_default(self.A, 0.0)
+        j = set_blank_if_default(self.j, 0.0)
+        i1 = set_blank_if_default(self.i1, 0.0)
+        i2 = set_blank_if_default(self.i2, 0.0)
+        i12 = set_blank_if_default(self.i12, 0.0)
+        nsm = set_blank_if_default(self.nsm, 0.0)
+
+        k1 = set_blank_if_default(self.k1, 1.0)
+        k2 = set_blank_if_default(self.k2, 1.0)
+
+        m1 = set_blank_if_default(self.m1, 0.0)
+        m2 = set_blank_if_default(self.m2, 0.0)
+
+        n1 = set_blank_if_default(self.n1, 0.0)
+        n2 = set_blank_if_default(self.n2, 0.0)
+
+        symopt = set_blank_if_default(self.symopt, 0)
+        
+        fields = ['PBCOMP', self.pid, self.Mid(), area, i1, i2, i12, j, nsm,
+                  k1, k2, m1, m2, n1, n2, symopt, None]
+
+        for (yi, zi, ci, mid) in zip(self.y,self.z,self.c,self.mids):
+            ci = set_blank_if_default(ci, 0.0)
+            fields += [yi, zi, ci, mid, None, None, None, None]
+        return fields
 
 class PBEAM(IntegratedLineProperty):
     type = 'PBEAM'
@@ -1058,7 +1132,7 @@ class PBEAM(IntegratedLineProperty):
         massPerL = integratePositiveLine(self.xxb, massPerLs)
         return massPerL
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def writeCodeAster(self):  # PBEAM
@@ -1285,7 +1359,7 @@ class PBEAML(IntegratedLineProperty):
     #def Mid(self):
     #    return self.mid
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         """
         @warning For structural problems, PBEAML entries must reference a MAT1 material entry
         @warning For heat-transfer problems, the MID must reference a MAT4 or MAT5 material entry.
@@ -1405,7 +1479,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
         """@warning nsm field not supported fully on PBEAM3 card"""
         return self.nsm
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def reprFields(self):
@@ -1494,7 +1568,7 @@ class PBEND(LineProperty):
         #raise RuntimeError(self.nsm[0])
         #return self.nsm
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def reprFields(self):

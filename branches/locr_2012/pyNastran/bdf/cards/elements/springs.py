@@ -140,7 +140,7 @@ class CELAS1(SpringElement):
     def K(self):
         return self.pid.k
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True)
         self.pid = model.Property(self.pid)
 
@@ -201,7 +201,7 @@ class CELAS2(SpringElement):
     def K(self):
         return self.k
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True)
         #print("nodes = ",self.nodes)
 
@@ -286,7 +286,7 @@ class CELAS3(SpringElement):
     def K(self):
         return self.pid.k
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes)
         self.pid = model.Property(self.pid)
 
@@ -340,7 +340,7 @@ class CELAS4(SpringElement):
     def K(self):
         return self.k
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes)
 
     def rawFields(self):

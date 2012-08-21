@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from .thermal import ThermalCard
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from ..baseCard import expandThru, expandThruBy, collapseThruBy
+from ..baseCard import expand_thru, expand_thru_by, collapse_thru_by
 
 
 class ThermalLoadDefault(ThermalCard):
@@ -34,13 +34,13 @@ class QBDY1(ThermalLoad):
             self.qFlux = card.field(2)
             eids = card.fields(3)
             ## CHBDYj element identification numbers (Integer)
-            self.eids = expandThru(eids)  ## @warning should this use expandThruBy ???
+            self.eids = expand_thru(eids)  ## @warning should this use expand_thru_by ???
         else:
             self.sid = data[0]
             self.qFlux = data[1]
             self.eids = data[2:]
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.eids = model.Elements(self.eids)
 
     def Eid(self):
@@ -57,7 +57,7 @@ class QBDY1(ThermalLoad):
         return fields
 
     def reprFields(self):
-        eids = collapseThruBy(self.eids)
+        eids = collapse_thru_by(self.eids)
         fields = ['QBDY1', self.sid, self.qFlux] + list(eids) + [self.qFlux]
         return fields
 
@@ -83,7 +83,7 @@ class QBDY2(ThermalLoad):  # not tested
             self.eid = data[1]
             self.qFlux = data[2]
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.eid = model.Element(self.eid)
 
     def Eid(self):
@@ -118,16 +118,15 @@ class QBDY3(ThermalLoad):
             self.Q0 = card.field(2)
             ## Control point for thermal flux load. (Integer > 0; Default = 0)
             self.cntrlnd = card.field(3, 0)
-            eids = card.fields(4)
             ## CHBDYj element identification numbers
-            self.eids = expandThruBy(eids)
+            self.eids = expand_thru_by(card.fields(4))
         else:
             self.sid = data[0]
             self.Q0 = data[1]
             self.cntrlnd = data[2]
             self.eids = list(data[3:])
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         for i, eid in enumerate(self.eids):
             self.eids[i] = model.Element(eid)
 
@@ -145,14 +144,15 @@ class QBDY3(ThermalLoad):
     def rawFields(self):
         eids = self.Eids()
         eids.sort()
-        fields = ['QBDY3', self.sid, self.Q0, self.cntrlnd] + eids
+        fields = ['QBDY3', self.sid, self.Q0, self.cntrlnd
+                 ] + collapse_thru_by(eids)
         return fields
 
     def reprFields(self):
         cntrlnd = set_blank_if_default(self.cntrlnd, 0)
-        eids = collapseThruBy(self.Eids())
+        eids = self.Eids()
         eids.sort()
-        fields = ['QBDY3', self.sid, self.Q0, cntrlnd] + eids
+        fields = ['QBDY3', self.sid, self.Q0, cntrlnd] + collapse_thru_by(eids)
         return fields
 
 
@@ -181,7 +181,7 @@ class QHBDY(ThermalLoad):
             self.grids = card.fields(5)
 
             ## Grid point identification of connected grid points. (Integer > 0 or blank)
-            self.grids = expandThruBy(self.grids)
+            self.grids = expand_thru_by(self.grids)
         else:
             self.sid = data[0]
             self.flag = data[1]
@@ -189,7 +189,7 @@ class QHBDY(ThermalLoad):
             self.af = data[3]
             self.grids = data[4:]
 
-    #def crossReference(self,model):
+    #def cross_reference(self,model):
     #    pass
 
     def rawFields(self):
@@ -232,7 +232,7 @@ class TEMP(ThermalLoad):
         for (gid, temp) in self.tempObj.temperatures.iteritems():
             self.temperatures[gid] = temp
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
     def rawFields(self):
@@ -280,7 +280,7 @@ class TEMPD(ThermalLoadDefault):
         for (lid, tempd) in self.tempdObj.temperatures.iteritems():
             self.temperatures[lid] = tempd
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
     def reprFields(self):

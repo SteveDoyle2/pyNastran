@@ -52,6 +52,7 @@ cdef extern from "stdio.h":
     ctypedef void* FILE
     int   fseek (FILE *stream, long int off, int whence)
     char *fgets (char *s, int n, FILE *stream)
+    cdef int fclose(FILE *fp)
     FILE *fopen(char *path, char *mode)
 
 cdef extern from "stdlib.h":
@@ -60,6 +61,7 @@ cdef extern from "stdlib.h":
 
 cdef extern from "string.h":
     void* memset(void *dest, int c, size_t n)
+#   void* memcpy(void *dest, void *src, size_t n)
 
 # Import the Python-level symbols of numpy
 import numpy as np
@@ -71,79 +73,106 @@ cimport numpy as np
 cdef extern from "libop4.c":
     ctypedef np.int_t      itype_t   # can't get this to do anything useful
     ctypedef struct str_t:
-        int     len         #/* Number of terms in the string (a complex       */
-                            #/* number counts as a single term).               */
-        int     start_row   #/* Zero based, so first row has start_row = 0.    */
-        int     N_idx       #/* Index into N[] to first numeric term for this  */
-                            #/* string.                                        */
+        int     len         # Number of terms in the string (a complex     
+                            # number counts as a single term).             
+        int     start_row   # Zero based, so first row has start_row = 0.  
+        int     N_idx       # Index into N[] to first numeric term for this
+                            # string.                                      
     ctypedef np.float64_t  dtype_t
     float  *op4_load_S(FILE   *fp         ,
-                       int     filetype   ,  #/* in  1=text, other is binary    */
-                       int     nRow       ,  #/* in  # rows    in matrix        */
-                       int     nCol       ,  #/* in  # columns in matrix        */
-                       char   *fmt_str    ,  #/* in  eg "%23le%23le%23le"       */
-                       int     col_width  ,  #/* in  # characters in format str */
-                       int     storage    ,  #/* in  0=dense  1,2=sparse  3=ccr */
-                       int     complx     ,  #/* in  0=real   1=complex         */
-                       int     n_Nnz      ,  #/* in  number of nonzero terms    */
-                       double *I_coo      ,  #/* out sparse row ind             */
-                       double *J_coo      ,  #/* out sparse col ind             */
+                       int     filetype   ,  # in  1=text, other is binary  
+                       int     nRow       ,  # in  # rows    in matrix       
+                       int     nCol       ,  # in  # columns in matrix       
+                       char   *fmt_str    ,  # in  eg "%23le%23le%23le"      
+                       int     col_width  ,  # in  # characters in format str
+                       int     storage    ,  # in  0=dense  1,2=sparse  3=ccr
+                       int     complx     ,  # in  0=real   1=complex        
+                       int     n_Nnz      ,  # in  number of nonzero terms   
+                       double *I_coo      ,  # out sparse row ind            
+                       double *J_coo      ,  # out sparse col ind            
                        )
     double *op4_load_D(FILE   *fp         ,
-                       int     filetype   ,  #/* in  1=text, other is binary    */
-                       int     nRow       ,  #/* in  # rows    in matrix        */
-                       int     nCol       ,  #/* in  # columns in matrix        */
-                       char   *fmt_str    ,  #/* in  eg "%23le%23le%23le"       */
-                       int     col_width  ,  #/* in  # characters in format str */
-                       int     storage    ,  #/* in  0=dense  1,2=sparse  3=ccr */
-                       int     complx     ,  #/* in  0=real   1=complex         */
-                       int     n_Nnz      ,  #/* in  number of nonzero terms    */
-                       double *I_coo      ,  #/* out sparse row ind             */
-                       double *J_coo      ,  #/* out sparse col ind             */
+                       int     filetype   ,  # in  1=text, other is binary   
+                       int     nRow       ,  # in  # rows    in matrix       
+                       int     nCol       ,  # in  # columns in matrix       
+                       char   *fmt_str    ,  # in  eg "%23le%23le%23le"      
+                       int     col_width  ,  # in  # characters in format str
+                       int     storage    ,  # in  0=dense  1,2=sparse  3=ccr
+                       int     complx     ,  # in  0=real   1=complex        
+                       int     n_Nnz      ,  # in  number of nonzero terms   
+                       double *I_coo      ,  # out sparse row ind            
+                       double *J_coo      ,  # out sparse col ind            
                        )
-    int    op4_scan(char *filename  , #/* in                          */
-                    int  *nmat     , #/* out number of matrices      */
-                    char  name[][9] , #/* out matrix names            */
-                    int  *storage   , #/* out 0=dn; 1=sp1; 2=sp2      */
-                    int  *nRow      , #/* out number of rows          */
-                    int  *nCol      , #/* out number of columns       */
-                    int  *nStr      , #/* out number of strings       */
-                    int  *nNnz      , #/* out number of nonzero terms */
-                    int  *Type      , #/* out 1=RS; 2=RD; 3=CS; 4=CD  */
-                    int  *form      , #/* out matrix form 6=symm, etc */
-                    int  *digits    , #/* out size of mantissa        */
-                    long *offset      #/* out byte offset to matrix   */
+    int    op4_scan(char *filename  , # in                         
+                    int  *nmat      , # out number of matrices     
+                    char  name[][9] , # out matrix names           
+                    int  *storage   , # out 0=dn; 1=sp1; 2=sp2     
+                    int  *nRow      , # out number of rows         
+                    int  *nCol      , # out number of columns      
+                    int  *nStr      , # out number of strings      
+                    int  *nNnz      , # out number of nonzero terms
+                    int  *Type      , # out 1=RS; 2=RD; 3=CS; 4=CD 
+                    int  *form      , # out matrix form 6=symm, etc
+                    int  *digits    , # out size of mantissa       
+                    long *offset      # out byte offset to matrix  
                     )
     int  op4_filetype(char *filename)
     FILE* op4_open_r(char *filename, long offset)
     int op4_read_col_t(FILE   *fp         ,
-                       int     c_in       ,  #/* in  requested column to read   */
-                       int     nRow       ,  #/* in  # rows    in matrix        */
-                       int     nCol       ,  #/* in  # columns in matrix        */
-                       char   *fmt_str    ,  #/* in  eg "%23le%23le%23le"       */
-                       int     col_width  ,  #/* in  # characters in format str */
-                       int     storage    ,  #/* in  0=dense  1,2=sparse  3=ccr */
-                       int     complx     ,  #/* in  0=real   1=complex         */
-                       int    *n_str      ,  #/* out # strings   (s_o) = 1,2    */
-                       str_t  *str_data   ,  #/* out string data (s_o) = 1,2    */
-                       int    *N_index    ,  #/* in/out          (s_o) = 1,2    */
-                       double *N             #/* out numeric data               */
+                       int     c_in       ,  # in  requested column to read  
+                       int     nRow       ,  # in  # rows    in matrix       
+                       int     nCol       ,  # in  # columns in matrix       
+                       char   *fmt_str    ,  # in  eg "%23le%23le%23le"      
+                       int     col_width  ,  # in  # characters in format str
+                       int     storage    ,  # in  0=dense  1,2=sparse  3=ccr
+                       int     complx     ,  # in  0=real   1=complex        
+                       int    *n_str      ,  # out # strings   (s_o) = 1,2   
+                       str_t  *str_data   ,  # out string data (s_o) = 1,2   
+                       int    *N_index    ,  # in/out          (s_o) = 1,2   
+                       double *N             # out numeric data              
                       )
     int  op4_read_col_b(FILE   *fp         ,
-                        int     endian     ,  #/* in  0=native   1=flipped    */
-                        int     c_in       ,  #/* in  requested column to read   */
-                        int     nRow       ,  #/* in  # rows    in matrix        */
-                        int     nCol       ,  #/* in  # columns in matrix        */
-                        int     nType      ,  #/* in  1=RS 2=RD 3=CS 4=CD        */
-                        int     storage    ,  #/* in  0=dn; 1=sp1; 2=sp2         */
-                        int    *n_str      ,  #/* in/out idx str_data[] (s_o)=1,2*/
-                        str_t  *S          ,  #/* out string data   (s_o)=1,2    */
-                        int    *N_index    ,  #/* in/out idx N[]    (s_o)=1,2    */
-                        double *N             #/* out numeric data               */
+                        int     endian     , # in  0=native   1=flipped       
+                        int     c_in       , # in  requested column to read   
+                        int     nRow       , # in  # rows    in matrix        
+                        int     nCol       , # in  # columns in matrix        
+                        int     nType      , # in  1=RS 2=RD 3=CS 4=CD        
+                        int     storage    , # in  0=dn; 1=sp1; 2=sp2         
+                        int    *n_str      , # in/out idx str_data[] (s_o)=1,2
+                        str_t  *S          , # out string data   (s_o)=1,2    
+                        int    *N_index    , # in/out idx N[]    (s_o)=1,2    
+                        double *N            # out numeric data               
                        )
+    int  op4_wrt_header(FILE   *fp         ,
+                        int     endian     , # in  0=native   1=flipped    
+                        char   *name       , # in  matrix name             
+                        int     nRow       , # in  # rows    in matrix     
+                        int     nCol       , # in  # columns in matrix     
+                        int     nType      , # in  1=RS 2=RD 3=CS 4=CD     
+                        int     Form       , # in  1=rect; 2=square        
+                        int     sparse     , # in  1=sp2; 0=dn             
+                        int     digits       # in -1=flipped endian binary 
+                                             #     0=native  endian binary 
+                                             #    >2=text; number of DIGITS
+                       )
+    int  op4_wrt_col_dn(FILE   *fp         ,
+                        int     column     , # first column is 0           
+                        int     nRows      , # number of rows              
+                        int     nCols      , # number of columns           
+                        double *A          , # array of terms to write     
+                        int     complx     , # 1=complex  0=real           
+                        int     digits       # in -1=flipped endian binary 
+                                             #     0=native  endian binary 
+                                             #    >2=text; number of DIGITS
+                        )
+    int  op4_wrt_trailer(FILE *fp          ,
+                         int   column      , # first column is 0
+                         int   digits        # -1=flipped; 0=native; >0=digits
+                        )
 
 cdef int OP4_TXT_LINE_SIZE = 82
 DTYPE = np.float64
+FTYPE = np.float32
 ctypedef np.float64_t DTYPE_t
 
 from libc.stdlib cimport free
@@ -301,7 +330,7 @@ cdef class ArrayWrapper_CD:                                # {{{1
         references to the object are gone. """
         free(<void*>self.data_ptr)
 # 1}}}
-class OP4:                                                # {{{1
+class OP4:                                                 # {{{1
     type_map = { 1 : 'RS' ,   # real    single precision
                  2 : 'RD' ,   # real    double precision
                  3 : 'CS' ,   # complex single precision
@@ -336,15 +365,16 @@ class OP4:                                                # {{{1
                 raise IOError
         self.filename = os.path.abspath(filename)
         if mode in ['w', 'W', 'a', 'A']:
+#           self.fh = fopen(filename, "wb")
+#           # self.fh_txt = fopen(filename, "w")
+#           fh[0] = <void *> fopen(filename, "wb")
+#           fh_wrapper_RD = ArrayWrapper_RD()
+#           fh_wrapper_RD.set_data(1, <void*> fh)   # crash
+#           ndfh = np.array(fh_wrapper_RD, copy=False)
+#           ndfh.base = <PyObject*> fh_wrapper_RD
+#           Py_INCREF(fh_wrapper_RD)
+#           self.fh = fh_wrapper_RD
             return
-############# self.fh_txt = fopen(filename, "w")
-############fh[0] = (double *) fopen(filename, "wb")
-############fh_wrapper_RD = ArrayWrapper_RD()
-############fh_wrapper_RD.set_data(1, <void*> fh)   # crash
-############ndfh = np.array(fh_wrapper_RD, copy=False)
-############ndfh.base = <PyObject*> fh_wrapper_RD
-############Py_INCREF(fh_wrapper_RD)
-############self.fh = fh_wrapper_RD
 
         # Scan the file for number of matrices and headers for each matrix.
         try:
@@ -415,7 +445,7 @@ class OP4:                                                # {{{1
         else:
             self.print_instance(index)
     # 2}}}
-    def Load(self ,                             # {{{2
+    def Load(self ,                              # {{{2
              int nmat=1 ,  # in, number of matrices to return
              int skip=0):  # in, number of matrices to skip before loading
         cdef FILE   *fp
@@ -684,7 +714,7 @@ class OP4:                                                # {{{1
 
     # 2}}}
 # 1}}}
-def Save(                                   # {{{2
+def Save(                                                  # {{{1
          filename ,
          *args    ,  # unnamed matrices
          **kwargs ): # named matrices and other options like digits
@@ -700,6 +730,11 @@ def Save(                                   # {{{2
      
     """
 
+    cdef FILE* fp
+    cdef int endian = 0
+    cdef int sparse = 0
+    cdef double *one_column
+
     if 'digits' in kwargs: 
         digits = kwargs['digits']
         if digits and digits <  2: digits =  2
@@ -708,7 +743,7 @@ def Save(                                   # {{{2
     else:
         digits = 0
 
-    print('write to %s with digits=%d' % (     filename, digits))
+#   print('write to %s with digits=%d' % (     filename, digits))
 
     # assign a name to each unnamed matrix: M0000001 through M9999999
     for mat in args:
@@ -719,9 +754,25 @@ def Save(                                   # {{{2
             i += 1
         kwargs[name] = mat
 
+    if digits: fp = fopen(filename, 'w' )  # text
+    else:      fp = fopen(filename, 'wb')  # binary
+
     for name in kwargs:  # loop over the matrices
-        if type(kwargs[name]) is not np.ndarray:
-            print('skipping %s, wrong type (%s)' % (
+
+        try:
+#           print('a %s' % name)
+            if sparse.issparse(kwargs[name]): 
+#               print('b')
+                sparse = 1
+            else:                             
+#               print('c')
+                sparse = 0
+        except:
+#           print('d')
+            sparse = 0
+
+        if (not sparse) and (type(kwargs[name]) is not np.ndarray):
+            print('OP4.Save skipping %s, wrong type (%s)' % (
                 name, type(kwargs[name])))
             continue
         if   kwargs[name].ndim == 1:
@@ -729,28 +780,28 @@ def Save(                                   # {{{2
         elif kwargs[name].ndim == 2:
             nR, nC = kwargs[name].shape
         else:
-            print('skipping %s, not 1D or 2D' % (name))
+            print('OP4.Save skipping %s, not 1D or 2D' % (name))
             continue
-        if kwargs[name].dtype not in ['float32', 'float64', 
-                                      'complex64', 'complex128',]:
-            print('   type %s not supported, converting to float64' % (
-                  kwargs[name].dtype))
-            kwargs[name] = kwargs[name].astype(np.float64)
-        print('%s:' % name)
-        print(kwargs[name])
-        print('%s' % ('-' * 40))
-        if   kwargs[name].dtype is 'float32':
+
+        if   kwargs[name].dtype == 'float32':
             op4_type   = 1
             op4_complx = 0
-        elif kwargs[name].dtype is 'float64':
+            npt        = 1
+        elif kwargs[name].dtype == 'float64':
             op4_type   = 2
             op4_complx = 0
-        elif kwargs[name].dtype is 'complex64':
+            npt        = 1
+        elif kwargs[name].dtype == 'complex64':
             op4_type   = 3
             op4_complx = 1
-        else: # kwargs[name].dtype is 'complex128':
+            npt        = 2
+        elif kwargs[name].dtype == 'complex128':
             op4_type   = 4
             op4_complx = 1
+            npt        = 2
+        else: # kwargs[name].dtype is 'complex128':
+            print('   type %s not supported' % (kwargs[name].dtype))
+            raise IOError
 
         if nR == nC: op4_form = 1   # square
         else:        op4_form = 2   # rectangular
@@ -758,5 +809,29 @@ def Save(                                   # {{{2
         # text with few digits; demote to single precision
         if (op4_type in [2,4]) and (2 <= digits <= 9): op4_type -= 1
 
+        op4_wrt_header(fp, endian, name, nR, nC, op4_type, 
+                       op4_form, sparse, digits)
+
+        one_column = <DTYPE_t*>malloc(sizeof(double) * nR * npt)
+
+        # write each column
+        for c in xrange(nC):
+            if sparse:
+                print('sparse column %d' % c)
+                print kwargs[name].get_col(c)
+            else:  # dense
+                # probably a better way to make the column copies below
+                if   op4_type in [1,2]:
+                    for r in xrange(nR): one_column[r] = kwargs[name][r,c]
+                else:
+                    for r in xrange(nR): one_column[2*r], one_column[2*r+1] = \
+                            kwargs[name][r,c].real, kwargs[name][r,c].imag
+
+                op4_wrt_col_dn(fp, c, nR, nC, one_column, op4_complx, digits)
+
+        free(one_column)
+
+    fclose(fp)
+
     return
-# 2}}}
+# 1}}}

@@ -133,7 +133,7 @@ def print_float_8(value, tol=0.):
                 #                                             field2))
                 #print("same - ", float(field1)==float(field2))
                 if field2 == '.':
-                    return "%8s" % (field)
+                    return print_scientific_8(value)
                 if len(field2) <= 8 and float(field1) == float(field2):
                     field = field2
                     #print("*field = ",field)
@@ -153,7 +153,7 @@ def print_float_8(value, tol=0.):
                 #field = field[1:]
             elif value < 1.:
                 field = "%8.7f" % (value)
-            elif value < 10:
+            elif value < 10.:
                 field = "%8.6f" % (value)
             elif value < 100.:
                 field = "%8.5f" % (value)
@@ -223,13 +223,13 @@ def print_float_8(value, tol=0.):
                 field = field.replace('-0.', '-.')
             elif value > -10.:
                 field = "%8.5f" % (value)   # -1    >x>-10
-            elif value > -100:
+            elif value > -100.:
                 field = "%8.4f" % (value)   # -10   >x>-100
-            elif value > -1000:
+            elif value > -1000.:
                 field = "%8.3f" % (value)   # -100  >x>-1000
-            elif value > -10000:
+            elif value > -10000.:
                 field = "%8.2f" % (value)   # -1000 >x>-10000
-            elif value > -100000:
+            elif value > -100000.:
                 field = "%8.1f" % (value)   # -10000>x>-100000
             else:
                 field = "%8.1f" % (value)
@@ -357,49 +357,5 @@ def print_int_card(fields, tol=0.):
     return out
 
 
-def main():
-    #print printField(1e20)
-    #printField(-0.021004)
-    #print printField(-4.21704e-6)
-    #print printField(4.21704e-6)
-    #print printField(8.17272e-6)
-    #print printField(10300000.0)
-    #print printField(-10300000.0)
-    if 1:  # works
-        print_field(-0.021004)
-
-        field = print_field(1e20)
-        assert '   1.+20' == field, '|%s|' % (field)
-        field = print_field(-.723476)
-        assert '-.723476' == field, '|%s|' % (field)
-        field = print_field(125000.)
-        assert ' 125000.' == field, '|%s|' % (field)
-        field = print_field(12500000.)
-        assert '  1.25+7' == field, '|%s|' % (field)
-        field = print_field(47.77267)
-        assert '47.77267' == field, '|%s|' % (field)
-        field = print_field(.001)
-        assert '    .001' == field, '|%s|' % (field)
-        field = print_field(.0000001)
-        assert '.0000001' == field, '|%s|' % (field)
-        field = print_field(-5.007e-3)
-        assert '-5.007-3' == field, '|%s|' % (field)
-        field = print_field(-0.0748662)
-        assert '-.074866' == field, '|%s|' % (field)
-        field = print_field(-999999.)
-        assert '-999999.' == field, '|%s|' % (field)
-    field = print_field(7.4851e-4)
-    assert '7.4851-4' == field, '|%s|' % (field)
-
-    #print(printField(12500000.))
-    #print(printField(47.77267))
-    #print(printField(.0000001))
-    #print(printField(-5.007e-3))
-
-    #print(printField(1.60665017692e-09))
-    #print(printField(3.22614998029e-08))
-    #print(printField(1.33564999731e-09))
-    print(print_field(-0.00082999792))
-
 if __name__ == '__main__':
-    main()
+    pass

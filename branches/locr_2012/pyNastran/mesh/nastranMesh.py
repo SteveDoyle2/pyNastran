@@ -1,7 +1,8 @@
 from itertools import izip
 from numpy import array, dot
 
-from pyNastran.bdf.bdf import BDF, printCard
+from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.fieldWriter import printCard
 
 
 class NastranMesh(BDF):
@@ -13,7 +14,8 @@ class NastranMesh(BDF):
                  mTol=0.05, nIterMax=10, addElements=True):
         """
         Fills a single fuel tank in consistent units
-        @param percentStart the percentage to start at. percentStart = z/(zMax-zMin); default=0.50
+        @param percentStart
+          the percentage to start at. percentStart = z/(zMax-zMin); default=0.50
         @param mFuel mass (or weight) of fuel to add to the tank
         @param rhoFuel density of fuel (default = 51.19 lb/ft^3 = 6.6 lb/gal)
         @param tankElements list of elements defining the boundary of the tank
@@ -96,10 +98,6 @@ class NastranMesh(BDF):
                     if nid not in nodeLocations:
                         p = node.PositionWRT(self, cid)
                         nodeLocations[nid] = p
-                    ###
-                ###
-            ###
-        ###
 
         zMax = nodeLocations[nid][2]
         zMin = zMax
@@ -136,8 +134,7 @@ class NastranMesh(BDF):
                             isAboveBelow.add(True)
                         else:
                             isAboveBelow.add(False)
-                        ###
-                    ###
+
                     if   True in isAboveBelow and False not in isAboveBelow:  # all nodes are above
                         pass
                     elif True not in isAboveBelow and False in isAboveBelow:  # all nodes are below
@@ -146,8 +143,6 @@ class NastranMesh(BDF):
                         partialElements.add(eid)
                     else:
                         raise RuntimeError('not above, not below, not partial...')
-                    ###
-                ###
 
             if 0:
                 for eid in belowElements:

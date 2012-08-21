@@ -21,7 +21,7 @@ class SolidElement(Element):
     def __init__(self, card, data):
         Element.__init__(self, card, data)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes)
         self.pid = model.Property(self.pid)
 

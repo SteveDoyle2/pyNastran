@@ -3,8 +3,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import izip
 
-from pyNastran.bdf.cards.baseCard import BaseCard, expandThru
+from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
 from pyNastran.bdf.fieldWriter import print_int_card
+from pyNastran.bdf.fieldWriter import printCard as print_card
 
 
 class Set(BaseCard):
@@ -24,14 +25,14 @@ class Set(BaseCard):
 
     def SetIDs(self):
         """gets the IDs of the SETx"""
-        return self.IDs
+        return collapse_thru(self.IDs)
 
     def reprFields(self):
         fields = self.rawFields()
         return fields
 
     def __repr__(self):
-        return print_int_card(self.reprFields())
+        return print_card(self.reprFields())
 
 
 class SetSuper(Set):
@@ -144,11 +145,11 @@ class ABQSet1(Set):
         self.components = str(card.field(1, 0))
 
         ## Identifiers of grids points. (Integer > 0)
-        self.IDs = expandThru(card.fields(2))
+        self.IDs = expand_thru(card.fields(2))
 
     def rawFields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        fields = [self.type, self.components] + self.IDs
+        fields = [self.type, self.components] + collapse_thru(self.IDs)
         return fields
 
     def __repr__(self):
@@ -194,12 +195,12 @@ class CSET1(Set):
             self.components = '123456'
         else:
             self.components = str(card.field(1))
-            self.IDs = expandThru(card.fields(2))
+            self.IDs = expand_thru(card.fields(2))
         ###
 
     def rawFields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        fields = [self.type, self.components] + self.IDs
+        fields = [self.type, self.components] + collapse_thru(self.IDs)
         return fields
 
     def __repr__(self):
@@ -246,7 +247,7 @@ class SET1(Set):
         if isinstance(fields[0], str) and fields[0].upper() == 'SKIN':
             self.isSkin = True
             i += 1
-        self.IDs = expandThru(fields[i:])
+        self.IDs = expand_thru(fields[i:])
         self.cleanIDs()
 
     def IsSkin(self):
@@ -285,7 +286,7 @@ class SET3(Set):
         self.IDs = []
 
         fields = card.fields(2)
-        self.IDs = expandThru(fields)
+        self.IDs = expand_thru(fields)
         self.cleanIDs()
 
     def IsGrid(self):
@@ -331,8 +332,7 @@ class SESET(SetSuper):
         ## (0 < Integer < 1000000; G1 < G2)
         self.IDs = []
 
-        fields = card.fields(2)
-        self.IDs = expandThru(fields)
+        self.IDs = expand_thru(card.fields(2))
         self.cleanIDs()
 
     def rawFields(self):
@@ -359,7 +359,7 @@ class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
         self.IDs = []
 
         fields = card.fields(3)
-        self.IDs = expandThru(fields)
+        self.IDs = expand_thru(fields)
         self.cleanIDs()
 
     def rawFields(self):
@@ -384,8 +384,7 @@ class RADSET(Set):  # not integrated
         ## (0 < Integer < 1000000; G1 < G2)
         self.IDs = []
 
-        fields = card.fields(2)
-        self.IDs = expandThru(fields)
+        self.IDs = expand_thru(card.fields(2))
         self.cleanIDs()
 
     def addRadsetObject(self, radset):

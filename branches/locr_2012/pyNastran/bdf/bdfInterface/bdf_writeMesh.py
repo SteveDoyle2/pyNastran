@@ -437,7 +437,8 @@ class WriteMesh(object):
         """writes the optimization cards sorted by ID"""
         msg = ''
         if (self.dconstrs or self.desvars or self.ddvals or self.dresps
-            or self.dvprels or self.dvmrels or self.doptprm or self.dlinks):
+            or self.dvprels or self.dvmrels or self.doptprm or self.dlinks
+            or self.ddvals):
             msg += '$OPTIMIZATION\n'
             for (ID, dconstr) in sorted(self.dconstrs.iteritems()):
                 msg += str(dconstr)

@@ -32,7 +32,7 @@ class PFAST(Property):
         ## Structural damping
         self.ge = card.field(12, 0.0)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mcid = model.Coord(self.mcid)
 
     def Mcid(self):
@@ -105,7 +105,7 @@ class PGAP(Property):
             self.trmin = data[10]
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
     def rawFields(self):
@@ -166,7 +166,7 @@ class PLSOLID(SolidProperty):
         ###
         assert self.str in ['GRID', 'GAUS'], 'STR=|%s| doesnt have a valid stress/strain output value set\n' % (self.str)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def rawFields(self):
@@ -269,7 +269,7 @@ class PRAC2D(CrackProperty):
             raise NotImplementedError('not supported')
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)  # MAT1, MAT2, MAT8
 
     def rawFields(self):
@@ -312,7 +312,7 @@ class PRAC3D(CrackProperty):
             raise NotImplementedError('not supported')
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)  # MAT1, MAT9
 
     def rawFields(self):
@@ -343,10 +343,11 @@ class PCONEAX(Property):  # not done
             raise NotImplementedError('not supported')
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def rawFields(self):
         fields = ['PCONEAX', self.pid, self.Mid(), self.group, self.Type]
         raise NotImplementedError('not supported')
         return fields
+

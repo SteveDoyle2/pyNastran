@@ -190,7 +190,8 @@ def fix_object(files):
                 f.close()
 
             if 0:
-                os.system('python C:\\Python32\\Tools\\Scripts\\2to3.py -p -w %s >> junk.out' %(fname))
+                os.system('autopep8 -i %s > junk.out' %(fname))
+                #os.system('python C:\\Python32\\Tools\\Scripts\\2to3.py -p -w %s >> junk.out' %(fname))
 
         ###
     ###

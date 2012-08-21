@@ -2,7 +2,8 @@
 import os
 import sys
 from struct import pack, unpack
-from numpy import array, zeros, float32, float64, complex64, complex128, allclose
+from numpy import (array, zeros, float32, float64, complex64, complex128, 
+                  allclose)
 from scipy.sparse import coo_matrix
 from pyNastran.general.general import is_binary
 from pyNastran.general.generalMath import printMatrix, printAnnotatedMatrix
@@ -467,7 +468,7 @@ class OP4(FortranFile):
                 self.endian + '4i8s', data)
             #print "nrows=%s ncols=%s form=%s Type=%s name=%s" %(nrows,ncols,form,Type,name)
         else:
-            msg = recordLength, self.printBlock(data)
+            msg = recordLength + self.printBlock(data)
             raise NotImplementedError('recordLength=%s\n%s' % (msg))
 
         name = name.strip()

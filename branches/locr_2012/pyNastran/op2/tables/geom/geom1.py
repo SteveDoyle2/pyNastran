@@ -53,7 +53,6 @@ class Geometry1(object):
             coord = CORD1C(None, None, dataIn)
             self.addCoord(coord)
             n += 24
-        ###
         data = data[n:]
 
     def readCord1R(self, data):
@@ -70,7 +69,6 @@ class Geometry1(object):
             coord = CORD1R(None, None, dataIn)
             self.addCoord(coord)
             n += 24
-        ###
         data = data[n:]
 
     def readCord1S(self, data):
@@ -87,7 +85,6 @@ class Geometry1(object):
             coord = CORD1S(None, dataIn)
             self.addCoord(coord, allowOverwrites=True)
             n += 24
-        ###
         data = data[n:]
 
     def readCord2C(self, data):
@@ -106,7 +103,6 @@ class Geometry1(object):
             coord = CORD2C(None, dataIn)
             self.addCoord(coord, allowOverwrites=True)
             n += 52
-        ###
         data = data[n:]
 
     def readCord2R(self, data):
@@ -125,7 +121,6 @@ class Geometry1(object):
             coord = CORD2R(None, dataIn)
             self.addCoord(coord, allowOverwrites=True)
             n += 52
-        ###
         data = data[n:]
 
     def readCord2S(self, data):
@@ -144,7 +139,6 @@ class Geometry1(object):
             coord = CORD2S(dataIn)
             self.addCoord(coord, allowOverwrites=True)
             n += 52
-        ###
         data = data[n:]
 
     def readCord3G(self, data):
@@ -162,7 +156,6 @@ class Geometry1(object):
             coord = CORD3G(None, dataIn)
             self.addCoord(coord, allowOverwrites=True)
             n += 16
-        ###
         data = data[n:]
 
     def readGrid(self, data):  # 21.8 sec, 18.9
@@ -180,10 +173,8 @@ class Geometry1(object):
                 self.addNode(node)
             else:
                 self.log.debug("*nID=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s seid=%s" % (nID, cp, x1, x2, x3, cd, ps, seid))
-            ###
             #print str(grid)[:-1]
             n += 32
-        ###
         data = data[n:]
         #assert len(data)==0,'len(data)!=0   len(data)=%s' %(len(data))
         #print "len(data) = ",len(data)

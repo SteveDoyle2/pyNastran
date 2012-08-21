@@ -26,29 +26,34 @@ class Subcase(object):
         #print "\n***adding subcase %s***" %(self.id)
 
     def get_stress_code(self, key, options, value):
-        """@note the individual element must take
-        the stressCode and reduce it to what the element can
-        return.  For example, for an isotropic CQUAD4
-        the fiber field doesnt mean anything.
+        """
+        @note
+          the individual element must take the stress_code and reduce it to
+          what the element can return.  For example, for an isotropic CQUAD4
+          the fiber field doesnt mean anything.
 
         BAR       - no von mises/fiber
         ISOTROPIC - no fiber
 
         @todo how does the MATERIAL bit get turned on?  I'm assuming it's element dependent...
         """
-        stressCode = 0
+        stress_code = 0
         if 'VONMISES' in options:
-            stressCode += 1
+            stress_code += 1
         if key == 'STRAIN':
-            stressCode += 10  # 2+8=10 - fields 2 and 4
+            stress_code += 10  # 2+8=10 - fields 2 and 4
         if 'FIBER' in options:
-            stressCode += 4
+            stress_code += 4
         #if 'MATERIAL' in options:
-        #    stressCode += 16  material coord (1) vs element (0)
-        return stressCode
+        #    stress_code += 16  material coord (1) vs element (0)
+        return stress_code
 
     def get_format_code(self, options, value):
-        """@todo not done..."""
+        """
+        returns the format code that will be used by the op2 based on
+        the options
+        @todo not done...only supports REAL, IMAG, PHASE
+        """
         formatCode = 0
         if 'REAL' in options:
             formatCode += 1
@@ -302,27 +307,6 @@ class Subcase(object):
         tableCode = tables[key]
         return tableCode
 
-    def hasParameter(self, paramName):
-        warnings.warn('hasParameter has been deprecated; use has_parameter',
-                      DeprecationWarning, stacklevel=2)
-        self.has_parameter(paramName)
-
-    def getParameter(self, paramName):
-        warnings.warn('getParameter has been deprecated; use get_parameter',
-                      DeprecationWarning, stacklevel=2)
-        self.get_parameter(paramName)
-
-    def updateParamName(self, paramName):
-        warnings.warn('updateParamName has been deprecated; use '
-                      'update_param_name', DeprecationWarning, stacklevel=2)
-        self.update_param_name(paramName)
-
-    def writeSubcase(self, subcase0):
-        warnings.warn('writeSubcase has been deprecated; use write_subcase',
-                      DeprecationWarning, stacklevel=2)
-        self.write_subcase(subcase0)
-
-#-----------------
     def has_parameter(self, paramName):
         if paramName in self.params:
             return True
@@ -334,59 +318,61 @@ class Subcase(object):
             raise KeyError('%s doesnt exist in subcase=%s in the case control deck.' % (paramName, self.id))
         return self.params[paramName][0:2]
 
-    def update_param_name(self, paramName):
+    def update_param_name(self, param_name):
         """
         takes an abbreviated name and expands it so the user can type DISP or
         DISPLACEMENT and get the same answer
+        @param self
+          the subcase object
+        @param param_name
+          the parameter name to be standardized (e.g. DISP vs. DIPLACEMENT)
         @todo not a complete list
-        @warning fully tested yet...
         """
-        #print 'paramName  = ',paramName
-        if   paramName.startswith('ACCE'):  paramName = 'ACCELERATION'
-        elif paramName.startswith('DESO'):  paramName = 'DESOBJ'
-        elif paramName.startswith('DESS'):  paramName = 'DESSUB'
-        elif paramName.startswith('DISP'):  paramName = 'DISPLACEMENT'
-        elif paramName.startswith('EXPO'):  paramName = 'EXPORTLID'
-        elif paramName.startswith('ELFO'):  paramName = 'FORCE'
-        elif paramName.startswith('FORC'):  paramName = 'FORCE'
-        elif paramName.startswith('FREQ'):  paramName = 'FREQUENCY'
-        elif paramName.startswith('GPFO'):  paramName = 'GPFORCE'
-        elif paramName == 'GPST':           raise SyntaxError('invalid GPST stress/strain')
-        elif paramName.startswith('METH'):  paramName = 'METHOD'
-        elif paramName.startswith('MPCF'):  paramName = 'MPCFORCES'
-        elif paramName.startswith('OLOA'):  paramName = 'OLOAD'
-        elif paramName.startswith('PRES'):  paramName = 'PRESSURE'
+        if   param_name.startswith('ACCE'):  param_name = 'ACCELERATION'
+        elif param_name.startswith('DESO'):  param_name = 'DESOBJ'
+        elif param_name.startswith('DESS'):  param_name = 'DESSUB'
+        elif param_name.startswith('DISP'):  param_name = 'DISPLACEMENT'
+        elif param_name.startswith('EXPO'):  param_name = 'EXPORTLID'
+        elif param_name.startswith('ELFO'):  param_name = 'FORCE'
+        elif param_name.startswith('FORC'):  param_name = 'FORCE'
+        elif param_name.startswith('FREQ'):  param_name = 'FREQUENCY'
+        elif param_name.startswith('GPFO'):  param_name = 'GPFORCE'
+        elif param_name == 'GPST':           raise SyntaxError('invalid GPST stress/strain')
+        elif param_name.startswith('METH'):  param_name = 'METHOD'
+        elif param_name.startswith('MPCF'):  param_name = 'MPCFORCES'
+        elif param_name.startswith('OLOA'):  param_name = 'OLOAD'
+        elif param_name.startswith('PRES'):  param_name = 'PRESSURE'
 
-        elif paramName.startswith('SPCF'):  paramName = 'SPCFORCES'
+        elif param_name.startswith('SPCF'):  param_name = 'SPCFORCES'
 
-        elif paramName.startswith('STRA'):  paramName = 'STRAIN'
-        elif paramName.startswith('STRE'):  paramName = 'STRESS'
-        elif paramName.startswith('SUPO'):  paramName = 'SUPORT1'
-        elif paramName.startswith('SVEC'):  paramName = 'SVECTOR'
-        elif paramName.startswith('THER'):  paramName = 'THERMAL'
-        elif paramName.startswith('VECT'):  paramName = 'VECTOR'
-        elif paramName.startswith('VELO'):  paramName = 'VELOCITY'
+        elif param_name.startswith('STRA'):  param_name = 'STRAIN'
+        elif param_name.startswith('STRE'):  param_name = 'STRESS'
+        elif param_name.startswith('SUPO'):  param_name = 'SUPORT1'
+        elif param_name.startswith('SVEC'):  param_name = 'SVECTOR'
+        elif param_name.startswith('THER'):  param_name = 'THERMAL'
+        elif param_name.startswith('VECT'):  param_name = 'VECTOR'
+        elif param_name.startswith('VELO'):  param_name = 'VELOCITY'
 
-        #elif paramName.startswith('DFRE'):  paramName = 'D'
-        #elif paramName.startswith('TEMP'):  paramName = 'TEMPERATURE'  # handled in caseControlDeck.py
-        #print '*paramName = ',paramName
-        return  paramName
+        #elif param_name.startswith('DFRE'):  param_name = 'D'
+        #elif param_name.startswith('TEMP'):  param_name = 'TEMPERATURE'  # handled in caseControlDeck.py
+        #print '*param_name = ',param_name
+        return  param_name
 
-    def _add_data(self, key, value, options, paramType):
+    def _add_data(self, key, value, options, param_type):
         key = self.update_param_name(key)
-        #print("adding iSubcase=%s key=|%s| value=|%s| options=|%s| "
-        #      "paramType=%s" %(self.id, key, value, options, paramType))
+        #print("adding isubcase=%s key=|%s| value=|%s| options=|%s| "
+        #      "param_type=%s" %(self.id, key, value, options, param_type))
         if isinstance(value, unicode) and value.isdigit():
             value = int(value)
 
         (key, value, options) = self._simplify_data(key, value, options,
-                                                    paramType)
-        self.params[key] = [value, options, paramType]
+                                                    param_type)
+        self.params[key] = [value, options, param_type]
 
-    def _simplify_data(self, key, value, options, paramType):
-        if paramType == 'SET-type':
+    def _simplify_data(self, key, value, options, param_type):
+        if param_type == 'SET-type':
             #print("adding iSubcase=%s key=|%s| value=|%s| options=|%s| "
-            #      "paramType=%s" %(self.id, key, value, options, paramType))
+            #      "param_type=%s" %(self.id, key, value, options, param_type))
             values2 = []
             for (i, ivalue) in enumerate(value):
                 ivalue = ivalue.strip()
@@ -394,10 +380,10 @@ class Subcase(object):
                     values2.append(int(ivalue))
                 else:
                     if value is 'EXCLUDE':
-                        raise RuntimeError('EXCLUDE is not supported on CaseControlDeck SET card\n')
+                        msg = ('EXCLUDE is not supported on CaseControlDeck '
+                               'SET card\n')
+                        raise RuntimeError(msg)
                     values2.append(ivalue)
-                ###
-            ###
 
             ## @todo expand values with THRU and EXCLUDE
             ## @todo sort values
@@ -407,9 +393,9 @@ class Subcase(object):
             options = int(options)
             return (key, values2, options)
 
-        elif paramType == 'CSV-type':
+        elif param_type == 'CSV-type':
             #print("adding iSubcase=%s key=|%s| value=|%s| options=|%s| "
-            #      "paramType=%s" %(self.id, key, value, options, paramType))
+            #      "param_type=%s" %(self.id, key, value, options, param_type))
             if value.isdigit():  # PARAM,DBFIXED,-1
                 value = value
             ###
@@ -417,7 +403,7 @@ class Subcase(object):
             #a = 'key=|%s|'       %(key)
             #b = 'value=|%s|'     %(value)
             #c = 'options=|%s|'   %(options)
-            #d = 'paramType=|%s|' %(paramType)
+            #d = 'param_type=|%s|' %(param_type)
             #print("_adding iSubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a,
             #                                                      b, c, d))
             if isinstance(value, int) or value is None:
@@ -453,7 +439,7 @@ class Subcase(object):
             print("***value=%s sol=%s" % (value, sol))
         else:  # leaves SOL the same
             sol = self.sol
-        ###
+
         if sol in self.solCodeMap:  # reduces SOL 144 to SOL 101
             sol = self.solCodeMap[sol]
 
@@ -486,7 +472,6 @@ class Subcase(object):
                     op2Params['stressCodes'].append(stressCode)
                 else:
                     op2Params['stressCodes'].append(0)
-                ###
 
                 formatCode = self.get_format_code(options, value)
                 tableCode = self.get_table_code(sol, key, options)
@@ -529,27 +514,27 @@ class Subcase(object):
         """
         msg = ''
         #msg += 'id=%s   ' %(self.id)
-        (value, options, paramType) = param
+        (value, options, param_type) = param
 
         spaces = ''
         if self.id > 0:
             spaces = '    '
 
-        if paramType == 'SUBCASE-type':
+        if param_type == 'SUBCASE-type':
             if self.id > 0:
                 msg += 'SUBCASE %s\n' % (self.id)
             ###
             #else:  global subcase ID=0 and is not printed
             #    pass
-        elif paramType == 'KEY-type':
+        elif param_type == 'KEY-type':
             #print "KEY-TYPE:  |%s|" %(value)
             assert value is not None, param
             msg += spaces + '%s\n' % (value)
-        elif paramType == 'STRING-type':
+        elif param_type == 'STRING-type':
             msg += spaces + '%s = %s\n' % (key, value)
-        elif paramType == 'CSV-type':
+        elif param_type == 'CSV-type':
             msg += spaces + '%s,%s,%s\n' % (key, value, options)
-        elif paramType == 'STRESS-type':
+        elif param_type == 'STRESS-type':
             sOptions = ','.join(options)
             #print("sOptions = |%s|" %(sOptions))
             #print("STRESSTYPE key=%s value=%s options=%s"
@@ -560,7 +545,7 @@ class Subcase(object):
                 msg += '%s = %s\n' % (key, value)
             msg = spaces + msg
 
-        elif paramType == 'BEGIN_BULK-type':
+        elif param_type == 'BEGIN_BULK-type':
             msg += '%s %s\n' % (key, value)
             if 'BEGIN BULK' not in msg:
                 msg = spaces + msg
@@ -568,8 +553,8 @@ class Subcase(object):
                 pass
             else:
                 msg = ''
-            ###
-        elif paramType == 'SET-type':
+
+        elif param_type == 'SET-type':
             ## @todo collapse data...not written yet
             starter = 'SET %s = ' % (options)
             msg2 = spaces + starter
@@ -587,53 +572,56 @@ class Subcase(object):
                     msg2 += newString
                 ###
                 i += 1
-            ###
+
             msg += msg2.rstrip(' \n,') + '\n'
         else:
             # SET-type is not supported yet...
             raise NotImplementedError((key, param))
-        ###
+
         #print "msg = |%r|" %(msg)
         return msg
 
     def crossReference(self, mesh):
         """
-        @note this is not integrated and probably never will be as it's not really that necessary
+        @note
+          this is not integrated and probably never will be as it's not
+          really that necessary.  it's only really useful when running an
+          analysis
         """
         print("keys = %s" % (sorted(self.params.keys())))
         if 'LOAD' in self.params:
             loadID = self.params['LOAD'][0]
             loadObj = mesh.loads[loadID]
-            loadObj.crossReference(mesh)
+            loadObj.cross_reference(mesh)
         if 'SUPORT' in self.params:
             pass
         if 'MPC' in self.params:
             #mpcID = self.params['MPC'][0]
             #mpcObj = mesh.mpcs[mpcID]
-            #mpcObj.crossReference(mesh)
+            #mpcObj.cross_reference(mesh)
             pass
         if 'SPC' in self.params:
             #spcID = self.params['SPC'][0]
             #print "SPC ID = ",spcID
             #spcObj = mesh.spcObject
-            #spcObj.crossReference(spcID,mesh)
+            #spcObj.cross_reference(spcID,mesh)
             pass
         if 'TSTEPNL' in self.params:
             tstepnlID = self.params['TSTEPNL'][0]
             tstepnlObj = mesh.tstepnl[tstepnlID]
-            tstepnlObj.crossReference(mesh)
+            tstepnlObj.cross_reference(mesh)
         if 'NLPARM' in self.params:
             nlparmID = self.params['NLPARM'][0]
             nlparmObj = mesh.nlparms[nlparmID]
-            nlparmObj.crossReference(mesh)
+            nlparmObj.cross_reference(mesh)
         if 'TRIM' in self.params:
             trimID = self.params['TRIM'][0]
             trimObj = mesh.trims[trimID]
-            trimObj.crossReference(mesh)
+            trimObj.cross_reference(mesh)
         if 'GUST' in self.params:
             gustID = self.params['GUST'][0]
             gustObj = mesh.gusts[gustID]
-            gustObj.crossReference(mesh)
+            gustObj.cross_reference(mesh)
         if 'DLOAD' in self.params:  # ???
             pass
 
@@ -667,7 +655,6 @@ class Subcase(object):
                         (value, options, paramType) = param
                         #print("  *key=|%s| value=|%s| options=%s "
                         #      "paramType=|%s|" % (key, value, options,
-                        #                          paramType))
                         msg += self.print_param(key, param,
                                                 printBeginBulk=False)
                         #print ""
@@ -739,7 +726,6 @@ class Subcase(object):
         msg = ''
         if self.id > 0:
             msg += 'SUBCASE %s\n' % (self.id)
-        ###
 
         for (key, param) in self.subcase_sorted(self.params.items()):
             if 'key' == 'BEGIN':
@@ -750,8 +736,7 @@ class Subcase(object):
                 #print "  ?*key=|%s| value=|%s| options=%s paramType=|%s|" %(key,value,options,paramType)
                 msg += self.print_param(key, param, printBeginBulk=False)
                 #print ""
-            ###
-        ###
+
         if self.id > 0 and 'BEGIN' in self.params:  # prevents 2 BEGIN BULKs
             msg += self.print_param('BEGIN', self.params['BEGIN'])
         return msg

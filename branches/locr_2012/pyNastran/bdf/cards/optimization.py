@@ -5,7 +5,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import izip
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
+    collapse_thru_by_float)
 
 
 class OptConstraint(BaseCard):
@@ -31,7 +32,6 @@ class DCONSTR(OptConstraint):
             self.uid = data[3]
             self.lowfq = data[4]
             self.highfq = data[5]
-        ###
 
     def rawFields(self):
         fields = ['DCONSTR', self.oid, self.rid, self.lid,
@@ -78,18 +78,15 @@ class DDVAL(OptConstraint):
 
     def __init__(self, card=None, data=None):
         self.oid = card.field(1)
-        self.dval1 = card.field(2)
-        self.dval2 = card.field(3)
-        self.dval3 = card.field(4)
-        self.dval4 = card.field(5)
-        self.dval5 = card.field(6)
-        self.dval6 = card.field(7)
-        self.dval7 = card.field(8)
+        ddvals = [ddval for ddval in card.fields(2) if ddval is not None]
+        self.ddvals = expand_thru_by(ddvals)
+        self.ddvals.sort()
 
     def rawFields(self):
-        fields = ['DDVAL', self.oid, self.dval1, self.dval2, self.dval3,
-                  self.dval4, self.dval5, self.dval6, self.dval7]
-        return self.printCard(fields)
+        self.ddvals.sort()
+        ddvals = collapse_thru_by_float(self.ddvals)
+        fields = ['DDVAL', self.oid] + ddvals
+        return fields
 
 
 class DOPTPRM(OptConstraint):
@@ -110,7 +107,6 @@ class DOPTPRM(OptConstraint):
             param = fields[i]
             val = fields[i + 1]
             self.params[param] = val
-        ###
 
     def rawFields(self):
         fields = ['DOPTPRM']
@@ -241,7 +237,7 @@ class DRESP2(OptConstraint):
                 valueList.append(field)
             #else:
             #    pass
-            ###
+
         self.params[key] = valueList
         del self.params['$NULL$']
 
@@ -325,6 +321,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         if nFields % 2 == 1:
             endFields.append(None)
             nFields += 1
+
         i = 0
         for i in xrange(0, nFields, 2):
             self.dvids.append(endFields[i])
@@ -336,7 +333,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             print(str(self))
             raise RuntimeError('invalid DVMREL1...')
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def Mid(self):
@@ -382,7 +379,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         self.dvids = []
         self.coeffs = []
         endFields = card.fields(9)
-        #print "endFields = ",endFields
+
         nFields = len(endFields) - 1
         if nFields % 2 == 1:
             endFields.append(None)
@@ -398,7 +395,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             print(str(self))
             raise RuntimeError('invalid DVPREL1...')
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.pid = model.Property(self.pid)
 
     def Pid(self):
@@ -419,6 +416,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         c0 = set_blank_if_default(self.c0, 0.)
         fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
                   self.pNameFid, self.pMin, pMax, c0, None]
+
         for (dvid, coeff) in izip(self.dvids, self.coeffs):
             fields.append(dvid)
             fields.append(coeff)
@@ -483,18 +481,13 @@ class DVPREL2(OptConstraint):
                 dvid = card.field(i)
                 if dvid:
                     self.dvids.append(dvid)
-                ###
-            ###
-        ###
+
         if iDTable:
             for i in xrange(iDTable + 1, iEnd):
                 dtable = card.field(i)
                 if dtable:
                     assert dtable is not 'DTABLE'
                     self.dtables.append(dtable)
-                ###
-            ###
-        ###
 
     def Pid(self):
         if isinstance(self.pid, int):
@@ -503,7 +496,7 @@ class DVPREL2(OptConstraint):
 
     #def EqID(self):
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         """@todo add support for DEQATN cards to finish DVPREL2 xref"""
         self.pid = model.Property(self.pid)
         #self.eqID = model.DEquation(self.eqID)

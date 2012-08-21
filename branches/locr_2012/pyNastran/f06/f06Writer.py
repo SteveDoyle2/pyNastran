@@ -89,6 +89,7 @@ class F06Writer(object):
         self.f06OutName = '%s.f06.out' % (self.model)
 
     def loadOp2(self, isTesting=False):
+        print("self.class = ",self.__class__.__name__)
         if isTesting == False:  ## @todo implement in way that doesnt require a variable (e.g. check parent class)
             raise RuntimeError("Don't call this method unless you're testing the F06Writer.  It breaks the F06 and OP2 classes.")
         from pyNastran.op2.op2 import OP2

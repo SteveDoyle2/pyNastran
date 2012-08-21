@@ -3,7 +3,7 @@ import sys
 #import time
 from pyNastran.op2.test.test_op2 import get_failed_files
 from pyNastran.f06.test.test_f06 import runLotsOfFiles
-from pyNastran.general.general import getFilesOfType
+from pyNastran.general.general import get_files_of_type
 
 
 def parseSkippedCards(fname):
@@ -45,7 +45,7 @@ def parseSkippedCards(fname):
 
 def main():
     # works
-    files = getFilesOfType('tests', '.f06')
+    files = get_files_of_type('tests', '.f06')
 
     #moveDir = r'D:\work\move\hard_demo'
     moveDir = r'D:\work\move\move_tpl'
@@ -62,7 +62,7 @@ def main():
     if getSkipCards:
         files2 = parseSkippedCards('skippedCards.out')
     elif regenerate:
-        files2 = getFilesOfType(moveDir, '.f06')
+        files2 = get_files_of_type(moveDir, '.f06')
         files2 = []
         files2 += files
     else:

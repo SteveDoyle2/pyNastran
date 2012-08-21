@@ -73,7 +73,7 @@ class CREEP(Material):
             self.g = data[15]
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def Mid(self):  # links up to MAT1, MAT2, MAT9 or same mid
@@ -155,6 +155,9 @@ class MAT1(Material):
     def Nu(self):
         return self.nu
 
+    def Rho(self):
+        return self.rho
+
     def set_E_G_nu(self, card):
         r"""
         \f[ \large G = \frac{E}{2 (1+\nu)} \f]
@@ -220,7 +223,7 @@ class MAT1(Material):
         msg += '                       RHO=%g),);\n' % (self.rho)
         return msg
 
-    #def crossReference(self, model):
+    #def cross_reference(self, model):
         #self.Mcsid = model.Coord(self.Mcsid)  # used only for PARAM,CURVPLOT
         #pass
 
@@ -1123,7 +1126,7 @@ class MATS1(MaterialDependence):
         ###
         return E
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
         if self.tid:  # then self.h is used
             self.tid = model.Table(self.tid)

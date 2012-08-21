@@ -7,13 +7,13 @@ import sys
 
 from pyNastran.bdf.test.test_bdf import run_lots_of_files
 from pyNastran.op2.test.test_op2 import get_failed_files
-from pyNastran.op2.test.op2_test import getAllFiles
-from pyNastran.general.general import getFilesOfType
+from pyNastran.op2.test.op2_test import get_all_files
+from pyNastran.general.general import get_files_of_type
 
 if __name__ == '__main__':
     # works
-    files = getFilesOfType('tests', '.bdf')
-    files += getFilesOfType('tests', '.dat')
+    files = get_files_of_type('tests', '.bdf')
+    files += get_files_of_type('tests', '.dat')
 
     foldersFile = 'tests/foldersRead.txt'
 
@@ -25,9 +25,9 @@ if __name__ == '__main__':
     stopOnFailure = False
 
     if regenerate:
-        files2 = getAllFiles(foldersFile, '.bdf')
-        files2 += getAllFiles(foldersFile, '.nas')
-        files2 += getAllFiles(foldersFile, '.dat')
+        files2 = get_all_files(foldersFile, '.bdf')
+        files2 += get_all_files(foldersFile, '.nas')
+        files2 += get_all_files(foldersFile, '.dat')
         files2 += files
     else:
         files2 = get_failed_files('failedCases.in')
@@ -53,4 +53,4 @@ if __name__ == '__main__':
     for fname in failed_files:
         f.write('%s\n' % (fname))
     f.close()
-    sys.exit('final stop...')
+    sys.exit('finished...')

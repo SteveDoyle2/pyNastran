@@ -14,44 +14,42 @@ class BaseCard(BDFCard):
     #    pass
 
     def writeCodeAster(self):
-        return '# skipping %s  because writeCodeAster is not implemented\n' % (self.type)
+        return ('# skipping %s  because writeCodeAster is not implemented\n'
+                % self.type)
 
     def writeCodeAsterLoad(self, model, gridWord='node'):
         return '# skipping %s (lid=%s) because writeCodeAsterLoad is not implemented\n' % (self.type, self.lid)
 
-    def verify(self, model, iSubcase):
-        """
-        this method checks performs checks on the cards such as
-        that the PBEAML has a proper material type
-        """
-        pass
+    #def verify(self, model, iSubcase):
+        #"""
+        #this method checks performs checks on the cards such as
+        #that the PBEAML has a proper material type
+        #"""
+        #pass
 
     def isSameFields(self, fields1, fields2):
         for (field1, field2) in izip(fields1, fields2):
             if not is_same(field1, field2):
                 return False
-            ###
-        ###
         return True
 
-    def Is(self, typeCheck):
-        """retruns True if the card type is the same as the object"""
-        if self.type == typeCheck:
-            return True
-        return False
+    #def Is(self, typeCheck):
+        #"""retruns True if the card type is the same as the object"""
+        #if self.type == typeCheck:
+        #    return True
+        #return False
 
-    def removeTrailingNones(self, fields):
-        """removes blank fields at the end of a card object"""
-        self._wipeEmptyFields(fields)
+    #def removeTrailingNones(self, fields):
+        #"""removes blank fields at the end of a card object"""
+        #self._wipeEmptyFields(fields)
 
     def printCard(self, fields, tol=0.):
         """prints a card object"""
-        #print "fields = ",fields
         return printCard(fields, tol)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         #self.mid = model.Material(self.mid)
-        msg = "%s needs to implement the 'crossReference' method" % (self.type)
+        msg = "%s needs to implement the 'cross_reference' method" % (self.type)
         raise NotImplementedError(msg)
 
     def buildTableLines(self, fields, nStart=1, nEnd=0):
@@ -79,8 +77,7 @@ class BaseCard(BDFCard):
                 #pad = [None]*(i+j)
                 #fieldsOut += pad
                 fieldsOut += [None] * (nStart + nEnd)
-            ###
-        ###
+
         # make sure they're aren't any trailing None's (from a new line)
         fieldsOut = self._wipeEmptyFields(fieldsOut)
         #print "fieldsOut = ",fieldsOut,len(fieldsOut)
@@ -114,7 +111,7 @@ class BaseCard(BDFCard):
         (default values are left blank).
         """
         #print "tol = ",tol
-        self.rawFields()
+        #self.rawFields()
         fields = self.reprFields()
         try:
             return self.printCard(fields)
@@ -150,7 +147,7 @@ class Property(BaseCard):
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
 
@@ -169,7 +166,7 @@ class Material(BaseCard):
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
     def Mid(self):
@@ -201,7 +198,6 @@ class Element(BaseCard):
             return self.pid
         else:
             return self.pid.pid
-        ###
 
     def nodePositions(self, nodes=None):
         """returns the positions of multiple node objects"""
@@ -298,7 +294,7 @@ class Element(BaseCard):
 
     def Jacobian(self):
         msg = 'Jacobian not implemented for %s' % (
-            self.self.__class__.__name__)
+            self.__class__.__name__)
         raise NotImplementedError(msg)
 
     def stiffnessMatrix(self):
@@ -312,15 +308,13 @@ class Element(BaseCard):
         raise NotImplementedError(msg)
 
 
-def expandThru(fields):
+def expand_thru(fields):
     """
     expands a list of values of the form [1,5,THRU,9,13]
     to be [1,5,6,7,8,9,13]
     """
     if len(fields) == 1:
         return fields
-    #print("expandThru")
-    #print("fields = ", fields)
     out = []
     nFields = len(fields)
     i = 0
@@ -328,18 +322,14 @@ def expandThru(fields):
         if fields[i] == 'THRU':
             for j in xrange(fields[i - 1], fields[i + 1] + 1):
                 out.append(j)
-            ###
             i += 2
         else:
             out.append(fields[i])
             i += 1
-        ###
-    ###
-    #print "out = ",out,'\n'
     return list(set(out))
 
 
-def expandThruBy(fields):
+def expand_thru_by(fields):
     """
     expands a list of values of the form [1,5,THRU,9,BY,2,13]
     to be [1,5,7,9,13]
@@ -348,8 +338,6 @@ def expandThruBy(fields):
     """
     if len(fields) == 1:
         return fields
-    #print "expandThruBy"
-    #print "fields = ",fields
     out = []
     nFields = len(fields)
     i = 0
@@ -357,40 +345,35 @@ def expandThruBy(fields):
     while(i < nFields):
         if fields[i] == 'THRU':
             by = 1
+            byCase = False
             if i + 2 < nFields and fields[i + 2] == 'BY':
                 by = fields[i + 3]
-                #sys.stderr.write("BY was found...untested...")
-                #raise NotImplementedError('implement BY support\nfields=%s' %(fields))
             else:
                 by = 1
+                byCase = True
             minValue = fields[i - 1]
             maxValue = fields[i + 1]
-            #print "minValue=%s maxValue=%s by=%s" %(minValue,maxValue,by)
-            for j in xrange(0, (maxValue - minValue) // by + 1):  # +1 is to include final point
+            maxR = int((maxValue - minValue) // by + 1) # max range value
+
+            for j in xrange(0, maxR):  # +1 is to include final point
                 value = minValue + by * j
                 out.append(value)
-            ###
-            if by == 1:  # null/standard case
+
+            if byCase:  # null/standard case
                 i += 2
             else:     # BY case
                 i += 3
-            ###
         else:
             out.append(fields[i])
             i += 1
-        ###
-    ###
-    #out = list(set(out))
-    #out.sort()
-    #print "out = ",out,'\n'
     return list(set(out))
 
 
-def expandThruExclude(self, fields):
+def expand_thru_exclude(self, fields):
     """
     expands a list of values of the form [1,5,THRU,11,EXCEPT,7,8,13]
     to be [1,5,6,9,10,11,13]
-    @todo not tested
+    @warning hasnt been tested
     """
     fieldsOut = []
     nFields = len(fields)
@@ -399,7 +382,7 @@ def expandThruExclude(self, fields):
             storedList = []
             for j in xrange(fields[i - 1], fields[i + 1]):
                 storedList.append(fields[j])
-            ###
+
         elif fields[i] == 'EXCLUDE':
             storedSet = set(storedList)
             while fields[i] < max(storedList):
@@ -409,135 +392,143 @@ def expandThruExclude(self, fields):
             if storedList:
                 fieldsOut += storedList
             fieldsOut.append(fields[i])
-        ###
-    ###
+    return fieldsOut
 
 
-def collapseThru(fields):
-    return fields
+def collapse_thru_by(fields):
+    assert 'THRU' not in fields, fields
+    fields.sort()
+    packs = condense(fields)
+    fields2 = build_thru(packs)
+    #assert fields == expand_thru_by(fields2)  # why doesn't this work?
+    return fields2
+
+def collapse_thru_by_float(fields):
+    assert 'THRU' not in fields, fields
+    fields.sort()
+    packs = condense(fields)
+    fields2 = build_thru_float(packs)
+    #assert fields == expand_thru_by(fields2)  # why doesn't this work?
+    return fields2
 
 
-def collapseThruBy(fields):
-    return fields
+def collapse_thru(fields):
+    assert 'THRU' not in fields, fields
+    fields.sort()
+    packs = condense(fields)
+    fields2 = build_thru(packs, maxDV=1)
+    #assert fields == expand_thru_by(fields2), fields2  # why doesn't this work?
+    return fields2
 
 
-def _collapseThru(fields):
+def condense(valueList):
     """
-    1,THRU,10
-    1,3,THRU,19,15
-    @warning doesnt work
+    Builds a list of packs (list of 3 values representing the first, last,
+    and delta values for condensing a SET card.
+    @see build_thru
     """
-    fields = list(set(fields))
+    if len(valueList) == 1:
+        return [[valueList[0], valueList[0], 1]]
+    valueList.sort()
+    packs = []
+    
+    dvOld = None
+    firstVal = valueList[0]
+    lastVal = firstVal
 
-    #assumes sorted...
-
-    dnMax = 1
-    (pre, i) = _preCollapse(fields, dnMax=dnMax)
-    mid = _midCollapse(pre, dnMax=dnMax)
-    #out = self._postCollapse(mid)
-
-    out = []
-    print("running post...")
-    for data in mid:
-        print("data = %s" % (data))
-        nData = len(data)
-        if nData == 1:
-            out.append(data[0])  # 1 field only
+    for val in valueList[1:]:
+        dv = val - lastVal
+        
+        # sets up the first item of the pack
+        if dvOld is None:
+            dvOld = dv
+        
+        # fill up the pack
+        if dvOld == dv:
+            lastVal = val
         else:
-            assert data[2] == 1  # dn
-            out += [data[0], 'THRU', data[1]]
-        ###
-    ###
-    print("dataOut = ", out)
-    return out
+            packs.append([firstVal,lastVal,dvOld])
+            lastVal = val
+            dvOld = None
+            firstVal = val
+
+    # fills the last pack
+    if dvOld == dv:
+        packs.append([firstVal,val,dv])
+    else:
+        packs.append([firstVal, val, dvOld])
+    return packs
 
 
-def _midCollapse(preCollapse, dnMax=10000000):
+def build_thru(packs, maxDV=None):
     """
-    input is lists of [[1,3,5,7],2]  dn=2
-    dNmax = 2
-    output is [1,7,2]
+    Takes a pack [1,7,2] and converts it into fields used by a SET card.
+    The values correspond to the first value, last value, and delta in the
+    list.  This means that [1,1001,2] represents 500 values.
+    [1,1001,1] represents 1001 values and will be written as [1,THRU,1001]..
+
+    @param packs
+      list of packs (list of 3 values: [first, last, delta] )
+    @param maxDV
+      integer defining the max allowable delta between two values
+      (default=None; no limit)
     """
-    out = []
-    print(preCollapse)
-    for collapse in preCollapse:
-        print("collapse = ", collapse)
-        (data, dn) = collapse
-        print("data = ", data)
-        print("dn = ", dn)
-        if len(data) > 1:
-            if dn <= dnMax:  # 1:11:2 - patran syntax
-                fields = [data[0], data[-1], dn]
-                out.append(fields)
-            ###
-            else:  # bigger than dn
-                for field in data:
-                    out.append(field)
-                ###
-            ###
-        else:  # 1 item
-            out.append([data[0]])
-        ###
-    return out
+    fields = []
+    for (firstVal, lastVal, dv) in packs:
+        if firstVal == lastVal:
+            fields.append(firstVal)
+        elif dv == 1:
+            if lastVal - firstVal > 2:
+                fields.append(firstVal)
+                fields.append('THRU')
+                fields.append(lastVal)
+            elif lastVal - firstVal == 2:
+                fields.append(firstVal)
+                fields.append(firstVal + 1)
+                fields.append(lastVal)
+            else:
+                fields.append(firstVal)
+                fields.append(lastVal)
+        else:
+            if maxDV is None:
+                if lastVal - firstVal > 4*dv:
+                    fields.append(firstVal)
+                    fields.append('THRU')
+                    fields.append(lastVal)
+                    fields.append('BY')
+                    fields.append(dv)
+                else:
+                    for v in xrange(firstVal, lastVal + dv, dv):
+                        fields.append(v)
+            else:
+                for v in xrange(firstVal, lastVal + dv, dv):
+                    fields.append(v)
+    return fields
 
-
-def _preCollapse(fields, dnMax=10000000):  # assumes sorted
-    out = []
-    nFields = len(fields) - 1
-    i = 0
-    while(i < nFields):
-        dn = fields[i + 1] - fields[i]
-        print("preFields = %s" % (fields[i:]))
-        (outFields, j) = _subCollapse(fields[i:], dn, dnMax)
-        print("outFields = %s" % (outFields))
-        out.append([outFields, dn])
-        i += j
-        ###
-        #if i==nFields+1:
-        #    out.append([[fields[i-1]],1])
-        #    print("lastOut = ",out[-1])
-        ###
-    ###
-
-    print("i=%s out=%s" % (i, out))
-    print("--end of preCollapse")
-    return (out, i)
-
-
-def _subCollapse(fields, dn, dnMax=10000000):
+def build_thru_float(packs, maxDV=None):
     """
-    in  = [1,2,3,  7]
-    out = [1,2,3]
+    Takes a pack [1,7,2] and converts it into fields used by a SET card.
+    The values correspond to the first value, last value, and delta in the
+    list.  This means that [1,1001,2] represents 500 values.
+    [1,1001,1] represents 1001 values and will be written as [1,THRU,1001]..
+
+    @param packs
+      list of packs (list of 3 values: [first, last, delta] )
+    @param maxDV
+      integer defining the max allowable delta between two values
+      (default=None; no limit)
     """
-    # dn=1
-    print("subIn = %s" % (fields))
-    out = [fields[0]]
-    nFields = len(fields)
-
-    for i in xrange(1, nFields):
-        dn = fields[i] - fields[i - 1]
-        print("i=%s field[%s]=%s fields[%s]=%s dn=%s dnMax=%s" % (
-            i, i, fields[i], i - 1, fields[i - 1], dn, dnMax))
-        if dn != dnMax:
-            #i += 1
-            #out.append(fields[i])
-            break
-        out.append(fields[i])
-    #i -= 1
-    print("subOut = %s" % (out))
-    #i += 1
-    print("iSubEnd = %s\n" % (i))
-    return (out, i)
-###
-
-
-#dnMax = 2
-if __name__ == '__main__':
-    card = BaseCard()
-
-    """
-    1,THRU,10
-    1,3,THRU,19,15
-    """
-    card.collapseThru([1, 2, 3, 4, 5, 10])
-    card.collapseThru([1, 3, 4, 5, 6, 17])
+    fields = []
+    for (firstVal, lastVal, dv) in packs:
+        if lastVal - firstVal > 4*dv:
+            fields.append(firstVal)
+            fields.append('THRU')
+            fields.append(lastVal)
+            fields.append('BY')
+            fields.append(dv)
+        else:
+            nv = int(round((lastVal-firstVal)/dv))+1
+            for i in xrange(nv):
+                v = firstVal + i*dv
+                fields.append(v)
+    return fields

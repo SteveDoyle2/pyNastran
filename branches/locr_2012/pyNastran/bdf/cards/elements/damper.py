@@ -14,7 +14,7 @@ class LineDamper(DamperElement):
     def __init__(self, card, data):
         DamperElement.__init__(self, card, data)
 
-    def crossReference(self, mesh):
+    def cross_reference(self, mesh):
         self.nodes = mesh.Nodes(self.nodes)
         self.pid = mesh.Property(self.pid)
 
@@ -88,7 +88,7 @@ class CDAMP1(LineDamper):
     def B(self):
         return self.pid.b
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True)
         self.pid = model.Property(self.pid)
 
@@ -131,7 +131,7 @@ class CDAMP2(LineDamper):
     def B(self):
         return self.b
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True)
 
     def rawFields(self):
@@ -162,7 +162,7 @@ class CDAMP3(LineDamper):
     def B(self):
         return self.pid.b
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True)
         self.pid = model.Property(self.pid)
 
@@ -194,7 +194,7 @@ class CDAMP4(LineDamper):
     def B(self):
         return self.b
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True)
 
     def rawFields(self):
@@ -222,7 +222,7 @@ class CDAMP5(LineDamper):
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True)
         self.pid = model.Property(self.pid)
 

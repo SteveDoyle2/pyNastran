@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import izip, count
 
-from pyNastran.bdf.cards.baseCard import BaseCard, expandThru
+from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 
 
 class constraintObject2(object):
@@ -18,8 +18,6 @@ class constraintObject2(object):
             print("already has key...key=%s\n%s" % (key, str(ADD_Constraint)))
         else:
             self.addConstraints[key] = ADD_Constraint
-        ###
-    ###
 
     def append(self, constraint):
         key = constraint.conid
@@ -36,24 +34,21 @@ class constraintObject2(object):
             return self.addConstraints[spcID]
         return self.constraints[spcID]
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         #return
         #addConstraints2 = {}
         for key, addConstraint in sorted(self.addConstraints.iteritems()):
             for i, spcID in enumerate(addConstraint.sets):
                 addConstraint.sets[i] = self._spc(spcID)
-            ###
             self.addConstraints[key] = addConstraint
-        ###
         #self.addConstraints = addConstraints2
 
         constraints2 = {}
         for key, constraints in sorted(self.constraints.iteritems()):
             constraints2[key] = []
             for constraint in constraints:
-                constraints2[key].append(constraint.crossReference(model))
-            ###
-        ###
+                constraints2[key].append(constraint.cross_reference(model))
+
         self.constraints = constraints2
 
     def createConstraintsForID(self):
@@ -77,7 +72,7 @@ class constraintObject2(object):
                 constraints += constraintIDs
                 #constraints.append(spcID)
                 constraints2[key] = [spcID]
-            ###
+
             constraints2[key] = constraints
 
         ## not needed b/c there are no MPCADD/SPCADD
@@ -101,9 +96,7 @@ class constraintObject2(object):
             for j in xrange(nKeys):
                 if i > j:
                     constraints2[Key].append(constraints[Key])
-                ###
-            ###
-        ###
+
         return constraints2
 
     def ConstraintID(self):
@@ -179,7 +172,6 @@ class constraintObject(object):
             #print "spcadds2 = ",self.addConstraints
         else:
             pass  # not done, no spcsets
-        ###
 
         # xrefs nodes...not done...
         #print "xref spc/spc1/spcd..."
@@ -193,10 +185,6 @@ class constraintObject(object):
                 #(conid,nodeDOFs) = constraint.getNodeDOFs(model) # the constrained nodes
                 #for nodeDOF in nodeDOFs:
                 #    self.addConstraint(conid,nodeDOF)
-                ###
-            ###
-        ###
-    ###
 
     def crossReference_AddConstraint(self, key, addConstraint):
         """
@@ -215,11 +203,9 @@ class constraintObject(object):
             #print "self.addConstraints[conid] = ",self.getConstraint(conid)
             constraint = self.getConstraint(conid)
             #print 'newSlot = ',self.addConstraints[key].gids[i]
-            self.addConstraints[key].crossReference(i, constraint)
+            self.addConstraints[key].cross_reference(i, constraint)
             #self.addConstraints[key].gids[i] = self.getConstraint(conid)
             #print "spcadds* = ",self.addConstraints
-        ###
-    ###
 
     #def popConstraint(self, conid):  # need to not throw away constraints...
     #    if conid in self.addConstraints:
@@ -238,7 +224,6 @@ class constraintObject(object):
             return self.constraints[conid]
         else:
             return conid
-        ###
 
     def addConstraint(self, conid, nodeDOF):
         (nid, dofs) = nodeDOF
@@ -261,9 +246,7 @@ class constraintObject(object):
             for key, constraintSets in sorted(self.constraints.iteritems()):
                 for constraint in constraintSets:
                     msg += str(constraint)
-                ###
-            ###
-        ###
+
         #print msg
         return msg
 
@@ -299,7 +282,6 @@ class SUPORT1(Constraint):
         for i in xrange(0, len(fields), 2):
             self.IDs.append(fields[i])
             self.Cs.append(fields[i + 1])
-        ###
 
     def rawFields(self):
         fields = ['SUPORT1', self.conid]
@@ -327,7 +309,6 @@ class SUPORT(Constraint):
         for i in xrange(0, len(fields), 2):
             self.IDs.append(fields[i])
             self.Cs.append(fields[i + 1])
-        ###
 
     def rawFields(self):
         fields = ['SUPORT']
@@ -373,8 +354,6 @@ class MPC(Constraint):
                 self.gids.append(pack2[0])
                 self.constraints.append(pack2[1])  # default=0 scalar point
                 self.enforced.append(pack2[2])  # default=0.0
-            ###
-        ###
 
         # reduce the size if there are duplicate Nones
         #nConstraints = max(len(self.gids       ),
@@ -426,13 +405,12 @@ class SPC(Constraint):
             self.gids = [data[1]]
             self.constraints = [data[2]]
             self.enforced = [data[3]]
-        ###
 
     def getNodeDOFs(self, model):
         pass
         #return conid,dofs
 
-    def crossReference(self, i, node):
+    def cross_reference(self, i, node):
         dofCount = 0
         self.gids[i] = node
         #for (i,constraint) in enumerate(self.constraints):
@@ -442,8 +420,6 @@ class SPC(Constraint):
         #            dofCount+=1
         #        else:
         #            dofCount+=6
-        #        ###
-        #    ###
         return dofCount
 
     def rawFields(self):
@@ -500,7 +476,7 @@ class SPCAX(Constraint):
         ## Enforced displacement value
         self.d = card.field(5)
 
-    def crossReference(self, i, node):
+    def cross_reference(self, i, node):
         pass
 
     def rawFields(self):
@@ -527,10 +503,10 @@ class SPC1(Constraint):
         self.conid = card.field(1)
         self.constraints = str(card.field(2, ''))  # 246 = y; dx, dz dir
         nodes = card.fields(3)
-        self.nodes = expandThru(nodes)
+        self.nodes = expand_thru(nodes)
         self.nodes.sort()
 
-    def crossReference(self, i, node):
+    def cross_reference(self, i, node):
         self.nodes[i] = node
 
     def rawFields(self):  # SPC1
@@ -571,14 +547,11 @@ class ConstraintADD(Constraint):
                 for spcset in sorted(spcsets):
                     fieldSets.append(spcset.conid)
                     outSPCs += str(spcset)
-                ###
             else:
                 #print 'dict'
                 #outSPCs += str(spcsets.conid)
                 for (key, spcset) in sorted(spcsets.iteritems()):
                     fieldSets.append(spcsets.conid)
-                ###
-            ###
         return self.printCard(fields + list(set(fieldSets))) + outSPCs  # SPCADD
 
 
@@ -594,7 +567,7 @@ class SPCADD(ConstraintADD):
         ConstraintADD.__init__(self, card, data)
         self.conid = card.field(1)
         sets = card.fields(2)
-        self.sets = expandThru(sets)
+        self.sets = expand_thru(sets)
         self.sets.sort()
 
     def organizeConstraints(self, model):
@@ -607,7 +580,7 @@ class SPCADD(ConstraintADD):
         (scaleFactors, loads) = self.getReducedConstraints()
         return (typesFound, positionSPCs)
 
-    def crossReference(self, i, node):
+    def cross_reference(self, i, node):
         #dofCount = 0
         self.sets.sort()
         self.sets[i] = node
@@ -634,10 +607,10 @@ class MPCADD(ConstraintADD):
         ConstraintADD.__init__(self, card, data)
         self.conid = card.field(1)
         sets = card.fields(2)
-        self.sets = expandThru(sets)
+        self.sets = expand_thru(sets)
         self.sets.sort()
 
-    def crossReference(self, i, node):
+    def cross_reference(self, i, node):
         #dofCount = 0
         self.sets.sort()
         self.sets[i] = node

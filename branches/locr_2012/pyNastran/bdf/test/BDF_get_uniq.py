@@ -29,7 +29,7 @@ class BDFuniqCard(pyNastran.bdf.bdf.BDF):
     #def _parse_executive_control_deck(self):
     #   pass
 
-    def crossReference(self, xref):
+    def cross_reference(self, xref):
         pass
 
     def add_card(self, card, cardName, iCard=0, old_card_obj=None):

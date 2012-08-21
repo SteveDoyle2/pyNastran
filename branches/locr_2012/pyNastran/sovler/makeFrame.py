@@ -78,7 +78,7 @@ def makeTruss2():
 
     force = ['FORCE', loadID, 2, None, 1000., 0., 1., 0.]
     model.add_card(force, 'FORCE')
-    ##model.write('conrod.bdf') todo: model has no write method
+    model.writeBDF('conrod.bdf')
     print "done"
     return model
 
@@ -157,7 +157,7 @@ def makeTruss():
 
     force = ['FORCE', loadID, 3, None, 100., 1., 0., 0.]
     model.add_card(force, 'FORCE')
-    model.write('frame.bdf')
+    model.writeBDF('frame.bdf')
     print "done"
     return model
 
@@ -295,7 +295,7 @@ def getForces(model, Dofs):
 
 def runTruss():
     model = makeTruss2()
-    model.crossReference()
+    model.cross_reference()
     #for id,e in model.elements.iteritems():
     #    print "K = \n",e.Stiffness(model),'\n'
 
@@ -400,6 +400,7 @@ def fKx(K, x):
     """
     f = solve(K, x)
     return f
+
 
 if __name__ == '__main__':
     runTruss()

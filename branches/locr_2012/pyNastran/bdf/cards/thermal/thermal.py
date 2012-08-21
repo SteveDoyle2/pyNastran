@@ -3,15 +3,15 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import BaseCard, expandThruBy, collapseThruBy
+from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru_by, collapse_thru_by
 
 
 class ThermalCard(BaseCard):
     def __init__(self, card, data):
         pass
 
-    def crossReference(self, model):
-        raise NotImplementedError('%s has not defined the crossReference'
+    def cross_reference(self, model):
+        raise NotImplementedError('%s has not defined the cross_reference'
                                   'method' % (self.type))
 
     def isSameCard(self, obj, debug=False):
@@ -104,7 +104,7 @@ class CHBDYE(ThermalElement):
 
         self.grids = []
 
-    #def crossReference(self,model):
+    #def cross_reference(self,model):
     #    pass
 
     def sideToEIDs(self, eid):
@@ -121,7 +121,7 @@ class CHBDYE(ThermalElement):
         return fields
 
     def reprFields(self):
-        #eids = collapseThruBy(self.eids)  ## @todo is this done
+        #eids = collapse_thru_by(self.eids)  ## @todo is this done
         fields = ['CHBDYE', self.eid, self.eid2, self.side, self.iViewFront,
                   self.iViewBack, self.radMidFront, self.radMidBack]
         return fields
@@ -172,7 +172,7 @@ class CHBDYG(ThermalElement):
             self.radMidBack = data[5]
             self.grids = data[6:14]
 
-    def crossReference(self, mesh):
+    def cross_reference(self, mesh):
         pass
         #self.pid = mesh.Phbdy(self.pid)
 
@@ -243,7 +243,7 @@ class CHBDYP(ThermalElement):
         else:
             raise NotImplementedError()
 
-    def crossReference(self, mesh):
+    def cross_reference(self, mesh):
         self.pid = mesh.Phbdy(self.pid)
 
     def rawFields(self):
@@ -305,7 +305,7 @@ class PCONV(ThermalProperty):
         self.e2 = card.field(13)
         self.e3 = card.field(14)
 
-    #def crossReference(self,model):
+    #def cross_reference(self,model):
     #    pass
 
     def rawFields(self):
@@ -352,7 +352,7 @@ class PCONVM(ThermalProperty):
         ## fluid. (Real > 0.0; Default = 0.0)
         self.exppo = card.field(8, 0.0)
 
-    #def crossReference(self,model):
+    #def cross_reference(self,model):
     #    pass
 
     def rawFields(self):
@@ -392,7 +392,7 @@ class PHBDY(ThermalProperty):
         self.d1 = card.field(3)
         self.d2 = card.field(4, self.d1)
 
-    #def crossReference(self,model):
+    #def cross_reference(self,model):
     #    pass
     def rawFields(self):
         fields = ['PHBDY', self.pid, self.af, self.d1, self.d2]
@@ -433,7 +433,7 @@ class CONV(ThermalBC):
         ## Ambient points used for convection 0's are allowed for TA2 and higher.
         self.ta = card.fields(5, card.nfields, [TA1] * nFields)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.eid = model.Element(self.eid)
         assert self.eid.type in ['CHBDYG', 'CHBDYE', 'CHBDYP']
 
@@ -471,7 +471,7 @@ class RADM(ThermalBC):
         for e in self.emissivity:
             assert 0. <= e <= 1.0
 
-    #def crossReference(self,model):
+    #def cross_reference(self,model):
     #    pass
 
     def reprFields(self):
@@ -497,9 +497,9 @@ class RADBC(ThermalBC):
 
         eids = card.fields(4)
         ## CHBDYi element identification number
-        self.eids = expandThruBy(eids)
+        self.eids = expand_thru_by(eids)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         for i, eid in enumerate(self.eids):
             self.eids[i] = model.Element(eid)
 
@@ -520,7 +520,7 @@ class RADBC(ThermalBC):
 
     def reprFields(self):
         cntrlnd = set_blank_if_default(self.cntrlnd, 0)
-        eids = collapseThruBy(self.Eids())
+        eids = collapse_thru_by(self.Eids())
         fields = ['RADBC', self.nodamb, self.famb, cntrlnd] + eids
         return fields
 

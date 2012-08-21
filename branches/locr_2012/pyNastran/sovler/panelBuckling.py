@@ -1,9 +1,9 @@
 import sys
 import copy
 
-from math import acos, pi
+from math import acos, pi, asin
 from numpy import degrees, dot
-from numpy.linalg import norm
+#from numpy.linalg import norm
 
 from pyNastran.bdf.bdf import BDF, ShellElement
 
@@ -272,7 +272,7 @@ class PanelBuckling(object):
         if arcos:
             return acos(max(min((self * other) / (self.length * other.length), 1), -1))
         else:
-            return math.asin(max(min((self * other.ortho()) / (self.length * other.length), 1), -1))
+            return asin(max(min((self * other.ortho()) / (self.length * other.length), 1), -1))
 
     def removeExtraElements(self, eid, touchingElements):
         return list(set(touchingElements))

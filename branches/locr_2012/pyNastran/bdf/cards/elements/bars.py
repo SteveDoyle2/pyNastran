@@ -16,7 +16,7 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
     def __init__(self, card, data):
         Element.__init__(self, card, data)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes)
         self.pid = model.Property(self.pid)
 
@@ -43,211 +43,15 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         L = self.Length()
         mass = (self.Rho() * self.Area() + self.Nsm()) * L
         return mass
-
-
-class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
-    def __init__(self, card, data):
-        Element.__init__(self, card, data)
-
-    def C(self):
-        """torsional constant"""
-        return self.pid.C()
-
-    def Area(self):
-        """returns the area of the element face"""
-        raise NotImplementedError('implement self.Area() for %s' % (self.type))
-
-    def E(self):
-        r"""returns the Young's Modulus  \f$ E \f$"""
-        return self.pid.mid.E()
-
-    def G(self):
-        r"""returns the Shear Modulus   \f$ G \f$"""
-        return self.pid.mid.G()
-
-    def J(self):
-        r"""returns the Polar Moment of Inertia.   \f$ J \f$"""
-        return self.pid.J()
-
-    def I11(self):
-        r"""returns the Moment of Inertia.   \f$ I_{11} \f$"""
-        return self.pid.I11()
-
-    def I22(self):
-        r"""returns the Moment of Inertia.   \f$ I_{22} \f$"""
-        return self.pid.I22()
-
-    def I12(self):
-        r"""returns the Moment of Inertia.   \f$ I_{12} \f$"""
-        return self.pid.I12()
-
-    def Nu(self):
-        r"""returns Poisson's Ratio  \f$ \nu \f$"""
-        return self.pid.mid.nu
-
-    def Rho(self):
-        r"""returns the material density  \f$ \rho \f$"""
-        #print str(self.pid),type(self.pid)
-        #raise NotImplementedMethodError('implement self.Rho() for %s' %(self.type))
-        return self.pid.mid.rho
-
-    def Nsm(self):
-        """Placeholder method for the non-structural mass"""
-        raise NotImplementedError('implement self.Area() for %s' % (self.type))
-
-    def MassPerLength(self):
-        """Returns the mass per unit length"""
-        return self.pid.MassPerLength()
-
-    def Mass(self):
-        r"""
-        returns the mass of the element
-
-        \f[ \large  mass = \left( \rho A + nsm \right) L  \f]
-        """
-        L = self.Length()
-        mass = (self.Rho() * self.Area() + self.Nsm()) * L
-        return mass
-
-    def crossReference(self, model):
-        self.nodes = model.Nodes(self.nodes)
-        self.pid = model.Property(self.pid)
-
-    def Length(self):
-        r"""
-        Returns the length of the element
-        \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
-        @param self the object pointer
-        """
-        L = norm(self.nodes[1].Position() - self.nodes[0].Position())
-        return L
-
-    def k_Axial(self):
-        r"""
-        Returns the axial stiffness matrix.
-
-        \f[ \large   k_{Axial} = \frac{AE}{2L}
-          \left[
-          \begin{array}{cc}
-              1 & -1 \\
-             -1 &  1
-          \end{array} \right]
-        \f]
-        """
-        raise NotImplementedError()
-        L = self.Length()
-        E = self.E()
-        A = self.Area()
-        kMag = A * E / (2 * L)
-        K = ones(1, 1)
-        K[0, 1] = K[1, 0] = -1
-        return kMag * K
-
-    def k_Torsion(self):  # not done
-        r"""
-        Returns the torsional stiffness matrix.
-
-        \f[ \large   k_{Axial} = \frac{L}{GJ}
-          \left[
-          \begin{array}{cc}
-              1 & -1 \\
-             -1 &  1
-          \end{array} \right]
-        \f]
-        @warning formula not verified
-        """
-        raise NotImplementedError()
-        L = self.Length()
-        G = self.G()
-        J = self.J()
-        #A = self.Area()
-        #kMag = A*E/(2*L)
-        kMag = L / (G * J)
-        K = ones(1, 1)
-        K[0, 1] = K[1, 0] = -1
-        return kMag * K
-
-    def k_Bending(self):
-        r"""
-        Returns the bending stiffness matrix.
-
-        \f[ \large  k_{Bending} = \frac{EI}{L^3}
-          \left[
-          \begin{array}{cccc}
-             12 &  6L   & -12 &  6L    \\
-             6L &  4L^2 & -6L &  2L^2  \\
-            -12 & -6L   &  12 & -6L    \\
-             6L &  2L^2 & -6L &  4L^2
-          \end{array} \right]
-        \f]
-        """
-        raise NotImplementedError()
-        L = self.Length()
-        E = self.E()
-        I = self.I()
-        LL = L * L
-        LLL = L * LL
-        sL = 6 * L
-        tLL = 2 * LL
-        fLL = 4 * LL
-        kMag = E * I / LLL
-
-        #K = Matrix(zeros(4,4))
-        K = matrix([[12., sL, -12, sL],
-                    [sL, fLL, -sL, tLL],
-                    [-12, -sL, 12., -sL],
-                    [sL, tLL, -sL, fLL]])
-        #M[1,0] = sL
-        #M[2,0] = -12.
-        #M[3,0] = sL
-
-        #M[2,4] =  -sL
-        #M[1,1] = M[3,3] = fLL
-
-        return kMag * K
-
-
-class CROD(RodElement):
-    type = 'CROD'
-
-    def __init__(self, card=None, data=None):
-        RodElement.__init__(self, card, data)
-        if card:
-            self.eid = int(card.field(1))
-            self.pid = int(card.field(2, self.eid))
-            nids = card.fields(3, 5)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:4]
-        ###
-        self.prepareNodeIDs(nids)
-        assert len(self.nodes) == 2
-
-    def Centroid(self):
-        return (self.nodes[0].Position() + self.nodes[1].Position()) / 2.
-
-    def Mid(self):
-        return self.pid.Mid()
-
-    def Area(self):
-        return self.pid.A
-
-    def Nsm(self):
-        return self.pid.nsm
-
-    def MassPerLength(self):
-        massPerLength = self.pid.mid.rho * self.pid.A + self.pid.nsm
-        return massPerLength
 
     def Rmatrix(self, model, is3D):
-        r"""
+        """
         where   \f$ [R]_{ij} \f$ is the tranformation matrix
         \f[ \large  [R]_{ij} \left[
           \begin{array}{ccc}
-              g_x \cdot e_x & g_x \cdot e_y &  g_x \cdot e_z    \\
-              g_y \cdot e_x & g_y \cdot e_y &  g_y \cdot e_z    \\
-              g_z \cdot e_x & g_z \cdot e_y &  g_z \cdot e_z
+              g_x \dot e_x & g_x \dot e_y &  g_x \dot e_z    \\
+              g_y \dot e_x & g_y \dot e_y &  g_y \dot e_z    \\
+              g_z \dot e_x & g_z \dot e_y &  g_z \dot e_z
           \end{array} \right]
         \f]
         """
@@ -423,6 +227,208 @@ class CROD(RodElement):
         #print "K = \n",K
         return K
 
+
+class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
+    def __init__(self, card, data):
+        Element.__init__(self, card, data)
+
+    def C(self):
+        """torsional constant"""
+        return self.pid.C()
+
+    def Area(self):
+        """returns the area of the element face"""
+        raise NotImplementedError('implement self.Area() for %s' % (self.type))
+
+    def E(self):
+        r"""returns the Young's Modulus  \f$ E \f$"""
+        return self.pid.mid.E()
+
+    def G(self):
+        r"""returns the Shear Modulus   \f$ G \f$"""
+        return self.pid.mid.G()
+
+    def J(self):
+        r"""returns the Polar Moment of Inertia.   \f$ J \f$"""
+        return self.pid.J()
+
+    def I11(self):
+        r"""returns the Moment of Inertia.   \f$ I_{11} \f$"""
+        return self.pid.I11()
+
+    def I22(self):
+        r"""returns the Moment of Inertia.   \f$ I_{22} \f$"""
+        return self.pid.I22()
+
+    def I12(self):
+        r"""returns the Moment of Inertia.   \f$ I_{12} \f$"""
+        return self.pid.I12()
+
+    def Nu(self):
+        r"""returns Poisson's Ratio  \f$ \nu \f$"""
+        return self.pid.mid.nu
+
+    def Rho(self):
+        r"""returns the material density  \f$ \rho \f$"""
+        #print str(self.pid),type(self.pid)
+        #raise NotImplementedMethodError('implement self.Rho() for %s' %(self.type))
+        return self.pid.mid.rho
+
+    def Nsm(self):
+        """Placeholder method for the non-structural mass"""
+        raise NotImplementedError('implement self.Area() for %s' % (self.type))
+
+    def MassPerLength(self):
+        """Returns the mass per unit length"""
+        return self.pid.MassPerLength()
+
+    def Mass(self):
+        r"""
+        returns the mass of the element
+
+        \f[ \large  mass = \left( \rho A + nsm \right) L  \f]
+        """
+        L = self.Length()
+        try:
+            mass = (self.Rho() * self.Area() + self.Nsm()) * L
+        except TypeError:
+            msg = 'TypeError on eid=%s pid=%s:\n' % (self.eid, self.Pid())
+            msg += 'rho = %s\narea = %s\nnsm = %s\nL = %s' % (self.Rho(), self.Area(), self.Nsm(), L)
+            raise TypeError(msg)
+            
+        return mass
+
+    def cross_reference(self, model):
+        self.nodes = model.Nodes(self.nodes)
+        self.pid = model.Property(self.pid)
+
+    def Length(self):
+        r"""
+        Returns the length of the element
+        \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
+        @param self the object pointer
+        """
+        L = norm(self.nodes[1].Position() - self.nodes[0].Position())
+        return L
+
+    def k_Axial(self):
+        r"""
+        Returns the axial stiffness matrix.
+
+        \f[ \large   k_{Axial} = \frac{AE}{2L}
+          \left[
+          \begin{array}{cc}
+              1 & -1 \\
+             -1 &  1
+          \end{array} \right]
+        \f]
+        """
+        raise NotImplementedError()
+        L = self.Length()
+        E = self.E()
+        A = self.Area()
+        kMag = A * E / (2 * L)
+        K = ones(1, 1)
+        K[0, 1] = K[1, 0] = -1
+        return kMag * K
+
+    def k_Torsion(self):  # not done
+        r"""
+        Returns the torsional stiffness matrix.
+
+        \f[ \large   k_{Axial} = \frac{L}{GJ}
+          \left[
+          \begin{array}{cc}
+              1 & -1 \\
+             -1 &  1
+          \end{array} \right]
+        \f]
+        @warning formula not verified
+        """
+        raise NotImplementedError()
+        L = self.Length()
+        G = self.G()
+        J = self.J()
+        #A = self.Area()
+        #kMag = A*E/(2*L)
+        kMag = L / (G * J)
+        K = ones(1, 1)
+        K[0, 1] = K[1, 0] = -1
+        return kMag * K
+
+    def k_Bending(self):
+        r"""
+        Returns the bending stiffness matrix.
+
+        \f[ \large  k_{Bending} = \frac{EI}{L^3}
+          \left[
+          \begin{array}{cccc}
+             12 &  6L   & -12 &  6L    \\
+             6L &  4L^2 & -6L &  2L^2  \\
+            -12 & -6L   &  12 & -6L    \\
+             6L &  2L^2 & -6L &  4L^2
+          \end{array} \right]
+        \f]
+        """
+        raise NotImplementedError()
+        L = self.Length()
+        E = self.E()
+        I = self.I()
+        LL = L * L
+        LLL = L * LL
+        sL = 6 * L
+        tLL = 2 * LL
+        fLL = 4 * LL
+        kMag = E * I / LLL
+
+        #K = Matrix(zeros(4,4))
+        K = matrix([[12., sL, -12, sL],
+                    [sL, fLL, -sL, tLL],
+                    [-12, -sL, 12., -sL],
+                    [sL, tLL, -sL, fLL]])
+        #M[1,0] = sL
+        #M[2,0] = -12.
+        #M[3,0] = sL
+
+        #M[2,4] =  -sL
+        #M[1,1] = M[3,3] = fLL
+
+        return kMag * K
+
+
+class CROD(RodElement):
+    type = 'CROD'
+
+    def __init__(self, card=None, data=None):
+        RodElement.__init__(self, card, data)
+        if card:
+            self.eid = int(card.field(1))
+            self.pid = int(card.field(2, self.eid))
+            nids = card.fields(3, 5)
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids = data[2:4]
+        ###
+        self.prepareNodeIDs(nids)
+        assert len(self.nodes) == 2
+
+    def Centroid(self):
+        return (self.nodes[0].Position() + self.nodes[1].Position()) / 2.
+
+    def Mid(self):
+        return self.pid.Mid()
+
+    def Area(self):
+        return self.pid.A
+
+    def Nsm(self):
+        return self.pid.nsm
+
+    def MassPerLength(self):
+        massPerLength = self.pid.mid.rho * self.pid.A + self.pid.nsm
+        return massPerLength
+
     def rawFields(self):
         fields = ['CROD', self.eid, self.Pid()] + self.nodeIDs()
         return fields
@@ -489,7 +495,7 @@ class CONROD(RodElement):
         assert len(self.nodes) == 2
         #print self.nodes
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes)
         self.mid = model.Material(self.mid)
 
@@ -696,7 +702,7 @@ class CBAR(LineElement):
         #if self.eid==14100238:
             #print "g0=%s x1=%s x2=%s x3=%s" %(self.g0,self.x1,self.x2,self.x3)
 
-    def crossReference(self, mesh):
+    def cross_reference(self, mesh):
         """
         set g0-ga to x1,x2,x3
         """
@@ -712,7 +718,7 @@ class CBAR(LineElement):
 
     #def updateNodes(self,nodes):
     #    """@todo maybe improve"""
-    #    self.crossReference(self,nodes)
+    #    self.cross_reference(self,nodes)
 
     def Ga(self):
         if isinstance(self.ga, int):
@@ -958,7 +964,7 @@ class CBEAM3(CBAR):
             raise NotImplementedError(data)
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.ga = model.Node(self.ga)
         self.gb = model.Node(self.gb)
         self.gc = model.Node(self.gc)
@@ -1121,7 +1127,7 @@ class CBEAM(CBAR):
             field8 = set_blank_if_default(self.bit, 0.0)
         return field8
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.ga = model.Node(self.ga)
         self.gb = model.Node(self.gb)
         self.pid = model.Property(self.pid)

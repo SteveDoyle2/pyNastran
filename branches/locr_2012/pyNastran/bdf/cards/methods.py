@@ -56,12 +56,12 @@ class EIGB(Method):
         #print self.reprFields()
         #print self
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
     def rawFields(self):
-        fields = ['EIGB', self.sid, self.method, self.L1, self.L2, self.nep, self.ndp, self.ndn, None,
-                          self.norm, self.G, self.C]
+        fields = ['EIGB', self.sid, self.method, self.L1, self.L2, self.nep,
+                  self.ndp, self.ndn, None, self.norm, self.G, self.C]
         return fields
 
     def reprFields(self):
@@ -89,7 +89,8 @@ class EIGC(Method):  ## not done
             self.sid = card.field(1)
             ## Method of complex eigenvalue extraction
             self.method = card.field(2)
-            assert self.method in ['INV', 'HESS', 'CLAN'], 'method=%s is not INV, HESS, CLAN' % (self.method)
+            assert self.method in ['INV', 'HESS', 'CLAN'],(
+                    'method=%s is not INV, HESS, CLAN' % (self.method))
             ## Method for normalizing eigenvectors
             self.norm = card.field(3)
 
@@ -99,9 +100,10 @@ class EIGC(Method):  ## not done
             ## Component number. Required only if NORM='POINT' and G is a
             ## geometric grid point. (1<Integer<6)
             self.C = card.field(5)
-            ## Convergence criterion. (Real > 0.0. Default values are: 10-4 for
-            ## METHOD = "INV", 10-15 for METHOD = "HESS", E is machine
-            ## dependent for METHOD = "CLAN".)
+            ## Convergence criterion. (Real > 0.0. Default values are:
+            # 10^-4 for METHOD = "INV",
+            # 10^-15 for METHOD = "HESS",
+            ## E is machine dependent for METHOD = "CLAN".)
             self.E = card.field(6)
             self.ndo = card.field(7)
 
@@ -134,7 +136,6 @@ class EIGC(Method):  ## not done
         self.NJIs = []
         for iRow in xrange(nRows):
             #NDJ_default = None
-
             self.alphaAjs.append(card.field(9 + 8 * iRow, 0.0))
             self.omegaAjs.append(card.field(9 + 8 * iRow + 1, 0.0))
             self.mblkszs.append(card.field(9 + 8 * iRow + 2, 7))
@@ -146,7 +147,6 @@ class EIGC(Method):  ## not done
             self.iblkszs.append(card.field(9 + 8 * iRow + 3, 2))
             self.ksteps.append(card.field(9 + 8 * iRow + 4, 5))
             self.NJIs.append(card.field(9 + 8 * iRow + 6))
-        ###
 
     def loadHESS_INV(self, nRows, card):
         self.alphaBjs = []
@@ -180,7 +180,7 @@ class EIGC(Method):  ## not done
             self.NDJs.append(card.field(9 + 8 * iRow + 6, NDJ_default))
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
     def rawMethod(self):
@@ -194,7 +194,7 @@ class EIGC(Method):  ## not done
                 alphaB = set_blank_if_default(alphaB, 0.0)
                 omegaB = set_blank_if_default(omegaB, 0.0)
                 fields += [alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj, None]
-            ###
+
         elif self.method == 'CLAN':
             for (alphaA, omegaA, mblksz, iblksz, kstep, Nj) in izip(
                  self.alphaAjs, self.omegaAjs, self.mblkszs, self.iblkszs,
@@ -265,19 +265,19 @@ class EIGR(Method):
             raise NotImplementedError('EIGR')
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
     def rawFields(self):
-        fields = ['EIGR', self.sid, self.method, self.f1, self.f2, self.ne, self.nd, None, None,
-                         self.norm, self.G, self.C]
+        fields = ['EIGR', self.sid, self.method, self.f1, self.f2, self.ne,
+                  self.nd, None, None, self.norm, self.G, self.C]
         return fields
 
     def reprFields(self):
         method = set_blank_if_default(self.method, 'LAN')
         norm = set_blank_if_default(self.norm, 'MASS')
-        fields = ['EIGR', self.sid, method, self.f1, self.f2, self.ne, self.nd, None, None,
-                         norm, self.G, self.C]
+        fields = ['EIGR', self.sid, method, self.f1, self.f2, self.ne,
+                  self.nd, None, None, norm, self.G, self.C]
         return fields
 
 
@@ -312,7 +312,7 @@ class EIGP(Method):
             raise NotImplementedError('EIGP')
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
     def rawFields(self):
@@ -376,7 +376,7 @@ class EIGRL(Method):
             raise NotImplementedError('EIGRL')
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         pass
 
     def rawFields(self):

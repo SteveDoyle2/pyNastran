@@ -8,7 +8,7 @@ from numpy.linalg import norm
 
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from ..baseCard import BaseCard, expandThru, expandThruBy
+from ..baseCard import BaseCard, expand_thru, expand_thru_by
 
 
 class LOAD(LoadCombination):
@@ -312,7 +312,7 @@ class GRAV(BaseCard):
         #msg = 'GRAV([%s,%s,%s])' %(p)
         #return msg
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         #print("xref GRAV")
         self.cid = model.Coord(self.cid)
 
@@ -363,9 +363,9 @@ class ACCEL1(BaseCard):
         self.N = array(card.fields(4, 7, [0., 0., 0.]))
         assert max(abs(self.N)) > 0.
         ## nodes to apply the acceleration to
-        self.nodes = expandThruBy(card.fields(9))
+        self.nodes = expand_thru_by(card.fields(9))
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.cid = model.Coord(self.cid)
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True)
 
@@ -523,7 +523,7 @@ class FORCE(Force):
     #def nodeID(self):
         #return self.node
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         """@todo cross reference and fix repr function"""
         self.cid = model.Coord(self.cid)
 
@@ -561,7 +561,7 @@ class FORCE1(Force):
             self.g2 = data[4]
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         """@todo cross reference and fix repr function"""
         self.node = model.Node(self.node)
         self.g1 = model.Node(self.g1)
@@ -623,7 +623,7 @@ class FORCE2(Force):
             self.g4 = data[6]
         ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         """@todo cross reference and fix repr function"""
         self.node = model.Node(self.node)
 
@@ -675,7 +675,7 @@ class MOMENT(Moment):
             return self.cid
         return self.cid.cid
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         """@todo cross reference and fix repr function"""
         pass
 
@@ -724,7 +724,7 @@ class MOMENT1(Moment):
         assert len(xyz) == 3, 'xyz=%s' % (xyz)
         self.xyz = array(xyz)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         """@todo cross reference and fix repr function"""
         self.node = model.Node(self.node)
         self.xyz = model.Node(
@@ -773,7 +773,7 @@ class MOMENT2(Moment):
         assert len(xyz) == 3, 'xyz=%s' % (xyz)
         self.xyz = array(xyz)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         """@todo cross reference and fix repr function"""
         (self.g1, self.g2, self.g3, self.g4) = model.Nodes(self.g1, self.g2,
                                                            self.g3, self.g4)
@@ -810,7 +810,7 @@ class PLOAD(Load):
             raise NotImplementedError('PLOAD')
         assert len(self.nodes) in [3, 4], 'nodes=%s' % (self.nodes)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         """@todo cross reference and fix repr function"""
         pass
 
@@ -854,7 +854,7 @@ class PLOAD1(Load):
         assert self.Type in self.validTypes, '%s is an invalid type on the PLOAD1 card' % (self.Type)
         assert self.scale in self.validScales, '%s is an invalid scale on the PLOAD1 card' % (self.scale)
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         """@todo cross reference and fix repr function"""
         pass
 
@@ -880,20 +880,15 @@ class PLOAD2(Load):
             eids = card.fields(3, 9)
 
             if card.field(4) == 'THRU':
-                #print "PLOAD2 %s %s" %(eids[0],eids[-1])
                 eids = [i for i in xrange(eids[0], eids[2] + 1)]
-                #print "found a THRU on PLOAD2"
-                #raise NotImplementedError('PLOAD2')
-            ###
             self.eids = eids
         else:
             self.sid = data[0]
             self.p = data[1]
             self.eids = list(data[2:])
             #print "PLOAD2 = ",data
-        ###
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         """@todo cross reference and fix repr function"""
         pass
 
@@ -927,7 +922,7 @@ class PLOAD4(Load):
             if card.field(7) == 'THRU' and card.field(8):  # plates
                 eid2 = card.field(8)
                 if eid2:
-                    self.eids = expandThru([self.eid, 'THRU', eid2])
+                    self.eids = expand_thru([self.eid, 'THRU', eid2])
 
                 self.g1 = None
                 self.g34 = None
@@ -1002,7 +997,7 @@ class PLOAD4(Load):
             return self.cid
         return self.cid.cid
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         self.eid = model.Element(self.eid)
         self.cid = model.Coord(self.cid)
         if self.g1:
@@ -1053,11 +1048,9 @@ class PLOAD4(Load):
                     print("g34 = %s" % (self.g34))
                     print("self.eids = %s" % (self.eids))
                     raise
-                ###
                 fields.append(self.getElementIDs(eid))
             else:
                 fields += [None, None]
-            ###
         fields.append(cid)
 
         n1 = set_blank_if_default(self.NVector[0], 0.0)
@@ -1089,7 +1082,7 @@ class PLOADX1(Load):
             print("PLOADX1 = %s" % (data))
             raise NotImplementedError('PLOADX1')
 
-    def crossReference(self, model):
+    def cross_reference(self, model):
         #self.eid = model.Element(self.eid)
         #self.ga = model.Node(self.ga)
         #self.gb = model.Node(self.gb)
