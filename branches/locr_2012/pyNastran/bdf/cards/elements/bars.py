@@ -7,7 +7,6 @@ from numpy import matrix, zeros, ones, array, transpose, dot
 from numpy.linalg import norm
 #from pyNastran.general.generalMath import printMatrix
 
-from pyNastran.bdf.errors import CardInstantiationError
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element, Mid
 
@@ -1107,7 +1106,7 @@ class CBEAM(CBAR):
             assert self.offt[2] in ['G', 'B', 'O'], 'invalid offt parameter of CBEAM...offt=%s' % (self.offt)
         else:
             msg = 'field8 on %s card is not a string(offt) or bit (float)...field8=%s\n' % (self.type, field8)
-            raise CardInstantiationError(msg)
+            raise RuntimeError("Card Instantiation: %s", (msg))
         ###
 
     def Mid(self):

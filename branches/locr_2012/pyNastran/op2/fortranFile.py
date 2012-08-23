@@ -3,8 +3,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 from struct import unpack, pack
 
-from pyNastran.op2.op2Errors import (InvalidMarkerError, InvalidMarkersError,
-                                     ZeroBufferError, EndOfFileError)
 
 
 class FortranFile(object):
@@ -58,7 +56,7 @@ class FortranFile(object):
             msg += "header ints=(%s) expected=%s\n" % (
                 str(ints[0:5]), expected)
             msg += 'tableName=|%s|' % (self.tableName)
-            raise InvalidMarkerError(msg)
+            raise SyntaxError("Invalid Marker: %s", msg)
 
         #if ints[1]==2:  # buffer???
         #    ints = self.readFullIntBlock()
@@ -277,7 +275,7 @@ class FortranFile(object):
         gets a data set of length N
         """
         if n <= 0:
-            raise ZeroBufferError()
+            raise RuntimeError('Zero Buffer Error')
 
         #assert self.op2.tell()==self.n,'tell=%s n=%s' % (self.op2.tell(),self.n)
         data = self.op2.read(n)
@@ -380,7 +378,7 @@ class FortranFile(object):
                         markers, foundMarkers)
                     msg += 'tableName=%s found=%s expected=%s leftover=%s' % (tableName, tableCode, marker, self.printSection(40))
                     #print(msg)
-                raise InvalidMarkersError(msg)
+                raise SyntaxError("Invalid Markers: %s", msg)
             foundMarkers.append(marker)
             ###
         ###
@@ -438,7 +436,7 @@ class FortranFile(object):
         """
         data = self.op2.read(4)
         if len(data) == 0:
-            raise EndOfFileError("data=('')")
+            raise EOFError("data=('')")
 
         iFormat = 'i'
         iFormat = bytes(iFormat)

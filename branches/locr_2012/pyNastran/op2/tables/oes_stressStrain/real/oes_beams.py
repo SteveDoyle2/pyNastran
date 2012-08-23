@@ -2,7 +2,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from .oes_objects import stressObject, strainObject
-from pyNastran.op2.op2Errors import InvalidCodeError
 
 
 class BeamStressObject(stressObject):
@@ -312,7 +311,7 @@ class BeamStrainObject(strainObject):
                 self.addNewEid = self.addNewEid
                 self.add = self.add
         else:
-            raise InvalidCodeError('beamStress - get the format/sort/stressCode=%s' % (self.code))
+            raise  RuntimeError("Invalid Code: beamStress - get the format/sort/stressCode=%s" % (self.code))
         if dt is not None:
             self.isTransient = True
             self.dt = self.nonlinearFactor

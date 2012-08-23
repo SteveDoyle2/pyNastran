@@ -15,9 +15,6 @@ from pyNastran.f06.f06_classes import MaxDisplacement  # classes not in op2
 from pyNastran.f06.f06Writer import F06Writer
 
 
-class EndOfFileError(Exception):
-    pass
-
 
 class F06(OES, OUG, OQG, F06Writer):
     def __init__(self, f06FileName, debug=False, log=None):

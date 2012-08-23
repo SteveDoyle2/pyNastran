@@ -1,7 +1,6 @@
 import sys
 from struct import unpack
 
-from pyNastran.op2.op2Errors import InvalidMarkersError
 from pyNastran.op2.tables.geom.geom1 import Geometry1
 from pyNastran.op2.tables.geom.geom2 import Geometry2
 from pyNastran.op2.tables.geom.geom3 import Geometry3
@@ -99,7 +98,7 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
             self.readMarkers([n, 1, 0])
             foundSubTable = True
             #print "subtable :) = ",foundSubTable
-        except InvalidMarkersError:
+        except SyntaxError:
             foundSubTable = False
         ###
         self.n = nOld

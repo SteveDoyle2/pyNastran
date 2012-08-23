@@ -8,8 +8,7 @@ from struct import unpack
 
 from pyNastran.op2.fortranFile import FortranFile
 from pyNastran.op2.op2Codes import Op2Codes
-from pyNastran.op2.op2Errors import (EndOfFileError, InvalidMarkersError,
-                                     TapeCodeError)
+
 
 from pyNastran.op2.tables.resultTable import ResultTable
 from pyNastran.op2.tables.geom.geometryTables import GeometryTables
@@ -417,7 +416,7 @@ class OP2(BDF,
             msg += '      2.  Run the problem on a different Operating System\n'
             msg += '      3.  Are you running an OP2? :)  \nfname=%s' % (
                 self.op2FileName)
-            raise TapeCodeError(msg)
+            raise RuntimeError("Tape Code Error: %s", msg)
 
         isAnotherTable = True
         while isAnotherTable:
@@ -426,11 +425,11 @@ class OP2(BDF,
                 tableName = self.readTableName(
                     rewind=True, stopOnFailure=False)
                 print("tableName = %s" % (tableName))
-            except EndOfFileError:  # the isAnotherTable method sucks...
+            except EOFError:  # the isAnotherTable method sucks...
                 isAnotherTable = False
                 self.log.debug("***ok exit, but it could be better...")
                 break
-            except InvalidMarkersError:  # the isAnotherTable method sucks...
+            except SyntaxError:  # Invalid Markers, the isAnotherTable method sucks...
                 isAnotherTable = False
                 self.log.debug("***poor exit, but it worked...")
                 #raise
@@ -594,7 +593,7 @@ class OP2(BDF,
                 #print("---isAnotherTable---")
                 (isAnotherTable) = self.hasMoreTables()
                 #isAnotherTable = True
-            except EndOfFileError:
+            except EOFError:
                 isAnotherTable = False
             ###
         else:

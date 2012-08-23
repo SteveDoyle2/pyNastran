@@ -4,7 +4,6 @@ import sys
 from math import isnan
 
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
-from pyNastran.op2.op2Errors import InvalidGridID_Error
 
 
 class StrainEnergyObject(scalarObject):
@@ -76,7 +75,7 @@ class StrainEnergyObject(scalarObject):
         #print "energyGridIDs = %s" %(self.energy.keys())
         #assert grid not in self.energy,'grid=%s out=%s' %(grid,out)
         if isinstance(eid, int) and eid <= 0:
-            raise InvalidGridID_Error('eid=%s' % (eid))
+            raise ValueError("Invalid Grid ID: eid=%s" % (eid))
         self.energy[eid] = energy
         self.percent[eid] = percent
         self.density[eid] = density
@@ -89,7 +88,7 @@ class StrainEnergyObject(scalarObject):
         #print str(self)
         #assert grid not in self.energy[dt],'grid=%s dt=%s energy=%s percent=%s density=%s' %(grid,dt,energy,percent,density)
         if eid <= 0:
-            raise InvalidGridID_Error('eid=%s' % (eid))
+            raise ValueError("Invalid Grid ID: eid=%s" % (eid))
 
         self.energy[dt][eid] = energy
         #print "self.energy = ",self.energy

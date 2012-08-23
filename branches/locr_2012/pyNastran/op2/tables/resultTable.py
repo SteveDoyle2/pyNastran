@@ -217,7 +217,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             #self.getMarker()
             #self.getMarker()
             #self.getMarker()
-        #except InvalidMarkersError:
+        #except SyntaxError: # Invalid Markers
         #    self.goto(nOld)
             #print self.printBlock(self.data)
             #print self.printSection(100)

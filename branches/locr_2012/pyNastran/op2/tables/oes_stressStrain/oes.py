@@ -570,9 +570,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
     def readOES_Data(self):
         #msg = '%s-OES elementType=%-3s -> %-6s\n' % (self.tableName,self.elementType,self.ElementType(self.elementType))
         msg = ''
-        #if self.analysisCode not in [1,6,10]:
-            #raise InvalidATFSCodeError('self.atfsCode=%s' % (self.atfsCode))
-
+        
         readCase = True
         if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase]) > 0:
             readCase = self.updateDtMap()

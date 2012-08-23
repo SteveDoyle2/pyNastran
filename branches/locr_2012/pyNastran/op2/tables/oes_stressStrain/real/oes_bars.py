@@ -2,7 +2,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from .oes_objects import stressObject, strainObject
-from pyNastran.op2.op2Errors import InvalidCodeError
 
 
 class BarStressObject(stressObject):
@@ -376,7 +375,6 @@ class BarStrainObject(strainObject):
 
         self.code = [self.formatCode, self.sortCode, self.sCode]
         if self.code in [[1, 0, 0], [1, 0, 1]]:
-            #raise InvalidCodeError('barStrain - get the format/sort/stressCode=%s' %(self.code))
             self.e1 = {}
             self.e2 = {}
             self.e3 = {}
@@ -397,7 +395,7 @@ class BarStrainObject(strainObject):
             self.MS_tension = {}
             self.MS_compression = {}
         else:
-            raise InvalidCodeError('barStrain - get the format/sort/stressCode=%s' % (self.code))
+            raise RuntimeError("Invalid Code: barStrain - get the format/sort/stressCode=%s" % (self.code))
 
         if isSort1:
             if dt is not None:

@@ -4,7 +4,7 @@ import time
 from traceback import print_exc
 
 import pyNastran
-from pyNastran.f06.f06 import F06  # ,EndOfFileError
+from pyNastran.f06.f06 import F06  
 #from pyNastran.op2.test.test_op2 import parseTableNamesFromF06, getFailedFiles
 
 
@@ -90,11 +90,9 @@ def runF06(f06file, iSubcases=[], writeF06=True, debug=False, stopOnFailure=True
 
     #except InvalidFormatCodeError:
     #    isPassed = True
-    #except InvalidAnalysisCodeError:
+    #except RuntimeError: #InvalidAnalysisCode
     #    isPassed = True
-    #except InvalidMarkersError:
-    #    isPassed = True
-    #except EndOfFileError:
+    #except SyntaxError: #Invalid Markers
     #    isPassed = True
     except SystemExit:
         #print_exc(file=sys.stdout)
@@ -119,11 +117,9 @@ def runF06(f06file, iSubcases=[], writeF06=True, debug=False, stopOnFailure=True
     except IOError:  # missing bdf file
         isPassed = False
         raise
-    #except InvalidSubcaseParseError:
+    #except SyntaxError: #Invalid Subcase 
     #    isPassed = True
-    #except ScientificCardParseError:  # bad value parsing
-    #    isPassed = True
-    #except ParamParseError:
+    #except SyntaxError: # Param Parse:
     #    isPassed = True
     except NotImplementedError:
         isPassed = True

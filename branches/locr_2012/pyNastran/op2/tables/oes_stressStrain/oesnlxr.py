@@ -1,7 +1,6 @@
 import sys
 from struct import unpack
 
-from pyNastran.op2.op2Errors import InvalidAnalysisCodeError, InvalidATFSCodeError
 from pyNastran.op2.tables.oes_stressStrain.real.elementsStressStrain import RealElementsStressStrain
 
 class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
@@ -115,7 +114,7 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
             ## Time step ??? --> straight from DMAP
             self.addDataParameter(data, 'dt', 'f', 5)
         else:
-            raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' % (self.analysisCode))
+            raise RuntimeError('Invalid Analysis Code: analysisCode=%s' % (self.analysisCode))
         ###
         # tCode=2
         #if self.analysisCode==2: # sort2
@@ -204,9 +203,7 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
         raise NotImplementedError('code this...')
         #msg = 'OES elementType=%-3s -> %-6s\n' %(self.elementType,self.ElementType(self.elementType))
         msg = ''
-        #if self.analysisCode not in [1,6,10]:
-            #raise InvalidATFSCodeError('self.atfsCode=%s' %(self.atfsCode))
-
+        
         if self.elementType in [1, 3, 10]:  # crod/ctube/conrod
             self.makeOES_Object(self.rodStress, rodStressObject,
                                 self.rodStrain, rodStrainObject)

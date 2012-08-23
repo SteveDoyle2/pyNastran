@@ -5,8 +5,6 @@ from traceback import print_exc
 
 import pyNastran
 from pyNastran.op2.op2    import OP2
-from pyNastran.bdf.errors import (ScientificCardParseError, ParamParseError)
-from pyNastran.op2.op2Errors import TapeCodeError
 
 def parse_table_names_from_F06(f06Name):
     """gets the op2 names from the f06"""
@@ -129,7 +127,7 @@ def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
         sys.exit('keyboard stop...')
     #except AddNewElementError:
     #    raise
-    except TapeCodeError: # the op2 is bad, not my fault
+    except RuntimeError: #Tape Code Error - the op2 is bad, not my fault
         isPassed = True
         if stopOnFailure:
             raise
@@ -143,12 +141,12 @@ def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
 
     #except InvalidFormatCodeError:
     #    isPassed = True
-    #except InvalidAnalysisCodeError:
+    #except RuntimeError: #invalid analysis code
     #    isPassed = True
-    #except InvalidMarkerError:
+    #except SyntaxError: # Invalid Marker
         #isPassed = True
 
-    #except EndOfFileError:
+    #except EOFError:
     #    isPassed = True
     except SystemExit:
         #print_exc(file=sys.stdout)
@@ -173,9 +171,7 @@ def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
     except IOError: # missing file
         isPassed = False
         raise
-    except ScientificCardParseError:  # bad value parsing
-        isPassed = True
-    except ParamParseError:
+    except SyntaxError: #Param Parse
         isPassed = True
     except:
         #print e

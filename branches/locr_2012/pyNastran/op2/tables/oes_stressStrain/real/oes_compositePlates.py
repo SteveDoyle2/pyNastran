@@ -35,7 +35,7 @@ class CompositePlateStressObject(stressObject):
             assert not self.isVonMises, 'isVonMises=%s' % (self.isVonMises())
             #self.isVonMises = True
         else:
-            raise InvalidCodeError('compositePlateStress - get the format/sort/stressCode=%s' % (self.code))
+            raise RuntimeError("Invalid Code: compositePlateStress - get the format/sort/stressCode=%s" % (self.code))
 
         self.dt = dt
         if isSort1:
@@ -448,7 +448,7 @@ class CompositePlateStrainObject(strainObject):
             self.evmShear = {}
             assert self.isVonMises() == False
         else:
-            raise InvalidCodeError('compositePlateStrain - get the format/sort/stressCode=%s' % (self.code))
+            raise RuntimeError("Invalid Code: compositePlateStrain - get the format/sort/stressCode=%s" % (self.code))
 
         self.dt = dt
         if isSort1:

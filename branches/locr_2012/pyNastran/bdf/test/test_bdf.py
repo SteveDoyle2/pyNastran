@@ -101,8 +101,6 @@ def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, cid=None,
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
-    #except ScientificCardParseError:
-        #pass
     #except IOError:
         #pass
     except SystemExit:

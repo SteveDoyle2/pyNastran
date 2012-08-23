@@ -1,5 +1,4 @@
 from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpretValue
-from pyNastran.bdf.errors import InvalidSubcaseParseError, ParamParseError
 #from pyNastran.bdf.caseControlDeck import CaseControlDeck
 
 
@@ -102,7 +101,7 @@ def _parseEntry(lines):
         sline = line2.split()
         if len(sline) != 2:
             msg = "trying to parse |%s|..." % (line)
-            raise InvalidSubcaseParseError(msg)
+            raise SyntaxError("Invalid Subcase: %s", (msg)) 
         (key, iSubcase) = sline
         #print "key=|%s| iSubcase=|%s|" %(key,iSubcase)
         value = int(iSubcase)
@@ -170,7 +169,7 @@ def _parseEntry(lines):
     elif 'PARAM' in lineUpper:  # param
         sline = line.split(',')
         if len(sline) != 3:
-            raise ParamParseError("trying to parse |%s|..." % (line))
+            raise SyntaxError("Param Parse: trying to parse |%s|..." % (line))
         (key, value, options) = sline
         ###
         paramType = 'CSV-type'
