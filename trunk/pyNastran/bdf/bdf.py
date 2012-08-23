@@ -136,7 +136,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.case_control_lines = []
 
         ## the list of possible cards that will be parsed
-        self.cardsToRead = {
+        self.cardsToRead = set([
             'PARAM',
             'GRID', 'GRDSET', 'SPOINT',  # 'RINGAX',
             'POINT',
@@ -258,10 +258,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             # other
             'INCLUDE',  # '='
             'ENDDATA',
-            }
+            ])
 
-        caseControlCards = {'FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
-                            'TEMP', 'TSTEPNL', 'INCLUDE'}
+        caseControlCards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
+                            'TEMP', 'TSTEPNL', 'INCLUDE'])
         self.uniqueBulkDataCards = self.cardsToRead.difference(
             caseControlCards)
 
