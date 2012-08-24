@@ -12,7 +12,6 @@ First part of this project is all about learning. For Python coding standards an
  * [http://docs.python.org/howto/doanddont.html Idioms and Anti-Idioms in Python]
  * [http://www.python.org/dev/peps/pep-0008/ PEP 8 -- Style Guide for Python Code]
  * [http://www.python.org/dev/peps/pep-0257/ PEP 257 -- Docstring Conventions]
-
  * [http://ivory.idyll.org/articles/advanced-swc/ Intermediate and Advanced Software Carpentry in Python]
  * [http://python.net/~goodger/projects/pycon/2007/idiomatic/handout.html Code Like a Pythonista: Idiomatic Python]
  * [http://www.memonic.com/user/pneff/folder/python/id/1bufp Python Idioms and Efficiency]
