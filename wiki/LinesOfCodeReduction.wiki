@@ -9,6 +9,7 @@ One of the ways to achieve this goal in the more extensive usage of Python idiom
 = Preparations =
 
 First part of this project is all about learning. For Python coding standards and coding tips I found these websites particularly interesting:
+
  * [http://docs.python.org/howto/doanddont.html Idioms and Anti-Idioms in Python]
  * [http://www.python.org/dev/peps/pep-0008/ PEP 8 -- Style Guide for Python Code]
  * [http://www.python.org/dev/peps/pep-0257/ PEP 257 -- Docstring Conventions]
