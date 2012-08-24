@@ -111,7 +111,7 @@ All of the custom Exceptions have been removed. Python defines many default Exce
 ||op2/op2Errors.py   || !InvalidCodeError(!RuntimeError)             || !RuntimeError("Invalid Code: %msg%")           ||
 ||op2/op2Errors.py   || !InvalidGridID_Error(!ValueError)            || !ValueError("Invalid Grid ID: %msg%")          ||
 ||op2/op2Errors.py   || !TapeCodeError(!InvalidCodeError)            || !RuntimeError("Tape Code Error: %msg%")        ||
-||op2/op2Errors.py   || !EndOfFileError(!RuntimeError)               || !EOFError                                      ||
+||op2/op2Errors.py   || !EndOfFileError(!RuntimeError)               || EOFError                                      ||
 ||op2/op2Errors.py   || !InvalidAnalysisCodeError(!InvalidCodeError) || !RuntimeError('Invalid Analysis Code:  %msg%") ||
 ||op2/op2Errors.py   || !InvalidATFSCodeError(!InvalidCodeError)     || _removed_                                      ||
 ||op2/op2Errors.py   || !ZeroBufferError(!RuntimeError)              || !RuntimeError('Zero Buffer Error')             ||
