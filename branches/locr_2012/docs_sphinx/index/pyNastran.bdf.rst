@@ -31,15 +31,6 @@ bdf Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`errors` Module
---------------------
-
-.. inheritance-diagram:: pyNastran.bdf.errors
-
-.. automodule:: pyNastran.bdf.errors
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`fieldWriter` Module
 -------------------------

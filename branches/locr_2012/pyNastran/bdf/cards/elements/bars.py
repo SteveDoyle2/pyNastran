@@ -44,7 +44,7 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         return mass
 
     def Rmatrix(self, model, is3D):
-        """
+        r"""
         where   \f$ [R]_{ij} \f$ is the tranformation matrix
         \f[ \large  [R]_{ij} \left[
           \begin{array}{ccc}

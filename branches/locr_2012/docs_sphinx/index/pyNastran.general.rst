@@ -51,15 +51,6 @@ general Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`octree` Module
---------------------
-
-.. inheritance-diagram:: pyNastran.general.octree
-
-.. automodule:: pyNastran.general.octree
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 
 

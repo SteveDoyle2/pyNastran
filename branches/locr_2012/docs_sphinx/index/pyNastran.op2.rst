@@ -31,16 +31,6 @@ op2 Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`op2Errors` Module
------------------------
-
-.. inheritance-diagram:: pyNastran.op2.op2Errors
-
-.. automodule:: pyNastran.op2.op2Errors
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`op2_helper` Module
 ------------------------
 
