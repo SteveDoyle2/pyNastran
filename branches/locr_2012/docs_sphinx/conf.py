@@ -31,7 +31,7 @@ sys.path.append(os.path.dirname(os.getcwd()))
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage',
-              'sphinx.ext.pngmath', 'sphinx.ext.viewcode',
+              'sphinx.ext.mathjax', 'sphinx.ext.viewcode',
               'sphinx.ext.todo', 'sphinx.ext.graphviz',
               'sphinx.ext.inheritance_diagram' ]
 
@@ -327,7 +327,7 @@ def convert_doxygen_comments(app, what, name, obj, options, lines):
         
         #multiline latex mathematics: begining of block
         if "\\f[" in new_line and "\\f]" not in new_line:
-            new_line = new_line.replace("\\f[", "\n.. math::\n\n")
+            new_line = new_line.replace("\\f[", "\n.. math::\n")
             
         #multiline latex mathematics: end of block
         if "\\f]" in new_line and "\\f[" not in new_line:
