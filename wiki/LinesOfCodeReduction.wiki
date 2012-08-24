@@ -72,6 +72,16 @@ Currently, most of python programs (and Python itself) are documented with a hel
 
 To generate HTML documentation using Sphinx it is necessary to go to `docs_sphinx` directory and issue `make html` command. The conversion form Doxygen documentation format will be automatic. Code responsible for it has been added to `conf.py` configuration file and it seems that it works quite well.
 
+=== User and developer documentation ===
+
+User and developer documentation (currently in Latex format) will also be available through Sphinx. Therefore it will be easy to read documentation using web browser and use hyper links to easily find documentation of particular class and  methods.
+
+*(this work is almost finished, needs little polishing)*  
+
+=== PDF and epub documentation format ===
+
+Sphinx makes generating PDF and epub files easy. 
+
 == Mathematics with Latex ==
 
 Both Doxygen and Sphinx 'understand' LaTeX code and nicely generate mathematics formulas. *There is one very important note*: you have to remember about escape characters. Every documentation comment in Python is just a string. Therefore Python will understand 
@@ -83,6 +93,32 @@ as
 {{{   hau}}}
 
 that is 'TABULATORhau', and not "\thau". The easiest solution is to mark every string containing LaTeX code as a *raw* string: `r""" \thau """`.
+
+= Code refactoring = 
+
+It is necessary to modify project code in order to simplify package structure.
+
+== Exceptions ==
+
+All of the custom Exceptions have been removed. Python defines many default Exception types and they should be sufficient for current needs. The following table presents pattern of the replace:
+
+|| *Defined in file* || *Definition of custom error *              || *Replaced with*                               ||
+||bdf/errors.py      || CardParseError(SyntaxError)	           || _removed_                                     ||
+||bdf/errors.py      || ParamParseError(CardParseError)            || SyntaxError("Param Parse: %msg%")             ||
+||bdf/errors.py      || ScientificCardParseError(CardParseError)   || _removed_                                     ||
+||bdf/errors.py      || CardInstantiationError(RuntimeError)       || RuntimeError("Card Instantiation: %msg%")     ||
+||bdf/errors.py      || InvalidSubcaseParseError(SyntaxError)      || SyntaxError("Invalid Subcase: %msg%")         ||
+||op2/op2Errors.py   || InvalidCodeError(RuntimeError)             || RuntimeError("Invalid Code: %msg%")           ||
+||op2/op2Errors.py   || InvalidGridID_Error(ValueError)            || ValueError("Invalid Grid ID: %msg%")          ||
+||op2/op2Errors.py   || TapeCodeError(InvalidCodeError)            || RuntimeError("Tape Code Error: %msg%")        ||
+||op2/op2Errors.py   || EndOfFileError(RuntimeError)               || EOFError                                      ||
+||op2/op2Errors.py   || InvalidAnalysisCodeError(InvalidCodeError) || RuntimeError('Invalid Analysis Code:  %msg%") ||
+||op2/op2Errors.py   || InvalidATFSCodeError(InvalidCodeError)     || _removed_                                     ||
+||op2/op2Errors.py   || ZeroBufferError(RuntimeError)              || RuntimeError('Zero Buffer Error')             ||
+||op2/op2Errors.py   || InvalidMarkersError(RuntimeError)          || SyntaxError("Invalid Markers: %msg%")         ||
+||op2/op2Errors.py   || InvalidMarkerError(RuntimeError)           || SyntaxError("Invalid Marker: %msg%")          ||
+||f06/f06.py         || EndOfFileError(Exception)                  || _removed_                                     ||
+
 
 = Project code =
 
