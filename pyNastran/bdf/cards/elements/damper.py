@@ -46,7 +46,6 @@ class CVISC(LineDamper):
 
     def reprFields(self):
         return self.rawFields()
-###
 
 
 class CDAMP1(LineDamper):
@@ -70,7 +69,7 @@ class CDAMP1(LineDamper):
             nids = [data[2], data[4]]
             self.c1 = data[3]
             self.c2 = data[5]
-        ###
+
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % (str(self), self.c1)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % (str(self), self.c2)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
@@ -122,7 +121,7 @@ class CDAMP2(LineDamper):
             nids = [data[2], data[4]]
             self.c1 = data[3]
             self.c2 = data[5]
-        ###
+
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % (str(self), self.c1)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % (str(self), self.c2)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
@@ -155,7 +154,7 @@ class CDAMP3(LineDamper):
             self.eid = data[0]
             self.pid = data[1]
             nids = [data[2], data[3]]
-        ###
+
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
 
@@ -187,7 +186,7 @@ class CDAMP4(LineDamper):
             self.eid = data[0]
             self.b = data[1]
             nids = [data[2], data[3]]
-        ###
+
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
 
