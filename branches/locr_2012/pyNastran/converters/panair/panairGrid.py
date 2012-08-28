@@ -176,9 +176,11 @@ class PanairGrid(PanairGridHelper, PanairWrite):
 
     def getSymmetry(self, section):
         """
+        @code
         $symmetry - xz plane of symmetry
         =misymm   mjsymm
         1.        0.
+		@endcode
 
         @warning
             doesnt consider antisymmetryic
@@ -257,6 +259,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
 
     def getPoints(self, section):
         """
+        @code
         $points - wing-body  with composite panels
         =kn                                               cpnorm
         4.                                                2.
@@ -266,6 +269,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         11.       3.                                                          winga
         =x(1,1)   y(1,1)    z(1,1)    x(*,*)    y(*,*)    z(*,*)
            69.4737    9.2105    0.0000   63.7818    9.5807    0.7831
+        @endcode
         """
         nNetworks = int(float(section[1][0:10]))
         cpNorm = section[1][50:60].strip()
@@ -314,6 +318,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
 
     def getCircularSection(self, section):
         """
+        @code
         $circular sections - nacelle with composite panels
         =kn
         2.
@@ -335,6 +340,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         5.
         =th(1)    th(2)     th(3)     th(4)     th(5)
         -90.      -45.      0.        45.       90.
+        @endcode
         """
         nNetworks = int(float(section[1][0:10]))
         cpNorm = section[1][50:60].strip()
@@ -494,8 +500,10 @@ class PanairGrid(PanairGridHelper, PanairWrite):
 
     def getPrintout(self, section):
         """
+        @code
         isings  igeomp  isingp  icontp  ibconp  iedgep
         ipraic  nexdgn  ioutpr  ifmcpr  icostp
+        @endcode
         """
         #self.printoutSection = '\n'.join(section)+'\n'
 
@@ -571,6 +579,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
 
     def getTrailingWakes(self, section):
         """
+        @code
         $trailing wakes from body
         =kn                                               cpnorm
         2.
@@ -579,6 +588,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         =inat     insd      xwake     twake                                   netname
         bodyl     3.        100.      .0                                      bodylwk
         bodyu     3.        100.      .0                                      bodyuwk
+        @endcode
         """
         nNetworks = int(float(section[1][0:10]))
         cpNorm = section[1][50:60].strip()

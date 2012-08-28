@@ -1,12 +1,13 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 """
+
 All beam properties are defined in this file.  This includes:
-    PBEAM
-    PBEAML
-    PBAR
-    PBARL
-    PROD
-    PTUBE
+ *   PBEAM
+ *   PBEAML
+ *   PBAR
+ *   PBARL
+ *   PROD
+ *   PTUBE
 
 All beams are LineProperty objects.
 Multi-segment beams are IntegratedLineProperty objects.
@@ -59,6 +60,7 @@ def getInertiaRectangular(sections):
     @retval interiaParameters
         list of [Area,Iyy,Izz,Iyz]
     @see http://www.webs1.uidaho.edu/mindworks/Machine_Design/Posters/PDF/Moment%20of%20Inertia.pdf
+    
     """
     As = []
     Ax = 0.
@@ -146,6 +148,7 @@ class LineProperty(Property):
 
     def CA_Section(self, iFace, iStart, dims):
         """
+        @code
         ---msg1---
         H1=0.1
         W1=0.05
@@ -159,6 +162,7 @@ class LineProperty(Property):
         W1=0.05
         Face_1 = geompy.MakeFaceHW(H1, W1, 1)
         geompy.addToStudy( Face_1, 'Face_1' )
+        @endcode
         """
         msg1 = ''
         msg2 = 'Face_%s = geompy.MakeFaceHW(' % (iFace + 1)
@@ -231,6 +235,7 @@ class LineProperty(Property):
 
     def I1_I2(self):
         """
+        @code
         BAR
             2
             ^
@@ -244,6 +249,7 @@ class LineProperty(Property):
         *------*
         I1 = 1/12*b*h^3
         I2 = 1/12*h*b^3
+        @endcode
         """
         dim = self.dim
         if self.Type == 'BAR':
@@ -635,6 +641,7 @@ class PBAR(LineProperty):
             support solution 600 default
             do a check for mid -> MAT1      for structural
             do a check for mid -> MAT4/MAT5 for thermal
+            
         """
         LineProperty.__init__(self, card, data)
         if card:
@@ -864,8 +871,10 @@ class PBARL(LineProperty):
 
     def MassPerLength(self):
         """
+        @code
         mass = L*(Area*rho+nsm)
         mass/L = Area*rho+nsm
+        @endcode
         """
         rho = self.Rho()
         area = self.Area()

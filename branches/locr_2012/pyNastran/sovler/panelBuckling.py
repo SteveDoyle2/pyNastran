@@ -13,9 +13,10 @@ class PanelBuckling(object):
         """
         Preliminary work on a panel buckling code
         Assumptions:
-            1.  node connectivitity (no gaps)
-            2.  large change in normal vector signifies change in panel
-            4.  only CTRIA3, CQUAD4 elements
+        
+        1. node connectivitity (no gaps)
+        2. large change in normal vector signifies change in panel
+        3. only CTRIA3, CQUAD4 elements
         """
         self.bdf = BDF(debug=True, log=None)
         self.bdf.readBDF(bdfFileName, xref=True)
@@ -247,7 +248,7 @@ class PanelBuckling(object):
     def Angle(self, nEid, nTouch):
         r"""
         \f[ a \cdot b = cos(\theta) * |a| * |b| \f]
-        if |a|=|b|=1. (unit vectors)
+        if \|a\|=\|b\|=1. (unit vectors)
         \f[ a \cdot b = cos(\theta) \f]
         """
         d = dot(nEid, nTouch)

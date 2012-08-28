@@ -13,12 +13,14 @@ class MarginChecker(object):
         Performs load case combination for:
         @param filenames  list of filenames that the subcase result will come from
         @param subcases   list of subcases to grab from from each filename
+        
         Assumptions:
-            linear static analysis
-            nodes numbers are consistent across different OP2s/subcases
-            only does static loading & maxDeflection
-            solid elements stress ONLY
+            * linear static analysis
+            * nodes numbers are consistent across different OP2s/subcases
+            * only does static loading & maxDeflection
+            * solid elements stress ONLY
 
+        @code
         User Info:
         UnitCase  Tension      Compression   Bending
         Filename  tension.op2  compBend.op2  compBend.op2
@@ -35,11 +37,15 @@ class MarginChecker(object):
         vmFactors = [[1.,           100.,          100.          ]]
         
         IDs       =  ['tension',    'comp',       'bend'         ]
+        @endcode
 
         @note vmFactors and IDs may have multiple levels...
-            vmFactors = [[1.,100.,100.],
-                         [2., 50., 75.],]
-            caseNames = ['Case1','Case2']  # only for VM
+            
+        @code
+             vmFactors = [[1.,100.,100.],
+                          [2., 50., 75.],]
+             caseNames = ['Case1','Case2']  # only for VM``
+        @endcode
         """
         self.filenames = filenames
         self.subcases = subcases
@@ -370,12 +376,13 @@ class MarginChecker(object):
 
     def SNcurve(stress):
         """
+        @code
         stress amplitude = fatigue strength coefficient* (2 N(f))^b
         N(f) is the cycles to failure
         2N(f) is the number of load reversals to failure
         b is the fatigue strength exponent
         For an AISI Type 1015 steel
-        b= -0.11
+        b = -0.11
         fatigue strength coefficient where 2N(f) =1,120 Ksi
 
 
@@ -384,6 +391,7 @@ class MarginChecker(object):
         b = -(Log (0.9 Sut / Se)) / 3 (= -0.0851 when Se = .5 Sut)
         Se = 0.5 Ftu  = Endurance Limit = Stress corresponding to 'infinite' life of 1,000,000 or more cycles.
         Sf = Stress corresponding to a fatigue life, N, of 1000 to 1,000,000 cycles inclusive.
+        @endcode
         """
         Sut = 120.   # ksi
         Se = 0.5 * Sut  # ksi

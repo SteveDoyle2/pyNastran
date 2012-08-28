@@ -138,7 +138,7 @@ class BDFMethods(object):
         @param self the object pointer
         @param cid the cid to resolve the nodes to
         @note loses association with previous coordinate systems so to go back
-        requires another fem
+         requires another fem
         """
         assert cid in self.coords, ('cannot resolve nodes to '
                                     'cid=|%s| b/c it doesnt exist' % (cid))

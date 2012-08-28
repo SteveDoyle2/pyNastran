@@ -27,6 +27,7 @@ class Subcase(object):
 
     def get_stress_code(self, key, options, value):
         """
+        Method get_stress_code:
         @note
           the individual element must take the stress_code and reduce it to
           what the element can return.  For example, for an isotropic CQUAD4
@@ -583,6 +584,7 @@ class Subcase(object):
 
     def crossReference(self, mesh):
         """
+        Method crossReference:
         @note
           this is not integrated and probably never will be as it's not
           really that necessary.  it's only really useful when running an

@@ -8,11 +8,12 @@ from .oes_objects import stressObject, strainObject
 
 class CompositePlateStressObject(stressObject):
     """
+    @code
     # sCode = 0
                     S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
     ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
       ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
-
+    @endcode
     """
     def __init__(self, dataCode, isSort1, iSubcase, dt=None):
         stressObject.__init__(self, dataCode, iSubcase)
@@ -49,10 +50,12 @@ class CompositePlateStressObject(stressObject):
 
     def addF06Data(self, data, transient, eType):
         """
+        @code
                        S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
         ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
           ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
             151    1  -1.02406E+04  4.18348E+05  4.14359E+02   -8.62021E+00  1.86352E+04   89.94  4.18348E+05 -1.02410E+04  2.14295E+05
+        @endcode
         """
         if transient is None:
             #for line in data:
@@ -426,9 +429,11 @@ class CompositePlateStressObject(stressObject):
 
 class CompositePlateStrainObject(strainObject):
     """
+    @code
     ???
     ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
       ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+    @endcode
     """
     def __init__(self, dataCode, isSort1, iSubcase, dt=None):
         strainObject.__init__(self, dataCode, iSubcase)

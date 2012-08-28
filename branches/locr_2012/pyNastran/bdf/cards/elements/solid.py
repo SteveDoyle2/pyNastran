@@ -57,8 +57,10 @@ class SolidElement(Element):
 
 class CHEXA8(SolidElement):
     """
+    @code
     CHEXA EID PID G1 G2 G3 G4 G5 G6
     G7 G8
+    @endcode
     """
     type = 'CHEXA'
     asterType = 'HEXA8'
@@ -112,9 +114,11 @@ class CHEXA8(SolidElement):
 
 class CHEXA20(CHEXA8):
     """
+    @code
     CHEXA EID PID G1 G2 G3 G4 G5 G6
     G7 G8 G9 G10 G11 G12 G13 G14
     G15 G16 G17 G18 G19 G20
+    @endcode
     """
     type = 'CHEXA'
     asterType = 'HEXA20'
@@ -158,6 +162,7 @@ class CHEXA20(CHEXA8):
 
 class CPENTA6(SolidElement):
     """
+    @code
     CPENTA EID PID G1 G2 G3 G4 G5 G6
       *----------*
      / \        / \
@@ -165,6 +170,7 @@ class CPENTA6(SolidElement):
     *---*-----*-----*
     V = (A1+A2)/2  * (c1-c2)
     C = (c1-c2)/2
+    @endcode
     """
     type = 'CPENTA'
     asterType = 'PENTA6'
@@ -259,9 +265,11 @@ class CPENTA6(SolidElement):
 
 class CPENTA15(CPENTA6):
     """
+    @code
     CPENTA EID PID G1 G2 G3 G4 G5 G6
     G7 G8 G9 G10 G11 G12 G13 G14
     G15
+    @endcode
     """
     type = 'CPENTA'
     asterType = 'PENTA15'
@@ -306,7 +314,9 @@ class CPENTA15(CPENTA6):
 
 class CTETRA4(SolidElement):
     """
+    @code
     CTETRA EID PID G1 G2 G3 G4
+    @endcode
     """
     type = 'CTETRA'
     asterType = 'TETRA4'
@@ -422,10 +432,12 @@ class CTETRA4(SolidElement):
 
 class CTETRA10(CTETRA4):
     """
+    @code
     CTETRA EID PID G1 G2 G3 G4 G5 G6
     G7 G8 G9 G10
     CTETRA   1       1       239     229     516     99      335     103
              265     334     101     102
+    @endcode
     """
     type = 'CTETRA'
     asterType = 'TETRA10'

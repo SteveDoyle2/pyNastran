@@ -45,8 +45,10 @@ class OP2(BDF,
         """
         takes a dictionary of list of times in a transient case and
         gets the output closest to those timse
+        @code
         times = {subcaseID_1: [time1, time2],
                  subcaseID_2: [time3, time4]}
+        @endcode
         """
         expectedTimes = {}
         for (iSubcase, eTimes) in times.iteritems():
@@ -688,7 +690,8 @@ class OP2(BDF,
         """
         extracts the ith word from the data structure as the provided type
         supports multiple inputs with iWordStop (note this is words,
-                                                 not outputs)
+        not outputs)
+        
         @param self the object pointer
         @param data the binary data that is as long as the buffer size
         @param iWordStart the word to start reading from

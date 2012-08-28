@@ -195,11 +195,13 @@ class F06(OES, OUG, OQG, F06Writer):
 
     def getGridPointSingularities(self):  # @todo not done
         """
+        @code
                     G R I D   P O I N T   S I N G U L A R I T Y   T A B L E
         POINT    TYPE   FAILED      STIFFNESS       OLD USET           NEW USET
          ID            DIRECTION      RATIO     EXCLUSIVE  UNION   EXCLUSIVE  UNION
           1        G      4         0.00E+00          B        F         SB       S    *
           1        G      5         0.00E+00          B        F         SB       S    *
+        @endcode
         """
         pass
 
@@ -290,10 +292,12 @@ class F06(OES, OUG, OQG, F06Writer):
 
     def getRealEigenvalues(self):
         """
+        @code
                                                    R E A L   E I G E N V A L U E S
          MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
           NO.       ORDER                                                                       MASS              STIFFNESS
               1         1        6.158494E+07        7.847607E+03        1.248985E+03        1.000000E+00        6.158494E+07
+        @endcode
         """
         (subcaseName, iSubcase, transient, dt, analysisCode,
             isSort1) = self.readSubcaseNameID()
@@ -310,11 +314,13 @@ class F06(OES, OUG, OQG, F06Writer):
 
     def getComplexEigenvalues(self):
         """
+        @code
                                C O M P L E X   E I G E N V A L U E   S U M M A R Y
         ROOT     EXTRACTION                  EIGENVALUE                     FREQUENCY              DAMPING
          NO.        ORDER             (REAL)           (IMAG)                (CYCLES)            COEFFICIENT
              1           6          0.0              6.324555E+01          1.006584E+01          0.0
              2           5          0.0              6.324555E+01          1.006584E+01          0.0
+        @endcode
         """
         #(subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         iSubcase = 1  # @todo fix this...
@@ -332,6 +338,7 @@ class F06(OES, OUG, OQG, F06Writer):
 
     def getRealEigenvectors(self, marker):
         """
+        @code
                                                                                                                SUBCASE 1
         EIGENVALUE =  6.158494E+07
             CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
@@ -348,6 +355,7 @@ class F06(OES, OUG, OQG, F06Writer):
         formatCode   = 1 (Real)
         #sCode        = 0 (Stress)
         numWide      = 8 (???)
+        @endcode
         """
         cycle, iMode = marker.strip(
         ).split('R E A L   E I G E N V E C T O R   N O .')
@@ -393,6 +401,7 @@ class F06(OES, OUG, OQG, F06Writer):
 
     def getElementStrainEnergies(self):
         """
+        @code
         EIGENVALUE = -3.741384E-04
         CYCLES =  3.078479E-03
                                            E L E M E N T   S T R A I N   E N E R G I E S
@@ -403,6 +412,7 @@ class F06(OES, OUG, OQG, F06Writer):
                                     ELEMENT-ID          STRAIN-ENERGY           PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY
                                              1         -5.410134E-08                -0.0929             -4.328107E-05
                                              2         -3.301516E-09                -0.0057             -2.641213E-06
+        @endcode
         """
         iSubcase = 1 ## @todo not correct
         cycles = self.storedLines[-1][1:].strip()

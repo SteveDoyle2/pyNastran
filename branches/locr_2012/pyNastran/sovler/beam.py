@@ -130,6 +130,7 @@ def Stiffness(self, r, A, E):
 
 def truss():
     """
+    @code
        ^y
        |
        1
@@ -140,6 +141,7 @@ def truss():
 
     L1 = 4 ft
     L2 = 3 ft
+    @endcode
     """
     p1 = array([4., 0., 0.]) * 12.
     p2 = array([0., 0., 0.]) * 12.

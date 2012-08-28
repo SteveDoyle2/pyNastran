@@ -336,12 +336,14 @@ class NonlinearRodObject(stressObject):
 
     def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):  # @todo doesnt support CONROD/CTUBE (calls them CRODs)
         """
+        @code
         ELEMENT-ID =     102
                                  N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
           TIME          AXIAL STRESS         EQUIVALENT         TOTAL STRAIN       EFF. STRAIN          EFF. CREEP        LIN. TORSIONAL
                                                STRESS                             PLASTIC/NLELAST          STRAIN              STRESS
         2.000E-02        1.941367E+01        1.941367E+01        1.941367E-04        0.0                 0.0                 0.0
         3.000E-02        1.941367E+01        1.941367E+01        1.941367E-04        0.0                 0.0                 0.0
+        @endcode
         """
         msg = []
         msgStart = ['                         N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',

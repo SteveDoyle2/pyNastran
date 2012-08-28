@@ -161,10 +161,12 @@ class CTRIA3(TriShell):
 
     def flipNormal(self):
         """
+        @code
              1           1
             * *   -->   * *
            *   *       *   *
           2-----3     3-----2
+        @endcode
         """
         (n1, n2, n3) = self.nodes
         self.nodes = [n1, n3, n2]
@@ -306,12 +308,14 @@ class CTRIA6(TriShell):
 
     def flipNormal(self):
         """
+        @code
              1                1
              **               **
             *  *             *  *
            4    6   -->     6    4
           *      *         *      *
          2----5---3       3----5---2
+        @endcode
         """
         (n1, n2, n3, n4, n5, n6) = self.nodes
         self.nodes = [n1, n3, n2, n6, n5, n4]
@@ -364,10 +368,12 @@ class CTRIAR(TriShell):
 
     def flipNormal(self):
         """
+        @code
              1           1
             * *   -->   * *
            *   *       *   *
           2-----3     3-----2
+        @endcode
         """
         (n1, n2, n3) = self.nodes
         self.nodes = [n1, n3, n2]
@@ -418,11 +424,13 @@ class CTRIAX(TriShell):
 class CTRIAX6(TriShell):
     """
     Nodes defined in a non-standard way
+    @code
          5
         / \
        6   4
      /       \
     1----2----3
+    @endcode
     """
     type = 'CTRIAX6'
     #calculixType = 'CAX6'
@@ -468,11 +476,13 @@ class CTRIAX6(TriShell):
 
     def flipNormal(self):
         """
+        @code
              5               5
             / \             / \
            6   4   -->     6   4
          /       \       /       \
         1----2----3     1----2----3
+        @endcode
         """
         (n1, n2, n3, n4, n5, n6) = self.nodes
         self.nodes = [n1, n6, n5, n4, n3, n2]
@@ -508,6 +518,7 @@ class QuadShell(ShellElement):
 
     def AreaCentroid(self, debug=False):
         """
+        @code
         1-----2
         |    /|
         | A1/ |
@@ -520,6 +531,7 @@ class QuadShell(ShellElement):
            where:
              c=centroid
              A=area
+        @endcode
         """
         #if debug:
         #    print("nodes = %s" %(self.nodes))
@@ -593,10 +605,12 @@ class QuadShell(ShellElement):
 
     def flipNormal(self):
         """
+        @code
         1---2        1---4
         |   |  -->   |   |
         |   |        |   |
         4---3        2---3
+		@endcode
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -661,6 +675,7 @@ class CSHEAR(QuadShell):
 
     def AreaCentroid(self, debug=False):
         """
+        @code
         1-----2
         |    /|
         | A1/ |
@@ -673,6 +688,7 @@ class CSHEAR(QuadShell):
            where:
              c=centroid
              A=area
+        @endcode
         """
         #if debug:
         #    print("nodes = %s" %(self.nodes))
@@ -714,10 +730,12 @@ class CSHEAR(QuadShell):
 
     def flipNormal(self):
         """
+        @code
         1---2        1---4
         |   |  -->   |   |
         |   |        |   |
         4---3        2---3
+        @endcode
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -789,10 +807,12 @@ class CQUAD4(QuadShell):
 
     def flipNormal(self):
         """
+        @code
         1---2        1---4
         |   |  -->   |   |
         |   |        |   |
         4---3        2---3
+        @endcode
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -875,10 +895,12 @@ class CQUADR(QuadShell):
 
     def flipNormal(self):
         """
+        @code
         1---2        1---4
         |   |  -->   |   |
         |   |        |   |
         4---3        2---3
+        @endcode
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -922,11 +944,13 @@ class CQUAD(QuadShell):
 
     def flipNormal(self):
         """
+        @code
         1--5--2        1--8--4
         |     |  -->   |     |
         8  9  6        5  9  7
         |     |        |     |
         4--7--3        2--6--3
+        @endcode
         """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]
@@ -1002,6 +1026,7 @@ class CQUAD8(QuadShell):
 
     def AreaCentroid(self, debug=False):
         """
+        @code
         1-----2
         |    /|
         | A1/ |
@@ -1014,6 +1039,7 @@ class CQUAD8(QuadShell):
            where:
              c=centroid
              A=area
+        @endcode
         """
         #if debug:
         #    print("nodes = %s" %(self.nodes))
@@ -1082,11 +1108,13 @@ class CQUADX(QuadShell):
 
     def flipNormal(self):
         """
+        @code
         1--5--2        1--8--4
         |     |  -->   |     |
         8  9  6        5  9  7
         |     |        |     |
         4--7--3        2--6--3
+        @endcode
         """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]

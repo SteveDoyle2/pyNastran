@@ -56,11 +56,12 @@ class constraintObject2(object):
         This function returns all the constraints with an given constraint ID.
         For example an MPCADD that references 2 MPCADDs which reference 4 MPCs
         should return 4 MPCs (or rather the IDs of those MPCs).
+        
         @todo This function *should* also find unassociated constraints.
-
-        not really done yet, idea needs to be integrated/separated from
-        cross-referencing.  no point in doing it twice
+         not really done yet, idea needs to be integrated/separated from
+         cross-referencing.  no point in doing it twice
         """
+        
         constraints2 = {}
         referencedConstraints = {}
         # some of the ADDConstraint keys are MPCADDs/SPCADDs, some are not

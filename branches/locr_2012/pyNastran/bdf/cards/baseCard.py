@@ -55,9 +55,12 @@ class BaseCard(BDFCard):
     def buildTableLines(self, fields, nStart=1, nEnd=0):
         """
         builds a table of the form:
+        @code
         'DESVAR' DVID1 DVID2 DVID3 DVID4 DVID5 DVID6 DVID7
                  DVID8 -etc.-
         'UM'     VAL1  VAL2  -etc.-
+        @endcode
+        
         and then pads the rest of the fields with None's
         @param fields the fields to enter, including DESVAR
         @param nStart the number of blank fields at the start of the line (default=1)

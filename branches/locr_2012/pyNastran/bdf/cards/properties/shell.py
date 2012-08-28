@@ -39,13 +39,11 @@ class ShellProperty(Property):
               My  \\
               Mz  \\
           \end{array} \right] =
-
           \left[
           \begin{array}{cc}
               A & B  \\
               B & D  \\
           \end{array} \right]
-
           \left[
           \begin{array}{c}
               \epsilon_{xx}  \\
@@ -57,14 +55,15 @@ class ShellProperty(Property):
           \end{array} \right]
         \f]
 
-
+		@code
         [Nx] = [            ] [ e_xx0    ]
         [Ny] = [  [A]   [B] ] [ e_yy0    ]
         [Nz] = [            ] [ gamma_xy0]
         [Mx] = [            ] [ k_xx0    ]
         [My] = [  [B]   [D] ] [ k_yy0    ]
         [Mz] = [            ] [ k_xy0    ]
-
+		@endcode
+		
         \f[ \large  A_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k  -z_{k-1}   \right) = \Sigma_{k=1}^N (Q_{ij})_k t_k                                                                                    \f]
         \f[ \large  B_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k^2-z_{k-1}^2 \right) = \Sigma_{k=1}^N (Q_{ij})_k                           \left( \overline{z} t_k                      \right)         \f]
         \f[ \large  D_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k^3-z_{k-1}^3 \right) = \Sigma_{k=1}^N (Q_{ij})_k                           \left( \overline{z}^2 t_k + \frac{t_k^3}{12} \right)         \f]
@@ -129,9 +128,10 @@ class ShellProperty(Property):
         return array([Q11a, Q12a, Q22a, Q16a, Q26a, Q66a, Q44a, Q55a, Q45a])
 
     def Q(self):
-        r""""
+        r"""
         Calculates the stiffness matrix \f$ [Q] \f$ for a lamina
         @todo is this done?
+        
         p. 114 "Introduction to Composite Material Design"
         """
         nu12 = self.nu12
@@ -164,11 +164,12 @@ class ShellProperty(Property):
               -mn & mn  & m^2-n^2
           \end{array} \right]
         \f]
-
+        
+		@code
                  [ m^2  n^2        2mn]
         [T]    = [ n^2  m^2       -2mn]   # transformation matrix
                  [ -mn   mn    m^2-n^2]
-
+		@endcode
 
         inverse transformation matrix \f$ [T]^{-1} \f$
         \f[ \large  [T]^{-1} = \left[
@@ -178,10 +179,12 @@ class ShellProperty(Property):
               mn  & -mn & m^2-n^2
           \end{array} \right]
         \f]
-
+        
+		@code
                  [ m^2  n^2       -2mn]
         [T]^-1 = [ n^2  m^2        2mn]   # inverse transform
                  [ mn   -mn    m^2-n^2]
+		@endcode
 
         \f[ \large  \left[
             \begin{array}{c}
@@ -221,10 +224,12 @@ class ShellProperty(Property):
 
 class PCOMP(ShellProperty):
     """
+    @code
     PCOMP     701512   0.0+0 1.549-2                   0.0+0   0.0+0     SYM
               300704   3.7-2   0.0+0     YES  300704   3.7-2     45.     YES
               300704   3.7-2    -45.     YES  300704   3.7-2     90.     YES
               300705      .5   0.0+0     YES
+    @endcode
     """
     type = 'PCOMP'
 
@@ -415,7 +420,7 @@ class PCOMP(ShellProperty):
         gets the thickness of the ith ply
         @param self the object pointer
         @param iPly the string 'all' (default) or the mass per area of the ith
-        ply
+         ply
         """
         if iPly == 'all':  # get all layers
             t = 0.
@@ -759,8 +764,9 @@ class PSHELL(ShellProperty):
 
     def writeCodeAster(self):
         """
-        http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/shell/static
-        http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/platedynamics
+        * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/shell/static
+        * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/platedynamics
+        
         the angle_rep is a direction angle, use either angle(a,b) or
         vecteur(x,y,z)
         coque_ncou is the number of gauss nodes along the thickness, for

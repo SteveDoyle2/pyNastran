@@ -453,12 +453,18 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
     def handleResultsBuffer(self, func, debug=False):
         """
         Works by knowing that:
-        the end of an unbuffered table has a
+        
+        * the end of an unbuffered table has a
+        
           - [4]
-        the end of an table with a buffer has a
+        
+        * the end of an table with a buffer has a
+        
           - [4,4,x,4] where x is the next buffer size, which may have another
             buffer
-        the end of the final buffer block has
+        
+        * the end of the final buffer block has
+        
           - nothing!
 
         @param self

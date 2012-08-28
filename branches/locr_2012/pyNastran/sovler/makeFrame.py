@@ -9,28 +9,31 @@ from pyNastran.general.generalMath import reduceMatrix
 
 
 def makeTruss2():
-    """          ^
-                 |1000  lb
-                 |
-    12           |
+    """
+    @code
+                  ^
+                  |1000  lb
+                  |
+     12           |
     *
-   *1-----A------2  34
-    | D        B |
-    |   \    /   C
-    F    /  \    |   20"
-    |  /       \ |
-   *3-----E------4  78
+    *1-----A------2  34
+     | D        B |
+     |   \    /   C
+     F    /  \    |   20"
+     |  /       \ |
+    *3-----E------4  78
     *56
           40"
-
+    @endcode
+    
     where:
-      * indicates a constraint
-      1234 are nodes
-      ABCDEF are rods
-      the truss is 20" by 40"
-      E = 1e7 psi
-      B and D do not touch, but cross at the diagonal
-      12,34,56,78 are the degrees of freedom
+      * \* indicates a constraint
+      * 1234 are nodes
+      * ABCDEF are rods
+      * the truss is 20" by 40"
+      * E = 1e7 psi
+      * B and D do not touch, but cross at the diagonal
+      * 12,34,56,78 are the degrees of freedom
     """
     model = BDF('')
     #model.executiveControlLines = ['SOL 101']
@@ -394,7 +397,7 @@ def solveKF(model, Kg, F, Dofs):
 
 
 def fKx(K, x):
-    """
+    r"""
     \f[ {F} = [K]{x} \f]
     \f[ {x} = [K]^-1 {F} \f]
     """

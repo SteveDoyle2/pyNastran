@@ -96,9 +96,13 @@ class DOPTPRM(OptConstraint):
         """
         Design Optimization Parameters
         Overrides default values of parameters used in design optimization
+        
+        @code
         DOPTPRM PARAM1 VAL1 PARAM2 VAL2 PARAM3 VAL3 PARAM4 VAL4
                 PARAM5 VAL5 -etc.-
+        @endcode
         """
+        
         fields = card.fields(1)
         nFields = len(fields)
 
@@ -122,8 +126,11 @@ class DLINK(OptConstraint):
         """
         Multiple Design Variable Linking
         Relates one design variable to one or more other design variables
+        
+        @code
         DLINK ID DDVID C0 CMULT IDV1 C1 IDV2 C2
               IDV3 C3 -etc.-
+        @endcode
         """
         self.oid = card.field(1)
         self.ddvid = card.field(2)
@@ -183,7 +190,9 @@ class DRESP1(OptConstraint):
 
     def __init__(self, card=None, data=None):
         """
+        @code
         DRESP1         1S1      CSTRAIN PCOMP                  1       1   10000
+        @endcode
         """
         self.oid = card.field(1)
         self.label = card.field(2)
@@ -302,8 +311,10 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         """
         Design Variable to Material Relation
         Defines the relation between a material property and design variables
+        @code
         DVMREL1 ID TYPE MID MPNAME MPMIN MPMAX C0
                 DVID1 COEF1 DVID2 COEF2 DVID3 COEF3 -etc.-
+        @endcode
         """
         self.oid = card.field(1)
         self.Type = card.field(2)
@@ -365,8 +376,10 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
     def __init__(self, card=None, data=None):
         """
+        @code
         DVPREL1   200000   PCOMP    2000      T2
                   200000     1.0
+        @endcode
         """
         self.oid = card.field(1)
         self.Type = card.field(2)
@@ -428,12 +441,15 @@ class DVPREL2(OptConstraint):
 
     def __init__(self, card=None, data=None):
         """
+        @code
         DVPREL2 ID TYPE PID PNAME/FID PMIN PMAX EQID
         'DESVAR' DVID1 DVID2 DVID3 DVID4 DVID5 DVID6 DVID7
                  DVID8 -etc.-
         'DTABLE' LABL1 LABL2 LABL3 LABL4 LABL5 LABL6 LABL7
                  LABL8 -etc.-
+        @endcode
         """
+        
         ## Unique identification number
         self.oid = card.field(1)
         ## Name of a property entry, such as PBAR, PBEAM, etc

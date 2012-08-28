@@ -243,6 +243,7 @@ class CTRIA6(FEM):
 
     def N(self):
         """
+        @code
         N1 = a**2
         N2 = b**2
         N3 = c**3
@@ -266,6 +267,7 @@ class CTRIA6(FEM):
         1-4-2 -> c=0
         5-6      c=1/2
         3        c=1
+        @endcode
         """
         k1 = Symbol('k1')
         k2 = Symbol('k2')

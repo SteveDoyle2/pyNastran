@@ -7,6 +7,7 @@ from .oes_objects import stressObject, strainObject
 
 class PlateStressObject(stressObject):
     """
+    @code
     ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)
       ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
           6    CEN/4  -1.250000E-01  -4.278394E+02  8.021165E+03 -1.550089E+02   -88.9493   8.024007E+03 -4.306823E+02  4.227345E+03
@@ -18,6 +19,7 @@ class PlateStressObject(stressObject):
       ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR         SHEAR
           6    CEN/4  -1.250000E-01  -4.278394E+02  8.021165E+03 -1.550089E+02   -88.9493   8.024007E+03 -4.306823E+02  4.227345E+03
                        1.250000E-01   5.406062E+02  1.201854E+04 -4.174177E+01   -89.7916   1.201869E+04  5.404544E+02  5.739119E+03
+    @endcode
     """
     def __init__(self, dataCode, isSort1, iSubcase, dt=None):
         stressObject.__init__(self, dataCode, iSubcase)
@@ -865,6 +867,7 @@ class PlateStressObject(stressObject):
 
 class PlateStrainObject(strainObject):
     """
+    @code
     # ??? - is this just 11
     ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)
       ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
@@ -883,6 +886,7 @@ class PlateStrainObject(strainObject):
                            S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
     ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)          MAX
       ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR         SHEAR
+    @endcode
     """
     def __init__(self, dataCode, isSort1, iSubcase, dt=None):
         strainObject.__init__(self, dataCode, iSubcase)

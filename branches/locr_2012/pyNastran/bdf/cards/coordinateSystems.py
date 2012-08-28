@@ -187,7 +187,6 @@ class Coord(BaseCard):
         r"""
         Returns the 6x6 transformation
         \f[ \large  [\lambda] = [B_{ij}] \f]
-
         \f[
         [T] =
         \left[
@@ -195,7 +194,7 @@ class Coord(BaseCard):
           \lambda  & 0 \\
           0  & \lambda \\
           \end{array}
-        \right
+        \right]
         \f]
         """
         (a, matrix) = self.transformToGlobal(self.e1)
@@ -412,8 +411,9 @@ class Cord2x(Coord):
           \end{array} \right]
         \f]
 
-        \f$ g  \f$ is the global directional vector (e.g. \f$ g_x = [1,0,0]\f$)
-        \f$ ijk \f$ is the ith direction in the local coordinate system
+        * \f$ g  \f$ is the global directional vector (e.g. \f$ g_x = [1,0,0]\f$)
+        * \f$ ijk \f$ is the ith direction in the local coordinate system
+        
         @warning
           make sure you cross-reference before calling this
         @warning
@@ -578,9 +578,12 @@ class CORD3G(Coord):  # not done
     The CORD3G entry is used with the MAT9 entry to orient material principal
     axes for 3-D composite analysis
 
+    @code
     CORD3G CID METHOD FORM THETAID1 THETAID2 THETAID3 CIDREF
     CORD3G 100 E313   EQN  110      111      112      0
+    @endcode
     """
+    
     type = 'CORD3G'
 
     def __init__(self, card=[0, 0, 0, 0, 0, 0, 0], data=None):
@@ -622,10 +625,10 @@ class CORD3G(Coord):  # not done
         @warning not done, just setting up how you'd do this
         @note per http://en.wikipedia.org/wiki/Euler_angles
          "This means for example that a convention named (YXZ) is the result
-          of performing first an intrinsic Z rotation, followed by X and
-          Y rotations, in the moving axes (Note: the order of multiplication
-          of matrices is the opposite of the order in which they're
-          applied to a vector)."
+         of performing first an intrinsic Z rotation, followed by X and
+         Y rotations, in the moving axes (Note: the order of multiplication
+         of matrices is the opposite of the order in which they're
+         applied to a vector)."
         """
         for (rotation, theta) in izip(self.rotations, self.thetas):
             ct = cos(radians(theta))

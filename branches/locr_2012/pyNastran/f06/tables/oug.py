@@ -12,6 +12,7 @@ class OUG(object):
 
     def getDisplacement(self):
         """
+        @code
                                              D I S P L A C E M E N T   V E C T O R
 
         POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
@@ -24,6 +25,7 @@ class OUG(object):
         tableCode    = 1 (Displacement)
         sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
         numWide      = 8 (???)
+        @endcode
         """
         (subcaseName, iSubcase, transient, dt, analysisCode,
             isSort1) = self.readSubcaseNameID()
@@ -47,6 +49,7 @@ class OUG(object):
 
     def getComplexDisplacement(self):
         """
+        @code
           BACKWARD WHIRL
                                                                                                                  SUBCASE 2
           POINT-ID =       101
@@ -57,11 +60,12 @@ class OUG(object):
         2.000000E+01     G      3.242295E-16   1.630439E-01   1.630439E-01   1.691497E-17   1.362718E-01   1.362718E-01
                                 196.0668        90.0000       180.0000        63.4349       180.0000       270.0000
 
-        tableCode = 1 (Displacement)
-        formatCode = 3 (Magnitude/Phase)
-        sortBits = [0,1,1]  (Sort1,Real/Imaginary,RandomResponse)
+        tableCode    = 1 (Displacement)
+        formatCode   = 3 (Magnitude/Phase)
+        sortBits     = [0,1,1]  (Sort1,Real/Imaginary,RandomResponse)
         analysisCode = 5 (Frequency)
-        sortCode = 2 (Random Response)
+        sortCode     = 2 (Random Response)
+        @endcode
         """
         (subcaseName, iSubcase, transient, dt, analysisCode,
             isSort1) = self.readSubcaseNameID()
@@ -108,6 +112,7 @@ class OUG(object):
 
     def getTemperatureVector(self):
         """
+        @code
         LOAD STEP =  1.00000E+00
                                               T E M P E R A T U R E   V E C T O R
 
@@ -121,6 +126,7 @@ class OUG(object):
         formatCode   = 1 (Real)
         sCode        = 0 (Stress)
         numWide      = 8 (???)
+        @endcode
         """
         (subcaseName, iSubcase, transient, dt, analysisCode,
             isSort1) = self.readSubcaseNameID()

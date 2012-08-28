@@ -6,31 +6,34 @@ class CodeAsterConverter(BDF):
     """
     Converts a BDF to Code Aster (comm/mail/py files).
     How:
-      * Nodes/Coordinate Systems/Elements/Properties/Materials are
-        directly extracted from the BDF.  All objects must reference
-        each other properly.
-      * Just like Nastran, extra materials/properties are allowed.
-        No idea how Code_Aster handles SPOINTs or unassociated GRIDs.
-      * Loads must be referenced by a single LOAD card in the Case Control deck.
-        This is consistent with standard Nastran.
+    
+     * Nodes/Coordinate Systems/Elements/Properties/Materials are
+       directly extracted from the BDF.  All objects must reference
+       each other properly.
+     * Just like Nastran, extra materials/properties are allowed.
+       No idea how Code_Aster handles SPOINTs or unassociated GRIDs.
+     * Loads must be referenced by a single LOAD card in the Case Control deck.
+       This is consistent with standard Nastran.
 
     Limitations:
-      * All Case Control inputs must come from SUBCASE 1.
-      * LOAD cards must bound FORCEx/MOMENTx/PLOAD4 cards in order for loads to be written
-      * Only SOL 101 (Static)
+    
+     * All Case Control inputs must come from SUBCASE 1.
+     * LOAD cards must bound FORCEx/MOMENTx/PLOAD4 cards in order for loads to be written
+     * Only SOL 101 (Static)
 
     Supported Cards:
-      * GRID, COORDx
-      * LOAD, FORCEx, MOMENTx, PLOAD4
-      * CBAR, CBEAM, CROD, CTUBE, CTETRA, CPENTA, CHEXA,CTRIA3/6, CQUAD4/8
-      * PBAR, PBEAM, PROD, PTUBE, PSOLID, PSHELL
-      * MAT1
-      * GRAV (incorrect writing, but really easy to make it correct given proper format)
+    
+     * GRID, COORDx
+     * LOAD, FORCEx, MOMENTx, PLOAD4
+     * CBAR, CBEAM, CROD, CTUBE, CTETRA, CPENTA, CHEXA,CTRIA3/6, CQUAD4/8
+     * PBAR, PBEAM, PROD, PTUBE, PSOLID, PSHELL
+     * MAT1
+     * GRAV (incorrect writing, but really easy to make it correct given proper format)
 
-    TODO:
-      * PCOMP
-      * SPC, SPC1, MPC
-      * RBE2, RBE3
+    @todo
+      PCOMP,
+      SPC, SPC1, MPC,
+      RBE2, RBE3
     """
     def __init__(self, language='english'):
         self.language = 'english'
@@ -238,12 +241,14 @@ class CodeAsterConverter(BDF):
 
     def CA_MaterialField(self):
         """
+        @code
         MtrlFld=AFFE_MATERIAU(MAILLAGE=MESH,
                               AFFE=(_F(GROUP_MA=('P32','P33','P42','P43','P46','P47','P48','P49','P61','P62','P63','P64','P65','P74',
                                                  'P75',),
                                        MATER=M3,),
                                     _F(GROUP_MA=('P11','P13','P14','P15','P55','P56','P59',),
                                        MATER=M6,),
+        @endcode
         """
         comm = ''
         comm += '# CA_MaterialField\n'

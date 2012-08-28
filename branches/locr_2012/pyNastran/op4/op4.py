@@ -29,6 +29,7 @@ class OP4(FortranFile):
         be read.  The resulting output is a dictionary of matrices that are
         accessed by their name.
 
+		@code
         from pyNastran.op4.op4 import OP4
         op4 = OP4()
         #alternative way to get all the matrices
@@ -45,6 +46,7 @@ class OP4(FortranFile):
         # or because you only want A
         matrices = op4.readOP4(op4Name,matrixNames='A')
         (formA,A) = matrices['A']
+		@endcode
 
         @param op4Name an OP4 filename.  Type=STRING.
         @param matrixNames list of matrix names (or None); Type=LIST OF STRINGS / NONE.
@@ -57,7 +59,7 @@ class OP4(FortranFile):
 
         @note based off the MATLAB code SAVEOP4 developed by ATA-E and later UCSD.
         @note it's strongly recommended that you convert sparse matrices to another
-        format before doing math on them.  This is standard with sparse matrices.
+         format before doing math on them.  This is standard with sparse matrices.
         @warning sparse binary is buggy right now        """
         assert precision in ['default', 'single', 'double'], "precison=|%s| valid=['default','single','double']"
         if isinstance(matrixNames, str):
@@ -138,9 +140,10 @@ class OP4(FortranFile):
 
     def readRealAscii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
         """
+        Method readRealAscii:
         @todo possibly split this into readDenseReal and readSparseReal
-        to get rid of all the extra isSparse checks.  This would cleanup the
-        runLoop condition as well.
+         to get rid of all the extra isSparse checks.  This would cleanup the
+         runLoop condition as well.
         """
         if isSparse:
             rows = []
@@ -219,9 +222,10 @@ class OP4(FortranFile):
 
     def readComplexAscii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
         """
+        Method readComplexAscii:
         @todo possibly split this into readDenseComplex and readSparseComplex
-        to get rid of all the extra isSparse checks.  This would cleanup the
-        runLoop condition as well.
+         to get rid of all the extra isSparse checks.  This would cleanup the
+         runLoop condition as well.
         """
         if isSparse:
             rows = []
@@ -916,20 +920,30 @@ class OP4(FortranFile):
         @param name the name of the matrix
         @param matrix a two-dimensional NUMPY.NDARRAY
         @param form Form is defined as one of the following:
-            1 Square
-            2 Rectangular
-            3 Diagonal
-            6 Symmetric
-            8 Identity
-            9 Pseudoidentity
+        
+        ==== ===============
+        Form Definition
+        ==== ===============
+        1.   Square
+        2.   Rectangular
+        3.   Diagonal
+        6.   Symmetric
+        8.   Id entity
+        9.   Pseudoidentity
+        ==== ===============
 
         Not Supported by all OP4s:
-            4 Lower triangular factor
-            5 Upper triangular factor
-            10 Cholesky factor
-            11 Trapezoidal factor
-            13 Sparse lower triangular factor
-            15 Sparse upper triangular factor
+        
+        ==== ===============================
+        Form Definition
+        ==== ===============================
+        4.   Lower triangular factor
+        5.   Upper triangular factor
+        10.  Cholesky factor
+        11.  Trapezoidal factor
+        13.  Sparse lower triangular factor
+        15.  Sparse upper triangular factor
+        ==== ===============================
 
         @note form defaults to 2, but 1 can be easily determined.  Any others must be specified.
         @todo call the actual function for now...not hooked up

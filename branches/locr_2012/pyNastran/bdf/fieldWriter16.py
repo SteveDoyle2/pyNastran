@@ -265,10 +265,10 @@ def printCard_16(fields, tol=0.):
     @param fields all the fields in the BDF card (no blanks)
     @param tol the abs(tol) to consider value=0 (default=0.)
     @note A large field format follows the  8-16-16-16-16-8 = 80
-    format where the first 8 is the card name or blank (continuation).
-    The last 8-character field indicates an optional continuation,
-    but because it's a left-justified unneccessary field,
-    printCard doesnt use it.
+     format where the first 8 is the card name or blank (continuation).
+     The last 8-character field indicates an optional continuation,
+     but because it's a left-justified unneccessary field,
+     printCard doesnt use it.
     """
     #print fields
     try:

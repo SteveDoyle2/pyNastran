@@ -7,6 +7,7 @@ from ..real.oes_objects import stressObject, strainObject
 
 class ComplexPlateStressObject(stressObject):
     """
+    @code
                 C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )
                                                           (REAL/IMAGINARY)
 
@@ -14,6 +15,7 @@ class ComplexPlateStressObject(stressObject):
       ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY
 0       100    CEN/8  -2.500000E-02    0.0          /  0.0             0.0          /  0.0             0.0          /  0.0
                        2.500000E-02    0.0          /  0.0             0.0          /  0.0             0.0          /  0.0
+    @endcode
     """
     def __init__(self, dataCode, isSort1, iSubcase, dt=None):
         #print "making complex plate stress obj"
@@ -663,6 +665,7 @@ class ComplexPlateStressObject(stressObject):
 
 class ComplexPlateStrainObject(strainObject):
     """
+    @code
     # ??? - is this just 11
     ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)
       ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
@@ -681,6 +684,7 @@ class ComplexPlateStrainObject(strainObject):
                            S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
     ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)          MAX
       ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR         SHEAR
+    @endcode
     """
     def __init__(self, dataCode, isSort1, iSubcase, dt=None):
         strainObject.__init__(self, dataCode, iSubcase)

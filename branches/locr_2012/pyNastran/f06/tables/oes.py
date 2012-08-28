@@ -45,10 +45,12 @@ class OES(object):
 
     def getRodStress(self):
         """
+        @code
                                      S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
         ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
           ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
              14    2.514247E+04              1.758725E+02                     15    2.443757E+04              2.924619E+01
+        @endcode
         """
         (iSubcase, transient, dataCode) = self.getRodHeader(False)
         dataCode['tableName'] = 'OES1X'
@@ -77,6 +79,7 @@ class OES(object):
 
     def getRodHeader(self, isStrain):
         """
+        @code
         analysisCode = 1 (Statics)
         deviceCode   = 1 (Print)
         tableCode    = 5 (Stress)
@@ -84,6 +87,7 @@ class OES(object):
         formatCode   = 1 (Real)
         sCode        = 0 (Stress)
         numWide      = 8 (???)
+        @endcode
         """
         (subcaseName, iSubcase, transient, dt, analysisCode,
             isSort1) = self.readSubcaseNameID()
@@ -102,10 +106,12 @@ class OES(object):
 
     def readRodStress(self):
         """
+        @code
                                      S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
         ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
           ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
              14    2.514247E+04              1.758725E+02                     15    2.443757E+04              2.924619E+01
+        @endcode
         """
         data = []
         while 1:
@@ -127,6 +133,7 @@ class OES(object):
 
     def getBarStress(self):
         """
+        @code
                                        S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )
         ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
           ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C
@@ -139,6 +146,7 @@ class OES(object):
         formatCode   = 1 (Real)
         sCode        = 0 (Stress)
         numWide      = 8 (???)
+        @endcode
         """
         (iSubcase, transient, dt, dataCode) = self.getBarHeader(False)
 
@@ -187,10 +195,12 @@ class OES(object):
 
     def readBarStress(self):
         """
+        @code
         ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
           ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C
              12    0.0            0.0            0.0            0.0            1.020730E+04   1.020730E+04   1.020730E+04
                    0.0            0.0            0.0            0.0                           1.020730E+04   1.020730E+04
+        @endcode
         """
         data = []
         while 1:
@@ -217,6 +227,7 @@ class OES(object):
 
     def getQuadCompositeStress(self):
         """
+        @code
                        S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
         ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
           ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
@@ -224,6 +235,7 @@ class OES(object):
             181    2   1.41820E+05  1.40805E+05  1.25412E+05   -1.06000E+02  2.85348E+04   44.88  2.66726E+05  1.58996E+04  1.25413E+05
 
         elementType = 33 b/c not bilinear
+        @endcode
         """
         (subcaseName, iSubcase, transient, dt, analysisCode,
             isSort1) = self.readSubcaseNameID()
@@ -260,6 +272,7 @@ class OES(object):
 
     def getTriStress(self):
         """
+        @code
                                  S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )
         ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)
           ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
@@ -272,6 +285,7 @@ class OES(object):
         formatCode   = 1 (Real)
         sCode        = 0 (Stress)
         numWide      = 8 (???)
+        @endcode
         """
         (iSubcase, transient, dataCode) = self.getTriHeader(False)
         dataCode['tableName'] = 'OES1X'
@@ -301,6 +315,7 @@ class OES(object):
 
     def getTriHeader(self, isStrain):
         """
+        @code
         analysisCode = 1 (Statics)
         deviceCode   = 1 (Print)
         tableCode    = 5 (Stress)
@@ -308,6 +323,7 @@ class OES(object):
         formatCode   = 1 (Real)
         sCode        = 0 (Stress)
         numWide      = 8 (???)
+        @endcode
         """
         (subcaseName, iSubcase, transient, dt, analysisCode,
             isSort1) = self.readSubcaseNameID()
@@ -333,10 +349,12 @@ class OES(object):
 
     def readTriStress(self, eType):
         """
+        @code
                 ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)
                   ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
                       8   -1.250000E-01     -1.303003E+02   1.042750E+04  -1.456123E+02   -89.2100    1.042951E+04   -1.323082E+02   1.049629E+04
                            1.250000E-01     -5.049646E+02   1.005266E+04  -2.132942E+02   -88.8431    1.005697E+04   -5.092719E+02   1.032103E+04
+        @endcode
         """
         data = []
         while 1:
@@ -389,6 +407,7 @@ class OES(object):
 
     def getQuadStressBilinear(self):
         """
+        @code
                              S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
 
         ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)
@@ -398,6 +417,7 @@ class OES(object):
 
                        4  -1.250000E-01  -8.871141E+02  7.576036E+03 -1.550089E+02   -88.9511   7.578874E+03 -8.899523E+02  8.060780E+03
                            1.250000E-01  -8.924081E+01  1.187899E+04 -4.174177E+01   -89.8002   1.187913E+04 -8.938638E+01  1.192408E+04
+        @endcode
         """
         (iSubcase, transient, dataCode) = self.getQuadHeader(3, False, 144)
         dataCode['tableName'] = 'OES1X',
@@ -517,6 +537,7 @@ class OES(object):
 
     def getSolidHeader(self, eType, n, isStrain):
         """
+        @code
         analysisCode = 1 (Statics)
         deviceCode   = 1 (Print)
         tableCode    = 5 (Stress/Strain)
@@ -524,6 +545,7 @@ class OES(object):
         formatCode   = 1 (Real)
         sCode        = 0 (Stress/Strain)
         numWide      = 8 (???)
+        @endcode
         """
         (subcaseName, iSubcase, transient, dt, analysisCode,
             isSort1) = self.readSubcaseNameID()

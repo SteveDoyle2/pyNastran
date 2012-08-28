@@ -65,9 +65,10 @@ class CaseControlDeck(object):
 
     def create_new_subcase(self, isubcase):
         """
+        Method create_new_subcase:
         @warning
-          be careful you dont add data to the global subcase after running
-          this...is this True???
+         be careful you dont add data to the global subcase after running
+         this...is this True???
         """
         if self.has_subcase(isubcase):
             sys.stderr.write('subcase=%s already exists...skipping\n' %

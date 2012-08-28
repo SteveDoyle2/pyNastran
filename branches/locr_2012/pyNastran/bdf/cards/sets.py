@@ -372,8 +372,8 @@ class RADSET(Set):  # not integrated
     """
     Specifies which radiation cavities are to be included for
     radiation enclosure analysis.
-    RADSET ICAVITY1 ICAVITY2 ICAVITY3 ICAVITY4 ICAVITY5 ICAVITY6 ICAVITY7 ICAVITY8
-           ICAVITY9 -etc.-
+    RADSET ICAVITY1 ICAVITY2 ICAVITY3 ICAVITY4 ICAVITY5 ICAVITY6 ICAVITY7
+    ICAVITY8 ICAVITY9 -etc.-
     """
     type = 'RADSET'
 

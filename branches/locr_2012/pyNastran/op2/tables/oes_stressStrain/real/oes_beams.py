@@ -6,13 +6,14 @@ from .oes_objects import stressObject, strainObject
 
 class BeamStressObject(stressObject):
     """
+    @code
     [1,0,0]
                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )
                       STAT DIST/
      ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C
             1       1   0.000   -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04
                     2   1.000   -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04
-
+	@endcode
     """
     def __init__(self, dataCode, isSort1, iSubcase, dt=None):
         stressObject.__init__(self, dataCode, iSubcase)
