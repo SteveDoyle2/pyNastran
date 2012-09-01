@@ -76,11 +76,25 @@ To generate HTML documentation using Sphinx it is necessary to go to `docs_sphin
 
 User and developer documentation (currently in Latex format) will also be available through Sphinx. Therefore it will be easy to read documentation using web browser and use hyper links to easily find documentation of particular class and  methods.
 
-*(this work is almost finished, needs little polishing)*  
+Most of the documentation present in `pyNastran/docs` in the LaTeX format has been ported to Sphinx. Now it is possible to easily read the manual in the HTML form. Moreover the class and methods mentioned in the manual are linked directly to their documentation.
 
 === PDF and epub documentation format ===
 
-Sphinx makes generating PDF and epub files easy. 
+Sphinx makes generating PDF and epub files easy. The PDF documentation is generated with the command
+
+{{{ 
+make latexpdf 
+}}}
+
+It contains the manual and API documentation in nice book form. All links (to WWW websites and internal links within documentation) works as in the HTML version. 
+
+It is possible to create ereaders friendly ePub file with the command
+
+{{{ 
+make epub 
+}}}
+
+Unforunately, currently it does not support mathematics equations correctly. Nevertheless the resulting file is usable to read the manual part of the documentation.
 
 == Mathematics with Latex ==
 
@@ -93,6 +107,10 @@ as
 {{{   hau}}}
 
 that is 'TABULATORhau', and not "\thau". The easiest solution is to mark every string containing LaTeX code as a *raw* string: `r""" \thau """`.
+
+== Documentation summary ==
+
+Currently the sphinx documentation is considered usable and no big changes in documentation handling are planned.
 
 = Code refactoring = 
 
