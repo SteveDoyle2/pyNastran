@@ -8,16 +8,17 @@ sovler Package
 
 .. automodule:: pyNastran.sovler.beam
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
 :mod:`makeFrame` Module
 -----------------------
 
-.. inheritance-diagram:: pyNastran.sovler.makeFrame
 
 .. automodule:: pyNastran.sovler.makeFrame
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -28,6 +29,7 @@ sovler Package
 
 .. automodule:: pyNastran.sovler.marginChecker
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -38,6 +40,7 @@ sovler Package
 
 .. automodule:: pyNastran.sovler.panelBuckling
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -48,6 +51,7 @@ sovler Package
 
 .. automodule:: pyNastran.sovler.plate
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -58,6 +62,7 @@ sovler Package
 
 .. automodule:: pyNastran.sovler.pyNastranSolver
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

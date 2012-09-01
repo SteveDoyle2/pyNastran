@@ -8,6 +8,7 @@ real Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.elementsStressStrain
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ real Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_bars
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -28,6 +30,7 @@ real Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_beams
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -38,6 +41,7 @@ real Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -48,6 +52,7 @@ real Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_objects
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -58,6 +63,7 @@ real Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_plates
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -68,6 +74,7 @@ real Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_rods
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -78,6 +85,7 @@ real Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_shear
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -88,6 +96,7 @@ real Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_solids
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -98,6 +107,7 @@ real Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_springs
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -108,6 +118,7 @@ real Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_triax
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

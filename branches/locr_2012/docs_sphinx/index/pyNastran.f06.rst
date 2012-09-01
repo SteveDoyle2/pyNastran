@@ -8,6 +8,7 @@ f06 Package
 
 .. automodule:: pyNastran.f06.f06
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ f06 Package
 
 .. automodule:: pyNastran.f06.f06Writer
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -28,6 +30,7 @@ f06 Package
 
 .. automodule:: pyNastran.f06.f06_classes
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -38,6 +41,7 @@ f06 Package
 
 .. automodule:: pyNastran.f06.matlabWriter
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

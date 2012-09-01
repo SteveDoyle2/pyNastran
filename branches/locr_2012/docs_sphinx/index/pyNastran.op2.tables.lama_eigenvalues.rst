@@ -8,6 +8,7 @@ lama_eigenvalues Package
 
 .. automodule:: pyNastran.op2.tables.lama_eigenvalues.lama
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ lama_eigenvalues Package
 
 .. automodule:: pyNastran.op2.tables.lama_eigenvalues.lama_objects
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

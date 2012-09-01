@@ -8,6 +8,7 @@ cart3d Package
 
 .. automodule:: pyNastran.converters.cart3d.cart3dIO
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ cart3d Package
 
 .. automodule:: pyNastran.converters.cart3d.cart3d_reader
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -28,6 +30,7 @@ cart3d Package
 
 .. automodule:: pyNastran.converters.cart3d.toPanair
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

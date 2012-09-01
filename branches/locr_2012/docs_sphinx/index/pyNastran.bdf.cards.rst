@@ -8,6 +8,7 @@ cards Package
 
 .. automodule:: pyNastran.bdf.cards.aero
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ cards Package
 
 .. automodule:: pyNastran.bdf.cards.baseCard
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -28,6 +30,7 @@ cards Package
 
 .. automodule:: pyNastran.bdf.cards.constraints
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -38,6 +41,7 @@ cards Package
 
 .. automodule:: pyNastran.bdf.cards.coordinateSystems
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -48,6 +52,7 @@ cards Package
 
 .. automodule:: pyNastran.bdf.cards.dmig
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -58,6 +63,7 @@ cards Package
 
 .. automodule:: pyNastran.bdf.cards.dynamic
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -68,6 +74,7 @@ cards Package
 
 .. automodule:: pyNastran.bdf.cards.materials
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -78,6 +85,7 @@ cards Package
 
 .. automodule:: pyNastran.bdf.cards.methods
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -88,6 +96,7 @@ cards Package
 
 .. automodule:: pyNastran.bdf.cards.nodes
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -98,6 +107,7 @@ cards Package
 
 .. automodule:: pyNastran.bdf.cards.optimization
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -108,6 +118,7 @@ cards Package
 
 .. automodule:: pyNastran.bdf.cards.params
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -118,6 +129,7 @@ cards Package
 
 .. automodule:: pyNastran.bdf.cards.sets
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -128,6 +140,7 @@ cards Package
 
 .. automodule:: pyNastran.bdf.cards.tables
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

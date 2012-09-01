@@ -8,6 +8,7 @@ loads Package
 
 .. automodule:: pyNastran.bdf.cards.loads.loads
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ loads Package
 
 .. automodule:: pyNastran.bdf.cards.loads.staticLoads
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

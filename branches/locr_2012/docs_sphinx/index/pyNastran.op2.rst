@@ -8,6 +8,7 @@ op2 Package
 
 .. automodule:: pyNastran.op2.fortranFile
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ op2 Package
 
 .. automodule:: pyNastran.op2.op2
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -28,16 +30,16 @@ op2 Package
 
 .. automodule:: pyNastran.op2.op2Codes
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
 :mod:`op2_helper` Module
 ------------------------
 
-.. inheritance-diagram:: pyNastran.op2.op2_helper
-
 .. automodule:: pyNastran.op2.op2_helper
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

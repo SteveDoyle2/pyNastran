@@ -4,50 +4,50 @@ general Package
 :mod:`general` Module
 ---------------------
 
-.. inheritance-diagram:: pyNastran.general.general
 
 .. automodule:: pyNastran.general.general
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
 :mod:`generalMath` Module
 -------------------------
 
-.. inheritance-diagram:: pyNastran.general.generalMath
 
 .. automodule:: pyNastran.general.generalMath
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
 :mod:`logger` Module
 --------------------
 
-.. inheritance-diagram:: pyNastran.general.logger
 
 .. automodule:: pyNastran.general.logger
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
 :mod:`makeLog` Module
 ---------------------
 
-.. inheritance-diagram:: pyNastran.general.makeLog
 
 .. automodule:: pyNastran.general.makeLog
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
 :mod:`matrixMethods` Module
 ---------------------------
 
-.. inheritance-diagram:: pyNastran.general.matrixMethods
 
 .. automodule:: pyNastran.general.matrixMethods
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

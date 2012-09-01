@@ -8,6 +8,7 @@ ogf_gridPointForces Package
 
 .. automodule:: pyNastran.op2.tables.ogf_gridPointForces.ogf
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ ogf_gridPointForces Package
 
 .. automodule:: pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -28,6 +30,7 @@ ogf_gridPointForces Package
 
 .. automodule:: pyNastran.op2.tables.ogf_gridPointForces.ogs_surfaceStresses
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

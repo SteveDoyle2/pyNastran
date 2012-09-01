@@ -8,6 +8,7 @@ dmap Package
 
 .. automodule:: pyNastran.bdf.dmap.builtins
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ dmap Package
 
 .. automodule:: pyNastran.bdf.dmap.pythonToDMAP
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

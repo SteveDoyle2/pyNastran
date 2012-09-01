@@ -8,6 +8,7 @@ bdf Package
 
 .. automodule:: pyNastran.bdf.bdf
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ bdf Package
 
 .. automodule:: pyNastran.bdf.bdf_Methods
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -28,6 +30,7 @@ bdf Package
 
 .. automodule:: pyNastran.bdf.caseControlDeck
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -35,20 +38,20 @@ bdf Package
 :mod:`fieldWriter` Module
 -------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.fieldWriter
 
 .. automodule:: pyNastran.bdf.fieldWriter
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
 :mod:`fieldWriter16` Module
 ---------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.fieldWriter16
 
 .. automodule:: pyNastran.bdf.fieldWriter16
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -59,6 +62,7 @@ bdf Package
 
 .. automodule:: pyNastran.bdf.subcase
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

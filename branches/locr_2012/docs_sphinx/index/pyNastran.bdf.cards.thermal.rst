@@ -8,6 +8,7 @@ thermal Package
 
 .. automodule:: pyNastran.bdf.cards.thermal.loads
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ thermal Package
 
 .. automodule:: pyNastran.bdf.cards.thermal.thermal
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

@@ -8,6 +8,7 @@ tables Package
 
 .. automodule:: pyNastran.op2.tables.destab
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ tables Package
 
 .. automodule:: pyNastran.op2.tables.ept
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -28,6 +30,7 @@ tables Package
 
 .. automodule:: pyNastran.op2.tables.mpt
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -38,6 +41,7 @@ tables Package
 
 .. automodule:: pyNastran.op2.tables.r1tab
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -48,6 +52,7 @@ tables Package
 
 .. automodule:: pyNastran.op2.tables.resultTable
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

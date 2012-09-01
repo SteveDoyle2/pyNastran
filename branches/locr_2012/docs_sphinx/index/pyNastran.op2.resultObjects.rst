@@ -8,6 +8,7 @@ resultObjects Package
 
 .. automodule:: pyNastran.op2.resultObjects.op2_Objects
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ resultObjects Package
 
 .. automodule:: pyNastran.op2.resultObjects.tableObject
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

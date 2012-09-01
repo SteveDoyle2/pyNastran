@@ -8,6 +8,7 @@ converters Package
 
 .. automodule:: pyNastran.converters.toCodeAster
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

@@ -8,17 +8,10 @@ op4 Package
 
 .. automodule:: pyNastran.op4.op4
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`setup` Module
--------------------
 
-.. inheritance-diagram:: pyNastran.op4.setup
-
-.. automodule:: pyNastran.op4.setup
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 

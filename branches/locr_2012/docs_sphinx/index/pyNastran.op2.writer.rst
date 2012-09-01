@@ -8,6 +8,7 @@ writer Package
 
 .. automodule:: pyNastran.op2.writer.oesWriter
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ writer Package
 
 .. automodule:: pyNastran.op2.writer.op2Writer
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -28,6 +30,7 @@ writer Package
 
 .. automodule:: pyNastran.op2.writer.ougWriter
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

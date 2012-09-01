@@ -8,6 +8,7 @@ elements Package
 
 .. automodule:: pyNastran.bdf.cards.elements.bars
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ elements Package
 
 .. automodule:: pyNastran.bdf.cards.elements.bush
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -28,6 +30,7 @@ elements Package
 
 .. automodule:: pyNastran.bdf.cards.elements.damper
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -38,6 +41,7 @@ elements Package
 
 .. automodule:: pyNastran.bdf.cards.elements.elements
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -48,6 +52,7 @@ elements Package
 
 .. automodule:: pyNastran.bdf.cards.elements.mass
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -58,6 +63,7 @@ elements Package
 
 .. automodule:: pyNastran.bdf.cards.elements.rigid
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -68,6 +74,7 @@ elements Package
 
 .. automodule:: pyNastran.bdf.cards.elements.shell
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -78,6 +85,7 @@ elements Package
 
 .. automodule:: pyNastran.bdf.cards.elements.solid
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -88,6 +96,7 @@ elements Package
 
 .. automodule:: pyNastran.bdf.cards.elements.springs
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

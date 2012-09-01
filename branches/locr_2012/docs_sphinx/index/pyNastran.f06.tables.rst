@@ -8,6 +8,7 @@ tables Package
 
 .. automodule:: pyNastran.f06.tables.oes
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ tables Package
 
 .. automodule:: pyNastran.f06.tables.oqg
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -28,6 +30,7 @@ tables Package
 
 .. automodule:: pyNastran.f06.tables.oug
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

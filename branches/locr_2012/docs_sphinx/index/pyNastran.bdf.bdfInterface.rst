@@ -8,6 +8,7 @@ bdfInterface Package
 
 .. automodule:: pyNastran.bdf.bdfInterface.BDF_Card
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ bdfInterface Package
 
 .. automodule:: pyNastran.bdf.bdfInterface.addCard
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -28,6 +30,7 @@ bdfInterface Package
 
 .. automodule:: pyNastran.bdf.bdfInterface.bdf_Reader
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -38,6 +41,7 @@ bdfInterface Package
 
 .. automodule:: pyNastran.bdf.bdfInterface.bdf_cardMethods
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -48,6 +52,7 @@ bdfInterface Package
 
 .. automodule:: pyNastran.bdf.bdfInterface.bdf_writeMesh
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -58,6 +63,7 @@ bdfInterface Package
 
 .. automodule:: pyNastran.bdf.bdfInterface.crossReference
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -68,6 +74,7 @@ bdfInterface Package
 
 .. automodule:: pyNastran.bdf.bdfInterface.getCard
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

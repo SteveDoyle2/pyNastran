@@ -8,6 +8,7 @@ panair Package
 
 .. automodule:: pyNastran.converters.panair.panairGrid
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -18,6 +19,7 @@ panair Package
 
 .. automodule:: pyNastran.converters.panair.panairGridPatch
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -28,6 +30,7 @@ panair Package
 
 .. automodule:: pyNastran.converters.panair.panairIO
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -38,6 +41,7 @@ panair Package
 
 .. automodule:: pyNastran.converters.panair.panairWrite
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

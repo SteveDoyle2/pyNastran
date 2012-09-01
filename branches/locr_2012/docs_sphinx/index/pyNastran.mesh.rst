@@ -8,6 +8,7 @@ mesh Package
 
 .. automodule:: pyNastran.mesh.nastranMesh
     :members:
+    :private-members:
     :undoc-members:
     :show-inheritance:
 
