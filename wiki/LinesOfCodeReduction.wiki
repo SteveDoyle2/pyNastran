@@ -156,7 +156,7 @@ from pyNastran.general import ...
 
 This could be obtained in pyNastran by simply adding `from general import *` to `__init__.py`.
 Some programmers suggest not to add *function/class* implementation code `__init__.py` file and keep additional 
-`.py` file inside a package. **But this would add additional layer between code callers and implementation** thus
+`.py` file inside a package. *But this would add additional layer between code callers and the code implementation* thus
 make code less clear. Every package in python is also a module, with an implementation code in `__init__.py` file.
 Therefore the code will be moved to `__init__.py`. Similar code placement is used, for example. in [https://www.djangoproject.com/ Django]. 
 
