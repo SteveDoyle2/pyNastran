@@ -323,7 +323,7 @@ class CardMethods(object):
         if debug:
             print("v1 = |%s|" % (valueRaw))
         lvalue = valueRaw.lstrip()
-        if self.isDynamicSyntax and '%' in lvalue[0:1]:
+        if self._is_dynamic_syntax and '%' in lvalue[0:1]:
             return self.parseDynamicSyntax(valueRaw)
         valueIn = valueRaw.lstrip().rstrip(' *').upper()
 

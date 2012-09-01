@@ -24,7 +24,7 @@ class WriteMesh(object):
         nodes, elements, properties, etc.
         @todo maybe add the write method
         """
-        self.autoReject = True
+        self._auto_reject = True
         return self.readBDF(infileName)
 
     def write_elements_as_CTRIA3(self):

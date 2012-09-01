@@ -153,7 +153,7 @@ class BDFReader(object):
           not used (not supported in Nastran)
         """
         ## automatically rejects every parsable card (default=False)
-        self.autoReject = False
+        self._auto_reject = False
         ## is the active file done reading
         self.doneReading = False
         ## was an ENDDATA card found
