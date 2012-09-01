@@ -33,13 +33,15 @@ The **Python OP4** reader supports ASCII and binary sparse and dense matrices.
 A simple GUI has been developed that can view BDF models and display static 
 stress results from the OP2. 
 
-Contents:
+
 
 
 .. toctree::
    :maxdepth: 2
 
-   index/modules
+   manual/index
+   
+   index/pyNastran
 
 Indices and tables
 ==================
