@@ -138,6 +138,30 @@ All of the custom Exceptions have been removed. Python defines many default Exce
 ||f06/f06.py         || !EndOfFileError(!Exception)                  || _removed_                                      ||
 
 
+== Module general == 
+
+Module general will be refactored in order to simplify its usage and code developing.
+Most frequently used functions will be moved to the `__init__.py` file This will
+allow to replace the calls
+
+{{{
+from pyNastran.general.general import ...
+}}}
+
+into 
+
+{{{
+from pyNastran.general import ...
+}}}
+
+This could be obtained in pyNastran by simply adding `from general import *` to `__init__.py`.
+Some programmers suggest not to add *function/class* implementation code `__init__.py` file and keep additional 
+`.py` file inside a package. **But this would add additional layer between code callers and implementation** thus
+make code less clear. Every package in python is also a module, with an implementation code in `__init__.py` file.
+Therefore the code will be moved to `__init__.py`. Similar code placement is used, for example. in [https://www.djangoproject.com/ Django]. 
+
+Mathematical related functions will be moved to `math.py` module and most of the rest into `utils.py` module.
+
 = Project code =
 
 New code will be maintained in [http://code.google.com/p/pynastran/source/browse/#svn%2Fbranches%2Flocr_2012 locr_2012] SVN branch.
