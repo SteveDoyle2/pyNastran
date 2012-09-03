@@ -517,13 +517,11 @@ class CAERO1(BaseCard):
                          card.field(10, 0.0),
                          card.field(11, 0.0)])
         self.x12 = card.field(12, 0.)
-        #self.p2   =  self.p1+array([card.field(12, 0.0), 0., 0.])
 
         self.p4 = array([card.field(13, 0.0),
                          card.field(14, 0.0),
                          card.field(15, 0.0)])
         self.x43 = card.field(16, 0.)
-        #self.p3   =  self.p4+array([card.field(16, 0.0), 0., 0.])
 
     def Cp(self):
         if isinstance(self.cp, int):
@@ -663,19 +661,56 @@ class CAERO2(BaseCard):
         self.x12 = x12[0]
 
     def rawFields(self):
-        fields = ['CAERO2', self.eid, self.Pid(), self.Cp(), self.nsb, self.nint, self.lsb, self.lint, self.igid,
-                  ] + list(self.p1) + [self.x12]
+        fields = ['CAERO2', self.eid, self.Pid(), self.Cp(), self.nsb,
+                  self.nint, self.lsb, self.lint, self.igid, ] + list(self.p1
+                  ) + [self.x12]
         return fields
 
     def reprFields(self):
         cp = set_blank_if_default(self.Cp(), 0)
-        fields = ['CAERO2', self.eid, self.Pid(), cp, self.nsb, self.nint, self.lsb, self.lint, self.igid,
-                  ] + list(self.p1) + [self.x12]
+        fields = ['CAERO2', self.eid, self.Pid(), cp, self.nsb, self.nint,
+                  self.lsb, self.lint, self.igid, ] + list(self.p1) + [self.x12]
         return fields
 
 
 class CAERO3(BaseCard):
-    pass
+    type = 'CAERO3'
+
+    def __init__(self, card=None, data=None):
+        self.eid = card.field(1)
+        self.pid = card.field(2)
+        self.cp = card.field(3, 0)
+        self.list_w = card.field(4)
+        self.list_c1 = card.field(5)
+        self.list_c2 = card.field(6)
+        self.p1 = array([card.field(9, 0.0),
+                         card.field(10, 0.0),
+                         card.field(11, 0.0)])
+        self.x12 = card.field(12)
+        self.p4 = array([card.field(13, 0.0),
+                         card.field(14, 0.0),
+                         card.field(15, 0.0)])
+        self.x43 = card.field(16, 0.0)
+
+    def cross_reference(self, model):
+        self.pid = model.PAero(self.pid)  # links to PAERO3
+        self.cp = model.Coord(self.cp)
+        #self.list_w = model.AeFact(self.list_w)   # not added
+        #self.list_c1 = model.AeFact(self.list_c1) # not added
+        #self.list_c2 = model.AeFact(self.list_c2) # not added
+
+    def rawFields(self):
+        fields = ['CAERO3', self.eid, self.Pid(), self.Cp(), self.list_w,
+                  self.list_c1, self.list_c2] + list(self.p1) + [self.x12
+                  ] + list(self.p4) + [self.x34]
+        return fields
+
+    def reprFields(self):
+        cp = set_blank_if_default(self.Cp(), 0)
+        fields = ['CAERO3', self.eid, self.Pid(), cp, self.list_w,
+                  self.list_c1, self.list_c2] + list(self.p1) + [self.x12
+                  ] + list(self.p4) + [self.x34]
+        return fields
 
 
 class CAERO4(BaseCard):

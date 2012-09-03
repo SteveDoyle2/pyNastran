@@ -14,34 +14,27 @@ from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
 from .cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,
                                      SpringElement)
 from .cards.properties.springs import PELAS, PELAST
-#------
+
 from .cards.elements.solid import (CTETRA4, CTETRA10, CPENTA6, CPENTA15,
                                    CHEXA8, CHEXA20, SolidElement)
 from .cards.elements.rigid import (RBAR, RBAR1, RBE1, RBE2, RBE3, RigidElement)
-#------
+
 from .cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
                                    CSHEAR, CTRIA3, CTRIA6, CTRIAX,
                                    CTRIAX6, CTRIAR, ShellElement)
 from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR
-#------
 from .cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from .cards.properties.bush import PBUSH, PBUSH1D
-#------
 from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
                                     CDAMP5, DamperElement)
 from .cards.properties.damper import (PVISC, PDAMP, PDAMP5, PDAMPT)
-#------
 from .cards.elements.bars import (CROD, CONROD, CTUBE, CBAR, CBEAM, CBEAM3,
                                   CBEND, LineElement, RodElement)
 from .cards.properties.bars import (PROD, PTUBE, PBAR, PBARL,
                                     PBEAM, PBEAML, PBCOMP)  # PBEND
-#------
-
 from .cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4,
                                   PointElement, PointMassElement)  # CMASS5
 from .cards.properties.mass import (PMASS, NSM)
-
-#--------------------------------
 from .cards.aero import (AEFACT, AELINK, AELIST, AEPARM, AESTAT, AESURF,
                          AESURFS, AERO, AEROS, CSSCHD, CAERO1, CAERO2, CAERO3,
                          CAERO4, CAERO5, FLFACT, FLUTTER, GUST, MKAERO1,
@@ -54,7 +47,6 @@ from .cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                       CORD2R, CORD2C, CORD2S, CORD3G)
 from .cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
 from .cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM)
-
 from .cards.loads.loads import (LSEQ, SLOAD, DLOAD, DAREA, TLOAD1, TLOAD2,
                                 RLOAD1, RLOAD2, RANDPS, RFORCE)
 from .cards.loads.staticLoads import (LOAD, GRAV, ACCEL1, FORCE,
@@ -72,19 +64,14 @@ from .cards.params import PARAM
 from .cards.sets import (ASET, BSET, CSET, QSET,
                          ASET1, BSET1, CSET1, QSET1,
                          SET1, SET3, SESET, SEQSEP, RADSET)
-
 from .cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD)
 from .cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                     PHBDY, CONV, RADM, RADBC,)
-
-
 from .cards.tables import (TABLED1, TABLED2, TABLED3,
                            TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                            TABLES1, TABLEST, TABRND1, TABRNDG, TIC)
-
 from pyNastran.bdf.caseControlDeck import CaseControlDeck
 from pyNastran.bdf.bdf_Methods import BDFMethods
-
 from .bdfInterface.getCard import GetMethods
 from .bdfInterface.addCard import AddMethods
 from .bdfInterface.BDF_Card import BDFCard
@@ -92,7 +79,6 @@ from .bdfInterface.bdf_Reader import BDFReader
 from .bdfInterface.bdf_writeMesh import WriteMesh
 from .bdfInterface.bdf_cardMethods import CardMethods
 from .bdfInterface.crossReference import XrefMesh
-
 
 class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
           CardMethods, XrefMesh):
@@ -105,10 +91,14 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
     def __init__(self, debug=True, log=None, nCardLinesMax=1000):
         """
         Initializes the BDF object
-        @param self the object pointer
-        @param debug used to set the logger if no logger is passed in
-        @param log a python logging module object
-        @param nCardLinesMax the number of lines of the longest card in the deck (default=1000)
+        @param self
+          the object pointer
+        @param debug
+          used to set the logger if no logger is passed in
+        @param log
+          a python logging module object
+        @param nCardLinesMax
+          the number of lines of the longest card in the deck (default=1000)
         """
         ## allows the BDF variables to be scoped properly (i think...)
         BDFReader.__init__(self, debug, log)
@@ -124,7 +114,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self._init_solution()
 
         ## flag that allows for OpenMDAO-style optimization syntax to be used
-        self.isDynamicSyntax = False
+        self._is_dynamic_syntax = False
         ## lines that were rejected b/c they were for a card
         ## that isnt supported
         self.rejects = []
@@ -136,7 +126,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.case_control_lines = []
 
         ## the list of possible cards that will be parsed
-        self.cardsToRead = {
+        self.cardsToRead = set([
             'PARAM',
             'GRID', 'GRDSET', 'SPOINT',  # 'RINGAX',
             'POINT',
@@ -258,10 +248,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             # other
             'INCLUDE',  # '='
             'ENDDATA',
-            }
+            ])
 
-        caseControlCards = {'FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
-                            'TEMP', 'TSTEPNL', 'INCLUDE'}
+        caseControlCards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
+                            'TEMP', 'TSTEPNL', 'INCLUDE'])
         self.uniqueBulkDataCards = self.cardsToRead.difference(
             caseControlCards)
 
@@ -297,9 +287,8 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
           1.  http://www.mscsoftware.com/support/library/conf/wuc87/p02387.pdf
         """
         self.bdf_filename = None
-        self.autoReject = False
-        self.solmap_toValue = {
-
+        self._auto_reject = False
+        self._solmap_to_value = {
             'NONLIN': 101,  # 66 -> 101 per Reference 1
             'SESTATIC': 101,
             'SESTATICS': 101,
@@ -344,7 +333,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             #'DIVERGE'  : None,
             'FLUTTER': 145,
             'SAERO': 146,
-        }
+            }
 
         self.rsolmap_toStr = {
             66: 'NONLIN',
@@ -407,7 +396,8 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.spoints = None
         ## stores GRIDSET card
         self.gridSet = None
-        ## stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD, etc.)
+        ## stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
+        ## etc.)
         self.elements = {}
         ## stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigidElements = {}
@@ -710,7 +700,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             #print "sol = |%s|" %(sol)
         except ValueError:
             #print "sol = |%r|" %(sol)
-            self.sol = self.solmap_toValue[sol]
+            self.sol = self._solmap_to_value[sol]
             #print "sol = ",self.sol
 
         if self.sol == 600:
@@ -742,7 +732,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                                    'len(%s)=%s' % (key, len(key)))
             self.dictOfVars[key.upper()] = value
 
-        self.isDynamicSyntax = True
+        self._is_dynamic_syntax = True
 
     def _is_case_control_deck(self, line):
         """@todo not done..."""
@@ -808,7 +798,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
         self.caseControlDeck = CaseControlDeck(self.case_control_lines,
                                                self.log)
-        self.caseControlDeck.solmap_toValue = self.solmap_toValue
+        self.caseControlDeck.solmap_toValue = self._solmap_to_value
         self.caseControlDeck.rsolmap_toStr = self.rsolmap_toStr
 
         #print "done w/ case control..."
@@ -999,7 +989,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 #cardName = oldCardObj.field(0)
 
             for iCard in xrange(nCards):
-                #print "----------------------------"
                 #if special:
                     #print "iCard = ",iCard
                 self.add_card(card, cardName, iCard=0, old_card_obj=None)
@@ -1037,7 +1026,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         warnings.warn('addCard has been deprecated; use add_card',
                       DeprecationWarning, stacklevel=2)
         return self.add_card(card, cardName, iCard=iCard,
-                             old_card_obj=oldCardObj)
 
     def add_card(self, card, cardName, iCard=0, old_card_obj=None):
         """
@@ -1081,7 +1069,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         #cardObj.applyOldFields(iCard)
 
         try:
-            if self.autoReject == True:
+            if self._auto_reject == True:
                 print('rejecting processed %s' % (card))
                 self.reject_cards.append(card)
             elif card == [] or cardName == '':

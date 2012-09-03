@@ -220,15 +220,15 @@ class TestFieldWriter(unittest.TestCase):
                                       1, None]))
 
 def compare(self, valueIn):
-        #print "a = |%s|" %(valueIn)
-        field = print_field(valueIn)
-        print("a = |%s|" % (field))
+    #print "a = |%s|" %(valueIn)
+    field = print_field(valueIn)
+    print("a = |%s|" % (field))
 
-        val = interpretValue(field)
-        if val != 0:
-            p = (val - valueIn) / val
-            if p > 0.01:
-                raise ValueError('val=%s valueIn=%s' % (val, valueIn))
+    val = interpretValue(field)
+    if val != 0:
+        p = (val - valueIn) / val
+        if p > 0.01:
+            raise ValueError('val=%s valueIn=%s' % (val, valueIn))
 
 if __name__ == "__main__":
     unittest.main()

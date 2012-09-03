@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 import copy
+
 from pyNastran.bdf import subcase
 from pyNastran.bdf.subcase import Subcase
 

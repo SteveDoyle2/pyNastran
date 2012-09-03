@@ -3,7 +3,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru_by, collapse_thru_by
+from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
+                                          collapse_thru_by)
 
 
 class ThermalCard(BaseCard):
@@ -37,7 +38,6 @@ class ThermalElement(ThermalCard):
             return self.pid
         else:
             return self.pid.pid
-        ###
 
 
 class ThermalProperty(ThermalCard):
@@ -97,7 +97,8 @@ class CHBDYE(ThermalElement):
         ## A VIEW entry identification number for the back face
         self.iViewBack = card.field(5, 0)
 
-        ## RADM identification number for front face of surface element (Integer > 0)
+        ## RADM identification number for front face of surface element
+        ## (Integer > 0)
         self.radMidFront = card.field(6, 0)
         ## RADM identification number for back face of surface element (Integer > 0)
         self.radMidBack = card.field(7, 0)
@@ -112,7 +113,7 @@ class CHBDYE(ThermalElement):
         ## [1,2,3]
 
         # id-1 is for the 0 based python index
-        nodes = [enodes[id - 1] for id in xrange(len(eid.nodes))  if id in sideIDs]
+        nodes = [enodes[id - 1] for id in xrange(len(eid.nodes)) if id in sideIDs]
         return side
 
     def rawFields(self):
@@ -177,7 +178,8 @@ class CHBDYG(ThermalElement):
         #self.pid = mesh.Phbdy(self.pid)
 
     def rawFields(self):
-        fields = ['CHBDYG', self.eid, None, self.Type, self.iViewFront, self.iViewBack, self.radMidFront, self.radMidBack, None,
+        fields = ['CHBDYG', self.eid, None, self.Type, self.iViewFront,
+                  self.iViewBack, self.radMidFront, self.radMidBack, None,
                   ] + self.grids
         return fields
 
@@ -187,8 +189,8 @@ class CHBDYG(ThermalElement):
         radMidFront = set_blank_if_default(self.radMidFront, 0)
         radMidBack = set_blank_if_default(self.radMidBack, 0)
 
-        fields = ['CHBDYG', self.eid, None, self.Type, iViewFront, iViewBack, radMidFront, radMidBack, None,
-                  ] + self.grids
+        fields = ['CHBDYG', self.eid, None, self.Type, iViewFront, iViewBack,
+                  radMidFront, radMidBack, None, ] + self.grids
         return fields
 
 
@@ -236,7 +238,9 @@ class CHBDYP(ThermalElement):
             ## Coordinate system for defining orientation vector. (Integer > 0;Default = 0
             self.ce = card.field(12, 0)
 
-            ## Components of the orientation vector in coordinate system CE. The origin of the orientation vector is grid point G1. (Real or blank)
+            ## Components of the orientation vector in coordinate system CE.
+            ## The origin of the orientation vector is grid point G1.
+            ## (Real or blank)
             self.e1 = card.field(13)
             self.e2 = card.field(14)
             self.e3 = card.field(15)
@@ -247,8 +251,10 @@ class CHBDYP(ThermalElement):
         self.pid = mesh.Phbdy(self.pid)
 
     def rawFields(self):
-        fields = ['CHBDYP', self.eid, self.Pid(), self.Type, self.iViewFront, self.iViewBack, self.g1, self.g2, self.g0,
-                  self.radMidFront, self.radMidBack, self.gmid, self.ce, self.e1, self.e2, self.e3]
+        fields = ['CHBDYP', self.eid, self.Pid(), self.Type, self.iViewFront,
+                  self.iViewBack, self.g1, self.g2, self.g0, self.radMidFront,
+                  self.radMidBack, self.gmid, self.ce, self.e1, self.e2,
+                  self.e3]
         return fields
 
     def reprFields(self):
@@ -260,8 +266,9 @@ class CHBDYP(ThermalElement):
         g0 = set_blank_if_default(self.g0, 0)
         ce = set_blank_if_default(self.ce, 0)
 
-        fields = ['CHBDYP', self.eid, self.Pid(), self.Type, iViewFront, iViewBack, self.g1, self.g2, g0,
-                  radMidFront, radMidBack, self.gmid, ce, self.e1, self.e2, self.e3]
+        fields = ['CHBDYP', self.eid, self.Pid(), self.Type, iViewFront,
+                  iViewBack, self.g1, self.g2, g0, radMidFront, radMidBack,
+                  self.gmid, ce, self.e1, self.e2, self.e3]
         return fields
 
 # Elements
@@ -271,8 +278,8 @@ class CHBDYP(ThermalElement):
 
 class PCONV(ThermalProperty):
     """
-    Specifies the free convection boundary condition properties of a boundary condition
-    surface element used for heat transfer analysis.
+    Specifies the free convection boundary condition properties of a boundary
+    condition surface element used for heat transfer analysis.
     """
     type = 'PCONV'
 
@@ -298,9 +305,11 @@ class PCONV(ThermalProperty):
         self.chlen = card.field(9)
         ## Grid ID of the referenced inlet point
         self.gidin = card.field(10)
-        ## Coordinate system for defining orientation vector. (Integer > 0;Default = 0
+        ## Coordinate system for defining orientation vector.
+        ## (Integer > 0;Default = 0
         self.ce = card.field(11, 0)
-        ## Components of the orientation vector in coordinate system CE. The origin of the orientation vector is grid point G1. (Real or blank)
+        ## Components of the orientation vector in coordinate system CE. The
+        ## origin of the orientation vector is grid point G1. (Real or blank)
         self.e1 = card.field(12)
         self.e2 = card.field(13)
         self.e3 = card.field(14)
@@ -309,8 +318,9 @@ class PCONV(ThermalProperty):
     #    pass
 
     def rawFields(self):
-        fields = ['PCONV', self.pconid, self.mid, self.form, self.expf, self.ftype, self.tid, None, None,
-                  self.chlen, self.gidin, self.ce, self.e1, self.e2, self.e3]
+        fields = ['PCONV', self.pconid, self.mid, self.form, self.expf,
+                  self.ftype, self.tid, None, None, self.chlen, self.gidin,
+                  self.ce, self.e1, self.e2, self.e3]
         return fields
 
     def reprFields(self):
@@ -318,15 +328,16 @@ class PCONV(ThermalProperty):
         expf = set_blank_if_default(self.expf, 0.0)
         ftype = set_blank_if_default(self.ftype, 0)
         ce = set_blank_if_default(self.ce, 0)
-        fields = ['PCONV', self.pconid, self.mid, form, expf, ftype, self.tid, None, None,
-                          self.chlen, self.gidin, ce, self.e1, self.e2, self.e3]
+        fields = ['PCONV', self.pconid, self.mid, form, expf, ftype, self.tid,
+                  None, None, self.chlen, self.gidin, ce, self.e1, self.e2,
+                  self.e3]
         return fields
 
 
 class PCONVM(ThermalProperty):
     """
-    Specifies the free convection boundary condition properties of a boundary condition
-    surface element used for heat transfer analysis.
+    Specifies the free convection boundary condition properties of a boundary
+    condition surface element used for heat transfer analysis.
     """
     type = 'PCONVM'
 
@@ -335,7 +346,8 @@ class PCONVM(ThermalProperty):
         self.pconid = card.field(1)
         ## Material property identification number. (Integer > 0)
         self.mid = card.field(2)
-        ## Type of formula used for free convection. (Integer 0, 1, 10, 11, 20, or 21)
+        ## Type of formula used for free convection.
+        ## (Integer 0, 1, 10, 11, 20, or 21)
         self.form = card.field(3, 0)
         assert self.form in [0, 1, 10, 11, 20, 21]
 
@@ -379,7 +391,8 @@ class PHBDY(ThermalProperty):
     type = 'PHBDY'
 
     def __init__(self, card=None, data=None):
-        ## Property identification number. (Unique Integer among all PHBDY entries). (Integer > 0)
+        ## Property identification number. (Unique Integer among all PHBDY
+        ## entries). (Integer > 0)
         self.pid = card.field(1)
 
         ## Area factor of the surface used only for CHBDYP element
@@ -388,7 +401,8 @@ class PHBDY(ThermalProperty):
         ## the hollow tube. (Real > 0.0 or blank)
         self.af = card.field(2)
 
-        ## Diameters associated with the surface. Used with CHBDYP element TYPE='ELCYL','TUBE','FTUBE'
+        ## Diameters associated with the surface. Used with CHBDYP element
+        ## TYPE='ELCYL','TUBE','FTUBE'
         self.d1 = card.field(3)
         self.d2 = card.field(4, self.d1)
 
@@ -410,14 +424,15 @@ class PHBDY(ThermalProperty):
 
 class CONV(ThermalBC):
     """
-    Specifies a free convection boundary condition for heat transfer analysis through
-    connection to a surface element (CHBDYi entry).
+    Specifies a free convection boundary condition for heat transfer analysis
+    through connection to a surface element (CHBDYi entry).
     """
     type = 'CONV'
 
     def __init__(self, card=None, data=None):
         #ThermalBC.__init__(self, card, data)
-        ## CHBDYG, CHBDYE, or CHBDYP surface element identification number. (Integer > 0)
+        ## CHBDYG, CHBDYE, or CHBDYP surface element identification number.
+        ## (Integer > 0)
         self.eid = card.field(1)
 
         ## Convection property identification number of a PCONV entry
@@ -453,10 +468,50 @@ class CONV(ThermalBC):
         fields = ['CONV', self.eid, self.pconID, flmnd, cntrlnd] + self.ta
         return fields
 
+class CONVM(ThermalBC):
+    """
+    Specifies a forced convection boundary condition for heat transfer analysis through connection to a
+    surface element (CHBDYi entry).
+    """
+    type = 'CONV'
+
+    def __init__(self, card=None, data=None):
+        self.eid = card.field(1)
+        self.pconvmID = card.field(2)
+        self.filmNode = card.field(3, 0)
+        self.cntmdot = card.field(4)
+        self.ta1 = card.field(5)
+        self.ta2 = card.field(6,self.ta1)
+        self.mdot = card.field(7, 1.0)
+
+    def cross_reference(self, model):
+        self.eid = model.CYBDY(self.eid)
+        self.pconvmID = model.PCONV(self.pconvmID)
+        self.filmNode = model.Grid(self.filmNode)
+
+    def film_node(self):
+        if isinstance(self.filmNode, int):
+            return self.filmNode
+        return self.filmNode.nid
+
+    def rawFields(self):
+        fields = ['CONVM', self.eid, self.pconvmID, self.filmNode, self.cntmdot,
+                  self.ta1, self.ta2, self.mdot]
+        return fields
+
+    def reprFields(self):
+        filmNode = set_blank_if_default(self.filmNode, 0)
+        ta2 = set_blank_if_default(self.ta2, self.ta1)
+        mdot = set_blank_if_default(self.mdot, 1.0)
+        fields = ['CONVM', self.eid, self.pconvmID, filmNode, self.cntmdot,
+                  self.ta1, ta2, mdot]
+        return fields
+
 
 class RADM(ThermalBC):
     """
-    Defines the radiation properties of a boundary element for heat transfer analysis
+    Defines the radiation properties of a boundary element for heat transfer
+    analysis
     """
     type = 'RADM'
 
@@ -481,7 +536,8 @@ class RADM(ThermalBC):
 
 class RADBC(ThermalBC):
     """
-    Specifies an CHBDYi element face for application of radiation boundary conditions
+    Specifies an CHBDYi element face for application of radiation boundary
+    conditions
     """
     type = 'RADBC'
 
@@ -490,7 +546,8 @@ class RADBC(ThermalBC):
 
         ## NODAMB Ambient point for radiation exchange. (Integer > 0)
         self.nodamb = card.field(1)
-        ## Radiation view factor between the face and the ambient point. (Real > 0.0)
+        ## Radiation view factor between the face and the ambient point.
+        ## (Real > 0.0)
         self.famb = card.field(2)
         ## Control point for thermal flux load. (Integer > 0; Default = 0)
         self.cntrlnd = card.field(3, 0)

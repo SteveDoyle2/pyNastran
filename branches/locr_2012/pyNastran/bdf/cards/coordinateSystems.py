@@ -69,7 +69,6 @@ class Coord(BaseCard):
         #print "e3 = ",self.e3
 
         try:
-
             ## k = (G3 cross G1) normalized
             self.k = self.normalize(e12)
             ## j = (k cross e13) normalized
@@ -128,6 +127,7 @@ class Coord(BaseCard):
         #    raise CoordTypeError(msg)
         #print "k = %s" %(self.k)
         #print "e13 = %s" %(e13)
+
     def transformToLocal(self, p, matrix, debug=False):
         r"""
         Transforms the global point p to the local coordinate system
@@ -328,7 +328,7 @@ class Cord2x(Coord):
             self.e2 = array(data[5:8])
             self.e3 = array(data[8:11])
             assert len(data) == 11, 'data = %s' % (data)
-        ###
+
         assert len(self.e1) == 3
         assert len(self.e2) == 3
         assert len(self.e3) == 3
@@ -354,8 +354,9 @@ class Cord2x(Coord):
         #print "cid=%s rid=%s"%(self.cid, self.Rid())
         if self.cid == 0 or isinstance(self.rid, int) or self.rid.isResolved:
             return  # rid=0 so already resolved
-        elif self.rid.isResolved == False:  # rid
-            #msg  = 'there is a circular reference between Coord %s and Coord %s' %(self.cid,self.Rid()
+        elif self.rid.isResolved is False:  # rid
+            msg  = ('there is a circular reference between Coord %s and '
+                    'Coord %s' %(self.cid,self.Rid()))
             #assert self.rid.isCrossReferenced==False,msg)
             #print "  resolving cid=%s rid=%s" %(self.cid,self.Rid())
             self.rid.resolveCid()
@@ -661,16 +662,16 @@ class CORD3G(Coord):  # not done
 
     def rawFields(self):
         method = self.methodES + str(self.methodInt)
-        fields = ['CORD3G', self.cid, method, self.form
-                 ] + self.thetas + [self.CidRef()]
+        fields = (['CORD3G', self.cid, method, self.form] + self.thetas +
+                  [self.CidRef()])
         return fields
 
 
 class CORD1R(Cord1x, RectangularCoord):
-    type = 'CORD1R'
     """
     CORD1R CIDA G1A G2A G3A CIDB G1B G2B G3B
     """
+    type = 'CORD1R'
 
     def __init__(self, card=None, nCoord=0, data=None):
         """
@@ -691,10 +692,11 @@ class CORD1R(Cord1x, RectangularCoord):
 
 
 class CORD1C(Cord1x, CylindricalCoord):
-    type = 'CORD1C'
     """
     CORD1C CIDA G1A G2A G3A CIDB G1B G2B G3B
     """
+    type = 'CORD1C'
+
     def __init__(self, card=None, nCoord=0, data=None):
         """
         Intilizes the CORD1R
@@ -744,7 +746,8 @@ class CORD1S(Cord1x, SphericalCoord):
 class CORD2R(Cord2x, RectangularCoord):
     type = 'CORD2R'
 
-    def __init__(self, card=None, data=[0, 0, 0., 0., 0., 0., 0., 1., 1., 0., 0.]):
+    def __init__(self, card=None,
+                 data=[0, 0, 0., 0., 0., 0., 0., 1., 1., 0., 0.]):
         """
         Intilizes the CORD2R
         @param self
@@ -754,7 +757,6 @@ class CORD2R(Cord2x, RectangularCoord):
         @param data
           a list version of the fields (1 CORD2R only)
         """
-        #print card
         Cord2x.__init__(self, card, data)
 
     def rawFields(self):
@@ -781,8 +783,8 @@ class CORD2S(Cord2x, SphericalCoord):
 
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
-        fields = ['CORD2S', self.cid, rid] + list(self.e1) + list(
-            self.e2) + list(self.e3)
+        fields = (['CORD2S', self.cid, rid] + list(self.e1) + list(self.e2) +
+                  list(self.e3))
         return fields
 
 
@@ -803,6 +805,6 @@ class CORD2C(Cord2x, CylindricalCoord):
 
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
-        fields = ['CORD2C', self.cid, rid] + list(self.e1) + list(
-            self.e2) + list(self.e3)
+        fields = (['CORD2C', self.cid, rid] + list(self.e1) + list(self.e2) +
+                  list(self.e3))
         return fields
