@@ -6,14 +6,16 @@ import unittest
 from pyNastran.bdf.fieldWriter import (print_field, print_float_8,
                                        set_default_if_blank,
                                        set_blank_if_default)
-from pyNastran.bdf.fieldWriter import printCard as print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_field_16, print_float_16
+
 
 from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpretValue
 
 
 class TestFieldWriter(unittest.TestCase):
 
-    def test_field_vals(self):
+    def test_field_vals_8(self):
         self.assertEquals(print_field(1e20),     '   1.+20',
                           print_field(1e20))
         self.assertEquals(print_field(-.723476), '-.723476',
@@ -41,7 +43,7 @@ class TestFieldWriter(unittest.TestCase):
             self.compare(a2)
             self.compare(-a2)
 
-    def test_strings(self):
+    def test_strings_8(self):
         self.assertEquals(print_field(None), '        ',
                           print_field(None))
         self.assertEquals(print_field('asdf'), '    asdf',
@@ -49,6 +51,15 @@ class TestFieldWriter(unittest.TestCase):
         self.assertEquals(print_field('  asdf  '), '  asdf  ',
                           print_field('  asdf  '))
         self.assertRaises(RuntimeError, print_field, '  asdf   ')
+
+    def test_strings_16(self):
+        self.assertEquals(print_field_16(None),         '                ',
+                          print_field_16(None))
+        self.assertEquals(print_field_16('asdf'),       '            asdf',
+                          print_field_16('asdf'))
+        self.assertEquals(print_field_16('  asdf  '),   '          asdf  ',
+                          print_field_16('  asdf  '))
+        self.assertRaises(RuntimeError, print_field_16, '          asdf   ')
 
     def test_field_defaults(self):
         self.assertEqual(set_blank_if_default(0.0, 0.0), None,
@@ -81,14 +92,27 @@ class TestFieldWriter(unittest.TestCase):
 
         #set_default_if_blank
 
-    def test_ints(self):
+    def test_ints_8(self):
         self.assertEquals(print_field(1), '       1', 'a')
         self.assertEquals(print_field(12345678), '12345678', 'b')
+        self.assertRaises(RuntimeError, print_field, 123456789)
         self.assertEquals(print_field('12345678'), '12345678', 'c')
-        #self.assertEquals(print_field('1       '),'       1',
-        #                  '|%s|' %(printField('1       ')))
+        self.assertEquals(print_field('1       '),'1       ',
+                          '|%s|' %(print_field('1       ')))
 
-    def test_floats_positive(self):
+    def test_ints_16(self):
+        self.assertEquals(print_field_16(1), '               1', 'a')
+        self.assertEquals(print_field_16(12345678), '        12345678', 'b')
+        self.assertEquals(print_field_16(1234567890123456), '1234567890123456', 'c')
+        self.assertRaises(RuntimeError, print_field_16, 12345678901234567)
+
+        #msg = print_field_16('12345678        ')
+        #msg = '|%s| len(msg)=%s' %(msg, len(msg))
+        #self.assertEquals(print_field_16('12345678'), '12345678        ',msg)
+        self.assertEquals(print_field_16('1               '),'1               ',
+                          '|%s|' %(print_field('1       ')))
+
+    def test_floats_positive_8(self):
         tol = 1.0
         self.assertEquals(print_float_8(1.2, tol), '     1.2',
                           print_float_8(1.2, tol))
@@ -142,7 +166,7 @@ class TestFieldWriter(unittest.TestCase):
         self.assertEquals(print_field(1.0),  '      1.',
                           print_field(1.0))
 
-    def test_floats_negative(self):
+    def test_floats_negative_8(self):
         self.assertEquals(print_field(-1.2), '    -1.2',
                           print_field(-1.2))
         self.assertEquals(print_field(-1.23456789), '-1.23457',
@@ -194,27 +218,27 @@ class TestFieldWriter(unittest.TestCase):
                           'N|%s|' % print_field(-1e-20))
 
     def test_print_card_8(self):
-        self.assertEquals(print_card(['GRID',1]),'GRID           1\n')
-        self.assertEquals(print_card(['GRID', 1, None, None, None, None, None,
+        self.assertEquals(print_card_8(['GRID',1]),'GRID           1\n')
+        self.assertEquals(print_card_8(['GRID', 1, None, None, None, None, None,
                                       None, None, 1]),
                           'GRID           1\n               1\n',
-                          print_card(['GRID', 1, None, None, None, None, None,
+                          print_card_8(['GRID', 1, None, None, None, None, None,
                                       None, None, 1]))
 
-        self.assertEquals(print_card(['GRID', 1, None, None, None, None, None,
+        self.assertEquals(print_card_8(['GRID', 1, None, None, None, None, None,
                                       None, None,
                                       1, None]),
                           'GRID           1\n               1\n',
-                          print_card(['GRID', 1, None, None, None, None, None,
+                          print_card_8(['GRID', 1, None, None, None, None, None,
                                       None, None,
                                       1, None]))
 
-        self.assertEquals(print_card(['GRID', 1, None, None, None, None, None,
+        self.assertEquals(print_card_8(['GRID', 1, None, None, None, None, None,
                                       None, None,
                                       None,None,None,None,None,None,None,None,
                                       1, None]),
                           'GRID           1\n+\n               1\n',
-                          print_card(['GRID', 1, None, None, None, None, None,
+                          print_card_8(['GRID', 1, None, None, None, None, None,
                                       None, None,
                                       None,None,None,None,None,None,None,None,
                                       1, None]))
