@@ -1026,6 +1026,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         warnings.warn('addCard has been deprecated; use add_card',
                       DeprecationWarning, stacklevel=2)
         return self.add_card(card, cardName, iCard=iCard,
+                             old_card_obj=oldCardObj)
 
     def add_card(self, card, cardName, iCard=0, old_card_obj=None):
         """
