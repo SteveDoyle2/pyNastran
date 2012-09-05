@@ -587,7 +587,7 @@ class Cart3DAsciiReader(object):
            1.  folding angle A-B x A-C
            2a. abs(A-C) - abs(B-D)  = 0  (abs to prevent 2L)
            2b. abs(A-B) - abs(C-D)  = 0
-        @encode
+        @endcode
         """
 
         iplus1 = i + 1

@@ -11,11 +11,11 @@ general Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`generalMath` Module
+:mod:`mathematics` Module
 -------------------------
 
 
-.. automodule:: pyNastran.general.generalMath
+.. automodule:: pyNastran.general.mathematics
     :members:
     :private-members:
     :undoc-members:
@@ -41,16 +41,13 @@ general Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`matrixMethods` Module
----------------------------
 
+:mod:`utils` Module
+---------------------
 
-.. automodule:: pyNastran.general.matrixMethods
+.. automodule:: pyNastran.general.utils
     :members:
     :private-members:
     :undoc-members:
     :show-inheritance:
-
-
-
 

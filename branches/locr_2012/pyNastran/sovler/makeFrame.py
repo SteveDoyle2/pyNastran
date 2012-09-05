@@ -5,7 +5,7 @@ from numpy.linalg import solve
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.general.general import ListPrint
-from pyNastran.general.generalMath import reduceMatrix
+from pyNastran.general.mathematics import reduceMatrix
 
 
 def makeTruss2():

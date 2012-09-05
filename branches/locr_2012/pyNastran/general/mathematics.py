@@ -1,17 +1,20 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function
-import sys
+#import sys
 
-from numpy import (float32, float64, complex64, complex128,
-                   array, cross, allclose, zeros, matrix, insert, diag)
+from numpy import (float32, float64, complex64, complex128, array, cross, 
+                   allclose, zeros, matrix, insert, diag)
 from numpy.linalg import norm  # , solve
 
 from scipy.linalg import solve_banded
 from scipy.interpolate import splrep, splev
 from scipy.integrate import quad
 
-if sys.version_info < (3, 0):
-    # "fixes" bug where scipy screws up return code handling
-    import scipy.weave
+from math import sqrt
+
+#if sys.version_info < (3, 0):
+#    # "fixes" bug where scipy screws up return code handling
+#    import scipy.weave
 
 
 def integrateLine(x, y):
@@ -27,7 +30,7 @@ def integrateLine(x, y):
         spline = buildSpline(x, y)
         #y = splev(xi,spline)
         # integrate the area; y=f(x); A=integral(y*dx,x)
-        out = quad(scipy.splev, 0., 1., args=(spline))
+        out = quad(splev, 0., 1., args=(spline))
         
         A = out[0]
     except:
@@ -125,8 +128,7 @@ def printAnnotatedMatrix(A, rowNames=None, tol=1e-8):
         rowNames = [i for i in xrange(A.shape[0])]
     B = array(A)
     msg = ''
-    (nr, nc) = B.shape
-    for i in xrange(nr):
+    for i in xrange(B.shape[0]):
         rowName = str(rowNames[i])
         msg += '%-2s' % (rowName) + ' ' + ListPrint(B[i, :], tol) + '\n'
     return msg
@@ -135,8 +137,7 @@ def printAnnotatedMatrix(A, rowNames=None, tol=1e-8):
 def printMatrix(A, tol=1e-8):
     B = array(A)
     msg = ''
-    (nr, nc) = B.shape
-    for i in xrange(nr):
+    for i in xrange(B.shape[0]):
         msg += ListPrint(B[i, :], tol) + '\n'
     #for row in A:
     #    msg += ListPrint(row)+'\n'
@@ -213,12 +214,12 @@ def solveTridag(A, D):
     return solve_banded((1, 1), ab, D, overwrite_ab=True, overwrite_b=True)
 
 
-def Area(a, b):
-    return 0.5 * norm(cross(a, b))
+Area = lambda a, b: 0.5 * norm(cross(a, b))
 
 
 def AreaNormal(nodes):
     """
+    @code
     Returns area,unitNormal
     n = Normal = a x b
     Area   = 1/2 * |a x b|
@@ -227,6 +228,7 @@ def AreaNormal(nodes):
 
     Area = 0.5 * |n|
     unitNormal = n/|n|
+    @endcode
     """
     (n0, n1, n2) = nodes
     a = n0 - n1
@@ -244,23 +246,92 @@ def AreaNormal(nodes):
     return (area, normal)
 
 
-def Triangle_AreaCentroidNormal(nodes):
-    """Returns area,centroid,unitNormal"""
+def Triangle_AreaCentroidNormal(nodes): 
+    '''
+    Returns area,centroid,unitNormal
+    
+    @param nodes:
+      list of three triangle vertices
+    '''
+    
     (area, normal) = AreaNormal(nodes)
-    centroid = Centroid(*nodes)
-    return (area, centroid, normal)
+    return (area, centroid(*nodes), normal) #pylint: disable=W0142
 
 
 def Normal(a, b):
-    """finds the unit normal vector of 2 vectors"""
+    """Finds the unit normal vector of 2 vectors"""
     vector = cross(a, b)
-    length = norm(vector)
-    normal = vector / length
+    normal = vector / norm(vector)
     assert allclose(norm(normal), 1.)
     return normal
 
 
-def Centroid(A, B, C):
-    """returns the centroid of a triangle"""
-    centroid = (A + B + C) / 3.
-    return centroid
+def centroid(A, B, C):
+    """Returns the centroid of a triangle A, B, C"""
+    return (A + B + C) / 3.
+
+
+
+def gauss(n):
+    r"""
+    A quadrature rule: an approximation of the definite integral of a function.
+    Currently implementation supports up to 5 quadrature points.
+    
+    Function returns following values depending on n (number of points):
+    
+    * n = 1:
+    
+     * \f$ 0 \f$ --> \f$ 2 \f$
+    
+    * n = 2:
+    
+     * \f$ \pm 1/\sqrt{3} \f$ --> \f$ 1 \f$ 
+    
+    * n = 3
+    
+     * \f$ 0 \f$   --> \f$ 8/9 \f$
+     * \f$ \pm\sqrt{3/5} \f$ --> \f$ 5/9 \f$ 
+    
+    * n = 4:
+    
+     * \f$ \pm\sqrt{\left( 3 - 2\sqrt{6/5} \right)/7} \f$ --> \f$ (18+\sqrt{30})/36 \f$
+     * \f$ \pm\sqrt{\left( 3 + 2\sqrt{6/5} \right)/7} \f$ --> \f$ (18-\sqrt{30})/36 \f$ 
+    
+    * n = 5:
+     
+     - \f$ 0 \f$ --> \f$ 128/225 \f$     
+     - \f$ \pm\frac{1}{3}\sqrt{5-2\sqrt{10/7}} \f$ --> \f$ (322+13\sqrt{70})/900 \f$ 
+     - \f$ \pm\frac{1}{3}\sqrt{5+2\sqrt{10/7}} \f$ --> \f$ (322-13\sqrt{70})/900 \f$ 
+    
+    
+    @param n
+      Number of quadrature points
+    @retval
+      Two lists: points and corresponding weights, sorted by points value
+      
+    @see http://en.wikipedia.org/wiki/Gaussian_quadrature
+    """
+ 
+    if n == 1:
+        return ([0.], [2.])
+    if n == 2:
+        p = 1. / sqrt(3)
+        return ([-p, p], [1.,1.])
+    if n == 3:
+        p = sqrt(3 / 5.)
+        return ([-p, 0., p], [5 / 9., 8 / 9., 5 / 9.])     
+    if n == 4:
+        p1 = (3 - 2. * sqrt(6 / 5)) / 7.
+        p2 = (3 + 2. * sqrt(6 / 5)) / 7.
+        w1 = (18 + sqrt(30)) / 36.
+        w2 = (18 - sqrt(30)) / 36.
+        return ([-p2, -p1, p1, p2], [w2, w1, w1, w2])
+    if n == 5:
+        p1 = 1 / 3. * sqrt(5 - 2 * sqrt(10. / 7.))
+        p2 = 1 / 3. * sqrt(5 + 2 * sqrt(10. / 7.))
+        w1 = (322 + 13 * sqrt(70)) / 900.
+        w2 = (322 - 13 * sqrt(70)) / 900.
+        return ([-p2, -p1, 0, p1, p2], [w2, w1, 128 / 225., w1, w2])
+        
+    raise NotImplementedError('The current implementation only supports up to ' 
+                              '5 quadrature points')

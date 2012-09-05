@@ -20,7 +20,7 @@ from numpy import zeros, pi
 
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
-from pyNastran.general.generalMath import integrateLine, integratePositiveLine
+from pyNastran.general.mathematics import integrateLine, integratePositiveLine
 from pyNastran.bdf.cards.baseCard import Property
 
 

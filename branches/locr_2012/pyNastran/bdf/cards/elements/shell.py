@@ -9,7 +9,7 @@ from numpy.linalg import det  # inv
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
 from pyNastran.bdf.cards.baseCard import Element
-from pyNastran.general.generalMath import (Area, Triangle_AreaCentroidNormal,
+from pyNastran.general.mathematics import (Area, Triangle_AreaCentroidNormal,
                                            Normal)
 
 

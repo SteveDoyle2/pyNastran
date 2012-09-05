@@ -5,7 +5,7 @@ from itertools import izip
 from numpy import array, zeros, ones
 from numpy.linalg import solve
 
-from pyNastran.general.generalMath import printMatrix, printAnnotatedMatrix
+from pyNastran.general.mathematics import printMatrix, printAnnotatedMatrix
 from pyNastran.bdf.bdf import BDF, SPC, SPC1
 from pyNastran.f06.f06 import F06
 from pyNastran.op2.op2 import OP2

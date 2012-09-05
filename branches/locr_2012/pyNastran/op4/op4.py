@@ -6,7 +6,7 @@ from numpy import (array, zeros, float32, float64, complex64, complex128,
                   allclose)
 from scipy.sparse import coo_matrix
 from pyNastran.general.general import is_binary
-from pyNastran.general.generalMath import printMatrix, printAnnotatedMatrix
+from pyNastran.general.mathematics import printMatrix, printAnnotatedMatrix
 from pyNastran.op2.fortranFile import FortranFile
 
 

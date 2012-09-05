@@ -333,11 +333,13 @@ class PCOMP(ShellProperty):
     def nPlies(self):
         """
         returns the number of plies including the core
+        @code
         if Lam=SYM:
-            returns nPlies*2   (even)
-            returns nPlies*2-1 (odd)
+          returns nPlies*2   (even)
+          returns nPlies*2-1 (odd)
         else:
-            returns nPlies
+          returns nPlies
+        @endcode
         """
         nPlies = len(self.plies)
         if self.isSymmetrical():
@@ -463,7 +465,7 @@ class PCOMP(ShellProperty):
         mass = rho*A*t
         but area comes from the element, so:
         \f[ \large  \frac{m}{A} =\rho t + nsm \f]
-          mass/A = rho*t for the various layers
+        mass/A = rho*t for the various layers
         the final mass calculation will be done later
         @param self
           the PCOMP object
