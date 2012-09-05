@@ -192,7 +192,6 @@ def augmentedIdentity(A):
     The location of the extra zeros depends on A.
     """
     (nx, ny) = A.shape
-    #(ny,nx) = A.shape
     I = zeros([nx, ny], 'd')
 
     for i in xrange(nx):
@@ -202,75 +201,17 @@ def augmentedIdentity(A):
     return I
 
 
-def solveTridag(A, D):
+def solve_tridag(A, D):
     # Find the diagonals
     ud = insert(diag(A, 1), 0, 0)  # upper diagonal
     d = diag(A)  # main diagonal
     ld = insert(diag(A, -1), len(d) - 1, 0)  # lower diagonal
-
     # simplified matrix
     ab = matrix([ud, d, ld])
-    #print "ab = ",ab
     return solve_banded((1, 1), ab, D, overwrite_ab=True, overwrite_b=True)
 
 
 Area = lambda a, b: 0.5 * norm(cross(a, b))
-
-
-def AreaNormal(nodes):
-    """
-    @code
-    Returns area,unitNormal
-    n = Normal = a x b
-    Area   = 1/2 * |a x b|
-    V = <v1,v2,v3>
-    |V| = sqrt(v1^0.5+v2^0.5+v3^0.5) = norm(V)
-
-    Area = 0.5 * |n|
-    unitNormal = n/|n|
-    @endcode
-    """
-    (n0, n1, n2) = nodes
-    a = n0 - n1
-    b = n0 - n2
-    vector = cross(a, b)
-    length = norm(vector)
-    normal = vector / length
-    area = 0.5 * length
-    if allclose(norm(normal), 1.) == False:
-        print("a = ", a)
-        print("b = ", b)
-        print("normal = ", normal)
-        print("length = ", length)
-        raise RuntimeError('check...')
-    return (area, normal)
-
-
-def Triangle_AreaCentroidNormal(nodes): 
-    '''
-    Returns area,centroid,unitNormal
-    
-    @param nodes:
-      list of three triangle vertices
-    '''
-    
-    (area, normal) = AreaNormal(nodes)
-    return (area, centroid(*nodes), normal) #pylint: disable=W0142
-
-
-def Normal(a, b):
-    """Finds the unit normal vector of 2 vectors"""
-    vector = cross(a, b)
-    normal = vector / norm(vector)
-    assert allclose(norm(normal), 1.)
-    return normal
-
-
-def centroid(A, B, C):
-    """Returns the centroid of a triangle A, B, C"""
-    return (A + B + C) / 3.
-
-
 
 def gauss(n):
     r"""

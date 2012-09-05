@@ -3,15 +3,48 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 
-from numpy import array, eye, cross  # zeros,dot
+from numpy import array, eye, cross, allclose  # zeros,dot
 from numpy.linalg import det  # inv
 
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
 from pyNastran.bdf.cards.baseCard import Element
-from pyNastran.general.mathematics import (Area, Triangle_AreaCentroidNormal,
-                                           Normal)
+from pyNastran.general.mathematics import (Area, norm)
 
+def _triangle_area_centroid_normal(nodes): 
+    """
+    Returns area,centroid,unitNormal
+    
+    @param nodes:
+      list of three triangle vertices
+      
+    @code
+    n = Normal = a x b
+    Area   = 1/2 * |a x b|
+    V = <v1,v2,v3>
+    |V| = sqrt(v1^0.5+v2^0.5+v3^0.5) = norm(V)
+
+    Area = 0.5 * |n|
+    unitNormal = n/|n|
+    @endcode
+    """
+    (n0, n1, n2) = nodes
+    vector = cross(n0 - n1, n0 - n2)
+    length = norm(vector)
+    normal = vector / length
+    if allclose(norm(normal), 1.) == False:
+        raise RuntimeError('function _triangle_area_centroid_normal, check...'
+                    '\na = {0}\nb = {1}\nnormal = {2}\nlength = {3}\n'.format(
+                    n0 - n1, n0 - n2, normal, length))
+
+    return (0.5 * length, (n0 + n1 + n2) /3, normal)
+
+def _normal(a, b):
+    """Finds the unit normal vector of 2 vectors"""
+    vector = cross(a, b)
+    normal = vector / norm(vector)
+    assert allclose(norm(normal), 1.)
+    return normal
 
 class ShellElement(Element):
     type = 'ShellElement'
@@ -66,7 +99,7 @@ class TriShell(ShellElement):
         returns area,centroid, normal as it's more efficient to do them together
         """
         (n0, n1, n2) = self.nodePositions()
-        return Triangle_AreaCentroidNormal([n0, n1, n2])
+        return _triangle_area_centroid_normal([n0, n1, n2])
 
     def Area(self):
         r"""
@@ -86,9 +119,7 @@ class TriShell(ShellElement):
         \f[ \large n = \frac{n}{norm(N)}           \f]
         """
         (n0, n1, n2) = self.nodePositions()
-        a = n0 - n1
-        b = n0 - n2
-        return Normal(a, b)
+        return _normal(n0 - n1, n0 - n2)
 
     def Centroid(self, debug=False):
         r"""
@@ -273,7 +304,7 @@ class CTRIA6(TriShell):
         returns area,centroid, normal as it's more efficient to do them together
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
-        return Triangle_AreaCentroidNormal([n1, n2, n3])
+        return _triangle_area_centroid_normal([n1, n2, n3])
 
     def Area(self):
         r"""
@@ -292,10 +323,8 @@ class CTRIA6(TriShell):
         \f[ \large a = (n_0-n_1) \times (n_0-n_2)  \f]
         \f[ \large n = \frac{n}{norm(N)}           \f]
         """
-        (n1, n2, n3, n4, n5, n6) = self.nodePositions()
-        a = n1 - n2
-        b = n1 - n3
-        return Normal(a, b)
+        (n0, n1, n2) = self.nodePositions()[:3]
+        return _normal(n0 - n1, n0 - n2)
 
     def Centroid(self, debug=False):
         r"""
@@ -507,9 +536,7 @@ class QuadShell(ShellElement):
 
     def Normal(self):
         (n1, n2, n3, n4) = self.nodePositions()
-        a = n1 - n3
-        b = n2 - n4
-        return Normal(a, b)
+        return _normal(n1 - n3, n2 - n4)
 
     def AreaCentroidNormal(self):
         (area, centroid) = self.AreaCentroid()
@@ -664,9 +691,7 @@ class CSHEAR(QuadShell):
 
     def Normal(self):
         (n1, n2, n3, n4) = self.nodePositions()
-        a = n1 - n3
-        b = n2 - n4
-        return Normal(a, b)
+        return _normal(n1 - n3, n2 - n4)
 
     def AreaCentroidNormal(self):
         (area, centroid) = self.AreaCentroid()
@@ -1019,10 +1044,8 @@ class CQUAD8(QuadShell):
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5]
 
     def Normal(self):
-        (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()
-        a = n1 - n3
-        b = n2 - n4
-        return Normal(a, b)
+        (n1, n2, n3, n4) = self.nodePositions()[:4]
+        return _normal(n1 - n3, n2 - n4)
 
     def AreaCentroid(self, debug=False):
         """
