@@ -5,7 +5,7 @@ from numpy.linalg import solve
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.general.general import ListPrint
-from pyNastran.general.mathematics import reduceMatrix
+from pyNastran.general.mathematics import reduce_matrix
 
 
 def makeTruss2():
@@ -252,8 +252,8 @@ def applyBoundaryConditions(model, Kg):
     #print "notNids =\n",notNids
     print "nids = ", nids
     print "Kg2 =\n", ListPrint(Kg)
-    Kr = reduceMatrix(Kg, nids)
-    #Kr = reduceMatrix(Kg,notNids)
+    Kr = reduce_matrix(Kg, nids)
+    #Kr = reduce_matrix(Kg,notNids)
     print "Kreduced =\n", ListPrint(Kr)
     return Kr
 

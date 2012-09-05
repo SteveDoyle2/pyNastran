@@ -20,7 +20,7 @@ from numpy import zeros, pi
 
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
-from pyNastran.general.mathematics import integrateLine, integratePositiveLine
+from pyNastran.general.mathematics import integrate_line, integrate_positive_line
 from pyNastran.bdf.cards.baseCard import Property
 
 
@@ -475,29 +475,29 @@ class IntegratedLineProperty(LineProperty):
         LineProperty.__init__(self, card, data)
 
     def Area(self):
-        A = integratePositiveLine(self.xxb, self.A)
+        A = integrate_positive_line(self.xxb, self.A)
         return A
 
     def J(self):
-        J = integratePositiveLine(self.xxb, self.j)
+        J = integrate_positive_line(self.xxb, self.j)
         return J
 
     def I11(self):
-        i1 = integratePositiveLine(self.xxb, self.i1)
+        i1 = integrate_positive_line(self.xxb, self.i1)
         return i1
 
     def I22(self):
-        i2 = integratePositiveLine(self.xxb, self.i2)
+        i2 = integrate_positive_line(self.xxb, self.i2)
         return i2
 
     def I12(self):
-        i12 = integrateLine(self.xxb, self.i12)
+        i12 = integrate_line(self.xxb, self.i12)
         return i12
 
     def Nsm(self):
         #print "xxb = ",self.xxb
         #print "nsm = ",self.nsm
-        nsm = integratePositiveLine(self.xxb, self.nsm)
+        nsm = integrate_positive_line(self.xxb, self.nsm)
         return nsm
 
 
@@ -1138,7 +1138,7 @@ class PBEAM(IntegratedLineProperty):
         massPerLs = []
         for (area, nsm) in izip(self.A, self.nsm):
             massPerLs.append(area * rho + nsm)
-        massPerL = integratePositiveLine(self.xxb, massPerLs)
+        massPerL = integrate_positive_line(self.xxb, massPerLs)
         return massPerL
 
     def cross_reference(self, model):
@@ -1355,14 +1355,14 @@ class PBEAML(IntegratedLineProperty):
             except:
                 msg = "PBEAML a*rho+nsm a=%s rho=%s nsm=%s" % (a, rho, nsm)
                 raise RuntimeError(msg)
-        massPerL = integratePositiveLine(self.xxb, massPerLs)
+        massPerL = integrate_positive_line(self.xxb, massPerLs)
         return massPerL
 
     def Area(self):
         Areas = []
         for dim in self.dim:
             Areas.append(self.areaL(dim))
-        A = integrateLine(self.xxb, Areas)
+        A = integrate_line(self.xxb, Areas)
         return A
 
     #def Mid(self):
@@ -1393,22 +1393,22 @@ class PBEAML(IntegratedLineProperty):
 
     def J(self):
         #Js = self._J()
-        #j = integratePositiveLine(self.xxb, Js)
+        #j = integrate_positive_line(self.xxb, Js)
         j = None
         return j
 
     def I11(self):
-        #i1 = integratePositiveLine(self.xxb,self.i1)
+        #i1 = integrate_positive_line(self.xxb,self.i1)
         i1 = None
         return i1
 
     def I22(self):
-        #i2 = integratePositiveLine(self.xxb,self.i2)
+        #i2 = integrate_positive_line(self.xxb,self.i2)
         i2 = None
         return i2
 
     def I12(self):
-        #i12 = integrateLine(self.xxb,self.i12)
+        #i12 = integrate_line(self.xxb,self.i12)
         i12 = None
         return i12
 

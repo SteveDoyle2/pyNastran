@@ -960,7 +960,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 #print " rejecting card = ",card
                 #card = self.processCard(card)
 
-            #print "card2 = ",ListPrint(card)
+            #print "card2 = ",list_print(card)
             #print "card = ",card
             #cardName = self._get_card_name(card)
 

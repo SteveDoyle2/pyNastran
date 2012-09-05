@@ -10,7 +10,7 @@ from numpy import array, zeros, ones
 from panairGridPatch import PanairPatch, PanairWakePatch, PanairGridHelper
 from panairWrite import PanairWrite
 
-#from pyNastran.general.general import ListPrint
+#from pyNastran.general.general import list_print
 
 #CL = -Fx*sin(alpha)*cos(beta) + Fy*sin(alpha)*sin(beta) +Fz*cos(alpha)
 #CD =  Fx*cos(alpha)*cos(beta) - Fy*cos(alpha)*sin(beta) +Fz*sin(alpha)
@@ -211,8 +211,8 @@ class PanairGrid(PanairGridHelper, PanairWrite):
             point2 = array([x2, y2, z2])
             #point1 = [x1,y1,z1]
             #point2 = [x2,y2,z2]
-            #print ListPrint(point1)
-            #print ListPrint(point2)
+            #print list_print(point1)
+            #print list_print(point2)
             points.append(point1)
             points.append(point2)
 
@@ -222,9 +222,9 @@ class PanairGrid(PanairGridHelper, PanairWrite):
             line = lines[n]
             (x1, y1, z1) = float(line[0:10]), float(line[10:20]), float(line[20:30])
             point1 = array([x1, y1, z1])
-            #print ListPrint(point1)
+            #print list_print(point1)
             points.append(point1)
-        #print "points = ",ListPrint(points)
+        #print "points = ",list_print(points)
         return points
 
     def addWakePatch(self, netName, options, x, y, z):

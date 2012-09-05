@@ -4,7 +4,7 @@ import sys
 import numpy as np
 from op4 import OP4
 from pyNastran.op4.op4 import OP4 as pyOP4
-from pyNastran.general.mathematics import printMatrix
+from pyNastran.general.mathematics import print_matrix
 
 for in_file in ['test/mat_b_dn.op4',
                 'test/mat_b_s1.op4',
@@ -48,12 +48,12 @@ for in_file in ['test/mat_b_dn.op4',
                 print "error[%s] = %s" % (Name, error)
 
                 print "cOP4:"
-                print printMatrix(a)
+                print print_matrix(a)
 
                 print "pyOP4:"
-                print printMatrix(A)
+                print print_matrix(A)
 
                 print "diff:"
-                print printMatrix(a - A)
+                print print_matrix(a - A)
                 print '----------------------------'
                 sys.exit('stopping')

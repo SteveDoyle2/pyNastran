@@ -5,7 +5,7 @@ from itertools import izip
 from numpy import array, zeros, ones
 from numpy.linalg import solve
 
-from pyNastran.general.mathematics import printMatrix, printAnnotatedMatrix
+from pyNastran.general.mathematics import print_matrix, print_annotated_matrix
 from pyNastran.bdf.bdf import BDF, SPC, SPC1
 from pyNastran.f06.f06 import F06
 from pyNastran.op2.op2 import OP2
@@ -334,7 +334,7 @@ class Solver(F06, OP2):
 
         (self.IDtoNidComponents) = reverseDict(self.nidComponentToID)
         print("IDtoNidComponents = ", self.IDtoNidComponents)
-        print("Kgg =\n" + printAnnotatedMatrix(Kgg, self.IDtoNidComponents))
+        print("Kgg =\n" + print_annotated_matrix(Kgg, self.IDtoNidComponents))
         #print("Kgg = \n", Kgg)
         #print("iSize = ", i)
 
@@ -342,12 +342,12 @@ class Solver(F06, OP2):
         #sys.exit('verify Kgg')
 
         Kaa = partition_dense_symmetric(Kgg, self.iUs)
-        print("Kaa = \n%s" % (printMatrix(Kaa)))
+        print("Kaa = \n%s" % (print_matrix(Kaa)))
         #print("Kaa.shape = ",Kaa.shape)
 
         #sys.exit('verify Kaa')
         Fa = partition_dense_vector(Fg, self.iUs)
-        #print("Kaa = \n%s" %(printMatrix(Kaa)))
+        #print("Kaa = \n%s" %(print_matrix(Kaa)))
 
         print("Fg = ", Fg)
         print("Fa = ", Fa)

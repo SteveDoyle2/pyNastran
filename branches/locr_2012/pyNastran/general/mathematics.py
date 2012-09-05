@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-#import sys
 
 from numpy import (float32, float64, complex64, complex128, array, cross, 
                    allclose, zeros, matrix, insert, diag)
@@ -17,50 +16,41 @@ from math import sqrt
 #    import scipy.weave
 
 
-def integrateLine(x, y):
+def integrate_line(x, y):
     """
     Integrates a line of length 1.0
     @param x the independent variable
-    @param y the   dependent variable
+    @param y the dependent variable
     """
     if len(set(y)) == 1:
         return y[0]  # (x1-x0 = 1., so yBar*1 = yBar)
     try:
         assert len(x) == len(y), 'x=%s y=%s' % (x, y)
-        spline = buildSpline(x, y)
-        #y = splev(xi,spline)
         # integrate the area; y=f(x); A=integral(y*dx,x)
-        out = quad(splev, 0., 1., args=(spline))
-        
-        A = out[0]
+        out = quad(splev, 0., 1., args=(build_spline(x, y)))
     except:
         print('spline Error x=%s y=%s' % (x, y))
         raise
-    return A
+    return out[0]
 
 
-def evaluatePositiveSpline(x, *args):
+def evaluate_positive_spline(x, *args):
     spline, minValue = args
-    y = splev([x], spline)
-    return max(y, minValue)
+    return max(splev([x], spline), minValue)
 
 
-def buildSpline(x, y):
+def build_spline(x, y):
     """
-    builds a cubic spline or 1st order spline if there are less than 3 terms
+    Builds a cubic spline or 1st order spline if there are less than 3 terms
     @param x the independent variable
     @param y the   dependent variable
     @note a 1st order spline is the same as linear interpolation
     """
-    if len(x) < 3:
-        # build a linearly interpolated representation
-        spline = splrep(x, y, k=1)
-    else:
-        spline = splrep(x, y)  # build a cubic spline representation
-    return spline
+    # build a linearly interpolated representation or cubic one
+    return splrep(x, y, k=1) if len(x) < 3 else splrep(x, y)
 
 
-def integratePositiveLine(x, y, minValue=0.):
+def integrate_positive_line(x, y, minValue=0.):
     """
     Integrates a line of length 1.0
     @param x the independent variable
@@ -70,16 +60,14 @@ def integratePositiveLine(x, y, minValue=0.):
         return y[0]  # (x1-x0 = 1., so yBar*1 = yBar)
     try:
         assert len(x) == len(y), 'x=%s y=%s' % (x, y)
-        spline = buildSpline(x, y)
-        out = quad(evaluatePositiveSpline, 0., 1., args=(spline,
+        out = quad(evaluate_positive_spline, 0., 1., args=(build_spline(x, y),
                                                          minValue))  # now integrate the area
-        A = out[0]
     except:
         raise RuntimeError('spline Error x=%s y=%s' % (x, y))
-    return A
+    return out[0]
 
 
-def reduceMatrix(matA, nids):
+def reduce_matrix(matA, nids):
     """
     takes a list of ids and removes those rows and cols
     """
@@ -92,34 +80,32 @@ def reduceMatrix(matA, nids):
     return matB
 
 
-def isListRanged(a, List, b):
+def is_list_ranged(a, List, b):
     """
     Returns true if a<= x <= b
     or a-x < 0 < b-x
     """
     for x in List:
-        if not isFloatRanged(a, x, b):
+        if not is_float_ranged(a, x, b):
             return False
     return True
 
 
-def isFloatRanged(a, x, b):
+def is_float_ranged(a, x, b):
     """
     Returns true if a<= x <= b
     or a-x < 0 < b-x
     """
-    if not a < x:
-        if not allclose(x, a):
-            return False
+    if (not a < x) and (not allclose(x, a)):
+        return False
 
-    if not x < b:
-        if not allclose(x, b):
-            return False
+    if (not x < b) and (not allclose(x, b)):
+        return False
 
     return True
 
 
-def printAnnotatedMatrix(A, rowNames=None, tol=1e-8):
+def print_annotated_matrix(A, rowNames=None, tol=1e-8):
     """
     takes a list/dictionary and annotates the row number with that value
     indicies go from 0 to N
@@ -127,29 +113,17 @@ def printAnnotatedMatrix(A, rowNames=None, tol=1e-8):
     if rowNames is None:
         rowNames = [i for i in xrange(A.shape[0])]
     B = array(A)
-    msg = ''
-    for i in xrange(B.shape[0]):
-        rowName = str(rowNames[i])
-        msg += '%-2s' % (rowName) + ' ' + ListPrint(B[i, :], tol) + '\n'
-    return msg
+    return ''.join([ '%-2s' % (str(rowNames[i])) + ' ' + list_print(B[i, :], tol) + '\n' for i in xrange(B.shape[0])])
 
 
-def printMatrix(A, tol=1e-8):
+def print_matrix(A, tol=1e-8):
     B = array(A)
-    msg = ''
-    for i in xrange(B.shape[0]):
-        msg += ListPrint(B[i, :], tol) + '\n'
-    #for row in A:
-    #    msg += ListPrint(row)+'\n'
-    ###
-    return msg
-###
+    return ''.join([ list_print(B[i, :], tol) + '\n' for i in xrange(B.shape[0]) ])
 
 
-def ListPrint(listA, tol=1e-8):
+def list_print(listA, tol=1e-8):
     if len(listA) == 0:
         return '[]'
-    ###
 
     msg = '['
     for a in listA:
@@ -181,12 +155,10 @@ def ListPrint(listA, tol=1e-8):
                 print("a = |%s|" % (a))
                 raise
 
-    msg = msg[:-1]
-    msg += ' ]'
-    return msg
+    return msg[:-1]+']'
 
 
-def augmentedIdentity(A):
+def augmented_identity(A):
     """
     Creates an Identity Matrix augmented with zeros.
     The location of the extra zeros depends on A.

@@ -6,7 +6,7 @@ from numpy import (array, zeros, float32, float64, complex64, complex128,
                   allclose)
 from scipy.sparse import coo_matrix
 from pyNastran.general.general import is_binary
-from pyNastran.general.mathematics import printMatrix, printAnnotatedMatrix
+from pyNastran.general.mathematics import print_matrix, print_annotated_matrix
 from pyNastran.op2.fortranFile import FortranFile
 
 
@@ -363,7 +363,7 @@ class OP4(FortranFile):
 
             (name, form, matrix) = self.readMatrixBinary(
                 self.op4, floatType, matrixNames)
-            #print printMatrix(matrix)
+            #print print_matrix(matrix)
             if name is not None:
                 if matrixNames is None or name in matrixNames:  # save the matrix
                     matrices[name] = (form, matrix)
@@ -523,7 +523,7 @@ class OP4(FortranFile):
             raise RuntimeError("Type=%s" % (Type))
 
         try:
-            printMatrix(A.todense())
+            print_matrix(A.todense())
         except:
             pass
 
@@ -829,7 +829,7 @@ class OP4(FortranFile):
                 recordLength -= nValues * NBW
                 data = data[nValues * NBW:]
                 #print "recordLength=%s NBW=%s" %(recordLength,NBW)
-                #print printMatrix(A)
+                #print print_matrix(A)
                 #print "********",data
 
         if isSparse:  # Initialize a complex matrix
@@ -1295,10 +1295,10 @@ if __name__ == '__main__':
             if isinstance(matrix, coo_matrix):
                 print("SPARSE")
                 #matrix = matrix.todense()
-                #print printAnnotatedMatrix(matrix)
+                #print print_annotated_matrix(matrix)
             else:
                 print("DENSE")
-                print(printMatrix(matrix))
+                print(print_matrix(matrix))
 
             #if 't' in fname:
             #f.write(op4.writeDenseMatrixAscii(name,matrix,form=form,precision='default'))
@@ -1308,7 +1308,7 @@ if __name__ == '__main__':
             else:
                 f.write(op4.writeDenseMatrixAscii(name, matrix, 1, 'single'))
                 #f.write(op4.writeDenseMatrixBinary(name,matrix,1,'single'))
-        #print printAnnotatedMatrix(matrices['STRINGS'][1]-strings)
+        #print print_annotated_matrix(matrices['STRINGS'][1]-strings)
     print("-----------------------------")
     print("done")
     print("-----------------------------")

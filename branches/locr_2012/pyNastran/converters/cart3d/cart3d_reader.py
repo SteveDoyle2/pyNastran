@@ -4,7 +4,7 @@ from math import ceil, sqrt
 from itertools import izip
 from numpy import array
 
-#from pyNastran.general.general import ListPrint
+#from pyNastran.general.general import list_print
 from struct import unpack
 from pyNastran.op2.fortranFile import FortranFile
 from pyNastran.general.general import is_binary
@@ -955,6 +955,6 @@ if 0:
     #(points,elements,regions,loads) = cart3.makeMirrorModel(points,elements,regions,loads)
 
 
-    #print "loads = ",ListPrint(loads),len(loads)
+    #print "loads = ",list_print(loads),len(loads)
     #cartOutfile = os.path.join(workpath,'bJet.a.tri_test')
     #cart.writeInfile(cartOutfile,cartPoints,elements,regions)

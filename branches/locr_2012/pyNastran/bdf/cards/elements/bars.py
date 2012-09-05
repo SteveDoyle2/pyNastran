@@ -5,7 +5,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from numpy import matrix, zeros, ones, array, transpose, dot
 from numpy.linalg import norm
-#from pyNastran.general.generalMath import printMatrix
+#from pyNastran.general.generalMath import print_matrix
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element, Mid
