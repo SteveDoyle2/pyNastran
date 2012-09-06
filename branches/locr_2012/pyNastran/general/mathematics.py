@@ -113,7 +113,8 @@ def print_annotated_matrix(A, rowNames=None, tol=1e-8):
     if rowNames is None:
         rowNames = [i for i in xrange(A.shape[0])]
     B = array(A)
-    return ''.join([ '%-2s' % (str(rowNames[i])) + ' ' + list_print(B[i, :], tol) + '\n' for i in xrange(B.shape[0])])
+    return ''.join([ '%-2s' % (str(rowNames[i])) + ' ' + list_print(B[i, :], tol)
+                     + '\n' for i in xrange(B.shape[0])])
 
 
 def print_matrix(A, tol=1e-8):
@@ -125,38 +126,28 @@ def list_print(listA, tol=1e-8):
     if len(listA) == 0:
         return '[]'
 
-    msg = '['
-    for a in listA:
+    def _print(a):
         if isinstance(a, str):
-            msg += ' %s,' % (a)
-        elif isinstance(a, float) or isinstance(a, float32) or isinstance(a, float64):
-            if abs(a) < tol:
-                a = 0.
-            msg += ' %-3.2g,' % (a)
-        elif isinstance(a, int):
-            if abs(a) < tol:
-                a = 0.
-            msg += ' %3i,' % (a)
-        elif isinstance(a, complex64) or isinstance(a, complex128):
-            r = '%.4g' % (a.real)
-            i = '%+.4gj' % (a.imag)
+            return a
+        for i,j in ((float,'%-3.2g'), (float32,'%-3.2g'), (float64,'%-3.2g'),
+                    (int, '%3i') ):
+            if isinstance(a,i):
+                return j % (0. if abs(a) < tol else a)
 
-            if abs(a.real) < tol:
-                r = '0'
-            if abs(a.imag) < tol:
-                i = ''
-            temp = '%4s%4s' % (r, i)
-            msg += ' %8s,' % (temp.strip())
-        else:
-            try:
-                print("type(a) is not supported...%s" % (type(a)))
-                msg += ' %g,' % (a)
-            except TypeError:
-                print("a = |%s|" % (a))
-                raise
+        if isinstance(a, complex) or isinstance(a, complex64) or isinstance(a, complex128):
+            return '%4s%4s' % ('0' if abs(a.real) < 1e-8 else '%.4g' % (a.real),
+                                '' if abs(a.imag) < 1e-8 else '%+.4gj' % (a.imag))
+        try:
+            print("list_print: type(a) is not supported... %s" % (type(a)))
+            return '%g' % (a)
+        except TypeError:
+            print("a = |%s|" % (a))
+            raise
 
-    return msg[:-1]+']'
+    return '['+ ', '.join([_print(a) for a in listA])+ ']'
 
+
+        
 
 def augmented_identity(A):
     """
