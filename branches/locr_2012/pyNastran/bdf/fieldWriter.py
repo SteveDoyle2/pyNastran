@@ -10,18 +10,10 @@ def is_same(value1, value2):
     checks to see if 2 values are the same
     @note this method is used by almost every card when printing
     """
-    #print "value=%s default=%s" %(value1,value2)
     if isinstance(value1, unicode) or value1 is None:
-        if value1 == value2:
-            return True
-        return False
-    elif (value1 == value2 or type(value1) == type(value2) and
-          not isinf(value1) and allclose(value1, value2)):
-        #print "value=%s value2=%s same=%s" %(value1, value2, True)
-        return True
-    #print "value1=%s value2=%s same=%s" %(value1, value2, False)
-    return False
-
+        return True if value1 == value2 else False
+    return True if (value1 == value2 or type(value1) == type(value2) and
+                    not isinf(value1) and allclose(value1, value2)) else False
 
 def set_blank_if_default(value, default):
     """
@@ -33,9 +25,7 @@ def set_blank_if_default(value, default):
     @note
       this method is used by almost every card when printing
     """
-    if is_same(value, default):
-        return None
-    return value
+    return None if is_same(value, default) else value
 
 
 def set_default_if_blank(value, default):
@@ -43,9 +33,7 @@ def set_default_if_blank(value, default):
     used when initializing a card and the default value isnt set
     used on PBARL
     """
-    if value is None or value == '':
-        return default
-    return value
+    return default if value is None or value == '' else value
 
 
 def print_scientific_8(value):
@@ -61,10 +49,8 @@ def print_scientific_8(value):
     exponent = int(sExponent)  # removes 0s
     #print "svalue=%s exponent=%s" %(svalue,exponent)
 
-    if abs(value) < 0.01:
-        sign = '-'
-    else:
-        sign = '+'
+    sign = '-' if abs(value) < 0.01 else '+'
+    
     sExp2 = str(exponent).strip('-+')  # the exponent will be added later...
     #print "sExp2 = ",sExp2
 

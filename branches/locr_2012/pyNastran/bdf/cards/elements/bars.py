@@ -55,11 +55,8 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         \f]
         """
         (n1, n2) = self.nodeIDs()
-        p1 = model.Node(n1).xyz
-        p2 = model.Node(n2).xyz
-        v1 = p2 - p1
+        v1 = model.Node(n2).xyz - model.Node(n1).xyz
         v1 = v1 / norm(v1)
-        (l, m, n) = v1
 
         v1x = array([v1[0], 0., 0.])
         v1y = array([0., v1[1], 0.])
@@ -70,27 +67,17 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         g1z = array([0., 0., 1.])
 
         if is3D:
-            R = matrix([  # global rod
+            return matrix([  # global rod
                        [dot(v1x, g1x), dot(v1y, g1x), dot(v1z, g1x)],
                        [dot(v1x, g1y), dot(v1y, g1y), dot(v1z, g1y)],
                        [dot(v1x, g1z), dot(v1y, g1z), dot(v1z, g1z)],
                        ])  # rod
-            #R = matrix([
-            #            [],
-            #            [],
-            #            [],
-            #          ])
 
-        else:
-            R = matrix([  # there can be no z component
+        return matrix([  # there can be no z component
                        [dot(v1x, g1x), dot(v1y, g1x)],
                        [dot(v1x, g1y), dot(v1y, g1y)],
                        ])  # rod
-            #R = matrix([ # there can be no z component
-            #            [dot(v1x,g1x),dot(v1y,g1x)],
-            #            [dot(v1x,g1y),dot(v1y,g1y)],
-            #          ]) # rod
-        return R
+
 
     def Lambda(self, model, debug=True):
         """
