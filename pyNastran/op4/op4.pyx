@@ -732,8 +732,10 @@ def Save(                                                  # {{{1
 
     cdef FILE* fp
     cdef int endian = 0
-    cdef int sparse = 0
+    cdef int sparse_mat = 0
     cdef double *one_column
+    cdef np.ndarray[np.int32_t, ndim=1] row_ind
+    cdef np.ndarray[np.int32_t, ndim=1] col_ind
 
     if 'digits' in kwargs: 
         digits = kwargs['digits']
@@ -763,15 +765,15 @@ def Save(                                                  # {{{1
 #           print('a %s' % name)
             if sparse.issparse(kwargs[name]): 
 #               print('b')
-                sparse = 1
+                sparse_mat = 1
             else:                             
 #               print('c')
-                sparse = 0
+                sparse_mat = 0
         except:
 #           print('d')
-            sparse = 0
+            sparse_mat = 0
 
-        if (not sparse) and (type(kwargs[name]) is not np.ndarray):
+        if (not sparse_mat) and (type(kwargs[name]) is not np.ndarray):
             print('OP4.Save skipping %s, wrong type (%s)' % (
                 name, type(kwargs[name])))
             continue
@@ -810,15 +812,25 @@ def Save(                                                  # {{{1
         if (op4_type in [2,4]) and (2 <= digits <= 9): op4_type -= 1
 
         op4_wrt_header(fp, endian, name, nR, nC, op4_type, 
-                       op4_form, sparse, digits)
+                       op4_form, sparse_mat, digits)
 
         one_column = <DTYPE_t*>malloc(sizeof(double) * nR * npt)
 
+        if sparse_mat:
+            print('Sparse matrix op4 save not yet implemented')
+            continue
+
         # write each column
         for c in xrange(nC):
-            if sparse:
+            if sparse_mat:
+                row_ind, col_ind = kwargs[name].nonzero()
+                for c in range(nR):
+                    print('r,c index %d is %d,%d' % (
+                        c, 
+                        (<int*>row_ind.data)[c],
+                        (<int*>col_ind.data)[c]))
                 print('sparse column %d' % c)
-                print kwargs[name].get_col(c)
+                print kwargs[name].getcol(c)
             else:  # dense
                 # probably a better way to make the column copies below
                 if   op4_type in [1,2]:
