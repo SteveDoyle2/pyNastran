@@ -6,6 +6,7 @@ import sys
 import warnings
 
 from pyNastran.general.general import ListPrint
+from pyNastran.general.object_introspection import list_attributes
 
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
@@ -1961,3 +1962,159 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             raise
 
         return cardObj
+
+    def card_stats(self):
+        """
+        print stats for the BDF
+        @note
+          if a card is not supported and not added to the proper lists,
+          this method will fail
+        """
+        card_stats = ['params', 'nodes', 'points', 'elements',
+                      'rigidElements', 'properties', 'materials',
+                      'materialDeps', 'creepMaterials', 'coords',
+                      'spcs', 'spcadds', 'mpcs', 'mpcadds',
+
+                      # dynamic cards
+                      'dareas', 'nlparms', 'tsteps', 'tstepnls',
+
+                      # direct matrix input - DMIG - dict
+                      'dmis', 'dmigs', 'dmijs', 'dmijis', 'dmiks',
+                      'dequations',
+
+                      # frequencies - dict
+                      'frequencies',
+
+                      # optimization - dict
+                      'dconstrs', 'desvars', 'ddvals', 'dlinks', 'dresps',
+                      'dvprels', 'dvmrels',
+
+                      # SESETx - dict
+                      'setsSuper',
+
+                      # tables
+                      'tables', 'randomTables',
+
+                      # methods
+                      'methods', 'cMethods',
+
+                      # aero
+                      'caeros', 'paeros', 'aero', 'aeros', 'aefacts',
+                      'aelinks', 'aelists', 'aeparams', 'aesurfs', 'aestats',
+                      'gusts', 'flfacts', 'flutters', 'splines',
+                      'trims',
+
+                      # thermal
+                      'bcs', 'thermalMaterials', 'phbdys',
+                      'convectionProperties',]
+
+        ignored_types = [
+            'spoints',  # singleton
+            'gridSet',  # singleton
+
+            # constraints - list
+            #self.constraints = {} # suport1, anything else???
+
+            'suports',  # suport, suport1 - list
+
+            #self.spcObject2 = constraintObject2()
+            #self.mpcObject2 = constraintObject2()
+            'doptprm', # singleton
+
+            # SETx - list
+            'sets', 'asets', 'bsets', 'csets', 'qsets',
+            ]
+
+        #all_params = list_attributes('public')
+        all_params = list_attributes(self)
+
+        # removing supported cards
+        leftover_types = set(all_params).difference(set(card_stats))
+
+        # removing special cards...SPOINTS, GRIDSET, etc.
+        leftover_types = leftover_types.difference(set(ignored_types))
+
+        # removing unsupported attributes that aren't cards or aren't supported
+        # (e.g. caseControlDeck, cardCount, etc.)
+        ignored_types2 = set([
+                              'caseControlDeck','spcObject2', 'mpcObject2',
+                              
+                              # done
+                              'sol', 'loads', 'mkaeros', 
+                               'rejects', 'reject_cards ',
+
+                              # not cards
+                              'debug',  'executive_control_lines ',
+                              'case_control_lines', 'cardsToRead', 'cardCount',
+                              'isStructured', 'uniqueBulkDataCards', 
+                              'nCardLinesMax', 'modelType', 'includeDir',
+                              'cardsToWrite', 'solMethod', 'log', 'doneReading',
+                              'linesPack', 'lineNumbers', 'iSolLine', 
+                              'rejectCount', 'relpath', 'isOpened',
+                              'foundEndData', 'specialCards', 
+                              'infilesPack'])
+
+        leftover_types = leftover_types.difference(set(ignored_types2))
+        assert len(leftover_types) == 0, 'leftover_types = %s' % (
+            str (leftover_types))
+        
+
+
+        msg = ['---BDF Statistics---']
+        # sol
+        msg.append('SOL %s\n' %(self.sol))
+        
+        # loads
+        for lid, loads in sorted(self.loads.iteritems()):
+            msg.append('bdf.loads[%s]' %(lid))
+            groups = {}
+            for load in loads:
+                if load.type not in groups:
+                    groups[load.type] = 0
+                groups[load.type] += 1
+            for name, n in sorted(groups.iteritems()):
+                name2 = '%s:' %(name)
+                msg.append('  %-8s %s' %(name2, n))
+            msg.append('')
+        
+        #mkaeros
+        if self.mkaeros:
+            msg.append('bdf:mkaeros')
+            name2 = 'MKAERO:' %(name)
+            msg.append('  %-8s %s' %(name2, len(self.mkaeros)))
+        
+        for card_group_name in card_stats:
+            card_group = getattr(self, card_group_name)
+            groups = set([])
+            if isinstance(card_group, list):
+                print("card_group_name = ",card_group_name)
+
+            for card in card_group.itervalues():
+                if isinstance(card, list):
+                    print("card = ",card)
+                    print("card_group = ",card_group)
+                groups.add(card.type)
+
+            group_msg = []
+            for card_name in sorted(groups):
+                try:
+                    ncards = self.cardCount[card_name]
+                    name2 = '%s:' %(card_name)
+                    group_msg.append('  %-8s %s' %(name2, ncards))
+                except KeyError:
+                    assert card_name == 'CORD2R'
+            if group_msg:
+                msg.append('bdf.%s' %(card_group_name))
+                msg.append('\n'.join(group_msg))
+                msg.append('')
+        
+        # rejects
+        if self.rejects:
+            msg.append('Rejected Cards')
+            for name, counter in sorted(self.cardCount.iteritems()):
+                if name not in self.cardsToRead:
+                    name2 = '%s:' %(name)
+                    msg.append('  %-8s %s' %(name2, counter))
+        return '\n'.join(msg)
+
+

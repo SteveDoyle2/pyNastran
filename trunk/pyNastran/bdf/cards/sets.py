@@ -5,7 +5,7 @@ from itertools import izip
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
 from pyNastran.bdf.fieldWriter import print_int_card
-from pyNastran.bdf.fieldWriter import printCard as print_card
+from pyNastran.bdf.fieldWriter import print_card_8
 
 
 class Set(BaseCard):
@@ -32,7 +32,7 @@ class Set(BaseCard):
         return fields
 
     def __repr__(self):
-        return print_card(self.reprFields())
+        return print_card_8(self.reprFields())
 
 
 class SetSuper(Set):
