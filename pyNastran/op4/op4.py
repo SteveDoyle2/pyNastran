@@ -109,7 +109,8 @@ class OP4(FortranFile):
         Type = int(Type)
         dType = self.getDType(Type, precision)
 
-        name, size = line[32:].split()
+        name = line[32:40]
+        size = line[40:]
         lineSize = size.split(
             ',')[1].split('E')[1].split('.')[0]  # 3E23.16 to 23
         lineSize = int(lineSize)
