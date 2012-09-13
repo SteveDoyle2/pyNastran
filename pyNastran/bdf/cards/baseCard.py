@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import sys
 from itertools import izip
 
-from pyNastran.bdf.fieldWriter import (printCard, set_default_if_blank,
+from pyNastran.bdf.fieldWriter import (print_card_8, set_default_if_blank,
                                        is_same)
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 
@@ -45,7 +45,7 @@ class BaseCard(BDFCard):
 
     def printCard(self, fields, tol=0.):
         """prints a card object"""
-        return printCard(fields, tol)
+        return print_card_8(fields, tol)
 
     def cross_reference(self, model):
         #self.mid = model.Material(self.mid)

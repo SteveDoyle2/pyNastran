@@ -216,7 +216,8 @@ def print_field(value, tol=0.):
 
 
 def printCard(fields, tol=0.):
-    warnings.warn('update printCard to print_card_8')
+    warnings.warn('update printCard to print_card_8', DeprecationWarning,
+                  stacklevel=2)
     return print_card_8(fields, tol)
 
 def print_card_8(fields, tol=0.):
