@@ -43,6 +43,21 @@ class BarStressObject(stressObject):
             #self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
 
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.s1)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, s1, s2, s3, s4, axial, smax, smin, '
+                   'MS_tension, MS_compression\n')
+        return msg
+
     def addF06Data(self, data, transient):
         if transient is None:
             for line in data:
@@ -407,6 +422,21 @@ class BarStrainObject(strainObject):
             assert dt is not None
             self.add = self.addSort2
             self.addNewEid = self.NewEidSort2
+
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.e1)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, e1, e2, e3, e4, axial, emax, emin, '
+                   'MS_tension, MS_compression\n')
+        return msg
 
     def addF06Data(self, data, transient):
         if transient is None:
