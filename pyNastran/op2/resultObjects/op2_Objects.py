@@ -140,8 +140,6 @@ class scalarObject(baseScalarObject):
                     msg = 'fem.%s(%i).%s = %s;\n' % (
                         name, iSubcase, key, value)
                 f.write(msg)
-            ###
-        ###
 
     def applyDataCode(self):
         self.log = self.dataCode['log']
@@ -186,8 +184,6 @@ class scalarObject(baseScalarObject):
                     raise
                 listA.append(value)
                 assert len(listA) == n + 1
-            ###
-        ###
 
     def setDataMembers(self):
         if 'dataNames' not in self.dataCode:
@@ -197,7 +193,6 @@ class scalarObject(baseScalarObject):
         for name in self.dataCode['dataNames']:
             #print "name = ",name
             self.appendDataMember(name + 's', name)
-        ###
 
     def updateDataCode(self, dataCode):
         self.dataCode = dataCode

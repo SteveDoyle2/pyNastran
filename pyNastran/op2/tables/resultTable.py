@@ -116,7 +116,6 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 #except:
                     #print "objName = ",self.obj
                 raise
-            ###
         else:
             #if self.isRegular:
                 #self.obj = classObj(self.dataCode,not(self.isRegular),self.iSubcase,self.nonlinearFactor)
@@ -185,8 +184,8 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             table3(iTable)
             self.dataCode['tableName'] = self.tableName
             ## developer parameter - Analysis/Table/Format/Sort Codes
-            self.atfsCode = [self.analysisCode, self.tableCode,
-                             self.formatCode, self.sortCode]
+            #self.atfsCode = [self.analysisCode, self.tableCode,
+            #                 self.formatCode, self.sortCode]
             #print "self.tellA = ",self.op2.tell()
 
             self.isMarker = False
@@ -203,7 +202,6 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 #self.n = self.markerStart
                 #self.op2.seek(self.n)
                 break
-            ###
             n = self.n
             #print self.printSection(100)
             self.readMarkers([iTable, 1, 0], tableName)
@@ -353,14 +351,12 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 #print "num=%s closest=%s iclose=%s" %(num,actualValue,iclose)
                 #print "B"
                 self.obj.deleteTransient(num)
-            ###
         else:  # read case
             self.dtMap[iSubcase][iclose] = num
             readCase = True
             #print "num=%s closest=%s iclose=%s" %(num,actualValue,iclose)
             #print self.dtMap
             #print "C"
-        ###
         #print "delta = ",delta,'\n'
         #print "readCase = ",readCase
         #if num>=0.14:
@@ -442,13 +438,10 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                             % (type(self.data), type(data)))
                 sys.stdout.flush()
                 self.data += data
-            ###
             i += 1
             if i == 2000:
                 raise RuntimeError('Infinite Loop or a really big model...')
             #print "isBufferDone=%s" %(self.isBufferDone)
-        ###
-        #print "---------------------------------"
 
     def handleResultsBuffer(self, func, debug=False):
         """
@@ -534,7 +527,6 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             self.readScalarsOut(debug=False)
         else:
             self.skipOES_Element()
-        ###
 
     def readScalarsOut(self, debug=False):
         """
@@ -560,7 +552,6 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 self.log.debug("*out = %s" % (out))
             self.obj.add(out)
             n += nTotal
-        ###
         self.data = data[n:]
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalarsOut, debug=False)

@@ -25,11 +25,31 @@ class TableObject(scalarObject):  # displacement style table
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
-        ###
+
+    def get_stats(self):
+        ngrids = len(self.gridTypes)
+        
+        msg = ''
+        for name in self.dataCode['dataNames']:
+            if hasattr(self, name + 's'):
+                name = name + 's'
+                vals = getattr(self, name)
+            else:
+                vals = getattr(self, name)
+            msg += '  %s = %s\n' %(name, vals)
+
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.translations)
+            msg += ('  type=%s ntimes=%s ngrids=%s\n'
+                   % (self.__class__.__name__, ntimes, ngrids))
+        else:
+            msg += '  type=%s ngrids=%s\n' % (self.__class__.__name__,
+                                             ngrids)
+        msg += '  translations, rotations, gridTypes\n'
+        return msg
 
     def isImaginary(self):
         return False
@@ -41,7 +61,6 @@ class TableObject(scalarObject):  # displacement style table
                 self.gridTypes[nodeID] = gridType
                 self.translations[nodeID] = array([t1, t2, t3])
                 self.rotations[nodeID] = array([r1, r2, r3])
-            ###
             return
 
         (dtName, dt) = transient
@@ -54,16 +73,16 @@ class TableObject(scalarObject):  # displacement style table
             self.gridTypes[nodeID] = gridType
             self.translations[dt][nodeID] = array([t1, t2, t3])
             self.rotations[dt][nodeID] = array([r1, r2, r3])
-        ###
 
     def updateDt(self, dataCode, dt):
         self.dataCode = dataCode
         self.applyDataCode()
         if dt is not None:
-            self.log.debug("updating %s...%s=%s  iSubcase=%s" % (self.dataCode['name'], self.dataCode['name'], dt, self.iSubcase))
+            self.log.debug("updating %s...%s=%s  iSubcase=%s"
+                        % (self.dataCode['name'], self.dataCode['name'],
+                           dt, self.iSubcase))
             self.dt = dt
             self.addNewTransient(dt)
-        ###
 
     def deleteTransient(self, dt):
         del self.translations[dt]
@@ -340,7 +359,8 @@ class TableObject(scalarObject):  # displacement style table
             (vals2, isAllZeros) = self.writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n'
+                        % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
             ###
         ###
         msg.append(pageStamp + str(pageNum) + '\n')
@@ -467,7 +487,8 @@ class TableObject(scalarObject):  # displacement style table
         @todo fix alphaLegend; test options more...
         """
         (results, nodeList, markers, Title, xLabel, yLabel) = getPlotData(
-            self, nodeList, resultType, coord, markers, Title, hasLegend, Legend, xLabel, yLabel)
+            self, nodeList, resultType, coord, markers, Title, hasLegend,
+            Legend, xLabel, yLabel)
 
         i = 0
         Labels = []
@@ -524,12 +545,22 @@ class ComplexTableObject(scalarObject):
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
-        ###
 
+    def get_stats(self):
+        ngrids = len(self.gridTypes)
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.translations)
+            msg = ('  imaginary type=%s ntimes=%s ngrids=%s\n'
+                   % (self.__class__.__name__, ntimes, ngrids))
+        else:
+            msg = ('  imaginary type=%s ngrids=%s\n'
+                   % (self.__class__.__name__, ngrids))
+        msg += '  translations, rotations, gridTypes\n'
+        return msg
+            
     def isImaginary(self):
         return True
 
@@ -540,7 +571,6 @@ class ComplexTableObject(scalarObject):
                 self.gridTypes[nodeID] = gridType
                 self.translations[self.dt][nodeID] = [v1, v2, v3]  # dx,dy,dz
                 self.rotations[self.dt][nodeID] = [v4, v5, v6]  # rx,ry,rz
-            ###
             return
 
         (dtName, dt) = transient
