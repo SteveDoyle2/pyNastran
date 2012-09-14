@@ -15,11 +15,23 @@ class gridPointForcesObject(scalarObject):
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
-        ###
+
+    def get_stats(self):
+        nelements = len(self.eids)
+
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.forces)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  forces, moments, elemName, eids\n')
+        return msg
 
     def addNewTransient(self, dt):  # eKey
         """initializes the transient variables"""
@@ -160,3 +172,18 @@ class complexGridPointForcesObject(scalarObject):
     def __init__(self, dataCode, isSort1, iSubcase, freq=None):
         scalarObject.__init__(self, dataCode, iSubcase)
         raise NotImplementedError()
+
+    def get_stats(self):
+        nelements = len(self.eids)
+
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.forces)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  forces, moments, elemName, eids\n')
+        return msg
+

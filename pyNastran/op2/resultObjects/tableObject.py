@@ -32,23 +32,15 @@ class TableObject(scalarObject):  # displacement style table
     def get_stats(self):
         ngrids = len(self.gridTypes)
         
-        msg = ''
-        for name in self.dataCode['dataNames']:
-            if hasattr(self, name + 's'):
-                name = name + 's'
-                vals = getattr(self, name)
-            else:
-                vals = getattr(self, name)
-            msg += '  %s = %s\n' %(name, vals)
-
+        msg = self.get_data_code()
         if self.nonlinearFactor is not None:  # transient
             ntimes = len(self.translations)
-            msg += ('  type=%s ntimes=%s ngrids=%s\n'
-                   % (self.__class__.__name__, ntimes, ngrids))
+            msg.append('  type=%s ntimes=%s ngrids=%s\n'
+                       % (self.__class__.__name__, ntimes, ngrids))
         else:
-            msg += '  type=%s ngrids=%s\n' % (self.__class__.__name__,
-                                             ngrids)
-        msg += '  translations, rotations, gridTypes\n'
+            msg.append('  type=%s ngrids=%s\n' % (self.__class__.__name__,
+                                                  ngrids))
+        msg.append('  translations, rotations, gridTypes\n')
         return msg
 
     def isImaginary(self):
@@ -551,14 +543,16 @@ class ComplexTableObject(scalarObject):
 
     def get_stats(self):
         ngrids = len(self.gridTypes)
+        msg = self.get_data_code()
+
         if self.nonlinearFactor is not None:  # transient
             ntimes = len(self.translations)
-            msg = ('  imaginary type=%s ntimes=%s ngrids=%s\n'
-                   % (self.__class__.__name__, ntimes, ngrids))
+            msg.append('  imaginary type=%s ntimes=%s ngrids=%s\n'
+                       % (self.__class__.__name__, ntimes, ngrids))
         else:
-            msg = ('  imaginary type=%s ngrids=%s\n'
-                   % (self.__class__.__name__, ngrids))
-        msg += '  translations, rotations, gridTypes\n'
+            msg.append('  imaginary type=%s ngrids=%s\n'
+                       % (self.__class__.__name__, ngrids))
+        msg.append('  translations, rotations, gridTypes\n')
         return msg
             
     def isImaginary(self):
@@ -583,7 +577,6 @@ class ComplexTableObject(scalarObject):
             self.gridTypes[nodeID] = gridType
             self.translations[self.dt][nodeID] = [v1, v2, v3]  # dx,dy,dz
             self.rotations[self.dt][nodeID] = [v4, v5, v6]  # rx,ry,rz
-        ###
 
     def updateDt(self, dataCode, dt):
         self.dataCode = dataCode
@@ -591,7 +584,6 @@ class ComplexTableObject(scalarObject):
         if dt is not None:
             self.log.debug("updating %s...%s=%s  iSubcase=%s" % (self.dataCode['name'], self.dataCode['name'], dt, self.iSubcase))
             self.addNewTransient(dt)
-        ###
 
     def deleteTransient(self, dt):
         del self.translations[dt]

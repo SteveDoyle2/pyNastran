@@ -150,6 +150,21 @@ class scalarObject(baseScalarObject):
                 #print "  key=%s value=%s" %(key,value)
         #self.log.debug("")
 
+
+    def get_data_code(self):
+        msg = []
+        for name in self.dataCode['dataNames']:
+            try:
+                if hasattr(self, name + 's'):
+                    vals = getattr(self, name+'s')
+                    name = name + 's'
+                else:
+                    vals = getattr(self, name)
+                msg.append('  %s = %s\n' %(name, vals))
+            except AttributeError: # weird case...
+                pass
+        return msg
+
     def getUnsteadyValue(self):
         name = self.dataCode['name']
         return self.getVar(name)
