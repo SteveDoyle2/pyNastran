@@ -354,6 +354,28 @@ class OP2(BDF,
             'thermalLoadVectors',
             'appliedLoads',
             'forceVectors',
+
+            # OES - tCode=5 thermal=0 sCode=0,1 (stress/strain)
+            ## OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
+            'celasStress',
+            ## OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
+            'celasStrain',
+
+            ## OES - isotropic CROD/CONROD/CTUBE stress
+            'rodStress',
+            ## OES - isotropic CROD/CONROD/CTUBE strain
+            'rodStrain',
+
+            ## OES - isotropic CTETRA/CHEXA/CPENTA stress
+            'solidStress',
+            ## OES - isotropic CTETRA/CHEXA/CPENTA strain
+            'solidStrain',
+
+            ## OES - CSHEAR stress
+            'shearStress',
+            ## OES - CSHEAR strain
+            'shearStrain',
+    
         ]
         
         msg = []
@@ -361,7 +383,8 @@ class OP2(BDF,
             table = getattr(self, table_type)
             for isubcase, subcase in sorted(table.iteritems()):
                 msg.append('op2.%s[%s]\n' % (table_type, isubcase))
-                msg.append(subcase.get_stats())
+                msg.extend(subcase.get_stats())
+                msg.append('\n')
 
         others = [
             # LAMA
@@ -396,21 +419,13 @@ class OP2(BDF,
             'thermalLoad_VU_3D',
             'thermalLoad_VUBeam',
             #self.temperatureForces # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
-    
-            # OES - tCode=5 thermal=0 sCode=0,1 (stress/strain)
-            ## OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
-            'celasStress',
-            ## OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
-            'celasStrain',
+        ]
+        others += [
     
             ## OES - CTRIAX6
             'ctriaxStress',
             'ctriaxStrain',
     
-            ## OES - isotropic CROD/CONROD/CTUBE stress
-            'rodStress',
-            ## OES - isotropic CROD/CONROD/CTUBE strain
-            'rodStrain',
             ## OES - nonlinear CROD/CONROD/CTUBE stress
             'nonlinearRodStress',
             ## OES - nonlinear CROD/CONROD/CTUBE strain
@@ -435,19 +450,10 @@ class OP2(BDF,
             'hyperelasticPlateStress',
             'hyperelasticPlateStrain',
     
-            ## OES - isotropic CTETRA/CHEXA/CPENTA stress
-            'solidStress',
-            ## OES - isotropic CTETRA/CHEXA/CPENTA strain
-            'solidStrain',
             ## OES - composite CTRIA3/CQUAD4 stress
             'compositePlateStress',
             ## OES - composite CTRIA3/CQUAD4 strain
             'compositePlateStrain',
-    
-            ## OES - CSHEAR stress
-            'shearStress',
-            ## OES - CSHEAR strain
-            'shearStrain',
     
             ## OGS1 - grid point stresses
             'gridPointStresses',        # tCode=26

@@ -48,12 +48,25 @@ class SolidStressObject(stressObject):
             if dt is not None:
                 self.add = self.addSort1
                 self.addNewEid = self.addNewEidSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
-        ###
+
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.oxx)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, cid, oxx, oyy, ozz, txy, tyz, txz, '
+                   'o1, o2, o3, ovmShear\n')
+        return msg
 
     def addF06Data(self, data, transient):
         if transient is None:
@@ -67,8 +80,6 @@ class SolidStressObject(stressObject):
                 self.data[dt] = []
             for line in data:
                 self.data[dt] += data
-            ###
-        ###
 
     def processF06Data(self):
         """
@@ -616,12 +627,25 @@ class SolidStrainObject(strainObject):
             if dt is not None:
                 self.add = self.addSort1
                 self.addNewEid = self.addNewEidSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
-        ###
+
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.oxx)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, cid, exx, eyy, ezz, exy, eyz, exz, '
+                   'e1, e2, e3, evmShear\n')
+        return msg
 
     def addF06Data(self, data, transient):
         if transient is None:
@@ -635,8 +659,6 @@ class SolidStrainObject(strainObject):
                 self.data[dt] = []
             for line in data:
                 self.data[dt] += data
-            ###
-        ###
 
     def processF06Data(self):
         """

@@ -45,7 +45,9 @@ class OPG(object):
         self.addDataParameter(data, 'formatCode', 'i', 9, False)
 
         ## number of words per entry in record
-        ## @note is this needed for this table ???        self.addDataParameter(data, 'numWide', 'i', 10, False)
+        ## @note is this needed for this table ???
+        self.addDataParameter(data, 'numWide', 'i', 10, False)
+        
         ## undefined in DMAP...
         self.addDataParameter(data, 'oCode', 'i', 11, False)
         ## thermal flag; 1 for heat transfer, 0 otherwise
