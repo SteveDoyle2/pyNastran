@@ -319,6 +319,145 @@ class OP2(BDF,
         ## OEE - strain energy density
         self.strainEnergy = {}  # tCode=18
 
+    def get_op2_stats(self):
+        table_types = [
+            ## OUG - displacement
+            'displacements',
+            'displacementsPSD',
+            'displacementsATO',
+            'displacementsRMS',
+            'displacementsCRM',
+            'displacementsNO',
+            'scaledDisplacements',
+    
+            ## OUG - temperatures
+            'temperatures',
+    
+            ## OUG - eigenvectors
+            'eigenvectors',
+    
+            ## OUG - velocity
+            'velocities',
+    
+            ## OUG - acceleration
+            'accelerations',
+    
+            # OQG - spc/mpc forces
+            'spcForces',
+            'mpcForces',
+    
+            ## OGF - grid point forces
+            'gridPointForces',
+    
+            ## OPG - summation of loads for each element
+            'loadVectors',
+            'thermalLoadVectors',
+            'appliedLoads',
+            'forceVectors',
+        ]
+        
+        msg = []
+        for table_type in table_types:
+            table = getattr(self, table_type)
+            for isubcase, subcase in sorted(table.iteritems()):
+                msg.append('op2.%s[%s]\n' % (table_type, isubcase))
+                msg.append(subcase.get_stats())
+
+        others = [
+            # LAMA
+            'eigenvalues',
+    
+            # OEF - Forces - tCode=4 thermal=0
+            'rodForces',
+            'barForces',
+            'bar100Forces',
+            'beamForces',
+            'bendForces',
+            'bushForces',
+            'coneAxForces',
+            'damperForces',
+            'gapForces',
+            'plateForces',
+            'plateForces2',
+            'shearForces',
+            'solidPressureForces',
+            'springForces',
+            'viscForces',
+    
+            'force_VU',
+            'force_VU_2D',
+    
+            #OEF - Fluxes - tCode=4 thermal=1
+            'thermalLoad_CONV',
+            'thermalLoad_CHBDY',
+            'thermalLoad_1D',
+            'thermalLoad_2D_3D',
+            'thermalLoad_VU',
+            'thermalLoad_VU_3D',
+            'thermalLoad_VUBeam',
+            #self.temperatureForces # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
+    
+            # OES - tCode=5 thermal=0 sCode=0,1 (stress/strain)
+            ## OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
+            'celasStress',
+            ## OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
+            'celasStrain',
+    
+            ## OES - CTRIAX6
+            'ctriaxStress',
+            'ctriaxStrain',
+    
+            ## OES - isotropic CROD/CONROD/CTUBE stress
+            'rodStress',
+            ## OES - isotropic CROD/CONROD/CTUBE strain
+            'rodStrain',
+            ## OES - nonlinear CROD/CONROD/CTUBE stress
+            'nonlinearRodStress',
+            ## OES - nonlinear CROD/CONROD/CTUBE strain
+            'nonlinearRodStrain',
+            ## OES - isotropic CBAR stress
+            'barStress',
+            ## OES - isotropic CBAR strain
+            'barStrain',
+            ## OES - isotropic CBEAM stress
+            'beamStress',
+            ## OES - isotropic CBEAM strain
+            'beamStrain',
+    
+            ## OES - isotropic CTRIA3/CQUAD4 stress
+            'plateStress',
+            # OES - isotropic CTRIA3/CQUAD4 strain
+            'plateStrain',
+            ## OESNLXR - CTRIA3/CQUAD4 stress
+            'nonlinearPlateStress',
+            ## OESNLXR - CTRIA3/CQUAD4 strain
+            'nonlinearPlateStrain',
+            'hyperelasticPlateStress',
+            'hyperelasticPlateStrain',
+    
+            ## OES - isotropic CTETRA/CHEXA/CPENTA stress
+            'solidStress',
+            ## OES - isotropic CTETRA/CHEXA/CPENTA strain
+            'solidStrain',
+            ## OES - composite CTRIA3/CQUAD4 stress
+            'compositePlateStress',
+            ## OES - composite CTRIA3/CQUAD4 strain
+            'compositePlateStrain',
+    
+            ## OES - CSHEAR stress
+            'shearStress',
+            ## OES - CSHEAR strain
+            'shearStrain',
+    
+            ## OGS1 - grid point stresses
+            'gridPointStresses',        # tCode=26
+            'gridPointVolumeStresses',  # tCode=27
+    
+            ## OEE - strain energy density
+            'strainEnergy',  # tCode=18
+        ]
+        return ''.join(msg)
+
     def readTapeCode2(self):
         data = self.op2.read(28)
         (f1, two, f2, f3, tableName, f4) = unpack('4i8si', data)

@@ -36,11 +36,16 @@ class OQG(object):
 
         ## random code
         self.addDataParameter( data, 'randomCode', 'i', 8, False)
-        ## format code        self.addDataParameter( data, 'formatCode', 'i', 9, False)
+
+        ## format code
+        self.addDataParameter( data, 'formatCode', 'i', 9, False)
+
         ## number of words per entry in record
-        ## @note is this needed for this table ???        self.addDataParameter(data, 'numWide', 'i', 10, False)
+        self.addDataParameter(data, 'numWide', 'i', 10, False)
+
         ## acoustic pressure flag
         self.addDataParameter(data, 'acousticFlag', 'f', 13, False)
+
         ## thermal flag; 1 for heat ransfer, 0 otherwise
         self.addDataParameter(data, 'thermal', 'i', 23, False)
 
