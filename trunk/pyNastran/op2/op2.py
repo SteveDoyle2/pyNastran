@@ -365,7 +365,19 @@ class OP2(BDF,
             'rodStress',
             ## OES - isotropic CROD/CONROD/CTUBE strain
             'rodStrain',
+            ## OES - isotropic CBAR stress
+            'barStress',
+            ## OES - isotropic CBAR strain
+            'barStrain',
+            ## OES - isotropic CBEAM stress
+            'beamStress',
+            ## OES - isotropic CBEAM strain
+            'beamStrain',
 
+            ## OES - isotropic CTRIA3/CQUAD4 stress
+            'plateStress',
+            # OES - isotropic CTRIA3/CQUAD4 strain
+            'plateStrain',
             ## OES - isotropic CTETRA/CHEXA/CPENTA stress
             'solidStress',
             ## OES - isotropic CTETRA/CHEXA/CPENTA strain
@@ -430,19 +442,7 @@ class OP2(BDF,
             'nonlinearRodStress',
             ## OES - nonlinear CROD/CONROD/CTUBE strain
             'nonlinearRodStrain',
-            ## OES - isotropic CBAR stress
-            'barStress',
-            ## OES - isotropic CBAR strain
-            'barStrain',
-            ## OES - isotropic CBEAM stress
-            'beamStress',
-            ## OES - isotropic CBEAM strain
-            'beamStrain',
-    
-            ## OES - isotropic CTRIA3/CQUAD4 stress
-            'plateStress',
-            # OES - isotropic CTRIA3/CQUAD4 strain
-            'plateStrain',
+
             ## OESNLXR - CTRIA3/CQUAD4 stress
             'nonlinearPlateStress',
             ## OESNLXR - CTRIA3/CQUAD4 strain

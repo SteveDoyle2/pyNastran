@@ -47,6 +47,21 @@ class CompositePlateStressObject(stressObject):
             self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
 
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.o11)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, fiberCurvature, o11, o22, t12, t1z, t2z, angle, '
+                   'majorP, minorP, ovmShear\n')
+        return msg
+
     def addF06Data(self, data, transient, eType):
         """
                        S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
@@ -455,12 +470,25 @@ class CompositePlateStrainObject(strainObject):
             if dt is not None:
                 self.add = self.addSort1
                 self.addNewEid = self.addNewEidSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
-        ###
+
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.e11)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, e11, e22, e12, e1z, e2z, angle, majorP, minorP\n')
+        
+        return msg
 
     def deleteTransient(self, dt):
         del self.e11[dt]
@@ -668,7 +696,6 @@ class CompositePlateStrainObject(strainObject):
         else:
             isTri = False
             triWords = []
-        ###
 
         msg = []
         for dt, e11s in sorted(self.e11.iteritems()):
@@ -705,15 +732,13 @@ class CompositePlateStrainObject(strainObject):
                     triMsg.append(out)
                 else:
                     raise NotImplementedError('eType = |%r|' % (eType))
-                ###
-            ###
+
             if isQuad:
                 quadMsg.append(pageStamp + str(pageNum) + '\n')
                 pageNum += 1
             if isTri:
                 triMsg.append(pageStamp + str(pageNum) + '\n')
                 pageNum += 1
-            ###
             msg += quadMsg + triMsg
         ###
         return (''.join(msg), pageNum - 1)
@@ -752,8 +777,6 @@ class CompositePlateStrainObject(strainObject):
                     else:
                         msg += '%10.3g ' % (val)
                 msg += '\n'
-            ###
-        ###
         return msg
 
     def __reprTransient__(self):
