@@ -17,11 +17,9 @@ class HeatFlux_VU_3D(scalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
-        ###
 
     def addNewTransient(self, dt):
         self.grad[dt] = {}
@@ -166,11 +164,9 @@ class HeatFlux_VUBEAM(scalarObject):  # 191-VUBEAM
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
-        ###
 
     def addNewTransient(self, dt):
         self.grad[dt] = {}
@@ -237,11 +233,9 @@ class HeatFlux_1D(scalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
-        ###
 
     def addNewTransient(self, dt):
         self.grad[dt] = {}
@@ -285,7 +279,6 @@ class HeatFlux_2D_3D(scalarObject):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 6
             self.add = self.addSort1
         else:
             self.add = self.addSort2
-        ###
 
     def addNewTransient(self, dt):
         self.grad[dt] = {}

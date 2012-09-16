@@ -143,8 +143,7 @@ class GridPointStressesObject(scalarObject):
                 msg.append('%s%8s  %8s   %4s    %s %s %s   %7.4f %s %s %s  %-s\n' % (zero, eKey2, eid, elemName, nx, ny, txy, angle, majorP, minorP, tmax, ovm.rstrip()))
                 zero = ' '
                 eKey2 = ' '
-            ###
-        ###
+
         msg.append(pageStamp + str(pageNum) + '\n')
         if f is not None:
             f.write(''.join(msg))
@@ -333,8 +332,7 @@ class GridPointStressesVolumeObject(scalarObject):
                 msg.append('%s%8s  %s %s %s   %s %s %s %s  %-s\n' % (zero, eKey, nx, ny, nz, txy, tyz, txz, pressure, ovm.rstrip()))
                 zero = ' '
                 eKey2 = ' '
-            ###
-        ###
+
         msg.append(pageStamp + str(pageNum) + '\n')
         if f is not None:
             f.write(''.join(msg))

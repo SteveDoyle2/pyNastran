@@ -35,8 +35,7 @@ def runLotsOfFiles(files, debug=True, saveCases=True, skipFiles=[],
             else:
                 nPassed += 1
             #sys.exit('end of test...test_f06.py')
-        ###
-    ###
+
     if saveCases:
         f = open('failedCases.in', 'wb')
         for f06file in failedCases:
@@ -136,9 +135,7 @@ def runF06(f06file, iSubcases=[], writeF06=True, debug=False, stopOnFailure=True
             raise
         else:
             isPassed = False
-        ###
     return isPassed
-    ###
 
 
 def runArgParse():

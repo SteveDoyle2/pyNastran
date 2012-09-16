@@ -28,8 +28,6 @@ def parseSkippedCards(fname):
             key = (eName, eType, form)
             if key not in results:
                 results[key] = fpath
-            ###
-        ###
 
     filesToAnalyze = []
     for (key, value) in sorted(results.iteritems()):

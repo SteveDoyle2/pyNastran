@@ -836,7 +836,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             self.log.debug(msg)
             self.skippedCardsFile.write(msg)
             self.NotImplementedOrSkip()
-        ###
+
         #elif self.elementType == 1:    # crod     (done)
         #elif self.elementType == 2:    # cbeam    (done)
         #elif self.elementType == 3:    # ctube    (done)

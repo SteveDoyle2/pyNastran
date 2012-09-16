@@ -122,7 +122,6 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
                 actor = actors.GetNextItem()
                 actor.GetProperty().SetInterpolationToFlat()
             self.widget.Render()
-        ###
 
     def onSetToGouraudShading(self, event):  # Gouraud
         if self.bdfFileName is not None:
@@ -133,7 +132,6 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
                 actor = actors.GetNextItem()
                 actor.GetProperty().SetInterpolationToGouraud()
             self.widget.Render()
-        ###
 
     def onSetToPhongShading(self, event):  # Phong
         if self.bdfFileName is not None:
@@ -144,7 +142,6 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
                 actor = actors.GetNextItem()
                 actor.GetProperty().SetInterpolationToPhong()
             self.widget.Render()
-        ###
 
     def getColors(self):
         pass
@@ -467,7 +464,6 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
                 gridResult.SetNumberOfComponents(vectorSize)
             else:
                 print("***%s skipping" % (location))
-            ###
 
             #self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
             caseName = self.iSubcaseNameMap[subcaseID]
@@ -498,13 +494,11 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
                     gridResult.InsertNextValue(value)
                     if len(valueSet) < 20:
                         valueSet.add(value)
-                ###
             else:  # vectorSize=3
                 pass
                 #for value in case:
                 #    self.gridResult.InsertNextTuple3(value)  # x,y,z
-                ###
-            ###
+
             print("max=%g min=%g norm=%g\n" % (maxValue, minValue, normValue))
 
             nValueSet = len(valueSet)
@@ -545,8 +539,6 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
                 #print "***nodal skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label)
             else:
                 print("***%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
-            ###
-        ### if results
 
     def onKeyPress(self, obj, event):
         rwi = obj

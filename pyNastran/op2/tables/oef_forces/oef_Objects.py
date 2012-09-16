@@ -19,7 +19,6 @@ class nonlinearFluxObject(scalarObject):  # approachCode=10, sortCode=0
             self.addNewTransient()
             #self.isTransient = True
             #raise Exception('transient not supported for flux yet...')
-        ###
 
     def updateDt(self, dataCode, loadStep):
         self.dataCode = dataCode

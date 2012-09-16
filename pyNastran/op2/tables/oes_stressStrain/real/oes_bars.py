@@ -74,7 +74,6 @@ class BarStressObject(stressObject):
                 self.smin[eid] = [sminA, sminB]
                 #self.MS_tension[eid]     = MSt
                 #self.MS_compression[eid] = MSc
-            ###
             return
 
         (dtName, dt) = transient
@@ -99,7 +98,6 @@ class BarStressObject(stressObject):
             self.smin[dt][eid] = [sminA, sminB]
             #self.MS_tension[dt][eid]     = MSt
             #self.MS_compression[dt][eid] = MSc
-        ###
 
     def getLength(self):
         return (68, 'iffffffffffffffff')
@@ -236,7 +234,7 @@ class BarStressObject(stressObject):
              s1b, s2b, s3b, s4b, smaxb, sminb] = vals2
             msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt.rstrip()))
             msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', s1b, s2b, s3b, s4b, '', smaxb, sminb, MSc.rstrip()))
-        ###
+
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
@@ -271,7 +269,7 @@ class BarStressObject(stressObject):
                  s1b, s2b, s3b, s4b, smaxb, sminb] = vals2
                 msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt.rstrip()))
                 msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', s1b, s2b, s3b, s4b, '', smaxb, sminb, MSc.rstrip()))
-            ###
+
             msg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
         return (''.join(msg), pageNum - 1)
@@ -306,7 +304,6 @@ class BarStressObject(stressObject):
                     msg += '%8s ' % ('0')
                 else:
                     msg += '%8i ' % (val)
-                ###
             msg += '\n'
 
             msg += '%s ' % (' ' * 13)
@@ -318,12 +315,11 @@ class BarStressObject(stressObject):
                     msg += '%8s ' % ('0')
                 else:
                     msg += '%8i ' % (val)
-                ###
             msg += '\n'
 
             #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i smax=%-5i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
             #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-5i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
-        ###
+
         return msg
 
     def __reprTransient__(self):
@@ -355,7 +351,6 @@ class BarStressObject(stressObject):
                         msg += '%8s ' % ('0')
                     else:
                         msg += '%8i ' % (val)
-                    ###
                 msg += '\n'
 
                 msg += '%s ' % (' ' * 13)
@@ -367,13 +362,10 @@ class BarStressObject(stressObject):
                         msg += '%8s ' % ('0')
                     else:
                         msg += '%8i ' % (val)
-                    ###
                 msg += '\n'
 
                 #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i smax=%-5i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
                 #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-5i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
-            ###
-        ###
         return msg
 
 
@@ -476,7 +468,6 @@ class BarStrainObject(strainObject):
             self.emin[dt][eid] = [eminA, eminB]
             #self.MS_tension[dt][eid]     = MSt
             #self.MS_compression[dt][eid] = MSc
-        ###
 
     def deleteTransient(self, dt):
         del self.e1[dt]
@@ -579,7 +570,7 @@ class BarStrainObject(strainObject):
 
             msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, e10, e20, e30, e40, axial, emax0, emin0, MSt.rstrip()))
             msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', e11, e21, e31, e41, '', emax1, emin1, MSc.rstrip()))
-        ###
+
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
@@ -664,7 +655,7 @@ class BarStrainObject(strainObject):
 
             #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i smax=%-5i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
             #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-5i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
-        ###
+
         return msg
 
     def __reprTransient__(self):
@@ -696,7 +687,6 @@ class BarStrainObject(strainObject):
                         msg += '%10s ' % ('0')
                     else:
                         msg += '%10.3g ' % (val)
-                    ###
                 msg += '\n'
 
                 msg += '%s ' % (' ' * 17)
@@ -712,6 +702,5 @@ class BarStrainObject(strainObject):
 
                 #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i smax=%-5i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
                 #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-5i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
-            ###
-        ###
+
         return msg

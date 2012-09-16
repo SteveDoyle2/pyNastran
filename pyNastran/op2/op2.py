@@ -115,21 +115,21 @@ class OP2(BDF,
         ## the list of supported tables (dont edit this)
         self.tablesToRead = [
             # nodes/geometry/loads/BCs
-            'GEOM1', 'GEOM2', 'GEOM3', 'GEOM4', # regular
-            'GEOM1S', 'GEOM2S', 'GEOM3S', 'GEOM4S', # superelements
-            
+            'GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',      # regular
+            'GEOM1S', 'GEOM2S', 'GEOM3S', 'GEOM4S',  # superelements
+
             'GEOM1OLD', 'GEOM1N',  # ???
-            'EPT', 'MPT',  # properties/materials
+            'EPT', 'MPT',    # properties/materials
             'EPTS', 'MPTS',  # properties/materials - superelements
-            'EDTS',         # ???
+            'EDTS',          # ???
             'DYNAMIC', 'DYNAMICS',
             'DIT',                           # tables (e.g. TABLED1)
-            'LAMA', 'BLAMA',                  # eigenvalues
+            'LAMA', 'BLAMA',                 # eigenvalues
 
-            'BGPDT', 'BGPDTS',                # boundary grids???
+            'BGPDT', 'BGPDTS',               # boundary grids???
             'EQEXIN', 'EQEXINS', 'PVT0', 'CASECC', 'EDOM',
             'DESTAB',                        # design variables
-            'OQG1', 'OQGV1',                  # spc forces
+            'OQG1', 'OQGV1',                 # spc forces
             'OQMG1',                         # mpc forces
 
             'OUGV1',                         # displacements
@@ -245,7 +245,7 @@ class OP2(BDF,
         self.thermalLoad_VU = {}
         self.thermalLoad_VU_3D = {}
         self.thermalLoad_VUBeam = {}
-        #self.temperatureForces = {}    # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
+        #self.temperatureForces = {}
 
         # OES - tCode=5 thermal=0 sCode=0,1 (stress/strain)
         ## OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
@@ -320,6 +320,10 @@ class OP2(BDF,
         self.strainEnergy = {}  # tCode=18
 
     def get_op2_stats(self):
+        """
+        gets info about the contents of the different attributes of the
+        OP2 class
+        """
         table_types = [
             ## OUG - displacement
             'displacements',
@@ -329,26 +333,26 @@ class OP2(BDF,
             'displacementsCRM',
             'displacementsNO',
             'scaledDisplacements',
-    
+
             ## OUG - temperatures
             'temperatures',
-    
+
             ## OUG - eigenvectors
             'eigenvectors',
-    
+
             ## OUG - velocity
             'velocities',
-    
+
             ## OUG - acceleration
             'accelerations',
-    
+
             # OQG - spc/mpc forces
             'spcForces',
             'mpcForces',
-    
+
             ## OGF - grid point forces
             'gridPointForces',
-    
+
             ## OPG - summation of loads for each element
             'loadVectors',
             'thermalLoadVectors',
@@ -387,9 +391,9 @@ class OP2(BDF,
             'shearStress',
             ## OES - CSHEAR strain
             'shearStrain',
-    
+
         ]
-        
+
         msg = []
         for table_type in table_types:
             table = getattr(self, table_type)
@@ -401,7 +405,7 @@ class OP2(BDF,
         others = [
             # LAMA
             'eigenvalues',
-    
+
             # OEF - Forces - tCode=4 thermal=0
             'rodForces',
             'barForces',
@@ -418,10 +422,10 @@ class OP2(BDF,
             'solidPressureForces',
             'springForces',
             'viscForces',
-    
+
             'force_VU',
             'force_VU_2D',
-    
+
             #OEF - Fluxes - tCode=4 thermal=1
             'thermalLoad_CONV',
             'thermalLoad_CHBDY',
@@ -430,14 +434,13 @@ class OP2(BDF,
             'thermalLoad_VU',
             'thermalLoad_VU_3D',
             'thermalLoad_VUBeam',
-            #self.temperatureForces # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
+            #self.temperatureForces
         ]
         others += [
-    
             ## OES - CTRIAX6
             'ctriaxStress',
             'ctriaxStrain',
-    
+
             ## OES - nonlinear CROD/CONROD/CTUBE stress
             'nonlinearRodStress',
             ## OES - nonlinear CROD/CONROD/CTUBE strain
@@ -449,22 +452,26 @@ class OP2(BDF,
             'nonlinearPlateStrain',
             'hyperelasticPlateStress',
             'hyperelasticPlateStrain',
-    
+
             ## OES - composite CTRIA3/CQUAD4 stress
             'compositePlateStress',
             ## OES - composite CTRIA3/CQUAD4 strain
             'compositePlateStrain',
-    
+
             ## OGS1 - grid point stresses
             'gridPointStresses',        # tCode=26
             'gridPointVolumeStresses',  # tCode=27
-    
+
             ## OEE - strain energy density
             'strainEnergy',  # tCode=18
         ]
         return ''.join(msg)
 
     def readTapeCode2(self):
+        """
+        Alternative method for the Tape Code table.
+        @todo not done
+        """
         data = self.op2.read(28)
         (f1, two, f2, f3, tableName, f4) = unpack('4i8si', data)
         #print("tableName = ",tableName)
@@ -556,12 +563,14 @@ class OP2(BDF,
         try:
             self.readTapeCode()
         except:
-            msg = 'When this happens, the analysis failed or the code bombed...check the F06.\n'
-            msg += '  If the F06 is OK:\n'
-            msg += '      1.  Make sure you used PARAM,POST,-1 in your BDF/DAT/NAS\n'
-            msg += '      2.  Run the problem on a different Operating System\n'
-            msg += '      3.  Are you running an OP2? :)  \nfname=%s' % (
-                self.op2FileName)
+            msg = ('When this happens, the analysis failed or '
+                  'the code bombed...check the F06.\n'
+                  '  If the F06 is OK:\n'
+                  '      1.  Make sure you used PARAM,POST,-1 in your '
+                  'BDF/DAT/NAS\n'
+                  '      2.  Run the problem on a different Operating System\n'
+                  '      3.  Are you running an OP2? :)  \n'
+                  'fname=%s' % (self.op2FileName))
             raise TapeCodeError(msg)
 
         isAnotherTable = True
@@ -589,7 +598,6 @@ class OP2(BDF,
                 break
             else:
                 isAnotherTable = self.readTable(tableName)
-            ###
 
         self.log.debug("---end of all tables---")
         self.skippedCardsFile.close()
@@ -602,14 +610,14 @@ class OP2(BDF,
                 #print("startTell = %s" %(self.op2.tell()))
                 if tableName == 'GEOM1':  # nodes,coords,etc.
                     self.readTable_Geom1()
-                elif tableName == 'GEOM1S':  # superelements - nodes,coords,etc.
-                    self.readTable_Geom1S()
-                elif tableName == 'GEOM2S':  # superelements - elements
-                    self.readTable_Geom2S()
-                elif tableName == 'GEOM3S':  # superelements - static/thermal loads
-                    self.readTable_Geom3S()
-                elif tableName == 'GEOM4S':  # superelements - constraints
-                    self.readTable_Geom4S()
+                elif tableName == 'GEOM1S':  # superelements
+                    self.readTable_Geom1S()  #  - nodes,coords,etc.
+                elif tableName == 'GEOM2S':  # superelements
+                    self.readTable_Geom2S()  #  - elements
+                elif tableName == 'GEOM3S':  # superelements
+                    self.readTable_Geom3S()  #  - static/thermal loads
+                elif tableName == 'GEOM4S':  # superelements
+                    self.readTable_Geom4S()  #  - constraints
 
                 #elif tableName=='GEOM1OLD':
                 #    self.readTable_Geom1Old()
@@ -628,8 +636,8 @@ class OP2(BDF,
                     self.readTable_MPTS()
                 elif tableName in ['DYNAMIC', 'DYNAMICS']:  # dyanmic info
                     self.readTable_DYNAMICS()
-                elif  tableName in ['DIT']:  # tables...TABLED1/TABLEM1/TABLES1/GUST
-                    self.readTable_DIT()
+                elif  tableName in ['DIT']:  # tables...
+                    self.readTable_DIT()     # TABLED1/TABLEM1/TABLES1/GUST
                 elif tableName in ['LAMA', 'BLAMA']:  # eigenvalue
                     self.readTable_LAMA()
 
@@ -725,7 +733,7 @@ class OP2(BDF,
                                    'OAGNO2', 'OAGCRM2', 'OPGPSD2', 'OPGPSD2',
                                    'OPGPSD2', 'OPGATO2']:
                     self.readTable_DUMMY_GEOM(tableName)
-                elif tableName in ['OPGRMS2', 'OPGNO2', 'OPGCRM2', 'OQGPSD2', ]:
+                elif tableName in ['OPGRMS2', 'OPGNO2', 'OPGCRM2', 'OQGPSD2']:
                     self.readTable_DUMMY_GEOM(tableName)
                 elif tableName in ['OQGPSD2', 'OQGATO2', 'OQGRMS2', 'OQGNO2',
                                    'OQGCRM2', 'PVT0', 'CASECC', 'EDOM', ]:
@@ -741,7 +749,6 @@ class OP2(BDF,
                 #isAnotherTable = True
             except EndOfFileError:
                 isAnotherTable = False
-            ###
         else:
             if tableName not in [None]:
                 assert 1 == 0, '%s is not supported' % (tableName)
@@ -749,7 +756,6 @@ class OP2(BDF,
             #return isAnotherTable
         #print(self.printSection(140))
         self.log.debug("*** finished tableName = |%r|" % (tableName))
-        ###
         return isAnotherTable
 
     def parseSortCode(self):
@@ -807,12 +813,13 @@ class OP2(BDF,
 
         if self.deviceCode == 3:
             #sys.stderr.write('The op2 may be inconsistent...\n')
-            #sys.stderr.write("  print and plot can cause bad results...if there's a crash, try plot only\n")
+            #sys.stderr.write("  print and plot can cause bad results..."
+            #                 "if there's a crash, try plot only\n")
             self.deviceCode = 1
 
             #self.log.info('The op2 may be inconsistent...')
-            #self.log.info("  print and plot can cause bad results...if there's a crash, try plot only")
-            #pass
+            #self.log.info('  print and plot can cause bad results...'
+            #              'if there's a crash, try plot only')
 
         ## dataCode stores the active variables; these pass important
         ## self variables into the result object
@@ -826,7 +833,10 @@ class OP2(BDF,
         #print("iSubcase = ",self.iSubcase)
         self.parseSortCode()
 
-        #print("aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s tableCode=%s sortCode=%s iSubcase(4)=%s" %(aCode,self.analysisCode,self.deviceCode,tCode,self.tableCode,self.sortCode,self.iSubcase))
+        #print('aCode(1)=%s analysisCode=%s deviceCode=%s '
+        #      'tCode(2)=%s tableCode=%s sortCode=%s iSubcase(4)=%s'
+        #      %(aCode, self.analysisCode, self.deviceCode, tCode, 
+        #        self.tableCode, self.sortCode, self.iSubcase))
         #self.log.debug(self.printTableCode(self.tableCode))
         return (int3)
 
@@ -844,7 +854,8 @@ class OP2(BDF,
             this makes it work with what's documented in the DMAP manual
         """
         if iWordStop is None:
-            #print("iWordStart=%s data[%s:%s]" %(iWordStart,iWordStart*4,(iWordStart+1)*4))
+            #print("iWordStart=%s data[%s:%s]" %(iWordStart,iWordStart*4,
+            #                                   (iWordStart+1)*4))
             ds = data[(iWordStart - 1) * 4:iWordStart * 4]
             iFormat = bytes(iFormat)
             return unpack(iFormat, ds)[0]
@@ -871,7 +882,8 @@ class OP2(BDF,
         if bufferWords <= 0:
             raise BufferError('An invalid buffersize was found...'
                               'bufferWords=%s tableName=%s section=\n%s'
-                              % (bufferWords, self.tableName, self.printSection(200)))
+                              % (bufferWords, self.tableName,
+                                 self.printSection(200)))
         return bufferWords
 
     def verifyBufferSize(self, bufferWords):
@@ -907,7 +919,7 @@ class OP2(BDF,
         self.tableName = word.strip()
         ## the names of all the tables
         self.tableNames.append(word)
-        msg = '*' * 20 + word + '*' * 20 + '\n'
+        #msg = '*' * 20 + word + '*' * 20 + '\n'
         #print(msg)
 
     def getTableNamesFromOP2(self):

@@ -1,8 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-import sys
-
 from .oes_objects import stressObject, strainObject
 
 
@@ -139,7 +137,8 @@ class CompositePlateStressObject(stressObject):
         self.minorP[dt] = {}
         self.ovmShear[dt] = {}
 
-    def addNewEid(self, eType, dt, eid, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm):
+    def addNewEid(self, eType, dt, eid, o11, o22, t12, t1z, t2z, angle,
+                  majorP, minorP, ovm):
         """all points are located at the centroid"""
         #print "Composite Plate Strain add..."
         msg = "eid=%s eType=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, eType, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
@@ -161,14 +160,16 @@ class CompositePlateStressObject(stressObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def addNewEidSort1(self, eType, dt, eid, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm):
+    def addNewEidSort1(self, eType, dt, eid, o11, o22, t12, t1z, t2z, angle,
+                       majorP, minorP, ovm):
         """all points are located at the centroid"""
         #print "Composite Plate Strain add..."
 
         if dt not in self.o11:
             self.addNewTransient(dt)
         if eid in self.o11[dt]:
-            return self.add(dt, eid, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
+            return self.add(dt, eid, o11, o22, t12, t1z, t2z, angle,
+                            majorP, minorP, ovm)
 
         assert eid not in self.o11[dt]
         self.eType[eid] = eType
@@ -185,7 +186,8 @@ class CompositePlateStressObject(stressObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def add(self, dt, eid, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm):
+    def add(self, dt, eid, o11, o22, t12, t1z, t2z, angle,
+            majorP, minorP, ovm):
         #print "***add"
         msg = "eid=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
         #print msg
@@ -201,7 +203,8 @@ class CompositePlateStressObject(stressObject):
         self.ovmShear[eid].append(ovm)
         #if nodeID==0: raise Exception(msg)
 
-    def addSort1(self, dt, eid, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm):
+    def addSort1(self, dt, eid, o11, o22, t12, t1z, t2z, angle,
+                 majorP, minorP, ovm):
         #print "***add"
         msg = "eid=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
         #print msg
@@ -254,7 +257,7 @@ class CompositePlateStressObject(stressObject):
         else:
             isTri = False
             triMsg = []
-        ###
+
         for eid, o11s in sorted(self.o11.iteritems()):
             out = ''
             eType = self.eType[eid]
@@ -279,8 +282,7 @@ class CompositePlateStressObject(stressObject):
                 triMsg.append(out)
             #else:
             #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8LC
-            ###
-        ###
+
         if isQuad:
             quadMsg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
@@ -291,7 +293,8 @@ class CompositePlateStressObject(stressObject):
         msg = ''.join(quadMsg + triMsg)
         return (msg, pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def writeF06Transient(self, header, pageStamp,
+                          pageNum=1, f=None, isMagPhase=False):
         if self.isVonMises():
             von = 'VON'
             mises = 'MISES'
@@ -342,7 +345,8 @@ class CompositePlateStressObject(stressObject):
                     minor = self.minorP[dt][eid][iLayer]
                     ovm = self.ovmShear[dt][eid][iLayer]
                     (vals2, isAllZeros) = self.writeFloats12E([o11, o22,
-                                                               t12, t1z, t2z, major, minor, ovm])
+                                                               t12, t1z, t2z,
+                                                               major, minor, ovm])
                     [o11, o22, t12, t1z, t2z, major, minor, ovm] = vals2
                     out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' % (eid, iLayer + 1, o11, o22, t12, t1z, t2z, angle, major, minor, ovm)
 
@@ -352,7 +356,7 @@ class CompositePlateStressObject(stressObject):
                     triMsg.append(out)
                 #else:
                 #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8LC
-            ###
+
             if isQuad:
                 quadMsg.append(pageStamp + str(pageNum) + '\n')
                 pageNum += 1
@@ -360,7 +364,7 @@ class CompositePlateStressObject(stressObject):
                 triMsg.append(pageStamp + str(pageNum) + '\n')
                 pageNum += 1
             msg += quadMsg + triMsg
-        ###
+
         return (''.join(msg), pageNum - 1)
 
     def __repr__(self):
@@ -384,9 +388,9 @@ class CompositePlateStressObject(stressObject):
                 t1z = self.t1z[eid][iLayer]
                 t2z = self.t2z[eid][iLayer]
 
-                angle = self.angle[eid][iLayer]
-                major = self.majorP[eid][iLayer]
-                minor = self.minorP[eid][iLayer]
+                #angle = self.angle[eid][iLayer]
+                #major = self.majorP[eid][iLayer]
+                #minor = self.minorP[eid][iLayer]
                 ovm = self.ovmShear[eid][iLayer]
 
                 msg += '%-6i %8s %8s ' % (eid, eType, iLayer + 1,)
@@ -396,10 +400,7 @@ class CompositePlateStressObject(stressObject):
                         msg += '%10s ' % ('0')
                     else:
                         msg += '%10i ' % (val)
-                    ###
                 msg += '\n'
-            ###
-        ###
         return msg
 
     def __reprTransient__(self):
@@ -421,9 +422,9 @@ class CompositePlateStressObject(stressObject):
                     t1z = self.t1z[dt][eid][iLayer]
                     t2z = self.t2z[dt][eid][iLayer]
 
-                    angle = self.angle[dt][eid][iLayer]
-                    major = self.majorP[dt][eid][iLayer]
-                    minor = self.minorP[dt][eid][iLayer]
+                    #angle = self.angle[dt][eid][iLayer]
+                    #major = self.majorP[dt][eid][iLayer]
+                    #minor = self.minorP[dt][eid][iLayer]
                     ovm = self.ovmShear[dt][eid][iLayer]
 
                     msg += '%-6i %8s %8s ' % (eid, eType, iLayer + 1,)
@@ -434,8 +435,6 @@ class CompositePlateStressObject(stressObject):
                         else:
                             msg += '%10i ' % (val)
                     msg += '\n'
-                ###
-        ###
         return msg
 
 
@@ -487,7 +486,6 @@ class CompositePlateStrainObject(strainObject):
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
         msg.append('  eType, e11, e22, e12, e1z, e2z, angle, majorP, minorP\n')
-        
         return msg
 
     def deleteTransient(self, dt):
@@ -633,7 +631,7 @@ class CompositePlateStrainObject(strainObject):
         else:
             isTri = False
             triMsg = []
-        ###
+
         for eid, e11s in sorted(self.e11.iteritems()):
             out = ''
             eType = self.eType[eid]
@@ -660,7 +658,7 @@ class CompositePlateStrainObject(strainObject):
                 triMsg.append(out)
             #else:
             #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8LC
-        ###
+
         if isQuad:
             quadMsg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
@@ -740,7 +738,7 @@ class CompositePlateStrainObject(strainObject):
                 triMsg.append(pageStamp + str(pageNum) + '\n')
                 pageNum += 1
             msg += quadMsg + triMsg
-        ###
+
         return (''.join(msg), pageNum - 1)
 
     def __repr__(self):
@@ -764,9 +762,9 @@ class CompositePlateStrainObject(strainObject):
                 e1z = self.e1z[eid][iLayer]
                 e2z = self.e2z[eid][iLayer]
 
-                angle = self.angle[eid][iLayer]
-                major = self.majorP[eid][iLayer]
-                minor = self.minorP[eid][iLayer]
+                #angle = self.angle[eid][iLayer]
+                #major = self.majorP[eid][iLayer]
+                #minor = self.minorP[eid][iLayer]
                 evm = self.evmShear[eid][iLayer]
 
                 msg += '%-6i %8s %8s ' % (eid, eType, iLayer + 1,)
@@ -798,9 +796,9 @@ class CompositePlateStrainObject(strainObject):
                     e1z = self.e1z[dt][eid][iLayer]
                     e2z = self.e2z[dt][eid][iLayer]
 
-                    angle = self.angle[dt][eid][iLayer]
-                    major = self.majorP[dt][eid][iLayer]
-                    minor = self.minorP[dt][eid][iLayer]
+                    #angle = self.angle[dt][eid][iLayer]
+                    #major = self.majorP[dt][eid][iLayer]
+                    #minor = self.minorP[dt][eid][iLayer]
                     evm = self.evmShear[dt][eid][iLayer]
 
                     msg += '%-6i %8s %8s ' % (eid, eType, iLayer + 1,)

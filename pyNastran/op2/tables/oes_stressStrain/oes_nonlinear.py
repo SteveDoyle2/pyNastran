@@ -190,12 +190,10 @@ class HyperelasticQuadObject(stressObject):
             if dt is not None:
                 self.add = self.addSort1
                 self.addNewEid = self.addNewEidSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
-        ###
 
     def deleteTransient(self, dt):
         del self.fiberDistance[dt]
@@ -292,12 +290,10 @@ class NonlinearRodObject(stressObject):
             if dt is not None:
                 self.add = self.addSort1
                 #self.addNewEid = self.addNewEidSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
             #self.addNewEid = self.addNewEidSort2
-        ###
 
     def deleteTransient(self, dt):
         del self.axialStress[dt]

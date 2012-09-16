@@ -74,7 +74,6 @@ class NastranIO(object):
             except NameError:
                 print("cant delete geo")
                 #pass
-            ###
             #print dir(self)
         self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
@@ -360,7 +359,6 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
-            ###
             elif isinstance(element, CONM2):  # not perfectly located
                 del self.eidMap[eid]
                 i -= 1
@@ -384,7 +382,7 @@ class NastranIO(object):
 
                 print("skipping %s" % (element.type))
             i += 1
-        ###
+
         self.grid.SetPoints(points)
         self.grid2.SetPoints(points2)
         #self.grid.GetPointData().SetScalars(self.gridResult)
@@ -454,14 +452,12 @@ class NastranIO(object):
                         #print T
                         nid2 = self.nidMap[nid]
                         temps[nid2] = T
-                    ###
                     #cases[key] = temps
 
             if self.isStress(op2, subcaseID):
                 cases = self.fillStressCase(cases, op2, subcaseID,
                                             eKey, nElements)
-            ###
-        ###
+
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
         #print "caseKeys = ",self.caseKeys
@@ -584,7 +580,6 @@ class NastranIO(object):
                 o2[eid2] = o2i
                 o3[eid2] = o3i
                 ovm[eid2] = ovmi
-            ###
 
         # subcaseID,resultType,vectorSize,location,dataFormat
         cases[(subcaseID, 'StressXX', 1, 'centroid', '%.3f')] = oxx

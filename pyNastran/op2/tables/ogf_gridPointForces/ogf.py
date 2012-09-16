@@ -129,8 +129,6 @@ class OGF(object):
         else:
             #self.log.debug('skipping approach/table/format/sortCode=%s on %s-OGF table' %(self.tableName,self.atfsCode))
             self.NotImplementedOrSkip('bad approach/table/format/sortCode=%s on %s-OGF table' % (self.atfsCode, self.tableName))
-        ###
-        #print self.obj
 
     def readOGF_Data_table19(self):  # grid point forces
         #isSort1 = self.isSort1()
@@ -154,7 +152,6 @@ class OGF(object):
             #self.handleResultsBuffer3(self.OUG_ComplexTable)
         else:
             raise NotImplementedError('only numWide=10 or 16 is allowed  numWide=%s' % (self.numWide))
-        ###
 
     def readOGF_numWide10(self):
         dt = self.nonlinearFactor

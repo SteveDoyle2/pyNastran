@@ -49,7 +49,6 @@ class StrainEnergyObject(scalarObject):
         if dt is not None:
             self.dt = dt
             self.addNewTransient(dt)
-        ###
         self.updateNumWide()
 
     def deleteTransient(self, dt):
@@ -119,8 +118,6 @@ class StrainEnergyObject(scalarObject):
                 #sys.stdout.flush()
                 msg += "%-10s %-14g %-14g %s" % (
                     eid, energy, percent, density2)
-            ###
-        ###
         return msg
 
     def __repr__(self):

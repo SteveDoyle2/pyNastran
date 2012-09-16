@@ -58,7 +58,7 @@ class LaWGS_Panel(object):
                 (x1, y1, z1) = line.strip().split()
                 points.append(array([x1, y1, z1], 'd'))
                 irow += 1
-            ###
+
         #for i,point in enumerate(points):
             #print "point[%s] = %s" %(i,point)
 
@@ -73,11 +73,10 @@ class LaWGS_Panel(object):
                 #ii = n/self.nCols
                 #print "n=%-2s i=%-2s j=%-2s ii=%-2s jj=%-2s" %(n,i,j,ii,jj)
                 n += 1
-            ###
+
             Points.append(points2)
             #print "len(points[%s]) = %s" %(j,len(points2))
-        #asdf
-        ###
+
         self.points = Points
         #print "len(self.points) = %s" %(len(self.points))
 
@@ -125,8 +124,6 @@ class LaWGS_Panel(object):
             #points2 = []
             for j in xrange(self.nCols):
                 Points2[i][j] = scale * (dot(rot, points[i][j]) + translate)
-            ###
-        ###
         self.Points = Points2
 
     def getPoints(self):
@@ -135,8 +132,6 @@ class LaWGS_Panel(object):
             #points2 = []
             for j in xrange(self.nCols):
                 Points.append(self.Points[i][j])
-            ###
-        ###
         return Points, len(Points)
 
     def getElements(self, pointI):
@@ -168,8 +163,6 @@ class LaWGS_Panel(object):
                 X.append(x)
                 Y.append(y)
                 Z.append(z)
-            ###
-        ###
 
         msg = ''
         for x in X:
@@ -220,7 +213,7 @@ class LaWGS(object):
             else:
                 group.append(line)
             i += 1
-        ###
+
         groups[name] = [header, group]
 
         del groups['']
@@ -232,7 +225,6 @@ class LaWGS(object):
                 panel = LaWGS_Panel(key, header, group)
                 panel.updatePoints()
                 self.panels[key] = panel
-        ###
 
     def getPointsElements(self):
         points = []
@@ -246,7 +238,7 @@ class LaWGS(object):
             elements += elementsI
             pointI += pointi
             #print "name=%s len(AllElements)=%s len(allPoints)=%s" %(name,len(elements),len(points))
-        ###
+
         #for point in points:
             #print point
         return points, elements

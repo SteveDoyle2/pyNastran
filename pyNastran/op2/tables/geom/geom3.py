@@ -65,7 +65,6 @@ class Geometry3(object):
             load = FORCE(None, [sid, g, cid, f, n1, n2, n3])
             self.addLoad(load)
             n += 28
-        ###
         data = data[n:]
 
     def readFORCE1(self, data):
@@ -82,7 +81,6 @@ class Geometry3(object):
             load = FORCE1(None, [sid, g, f, n1, n2])
             self.addLoad(load)
             n += 20
-        ###
         data = data[n:]
 
     def readFORCE2(self, data):
@@ -99,7 +97,6 @@ class Geometry3(object):
             load = FORCE2(None, [sid, g, f, n1, n2, n3, n4])
             self.addLoad(load)
             n += 28
-        ###
         data = data[n:]
 
 # GMLOAD
@@ -118,7 +115,6 @@ class Geometry3(object):
             grav = GRAV(None, out)
             self.addLoad(grav)
             n += 28
-        ###
         data = data[n:]
 
     def readLOAD(self, data):
@@ -152,7 +148,6 @@ class Geometry3(object):
             dataIn = [sid, s, Si, L1]
             load = LOAD(None, dataIn)
             self.addLoad(load)
-        ###
 
     def readLOADCYH(self, data):
         self.skippedCardsFile.write('skipping LOADCYG in GEOM3\n')
@@ -178,7 +173,6 @@ class Geometry3(object):
             load = FORCE1(None, out)
             self.addLoad(load)
             n += 28
-        ###
         data = data[n:]
 
     def readMOMENT1(self, data):
@@ -195,7 +189,6 @@ class Geometry3(object):
             load = FORCE1(None, out)
             self.addLoad(load)
             n += 20
-        ###
         data = data[n:]
 
     def readMOMENT2(self, data):
@@ -213,7 +206,6 @@ class Geometry3(object):
             load = FORCE1(None, out)
             self.addLoad(load)
             n += 28
-        ###
         data = data[n:]
 
     def readPLOAD(self, data):
@@ -234,7 +226,6 @@ class Geometry3(object):
             load = PLOAD1(None, out)
             self.addLoad(load)
             n += 32
-        ###
         data = data[n:]
 
     def readPLOAD2(self, data):
@@ -251,7 +242,6 @@ class Geometry3(object):
             load = PLOAD2(None, out)
             self.addLoad(load)
             n += 12
-        ###
         data = data[n:]
 
     def readPLOAD3(self, data):
@@ -268,7 +258,6 @@ class Geometry3(object):
             load = PLOAD3(None, out)
             self.addLoad(load)
             n += 20
-        ###
         data = data[n:]
 
     def readPLOAD4(self, data):  ## inconsistent with DMAP
@@ -296,7 +285,6 @@ class Geometry3(object):
                                  cid, [n1, n2, n3], sdrlA, sdrlB, ldirA, ldirB])
             self.addLoad(load)
             n += 48
-        ###
         data = data[n:]
 
 # PLOADX - obsolete
@@ -319,7 +307,6 @@ class Geometry3(object):
             load = QBDY1(None, out)
             self.addThermalLoad(load)
             n += 12
-        ###
         data = data[n:]
 
     def readQBDY2(self, data):
@@ -336,7 +323,6 @@ class Geometry3(object):
             load = QBDY2(None, out)
             self.addThermalLoad(load)
             n += 40
-        ###
         data = data[n:]
 
     def readQBDY3(self, data):
@@ -353,7 +339,6 @@ class Geometry3(object):
             load = QBDY3(None, out)
             self.addThermalLoad(load)
             n += 16
-        ###
         data = data[n:]
 
     def readTEMP(self, data):
@@ -374,7 +359,6 @@ class Geometry3(object):
             else:
                 self.log.debug('TEMP = %s' % (out))
             n += 12
-        ###
         data = data[n:]
 
     def readTEMPD(self, data):
@@ -392,7 +376,6 @@ class Geometry3(object):
             load = TEMPD(None, out)
             #self.addThermalLoad(load)
             n += 8
-        ###
         data = data[n:]
 
 # QHBDY

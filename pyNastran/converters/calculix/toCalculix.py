@@ -47,7 +47,6 @@ class CalculixConverter(BDF):
         for eid, element in self.elements.iteritems():
             pid = element.Pid()
             props[pid].append(eid)
-        ###
         return mats
 
     def getElementsByMid(self):
@@ -62,7 +61,6 @@ class CalculixConverter(BDF):
                 mats[mid].append(eid)
             except:
                 mats[0].append(eid)
-        ###
         return mats
 
     def getElementsByType(self):
@@ -78,7 +76,6 @@ class CalculixConverter(BDF):
             elems[Type].append(eid)
             #mid = element.Mid()
             #mats[mid].append(eid)
-        ###
         return elems
 
     def getPropertiesByMid(self):
@@ -93,7 +90,6 @@ class CalculixConverter(BDF):
                 mats[mid].append(pid)
             except:
                 mats[0].append(pid)
-        ###
         return mats
 
     def Calculix_Executive(self):
@@ -119,7 +115,6 @@ class CalculixConverter(BDF):
         for nid, node in sorted(self.nodes.iteritems()):
             p = node.Position()
             dat += form % (nid, p[0], p[1], p[2])
-        ###
         dat += '\n\n'
         dat += self.breaker()
         return dat
@@ -183,7 +178,6 @@ class CalculixConverter(BDF):
                 isSkipped = False
                 if 'skipped' in prop:
                     isSkipped = True
-            ###
         if not isSkipped:
             inp = inp[:-2]
         inp += ');\n'
@@ -239,7 +233,6 @@ class CalculixConverter(BDF):
                 inp += "'P%s'," % (pid)
             inp = inp[:-1] + '),\n'
             inp += "                      MATER=M%s),\n" % (mid)
-        ###
         inp = inp[:-1] + '));\n'
 
         inp += self.breaker()
@@ -281,12 +274,9 @@ class CalculixConverter(BDF):
                     #except:
                         #print 'failed printing load...type=%s key=%s' %(load.type,key)
                         #raise
-                    ###
             #loadcase.
             #for ID,grav in sorted(self.gravs.iteritems()):
             #    inp += grav.writeCalculix(mag)
-            ###
-        ###
 
         #for lid_loadType,inpi in sorted(skippedLids.iteritems()):
             #inp += inpi
@@ -367,7 +357,6 @@ class CalculixConverter(BDF):
             #print "writing fname=%s" %(fname+'.py')
             #f.write(pyCA)
             #f.close()
-        ###
 
 
 def main():

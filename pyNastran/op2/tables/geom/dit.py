@@ -39,7 +39,6 @@ class DIT(object):
             gust = GUST(None, out)
             self.addGUST(gust)
             n += 20
-        ###
         data = data[n:]
 
 #TABDMP1
@@ -73,11 +72,10 @@ class DIT(object):
                     break
                 else:
                     dataIn += [x, y]
-                ###
+
             dataIn += [x, y]
             table = func(None, out)
             self.addTable(table)
-        ###
         data = data[n:]
 
     def readTableD2(self, data):
@@ -105,11 +103,9 @@ class DIT(object):
                     break
                 else:
                     dataIn += [x, y]
-                ###
             dataIn += [x, y]
             table = func(None, out)
             self.addTable(table)
-        ###
         data = data[n:]
 
     def readTableD3(self, data):
@@ -137,11 +133,9 @@ class DIT(object):
                     break
                 else:
                     dataIn += [x, y]
-                ###
             dataIn += [x, y]
             table = func(None, out)
             self.addTable(table)
-        ###
         data = data[n:]
 
 #TABLEDR

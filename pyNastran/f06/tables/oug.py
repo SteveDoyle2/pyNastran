@@ -94,7 +94,6 @@ class OUG(object):
             #print out
             data.append(out)
             self.i += 2
-        ###
         self.i += 1
 
         if iSubcase in self.displacements:

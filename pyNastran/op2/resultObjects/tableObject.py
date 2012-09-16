@@ -158,7 +158,6 @@ class TableObject(scalarObject):  # displacement style table
             #(rx,ry,rz) = rotation
             #grid = nodeID*10+deviceCode
             #msg += pack('iffffff',grid,dx,dy,dz,rx,ry,rz)
-        ###
         #return msg
 
     #def writeOp2Transient(self,block3,deviceCode=1):
@@ -180,8 +179,6 @@ class TableObject(scalarObject):  # displacement style table
     #
     #            grid = nodeID*10+deviceCode
     #            msg += pack('iffffff',grid,dx,dy,dz,rx,ry,rz)
-    #        ###
-    #    ###
     #    return msg
 
     def writeHeader(self):
@@ -215,7 +212,6 @@ class TableObject(scalarObject):  # displacement style table
                     rotation = self.rotations[dt][nodeID]
                     translations2[nodeID][dt] = translation
                     rotations2[nodeID][dt] = rotation
-                ###
         else:
             return (self.translations, self.rotations)
             #for nodeID,translation in sorted(self.translations.iteritems()):
@@ -266,8 +262,7 @@ class TableObject(scalarObject):  # displacement style table
                 msgT += '\n%s' % (spaceT)
                 msgR += '\n%s' % (spaceR)
                 i = 0
-            ###
-        ###
+
         msgG += "'];\n"
         msgT += '];\n'
         msgR += '];\n'
@@ -328,15 +323,13 @@ class TableObject(scalarObject):  # displacement style table
                     msgT += '\n'
                     msgR += '\n'
                     i = 0
-                ###
-            ###
+
             msgT += '];\n'
             msgR += '];\n'
             f.write(msgT)
             f.write(msgR)
             msgT = ''
             msgR = ''
-        ###
 
     def _writeF06Block(self, words, header, pageStamp, pageNum=1, f=None):
         msg = words
@@ -353,8 +346,7 @@ class TableObject(scalarObject):  # displacement style table
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n'
                         % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
-            ###
-        ###
+
         msg.append(pageStamp + str(pageNum) + '\n')
         if f is not None:
             f.write(''.join(msg))
@@ -383,8 +375,7 @@ class TableObject(scalarObject):  # displacement style table
                 if not isAllZeros:
                     [dx, dy, dz, rx, ry, rz] = vals2
                     msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
-                ###
-            ###
+
             msg.append(pageStamp + str(pageNum) + '\n')
             if f is not None:
                 f.write(''.join(msg))
@@ -614,7 +605,6 @@ class ComplexTableObject(scalarObject):
         self.gridTypes[nodeID] = self.recastGridType(gridType)
         self.translations[nodeID] = [v1, v2, v3]  # dx,dy,dz
         self.rotations[nodeID] = [v4, v5, v6]  # rx,ry,rz
-    ###
 
     def addSort1(self, dt, out):
         (nodeID, gridType, v1, v2, v3, v4, v5, v6) = out
@@ -698,14 +688,11 @@ class ComplexTableObject(scalarObject):
                     msgT += '\n'
                     msgR += '\n'
                     i = 0
-                ###
-            ###
+
             msgT += '];\n'
             msgR += '];\n'
             f.write(msgT)
             f.write(msgR)
-            ###
-        ###
 
     def _writeF06Block(self, words, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         #words += self.getTableMarker()
@@ -731,7 +718,7 @@ class ComplexTableObject(scalarObject):
             msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
             msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %
                        ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
-        ###
+
         msg.append(pageStamp + str(pageNum) + '\n')
         if f is not None:
             f.write(''.join(msg))
@@ -768,7 +755,7 @@ class ComplexTableObject(scalarObject):
                 if not isAllZeros:
                     msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
                     msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
-            ###
+
             msg.append(pageStamp + str(pageNum) + '\n')
             if f is not None:
                 f.write(''.join(msg))
@@ -817,7 +804,7 @@ class ComplexTableObject(scalarObject):
                     val = sqrt(res.dot(res))
                 else:
                     val = res[coord]
-                ###
+
                 mag = abs(val)
                 phase = angle(val, deg=True)
                 Ys.append(val)
