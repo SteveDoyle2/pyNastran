@@ -40,7 +40,7 @@ class Cart3dIO(object):
             except:
                 print "cant delete geo"
                 pass
-            ###
+
             #print dir(self)
             skipReading = False
         self.scalarBar.VisibilityOff()
@@ -99,7 +99,7 @@ class Cart3dIO(object):
             elem.GetPointIds().SetId(1, nodeIDs[1] - 1)
             elem.GetPointIds().SetId(2, nodeIDs[2] - 1)
             self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-        ###
+
         self.grid.SetPoints(points)
         #self.grid2.SetPoints(points2)
         #self.grid.GetPointData().SetScalars(self.gridResult)
@@ -154,7 +154,7 @@ class Cart3dIO(object):
             for eid, regioni in sorted(regions.iteritems()):
                 Eids[eid - 1] = eid
                 Regions[eid - 1] = regioni
-            ###
+
             del regions
             cases[(ID, 'Region', 1, 'centroid', '%.0f')] = Regions
             cases[(ID, 'Eids', 1, 'centroid', '%.0f')] = Eids
@@ -166,7 +166,7 @@ class Cart3dIO(object):
             Cp = zeros(nNodes)
             for nid, cpi in sorted(cp.iteritems()):
                 Cp[nid - 1] = cpi
-            ###
+
             #del loads['Cp']
             #del cp
             cases[(ID, 'Cp', 1, 'nodal', '%.3f')] = Cp
@@ -176,7 +176,7 @@ class Cart3dIO(object):
             Mach = zeros(nNodes)
             for nid, machi in sorted(mach.iteritems()):
                 Mach[nid - 1] = machi
-            ###
+
             cases[(ID, 'Mach', 1, 'nodal', '%.3f')] = Mach
 
         if 'U' in loads and plotNodal:
@@ -184,7 +184,6 @@ class Cart3dIO(object):
             U = zeros(nNodes)
             for nid, ui in sorted(u.iteritems()):
                 U[nid - 1] = ui
-            ###
             cases[(ID, 'U', 1, 'nodal', '%.3f')] = U
 
         if 'V' in loads and plotNodal:
@@ -192,7 +191,6 @@ class Cart3dIO(object):
             V = zeros(nNodes)
             for nid, vi in sorted(v.iteritems()):
                 V[nid - 1] = vi
-            ###
             cases[(ID, 'V', 1, 'nodal', '%.3f')] = V
 
         if 'W' in loads and plotNodal:
@@ -200,7 +198,6 @@ class Cart3dIO(object):
             W = zeros(nNodes)
             for nid, wi in sorted(w.iteritems()):
                 W[nid - 1] = wi
-            ###
             cases[(ID, 'W', 1, 'nodal', '%.3f')] = W
 
         #cases[(ID,'rhoU',   1,'nodal','%.3f')] = rhoU

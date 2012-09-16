@@ -78,7 +78,6 @@ class gridPointForcesObject(scalarObject):
             self.log.debug("updating %s...%s=%s  iSubcase=%s" % (self.dataCode['name'], self.dataCode['name'], freq, self.iSubcase))
             self.dt = dt
             self.addNewTransient()
-        ###
 
     def deleteTransient(self, dt):
         del self.forces[dt]
@@ -120,8 +119,7 @@ class gridPointForcesObject(scalarObject):
                 msg.append('%s  %8s    %10s    %-8s      %s  %s  %s  %s  %s  %-s\n' % (zero, eKey, eid, elemName, f1, f2, f3, m1, m2, m3.rstrip()))
                 zero = ' '
             zero = '0'
-            ###
-        ###
+
         msg.append(pageStamp + str(pageNum) + '\n')
         if f is not None:
             f.write(''.join(msg))
@@ -152,9 +150,8 @@ class gridPointForcesObject(scalarObject):
 
                     msg.append('%s  %8s    %10s    %8s      %s  %s  %s  %s  %s  %-s\n' % (zero, eKey, eid, elemName, f1, f2, f3, m1, m2, m3))
                     zero = ' '
-                ###
                 zero = '0'
-            ###
+
             msg.append(pageStamp + str(pageNum) + '\n')
             if f is not None:
                 f.write(''.join(msg))

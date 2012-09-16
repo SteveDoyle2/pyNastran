@@ -207,8 +207,7 @@ class OP4(FortranFile):
                     nWords -= nWordsInLine
                 sline = line.strip().split()
                 nLoops += 1
-            ###
-        ###
+
         f.readline()
 
         if isSparse:  # Initialize a real matrix
@@ -284,8 +283,7 @@ class OP4(FortranFile):
                     nWords -= nWordsInLine
                 sline = line.strip().split()
                 nLoops += 1
-            ###
-        ###
+
         if isSparse:  # Initialize a complex matrix
             A = coo_matrix((entries, (rows, cols)), shape=(
                 nrows, ncols), dtype=dType)
@@ -312,8 +310,7 @@ class OP4(FortranFile):
                     IS = int(f.readline().strip())
                 L = IS // 65536 - 1
                 irow = IS - 65536 * (L + 1)
-            ###
-        ###
+
         return irow
 
     def letterCount(self, word, letter):
@@ -865,7 +862,6 @@ class OP4(FortranFile):
 
                 #(irow) = self.getIRowSmall(f)
                 nWords -= 1
-            ###
         else:
             (a, icol, irow, nWords) = self.readStartMarker(f)
             #print "N=%s a=%s icol=%s irow=%s nWords=%s"%(self.n,a,icol,irow,nWords)
@@ -1059,7 +1055,6 @@ class OP4(FortranFile):
                 f.write(msg)
         f.write('%8i%8i%8i\n' % (ncols + 1, 1, 1))
         f.write(' 1.0000000000000000E+00\n')
-        ###
 
     def writeDenseMatrixBinary(self, name, matrix, form=2, precision='default', tol=1e-15):
         """
@@ -1094,10 +1089,7 @@ class OP4(FortranFile):
                     for irow in range(iStart, iEnd):
                         msg += pack('dd', A[irow, icol]
                                     .real, A[irow, icol].imag)
-                    ###
-                ###
-            ###
-        ###
+
         msg += pack(self.endian + '4id', 24, ncols + 1, 1, 1, 1.0)
 
         return msg
@@ -1171,8 +1163,7 @@ class OP4(FortranFile):
                         i += 2
             if valueStr:
                 msg += valueStr + '\n'
-            ###
-        ###
+
         msg += '%8i%8i%8i\n' % (ncols + 1, 1, 1)
         msg += ' 1.0000000000000000E+00\n'
         return msg

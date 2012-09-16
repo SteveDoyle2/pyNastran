@@ -363,7 +363,6 @@ class FrameVTK(object):
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 self.grid.InsertNextCell(
                     elem.GetCellType(), elem.GetPointIds())
-            ###
             elif isinstance(element, CONM2):  # not perfectly located
                 nid = element.Nid()
                 c = element.Centroid()
@@ -381,7 +380,6 @@ class FrameVTK(object):
             else:
                 print "skipping %s" % (element.type)
 
-        ###
         self.grid.SetPoints(points)
         self.grid2.SetPoints(points2)
         self.grid.Update()

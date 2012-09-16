@@ -42,7 +42,6 @@ class RealElementsStressStrain(object):
 
             #print "eid=%i axial=%i torsion=%i" % (eid,axial,torsion)
             #print "len(data) = ",len(self.data)
-        ###
         #print self.rodStress[self.iSubcase]
 
     def OES_basicElement(self):
@@ -159,7 +158,6 @@ class RealElementsStressStrain(object):
 
             #self.printSection(100)
             #self.dn += 348
-        ###
 
     def OES_CBAR_34(self):
         dt = self.nonlinearFactor
@@ -280,7 +278,6 @@ class RealElementsStressStrain(object):
             #self.printBlock(self.data[1:100])
             #self.printBlock(self.data[2:100])
             #self.printBlock(self.data[3:100])
-        ###
 
     def OES_CTRIA3_74(self):
         """
@@ -406,7 +403,6 @@ class RealElementsStressStrain(object):
             #self.printBlock(self.data[1:100])
             #self.printBlock(self.data[2:100])
             #self.printBlock(self.data[3:100])
-        ###
         #print self.solidStress[self.iSubcase]
 
     def OES_field1(self):
@@ -431,10 +427,8 @@ class RealElementsStressStrain(object):
             else:
                 raise NotImplementedError('invalid SORT2 analysisCode=%s' %
                                           (self.analysisCode))
-            ###
         else:
             raise NotImplementedError('invalid SORTx code')
-        ###
 
     def OES_CTRIAX6_53(self):
         #(Format1,scaleValue) = self.OES_field1()
@@ -642,7 +636,6 @@ class RealElementsStressStrain(object):
                              t2z, angle, major, minor, ovm)
             self.eid2 = eid
             #self.dn += 348
-        ###
         #print "3 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
 
     def OES_QUAD4FD_139(self):  # hyperelastic
@@ -724,8 +717,6 @@ class RealElementsStressStrain(object):
                                     sy1, txy1, angle1, major1, minor1, vm1)
                 self.obj.add(eid, grid, fd2, sx2, sy2,
                              txy2, angle2, major2, minor2, vm2)
-            ###
-        ###
 
     def OES_CQUAD4_144(self):  # works
         """
@@ -806,7 +797,6 @@ class RealElementsStressStrain(object):
 
             #self.printSection(100)
             #self.dn += 348
-        ###
        # elif self.numWide==77:
        #     while len(self.data) >= 308: # 2+15*5 = 77 -> 77*4 = 308
        #         (eid,_) = unpack(b'i4s',self.data[0:8])

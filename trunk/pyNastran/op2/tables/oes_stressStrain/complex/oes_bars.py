@@ -184,7 +184,7 @@ class ComplexBarStressObject(stressObject):
                 '', s1br, s2br, s3br, s4br.rstrip()))
             msg.append(' %8s   %13s  %13s  %13s  %-s\n' % (
                 '', s1bi, s2bi, s3bi, s4bi.rstrip()))
-        ###
+
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
@@ -221,7 +221,7 @@ class ComplexBarStressObject(stressObject):
                            ('', s1br, s2br, s3br, s4br.rstrip()))
                 msg.append(' %8s   %13s  %13s  %13s  %-s\n' %
                            ('', s1bi, s2bi, s3bi, s4bi.rstrip()))
-            ###
+
             msg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
         return (''.join(msg), pageNum - 1)
@@ -252,7 +252,6 @@ class ComplexBarStressObject(stressObject):
                     msg += '%8s ' % ('0')
                 else:
                     msg += '%8i ' % (val)
-                ###
             msg += '\n'
 
             msg += '%s ' % (' ' * 13)
@@ -268,7 +267,6 @@ class ComplexBarStressObject(stressObject):
 
             #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial)
             #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s\n"         %(' '*4,    s1[1],s2[1],s3[1],s4[1])
-        ###
         return msg
 
     def __reprTransient__(self):
@@ -306,8 +304,6 @@ class ComplexBarStressObject(stressObject):
 
                 #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial)
                 #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s\n"         %(' '*4,    s1[1],s2[1],s3[1],s4[1])
-            ###
-        ###
         return msg
 
 
@@ -447,7 +443,6 @@ class ComplexBarStrainObject(strainObject):
 
             msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, e10, e20, e30, e40, axial.rstrip()))
             msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', e11, e21, e31, e41.rstrip()))
-        ###
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
@@ -521,7 +516,7 @@ class ComplexBarStrainObject(strainObject):
 
             #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial)
             #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s\n"         %(' '*4,    s1[1],s2[1],s3[1],s4[1])
-        ###
+
         return msg
 
     def __reprTransient__(self):
@@ -559,11 +554,9 @@ class ComplexBarStrainObject(strainObject):
                         msg += '%10s ' % ('0')
                     else:
                         msg += '%10.3g ' % (val)
-                    ###
                 msg += '\n'
 
                 #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial)
                 #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s\n"         %(' '*4,    s1[1],s2[1],s3[1],s4[1])
-            ###
-        ###
+
         return msg

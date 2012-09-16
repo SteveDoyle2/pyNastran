@@ -17,8 +17,7 @@ def parse_table_names_from_F06(f06Name):
         if marker in line:
             word = line.replace(marker,'').strip().strip('.')
             names.append(word)
-        ###
-    ###
+
     infile.close()
     return names
 
@@ -64,8 +63,7 @@ def runLotsOfFiles(files ,makeGeom=True, writeBDF=False, writeF06=True,
             else:
                 nPassed +=1
             #sys.exit('end of test...test_op2.py')
-        ###
-    ###
+
     if saveCases:
         f = open('failedCases.in','wb')
         for op2file in failedCases:
@@ -137,7 +135,7 @@ def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
             raise
         else:
             isPassed = True
-        ###
+
     #except IOError: # missing file
         #pass
     #except AssertionError:
@@ -186,9 +184,8 @@ def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
             raise
         else:
             isPassed = False
-        ###
+
     return isPassed
-    ###
 
 def runArgParse():
     import argparse

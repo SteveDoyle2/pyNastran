@@ -57,7 +57,7 @@ class LAMA(object):
                 self.readDesvar(data)
                 iTable -= 1
             self.printSection(80)
-        ###
+
         #self.op2Debug.write('bufferWords=%s\n' %(str(bufferWords)))
         #print "1-bufferWords = ",bufferWords,bufferWords*4
 

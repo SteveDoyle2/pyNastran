@@ -332,8 +332,6 @@ class Op2Codes(object):
                 stressWord = 'Stress'
             else:
                 stressWord = 'Strain'
-            ###
-        ###
 
         elementType = None
         if hasattr(self, 'elementType'):

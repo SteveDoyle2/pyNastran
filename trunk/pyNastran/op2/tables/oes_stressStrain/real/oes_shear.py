@@ -1,6 +1,5 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
 
 from .oes_objects import stressObject, strainObject
 
@@ -29,7 +28,6 @@ class ShearStressObject(stressObject):
         #    self.addNewEid       = self.addNewEidTransient
         #else:
         #    self.addNewEid = self.addNewEid
-        ###
 
         self.dt = dt
         if isSort1:
@@ -42,14 +40,15 @@ class ShearStressObject(stressObject):
             self.addNewEid = self.addNewEidSort2
 
     def get_stats(self):
-        nelements = len(self.eType)
-
         msg = self.get_data_code()
         if self.dt is not None:  # transient
-            ntimes = len(self.stress)
+            ntimes = len(self.maxShear)
+            s0 = self.maxShear.keys()[0]
+            nelements = len(self.maxShear[s0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
+            nelements = len(self.maxShear)
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
         msg.append('  eType, maxShear, avgShear, margin\n')
@@ -98,16 +97,6 @@ class ShearStressObject(stressObject):
         self.avgShear[dt][eid] = avgShear
         self.margin[dt][eid] = margin
 
-    def addNewEidSort1(self, eid, dt, out):
-        (maxShear, avgShear, margin) = out
-        if dt not in self.maxShear:
-            self.addNewTransient(dt)
-        assert isinstance(eid, int)
-        assert eid >= 0
-        self.maxShear[dt][eid] = maxShear
-        self.avgShear[dt][eid] = avgShear
-        self.margin[dt][eid] = margin
-
     def __reprTransient__(self):
         msg = '---TRANSIENT CSHEAR STRESSES---\n'
         msg += '%-6s %6s ' % ('EID', 'eType')
@@ -129,10 +118,9 @@ class ShearStressObject(stressObject):
                         msg += '%10s ' % ('0')
                     else:
                         msg += '%10i ' % (val)
-                    ###
                 msg += '\n'
-                #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
-            ###
+                msg += ('eid=%-4s eType=%s axial=%-4i '
+                        'torsion=%-4i\n' %(eid, self.eType, axial, torsion))
         return msg
 
     def __repr__(self):
@@ -158,9 +146,9 @@ class ShearStressObject(stressObject):
                     msg += '%10s ' % ('0')
                 else:
                     msg += '%10i ' % (val)
-                ###
             msg += '\n'
-            #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
+            #msg += ('eid=%-4s eType=%s axial=%-4i '
+            #        'torsion=%-4i\n' %(eid, self.eType, axial, torsion)
         return msg
 
 
@@ -187,14 +175,15 @@ class ShearStrainObject(strainObject):
             self.addNewEid = self.addNewEidSort2
 
     def get_stats(self):
-        nelements = len(self.eType)
-
         msg = self.get_data_code()
         if self.dt is not None:  # transient
-            ntimes = len(self.stress)
+            ntimes = len(self.maxShear)
+            s0 = self.maxShear.keys()[0]
+            nelements = len(self.maxShear[s0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
+            nelements = len(self.maxShear)
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
         msg.append('  eType, maxShear, avgShear, margin\n')
@@ -276,7 +265,8 @@ class ShearStrainObject(strainObject):
                     else:
                         msg += '%10g ' % (val)
                 msg += '\n'
-                #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
+                #msg += ('eid=%-4s eType=%s axial=%-4i '
+                #        'torsion=%-4i\n' %(eid, self.eType, axial, torsion))
         return msg
 
     def __repr__(self):

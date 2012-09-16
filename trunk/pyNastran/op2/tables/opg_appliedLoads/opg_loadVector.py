@@ -31,8 +31,7 @@ class LoadVectorObject(TableObject):  # tableCode=2, sortCode=0, thermal=0
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
-            ###
-        ###
+
         msg.append(pageStamp + str(pageNum) + '\n')
         if f is not None:
             f.write(''.join(msg))
@@ -88,9 +87,7 @@ class LoadVectorObject(TableObject):  # tableCode=2, sortCode=0, thermal=0
                         msg += '%10s ' % (0)
                     else:
                         msg += '%10.3e ' % (val)
-                    ###
                 msg += '\n'
-            ###
         return msg
 
     def __repr__(self):
@@ -181,7 +178,7 @@ class ComplexLoadVectorObject(ComplexTableObject):  # tableCode=11, approachCode
              dxi, dyi, dzi, rxi, ryi, rzi] = vals2
             msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
             msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '',           dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
-        ###
+
         msg.append(pageStamp + str(pageNum) + '\n')
         if f is not None:
             f.write(''.join(msg))

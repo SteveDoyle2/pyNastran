@@ -16,7 +16,8 @@ class baseScalarObject(Op2Codes):
             self.__class__.__name__)]
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def writeF06Transient(self, header, pageStamp,
+                          pageNum=1, f=None, isMagPhase=False):
         msg = 'writeF06Transient is not implemented in %s\n' % (
             self.__class__.__name__)
         return (''.join(msg), pageNum)
@@ -150,18 +151,17 @@ class scalarObject(baseScalarObject):
                 #print "  key=%s value=%s" %(key,value)
         #self.log.debug("")
 
-
     def get_data_code(self):
         msg = []
         for name in self.dataCode['dataNames']:
             try:
                 if hasattr(self, name + 's'):
-                    vals = getattr(self, name+'s')
+                    vals = getattr(self, name + 's')
                     name = name + 's'
                 else:
                     vals = getattr(self, name)
-                msg.append('  %s = %s\n' %(name, vals))
-            except AttributeError: # weird case...
+                msg.append('  %s = %s\n' % (name, vals))
+            except AttributeError:  # weird case...
                 pass
         return msg
 
@@ -184,7 +184,9 @@ class scalarObject(baseScalarObject):
         return False
 
     def appendDataMember(self, varName, valueName):
-        """this appends a data member to a variable that may or may not exist"""
+        """
+        this appends a data member to a variable that may or may not exist
+        """
         #print "append..."
         hasList = self.startDataMember(varName, valueName)
         if hasList:
@@ -266,8 +268,8 @@ class scalarObject(baseScalarObject):
         """
         self.dataCode = dataCode
         self.applyDataCode()
-        raise RuntimeError('updateDt not implemented in the %s class' %
-                           (self.__class__.__name__))
+        raise RuntimeError('updateDt not implemented in the %s class'
+                           % (self.__class__.__name__))
         #assert dt>=0.
         #print "updating dt...dt=%s" %(dt)
         if dt is not None:

@@ -264,7 +264,6 @@ class OEF(ThermalElements, RealForces, ComplexForces):
             #self.skipOES_Element() # skipping entire table
         else:
             self.NotImplementedOrSkip()
-        ###
 
     def readOEF_Data_table4(self):  # Forces/Heat Flux
         if self.thermal in [0, 8]:
@@ -484,4 +483,3 @@ class OEF(ThermalElements, RealForces, ComplexForces):
                 self.NotImplementedOrSkip()
         else:
             self.NotImplementedOrSkip()
-        ###

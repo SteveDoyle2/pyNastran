@@ -382,8 +382,7 @@ class FortranFile(object):
                     #print(msg)
                 raise InvalidMarkersError(msg)
             foundMarkers.append(marker)
-            ###
-        ###
+
         msg = ''
         for i in markers:
             msg += '[4,' + str(i) + ',4] + '
@@ -392,7 +391,6 @@ class FortranFile(object):
         if debug:
             self.log.debug("@markers = %s" % (markers))
             self.log.debug("")
-        ###
 
     def getNMarkers(self, nMarkers, rewind=False):
         """gets the next N markers, verifies they're correct"""
@@ -400,7 +398,7 @@ class FortranFile(object):
         for iMarker in xrange(nMarkers):
             tableCode = self.readHeader(None)
             markers.append(tableCode)
-        ###
+
         if rewind:
             self.n -= 12 * nMarkers
             self.op2.seek(self.n)
@@ -586,8 +584,6 @@ class FortranFile(object):
                 self.op2.seek(n)
                 return
             raise
-            ###
-        ###
 
     def skipNextTable(self, bufferSize=10000):
         """
@@ -638,7 +634,7 @@ class FortranFile(object):
         else:  # marker=0
             isAnotherTable = False
         isAnotherTable = True
-        ###
+
         #print "isAnotherTable = ",isAnotherTable
         self.n -= 24  # subtract off the header [0,2] or [0,0]
         self.op2.seek(self.n)
@@ -659,7 +655,7 @@ class FortranFile(object):
                 isAnotherTable = True
             else:  # marker=0
                 isAnotherTable = False
-            ###
+
             #print "isAnotherTable = ",isAnotherTable
             self.n -= 24  # subtract off the header [0,2] or [0,0]
             self.op2.seek(self.n)

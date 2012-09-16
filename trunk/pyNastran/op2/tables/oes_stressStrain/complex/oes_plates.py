@@ -267,12 +267,7 @@ class ComplexPlateStressObject(stressObject):
                                 except:
                                     print("bad val = %s" % (val))
                                     raise
-                            ###
                         msg += '\n'
-                    ###
-                ###
-            ###
-        ###
         return msg
 
     def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
@@ -341,7 +336,6 @@ class ComplexPlateStressObject(stressObject):
                         for eid in eids:
                             out = self.writeF06_Tri3(eid)
                             msg.append(out)
-                    ###
                 elif eType in ['CTRIA3']:
                     for eid in eids:
                         out = self.writeF06_Tri3(eid)
@@ -362,8 +356,7 @@ class ComplexPlateStressObject(stressObject):
                     f.write(''.join(msg))
                     msg = ['']
                 pageNum += 1
-            ###
-        ###
+
         return (''.join(msg), pageNum - 1)
 
     def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
@@ -480,7 +473,6 @@ class ComplexPlateStressObject(stressObject):
                             if f is not None:
                                 f.write(''.join(msg))
                                 msg = ['']
-                    ###
                 elif eType in ['CTRIA3']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
@@ -976,7 +968,6 @@ class ComplexPlateStrainObject(strainObject):
                     else:
                         for eid in eids:
                             out = self.writeF06_Tri3(eid)
-                    ###
                 elif eType in ['CTRIA3']:
                     for eid in eids:
                         out = self.writeF06_Tri3(eid)
@@ -996,8 +987,7 @@ class ComplexPlateStrainObject(strainObject):
                     f.write(''.join(msg))
                     msg = ['']
                 pageNum += 1
-            ###
-        ###
+
         return (''.join(msg), pageNum - 1)
 
     def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
@@ -1134,9 +1124,6 @@ class ComplexPlateStrainObject(strainObject):
                 else:
                     raise NotImplementedError('eType = |%r|' %
                                               (eType))  # CQUAD8, CTRIA6
-                ###
-            ###
-        ###
         return (''.join(msg), pageNum - 1)
 
     def writeF06_Quad4_Bilinear(self, eid, n, isMagPhase):
@@ -1295,7 +1282,6 @@ class ComplexPlateStrainObject(strainObject):
                                 msg += '%10s ' % ('0.')
                             else:
                                 msg += '%10.3g ' % (val)
-                            ###
                         msg += '\n'
 
                         #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy)

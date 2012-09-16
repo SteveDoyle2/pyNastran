@@ -195,7 +195,7 @@ class RealCBeamForce(scalarObject):  # 2-CBEAM
                 [bm1, bm2, ts1, ts2, af, ttrq, wtrq] = vals2
                 msg.append('0  %8i\n' % (eid))
                 msg.append('           %8i   %.3f   %13s %13s  %13s %13s  %13s  %13s  %-s\n' % (eid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq))
-            ###
+
         msg.append(pageStamp + str(pageNum) + '\n')
         if f is not None:
             f.write(''.join(msg))
@@ -384,7 +384,7 @@ class RealSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
                 f.write(''.join(msg))
                 msg = ['']
             pageNum += 1
-        ###
+
         return (''.join(msg), pageNum - 1)
 
     def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
@@ -488,7 +488,7 @@ class RealDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
                 f.write(''.join(msg))
                 msg = ['']
             pageNum += 1
-        ###
+
         return (''.join(msg), pageNum - 1)
 
     def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
@@ -866,7 +866,7 @@ class RealCBARForce(scalarObject):  # 34-CBAR
                 [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = vals2
                 msg.append('      %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
 #            1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
-            ###
+
             msg.append(pageStamp + str(pageNum) + '\n')
             if f is not None:
                 f.write(''.join(msg))
@@ -1023,11 +1023,9 @@ class RealCGAPForce(scalarObject):  # 38-CGAP
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
-        ###
 
     def addNewTransient(self, dt):
         self.dt = dt
@@ -1172,11 +1170,9 @@ class RealPentaPressureForce(scalarObject):  # 77-PENTA_PR,78-TETRA_PR
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
-        ###
 
     def addNewTransient(self, dt):
         self.dt = dt

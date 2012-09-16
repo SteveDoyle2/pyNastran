@@ -237,7 +237,6 @@ class F06(OES, OUG, OQG, F06Writer):
         while 'PAGE' not in line:
             line = self.infile.readline()[1:]
             self.i += 1
-        ###
 
     def readSubcaseNameID(self):
         subcaseName = self.storedLines[-3].strip()
@@ -254,10 +253,9 @@ class F06(OES, OUG, OQG, F06Writer):
                 iSubcase = 1
             else:
                 iSubcase = int(iSubcase.strip('SUBCASE '))
-            ###
+
             #assert isinstance(iSubcase,int),'iSubcase=|%r|' %(iSubcase)
             #print "subcaseName=%s iSubcase=%s" %(subcaseName,iSubcase)
-        ###
         self.iSubcaseNameMap[iSubcase] = [subcaseName,
                                           'SUBCASE %s' % (iSubcase)]
         transient = self.storedLines[-1].strip()
@@ -281,7 +279,6 @@ class F06(OES, OUG, OQG, F06Writer):
                 analysisCode = None
             else:
                 raise NotImplementedError('transientWord=|%r| is not supported...' % (transWord))
-            ###
         else:
             transient = None
             analysisCode = 1
@@ -392,7 +389,6 @@ class F06(OES, OUG, OQG, F06Writer):
             self.eigenvectors[iSubcase] = EigenVectorObject(dataCode, isSort1,
                                                             iSubcase, iMode)
             self.eigenvectors[iSubcase].readF06Data(dataCode, data)
-        ###
 
     def getElementStrainEnergies(self):
         """
@@ -442,7 +438,6 @@ class F06(OES, OUG, OQG, F06Writer):
             strainEnergyDensity = float(sline[3])
             out = (eid, strainEnergy, percentTotal, strainEnergyDensity)
             data.append(out)
-        ###
 
         if sline == []:
             line = self.infile.readline()[1:].rstrip('\r\n ')
@@ -456,7 +451,6 @@ class F06(OES, OUG, OQG, F06Writer):
             sed = strainEnergyDensity(data, transient)
             sed.readF06Data(data, transient)
             self.strainEnergyDensity[iSubcase] = sed
-        ###
 
     def getTempGradientsFluxes(self):
         (subcaseName, iSubcase, transient, dt, analysisCode,
@@ -496,7 +490,6 @@ class F06(OES, OUG, OQG, F06Writer):
                 #print "sline=|%r|\n entry=|%r| format=%r" %(sline,entry,iFormat)
                 entry2 = iFormat(entry)
                 out.append(entry2)
-            ###
         return out
 
     def readTable(self, Format):
@@ -581,7 +574,7 @@ class F06(OES, OUG, OQG, F06Writer):
 
             else:
                 blank = 0
-            ###
+
             self.storedLines.append(line)
             self.i += 1
         #print "i=%i" %(self.i)
@@ -607,8 +600,6 @@ class F06(OES, OUG, OQG, F06Writer):
                 return False
             elif i % 2 == 0 and ' ' == char:
                 return False
-            ###
-        ###
         return True
 
     def skip(self, iskip):
@@ -632,8 +623,6 @@ class F06(OES, OUG, OQG, F06Writer):
             for result in data:
                 if iSubcase in result:
                     msg += str(result[iSubcase])
-                ###
-            ###
         return msg
 
 if __name__ == '__main__':

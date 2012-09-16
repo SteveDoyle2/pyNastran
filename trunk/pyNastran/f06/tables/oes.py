@@ -121,8 +121,7 @@ class OES(object):
             if isinstance(out[5], int):
                 data.append(out[5:])
             self.i += 1
-            ###
-        ###
+
         return data
 
     def getBarStress(self):
@@ -555,7 +554,7 @@ class OES(object):
             elif '' is not sline[0]:
                 sline = [eType] + sline
             data.append(sline)
-        ###
+
         return data
 
     def makeStressBits(self, isFiberDistance=False, isMaxShear=True, isStrain=True, isRodOrSolid=False):

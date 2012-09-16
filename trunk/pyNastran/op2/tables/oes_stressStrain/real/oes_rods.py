@@ -1,6 +1,5 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
 
 from .oes_objects import stressObject, strainObject
 
@@ -15,14 +14,16 @@ class RodDamperObject(stressObject):
         self.torsion = {}
 
     def get_stats(self):
-        nelements = len(self.eType)
 
         msg = self.get_data_code()
         if self.nonlinearFactor is not None:  # transient
-            ntimes = len(self.stress)
+            ntimes = len(self.axial)
+            a0 = self.stress.keys()[0]
+            nelements = len(self.axial[a0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
+            nelements = len(self.axial)
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
         msg.append('  eType, axial, torsion\n')
@@ -65,14 +66,15 @@ class RodStressObject(stressObject):
             self.addNewEid = self.addNewEidSort2
 
     def get_stats(self):
-        nelements = len(self.eType)
-
         msg = self.get_data_code()
         if self.dt is not None:  # transient
-            ntimes = len(self.stress)
+            ntimes = len(self.axial)
+            a0 = self.stress.keys()[0]
+            nelements = len(self.axial[a0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
+            nelements = len(self.axial)
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
         msg.append('  eType, axial, torsion, MS_axial, MS_torsion\n')
@@ -187,10 +189,8 @@ class RodStressObject(stressObject):
                         msg += '%10s ' % ('0')
                     else:
                         msg += '%10i ' % (val)
-                    ###
                 msg += '\n'
                 #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
-            ###
         return msg
 
     def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
@@ -293,7 +293,6 @@ class RodStressObject(stressObject):
                     msg += '%10s ' % ('0')
                 else:
                     msg += '%10i ' % (val)
-                ###
             msg += '\n'
             #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg
@@ -336,14 +335,15 @@ class RodStrainObject(strainObject):
             self.addNewEid = self.addNewEidSort2
 
     def get_stats(self):
-        nelements = len(self.eType)
-
         msg = self.get_data_code()
         if self.dt is not None:  # transient
-            ntimes = len(self.stress)
+            ntimes = len(self.axial)
+            a0 = self.axial.keys()[0]
+            nelements = len(self.axial[a0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
+            nelements = len(self.axial)
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
         msg.append('  eType, axial, torsion, MS_axial, MS_torsion\n')

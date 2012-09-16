@@ -118,7 +118,7 @@ class OPG(object):
         else:
             raise RuntimeError('invalid analysisCode...analysisCode=%s' %
                                (self.analysisCode))
-        ###
+
         # tCode=2
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set, Mode number
@@ -185,7 +185,7 @@ class OPG(object):
         #    self.readOPG_Data_format3_sort3()
         else:
             self.NotImplementedOrSkip('bad tableCode/formatCode/sortCode=%s on %s-OPG table' % (self.atfsCode, self.tableName))
-        ###
+
         #print self.obj
 
     def readOPG_Data_table2(self):  # Load Vector
