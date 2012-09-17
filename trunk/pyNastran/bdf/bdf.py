@@ -670,7 +670,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 #print "solValue = |%s|" %(solValue)
                 sol = solValue[3:].strip()
                 
-                if self.sol is None:
+                if self.sol is not None:
                     raise ValueError('cannot overwrite solution existing='
                                     '|SOL %s| new =|%s|' % (self.sol, uline))
                 self.iSolLine = i
