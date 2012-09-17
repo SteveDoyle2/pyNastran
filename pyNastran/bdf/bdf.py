@@ -995,7 +995,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             for iCard in xrange(nCards):
                 #if special:
                     #print "iCard = ",iCard
-                self.add_card(card, cardName, iCard=0, old_card_obj=None)
+                self.add_card(card, cardName, icard=0, old_card_obj=None)
                 #if self.foundEndData:
                 #    break
 
@@ -1041,7 +1041,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
           the list of the card fields -> ['GRID',1,2,]
         @param cardName
           the cardName -> 'GRID'
-        @param iCard
+        @param icard
           used when reading Nastran Free-Format (disabled)
         @param old_card_obj
           the last card object that was returned (type=BDFCard or None;
@@ -1071,7 +1071,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         #    self.log.debug(card)
         #    self.log.debug("*old_card_obj = \n%s" %(old_card_obj))
         #    self.log.debug("*cardObj = \n%s" %(cardObj))
-        #cardObj.applyOldFields(iCard)
+        #cardObj.applyOldFields(icard)
 
         try:
             if self._auto_reject:
