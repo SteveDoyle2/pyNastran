@@ -66,7 +66,7 @@ class SolidStressObject(stressObject):
                                                      nelements))
         msg.append('  eType, cid, oxx, oyy, ozz, txy, tyz, txz, '
                    'o1, o2, o3, ovmShear\n  ')
-        msg.append(', '.join(set(self.eType.values()))
+        msg.append(', '.join(  set(self.eType.values())  ))
         msg.append('\n')
         return msg
 
