@@ -7,7 +7,7 @@ from numpy import array
 #from pyNastran.general.general import list_print
 from struct import unpack
 from pyNastran.op2.fortranFile import FortranFile
-from pyNastran.general.general import is_binary
+from pyNastran.general.utils import is_binary
 
 
 def convertToFloat(svalues):

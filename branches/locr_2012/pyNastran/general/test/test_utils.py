@@ -4,7 +4,8 @@ import unittest
 import sys
 
 
-from pyNastran.general.utils import (object_methods, object_attributes)
+from pyNastran.general.utils import (is_binary, object_methods, object_attributes)
+from os.path import abspath
 
 class A(object):
     def __init__(self):
@@ -30,10 +31,14 @@ class B(A):
     def _getB(self):
         return self.b
 
-class TestObjectIntrospection(unittest.TestCase):
+class TestUtils(unittest.TestCase):
     
     def setUp(self):
         self.b = B(7)
+        
+    def test_is_binary(self):
+        self.assertTrue(is_binary(abspath("logo.png")))
+        self.assertFalse(is_binary(abspath("test_utils.py")))
 
     def test_object_methods_introspection(self):
         methods = object_methods(self.b)

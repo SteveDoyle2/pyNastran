@@ -2,6 +2,20 @@
 
 from types import MethodType
 
+def is_binary(filename):
+    """
+    Return true if the given filename is binary.
+    Based on the idea that file is binary if it contains null. See 
+    http://bytes.com/topic/python/answers/21222-determine-file-type-binary-text on 6/08/2010
+    @raise IOError if the file cannot be opened.
+    @warning this may not work for unicode...
+    """
+    with open(filename, 'rb') as fil:
+        for chunk in iter(lambda:fil.read(1024), ''):
+            if b'\0' in chunk:  # found null byte
+                return True
+    return False
+
 # list object attributes of a given type 
 def __object_attr(obj, mode, attr_type):
     test = {"public":  lambda k: not k.startswith('_'),
