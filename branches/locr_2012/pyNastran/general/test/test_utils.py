@@ -4,7 +4,8 @@ import unittest
 import sys
 
 
-from pyNastran.general.utils import (is_binary, object_methods, object_attributes)
+from pyNastran.general.utils import (is_binary, obscure, de_obscure,
+                                     object_methods, object_attributes)
 from os.path import abspath
 
 class A(object):
@@ -39,6 +40,11 @@ class TestUtils(unittest.TestCase):
     def test_is_binary(self):
         self.assertTrue(is_binary(abspath("logo.png")))
         self.assertFalse(is_binary(abspath("test_utils.py")))
+        
+    def test_obscure(self):
+        for num in [0,1,5,53,231123, 34567523, 1024, 65367, 14321324, 73123434,
+                    1309872418439702897245, 955785585080806958106769948497824]:
+            self.assertEqual(de_obscure(obscure(num)), num)
 
     def test_object_methods_introspection(self):
         methods = object_methods(self.b)

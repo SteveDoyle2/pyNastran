@@ -16,6 +16,42 @@ def is_binary(filename):
                 return True
     return False
 
+def obscure(num, debug=False):
+    """
+    Takes a large positive number and shrinks it down...similar to binary, but base 52.
+    A base 52 value takes up a fewer characters than a base 10 number
+    which helps to do Mat12345678 when there's an 8 character limit on variable names.
+    @param debug display additional information about conversion process
+    """
+    vals = list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    tmp = num
+    pack = ['a'] if tmp == 0 else [] 
+    while tmp > 0:
+        if debug:
+            print("num = %s\nfactor = %s" % (tmp, tmp % 52))
+        pack.append(vals[tmp % 52])
+        tmp //= 52
+        
+    if debug:
+        print(pack,"\n\nsize chacnge %s > %s" % (len(str(num)), len(pack)))
+    return "".join(pack)
+
+def de_obscure(num, debug = False):
+    """
+    Unpacks an "obscured" positive number...similar to binary, but base 52.
+    A base 52 value takes up a fewer characters than a base 10 number
+    which helps to do Mat12345678 when there's an 8 character limit on variable names.
+    @param debug display additional information about conversion process
+    """
+    
+    dict_vals = dict(zip(list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'),xrange(52)))
+    val = 0
+    for i, letter in enumerate(list(num)):
+        val += dict_vals[letter] * 52 ** i
+        if debug:
+            print("letter = ", letter, "\nfactor = ", dict_vals[letter] * 52 ** i)
+    return val
+
 # list object attributes of a given type 
 def __object_attr(obj, mode, attr_type):
     test = {"public":  lambda k: not k.startswith('_'),
