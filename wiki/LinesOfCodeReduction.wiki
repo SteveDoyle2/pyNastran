@@ -141,7 +141,7 @@ All of the custom Exceptions have been removed. Python defines many default Exce
 == Module general == 
 
 Module general will be refactored in order to simplify its usage and code developing.
-Most frequently used functions will be moved to the `__init__.py` file This will
+Most frequently used functions (list_print?) will be moved to the `__init__.py` file This will
 allow to replace the calls
 
 {{{
@@ -167,6 +167,7 @@ Mathematical related functions will be moved to `mathematics.py` module and most
  * generalMath and matrixMethods are merged into mathematics module. Gauss function is know fully functional and documented. Functions are simplified, but more documentation would be useful.
  * generaMath -> some functions that were used only in shell.py has been moved to shell.py.
  * object_introstpection module is moved to utils.py functions are more flexible and documented. Functions test have been updated to match new capabilities. Tests are working properly in Python 2 and 3 (some properties of objets changed between versions and test has to take it into account).
+ * refactor almost complete, some bugs have been fixed and tests added.
 
 == Python idioms == 
 
