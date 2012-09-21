@@ -34,16 +34,11 @@ def integrate_line(x, y):
     return out[0]
 
 
-def evaluate_positive_spline(x, *args):
-    spline, minValue = args
-    return max(splev([x], spline), minValue)
-
-
 def build_spline(x, y):
     """
     Builds a cubic spline or 1st order spline if there are less than 3 terms
     @param x the independent variable
-    @param y the   dependent variable
+    @param y the dependent variable
     @note a 1st order spline is the same as linear interpolation
     """
     # build a linearly interpolated representation or cubic one
@@ -60,8 +55,9 @@ def integrate_positive_line(x, y, minValue=0.):
         return y[0]  # (x1-x0 = 1., so yBar*1 = yBar)
     try:
         assert len(x) == len(y), 'x=%s y=%s' % (x, y)
-        out = quad(evaluate_positive_spline, 0., 1., args=(build_spline(x, y),
-                                                         minValue))  # now integrate the area
+        # now integrate the area
+        eval_posit_spline = lambda x, spl, min_val: max(splev([x], spl), min_val)
+        out = quad(eval_posit_spline, 0., 1., args=(build_spline(x, y), minValue))  
     except:
         raise RuntimeError('spline Error x=%s y=%s' % (x, y))
     return out[0]
@@ -119,7 +115,7 @@ def print_annotated_matrix(A, rowNames=None, tol=1e-8):
 
 def print_matrix(A, tol=1e-8):
     B = array(A)
-    return ''.join([ list_print(B[i, :], tol) + '\n' for i in xrange(B.shape[0]) ])
+    return ''.join([list_print(B[i, :], tol) + '\n' for i in xrange(B.shape[0])])
 
 
 def list_print(listA, tol=1e-8):
