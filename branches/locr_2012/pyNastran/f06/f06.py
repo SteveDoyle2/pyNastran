@@ -2,7 +2,7 @@ import os
 import sys
 from itertools import izip
 
-from pyNastran.general.general import printBadPath
+from pyNastran.general.utils import print_bad_path
 
 #ComplexEigenvalues,strainEnergyDensity,TemperatureGradientObject
 from pyNastran.op2.tables.oug.oug_eigenvectors import EigenVectorObject  # ,ComplexEigenVectorObject
@@ -32,7 +32,7 @@ class F06(OES, OUG, OQG, F06Writer):
         self.f06FileName = f06FileName
         if not os.path.exists(self.f06FileName):
             msg = 'cant find F06FileName=|%s|\n%s' % (
-                self.f06FileName, printBadPath(self.f06FileName))
+                self.f06FileName, print_bad_path(self.f06FileName))
             raise RuntimeError(msg)
         self.infile = open(self.f06FileName, 'r')
         self.__initAlt__(debug, log)

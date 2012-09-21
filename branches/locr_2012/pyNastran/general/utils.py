@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from types import MethodType
+import os
+from os.path import splitext
 
 def is_binary(filename):
     """
@@ -51,6 +53,36 @@ def de_obscure(num, debug = False):
         if debug:
             print("letter = ", letter, "\nfactor = ", dict_vals[letter] * 52 ** i)
     return val
+
+def get_files_of_type(dirname, extension='.txt', maxSize=100.):
+    """
+    Gets all the files in the specified directory with a given extension
+    @param dirname the directory name
+    @param extension list of filetypes to get (default='.txt')
+    @param maxSize size in MB for max file size
+    """
+    files = []
+    for fname in filter(lambda x: extension in splitext(x)[1], os.listdir(dirname)):
+        f = os.path.join(dirname, fname)
+        if os.path.getsize(f) / (1024. * 1024.) <= maxSize:  # convert to MB
+            files.append(f)
+    return files
+
+def print_bad_path(path):
+    """
+    Prints information about the existence (access possibility) of the parts of the given path.
+    @param path path to check
+    """
+    path = os.path.abspath(path)
+    npath = os.path.dirname(path)
+    res = [path]
+    while path != npath:
+        path, npath = npath, os.path.dirname(npath)
+        res.append(path)
+    msg = {True: "passed", False: "failed"}
+    return "\n".join(["%s: %s" % (msg[os.path.exists(i)], i) for i in res])
+
+
 
 # list object attributes of a given type 
 def __object_attr(obj, mode, attr_type):

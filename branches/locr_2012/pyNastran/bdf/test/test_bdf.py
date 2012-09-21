@@ -10,7 +10,7 @@ warnings.simplefilter('always')
 numpy.seterr(all='raise')
 import traceback
 
-from pyNastran.general.general import printBadPath
+from pyNastran.general.utils import print_bad_path
 from pyNastran.bdf.bdf import BDF, CTRIAX, CTRIAX6
 from pyNastran.bdf.bdf import (ShellElement, SolidElement, LineElement,
                                RigidElement, SpringElement, PointElement,
@@ -118,7 +118,7 @@ def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, cid=None,
 
 
 def run_fem1(fem1, bdfModel, meshForm, xref, cid):
-    assert os.path.exists(bdfModel), printBadPath(bdfModel)
+    assert os.path.exists(bdfModel), print_bad_path(bdfModel)
     try:
         if '.pch' in bdfModel:
             fem1.readBDF_Punch(bdfModel, xref=False)

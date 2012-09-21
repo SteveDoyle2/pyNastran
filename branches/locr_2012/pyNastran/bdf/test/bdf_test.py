@@ -8,7 +8,7 @@ import sys
 from pyNastran.bdf.test.test_bdf import run_lots_of_files
 from pyNastran.op2.test.test_op2 import get_failed_files
 from pyNastran.op2.test.op2_test import get_all_files
-from pyNastran.general.general import get_files_of_type
+from pyNastran.general.utils import get_files_of_type
 
 if __name__ == '__main__':
     # works
