@@ -10,7 +10,7 @@ from numpy import array, zeros, ones
 from panairGridPatch import PanairPatch, PanairWakePatch, PanairGridHelper
 from panairWrite import PanairWrite
 
-#from pyNastran.general.general import list_print
+#from pyNastran.general.utils import list_print
 
 #CL = -Fx*sin(alpha)*cos(beta) + Fy*sin(alpha)*sin(beta) +Fz*cos(alpha)
 #CD =  Fx*cos(alpha)*cos(beta) - Fy*cos(alpha)*sin(beta) +Fz*sin(alpha)

@@ -1,15 +1,6 @@
 general Package
 ===============
 
-:mod:`general` Module
----------------------
-
-
-.. automodule:: pyNastran.general.general
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`mathematics` Module
 -------------------------

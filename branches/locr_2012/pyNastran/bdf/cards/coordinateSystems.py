@@ -9,7 +9,7 @@ from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, BDFCard
-from pyNastran.general.general import ListPrint
+from pyNastran.general.utils import list_print
 
 
 class Coord(BaseCard):
@@ -463,12 +463,12 @@ class Cord2x(Coord):
             print("gx = %s" % (gx))
             print("gy = %s" % (gy))
             print("gz = %s" % (gz))
-            print("p = %s" % (ListPrint(p)))
+            print("p = %s" % (list_print(p)))
             print("matrix = \n", matrix)
-            print("e1 = %s" % (ListPrint(self.e1)))
-            print("p2 = %s" % (ListPrint(p2)))
+            print("e1 = %s" % (list_print(self.e1)))
+            print("p2 = %s" % (list_print(p2)))
             print('------------------------')
-            print("p3 = %s\n" % (ListPrint(p3)))
+            print("p3 = %s\n" % (list_print(p3)))
 
         #print str(self)
         if isinstance(self.rid, int):

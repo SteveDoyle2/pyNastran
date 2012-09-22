@@ -2,9 +2,10 @@
 
 import unittest
 import sys
+from numpy import matrix, array
 
 
-from pyNastran.general.utils import (is_binary, obscure, de_obscure,
+from pyNastran.general.utils import (is_binary, obscure, de_obscure, list_print,
                                      object_methods, object_attributes)
 from os.path import abspath
 
@@ -45,6 +46,24 @@ class TestUtils(unittest.TestCase):
         for num in [0,1,5,53,231123, 34567523, 1024, 65367, 14321324, 73123434,
                     1309872418439702897245, 955785585080806958106769948497824]:
             self.assertEqual(de_obscure(obscure(num)), num)
+            
+    def test_list_print(self):
+        self.assertRaises(TypeError, lambda: list_print(None))
+        for a,b in [([],'[]'),(array([]), '[]'), (tuple(),'[]'), (matrix([]), '[[]]')]:
+            self.assertEqual(list_print(a), b)
+        r = ('[[1         ,2         ,3         ],\n [4         ,5         ,6'
+             '         ],\n [7         ,8         ,9         ]]')
+        self.assertEqual(list_print(array([(1,2,3),(4,5,6),(7,8,9)])), r)
+        self.assertEqual(list_print(matrix([(1,2,3),(4,5,6),(7,8,9)])), r)    
+        self.assertEqual(list_print(array([(1.0,2,3.),(4.,5.,6),(7.0,8,9)])), r)
+        self.assertEqual(list_print(matrix([(1,2,3.0),(4,5.0,6),(7.,8,9.0)])), r)
+        
+        r = "[[1.1       ,2.234     ,3.00001   ],\n [4.001     ,5         ,6.2       ]]"
+        self.assertEqual(list_print(array([(1.1,2.234,3.00001),(4.001,5.0000005,6.2)])), r)
+        self.assertEqual(list_print(matrix([(1.1,2.234,3.00001),(4.001,5.0000005,6.2)])), r)         
+        
+        self.assertEqual(list_print(['a',None,11,'']), '[a, None, 11, ]')
+        self.assertEqual(list_print(('a',None,11,'')), '[a, None, 11, ]')
 
     def test_object_methods_introspection(self):
         methods = object_methods(self.b)

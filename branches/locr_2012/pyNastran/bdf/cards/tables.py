@@ -5,7 +5,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
-from pyNastran.general.general import ListPrint
+from pyNastran.general.utils import list_print
 
 
 class Table(BaseCard):
@@ -37,7 +37,7 @@ class TableObj(object):
                 self.crashFields(fields, nRepeated, nFields)
             if nFields % nRepeated != 0:
                 msg = 'invalid table length nRepeat=%s fields=%s' % (
-                    nRepeated, ListPrint(fields))
+                    nRepeated, list_print(fields))
                 raise RuntimeError(msg)
 
         i = 0

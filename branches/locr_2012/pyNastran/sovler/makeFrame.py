@@ -4,7 +4,7 @@ from numpy import array, zeros, matrix
 from numpy.linalg import solve
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.general.general import ListPrint
+from pyNastran.general.utils import list_print
 from pyNastran.general.mathematics import reduce_matrix
 
 
@@ -223,8 +223,8 @@ def buildGlobalStiffness(model):
                 #Kg[dof2,dof2] += Ke[k,k]
                 #Kg[dof ,dof ] += Ke[j,j]
 
-        print "K_global =\n", ListPrint(Kg)
-    print "K_global =\n", ListPrint(Kg)
+        print "K_global =\n", list_print(Kg)
+    print "K_global =\n", list_print(Kg)
     #print "K_global = \n",Kg
     return Kg, Dofs
 
@@ -251,10 +251,10 @@ def applyBoundaryConditions(model, Kg):
     notNids = [nid - 1 for nid in allNodes if nid not in nids]
     #print "notNids =\n",notNids
     print "nids = ", nids
-    print "Kg2 =\n", ListPrint(Kg)
+    print "Kg2 =\n", list_print(Kg)
     Kr = reduce_matrix(Kg, nids)
     #Kr = reduce_matrix(Kg,notNids)
-    print "Kreduced =\n", ListPrint(Kr)
+    print "Kreduced =\n", list_print(Kr)
     return Kr
 
 

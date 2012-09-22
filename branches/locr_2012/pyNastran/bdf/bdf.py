@@ -5,7 +5,7 @@ import os
 import sys
 import warnings
 
-from pyNastran.general.general import ListPrint
+from pyNastran.general.utils import list_print
 
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
@@ -1954,7 +1954,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             ###
         except:
             print("cardName = |%r|" % (cardName))
-            print("failed! Unreduced Card=%s\n" % (ListPrint(card)))
+            print("failed! Unreduced Card=%s\n" % (list_print(card)))
             print("filename = %s\n" % (self.bdf_filename))
             sys.stdout.flush()
             raise
