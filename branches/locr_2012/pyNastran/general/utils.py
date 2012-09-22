@@ -3,6 +3,9 @@
 from types import MethodType
 import os
 from os.path import splitext
+from os.path import join as pjoin
+from os.path import getsize
+
 
 def is_binary(filename):
     """
@@ -61,12 +64,9 @@ def get_files_of_type(dirname, extension='.txt', maxSize=100.):
     @param extension list of filetypes to get (default='.txt')
     @param maxSize size in MB for max file size
     """
-    files = []
-    for fname in filter(lambda x: extension in splitext(x)[1], os.listdir(dirname)):
-        f = os.path.join(dirname, fname)
-        if os.path.getsize(f) / (1024. * 1024.) <= maxSize:  # convert to MB
-            files.append(f)
-    return files
+
+    return [pjoin(dirname, f) for f in os.listdir(dirname) if extension in 
+            splitext(f)[1] and getsize(pjoin(dirname, f)) / (1048576.) <= maxSize]
 
 def print_bad_path(path):
     """
