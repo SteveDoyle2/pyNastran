@@ -71,7 +71,9 @@ def get_files_of_type(dirname, extension='.txt', maxSize=100.):
 def print_bad_path(path):
     """
     Prints information about the existence (access possibility) of the parts of the given path.
+    Useful for debugging when the path to a given file is wrong.
     @param path path to check
+    @retval msg string with informations whether access to parts of the path is possible
     """
     path = os.path.abspath(path)
     npath = os.path.dirname(path)
