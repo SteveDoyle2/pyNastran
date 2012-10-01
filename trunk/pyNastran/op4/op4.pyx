@@ -59,6 +59,30 @@ cdef extern from "stdlib.h":
     void free(void* ptr)
     void* malloc(size_t size)
 
+ctypedef struct str_t:
+    int     len         # Number of terms in the string (a complex     
+                        # number counts as a single term).             
+    int     start_row   # Zero based, so first row has start_row = 0.  
+    int     N_idx       # Index into N[] to first numeric term for this
+                        # string.                                      
+
+ctypedef struct SparseMatrix:
+    int     *magic              #
+    int     *H                  # size = SPARSE_HDR_SIZE 
+    int     *S_start            # size = # columns + 1   
+    int     *N_start            # size = # columns + 1   
+    str_t   *S                  # size = n_strings_total 
+    double  *N                  # size = n_nonzeros_total
+    char    *data               # main data block        
+
+ctypedef enum:
+    ROWS     = 0
+    COLS     = 1
+    n_STR    = 2
+    n_NONZ   = 3
+    COMPLX   = 4
+    DATA_SIZE= 5
+
 cdef extern from "string.h":
     void* memset(void *dest, int c, size_t n)
 #   void* memcpy(void *dest, void *src, size_t n)
@@ -174,6 +198,7 @@ cdef int OP4_TXT_LINE_SIZE = 82
 DTYPE = np.float64
 FTYPE = np.float32
 ctypedef np.float64_t DTYPE_t
+ctypedef char         CHAR_t
 
 from libc.stdlib cimport free
 from cpython cimport PyObject, Py_INCREF
@@ -733,7 +758,10 @@ def Save(                                                  # {{{1
     cdef FILE* fp
     cdef int endian = 0
     cdef int sparse_mat = 0
-    cdef double *one_column
+    cdef int n_str_one_col, ptr_H, ptr_S_start, ptr_N_start, ptr_S, ptr_N, n_str, n_ptr, Ar_ptr, Ai_ptr
+    cdef double *one_column, *A
+    cdef int *start_ind, *str_len
+    cdef SparseMatrix m
     cdef np.ndarray[np.int32_t, ndim=1] row_ind
     cdef np.ndarray[np.int32_t, ndim=1] col_ind
 
@@ -748,6 +776,7 @@ def Save(                                                  # {{{1
 #   print('write to %s with digits=%d' % (     filename, digits))
 
     # assign a name to each unnamed matrix: M0000001 through M9999999
+#   print('args:'); print(args)
     for mat in args:
         i = 1
         while True:
@@ -761,6 +790,9 @@ def Save(                                                  # {{{1
 
     for name in kwargs:  # loop over the matrices
 
+#       print kwargs[name]
+#       print('----')
+#       print sparse.issparse(kwargs[name])
         try:
 #           print('a %s' % name)
             if sparse.issparse(kwargs[name]): 
@@ -819,16 +851,75 @@ def Save(                                                  # {{{1
         if sparse_mat:
             print('Sparse matrix op4 save not yet implemented')
             continue
+            sparse  = 2
+            nNZ     = 0   # mxGetNzmax(prhs[i])
+            row_ind = 0   # mxGetIr(   prhs[i])
+            col_ind = 0   # mxGetJc(   prhs[i])
+            Ar_ptr  = 0
+            Ai_ptr  = 0
+
+            if not nR*nC: # zero rows and/or columns; make null 1x1
+                nR      = 1
+                nC      = 1
+            #   Ar[0]   = 0.0
+                complx  = 0
+                sparse  = 0
+
+            # Declare a tops native sparse matrix having only 1 column. 
+            # Assume worst case values for # strings, # non-zeros.  Have
+            # to declare a double to force alignment to multiple of 8.  
+            # This code duplicates code in the following functions:     
+            #  - src/sparce.c:sp_data_offsets()                         
+            #  - src/sparce.c:sp_set_header()                           
+            #  - src/sparce.c:sparse_overlay()                          
+            n_str_one_col = nR/2 + 1
+            ptr_H         =               4  # SPARSE_MAGIC_SIZE
+            ptr_S_start   = ptr_H       + 6  # SPARSE_HDR_SIZE
+            ptr_N_start   = ptr_S_start +     (1 + 1)  # nCol = 1
+            ptr_S         = ptr_N_start +     (1 + 1)  # nCol = 1
+            ptr_N         = ptr_S       + n_str_one_col*sizeof(str_t)/ \
+                                                        sizeof(int)
+            if ptr_N % 2: ptr_N += 1
+
+            size = (ptr_N)*sizeof(int) + npt*nR*sizeof(double)
+
+            A = <DTYPE_t*>malloc(sizeof(double) * size)
+            if A == NULL:
+                print('saveop4:  insufficient memory for matrix column')
+                return
+
+            m.data        = <char *>A
+            m.magic       = <int *> m.data
+            m.H           =             &m.magic[4] # SPARSE_MAGIC_SIZE
+            m.S_start     =             &m.magic[ptr_S_start]
+            m.N_start     =             &m.magic[ptr_N_start]
+            m.S           = <str_t  *>  &m.magic[ptr_S      ]
+            m.N           = <DTYPE_t *> &m.magic[ptr_N      ]
+
+            m.H[ROWS]     = nR
+            m.H[COLS]     =  1
+            m.H[n_STR]    = nR/2 + 1
+            m.H[n_NONZ]   = nR*npt
+            m.H[COMPLX]   = complx
+            m.H[DATA_SIZE]= size
+
+            start_ind = <int *> malloc(m.H[n_STR]*sizeof(int))
+            if start_ind == NULL:
+                print('saveop4:  insufficient memory for start_ind')
+                return
+            str_len   = <int *> malloc(m.H[n_STR]*sizeof(int))
+            if str_len == NULL:
+                print('saveop4:  insufficient memory for str_len')
+                return
+
 
         # write each column
         for c in xrange(nC):
             if sparse_mat:
                 row_ind, col_ind = kwargs[name].nonzero()
                 for c in range(nR):
-                    print('r,c index %d is %d,%d' % (
-                        c, 
-                        (<int*>row_ind.data)[c],
-                        (<int*>col_ind.data)[c]))
+                    print('column %3d row %3d' % (
+                        c, (<int*>row_ind.data)[c]))
                 print('sparse column %d' % c)
                 print kwargs[name].getcol(c)
             else:  # dense
