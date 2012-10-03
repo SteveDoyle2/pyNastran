@@ -12,25 +12,16 @@ general Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`logger` Module
+:mod:`log` Module
 --------------------
 
 
-.. automodule:: pyNastran.general.logger
+.. automodule:: pyNastran.general.log
     :members:
     :private-members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`makeLog` Module
----------------------
-
-
-.. automodule:: pyNastran.general.makeLog
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
 
 
 :mod:`utils` Module

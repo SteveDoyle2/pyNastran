@@ -6,6 +6,7 @@ import copy
 
 from pyNastran.bdf import subcase
 from pyNastran.bdf.subcase import Subcase
+from pyNastran.general.log import get_logger
 
 
 class CaseControlDeck(object):
@@ -20,16 +21,12 @@ class CaseControlDeck(object):
         @param log
           a logger object
         """
-        if log is None:
-        #if 1:
-            from pyNastran.general.logger import dummyLogger
-            word = 'debug'
-            loggerObj = dummyLogger()
-            log = loggerObj.startLog(word)  # or info
+
+        self.log = get_logger(log, "debug")
         self.debug = False
         #self.debug = True
 
-        self.log = log
+        
         self.lines = lines
         self.subcases = {0: Subcase(id=0)}
         self._read(self.lines)

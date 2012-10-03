@@ -3,6 +3,7 @@ import sys
 from itertools import izip
 
 from pyNastran.general.utils import print_bad_path
+from pyNastran.general.log import get_logger
 
 #ComplexEigenvalues,strainEnergyDensity,TemperatureGradientObject
 from pyNastran.op2.tables.oug.oug_eigenvectors import EigenVectorObject  # ,ComplexEigenVectorObject
@@ -183,15 +184,8 @@ class F06(OES, OUG, OQG, F06Writer):
         @param log a python logging object
         @param debug adds debug messages (True/False)
         """
-        if log is None:
-            from pyNastran.general.logger import dummyLogger
-            if debug:
-                word = 'debug'
-            else:
-                word = 'info'
-            loggerObj = dummyLogger()
-            log = loggerObj.startLog(word)  # or info
-        self.log = log
+
+        self.log = get_logger(log, 'debug' if debug else 'info')
 
     def getGridPointSingularities(self):  # @todo not done
         """

@@ -1,15 +1,13 @@
 import sys
 import platform
 import os
-import inspect
 import logging
-from functools import partial
 
 def make_log(display=False):
     """
     Creates 'pyNastran.log' file with information about working environment,
     such as Python version, platform, architecture, etc. Useful for debugging.
-    @param do not only create file but also print log information
+    @param display do not only create file but also print log information
     """
     smsg = [("sys.version", sys.version), ("sys.version_info", sys.version_info)]
     pmsg = ["machine", "platform", "processor", "architecture","python_branch", 
@@ -27,101 +25,88 @@ def make_log(display=False):
         fil.write(msg)
 
 
-
-class debugLogger(object):
+class simpleLogger(object):
+    """
+    Simple logger object. In future might be changed to use Python logging module.
+    Two levels are supported: 'debug' and 'info'. Info level discards debug
+    messages, 'debug' level displays all messages.
+    """
+    
+    def __init__(self, level='debug'):
+        """
+        @param level level of logging: 'info' or 'debug'
+        """
+        assert level in ('info','debug')
+        self.level = level
 
     def properties(self):
         """Return tuple: line number and filename"""
-        f =  inspect.currentframe(3)  # jump 2 levels down to get out of the logger code
+        f =  sys._getframe(3)  # jump 2 levels down to get out of the logger code
         return (f.f_lineno, os.path.basename(f.f_globals['__file__']))
 
     def debug(self, msg):
+        """
+        Log DEBUG message
+        @param msg message to be logged
+        """
+        if self.level != 'debug':
+            return
         lines = str(msg).split('\n')
         self.msg_typ('DEBUG',''.join([lines[0]] + [' ' * 54 + line + '\n' 
                                                    for line in lines[1:]]))
         
     def msg_typ(self,typ,msg):
+        """
+        Log message of a given type
+        @param typ type of a message (e.g. INFO)
+        @param msg message to be logged
+        """
         n, fn = self.properties()
         sys.stdout.write('%s:    fname=%-25s lineNo=%-4s   %s\n' % (typ, fn, n, msg))
 
     def info(self, msg):
+        """
+        Log INFO message
+        @param msg message to be logged
+        """
         self.msg_typ("INFO", msg)
     
     def warning(self, msg):
+        """
+        Log WARNING message
+        @param msg message to be logged
+        """
         self.msg_typ("WARNING", msg)
     
     def error(self, msg):
+        """
+        Log ERROR message
+        @param msg message to be logged
+        """
         self.msg_typ("ERROR", msg)
     
     def critical(self, msg):
+        """
+        Log CRITICAL message
+        @param msg message to be logged
+        """
         self.msg_typ("CRITICAL", msg)
-    
-
-class infoLogger(debugLogger):
-    def debug(self, msg):
-        pass
-
-
-class dummyLogger(object):
-    
-    def startLog(self, level):
-        if level == 'debug':
-            return debugLogger()
-        elif level == 'info':
-            return infoLogger()
-        raise RuntimeError("invalid logger:  debug, info ONLY!")
 
 
 def get_logger(log=None, level='debug'):
     """
-    This function is useful as it will instantiate a dummy logger object if log=None
-    log may be a logger object or None
-    pyFile is the python file that the code was called from (unused)
+    This function is useful as it will instantiate a simpleLogger object if log=None.
+    @param log a logger object or None
+    @param level level of logging: 'info' or 'debug'
     """
-    return dummyLogger().startLog(level) if log is None else log
-    
-
-
-def buildDummyLogger2(level='debug'):
-    try:
-        version = sys.version_info
-        fname = 'pyNastran.py%s%s.log' % (version.major, version.minor)
-        logPath = os.path.join(os.getcwd(), fname)
-        if os.path.exists(logPath):
-            os.remove(logPath)
-
-        # create logger with 'pyNastran'
-        logger = logging.getLogger('pyNastran')
-        logger.setLevel(logging.DEBUG)
-        # create file handler which logs even debug messages
-        fh = logging.FileHandler(logPath)
-        if level == 'debug':
-            fh.setLevel(logging.DEBUG)
-        elif level == 'info':
-            fh.setLevel(logging.INFO)
-        else:
-            raise RuntimeError("invalid logger:  debug, info ONLY!")
-        # create console handler with a higher log level
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.ERROR)
-        # create formatter and add it to the handlers
-        formatter = logging.Formatter('%(levelname)-8s:  %(filename)-25s linenum=%(lineno)-4s %(message)s')
-        fh.setFormatter(formatter)
-        ch.setFormatter(formatter)
-        # add the handlers to the logger
-        logger.addHandler(fh)
-        logger.addHandler(ch)
-
-        logger.info('logger is initialized---')
-    except Exception:
-        logger = logging.getLogger('pyNastran')
-
-    return logger
+    return simpleLogger(level) if log is None else log
 
 if __name__ == '__main__':
-    # how to use a dummy logger
-    logger = dummyLogger()
-    log = logger.startLog('debug')  # or info
-    log.debug('test message')
-    log.warning('asf')
-    log.error('errorss')
+    # how to use a simple logger
+    for nam in ["debug", "info"]:      
+        print('--- %s logger ---' % (nam))
+        log = simpleLogger(nam)
+        log.debug('test message')
+        log.warning('asf')
+        log.error('errorss')
+    

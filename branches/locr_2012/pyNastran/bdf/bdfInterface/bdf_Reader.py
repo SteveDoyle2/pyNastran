@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
-
+from pyNastran.general.log import get_logger
 
 class BDFReader(object):
     def __init__(self, debug, log):
@@ -13,16 +13,8 @@ class BDFReader(object):
             self.relpath = False
             #raise RuntimeError("must use python 2.6 or greater...version=%s"
             #                   %(str(version)))
-
-        if log is None:
-            from pyNastran.general.logger import dummyLogger
-            if debug:
-                word = 'debug'
-            else:
-                word = 'info'
-            loggerObj = dummyLogger()
-            log = loggerObj.startLog(word)  # or info
-        self.log = log
+            
+        self.log = get_logger(log, 'debug' if debug else 'info')
 
     def print_filename(self, filename):
         """

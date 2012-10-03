@@ -8,6 +8,8 @@ from numpy import array
 from struct import unpack
 from pyNastran.op2.fortranFile import FortranFile
 from pyNastran.general.utils import is_binary
+from pyNastran.general.log import get_logger
+
 
 
 def convertToFloat(svalues):
@@ -31,15 +33,7 @@ class Cart3DAsciiReader(object):
         self.infilename = None
         self.readHalf = False
 
-        if log is None:
-            from pyNastran.general.logger import dummyLogger
-            if debug:
-                word = 'debug'
-            else:
-                word = 'info'
-            loggerObj = dummyLogger()
-            log = loggerObj.startLog(word)  # or info
-        self.log = log
+        self.log = get_logger(log, 'debug' if debug else 'info')
 
     def readCart3d(self, infilename):
         """extracts the points, elements, and Cp"""
@@ -660,14 +654,7 @@ class Cart3DBinaryReader(FortranFile, Cart3DAsciiReader):
         self.makeOp2Debug = False
         self.n = 0
 
-        if log is None:
-            from pyNastran.general.logger import dummyLogger
-            loggerObj = dummyLogger()
-            if debug:
-                log = loggerObj.startLog('debug')  # or info
-            else:
-                log = loggerObj.startLog('info')  # or info
-        self.log = log
+        self.log = get_logger(log, 'debug' if debug else 'info')
 
     def readCart3d(self, infileName):
         self.infilename = infileName

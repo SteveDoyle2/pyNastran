@@ -68,16 +68,9 @@ def fix_object(files):
                             #line = line.replace('(object):','():')
                         if 'nested_scopes' in line:
                             line = ''
-                        elif 'from pyNastran.general.logger import dummyLogger' in line:
-                            line = line.replace('dummyLogger','buildDummyLogger2')
                         elif 'self.subcase_sorted(self.params.items())' in line:
                             line = line.replace('self.subcase_sorted(self.params.items())',
                                                 'self.subcase_sorted(list(self.params.items()))')
-                        elif 'loggerObj = dummyLogger()' in line:
-                            line = ''
-                        elif 'log = loggerObj.startLog(word)' in line:
-                            line = line.replace('log = loggerObj.startLog(word)',
-                                                'log = buildDummyLogger2(word)')
                         elif 'unicode_literals' in line:
                             line = ''
                         elif 'import StringIO' in line:
