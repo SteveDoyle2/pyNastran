@@ -1,7 +1,6 @@
 import sys
 import platform
 import os
-import logging
 
 def make_log(display=False):
     """
@@ -10,13 +9,13 @@ def make_log(display=False):
     @param display do not only create file but also print log information
     """
     smsg = [("sys.version", sys.version), ("sys.version_info", sys.version_info)]
-    pmsg = ["machine", "platform", "processor", "architecture","python_branch", 
+    pmsg = ["machine", "platform", "processor", "architecture", "python_branch", 
            "python_revision", "win32_ver", "version", "uname", "system",
            "python_build", "python_compiler", "python_implementation", "system",
            "mac_ver", "linux_distribution", "libc_ver"]
     
     fmt = "%-{0}s = %s\n".format(max(map(len, pmsg + [j[0] for j in smsg])))
-    msg = "".join([fmt % (i, str(j).replace("\n", "; ")) for (i,j) in smsg])
+    msg = "".join([fmt % (i, str(j).replace("\n", "; ")) for (i, j) in smsg])
     msg += "".join([fmt % (i, str(getattr(platform, i)())) for i in pmsg])
     if display:
         print(msg)
@@ -41,8 +40,8 @@ class simpleLogger(object):
 
     def properties(self):
         """Return tuple: line number and filename"""
-        f =  sys._getframe(3)  # jump 2 levels down to get out of the logger code
-        return (f.f_lineno, os.path.basename(f.f_globals['__file__']))
+        _fr =  sys._getframe(3)  # jump to get out of the logger code
+        return (_fr.f_lineno, os.path.basename(_fr.f_globals['__file__']))
 
     def debug(self, msg):
         """
@@ -52,10 +51,10 @@ class simpleLogger(object):
         if self.level != 'debug':
             return
         lines = str(msg).split('\n')
-        self.msg_typ('DEBUG',''.join([lines[0]] + [' ' * 54 + line + '\n' 
+        self.msg_typ('DEBUG', ''.join([lines[0]] + [' ' * 54 + line + '\n' 
                                                    for line in lines[1:]]))
         
-    def msg_typ(self,typ,msg):
+    def msg_typ(self, typ, msg):
         """
         Log message of a given type
         @param typ type of a message (e.g. INFO)
@@ -93,7 +92,7 @@ class simpleLogger(object):
         self.msg_typ("CRITICAL", msg)
 
 
-def get_logger(log=None, level='debug'):
+def get_logger(log = None, level = 'debug'):
     """
     This function is useful as it will instantiate a simpleLogger object if log=None.
     @param log a logger object or None
@@ -105,8 +104,8 @@ if __name__ == '__main__':
     # how to use a simple logger
     for nam in ["debug", "info"]:      
         print('--- %s logger ---' % (nam))
-        log = simpleLogger(nam)
-        log.debug('test message')
-        log.warning('asf')
-        log.error('errorss')
+        test_log = simpleLogger(nam)
+        test_log.debug('test message')
+        test_log.warning('asf')
+        test_log.error('errorss')
     
