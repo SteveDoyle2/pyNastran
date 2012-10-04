@@ -1,7 +1,7 @@
 import os
 import sys
 from pyNastran.op2.test.test_op2 import get_failed_files,runLotsOfFiles
-from pyNastran.general.utils import get_files_of_type
+from pyNastran.utils import get_files_of_type
 
 def parseSkippedCards(fname):
     f = open(fname,'r')

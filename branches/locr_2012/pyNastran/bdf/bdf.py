@@ -5,7 +5,7 @@ import os
 import sys
 import warnings
 
-from pyNastran.general.utils import list_print
+from pyNastran.utils import list_print
 
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,

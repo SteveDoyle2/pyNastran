@@ -4,11 +4,11 @@ from math import ceil, sqrt
 from itertools import izip
 from numpy import array
 
-#from pyNastran.general.utils import list_print
+#from pyNastran.utils import list_print
 from struct import unpack
 from pyNastran.op2.fortranFile import FortranFile
-from pyNastran.general.utils import is_binary
-from pyNastran.general.log import get_logger
+from pyNastran.utils import is_binary
+from pyNastran.utils.log import get_logger
 
 
 

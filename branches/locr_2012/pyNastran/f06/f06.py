@@ -2,8 +2,8 @@ import os
 import sys
 from itertools import izip
 
-from pyNastran.general.utils import print_bad_path
-from pyNastran.general.log import get_logger
+from pyNastran.utils import print_bad_path
+from pyNastran.utils.log import get_logger
 
 #ComplexEigenvalues,strainEnergyDensity,TemperatureGradientObject
 from pyNastran.op2.tables.oug.oug_eigenvectors import EigenVectorObject  # ,ComplexEigenVectorObject

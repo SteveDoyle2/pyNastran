@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from types import MethodType
 import os
 from os.path import splitext

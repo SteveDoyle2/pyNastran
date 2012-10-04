@@ -4,8 +4,8 @@ from numpy import array, zeros, matrix
 from numpy.linalg import solve
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.general.utils import list_print
-from pyNastran.general.mathematics import reduce_matrix
+from pyNastran.utils import list_print
+from pyNastran.utils.mathematics import reduce_matrix
 
 
 def makeTruss2():

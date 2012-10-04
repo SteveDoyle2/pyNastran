@@ -10,7 +10,7 @@ warnings.simplefilter('always')
 numpy.seterr(all='raise')
 import traceback
 
-from pyNastran.general.utils import print_bad_path
+from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf import BDF, CTRIAX, CTRIAX6
 from pyNastran.bdf.bdf import (ShellElement, SolidElement, LineElement,
                                RigidElement, SpringElement, PointElement,

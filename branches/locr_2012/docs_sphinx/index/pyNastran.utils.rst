@@ -1,12 +1,17 @@
-general Package
+utils Package
 ===============
 
+.. automodule:: pyNastran.utils
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
 
 :mod:`mathematics` Module
 -------------------------
 
 
-.. automodule:: pyNastran.general.mathematics
+.. automodule:: pyNastran.utils.mathematics
     :members:
     :private-members:
     :undoc-members:
@@ -16,7 +21,7 @@ general Package
 --------------------
 
 
-.. automodule:: pyNastran.general.log
+.. automodule:: pyNastran.utils.log
     :members:
     :private-members:
     :undoc-members:
@@ -24,12 +29,4 @@ general Package
 
 
 
-:mod:`utils` Module
----------------------
-
-.. automodule:: pyNastran.general.utils
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
 

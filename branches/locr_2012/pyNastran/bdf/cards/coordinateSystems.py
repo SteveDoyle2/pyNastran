@@ -9,7 +9,7 @@ from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, BDFCard
-from pyNastran.general.utils import list_print
+from pyNastran.utils import list_print
 
 
 class Coord(BaseCard):

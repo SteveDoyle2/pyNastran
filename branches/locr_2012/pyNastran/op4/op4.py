@@ -5,8 +5,8 @@ from struct import pack, unpack
 from numpy import (array, zeros, float32, float64, complex64, complex128, 
                   allclose)
 from scipy.sparse import coo_matrix
-from pyNastran.general.utils import is_binary
-from pyNastran.general.mathematics import print_matrix, print_annotated_matrix
+from pyNastran.utils import is_binary
+from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 from pyNastran.op2.fortranFile import FortranFile
 
 

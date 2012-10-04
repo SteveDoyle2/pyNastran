@@ -6,7 +6,7 @@ import copy
 
 from pyNastran.bdf import subcase
 from pyNastran.bdf.subcase import Subcase
-from pyNastran.general.log import get_logger
+from pyNastran.utils.log import get_logger
 
 
 class CaseControlDeck(object):

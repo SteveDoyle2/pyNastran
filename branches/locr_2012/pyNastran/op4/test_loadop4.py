@@ -4,7 +4,7 @@ import sys
 import numpy as np
 from op4 import OP4
 from pyNastran.op4.op4 import OP4 as pyOP4
-from pyNastran.general.mathematics import print_matrix
+from pyNastran.utils.mathematics import print_matrix
 
 for in_file in ['test/mat_b_dn.op4',
                 'test/mat_b_s1.op4',

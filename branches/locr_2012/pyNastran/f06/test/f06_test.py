@@ -3,7 +3,7 @@ import sys
 #import time
 from pyNastran.op2.test.test_op2 import get_failed_files
 from pyNastran.f06.test.test_f06 import runLotsOfFiles
-from pyNastran.general.utils import get_files_of_type
+from pyNastran.utils import get_files_of_type
 
 
 def parseSkippedCards(fname):

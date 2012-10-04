@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
-from pyNastran.general.log import get_logger
+from pyNastran.utils.log import get_logger
 
 class BDFReader(object):
     def __init__(self, debug, log):

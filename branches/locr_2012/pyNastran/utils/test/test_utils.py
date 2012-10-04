@@ -5,7 +5,7 @@ import sys
 from numpy import matrix, array
 
 
-from pyNastran.general.utils import (is_binary, obscure, de_obscure, list_print,
+from pyNastran.utils import (is_binary, obscure, de_obscure, list_print,
                                      object_methods, object_attributes)
 from os.path import abspath
 

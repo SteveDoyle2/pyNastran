@@ -5,7 +5,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
-from pyNastran.general.utils import list_print
+from pyNastran.utils import list_print
 
 
 class Table(BaseCard):
