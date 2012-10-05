@@ -1,14 +1,33 @@
 import os
-import sys
+import os.path
 import copy
 import pyNastran
+
+
+def get_folders_files(dirname):
+    """
+    Return list of directories and files in a given tree path. Discards:
+    
+    * .svn, .idea, .settings directories
+      
+    * .pyc, .pyx, .bdf files
+    """
+    files = []
+    folders = []
+    for root, dirs, fil in os.walk(dirname):
+        folders.append(root)
+        files += [os.path.join(root, i) for i in fil 
+                  if not i.endswith(('.pyc', '.pyx', '.bdf','__init__.py'))]
+        dirs[:] = [d for d in dirs if not d in ('.svn', '.idea', '.settings')]
+
+    return (folders, files)
 
 def getFoldersFiles(dirname):
     """
     I'm sure there's an automatic way to create this...
     try using os.walk
     """
-    print(dirname)
+    #print(dirname)
     filesFolders = os.listdir(dirname)
     
     files = []
@@ -143,3 +162,4 @@ def updateCopyright():
 
 if __name__=='__main__':
     updateCopyright()
+    
