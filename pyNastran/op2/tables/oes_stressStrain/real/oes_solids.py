@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
-from numpy import array
+from numpy import array, sqrt
 from numpy.linalg import eigh
 
 from .oes_objects import stressObject, strainObject
@@ -66,7 +66,7 @@ class SolidStressObject(stressObject):
                                                      nelements))
         msg.append('  eType, cid, oxx, oyy, ozz, txy, tyz, txz, '
                    'o1, o2, o3, ovmShear\n  ')
-        msg.append(', '.join(  set(self.eType.values())  ))
+        msg.append(', '.join(set(self.eType.values())))
         msg.append('\n')
         return msg
 
@@ -880,19 +880,21 @@ class SolidStrainObject(strainObject):
 
     def ovm(self, o11, o22, o33, o12, o13, o23):
         """http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
-        ovm = 0.5 * ((o11 - o22) ** 2 + (o22 - o33) ** 2 + (o11 -
-                                                            o33) ** 2 + 6 * (o23 ** 2 + o13 ** 2 + o12 ** 2))
+        ovm = 0.5 * ((o11 - o22) ** 2 + 
+                     (o22 - o33) ** 2 + 
+                     (o11 - o33) ** 2 +
+                     6 * (o23 ** 2 + o13 ** 2 + o12 ** 2))
         return ovm
 
     #def ovmPlane(self,o11,o22,o12):
         #"""http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
-        #ovm = (o11**2+o22**2-o1*o2+3*o12**2)**0.5
+        #ovm = sqrt(o11**2+o22**2-o1*o2+3*o12**2)
         #return ovm
 
     def octahedral(self, o11, o22, o33, o12, o13, o23):
         """http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
         ovm = self.ovm(o11, o22, o33, o12, o13, o23)
-        return ovm / 3 * 2 ** 0.5
+        return ovm * sqrt(2) / 3.
 
     def pressure(self, e1, e2, e3):
         """
