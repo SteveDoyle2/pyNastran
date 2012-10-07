@@ -41,6 +41,20 @@ class ComplexPlateStressObject(stressObject):
             self.addNewEid = self.addNewEidSort2
             self.addNewNode = self.addNewNodeSort2
 
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.oxx)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, fiberCurvature, oxx, oyy, txy\n')
+        return msg
+
     def addF06Data(self, data, transient):
         if transient is None:
             eType = data[0][0]
@@ -695,6 +709,20 @@ class ComplexPlateStrainObject(strainObject):
             assert dt is not None
             self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
+
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.exx)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, fiberCurvature, exx, eyy, exy\n')
+        return msg
 
     def addF06Data(self, data, transient):
         if transient is None:

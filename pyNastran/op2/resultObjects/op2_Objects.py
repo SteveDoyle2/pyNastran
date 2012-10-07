@@ -118,7 +118,7 @@ class scalarObject(baseScalarObject):
         self.dt = None
         self.dataCode = dataCode
         self.applyDataCode()
-        self.log.debug(self.codeInformation())
+        #self.log.debug(self.codeInformation())
 
     def isImaginary(self):
         return bool(self.sortBits[1])
