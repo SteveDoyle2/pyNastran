@@ -751,7 +751,7 @@ class OP2(BDF,
                 isAnotherTable = False
         else:
             if tableName not in [None]:
-                assert 1 == 0, '%s is not supported' % (tableName)
+                raise NotImplementedError('%s is not supported' % (tableName))
             (isAnotherTable) = self.skipNextTable()
             #return isAnotherTable
         #print(self.printSection(140))
