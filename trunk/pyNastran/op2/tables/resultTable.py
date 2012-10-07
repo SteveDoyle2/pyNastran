@@ -404,8 +404,8 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         if False:
             raise NotImplementedError(msg)
         else:
-            self.log.info("skipping...")
-            self.log.info("\n" + self.codeInformation())
+            #self.log.info("skipping...")
+            #self.log.info("\n" + self.codeInformation())
             self.skipOES_Element()
 
     def handleResultsBuffer3(self, f, resultName, debug=False):

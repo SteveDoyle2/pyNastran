@@ -12,9 +12,12 @@ from struct import unpack
 class RealElementsStressStrain(object):
 
     def skipOES_Element(self):
-        self.log.debug('skipping approach/table/format/sortCode=%s on %s table' % (self.atfsCode, self.tableName))
-        #print 'skipping approach/table/format/sortCode=%s on %s table' % (self.atfsCode,self.tableName)
-        #print self.codeInformation()
+        self.log.debug('skipping approachCode=%s, tableCode=%s, formatCode-%s '
+                       'sortCode=%s on %s table' % (self.analysisCode,
+                       self.tableCode, self.formatCode, self.sortCode,
+                       self.tableName))
+        print(self.codeInformation())
+        #asdf
         self.handleResultsBuffer3(self.dummyPass, None, debug=True)
 
     def dummyPass(self):

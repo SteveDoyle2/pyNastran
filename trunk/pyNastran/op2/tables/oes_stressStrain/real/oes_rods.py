@@ -69,7 +69,7 @@ class RodStressObject(stressObject):
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.axial)
-            a0 = self.stress.keys()[0]
+            a0 = self.axial.keys()[0]
             nelements = len(self.axial[a0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))

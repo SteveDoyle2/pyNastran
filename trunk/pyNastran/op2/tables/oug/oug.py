@@ -217,7 +217,11 @@ class OUG(object):
                 assert self.tableName in ['OUGV1'], 'tableName=%s tableCode=%s\n%s' % (self.tableName, self.tableCode, self.codeInformation())
                 self.readOUG_Data_table1()
             else:  # 'OUPV1'
-                self.NotImplementedOrSkip('bad approach/table/format/sortCode=%s on %s-OUG table' % (self.atfsCode, self.tableName))
+                msg = ('bad approachCode=%s, tableCode=%s, formatCode-%s '
+                       'sortCode=%s on %s-OUG table' % (self.analysisCode,
+                        self.tableCode, self.formatCode, self.sortCode,
+                        self.tableName))
+                self.NotImplementedOrSkip(msg)
         elif self.tableCode == 1 and self.tableName in ['OUGATO2', 'OUGCRM2', 'OUGPSD2', 'OUGRMS2', 'OUGNO2', ]:    # displacement
             #assert self.tableName in ['OUGATO2','OUGCRM2','OUGPSD2','OUGRMS2','OUGNO2',],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
             self.readOUG_Data_table1()

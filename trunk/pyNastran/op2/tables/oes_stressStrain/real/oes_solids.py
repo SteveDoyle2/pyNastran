@@ -626,7 +626,7 @@ class SolidStrainObject(strainObject):
 
         msg = self.get_data_code()
         if self.nonlinearFactor is not None:  # transient
-            ntimes = len(self.oxx)
+            ntimes = len(self.exx)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:

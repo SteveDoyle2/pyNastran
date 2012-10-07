@@ -29,11 +29,11 @@ class CompositePlateStressObject(stressObject):
         self.ovmShear = {}
         #print "self.dataCode = ",self.dataCode
         #if self.isVonMisesStress():
-        if self.code == [1, 0, 0]:
-            assert not self.isVonMises, 'isVonMises=%s' % (self.isVonMises())
-            #self.isVonMises = True
-        else:
-            raise InvalidCodeError('compositePlateStress - get the format/sort/stressCode=%s' % (self.code))
+        #if self.code == [1, 0, 0]:
+            #assert not self.isVonMises, 'isVonMises=%s' % (self.isVonMises())
+            ##self.isVonMises = True
+        #else:
+            #raise InvalidCodeError('compositePlateStress - get the format/sort/stressCode=%s' % (self.code))
 
         self.dt = dt
         if isSort1:
@@ -141,7 +141,7 @@ class CompositePlateStressObject(stressObject):
                   majorP, minorP, ovm):
         """all points are located at the centroid"""
         #print "Composite Plate Strain add..."
-        msg = "eid=%s eType=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, eType, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
+        #msg = "eid=%s eType=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, eType, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
         if eid in self.o11:
             return self.add(dt, eid, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
         assert eid not in self.o11, msg + '\n  o11=%s eType=%s code=%s' % (
@@ -182,14 +182,14 @@ class CompositePlateStressObject(stressObject):
         self.majorP[dt][eid] = [majorP]
         self.minorP[dt][eid] = [minorP]
         self.ovmShear[dt][eid] = [ovm]
-        msg = "eid=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
+        #msg = "eid=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
         #print msg
         #if nodeID==0: raise Exception(msg)
 
     def add(self, dt, eid, o11, o22, t12, t1z, t2z, angle,
             majorP, minorP, ovm):
         #print "***add"
-        msg = "eid=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
+        #msg = "eid=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
         #print msg
         #print self.o11
         self.o11[eid].append(o11)
@@ -536,7 +536,7 @@ class CompositePlateStrainObject(strainObject):
         self.majorP[eid] = [majorP]
         self.minorP[eid] = [minorP]
         self.evmShear[eid] = [evm]
-        msg = "eid=%s e11=%g e22=%g e12=%g e1z=%g e2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evm)
+        #msg = "eid=%s e11=%g e22=%g e12=%g e1z=%g e2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evm)
         #print msg
         #if nodeID==0: raise Exception(msg)
 
@@ -581,7 +581,7 @@ class CompositePlateStrainObject(strainObject):
 
     def addSort1(self, dt, eid, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evm):
         #print "***add"
-        msg = "eid=%s e11=%g e22=%g e12=%g e1z=%g e2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evm)
+        #msg = "eid=%s e11=%g e22=%g e12=%g e1z=%g e2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evm)
         #print msg
         #print self.o11
         self.e11[dt][eid].append(e11)
