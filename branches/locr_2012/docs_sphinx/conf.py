@@ -322,7 +322,7 @@ def convert_doxygen_comments(app, what, name, obj, options, lines):
     res_lines = []
     _need_indent = False
     for line in lines:
-        #copy empty linesdirectly to result
+        #copy empty lines directly to result
         if not line:
             res_lines.append(line)
             continue
@@ -356,8 +356,7 @@ def convert_doxygen_comments(app, what, name, obj, options, lines):
         
             
         # simple subsitutions    
-        for old_str, new_str in substitutions:
-            new_line = new_line.replace(old_str, new_str)
+        new_line = reduce(lambda s, l: s.replace(*l), substitutions, new_line)
         
         # other links
         if "@see" in new_line:
