@@ -669,27 +669,26 @@ class Subcase(object):
             msg += self.print_param('BEGIN', self.params['BEGIN'])
         return msg
 
-    def subcase_sorted(self, listA):
+    def subcase_sorted(self, lst):
         """
         does a "smart" sort on the keys such that SET cards increment in
         numerical order.
         @param self
           the subcase object
-        @param listA
+        @param lst
           the list of subcase list objects
         @retval listB
-          the sorted version of listA
+          the sorted version of lst
         """
         # presort the list to put all the SET cards next to each other
-        listA.sort()
+        lst = sorted(lst) # instead od lst.sort() as it allows lst to be any iterable
 
-        i = 0  # needed in case the loop doesnt execute
+        i = 0  # needed in case the loop doesn't execute
         iSet = None  # index of first SET card in the deck
         setDict = {}
         listBefore = []
-        listAfter = []
         setKeys = []
-        for (i, entry) in enumerate(listA):
+        for (i, entry) in enumerate(lst):
             key = entry[0]
             if 'SET' in key[0:3]:
                 if key == 'SET':  # handles "SET = ALL"
@@ -708,7 +707,7 @@ class Subcase(object):
                     break
 
         # grab the other entries
-        listAfter = listA[i + 1:]
+        listAfter = lst[i + 1:]
 
         # write the SET cards in a sorted order
         setList = []

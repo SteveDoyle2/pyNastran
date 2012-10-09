@@ -1,165 +1,88 @@
+from __future__ import print_function
 import os
 import os.path
-import copy
-import pyNastran
+import re
 
-
-def get_folders_files(dirname):
+def get_folders_files(dirname, skip_file_sufix = ('.pyc', '.pyx', '.bdf'),
+                            skip_directories = ('.svn', '.idea', '.settings')):
     """
-    Return list of directories and files in a given tree path. Discards:
+    Return list of directories and files in a given tree path. By default discards:
     
-    * .svn, .idea, .settings directories
+    * directories ".svn", ".idea", ".settings"
       
-    * .pyc, .pyx, .bdf files
+    * files that ends with ".pyc", .pyx", ".bdf"
     """
     files = []
     folders = []
     for root, dirs, fil in os.walk(dirname):
         folders.append(root)
         files += [os.path.join(root, i) for i in fil 
-                  if not i.endswith(('.pyc', '.pyx', '.bdf','__init__.py'))]
-        dirs[:] = [d for d in dirs if not d in ('.svn', '.idea', '.settings')]
+                  if not i.endswith(skip_file_sufix)]
+        dirs[:] = [d for d in dirs if not d in skip_directories]
 
     return (folders, files)
 
-def getFoldersFiles(dirname):
+
+def print_tree(files, padding = 4):
     """
-    I'm sure there's an automatic way to create this...
-    try using os.walk
+    Prints given list of files (usually returned by get_folders_files) in
+    a graphical form of a tree.
+    @param files list of files to be printed
+    @padding number of spaces to use when padding tree nodes, default is 4
     """
-    #print(dirname)
-    filesFolders = os.listdir(dirname)
+    def divide_path(path): # divide full path into parts
+        part = path 
+        res = []
+        while part: 
+            mark = os.sep if os.path.isdir(path) else ""
+            path, part = os.path.split(path)
+            # if part is empty take the root (or drive letter)
+            res.append(part + mark if part else path )
+        return list(reversed(res))
     
-    files = []
-    folders = []
-    for fileFolder in filesFolders:
-        if '.svn' not in fileFolder:
-            fullPath = os.path.join(dirname,fileFolder)
-            if os.path.isdir(fullPath):
-                (subFolders,fullPaths) = getFoldersFiles(fullPath)
-                folders.append(fullPath)
-                for folder in subFolders:
-                    folders.append(folder)
-                ###
-                for fullPath in fullPaths:
-                    #print "A %s" %(fullPath)
-                    files.append(fullPath)
-                ###
-            else:
-                if '.pyc' not in fileFolder and '.pyx' not in fileFolder and '.bdf' not in fileFolder and '__init__.py' not in fileFolder:
-                    #print "B %s" %(fullPath)
-                    files.append(fullPath)
-                ###
-                else:
-                    pass
-                    #print "skipping %s" %(fullPath)
-                ###
-            ###
-        ###
-    ###
-    return (folders,files)
+    paths =  sorted([divide_path(i) for i in files])
+    
+    npaths = [(0, paths[0])]
+    for i in range(1,len(paths)): #max common prefix
+        l, max_len = 0, min(len(paths[i-1]), len(paths[i]))
+        while l < max_len and paths[i-1][l] == paths[i][l]:
+            l += 1
+        npaths.append( (l, paths[i][l:]) ) # padding size and new names
 
-def printTree(files):
-    """
-    I'm sure there's an automatic way to print this...
-    """
-    levelsPrinted = {}
-    levelOrder = []
-    for fname in files:
-        fullDir = [os.path.basename(fname)]
-        while os.path.dirname(fname):
-            fullDir.append(os.path.basename(os.path.dirname(fname)))
-            fname = os.path.dirname(fname)
-            print "fname = ",fname
-            
-        fullDir.reverse()
-        
-        nLevels = len(fullDir)
-        for i,level in enumerate(fullDir):
-            if level not in levelsPrinted:
-                levelsPrinted[level] = i
-                levelOrder.append(level)
-            
-        #print levelOrder
-        #print fullDir
-        #sys.exit()
-    ###
-    for level in levelOrder:
-        nLevels = levelsPrinted[level]
-        if '.py' in level:
-            print "    "*nLevels+level
-        else:
-            print "    "*nLevels+level+'/'
-        ###
-    ###
-    #sys.exit()
+    #print the tree
+    for padd, path in npaths:
+        for i, part in enumerate(path):
+            print(' ' * padding * (padd + i) + part)
+    
 
-def cleanHeader(lines):
+def update_copyright():
     """
-    removes the copyright lines from the file
-    used when the copyright statement is updated.
+    Update copytight info in all .py pyNastran files.
     """
-    markerWord = 'changes to it will be lost.' # this is the last line with header text
-    lines2 = copy.deepcopy(lines)
-    for i,line in enumerate(lines[0:50]):
-        line2 = lines[i]
-        print "line2[%s] = |%r|" %(i,line2)
-        if markerWord in line2:
-            lines2.pop(0) # removes last ## line
-            lines2.pop(0) # removes last ## line
-            print "breaking on line %s" %(i)
-            break
-        elif line2 and line2[0:3]=='## ':
-            lines2.pop(0)
-        else:
-            break
-        ###
-    ###
-    #print "i = ",i
-    return lines2
-
-def updateCopyright():
-    # must be in ../licenses
+    import pyNastran
     dirname = os.path.relpath(os.path.dirname(pyNastran.__file__))
     print("dirname = %s" %(dirname))
-    (folders,files) = getFoldersFiles(dirname)
-    printTree(files)
-
-    header = open(os.path.join('licenses','header.txt'),'r')
-    headerLines = header.readlines()
-    header.close()
-
+    files = [i for i in get_folders_files(dirname)[1] if i.endswith('.py')]
+    
+    with open(os.path.join(os.path.dirname(dirname),'licenses','header.txt'),'r') as header:
+        header_txt = header.read()
+        
     for fname in files:
-        if '.py' in fname:
-            print "adding fname=%s" %(fname)
-            f = open(fname,'r')
-            lines = f.readlines()
-            f.close()
+        print("adding fname=%s" % (fname))
+        with open(fname,'r') as fin:
+            lines = fin.read()
+        #remove copyright lines 
+        for regx in ("^## GNU .*\n(##.*\n)*?##.*<http://www.gnu.org/licenses/>.\n([# ]*\n)*",
+                     "^# GNU .*\n(#.*\n)*?#.*file will be lost.\n([# ]*\n)*"):
+            lines = re.sub(regx, '', lines)
+            
+        with open(fname,'wb') as fout:
+            fout.write(header_txt + lines)
+      
+    print("---FILES---")
+    print_tree(files)
 
-            for line in lines[0:20]:
-                print line
-
-            f.close()
-            lines2 = cleanHeader(lines)
-
-            #break
-            lines3 = headerLines + lines2
-
-            fout = open(fname,'wb')
-            for line in lines3:
-                fout.write(line)
-            ###
-            #if 'bdf.py' in fname:
-            #    break
-        ###
-    ###    
-    #print "---FOLDERS---"
-    #print "folders = ",'\n'.join(folders)+'\n'
-
-    print "---FILES---"
-    print "files = ",'\n'.join(files)
-###
-
-if __name__=='__main__':
-    updateCopyright()
+if __name__ == '__main__':
+    pass
+    #update_copyright()
     

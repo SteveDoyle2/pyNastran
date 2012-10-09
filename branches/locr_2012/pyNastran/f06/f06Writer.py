@@ -141,8 +141,8 @@ class F06Writer(object):
         if makeFile:
             f = open(f06OutName, 'wb')
         else:
-            import StringIO
-            f = StringIO.StringIO()
+            from StringIO import StringIO
+            f = StringIO()
 
         #f.write(self.makeF06Header())
         pageStamp = self.makeStamp(self.Title)

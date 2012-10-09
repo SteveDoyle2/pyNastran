@@ -68,8 +68,8 @@ def countLines(fnames=[]):
     #if fnames==[]:
     #    fnames = sys.argv[1:]
     import os
-    from applyLicense import getFoldersFiles
-    folders,fnames = getFoldersFiles(os.path.join('..','pyNastran'))
+    from applyLicense import get_folders_files
+    fnames = get_folders_files(os.path.join('..','pyNastran'))[1]
 
     total_lines = 0
     comment_lines = 0
