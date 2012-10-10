@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import os
-import sys
 from struct import pack, unpack
 from numpy import (array, zeros, float32, float64, complex64, complex128, 
                   allclose)
@@ -8,7 +7,7 @@ from scipy.sparse import coo_matrix
 from pyNastran.utils import is_binary
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 from pyNastran.op2.fortranFile import FortranFile
-
+import io
 
 class OP4(FortranFile):
 #class OP4(object):
@@ -67,6 +66,7 @@ class OP4(FortranFile):
 
         if not os.path.exists(op4Name):
             raise IOError('cannot find op4FileName=|%s|' % (op4Name))
+        
         if is_binary(op4Name):
             return self.readOP4Binary(op4Name, matrixNames, precision)
         else:
@@ -330,7 +330,7 @@ class OP4(FortranFile):
 #--------------------------------------------------------------------------
     def readOP4Binary(self, op4Name, matrixNames=None, floatType='default'):
         """matrixNames must be a list or None, but basically the same"""
-        self.op4 = open(op4Name, 'rb')
+        self.op4 = io.open(op4Name, mode = 'rb')
         self.op2 = self.op4
         self.makeOp2Debug = False
 

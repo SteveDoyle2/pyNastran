@@ -1,6 +1,7 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from functools import reduce
 import re
+import sys
 from applyLicense import get_folders_files
    
 
@@ -22,18 +23,20 @@ def fix_files(fils):
                 ('.itervalues()','.values()'), ('.iterkeys()','.keys()'),
                 ('unicode)', 'str)'),("unpack(b'","unpack('")))
         
-            #look for .keys() and values() method calls that are not inside set() or sorted()
+            # look for .keys() and values() method calls that are not inside
+            # set() or sorted(), list() 
             keyval = re.search('[\w\.\[\]]+\.(keys|values)\(\)',line)
             if keyval:
                 kv = keyval.group()
-                if not ("set(%s)" % (kv) in line or "sorted(%s)" % (kv) in line):
+                if reduce(lambda r, s: r and ("%s(%s)" % (s, kv) not in line), 
+                              ("set", "sorted", "list"), True):
                     line = line.replace(kv, "list(%s)" % (kv))
             # remove var = bytes(var) lines
             if re.search("([\w\.\[\]]+) *= *bytes\(\1\)", line):
                 line= ''
                 
-            #file handling - add utf8 coding option
-            line = re.sub(r'(open\(.*,.*?)([\'"])(r|w)b{0,1}\2.*?(\))', 
+            #file handling - add utf8 coding option, do not change io.open -> would brake is_binary in utils
+            line = re.sub(r'((?<!\.)open\(.*,.*?)([\'"])(r|w)b{0,1}\2.*?(\))', 
                           r"\1'\3', encoding='utf-8'\4",line) 
         
             if "data = b''" in line:
@@ -47,12 +50,15 @@ def fix_files(fils):
         return "\n".join(res)
 
     # Fix every python file in the project source directory
-    for fil in filter(lambda x: x.endswith('.py'),files):
+    for fil in fils:
         with open(fil, 'r') as f:
             txt = f.read()
         with open(fil, 'w') as f:
             f.write(fix_string(txt))
    
 if __name__ == "__main__":
-    files = get_folders_files('../pyNastran')[1]
+    files = [i for i in  get_folders_files('../pyNastran')[1] if i.endswith('.py')]
+    print("Applying changess to ", len(files), " files... ", end = "")
+    sys.stdout.flush()
     fix_files(files)
+    print("done")

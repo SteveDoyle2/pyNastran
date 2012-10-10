@@ -5,6 +5,7 @@ from os.path import splitext
 from os.path import join as pjoin
 from os.path import getsize
 from numpy import ndarray
+import io
 
 def is_binary(filename):
     """
@@ -15,9 +16,9 @@ def is_binary(filename):
     @retval True if filename is a binary file (contains null byte) and False otherwise.
     @warning this may not work for unicode.
     """
-    with open(filename, 'rb') as fil:
-        for chunk in iter(lambda:fil.read(1024), ''):
-            if b'\0' in chunk:  # found null byte
+    with io.open(filename, mode='rb') as fil:
+        for chunk in iter(lambda: fil.read(1024), bytes()):
+            if b"\0" in chunk:  # found null byte
                 return True
     return False
 
