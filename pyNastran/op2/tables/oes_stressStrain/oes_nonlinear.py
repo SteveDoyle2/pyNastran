@@ -38,6 +38,21 @@ class NonlinearQuadObject(stressObject):
             self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
 
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.oxx)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, fiberDistance, oxx, oyy, ozz, txy, '
+                   'exx, eyy, ezz, exy, es, eps, ecs\n')
+        return msg
+
     def deleteTransient(self, dt):
         del self.fiberDistance[dt]
         del self.oxx[dt]
@@ -194,6 +209,20 @@ class HyperelasticQuadObject(stressObject):
             assert dt is not None
             self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
+
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.oxx)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  Type, oxx, oyy, txy, angle, majorP, minorP\n')
+        return msg
 
     def deleteTransient(self, dt):
         del self.fiberDistance[dt]
