@@ -394,15 +394,7 @@ class OP2(BDF,
 
         ]
 
-        msg = []
-        for table_type in table_types:
-            table = getattr(self, table_type)
-            for isubcase, subcase in sorted(table.iteritems()):
-                msg.append('op2.%s[%s]\n' % (table_type, isubcase))
-                msg.extend(subcase.get_stats())
-                msg.append('\n')
-
-        others = [
+        table_types += [
             # LAMA
             'eigenvalues',
 
@@ -436,7 +428,7 @@ class OP2(BDF,
             'thermalLoad_VUBeam',
             #self.temperatureForces
         ]
-        others += [
+        table_types += [
             ## OES - CTRIAX6
             'ctriaxStress',
             'ctriaxStrain',
@@ -465,6 +457,17 @@ class OP2(BDF,
             ## OEE - strain energy density
             'strainEnergy',  # tCode=18
         ]
+        msg = []
+        for table_type in table_types:
+            table = getattr(self, table_type)
+            for isubcase, subcase in sorted(table.iteritems()):
+                if hasattr(subcase,'get_stats'):
+                    msg.append('op2.%s[%s]\n' % (table_type, isubcase))
+                    msg.extend(subcase.get_stats())
+                    msg.append('\n')
+                else:
+                    msg.append('skipping op2.%s[%s]\n\n' % (table_type, isubcase))
+
         return ''.join(msg)
 
     def readTapeCode2(self):
