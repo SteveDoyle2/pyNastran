@@ -593,6 +593,21 @@ class RealPlateForce(scalarObject):  # 33-CQUAD4, 74-CTRIA3
             assert dt is not None
             self.add = self.addSort2
 
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.mx)
+            time0 = self.mx.keys()[0]
+            nelements = len(self.mx[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.mx)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  mx, my, mxy, bmx, bmy, bmxy, tx, ty\n')
+        return msg
+
     def addNewTransient(self, dt):
         self.dt = dt
         self.mx[dt] = {}

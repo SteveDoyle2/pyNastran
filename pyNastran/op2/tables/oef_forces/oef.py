@@ -277,11 +277,12 @@ class OEF(ThermalElements, RealForces, ComplexForces):
         #    self.NotImplementedOrSkip('thermal=%s' %(self.thermal))
 
     def readOEF_Forces(self):
-        #print self.codeInformation()
         try:
             (numWideReal, numWideImag) = self.OEF_ForceCode()
         except KeyError:
             self.NotImplementedOrSkip()
+
+        #print(self.codeInformation())
 
         if self.elementType in [1, 3, 10]:  # CROD,CTUBE,CONROD
             resultName = 'rodForces'
@@ -356,7 +357,7 @@ class OEF(ThermalElements, RealForces, ComplexForces):
         elif self.elementType in [33, 74, 235]:  # CQUAD4,CTRIA3,CQUADR
             resultName = 'plateForces'
             if self.numWide == numWideReal:
-                #print self.codeInformation()
+                print(self.codeInformation())
                 self.createTransientObject(self.plateForces, RealPlateForce)
                 self.handleResultsBuffer3(self.OEF_Plate, resultName)
             elif self.numWide == numWideImag:
