@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # {{{1 GNU Lesser General Public License
 # 
 # Copyright (C) 1999-2012  <al.danial@gmail.com>
@@ -39,14 +40,14 @@ Example:
     Loads the second and third matrices from the file sol103.op4 into K and M.
 
 Limitations (these will be resolved in future releases):
-    1. only handles dense matrices in text and binary op4 files
-    2. unable to byte-swap files created on a different-endian machine
-    3. unable to save Python arrays to new op4 files
+    1. unable to byte-swap files created on a different-endian machine
+    2. unable to save sparse Python arrays to op4 files
 """
 
 # Early version of op4.pyx was based on cython_wrapper.pyx from
 # https://gist.github.com/1249305 by Gael Varoquaux
 
+# cdef, ctypedef {{{1
 cdef extern from "stdio.h":
     cdef int SEEK_SET = 0
     ctypedef void* FILE
@@ -89,7 +90,7 @@ cdef extern from "string.h":
 
 # Import the Python-level symbols of numpy
 import numpy as np
-from   scipy import sparse
+import scipy.sparse as SS
 
 # Import the C-level symbols of numpy
 cimport numpy as np
@@ -199,17 +200,16 @@ DTYPE = np.float64
 FTYPE = np.float32
 ctypedef np.float64_t DTYPE_t
 ctypedef char         CHAR_t
-
+# 1}}}
 from libc.stdlib cimport free
 from cpython cimport PyObject, Py_INCREF
 import os
 
-# Numpy must be initialized. When using numpy from C or Cython you must
-# _always_ do that, or you will have segfaults
+# Initialize Numpy (failure to do so generates segfaults)
 np.import_array()
 
-# We need to build an array-wrapper class to deallocate our array when
-# the Python object is deleted.
+# Array-wrapper classes that can deallocate--on object deletion--arrays 
+# malloc'ed here.
 # types at http://cython.org/release/Cython-0.13/Cython/Includes/numpy.pxd
 cdef class ArrayWrapper_RS:                                # {{{1
     cdef void* data_ptr
@@ -644,7 +644,7 @@ class OP4:                                                 # {{{1
                 ndarray_J.base = <PyObject*> array_wrapper_J
                 Py_INCREF(array_wrapper_J)
 
-                All_Matrices.append( sparse.coo_matrix(
+                All_Matrices.append( SS.coo_matrix(
                     (ndarray, (ndarray_I ,ndarray_J)), 
                      shape=(self.nrow[i], self.ncol[i])) )
 
@@ -792,10 +792,10 @@ def Save(                                                  # {{{1
 
 #       print kwargs[name]
 #       print('----')
-#       print sparse.issparse(kwargs[name])
+#       print SS.issparse(kwargs[name])
         try:
 #           print('a %s' % name)
-            if sparse.issparse(kwargs[name]): 
+            if SS.issparse(kwargs[name]): 
 #               print('b')
                 sparse_mat = 1
             else:                             
@@ -853,15 +853,12 @@ def Save(                                                  # {{{1
             continue
             sparse  = 2
             nNZ     = 0   # mxGetNzmax(prhs[i])
-            row_ind = 0   # mxGetIr(   prhs[i])
-            col_ind = 0   # mxGetJc(   prhs[i])
             Ar_ptr  = 0
             Ai_ptr  = 0
 
             if not nR*nC: # zero rows and/or columns; make null 1x1
                 nR      = 1
                 nC      = 1
-            #   Ar[0]   = 0.0
                 complx  = 0
                 sparse  = 0
 
@@ -912,16 +909,15 @@ def Save(                                                  # {{{1
                 print('saveop4:  insufficient memory for str_len')
                 return
 
-
-        # write each column
         for c in xrange(nC):
+            print('column %d' % c)
             if sparse_mat:
-                row_ind, col_ind = kwargs[name].nonzero()
-                for c in range(nR):
-                    print('column %3d row %3d' % (
-                        c, (<int*>row_ind.data)[c]))
-                print('sparse column %d' % c)
-                print kwargs[name].getcol(c)
+                row_ind, col_ind = kwargs[name].getcol(c).nonzero()
+                # col_ind will always be an array of zeros since
+                # kwargs[name].getcol(c) returns a single column
+                col_values       = kwargs[name].getcol(c)
+                print('row_ind', row_ind)
+                print('col_val', col_values.data)
             else:  # dense
                 # probably a better way to make the column copies below
                 if   op4_type in [1,2]:
