@@ -134,6 +134,9 @@ class OEF(ThermalElements, RealForces, ComplexForces):
         #if self.analysisCode==2: # sort2
         #    self.loadID = self.getValues(data,'i',5) ## load set ID number
 
+        if not self.isSort1():
+            raise NotImplementedError('sort2...')
+
         #print "*iSubcase=%s"%(self.iSubcase)
         #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
         #print self.codeInformation()
@@ -357,7 +360,7 @@ class OEF(ThermalElements, RealForces, ComplexForces):
         elif self.elementType in [33, 74, 235]:  # CQUAD4,CTRIA3,CQUADR
             resultName = 'plateForces'
             if self.numWide == numWideReal:
-                print(self.codeInformation())
+                #print(self.codeInformation())
                 self.createTransientObject(self.plateForces, RealPlateForce)
                 self.handleResultsBuffer3(self.OEF_Plate, resultName)
             elif self.numWide == numWideImag:

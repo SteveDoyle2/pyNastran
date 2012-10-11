@@ -16,7 +16,7 @@ class RealElementsStressStrain(object):
                        'sortCode=%s on %s table' % (self.analysisCode,
                        self.tableCode, self.formatCode, self.sortCode,
                        self.tableName))
-        print(self.codeInformation())
+        #print(self.codeInformation())
         #asdf
         self.handleResultsBuffer3(self.dummyPass, None, debug=True)
 
@@ -836,3 +836,55 @@ class RealElementsStressStrain(object):
        #                   fd2,sx2,sy2,txy2) = out
        # else:
        #     raise NotImplementedError('invalid numWide')
+
+
+    def OES_VUQUAD_189(self):
+        if self.elementType == 144:  # CQUAD4
+            nTotal = 440  # 6+(33-7)*4 =  -> 110*4 = 440
+            nNodes = 4    # 4 corner points
+            eType = 'CQUAD4'
+        #elif self.elementType == 64:  # CQUAD8
+            #nTotal = 348  # 2+17*5 = 87 -> 87*4 = 348
+            #nNodes = 4    # centroid + 4 corner points
+            #eType = 'CQUAD8'
+        #elif self.elementType == 82:  # CQUADR
+            #nTotal = 348  # 2+17*5 = 87 -> 87*4 = 348
+            #nNodes = 4    # centroid + 4 corner points
+            #eType = 'CQUAD4'  ## @todo write the word CQUADR
+        #elif self.elementType == 75:  # CTRIA6
+            #nTotal = 280  # 2+17*3 = 70 -> 70*4 = 280
+            #nNodes = 3    # centroid + 3 corner points
+            #eType = 'CTRIA6'
+        #elif self.elementType == 70:  # CTRIAR
+            #nTotal = 280  # 2+17*3 = 70 -> 70*4 = 280
+            #nNodes = 3    # centroid + 3 corner points
+            #eType = 'CTRIAR'  ## @todo write the word CTRIAR
+        else:
+            raise NotImplementedError('elementType=%s nTotal not defined...'
+                                      % (self.elementType))
+
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+        format1 += '2i4s2i'
+        format1 = bytes(format1)
+
+        while len(self.data) >= nTotal:
+            (eid, parent, coord, icord, theta, itype) = unpack(b'i4s', self.data[0:8])
+            self.data = self.data[8:]  # 2
+            eid = extract(eid, dt)
+            eData = self.data[0:68]
+            self.data = self.data[68:]
+            out = unpack(format1, eData)  # len=17*4
+            self.obj.addNewNode(dt, eid, parent, coord, icord, theta, itype)
+            
+            self.obj.addNewEid(eType, dt, eid, parent, coord, icord, theta, itype)
+            for nodeID in xrange(nNodes):  # nodes pts
+                eData = self.data[0:68]
+                self.data = self.data[68:]
+                out = unpack(b'i16f', eData)
+                (vuid, dummy, dummy2, msx, msy, mxy, dummy3, dummy4, dummy5,
+                 bcx, bcy, bcxy,tyz,tzx,dummy6,dummy7,dummy8) = out
+                self.obj.add(vuid, dummy, dummy2, msx, msy, mxy,
+                             dummy3, dummy4, dummy5,
+                             bcx, bcy, bcxy,tyz,tzx,
+                             dummy6,dummy7,dummy8)

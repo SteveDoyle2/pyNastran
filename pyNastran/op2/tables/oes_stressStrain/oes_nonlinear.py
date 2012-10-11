@@ -324,6 +324,21 @@ class NonlinearRodObject(stressObject):
             self.add = self.addSort2
             #self.addNewEid = self.addNewEidSort2
 
+    def get_stats(self):
+        nelements = len(self.eType)
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.axialStress)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, axialStress, equivStress, totalStrain, '
+                   'effectivePlasticCreepStrain, effectiveCreepStrain, '
+                   'linearTorsionalStress\n')
+        return msg
+
     def deleteTransient(self, dt):
         del self.axialStress[dt]
         del self.equivStress[dt]

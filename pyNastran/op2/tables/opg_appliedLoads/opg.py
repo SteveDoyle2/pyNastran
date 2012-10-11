@@ -132,9 +132,6 @@ class OPG(object):
 
     def readOPG_Data(self):
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
-        #tfsCode = [self.tableCode,self.formatCode,self.sortCode]
-        self.atfsCode = [self.analysisCode, self.tableCode,
-                         self.formatCode, self.sortCode]
 
         if self.tableCode == 19:
             assert self.tableName in [None], 'tableName=%s tableCode=%s' % (
@@ -184,7 +181,7 @@ class OPG(object):
         #elif tfsCode==[55,3,3]:
         #    self.readOPG_Data_format3_sort3()
         else:
-            self.NotImplementedOrSkip('bad tableCode/formatCode/sortCode=%s on %s-OPG table' % (self.atfsCode, self.tableName))
+            self.NotImplementedOrSkip('bad OPG table')
 
         #print self.obj
 
