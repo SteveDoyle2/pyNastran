@@ -16,6 +16,15 @@ class RealEigenvalues(baseScalarObject):
         self.generalizedMass = {}
         self.generalizedStiffness = {}
 
+    def get_stats(self):
+        msg = []
+        neigenvalues = len(self.extractionOrder)
+        msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__,
+                                                 neigenvalues))
+        msg.append('  iSubcase, extractionOrder, eigenvalues, radians, '
+                   'cycles, generalizedMass, generalizedStiffness\n')
+        return msg
+
     def isReal(self):
         return True
 
@@ -97,6 +106,15 @@ class ComplexEigenvalues(baseScalarObject):
         self.eigenvalues = {}
         self.cycles = {}
         self.damping = {}
+
+    def get_stats(self):
+        neigenvalues = len(self.extractionOrder)
+        msg = []
+        msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__,
+                                                 neigenvalues))
+        msg.append('  iSubcase, extractionOrder, eigenvalues, '
+                   'cycles, damping\n')
+        return msg
 
     def isReal(self):
         return False

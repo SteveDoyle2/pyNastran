@@ -23,6 +23,21 @@ class ComplexRodForce(scalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
         self.axialForce[dt] = {}
         self.torque[dt] = {}
 
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.torque)
+            time0 = self.torque.keys()[0]
+            nelements = len(self.torque[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.torque)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  axialForce, torque\n')
+        return msg
+
     def add(self, dt, data):
         [eid, axialForce, torque] = data
 
@@ -71,6 +86,22 @@ class ComplexCBeamForce(scalarObject):  # 2-CBEAM
             assert dt is not None
             self.addNewElement = self.addNewElementSort2
             self.add = self.addSort2
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.shear)
+            time0 = self.shear.keys()[0]
+            nelements = len(self.shear[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.shear)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  bendingMoment, shear, axial, totalTorque, '
+                   'warpingTorque\n')
+        return msg
 
     def addNewTransient(self, dt):
         self.dt = dt
@@ -174,6 +205,23 @@ class ComplexCShearForce(scalarObject):  # 4-CSHEAR
             assert dt is not None
             self.add = self.addSort2
 
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.shear12)
+            time0 = self.shear12.keys()[0]
+            nelements = len(self.shear12[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.shear12)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  force41, force14, force21, force12, force32, force23, '
+                   '  force 43, force34, kickForce1, kickForce2, kickForce3, '
+                   '  kickForce4, shear12, shear23, shear34, shear41\n')
+        return msg
+
     def addNewTransient(self, dt):
         self.force41[dt] = {}
         self.force14[dt] = {}
@@ -265,6 +313,21 @@ class ComplexSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
         else:
             assert dt is not None
             self.add = self.addSort2
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.force)
+            time0 = self.force.keys()[0]
+            nelements = len(self.force[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.force)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  force\n')
+        return msg
 
     def addNewTransient(self, dt):
         self.dt = dt
@@ -376,6 +439,21 @@ class ComplexDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAM
             assert dt is not None
             self.add = self.addSort2
 
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.force)
+            time0 = self.force.keys()[0]
+            nelements = len(self.force[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.force)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  force\n')
+        return msg
+
     def addNewTransient(self, dt):
         self.dt = dt
         self.force[dt] = {}
@@ -420,6 +498,21 @@ class ComplexViscForce(scalarObject):  # 24-CVISC
         else:
             assert dt is not None
             self.add = self.addSort2
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.torque)
+            time0 = self.torque.keys()[0]
+            nelements = len(self.torque[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.torque)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  axialForce, torque\n')
+        return msg
 
     def addNewTransient(self, dt):
         self.dt = dt
@@ -475,6 +568,21 @@ class ComplexPlateForce(scalarObject):  # 33-CQUAD4, 74-CTRIA3
         else:
             assert dt is not None
             self.add = self.addSort2
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.mx)
+            time0 = self.mx.keys()[0]
+            nelements = len(self.mx[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.mx)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  mx, my, mxy, bmx, bmy, bmxy, tx, ty\n')
+        return msg
 
     def addNewTransient(self, dt):
         self.dt = dt
@@ -558,6 +666,21 @@ class ComplexPLATE2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
             assert dt is not None
             self.addNewElement = self.addNewElementSort2
             self.add = self.addSort2
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.mx)
+            time0 = self.mx.keys()[0]
+            nelements = len(self.mx[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.mx)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  term, ngrids, mx, my, mxy, bmx, bmy, bmxy, tx, ty\n')
+        return msg
 
     def addNewTransient(self, dt):
         self.dt = dt
@@ -703,6 +826,21 @@ class ComplexCBARForce(scalarObject):  # 34-CBAR
             assert dt is not None
             self.add = self.addSort2
 
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.torque)
+            time0 = self.torque.keys()[0]
+            nelements = len(self.torque[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.torque)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  bendingMomentA, bendingMomentB, shear, axial, torque\n')
+        return msg
+
     def addNewTransient(self, dt):
         self.dt = dt
         self.bendingMomentA[dt] = {}
@@ -824,6 +962,22 @@ class ComplexBendForce(scalarObject):  # 69-CBEND
             assert dt is not None
             self.add = self.addSort2
 
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.torque)
+            time0 = self.torque.keys()[0]
+            nelements = len(self.torque[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.torque)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  nodeIDs, bendingMoment1, bendingMoment2, '
+                   'shearPlate1, shearPlate2, axial, torque\n')
+        return msg
+
     def addNewTransient(self, dt):
         self.dt = dt
         self.bendingMoment1[dt] = {}
@@ -895,6 +1049,21 @@ class ComplexPentaPressureForce(scalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TET
             assert dt is not None
             self.add = self.addSort2
 
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.acceleration)
+            time0 = self.acceleration.keys()[0]
+            nelements = len(self.acceleration[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.acceleration)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  acceleration, velocity, pressure\n')
+        return msg
+
     def addNewTransient(self, dt):
         self.dt = dt
         self.acceleration[dt] = {}
@@ -947,6 +1116,21 @@ class ComplexCBUSHForce(scalarObject):  # 102-CBUSH
         else:
             assert dt is not None
             self.add = self.addSort2
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.force)
+            time0 = self.force.keys()[0]
+            nelements = len(self.force[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.force)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  force, moment\n')
+        return msg
 
     def addNewTransient(self, dt):
         self.dt = dt
@@ -1005,6 +1189,20 @@ class ComplexForce_VU(scalarObject):  # 191-VUBEAM
         else:
             assert dt is not None
             self.add = self.addSort2
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        nelements = len(self.coord)
+        if self.dt is not None:  # transient
+            ntimes = len(self.forceX)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  parent, coord, icord, forceX, shearY, shearZ, torsion, '
+                   'bendingY, bendingZ\n')
+        return msg
 
     def addNewTransient(self, dt):
         self.dt = dt
@@ -1120,6 +1318,21 @@ class ComplexForce_VU_2D(scalarObject):  # 189-VUQUAD,190-VUTRIA
         else:
             assert dt is not None
             self.add = self.addSort2
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        nelements = len(self.coord)
+        if self.dt is not None:  # transient
+            ntimes = len(self.membraneX)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  parent, coord, icord, theta, membraneX, membraneY, '
+                   'membraneXY, bendingX, bendingY, bendingXY, '
+                   'shearYZ, shearXZ\n')
+        return msg
 
     def addNewTransient(self, dt):
         self.membraneX[dt] = {}

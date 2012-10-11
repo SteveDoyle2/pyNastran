@@ -24,6 +24,21 @@ class GridPointStressesObject(scalarObject):
             assert dt is not None
             self.add = self.addSort2
 
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.nx)
+            times0 = self.nx.keys()[0]
+            nelements = len(self. nx[times0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self. nx)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  nx, ny, txy, angle, majorP, minorP, tmax, ovm\n')
+        return msg
+
     def addNewTransient(self, dt):  # eKey
         """initializes the transient variables"""
         self.nx[dt] = {}
@@ -212,6 +227,21 @@ class GridPointStressesVolumeObject(scalarObject):
         else:
             assert dt is not None
             self.add = self.addSort2
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.nx)
+            times0 = self.nx.keys()[0]
+            nelements = len(self. nx[times0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self. nx)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  nx, ny, nz, txy, tyz, txz, pressure, ovm\n')
+        return msg
 
     def addNewTransient(self, dt):  # eKey
         """initializes the transient variables"""

@@ -35,6 +35,21 @@ class StrainEnergyObject(scalarObject):
             assert dt is not None
             self.add = self.addSort2
 
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.energy)
+            time0 = self.energy.keys()[0]
+            nelements = len(self.energy[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.energy)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  energy, percent, density\n')
+        return msg
+
     def updateDt(self, dataCode, dt):
         """
         this method is called if the object

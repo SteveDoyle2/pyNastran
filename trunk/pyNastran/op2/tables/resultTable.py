@@ -101,29 +101,36 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             print("***NF = %s" % (self.nonlinearFactor))
             #print "DC = ",self.dataCode
 
-        if self.iSubcase in storageObj:
-            #print "updating dt..."
-            self.obj = storageObj[self.iSubcase]
-            #print "obj = ",self.obj.__class__.__name__
-            #print self.obj.writeF06(['',''],'PAGE ',1)[0]
+        if hasattr(self,'iSubcase'):
+            if self.iSubcase in storageObj:
+                #print "updating dt..."
+                self.obj = storageObj[self.iSubcase]
+                #print "obj = ",self.obj.__class__.__name__
+                #print self.obj.writeF06(['',''],'PAGE ',1)[0]
 
-            try:
-                self.obj.updateDataCode(self.dataCode)
-                #self.obj.updateDt(self.dataCode,self.nonlinearFactor)
-            except:
-                #try:
-                    #print "objName = ",self.obj.name()
-                #except:
-                    #print "objName = ",self.obj
-                raise
+                try:
+                    self.obj.updateDataCode(self.dataCode)
+                    #self.obj.updateDt(self.dataCode,self.nonlinearFactor)
+                except:
+                    #try:
+                        #print "objName = ",self.obj.name()
+                    #except:
+                        #print "objName = ",self.obj
+                    raise
+            else:
+                #if self.isRegular:
+                    #self.obj = classObj(self.dataCode,not(self.isRegular),self.iSubcase,self.nonlinearFactor)
+                #else:
+                self.obj = classObj(self.dataCode, self.isSort1(
+                ), self.iSubcase, self.nonlinearFactor)
+                #print "obj2 = ",self.obj.__class__.__name__
+            storageObj[self.iSubcase] = self.obj
         else:
-            #if self.isRegular:
-                #self.obj = classObj(self.dataCode,not(self.isRegular),self.iSubcase,self.nonlinearFactor)
-            #else:
-            self.obj = classObj(self.dataCode, self.isSort1(
-            ), self.iSubcase, self.nonlinearFactor)
-            #print "obj2 = ",self.obj.__class__.__name__
-        storageObj[self.iSubcase] = self.obj
+            if self.ID in storageObj:
+                #print "updating dt..."
+                self.obj = storageObj[self.ID]
+            else:
+                storageObj[self.ID] = self.obj
         ###
 
     def createThermalTransientObject(self, resultName, objClass, isSort1):

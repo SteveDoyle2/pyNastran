@@ -139,8 +139,7 @@ class OQG(object):
                 self.tableName, self.tableCode)
             self.readOQG_Data_table3()
         else:
-            self.NotImplementedOrSkip('bad analysis/table/format/sortCode=%s' %
-                                      (self.atfsCode))
+            self.NotImplementedOrSkip('bad OQG table')
         #print self.obj
 
     def readOQG_Data_table3(self):  # SPC Forces

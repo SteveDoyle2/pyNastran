@@ -466,7 +466,8 @@ class OP2(BDF,
                     msg.extend(subcase.get_stats())
                     msg.append('\n')
                 else:
-                    msg.append('skipping op2.%s[%s]\n\n' % (table_type, isubcase))
+                    msg.append('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
+                    #raise RuntimeError('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
 
         return ''.join(msg)
 
@@ -681,7 +682,8 @@ class OP2(BDF,
                     self.readTable_OUG()  # displacements/velocity/acceleration
                 elif tableName in ['OUGPSD2', 'OUGATO2', 'OUGRMS2', 'OUGNO2',
                                    'OUGCRM2']:  # OUG tables???
-                    self.readTable_OUG()
+                    self.readTable_OUG2()
+                    #self.readTable_OUG()
 
                 elif tableName in ['OES1', 'OES1X', 'OES1X1', 'OSTR1X',
                                    'OES1C', 'OESCP', 'OESRT', 'OESNLXR',
@@ -716,7 +718,9 @@ class OP2(BDF,
                 # not done
                 elif tableName in []:
                     self.readTableB_DUMMY()
-                elif tableName in ['MONITOR', 'PMRF', 'PERF', 'PFRF',
+                elif tableName in ['MONITOR']:
+                    self.readMonitor()
+                elif tableName in ['PMRF', 'PERF', 'PFRF',
                                    'AEMONPT', 'FOL', 'AFRF', 'AGRF', ]:
                     self.readTableB_DUMMY()
                 #elif tableName in []:
@@ -761,6 +765,59 @@ class OP2(BDF,
         self.log.debug("*** finished tableName = |%r|" % (tableName))
         return isAnotherTable
 
+    def readMonitor(self):
+        tableName = self.readTableName(rewind=False)  # LAMA
+        self.tableInit(tableName)
+        print("tableName1 = |%r|" %(tableName))
+        print("tableName2 = |%r|" %(self.tableName))
+
+        self.readMarkers([-1, 7], 'MONITOR')
+        ints = self.readIntBlock()
+        print("*ints = ",ints)
+
+        self.readMarkers([-2, 1, 0], 'MONITOR')
+        bufferWords = self.getMarker()
+        print("bufferWords = ",bufferWords)
+
+        word = self.readStringBlock()  # MONITOR
+        print("word = |%s|" %(word))
+
+        self.readMarkers([-3, 1, 0], 'MONITOR')
+        bufferWords = self.getMarker()
+        print("bufferWords = ",bufferWords,bufferWords*4)
+        
+        data = self.op2.read(4)
+        data = self.op2.read(bufferWords*4)
+        Format = str(bufferWords*4) + 's'
+        Format = bytes(Format)
+        word, = unpack(Format, data)
+        print("word = ",word)
+        data = self.op2.read(4)
+        self.n += bufferWords*4+8
+        
+
+        self.readMarkers([-4, 1, 0], 'MONITOR')
+        bufferWords = self.getMarker()
+        print("bufferWords = ",bufferWords,bufferWords*4)
+        data = self.op2.read(4)
+        data = self.op2.read(bufferWords*4)
+        Format = str(bufferWords*4) + 's'
+        Format = bytes(Format)
+        word, = unpack(Format, data)
+        print("word = ",word)
+        data = self.op2.read(4)
+        self.n += bufferWords*4+8
+
+        self.readMarkers([-5, 1, 0], 'MONITOR')
+
+        #word = self.readStringBlock()  # MONITOR
+        #print("word = |%s|" %(word))
+
+
+
+        #print(self.printSection(200))
+        #sys.exit()
+
     def parseSortCode(self):
         """
         sortCode = 0 -> sortBits = [0,0,0]
@@ -802,6 +859,57 @@ class OP2(BDF,
         self.iSubcase = iSubcase
         #print("iSubcase = %s" %(iSubcase))
         self.subcases.add(self.iSubcase)  # set notation
+
+        ## the type of result being processed
+        self.tableCode = tCode % 1000
+        ## used to create sortBits
+        self.sortCode = tCode // 1000
+        ## what type of data was saved from the run; used to parse the
+        ## approachCode and gridDevice.  deviceCode defines what options
+        ## inside a result, STRESS(PLOT,PRINT), are used.
+        self.deviceCode = aCode % 10
+        ## what solution was run (e.g. Static/Transient/Modal)
+        self.analysisCode = (aCode - self.deviceCode) // 10
+
+        if self.deviceCode == 3:
+            #sys.stderr.write('The op2 may be inconsistent...\n')
+            #sys.stderr.write("  print and plot can cause bad results..."
+            #                 "if there's a crash, try plot only\n")
+            self.deviceCode = 1
+
+            #self.log.info('The op2 may be inconsistent...')
+            #self.log.info('  print and plot can cause bad results...'
+            #              'if there's a crash, try plot only')
+
+        ## dataCode stores the active variables; these pass important
+        ## self variables into the result object
+        self.dataCode = {'analysisCode': self.analysisCode,
+                         'deviceCode': self.deviceCode,
+                         'tableCode': self.tableCode,
+                         'sortCode': self.sortCode,
+                         'dt': None,
+                         'log': self.log,
+                         }
+        #print("iSubcase = ",self.iSubcase)
+        self.parseSortCode()
+
+        #print('aCode(1)=%s analysisCode=%s deviceCode=%s '
+        #      'tCode(2)=%s tableCode=%s sortCode=%s iSubcase(4)=%s'
+        #      %(aCode, self.analysisCode, self.deviceCode, tCode, 
+        #        self.tableCode, self.sortCode, self.iSubcase))
+        #self.log.debug(self.printTableCode(self.tableCode))
+        return (int3)
+
+    def parseApproachCode2(self, data):
+        """
+        int3 is the 3rd word in table=-3 and may be
+        elementType or something else depending on the table type
+        """
+        (aCode, tCode, int3, ID) = unpack(b'iiii', data[:16])
+        ## the local subcase ID
+        self.ID = ID
+        #print("iSubcase = %s" %(iSubcase))
+        self.subcases.add(self.ID)  # set notation
 
         ## the type of result being processed
         self.tableCode = tCode % 1000
@@ -911,8 +1019,11 @@ class OP2(BDF,
         self.dataCode['subtitle'] = self.subtitle
         self.dataCode['label'] = self.label
 
-        if self.iSubcase not in self.iSubcaseNameMap:
-            self.iSubcaseNameMap[self.iSubcase] = [self.subtitle, self.label]
+        if hasattr(self,'iSubcase'):
+            if self.iSubcase not in self.iSubcaseNameMap:
+                self.iSubcaseNameMap[self.iSubcase] = [self.subtitle, self.label]
+        else:
+            pass
 
     def tableInit(self, word):
         """
