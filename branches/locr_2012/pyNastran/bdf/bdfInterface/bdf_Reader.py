@@ -9,11 +9,9 @@ class BDFReader(object):
     def __init__(self, debug, log):
         self.relpath = True
         if sys.version_info < (2, 6):
-            #version = sys.version_info
             self.relpath = False
             #raise RuntimeError("must use python 2.6 or greater...version=%s"
-            #                   %(str(version)))
-            
+            #                   %(str(sys.version_info)))
         self.log = get_logger(log, 'debug' if debug else 'info')
 
     def print_filename(self, filename):
@@ -27,8 +25,7 @@ class BDFReader(object):
         driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
         if driveLetter == os.path.splitdrive(os.curdir)[0] and self.relpath:
             return os.path.relpath(filename)
-        else:
-            return filename
+        return filename
 
     def open_file(self, infileName):
         """
@@ -54,12 +51,11 @@ class BDFReader(object):
 
     def get_file_stats(self):
         """
-        gets information about the active BDF file being read
+        Gets information about the active BDF file being read
         @param self the object pointer
         @retval lineNumber the active file's line number
         """
-        filename = self._active_filenames[-1]
-        return (filename, self.get_line_number())
+        return (self._active_filenames[-1], self.get_line_number())
 
     def get_line_number(self):
         """
@@ -67,32 +63,7 @@ class BDFReader(object):
         @param self the object pointer
         @retval returns the line number of the active BDF filename
         """
-        lineNumber = self.lineNumbers[-1]
-        return lineNumber
-
-    def get_next_line(self, debug=False):
-        """
-        Gets the next line in the BDF
-        @param self
-          the BDF object
-        @param debug
-          developer debug
-        @retval line
-          the next line in the BDF or None if it's the end of the current file
-        """
-        self.lineNumbers[-1] += 1
-        linesPack = self._make_lines_pack(debug=False)
-        #print "len(linesPack) = ", len(linesPack)
-        #for line in linesPack:
-            #print("$  |%r|" %(line))
-
-        if len(linesPack) == 0:
-            self.close_file()
-            return None
-            #linesPack = self._make_lines_pack(debug=debug)
-            #return lastLine
-        #print linesPack[0]
-        return linesPack.pop(0)
+        return self.lineNumbers[-1]
 
     def close_file(self, debug=False):
         """
@@ -104,8 +75,7 @@ class BDFReader(object):
         """
         if len(self.infilesPack) == 0:
             return
-        if debug:
-            self.log.debug("*closing")
+        self.log.debug("*closing")
         infile = self.infilesPack.pop()
         infile.close()
 

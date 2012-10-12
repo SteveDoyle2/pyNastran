@@ -9,23 +9,44 @@ class CardMethods(object):
         self.nCardLinesMax = nCardLinesMax
 
     def _make_lines_pack(self, debug=False):
-        emptyLines = 0
         if not self.linesPack:
             return ['']
-
-        while len(self.linesPack[-1]) < self.nCardLinesMax:
-            line = self.infilesPack[-1].readline()
-            line = line.split('$')[0].rstrip('\n\r\t ')
-            if('$' not in line and len(line) > 0):
+        
+        emptyLines = 0
+        while (len(self.linesPack[-1]) < self.nCardLinesMax) and emptyLines != 500:
+            line = self.infilesPack[-1].readline().split('$')[0].rstrip('\n\r\t ')
+            if line:
                 if debug:
                     print("line = |%r|" % (line))
                 self.linesPack[-1].append(line)
             else:
                 emptyLines += 1
-            ###
-            if emptyLines == 500:
-                break
+
         return self.linesPack[-1]
+
+    def get_next_line(self, debug=False):
+        """
+        Gets the next line in the BDF
+        @param self
+          the BDF object
+        @param debug
+          developer debug
+        @retval line
+          the next line in the BDF or None if it's the end of the current file
+        """
+        self.lineNumbers[-1] += 1
+        linesPack = self._make_lines_pack(debug)
+        #print "len(linesPack) = ", len(linesPack)
+        #for line in linesPack:
+            #print("$  |%r|" %(line))
+
+        if len(linesPack) == 0:
+            self.close_file()
+            return None
+            #linesPack = self._make_lines_pack(debug=debug)
+            #return lastLine
+        #print linesPack[0]
+        return linesPack.pop(0)
 
     def update_card_lines(self, lines):
         """expands a card with tabs in it"""
