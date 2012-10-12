@@ -549,9 +549,9 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ## stores convection properties - PCONV, PCONVM ???
         self.convectionProperties = {}
 
-    def readBDF(self, infilename, includeDir=None, xref=True):
+    def readBDF(self, infilename, includeDir=None, xref=True, punch=False):
         """
-        main read method for the bdf
+        Read method for the bdf files
         @param infilename
           the input bdf
         @param includeDir
@@ -559,57 +559,23 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
           if no include files)
         @param xref
           should the bdf be cross referenced (default=True)
+        @param punch
+          indicates whether the file is a punch file (default=False)
         """
         self._set_infile(infilename, includeDir)
 
         fname = self.print_filename(self.bdf_filename)
         self.log.debug('---starting BDF.readBDF of %s---' % fname)
         #self.log.info('xref=%s' %(xref))
-        sys.stdout.flush()
 
-        #self.debug = True
-        if self.debug:
-            self.log.debug("*BDF.readBDF")
-        self._read_executive_control_deck()
-        self._read_case_control_deck(self.bdf_filename)
+        if not punch:
+            self._read_executive_control_deck()
+            self._read_case_control_deck(self.bdf_filename)
+            
         self._read_bulk_data_deck()
-
         self.cross_reference(xref=xref)
-        if self.debug:
-            self.log.debug("***BDF.readBDF")
 
         self.log.debug('---finished BDF.readBDF of %s---' % fname)
-        sys.stdout.flush()
-
-    def readBDF_Punch(self, infilename, includeDir=None, xref=True):
-        """
-        BDF punch file reader
-        @param infilename
-          the input bdf
-        @param includeDir
-          the relative path to any include files (default=None
-          if no include files)
-        @param xref
-          should the bdf be cross referenced (default=True)
-        """
-        self._set_infile(infilename, includeDir)
-
-        fname = self.print_filename(self.bdf_filename)
-        self.log.debug('---starting BDF.readBDF_Punch of %s---' % fname)
-        #self.log.info('xref=%s' %(xref))
-        sys.stdout.flush()
-
-        #self.debug = True
-        if self.debug:
-            self.log.debug("*BDF.readBDF_Punch")
-        self._read_bulk_data_deck()
-        #self.close_file()
-        self.cross_reference(xref=xref)
-        if self.debug:
-            self.log.debug("***BDF.readBDF_Punch")
-
-        self.log.debug('---finished BDF.readBDF_Punch of %s---' % fname)
-        sys.stdout.flush()
 
     def _is_executive_control_deck(self, line):
         """@todo code this..."""

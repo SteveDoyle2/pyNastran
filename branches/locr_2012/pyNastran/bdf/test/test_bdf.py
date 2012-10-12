@@ -121,7 +121,7 @@ def run_fem1(fem1, bdfModel, meshForm, xref, cid):
     assert os.path.exists(bdfModel), print_bad_path(bdfModel)
     try:
         if '.pch' in bdfModel:
-            fem1.readBDF_Punch(bdfModel, xref=False)
+            fem1.readBDF_Punch(bdfModel, xref=False, punch=True)
         else:
             fem1.readBDF(bdfModel, xref=xref)
     except:

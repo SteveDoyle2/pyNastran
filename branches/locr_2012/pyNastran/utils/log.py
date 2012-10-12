@@ -62,6 +62,7 @@ class simpleLogger(object):
         """
         n, fn = self.properties()
         sys.stdout.write('%s:    fname=%-25s lineNo=%-4s   %s\n' % (typ, fn, n, msg))
+        sys.stdout.flush()
 
     def info(self, msg):
         """
