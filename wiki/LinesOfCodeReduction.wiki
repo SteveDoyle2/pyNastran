@@ -184,6 +184,34 @@ from pyNastran.general.general import is_binary
 }}}
  
 
+
+* Log *
+
+A `dummyLogger` has been refactored into a `simpleLogger` class (file `pyNastran/utils/log.py`). It understands that *debug* messages should be displayed only in the `debug` mode. Therefore, now instead of:
+
+{{{
+if self.debug:
+    self.log.debug("debug message")
+}}}
+
+it is enough to write 
+
+{{{
+self.log.debug("debug message")
+}}} 
+
+
+== applyLicense.py and build_2to3.py == 
+
+Files `applyLicense.py` and `build_2to3.py` have been refactored. It took surprisingly long time, but the code inside the files is now much shorter and clearer. Codebase converted to Python 3 seems to work correctly. Nevertheless, it still may contain bugs. 
+
+*Important note:* Python 2.7 has a module `io` providing the Python interfaces to stream handling (files handling) that is the default interface in Python 3.x. It may be a good idea to use it as a default in a new code as it provides identical behaviour between Python versions. The `build_2to3.py` adds `encoding='utf-8'` parameter to `open()` function but it does not change anything if a word `open` is preceded by a dot (as in `io.open()`).
+
+== Notable code changes ==
+
+ * method `get_next_line` has been moved from `bdf_Reader` to `bdf_CardMethods` as it requires `bdf_CardMethods_make_lines_pack` method
+ * `BDF.readBDF_Punch()` has been merged into `BDF.readBDF_Punch()`. New parameter `punch` has been added to `BDF.readBDF_Punch()` and `BDF.readBDF_Punch(punch=True)` is equal to old `BDF.readBDF_Punch()`.
+
 == Python idioms == 
 
 The work on full project scale refactoring has been started. It's aim is to replace some parts of the code to more 'pythonic version' without big semantic changes. 
