@@ -70,21 +70,21 @@ class OUG(object):
         eidDevice = self.getValues(data, 'i', 5)
         floatVal = self.getValues(data, 'f', 5)
         eid = (eidDevice-self.deviceCode)//10
-        print("EID = %s" %(eidDevice))
-        print("floatVal = %s" %(floatVal))
+        #print("EID = %s" %(eidDevice))
+        #print("floatVal = %s" %(floatVal))
 
         if self.tableName == 'OUGRMS2' and self.analysisCode == 1:
             self.addDataParameter(data, 'nodeID', 'i',
                                   5, fixDeviceCode=True)  # frequency
             self.applyDataCodeValue('dataNames', ['nodeID'])
-            print("nodeID = %s" %(self.nodeID))
+            #print("nodeID = %s" %(self.nodeID))
 
         #self.isRegular = False
         elif self.analysisCode in [1, 5]:  # 5 # freq
             self.addDataParameter(data, 'nodeID', 'i',
                                   5, fixDeviceCode=True)  # frequency
             self.applyDataCodeValue('dataNames', ['nodeID'])
-            print("nodeID = %s" %(self.nodeID))
+            #print("nodeID = %s" %(self.nodeID))
             #sys.exit(self.nodeID)
         elif self.analysisCode == 6:  # transient dt
             self.addDataParameter(data, 'nodeID', 'i',
@@ -296,9 +296,9 @@ class OUG(object):
         #print self.dataCode
         #print "tfsCode=%s" %(tfsCode)
 
-        if self.tableCode == 1 and self.tableName in ['OUGV1', 'OUPV1']:    # displacement
-            if self.tableName == 'OUGV1':
-                assert self.tableName in ['OUGV1'], 'tableName=%s tableCode=%s\n%s' % (self.tableName, self.tableCode, self.codeInformation())
+        if self.tableCode == 1 and self.tableName in ['OUGV1', 'OUG1', 'OUPV1']:    # displacement
+            if self.tableName in ['OUGV1', 'OUG1']:
+                assert self.tableName in ['OUGV1', 'OUG1'], 'tableName=%s tableCode=%s\n%s' % (self.tableName, self.tableCode, self.codeInformation())
                 self.readOUG_Data_table1()
             else:  # 'OUPV1'
                 msg = ('bad approachCode=%s, tableCode=%s, formatCode-%s '
@@ -310,20 +310,20 @@ class OUG(object):
             #assert self.tableName in ['OUGATO2','OUGCRM2','OUGPSD2','OUGRMS2','OUGNO2',],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
             self.readOUG_Data_table1()
         elif self.tableCode == 7:  # modes
-            if self.tableName == 'OUGV1':
-                assert self.tableName in ['OUGV1'], 'tableName=%s tableCode=%s\n%s' % (self.tableName, self.tableCode, self.codeInformation())
+            if self.tableName in ['OUGV1', 'OUG1']:
+                assert self.tableName in ['OUGV1', 'OUG1'], 'tableName=%s tableCode=%s\n%s' % (self.tableName, self.tableCode, self.codeInformation())
                 self.readOUG_Data_table7()
             else:
                 self.NotImplementedOrSkip('bad OUG table')
         elif self.tableCode == 10:  # velocity
-            if self.tableName == 'OUGV1':
-                assert self.tableName in ['OUGV1'], 'tableName=%s tableCode=%s\n%s' % (self.tableName, self.tableCode, self.codeInformation())
+            if self.tableName in ['OUGV1', 'OUG1']:
+                assert self.tableName in ['OUGV1', 'OUG1'], 'tableName=%s tableCode=%s\n%s' % (self.tableName, self.tableCode, self.codeInformation())
                 self.readOUG_Data_table10()
             else:
                 self.NotImplementedOrSkip('bad OUG table')
         elif self.tableCode == 11:  # Acceleration vector
-            if self.tableName == 'OUGV1':
-                assert self.tableName in ['OUGV1'], 'tableName=%s tableCode=%s\n%s' % (self.tableName, self.tableCode, self.codeInformation())
+            if self.tableName in ['OUGV1', 'OUG1']:
+                assert self.tableName in ['OUGV1', 'OUG1'], 'tableName=%s tableCode=%s\n%s' % (self.tableName, self.tableCode, self.codeInformation())
                 self.readOUG_Data_table11()
             else:
                 self.NotImplementedOrSkip('bad OUG table')
@@ -359,7 +359,7 @@ class OUG(object):
         if self.numWide == 8:  # real/random
             if self.thermal == 0:
                 #print self.dataCode
-                if self.tableName in ['OUGV1']:
+                if self.tableName in ['OUGV1', 'OUG1']:
                     resultName = 'displacements'
                     self.createTransientObject(self.displacements,
                                                DisplacementObject)
@@ -497,8 +497,8 @@ class OUG(object):
             #print "eType=%s" %(eType)
 
             dataIn = [eid2, gridType, tx, ty, tz, rx, ry, rz]
-            if self.debug:
-                print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid, gridType, tx, ty, tz, rx, ry, rz))
+            #if self.debug:
+            #    print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid, gridType, tx, ty, tz, rx, ry, rz))
             #print "%s" %(self.ElementType(self.elementType)),dataIn
             #print "%s" %(self.tableName),dataIn
             #eid = self.obj.addNewEid(out)

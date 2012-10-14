@@ -82,9 +82,8 @@ class PlateStressObject(stressObject):
                 elif eType == 'CQUAD4':
                     #assert len(line)==19,'len(line)=%s' %(len(line))
                     if len(line) == 19:  # Centroid - bilinear
-                        (
-                            eType, eid, nid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
-                                             f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                        (eType, eid, nid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
+                                          f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
                         if nid == 'CEN/4':
                             nid = 'C'
                         self.eType[eid] = eType
@@ -462,7 +461,7 @@ class PlateStressObject(stressObject):
 
     def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum)
+            return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
 
         if self.isVonMises():
             vonMises = 'VON MISES'
@@ -765,7 +764,6 @@ class PlateStressObject(stressObject):
                 else:
                     #msg += '   %8s %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %('','',  fd,oxx,oyy,txy,angle,major,minor,ovm)
                     raise RuntimeError('Invalid option for cquad4')
-
         return msg
 
     def writeF06_Tri3(self, eid):
@@ -811,7 +809,6 @@ class PlateStressObject(stressObject):
                     msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm)
                 else:
                     msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm)
-
         return msg
 
     def __repr__(self):
@@ -1399,7 +1396,7 @@ class PlateStrainObject(strainObject):
                 elif iLayer == 1:
                     msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
                 else:
-                    raise Exception('Invalid option for cquad4')
+                    raise RuntimeError('Invalid option for cquad4')
         return msg
 
     def writeF06_Quad4_BilinearTransient(self, dt, eid, n):
@@ -1428,7 +1425,7 @@ class PlateStrainObject(strainObject):
                 elif iLayer == 1:
                     msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
                 else:
-                    raise Exception('Invalid option for cquad4')
+                    raise RuntimeError('Invalid option for cquad4')
         return msg
 
     def writeF06_Tri3(self, eid):

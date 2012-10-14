@@ -130,9 +130,9 @@ class TestCoords(unittest.TestCase):
                  '           1.135 .089237   .9324']
 
         mesh = BDF()
-        card = mesh.processCard(grid)
+        card = mesh.process_card(grid)
         mesh.add_card(card, card[0])
-        card = mesh.processCard(coord)
+        card = mesh.process_card(coord)
         mesh.add_card(card, card[0])
         mesh.cross_reference()
 
