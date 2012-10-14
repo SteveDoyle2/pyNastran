@@ -132,7 +132,7 @@ class OP2(BDF,
             'OQG1', 'OQGV1',                 # spc forces
             'OQMG1',                         # mpc forces
 
-            'OUGV1',                         # displacements
+            'OUGV1', 'OUG1',                 # displacements
             'OGPFB1',                        # grid point forces
             'OGS1',                          # grid point stresses
 
@@ -551,6 +551,95 @@ class OP2(BDF,
         #data = self.getData(60)
         #self.printBlock(data)
 
+    def readTapeCodePost2(self):
+        # PVTO
+        #self.readMarkers([2])
+        #ints = self.readIntBlock()
+        #print("*ints = ",ints)
+        
+        #ints = self.readBlock()
+        #print("*ints = ",ints)
+        #print(self.printSection(40))
+
+        block = self.readNewBlock()
+        tableName, = unpack(b'8s',block)
+        print("tableName = |%s|\n" %(tableName))
+
+        self.readMarkers([-1])
+        block = self.readNewBlock()
+        #print(self.printBlock(block))
+        print("")
+
+        self.readPartOfNewTable()
+
+        # -----------------------
+        
+        foundMoreTables = True
+        while foundMoreTables and tableName:
+            print("tableName=%s self.n=%s" %(tableName,self.n))
+            print("-----------------------------")
+            try:
+                n = self.n
+                tableName = self.readNewTable()
+            except:
+                self.op2.seek(n)
+                foundMoreTables = False
+
+        print("**************")
+        self.op2.seek(n)
+        print(self.printSection(240))
+        sys.exit('stopping')
+    
+    def readNewTable(self):
+        self.op2.read(8); self.n+=8
+        data = self.op2.read(8); self.n+=12
+
+        if len(data)<8:
+            return
+
+        self.op2.seek(self.n)
+        tableName, = unpack(b'8s',data)
+        print("tableName = |%s|\n" %(tableName))
+
+        self.readMarkers([-1])
+        block = self.readNewBlock()
+        #print(self.printBlock(block))
+
+        self.readPartOfNewTable()
+        return tableName
+
+    def readPartOfNewTable(self):
+        n = -2
+        keepGoingOnTable = True
+        while keepGoingOnTable:
+            print("n = %s" %(n))
+            try:
+                nStar = self.n
+                self.readMarkers([n,1,0])
+                block = self.readNewBlock()
+                #print(self.printBlock(block))
+                n -= 1
+            except:
+                self.n = nStar
+                self.op2.seek(nStar)
+                keepGoingOnTable = False
+
+    def readNewBlock(self):
+        data = self.op2.read(16)
+        #print(self.printBlock(data))
+        (four,n,four,fourN) = unpack(b'iiii',data)
+        #print('n = %s' %(n))
+        self.n += 16
+        
+        if n > 70000:
+            asf
+        data = self.op2.read(n*4)
+        self.n += n*4+4
+        #print("self.n = ",self.n)
+        self.op2.seek(self.n)
+        
+        return data
+        
     def readOP2(self):
         """
         reads the op2 file
@@ -565,8 +654,10 @@ class OP2(BDF,
         self.n = self.op2.tell()
 
         try:
+            #self.readTapeCodePost2()
             self.readTapeCode()
         except:
+            raise
             msg = ('When this happens, the analysis failed or '
                   'the code bombed...check the F06.\n'
                   '  If the F06 is OK:\n'
@@ -678,7 +769,7 @@ class OP2(BDF,
                     #self.readTable_OQG()
                     self.readTable_DUMMY_GEOM(tableName)
 
-                elif tableName in ['OUGV1', 'OUPV1']:
+                elif tableName in ['OUGV1', 'OUPV1', 'OUG1']:
                     self.readTable_OUG()  # displacements/velocity/acceleration
                 elif tableName in ['OUGPSD2', 'OUGATO2', 'OUGRMS2', 'OUGNO2',
                                    'OUGCRM2']:  # OUG tables???
