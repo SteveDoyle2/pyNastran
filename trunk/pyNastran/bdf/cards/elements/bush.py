@@ -14,7 +14,9 @@ class BushElement(Element):
         Element.__init__(self, card, data)
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if self.cid is None:
+            return None
+        elif isinstance(self.cid, int):
             return self.cid
         return self.cid.cid
 
@@ -62,8 +64,8 @@ class CBUSH(BushElement):
             ###
             ## Element coordinate system identification. A 0 means the basic
             ## coordinate system. If CID is blank, then the element coordinate
-            ## system is determined from GO or Xi.
-            self.cid = card.field(8, 0)
+            ## system is determined from GO or Xi.  (default=blank=element-based)
+            self.cid = card.field(8)
             ## Location of spring damper (0 <= s <= 1.0)
             self.s = card.field(9, 0.5)
             ## Coordinate system identification of spring-damper offset. See
@@ -85,7 +87,9 @@ class CBUSH(BushElement):
         #return self.ocid.cid
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if self.cid is None:
+            return None
+        elif isinstance(self.cid, int):
             return self.cid
         return self.cid.cid
 
@@ -109,8 +113,7 @@ class CBUSH(BushElement):
         else:
             x = self.x
 
-        cid = set_blank_if_default(self.Cid(), 0)
-        fields = ['CBUSH', self.eid, self.Pid(), self.ga, self.gb] + x + [cid,
+        fields = ['CBUSH', self.eid, self.Pid(), self.ga, self.gb] + x + [self.Cid(),
                                                                           self.s, self.ocid] + self.si
         return fields
 
@@ -124,7 +127,7 @@ class CBUSH1D(BushElement):
             self.eid = int(card.field(1))
             self.pid = int(card.field(2, self.eid))
             nids = card.fields(3, 5)
-            self.cid = card.field(5, 0)
+            self.cid = card.field(5)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -146,8 +149,7 @@ class CBUSH1D(BushElement):
 
     def reprFields(self):
         nodeIDs = self.nodeIDs()
-        cid = set_blank_if_default(self.Cid(), 0)
-        fields = ['CBUSH1D', self.eid, self.Pid(), nodeIDs[0], nodeIDs[1], cid]
+        fields = ['CBUSH1D', self.eid, self.Pid(), nodeIDs[0], nodeIDs[1], self.Cid()]
         return fields
 
 
