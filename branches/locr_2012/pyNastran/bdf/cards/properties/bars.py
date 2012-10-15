@@ -16,7 +16,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 from itertools import izip, count
-from numpy import zeros, pi
+from numpy import zeros, pi, sqrt
 
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
@@ -525,7 +525,7 @@ class PROD(LineProperty):
 
     #def Radius(self):
         #"""assumes circular cross section - probably will remove this"""
-        #return (self.A/pi)**0.5
+        #return sqrt(self.A/pi)
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)

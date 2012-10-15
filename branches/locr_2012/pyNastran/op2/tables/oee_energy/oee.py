@@ -111,7 +111,6 @@ class OEE(object):
         else:
             raise RuntimeError('invalid analysisCode...analysisCode=%s' %
                                (self.analysisCode))
-        ###
 
         #print "*iSubcase=%s elementName=|%s|"%(self.iSubcase,self.elementName)
         #print "analysisCode=%s tableCode=%s" %(self.analysisCode,self.tableCode)
@@ -128,8 +127,7 @@ class OEE(object):
             assert self.tableName in ['ONRGY1', 'ONRGY2'], 'tableName=%s tableCode=%s' % (self.tableName, self.tableCode)
             self.readStrainEnergy_table18()
         else:
-            self.NotImplementedOrSkip('bad approach/table/format/sortCode=%s on %s-OEE table' % (self.atfsCode, self.tableName))
-        ###
+            self.NotImplementedOrSkip('bad OEE table')
         #print str(self.obj)
 
     def readStrainEnergy_table18(self):  # real ???
@@ -167,7 +165,6 @@ class OEE(object):
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
-        ###
         #print self.strainEnergy
 
     def OEE_Strain5(self):
@@ -193,5 +190,4 @@ class OEE(object):
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
-        ###
         #print self.strainEnergy

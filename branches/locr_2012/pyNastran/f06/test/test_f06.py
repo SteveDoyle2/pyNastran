@@ -35,8 +35,7 @@ def runLotsOfFiles(files, debug=True, saveCases=True, skipFiles=[],
             else:
                 nPassed += 1
             #sys.exit('end of test...test_f06.py')
-        ###
-    ###
+
     if saveCases:
         f = open('failedCases.in', 'wb')
         for f06file in failedCases:
@@ -50,7 +49,7 @@ def runLotsOfFiles(files, debug=True, saveCases=True, skipFiles=[],
     sys.exit('-----done with all models %s/%s=%.2f%%  nFailed=%s-----' % (nPassed, nTotal, 100. * nPassed / float(nTotal), nTotal - nPassed))
 
 
-def runF06(f06file, iSubcases=[], writeF06=True, debug=False, stopOnFailure=True):
+def runF06(f06file, iSubcases=[], writeF06=True, printF06=False, debug=False, stopOnFailure=True):
     isPassed = False
     stopOnFailure = False
     #debug = True
@@ -65,8 +64,9 @@ def runF06(f06file, iSubcases=[], writeF06=True, debug=False, stopOnFailure=True
         if writeF06:
             (model, ext) = os.path.splitext(f06file)
             f06.writeF06(model + '.f06.out')
-        #print f06.printResults()
-        f06.printResults()
+
+        if printF06:
+            f06.printResults()
         #print "subcases = ",f06.subcases
 
         #assert tableNamesF06==tableNamesF06,'tableNamesF06=%s tableNamesF06=%s' %(tableNamesF06,tableNamesF06)
@@ -132,9 +132,7 @@ def runF06(f06file, iSubcases=[], writeF06=True, debug=False, stopOnFailure=True
             raise
         else:
             isPassed = False
-        ###
     return isPassed
-    ###
 
 
 def runArgParse():
@@ -150,6 +148,8 @@ def runArgParse():
                        help='Prints   debug messages (default=True)')
     parser.add_argument('-f', '--writeF06', dest='writeF06',
                         action='store_true', help='Writes the f06 to fem.f06.out')
+    parser.add_argument('-p', '--printF06', dest='printF06',
+                        action='store_true', help='Prints the F06 to the screen, slow & uses a lot of memory for large files')
     parser.add_argument('-v', '--version', action='version', version=ver)
 
     if len(sys.argv) == 1:
@@ -161,16 +161,17 @@ def runArgParse():
 
     debug = not(args.quiet)
     writeF06 = args.writeF06
+    printF06 = args.printF06
     f06FileName = args.f06FileName[0]
 
-    return (f06FileName, writeF06, debug)
+    return (f06FileName, writeF06, printF06, debug)
 
 
 def main():
-    (f06FileName, writeF06, debug) = runArgParse()
+    (f06FileName, writeF06, printF06, debug) = runArgParse()
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
-    runF06(f06FileName, writeF06=writeF06, debug=debug)
+    runF06(f06FileName, writeF06=writeF06, printF06=printF06, debug=debug)
 
 if __name__ == '__main__':  # f06
     main()

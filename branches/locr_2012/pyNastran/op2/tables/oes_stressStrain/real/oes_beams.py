@@ -45,6 +45,22 @@ class BeamStressObject(stressObject):
             self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
 
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.smax)
+            s0 = self.smax.keys()[0]
+            nelements = len(self.smax[s0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.smax)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, xxb, grids, smax, smin, MS_tension, '
+                   'MS_compression, sxc, sxd, sxe, sxf\n')
+        return msg
+
     def getLengthTotal(self):
         return 444  # 44+10*40   (11 nodes)
 
@@ -317,7 +333,24 @@ class BeamStrainObject(strainObject):
             self.isTransient = True
             self.dt = self.nonlinearFactor
             self.addNewTransient()
-        ###
+
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.smax)
+            s0 = self.smax.keys()[0]
+            nelements = len(self.smax[s0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.smax)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, xxb, grids, smax, smin, MS_tension, '
+                   'MS_compression, sxc, sxd, sxe, sxf\n')
+        return msg
 
     def getLengthTotal(self):
         return 444  # 44+10*40   (11 nodes)
@@ -422,7 +455,6 @@ class BeamStrainObject(strainObject):
             self.smin[dt][eid].append(smin)
             self.MS_tension[dt][eid].append(mst)
             self.MS_compression[dt][eid].append(msc)
-        ###
 
     def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinearFactor is not None:
@@ -449,7 +481,7 @@ class BeamStrainObject(strainObject):
                     sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc])
                 (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
-        ###
+
         msg.append(pageStamp + str(pageNum) + '\n')
         if f is not None:
             f.write(''.join(msg))

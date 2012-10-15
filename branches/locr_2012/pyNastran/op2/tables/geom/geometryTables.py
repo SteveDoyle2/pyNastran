@@ -51,7 +51,6 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
                 #sys.exit('end of geom1')
                 return
             iTable -= 1
-        ###
         sys.exit('end of %s-this should never happen...' % (expectedTableName))
 
     def checkForNextTable(self):
@@ -80,10 +79,8 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
             #print "subtable :) = ",foundSubTable
             if [markerA, markerB] == [0, 0]:
                 isFileDone = True
-            ###
         except:
             pass
-        ###
         self.n = nOld
         self.op2.seek(self.n)
         #print "isFileDone = ",isFileDone
@@ -100,7 +97,6 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
             #print "subtable :) = ",foundSubTable
         except SyntaxError:
             foundSubTable = False
-        ###
         self.n = nOld
         self.op2.seek(self.n)
 
@@ -144,9 +140,6 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
                     #self.skippedCardsFile.write(msg+'\n')
                     if self.makeGeom:
                         self.log.debug(msg)
-                    ###
-                ###
-            ###
             #self.op2Debug.write('ints = %s\n' %(str(ints)))
 
             isNextTable = self.checkForNextTable()
@@ -207,14 +200,10 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
                     #print "bufferSize = ",bufferSize
                     data = self.getData(bufferWords * 4)
                     data = self.getData(4)
-                ###
             except:
                 raise RuntimeError('error in iTable=% of %s...' %
                                    (self.iTable, self.tableName))
-            ###
             iTable -= 1
-            ###
-        ###
 
     def readTable_SDF(self):
         tableName = self.readTableName(rewind=False)  # SDF
@@ -320,8 +309,6 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
             except:
                 self.goto(n)
                 break
-            ###
-        ###
 
         #-------------------------------------------
         #print self.printSection(400)

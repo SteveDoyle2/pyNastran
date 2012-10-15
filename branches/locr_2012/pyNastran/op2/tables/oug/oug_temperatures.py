@@ -18,6 +18,20 @@ class TemperatureObject(scalarObject):  # approachCode=1, sortCode=0, thermal=1
             assert dt is not None
             self.add = self.addSort2
 
+    def get_stats(self):
+        ngrids = len(self.gridTypes)
+        
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.temperatures)
+            msg.append('  type=%s ntimes=%s ngrids=%s\n'
+                       % (self.__class__.__name__, ntimes, ngrids))
+        else:
+            msg.append('  type=%s ngrids=%s\n' % (self.__class__.__name__,
+                                                  ngrids))
+        msg.append('  translations, rotations, gridTypes\n')
+        return msg
+
     def addF06Data(self, data, transient):
         if transient is None:
             for line in data:

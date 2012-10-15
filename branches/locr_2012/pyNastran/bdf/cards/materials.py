@@ -835,7 +835,6 @@ class MAT10(Material):
             self.rho = data[2]
             self.c = data[3]
             self.ge = data[4]
-        ###
 
     def getBulkRhoC(self, card):
         r"""
@@ -859,7 +858,6 @@ class MAT10(Material):
             else:
                 msg = 'c, bulk, and rho are all undefined on tbe MAT10'
                 raise RuntimeError(msg)
-            ###
         else:
             msg = 'c, bulk, and rho are all undefined on tbe MAT10'
             raise RuntimeError(msg)
@@ -879,6 +877,8 @@ class MAT10(Material):
 
 
 class MATHP(HyperelasticMaterial):
+    type = 'MATHP'
+
     def __init__(self, card=None, data=None):
         HyperelasticMaterial.__init__(self, card, data)
         if card:

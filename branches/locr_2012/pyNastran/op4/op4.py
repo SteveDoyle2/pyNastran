@@ -75,18 +75,15 @@ class OP4(FortranFile):
 #--------------------------------------------------------------------------
     def readOP4Ascii(self, op4Name, matrixNames=None, precision='default'):
         """matrixNames must be a list or None, but basically the same"""
-        f = open(op4Name, 'r')
-        matrices = {}
-        name = 'dummyName'
-
-        i = 0
-        while name is not None:
-            (name, form, matrix) = self.readMatrixAscii(
-                f, matrixNames, precision)
-            if name is not None:
-                if matrixNames is None or name in matrixNames:  # save the matrix
-                    matrices[name] = (form, matrix)
-            i += 1
+        with open(op4Name, 'r') as f:
+            matrices = {}
+            name = 'dummyName'
+            while name is not None:
+                (name, form, matrix) = self.readMatrixAscii(
+                    f, matrixNames, precision)
+                if name is not None:
+                    if matrixNames is None or name in matrixNames:  # save the matrix
+                        matrices[name] = (form, matrix)
         return matrices
 
     def readMatrixAscii(self, f, matrixNames=None, precision='default'):
@@ -111,7 +108,8 @@ class OP4(FortranFile):
         Type = int(Type)
         dType = self.getDType(Type, precision)
 
-        name, size = line[32:].split()
+        name = line[32:40].strip()
+        size = line[40:].strip()
         lineSize = size.split(
             ',')[1].split('E')[1].split('.')[0]  # 3E23.16 to 23
         lineSize = int(lineSize)
@@ -209,8 +207,7 @@ class OP4(FortranFile):
                     nWords -= nWordsInLine
                 sline = line.strip().split()
                 nLoops += 1
-            ###
-        ###
+
         f.readline()
 
         if isSparse:  # Initialize a real matrix
@@ -287,8 +284,7 @@ class OP4(FortranFile):
                     nWords -= nWordsInLine
                 sline = line.strip().split()
                 nLoops += 1
-            ###
-        ###
+
         if isSparse:  # Initialize a complex matrix
             A = coo_matrix((entries, (rows, cols)), shape=(
                 nrows, ncols), dtype=dType)
@@ -315,8 +311,7 @@ class OP4(FortranFile):
                     IS = int(f.readline().strip())
                 L = IS // 65536 - 1
                 irow = IS - 65536 * (L + 1)
-            ###
-        ###
+
         return irow
 
     def letterCount(self, word, letter):
@@ -868,7 +863,6 @@ class OP4(FortranFile):
 
                 #(irow) = self.getIRowSmall(f)
                 nWords -= 1
-            ###
         else:
             (a, icol, irow, nWords) = self.readStartMarker(f)
             #print "N=%s a=%s icol=%s irow=%s nWords=%s"%(self.n,a,icol,irow,nWords)
@@ -1072,7 +1066,6 @@ class OP4(FortranFile):
                 f.write(msg)
         f.write('%8i%8i%8i\n' % (ncols + 1, 1, 1))
         f.write(' 1.0000000000000000E+00\n')
-        ###
 
     def writeDenseMatrixBinary(self, name, matrix, form=2, precision='default', tol=1e-15):
         """
@@ -1107,10 +1100,7 @@ class OP4(FortranFile):
                     for irow in range(iStart, iEnd):
                         msg += pack('dd', A[irow, icol]
                                     .real, A[irow, icol].imag)
-                    ###
-                ###
-            ###
-        ###
+
         msg += pack(self.endian + '4id', 24, ncols + 1, 1, 1, 1.0)
 
         return msg
@@ -1184,8 +1174,7 @@ class OP4(FortranFile):
                         i += 2
             if valueStr:
                 msg += valueStr + '\n'
-            ###
-        ###
+
         msg += '%8i%8i%8i\n' % (ncols + 1, 1, 1)
         msg += ' 1.0000000000000000E+00\n'
         return msg
@@ -1309,6 +1298,8 @@ if __name__ == '__main__':
                 f.write(op4.writeDenseMatrixAscii(name, matrix, 1, 'single'))
                 #f.write(op4.writeDenseMatrixBinary(name,matrix,1,'single'))
         #print print_annotated_matrix(matrices['STRINGS'][1]-strings)
+    f.close()
     print("-----------------------------")
     print("done")
     print("-----------------------------")
+    

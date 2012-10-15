@@ -15,11 +15,23 @@ class gridPointForcesObject(scalarObject):
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
-        ###
+
+    def get_stats(self):
+        nelements = len(self.eids)
+
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.forces)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  forces, moments, elemName, eids\n')
+        return msg
 
     def addNewTransient(self, dt):  # eKey
         """initializes the transient variables"""
@@ -66,7 +78,6 @@ class gridPointForcesObject(scalarObject):
             self.log.debug("updating %s...%s=%s  iSubcase=%s" % (self.dataCode['name'], self.dataCode['name'], freq, self.iSubcase))
             self.dt = dt
             self.addNewTransient()
-        ###
 
     def deleteTransient(self, dt):
         del self.forces[dt]
@@ -108,8 +119,7 @@ class gridPointForcesObject(scalarObject):
                 msg.append('%s  %8s    %10s    %-8s      %s  %s  %s  %s  %s  %-s\n' % (zero, eKey, eid, elemName, f1, f2, f3, m1, m2, m3.rstrip()))
                 zero = ' '
             zero = '0'
-            ###
-        ###
+
         msg.append(pageStamp + str(pageNum) + '\n')
         if f is not None:
             f.write(''.join(msg))
@@ -140,9 +150,8 @@ class gridPointForcesObject(scalarObject):
 
                     msg.append('%s  %8s    %10s    %8s      %s  %s  %s  %s  %s  %-s\n' % (zero, eKey, eid, elemName, f1, f2, f3, m1, m2, m3))
                     zero = ' '
-                ###
                 zero = '0'
-            ###
+
             msg.append(pageStamp + str(pageNum) + '\n')
             if f is not None:
                 f.write(''.join(msg))
@@ -160,3 +169,18 @@ class complexGridPointForcesObject(scalarObject):
     def __init__(self, dataCode, isSort1, iSubcase, freq=None):
         scalarObject.__init__(self, dataCode, iSubcase)
         raise NotImplementedError()
+
+    def get_stats(self):
+        nelements = len(self.eids)
+
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.forces)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  forces, moments, elemName, eids\n')
+        return msg
+

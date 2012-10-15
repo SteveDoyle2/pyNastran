@@ -1,5 +1,5 @@
 # http://www.cadfamily.com/online-help/I-DEAS/SDRCHelp/LANG/English/slv_ug/NAS_results_imported.htm
-#import sys
+import sys
 from struct import unpack
 
 from pyNastran.op2.tables.oug.oug_displacements import (
@@ -29,6 +29,86 @@ from pyNastran.op2.op2_helper import polarToRealImag
 
 class OUG(object):
     """Table of displacements/velocities/acceleration/heat flux/temperature"""
+
+    def readTable_OUG2(self):  # OUGPSD
+        #self.tableName = 'OUG'
+        table3 = self.readTable_OUG2_3
+        table4Data = self.readOUG2_Data
+        self.readResultsTable(table3, table4Data)
+        self.deleteAttributes_OUG()
+
+        sys.exit('stopping...')
+
+    def readOUG2_Data(self):
+        self.readOUG_Data_table1(debug=True)
+
+    def readTable_OUG2_3(self, iTable):  # iTable=-3
+        bufferWords = self.getMarker()
+        if self.makeOp2Debug:
+            self.op2Debug.write('bufferWords=%s\n' % (str(bufferWords)))
+        #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
+
+        data = self.getData(4)
+        bufferSize, = unpack('i', data)
+        data = self.getData(4 * 50)
+        #print self.printBlock(data)
+
+        (three) = self.parseApproachCode2(data)
+
+        ## random code
+        self.addDataParameter(data, 'randomCode', 'i', 8, False)
+        ## format code
+        self.addDataParameter(data, 'formatCode', 'i', 9, False)
+        ## number of words per entry in record; @note is this needed for this table ???
+        self.addDataParameter(data, 'numWide', 'i', 10, False)
+        ## acoustic pressure flag
+        self.addDataParameter(data, 'acousticFlag', 'f', 13, False)
+        ## thermal flag; 1 for heat transfer, 0 otherwise
+        self.addDataParameter(data, 'thermal', 'i', 23, False)
+        self.isFlipped = False
+
+        eidDevice = self.getValues(data, 'i', 5)
+        floatVal = self.getValues(data, 'f', 5)
+        eid = (eidDevice-self.deviceCode)//10
+        #print("EID = %s" %(eidDevice))
+        #print("floatVal = %s" %(floatVal))
+
+        if self.tableName == 'OUGRMS2' and self.analysisCode == 1:
+            self.addDataParameter(data, 'nodeID', 'i',
+                                  5, fixDeviceCode=True)  # frequency
+            self.applyDataCodeValue('dataNames', ['nodeID'])
+            #print("nodeID = %s" %(self.nodeID))
+
+        #self.isRegular = False
+        elif self.analysisCode in [1, 5]:  # 5 # freq
+            self.addDataParameter(data, 'nodeID', 'i',
+                                  5, fixDeviceCode=True)  # frequency
+            self.applyDataCodeValue('dataNames', ['nodeID'])
+            #print("nodeID = %s" %(self.nodeID))
+            #sys.exit(self.nodeID)
+        elif self.analysisCode == 6:  # transient dt
+            self.addDataParameter(data, 'nodeID', 'i',
+                                  5, fixDeviceCode=True)  # time step
+            self.applyDataCodeValue('dataNames', ['nodeID'])
+        elif self.analysisCode == 10:  # freq/time step fqts
+            self.addDataParameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)  # frequency / time step
+            self.applyDataCodeValue('dataNames', ['nodeID'])
+        else:
+            self.isRegular = True
+            self.addDataParameter(data, 'nodeID', 'i',
+                                  5, fixDeviceCode=True)  # node ID
+            self.applyDataCodeValue('dataNames', ['nodeID'])
+        # tCode=2
+        #if self.analysisCode==2: # sort2
+        #    self.lsdvmn = self.getValues(data,'i',5)
+
+        #print "*iSubcase=%s"%(self.iSubcase)
+        #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
+        print(self.codeInformation())
+
+        #self.printBlock(data)
+        self.readTitle()
+
 
     def readTable_OUG(self):
         #self.tableName = 'OUG'
@@ -124,7 +204,6 @@ class OUG(object):
                 raise RuntimeError('invalid analysisCode...analysisCode=%s' %
                                    (self.analysisCode))
         else:  # sort2
-
             eidDevice = self.getValues(data, 'i', 5)
             floatVal = self.getValues(data, 'f', 5)
             #eid = (eidDevice-self.deviceCode)//10
@@ -161,7 +240,7 @@ class OUG(object):
 
         #print "*iSubcase=%s"%(self.iSubcase)
         #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
-        #print self.codeInformation()
+        #print(self.codeInformation())
 
         if not self.isSort1():
             raise NotImplementedError('sort2...')
@@ -175,34 +254,39 @@ class OUG(object):
         Also returns an extraction function that is called on the first argument
         """
         isSort1 = self.isSort1()
-        if self.tableName == 'OUGRMS2' and self.analysisCode == 1:
-            format1 = 'i'  # SORT2
-            extract = self.extractSort2
-
-        elif isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            #print "SORT1"
-            format1 = 'i'  # SORT1
-            extract = self.extractSort1
-            #if self.analysisCode in [5]:
-                #extract==self.extractSort2
-        else:  # values from IDENT   #@todo test this...
-            #print "SORT2"
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            if self.analysisCode in [2, 3, 4, 6, 7, 8, 11]:
+        #print('isSort1 = %s' %isSort1)
+        if self.tableName == 'OUGRMS2':
+            if self.analysisCode == 1:
                 format1 = 'f'  # SORT2
-                extract = self.extractSort2
-            elif self.analysisCode in [5]:
-                format1 = 'f'
-                extract = self.extractSort2
-            elif self.analysisCode in [1, 9, 10, 12]:
-                format1 = 'f'  # SORT1
                 extract = self.extractSort2
             else:
                 raise KeyError('invalid analysisCode...analysisCode=%s' %
                                (self.analysisCode))
-            ###
-            #eid = self.nonlinearFactor
+        else:
+            if isSort1:
+                #print "SORT1 - %s" %(self.ElementType(self.elementType))
+                #print "SORT1"
+                format1 = 'i'  # SORT1
+                extract = self.extractSort1
+                #if self.analysisCode in [5]:
+                    #extract==self.extractSort2
+            else:  # values from IDENT   #@todo test this...
+                #print "SORT2"
+                #print "SORT2 - %s" %(self.ElementType(self.elementType))
+                if self.analysisCode in [2, 3, 4, 6, 7, 8, 11]:
+                    format1 = 'f'  # SORT2
+                    extract = self.extractSort2
+                elif self.analysisCode in [5]:
+                    format1 = 'f'
+                    extract = self.extractSort2
+                elif self.analysisCode in [1, 9, 10, 12]:
+                    format1 = 'f'  # SORT1
+                    extract = self.extractSort2
+                else:
+                    raise KeyError('invalid analysisCode...analysisCode=%s' %
+                                   (self.analysisCode))
+                ###
+                #eid = self.nonlinearFactor
         return (format1, extract)
 
     def readOUG_Data(self):
@@ -212,36 +296,39 @@ class OUG(object):
         #print self.dataCode
         #print "tfsCode=%s" %(tfsCode)
 
-        if self.tableCode == 1 and self.tableName in ['OUGV1', 'OUPV1']:    # displacement
-            if self.tableName == 'OUGV1':
-                assert self.tableName in ['OUGV1'], 'tableName=%s tableCode=%s\n%s' % (self.tableName, self.tableCode, self.codeInformation())
+        if self.tableCode == 1 and self.tableName in ['OUGV1', 'OUG1', 'OUPV1']:    # displacement
+            if self.tableName in ['OUGV1', 'OUG1']:
+                assert self.tableName in ['OUGV1', 'OUG1'], 'tableName=%s tableCode=%s\n%s' % (self.tableName, self.tableCode, self.codeInformation())
                 self.readOUG_Data_table1()
             else:  # 'OUPV1'
-                self.NotImplementedOrSkip('bad approach/table/format/sortCode=%s on %s-OUG table' % (self.atfsCode, self.tableName))
+                msg = ('bad approachCode=%s, tableCode=%s, formatCode-%s '
+                       'sortCode=%s on %s-OUG table' % (self.analysisCode,
+                        self.tableCode, self.formatCode, self.sortCode,
+                        self.tableName))
+                self.NotImplementedOrSkip(msg)
         elif self.tableCode == 1 and self.tableName in ['OUGATO2', 'OUGCRM2', 'OUGPSD2', 'OUGRMS2', 'OUGNO2', ]:    # displacement
             #assert self.tableName in ['OUGATO2','OUGCRM2','OUGPSD2','OUGRMS2','OUGNO2',],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
             self.readOUG_Data_table1()
         elif self.tableCode == 7:  # modes
-            if self.tableName == 'OUGV1':
-                assert self.tableName in ['OUGV1'], 'tableName=%s tableCode=%s\n%s' % (self.tableName, self.tableCode, self.codeInformation())
+            if self.tableName in ['OUGV1', 'OUG1']:
+                assert self.tableName in ['OUGV1', 'OUG1'], 'tableName=%s tableCode=%s\n%s' % (self.tableName, self.tableCode, self.codeInformation())
                 self.readOUG_Data_table7()
             else:
-                self.NotImplementedOrSkip('bad approach/table/format/sortCode=%s on %s-OUG table' % (self.atfsCode, self.tableName))
+                self.NotImplementedOrSkip('bad OUG table')
         elif self.tableCode == 10:  # velocity
-            if self.tableName == 'OUGV1':
-                assert self.tableName in ['OUGV1'], 'tableName=%s tableCode=%s\n%s' % (self.tableName, self.tableCode, self.codeInformation())
+            if self.tableName in ['OUGV1', 'OUG1']:
+                assert self.tableName in ['OUGV1', 'OUG1'], 'tableName=%s tableCode=%s\n%s' % (self.tableName, self.tableCode, self.codeInformation())
                 self.readOUG_Data_table10()
             else:
-                self.NotImplementedOrSkip('bad approach/table/format/sortCode=%s on %s-OUG table' % (self.atfsCode, self.tableName))
+                self.NotImplementedOrSkip('bad OUG table')
         elif self.tableCode == 11:  # Acceleration vector
-            if self.tableName == 'OUGV1':
-                assert self.tableName in ['OUGV1'], 'tableName=%s tableCode=%s\n%s' % (self.tableName, self.tableCode, self.codeInformation())
+            if self.tableName in ['OUGV1', 'OUG1']:
+                assert self.tableName in ['OUGV1', 'OUG1'], 'tableName=%s tableCode=%s\n%s' % (self.tableName, self.tableCode, self.codeInformation())
                 self.readOUG_Data_table11()
             else:
-                self.NotImplementedOrSkip('bad approach/table/format/sortCode=%s on %s-OUG table' % (self.atfsCode, self.tableName))
+                self.NotImplementedOrSkip('bad OUG table')
         else:
-            #self.log.debug('skipping approach/table/format/sortCode=%s on %s-OUG table' %(self.atfsCode,self.tableName))
-            self.NotImplementedOrSkip('bad approach/table/format/sortCode=%s on %s-OUG table' % (self.atfsCode, self.tableName))
+            self.NotImplementedOrSkip('bad OUG table')
         ###
         #print self.obj
 
@@ -260,18 +347,19 @@ class OUG(object):
             #print "nid = ",nid
         #sys.exit('thermal4...')
 
-    def readOUG_Data_table1(self):  # displacement / temperature OUGV1, OUPV1
+    def readOUG_Data_table1(self,debug=False):  # displacement / temperature OUGV1, OUPV1
         """
         OUGV1   - global coordinate system in sort 1
         OUPV1   - scaled response spectra in sort 1
         OUGPSD2 - PSD in sort 2
         OUGATO2 - auto-correlated in sort 2
         """
+        self.debug = debug
         isSkip = False
         if self.numWide == 8:  # real/random
             if self.thermal == 0:
                 #print self.dataCode
-                if self.tableName in ['OUGV1']:
+                if self.tableName in ['OUGV1', 'OUG1']:
                     resultName = 'displacements'
                     self.createTransientObject(self.displacements,
                                                DisplacementObject)
@@ -393,7 +481,9 @@ class OUG(object):
     def OUG_RealTable(self):
         dt = self.nonlinearFactor
         (format1, extract) = self.getOUG_FormatStart()
+        #format1 = 'f'
         format1 += 'i6f'
+        #print("format1 =",format1)
 
         #print "len(data) = ",len(self.data)
         while len(self.data) >= 32:  # 8*4
@@ -407,6 +497,8 @@ class OUG(object):
             #print "eType=%s" %(eType)
 
             dataIn = [eid2, gridType, tx, ty, tz, rx, ry, rz]
+            #if self.debug:
+            #    print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid, gridType, tx, ty, tz, rx, ry, rz))
             #print "%s" %(self.ElementType(self.elementType)),dataIn
             #print "%s" %(self.tableName),dataIn
             #eid = self.obj.addNewEid(out)
@@ -417,6 +509,7 @@ class OUG(object):
         dt = self.nonlinearFactor
 
         (format1, extract) = self.getOUG_FormatStart()
+        
         format1 += 'i12f'
         #print "format1 = ",format1
         isMagnitudePhase = self.isMagnitudePhase()

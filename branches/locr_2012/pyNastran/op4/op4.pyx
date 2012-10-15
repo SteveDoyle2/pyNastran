@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # {{{1 GNU Lesser General Public License
 # 
 # Copyright (C) 1999-2012  <al.danial@gmail.com>
@@ -39,14 +40,14 @@ Example:
     Loads the second and third matrices from the file sol103.op4 into K and M.
 
 Limitations (these will be resolved in future releases):
-    1. only handles dense matrices in text and binary op4 files
-    2. unable to byte-swap files created on a different-endian machine
-    3. unable to save Python arrays to new op4 files
+    1. unable to byte-swap files created on a different-endian machine
+    2. unable to save sparse Python arrays to op4 files
 """
 
 # Early version of op4.pyx was based on cython_wrapper.pyx from
 # https://gist.github.com/1249305 by Gael Varoquaux
 
+# cdef, ctypedef {{{1
 cdef extern from "stdio.h":
     cdef int SEEK_SET = 0
     ctypedef void* FILE
@@ -59,13 +60,37 @@ cdef extern from "stdlib.h":
     void free(void* ptr)
     void* malloc(size_t size)
 
+ctypedef struct str_t:
+    int     len         # Number of terms in the string (a complex     
+                        # number counts as a single term).             
+    int     start_row   # Zero based, so first row has start_row = 0.  
+    int     N_idx       # Index into N[] to first numeric term for this
+                        # string.                                      
+
+ctypedef struct SparseMatrix:
+    int     *magic              #
+    int     *H                  # size = SPARSE_HDR_SIZE 
+    int     *S_start            # size = # columns + 1   
+    int     *N_start            # size = # columns + 1   
+    str_t   *S                  # size = n_strings_total 
+    double  *N                  # size = n_nonzeros_total
+    char    *data               # main data block        
+
+ctypedef enum:
+    ROWS     = 0
+    COLS     = 1
+    n_STR    = 2
+    n_NONZ   = 3
+    COMPLX   = 4
+    DATA_SIZE= 5
+
 cdef extern from "string.h":
     void* memset(void *dest, int c, size_t n)
 #   void* memcpy(void *dest, void *src, size_t n)
 
 # Import the Python-level symbols of numpy
 import numpy as np
-from   scipy import sparse
+import scipy.sparse as SS
 
 # Import the C-level symbols of numpy
 cimport numpy as np
@@ -174,17 +199,17 @@ cdef int OP4_TXT_LINE_SIZE = 82
 DTYPE = np.float64
 FTYPE = np.float32
 ctypedef np.float64_t DTYPE_t
-
+ctypedef char         CHAR_t
+# 1}}}
 from libc.stdlib cimport free
 from cpython cimport PyObject, Py_INCREF
 import os
 
-# Numpy must be initialized. When using numpy from C or Cython you must
-# _always_ do that, or you will have segfaults
+# Initialize Numpy (failure to do so generates segfaults)
 np.import_array()
 
-# We need to build an array-wrapper class to deallocate our array when
-# the Python object is deleted.
+# Array-wrapper classes that can deallocate--on object deletion--arrays 
+# malloc'ed here.
 # types at http://cython.org/release/Cython-0.13/Cython/Includes/numpy.pxd
 cdef class ArrayWrapper_RS:                                # {{{1
     cdef void* data_ptr
@@ -619,7 +644,7 @@ class OP4:                                                 # {{{1
                 ndarray_J.base = <PyObject*> array_wrapper_J
                 Py_INCREF(array_wrapper_J)
 
-                All_Matrices.append( sparse.coo_matrix(
+                All_Matrices.append( SS.coo_matrix(
                     (ndarray, (ndarray_I ,ndarray_J)), 
                      shape=(self.nrow[i], self.ncol[i])) )
 
@@ -732,8 +757,13 @@ def Save(                                                  # {{{1
 
     cdef FILE* fp
     cdef int endian = 0
-    cdef int sparse = 0
-    cdef double *one_column
+    cdef int sparse_mat = 0
+    cdef int n_str_one_col, ptr_H, ptr_S_start, ptr_N_start, ptr_S, ptr_N, n_str, n_ptr, Ar_ptr, Ai_ptr
+    cdef double *one_column, *A
+    cdef int *start_ind, *str_len
+    cdef SparseMatrix m
+    cdef np.ndarray[np.int32_t, ndim=1] row_ind
+    cdef np.ndarray[np.int32_t, ndim=1] col_ind
 
     if 'digits' in kwargs: 
         digits = kwargs['digits']
@@ -746,6 +776,7 @@ def Save(                                                  # {{{1
 #   print('write to %s with digits=%d' % (     filename, digits))
 
     # assign a name to each unnamed matrix: M0000001 through M9999999
+#   print('args:'); print(args)
     for mat in args:
         i = 1
         while True:
@@ -759,19 +790,22 @@ def Save(                                                  # {{{1
 
     for name in kwargs:  # loop over the matrices
 
+#       print kwargs[name]
+#       print('----')
+#       print SS.issparse(kwargs[name])
         try:
 #           print('a %s' % name)
-            if sparse.issparse(kwargs[name]): 
+            if SS.issparse(kwargs[name]): 
 #               print('b')
-                sparse = 1
+                sparse_mat = 1
             else:                             
 #               print('c')
-                sparse = 0
+                sparse_mat = 0
         except:
 #           print('d')
-            sparse = 0
+            sparse_mat = 0
 
-        if (not sparse) and (type(kwargs[name]) is not np.ndarray):
+        if (not sparse_mat) and (type(kwargs[name]) is not np.ndarray):
             print('OP4.Save skipping %s, wrong type (%s)' % (
                 name, type(kwargs[name])))
             continue
@@ -810,15 +844,80 @@ def Save(                                                  # {{{1
         if (op4_type in [2,4]) and (2 <= digits <= 9): op4_type -= 1
 
         op4_wrt_header(fp, endian, name, nR, nC, op4_type, 
-                       op4_form, sparse, digits)
+                       op4_form, sparse_mat, digits)
 
         one_column = <DTYPE_t*>malloc(sizeof(double) * nR * npt)
 
-        # write each column
+        if sparse_mat:
+            print('Sparse matrix op4 save not yet implemented')
+            continue
+            sparse  = 2
+            nNZ     = 0   # mxGetNzmax(prhs[i])
+            Ar_ptr  = 0
+            Ai_ptr  = 0
+
+            if not nR*nC: # zero rows and/or columns; make null 1x1
+                nR      = 1
+                nC      = 1
+                complx  = 0
+                sparse  = 0
+
+            # Declare a tops native sparse matrix having only 1 column. 
+            # Assume worst case values for # strings, # non-zeros.  Have
+            # to declare a double to force alignment to multiple of 8.  
+            # This code duplicates code in the following functions:     
+            #  - src/sparce.c:sp_data_offsets()                         
+            #  - src/sparce.c:sp_set_header()                           
+            #  - src/sparce.c:sparse_overlay()                          
+            n_str_one_col = nR/2 + 1
+            ptr_H         =               4  # SPARSE_MAGIC_SIZE
+            ptr_S_start   = ptr_H       + 6  # SPARSE_HDR_SIZE
+            ptr_N_start   = ptr_S_start +     (1 + 1)  # nCol = 1
+            ptr_S         = ptr_N_start +     (1 + 1)  # nCol = 1
+            ptr_N         = ptr_S       + n_str_one_col*sizeof(str_t)/ \
+                                                        sizeof(int)
+            if ptr_N % 2: ptr_N += 1
+
+            size = (ptr_N)*sizeof(int) + npt*nR*sizeof(double)
+
+            A = <DTYPE_t*>malloc(sizeof(double) * size)
+            if A == NULL:
+                print('saveop4:  insufficient memory for matrix column')
+                return
+
+            m.data        = <char *>A
+            m.magic       = <int *> m.data
+            m.H           =             &m.magic[4] # SPARSE_MAGIC_SIZE
+            m.S_start     =             &m.magic[ptr_S_start]
+            m.N_start     =             &m.magic[ptr_N_start]
+            m.S           = <str_t  *>  &m.magic[ptr_S      ]
+            m.N           = <DTYPE_t *> &m.magic[ptr_N      ]
+
+            m.H[ROWS]     = nR
+            m.H[COLS]     =  1
+            m.H[n_STR]    = nR/2 + 1
+            m.H[n_NONZ]   = nR*npt
+            m.H[COMPLX]   = complx
+            m.H[DATA_SIZE]= size
+
+            start_ind = <int *> malloc(m.H[n_STR]*sizeof(int))
+            if start_ind == NULL:
+                print('saveop4:  insufficient memory for start_ind')
+                return
+            str_len   = <int *> malloc(m.H[n_STR]*sizeof(int))
+            if str_len == NULL:
+                print('saveop4:  insufficient memory for str_len')
+                return
+
         for c in xrange(nC):
-            if sparse:
-                print('sparse column %d' % c)
-                print kwargs[name].get_col(c)
+            print('column %d' % c)
+            if sparse_mat:
+                row_ind, col_ind = kwargs[name].getcol(c).nonzero()
+                # col_ind will always be an array of zeros since
+                # kwargs[name].getcol(c) returns a single column
+                col_values       = kwargs[name].getcol(c)
+                print('row_ind', row_ind)
+                print('col_val', col_values.data)
             else:  # dense
                 # probably a better way to make the column copies below
                 if   op4_type in [1,2]:

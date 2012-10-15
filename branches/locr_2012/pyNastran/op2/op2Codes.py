@@ -332,8 +332,6 @@ class Op2Codes(object):
                 stressWord = 'Stress'
             else:
                 stressWord = 'Strain'
-            ###
-        ###
 
         elementType = None
         if hasattr(self, 'elementType'):
@@ -579,7 +577,10 @@ class Op2Codes(object):
         if thermal is not None:
             msg += "  thermal      = %-3s %s\n" % (thermal, thermalWord)
         msg += "  numWide      = %-3s\n" % (self.numWide)
-        msg += "  iSubcase     = %-3s\n" % (self.iSubcase)
+        if hasattr(self,'iSubcase'):
+            msg += "  iSubcase     = %-3s\n" % (self.iSubcase)
+        else:
+            msg += "  ID           = %-3s\n" % (self.ID)
         #print msg
         return msg
 

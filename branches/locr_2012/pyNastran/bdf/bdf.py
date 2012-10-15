@@ -6,6 +6,7 @@ import sys
 import warnings
 
 from pyNastran.utils import list_print
+from pyNastran.general.object_introspection import list_attributes
 
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
@@ -79,6 +80,7 @@ from .bdfInterface.bdf_Reader import BDFReader
 from .bdfInterface.bdf_writeMesh import WriteMesh
 from .bdfInterface.bdf_cardMethods import CardMethods
 from .bdfInterface.crossReference import XrefMesh
+
 
 class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
           CardMethods, XrefMesh):
@@ -157,10 +159,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             'PBUSH', 'PBUSH1D',
             'PDAMP', 'PDAMP5', 'PDAMPT',
             'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBCOMP',
-            'PBEAML', # 'PBEAM3',
+            'PBEAML',  # 'PBEAM3',
 
             'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
-            'PSOLID', 'PLSOLID', 'PVISC','PRAC2D','PRAC3D',
+            'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
 
             # creep materials
             'CREEP',
@@ -218,7 +220,8 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             'DEQATN',
 
             # optimization cards
-            'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2', 'DVPREL1', 'DVPREL2',
+            'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2',
+            'DVPREL1', 'DVPREL2',
             'DOPTPRM', 'DVMREL1', 'DLINK', 'DRESP3',
 
             # sets
@@ -251,7 +254,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             ])
 
         caseControlCards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
-                            'TEMP', 'TSTEPNL', 'INCLUDE'])
+                                'TEMP', 'TSTEPNL', 'INCLUDE'])
         self.uniqueBulkDataCards = self.cardsToRead.difference(
             caseControlCards)
 
@@ -632,9 +635,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
                 #print "solValue = |%s|" %(solValue)
                 sol = solValue[3:].strip()
-
-                assert self.sol is None, ('cannot overwrite solution existing='
-                                          '|SOL %s| new =|%s|' % (self.sol, uline))
+                
+                if self.sol is not None:
+                    raise ValueError('cannot overwrite solution existing='
+                                    '|SOL %s| new =|%s|' % (self.sol, uline))
                 self.iSolLine = i
 
                 try:
@@ -957,7 +961,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             for iCard in xrange(nCards):
                 #if special:
                     #print "iCard = ",iCard
-                self.add_card(card, cardName, iCard=0, old_card_obj=None)
+                self.add_card(card, cardName, icard=0, old_card_obj=None)
                 #if self.foundEndData:
                 #    break
 
@@ -991,9 +995,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         """@see add_card"""
         warnings.warn('addCard has been deprecated; use add_card',
                       DeprecationWarning, stacklevel=2)
-        return self.add_card(card, cardName, iCard=iCard)
+        return self.add_card(card, cardName, icard=iCard,
+                             old_card_obj=oldCardObj)
 
-    def add_card(self, card, cardName, iCard=0, old_card_obj=None):
+    def add_card(self, card, cardName, icard=0, old_card_obj=None):
         """
         adds a card object to the BDF object.
         @param self
@@ -1002,7 +1007,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
           the list of the card fields -> ['GRID',1,2,]
         @param cardName
           the cardName -> 'GRID'
-        @param iCard
+        @param icard
           used when reading Nastran Free-Format (disabled)
         @param old_card_obj
           the last card object that was returned (type=BDFCard or None;
@@ -1032,10 +1037,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         #    self.log.debug(card)
         #    self.log.debug("*old_card_obj = \n%s" %(old_card_obj))
         #    self.log.debug("*cardObj = \n%s" %(cardObj))
-        #cardObj.applyOldFields(iCard)
+        #cardObj.applyOldFields(icard)
 
         try:
-            if self._auto_reject == True:
+            if self._auto_reject:
                 print('rejecting processed %s' % (card))
                 self.reject_cards.append(card)
             elif card == [] or cardName == '':
@@ -1926,3 +1931,164 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             raise
 
         return cardObj
+
+    def card_stats(self):
+        """
+        print stats for the BDF
+        @note
+          if a card is not supported and not added to the proper lists,
+          this method will fail
+        """
+        card_stats = ['params', 'nodes', 'points', 'elements',
+                      'rigidElements', 'properties', 'materials',
+                      'materialDeps', 'creepMaterials', 'coords',
+                      'mpcs', 'mpcadds',
+
+                      # dynamic cards
+                      'dareas', 'nlparms', 'tsteps', 'tstepnls',
+
+                      # direct matrix input - DMIG - dict
+                      'dmis', 'dmigs', 'dmijs', 'dmijis', 'dmiks',
+                      'dequations',
+
+                      # frequencies - dict
+                      'frequencies',
+
+                      # optimization - dict
+                      'dconstrs', 'desvars', 'ddvals', 'dlinks', 'dresps',
+                      'dvprels', 'dvmrels',
+
+                      # SESETx - dict
+                      'setsSuper',
+
+                      # tables
+                      'tables', 'randomTables',
+
+                      # methods
+                      'methods', 'cMethods',
+
+                      # aero
+                      'caeros', 'paeros', 'aero', 'aeros', 'aefacts',
+                      'aelinks', 'aelists', 'aeparams', 'aesurfs', 'aestats',
+                      'gusts', 'flfacts', 'flutters', 'splines',
+                      'trims',
+
+                      # thermal
+                      'bcs', 'thermalMaterials', 'phbdys',
+                      'convectionProperties',]
+
+        ignored_types = set([
+            'spoints', 'spointi',  # singleton
+            'gridSet',  # singleton
+            
+            'spcs', 'spcadds', 
+
+            # constraints - list
+            #self.constraints = {} # suport1, anything else???
+
+            'suports', # suport, suport1 - list
+
+            #self.spcObject2 = constraintObject2()
+            #self.mpcObject2 = constraintObject2()
+            'doptprm',  # singleton
+
+            # SETx - list
+            'sets', 'asets', 'bsets', 'csets', 'qsets',
+            ])
+
+        #all_params = list_attributes('public')
+        all_params = list_attributes(self)
+
+        ignored_types2 = set([
+                              'caseControlDeck','spcObject2', 'mpcObject2',
+                              
+                              # done
+                              'sol', 'loads', 'mkaeros', 
+                               'rejects', 'reject_cards ',
+
+                              # not cards
+                              'debug',  'executive_control_lines ',
+                              'case_control_lines', 'cardsToRead', 'cardCount',
+                              'isStructured', 'uniqueBulkDataCards', 
+                              'nCardLinesMax', 'modelType', 'includeDir',
+                              'cardsToWrite', 'solMethod', 'log', 'doneReading',
+                              'linesPack', 'lineNumbers', 'iSolLine', 
+                              'rejectCount', 'relpath', 'isOpened',
+                              'foundEndData', 'specialCards', 
+                              'infilesPack'])
+
+        # removing variables that are not supported
+        leftover_types = set(all_params)
+        leftover_types = leftover_types.difference(set(card_stats))
+        for attribute_name in ignored_types.union(ignored_types2):
+            try:
+                all_params.remove(attribute_name)
+                print('removing attribute_name=%s' % (attribute_name))
+            except ValueError:
+                pass
+
+        #assert len(leftover_types) == 0, 'leftover_types = %s' % (
+        #    str (leftover_types))
+
+
+
+        msg = ['---BDF Statistics---']
+        # sol
+        msg.append('SOL %s\n' %(self.sol))
+        
+        # loads
+        for lid, loads in sorted(self.loads.iteritems()):
+            msg.append('bdf.loads[%s]' %(lid))
+            groups = {}
+            for load in loads:
+                if load.type not in groups:
+                    groups[load.type] = 0
+                groups[load.type] += 1
+            for name, n in sorted(groups.iteritems()):
+                name2 = '%s:' % (name)
+                msg.append('  %-8s %s' % (name2, n))
+            msg.append('')
+
+        #mkaeros
+        if self.mkaeros:
+            msg.append('bdf:mkaeros')
+            name2 = 'MKAERO:' % (name)
+            msg.append('  %-8s %s' % (name2, len(self.mkaeros)))
+
+        for card_group_name in card_stats:
+            card_group = getattr(self, card_group_name)
+            groups = set([])
+            print("card_group_name = ", card_group_name)
+            if isinstance(card_group, list):
+                print("card_group_name = ", card_group_name)
+
+            for card in card_group.itervalues():
+                if isinstance(card, list):
+                    #print("card = ",card)
+                    #print("card_group = ",card_group)
+                    for card2 in card:
+                        groups.add(card2.type)
+                else:
+                    groups.add(card.type)
+
+            group_msg = []
+            for card_name in sorted(groups):
+                try:
+                    ncards = self.cardCount[card_name]
+                    name2 = '%s:' % (card_name)
+                    group_msg.append('  %-8s %s' % (name2, ncards))
+                except KeyError:
+                    assert card_name == 'CORD2R'
+            if group_msg:
+                msg.append('bdf.%s' % (card_group_name))
+                msg.append('\n'.join(group_msg))
+                msg.append('')
+
+        # rejects
+        if self.rejects:
+            msg.append('Rejected Cards')
+            for name, counter in sorted(self.cardCount.iteritems()):
+                if name not in self.cardsToRead:
+                    name2 = '%s:' % (name)
+                    msg.append('  %-8s %s' % (name2, counter))
+        return '\n'.join(msg)

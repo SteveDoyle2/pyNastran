@@ -96,7 +96,6 @@ class pyWidget(wxVTKRenderWindow):
 
         self.Update()
         self.Render()
-        ###
 
     def ShowHideScalarBar(self):
         if self.parent.nCases == 0:

@@ -101,30 +101,36 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             print("***NF = %s" % (self.nonlinearFactor))
             #print "DC = ",self.dataCode
 
-        if self.iSubcase in storageObj:
-            #print "updating dt..."
-            self.obj = storageObj[self.iSubcase]
-            #print "obj = ",self.obj.__class__.__name__
-            #print self.obj.writeF06(['',''],'PAGE ',1)[0]
+        if hasattr(self,'iSubcase'):
+            if self.iSubcase in storageObj:
+                #print "updating dt..."
+                self.obj = storageObj[self.iSubcase]
+                #print "obj = ",self.obj.__class__.__name__
+                #print self.obj.writeF06(['',''],'PAGE ',1)[0]
 
-            try:
-                self.obj.updateDataCode(self.dataCode)
-                #self.obj.updateDt(self.dataCode,self.nonlinearFactor)
-            except:
-                #try:
-                    #print "objName = ",self.obj.name()
-                #except:
-                    #print "objName = ",self.obj
-                raise
-            ###
+                try:
+                    self.obj.updateDataCode(self.dataCode)
+                    #self.obj.updateDt(self.dataCode,self.nonlinearFactor)
+                except:
+                    #try:
+                        #print "objName = ",self.obj.name()
+                    #except:
+                        #print "objName = ",self.obj
+                    raise
+            else:
+                #if self.isRegular:
+                    #self.obj = classObj(self.dataCode,not(self.isRegular),self.iSubcase,self.nonlinearFactor)
+                #else:
+                self.obj = classObj(self.dataCode, self.isSort1(
+                ), self.iSubcase, self.nonlinearFactor)
+                #print "obj2 = ",self.obj.__class__.__name__
+            storageObj[self.iSubcase] = self.obj
         else:
-            #if self.isRegular:
-                #self.obj = classObj(self.dataCode,not(self.isRegular),self.iSubcase,self.nonlinearFactor)
-            #else:
-            self.obj = classObj(self.dataCode, self.isSort1(
-            ), self.iSubcase, self.nonlinearFactor)
-            #print "obj2 = ",self.obj.__class__.__name__
-        storageObj[self.iSubcase] = self.obj
+            if self.ID in storageObj:
+                #print "updating dt..."
+                self.obj = storageObj[self.ID]
+            else:
+                storageObj[self.ID] = self.obj
         ###
 
     def createThermalTransientObject(self, resultName, objClass, isSort1):
@@ -185,8 +191,8 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             table3(iTable)
             self.dataCode['tableName'] = self.tableName
             ## developer parameter - Analysis/Table/Format/Sort Codes
-            self.atfsCode = [self.analysisCode, self.tableCode,
-                             self.formatCode, self.sortCode]
+            #self.atfsCode = [self.analysisCode, self.tableCode,
+            #                 self.formatCode, self.sortCode]
             #print "self.tellA = ",self.op2.tell()
 
             self.isMarker = False
@@ -203,7 +209,6 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 #self.n = self.markerStart
                 #self.op2.seek(self.n)
                 break
-            ###
             n = self.n
             #print self.printSection(100)
             self.readMarkers([iTable, 1, 0], tableName)
@@ -353,14 +358,12 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 #print "num=%s closest=%s iclose=%s" %(num,actualValue,iclose)
                 #print "B"
                 self.obj.deleteTransient(num)
-            ###
         else:  # read case
             self.dtMap[iSubcase][iclose] = num
             readCase = True
             #print "num=%s closest=%s iclose=%s" %(num,actualValue,iclose)
             #print self.dtMap
             #print "C"
-        ###
         #print "delta = ",delta,'\n'
         #print "readCase = ",readCase
         #if num>=0.14:
@@ -408,8 +411,8 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         if False:
             raise NotImplementedError(msg)
         else:
-            self.log.info("skipping...")
-            self.log.info("\n" + self.codeInformation())
+            #self.log.info("skipping...")
+            #self.log.info("\n" + self.codeInformation())
             self.skipOES_Element()
 
     def handleResultsBuffer3(self, f, resultName, debug=False):
@@ -442,13 +445,10 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                             % (type(self.data), type(data)))
                 sys.stdout.flush()
                 self.data += data
-            ###
             i += 1
             if i == 2000:
                 raise RuntimeError('Infinite Loop or a really big model...')
             #print "isBufferDone=%s" %(self.isBufferDone)
-        ###
-        #print "---------------------------------"
 
     def handleResultsBuffer(self, func, debug=False):
         """
@@ -540,7 +540,6 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             self.readScalarsOut(debug=False)
         else:
             self.skipOES_Element()
-        ###
 
     def readScalarsOut(self, debug=False):
         """
@@ -566,7 +565,6 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 self.log.debug("*out = %s" % (out))
             self.obj.add(out)
             n += nTotal
-        ###
         self.data = data[n:]
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalarsOut, debug=False)

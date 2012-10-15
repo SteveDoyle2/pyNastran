@@ -112,6 +112,9 @@ class OGF(object):
             msg = 'invalid analysisCode...analysisCode=%s' % (self.analysisCode)
             raise RuntimeError(msg)
 
+        if not self.isSort1():
+            raise NotImplementedError('sort2...')
+
         #print "*iSubcase=%s"%(self.iSubcase)
         #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
         #self.printBlock(data)
@@ -127,10 +130,7 @@ class OGF(object):
             assert self.tableName in ['OGPFB1'], 'tableName=%s tableCode=%s' % (self.tableName, self.tableCode)
             self.readOGF_Data_table19()
         else:
-            #self.log.debug('skipping approach/table/format/sortCode=%s on %s-OGF table' %(self.tableName,self.atfsCode))
-            self.NotImplementedOrSkip('bad approach/table/format/sortCode=%s on %s-OGF table' % (self.atfsCode, self.tableName))
-        ###
-        #print self.obj
+            self.NotImplementedOrSkip('bad OGF table')
 
     def readOGF_Data_table19(self):  # grid point forces
         #isSort1 = self.isSort1()
@@ -154,7 +154,6 @@ class OGF(object):
             #self.handleResultsBuffer3(self.OUG_ComplexTable)
         else:
             raise NotImplementedError('only numWide=10 or 16 is allowed  numWide=%s' % (self.numWide))
-        ###
 
     def readOGF_numWide10(self):
         dt = self.nonlinearFactor

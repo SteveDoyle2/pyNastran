@@ -122,7 +122,6 @@ class Geometry4(object):
             iFormat = bytes(iFormat)
             Gm = list(unpack(iFormat, eData))
             alpha, = unpack(b'f', data[-4:])
-        ###
         elem = RBE2(None, [eid, gn, cm, Gm, alpha])
         self.addRigidElement(elem)
         data = data[-1:]
@@ -175,7 +174,6 @@ class Geometry4(object):
             constraint = SPC(None, [sid, ID, c, dx])
             self.addConstraint_SPC(constraint)
             n += 20
-        ###
         data = data[n:]
 
     def readSPC1(self, data):
@@ -191,7 +189,6 @@ class Geometry4(object):
             constraint = SPC1(None, [sid, g, f, n1, n2])
             self.addConstraint_SPC(constraint)
             n += 20
-        ###
         data = data[n:]
 
     def readSPCADD(self, data):
@@ -210,7 +207,6 @@ class Geometry4(object):
             constraint = SPCD(None, [sid, ID, c, dx])
             self.addConstraint_SPC(constraint)
             n += 20
-        ###
         data = data[n:]
 
     def readSPCDE(self, data):
@@ -253,7 +249,6 @@ class Geometry4(object):
             suport = SUPORT(None, [sid, c])
             self.addSuport(suport)
             n += 8
-        ###
         data = data[n:]
 
     def readSUPORT1(self, data):

@@ -143,6 +143,9 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5)
 
+        if not self.isSort1():
+            raise NotImplementedError('sort2...')
+
         self.readTitle()
         #print "n4 = ",self.n
 
@@ -247,8 +250,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                                           'OSTR1X', 'OSTR1C'], '%s is not supported' % (self.tableName)
                 self.readOES_Data()
             else:
-                self.NotImplementedOrSkip(
-                    'invalid atfsCode=%s' % (self.atfsCode))
+                self.NotImplementedOrSkip('bad OES table')
         elif self.thermal == 1:
             self.OES_Thermal()
         else:
@@ -811,6 +813,19 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             else:
                 self.NotImplementedOrSkip()
 
+        elif self.elementType in [2189]:   # VUQUAD 189 ()
+            #print "    found QUAD4FD_139"
+            if self.numWide == numWideReal:
+                resultName = self.makeOES_Object(self.hyperelasticPlateStress, VUQuadObject, 'VUStress',
+                                                 self.hyperelasticPlateStrain, VUQuadObject, 'VUStrain')
+                self.handleResultsBuffer3(self.OES_QUAD4FD_139, resultName)
+            #elif self.numWide==numWideImag:
+            #    resultName = self.makeOES_Object(self.hyperelasticPlateStress,ComplexHyperelasticQuadObject,'hyperelasticPlateStress',
+            #                                     self.hyperelasticPlateStrain,ComplexHyperelasticQuadObject,'hyperelasticPlateStrain')
+            #    self.handleResultsBuffer3(self.OES_QUAD4FD_139,resultName)
+            else:
+                self.NotImplementedOrSkip()
+
         #elif self.elementType in [2,53,61,70,86,88,90,94,102,189,232,]:
             #elementType=53  -> TRIAX6  is not supported
             #elementType=61  -> DUM9    is not supported
@@ -834,7 +849,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             self.log.debug(msg)
             self.skippedCardsFile.write(msg)
             self.NotImplementedOrSkip()
-        ###
+
         #elif self.elementType == 1:    # crod     (done)
         #elif self.elementType == 2:    # cbeam    (done)
         #elif self.elementType == 3:    # ctube    (done)

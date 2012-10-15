@@ -51,7 +51,6 @@ class DYNAMICS(object):
             #(sid,p,c,a) = out
             darea = DAREA(data=out)
             self.addDArea(darea)
-        ###
 
     def readDelay(self, data):
         """DELAY(37,18,183) - Record 3"""

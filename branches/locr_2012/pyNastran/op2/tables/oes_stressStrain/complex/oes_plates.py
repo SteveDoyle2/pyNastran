@@ -43,6 +43,20 @@ class ComplexPlateStressObject(stressObject):
             self.addNewEid = self.addNewEidSort2
             self.addNewNode = self.addNewNodeSort2
 
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.oxx)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, fiberCurvature, oxx, oyy, txy\n')
+        return msg
+
     def addF06Data(self, data, transient):
         if transient is None:
             eType = data[0][0]
@@ -269,12 +283,7 @@ class ComplexPlateStressObject(stressObject):
                                 except:
                                     print("bad val = %s" % (val))
                                     raise
-                            ###
                         msg += '\n'
-                    ###
-                ###
-            ###
-        ###
         return msg
 
     def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
@@ -343,7 +352,6 @@ class ComplexPlateStressObject(stressObject):
                         for eid in eids:
                             out = self.writeF06_Tri3(eid)
                             msg.append(out)
-                    ###
                 elif eType in ['CTRIA3']:
                     for eid in eids:
                         out = self.writeF06_Tri3(eid)
@@ -364,8 +372,7 @@ class ComplexPlateStressObject(stressObject):
                     f.write(''.join(msg))
                     msg = ['']
                 pageNum += 1
-            ###
-        ###
+
         return (''.join(msg), pageNum - 1)
 
     def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
@@ -482,7 +489,6 @@ class ComplexPlateStressObject(stressObject):
                             if f is not None:
                                 f.write(''.join(msg))
                                 msg = ['']
-                    ###
                 elif eType in ['CTRIA3']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
@@ -707,6 +713,20 @@ class ComplexPlateStrainObject(strainObject):
             assert dt is not None
             self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
+
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.exx)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, fiberCurvature, exx, eyy, exy\n')
+        return msg
 
     def addF06Data(self, data, transient):
         if transient is None:
@@ -980,7 +1000,6 @@ class ComplexPlateStrainObject(strainObject):
                     else:
                         for eid in eids:
                             out = self.writeF06_Tri3(eid)
-                    ###
                 elif eType in ['CTRIA3']:
                     for eid in eids:
                         out = self.writeF06_Tri3(eid)
@@ -1000,8 +1019,7 @@ class ComplexPlateStrainObject(strainObject):
                     f.write(''.join(msg))
                     msg = ['']
                 pageNum += 1
-            ###
-        ###
+
         return (''.join(msg), pageNum - 1)
 
     def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
@@ -1138,9 +1156,6 @@ class ComplexPlateStrainObject(strainObject):
                 else:
                     raise NotImplementedError('eType = |%r|' %
                                               (eType))  # CQUAD8, CTRIA6
-                ###
-            ###
-        ###
         return (''.join(msg), pageNum - 1)
 
     def writeF06_Quad4_Bilinear(self, eid, n, isMagPhase):
@@ -1271,11 +1286,8 @@ class ComplexPlateStrainObject(strainObject):
 
     def __reprTransient__(self):
         msg = '---ISOTROPIC PLATE STRAIN---\n'
-        headers = self.getHeaders()
         msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
-        for header in headers:
-            msg += '%10s ' % (header)
-        msg += '\n'
+        msg += "".join(['%10s ' % (h) for h in self.getHeaders()]) + '\n'
 
         for dt, exx in sorted(self.exx.iteritems()):
             msg += '%s = %g\n' % (self.dataCode['name'], dt)
@@ -1283,8 +1295,7 @@ class ComplexPlateStrainObject(strainObject):
                 eType = self.eType[eid]
                 k = exxNodes.keys()
                 k.remove('C')
-                k.sort()
-                for nid in ['C'] + k:
+                for nid in ['C'] + sorted(k):
                     for iLayer in xrange(len(self.exx[dt][eid][nid])):
                         fd = self.fiberCurvature[eid][nid][iLayer]
                         exx = self.exx[dt][eid][nid][iLayer]
@@ -1293,13 +1304,9 @@ class ComplexPlateStrainObject(strainObject):
 
                         msg += '%-6i %6s %8s %7s %10g ' % (eid, eType,
                                                            nid, iLayer + 1, fd)
-                        vals = [exx, eyy, exy]
-                        for val in vals:
-                            if abs(val) < 1e-6:
-                                msg += '%10s ' % ('0.')
-                            else:
-                                msg += '%10.3g ' % (val)
-                            ###
+                        for val in [exx, eyy, exy]:
+                            msg += ('%10s ' % ('0.') if abs(val) < 1e-6 else
+                                '%10.3g ' % (val))
                         msg += '\n'
 
                         #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy)

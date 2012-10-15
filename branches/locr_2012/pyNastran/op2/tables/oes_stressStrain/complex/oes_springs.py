@@ -36,6 +36,20 @@ class ComplexCelasStressObject(complexStressObject):
             #self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
 
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.stress)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, stress\n')
+        return msg
+
     def deleteTransient(self, dt):
         del self.stress[dt]
 

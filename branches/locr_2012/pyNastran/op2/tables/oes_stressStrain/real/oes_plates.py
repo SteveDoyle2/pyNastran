@@ -50,6 +50,21 @@ class PlateStressObject(stressObject):
             self.addNewEid = self.addNewEidSort2
             self.addNewNode = self.addNewNodeSort2
 
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.oxx)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, fiberCurvature, oxx, oyy, txy, angle, '
+                   'majorP, minorP, ovmShear\n')
+        return msg
+
     def addF06Data(self, data, transient):
         if transient is None:
             eType = data[0][0]
@@ -69,9 +84,8 @@ class PlateStressObject(stressObject):
                 elif eType == 'CQUAD4':
                     #assert len(line)==19,'len(line)=%s' %(len(line))
                     if len(line) == 19:  # Centroid - bilinear
-                        (
-                            eType, eid, nid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
-                            f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                        (eType, eid, nid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
+                                          f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
                         if nid == 'CEN/4':
                             nid = 'C'
                         self.eType[eid] = eType
@@ -99,7 +113,7 @@ class PlateStressObject(stressObject):
                     elif len(line) == 17:  # Bilinear
                         #print line
                         (nid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
-                         f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                              f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
                         self.fiberCurvature[eid][nid] = [f1, f2]
                         self.oxx[eid][nid] = [ox1, ox2]
                         self.oyy[eid][nid] = [oy1, oy2]
@@ -319,12 +333,7 @@ class PlateStressObject(stressObject):
                                 except:
                                     print("bad val = %s" % (val))
                                     raise
-                            ###
                         msg += '\n'
-                    ###
-                ###
-            ###
-        ###
         return msg
 
     def writeMatlab(self, name, iSubcase, f=None, isMagPhase=False):
@@ -429,8 +438,6 @@ class PlateStressObject(stressObject):
                                               (eType))  # CQUAD8, CTRIA6
                 f.write(''.join(msg))
                 msg = []
-            ###
-        ###
 
     def writeMatlab_Tri3(self, eid):
         msg = ''
@@ -456,7 +463,7 @@ class PlateStressObject(stressObject):
 
     def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum)
+            return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
 
         if self.isVonMises():
             vonMises = 'VON MISES'
@@ -564,8 +571,6 @@ class PlateStressObject(stressObject):
                     f.write(''.join(msg))
                     msg = ['']
                 pageNum += 1
-            ###
-        ###
         return (''.join(msg), pageNum - 1)
 
     def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
@@ -667,7 +672,6 @@ class PlateStressObject(stressObject):
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid)
                                 msg.append(out)
-                    ###
                 elif eType in ['CTRIA3']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
@@ -697,13 +701,13 @@ class PlateStressObject(stressObject):
                 else:
                     raise NotImplementedError('eType = |%r|' %
                                               (eType))  # CQUAD8, CTRIA6
-                ###
+
                 msg.append(pageStamp + str(pageNum) + '\n')
                 if f is not None:
                     f.write(''.join(msg))
                     msg = ['']
                 pageNum += 1
-        ###
+
         return (''.join(msg), pageNum - 1)
 
     def writeF06_Quad4_Bilinear(self, eid, n):
@@ -732,9 +736,7 @@ class PlateStressObject(stressObject):
                     msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, oxx, oyy, txy, angle, major, minor, ovm)
                 else:
                     raise Exception('Invalid option for cquad4')
-                ###
-            ###
-        ###
+
         return msg
 
     def writeF06_Quad4_BilinearTransient(self, dt, eid, n):
@@ -764,9 +766,6 @@ class PlateStressObject(stressObject):
                 else:
                     #msg += '   %8s %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %('','',  fd,oxx,oyy,txy,angle,major,minor,ovm)
                     raise RuntimeError('Invalid option for cquad4')
-                ###
-            ###
-        ###
         return msg
 
     def writeF06_Tri3(self, eid):
@@ -789,9 +788,7 @@ class PlateStressObject(stressObject):
                     msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip())
                 else:
                     msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip())
-                ###
-            ###
-        ###
+
         return msg
 
     def writeF06_Tri3Transient(self, dt, eid):
@@ -814,9 +811,6 @@ class PlateStressObject(stressObject):
                     msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm)
                 else:
                     msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm)
-                ###
-            ###
-        ###
         return msg
 
     def __repr__(self):
@@ -857,11 +851,7 @@ class PlateStressObject(stressObject):
                             except:
                                 print("bad val = %s" % (val))
                                 raise
-                        ###
                     msg += '\n'
-                ###
-            ###
-        ###
         return msg
 
 
@@ -913,6 +903,21 @@ class PlateStrainObject(strainObject):
             assert dt is not None
             self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
+
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.exx)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, fiberCurvature, exx, eyy, exy, angle, '
+                   'majorP, minorP, evmShear\n')
+        return msg
 
     def addF06Data(self, data, transient):
         if transient is None:
@@ -977,7 +982,6 @@ class PlateStrainObject(strainObject):
                     else:
                         assert len(line) == 19, 'len(line)=%s' % (len(line))
                         raise NotImplementedError()
-                    ###
                 else:
                     msg = 'line=%s not supported...' % (line)
                     raise NotImplementedError(msg)
@@ -1227,7 +1231,6 @@ class PlateStrainObject(strainObject):
                     else:
                         for eid in eids:
                             out = self.writeF06_Tri3(eid)
-                    ###
                 elif eType in ['CTRIA3']:
                     for eid in eids:
                         out = self.writeF06_Tri3(eid)
@@ -1397,7 +1400,7 @@ class PlateStrainObject(strainObject):
                 elif iLayer == 1:
                     msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
                 else:
-                    raise Exception('Invalid option for cquad4')
+                    raise RuntimeError('Invalid option for cquad4')
         return msg
 
     def writeF06_Quad4_BilinearTransient(self, dt, eid, n):
@@ -1426,7 +1429,7 @@ class PlateStrainObject(strainObject):
                 elif iLayer == 1:
                     msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
                 else:
-                    raise Exception('Invalid option for cquad4')
+                    raise RuntimeError('Invalid option for cquad4')
         return msg
 
     def writeF06_Tri3(self, eid):
@@ -1469,9 +1472,13 @@ class PlateStrainObject(strainObject):
                 ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = self.writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
                 ([angle], isAllZeros) = self.writeFloats8p4F([angle])
                 if iLayer == 0:
-                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, exx, eyy, exy, angle, major, minor, evm)
+                    msg += ('0  %6i   %13s     %13s  %13s  %13s   %8s   '
+                            '%13s   %13s  %-s\n' % (eid, fd, exx, eyy, exy,
+                                                    angle, major, minor, evm))
                 else:
-                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, exx, eyy, exy, angle, major, minor, evm)
+                    msg += ('   %6s   %13s     %13s  %13s  %13s   %8s   '
+                            '%13s   %13s  %-s\n' % ('', fd, exx, eyy, exy,
+                                                    angle, major, minor, evm))
         return msg
 
     def __repr__(self):
@@ -1506,13 +1513,9 @@ class PlateStrainObject(strainObject):
                             msg += '%10s ' % ('0.')
                         else:
                             msg += '%10.3g ' % (val)
-                        ###
                     msg += '\n'
 
                     #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy,evm)
-                ###
-            ###
-        ###
         return msg
 
     def __reprTransient__(self):
@@ -1546,8 +1549,9 @@ class PlateStrainObject(strainObject):
                                 msg += '%10s ' % ('0.')
                             else:
                                 msg += '%10.3g ' % (val)
-                            ###
                         msg += '\n'
 
-                        #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy,evm)
+                        #msg += ('eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g '
+                        #        'eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n'
+                        #      % (eid, eType, nid, iLayer, exx, eyy, exy, evm))
         return msg

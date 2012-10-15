@@ -38,7 +38,6 @@ class ComplexForces(object):
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
-        ###
         #print self.rodForces
 
     def OEF_Beam_alt(self):  # 2-CBEAM
@@ -102,7 +101,6 @@ class ComplexForces(object):
                 #else: pass
 
             #print "len(data) = ",len(self.data)
-        ###
         #print self.beamForces
 
     def OEF_Shear_alt(self):  # 4-CSHEAR
@@ -164,7 +162,6 @@ class ComplexForces(object):
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
-        ###
         #print self.shearForces
 
     def OEF_Spring_alt(self):  # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
@@ -194,7 +191,6 @@ class ComplexForces(object):
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
-        ###
         #print self.springForces
 
     def OEF_CVisc_alt(self):  # 24-CVISC
@@ -226,7 +222,6 @@ class ComplexForces(object):
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
-        ###
         #print self.viscForces
 
     def OEF_CBar_alt(self):  # 34-CBAR
@@ -271,7 +266,6 @@ class ComplexForces(object):
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
-        ###
         #print self.barForces
 
     def OEF_Plate_alt(self):  # 33-CQUAD4,74-CTRIA3
@@ -316,7 +310,6 @@ class ComplexForces(object):
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
-        ###
         #print self.plateForces
 
     def OEF_Plate2_alt(self):  # 64-CQUAD8,70-CTRIAR,75-CTRIA6,82-CQUAD8,144-CQUAD4-bilinear
@@ -331,7 +324,6 @@ class ComplexForces(object):
             nNodes = 5
         else:
             raise NotImplementedError(self.codeInformation())
-        ###
 
         allFormat = '17f'
         format1 = bytes(format1)
@@ -404,8 +396,6 @@ class ComplexForces(object):
 
                 self.obj.add(eid2, dt, dataIn)
                 #print "len(data) = ",len(self.data)
-            ###
-        ###
         #print self.plateForces2
 
     def OEF_Bend_alt(self):  # 69-CBEND
@@ -467,7 +457,6 @@ class ComplexForces(object):
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
-        ###
         #print self.bendForces
 
     def OEF_PentaPressure_alt(self):  # 76-CHEXA_PR,77-CPENTA_PR,78-CTETRA_PR
@@ -509,7 +498,6 @@ class ComplexForces(object):
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
-        ###
         #print self.bendForces
 
     def OEF_CBush_alt(self):  # 102-CBUSH
@@ -550,7 +538,6 @@ class ComplexForces(object):
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
-        ###
         #print self.bushForces
 
     def OEF_Force_VU_alt(self):  # 191-VUBEAM
@@ -615,10 +602,6 @@ class ComplexForces(object):
             #eid = self.obj.addNewEid(out)
             self.obj.add(nNodes, dt, dataIn)
             #print "len(data) = ",len(self.data)
-        ###
-        if self.makeOp2Debug:
-            print("done with OEF_Force_VU")
-        #print(self.force_VU)
 
     def OEF_Force_VUTRIA_alt(self):  # 189-VUQUAD,190-VUTRIA
         dt = self.nonlinearFactor
@@ -679,7 +662,7 @@ class ComplexForces(object):
 
                 out2 = [vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx]
                 forces.append(out2)
-            ###
+
             dataIn.append(forces)
             #print "eType=%s" %(eType)
 
@@ -689,7 +672,3 @@ class ComplexForces(object):
             #eid = self.obj.addNewEid(out)
             self.obj.add(nNodes, dt, dataIn)
             #print "len(data) = ",len(self.data)
-        ###
-        if self.makeOp2Debug:
-            print("done with OEF_Force_VUTRIA")
-        #print(self.force_VU_2D)

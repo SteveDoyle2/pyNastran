@@ -45,7 +45,9 @@ class OPG(object):
         self.addDataParameter(data, 'formatCode', 'i', 9, False)
 
         ## number of words per entry in record
-        ## @note is this needed for this table ???        self.addDataParameter(data, 'numWide', 'i', 10, False)
+        ## @note is this needed for this table ???
+        self.addDataParameter(data, 'numWide', 'i', 10, False)
+        
         ## undefined in DMAP...
         self.addDataParameter(data, 'oCode', 'i', 11, False)
         ## thermal flag; 1 for heat transfer, 0 otherwise
@@ -116,7 +118,7 @@ class OPG(object):
         else:
             raise RuntimeError('invalid analysisCode...analysisCode=%s' %
                                (self.analysisCode))
-        ###
+
         # tCode=2
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set, Mode number
@@ -130,9 +132,6 @@ class OPG(object):
 
     def readOPG_Data(self):
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
-        #tfsCode = [self.tableCode,self.formatCode,self.sortCode]
-        self.atfsCode = [self.analysisCode, self.tableCode,
-                         self.formatCode, self.sortCode]
 
         if self.tableCode == 19:
             assert self.tableName in [None], 'tableName=%s tableCode=%s' % (
@@ -182,8 +181,8 @@ class OPG(object):
         #elif tfsCode==[55,3,3]:
         #    self.readOPG_Data_format3_sort3()
         else:
-            self.NotImplementedOrSkip('bad tableCode/formatCode/sortCode=%s on %s-OPG table' % (self.atfsCode, self.tableName))
-        ###
+            self.NotImplementedOrSkip('bad OPG table')
+
         #print self.obj
 
     def readOPG_Data_table2(self):  # Load Vector

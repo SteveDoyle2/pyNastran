@@ -97,7 +97,6 @@ class stressObject(OES_Object):
                            (self.dataCode['name'], dt, self.elementName))
             self.dt = dt
             self.addNewTransient(dt)
-        ###
 
     def isStrain(self):
         return True

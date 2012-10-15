@@ -127,8 +127,7 @@ class OES(object):
             if isinstance(out[5], int):
                 data.append(out[5:])
             self.i += 1
-            ###
-        ###
+
         return data
 
     def getBarStress(self):
@@ -359,23 +358,22 @@ class OES(object):
         data = []
         while 1:
             line = self.infile.readline()[1:].strip().split()
-            if 'PAGE' in line:
+            if 'PAGE' in line or '***' in line:
                 break
             #print line
             dataTypes = [int, float, float, float, float,
                          float, float, float, float]
             sline = self.parseLine(line, dataTypes)  # line 1
-            #print sline
+            #print 'sline',sline
             sline = eType + sline
             data.append(sline)
             line = self.infile.readline()[1:].strip().split()
-            #print line
+            #print '***',line
             dataTypes = [float, float, float, float,
                          float, float, float, float]
             sline += self.parseLine(line, dataTypes)  # line 2
             data.append(sline)
             self.i += 2
-
         return data
 
     def getQuadStress(self):
@@ -577,7 +575,7 @@ class OES(object):
             elif '' is not sline[0]:
                 sline = [eType] + sline
             data.append(sline)
-        ###
+
         return data
 
     def makeStressBits(self, isFiberDistance=False, isMaxShear=True, isStrain=True, isRodOrSolid=False):

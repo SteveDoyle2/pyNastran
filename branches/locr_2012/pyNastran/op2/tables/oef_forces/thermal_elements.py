@@ -53,7 +53,6 @@ class ThermalElements(object):
                 self.OEF_CONV, resultName='thermalLoad_CONV')
         else:
             self.NotImplementedOrSkip()
-        ###
 
     def OEF_CHBDYx(self):  # [107,108,109]  CHBDYE, CHBDYG, CHBDYP
         if self.makeOp2Debug:
@@ -125,7 +124,7 @@ class ThermalElements(object):
             #print "heatFlux %s" %(self.ElementType(self.elementType)),dataIn
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
-        ###
+
         if self.makeOp2Debug:
             print("done with OEF_CONV")
         #print(self.thermalLoad_CHBDY)
@@ -154,7 +153,7 @@ class ThermalElements(object):
             format1 = 'fii4sii'  # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
-        ###
+
         formatAll = 'iffffff'
         format1 = bytes(format1)
         formatAll = bytes(formatAll)

@@ -671,8 +671,8 @@ class Subcase(object):
 
     def subcase_sorted(self, lst):
         """
-        does a "smart" sort on the keys such that SET cards increment in
-        numerical order.
+        Does a "smart" sort on the keys such that SET cards increment in
+        numerical order.  Also puts the sets first.
         @param self
           the subcase object
         @param lst
@@ -715,7 +715,7 @@ class Subcase(object):
             setList.append(setDict[key])
 
         # combine all the cards
-        listB = listBefore + setList + listAfter
+        listB =  setList + listBefore + listAfter
         return listB
 
     def __repr__(self):

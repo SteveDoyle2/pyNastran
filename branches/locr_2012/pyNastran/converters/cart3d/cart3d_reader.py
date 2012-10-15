@@ -4,12 +4,12 @@ from math import ceil, sqrt
 from itertools import izip
 from numpy import array
 
-#from pyNastran.utils import list_print
 from struct import unpack
+from pyNastran.bdf.fieldWriter import printCard
 from pyNastran.op2.fortranFile import FortranFile
 from pyNastran.utils import is_binary
 from pyNastran.utils.log import get_logger
-
+#from pyNastran.utils import list_print
 
 
 def convertToFloat(svalues):
@@ -441,8 +441,7 @@ class Cart3DAsciiReader(object):
                 V[pointNum + 1] = rhoV / rho
                 W[pointNum + 1] = rhoW / rho
                 #print "pt=%s i=%s Cp=%s p=%s" %(pointNum,i,sline[0],p)
-            ###
-        ###
+
         loads = {}
         if Cp:
             loads['Cp'] = Cp
@@ -453,7 +452,6 @@ class Cart3DAsciiReader(object):
             loads['V'] = V
             loads['W'] = W
         return loads
-    ###
 
     def getList(self, sline):
         """Takes a list of strings and converts them to floats."""
@@ -468,16 +466,12 @@ class Cart3DAsciiReader(object):
         """Converts a string to a float."""
         value = float(sline[1])
         return value
-    ###
 
     def exportToNastran(self, fname, points, elements, regions):
-        from pyNastran.bdf.fieldWriter import printCard
-
         f = open(fname, 'wb')
         for nid, grid in enumerate(1, points):
             (x, y, z) = grid
             f.write(printCard(['GRID', nid, '', x, y, z]))
-        ###
 
         e = 1e7
         nu = 0.3
@@ -487,12 +481,10 @@ class Cart3DAsciiReader(object):
         for pidMid in setRegions:
             f.write(printCard(['MAT1', pidMid, e, g, nu]))
             f.write(printCard(['PSHELL', pidMid, pidMid, thickness]))
-        ###
 
         for eid, (nodes, region) in enumerate(1, izip(elements, regions)):
             (n1, n2, n3) = nodes
             f.write(printCard(['CTRIA3', eid, region, n1, n2, n3]))
-        ###
         f.close()
 
 #------------------------------------------------------------------
@@ -737,7 +729,6 @@ class Cart3DBinaryReader(FortranFile, Cart3DAsciiReader):
                 nodes[n] = node
                 n -= 1
                 np += 1
-            ###
             size = 0
 
         #for p,point in sorted(nodes.iteritems()):
@@ -799,7 +790,6 @@ class Cart3DBinaryReader(FortranFile, Cart3DAsciiReader):
                 elements[e] = element
                 e -= 1
                 ne += 1
-            ###
             size = 0
 
         #for p,point in sorted(nodes.iteritems()):
@@ -853,7 +843,6 @@ class Cart3DBinaryReader(FortranFile, Cart3DAsciiReader):
                 regions[r] = regionData.pop()
                 r -= 1
                 nr += 1
-            ###
             size = 0
 
         self.op2.read(4)  # end of regions (fourth) block

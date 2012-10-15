@@ -12,9 +12,12 @@ from struct import unpack
 class RealElementsStressStrain(object):
 
     def skipOES_Element(self):
-        self.log.debug('skipping approach/table/format/sortCode=%s on %s table' % (self.atfsCode, self.tableName))
-        #print 'skipping approach/table/format/sortCode=%s on %s table' % (self.atfsCode,self.tableName)
-        #print self.codeInformation()
+        self.log.debug('skipping approachCode=%s, tableCode=%s, formatCode-%s '
+                       'sortCode=%s on %s table' % (self.analysisCode,
+                       self.tableCode, self.formatCode, self.sortCode,
+                       self.tableName))
+        #print(self.codeInformation())
+        #asdf
         self.handleResultsBuffer3(self.dummyPass, None, debug=True)
 
     def dummyPass(self):
@@ -42,7 +45,6 @@ class RealElementsStressStrain(object):
 
             #print "eid=%i axial=%i torsion=%i" % (eid,axial,torsion)
             #print "len(data) = ",len(self.data)
-        ###
         #print self.rodStress[self.iSubcase]
 
     def OES_basicElement(self):
@@ -159,7 +161,6 @@ class RealElementsStressStrain(object):
 
             #self.printSection(100)
             #self.dn += 348
-        ###
 
     def OES_CBAR_34(self):
         dt = self.nonlinearFactor
@@ -280,7 +281,6 @@ class RealElementsStressStrain(object):
             #self.printBlock(self.data[1:100])
             #self.printBlock(self.data[2:100])
             #self.printBlock(self.data[3:100])
-        ###
 
     def OES_CTRIA3_74(self):
         """
@@ -406,7 +406,6 @@ class RealElementsStressStrain(object):
             #self.printBlock(self.data[1:100])
             #self.printBlock(self.data[2:100])
             #self.printBlock(self.data[3:100])
-        ###
         #print self.solidStress[self.iSubcase]
 
     def OES_field1(self):
@@ -431,10 +430,8 @@ class RealElementsStressStrain(object):
             else:
                 raise NotImplementedError('invalid SORT2 analysisCode=%s' %
                                           (self.analysisCode))
-            ###
         else:
             raise NotImplementedError('invalid SORTx code')
-        ###
 
     def OES_CTRIAX6_53(self):
         #(Format1,scaleValue) = self.OES_field1()
@@ -642,7 +639,6 @@ class RealElementsStressStrain(object):
                              t2z, angle, major, minor, ovm)
             self.eid2 = eid
             #self.dn += 348
-        ###
         #print "3 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
 
     def OES_QUAD4FD_139(self):  # hyperelastic
@@ -724,8 +720,6 @@ class RealElementsStressStrain(object):
                                     sy1, txy1, angle1, major1, minor1, vm1)
                 self.obj.add(eid, grid, fd2, sx2, sy2,
                              txy2, angle2, major2, minor2, vm2)
-            ###
-        ###
 
     def OES_CQUAD4_144(self):  # works
         """
@@ -806,7 +800,6 @@ class RealElementsStressStrain(object):
 
             #self.printSection(100)
             #self.dn += 348
-        ###
        # elif self.numWide==77:
        #     while len(self.data) >= 308: # 2+15*5 = 77 -> 77*4 = 308
        #         (eid,_) = unpack(b'i4s',self.data[0:8])
@@ -843,3 +836,55 @@ class RealElementsStressStrain(object):
        #                   fd2,sx2,sy2,txy2) = out
        # else:
        #     raise NotImplementedError('invalid numWide')
+
+
+    def OES_VUQUAD_189(self):
+        if self.elementType == 144:  # CQUAD4
+            nTotal = 440  # 6+(33-7)*4 =  -> 110*4 = 440
+            nNodes = 4    # 4 corner points
+            eType = 'CQUAD4'
+        #elif self.elementType == 64:  # CQUAD8
+            #nTotal = 348  # 2+17*5 = 87 -> 87*4 = 348
+            #nNodes = 4    # centroid + 4 corner points
+            #eType = 'CQUAD8'
+        #elif self.elementType == 82:  # CQUADR
+            #nTotal = 348  # 2+17*5 = 87 -> 87*4 = 348
+            #nNodes = 4    # centroid + 4 corner points
+            #eType = 'CQUAD4'  ## @todo write the word CQUADR
+        #elif self.elementType == 75:  # CTRIA6
+            #nTotal = 280  # 2+17*3 = 70 -> 70*4 = 280
+            #nNodes = 3    # centroid + 3 corner points
+            #eType = 'CTRIA6'
+        #elif self.elementType == 70:  # CTRIAR
+            #nTotal = 280  # 2+17*3 = 70 -> 70*4 = 280
+            #nNodes = 3    # centroid + 3 corner points
+            #eType = 'CTRIAR'  ## @todo write the word CTRIAR
+        else:
+            raise NotImplementedError('elementType=%s nTotal not defined...'
+                                      % (self.elementType))
+
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+        format1 += '2i4s2i'
+        format1 = bytes(format1)
+
+        while len(self.data) >= nTotal:
+            (eid, parent, coord, icord, theta, itype) = unpack(b'i4s', self.data[0:8])
+            self.data = self.data[8:]  # 2
+            eid = extract(eid, dt)
+            eData = self.data[0:68]
+            self.data = self.data[68:]
+            out = unpack(format1, eData)  # len=17*4
+            self.obj.addNewNode(dt, eid, parent, coord, icord, theta, itype)
+            
+            self.obj.addNewEid(eType, dt, eid, parent, coord, icord, theta, itype)
+            for nodeID in xrange(nNodes):  # nodes pts
+                eData = self.data[0:68]
+                self.data = self.data[68:]
+                out = unpack(b'i16f', eData)
+                (vuid, dummy, dummy2, msx, msy, mxy, dummy3, dummy4, dummy5,
+                 bcx, bcy, bcxy,tyz,tzx,dummy6,dummy7,dummy8) = out
+                self.obj.add(vuid, dummy, dummy2, msx, msy, mxy,
+                             dummy3, dummy4, dummy5,
+                             bcx, bcy, bcxy,tyz,tzx,
+                             dummy6,dummy7,dummy8)

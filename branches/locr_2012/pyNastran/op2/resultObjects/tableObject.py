@@ -25,11 +25,23 @@ class TableObject(scalarObject):  # displacement style table
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
-        ###
+
+    def get_stats(self):
+        ngrids = len(self.gridTypes)
+        
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.translations)
+            msg.append('  type=%s ntimes=%s ngrids=%s\n'
+                       % (self.__class__.__name__, ntimes, ngrids))
+        else:
+            msg.append('  type=%s ngrids=%s\n' % (self.__class__.__name__,
+                                                  ngrids))
+        msg.append('  translations, rotations, gridTypes\n')
+        return msg
 
     def isImaginary(self):
         return False
@@ -41,7 +53,6 @@ class TableObject(scalarObject):  # displacement style table
                 self.gridTypes[nodeID] = gridType
                 self.translations[nodeID] = array([t1, t2, t3])
                 self.rotations[nodeID] = array([r1, r2, r3])
-            ###
             return
 
         (dtName, dt) = transient
@@ -54,16 +65,16 @@ class TableObject(scalarObject):  # displacement style table
             self.gridTypes[nodeID] = gridType
             self.translations[dt][nodeID] = array([t1, t2, t3])
             self.rotations[dt][nodeID] = array([r1, r2, r3])
-        ###
 
     def updateDt(self, dataCode, dt):
         self.dataCode = dataCode
         self.applyDataCode()
         if dt is not None:
-            self.log.debug("updating %s...%s=%s  iSubcase=%s" % (self.dataCode['name'], self.dataCode['name'], dt, self.iSubcase))
+            self.log.debug("updating %s...%s=%s  iSubcase=%s"
+                        % (self.dataCode['name'], self.dataCode['name'],
+                           dt, self.iSubcase))
             self.dt = dt
             self.addNewTransient(dt)
-        ###
 
     def deleteTransient(self, dt):
         del self.translations[dt]
@@ -147,7 +158,6 @@ class TableObject(scalarObject):  # displacement style table
             #(rx,ry,rz) = rotation
             #grid = nodeID*10+deviceCode
             #msg += pack('iffffff',grid,dx,dy,dz,rx,ry,rz)
-        ###
         #return msg
 
     #def writeOp2Transient(self,block3,deviceCode=1):
@@ -169,8 +179,6 @@ class TableObject(scalarObject):  # displacement style table
     #
     #            grid = nodeID*10+deviceCode
     #            msg += pack('iffffff',grid,dx,dy,dz,rx,ry,rz)
-    #        ###
-    #    ###
     #    return msg
 
     def writeHeader(self):
@@ -204,7 +212,6 @@ class TableObject(scalarObject):  # displacement style table
                     rotation = self.rotations[dt][nodeID]
                     translations2[nodeID][dt] = translation
                     rotations2[nodeID][dt] = rotation
-                ###
         else:
             return (self.translations, self.rotations)
             #for nodeID,translation in sorted(self.translations.iteritems()):
@@ -255,8 +262,7 @@ class TableObject(scalarObject):  # displacement style table
                 msgT += '\n%s' % (spaceT)
                 msgR += '\n%s' % (spaceR)
                 i = 0
-            ###
-        ###
+
         msgG += "'];\n"
         msgT += '];\n'
         msgR += '];\n'
@@ -317,15 +323,13 @@ class TableObject(scalarObject):  # displacement style table
                     msgT += '\n'
                     msgR += '\n'
                     i = 0
-                ###
-            ###
+
             msgT += '];\n'
             msgR += '];\n'
             f.write(msgT)
             f.write(msgR)
             msgT = ''
             msgR = ''
-        ###
 
     def _writeF06Block(self, words, header, pageStamp, pageNum=1, f=None):
         msg = words
@@ -340,9 +344,9 @@ class TableObject(scalarObject):  # displacement style table
             (vals2, isAllZeros) = self.writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
-            ###
-        ###
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n'
+                        % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+
         msg.append(pageStamp + str(pageNum) + '\n')
         if f is not None:
             f.write(''.join(msg))
@@ -371,8 +375,7 @@ class TableObject(scalarObject):  # displacement style table
                 if not isAllZeros:
                     [dx, dy, dz, rx, ry, rz] = vals2
                     msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
-                ###
-            ###
+
             msg.append(pageStamp + str(pageNum) + '\n')
             if f is not None:
                 f.write(''.join(msg))
@@ -467,7 +470,8 @@ class TableObject(scalarObject):  # displacement style table
         @todo fix alphaLegend; test options more...
         """
         (results, nodeList, markers, Title, xLabel, yLabel) = getPlotData(
-            self, nodeList, resultType, coord, markers, Title, hasLegend, Legend, xLabel, yLabel)
+            self, nodeList, resultType, coord, markers, Title, hasLegend,
+            Legend, xLabel, yLabel)
 
         i = 0
         Labels = []
@@ -524,12 +528,24 @@ class ComplexTableObject(scalarObject):
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
-        ###
 
+    def get_stats(self):
+        ngrids = len(self.gridTypes)
+        msg = self.get_data_code()
+
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.translations)
+            msg.append('  imaginary type=%s ntimes=%s ngrids=%s\n'
+                       % (self.__class__.__name__, ntimes, ngrids))
+        else:
+            msg.append('  imaginary type=%s ngrids=%s\n'
+                       % (self.__class__.__name__, ngrids))
+        msg.append('  translations, rotations, gridTypes\n')
+        return msg
+            
     def isImaginary(self):
         return True
 
@@ -540,7 +556,6 @@ class ComplexTableObject(scalarObject):
                 self.gridTypes[nodeID] = gridType
                 self.translations[self.dt][nodeID] = [v1, v2, v3]  # dx,dy,dz
                 self.rotations[self.dt][nodeID] = [v4, v5, v6]  # rx,ry,rz
-            ###
             return
 
         (dtName, dt) = transient
@@ -553,7 +568,6 @@ class ComplexTableObject(scalarObject):
             self.gridTypes[nodeID] = gridType
             self.translations[self.dt][nodeID] = [v1, v2, v3]  # dx,dy,dz
             self.rotations[self.dt][nodeID] = [v4, v5, v6]  # rx,ry,rz
-        ###
 
     def updateDt(self, dataCode, dt):
         self.dataCode = dataCode
@@ -561,7 +575,6 @@ class ComplexTableObject(scalarObject):
         if dt is not None:
             self.log.debug("updating %s...%s=%s  iSubcase=%s" % (self.dataCode['name'], self.dataCode['name'], dt, self.iSubcase))
             self.addNewTransient(dt)
-        ###
 
     def deleteTransient(self, dt):
         del self.translations[dt]
@@ -592,7 +605,6 @@ class ComplexTableObject(scalarObject):
         self.gridTypes[nodeID] = self.recastGridType(gridType)
         self.translations[nodeID] = [v1, v2, v3]  # dx,dy,dz
         self.rotations[nodeID] = [v4, v5, v6]  # rx,ry,rz
-    ###
 
     def addSort1(self, dt, out):
         (nodeID, gridType, v1, v2, v3, v4, v5, v6) = out
@@ -676,14 +688,11 @@ class ComplexTableObject(scalarObject):
                     msgT += '\n'
                     msgR += '\n'
                     i = 0
-                ###
-            ###
+
             msgT += '];\n'
             msgR += '];\n'
             f.write(msgT)
             f.write(msgR)
-            ###
-        ###
 
     def _writeF06Block(self, words, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         #words += self.getTableMarker()
@@ -709,7 +718,7 @@ class ComplexTableObject(scalarObject):
             msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
             msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %
                        ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
-        ###
+
         msg.append(pageStamp + str(pageNum) + '\n')
         if f is not None:
             f.write(''.join(msg))
@@ -746,7 +755,7 @@ class ComplexTableObject(scalarObject):
                 if not isAllZeros:
                     msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
                     msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
-            ###
+
             msg.append(pageStamp + str(pageNum) + '\n')
             if f is not None:
                 f.write(''.join(msg))
@@ -795,7 +804,7 @@ class ComplexTableObject(scalarObject):
                     val = sqrt(res.dot(res))
                 else:
                     val = res[coord]
-                ###
+
                 mag = abs(val)
                 phase = angle(val, deg=True)
                 Ys.append(val)

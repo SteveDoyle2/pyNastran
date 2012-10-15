@@ -215,14 +215,13 @@ class ComplexElementsStressStrain(object):
                 #self.printBlock(self.data)
                 self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1, txy1)
                 self.obj.add(dt, eid, grid, fd2, sx2, sy2, txy2)
-            ###
+
             #print '--------------------'
             #print "len(data) = ",len(self.data)
             #print "tell = ",self.op2.tell()
 
             #self.printSection(100)
             #self.dn += 348
-        ###
 
     def OES_CQUAD4NL_90_alt(self):
         dt = self.nonlinearFactor
@@ -253,7 +252,6 @@ class ComplexElementsStressStrain(object):
 
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' % (str(out)))
-        ###
 
     def OES_CQUAD4_144_alt(self):
         """
@@ -366,11 +364,10 @@ class ComplexElementsStressStrain(object):
                 #self.printBlock(self.data)
                 self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1, txy1)
                 self.obj.add(dt, eid, grid, fd2, sx2, sy2, txy2)
-            ###
+
             #print '--------------------'
             #print "len(data) = ",len(self.data)
             #self.dn += 348
-        ###
 
     def OES_CTRIA3_74_alt(self):  # in progress
         """
@@ -416,7 +413,6 @@ class ComplexElementsStressStrain(object):
             self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2)
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' % (str(out)))
-        ###
 
 #==============================================================================
 # dont work...
@@ -452,7 +448,6 @@ class ComplexElementsStressStrain(object):
 
             #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
             #print "len(data) = ",len(self.data)
-        ###
 
     def xOES_CSOLID_67_alt(self):  # works
         """
@@ -518,7 +513,6 @@ class ComplexElementsStressStrain(object):
                 else:
                     #grid = (gridDevice - deviceCode) // 10
                     grid = gridDevice
-                ###
 
                 out = unpack(b'ffffffffffffffffffff', eData[4:84])
                 if self.makeOp2Debug:
@@ -548,7 +542,7 @@ class ComplexElementsStressStrain(object):
                 #self.printBlock(data)
             #sys.exit('finished a CEHXA')
             #print self.solidStress[self.iSubcase]
-            ###
+
             #print '--------------------'
             #print "len(data) = ",len(self.data)
 
@@ -557,7 +551,7 @@ class ComplexElementsStressStrain(object):
             #self.printBlock(self.data[1:100])
             #self.printBlock(self.data[2:100])
             #self.printBlock(self.data[3:100])
-        ###
+
         #print self.solidStress[self.iSubcase]
 
     def xOES_CSOLID_85_alt(self):  # works
@@ -636,7 +630,6 @@ class ComplexElementsStressStrain(object):
                 else:
                     #grid = (gridDevice - deviceCode) // 10
                     gridGauss = gridGauss
-                ###
 
                 #print "%s gridGauss=%-5s eid=%s sxx=%g syy=%g szz=%g" %(elementType,gridGauss,eid,sxx,syy,szz)
 
@@ -658,7 +651,7 @@ class ComplexElementsStressStrain(object):
                 #self.printBlock(data)
             #sys.exit('finished a CTETRANL')
             #print self.solidStress[self.iSubcase]
-            ###
+
             #print '--------------------'
             #print "len(data) = ",len(self.data)
 
@@ -667,8 +660,6 @@ class ComplexElementsStressStrain(object):
             #self.printBlock(self.data[1:100])
             #self.printBlock(self.data[2:100])
             #self.printBlock(self.data[3:100])
-        ###
-        #print self.solidStress[self.iSubcase]
 
     def xOES_CTRIAX6_53_alt(self):
         raise NotImplementedError()
@@ -694,11 +685,7 @@ class ComplexElementsStressStrain(object):
                 (loc, rs, azs, As, ss, maxp, tmax, octs) = out
                 #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,loc,rs,azs,As,ss,maxp,tmax,octs)
                 self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
-
-            if self.makeOp2Debug:
-                self.op2Debug.write('%s\n' % (str(out)))
-        ###
-
+        
     def xOES_RODNL_89_92_alt(self):
         raise NotImplementedError()
         dt = self.nonlinearFactor
@@ -722,9 +709,6 @@ class ComplexElementsStressStrain(object):
             #self.obj.addNewEid('CTRIA3',eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
             self.obj.add(self.elementType, dt, data)
 
-            if self.makeOp2Debug:
-                self.op2Debug.write('%s\n' % (str(out)))
-        ###
 
     def xOES_CPENTANL_91_alt(self):
         """
@@ -837,9 +821,7 @@ class ComplexElementsStressStrain(object):
                     out = unpack(format1, eData)
                     (loc, nsx, nse, te, epe, ece) = out
                     #print "loc=%s nsx=%s nse=%s te=%s epe=%s ece=%s" %(loc,nsx,nse,te,epe,ece)
-                ###
                 #self.obj.add(eid,out)
-            ###
             #sys.exit('stoping in CBEAM_94')
 
         #raise Exception('add CBEAM-94...')
@@ -880,10 +862,8 @@ class ComplexElementsStressStrain(object):
                 #print "2 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
                 self.obj.add(dt, eid, o1, o2, t12, t1z,
                              t2z, angle, major, minor, ovm)
-            ###
             self.eid2 = eid
             #self.dn += 348
-        ###
         #print "3 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
         #self.printSection(100)
 
@@ -917,12 +897,10 @@ class ComplexElementsStressStrain(object):
                 #(ID,sx,sy,sxy,angle,smj,smi) = out
                 self.obj.add(dt, eid, out)
                 #print "***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" %(ID,sx,sy,sxy,angle,smj,smi)
-            ###
             #self.obj.add(data)
             #x+=1
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' % (str(out)))
-        ###
         #sys.exit('end of hyperQuad')
 
     def xOES_CQUADR_82_alt(self):  # not done...
@@ -977,5 +955,3 @@ class ComplexElementsStressStrain(object):
                                     sy1, txy1, angle1, major1, minor1, vm1)
                 self.obj.add(eid, grid, fd2, sx2, sy2,
                              txy2, angle2, major2, minor2, vm2)
-            ###
-        ###

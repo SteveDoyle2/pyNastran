@@ -17,11 +17,22 @@ class HeatFlux_VU_3D(scalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
-        ###
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        nelements = len(self. parent)
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.grad)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  parent, grad, flux\n')
+        return msg
 
     def addNewTransient(self, dt):
         self.grad[dt] = {}
@@ -93,6 +104,19 @@ class HeatFlux_VU(scalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         else:
             assert dt is not None
             self.add = self.addSort2
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        nelements = len(self. parent)
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.grad)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  parent, coord, icord, theta, grad, flux\n')
+        return msg
 
     def addNewTransient(self, dt):
         self.grad[dt] = {}
@@ -166,11 +190,22 @@ class HeatFlux_VUBEAM(scalarObject):  # 191-VUBEAM
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
-        ###
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        nelements = len(self. parent)
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.grad)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  parent, coord, icord, theta, grad, flux\n')
+        return msg
 
     def addNewTransient(self, dt):
         self.grad[dt] = {}
@@ -237,11 +272,22 @@ class HeatFlux_1D(scalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
-        ###
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        nelements = len(self.eType)
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.grad)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, grad, flux\n')
+        return msg
 
     def addNewTransient(self, dt):
         self.grad[dt] = {}
@@ -285,7 +331,19 @@ class HeatFlux_2D_3D(scalarObject):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 6
             self.add = self.addSort1
         else:
             self.add = self.addSort2
-        ###
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        nelements = len(self.eType)
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.grad)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, grad, flux\n')
+        return msg
 
     def addNewTransient(self, dt):
         self.grad[dt] = {}
@@ -325,6 +383,21 @@ class HeatFlux_CONV(scalarObject):  # 110-CONV
         else:
             assert dt is not None
             self.add = self.addSort2
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.cntlNode)
+            times0 = self.cntlNode.keys()[0]
+            nelements = len(self.cntlNode[times0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.cntlNode)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  cntlNode, freeConv, freeConvK\n')
+        return msg
 
     def addNewTransient(self, dt):
         self.cntlNode[dt] = {}
@@ -379,6 +452,19 @@ class HeatFlux_CHBDYx(scalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         else:
             assert dt is not None
             self.add = self.addSort2
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        nelements = len(self.eType)
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.fApplied)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, fApplied, freeConv, forceConv, fRad, fTotal\n')
+        return msg
 
     def addNewTransient(self, dt):
         self.fApplied[dt] = {}

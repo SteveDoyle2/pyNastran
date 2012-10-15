@@ -22,8 +22,6 @@ def parseSkippedCards(fname):
             key = (eName,eType,form)
             if key not in results:
                 results[key] = fpath
-            ###
-        ###
     
     filesToAnalyze = []
     for (key,value) in sorted(results.iteritems()):
@@ -46,8 +44,6 @@ def get_all_files(foldersFile,fileType):
             print("moveDir = %s" %(moveDir))
             assert os.path.exists(moveDir),'%s doesnt exist' %(moveDir)
             files2 += get_files_of_type(moveDir,fileType,maxSize=100.)
-        ###
-    ###
     return files2
 
 if __name__=='__main__':

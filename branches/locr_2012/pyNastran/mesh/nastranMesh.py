@@ -184,7 +184,6 @@ class NastranMesh(BDF):
             percentFill = xi
 
             nIter += 1
-        ###
 
         if addElements:
             maxEid = max(self.elements) + 1  # get the next available eid

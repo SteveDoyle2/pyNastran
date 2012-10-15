@@ -18,7 +18,7 @@ class Coord(BaseCard):
     def __init__(self, card, data):
         """
         Defines a general CORDxx object
-        @param self the object pointer
+        @param self the coordinate system object
         @param card a BDFCard object
         @param data a list analogous to the card
         """
@@ -132,7 +132,7 @@ class Coord(BaseCard):
         r"""
         Transforms the global point p to the local coordinate system
         @param self
-          the object pointer
+          the coordinate system object
         @param p
           the point to transform
         @param matrix
@@ -172,7 +172,7 @@ class Coord(BaseCard):
         """
         Normalizes v into a unit vector
         @param self
-          the object pointer
+          the coordinate system object
         @param v
           the vector to normalize
         @retval
@@ -248,6 +248,7 @@ class CylindricalCoord(object):
 
         \f[ \large x = R \cos(\theta) \f]
         \f[ \large y = R \sin(\theta) \f]
+        @param self the coordinate system object
         """
         R = p[0]
         theta = radians(p[1])
@@ -302,7 +303,7 @@ class Cord2x(Coord):
     def __init__(self, card, data):
         """
         defines the CORD2x class
-        @param self the object pointer
+        @param self the coordinate system object
         @param card a BDFCard object
         @param data a list analogous to the card
         """
@@ -355,8 +356,8 @@ class Cord2x(Coord):
         if self.cid == 0 or isinstance(self.rid, int) or self.rid.isResolved:
             return  # rid=0 so already resolved
         elif self.rid.isResolved is False:  # rid
-            msg  = ('there is a circular reference between Coord %s and '
-                    'Coord %s' %(self.cid,self.Rid()))
+            #msg  = ('there is a circular reference between Coord %s and '
+            #        'Coord %s' %(self.cid,self.Rid()))
             #assert self.rid.isCrossReferenced==False,msg)
             #print "  resolving cid=%s rid=%s" %(self.cid,self.Rid())
             self.rid.resolveCid()
@@ -383,7 +384,7 @@ class Cord2x(Coord):
     def cross_reference(self, model):
         """
         Links self.rid to a coordinate system.
-        @param self  the object pointer
+        @param self the coordinate system object
         @param model the BDF object
         @warning
             Doesn't set rid to the coordinate system if it's in the global.
@@ -393,7 +394,6 @@ class Cord2x(Coord):
         self.isCrossReferenced = True
         if self.rid != 0:
             self.rid = model.Coord(self.rid)
-        ###
 
     def transformToGlobal(self, p, resolveAltCoord=True, debug=False):
         r"""
@@ -415,6 +415,10 @@ class Cord2x(Coord):
         * \f$ g  \f$ is the global directional vector (e.g. \f$ g_x = [1,0,0]\f$)
         * \f$ ijk \f$ is the ith direction in the local coordinate system
         
+        @param self the coordinate system object
+        @param p the point to be transformed.  Type=NUMPY.NDARRAY
+        @param resolveAltCoord should the CD field be resolved (default=True)
+        @param debug developer debug (default=False)
         @warning
           make sure you cross-reference before calling this
         @warning
@@ -450,7 +454,6 @@ class Cord2x(Coord):
             gx = self.rid.i
             gy = self.rid.j
             gz = self.rid.k
-        ###
 
         matrix = array([[dot(gx, i), dot(gy, i), dot(gz, i)],
                         [dot(gx, j), dot(gy, j), dot(gz, j)],
@@ -470,13 +473,11 @@ class Cord2x(Coord):
             print('------------------------')
             print("p3 = %s\n" % (list_print(p3)))
 
-        #print str(self)
         if isinstance(self.rid, int):
             return (p3, matrix)
         else:
-              ## @todo do i need to multiply rid.transform(p3)[1]*matrix
+            ## @todo do i need to multiply rid.transform(p3)[1]*matrix
             return (self.rid.transformToGlobal(p3)[0], matrix)
-        ###
 
     def Rid(self):
         """Returns the reference coordinate system self.rid"""
@@ -510,7 +511,7 @@ class Cord1x(Coord):
             self.g2 = data[2]
             self.g3 = data[3]
             assert len(data) == 4, 'data = %s' % (data)
-        ###
+
         assert self.g1 != self.g2
         assert self.g1 != self.g3
         assert self.g2 != self.g3
@@ -522,10 +523,47 @@ class Cord1x(Coord):
         self.j = None
         self.k = None
 
+    def to_CORD2x(self, model):
+        """
+        converts a coordinate system from a CORD1x to a CORD2x
+        @param self the coordinate system object
+        @param model a BDF model
+        """
+        rid1 = self.g1.cid
+        rid2 = self.g2.cid
+        rid3 = self.g2.cid
+        type1 = self.g1.type
+        #type2 = self.g2.type
+        #type3 = self.g3.type
+
+        p1 = self.g1.xyz
+        if rid2 == rid1 and rid3 == rid1:
+            # if all the same coordinate system, make them coord 2
+            # the types are automatically the same then
+            p2 = self.g2.xyz
+            p3 = self.g3.xyz
+        else:
+            # otherwise make them the same rid as g1
+            p2 = self.g2.PositionWRT(model, rid1)
+            p3 = self.g3.PositionWRT(model, rid1)
+
+        data = [type1, self.cid, rid1, list(p1) + list(p2) + list(p3)]
+
+        if type1 == 'CORD2R':
+            coord = CORD2R(card=None, data=data)
+        elif type1 == 'CORD2C':
+            coord = CORD2R(card=None, data=data)
+        elif type1 == 'CORD2C':
+            coord = CORD2R(card=None, data=data)
+        else:
+            raise RuntimeError('coordinate type of \n%s is %s' % (str(self),
+                                                                  type1))
+        model.coords[self.cid] = coord
+
     def cross_reference(self, model):
         """
         Links self.rid to a coordinate system.
-        @param self  the object pointer
+        @param self  the coordinate system object
         @param model the BDF object
         """
         self.isCrossReferenced = True
@@ -540,6 +578,7 @@ class Cord1x(Coord):
         """
         finds the position of the nodes used define the coordinate system
         and sets the ijk vectors
+        @param self the coordinate system object
         """
         ## the origin
         self.e1 = self.g1.Position()
@@ -567,6 +606,7 @@ class Cord1x(Coord):
     def NodeIDs(self):
         """
         returns [g1,g2,g3]
+        @param self  the coordinate system object
         """
         grids = [self.G1(), self.G2(), self.G3()]
         return grids
@@ -590,8 +630,8 @@ class CORD3G(Coord):  # not done
     def __init__(self, card=[0, 0, 0, 0, 0, 0, 0], data=None):
         """
         Intilizes the CORD3G
-        @param self   the object pointer
-        @param card   a list version of the fields
+        @param self the CORD3G coordinate system object
+        @param card a list version of the fields
         """
         if isinstance(card, list):
             assert len(card) == 8
@@ -623,6 +663,9 @@ class CORD3G(Coord):  # not done
 
     def transformToGlobal(self, p, debug=False):
         """
+        @param self the coordinate system object
+        @param p the point to transform.  TYPE=NUMPY.NDARRAY.
+        @param debug should debug messages be printed
         @warning not done, just setting up how you'd do this
         @note per http://en.wikipedia.org/wiki/Euler_angles
          "This means for example that a convention named (YXZ) is the result
@@ -677,7 +720,7 @@ class CORD1R(Cord1x, RectangularCoord):
         """
         Intilizes the CORD1R
         @param self
-          the object pointer
+          the CORD1R coordinate system object
         @param nCoord
           the coordinate location on the line (there are possibly 2 coordinates
           on 1 card)
@@ -701,7 +744,7 @@ class CORD1C(Cord1x, CylindricalCoord):
         """
         Intilizes the CORD1R
         @param self
-          the object pointer
+          the CORD1C coordinate system object
         @param card
           a BDFCard object
         @param nCoord
@@ -727,7 +770,7 @@ class CORD1S(Cord1x, SphericalCoord):
         """
         Intilizes the CORD1S
         @param self
-          the object pointer
+            the CORD1S coordinate system object
         @param card
           a BDFCard object
         @param nCoord
@@ -751,7 +794,7 @@ class CORD2R(Cord2x, RectangularCoord):
         """
         Intilizes the CORD2R
         @param self
-          the object pointer
+            the CORD2R coordinate system object
         @param card
           a BDFCard object
         @param data
@@ -773,7 +816,7 @@ class CORD2S(Cord2x, SphericalCoord):
         """
         Intilizes the CORD2R
         @param self
-          the object pointer
+            the CORD2S coordinate system object
         @param card
           a BDFCard object
         @param data
@@ -795,7 +838,7 @@ class CORD2C(Cord2x, CylindricalCoord):
         """
         Intilizes the CORD2C
         @param self
-          the object pointer
+            the CORD2C coordinate system object
         @param card
           a BDFCard object
         @param data

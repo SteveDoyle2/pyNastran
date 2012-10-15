@@ -69,7 +69,6 @@ class Ougv1Writer(object):
         else:
             approachCode = 6  # transient
             FiveSixSeven = [disp.dt, 0, 0]  # fields five,six,seven
-        ###
 
         tableCode = 1  # statics
         sortCode = 0

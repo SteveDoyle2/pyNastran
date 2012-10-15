@@ -39,6 +39,22 @@ class TriaxStressObject(stressObject):
             self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
 
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.radial)
+            r0 = self.radial.keys()[0]
+            nelements = len(self.radial[r0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.radial)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, radial, azimuthal, axial, shear, '
+                   'omax, oms, ovm\n')
+        return msg
+
     def addF06Data(self, data, transient):
         raise Exception('Not Implemented')
         if transient is None:
@@ -175,7 +191,8 @@ class TriaxStressObject(stressObject):
             msg = ['']
         return(''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def writeF06Transient(self, header, pageStamp,
+                          pageNum=1, f=None, isMagPhase=False):
         words = ['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
                  '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
                  '      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n', ]
@@ -249,6 +266,22 @@ class TriaxStrainObject(strainObject):
             assert dt is not None
             self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.nonlinearFactor is not None:  # transient
+            ntimes = len(self.radial)
+            r0 = self.radial.keys()[0]
+            nelements = len(self.radial[r0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.radial)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, radial, azimuthal, axial, shear, '
+                   'emax, ems, evm\n')
+        return msg
 
     def addF06Data(self, data, transient):
         raise Exception('Not Implemented')
@@ -355,7 +388,8 @@ class TriaxStrainObject(strainObject):
             msg = ['']
         return(''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def writeF06Transient(self, header, pageStamp,
+                          pageNum=1, f=None, isMagPhase=False):
         words = ['                                      S T R A I N S   I N   T R I A X 6   E L E M E N T S\n',
                  '   ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
                  '      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n', ]
@@ -380,7 +414,9 @@ class TriaxStrainObject(strainObject):
                     else:
                         Eid = ''
                     ([rad, azimuth, axial, shear, emax, ems, evm], isAllZeros) = self.writeFloats13E([rad, azimuth, axial, shear, emax, ems, evm])
-                    msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' % (Eid, nid, rad, azimuth, axial, shear, emax, ems, evm.rstrip()))
+                    msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n'
+                               % (Eid, nid, rad, azimuth, axial, shear, emax,
+                                  ems, evm.rstrip()))
                 msg.append('\n')
 
             msg.append(pageStamp + str(pageNum) + '\n')
