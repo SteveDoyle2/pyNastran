@@ -58,10 +58,9 @@ class CBUSH(BushElement):
                 x3 = card.field(7)
                 self.x = [x1, x2, x3]
             else:
-                #raise RuntimeError('invalid CBUSH...x1/g0 = |%s|' %(x1G0))
                 self.g0 = None
                 self.x = [None, None, None]
-            ###
+            
             ## Element coordinate system identification. A 0 means the basic
             ## coordinate system. If CID is blank, then the element coordinate
             ## system is determined from GO or Xi.  (default=blank=element-based)
@@ -81,10 +80,12 @@ class CBUSH(BushElement):
         #self.prepareNodeIDs(nids,allowEmptyNodes=True)
         #assert len(self.nodes)==2
 
-    #def OCid(self):
-        #if isinstance(self.ocid,int):
-            #return self.ocid
-        #return self.ocid.cid
+    def OCid(self):
+        if self.ocid is None:
+            return None
+        elif isinstance(self.ocid,int):
+            return self.ocid
+        return self.ocid.cid
 
     def Cid(self):
         if self.cid is None:
@@ -113,8 +114,11 @@ class CBUSH(BushElement):
         else:
             x = self.x
 
+        ocid = set_blank_if_default(self.OCid(), -1)
+        s = set_blank_if_default(self.s, 0.5)
+        print("s = %s" %(self.s))
         fields = ['CBUSH', self.eid, self.Pid(), self.ga, self.gb] + x + [self.Cid(),
-                                                                          self.s, self.ocid] + self.si
+                                                                          s, ocid] + self.si
         return fields
 
 
