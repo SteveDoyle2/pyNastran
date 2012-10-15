@@ -70,7 +70,7 @@ class PBUSH(BushingProperty):
         #self.k = card.field(iStart)
         ## Nominal stiffness values in directions 1 through 6.
         ## See Remarks 2 and 3. (Real; Default = 0.0)
-        self.Ki = card.fields(i=iStart + 1, j=iStart + 6)
+        self.Ki = card.fields(i=iStart + 1, j=iStart + 7)
         #print "Ki = ",self.Ki
         self.vars.append('K')
 
@@ -81,7 +81,7 @@ class PBUSH(BushingProperty):
         ## Force per unit velocity (Real)
         ## Nominal damping coefficients in direction 1 through 6 in units of
         ## force per unit velocity. See Remarks 2, 3, and 9. (Real; Default=0.)
-        self.Bi = card.fields(i=iStart + 1, j=iStart + 6)
+        self.Bi = card.fields(i=iStart + 1, j=iStart + 7)
         self.vars.append('B')
 
     def getGE(self, card, iStart):
@@ -90,7 +90,7 @@ class PBUSH(BushingProperty):
         #self.ge = card.field(iStart)
         ## Nominal structural damping constant in directions 1 through 6. See
         ## Remarks 2. and 3. (Real; Default = 0.0)
-        self.GEi = card.fields(i=iStart + 1, j=iStart + 6)
+        self.GEi = card.fields(i=iStart + 1, j=iStart + 7)
         self.vars.append('GE')
 
     def getRCV(self, card, iStart):
