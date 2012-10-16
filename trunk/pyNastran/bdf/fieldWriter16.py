@@ -203,7 +203,7 @@ def print_card_16(fields, tol=0.):
         fields += [None] * nExtraFields
 
     try:
-        out = '%-8s' % (fields[0])
+        out = '%-8s' % (fields[0]+'*')
     except:
         print("ERROR!  fields=%s" % (fields))
         sys.stdout.flush()
@@ -220,6 +220,6 @@ def print_card_16(fields, tol=0.):
             out = out.rstrip(' ')
             if out[-1] == '\n':  # empty line
                 out += '*'
-            out += '\n        '
+            out += '\n*       '
     out = out.rstrip(' \n*') + '\n'  # removes blank lines at the end of cards
     return out
