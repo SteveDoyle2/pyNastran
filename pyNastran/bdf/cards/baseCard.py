@@ -122,12 +122,10 @@ class BaseCard(BDFCard):
 
 
 def Mid(self):
-    #print str(self)
     if isinstance(self.mid, int):
         return self.mid
     else:
         return self.mid.mid
-    ###
 
 
 class Property(BaseCard):
@@ -226,7 +224,7 @@ class Element(BaseCard):
                     nodeIDs = [node for node in nodes]
                 else:
                     nodeIDs = [node.nid for node in nodes]
-                ###
+
                 assert 0 not in nodeIDs, 'nodeIDs = %s' % (nodeIDs)
                 return nodeIDs
         except:
@@ -245,7 +243,6 @@ class Element(BaseCard):
             else:  # string???
                 self.nodes.append(int(nid))
                 #raise RuntimeError('this element may not have missing nodes...nids=%s allowEmptyNodes=False' %(nids))
-            ###
 
     #def Normal(self,a,b):
     #    """finds the unit normal vector of 2 vectors"""

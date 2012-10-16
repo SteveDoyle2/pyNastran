@@ -22,8 +22,6 @@ class PARAM(BaseCard):
         #for (field1, field2) in izip(fields1, fields2):
         #    if not self.isSame(field1, field2):
         #        return False
-        #    ###
-        ####
         #return True
 
     def rawFields(self):

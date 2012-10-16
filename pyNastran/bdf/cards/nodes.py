@@ -28,21 +28,18 @@ class Node(BaseCard):
             return self.cp
         else:
             return self.cp.cid
-        ###
 
     def Seid(self):
         if isinstance(self.seid, int):
             return self.seid
         else:
             return self.seid.seid
-        ###
 
     def Cd(self):
         if isinstance(self.cd, int):
             return self.cd
         else:
             return self.cd.cid
-        ###
 
 
 class RINGAX(Ring):
@@ -116,7 +113,6 @@ class SPOINTs(Node):
         #    else:
         #        self.spoints.append(fields[i])
         #    i+=1
-        ###
 
     def nDOF(self):
         return len(self.spoints)
@@ -132,7 +128,6 @@ class SPOINTs(Node):
         spoints = []
         for nid in self.spoints:
             spoints.append(SPOINT(nid))
-        ###
         return spoints
 
     def rawFields(self):
@@ -205,7 +200,7 @@ class GRIDB(Node):
             self.cd = data[2]
             self.ps = data[3]
             self.idf = data[4]
-        ###
+
         assert self.nid > 0, 'nid=%s' % (self.nid)
         assert self.phi >= 0, 'phi=%s' % (self.phi)
         assert self.cd >= 0, 'cd=%s' % (self.cd)
@@ -265,7 +260,7 @@ class GRID(Node):
             if self.ps == 0:
                 self.ps = ''
             assert len(self.xyz) == 3
-        ###
+
         assert self.nid > 0, 'nid=%s' % (self.nid)
         assert self.cp >= 0, 'cp=%s' % (self.cp)
         assert self.cd >= -1, 'cd=%s' % (self.cd)

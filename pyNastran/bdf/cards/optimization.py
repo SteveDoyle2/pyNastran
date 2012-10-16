@@ -138,7 +138,6 @@ class DLINK(OptConstraint):
         for i in xrange(0, nFields, 2):
             self.IDv.append(fields[i])
             self.Ci.append(fields[i + 1])
-        ###
 
     def rawFields(self):
         fields = ['DLINK', self.oid, self.ddvid, self.c0, self.cmult]
@@ -275,7 +274,6 @@ class DRESP2(OptConstraint):
                     key, valueList, self.oid)
                 raise KeyError(msg)
             fields += self.buildTableLines(fields2, nStart=i, nEnd=j)
-        ###
         return fields
 
     def rawFields(self):

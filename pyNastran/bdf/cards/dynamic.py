@@ -74,7 +74,6 @@ class FREQ1(FREQ):
         self.freqs = []
         for i in xrange(ndf):
             self.freqs.append(f1 + i * df)
-        ###
         self.cleanFreqs()
 
 
@@ -242,7 +241,6 @@ class TSTEPNL(BaseCard):
             self.uTol = uTol
             self.rTolB = rTolB
             self.minIter = None  # not listed in DMAP 2005
-        ###
 
     def rawFields(self):
         fields = ['TSTEPNL', self.sid, self.ndt, self.dt, self.no, self.method, self.kStep, self.maxIter, self.conv,
@@ -349,7 +347,6 @@ class NLPARM(BaseCard):
             self.maxBisect = maxBisect
             self.maxR = maxR
             self.rTolB = rTolB
-        ###
 
     def rawFields(self):
         fields = ['NLPARM', self.nid, self.ninc, self.dt, self.kMethod, self.kStep, self.maxIter, self.conv, self.intOut,
