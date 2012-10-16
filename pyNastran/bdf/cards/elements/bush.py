@@ -11,7 +11,6 @@ from pyNastran.bdf.cards.baseCard import Element
 class BushElement(Element):
     def __init__(self, card, data):
         self.cid = None
-        print("&&&card = ", card)
         Element.__init__(self, card, data)
 
     def Cid(self):
