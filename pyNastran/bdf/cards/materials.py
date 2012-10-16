@@ -162,11 +162,6 @@ class MAT1(Material):
         """
         \f[ \large G = \frac{E}{2 (1+\nu)} \f]
         """
-        #self.E  = card.field(2)
-        #self.G  = card.field(3)
-        #self.nu = card.field(4)
-        #return
-
         E = card.field(2)
         G = card.field(3)
         nu = card.field(4)
@@ -193,11 +188,6 @@ class MAT1(Material):
         self.e = E
         self.g = G
         self.nu = nu
-        #print "mid = ",self.mid
-        #print "E  = ",E
-        #print "G  = ",G
-        #print "nu = ",nu
-        #print ""
 
     def writeCalculix(self, elementSet='ELSetDummyMat'):
         temperature = self.TRef  # default value - same properties for all values
@@ -242,7 +232,8 @@ class MAT1(Material):
         return G
 
     def reprFields(self):
-        G = self.getG_default()
+        Gdefault = self.getG_default()
+        G = set_blank_if_default(self.g, Gdefault)
 
         rho = set_blank_if_default(self.rho, 0.)
         a = set_blank_if_default(self.a, 0.)
