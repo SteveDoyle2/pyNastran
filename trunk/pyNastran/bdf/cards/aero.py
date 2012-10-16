@@ -53,15 +53,12 @@ class AELINK(BaseCard):
         self.Cis = []
 
         fields = card.fields(3)
-        #print "aelink fields = ",fields
         assert len(fields) % 2 == 0, 'fields=%s' % (fields)
-        #print "len(fields) = ",len(fields)
         for i in xrange(0, len(fields), 2):
             independentLabel = fields[i]
             Ci = fields[i + 1]
             self.independentLabels.append(independentLabel)
             self.Cis.append(Ci)
-        ###
         #print self
 
     def rawFields(self):
@@ -128,7 +125,6 @@ class AEPARM(BaseCard):
             self.label = data[1]
             self.units = data[2]
             assert len(data) == 3, 'data = %s' % (data)
-        ###
 
     def rawFields(self):
         fields = ['AEPARM', self.id, self.label, self.units]
@@ -152,7 +148,6 @@ class AESTAT(BaseCard):
             self.id = data[0]
             self.label = data[1]
             assert len(data) == 2, 'data = %s' % (data)
-        ###
 
     def rawFields(self):
         fields = ['AESTAT', self.id, self.label]
@@ -262,7 +257,6 @@ class AESURFS(BaseCard):  # not integrated
             self.list1 = data[2]
             self.list2 = data[3]
             assert len(data) == 4, 'data = %s' % (data)
-        ###
 
     def rawFields(self):
         fields = ['AESURFS', self.id, self.label, None, self.list1,
@@ -327,7 +321,7 @@ class AERO(Aero):
             self.symXZ = data[4]
             self.symXY = data[5]
             assert len(data) == 6, 'data = %s' % (data)
-        ###
+
         # T is the tabular function
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V)
 
@@ -371,7 +365,6 @@ class AEROS(Aero):
             self.symXZ = data[5]
             self.symXY = data[6]
             assert len(data) == 7, 'data = %s' % (data)
-        ###
 
     def rawFields(self):
         fields = ['AEROS', self.acsid, self.rcsid, self.cRef,
@@ -408,7 +401,6 @@ class CSSCHD(BaseCard):
             self.lAlpha = data[2]  # AEFACT
             self.lMach = data[3]  # AEFACT
             self.lSchd = data[4]  # AEFACT
-        ###
 
     def cross_reference(self, model):
         self.aesid = model.AESurf(self.aesid)
@@ -709,11 +701,9 @@ class FLFACT(BaseCard):
                 raise NotImplementedError(msg)
                 #(a,thru,b,n,dn) = factors
                 #for i in xrange(
-            ###
         else:
             self.sid = data[0]
             self.factors = data[1:]
-        ###
 
     def rawFields(self):
         fields = ['FLFACT', self.sid] + self.factors
@@ -751,7 +741,7 @@ class FLUTTER(BaseCard):
             self.nValue = data[7]
             self.omax = data[8]
             raise NotImplementedError('verify...')
-        ###
+
         assert self.method in ['K', 'PK', 'PKNL', 'PKS', 'PKNLS', 'KE']
 
         if self.method in ['K', 'KE']:
@@ -778,7 +768,6 @@ class FLUTTER(BaseCard):
             return(self.imethod, self.omax)
         else:
             return(self.imethod, self.nValue)
-        ###
 
     def _reprNValueOMax(self):
         if self.method in ['K', 'KE']:
@@ -789,7 +778,6 @@ class FLUTTER(BaseCard):
             return(self.imethod, self.omax)
         else:
             return(self.imethod, self.nValue)
-        ###
 
     def rawFields(self):
         (imethod, nValue) = self._rawNValueOMax()
@@ -854,7 +842,7 @@ class MKAERO1(BaseCard):
                 self.rFreqs.append(card.field(i + 8))
         else:
             raise NotImplementedError('MKAERO1')
-        ###
+
         #print "machs  = ",self.machs
         #print "rFreqs = ",self.rFreqs
 
@@ -902,10 +890,8 @@ class MKAERO2(BaseCard):
             for i in xrange(1, 1 + nFields, 2):
                 self.machs.append(card.field(i))
                 self.rFreqs.append(card.field(i + 1))
-            ###
         else:
             raise NotImplementedError('MKAERO2')
-        ###
 
     def addFreqs(self, mkaero):
         self.getMach_rFreqs()
@@ -913,7 +899,6 @@ class MKAERO2(BaseCard):
             self.machs.append(m)
         for f in mkaero.rFreqs:
             self.rFreqs.append(f)
-        ###
 
     def rawFields(self):
         fields = ['MKAERO2']
@@ -947,7 +932,6 @@ class PAERO1(BaseCard):
                 raise RuntimeError('invalid Bi value on PAERO1 bi=|%r|' % (bi))
             #else:
             #    pass
-        ###
 
     def Bodies(self):
         return self.Bi
@@ -999,7 +983,6 @@ class PAERO2(BaseCard):
         for i in xrange(9, 9 + nFields, 2):
             self.thi.append(card.field(i))
             self.thi.append(card.field(i + 1))
-        ###
 
     def rawFields(self):
         fields = ['PAERO2', self.pid, self.orient, self.width,
@@ -1055,7 +1038,6 @@ class SPLINE1(Spline):
             self.nelements = data[8]
             self.melements = data[9]
             assert len(data) == 10, 'data = %s' % (data)
-        ###
 
         assert self.box2 >= self.box1
         assert self.method in ['IPS', 'TPS', 'FPS']
@@ -1123,7 +1105,6 @@ class SPLINE2(Spline):
             self.usage = card.field(12, 'BOTH')
         else:
             raise NotImplementedError('not supported')
-        ###
 
     def cross_reference(self, model):
         self.caero = model.CAero(self.caero)
@@ -1194,7 +1175,6 @@ class SPLINE4(Spline):
             self.nelements = data[7]
             self.melements = data[8]
             assert len(data) == 9, 'data = %s' % (data)
-        ###
 
         assert self.method in ['IPS', 'TPS', 'FPS']
         assert self.usage in ['FORCE', 'DISP', 'BOTH']
@@ -1267,7 +1247,6 @@ class SPLINE5(Spline):
             self.usage = card.field(12, 'BOTH')
         else:
             raise NotImplementedError('not supported')
-        ###
 
     def Cid(self):
         if isinstance(self.cid, int):
@@ -1342,10 +1321,8 @@ class TRIM(BaseCard):
                     self.aeqr = card.field(4 + i + 2, 1.0)
                     i += 1
                 i += 2
-            ###
         else:
             raise NotImplementedError('TRIM not supported')
-        ###
 
     def rawFields(self):
         fields = ['TRIM', self.sid, self.mach, self.q]

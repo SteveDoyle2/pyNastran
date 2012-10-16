@@ -26,7 +26,6 @@ class constraintObject2(object):
             self.constraints[key].append(constraint)
         else:
             self.constraints[key] = [constraint]
-        ###
 
     def _spc(self, spcID):
         """could be an spcadd/mpcadd or spc/mpc,spc1,spcd,spcax,suport1"""
@@ -214,7 +213,6 @@ class constraintObject(object):
     #        return self.constraints[conid]
     #    else:
     #        return conid
-    #    ###
 
     def getConstraint(self, conid):
         #print "sid=%s" %(conid)
@@ -229,7 +227,6 @@ class constraintObject(object):
         (nid, dofs) = nodeDOF
         for dof in dofs:
             self.resolvedConstraints.append((nid, dof))
-        ###
 
     def __repr__(self):
         msg = ''

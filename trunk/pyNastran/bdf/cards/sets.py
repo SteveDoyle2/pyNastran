@@ -196,7 +196,6 @@ class CSET1(Set):
         else:
             self.components = str(card.field(1))
             self.IDs = expand_thru(card.fields(2))
-        ###
 
     def rawFields(self):
         """gets the "raw" card without any processing as a list for printing"""

@@ -227,8 +227,6 @@ class NastranMatrix(BaseCard):
         #        cols.append(j)
         #        data.append(k)
         #        A[i,j] = k
-        #    ###
-        ###
 
         #isSparse = False
         if isSparse:
@@ -288,8 +286,6 @@ class NastranMatrix(BaseCard):
                     i = rows[GCi]
                     j = cols[GCj]
                     M[i, j] = reali
-                ###
-            ###
         #print(M)
         return (M, rowsReversed, colsReversed)
 
@@ -477,13 +473,11 @@ class DMI(BaseCard):
                             self.GCj.append(j)
                             self.GCi.append(ii)
                             self.Real.append(realValue)
-                        ###
+
                         #print "i = ",3+i
                         #print 'field i=',fields[i]
                         i += 1
                         isDoneReadingFloats = True
-                    ###
-            ###
 
     def readComplex(self, card):
         msg = 'complex matrices not supported in the DMI reader...'
@@ -515,9 +509,6 @@ class DMI(BaseCard):
                     i += 2
                 else:
                     asdf
-                ###
-            ### while floats
-        ### while fields
 
     def rename(self, newName):
         self.name = newName

@@ -51,7 +51,6 @@ class TableObj(object):
     def crashFields(self, fields, nRepeated, nFields):
         try:
             msg = ''
-            #k = 0
             for i in xrange(nFields):
                 for j in xrange(nRepeated):
                     try:
@@ -60,7 +59,6 @@ class TableObj(object):
                         msg += '*%-8s ' % (fields[i * nRepeated + j])
                     except IndexError:
                         msg += 'IndexError'
-                    #k+=1
                 msg += '\n'
         except:
             print(fields)
