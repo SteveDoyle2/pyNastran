@@ -2057,7 +2057,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         for attribute_name in ignored_types.union(ignored_types2):
             try:
                 all_params.remove(attribute_name)
-                print('removing attribute_name=%s' % (attribute_name))
+                #print('removing attribute_name=%s' % (attribute_name))
             except ValueError:
                 pass
 
@@ -2092,9 +2092,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         for card_group_name in card_stats:
             card_group = getattr(self, card_group_name)
             groups = set([])
-            print("card_group_name = ", card_group_name)
+            #print("card_group_name = ", card_group_name)
             if isinstance(card_group, list):
-                print("card_group_name = ", card_group_name)
+                #print("card_group_name = ", card_group_name)
+                pass
 
             for card in card_group.itervalues():
                 if isinstance(card, list):
