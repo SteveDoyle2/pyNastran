@@ -11,6 +11,7 @@ from pyNastran.bdf.cards.baseCard import Element
 class BushElement(Element):
     def __init__(self, card, data):
         self.cid = None
+        print("&&&card = ", card)
         Element.__init__(self, card, data)
 
     def Cid(self):
@@ -47,6 +48,7 @@ class CBUSH(BushElement):
             self.pid = card.field(2)
             self.ga = card.field(3)
             self.gb = card.field(4)
+            #self.nodes = [card.field(3), card.field(4)]
             x1G0 = card.field(5)
             if isinstance(x1G0, int):
                 self.g0 = x1G0
@@ -80,6 +82,16 @@ class CBUSH(BushElement):
         #self.prepareNodeIDs(nids,allowEmptyNodes=True)
         #assert len(self.nodes)==2
 
+    def Ga(self):
+        if isinstance(self.ga, int):
+            return self.ga
+        return self.ga.nid
+
+    def Gb(self):
+        if isinstance(self.gb, int):
+            return self.gb
+        return self.gb.nid
+
     def OCid(self):
         if self.ocid is None:
             return None
@@ -95,8 +107,9 @@ class CBUSH(BushElement):
         return self.cid.cid
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes)
-        #self.pid = model.Property(self.pid)
+        self.ga = model.Node(self.ga)
+        self.gb = model.Node(self.gb)
+        self.pid = model.Property(self.pid)
         self.cid = model.Coord(self.cid)
 
     def rawFields(self):
@@ -104,8 +117,8 @@ class CBUSH(BushElement):
             x = [self.g0, None, None]
         else:
             x = self.x
-        fields = ['CBUSH', self.eid, self.Pid(), self.ga, self.gb] + x + [self.Cid(),
-                                                                          self.s, self.ocid] + self.si
+        fields = ['CBUSH', self.eid, self.Pid(), self.Ga(), self.Gb()] + x + [self.Cid(),
+                                                            self.s, self.ocid] + self.si
         return fields
 
     def reprFields(self):
@@ -116,9 +129,8 @@ class CBUSH(BushElement):
 
         ocid = set_blank_if_default(self.OCid(), -1)
         s = set_blank_if_default(self.s, 0.5)
-        print("s = %s" %(self.s))
-        fields = ['CBUSH', self.eid, self.Pid(), self.ga, self.gb] + x + [self.Cid(),
-                                                                          s, ocid] + self.si
+        fields = ['CBUSH', self.eid, self.Pid(), self.Ga(), self.Gb()] + x + [self.Cid(),
+                                                                       s, ocid] + self.si
         return fields
 
 
