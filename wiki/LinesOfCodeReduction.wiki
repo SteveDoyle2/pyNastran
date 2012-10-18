@@ -209,8 +209,17 @@ Files `applyLicense.py` and `build_2to3.py` have been refactored. It took surpri
 
 == Notable code changes ==
 
- * method `get_next_line` has been moved from `bdf_Reader` to `bdf_CardMethods` as it requires `bdf_CardMethods_make_lines_pack` method
+ * Method `get_next_line` has been moved from `bdf_Reader` to `bdf_CardMethods` as it requires `bdf_CardMethods_make_lines_pack` method
  * `BDF.readBDF_Punch()` has been merged into `BDF.readBDF_Punch()`. New parameter `punch` has been added to `BDF.readBDF_Punch()` and `BDF.readBDF_Punch(punch=True)` is equal to old `BDF.readBDF_Punch()`.
+ * Some methods of `BDF` class has been refactored. Most importantly: the `add_card` method. The `bdf.py` has 1295 lines instead of 2129. _*Warning*_: `add_card` method heavily uses Python introspection and asks for some classes at the runtime. pylint gives warnings about unused classes that can be safely ignored (pylint does not know anything about runtime environment of a program). 
+ * A lot of methods in the `addCard.py` has been renamed. They are more consistent and readable. Methods specialized for supporting one specyfic type of a card have names beginning with `add_` and then the card name, e.g.
+
+{{{
+def add_CAERO(self, caero)
+def add_DCONSTR(self, dconstr)
+}}} 
+
+Methods names are in accordance with the PEP-8 guidelines (they are not strictly PEP-8 names but PEP-8 says that rules should be broken if 'applying the rule would make the code less readable' and names with card names in upper-case are most readable).
 
 == Python idioms == 
 
