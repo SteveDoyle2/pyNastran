@@ -9,15 +9,15 @@ from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 class constraintObject2(object):
     def __init__(self):
         self.constraints = {}  # SPC, SPC1, SPCD, etc...
-        self.addConstraints = {}  # SPCADD
+        self.add_constraints = {}  # SPCADD
 
     def Add(self, ADD_Constraint):
-        """bad name, but adds an SPCADD or MPCADD"""
+        """Bad name, but adds an SPCADD or MPCADD"""
         key = ADD_Constraint.conid
-        if key in self.addConstraints:
+        if key in self.add_constraints:
             print("already has key...key=%s\n%s" % (key, str(ADD_Constraint)))
         else:
-            self.addConstraints[key] = ADD_Constraint
+            self.add_constraints[key] = ADD_Constraint
 
     def append(self, constraint):
         key = constraint.conid
@@ -30,18 +30,18 @@ class constraintObject2(object):
 
     def _spc(self, spcID):
         """could be an spcadd/mpcadd or spc/mpc,spc1,spcd,spcax,suport1"""
-        if spcID in self.addConstraints:
-            return self.addConstraints[spcID]
+        if spcID in self.add_constraints:
+            return self.add_constraints[spcID]
         return self.constraints[spcID]
 
     def cross_reference(self, model):
         #return
-        #addConstraints2 = {}
-        for key, addConstraint in sorted(self.addConstraints.iteritems()):
-            for i, spcID in enumerate(addConstraint.sets):
-                addConstraint.sets[i] = self._spc(spcID)
-            self.addConstraints[key] = addConstraint
-        #self.addConstraints = addConstraints2
+        #add_constraints2 = {}
+        for key, add_constraint in sorted(self.add_constraints.iteritems()):
+            for i, spcID in enumerate(add_constraint.sets):
+                add_constraint.sets[i] = self._spc(spcID)
+            self.add_constraints[key] = add_constraint
+        #self.add_constraints = add_constraints2
 
         constraints2 = {}
         for key, constraints in sorted(self.constraints.iteritems()):
@@ -65,10 +65,10 @@ class constraintObject2(object):
         constraints2 = {}
         referencedConstraints = {}
         # some of the ADDConstraint keys are MPCADDs/SPCADDs, some are not
-        for key, addConstraint in sorted(self.addConstraints.iteritems()):
+        for key, add_constraint in sorted(self.add_constraints.iteritems()):
             constraints = []
-            for i, spcID in enumerate(addConstraint.sets):
-                constraintIDs = addConstraint.getConstraintIDs()
+            for i, spcID in enumerate(add_constraint.sets):
+                constraintIDs = add_constraint.getConstraintIDs()
                 constraints[spcID] = constraintIDs
                 constraints += constraintIDs
                 #constraints.append(spcID)
@@ -107,7 +107,7 @@ class constraintObject2(object):
 
     def getConstraintIDs(self):
         IDs = []
-        for key, constraints in sorted(self.addConstraints.iteritems()):
+        for key, constraints in sorted(self.add_constraints.iteritems()):
             conID = constraints.ConID()
             IDs.append(conID)
 
@@ -123,8 +123,8 @@ class constraintObject2(object):
     def __repr__(self):
         msg = ''
         # write the SPCADD/MPCADD cards
-        for key, addConstraint in sorted(self.addConstraints.iteritems()):
-            msg += str(addConstraint)
+        for key, add_constraint in sorted(self.add_constraints.iteritems()):
+            msg += str(add_constraint)
 
         for key, constraints in sorted(self.constraints.iteritems()):
             for constraint in constraints:
@@ -136,13 +136,13 @@ class constraintObject(object):
 
     def __init__(self):
         self.constraints = {}  # SPC, SPC1, SPCD, etc...
-        self.addConstraints = {}  # SPCADD
+        self.add_constraints = {}  # SPCADD
         self.resolvedConstraints = []
 
     def add(self, constraint):
         conid = constraint.conid
-        assert conid not in self.addConstraints
-        self.addConstraints[conid] = constraint
+        assert conid not in self.add_constraints
+        self.add_constraints[conid] = constraint
 
     def append(self, constraint):
         key = constraint.conid
@@ -166,11 +166,11 @@ class constraintObject(object):
 
     def crossReference(self, model):
         #print "xref spcadds..."
-        #print "spcadds = ",self.addConstraints
-        if self.addConstraints:
-            for (key, addConstraint) in sorted(self.addConstraints.iteritems()):  # SPCADDs
-                self.crossReference_AddConstraint(key, addConstraint)
-            #print "spcadds2 = ",self.addConstraints
+        #print "spcadds = ",self.add_constraints
+        if self.add_constraints:
+            for (key, add_constraint) in sorted(self.add_constraints.iteritems()):  # SPCADDs
+                self.crossReference_AddConstraint(key, add_constraint)
+            #print "spcadds2 = ",self.add_constraints
         else:
             pass  # not done, no spcsets
 
@@ -185,32 +185,32 @@ class constraintObject(object):
                 #else:
                 #(conid,nodeDOFs) = constraint.getNodeDOFs(model) # the constrained nodes
                 #for nodeDOF in nodeDOFs:
-                #    self.addConstraint(conid,nodeDOF)
+                #    self.add_constraint(conid,nodeDOF)
 
-    def crossReference_AddConstraint(self, key, addConstraint):
+    def crossReference_AddConstraint(self, key, add_constraint):
         """
         cross references MPCSETs and SPCSETs
         """
         #print "add key=%s" %(key)
-        #sets = type(addConstraint)
-        spcsets = addConstraint.sets
+        #sets = type(add_constraint)
+        spcsets = add_constraint.sets
         #sys.stdout.flush()
-        #print str(addConstraint.sets)
+        #print str(add_constraint.sets)
         #sys.stdout.flush()
         #print "spcsets = ",spcsets
         for (i, conid) in enumerate(spcsets):
             #print "conid = ",conid
             #conid = spcset.conid
-            #print "self.addConstraints[conid] = ",self.getConstraint(conid)
+            #print "self.add_constraints[conid] = ",self.getConstraint(conid)
             constraint = self.getConstraint(conid)
-            #print 'newSlot = ',self.addConstraints[key].gids[i]
-            self.addConstraints[key].cross_reference(i, constraint)
-            #self.addConstraints[key].gids[i] = self.getConstraint(conid)
-            #print "spcadds* = ",self.addConstraints
+            #print 'newSlot = ',self.add_constraints[key].gids[i]
+            self.add_constraints[key].cross_reference(i, constraint)
+            #self.add_constraints[key].gids[i] = self.getConstraint(conid)
+            #print "spcadds* = ",self.add_constraints
 
     #def popConstraint(self, conid):  # need to not throw away constraints...
-    #    if conid in self.addConstraints:
-    #        return self.addConstraints[conid]
+    #    if conid in self.add_constraints:
+    #        return self.add_constraints[conid]
     #    elif conid in self.constraints:
     #        return self.constraints[conid]
     #    else:
@@ -219,14 +219,14 @@ class constraintObject(object):
 
     def getConstraint(self, conid):
         #print "sid=%s" %(conid)
-        if conid in self.addConstraints:
-            return self.addConstraints[conid]
+        if conid in self.add_constraints:
+            return self.add_constraints[conid]
         elif conid in self.constraints:
             return self.constraints[conid]
         else:
             return conid
 
-    def addConstraint(self, conid, nodeDOF):
+    def add_constraint(self, conid, nodeDOF):
         (nid, dofs) = nodeDOF
         for dof in dofs:
             self.resolvedConstraints.append((nid, dof))
@@ -234,14 +234,14 @@ class constraintObject(object):
 
     def __repr__(self):
         msg = ''
-        for addID, spcadd in sorted(self.addConstraints.iteritems()):
+        for addID, spcadd in sorted(self.add_constraints.iteritems()):
             msg += str(spcadd)  # this writes the SPC cards as well
         return msg
 
         msg = ''
-        #print "repr %s" %(self.addConstraints)
-        if self.addConstraints:
-            for addID, spcadd in sorted(self.addConstraints.iteritems()):
+        #print "repr %s" %(self.add_constraints)
+        if self.add_constraints:
+            for addID, spcadd in sorted(self.add_constraints.iteritems()):
                 msg += str(spcadd)  # this writes the SPC cards as well
         else:
             for key, constraintSets in sorted(self.constraints.iteritems()):
@@ -269,7 +269,9 @@ class Constraint(BaseCard):
 
 class SUPORT1(Constraint):
     """
+    @code
     SUPORT1 SID ID1 C1 ID2 C2 ID3 C3
+    @endcode
     """
     type = 'SUPORT1'
 
@@ -293,8 +295,10 @@ class SUPORT1(Constraint):
 
 class SUPORT(Constraint):
     """
+    @code
     SUPORT      ID1 C1 ID2 C2 ID3 C3 ID4 C4
     SUPORT1 SID ID1 C1 ID2 C2 ID3 C3
+    @endcode
     """
     type = 'SUPORT'
 
@@ -379,8 +383,11 @@ class SPC(Constraint):
     """
     Defines enforced displacement/temperature (static analysis)
     velocity/acceleration (dynamic analysis)
+    
+    @code
     SPC SID G1 C1 D1   G2 C2 D2
     SPC 2   32 3  -2.6  5
+    @endcode
     """
     type = 'SPC'
 
@@ -434,8 +441,11 @@ class SPCD(SPC):
     """
     Defines an enforced displacement value for static analysis and an enforced
     motion value (displacement, velocity or acceleration) in dynamic analysis.
+    
+    @code
     SPCD SID G1  C1   D1 G2 C2  D2
     SPCD 100 32 436 -2.6  5    2.9
+    @endcode
     """
     type = 'SPCD'
 
@@ -455,8 +465,11 @@ class SPCAX(Constraint):
     """
     Defines a set of single-point constraints or enforced displacements
     for conical shell coordinates.
+    
+    @code
     SPCAX SID RID HID C    D
     SPCAX 2   3     4 13 6.0
+    @endcode
     """
     type = 'SPCAX'
 
@@ -487,6 +500,7 @@ class SPCAX(Constraint):
 
 class SPC1(Constraint):
     """
+    @code
     SPC1 SID C G1 G2 G3 G4 G5 G6
     G7 G8 G9 -etc.-
 
@@ -496,6 +510,7 @@ class SPC1(Constraint):
 
     SPC1 SID C    G1 THRU G2
     SPC1 313 12456 6 THRU 32
+    @endcode
     """
     type = 'SPC1'
 
@@ -560,7 +575,10 @@ class SPCADD(ConstraintADD):
     """
     Defines a single-point constraint set as a union of single-point constraint
     sets defined on SPC or SPC1 entries.
+    
+    @code
     SPCADD   2       1       3
+    @endcode
     """
     type = 'SPCADD'
 

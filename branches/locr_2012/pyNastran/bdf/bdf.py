@@ -6,7 +6,7 @@ import sys
 import warnings
 
 from pyNastran.utils import list_print
-from pyNastran.general.object_introspection import list_attributes
+from pyNastran.utils import object_attributes
 
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
@@ -910,16 +910,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 #self.close_file()
                 #continue
 
-            passCard = False
             if self._is_special_card(cardName):
-                passCard = True
                 card = rawCard
-                #print(rawCard)
             elif not self._is_reject(cardName):
-                #print ""
-                #print "not a reject"
-                card = self.processCard(card)  # parse the card into fields
-                #print "processedCard = ",card
+                card = self.process_card(card)  # parse the card into fields
             elif card[0].strip() == '':
                 #print "funny strip thing..."
                 pass
@@ -928,7 +922,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 self.rejects.append(card)
                 continue
                 #print " rejecting card = ",card
-                #card = self.processCard(card)
+                #card = self.process_card(card)
 
             #print "card2 = ",list_print(card)
             #print "card = ",card
@@ -937,33 +931,19 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             if 'ENDDATA' in cardName:
                 #print cardName
                 break  # exits while loop
-            #self.log.debug('cardName = |%s|' %(cardName))
-
-            #cardObj = BDFCard(card,oldCardObj)
-            #if cardName in self.specialCards:
-            #    cardObj = card
-            #else:
-            #    cardObj = BDFCard(card)
-            #cardObj = BDFCard(card)
-
+          
             nCards = 1
             #special = False
             if '=' in cardName:
                 nCards = cardName.strip('=()')
-                if nCards:
-                    nCards = int(nCards)
-                else:
-                    nCards = 1
-                    #special = True
-                #print "nCards = ",nCards
+                nCards = int(nCards) if nCards else 1
                 #cardName = oldCardObj.field(0)
 
             for iCard in xrange(nCards):
                 #if special:
                     #print "iCard = ",iCard
                 self.add_card(card, cardName, icard=0, old_card_obj=None)
-                #if self.foundEndData:
-                #    break
+
 
             if self.doneReading or len(self.linesPack[-1]) == 0:
                 #print("doneReading=%s len(pack)=%s"
@@ -998,15 +978,15 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         return self.add_card(card, cardName, icard=iCard,
                              old_card_obj=oldCardObj)
 
-    def add_card(self, card, cardName, icard=0, old_card_obj=None):
+    def add_card(self, card, card_name, icard=0, old_card_obj=None):
         """
         adds a card object to the BDF object.
         @param self
           the object pointer
         @param card
           the list of the card fields -> ['GRID',1,2,]
-        @param cardName
-          the cardName -> 'GRID'
+        @param card_name
+          the card_name -> 'GRID'
         @param icard
           used when reading Nastran Free-Format (disabled)
         @param old_card_obj
@@ -1020,936 +1000,181 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
            the cardObject is not a card-type object...so not a GRID card
            or CQUAD4 object.  It's a BDFCard Object.  However, you know the
            type (assuming a GRID), so just call the mesh.Node(nid) to get the
-           No de object that was just created.
+           Node object that was just created.
         @warning
           cardObject is not returned
-        @todo this method is 600+ lines long...refactor time...
         """
-        #print "card = ",card
+        
+        card_obj = BDFCard(card, oldCardObj=None)
+        # function that gets by name the initialized object (from global scope)
+        _get_cls = lambda name: globals()[name](card_obj)
+        _cls = lambda name: globals()[name]
+        
+        if card == [] or card_name == '':
+            return card_obj
 
-        #if cardName in self.specialCards:
-        #    pass #cardObj = card
-        #else:
-        cardObj = BDFCard(card, oldCardObj=None)
-
-        #cardObj = BDFCard(card, old_card_obj=None)
-        #if self.debug:
-        #    self.log.debug(card)
-        #    self.log.debug("*old_card_obj = \n%s" %(old_card_obj))
-        #    self.log.debug("*cardObj = \n%s" %(cardObj))
-        #cardObj.applyOldFields(icard)
-
+        if self._auto_reject:
+            self.reject_cards.append(card)
+            print('rejecting processed %s' % (card))
+            return card_obj
         try:
-            if self._auto_reject:
-                print('rejecting processed %s' % (card))
-                self.reject_cards.append(card)
-            elif card == [] or cardName == '':
-                pass
-            elif cardName == 'DMIG':  # not done...
-                if cardObj.field(2) == 'UACCEL':  # special DMIG card
+            # cards that have their own method add_CARDNAME to add them
+            if card_name in ['LSEQ', 'PHBDY', 'AERO', 'AEROS', 'AEFACT', 'AELINK',
+              'AELIST', 'AEPARM', 'AESTAT', 'AESURF', 'TRIM', 'FLUTTER', 
+              'FLFACT', 'GUST', 'NLPARM', 'TSTEP', 'TSTEPNL', 'SESET', 'DCONSTR',
+              'DESVAR', 'DDVAL', 'DLINK', 'PARAM']:
+                getattr(self, 'add_' + card_name)(_get_cls(card_name))
+                return card_obj
+
+            # dictionary of cards. Key is the name of the function to add the card 
+            # 'PCOMPG':  # hasnt been verified
+            # 'MAT8':  # note there is no MAT6 or MAT7
+            _cards = {
+             'add_node' : ['GRID'],
+             'add_element': ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CQUADX',
+               'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6', 'CBAR', 'CBEAM',
+               'CBEAM3', 'CROD', 'CONROD', 'CTUBE', 'CBEND', 'CELAS1', 'CELAS2',
+               'CELAS3', 'CELAS4', 'CONM1',  'CONM2', 'CMASS1', 'CMASS2','CMASS3',
+               'CMASS4', 'CVISC', 'CSHEAR', 'CGAP', 'CRAC2D', 'CRAC3D'],
+             'add_damper_element' : ['CBUSH', 'CBUSH1D', 'CFAST', 'CDAMP1',
+               'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5'],
+             'add_rigid_element' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3'],
+             'add_property' : ['PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PSOLID',
+               'PBAR', 'PBARL', 'PBEAM', 'PBCOMP', 'PBEAML', 'PROD', 'PTUBE',
+               'PLSOLID', 'PBUSH1D', 'PBUSH', 'PFAST', 'PDAMPT', 'PDAMP5',
+               'PGAP', 'PRAC2D', 'PRAC3D'],
+             'add_creep_material' : ['CREEP'], # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
+             'add_material': ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 
+               'MATHP'],
+             'add_thermal_material': ['MAT4', 'MAT5'],
+             'add_material_dependence': ['MATS1'],
+             'add_load': ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 
+               'MOMENT2', 'GRAV', 'ACCEL1', 'LOAD', 'PLOAD', 'PLOAD1', 'PLOAD2',
+               'PLOAD4', 'PLOADX1', 'RFORCE', 'DLOAD', 'SLOAD', 'TLOAD1',
+               'TLOAD2', 'RLOAD1', 'RLOAD2', 'RANDPS'],
+             'add_thermal_load': ['TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY'],
+             'add_thermal_element' : ['CHBDYE', 'CHBDYG', 'CHBDYP'],
+             'add_convection_property' : ['PCONV', 'PCONVM'],
+             'add_thermal_BC' : ['CONV', 'RADBC'],
+             'add_constraint_MPC' : ['MPC', 'MPCADD'],
+             'add_constraint_SPC' : ['SPC', 'SPC1', 'SPCAX', 'SPCD', 'SPCADD'],
+             'add_suport' : ['SUPORT'], # pseudo-constraint
+             'add_constraint' : ['SUPORT1'], # pseudo-constraint
+             'add_SPLINE' : ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5'],
+             'add_CAERO' : ['CAERO1', 'CAERO2'],
+             'add_PAERO' : ['PAERO1', 'PAERO2'],
+             'add_MKAERO' : ['MKAERO1', 'MKAERO2'],
+             'add_FREQ' : ['FREQ', 'FREQ1', 'FREQ2'],
+             'add_ASET' : ['ASET', 'ASET1'], 'add_BSET' : ['BSET', 'BSET1'],
+             'add_CSET' : ['CSET', 'CSET1'], 'add_QSET' : ['QSET', 'QSET1'],
+             'add_SET' : ['SET1', 'SET3'],
+             'add_DRESP' : ['DRESP1', 'DRESP2'],
+             'add_DVPREL' : ['DVPREL1', 'DVPREL2'],
+             'add_coord' : ['CORD2R', 'CORD2C', 'CORD2S'],
+             'add_table' : ['TABLED1', 'TABLED2', 'TABLED3', 'TABLEM1',
+               'TABLEM2', 'TABLEM3', 'TABLEM4', 'TABLES1', 'TABLEST'],
+             'add_random_table' : ['TABRND1', 'TABRNDG'],
+             'add_method' : ['EIGB', 'EIGR', 'EIGRL'],
+             'add_cmethod' : ['EIGC', 'EIGP'], 'add_DVMREL' : ['DVMREL1']
+            }
+
+            for func, nams in _cards.iteritems():
+                if card_name in nams:
+                    getattr(self, func)(_get_cls(card_name))
+                    return card_obj
+                
+            ############ card that requires more careful processing ###########
+            _dct = {'CTETRA': (7, CTETRA4, CTETRA10), 'CHEXA': (11, CHEXA8, 
+                    CHEXA20), 'CPENTA' : (9, CPENTA6, CPENTA15)}
+            if card_name in _dct:                
+                d = _dct[card_name]
+                self.add_element((d[1] if card_obj.nFields() == d[0] else d[2])(card_obj))
+                return card_obj
+            
+            _dct = {'PELAS': (5,), 'PVISC': (5,), 'PDAMP' : (3, 5)}
+            if card_name in _dct:
+                self.add_property(_get_cls(card_name))
+                for i in _dct[card_name]:
+                    if card_obj.field(i):
+                        self.add_property(_cls(card_name)(card_obj, 1))
+                return card_obj
+        
+            if card_name in ['DEQATN']:  # buggy for commas
+                #print 'DEQATN:  card_obj.card=%s' %(card_obj.card)
+                #self.add_DEQATN(DEQATN(card_obj)) # should be later moved to 
+                self.rejects.append(card)          # for loop below            
+            elif card_name == 'GRDSET':
+                self.gridSet = GRDSET(card_obj)
+            elif card_name == 'DOPTPRM':
+                self.doptprm = DOPTPRM(card_obj)
+                
+            elif card_name == 'DMIG':  # not done...
+                if card_obj.field(2) == 'UACCEL':  # special DMIG card
                     self.reject_cards.append(card)
-                elif cardObj.field(2) == 0:
-                    dmig = DMIG(cardObj)
-                    self.addDMIG(dmig)
+                elif card_obj.field(2) == 0:
+                    self.add_DMIG(DMIG(card_obj))
                 else:
-                    name = cardObj.field(1)
-                    dmig = self.dmigs[name]
-                    dmig.addColumn(cardObj)
-
-            elif cardName == 'DMIJ':
-                if cardObj.field(2) == 0:
-                    dmij = DMIJ(cardObj)
-                    self.addDMIJ(dmij)
+                    self.dmigs[card_obj.field(1)].addColumn(card_obj)
+                    
+            elif card_name in ['DMI', 'DMIJ', 'DMIJI', 'DMIK']:
+                if card_obj.field(2) == 0:
+                    getattr(self, 'add_' + card_name)(_get_cls(card_name))
                 else:
-                    name = cardObj.field(1)
-                    dmij = self.dmijs[name]
-                    dmij.addColumn(cardObj)
-            elif cardName == 'DMIJI':
-                if cardObj.field(2) == 0:
-                    dmiji = DMIJI(cardObj)
-                    self.addDMIJI(dmiji)
-                else:
-                    name = cardObj.field(1)
-                    dmiji = self.dmijis[name]
-                    dmiji.addColumn(cardObj)
-            elif cardName == 'DMIK':
-                if cardObj.field(2) == 0:
-                    dmik = DMIK(cardObj)
-                    self.addDMIK(dmik)
-                else:
-                    name = cardObj.field(1)
-                    dmik = self.dmiks[name]
-                    dmik.addColumn(cardObj)
-            elif cardName == 'DMI':
-                if cardObj.field(2) == 0:
-                    dmi = DMI(cardObj)
-                    self.addDMI(dmi)
-                else:
-                    name = cardObj.field(1)
-                    dmi = self.dmis[name]
-                    dmi.addColumn(cardObj)
-
-            elif cardName == 'DEQATN':  # buggy for commas
-                #print 'DEQATN:  cardObj.card=%s' %(cardObj.card)
-                #equation = DEQATN(cardObj)
-                #self.addDEQATN(equation)
-                self.rejects.append(card)
-
-            elif cardName == 'GRID':
-                node = GRID(cardObj)
-                self.addNode(node)
-            elif cardName == 'GRDSET':
-                self.gridSet = GRDSET(cardObj)
-            #elif cardName == 'POINT':
-            #    point = POINT(cardObj)
-            #    self.addPoint(point)
-
-            #elif cardName == 'RINGAX':
-            #    node = RINGAX(cardObj)
-            #    self.addNode(node)
-            elif cardName == 'SPOINT':
-                spoint = SPOINTs(cardObj)
-                self.addSPoint(spoint)
-
-            elif cardName == 'CQUAD4':
-                elem = CQUAD4(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CQUAD8':
-                elem = CQUAD8(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CQUAD':
-                elem = CQUAD(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CQUADR':
-                elem = CQUADR(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CQUADX':
-                elem = CQUADX(cardObj)
-                self.addElement(elem)
-
-            elif cardName == 'CTRIA3':
-                elem = CTRIA3(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CTRIA6':
-                elem = CTRIA6(cardObj)
-                self.addElement(elem)
-
-            elif cardName == 'CTRIAR':
-                elem = CTRIAR(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CTRIAX':
-                elem = CTRIAX(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CTRIAX6':
-                elem = CTRIAX6(cardObj)
-                self.addElement(elem)
-
-            elif cardName == 'CTETRA':  # 4/10 nodes
-                nFields = cardObj.nFields()
-                if   nFields == 7:
-                    elem = CTETRA4(cardObj)  # 4+3
-                else:
-                    elem = CTETRA10(cardObj)  # 10+3
-                self.addElement(elem)
-            elif cardName == 'CHEXA':  # 8/20 nodes
-                nFields = cardObj.nFields()
-                if   nFields == 11:
-                    elem = CHEXA8(cardObj)   # 8+3
-                else:
-                    elem = CHEXA20(cardObj)  # 20+3
-                self.addElement(elem)
-            elif cardName == 'CPENTA':  # 6/15 nodes
-                nFields = cardObj.nFields()
-                if   nFields == 9:
-                    elem = CPENTA6(cardObj)   # 6+3
-                else:
-                    elem = CPENTA15(cardObj)  # 15+3
-                self.addElement(elem)
-
-            elif cardName == 'CBAR':
-                elem = CBAR(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CBEAM':
-                elem = CBEAM(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CBEAM3':
-                elem = CBEAM3(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CROD':
-                elem = CROD(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CONROD':
-                elem = CONROD(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CTUBE':
-                elem = CTUBE(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CBEND':
-                elem = CBEND(cardObj)
-                self.addElement(elem)
-
-            elif cardName == 'CELAS1':
-                elem = CELAS1(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CELAS2':
-                (elem) = CELAS2(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CELAS3':
-                (elem) = CELAS3(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CELAS4':
-                (elem) = CELAS4(cardObj)
-                self.addElement(elem)
-
-            elif cardName == 'CBUSH':
-                (elem) = CBUSH(cardObj)
-                self.addDamperElement(elem)
-            elif cardName == 'CBUSH1D':
-                (elem) = CBUSH1D(cardObj)
-                self.addDamperElement(elem)
-            elif cardName == 'CFAST':
-                (elem) = CFAST(cardObj)
-                self.addDamperElement(elem)
-
-            elif cardName == 'CDAMP1':
-                (elem) = CDAMP1(cardObj)
-                self.addDamperElement(elem)
-            elif cardName == 'CDAMP2':
-                (elem) = CDAMP2(cardObj)
-                self.addDamperElement(elem)
-            elif cardName == 'CDAMP3':
-                (elem) = CDAMP3(cardObj)
-                self.addDamperElement(elem)
-            elif cardName == 'CDAMP4':
-                (elem) = CDAMP4(cardObj)
-                self.addDamperElement(elem)
-            elif cardName == 'CDAMP5':
-                (elem) = CDAMP5(cardObj)
-                self.addDamperElement(elem)
-
-            elif cardName == 'CONM1':
-                elem = CONM1(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CONM2':
-                elem = CONM2(cardObj)
-                self.addElement(elem)
-
-            elif cardName == 'CMASS1':
-                elem = CMASS1(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CMASS2':
-                elem = CMASS2(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CMASS3':
-                elem = CMASS3(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CMASS4':
-                elem = CMASS4(cardObj)
-                self.addElement(elem)
-
-            elif cardName == 'CVISC':
-                elem = CVISC(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CSHEAR':
-                elem = CSHEAR(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CGAP':
-                elem = CGAP(cardObj)
-                self.addElement(elem)
-
-            elif cardName == 'CRAC2D':
-                elem = CRAC2D(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CRAC3D':
-                elem = CRAC3D(cardObj)
-                self.addElement(elem)
-
-            # rigid elements
-            elif cardName == 'RBAR':
-                (elem) = RBAR(cardObj)
-                self.addRigidElement(elem)
-            elif cardName == 'RBAR1':
-                (elem) = RBAR1(cardObj)
-                self.addRigidElement(elem)
-            elif cardName == 'RBE1':
-                (elem) = RBE1(cardObj)
-                self.addRigidElement(elem)
-            elif cardName == 'RBE2':
-                (elem) = RBE2(cardObj)
-                self.addRigidElement(elem)
-            elif cardName == 'RBE3':
-                (elem) = RBE3(cardObj)
-                self.addRigidElement(elem)
-
-            elif cardName == 'PSHELL':
-                prop = PSHELL(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PCOMP':
-                prop = PCOMP(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PCOMPG':  # hasnt been verified
-                prop = PCOMPG(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PSHEAR':
-                prop = PSHEAR(cardObj)
-                self.addProperty(prop)
-
-            elif cardName == 'PSOLID':
-                prop = PSOLID(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PBAR':
-                prop = PBAR(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PBARL':
-                prop = PBARL(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PBEAM':
-                prop = PBEAM(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PBCOMP':
-                prop = PBCOMP(cardObj)
-                self.addProperty(prop)
-            #elif cardName == 'PBEAM3':
-            #    prop = PBEAM3(cardObj)
-            #    self.addProperty(prop)
-            elif cardName == 'PBEAML':   # disabled
-                prop = PBEAML(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PELAS':
-                prop = PELAS(cardObj)
-                self.addProperty(prop)
-                if cardObj.field(5):
-                    prop = PELAS(cardObj, 1)  # makes 2nd PELAS card
-                    self.addProperty(prop)
-            elif cardName == 'PVISC':
-                prop = PVISC(cardObj)
-                self.addProperty(prop)
-                if cardObj.field(5):
-                    prop = PVISC(card, 1)
-                    self.addProperty(prop)
-            elif cardName == 'PROD':
-                prop = PROD(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PTUBE':
-                prop = PTUBE(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PMASS':
-                prop = PMASS(cardObj, nOffset=0)
-                self.addProperty(prop)
-
-                if cardObj.field(3) is not None:
-                    prop = PMASS(cardObj, nOffset=1)
-                    self.addProperty(prop)
-                if cardObj.field(5) is not None:
-                    prop = PMASS(cardObj, nOffset=2)
-                    self.addProperty(prop)
-                if cardObj.field(7) is not None:
-                    prop = PMASS(cardObj, nOffset=3)
-                    self.addProperty(prop)
-
-            elif cardName == 'PLSOLID':
-                prop = PLSOLID(cardObj)
-                self.addProperty(prop)
-
-            elif cardName == 'PBUSH1D':
-                prop = PBUSH1D(cardObj)
-                self.addProperty(prop)
-            #elif cardName == 'PBUSHT':
-            #    prop = PBUSHT(cardObj)
-            #    self.addProperty(prop)
-            elif cardName == 'PBUSH':
-                prop = PBUSH(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PFAST':
-                prop = PFAST(cardObj)
-                self.addProperty(prop)
-
-            elif cardName == 'PDAMPT':
-                prop = PDAMPT(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PDAMP':
-                prop = PDAMP(cardObj)
-                self.addProperty(prop)
-                if cardObj.field(3):
-                    prop = PDAMP(cardObj, 1)  # makes 2nd PDAMP card
-                    self.addProperty(prop)
-                if cardObj.field(5):
-                    prop = PDAMP(cardObj, 1)  # makes 3rd PDAMP card
-                    self.addProperty(prop)
-
-            elif cardName == 'PDAMP5':
-                prop = PDAMP5(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PGAP':
-                elem = PGAP(cardObj)
-                self.addProperty(elem)
-            elif cardName == 'PRAC2D':
-                prop = PRAC2D(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PRAC3D':
-                prop = PRAC3D(cardObj)
-                self.addProperty(prop)
-
-            elif cardName == 'CREEP':  # hasnt been verified
-                creep = CREEP(cardObj)
-                # links up to MAT1, MAT2, MAT9 w/ same MID
-                self.addCreepMaterial(creep)
-            elif cardName == 'MAT1':
-                material = MAT1(cardObj)
-                self.addMaterial(material)
-            elif cardName == 'MAT2':
-                material = MAT2(cardObj)
-                self.addMaterial(material)
-            elif cardName == 'MAT3':
-                material = MAT3(cardObj)
-                self.addMaterial(material)
-            elif cardName == 'MAT4':
-                material = MAT4(cardObj)
-                self.addThermalMaterial(material)
-            elif cardName == 'MAT5':
-                material = MAT5(cardObj)
-                self.addThermalMaterial(material)
-            elif cardName == 'MAT8':  # note there is no MAT6 or MAT7
-                material = MAT8(cardObj)
-                self.addMaterial(material)
-            elif cardName == 'MAT9':
-                material = MAT9(cardObj)
-                self.addMaterial(material)
-            elif cardName == 'MAT10':
-                material = MAT10(cardObj)
-                self.addMaterial(material)
-
-            elif cardName == 'MATHP':
-                material = MATHP(cardObj)
-                self.addMaterial(material)
-
-            elif cardName == 'MATS1':
-                material = MATS1(cardObj)
-                self.addMaterialDependence(material)
-            #elif cardName == 'MATT1':
-            #    material = MATT1(cardObj)
-            #    self.addTempMaterial(material)
-            #elif cardName == 'MATT2':
-            #    material = MATT2(cardObj)
-            #    self.addTempMaterial(material)
-            #elif cardName == 'MATT3':
-            #    material = MATT3(cardObj)
-            #    self.addTempMaterial(material)
-            #elif cardName == 'MATT4':
-            #    material = MATT4(cardObj)
-            #    self.addTempMaterial(material)
-            #elif cardName == 'MATT5':
-            #    material = MATT5(cardObj)
-            #    self.addTempMaterial(material)
-            #elif cardName == 'MATT8':
-            #    material = MATT8(cardObj)
-            #    self.addTempMaterial(material)
-            #elif cardName == 'MATT9':
-            #    material = MATT9(cardObj)
-            #    self.addTempMaterial(material)
-
-            # cards contained within the LOAD card
-            elif cardName == 'FORCE':
-                force = FORCE(cardObj)
-                self.addLoad(force)
-            elif cardName == 'FORCE1':
-                force = FORCE1(cardObj)
-                self.addLoad(force)
-            elif cardName == 'FORCE2':
-                force = FORCE2(cardObj)
-                self.addLoad(force)
-            elif cardName == 'MOMENT':
-                moment = MOMENT(cardObj)
-                self.addLoad(moment)
-            elif cardName == 'MOMENT1':
-                moment = MOMENT1(cardObj)
-                self.addLoad(moment)
-            elif cardName == 'MOMENT2':
-                moment = MOMENT2(cardObj)
-                self.addLoad(moment)
-            elif cardName == 'GRAV':
-                grav = GRAV(cardObj)
-                self.addLoad(grav)
-            elif cardName == 'ACCEL1':
-                grav = ACCEL1(cardObj)
-                self.addLoad(grav)
-            elif cardName == 'LOAD':
-                load = LOAD(cardObj)
-                self.addLoad(load)
-            elif cardName == 'PLOAD':
-                load = PLOAD(cardObj)
-                self.addLoad(load)
-            elif cardName == 'PLOAD1':
-                load = PLOAD1(cardObj)
-                self.addLoad(load)
-            elif cardName == 'PLOAD2':
-                load = PLOAD2(cardObj)
-                self.addLoad(load)
-            elif cardName == 'PLOAD4':
-                load = PLOAD4(cardObj)
-                self.addLoad(load)
-            elif cardName == 'PLOADX1':
-                load = PLOADX1(cardObj)
-                self.addLoad(load)
-            elif cardName == 'RFORCE':
-                load = RFORCE(cardObj)
-                self.addLoad(load)
-
-            elif cardName == 'LSEQ':
-                load = LSEQ(cardObj)
-                self.addLSeq(load)
-
-            elif cardName == 'DLOAD':
-                load = DLOAD(cardObj)
-                self.addLoad(load)
-            elif cardName == 'SLOAD':
-                load = SLOAD(cardObj)
-                self.addLoad(load)
-
-            elif cardName == 'TLOAD1':
-                load = TLOAD1(cardObj)
-                self.addLoad(load)
-            elif cardName == 'TLOAD2':
-                load = TLOAD2(cardObj)
-                self.addLoad(load)
-            elif cardName == 'RLOAD1':
-                load = RLOAD1(cardObj)
-                self.addLoad(load)
-            elif cardName == 'RLOAD2':
-                load = RLOAD2(cardObj)
-                self.addLoad(load)
-            elif cardName == 'RANDPS':
-                load = RANDPS(cardObj)
-                self.addLoad(load)
-
-            # thermal loads
-            elif cardName == 'TEMP':
-                load = TEMP(cardObj)
-                self.addThermalLoad(load)
-            #elif cardName == 'TEMPD':
-            #    load = TEMPD(cardObj)
-            #    self.addThermalLoad(load)
-            elif cardName == 'QBDY1':
-                load = QBDY1(cardObj)
-                self.addThermalLoad(load)
-            elif cardName == 'QBDY2':
-                load = QBDY2(cardObj)
-                self.addThermalLoad(load)
-            elif cardName == 'QBDY3':
-                load = QBDY3(cardObj)
-                self.addThermalLoad(load)
-            elif cardName == 'QHBDY':
-                load = QHBDY(cardObj)
-                self.addThermalLoad(load)
-
-            # thermal elements
-            elif cardName == 'CHBDYE':
-                element = CHBDYE(cardObj)
-                self.addThermalElement(element)
-            elif cardName == 'CHBDYG':
-                element = CHBDYG(cardObj)
-                self.addThermalElement(element)
-            elif cardName == 'CHBDYP':
-                element = CHBDYP(cardObj)
-                self.addThermalElement(element)
-
-            # thermal properties
-            elif cardName == 'PCONV':
-                prop = PCONV(cardObj)
-                self.addConvectionProperty(prop)
-            elif cardName == 'PCONVM':
-                prop = PCONVM(cardObj)
-                self.addConvectionProperty(prop)
-            elif cardName == 'PHBDY':
-                prop = PHBDY(cardObj)
-                self.addPHBDY(prop)
-
-            # thermal BCs
-            elif cardName == 'CONV':
-                bc = CONV(cardObj)
-                self.addThermalBC(bc, bc.eid)
-            #elif cardName == 'RADM':
-            #    bc = RADM(cardObj)
-            #    self.addThermalBC(bc, bc.nodamb)
-            elif cardName == 'RADBC':
-                bc = RADBC(cardObj)
-                self.addThermalBC(bc, bc.nodamb)
-
-            #elif cardName == 'TABLEH1':
-            #    load = TABLEH1(cardObj)
-            #    self.addTable(load)
-
-            # constraints
-            elif cardName == 'MPC':
-                constraint = MPC(cardObj)
-                self.addConstraint_MPC(constraint)
-            elif cardName == 'MPCADD':
-                constraint = MPCADD(cardObj)
-                #assert not isinstance(constraint,SPCADD)
-                self.addConstraint_MPC(constraint)
-
-            # constraints
-            elif cardName == 'SPC':
-                constraint = SPC(cardObj)
-                self.addConstraint_SPC(constraint)
-            elif cardName == 'SPC1':
-                constraint = SPC1(cardObj)
-                self.addConstraint_SPC(constraint)
-            elif cardName == 'SPCAX':
-                constraint = SPCAX(cardObj)
-                self.addConstraint_SPC(constraint)
-            elif cardName == 'SPCD':
-                constraint = SPCD(cardObj)
-                self.addConstraint_SPC(constraint)
-            elif cardName == 'SPCADD':
-                constraint = SPCADD(cardObj)
-                #assert not isinstance(constraint,MPCADD)
-                self.addConstraint_SPC(constraint)
-            elif cardName == 'SUPORT':  # pseudo-constraint
-                suport = SUPORT(cardObj)
-                self.addSuport(suport)
-            elif cardName == 'SUPORT1':  # pseudo-constraint
-                suport1 = SUPORT1(cardObj)
-                self.addConstraint(suport1)
-
-            # aero
-            elif cardName == 'SPLINE1':
-                aero = SPLINE1(cardObj)
-                self.addSpline(aero)
-            elif cardName == 'SPLINE2':
-                aero = SPLINE2(cardObj)
-                self.addSpline(aero)
-            #elif cardName == 'SPLINE3':
-                #aero = SPLINE3(cardObj)
-                #self.addSpline(aero)
-            elif cardName == 'SPLINE4':
-                aero = SPLINE4(cardObj)
-                self.addSpline(aero)
-            elif cardName == 'SPLINE5':
-                aero = SPLINE5(cardObj)
-                self.addSpline(aero)
-
-            elif cardName == 'CAERO1':
-                aero = CAERO1(cardObj)
-                self.addCAero(aero)
-            elif cardName == 'CAERO2':
-                aero = CAERO2(cardObj)
-                self.addCAero(aero)
-            #elif cardName == 'CAERO3':
-            #    aero = CAERO3(cardObj)
-            #    self.addCAero(aero)
-            elif cardName == 'PAERO1':
-                aero = PAERO1(cardObj)
-                self.addPAero(aero)
-            elif cardName == 'PAERO2':
-                aero = PAERO2(cardObj)
-                self.addPAero(aero)
-            #elif cardName == 'PAERO3':
-            #    aero = PAERO3(cardObj)
-            #    self.addPAero(aero)
-            elif cardName == 'AERO':
-                aero = AERO(cardObj)
-                self.addAero(aero)
-            elif cardName == 'AEROS':
-                aeros = AEROS(cardObj)
-                self.addAeros(aeros)
-
-            elif cardName == 'AEFACT':
-                aefact = AEFACT(cardObj)
-                self.addAEFact(aefact)
-            elif cardName == 'AELINK':
-                aelink = AELINK(cardObj)
-                self.addAELink(aelink)
-            elif cardName == 'AELIST':
-                aelist = AELIST(cardObj)
-                self.addAEList(aelist)
-            elif cardName == 'AEPARM':
-                aeparm = AEPARM(cardObj)
-                self.addAEParam(aeparm)
-            elif cardName == 'AESTAT':
-                aestat = AESTAT(cardObj)
-                self.addAEStat(aestat)
-            elif cardName == 'AESURF':
-                aesurf = AESURF(cardObj)
-                self.addAESurf(aesurf)
-
-            elif cardName == 'TRIM':
-                trim = TRIM(cardObj)
-                self.addTrim(trim)
-
-            elif cardName == 'FLUTTER':
-                flutter = FLUTTER(cardObj)
-                self.addFlutter(flutter)
-            elif cardName == 'MKAERO1':
-                mkaero = MKAERO1(cardObj)
-                self.addMKAero(mkaero)
-            elif cardName == 'MKAERO2':
-                mkaero = MKAERO2(cardObj)
-                self.addMKAero(mkaero)
-
-            elif cardName == 'FLFACT':
-                flfact = FLFACT(cardObj)
-                self.addFLFACT(flfact)
-            elif cardName == 'GUST':
-                gust = GUST(cardObj)
-                self.addGUST(gust)
-
+                    getattr(self, card_name.lower() +
+                            's')[card_obj.field(1)].addColumn(card_obj)
             # dynamic
-            elif cardName == 'DAREA':
-                darea = DAREA(cardObj)
-                self.addDArea(darea)
-                if cardObj.field(5):
-                    darea = DAREA(cardObj, 1)
-                    self.addDArea(darea)
-            elif cardName == 'NLPARM':
-                nlparmObj = NLPARM(cardObj)
-                self.addNLParm(nlparmObj)
-            elif cardName == 'TSTEP':
-                tstepObj = TSTEP(cardObj)
-                self.addTSTEP(tstepObj)
-            elif cardName == 'TSTEPNL':
-                tstepnlObj = TSTEPNL(cardObj)
-                self.addTSTEPNL(tstepnlObj)
+            elif card_name == 'DAREA':
+                self.add_DAREA(DAREA(card_obj))
+                if card_obj.field(5):
+                    self.add_DAREA(DAREA(card_obj, 1))
 
-            # frequencies
-            elif cardName == 'FREQ':
-                freq = FREQ(cardObj)
-                self.addFREQ(freq)
-            elif cardName == 'FREQ1':
-                freq = FREQ1(cardObj)
-                self.addFREQ(freq)
-            elif cardName == 'FREQ2':
-                freq = FREQ2(cardObj)
-                self.addFREQ(freq)
-            #elif cardName == 'FREQ3':
-            #    freq = FREQ3(cardObj)
-            #    self.addFREQ(freq)
-            #elif cardName == 'FREQ4':
-            #    freq = FREQ4(cardObj)
-            #    self.addFREQ(freq)
-            #elif cardName == 'FREQ5':
-            #    freq = FREQ5(cardObj)
-            #    self.addFREQ(freq)
+            elif card_name in ['CORD1R', 'CORD1C', 'CORD1S']:
+                self.add_coord(_get_cls(card_name))
+                if card_obj.field(5):
+                    self.add_coord(_cls(card_name)(card_obj, nCoord=1))
 
-            # SETx
-            elif cardName == 'ASET':
-                set_obj = ASET(cardObj)
-                self.addASet(set_obj)
-            elif cardName == 'BSET':
-                set_obj = BSET(cardObj)
-                self.addBSet(set_obj)
-            elif cardName == 'CSET':
-                set_obj = CSET(cardObj)
-                self.addCSet(set_obj)
-            elif cardName == 'QSET':
-                set_obj = QSET(cardObj)
-                self.addQSet(set_obj)
-            elif cardName == 'ASET1':
-                set_obj = ASET1(cardObj)
-                self.addASet(set_obj)
-            elif cardName == 'BSET1':
-                set_obj = BSET1(cardObj)
-                self.addBSet(set_obj)
-            elif cardName == 'CSET1':
-                set_obj = CSET1(cardObj)
-                self.addCSet(set_obj)
-            elif cardName == 'QSET1':
-                set_obj = QSET1(cardObj)
-                self.addQSet(set_obj)
-
-            #elif cardName == 'USET':
-            #    set_obj = USET(cardObj)
-            #    self.addSet(set_obj)
-            #elif cardName == 'USET1':
-            #    set_obj = USET1(cardObj)
-            #    self.addSet(set_obj)
-            elif cardName == 'SET1':
-                set_obj = SET1(cardObj)
-                self.addSet(set_obj)
-            #elif cardName == 'SET2':
-            #    set_obj = SET2(cardObj)
-            #    self.addSet(set_obj)
-            elif cardName == 'SET3':
-                set_obj = SET3(cardObj)
-                self.addSet(set_obj)
-
-            elif cardName == 'SESET':
-                set_obj = SESET(cardObj)
-                self.addSetSuper(set_obj)
-
-            # optimization
-            elif cardName == 'DCONSTR':
-                flutter = DCONSTR(cardObj)
-                self.addDConstr(flutter)
-            elif cardName == 'DESVAR':
-                desvar = DESVAR(cardObj)
-                self.addDesvar(desvar)
-            elif cardName == 'DDVAL':
-                ddval = DDVAL(cardObj)
-                self.addDDVal(ddval)
-            elif cardName == 'DLINK':
-                dlink = DLINK(cardObj)
-                self.addDLink(dlink)
-            elif cardName == 'DRESP1':
-                ddval = DRESP1(cardObj)
-                self.addDResp(ddval)
-            elif cardName == 'DRESP2':
-                ddval = DRESP2(cardObj)
-                self.addDResp(ddval)
-            elif cardName == 'DVPREL1':
-                dvprel = DVPREL1(cardObj)
-                self.addDvprel(dvprel)
-            elif cardName == 'DVPREL2':
-                dvprel = DVPREL2(cardObj)
-                self.addDvprel(dvprel)
-            elif cardName == 'DVMREL1':
-                dvmrel = DVMREL1(cardObj)
-                self.addDvmrel(dvmrel)
-            #elif cardName == 'DVMREL2':
-            #    dvmrel = DVMREL2(cardObj)
-            #    self.addDvmrel(dvmrel)
-            elif cardName == 'DOPTPRM':
-                doptprm = DOPTPRM(cardObj)
-                #self.addDoptprm(doptprm)
-                self.doptprm = doptprm
-
-            # coordinate systems
-            elif cardName == 'CORD2R':
-                coord = CORD2R(cardObj)
-                self.addCoord(coord)
-            elif cardName == 'CORD2C':
-                coord = CORD2C(cardObj)
-                self.addCoord(coord)
-            elif cardName == 'CORD2S':
-                coord = CORD2S(cardObj)
-                self.addCoord(coord)
-
-            elif cardName == 'CORD1R':
-                coord = CORD1R(cardObj)
-                self.addCoord(coord)
-                if cardObj.field(5):
-                    coord = CORD1R(cardObj, nCoord=1)
-                    self.addCoord(coord)
-
-            elif cardName == 'CORD1C':
-                coord = CORD1C(cardObj)
-                self.addCoord(coord)
-                if cardObj.field(5):
-                    coord = CORD1C(cardObj, nCoord=1)
-                    self.addCoord(coord)
-
-            elif cardName == 'CORD1S':
-                coord = CORD1S(cardObj)
-                self.addCoord(coord)
-                if cardObj.field(5):
-                    coord = CORD1S(cardObj, nCoord=1)
-                    self.addCoord(coord)
-
-            #elif cardName == 'CORD3G':
-            #    coord = CORD3G(cardObj)
-            #    self.addCoord(coord)
-
-            # Table
-            elif cardName == 'TABLED1':
-                table = TABLED1(cardObj)
-                self.addTable(table)
-            elif cardName == 'TABLED2':
-                table = TABLED2(cardObj)
-                self.addTable(table)
-            elif cardName == 'TABLED3':
-                table = TABLED3(cardObj)
-                self.addTable(table)
-            #elif cardName == 'TABLED4':
-            #    table = TABLED4(cardObj)
-            #    self.addTable(table)
-
-            elif cardName == 'TABLEM1':
-                table = TABLEM1(cardObj)
-                self.addTable(table)
-            elif cardName == 'TABLEM2':
-                table = TABLEM2(cardObj)
-                self.addTable(table)
-            elif cardName == 'TABLEM3':
-                table = TABLEM3(cardObj)
-                self.addTable(table)
-            elif cardName == 'TABLEM4':
-                table = TABLEM4(cardObj)
-                self.addTable(table)
-
-            elif cardName == 'TABLES1':
-                table = TABLES1(cardObj)
-                self.addTable(table)
-            elif cardName == 'TABLEST':
-                table = TABLEST(cardObj)
-                self.addTable(table)
-
-            # randomTables
-            elif cardName == 'TABRND1':
-                table = TABRND1(cardObj)
-                self.addRandomTable(table)
-            elif cardName == 'TABRNDG':
-                table = TABRNDG(cardObj)
-                self.addRandomTable(table)
-
-            # Methods
-            elif cardName == 'EIGB':
-                method = EIGB(cardObj)
-                self.addMethod(method)
-            elif cardName == 'EIGR':
-                method = EIGR(cardObj)
-                self.addMethod(method)
-            elif cardName == 'EIGRL':
-                method = EIGRL(cardObj, sol=self.sol)
-                self.addMethod(method)
-
-            # CMethods
-            elif cardName == 'EIGC':
-                method = EIGC(cardObj)
-                self.addCMethod(method)
-            elif cardName == 'EIGP':
-                method = EIGP(cardObj)
-                self.addCMethod(method)
-
-            elif cardName == 'PARAM':
-                param = PARAM(cardObj)
-                self.addParam(param)
-            elif 'ENDDATA' in cardName:
+            elif card_name == 'PMASS':
+                self.add_property(PMASS(card_obj, nOffset=0))
+                for i,j in enumerate([3,5,7]):
+                    if card_obj.field(j) is not None:
+                        self.add_property(PMASS(card_obj, nOffset = i + 1))
+            
+            elif card_name == 'SPOINT':
+                self.add_SPOINT(SPOINTs(card_obj))
+            elif 'ENDDATA' in card_name:
                 self.foundEndData = True
-                #break
             else:
                 ## @warning cards with = signs in them
                 ## are not announced when they are rejected
                 if '=' not in card[0]:
-                    print('rejecting processed %s' % (card))
+                    self.log.info('rejecting processed %s' % (card))
                 self.reject_cards.append(card)
             ###
-        except:
-            print("cardName = |%r|" % (cardName))
-            print("failed! Unreduced Card=%s\n" % (list_print(card)))
-            print("filename = %s\n" % (self.bdf_filename))
-            sys.stdout.flush()
+        except Exception as e:
+            print(str(e))
+            self.log.debug("card_name = |%r|" % (card_name))
+            self.log.debug("failed! Unreduced Card=%s\n" % (list_print(card)))
+            self.log.debug("filename = %s\n" % (self.bdf_filename))
             raise
 
-        return cardObj
+        return card_obj
 
     def card_stats(self):
         """
-        print stats for the BDF
+        Print statistics for the BDF
         @note
           if a card is not supported and not added to the proper lists,
           this method will fail
         """
-        card_stats = ['params', 'nodes', 'points', 'elements',
-                      'rigidElements', 'properties', 'materials',
-                      'materialDeps', 'creepMaterials', 'coords',
-                      'mpcs', 'mpcadds',
+        card_stats = ['params', 'nodes', 'points', 'elements', 'rigidElements',
+                      'properties', 'materials', 'materialDeps',
+                      'creepMaterials', 'coords', 'mpcs', 'mpcadds',
 
                       # dynamic cards
                       'dareas', 'nlparms', 'tsteps', 'tstepnls',
 
                       # direct matrix input - DMIG - dict
-                      'dmis', 'dmigs', 'dmijs', 'dmijis', 'dmiks',
-                      'dequations',
+                      'dmis', 'dmigs', 'dmijs', 'dmijis', 'dmiks', 'dequations',
 
                       # frequencies - dict
                       'frequencies',
@@ -1970,8 +1195,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                       # aero
                       'caeros', 'paeros', 'aero', 'aeros', 'aefacts',
                       'aelinks', 'aelists', 'aeparams', 'aesurfs', 'aestats',
-                      'gusts', 'flfacts', 'flutters', 'splines',
-                      'trims',
+                      'gusts', 'flfacts', 'flutters', 'splines', 'trims',
 
                       # thermal
                       'bcs', 'thermalMaterials', 'phbdys',
@@ -1983,21 +1207,12 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             
             'spcs', 'spcadds', 
 
-            # constraints - list
-            #self.constraints = {} # suport1, anything else???
-
             'suports', # suport, suport1 - list
-
-            #self.spcObject2 = constraintObject2()
-            #self.mpcObject2 = constraintObject2()
             'doptprm',  # singleton
 
             # SETx - list
             'sets', 'asets', 'bsets', 'csets', 'qsets',
             ])
-
-        #all_params = list_attributes('public')
-        all_params = list_attributes(self)
 
         ignored_types2 = set([
                               'caseControlDeck','spcObject2', 'mpcObject2',
@@ -2017,20 +1232,14 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                               'foundEndData', 'specialCards', 
                               'infilesPack'])
 
+        all_params = object_attributes(self)
         # removing variables that are not supported
-        leftover_types = set(all_params)
-        leftover_types = leftover_types.difference(set(card_stats))
         for attribute_name in ignored_types.union(ignored_types2):
             try:
                 all_params.remove(attribute_name)
-                print('removing attribute_name=%s' % (attribute_name))
+                #print('removing attribute_name=%s' % (attribute_name))
             except ValueError:
                 pass
-
-        #assert len(leftover_types) == 0, 'leftover_types = %s' % (
-        #    str (leftover_types))
-
-
 
         msg = ['---BDF Statistics---']
         # sol
@@ -2041,31 +1250,25 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             msg.append('bdf.loads[%s]' %(lid))
             groups = {}
             for load in loads:
-                if load.type not in groups:
-                    groups[load.type] = 0
-                groups[load.type] += 1
+                groups[load.type] = groups.get(load.type, 0) + 1
             for name, n in sorted(groups.iteritems()):
-                name2 = '%s:' % (name)
-                msg.append('  %-8s %s' % (name2, n))
+                msg.append('  %-8s %s' % (name + ':', n))
             msg.append('')
 
         #mkaeros
         if self.mkaeros:
             msg.append('bdf:mkaeros')
-            name2 = 'MKAERO:' % (name)
-            msg.append('  %-8s %s' % (name2, len(self.mkaeros)))
+            msg.append('  %-8s %s' % ('MKAERO:', len(self.mkaeros)))
 
         for card_group_name in card_stats:
             card_group = getattr(self, card_group_name)
             groups = set([])
-            print("card_group_name = ", card_group_name)
-            if isinstance(card_group, list):
-                print("card_group_name = ", card_group_name)
+            #print("card_group_name = ", card_group_name)
+            #if isinstance(card_group, list):
+            #    print("card_group_name = ", card_group_name)
 
             for card in card_group.itervalues():
                 if isinstance(card, list):
-                    #print("card = ",card)
-                    #print("card_group = ",card_group)
                     for card2 in card:
                         groups.add(card2.type)
                 else:
@@ -2075,8 +1278,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             for card_name in sorted(groups):
                 try:
                     ncards = self.cardCount[card_name]
-                    name2 = '%s:' % (card_name)
-                    group_msg.append('  %-8s %s' % (name2, ncards))
+                    group_msg.append('  %-8s %s' % (card_name + ':', ncards))
                 except KeyError:
                     assert card_name == 'CORD2R'
             if group_msg:
@@ -2089,6 +1291,5 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             msg.append('Rejected Cards')
             for name, counter in sorted(self.cardCount.iteritems()):
                 if name not in self.cardsToRead:
-                    name2 = '%s:' % (name)
-                    msg.append('  %-8s %s' % (name2, counter))
+                    msg.append('  %-8s %s' % (name + ':', counter))
         return '\n'.join(msg)

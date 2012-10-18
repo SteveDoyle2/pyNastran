@@ -37,7 +37,7 @@ class DIT(object):
             out = unpack('iifff', eData)
             (sid, dload, wg, x0, V) = out
             gust = GUST(None, out)
-            self.addGUST(gust)
+            self.add_GUST(gust)
             n += 20
         data = data[n:]
 
@@ -75,7 +75,7 @@ class DIT(object):
 
             dataIn += [x, y]
             table = func(None, out)
-            self.addTable(table)
+            self.add_table(table)
         data = data[n:]
 
     def readTableD2(self, data):
@@ -105,7 +105,7 @@ class DIT(object):
                     dataIn += [x, y]
             dataIn += [x, y]
             table = func(None, out)
-            self.addTable(table)
+            self.add_table(table)
         data = data[n:]
 
     def readTableD3(self, data):
@@ -135,7 +135,7 @@ class DIT(object):
                     dataIn += [x, y]
             dataIn += [x, y]
             table = func(None, out)
-            self.addTable(table)
+            self.add_table(table)
         data = data[n:]
 
 #TABLEDR

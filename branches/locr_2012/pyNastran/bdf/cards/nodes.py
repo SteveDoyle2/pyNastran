@@ -48,8 +48,11 @@ class Node(BaseCard):
 class RINGAX(Ring):
     """
     Defines a ring for conical shell problems
+    
+    @code
     RINGAX ID R    Z    PS
     RINGAX 3  2.0 -10.0 162
+    @endcode
     """
     type = 'RINGAX'
 
@@ -92,10 +95,16 @@ class SPOINT(Node):
 
 class SPOINTs(Node):
     """
+    @code
     SPOINT ID1 ID2 ID3 ID4 ID5 ID6 ID7 ID8
+    @endcode
+    
     or
+    
+    @code
     SPOINT ID1 THRU ID2
     SPOINT 5   THRU 649
+    @endcode
     """
     type = 'SPOINT'
 

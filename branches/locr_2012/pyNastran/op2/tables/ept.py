@@ -47,7 +47,7 @@ class EPT(object):
         self.readRecordTable('EPT')
 
     def addOp2Property(self, prop):
-        self.addProperty(prop, allowOverwrites=True)
+        self.add_property(prop, allowOverwrites=True)
 
 # HGSUPPR
 

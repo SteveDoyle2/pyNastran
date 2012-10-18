@@ -42,7 +42,7 @@ class MPT(object):
         self.readRecordTable('MPTS')
 
     def addOp2Material(self, mat):
-        self.addMaterial(mat, allowOverwrites=True)
+        self.add_material(mat, allowOverwrites=True)
 
     def readCREEP(self, data):
         """
@@ -50,13 +50,11 @@ class MPT(object):
         """
         #print "reading CREEP"
         while len(data) >= 64:  # 16*4
-            eData = data[:64]
             data = data[64:]
-            out = unpack(b'iffiiiififffffff', eData)
+            out = unpack(b'iffiiiififffffff', data[:64])
             (mid, T0, exp, form, tidkp, tidcp, tidcs, thresh,
                 Type, ag1, ag2, ag3, ag4, ag5, ag6, ag7) = out
-            mat = CREEP(None, out)
-            self.addCreepMaterial(mat, allowOverwrites=True)
+            self.add_creep_material(CREEP(None, out), allowOverwrites=True)
 
     def readMAT1(self, data):
         """
@@ -68,8 +66,7 @@ class MPT(object):
             data = data[48:]
             out = unpack(b'iffffffffffi', eData)
             (mid, E, G, nu, rho, A, TRef, ge, St, Sc, Ss, mcsid) = out
-            mat = MAT1(None, out)
-            self.addOp2Material(mat)
+            self.addOp2Material(MAT1(None, out))
 
     def readMAT2(self, data):
         """
@@ -77,9 +74,8 @@ class MPT(object):
         """
         #print "reading MAT2"
         while len(data) >= 68:  # 17*4
-            eData = data[:68]
             data = data[68:]
-            out = unpack(b'ifffffffffffffffi', eData)
+            out = unpack(b'ifffffffffffffffi', data[:68])
             (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
                 TRef, ge, St, Sc, Ss, mcsid) = out
             #print "MAT2 = ",out
@@ -96,9 +92,8 @@ class MPT(object):
         """
         #print "reading MAT3"
         while len(data) >= 64:  # 16*4
-            eData = data[:64]
             data = data[64:]
-            out = unpack(b'iffffffffifffffi', eData)
+            out = unpack(b'iffffffffifffffi', data[:64])
             (mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
                 blank, ax, ath, az, TRef, ge, blank) = out
             mat = MAT3(None, [mid, ex, eth, ez, nuxth, nuthz,
@@ -111,12 +106,10 @@ class MPT(object):
         """
         #print "reading MAT4"
         while len(data) >= 44:  # 11*4
-            eData = data[:44]
             data = data[44:]
-            out = unpack(b'i10f', eData)
+            out = unpack(b'i10f', data[:44])
             (mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
-            mat = MAT4(None, out)
-            self.addThermalMaterial(mat, allowOverwrites=True)
+            self.add_thermal_material(MAT4(None, out), allowOverwrites=True)
 
     def readMAT5(self, data):
         """
@@ -124,12 +117,10 @@ class MPT(object):
         """
         #print "reading MAT5"
         while len(data) >= 40:  # 10*4
-            eData = data[:40]
             data = data[40:]
-            out = unpack(b'ifffffffff', eData)
+            out = unpack(b'ifffffffff', data[:40])
             (mid, k1, k2, k3, k4, k5, k6, cp, rho, hgen) = out
-            mat = MAT5(None, out)
-            self.addThermalMaterial(mat, allowOverwrites=True)
+            self.add_thermal_material(MAT5(None, out), allowOverwrites=True)
 
     def readMAT8(self, data):
         """
@@ -137,13 +128,11 @@ class MPT(object):
         """
         #print "reading MAT8"
         while len(data) >= 76:  # 19*4
-            eData = data[:76]
             data = data[76:]
-            out = unpack(b'i18f', eData)
+            out = unpack(b'i18f', data[:76])
             (mid, E1, E2, nu12, G12, G1z, G2z, rho, a1, a2,
                 TRef, Xt, Xc, Yt, Yc, S, ge, f12, strn) = out
-            mat = MAT8(None, out)
-            self.addOp2Material(mat)
+            self.addOp2Material(MAT8(None, out))
 
     def readMAT9(self, data):
         """
@@ -152,9 +141,8 @@ class MPT(object):
         """
         #print "reading MAT9"
         while len(data) >= 140:  # 35*4
-            eData = data[:140]
             data = data[140:]
-            out = unpack(b'iiiiiiiiiiiiiiiiiiiiiifffffffffiiii', eData)
+            out = unpack(b'iiiiiiiiiiiiiiiiiiiiiifffffffffiiii', data[:140])
 
             (
                 mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
@@ -163,8 +151,7 @@ class MPT(object):
                       rho, [a1, a2, a3, a4, a5, a6],
                       TRef, ge]
             #print "dataIn = ",dataIn
-            mat = MAT9(None, dataIn)
-            self.addOp2Material(mat)
+            self.addOp2Material(MAT9(None, dataIn))
 
     def readMAT10(self, data):
         """
@@ -172,12 +159,10 @@ class MPT(object):
         """
         #print "reading MAT10"
         while len(data) >= 20:  # 5*4
-            eData = data[:20]
             data = data[20:]
-            out = unpack(b'iffff', eData)
+            out = unpack(b'iffff', data[:20])
             (mid, bulk, rho, c, ge) = out
-            mat = MAT10(None, out)
-            self.addOp2Material(mat)
+            self.addOp2Material(MAT10(None, out))
 
 # MAT11 - unused
 
@@ -202,8 +187,7 @@ class MPT(object):
                 out2 = unpack(b'iiiiiiii', eData)
                 (tab1, tab2, tab3, tab4, x1, x2, x3, tab5) = out2
                 data.append(out2)
-            mat = MATHP(None, dataIn)
-            self.addOp2Material(mat)
+            self.addOp2Material(MATHP(None, dataIn))
 
     def readMATS1(self, data):
         """
@@ -211,13 +195,11 @@ class MPT(object):
         """
         #print "reading MATS1"
         while len(data) >= 44:  # 11*4
-            eData = data[:44]
             data = data[44:]
-            out = unpack(b'iiifiiffiii', eData)
+            out = unpack(b'iiifiiffiii', data[:44])
             (mid, tid, Type, h, yf, hr, limit1, limit2, a, b, c) = out
             dataIn = [mid, tid, Type, h, yf, hr, limit1, limit2]
-            mat = MATS1(None, dataIn)
-            self.addMaterialDependence(mat, allowOverwrites=True)
+            self.add_material_dependence(MATS1(None, dataIn), allowOverwrites=True)
 
     def readMATT1(self, data):
         self.skippedCardsFile.write('skipping MATT1 in MPT\n')
@@ -235,7 +217,6 @@ class MPT(object):
         self.skippedCardsFile.write('skipping MATT5 in MPT\n')
 
 # MATT8 - unused
-
     def readMATT9(self, data):
         self.skippedCardsFile.write('skipping MATT9 in MPT\n')
 
@@ -283,13 +264,11 @@ class MPT(object):
         """
         #print "reading NLPARM"
         while len(data) >= 76:  # 19*4
-            eData = data[:76]
             data = data[76:]
-            out = unpack(b'iifiiiiifffiiiffiff', eData)
+            out = unpack(b'iifiiiiifffiiiffiff', data[:76])
             #(sid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,maxR,rTolB) = out
-            nlparm = NLPARM(None, out)
-            self.addNLParm(nlparm)
+            self.add_NLPARM(NLPARM(None, out))
 
     def readNLPCI(self, data):
         self.skippedCardsFile.write('skipping NLPCI in MPT\n')
@@ -300,10 +279,8 @@ class MPT(object):
         """
         #print "reading TSTEPNL"
         while len(data) >= 88:  # 19*4
-            eData = data[:88]
             data = data[88:]
-            out = unpack(b'iifiiiiifffiiifiiiffff', eData)
+            out = unpack(b'iifiiiiifffiiifiiiffff', data[:88])
             #(sid,ndt,dt,no,kMethod,kStep,maxIter,conv,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,adjust,mStep,rb,maxR,uTol,rTolB) = out
-            tstepnl = TSTEPNL(None, out)
-            self.addTSTEPNL(tstepnl)
+            self.add_TSTEPNL(TSTEPNL(None, out))

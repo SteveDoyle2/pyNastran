@@ -226,9 +226,9 @@ class CardMethods(object):
             return True
         return False
 
-    def processCard(self, tempcard, debug=False):
+    def process_card(self, tempcard, debug=False):
         """
-        takes a list of strings and returns a list with the
+        Takes a list of strings and returns a list with the
         proper value in the fields of the list
         """
         #debug = True

@@ -51,7 +51,7 @@ class Geometry1(object):
             (cid, one, two, g1, g2, g3) = unpack(b'iiiiii', eData)
             dataIn = [cid, g1, g2, g3]
             coord = CORD1C(None, None, dataIn)
-            self.addCoord(coord)
+            self.add_coord(coord)
             n += 24
         data = data[n:]
 
@@ -67,7 +67,7 @@ class Geometry1(object):
             (cid, one, one, g1, g2, g3) = unpack(b'iiiiii', eData)
             dataIn = [cid, g1, g2, g3]
             coord = CORD1R(None, None, dataIn)
-            self.addCoord(coord)
+            self.add_coord(coord)
             n += 24
         data = data[n:]
 
@@ -83,7 +83,7 @@ class Geometry1(object):
             (cid, three, one, g1, g2, g3) = unpack(b'iiiiii', eData)
             dataIn = [cid, g1, g2, g3]
             coord = CORD1S(None, dataIn)
-            self.addCoord(coord, allowOverwrites=True)
+            self.add_coord(coord, allowOverwrites=True)
             n += 24
         data = data[n:]
 
@@ -101,7 +101,7 @@ class Geometry1(object):
             #print "cid=%s two=%s two=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,two,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3)
             dataIn = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
             coord = CORD2C(None, dataIn)
-            self.addCoord(coord, allowOverwrites=True)
+            self.add_coord(coord, allowOverwrites=True)
             n += 52
         data = data[n:]
 
@@ -119,7 +119,7 @@ class Geometry1(object):
             dataIn = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
             #print "cid=%s one=%s two=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,one,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3)
             coord = CORD2R(None, dataIn)
-            self.addCoord(coord, allowOverwrites=True)
+            self.add_coord(coord, allowOverwrites=True)
             n += 52
         data = data[n:]
 
@@ -137,7 +137,7 @@ class Geometry1(object):
             #print "cid=%s sixty5=%s eight=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,sixty5,eight,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3)
             dataIn = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
             coord = CORD2S(dataIn)
-            self.addCoord(coord, allowOverwrites=True)
+            self.add_coord(coord, allowOverwrites=True)
             n += 52
         data = data[n:]
 
@@ -154,7 +154,7 @@ class Geometry1(object):
             (cid, n1, n2, n3) = unpack(b'iiii', eData)
             dataIn = [cid, n1, n2, n3]
             coord = CORD3G(None, dataIn)
-            self.addCoord(coord, allowOverwrites=True)
+            self.add_coord(coord, allowOverwrites=True)
             n += 16
         data = data[n:]
 
@@ -170,7 +170,7 @@ class Geometry1(object):
             (nID, cp, x1, x2, x3, cd, ps, seid) = out
             if cd >= 0 and nID < 10000000:
                 node = GRID(None, out)
-                self.addNode(node)
+                self.add_node(node)
             else:
                 self.log.debug("*nID=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s seid=%s" % (nID, cp, x1, x2, x3, cd, ps, seid))
             #print str(grid)[:-1]

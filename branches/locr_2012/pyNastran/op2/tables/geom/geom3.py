@@ -63,7 +63,7 @@ class Geometry3(object):
             eData = data[n:n + 28]
             (sid, g, cid, f, n1, n2, n3) = unpack('iiiffff', eData)
             load = FORCE(None, [sid, g, cid, f, n1, n2, n3])
-            self.addLoad(load)
+            self.add_load(load)
             n += 28
         data = data[n:]
 
@@ -79,7 +79,7 @@ class Geometry3(object):
             (sid, g, f, n1, n2) = unpack('iifii', eData)
 
             load = FORCE1(None, [sid, g, f, n1, n2])
-            self.addLoad(load)
+            self.add_load(load)
             n += 20
         data = data[n:]
 
@@ -95,7 +95,7 @@ class Geometry3(object):
             (sid, g, f, n1, n2, n3, n4) = unpack('iifiiii', eData)
 
             load = FORCE2(None, [sid, g, f, n1, n2, n3, n4])
-            self.addLoad(load)
+            self.add_load(load)
             n += 28
         data = data[n:]
 
@@ -113,7 +113,7 @@ class Geometry3(object):
             out = unpack('iiffffi', eData)
             (sid, cid, a, n1, n2, n3, mb) = out
             grav = GRAV(None, out)
-            self.addLoad(grav)
+            self.add_load(grav)
             n += 28
         data = data[n:]
 
@@ -147,7 +147,7 @@ class Geometry3(object):
 
             dataIn = [sid, s, Si, L1]
             load = LOAD(None, dataIn)
-            self.addLoad(load)
+            self.add_load(load)
 
     def readLOADCYH(self, data):
         self.skippedCardsFile.write('skipping LOADCYG in GEOM3\n')
@@ -171,7 +171,7 @@ class Geometry3(object):
             (sid, g, cid, m, n1, n2, n3) = out
 
             load = FORCE1(None, out)
-            self.addLoad(load)
+            self.add_load(load)
             n += 28
         data = data[n:]
 
@@ -187,7 +187,7 @@ class Geometry3(object):
             out = unpack('iifii', eData)
             (sid, g, m, n1, n2) = out
             load = FORCE1(None, out)
-            self.addLoad(load)
+            self.add_load(load)
             n += 20
         data = data[n:]
 
@@ -204,7 +204,7 @@ class Geometry3(object):
             (sid, g, m, n1, n2, n3, n4) = out
 
             load = FORCE1(None, out)
-            self.addLoad(load)
+            self.add_load(load)
             n += 28
         data = data[n:]
 
@@ -224,7 +224,7 @@ class Geometry3(object):
             (sid, eid, Type, scale, x1, p1, x2, p2) = out
             #print "PLOAD1 = ",out
             load = PLOAD1(None, out)
-            self.addLoad(load)
+            self.add_load(load)
             n += 32
         data = data[n:]
 
@@ -240,7 +240,7 @@ class Geometry3(object):
             out = unpack('ifi', eData)
             (sid, p, eid) = out
             load = PLOAD2(None, out)
-            self.addLoad(load)
+            self.add_load(load)
             n += 12
         data = data[n:]
 
@@ -256,7 +256,7 @@ class Geometry3(object):
             out = unpack('if3i', eData)
             (sid, p, eid, n1, n2) = out
             load = PLOAD3(None, out)
-            self.addLoad(load)
+            self.add_load(load)
             n += 20
         data = data[n:]
 
@@ -283,7 +283,7 @@ class Geometry3(object):
             ldirB = None
             load = PLOAD4(None, [sid, eid, [p1, p2, p3, p4], g1, g34,
                                  cid, [n1, n2, n3], sdrlA, sdrlB, ldirA, ldirB])
-            self.addLoad(load)
+            self.add_load(load)
             n += 48
         data = data[n:]
 
@@ -305,7 +305,7 @@ class Geometry3(object):
             out = unpack('ifi', eData)
             (sid, q0, eid) = out
             load = QBDY1(None, out)
-            self.addThermalLoad(load)
+            self.add_thermal_load(load)
             n += 12
         data = data[n:]
 
@@ -321,7 +321,7 @@ class Geometry3(object):
             out = unpack('iiffffffff', eData)
             (sid, eid, q1, q2, q3, q4, q5, q6, q7, q8) = out
             load = QBDY2(None, out)
-            self.addThermalLoad(load)
+            self.add_thermal_load(load)
             n += 40
         data = data[n:]
 
@@ -337,7 +337,7 @@ class Geometry3(object):
             out = unpack('ifii', eData)
             (sid, q0, cntrlnd, eid) = out
             load = QBDY3(None, out)
-            self.addThermalLoad(load)
+            self.add_thermal_load(load)
             n += 16
         data = data[n:]
 
@@ -355,7 +355,7 @@ class Geometry3(object):
             (sid, g, T) = out
             if g < 10000000:
                 load = TEMP(None, out)
-                self.addThermalLoad(load)
+                self.add_thermal_load(load)
             else:
                 self.log.debug('TEMP = %s' % (out))
             n += 12
@@ -374,7 +374,7 @@ class Geometry3(object):
             out = unpack('if', eData)
             (sid, T) = out
             load = TEMPD(None, out)
-            #self.addThermalLoad(load)
+            #self.add_thermal_load(load)
             n += 8
         data = data[n:]
 

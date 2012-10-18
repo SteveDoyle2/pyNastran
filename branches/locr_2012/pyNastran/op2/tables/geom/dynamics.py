@@ -50,7 +50,7 @@ class DYNAMICS(object):
             out = unpack('iiff', eData)
             #(sid,p,c,a) = out
             darea = DAREA(data=out)
-            self.addDArea(darea)
+            self.add_DAREA(darea)
 
     def readDelay(self, data):
         """DELAY(37,18,183) - Record 3"""
