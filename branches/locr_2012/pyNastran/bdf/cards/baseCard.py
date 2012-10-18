@@ -4,8 +4,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import sys
 from itertools import izip
 
-from pyNastran.bdf.fieldWriter import (print_card_8, set_default_if_blank,
+from pyNastran.bdf.fieldWriter import (print_card, print_card_8, set_default_if_blank,
                                        is_same)
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 
 
@@ -42,10 +43,6 @@ class BaseCard(BDFCard):
     #def removeTrailingNones(self, fields):
         #"""removes blank fields at the end of a card object"""
         #self._wipeEmptyFields(fields)
-
-    def printCard(self, fields, tol=0.):
-        """prints a card object"""
-        return print_card_8(fields, tol)
 
     def cross_reference(self, model):
         #self.mid = model.Material(self.mid)
@@ -107,30 +104,31 @@ class BaseCard(BDFCard):
 
     def reprFields(self):
         return self.rawFields()
+    
+    def print_card(self, size=8):
+        fields = self.reprFields()
+        return print_card(fields, size=size)
 
-    def __repr__(self):  # ,tol=1e-8
+    def __repr__(self):
         """
         Prints a card in the simplest way possible
         (default values are left blank).
         """
-        #print "tol = ",tol
         #self.rawFields()
-        fields = self.reprFields()
         try:
-            return self.printCard(fields)
+            return self.print_card()
         except:
+            fields = self.reprFields()
             print('problem printing %s card' % (self.type))
             print("fields = ", fields)
             raise
 
 
 def Mid(self):
-    #print str(self)
     if isinstance(self.mid, int):
         return self.mid
     else:
         return self.mid.mid
-    ###
 
 
 class Property(BaseCard):
@@ -229,7 +227,7 @@ class Element(BaseCard):
                     nodeIDs = [node for node in nodes]
                 else:
                     nodeIDs = [node.nid for node in nodes]
-                ###
+
                 assert 0 not in nodeIDs, 'nodeIDs = %s' % (nodeIDs)
                 return nodeIDs
         except:
@@ -248,7 +246,6 @@ class Element(BaseCard):
             else:  # string???
                 self.nodes.append(int(nid))
                 #raise RuntimeError('this element may not have missing nodes...nids=%s allowEmptyNodes=False' %(nids))
-            ###
 
     #def Normal(self,a,b):
     #    """finds the unit normal vector of 2 vectors"""

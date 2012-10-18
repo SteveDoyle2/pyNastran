@@ -14,7 +14,9 @@ class BushElement(Element):
         Element.__init__(self, card, data)
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if self.cid is None:
+            return None
+        elif isinstance(self.cid, int):
             return self.cid
         return self.cid.cid
 
@@ -45,6 +47,7 @@ class CBUSH(BushElement):
             self.pid = card.field(2)
             self.ga = card.field(3)
             self.gb = card.field(4)
+            #self.nodes = [card.field(3), card.field(4)]
             x1G0 = card.field(5)
             if isinstance(x1G0, int):
                 self.g0 = x1G0
@@ -56,14 +59,13 @@ class CBUSH(BushElement):
                 x3 = card.field(7)
                 self.x = [x1, x2, x3]
             else:
-                #raise RuntimeError('invalid CBUSH...x1/g0 = |%s|' %(x1G0))
                 self.g0 = None
                 self.x = [None, None, None]
-            ###
+            
             ## Element coordinate system identification. A 0 means the basic
             ## coordinate system. If CID is blank, then the element coordinate
-            ## system is determined from GO or Xi.
-            self.cid = card.field(8, 0)
+            ## system is determined from GO or Xi.  (default=blank=element-based)
+            self.cid = card.field(8)
             ## Location of spring damper (0 <= s <= 1.0)
             self.s = card.field(9, 0.5)
             ## Coordinate system identification of spring-damper offset. See
@@ -79,19 +81,34 @@ class CBUSH(BushElement):
         #self.prepareNodeIDs(nids,allowEmptyNodes=True)
         #assert len(self.nodes)==2
 
-    #def OCid(self):
-        #if isinstance(self.ocid,int):
-            #return self.ocid
-        #return self.ocid.cid
+    def Ga(self):
+        if isinstance(self.ga, int):
+            return self.ga
+        return self.ga.nid
+
+    def Gb(self):
+        if isinstance(self.gb, int):
+            return self.gb
+        return self.gb.nid
+
+    def OCid(self):
+        if self.ocid is None:
+            return None
+        elif isinstance(self.ocid,int):
+            return self.ocid
+        return self.ocid.cid
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if self.cid is None:
+            return None
+        elif isinstance(self.cid, int):
             return self.cid
         return self.cid.cid
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes)
-        #self.pid = model.Property(self.pid)
+        self.ga = model.Node(self.ga)
+        self.gb = model.Node(self.gb)
+        self.pid = model.Property(self.pid)
         self.cid = model.Coord(self.cid)
 
     def rawFields(self):
@@ -99,8 +116,8 @@ class CBUSH(BushElement):
             x = [self.g0, None, None]
         else:
             x = self.x
-        fields = ['CBUSH', self.eid, self.Pid(), self.ga, self.gb] + x + [self.Cid(),
-                                                                          self.s, self.ocid] + self.si
+        fields = ['CBUSH', self.eid, self.Pid(), self.Ga(), self.Gb()] + x + [self.Cid(),
+                                                            self.s, self.ocid] + self.si
         return fields
 
     def reprFields(self):
@@ -109,9 +126,10 @@ class CBUSH(BushElement):
         else:
             x = self.x
 
-        cid = set_blank_if_default(self.Cid(), 0)
-        fields = ['CBUSH', self.eid, self.Pid(), self.ga, self.gb] + x + [cid,
-                                                                          self.s, self.ocid] + self.si
+        ocid = set_blank_if_default(self.OCid(), -1)
+        s = set_blank_if_default(self.s, 0.5)
+        fields = ['CBUSH', self.eid, self.Pid(), self.Ga(), self.Gb()] + x + [self.Cid(),
+                                                                       s, ocid] + self.si
         return fields
 
 
@@ -124,7 +142,7 @@ class CBUSH1D(BushElement):
             self.eid = int(card.field(1))
             self.pid = int(card.field(2, self.eid))
             nids = card.fields(3, 5)
-            self.cid = card.field(5, 0)
+            self.cid = card.field(5)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -146,8 +164,7 @@ class CBUSH1D(BushElement):
 
     def reprFields(self):
         nodeIDs = self.nodeIDs()
-        cid = set_blank_if_default(self.Cid(), 0)
-        fields = ['CBUSH1D', self.eid, self.Pid(), nodeIDs[0], nodeIDs[1], cid]
+        fields = ['CBUSH1D', self.eid, self.Pid(), nodeIDs[0], nodeIDs[1], self.Cid()]
         return fields
 
 

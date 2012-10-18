@@ -71,7 +71,6 @@ class CREEP(Material):
             self.e = data[13]
             self.f = data[14]
             self.g = data[15]
-        ###
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
@@ -162,11 +161,6 @@ class MAT1(Material):
         r"""
         \f[ \large G = \frac{E}{2 (1+\nu)} \f]
         """
-        #self.E  = card.field(2)
-        #self.G  = card.field(3)
-        #self.nu = card.field(4)
-        #return
-
         E = card.field(2)
         G = card.field(3)
         nu = card.field(4)
@@ -193,11 +187,6 @@ class MAT1(Material):
         self.e = E
         self.g = G
         self.nu = nu
-        #print "mid = ",self.mid
-        #print "E  = ",E
-        #print "G  = ",G
-        #print "nu = ",nu
-        #print ""
 
     def writeCalculix(self, elementSet='ELSetDummyMat'):
         temperature = self.TRef  # default value - same properties for all values
@@ -242,7 +231,8 @@ class MAT1(Material):
         return G
 
     def reprFields(self):
-        G = self.getG_default()
+        Gdefault = self.getG_default()
+        G = set_blank_if_default(self.g, Gdefault)
 
         rho = set_blank_if_default(self.rho, 0.)
         a = set_blank_if_default(self.a, 0.)
@@ -310,7 +300,6 @@ class MAT2(AnisotropicMaterial):
             self.Sc = data[14]
             self.Ss = data[15]
             self.Mcsid = data[16]
-        ###
 
     def Dsolid(self):
         """
@@ -512,7 +501,6 @@ class MAT4(ThermalMaterial):
             self.tch = data[8]
             self.tdelta = data[9]
             self.qlat = data[10]
-        ###
 
     def rawFields(self):
         fields = ['MAT4', self.mid, self.k, self.cp, self.rho, self.H, self.mu, self.hgen, self.refEnthalpy,
@@ -563,7 +551,6 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
             self.cp = data[7]
             self.rho = data[8]
             self.hgen = data[9]
-        ###
 
     def K(self):
         """
@@ -781,7 +768,7 @@ class MAT9(AnisotropicMaterial):
             self.A = data[3]
             self.TRef = data[4]
             self.ge = data[5]
-        ###
+
         assert len(self.A) == 6
 
     def D(self):
@@ -861,7 +848,7 @@ class MAT10(Material):
         else:
             msg = 'c, bulk, and rho are all undefined on tbe MAT10'
             raise RuntimeError(msg)
-        ###
+
         self.bulk = bulk
         self.rho = rho
         self.c = c
@@ -980,7 +967,7 @@ class MATHP(HyperelasticMaterial):
                 tab3 = None
                 tab4 = None
                 tab5 = None
-            ###
+
             self.tab1 = tab1
             self.tab2 = tab2
             self.tab3 = tab3
@@ -1102,7 +1089,6 @@ class MATS1(MaterialDependence):
             self.hr = hr
             self.limit1 = limit1
             self.limit2 = limit2
-        ###
 
     def Yf(self):
         d = {1: 'VonMises', 2: 'Tresca', 3: 'MohrCoulomb', 4: 'Drucker-Prager'}
@@ -1123,14 +1109,12 @@ class MATS1(MaterialDependence):
         raise NotImplementedError(msg)
         if self.tid:
             E = self.tid.Value(strain)
-        ###
         return E
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
         if self.tid:  # then self.h is used
             self.tid = model.Table(self.tid)
-        ###
 
     def Mid(self):
         if isinstance(self.mid, int):

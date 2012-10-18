@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import sys
 import warnings
 from numpy import allclose, isinf
-
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 def is_same(value1, value2):
     """
@@ -189,20 +189,21 @@ def print_field(value, tol=0.):
         raise RuntimeError(msg)
     return field
 
-#def print_card(fields,size=8, tol=0.):
-    #"""
-    #prints a nastran-style card with 8 or 16-character width fields
-    #@param fields all the fields in the BDF card (no blanks)
-    #@param tol the abs(tol) to consider value=0 (default=0.)
-    #@param size the width of a field (size=8 or 16)
-    #@warning 8 or 16 is required, but 16 is not checked for
-    #"""
-    #if size==8:
-    #    return self.print_card_8(fields)
-    #else:
-    #    return self.print_card_16(fields)
-    ###
-
+def print_card(fields, size=8, tol=0.):
+    """
+    prints a nastran-style card with 8 or 16-character width fields
+    @param fields all the fields in the BDF card (no blanks)
+    @param tol the abs(tol) to consider value=0 (default=0.)
+    @param size the width of a field (size=8 or 16)
+    @warning 8 or 16 is required, but 16 is not checked for
+    """
+    if size==8:
+        return print_card_8(fields)
+    elif size==16:
+        return print_card_16(fields)
+    else:
+        msg = 'fields = %s\nsize = %s' %(fields,size)
+        raise ValueError(msg)
 
 def printCard(fields, tol=0.):
     warnings.warn('update printCard to print_card_8', DeprecationWarning,

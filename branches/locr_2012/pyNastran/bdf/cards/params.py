@@ -8,9 +8,13 @@ from pyNastran.bdf.cards.baseCard import BaseCard
 class PARAM(BaseCard):
     type = 'PARAM'
 
-    def __init__(self, card):
-        self.key = card.field(1)
-        self.value = card.field(2)
+    def __init__(self, card, data=None):
+        if card:
+            self.key = card.field(1)
+            self.value = card.field(2)
+        else:
+            self.key = data[0]
+            self.value = data[1]
 
     #def isSameCard(self, param, debug=False):
         #fields1 = [self.key, self.value ]
@@ -18,8 +22,6 @@ class PARAM(BaseCard):
         #for (field1, field2) in izip(fields1, fields2):
         #    if not self.isSame(field1, field2):
         #        return False
-        #    ###
-        ####
         #return True
 
     def rawFields(self):

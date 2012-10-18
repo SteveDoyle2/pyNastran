@@ -51,10 +51,6 @@ class EIGB(Method):
             self.C = card.field(11)
         else:
             raise NotImplementedError('EIGB')
-        ###
-        #print self.rawFields()
-        #print self.reprFields()
-        #print self
 
     def cross_reference(self, model):
         pass
@@ -123,11 +119,9 @@ class EIGC(Method):  ## not done
             else:
                 msg = 'invalid EIGC method...method=|%r|' % (self.method)
                 raise RuntimeError(msg)
-            ###
             #assert card.nFields()<8,'card = %s' %(card.fields(0))
         else:
             raise NotImplementedError('EIGC')
-        ###
 
     def loadCLAN(self, nRows, card):
         self.mblkszs = []
@@ -178,7 +172,6 @@ class EIGC(Method):  ## not done
             self.LJs.append(card.field(9 + 8 * iRow + 4, LJ_default))
             self.NEJs.append(card.field(9 + 8 * iRow + 5))
             self.NDJs.append(card.field(9 + 8 * iRow + 6, NDJ_default))
-        ###
 
     def cross_reference(self, model):
         pass
@@ -263,7 +256,6 @@ class EIGR(Method):
             self.C = card.field(11)
         else:
             raise NotImplementedError('EIGR')
-        ###
 
     def cross_reference(self, model):
         pass
@@ -310,7 +302,6 @@ class EIGP(Method):
             self.m2 = card.field(7)
         else:
             raise NotImplementedError('EIGP')
-        ###
 
     def cross_reference(self, model):
         pass
@@ -374,7 +365,6 @@ class EIGRL(Method):
             #assert card.nFields()<9,'card = %s' %(card.fields(0))
         else:
             raise NotImplementedError('EIGRL')
-        ###
 
     def cross_reference(self, model):
         pass
