@@ -515,7 +515,6 @@ class PROD(LineProperty):
             self.j = data[3]
             self.c = data[4]
             self.nsm = data[5]
-        ###
 
     #def Radius(self):
         #"""assumes circular cross section - probably will remove this"""
@@ -671,7 +670,6 @@ class PBAR(LineProperty):
             if self.A == 0.0:
                 assert self.K1 is None
                 assert self.K2 is None
-            ###
         else:
             self.pid = data[0]
             self.mid = data[1]
@@ -693,7 +691,6 @@ class PBAR(LineProperty):
             self.K1 = data[16]
             self.K2 = data[17]
             self.i12 = data[18]
-        ###
 
     def MassPerLength(self):
         """
@@ -1431,9 +1428,6 @@ class PBEAML(IntegratedLineProperty):
                 fields += dim + [nsm]
             else:
                 fields += [xxb, so] + dim + [nsm]
-            ###
-        ###
-        #print self.printCard(fields)
         #raise NotImplementedError('verify PBEAML...')
         return fields
 
@@ -1470,10 +1464,8 @@ class PBEAM3(LineProperty):  # not done, cleanup
             self.fz = card.field(16)
 
             # more...
-        ###
         else:
             raise NotImplementedError('not implemented...')
-        ###
 
     def Nsm(self):
         """@warning nsm field not supported fully on PBEAM3 card"""
@@ -1558,10 +1550,8 @@ class PBEND(LineProperty):
             ## Offset of the geometric centroid in a direction perpendicular to the
             ## plane of points GA and GB and vector v
             self.zc = card.field(21)
-        ###
         else:
             raise NotImplementedError('PBEND')
-        ###
 
     #def Nsm(self):
         #"""@warning nsm field not supported fully on PBEND card"""

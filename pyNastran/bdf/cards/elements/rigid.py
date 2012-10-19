@@ -9,9 +9,6 @@ from pyNastran.bdf.cards.baseCard import Element
 
 
 class RigidElement(Element):
-    #def __repr__(self):
-        #fields = [self.type, self.eid]
-        #return self.printCard(fields)
     def cross_reference(self, model):
         pass
 

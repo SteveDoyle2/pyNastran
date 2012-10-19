@@ -74,7 +74,7 @@ class ABCQSet(Set):
 
     def __repr__(self):
         fields = self.rawFields()
-        return self.printCard(fields)
+        return print_card_8(fields)
 
 
 class ASET(ABCQSet):
@@ -154,7 +154,7 @@ class ABQSet1(Set):
 
     def __repr__(self):
         fields = self.rawFields()
-        return self.printCard(fields)
+        return print_card_8(fields)
 
 
 class ASET1(ABQSet1):
@@ -204,7 +204,7 @@ class CSET1(Set):
 
     def __repr__(self):
         fields = self.rawFields()
-        return self.printCard(fields)
+        return print_card_8(fields)
 
 
 class QSET1(ABQSet1):
@@ -315,7 +315,7 @@ class SET3(Set):
 
     def __repr__(self):
         fields = ['SET3', self.sid, self.desc] + self.SetIDs()
-        return self.printCard(fields)
+        return print_card_8(fields)
 
 
 class SESET(SetSuper):

@@ -95,8 +95,7 @@ class SpringElement(Element):
         return self.rawFields()
 
     def __repr__(self):
-        fields = self.rawFields()
-        return self.printCard(fields)
+        return self.print_card(8)
 
 
 class CELAS1(SpringElement):
