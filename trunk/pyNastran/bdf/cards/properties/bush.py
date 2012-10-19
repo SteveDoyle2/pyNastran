@@ -118,10 +118,11 @@ class PBUSH(BushingProperty):
                 raise RuntimeError('not supported PBUSH field...')
             nSpaces = 8 - (len(fields) - 1) % 8
 
-            #print "nSpaces = ",nSpaces
-            if nSpaces < 8:
+            #print("nSpaces = ",nSpaces)
+            if nSpaces == 8:
+                fields += [None]
+            elif nSpaces < 8:
                 fields += [None] * (nSpaces + 1)
-            ###
         return fields
 
     def reprFields(self):
