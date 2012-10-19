@@ -109,7 +109,8 @@ class CBUSH(BushElement):
         self.ga = model.Node(self.ga)
         self.gb = model.Node(self.gb)
         self.pid = model.Property(self.pid)
-        self.cid = model.Coord(self.cid)
+        if self.cid is not None:
+            self.cid = model.Coord(self.cid)
 
     def rawFields(self):
         if self.g0 is not None:
@@ -154,7 +155,8 @@ class CBUSH1D(BushElement):
     def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes)
         self.pid = model.Property(self.pid)
-        self.cid = model.Coord(self.cid)
+        if self.cid is not None:
+            self.cid = model.Coord(self.cid)
 
     def rawFields(self):
         nodeIDs = self.nodeIDs()
@@ -205,8 +207,8 @@ class CBUSH2D(BushElement):
     def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes)
         #self.pid = model.Property(self.pid)
-        self.cid = model.Coord(self.cid)
+        if self.cid is not None:
+            self.cid = model.Coord(self.cid)
 
     #def reprFields(self):
         #return self.rawFields()
-###
