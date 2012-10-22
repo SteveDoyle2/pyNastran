@@ -17,10 +17,11 @@ from .real.oes_compositePlates import CompositePlateStressObject, CompositePlate
 
 
 from .complex.elementsStressStrain import ComplexElementsStressStrain
+from .complex.oes_bars import ComplexBarStressObject, ComplexBarStrainObject
+from .complex.oes_bush import ComplexBushStressObject, ComplexBushStrainObject
+from .complex.oes_plates import ComplexPlateStressObject, ComplexPlateStrainObject
 from .complex.oes_rods import ComplexRodStressObject, ComplexRodStrainObject
 from .complex.oes_springs import ComplexCelasStressObject, ComplexCelasStrainObject
-from .complex.oes_bars import ComplexBarStressObject, ComplexBarStrainObject
-from .complex.oes_plates import ComplexPlateStressObject, ComplexPlateStrainObject
 
 
 from .oes_nonlinear import NonlinearRodObject, NonlinearQuadObject, HyperelasticQuadObject
@@ -802,8 +803,19 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             #raise NotImplementedError('stoping at end of CBEAM_94')
             #del self.eid2
 
+        elif self.elementType in [102]:   # BUSH (CBUSH)
+            #if self.numWide == numWideReal:
+            #    resultName = self.makeOES_Object(self.bushStress, BushStressObject, 'bushStress',
+            #                                     self.bushStrain, BushStressObject, 'bushStrain')
+            #    self.handleResultsBuffer3(self.OES_CBUSH_102, resultName)
+            if self.numWide==numWideImag:
+                resultName = self.makeOES_Object(self.bushStress, ComplexBushStressObject, 'bushStress',
+                                                 self.bushStrain, ComplexBushStrainObject, 'bushStrain')
+                self.handleResultsBuffer3(self.OES_CBUSH_102_alt, resultName)
+            else:
+                self.NotImplementedOrSkip()
+
         elif self.elementType in [139]:   # QUAD4FD (hyperelastic)
-            #print "    found QUAD4FD_139"
             if self.numWide == numWideReal:
                 resultName = self.makeOES_Object(self.hyperelasticPlateStress, HyperelasticQuadObject, 'hyperelasticPlateStress',
                                                  self.hyperelasticPlateStrain, HyperelasticQuadObject, 'hyperelasticPlateStrain')
@@ -836,7 +848,6 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             #elementType=88  -> TRIA3NL is not supported
             #elementType=90  -> QUAD4NL is not supported
             #elementType=94  -> BEAMNL  is not supported
-            #elementType=102 -> BUSH    is not supported
             #elementType=189 -> VUQUAD  is not supported
             #elementType=232 -> QUADRLC is not supported
         #elif self.elementType in [100]:   # BARS
@@ -890,16 +901,16 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
         #elif self.elementType == 97:   # composite CTRIA3    (done)
         #elif self.elementType == 98:   # composite CTRIA6    (done)
         #elif self.elementType == 100:  # cbar w/ cbarao or pload1
-
-        #elif self.elementType == 102:  # cbush
+        #elif self.elementType == 102:  # cbush (done)
         #elif self.elementType == 144:  # cquad_144 - corner stresses (done)
 
-        # rods/bars/beams
+        # rods/bars/beams/bush
         #elif self.elementType == 1:    # crod   (done)
         #elif self.elementType == 2:    # cbeam  (done)
         #elif self.elementType == 3:    # ctube  (done)
         #elif self.elementType == 10:   # conrod (done)
         #elif self.elementType == 34:   # cbar   (done)
+        #elif self.elementType == 102:  # cbush  (done)
         #springs
         #elif self.elementType == 11:   # celas1 (done)
         #elif self.elementType == 12:   # celas2 (done)
@@ -935,6 +946,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
         #elif self.elementType == 77:   # cpenta (acoustic)
         #elif self.elementType == 78:   # ctetra (acoustic)
         #elif self.elementType == 101:  # caabsf (acoustic)
+
     def makeOES_Object(self, stress, stressObject, stressName,
                              strain, strainObject, strainName):
         """
