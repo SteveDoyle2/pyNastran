@@ -2,6 +2,7 @@ from __future__ import print_function
 #from numpy import array
 from numpy import angle
 from pyNastran.op2.op2Codes import Op2Codes
+from pyNastran.general.general import ListPrint
 
 
 class baseScalarObject(Op2Codes):
@@ -160,7 +161,7 @@ class scalarObject(baseScalarObject):
                     name = name + 's'
                 else:
                     vals = getattr(self, name)
-                msg.append('  %s = %s\n' % (name, vals))
+                msg.append('  %s = %s\n' % (name, ListPrint(vals)))
             except AttributeError:  # weird case...
                 pass
         return msg

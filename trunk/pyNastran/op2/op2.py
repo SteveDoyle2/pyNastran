@@ -277,7 +277,8 @@ class OP2(BDF,
         self.bushStress = {}
         ## OES - isotropic CBUSH strain
         self.bushStrain = {}
-        
+         ## OES - isotropic CBUSH1D strain/strain
+        self.bush1dStressStrain = {}
 
         ## OES - isotropic CTRIA3/CQUAD4 stress
         self.plateStress = {}
@@ -440,6 +441,7 @@ class OP2(BDF,
             
             'bushStress',
             'bushStrain',
+            'bush1dStressStrain',
 
             ## OES - nonlinear CROD/CONROD/CTUBE stress
             'nonlinearRodStress',
