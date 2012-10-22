@@ -190,10 +190,28 @@ cdef extern from "libop4.c":
                                              #     0=native  endian binary 
                                              #    >2=text; number of DIGITS
                         )
+    int  op4_wrt_col_sp(FILE   *fp    ,
+                        int     column,  # first column is 0
+                        int     A_col ,  # column index to A[]; this differs
+                                         # from 'column' if A[] contains only
+                                         # part of the entire matrix
+                        int     nCols ,  # number of columns
+                        SparseMatrix A,  # entire sparse matrix
+                        int     complx,  # 1=complex  0=real
+                        int     digits   # in -1=flipped endian binary 
+                                         #     0=native  endian binary 
+                                         #    >2=text; number of DIGITS
+                    )
     int  op4_wrt_trailer(FILE *fp          ,
                          int   column      , # first column is 0
                          int   digits        # -1=flipped; 0=native; >0=digits
                         )
+    void strings_in_list(int  n_terms   ,    # in  length of list[]
+                         int *list      ,    # in                 
+                         int *n_str     ,    # out number of strings in list[]
+                         int *start_ind ,    # out index of 1st string terms
+                         int *str_len   ,    # out length of each string
+                         int *max_length)
 
 cdef int OP4_TXT_LINE_SIZE = 82
 DTYPE = np.float64
@@ -482,7 +500,7 @@ class OP4:                                                 # {{{1
         cdef str_t  *unused_s
         cdef str_t  *str_data
         cdef int     n_nnz = self.nnz[skip]
-        cdef int    *N_index
+####### cdef int    *N_index
         cdef float  *array_RS
         cdef float  *array_CS
         cdef double *array_RD
@@ -759,11 +777,12 @@ def Save(                                                  # {{{1
     cdef int endian = 0
     cdef int sparse_mat = 0
     cdef int n_str_one_col, ptr_H, ptr_S_start, ptr_N_start, ptr_S, ptr_N, n_str, n_ptr, Ar_ptr, Ai_ptr
-    cdef double *one_column, *A
-    cdef int *start_ind, *str_len
+    cdef double *one_column, *A, *C_col_values
+    cdef int *start_ind, *str_len, max_length
     cdef SparseMatrix m
     cdef np.ndarray[np.int32_t, ndim=1] row_ind
     cdef np.ndarray[np.int32_t, ndim=1] col_ind
+#   cdef np.ndarray[np.float  , ndim=1] C_col_values
 
     if 'digits' in kwargs: 
         digits = kwargs['digits']
@@ -916,8 +935,49 @@ def Save(                                                  # {{{1
                 # col_ind will always be an array of zeros since
                 # kwargs[name].getcol(c) returns a single column
                 col_values       = kwargs[name].getcol(c)
+#               C_col_values     = <DTYPE_t *> col_values.data
+#               C_col_values     = col_values.data
                 print('row_ind', row_ind)
                 print('col_val', col_values.data)
+#               for iI in range(len(col_values)):
+#                   print(' colval[%d]=%e' % (C_col_values[iI]))
+                strings_in_list(len(col_ind),      # in  # terms
+                        <int *> row_ind.data,      # in  row indices
+                               &n_str       ,      # out # strings
+                                start_ind   ,      # out leading index
+                                str_len     ,      # out string lengths
+                               &max_length)
+                m.S_start[0] = 0
+                m.N_start[0] = 0
+                m.S_start[1] = n_str
+                n_ptr        = 0
+#               m.N          = <DTYPE_t *> col_values.data
+                for s in range(n_str):
+                    m.S[s].start_row = row_ind[col_ind[c] + start_ind[s] ]
+                    m.S[s].len       = str_len[s]
+                    m.S[s].N_idx     = n_ptr
+
+                    for j in range(str_len[s]):
+                        m.N[n_ptr] = <DTYPE_t> col_values[Ar_ptr]
+                        n_ptr  += 1
+                        Ar_ptr += 1
+                        if op4_complx:
+                            m.N[n_ptr] = col_values[Ar_ptr]
+                            Ar_ptr += 1
+                            n_ptr  += 1
+
+########################### m.N[n_ptr] = Ai[Ai_ptr]
+########################### Ai_ptr += 1
+########################### n_ptr  += 1
+
+                m.N_start[1] = n_ptr
+#               op4_wrt_col_sp(fp ,
+#                              c  ,
+#                              0  ,
+#                              nC ,
+#                              m  ,
+#                              op4_complx,
+#                              digits)
             else:  # dense
                 # probably a better way to make the column copies below
                 if   op4_type in [1,2]:
