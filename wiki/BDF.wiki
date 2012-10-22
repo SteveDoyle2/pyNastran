@@ -5,7 +5,6 @@
 
 This section discusses the BDF class and how to use it.  Make sure you read the CrossReferencing and the DeveloperDocs sections.
 
-
 = Basic Usage =
 {{{
 from pyNastran.bdf.bdf import BDF
@@ -23,7 +22,7 @@ mesh.cardsToRead = set(['GRID','CQUAD4','PSHELL','MAT1','CORD2R'])
 node100 = ['GRID',id,cp,x,y,z,cd,ps,seid]
 # Note that None may be used for default values
 
-mesh.addCard(node100,'GRID')  # adds the new GRID card to the bdf
+mesh.add_card(node100,'GRID')  # adds the new GRID card to the bdf
 
 mesh.readBDF(bdfFileIn,includeDir=None,xref=True) # reads the bdf
 #includeDir lets you append path information onto the include files
@@ -77,9 +76,7 @@ print m.G()   # calculated based on E, nu
 =Specific Examples=
 Check out the DeveloperDocs for more detail on the specific method that was implemented in the various examples.
 
-Examples 4-6 require v0.4.  The new version (v0.4) makes these examples much easier by adding a few new methods.
-
-==1-Print all the Grid details (Nodes, Coords) to an Output File==
+==1.  Print all the Grid details (Nodes, Coords) to an Output File==
 {{{
 from pyNastran.bdf.bdf import BDF
 
@@ -108,11 +105,11 @@ for cid,coord in sorted(model.coords.items()):
 
 #----------------
 #Method 2 - using built-in methods
-f.write(model.writeNodes())
-f.write(model.writeCoords())
+f.write(model.write_nodes())
+f.write(model.write_coords())
 
 }}}
-==2-Print the Element ID and associated Node and Property to an Output File==
+==2.  Print the Element ID and associated Node and Property to an Output File==
 {{{
 # note this skips rigidElements
 
@@ -124,14 +121,14 @@ for pid,prop in sorted(model.properties.items()):
     f.write(prop)
 
 # Method 2 - using built-in method
-f.write(model.writeElementsProperties())
+f.write(model.write_elements_properties())
 
 # Method 3 - using built-in methods
-f.write(model.writeElements())
-f.write(model.writeProperties())
+f.write(model.write_elements())
+f.write(model.write_properties())
 }}}
 
-==3-Print the Element ID and its Configuration (e.g. CQUAD4, CTRIA3, etc.) to an Output File==
+==3.  Print the Element ID and its Configuration (e.g. CQUAD4, CTRIA3, etc.) to an Output File==
 {{{
 # note this skips rigidElements
 
@@ -141,7 +138,7 @@ for eid,element in sorted(model.elements.items()):
     f.write(msg)
 }}}
 
-== 4-Given a Node, get the Elements Attached to that Node ==
+==4.  Given a Node, get the Elements Attached to that Node ==
 {{{
 # assume node 8101
 nidToEidsMap = model.getNodeIDToElementIDsMap() # doesnt support 0d/1d elements yet
@@ -151,12 +148,12 @@ eids = nidToEidsMap[8101]
 elements = []
 for eid in eids:
     elements.append(model.Element(eid))
-###
+
 print eids
 print "elements =\n ",elements
 }}}
 
-==5-Creating a List of Elements based on a Property ID==
+==5.  Creating a List of Elements based on a Property ID==
 {{{
 # assume pid=5
 pidToEidsMap = model.getPropertyIDToElementIDsMap()
@@ -172,7 +169,7 @@ for eid in eids10:
     elements10.append(model.Element(eid))
 }}}
 
-==6-Create a List of Elements based on a Material ID==
+==6.  Create a List of Elements based on a Material ID==
 {{{
 # assume you want the eids for material 10
 pidToEidsMap = model.getPropertyIDToElementIDsMap()
@@ -183,11 +180,9 @@ pids10 = midToPidsMap[10]
 eids = []
 for pid in pids10:
     eids += pidToEidsMap[pid]
-###
 
 # convert to elements instead of element IDs
 elements = []
 for eid in eids:
     elements.append(model.Element(eid))
-###
 }}}
