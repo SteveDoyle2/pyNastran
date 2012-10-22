@@ -273,6 +273,11 @@ class OP2(BDF,
         self.beamStress = {}
         ## OES - isotropic CBEAM strain
         self.beamStrain = {}
+        ## OES - isotropic CBUSH stress
+        self.bushStress = {}
+        ## OES - isotropic CBUSH strain
+        self.bushStrain = {}
+        
 
         ## OES - isotropic CTRIA3/CQUAD4 stress
         self.plateStress = {}
@@ -432,22 +437,22 @@ class OP2(BDF,
             ## OES - CTRIAX6
             'ctriaxStress',
             'ctriaxStrain',
+            
+            'bushStress',
+            'bushStrain',
 
             ## OES - nonlinear CROD/CONROD/CTUBE stress
             'nonlinearRodStress',
-            ## OES - nonlinear CROD/CONROD/CTUBE strain
             'nonlinearRodStrain',
 
             ## OESNLXR - CTRIA3/CQUAD4 stress
             'nonlinearPlateStress',
-            ## OESNLXR - CTRIA3/CQUAD4 strain
             'nonlinearPlateStrain',
             'hyperelasticPlateStress',
             'hyperelasticPlateStrain',
 
             ## OES - composite CTRIA3/CQUAD4 stress
             'compositePlateStress',
-            ## OES - composite CTRIA3/CQUAD4 strain
             'compositePlateStrain',
 
             ## OGS1 - grid point stresses
