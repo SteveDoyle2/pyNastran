@@ -19,6 +19,7 @@ from .real.oes_compositePlates import CompositePlateStressObject, CompositePlate
 from .complex.elementsStressStrain import ComplexElementsStressStrain
 from .complex.oes_bars import ComplexBarStressObject, ComplexBarStrainObject
 from .complex.oes_bush import ComplexBushStressObject, ComplexBushStrainObject
+from .complex.oes_bush1d import ComplexBush1DStressObject
 from .complex.oes_plates import ComplexPlateStressObject, ComplexPlateStrainObject
 from .complex.oes_rods import ComplexRodStressObject, ComplexRodStrainObject
 from .complex.oes_springs import ComplexCelasStressObject, ComplexCelasStrainObject
@@ -803,7 +804,19 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             #raise NotImplementedError('stoping at end of CBEAM_94')
             #del self.eid2
 
-        elif self.elementType in [102]:   # BUSH (CBUSH)
+        elif self.elementType in [40]:   # CBUSH1D
+            #if self.numWide == numWideReal:
+            #    resultName = self.makeOES_Object(self.bushStress, BushStressObject, 'bushStress',
+            #                                     self.bushStrain, BushStressObject, 'bushStrain')
+            #    self.handleResultsBuffer3(self.OES_CBUSH1D_40, resultName)
+            if self.numWide==numWideImag:
+                resultName = self.makeOES_Object(self.bush1dStressStrain, ComplexBush1DStressObject, 'bush1dStressStrain',
+                                                 self.bush1dStressStrain, ComplexBush1DStressObject, 'bush1dStressStrain')
+                self.handleResultsBuffer3(self.OES_CBUSH1D_40_alt, resultName)
+            else:
+                self.NotImplementedOrSkip()
+
+        elif self.elementType in [102]:   # CBUSH
             #if self.numWide == numWideReal:
             #    resultName = self.makeOES_Object(self.bushStress, BushStressObject, 'bushStress',
             #                                     self.bushStrain, BushStressObject, 'bushStrain')
