@@ -5,15 +5,17 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from struct import unpack
 
 from .real.elementsStressStrain import RealElementsStressStrain
-from .real.oes_rods import RodStressObject, RodStrainObject
-from .real.oes_shear import ShearStressObject, ShearStrainObject
 from .real.oes_bars import BarStressObject, BarStrainObject
 from .real.oes_beams import BeamStressObject, BeamStrainObject
-from .real.oes_solids import SolidStressObject, SolidStrainObject
+from .real.oes_bush import BushStressObject, BushStrainObject
+from .real.oes_bush1d import Bush1DStressObject
+from .real.oes_compositePlates import CompositePlateStressObject, CompositePlateStrainObject
 from .real.oes_plates import PlateStressObject, PlateStrainObject
+from .real.oes_rods import RodStressObject, RodStrainObject
+from .real.oes_shear import ShearStressObject, ShearStrainObject
+from .real.oes_solids import SolidStressObject, SolidStrainObject
 from .real.oes_springs import CelasStressObject, CelasStrainObject
 from .real.oes_triax import TriaxStressObject, TriaxStrainObject
-from .real.oes_compositePlates import CompositePlateStressObject, CompositePlateStrainObject
 
 
 from .complex.elementsStressStrain import ComplexElementsStressStrain
@@ -805,11 +807,11 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             #del self.eid2
 
         elif self.elementType in [40]:   # CBUSH1D
-            #if self.numWide == numWideReal:
-            #    resultName = self.makeOES_Object(self.bushStress, BushStressObject, 'bushStress',
-            #                                     self.bushStrain, BushStressObject, 'bushStrain')
-            #    self.handleResultsBuffer3(self.OES_CBUSH1D_40, resultName)
-            if self.numWide==numWideImag:
+            if self.numWide == numWideReal:
+                resultName = self.makeOES_Object(self.bush1dStressStrain, Bush1DStressObject, 'bush1dStressStrain',
+                                                 self.bush1dStressStrain, Bush1DStressObject, 'bush1dStressStrain')
+                self.handleResultsBuffer3(self.OES_CBUSH1D_40, resultName)
+            elif self.numWide==numWideImag:
                 resultName = self.makeOES_Object(self.bush1dStressStrain, ComplexBush1DStressObject, 'bush1dStressStrain',
                                                  self.bush1dStressStrain, ComplexBush1DStressObject, 'bush1dStressStrain')
                 self.handleResultsBuffer3(self.OES_CBUSH1D_40_alt, resultName)
@@ -817,11 +819,11 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                 self.NotImplementedOrSkip()
 
         elif self.elementType in [102]:   # CBUSH
-            #if self.numWide == numWideReal:
-            #    resultName = self.makeOES_Object(self.bushStress, BushStressObject, 'bushStress',
-            #                                     self.bushStrain, BushStressObject, 'bushStrain')
-            #    self.handleResultsBuffer3(self.OES_CBUSH_102, resultName)
-            if self.numWide==numWideImag:
+            if self.numWide == numWideReal:
+                resultName = self.makeOES_Object(self.bushStress, BushStressObject, 'bushStress',
+                                                 self.bushStrain, BushStressObject, 'bushStrain')
+                self.handleResultsBuffer3(self.OES_CBUSH_102, resultName)
+            elif self.numWide==numWideImag:
                 resultName = self.makeOES_Object(self.bushStress, ComplexBushStressObject, 'bushStress',
                                                  self.bushStrain, ComplexBushStrainObject, 'bushStrain')
                 self.handleResultsBuffer3(self.OES_CBUSH_102_alt, resultName)
