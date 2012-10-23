@@ -540,9 +540,10 @@ class AddMethods(object):
 
     def addSetSuper(self, setObj):
         key = setObj.seid
-        assert key not in self.setsSuper, '\nSESET=\n%s oldSESET=\n%s' % (
-            setObj, self.setsSuper[key])
         assert key >= 0
+        if key in self.setsSuper:
+            oldSet = self.setsSuper[key]
+            setObj.add_SESET_Object(oldSet)
         self.setsSuper[key] = setObj
 
     def addTable(self, table):

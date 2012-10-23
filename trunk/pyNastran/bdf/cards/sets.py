@@ -334,10 +334,33 @@ class SESET(SetSuper):
         self.IDs = expand_thru(card.fields(2))
         self.cleanIDs()
 
-    def rawFields(self):
-        fields = ['SESET', self.seid] + self.SetIDs()
-        return fields
+    def add_SESET_Object(self, seset):
+        self.IDs += seset.IDs
+        self.cleanIDs()
 
+    def rawFields(self):
+        return ['SESET',self.seid]+collapse_thru(self.IDs)
+
+    def __repr__(self):
+        thruFields = collapse_thru(self.IDs)
+        
+        fields = ['SESET', self.seid]
+        
+        i = 0
+        cards = []
+        print("thruFields",thruFields)
+        while 'THRU' in thruFields:
+            print("thruFields",thruFields)
+            iThru = thruFields.index('THRU')
+            card = print_card_8(['SESET',self.seid]+thruFields[iThru-1:iThru+2])
+            cards.append(card)
+            thruFields = thruFields[0:iThru-1]+thruFields[iThru+2:]
+        print("thruFields",thruFields)
+        if thruFields:
+            card = print_card_8(['SESET',self.seid]+thruFields)
+            cards.append(card)
+        #print("cards",cards)
+        return ''.join(cards)
 
 class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
     """
