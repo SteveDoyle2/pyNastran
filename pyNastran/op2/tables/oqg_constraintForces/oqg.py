@@ -5,7 +5,8 @@ from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import(
     SPCForcesObject, ComplexSPCForcesObject)
 from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import(
     MPCForcesObject, ComplexMPCForcesObject)
-
+from pyNastran.op2.tables.oqg_constraintForces.oqg_thermalGradientAndFlux import (
+    TemperatureGradientAndFluxObject)
 
 class OQG(object):
     """Table of spc/mpc forces/momenets"""
@@ -159,6 +160,11 @@ class OQG(object):
                 resultName = 'spcForces'
                 self.createTransientObject(
                     self.spcForces, SPCForcesObject)
+                self.handleResultsBuffer3(self.OUG_RealTable, resultName)
+            elif self.thermal == 1:
+                resultName = 'thermalGradientAndFlux' #'finite element temperature gradients and fluxes'
+                self.createTransientObject(
+                    self.thermalGradientAndFlux, TemperatureGradientAndFluxObject)
                 self.handleResultsBuffer3(self.OUG_RealTable, resultName)
             else:
                 self.NotImplementedOrSkip()

@@ -17,6 +17,7 @@ class RealElementsStressStrain(object):
                        self.tableCode, self.formatCode, self.sortCode,
                        self.tableName))
         #print(self.codeInformation())
+        #print("**************skipping**************")
         #asdf
         self.handleResultsBuffer3(self.dummyPass, None, debug=True)
 
@@ -721,7 +722,46 @@ class RealElementsStressStrain(object):
                 self.obj.add(eid, grid, fd2, sx2, sy2,
                              txy2, angle2, major2, minor2, vm2)
 
-    def OES_CQUAD4_144(self):  # works
+    def OES_CBUSH1D_40(self):
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+
+        assert self.numWide == 8, "numWide=%s not 8" % (self.numWide)
+        nTotal = 32  # 4*8
+        format1 += '6fi'
+        format1 = bytes(format1)
+
+        while len(self.data) >= nTotal:
+            eData = self.data[0:nTotal]
+            self.data = self.data[nTotal:]
+
+            out = unpack(format1, eData)  # numWide=25
+            (eid, fe, ue, ve, ao, ae, ep, fail) = out
+            eid = extract(eid, dt)
+
+            # axial_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed
+            self.obj.addNewEid(self.elementType, dt, eid, fe, ue, ve, ao, ae, ep, fail)
+
+    def OES_CBUSH_102(self):
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+
+        assert self.numWide == 7, "numWide=%s not 7" % (self.numWide)
+        nTotal = 28  # 4*7
+        format1 += '6f'
+        format1 = bytes(format1)
+
+        while len(self.data) >= nTotal:
+            eData = self.data[0:nTotal]
+            self.data = self.data[nTotal:]
+
+            out = unpack(format1, eData)  # numWide=7
+            (eid, tx,ty,tz,rx,ry,rz) = out
+            eid = extract(eid, dt)
+
+            self.obj.addNewEid(self.elementType, dt, eid, tx, ty, tz, rx, ry, rz)
+
+    def OES_CQUAD4_144(self):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """

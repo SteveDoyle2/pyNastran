@@ -2,10 +2,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 
-from ..real.oes_objects import stressObject, strainObject
+from .oes_objects import stressObject, strainObject
 
 
-class ComplexBushStressObject(stressObject):
+class BushStressObject(stressObject):
     """
     # sCode=0
                            C O M P L E X   S T R E S S E S   I N   B A R   E L E M E N T S   ( C B A R )
@@ -65,7 +65,7 @@ class ComplexBushStressObject(stressObject):
 
         for line in data:
             (eType, eid, tx, ty, tz, rx, ry, rz) = line
-            self.eType[eid] = 'CBAR'
+            self.eType[eid] = 'CBUSH'
             self.translations[dt][eid] = [tx, ty, tz]
             self.rotations[dt][eid] = [rx, ry, rz]
 
@@ -99,78 +99,45 @@ class ComplexBushStressObject(stressObject):
         self.rotations[dt][eid] = [rx, ry, rz]
 
     def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        raise NotImplementedError('CBUSH')
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
 
         msg = header + [
-            '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
-            '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
-            '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
+            '                                  S T R E S S E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n\n',
+            '                  ELEMENT-ID        STRESS-TX     STRESS-TY     STRESS-TZ    STRESS-RX     STRESS-RY     STRESS-RZ \n',
         ]
 
-        for eid, S1s in sorted(self.s1.iteritems()):
+        for eid, (tx, ty, tz) in sorted(self.translations.iteritems()):
             eType = self.eType[eid]
-            axial = self.axial[eid]
-            s1 = self.s1[eid]
-            s2 = self.s2[eid]
-            s3 = self.s3[eid]
-            s4 = self.s4[eid]
+            (rx, ry, rz) = self.rotations[eid]
 
-            vals = [s1[0], s2[0], s3[0], s4[0], axial,
-                    s1[1], s2[1], s3[1], s4[1], ]
-            (vals2, isAllZeros) = self.writeImagFloats13E(vals, isMagPhase)
-            [s1ar, s2ar, s3ar, s4ar, axialr,
-             s1br, s2br, s3br, s4br,
-             s1ai, s2ai, s3ai, s4ai, axiali,
-             s1bi, s2bi, s3bi, s4bi, ] = vals2
-            msg.append('0%8i   %13s  %13s  %13s  %13s  %-s\n' %
-                       (eid, s1ar, s2ar, s3ar, s4ar, axialr.rstrip()))
-            msg.append(' %8s   %13s  %13s  %13s  %13s  %-s\n' %
-                       ('', s1ai, s2ai, s3ai, s4ai, axiali.rstrip()))
-
-            msg.append(' %8s   %13s  %13s  %13s  %-s\n' % (
-                '', s1br, s2br, s3br, s4br.rstrip()))
-            msg.append(' %8s   %13s  %13s  %13s  %-s\n' % (
-                '', s1bi, s2bi, s3bi, s4bi.rstrip()))
+            vals = [tx, ty, tz, rx, ry, rz]
+            (vals2, isAllZeros) = self.writeFloats13E(vals)
+            [tx, ty, tz, rx, ry, rz] = vals2
+            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %-s\n' %
+                       (eid, tx, ty, tz, rx, ry, rz.rstrip()))
 
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
     def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        raise NotImplementedError('CBUSH')
         words = [
-            '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
-            '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
-            '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
+            '                                  S T R E S S E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n\n',
+            '                  ELEMENT-ID        STRESS-TX     STRESS-TY     STRESS-TZ    STRESS-RX     STRESS-RY     STRESS-RZ \n',
         ]
         msg = []
-        for dt, S1s in sorted(self.s1.iteritems()):
+        for dt, translations in sorted(self.translations.iteritems()):
             header[1] = ' %s = %10.4E\n' % (self.dataCode['name'], dt)
             msg += header + words
-            for eid, S1 in sorted(S1s.iteritems()):
+            for eid, (tx, ty, tz) in sorted(translations.iteritems()):
                 eType = self.eType[eid]
-                axial = self.axial[dt][eid]
-                s1 = self.s1[dt][eid]
-                s2 = self.s2[dt][eid]
-                s3 = self.s3[dt][eid]
-                s4 = self.s4[dt][eid]
-                vals = [s1[0], s2[0], s3[0], s4[0], axial,
-                        s1[1], s2[1], s3[1], s4[1], ]
-                (vals2, isAllZeros) = self.writeImagFloats13E(vals, isMagPhase)
-                [s1ar, s2ar, s3ar, s4ar, axialr,
-                 s1br, s2br, s3br, s4br,
-                 s1ai, s2ai, s3ai, s4ai, axiali,
-                 s1bi, s2bi, s3bi, s4bi, ] = vals2
-                msg.append('0%8i   %13s  %13s  %13s  %13s  %-s\n' % (eid,
-                                                                     s1ar, s2ar, s3ar, s4ar, axialr.rstrip()))
-                msg.append(' %8s   %13s  %13s  %13s  %13s  %-s\n' % ('',
-                                                                     s1ai, s2ai, s3ai, s4ai, axiali.rstrip()))
+                (rx, ry, rz) = self.rotations[dt][eid]
 
-                msg.append(' %8s   %13s  %13s  %13s  %-s\n' %
-                           ('', s1br, s2br, s3br, s4br.rstrip()))
-                msg.append(' %8s   %13s  %13s  %13s  %-s\n' %
-                           ('', s1bi, s2bi, s3bi, s4bi.rstrip()))
+                vals = [tx, ty, tz, rx, ry, rz]
+                (vals2, isAllZeros) = self.writeFloats13E(vals)
+                [tx, ty, tz, rx, ry, rz] = vals2
+                msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %-s\n' %
+                           (eid, tx, ty, tz, rx, ry, rz.rstrip()))
 
             msg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
@@ -181,7 +148,7 @@ class ComplexBushStressObject(stressObject):
         if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
-        msg = '---BAR STRESS---\n'
+        msg = '---BUSH STRESS---\n'
         msg += '%-6s %6s ' % ('EID', 'eType')
         headers = ['s1', 's2', 's3', 's4', 'Axial']
         for header in headers:
@@ -222,7 +189,7 @@ class ComplexBushStressObject(stressObject):
 
     def __reprTransient__(self):
         raise NotImplementedError('CBUSH')
-        msg = '---BAR STRESS---\n'
+        msg = '---BUSH STRESS---\n'
         msg += '%-6s %6s ' % ('EID', 'eType')
         headers = ['s1', 's2', 's3', 's4', 'Axial', 'sMax', 'sMin']
         for header in headers:
@@ -259,7 +226,7 @@ class ComplexBushStressObject(stressObject):
         return msg
 
 
-class ComplexBushStrainObject(strainObject):
+class BushStrainObject(strainObject):
     """
     # sCode=10
                                      S T R A I N S   I N   B A R   E L E M E N T S          ( C B A R )
@@ -276,11 +243,9 @@ class ComplexBushStrainObject(strainObject):
 
         if isSort1:
             if dt is not None:
-                #self.add = self.addSort1
                 self.addNewEid = self.addNewEidSort1
         else:
             assert dt is not None
-            #self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
 
     def get_stats(self):
@@ -314,7 +279,7 @@ class ComplexBushStrainObject(strainObject):
 
         for line in data:
             (eType, eid, tx, ty, tz, rx, ry, rz) = line
-            self.eType[eid] = 'CBAR'
+            self.eType[eid] = 'CBUSH'
             self.translations[dt][eid] = [tx, ty, tz]
             self.rotations[dt][eid] = [rx, ry, rz]
 
@@ -350,7 +315,7 @@ class ComplexBushStrainObject(strainObject):
 
     def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         raise NotImplementedError('CBUSH')
-        return 'ComplexBarStress writeF06 not implemented...', pageNum
+        return 'BushStress writeF06 not implemented...', pageNum
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
 
@@ -414,7 +379,7 @@ class ComplexBushStrainObject(strainObject):
         if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
-        msg = '---BAR STRAIN---\n'
+        msg = '---BUSH STRAIN---\n'
         msg += '%-8s %6s ' % ('EID', 'eType')
         headers = ['e1', 'e2', 'e3', 'e4', 'Axial', 'eMax', 'eMin']
         for header in headers:
@@ -455,7 +420,7 @@ class ComplexBushStrainObject(strainObject):
 
     def __reprTransient__(self):
         raise NotImplementedError('CBUSH')
-        msg = '---BAR STRAIN---\n'
+        msg = '---BUSH STRAIN---\n'
         msg += '%-8s %6s ' % ('EID', 'eType')
         headers = ['e1', 'e2', 'e3', 'e4', 'Axial', 'eMax', 'eMin']
         for header in headers:
