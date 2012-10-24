@@ -362,6 +362,81 @@ class SESET(SetSuper):
         #print("cards",cards)
         return ''.join(cards)
 
+class SEBSET(Set):
+    """
+    Defines boundary degrees-of-freedom to be fixed (b-set) during generalized dynamic
+    reduction or component mode calculations.
+    SEBSET SEID ID1 C1 ID2 C2 ID3 C3
+    SEBSET C ID1 'THRU' ID2
+    """
+    def __init__(self, card=None, data=None):  ## @todo doesnt support data
+        Set.__init__(self, card, data)
+
+        ## Identifiers of grids points. (Integer > 0)
+        self.components = []
+        self.IDs = []
+        
+        fields = str(card.fields(1))
+        nfields = len(fields)
+        for i in range(nfields,2):
+            component = fields[i]
+            ID = fields[i+1]
+            self.components.append(component)
+            self.IDs.append(ID)
+
+    def rawFields(self):
+        """gets the "raw" card without any processing as a list for printing"""
+        fields = ['SEBSET1']
+        for (component, ID) in zip(self.components, self.IDs):
+            fields += [component,ID]
+        return fields
+
+class SEBSET1(Set):
+    """
+    Defines boundary degrees-of-freedom to be fixed (b-set) during generalized dynamic
+    reduction or component mode calculations.
+    SEBSET1 C ID1 ID2 ID3 ID4 ID5 ID6 ID7
+    ID8 ID9
+    SEBSET1 C ID1 'THRU' ID2
+    """
+    def __init__(self, card=None, data=None):  ## @todo doesnt support data
+        Set.__init__(self, card, data)
+
+        ## Identifiers of grids points. (Integer > 0)
+        self.IDs = []
+        self.components = str(card.field(1))
+        self.IDs = expand_thru(card.fields(2))
+
+    def rawFields(self):
+        """gets the "raw" card without any processing as a list for printing"""
+        fields = ['SEBSET1', self.components] + collapse_thru(self.IDs)
+        return fields
+
+    def __repr__(self):
+        fields = self.rawFields()
+        return print_card_8(fields)
+
+class SEQSET1(Set):
+    """
+    Defines the generalized degrees-of-freedom of the superelement to be used in
+    generalized dynamic reduction or component mode synthesis.
+    SEQSET1 C ID1 ID2 ID3 ID4 ID5 ID6 ID7
+    ID8 ID9
+    SEQSET1 C ID1 'THRU' ID2
+    """
+    def __init__(self, card=None, data=None):  ## @todo doesnt support data
+        Set.__init__(self, card, data)
+
+        ## Identifiers of grids points. (Integer > 0)
+        self.IDs = []
+        self.components = str(card.field(1))
+        self.IDs = expand_thru(card.fields(2))
+
+    def rawFields(self):
+        """gets the "raw" card without any processing as a list for printing"""
+        fields = ['SEQSET1', self.components] + collapse_thru(self.IDs)
+        return fields
+
 class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
     """
     Used with the CSUPER entry to define the correspondence of the
