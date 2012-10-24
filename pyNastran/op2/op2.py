@@ -304,6 +304,10 @@ class OP2(BDF,
         self.shearStress = {}
         ## OES - CSHEAR strain
         self.shearStrain = {}
+        ## OES - CELAS1 224, CELAS3 225, 
+        self.nonlinearSpringStress = {}
+        ## OES - GAPNL 86
+        self.nonlinearGapStress = {}
 
         # OQG - spc/mpc forces
         self.spcForces = {}  # tCode=3?
@@ -401,6 +405,10 @@ class OP2(BDF,
             'shearStress',
             ## OES - CSHEAR strain
             'shearStrain',
+            ## OES - CEALS1 224, CELAS3 225
+            'nonlinearSpringStress',
+            ## OES - GAPNL 86
+            'nonlinearGapStress',
 
         ]
 

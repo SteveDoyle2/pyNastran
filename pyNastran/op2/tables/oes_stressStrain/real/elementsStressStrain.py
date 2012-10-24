@@ -16,13 +16,38 @@ class RealElementsStressStrain(object):
                        'sortCode=%s on %s table' % (self.analysisCode,
                        self.tableCode, self.formatCode, self.sortCode,
                        self.tableName))
-        #print(self.codeInformation())
-        #print("**************skipping**************")
-        #asdf
+        print(self.codeInformation())
+        print("**************skipping**************")
+        asdf
         self.handleResultsBuffer3(self.dummyPass, None, debug=True)
 
     def dummyPass(self):
         self.data = b''
+
+    def OES_field1(self):
+        if self.isSort1():
+            #raise NotImplementedError('SORT1 is not supported')
+            return ('i', self.scaleEid)
+        elif self.isSort2():
+            if self.analysisCode in [1, 2, 3, 4, 7, 8, 9, 11, 12]:  # eid
+                return ('i', self.scaleEid)
+            elif self.analysisCode == 5:  # freq
+                #freq
+                return ('f', self.scaleDt)
+                #raise NotImplementedError('freq is not supported')
+            elif self.analysisCode == 6:  # time
+                #time
+                return ('f', self.scaleDt)
+                #raise NotImplementedError('time is not supported')
+            elif self.analysisCode == 10:  # fqts:
+                #fqts # freqTime
+                return ('f', self.scaleDt)
+                #raise NotImplementedError('freqTime is not supported')
+            else:
+                raise NotImplementedError('invalid SORT2 analysisCode=%s' %
+                                          (self.analysisCode))
+        else:
+            raise NotImplementedError('invalid SORTx code')
 
     def OES_Thermal(self, debug=False):
         #assert self.numWide==5,'invalid numWide...numWide=%s' % (self.numWide)
@@ -189,6 +214,50 @@ class RealElementsStressStrain(object):
             #print "         s1=%i s2=%i s3=%i s4=%i          smax=%i smin=%i" % (s1b,s2b,s3b,s4b,smaxb,sminb)
             #print "len(data) = ",len(self.data)
 
+    def OES_CBUSH1D_40(self):
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+
+        assert self.numWide == 8, "numWide=%s not 8" % (self.numWide)
+        nTotal = 32  # 4*8
+        format1 += '6fi'
+        format1 = bytes(format1)
+
+        while len(self.data) >= nTotal:
+            eData = self.data[0:nTotal]
+            self.data = self.data[nTotal:]
+
+            out = unpack(format1, eData)  # numWide=25
+            (eid, fe, ue, ve, ao, ae, ep, fail) = out
+            eid = extract(eid, dt)
+
+            # axial_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed
+            self.obj.addNewEid(self.elementType, dt, eid, fe, ue, ve, ao, ae, ep, fail)
+
+    def OES_CTRIAX6_53(self):
+        #(Format1,scaleValue) = self.OES_field1()
+        #Format = Format1+'ifffffff'
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+        format1 += 'i7f'
+        format1 = bytes(format1)
+        while len(self.data) >= 132:  # (1+8*4)*4 = 33*4 = 132
+            eData = self.data[0:36]  # 4*9
+            self.data = self.data[36:]
+            out = unpack(format1, eData)
+            (eid, loc, rs, azs, As, ss, maxp, tmax, octs) = out
+            eid = extract(eid, dt)
+            #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
+            self.obj.addNewEid(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
+
+            for i in xrange(3):
+                eData = self.data[0:32]  # 4*8
+                self.data = self.data[32:]
+                out = unpack(b'i7f', eData)
+                (loc, rs, azs, As, ss, maxp, tmax, octs) = out
+                #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
+                self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
+
     def OES_CSOLID_67(self):
         """
         stress is extracted at the centroid
@@ -311,7 +380,7 @@ class RealElementsStressStrain(object):
             self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2,
                          angle2, major2, minor2, vm2)
 
-    def OES_CSOLID_85(self):  # works
+    def OES_CSOLID_85(self):
         """
         stress is extracted at the centroid
         CTETRA_85
@@ -409,54 +478,24 @@ class RealElementsStressStrain(object):
             #self.printBlock(self.data[3:100])
         #print self.solidStress[self.iSubcase]
 
-    def OES_field1(self):
-        if self.isSort1():
-            #raise NotImplementedError('SORT1 is not supported')
-            return ('i', self.scaleEid)
-        elif self.isSort2():
-            if self.analysisCode in [1, 2, 3, 4, 7, 8, 9, 11, 12]:  # eid
-                return ('i', self.scaleEid)
-            elif self.analysisCode == 5:  # freq
-                #freq
-                return ('f', self.scaleDt)
-                #raise NotImplementedError('freq is not supported')
-            elif self.analysisCode == 6:  # time
-                #time
-                return ('f', self.scaleDt)
-                #raise NotImplementedError('time is not supported')
-            elif self.analysisCode == 10:  # fqts:
-                #fqts # freqTime
-                return ('f', self.scaleDt)
-                #raise NotImplementedError('freqTime is not supported')
-            else:
-                raise NotImplementedError('invalid SORT2 analysisCode=%s' %
-                                          (self.analysisCode))
-        else:
-            raise NotImplementedError('invalid SORTx code')
-
-    def OES_CTRIAX6_53(self):
-        #(Format1,scaleValue) = self.OES_field1()
-        #Format = Format1+'ifffffff'
+    def OES_CGAPNL_86(self):
         dt = self.nonlinearFactor
         (format1, extract) = self.getOUG_FormatStart()
-        format1 += 'i7f'
-        format1 = bytes(format1)
-        while len(self.data) >= 132:  # (1+8*4)*4 = 33*4 = 132
-            eData = self.data[0:36]  # 4*9
-            self.data = self.data[36:]
-            out = unpack(format1, eData)
-            (eid, loc, rs, azs, As, ss, maxp, tmax, octs) = out
-            eid = extract(eid, dt)
-            #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
-            self.obj.addNewEid(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
 
-            for i in xrange(3):
-                eData = self.data[0:32]  # 4*8
-                self.data = self.data[32:]
-                out = unpack(b'i7f', eData)
-                (loc, rs, azs, As, ss, maxp, tmax, octs) = out
-                #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
-                self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
+        assert self.numWide == 11, "numWide=%s not 11" % (self.numWide)
+        nTotal = 44  # 4*11
+        format1 += '8f4s4s'
+        format1 = bytes(format1)
+
+        while len(self.data) >= nTotal:
+            eData = self.data[0:nTotal]
+            self.data = self.data[nTotal:]
+
+            out = unpack(format1, eData)  # numWide=25
+            (eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2) = out
+            eid = extract(eid, dt)
+
+            self.obj.addNewEid(dt, eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2)
 
     def OES_RODNL_89_92(self):
         dt = self.nonlinearFactor
@@ -722,26 +761,6 @@ class RealElementsStressStrain(object):
                 self.obj.add(eid, grid, fd2, sx2, sy2,
                              txy2, angle2, major2, minor2, vm2)
 
-    def OES_CBUSH1D_40(self):
-        dt = self.nonlinearFactor
-        (format1, extract) = self.getOUG_FormatStart()
-
-        assert self.numWide == 8, "numWide=%s not 8" % (self.numWide)
-        nTotal = 32  # 4*8
-        format1 += '6fi'
-        format1 = bytes(format1)
-
-        while len(self.data) >= nTotal:
-            eData = self.data[0:nTotal]
-            self.data = self.data[nTotal:]
-
-            out = unpack(format1, eData)  # numWide=25
-            (eid, fe, ue, ve, ao, ae, ep, fail) = out
-            eid = extract(eid, dt)
-
-            # axial_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed
-            self.obj.addNewEid(self.elementType, dt, eid, fe, ue, ve, ao, ae, ep, fail)
-
     def OES_CBUSH_102(self):
         dt = self.nonlinearFactor
         (format1, extract) = self.getOUG_FormatStart()
@@ -928,3 +947,22 @@ class RealElementsStressStrain(object):
                              dummy3, dummy4, dummy5,
                              bcx, bcy, bcxy,tyz,tzx,
                              dummy6,dummy7,dummy8)
+
+    def OES_CELAS_224(self):
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+
+        assert self.numWide == 3, "numWide=%s not 3" % (self.numWide)
+        nTotal = 12  # 4*3
+        format1 += '2f'
+        format1 = bytes(format1)
+
+        while len(self.data) >= nTotal:
+            eData = self.data[0:nTotal]
+            self.data = self.data[nTotal:]
+
+            out = unpack(format1, eData)  # numWide=3
+            (eid, force, stress) = out
+            eid = extract(eid, dt)
+
+            self.obj.addNewEid(self.elementType, dt, eid, force, stress)
