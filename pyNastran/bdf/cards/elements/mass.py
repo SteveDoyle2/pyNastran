@@ -184,7 +184,6 @@ class CMASS3(PointMassElement):
             self.pid = data[1]
             self.s1 = data[2]
             self.s2 = data[3]
-        ###
 
     def Mass(self):
         return self.pid.mass
@@ -231,7 +230,6 @@ class CMASS4(PointMassElement):
             self.mass = data[1]
             self.s1 = data[2]
             self.s2 = data[3]
-        ###
 
     def Mass(self):
         return self.mass
@@ -307,7 +305,6 @@ class CONM1(PointMass):
             m[5, 3] = card.field(22, 0.)  # M64
             m[5, 4] = card.field(23, 0.)  # M65
             m[5, 5] = card.field(24, 0.)  # M66
-        ###
         else:
             (eid, nid, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
              m5a, m5b, m5c, m5d, m5e, m6a, m6b, m6c, m6d, m6e, m6f) = data
@@ -335,7 +332,6 @@ class CONM1(PointMass):
             m[5, 3] = m6d  # M64
             m[5, 4] = m6e  # M65
             m[5, 5] = m6f  # M66
-        ###
         self.massMatrix = m
 
     def nodeIDs(self):
@@ -396,7 +392,6 @@ class CONM2(PointMassElement):  ## @todo not done
         if card:
             #self.nids  = [ card[1] ]
             #del self.nids
-            #self.pid = None
             self.eid = card.field(1)
             self.nid = card.field(2)
             self.cid = card.field(3, 0)
@@ -410,7 +405,6 @@ class CONM2(PointMassElement):  ## @todo not done
             self.mass = data[3]
             self.X = data[4:7]
             self.I = data[7:]
-        ###
 
     def Mass(self):
         return self.mass
@@ -472,8 +466,6 @@ class CONM2(PointMassElement):  ## @todo not done
         return msg
 
     def rawFields(self):
-        #print "X=%r" %(self.X)
-        #print "I=%r" %(self.I)
         fields = ['CONM2', self.eid, self.Nid(), self.Cid(),
                   self.mass] + list(self.X) + [None] + list(self.I)
         return fields
@@ -485,18 +477,13 @@ class CONM2(PointMassElement):  ## @todo not done
                 I.append(None)
             else:
                 I.append(i)
-            ###
-        ###
         X = []
         for x in self.X:
             if x == 0.:
                 X.append(None)
             else:
                 X.append(x)
-            ###
-        ###
 
         cid = set_blank_if_default(self.Cid(), 0)
-        mass = set_blank_if_default(self.mass, 0.)
-        fields = ['CONM2', self.eid, self.Nid(), cid, mass] + X + [None] + I
+        fields = ['CONM2', self.eid, self.Nid(), cid, self.mass] + X + [None] + I
         return fields
