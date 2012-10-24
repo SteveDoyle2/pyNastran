@@ -948,8 +948,9 @@ class RealElementsStressStrain(object):
                              bcx, bcy, bcxy,tyz,tzx,
                              dummy6,dummy7,dummy8)
 
-    def OES_CELAS_224(self):
+    def OES_CELAS_224_225(self):
         dt = self.nonlinearFactor
+        elementName = self.dataCode['elementName']
         (format1, extract) = self.getOUG_FormatStart()
 
         assert self.numWide == 3, "numWide=%s not 3" % (self.numWide)
@@ -965,4 +966,33 @@ class RealElementsStressStrain(object):
             (eid, force, stress) = out
             eid = extract(eid, dt)
 
-            self.obj.addNewEid(self.elementType, dt, eid, force, stress)
+            self.obj.addNewEid(elementName, dt, eid, force, stress)
+
+    def OESRT_CQUAD4_95(self):
+        dt = self.nonlinearFactor
+        #elementName = self.dataCode['elementName']
+        (format1, extract) = self.getOUG_FormatStart()
+
+        assert self.numWide == 9, "numWide=%s not 9" % (self.numWide)
+        nTotal = 36  # 4*9
+        format1 += '8si3fi4s'
+        format1 = bytes(format1)
+
+        while len(self.data) >= nTotal:
+            eData = self.data[0:nTotal]
+            self.data = self.data[nTotal:]
+
+            out = unpack(format1, eData)  # numWide=9
+            #print(self.printBlock(eData[-4:]))
+            #asfd
+            #eid,failure,ply,failureIndexPly,failureIndexBonding,failureIndexMax,flag
+            # 3,TSAIWU,1,8.5640,0.0,None
+            #print('out',out)
+            
+            (eid, failure, ply, strengthRatioPly, failureIndexBonding,strengthRatioBonding,flag,flag2) = out
+            strengthRatioPly
+            #print("eid=%s failure=|%s| ply=%s failureIndexPly=%s  failureIndexBonding=%s strengthRatioBonding=%s flag=%s flag2=%s" %(eid, failure.strip(), ply, failureIndexPly, failureIndexBonding,strengthRatioBonding,flag,flag2))
+            print("eid=%s strengthRatioPly=%g failureIndexBonding=%s strengthRatioBonding=%s" %(eid,strengthRatioPly, failureIndexBonding,strengthRatioBonding))
+
+            #self.obj.addNewEid(elementName, dt, eid, force, stress)
+        asd
