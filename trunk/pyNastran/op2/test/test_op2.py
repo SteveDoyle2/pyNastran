@@ -129,12 +129,12 @@ def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
         sys.exit('keyboard stop...')
     #except AddNewElementError:
     #    raise
-    except TapeCodeError: # the op2 is bad, not my fault
-        isPassed = True
-        if stopOnFailure:
-            raise
-        else:
-            isPassed = True
+    #except TapeCodeError: # the op2 is bad, not my fault
+    #    isPassed = True
+    #    if stopOnFailure:
+    #        raise
+    #    else:
+    #        isPassed = True
 
     #except IOError: # missing file
         #pass

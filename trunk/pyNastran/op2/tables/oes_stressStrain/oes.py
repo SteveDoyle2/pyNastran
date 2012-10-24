@@ -10,11 +10,12 @@ from .real.oes_beams import BeamStressObject, BeamStrainObject
 from .real.oes_bush import BushStressObject, BushStrainObject
 from .real.oes_bush1d import Bush1DStressObject
 from .real.oes_compositePlates import CompositePlateStressObject, CompositePlateStrainObject
+from .real.oes_gap import NonlinearGapStressObject
 from .real.oes_plates import PlateStressObject, PlateStrainObject
 from .real.oes_rods import RodStressObject, RodStrainObject
 from .real.oes_shear import ShearStressObject, ShearStrainObject
 from .real.oes_solids import SolidStressObject, SolidStrainObject
-from .real.oes_springs import CelasStressObject, CelasStrainObject
+from .real.oes_springs import CelasStressObject, CelasStrainObject, NonlinearSpringStressObject
 from .real.oes_triax import TriaxStressObject, TriaxStrainObject
 
 
@@ -756,6 +757,11 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             else:
                 self.NotImplementedOrSkip()
 
+        elif self.elementType == 86:   # CGAPNL 86
+            resultName = self.makeOES_Object(self.nonlinearGapStress, NonlinearGapStressObject, 'nonlinearGapStress',
+                                             self.nonlinearGapStress, NonlinearGapStressObject, 'nonlinearGapStress')
+            self.handleResultsBuffer3(self.OES_CGAPNL_86, resultName)
+
         elif self.elementType in [87, 89, 92]:   # CTUBENL, RODNL, CONRODNL
             #print "    found RODNL_89"
             resultName = self.makeOES_Object(self.nonlinearRodStress, NonlinearRodObject, 'nonlinearRodStress',
@@ -855,6 +861,10 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             else:
                 self.NotImplementedOrSkip()
 
+        elif self.elementType in [224]:   # CELAS1
+            resultName = self.makeOES_Object(self.nonlinearSpringStress, NonlinearSpringStressObject, 'nonlinearSpringStress',
+                                             self.nonlinearSpringStress, NonlinearSpringStressObject, 'nonlinearSpringStress')
+            self.handleResultsBuffer3(self.OES_CELAS_224, resultName)
         #elif self.elementType in [2,53,61,70,86,88,90,94,102,189,232,]:
             #elementType=53  -> TRIAX6  is not supported
             #elementType=61  -> DUM9    is not supported
