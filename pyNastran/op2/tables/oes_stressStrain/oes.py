@@ -247,21 +247,34 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             print("***skipping table=%s iSubcase=%s" % (
                 self.tableName, self.iSubcase))
             self.skipOES_Element()
-        elif self.thermal == 0:
-            # Stress / Strain
-            self.dataCode['elementName'] = self.ElementType(self.elementType)
-            if self.tableCode == 5 and self.isSort1():
-                assert self.tableName in ['OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESNLXR', 'OESNLXD', 'OESNL1X', 'OESCP', 'OESTRCP',
-                                          'OSTR1X', 'OSTR1C'], '%s is not supported' % (self.tableName)
-                self.readOES_Data()
-            else:
-                self.NotImplementedOrSkip('bad OES table')
-        elif self.thermal == 1:
-            self.OES_Thermal()
-        else:
-            raise RuntimeError('invalid thermal option...')
+            return
+        
+        if not self.isSort1():
+            raise NotImplementedError('SORT2')
 
-        #print self.obj
+        if self.tableName in ['OES1', 'OES1X', 'OES1X1', 'OES1C',
+                              'OESNLXR', 'OESNLXD', 'OESNL1X', 'OESCP', 'OESTRCP',
+                              'OSTR1X', 'OSTR1C']:
+            if self.thermal == 0:
+                # Stress / Strain
+                self.dataCode['elementName'] = self.ElementType(self.elementType)
+                if self.tableCode == 5:
+                    assert self.tableName in ['OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESNLXR', 'OESNLXD', 'OESNL1X', 'OESCP', 'OESTRCP',
+                                              'OSTR1X', 'OSTR1C'], '%s is not supported' % (self.tableName)
+                    self.readOES_Data()
+                else:
+                    self.NotImplementedOrSkip('bad OES table')
+            elif self.thermal == 1:
+                self.OES_Thermal()
+            else:
+                self.NotImplementedOrSkip('bad OES-thermal table')
+        elif self.tableName in ['OESRT']:
+            if self.tableCode == 25:  # failure indices for layered composite elements
+                self.readOESRT_Data()
+            else:
+                self.NotImplementedOrSkip('bad OESRT table')
+        else:
+            self.NotImplementedOrSkip('bad OES table')
 
     def OES_StressStrainCode(self):
         """
@@ -574,6 +587,30 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
         Random = randomMapper[self.elementType]
         return (Real, Imag, Random)
 
+    def readOESRT_Data(self):
+        #msg = '%s-OES elementType=%-3s -> %-6s\n' % (self.tableName,self.elementType,self.ElementType(self.elementType))
+        msg = ''
+        #if self.analysisCode not in [1,6,10]:
+            #raise InvalidATFSCodeError('self.atfsCode=%s' % (self.atfsCode))
+
+        readCase = True
+        if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase]) > 0:
+            readCase = self.updateDtMap()
+
+        if readCase == False:
+            self.skipOES_Element()
+            return
+
+        #print 'self.elementType  = ',self.elementType
+        (numWideReal, numWideImag, numWideRandom) = self.OES_StressStrainCode()
+        print("numWideReal=%s numWideImag=%s numWideRandom=%s" %(numWideReal, numWideImag, numWideRandom))
+        print('elementType=%s' %(self.elementType))
+        print('self.numWide = %s' %(self.numWide))
+        
+        if self.elementType == 95:
+            self.OESRT_CQUAD4_95()
+        asdf
+
     def readOES_Data(self):
         #msg = '%s-OES elementType=%-3s -> %-6s\n' % (self.tableName,self.elementType,self.ElementType(self.elementType))
         msg = ''
@@ -861,10 +898,17 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             else:
                 self.NotImplementedOrSkip()
 
-        elif self.elementType in [224]:   # CELAS1
+        elif self.elementType in [224, 225]:   # CELAS1
+            if self.elementType == 224:
+                self.dataCode['elementName'] = 'CELAS1'
+            elif self.elementType == 225:
+                self.dataCode['elementName'] = 'CELAS3'
+            else:
+                raise NotImplementedError(self.elementType)
             resultName = self.makeOES_Object(self.nonlinearSpringStress, NonlinearSpringStressObject, 'nonlinearSpringStress',
                                              self.nonlinearSpringStress, NonlinearSpringStressObject, 'nonlinearSpringStress')
-            self.handleResultsBuffer3(self.OES_CELAS_224, resultName)
+            self.handleResultsBuffer3(self.OES_CELAS_224_225, resultName)
+            
         #elif self.elementType in [2,53,61,70,86,88,90,94,102,189,232,]:
             #elementType=53  -> TRIAX6  is not supported
             #elementType=61  -> DUM9    is not supported
