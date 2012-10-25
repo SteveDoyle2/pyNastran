@@ -770,27 +770,27 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             else:
                 self.NotImplementedOrSkip()
 
+        elif self.elementType in [40]:   # CBUSH1D
+            if self.numWide == numWideReal:
+                resultName = self.makeOES_Object(self.bush1dStressStrain, Bush1DStressObject, 'bush1dStressStrain',
+                                                 self.bush1dStressStrain, Bush1DStressObject, 'bush1dStressStrain')
+                self.handleResultsBuffer3(self.OES_CBUSH1D_40, resultName)
+            elif self.numWide==numWideImag:
+                resultName = self.makeOES_Object(self.bush1dStressStrain, ComplexBush1DStressObject, 'bush1dStressStrain',
+                                                 self.bush1dStressStrain, ComplexBush1DStressObject, 'bush1dStressStrain')
+                self.handleResultsBuffer3(self.OES_CBUSH1D_40_alt, resultName)
+            else:
+                self.NotImplementedOrSkip()
+
         elif self.elementType in [39, 67, 68]:   # ctetra/chexa/cpenta (linear)
             if self.numWide == numWideReal:
                 resultName = self.makeOES_Object(self.solidStress, SolidStressObject, 'solidStress',
                                                  self.solidStrain, SolidStrainObject, 'solidStrain')
-                self.handleResultsBuffer3(self.OES_CSOLID_67, resultName)
+                self.handleResultsBuffer3(self.OES_CSOLID_39_67_68, resultName)
             #elif self.numWide==numWideImag:
             #    resultName = self.makeOES_Object(self.solidStress,ComplexSolidStressObject,'solidStress',
             #                                     self.solidStrain,ComplexSolidStrainObject,'solidStrain')
             #    self.handleResultsBuffer3(self.OES_CSOLID_67_alt,resultName)
-            else:
-                self.NotImplementedOrSkip()
-
-        elif self.elementType in [85]:   # ctetra/chexa/cpenta (91,93)  (nonlinear)
-            if self.numWide == numWideReal:
-                resultName = self.makeOES_Object(self.solidStress, SolidStressObject, 'solidStress',
-                                                 self.solidStrain, SolidStrainObject, 'solidStrain')
-                self.handleResultsBuffer3(self.OES_CSOLID_85, resultName)
-            #elif self.numWide==numWideImag:
-            #    resultName = self.makeOES_Object(self.solidStress,ComplexSolidStressObject,'solidStress',
-            #                                     self.solidStrain,ComplexSolidStrainObject,'solidStrain')
-            #    self.handleResultsBuffer3(self.OES_CSOLID_85_alt,resultName)
             else:
                 self.NotImplementedOrSkip()
 
@@ -800,13 +800,11 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             self.handleResultsBuffer3(self.OES_CGAPNL_86, resultName)
 
         elif self.elementType in [87, 89, 92]:   # CTUBENL, RODNL, CONRODNL
-            #print "    found RODNL_89"
             resultName = self.makeOES_Object(self.nonlinearRodStress, NonlinearRodObject, 'nonlinearRodStress',
                                              self.nonlinearRodStrain, NonlinearRodObject, 'nonlinearRodStrain')
             self.handleResultsBuffer3(self.OES_RODNL_89_92, resultName)
 
         elif self.elementType in [88, 90]:  # CTRIA3NL, CQUAD4NL
-            #print "cquad4_90"
             if self.numWide == numWideReal:
                 resultName = self.makeOES_Object(self.nonlinearPlateStress, NonlinearQuadObject, 'nonlinearPlateStress',
                                                  self.nonlinearPlateStrain, NonlinearQuadObject, 'nonlinearPlateStrain')
@@ -818,15 +816,18 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             else:
                 self.NotImplementedOrSkip()
 
-        #elif self.elementType in [91]: # CPENTANL
-        #    #print "hexa_93"
-        #    self.handleResultsBuffer3(self.OES_CPENTANL_91)
-        #elif self.elementType in [93]: # CHEXANL
-        #    #print "hexa_93"
-        #    self.handleResultsBuffer3(self.OES_CHEXANL_93)
+        elif self.elementType in [85, 91, 93]: # CTETRANL 85 / CPENTANL 91 / CHEXANL 93
+            print('not done...')
+            resultName = self.makeOES_Object(self.solidStress, SolidStressObject, 'solidStress',
+                                             self.solidStrain, SolidStrainObject, 'solidStrain')
+            self.handleResultsBuffer3(self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, resultName)
+        elif self.elementType in [145, 146, 147]: # VUHEXA 145 / VUPENTA 146 / VUTETRA 147
+            print('only the first type read, not parsed...')
+            resultName = self.makeOES_Object(self.solidStress, SolidStressObject, 'solidStress',
+                                             self.solidStrain, SolidStrainObject, 'solidStrain')
+            self.handleResultsBuffer3(self.OES_VUHEXA_145_VUPENTA_146_VUTETRA_147, resultName)
 
         elif self.elementType in [95, 96, 97, 98]:  # CQUAD4, CQUAD8, CTRIA3, CTRIA6 (composite)
-            #print "    found a 95/96/97 or 98!"
             self.eid2 = None  # stores the previous elementID
             if self.numWide == numWideReal:
                 resultName = self.makeOES_Object(self.compositePlateStress, CompositePlateStressObject, 'compositePlateStress',
@@ -848,18 +849,6 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             #self.handleResultsBuffer3(self.OES_CBEAM_94)
             #raise NotImplementedError('stoping at end of CBEAM_94')
             #del self.eid2
-
-        elif self.elementType in [40]:   # CBUSH1D
-            if self.numWide == numWideReal:
-                resultName = self.makeOES_Object(self.bush1dStressStrain, Bush1DStressObject, 'bush1dStressStrain',
-                                                 self.bush1dStressStrain, Bush1DStressObject, 'bush1dStressStrain')
-                self.handleResultsBuffer3(self.OES_CBUSH1D_40, resultName)
-            elif self.numWide==numWideImag:
-                resultName = self.makeOES_Object(self.bush1dStressStrain, ComplexBush1DStressObject, 'bush1dStressStrain',
-                                                 self.bush1dStressStrain, ComplexBush1DStressObject, 'bush1dStressStrain')
-                self.handleResultsBuffer3(self.OES_CBUSH1D_40_alt, resultName)
-            else:
-                self.NotImplementedOrSkip()
 
         elif self.elementType in [102]:   # CBUSH
             if self.numWide == numWideReal:
