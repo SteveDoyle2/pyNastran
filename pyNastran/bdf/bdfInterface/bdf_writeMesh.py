@@ -344,8 +344,14 @@ class WriteMesh(object):
                           'type=%s eid=%s' % (element.type, eid))
                     raise
 
-        if missingProperties:
+        if missingProperties or self.pdampt or self.pbusht or self.pelast:
             msg.append('$UNASSOCIATED_PROPERTIES\n')
+            for pbusht in sorted(self.pbusht.itervalues()):
+                msg.append(str(pbusht))
+            for pdampt in sorted(self.pdampt.itervalues()):
+                msg.append(str(pdampt))
+            for pelast in sorted(self.pelast.itervalues()):
+                msg.append(str(pelast))
             for missingProperty in missingProperties:
                 msg.append(missingProperty.print_card(size))
         return ''.join(msg)

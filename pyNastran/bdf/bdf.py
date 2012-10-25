@@ -408,6 +408,9 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         #self.massElements = {}
         ## stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}
+        self.pdampt = {}
+        self.pelast = {}
+        self.pbusht = {}
         ## stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
         self.materials = {}
         ## stores MATS1
@@ -1349,12 +1352,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             elif cardName == 'PBEAML':   # disabled
                 prop = PBEAML(cardObj)
                 self.addProperty(prop)
-            elif cardName == 'PELAS':
-                prop = PELAS(cardObj)
-                self.addProperty(prop)
-                if cardObj.field(5):
-                    prop = PELAS(cardObj, 1)  # makes 2nd PELAS card
-                    self.addProperty(prop)
             elif cardName == 'PVISC':
                 prop = PVISC(cardObj)
                 self.addProperty(prop)
@@ -1384,23 +1381,11 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             elif cardName == 'PLSOLID':
                 prop = PLSOLID(cardObj)
                 self.addProperty(prop)
-
-            elif cardName == 'PBUSH1D':
-                prop = PBUSH1D(cardObj)
-                self.addProperty(prop)
-            #elif cardName == 'PBUSHT':
-            #    prop = PBUSHT(cardObj)
-            #    self.addProperty(prop)
-            elif cardName == 'PBUSH':
-                prop = PBUSH(cardObj)
-                self.addProperty(prop)
             elif cardName == 'PFAST':
                 prop = PFAST(cardObj)
                 self.addProperty(prop)
 
-            elif cardName == 'PDAMPT':
-                prop = PDAMPT(cardObj)
-                self.addProperty(prop)
+
             elif cardName == 'PDAMP':
                 prop = PDAMP(cardObj)
                 self.addProperty(prop)
@@ -1410,10 +1395,33 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 if cardObj.field(5):
                     prop = PDAMP(cardObj, 1)  # makes 3rd PDAMP card
                     self.addProperty(prop)
-
             elif cardName == 'PDAMP5':
                 prop = PDAMP5(cardObj)
                 self.addProperty(prop)
+            elif cardName == 'PELAS':
+                prop = PELAS(cardObj)
+                self.addProperty(prop)
+                if cardObj.field(5):
+                    prop = PELAS(cardObj, 1)  # makes 2nd PELAS card
+                    self.addProperty(prop)
+            elif cardName == 'PBUSH1D':
+                prop = PBUSH1D(cardObj)
+                self.addProperty(prop)
+            elif cardName == 'PBUSH':
+                prop = PBUSH(cardObj)
+                self.addProperty(prop)
+            
+            # frequency dependent properties that point to the card (two pointers to same card)
+            elif cardName == 'PDAMPT': # points to a CDAMP1, CDAMP3
+                prop = PDAMPT(cardObj)
+                self.addPDAMPT(prop)
+            elif cardName == 'PELAST': # points to a CELAS1, CELAS3
+                prop = PELAST(cardObj)
+                self.addPELAST(prop)
+            elif cardName == 'PBUSHT': # points to a CBUSH. CBUSH1D
+                prop = PBUSHT(cardObj)
+                self.addPBUSHT(prop)
+
             elif cardName == 'PGAP':
                 elem = PGAP(cardObj)
                 self.addProperty(elem)
