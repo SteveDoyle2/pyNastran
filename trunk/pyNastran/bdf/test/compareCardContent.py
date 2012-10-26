@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import izip, count
 
 from pyNastran.bdf.bdfInterface.BDF_Card import wipeEmptyFields
+from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpretValue
 from pyNastran.bdf.fieldWriter import print_field, printCard
 
 
@@ -22,15 +23,19 @@ def assert_fields(card1, card2):
         raise RuntimeError(msg)
 
     for (i, field1, field2) in izip(count(), fields1, fields2):
-        value1 = print_field(field1)
-        value2 = print_field(field2)
-        if value1 != value2:
-            msg = 'value1 != value2\n'
-            msg += ('cardName=%s ID=%s i=%s field1=%r field2=%r value1=%r '
-                    'value2=%r\n%r\n%r' % (fields1[0], fields1[1], i,
-                                           field1, field2, value1, value2,
-                                           fields1, fields2))
-            raise RuntimeError(msg)
+        value1a = print_field(field1)
+        value2b = print_field(field2)
+        if value1a != value2b:
+            value1 = print_field(interpretValue(value1a))
+            value2 = print_field(interpretValue(value2b))
+
+            if value1 != value2:
+                msg = 'value1 != value2\n'
+                msg += ('cardName=%s ID=%s i=%s field1=%r field2=%r value1=%r '
+                        'value2=%r\n%r\n%r' % (fields1[0], fields1[1], i,
+                                               field1, field2, value1, value2,
+                                               fields1, fields2))
+                raise RuntimeError(msg)
 
 
 def compare_card_content(fem1, fem2):
