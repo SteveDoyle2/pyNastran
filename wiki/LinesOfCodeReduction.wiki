@@ -221,10 +221,20 @@ def add_DCONSTR(self, dconstr)
 
 Methods names are in accordance with the PEP-8 guidelines (they are not strictly PEP-8 names but PEP-8 says that rules should be broken if 'applying the rule would make the code less readable' and names with card names in upper-case are most readable).
 
-== Python idioms == 
+== GUI in PyQT == 
 
-The work on full project scale refactoring has been started. It's aim is to replace some parts of the code to more 'pythonic version' without big semantic changes. 
+A new GUI written in the PyQT toolkit has been added to the project. It looks very similar to the existing one (created with wxWidgets)
+
+https://pynastran.googlecode.com/svn/branches/locr_2012/pyNastran/gui_qt/demoqtgui.png
+
+Thanks to refactored logging facilities the new GUI can display application logs directly. By default it displays DEBUG messages in "Crimson" (red) and its own messages in blue. Logging widget can be moved around inside application.
+
+https://pynastran.googlecode.com/svn/branches/locr_2012/pyNastran/gui_qt/demoqtgui2.png 
+
+Toolbar and log widget ca be hidden. Moreover, user settings are saved at the application close and restored when started again.
+
+The GUI works stable, but should be considered experimental as it does not have all of the functionality of the wxWidgets GUI.
 
 = Project code =
 
-New code will be maintained in [http://code.google.com/p/pynastran/source/browse/#svn%2Fbranches%2Flocr_2012 locr_2012] SVN branch.
+Project code can be accessed in the [http://code.google.com/p/pynastran/source/browse/#svn%2Fbranches%2Flocr_2012 locr_2012] SVN branch.
