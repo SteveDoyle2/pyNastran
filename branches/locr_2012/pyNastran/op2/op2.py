@@ -274,6 +274,12 @@ class OP2(BDF,
         self.beamStress = {}
         ## OES - isotropic CBEAM strain
         self.beamStrain = {}
+        ## OES - isotropic CBUSH stress
+        self.bushStress = {}
+        ## OES - isotropic CBUSH strain
+        self.bushStrain = {}
+         ## OES - isotropic CBUSH1D strain/strain
+        self.bush1dStressStrain = {}
 
         ## OES - isotropic CTRIA3/CQUAD4 stress
         self.plateStress = {}
@@ -299,10 +305,17 @@ class OP2(BDF,
         self.shearStress = {}
         ## OES - CSHEAR strain
         self.shearStrain = {}
+        ## OES - CELAS1 224, CELAS3 225, 
+        self.nonlinearSpringStress = {}
+        ## OES - GAPNL 86
+        self.nonlinearGapStress = {}
 
         # OQG - spc/mpc forces
         self.spcForces = {}  # tCode=3?
         self.mpcForces = {}  # tCode=39
+        
+        # OQG - thermal forces
+        self.thermalGradientAndFlux = {}
 
         ## OGF - grid point forces
         self.gridPointForces = {}  # tCode=19
@@ -350,6 +363,7 @@ class OP2(BDF,
             # OQG - spc/mpc forces
             'spcForces',
             'mpcForces',
+            'thermalGradientAndFlux',
 
             ## OGF - grid point forces
             'gridPointForces',
@@ -392,6 +406,10 @@ class OP2(BDF,
             'shearStress',
             ## OES - CSHEAR strain
             'shearStrain',
+            ## OES - CEALS1 224, CELAS3 225
+            'nonlinearSpringStress',
+            ## OES - GAPNL 86
+            'nonlinearGapStress',
 
         ]
 
@@ -433,22 +451,23 @@ class OP2(BDF,
             ## OES - CTRIAX6
             'ctriaxStress',
             'ctriaxStrain',
+            
+            'bushStress',
+            'bushStrain',
+            'bush1dStressStrain',
 
             ## OES - nonlinear CROD/CONROD/CTUBE stress
             'nonlinearRodStress',
-            ## OES - nonlinear CROD/CONROD/CTUBE strain
             'nonlinearRodStrain',
 
             ## OESNLXR - CTRIA3/CQUAD4 stress
             'nonlinearPlateStress',
-            ## OESNLXR - CTRIA3/CQUAD4 strain
             'nonlinearPlateStrain',
             'hyperelasticPlateStress',
             'hyperelasticPlateStrain',
 
             ## OES - composite CTRIA3/CQUAD4 stress
             'compositePlateStress',
-            ## OES - composite CTRIA3/CQUAD4 strain
             'compositePlateStrain',
 
             ## OGS1 - grid point stresses
@@ -472,19 +491,6 @@ class OP2(BDF,
 
         return ''.join(msg)
 
-    def readTapeCode2(self):
-        """
-        Alternative method for the Tape Code table.
-        @todo not done
-        """
-        data = self.op2.read(28)
-        (f1, two, f2, f3, tableName, f4) = unpack('4i8si', data)
-        #print("tableName = ",tableName)
-        #data = self.op2.read(16)
-        #print(self.printSection(200))
-
-        sys.exit('')
-
     def readTapeCode(self):
         """
         Reads the OP2 header.  This table is still very much in development.
@@ -492,45 +498,6 @@ class OP2(BDF,
         """
         #self.printSection(500)
         #sys.exit('op2-readTapeCode')
-
-        if 0:  # param post 0
-            marker = 0
-            #print self.printSection(200)
-            sys.exit('stopping in readTapeCode in op2.py')
-            while marker != -1:
-                ints = self.readIntBlock()
-                marker = ints[0]
-                #print "ints1 = ",ints
-            #print ""
-
-            while marker != -2:
-                ints = self.readIntBlock()
-                marker = ints[0]
-                #print "ints2 = ",ints
-            #print ""
-            while marker != -3:
-                ints = self.readIntBlock()
-                marker = ints[0]
-                #print "ints3 = ",ints
-            #print ""
-            while marker != -4:
-                ints = self.readIntBlock()
-                marker = ints[0]
-                #print "ints4 = ",ints
-            #print ""
-            #while marker != -1:
-                #ints = self.readIntBlock()
-                #marker = ints[0]
-                #print "ints1 = ",ints
-            #print ""
-            self.readMarkers([2])
-
-            #print self.printSection(200)
-            ints2 = self.readIntBlock()
-            ints3 = self.readIntBlock()
-            #print "ints2 = ",ints2
-            #print "ints3 = ",ints3
-            sys.exit('stopping...')
 
         self.readMarkers([3])
         #print(self.printSection(20))
@@ -563,16 +530,82 @@ class OP2(BDF,
         #print(self.printSection(40))
 
         block = self.readNewBlock()
-        tableName, = unpack(b'8s',block)
-        print("tableName = |%s|\n" %(tableName))
+        #print("len(block) = %s" %(len(block)))
+        if len(block)==12:  # post = -1
+            form = -1
+            (month,day,year) = unpack(b'iii',block)
+            print("date = %s/%s/%s" %(month,day,2000+year))
 
-        self.readMarkers([-1])
-        block = self.readNewBlock()
-        #print(self.printBlock(block))
-        print("")
+            block = self.readNewBlock()
+            #print("len(block) = %s" %(len(block)))
+            print(self.printBlock(block))
+            
+            block = self.readNewBlock()
+            #print("len(block) = %s" %(len(block)))
+            print(self.printBlock(block))
 
-        self.readPartOfNewTable()
+            self.readMarkers([-1,0])
 
+            block = self.readNewBlock()
+            #print("len(block) = %s" %(len(block)))
+            tableName, = unpack(b'8s',block)
+            print("tableName=%s self.n=%s" %(tableName,self.n))
+
+            marker = self.readMarker()
+            print('marker = %s' %(marker))
+            #self.readMarkers([-1])
+            block = self.readNewBlock()
+            print(self.printBlock(block))
+
+            self.readMarkers([-2])
+            block = self.readNewBlock()
+            print(self.printBlock(block))
+            
+            marker = self.readMarker()
+            print('marker = %s' %(marker))
+
+            #self.readMarkers([-1])
+            #self.readPartOfNewTable()  # PVTO
+
+            #self.readNewTable()
+            #self.readNewTable()
+            print(self.printSection(100))
+            
+            sys.exit('stoppingD')
+
+        elif len(block)==8: # post = -2
+            self.n = 0
+            self.op2.seek(self.n)
+            tableName, = unpack(b'8s',block)
+            print("tableName = |%s|\n" %(tableName))
+            #sys.exit('stoppingA')
+
+            block = self.readNewBlock()
+            #print(self.printBlock(block))
+            self.readMarkers([-1])
+            #print("")
+
+            self.readPartOfNewTable()  # PVTO
+
+            block = self.readNewBlock()
+            print(self.printBlock(block))
+            self.readPartOfNewTable()  # PRTMAXIM=YES AUTOSPC=NO
+            
+            #block = self.readNewBlock()
+            #print(self.printSection(200))
+            #return
+            
+            self.readNewTable()
+            self.readNewTable()
+            self.readNewTable()
+            #print(self.printSection(40))
+            sys.exit('stoppingB')
+
+            return
+
+        
+        sys.exit()
+        
         # -----------------------
         
         foundMoreTables = True
@@ -589,7 +622,7 @@ class OP2(BDF,
         print("**************")
         self.op2.seek(n)
         print(self.printSection(240))
-        sys.exit('stopping')
+        sys.exit('stoppingC')
     
     def readNewTable(self):
         self.op2.read(8); self.n+=8

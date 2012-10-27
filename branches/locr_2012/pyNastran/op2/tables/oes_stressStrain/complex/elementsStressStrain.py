@@ -253,6 +253,75 @@ class ComplexElementsStressStrain(object):
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' % (str(out)))
 
+    def OES_CBUSH1D_40_alt(self):
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+        isMagnitudePhase = self.isMagnitudePhase()
+
+        assert self.numWide == 9, "numWide=%s not 9" % (self.numWide)
+        nTotal = 36  # 4*9
+        format1 += '8f'
+        format1 = bytes(format1)
+
+        while len(self.data) >= nTotal:
+            eData = self.data[0:nTotal]
+            self.data = self.data[nTotal:]
+
+            out = unpack(format1, eData)  # numWide=25
+            (eid, fer, uer, aor, aer,
+                  fei, uei, aoi, aei) = out
+            eid = extract(eid, dt)
+            
+            if isMagnitudePhase:
+                fe = polarToRealImag(fer, fei)
+                ue = polarToRealImag(uer, uei)
+                ao = polarToRealImag(aor, aoi)
+                ae = polarToRealImag(aer, aei)
+            else:
+                fe = complex(fer, fei)
+                ue = complex(uer, uei)
+                ao = complex(aor, aoi)
+                ae = complex(aer, aei)
+
+            self.obj.addNewEid(self.elementType, dt, eid, fe, ue, ao, ae)
+
+    def OES_CBUSH_102_alt(self):
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+        isMagnitudePhase = self.isMagnitudePhase()
+
+        assert self.numWide == 13, "numWide=%s not 14" % (self.numWide)
+        nTotal = 52  # 4*13
+        format1 += '12f'
+        format1 = bytes(format1)
+
+        while len(self.data) >= nTotal:
+            eData = self.data[0:nTotal]
+            self.data = self.data[nTotal:]
+
+            out = unpack(format1, eData)  # numWide=25
+            (eid, txr,tyr,tzr,rxr,ryr,rzr,
+                  txi,tyi,tzi,rxi,ryi,rzi) = out
+            eid = extract(eid, dt)
+            
+            if isMagnitudePhase:
+                tx = polarToRealImag(txr, txi)
+                ty = polarToRealImag(tyr, tyi)
+                tz = polarToRealImag(tzr, tzi)
+                rx = polarToRealImag(rxr, rxi)
+                ry = polarToRealImag(ryr, ryi)
+                rz = polarToRealImag(rzr, rzi)
+            else:
+                tx = complex(txr, txi)
+                ty = complex(tyr, tyi)
+                tz = complex(tzr, tzi)
+                rx = complex(rxr, rxi)
+                ry = complex(ryr, ryi)
+                rz = complex(rzr, rzi)
+
+            #data = (eid, tx, ty, tz, rx, ry, rz)
+            self.obj.addNewEid(self.elementType, dt, eid, tx, ty, tz, rx, ry, rz)
+
     def OES_CQUAD4_144_alt(self):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES

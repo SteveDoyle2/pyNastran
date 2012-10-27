@@ -16,12 +16,38 @@ class RealElementsStressStrain(object):
                        'sortCode=%s on %s table' % (self.analysisCode,
                        self.tableCode, self.formatCode, self.sortCode,
                        self.tableName))
-        #print(self.codeInformation())
-        #asdf
+        print(self.codeInformation())
+        print("**************skipping**************")
+        asdf
         self.handleResultsBuffer3(self.dummyPass, None, debug=True)
 
     def dummyPass(self):
         self.data = b''
+
+    def OES_field1(self):
+        if self.isSort1():
+            #raise NotImplementedError('SORT1 is not supported')
+            return ('i', self.scaleEid)
+        elif self.isSort2():
+            if self.analysisCode in [1, 2, 3, 4, 7, 8, 9, 11, 12]:  # eid
+                return ('i', self.scaleEid)
+            elif self.analysisCode == 5:  # freq
+                #freq
+                return ('f', self.scaleDt)
+                #raise NotImplementedError('freq is not supported')
+            elif self.analysisCode == 6:  # time
+                #time
+                return ('f', self.scaleDt)
+                #raise NotImplementedError('time is not supported')
+            elif self.analysisCode == 10:  # fqts:
+                #fqts # freqTime
+                return ('f', self.scaleDt)
+                #raise NotImplementedError('freqTime is not supported')
+            else:
+                raise NotImplementedError('invalid SORT2 analysisCode=%s' %
+                                          (self.analysisCode))
+        else:
+            raise NotImplementedError('invalid SORTx code')
 
     def OES_Thermal(self, debug=False):
         #assert self.numWide==5,'invalid numWide...numWide=%s' % (self.numWide)
@@ -188,7 +214,51 @@ class RealElementsStressStrain(object):
             #print "         s1=%i s2=%i s3=%i s4=%i          smax=%i smin=%i" % (s1b,s2b,s3b,s4b,smaxb,sminb)
             #print "len(data) = ",len(self.data)
 
-    def OES_CSOLID_67(self):
+    def OES_CBUSH1D_40(self):
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+
+        assert self.numWide == 8, "numWide=%s not 8" % (self.numWide)
+        nTotal = 32  # 4*8
+        format1 += '6fi'
+        format1 = bytes(format1)
+
+        while len(self.data) >= nTotal:
+            eData = self.data[0:nTotal]
+            self.data = self.data[nTotal:]
+
+            out = unpack(format1, eData)  # numWide=25
+            (eid, fe, ue, ve, ao, ae, ep, fail) = out
+            eid = extract(eid, dt)
+
+            # axial_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed
+            self.obj.addNewEid(self.elementType, dt, eid, fe, ue, ve, ao, ae, ep, fail)
+
+    def OES_CTRIAX6_53(self):
+        #(Format1,scaleValue) = self.OES_field1()
+        #Format = Format1+'ifffffff'
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+        format1 += 'i7f'
+        format1 = bytes(format1)
+        while len(self.data) >= 132:  # (1+8*4)*4 = 33*4 = 132
+            eData = self.data[0:36]  # 4*9
+            self.data = self.data[36:]
+            out = unpack(format1, eData)
+            (eid, loc, rs, azs, As, ss, maxp, tmax, octs) = out
+            eid = extract(eid, dt)
+            #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
+            self.obj.addNewEid(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
+
+            for i in xrange(3):
+                eData = self.data[0:32]  # 4*8
+                self.data = self.data[32:]
+                out = unpack(b'i7f', eData)
+                (loc, rs, azs, As, ss, maxp, tmax, octs) = out
+                #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
+                self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
+
+    def OES_CSOLID_39_67_68(self):
         """
         stress is extracted at the centroid
         CTETRA_39
@@ -229,7 +299,10 @@ class RealElementsStressStrain(object):
             elif ElementType == 'HEXA':
                 nNodesExpected = 9
             else:
-                raise NotImplementedError('not supported....EType=%s eType=%s nNodes=%s numWide=%s' % (ElementType, self.elementType, nNodes, self.numWide))
+                msg = ('not supported....EType=%s eType=%s nNodes=%s'
+                       'numWide=%s' % (ElementType, self.elementType,
+                                       nNodes, self.numWide))
+                raise NotImplementedError(msg)
 
             #print "len(data) = ",len(self.data)
             for nodeID in xrange(nNodesExpected):  # nodes pts, +1 for centroid (???)
@@ -272,15 +345,6 @@ class RealElementsStressStrain(object):
                 else:
                     self.obj.add(dt, eid2, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
                 #self.printBlock(data)
-            #print self.solidStress[self.iSubcase]
-            #print '--------------------'
-            #print "len(data) = ",len(self.data)
-
-            #self.printSection(100)
-            #self.printBlock(self.data[0:100])
-            #self.printBlock(self.data[1:100])
-            #self.printBlock(self.data[2:100])
-            #self.printBlock(self.data[3:100])
 
     def OES_CTRIA3_74(self):
         """
@@ -310,370 +374,7 @@ class RealElementsStressStrain(object):
             self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2,
                          angle2, major2, minor2, vm2)
 
-    def OES_CSOLID_85(self):  # works
-        """
-        stress is extracted at the centroid
-        CTETRA_85
-        CPENTA_91 ???
-        CHEXA_93  ???
-        """
-        #print "starting nonlinear solid element..."
-        #nNodes = 5 # 1 centroid + 4 corner points
-        #self.printSection(20)
-        #term      = self.data[0:4] CEN/
-        #self.data = self.data[4:]
-        #print "*****"
-        dt = self.nonlinearFactor
-        (format1, extract) = self.getOUG_FormatStart()
-        format1 += "4s"
-        format1 = bytes(format1)
-
-        nNodes = 4  # this is a minimum, it will be reset later
-        nNodesExpected = 1
-        assert self.numWide in [82], 'invalid numWide...numWide=%s' % (self.numWide)
-        while len(self.data) >= 16 + 84 * nNodesExpected:
-            eData = self.data[0:8]
-            self.data = self.data[8:]
-            #self.printBlock(eData)
-
-            out = unpack(format1, eData)
-            (eid, abcd) = out
-            #print "abcd = |%s|" % (a+b+c+d)
-            #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" % (eid,cid,nNodes,nNodesExpected)
-
-            assert nNodes < 21, self.printBlock(eData)
-            eid = extract(eid, dt)
-            if(nNodes in [4, 10]):
-                elementType = "CTETRA"
-                nNodesExpected = 5
-            #elif(nNodes in [6,15]):
-            #    elementType = "CPENTA"
-            #    nNodesExpected = 7
-            #elif(nNodes in [8,20]):
-            #    elementType = "CHEXA"
-            #    nNodesExpected = 9
-            #else:
-            #    raise Exception('not supported....nNodes=%s' % (nNodes))
-
-            #print "len(data) = ",len(self.data)
-            for nodeID in xrange(nNodesExpected):  # nodes pts, +1 for centroid (???)
-                #print "len(data)A = ",len(self.data)
-                eData = self.data[0:64]  # 4*16; for the stresses
-                self.data = self.data[64:]
-                #print "len(data)B = ",len(self.data)
-                #self.printBlock(eData)
-
-                #print "self.tableCode = ",self.tableCode
-                #print "len(data) = ",len(self.data)
-                #gridDevice, = unpack(b'i', eData[0:4])
-                #print "gridDevice = ",gridDevice
-
-                out = unpack(b'i15f', eData[:64])  # 18-3 = 15
-                (gridGauss, sxx, syy, szz, sxy, syz, sxz, se,
-                 eps, ecs, exx, eyy, ezz, exy, eyz, exz) = out
-
-                if gridGauss == 0:
-                    gridGauss = 'C'
-                else:
-                    #grid = (gridDevice - deviceCode) // 10
-                    gridGauss = gridGauss
-
-                #print "%s gridGauss=%-5s eid=%s sxx=%g syy=%g szz=%g" % (elementType,gridGauss,eid,sxx,syy,szz)
-
-                #print "%s eid=%s cid=%s grid=%s sxx=%-6i txy=%-5i s1=%-6i a1=%i a2=%i a3=%i press=%i vm=%s" % (elementType,eid,cid,grid,sxx,sxy,s1,a1,a2,a3,pressure,svm)
-                #print "%s eid=%s cid=%s grid=%s syy=%-6i tyz=%-5i s2=%-6i b1=%i b2=%i b3=%i"                % (elementType,eid,cid,grid,syy,syz,s2,b1,b2,b3)
-                #print "%s eid=%s cid=%s grid=%s szz=%-6i txz=%-5i s3=%-6i c1=%i c2=%i c3=%i"                % (elementType,eid,cid,grid,szz,sxz,s3,c1,c2,c3)
-                #print ""
-
-                #smax = max(s1,s2,s3)
-                #smin = min(s1,s2,s3)
-
-                #if nodeID==0:
-                #    #print "adding new eid"
-                #    self.obj.addNewEid(elementType,cid,eid,grid,sxx,syy,szz,sxy,syz,sxz,aCos,bCos,cCos,pressure,svm)
-                #else:
-                #    self.obj.add(                      eid,grid,sxx,syy,szz,sxy,syz,sxz,aCos,bCos,cCos,pressure,svm)
-                #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-                #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-                #self.printBlock(data)
-            #sys.exit('finished a CTETRANL')
-            #print self.solidStress[self.iSubcase]
-            #print '--------------------'
-            #print "len(data) = ",len(self.data)
-
-            #self.printSection(100)
-            #self.printBlock(self.data[0:100])
-            #self.printBlock(self.data[1:100])
-            #self.printBlock(self.data[2:100])
-            #self.printBlock(self.data[3:100])
-        #print self.solidStress[self.iSubcase]
-
-    def OES_field1(self):
-        if self.isSort1():
-            #raise NotImplementedError('SORT1 is not supported')
-            return ('i', self.scaleEid)
-        elif self.isSort2():
-            if self.analysisCode in [1, 2, 3, 4, 7, 8, 9, 11, 12]:  # eid
-                return ('i', self.scaleEid)
-            elif self.analysisCode == 5:  # freq
-                #freq
-                return ('f', self.scaleDt)
-                #raise NotImplementedError('freq is not supported')
-            elif self.analysisCode == 6:  # time
-                #time
-                return ('f', self.scaleDt)
-                #raise NotImplementedError('time is not supported')
-            elif self.analysisCode == 10:  # fqts:
-                #fqts # freqTime
-                return ('f', self.scaleDt)
-                #raise NotImplementedError('freqTime is not supported')
-            else:
-                raise NotImplementedError('invalid SORT2 analysisCode=%s' %
-                                          (self.analysisCode))
-        else:
-            raise NotImplementedError('invalid SORTx code')
-
-    def OES_CTRIAX6_53(self):
-        #(Format1,scaleValue) = self.OES_field1()
-        #Format = Format1+'ifffffff'
-        dt = self.nonlinearFactor
-        (format1, extract) = self.getOUG_FormatStart()
-        format1 += 'i7f'
-        format1 = bytes(format1)
-        while len(self.data) >= 132:  # (1+8*4)*4 = 33*4 = 132
-            eData = self.data[0:36]  # 4*9
-            self.data = self.data[36:]
-            out = unpack(format1, eData)
-            (eid, loc, rs, azs, As, ss, maxp, tmax, octs) = out
-            eid = extract(eid, dt)
-            #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
-            self.obj.addNewEid(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
-
-            for i in xrange(3):
-                eData = self.data[0:32]  # 4*8
-                self.data = self.data[32:]
-                out = unpack(b'i7f', eData)
-                (loc, rs, azs, As, ss, maxp, tmax, octs) = out
-                #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
-                self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
-
-    def OES_RODNL_89_92(self):
-        dt = self.nonlinearFactor
-        (format1, extract) = self.getOUG_FormatStart()
-        format1 += '6f'  # 1+6=7
-        format1 = bytes(format1)
-
-        while len(self.data) >= 28:  # len(format1)*4 = 7*4 = 28
-            eData = self.data[0:28]
-            self.data = self.data[28:]
-            out = unpack(format1, eData)
-
-            (eid, axial, equivStress, totalStrain, effPlasticCreepStrain,
-                effCreepStrain, linearTorsionalStresss) = out
-            eid = extract(eid, dt)
-            data = (eid, axial, equivStress, totalStrain, effPlasticCreepStrain, effCreepStrain, linearTorsionalStresss)
-
-            #print "eid=%s axial=%s equivStress=%s totalStrain=%s effPlasticCreepStrain=%s effCreepStrain=%s linearTorsionalStresss=%s" % (eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss)
-            self.obj.add(self.elementType, dt, data)
-
-    def OES_CQUAD4NL_90(self):
-        dt = self.nonlinearFactor
-        (format1, extract) = self.getOUG_FormatStart()
-
-        nStep = 52  # 4*13
-        format1 += '12f'  # 1+12=13
-        format1 = bytes(format1)
-        assert 13 == self.numWide, 'numWide=%s not 13' % (self.numWide)
-
-        while len(self.data) >= nStep:
-            eData = self.data[0:nStep]
-            self.data = self.data[nStep:]
-
-            out = unpack(format1, eData)  # numWide=13
-            (eid, fd1, sx1, sy1, sz1, txy1, es1, eps1, ecs1,
-                ex1, ey1, ez1, exy1) = out
-            eid = extract(eid, dt)
-            data = (eid, fd1, sx1, sy1, sz1, txy1, es1, eps1,
-                    ecs1, ex1, ey1, ez1, exy1)
-            self.obj.addNewEid(self.elementType, dt, data)
-            #print "eid=%s axial=%s equivStress=%s totalStrain=%s effPlasticCreepStrain=%s effCreepStrain=%s linearTorsionalStresss=%s" % (eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss)
-
-    def OES_CPENTANL_91(self):
-        """
-        The DMAP manual says fields 3-18 repeat 7 times. but they dont.
-        They repeat 6 times.  Other DMAP cards are correct with
-        their repeat statements.
-        """
-        n = 0
-        dt = self.nonlinearFactor
-        (format1, extract) = self.getOUG_FormatStart()
-        format1 += '4s'
-        format1 = bytes(format1)
-
-        while len(self.data) >= 456:  # 2+16*7 = 114 -> 114*4 = 456
-            eData = self.data[0:8]
-            self.data = self.data[8:]
-            (eid, a, b, c, d) = unpack(format1, eData)
-            eid = extract(eid, dt)
-            #out = unpack(b"ii",eData)
-            #(eid,cType) = out
-            cType = a + b + c + d
-
-            for i in xrange(7):
-                #print "len(self.data) = ",len(self.data)
-                eData = self.data[0:64]
-                self.data = self.data[64:]
-                out = unpack(b'i15f', eData)
-                assert len(out) == 16
-                (grid, sx, sy, sz, sxy, syz, sxz, se,
-                 eps, ecs, ex, ey, ez, exy, eyz, exz) = out
-                #print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" % (eid,cType,sx,sy,sz,sxy,syz,sxz,se)
-                #print "gid=%3s ecs=%.3g   ex=%.3g ey=%.3g ez=%.3g exy=%.3g eyz=%.3g ezx=%.3g"  % (grid,ecs,ex,ey,ez,exy,eyz,exz)
-                #print ""
-                assert a == 'G'
-
-            #self.data = self.data[1456:]
-        #self.firstPass = True
-
-    def OES_CHEXANL_93(self):
-        """
-        The DMAP manual says fields 3-18 repeat 9 times. but they dont.
-        They repeat 8 times.  Other DMAP cards are correct with
-        their repeat statements.
-        """
-        #print "CHEXANL_93"
-        #print "len(self.data) = ",len(self.data)
-
-        n = 0
-        dt = self.nonlinearFactor
-        (format1, extract) = self.getOUG_FormatStart()
-        format1 += '4s'
-        format1 = bytes(format1)
-
-        while len(self.data) >= 584:  # 2+16*9 = 146 -> 146*4 = 584
-            eData = self.data[0:8]
-            self.data = self.data[8:]
-            (eid, cType) = unpack(format1, eData)
-            eid = extract(eid, dt)
-            #out = unpack('2i',eData)
-            #(eid,cType) = out
-
-            for i in xrange(9):
-                #print "len(self.data) = ",len(self.data)
-                eData = self.data[0:64]
-                self.data = self.data[64:]
-                out = unpack(b'i15f', eData)
-                assert len(out) == 16
-                (grid, sx, sy, sz, sxy, syz, sxz, se, eps,
-                    ecs, ex, ey, ez, exy, eyz, exz) = out
-                #print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" % (eid,cType,sx,sy,sz,sxy,syz,sxz,se)
-                #print "gid=%3s ecs=%.3g   ex=%.3g ey=%.3g ez=%.3g exy=%.3g eyz=%.3g ezx=%.3g"  % (grid,ecs,ex,ey,ez,exy,eyz,exz)
-                #print ""
-                assert a == 'G'
-
-            #self.data = self.data[1456:]
-        #self.firstPass = True
-
-    def OES_CBEAM_94(self):
-        nNodes = 10  # 11-1
-
-        #nTotal       = self.obj.getLengthTotal()
-        #(n1,format1) = self.obj.getLength1()
-        #(n2,format2) = self.obj.getLength2()
-        nTotal = 2 * 4 + (18 - 3) * 9 * 4
-        nTotal = 204
-
-        n1 = 24
-        format1 = '4s5f'
-        format1 = bytes(format1)
-        #print "len(data) = ",len(self.data)
-        while len(self.data) >= nTotal:
-            eData = self.data[0:8]
-            self.data = self.data[8:]
-            (eid, gridA) = unpack(b'2i', eData)
-            #print "eid=%s gridA=%s" % (eid,gridA)
-
-            for i in xrange(1):
-                for j in xrange(4):  # c,d,e,f @ A;    c,d,e,f @ B
-                    eData = self.data[0:n1]
-                    self.data = self.data[n1:]
-                    out = unpack(format1, eData)
-                    (loc, nsx, nse, te, epe, ece) = out
-                    #print "loc=%s nsx=%s nse=%s te=%s epe=%s ece=%s" % (loc,nsx,nse,te,epe,ece)
-                #self.obj.add(eid,out)
-
-    def OES_CQUAD4_95(self):  # works (doesnt handle all stress/strain cases tho)
-        """
-        GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
-        composite quad
-        """
-        eType = self.ElementType(self.elementType)
-
-        #self.printSection(20)
-        #term = data[0:4] CEN/
-        #data = data[4:]
-        assert self.numWide == 11, 'invalid numWide...numWide=%s' % (
-            self.numWide)
-
-        dt = self.nonlinearFactor
-        (format1, extract) = self.getOUG_FormatStart()
-        format1 += 'i9f'
-        format1 = bytes(format1)
-
-        while len(self.data) >= 44:  # 2+17*5 = 87 -> 87*4 = 348
-            eData = self.data[0:44]  # 4*11
-            self.data = self.data[44:]
-            out = unpack(format1, eData)
-            (eid, iLayer, o1, o2, t12, t1z, t2z, angle, major,
-                minor, ovm) = out
-            #print "out =",out
-            eid = extract(eid, dt)
-
-            if eid != self.eid2:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
-                #print "1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
-                self.obj.addNewEid(eType, dt, eid, o1, o2,
-                                   t12, t1z, t2z, angle, major, minor, ovm)
-            else:
-                #print "2 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
-                self.obj.add(dt, eid, o1, o2, t12, t1z,
-                             t2z, angle, major, minor, ovm)
-            self.eid2 = eid
-            #self.dn += 348
-        #print "3 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
-
-    def OES_QUAD4FD_139(self):  # hyperelastic
-        """
-        Hyperelastic Quad
-        36+4*7*4 = 148
-        """
-        #x = 0
-        dt = self.nonlinearFactor
-        (format1, extract) = self.getOUG_FormatStart()
-        format1 += '4si6f'  # 1 + 4+1+6 = 12
-        format1 = bytes(format1)
-        while len(self.data) >= 148:
-            #if x==2:
-            #    sys.exit('end of hyperQuad')
-            eData = self.data[0:36]  # 4*9
-            self.data = self.data[36:]
-            out = unpack(format1, eData)
-
-            (eid, Type, ID, sx, sy, sxy, angle, smj, smi) = out
-            eid = extract(eid, dt)
-            self.obj.addNewEid(dt, [eid, Type, sx, sy, sxy, angle, smj, smi])
-            #print "eid=%s Type=%s\n***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" % (eid,Type,ID,sx,sy,sxy,angle,smj,smi)
-            for i in xrange(3):
-                eData = self.data[0:28]  # 4*7
-                self.data = self.data[28:]
-                out = unpack(b'i6f', eData)
-                #(ID,sx,sy,sxy,angle,smj,smi) = out
-                self.obj.add(dt, eid, out)
-                #print "***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" % (ID,sx,sy,sxy,angle,smj,smi)
-            #self.obj.add(data)
-            #x+=1
-        #sys.exit('end of hyperQuad')
-
-    def OES_CQUADR_82(self):  # not done...
+    def OES_CQUADR_82(self):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
@@ -721,11 +422,282 @@ class RealElementsStressStrain(object):
                 self.obj.add(eid, grid, fd2, sx2, sy2,
                              txy2, angle2, major2, minor2, vm2)
 
-    def OES_CQUAD4_144(self):  # works
+    def OES_CGAPNL_86(self):
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+
+        assert self.numWide == 11, "numWide=%s not 11" % (self.numWide)
+        nTotal = 44  # 4*11
+        format1 += '8f4s4s'
+        format1 = bytes(format1)
+
+        while len(self.data) >= nTotal:
+            eData = self.data[0:nTotal]
+            self.data = self.data[nTotal:]
+
+            out = unpack(format1, eData)  # numWide=25
+            (eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2) = out
+            eid = extract(eid, dt)
+
+            self.obj.addNewEid(dt, eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2)
+
+    def OES_RODNL_89_92(self):
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+        format1 += '6f'  # 1+6=7
+        format1 = bytes(format1)
+
+        while len(self.data) >= 28:  # len(format1)*4 = 7*4 = 28
+            eData = self.data[0:28]
+            self.data = self.data[28:]
+            out = unpack(format1, eData)
+
+            (eid, axial, equivStress, totalStrain, effPlasticCreepStrain,
+                effCreepStrain, linearTorsionalStresss) = out
+            eid = extract(eid, dt)
+            data = (eid, axial, equivStress, totalStrain, effPlasticCreepStrain, effCreepStrain, linearTorsionalStresss)
+
+            #print "eid=%s axial=%s equivStress=%s totalStrain=%s effPlasticCreepStrain=%s effCreepStrain=%s linearTorsionalStresss=%s" % (eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss)
+            self.obj.add(self.elementType, dt, data)
+
+    def OES_CQUAD4NL_90(self):
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+
+        nStep = 52  # 4*13
+        format1 += '12f'  # 1+12=13
+        format1 = bytes(format1)
+        assert 13 == self.numWide, 'numWide=%s not 13' % (self.numWide)
+
+        while len(self.data) >= nStep:
+            eData = self.data[0:nStep]
+            self.data = self.data[nStep:]
+
+            out = unpack(format1, eData)  # numWide=13
+            (eid, fd1, sx1, sy1, sz1, txy1, es1, eps1, ecs1,
+                ex1, ey1, ez1, exy1) = out
+            eid = extract(eid, dt)
+            data = (eid, fd1, sx1, sy1, sz1, txy1, es1, eps1,
+                    ecs1, ex1, ey1, ez1, exy1)
+            self.obj.addNewEid(self.elementType, dt, data)
+            #print "eid=%s axial=%s equivStress=%s totalStrain=%s effPlasticCreepStrain=%s effCreepStrain=%s linearTorsionalStresss=%s" % (eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss)
+
+    def OES_TETRANL_85_PENTANL_91_CHEXANL_93(self):  # TETRANL 85 / PENTANL 91 / HEXANL 93
+        """
+        The DMAP manual says fields 3-18 repeat 9 times. but they dont.
+        They repeat 8 times.  Other DMAP cards are correct with
+        their repeat statements.
+
+        stress is extracted at the centroid
+        CTETRANL_ - 4 nodes
+        CPENTANL_91 - 7 nodes
+        CHEXANL_93 - 9 nodes
+        """
+        n = 0
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+        format1 += '4s'
+        format1 = bytes(format1)
+        
+        
+        if self.elementType == 85:
+            eType = 'CTETRANL'
+            nNodes = 5
+        elif self.elementType == 91:
+            eType = 'CPENTANL'
+            nNodes = 7
+            #nTotal = 456
+        elif self.elementType == 93:
+            eType = 'CHEXANL'
+            nNodes = 9
+            #nTotal = 584
+        else:
+            raise NotImplementedError(self.elementType)
+        nTotal = 8 + 64 * nNodes
+
+        while len(self.data) >= nTotal:  # 2+16*9 = 146 -> 146*4 = 584
+            eData = self.data[0:8]
+            self.data = self.data[8:]
+            (eid, cType) = unpack(format1, eData)
+            eid = extract(eid, dt)
+
+            for i in xrange(nNodes):
+                eData = self.data[0:64]
+                self.data = self.data[64:]
+                out = unpack(b'i15f', eData)
+                assert len(out) == 16
+                (grid, sx, sy, sz, sxy, syz, sxz, se, eps,
+                  ecs, ex, ey, ez, exy, eyz, exz) = out
+                #print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" % (eid,cType,sx,sy,sz,sxy,syz,sxz,se)
+                #print "gid=%3s ecs=%.3g   ex=%.3g ey=%.3g ez=%.3g exy=%.3g eyz=%.3g ezx=%.3g"  % (grid,ecs,ex,ey,ez,exy,eyz,exz)
+                #assert cType == 'GRID',cType
+                print("cType =",cType)
+
+    def OES_VUHEXA_145_VUPENTA_146_VUTETRA_147(self):  # VUHEXA 145 / 
+        """
+        VUTETRA - 4 nodes
+        VUPENTA 146 - 6 nodes
+        VUHEXA 145 - 8 nodes
+        """
+        n = 0
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+        format1 += 'i'
+        format1 = bytes(format1)
+        
+        
+        if self.elementType == 147:
+            eType = 'VUTETRA'
+            nNodes = 4
+        elif self.elementType == 146:
+            eType = 'VUPENTA'
+            nNodes = 6
+        elif self.elementType == 145:
+            eType = 'VUHEXA'
+            nNodes = 8
+        else:
+            raise NotImplementedError(self.elementType)
+        numWide = 2 + 12 * nNodes
+        nTotal = 8 + 48 * nNodes
+        assert self.numWide==numWide
+
+        while len(self.data) >= nTotal:  # 2+16*9 = 146 -> 146*4 = 584
+            eData = self.data[0:8]
+            self.data = self.data[8:]
+            (eid, parentID) = unpack(format1, eData)
+            eid = extract(eid, dt)
+
+            for i in xrange(nNodes):
+                eData = self.data[0:48]
+                self.data = self.data[48:]
+                out = unpack(b'i11f', eData)
+                assert len(out) == 12
+                (grid, xnorm, ynorm, znorm, txy, tyz, txz,
+                 prin1, prin2, prin3, mean, vonoRoct) = out
+                #print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" % (eid,cType,sx,sy,sz,sxy,syz,sxz,se)
+                #print "gid=%3s ecs=%.3g   ex=%.3g ey=%.3g ez=%.3g exy=%.3g eyz=%.3g ezx=%.3g"  % (grid,ecs,ex,ey,ez,exy,eyz,exz)
+                #assert cType == 'GRID',cType
+                #print("grid =",grid)
+
+    def OES_CBEAM_94(self):
+        nNodes = 10  # 11-1
+
+        #nTotal       = self.obj.getLengthTotal()
+        #(n1,format1) = self.obj.getLength1()
+        #(n2,format2) = self.obj.getLength2()
+        nTotal = 2 * 4 + (18 - 3) * 9 * 4
+        nTotal = 204
+
+        n1 = 24
+        format1 = '4s5f'
+        format1 = bytes(format1)
+        while len(self.data) >= nTotal:
+            eData = self.data[0:8]
+            self.data = self.data[8:]
+            (eid, gridA) = unpack(b'2i', eData)
+            #print "eid=%s gridA=%s" % (eid,gridA)
+
+            for i in xrange(1):
+                for j in xrange(4):  # c,d,e,f @ A;    c,d,e,f @ B
+                    eData = self.data[0:n1]
+                    self.data = self.data[n1:]
+                    out = unpack(format1, eData)
+                    (loc, nsx, nse, te, epe, ece) = out
+                    #print "loc=%s nsx=%s nse=%s te=%s epe=%s ece=%s" % (loc,nsx,nse,te,epe,ece)
+                #self.obj.add(eid,out)
+
+    def OES_CQUAD4_95(self):  # works (doesnt handle all stress/strain cases tho)
+        """
+        GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
+        composite quad
+        """
+        eType = self.ElementType(self.elementType)
+
+        #self.printSection(20)
+        #term = data[0:4] CEN/
+        #data = data[4:]
+        assert self.numWide == 11, 'invalid numWide...numWide=%s' % (
+            self.numWide)
+
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+        format1 += 'i9f'
+        format1 = bytes(format1)
+
+        while len(self.data) >= 44:  # 2+17*5 = 87 -> 87*4 = 348
+            eData = self.data[0:44]  # 4*11
+            self.data = self.data[44:]
+            out = unpack(format1, eData)
+            (eid, iLayer, o1, o2, t12, t1z, t2z, angle, major,
+                minor, ovm) = out
+            eid = extract(eid, dt)
+
+            if eid != self.eid2:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
+                #print "1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
+                self.obj.addNewEid(eType, dt, eid, o1, o2,
+                                   t12, t1z, t2z, angle, major, minor, ovm)
+            else:
+                #print "2 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
+                self.obj.add(dt, eid, o1, o2, t12, t1z,
+                             t2z, angle, major, minor, ovm)
+            self.eid2 = eid
+            #self.dn += 348
+        #print "3 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
+
+    def OES_QUAD4FD_139(self):  # hyperelastic
+        """
+        Hyperelastic Quad
+        36+4*7*4 = 148
+        """
+        #x = 0
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+        format1 += '4si6f'  # 1 + 4+1+6 = 12
+        format1 = bytes(format1)
+        while len(self.data) >= 148:
+            #if x==2:
+            #    sys.exit('end of hyperQuad')
+            eData = self.data[0:36]  # 4*9
+            self.data = self.data[36:]
+            out = unpack(format1, eData)
+
+            (eid, Type, ID, sx, sy, sxy, angle, smj, smi) = out
+            eid = extract(eid, dt)
+            self.obj.addNewEid(dt, [eid, Type, sx, sy, sxy, angle, smj, smi])
+            #print "eid=%s Type=%s\n***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" % (eid,Type,ID,sx,sy,sxy,angle,smj,smi)
+            for i in xrange(3):
+                eData = self.data[0:28]  # 4*7
+                self.data = self.data[28:]
+                out = unpack(b'i6f', eData)
+                #(ID,sx,sy,sxy,angle,smj,smi) = out
+                self.obj.add(dt, eid, out)
+                #print "***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" % (ID,sx,sy,sxy,angle,smj,smi)
+            #self.obj.add(data)
+            #x+=1
+
+    def OES_CBUSH_102(self):
+        dt = self.nonlinearFactor
+        (format1, extract) = self.getOUG_FormatStart()
+
+        assert self.numWide == 7, "numWide=%s not 7" % (self.numWide)
+        nTotal = 28  # 4*7
+        format1 += '6f'
+        format1 = bytes(format1)
+
+        while len(self.data) >= nTotal:
+            eData = self.data[0:nTotal]
+            self.data = self.data[nTotal:]
+
+            out = unpack(format1, eData)  # numWide=7
+            (eid, tx,ty,tz,rx,ry,rz) = out
+            eid = extract(eid, dt)
+
+            self.obj.addNewEid(self.elementType, dt, eid, tx, ty, tz, rx, ry, rz)
+
+    def OES_CQUAD4_144(self):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
-        #self.printSection(20)
         #term = data[0:4] CEN/
         #data = data[4:]
         #print "*****"
@@ -787,56 +759,10 @@ class RealElementsStressStrain(object):
 
                 #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
                 #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-                #print "len(data) = ",len(self.data)
-                #self.printBlock(self.data)
                 self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1,
                                     txy1, angle1, major1, minor1, vm1)
                 self.obj.add(dt, eid, grid, fd2, sx2, sy2,
                              txy2, angle2, major2, minor2, vm2)
-
-            #print '--------------------'
-            #print "len(data) = ",len(self.data)
-            #print "tell = ",self.op2.tell()
-
-            #self.printSection(100)
-            #self.dn += 348
-       # elif self.numWide==77:
-       #     while len(self.data) >= 308: # 2+15*5 = 77 -> 77*4 = 308
-       #         (eid,_) = unpack(b'i4s',self.data[0:8])
-       #         self.data = self.data[8:]  # 2
-       #         eData     = self.data[0:62] # 4*15
-       #         self.data = self.data[62: ]
-       #
-       #         out = unpack(b'i14f', eData)  # 15
-       #         (grid,fd1,sx1r,sx11,sy1r,sy11,txy1r,txy11,
-       #               fd2,sx2r,sx21,sy2r,sy21,txy2r,txy21) = out
-       #
-       #         for nodeID in xrange(nNodes):   #nodes pts
-       #             eData     = self.data[0:4*15]
-       #             self.data = self.data[4*15: ]
-       #             out = unpack(b'i14f', eData)
-       #             (grid,fd1,sx1r,sx11,sy1r,sy11,txy1r,txy11,
-       #                   fd2,sx2r,sx21,sy2r,sy21,txy2r,txy21) = out
-       # elif self.numWide==47:
-       #     while len(self.data) >= 188: # 2+9*5 = 47 -> 47*4 = 188
-       #         (eid,_) = unpack(b'i4s',self.data[0:8])
-       #         self.data = self.data[8:]  # 2
-       #         eData     = self.data[0:36] # 4*9
-       #         self.data = self.data[36: ]
-       #
-       #         out = unpack(b'i8f', eData)  # 9
-       #         (grid,fd1,sx1,sy1,txy1,
-       #               fd2,sx2,sy2,txy2) = out
-       #
-       #         for nodeID in xrange(nNodes):   #nodes pts
-       #             eData     = self.data[0:36] # 4*9
-       #             self.data = self.data[36: ]
-       #             out = unpack(b'i8f', eData)
-       #             (grid,fd1,sx1,sy1,txy1,
-       #                   fd2,sx2,sy2,txy2) = out
-       # else:
-       #     raise NotImplementedError('invalid numWide')
-
 
     def OES_VUQUAD_189(self):
         if self.elementType == 144:  # CQUAD4
@@ -888,3 +814,51 @@ class RealElementsStressStrain(object):
                              dummy3, dummy4, dummy5,
                              bcx, bcy, bcxy,tyz,tzx,
                              dummy6,dummy7,dummy8)
+
+    def OES_CELAS_224_225(self):
+        dt = self.nonlinearFactor
+        elementName = self.dataCode['elementName']
+        (format1, extract) = self.getOUG_FormatStart()
+
+        assert self.numWide == 3, "numWide=%s not 3" % (self.numWide)
+        nTotal = 12  # 4*3
+        format1 += '2f'
+        format1 = bytes(format1)
+
+        while len(self.data) >= nTotal:
+            eData = self.data[0:nTotal]
+            self.data = self.data[nTotal:]
+
+            out = unpack(format1, eData)  # numWide=3
+            (eid, force, stress) = out
+            eid = extract(eid, dt)
+            self.obj.addNewEid(elementName, dt, eid, force, stress)
+
+    def OESRT_CQUAD4_95(self):
+        dt = self.nonlinearFactor
+        #elementName = self.dataCode['elementName']
+        (format1, extract) = self.getOUG_FormatStart()
+
+        assert self.numWide == 9, "numWide=%s not 9" % (self.numWide)
+        nTotal = 36  # 4*9
+        format1 += '8si3fi4s'
+        format1 = bytes(format1)
+
+        while len(self.data) >= nTotal:
+            eData = self.data[0:nTotal]
+            self.data = self.data[nTotal:]
+
+            out = unpack(format1, eData)  # numWide=9
+            #print(self.printBlock(eData[-4:]))
+            #asfd
+            #eid,failure,ply,failureIndexPly,failureIndexBonding,failureIndexMax,flag
+            # 3,TSAIWU,1,8.5640,0.0,None
+            #print('out',out)
+            
+            (eid, failure, ply, strengthRatioPly, failureIndexBonding,strengthRatioBonding,flag,flag2) = out
+            strengthRatioPly
+            #print("eid=%s failure=|%s| ply=%s failureIndexPly=%s  failureIndexBonding=%s strengthRatioBonding=%s flag=%s flag2=%s" %(eid, failure.strip(), ply, failureIndexPly, failureIndexBonding,strengthRatioBonding,flag,flag2))
+            print("eid=%s strengthRatioPly=%g failureIndexBonding=%s strengthRatioBonding=%s" %(eid,strengthRatioPly, failureIndexBonding,strengthRatioBonding))
+
+            #self.obj.addNewEid(elementName, dt, eid, force, stress)
+        asd

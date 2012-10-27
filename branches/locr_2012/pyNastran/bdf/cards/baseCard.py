@@ -97,13 +97,16 @@ class BaseCard(BDFCard):
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
-    def printRawFields(self):
+    def printRawFields(self, size=8):
         """A card's raw fields include all defaults for all fields"""
         fields = self.rawFields()
-        return self.printCard(fields)
+        return print_card(fields, size=size)
 
     def reprFields(self):
         return self.rawFields()
+    
+    def printCard(self, fields, size=8):
+        return print_card(fields, size=size)
     
     def print_card(self, size=8):
         fields = self.reprFields()

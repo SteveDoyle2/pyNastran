@@ -1022,7 +1022,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             if card_name in ['LSEQ', 'PHBDY', 'AERO', 'AEROS', 'AEFACT', 'AELINK',
               'AELIST', 'AEPARM', 'AESTAT', 'AESURF', 'TRIM', 'FLUTTER', 
               'FLFACT', 'GUST', 'NLPARM', 'TSTEP', 'TSTEPNL', 'SESET', 'DCONSTR',
-              'DESVAR', 'DDVAL', 'DLINK', 'PARAM']:
+              'DESVAR', 'DDVAL', 'DLINK', 'PARAM', 'PDAMPT', 'PELAST', 'PBUSHT']:
                 getattr(self, 'add_' + card_name)(_get_cls(card_name))
                 return card_obj
 
@@ -1041,7 +1041,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
              'add_rigid_element' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3'],
              'add_property' : ['PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PSOLID',
                'PBAR', 'PBARL', 'PBEAM', 'PBCOMP', 'PBEAML', 'PROD', 'PTUBE',
-               'PLSOLID', 'PBUSH1D', 'PBUSH', 'PFAST', 'PDAMPT', 'PDAMP5',
+               'PLSOLID', 'PBUSH1D', 'PBUSH', 'PFAST', 'PDAMP5',
                'PGAP', 'PRAC2D', 'PRAC3D'],
              'add_creep_material' : ['CREEP'], # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
              'add_material': ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 

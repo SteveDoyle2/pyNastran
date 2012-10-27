@@ -179,7 +179,40 @@ class AddMethods(object):
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
             self.properties[key] = prop
-        ###
+
+    def add_PBUSHT(self, prop, allowOverwrites=False):
+        key = prop.pid
+
+        if key in self.pbusht and not allowOverwrites:
+            if not prop.isSameCard(self.pbusht[key]):
+                #print 'pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pdampt[key],prop)
+                assert key not in self.pbusht, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.pbusht[key], prop)
+        else:
+            assert key > 0, 'pid=%s prop=%s' % (key, prop)
+            self.pbusht[key] = prop
+
+    def add_PDAMPT(self, prop, allowOverwrites=False):
+        key = prop.pid
+
+        if key in self.pdampt and not allowOverwrites:
+            if not prop.isSameCard(self.pdampt[key]):
+                #print 'pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pdampt[key],prop)
+                assert key not in self.pdampt, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.pdampt[key], prop)
+        else:
+            assert key > 0, 'pid=%s prop=%s' % (key, prop)
+            self.pdampt[key] = prop
+
+    def add_PELAST(self, prop, allowOverwrites=False):
+        key = prop.pid
+
+        if key in self.pelast and not allowOverwrites:
+            if not prop.isSameCard(self.pelast[key]):
+                #print 'pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pdampt[key],prop)
+                assert key not in self.pelast, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.pelast[key], prop)
+        else:
+            assert key > 0, 'pid=%s prop=%s' % (key, prop)
+            self.pdampt[key] = prop
+
 
     def add_material(self, material, allowOverwrites=False):
         """
@@ -541,9 +574,10 @@ class AddMethods(object):
 
     def add_SESET(self, setObj):
         key = setObj.seid
-        assert key not in self.setsSuper, '\nSESET=\n%s oldSESET=\n%s' % (
-            setObj, self.setsSuper[key])
         assert key >= 0
+        if key in self.setsSuper:
+            oldSet = self.setsSuper[key]
+            setObj.add_SESET_Object(oldSet)
         self.setsSuper[key] = setObj
 
     def add_table(self, table):

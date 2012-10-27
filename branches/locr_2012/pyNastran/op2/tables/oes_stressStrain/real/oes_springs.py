@@ -36,6 +36,7 @@ class CelasStressObject(stressObject):
         nelements = len(self.eType)
 
         msg = self.get_data_code()
+        eTypes = list(set(self.eType.values()))
         if self.dt is not None:  # transient
             ntimes = len(self.stress)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
@@ -44,6 +45,7 @@ class CelasStressObject(stressObject):
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
         msg.append('  eType, stress\n')
+        msg.append('  eTypes = %s\n' %(', '.join(eTypes)))
         return msg
 
     def getLength(self):
@@ -102,7 +104,6 @@ class CelasStressObject(stressObject):
         return msg
 
     def __repr__(self):
-        #print "spring dt=%s" %(self.dt)
         if self.dt is not None:
             return self.__reprTransient__()
 
@@ -114,7 +115,6 @@ class CelasStressObject(stressObject):
         msg += '\n'
         #print "self.code = ",self.code
         for eid, istress in sorted(self.stress.iteritems()):
-            #print "eid=",eid
             #print "eType",self.eType
             msg += '%-8i %6s ' % (eid, self.eType[eid])
             if abs(istress) < 1e-6:
@@ -149,6 +149,7 @@ class CelasStrainObject(strainObject):
 
     def get_stats(self):
         nelements = len(self.eType)
+        eTypes = list(set(self.eType.values()))
 
         msg = self.get_data_code()
         if self.dt is not None:  # transient
@@ -159,6 +160,7 @@ class CelasStrainObject(strainObject):
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
         msg.append('  eType, strain\n')
+        msg.append('  eTypes = %s\n' %(', '.join(eTypes)))
         return msg
 
     def getLength(self):
@@ -181,12 +183,10 @@ class CelasStrainObject(strainObject):
     def addNewEid(self, dt, eid, out):
         (strain,) = out
         assert eid >= 0
-        #self.eType = self.eType
         self.eType[eid] = self.elementName
         self.strain[eid] = strain
 
     def addNewEidSort1(self, dt, eid, out):
-        #print out
         (strain,) = out
         assert eid >= 0
 
@@ -213,4 +213,120 @@ class CelasStrainObject(strainObject):
             else:
                 msg += '%8.3g ' % (strain)
             msg += '\n'
+        return msg
+
+
+class NonlinearSpringStressObject(stressObject):
+    """
+    """
+    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
+        stressObject.__init__(self, dataCode, iSubcase)
+        self.eType = {}
+        self.elementName = self.dataCode['elementName']
+
+        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.force = {}
+        self.stress = {}
+
+        self.dt = dt
+        if isSort1:
+            if dt is not None:
+                self.addNewEid = self.addNewEidSort1
+        else:
+            assert dt is not None
+            self.addNewEid = self.addNewEidSort2
+
+    def get_stats(self):
+        nelements = len(self.eType)
+        eTypes = list(set(self.eType.values()))
+
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.stress)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, force, stress\n')
+        msg.append('  eTypes = %s\n' %(', '.join(eTypes)))
+        return msg
+
+    def deleteTransient(self, dt):
+        del self.force[dt]
+        del self.stress[dt]
+
+    def getTransients(self):
+        k = self.stress.keys()
+        k.sort()
+        return k
+
+    def addNewTransient(self, dt):
+        """initializes the transient variables"""
+        self.dt = dt
+        self.force[dt] = {}
+        self.stress[dt] = {}
+
+    def addNewEid(self, eType, dt, eid, force, stress):
+        self.eType[eid] = eType
+        self.force[eid] = force
+        self.stress[eid] = stress
+
+    def addNewEidSort1(self, eType, dt, eid, force, stress):
+        if dt not in self.stress:
+            self.addNewTransient(dt)
+        self.eType[eid] = eType
+        self.force[dt][eid] = force
+        self.stress[dt][eid] = stress
+
+    def addNewEidSort2(self, eType, eid, dt, force, stress):
+        if dt not in self.stress:
+            self.addNewTransient(dt)
+        self.eType[eid] = eType
+        self.force[dt][eid] = force
+        self.stress[dt][eid] = stress
+
+    def __reprTransient__(self):
+        raise NotImplementedError('CELASx')
+        msg = '---CELASx STRESSES---\n'
+        msg += '%-6s %6s ' % ('EID', 'eType')
+        headers = ['stress']
+        for header in headers:
+            msg += '%10s ' % (header)
+        msg += '\n'
+
+        for dt, stress in sorted(self.stress.iteritems()):
+            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            for eid, istress in sorted(stress.iteritems()):
+                msg += '%-6g %6s ' % (eid, self.eType[eid])
+                if abs(istress) < 1e-6:
+                    msg += '%10s ' % ('0')
+                else:
+                    msg += '%10g ' % (istress)
+                msg += '\n'
+        return msg
+
+    def __repr__(self):
+        raise NotImplementedError('CELASx')
+        #print "spring dt=%s" %(self.dt)
+        if self.dt is not None:
+            return self.__reprTransient__()
+
+        msg = '---CELASx STRESSES---\n'
+        msg += '%-8s %6s ' % ('EID', 'eType')
+        headers = ['stress']
+        for header in headers:
+            msg += '%10s ' % (header)
+        msg += '\n'
+        #print "self.code = ",self.code
+        for eid, istress in sorted(self.stress.iteritems()):
+            #print "eid=",eid
+            #print "eType",self.eType
+            msg += '%-8i %6s ' % (eid, self.eType[eid])
+            if abs(istress) < 1e-6:
+                msg += '%10s ' % ('0')
+            else:
+                msg += '%10i ' % (istress)
+            msg += '\n'
+            #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg

@@ -24,6 +24,17 @@ def make_log(display=False):
         fil.write(msg)
 
 
+def stderr_logging(typ, msg):
+    '''
+    Default logging function. Takes a text and outputs to stderr.
+    @param typ messeage type
+    @param msg message to be displayed
+    
+    Message will have format 'typ: msg'
+    '''
+    sys.stdout.write((typ + ': ' + msg) if typ else msg)
+    sys.stdout.flush()
+
 class simpleLogger(object):
     """
     Simple logger object. In future might be changed to use Python logging module.
@@ -31,12 +42,18 @@ class simpleLogger(object):
     messages, 'debug' level displays all messages.
     """
     
-    def __init__(self, level='debug'):
+    def __init__(self, level='debug', log_func = stderr_logging):
         """
-        @param level level of logging: 'info' or 'debug'
+        @param
+          level level of logging: 'info' or 'debug'
+        @param log_func
+          funtion that will be used to print log. It should take one argument:
+          string that is produces by a logger. Default: print messages to
+          stderr using @see stderr_logging function.
         """
         assert level in ('info','debug')
         self.level = level
+        self.log_func = log_func
 
     def properties(self):
         """Return tuple: line number and filename"""
@@ -61,9 +78,15 @@ class simpleLogger(object):
         @param msg message to be logged
         """
         n, fn = self.properties()
-        sys.stdout.write('%s:    fname=%-25s lineNo=%-4s   %s\n' % (typ, fn, n, msg))
-        sys.stdout.flush()
-
+        self.log_func(typ, '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg))
+ 
+    def simple_msg(self,msg, typ = None):
+        """
+        Log message directly without any altering.
+        @param msg message to be looged without any alteration.
+        """
+        self.log_func(typ, msg)
+        
     def info(self, msg):
         """
         Log INFO message

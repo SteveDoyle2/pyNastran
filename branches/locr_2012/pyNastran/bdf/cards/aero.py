@@ -746,8 +746,7 @@ class FLFACT(BaseCard):
         return fields
 
     def __repr__(self):
-        fields = self.reprFields()
-        return self.printCard(fields, tol=0.)
+        return self.print_card(fields)
 
 
 class FLUTTER(BaseCard):
