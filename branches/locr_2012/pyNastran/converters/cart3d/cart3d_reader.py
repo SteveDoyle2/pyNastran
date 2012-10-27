@@ -5,7 +5,7 @@ from itertools import izip
 from numpy import array
 
 from struct import unpack
-from pyNastran.bdf.fieldWriter import printCard
+from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.op2.fortranFile import FortranFile
 from pyNastran.utils import is_binary
 from pyNastran.utils.log import get_logger
@@ -471,7 +471,7 @@ class Cart3DAsciiReader(object):
         f = open(fname, 'wb')
         for nid, grid in enumerate(1, points):
             (x, y, z) = grid
-            f.write(printCard(['GRID', nid, '', x, y, z]))
+            f.write(print_card(['GRID', nid, '', x, y, z]))
 
         e = 1e7
         nu = 0.3
@@ -479,12 +479,12 @@ class Cart3DAsciiReader(object):
         thickness = 0.25
         setRegions = list(set(regions))
         for pidMid in setRegions:
-            f.write(printCard(['MAT1', pidMid, e, g, nu]))
-            f.write(printCard(['PSHELL', pidMid, pidMid, thickness]))
+            f.write(print_card(['MAT1', pidMid, e, g, nu]))
+            f.write(print_card(['PSHELL', pidMid, pidMid, thickness]))
 
         for eid, (nodes, region) in enumerate(1, izip(elements, regions)):
             (n1, n2, n3) = nodes
-            f.write(printCard(['CTRIA3', eid, region, n1, n2, n3]))
+            f.write(print_card(['CTRIA3', eid, region, n1, n2, n3]))
         f.close()
 
 #------------------------------------------------------------------

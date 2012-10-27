@@ -219,7 +219,7 @@ def print_card_8(fields, tol=0.):
      format where the first 8 is the card name or blank (continuation).
      The last 8-character field indicates an optional continuation,
      but because it's a left-justified unneccessary field,
-     printCard doesnt use it.
+     print_card doesnt use it.
     """
     try:
         out = '%-8s' % (fields[0])

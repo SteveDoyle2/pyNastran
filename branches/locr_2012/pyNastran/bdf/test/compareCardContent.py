@@ -4,7 +4,7 @@ from itertools import izip, count
 
 from pyNastran.bdf.bdfInterface.BDF_Card import wipeEmptyFields
 from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpretValue
-from pyNastran.bdf.fieldWriter import print_field, printCard
+from pyNastran.bdf.fieldWriter import print_field, print_card
 
 
 def assert_fields(card1, card2):
@@ -19,7 +19,7 @@ def assert_fields(card1, card2):
     if len(fields1) != len(fields2):
         msg = ('len(fields1)=%s len(fields2)=%s\n%r\n%r\n%s\n%s'
                % (len(fields1), len(fields2), fields1, fields2,
-                  printCard(fields1), printCard(fields2)))
+                  print_card(fields1), print_card(fields2)))
         raise RuntimeError(msg)
 
     for (i, field1, field2) in izip(count(), fields1, fields2):

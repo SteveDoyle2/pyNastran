@@ -490,6 +490,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.methods = {}
         # EIGC, EIGP methods
         self.cMethods = {}
+        
 
     def _init_aero_defaults(self):
         """
@@ -966,7 +967,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
             #self.log.debug("\n$REJECTS")
             #for reject in self.rejects:
-                #print printCard(reject)
+                #print print_card(reject)
                 #print ''.join(reject)
             self.log.debug("***read_bulk_data_deck")
 

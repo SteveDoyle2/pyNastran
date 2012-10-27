@@ -105,7 +105,7 @@ class BaseCard(BDFCard):
     def reprFields(self):
         return self.rawFields()
     
-    def printCard(self, fields, size=8):
+    def print_card(self, fields, size=8):
         return print_card(fields, size=size)
     
     def print_card(self, size=8):

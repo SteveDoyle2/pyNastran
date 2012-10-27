@@ -2,7 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from pyNastran.bdf.fieldWriter import printCard
+from pyNastran.bdf.fieldWriter import print_card
 
 
 class WriteMesh(object):
@@ -353,7 +353,7 @@ class WriteMesh(object):
             for pelast in sorted(self.pelast.itervalues()):
                 msg.append(str(pelast))
             for missingProperty in missingProperties:
-                msg.append(missingProperty.print_card(size))
+                msg.append(missingProperty)
         return ''.join(msg)
 
     def write_materials(self, size):
@@ -611,7 +611,7 @@ class WriteMesh(object):
             msg += '$REJECTS\n'
             for reject_card in self.reject_cards:
                 try:
-                    msg += printCard(reject_card)
+                    msg += print_card(reject_card)
                 except RuntimeError:
                     for field in reject_card:
                         if field is not None and '=' in field:

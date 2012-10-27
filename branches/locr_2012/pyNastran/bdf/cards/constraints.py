@@ -565,7 +565,7 @@ class ConstraintADD(Constraint):
                 #outSPCs += str(spcsets.conid)
                 for (key, spcset) in sorted(spcsets.iteritems()):
                     fieldSets.append(spcsets.conid)
-        return self.printCard(fields + list(set(fieldSets))) + outSPCs  # SPCADD
+        return self.print_card(fields + list(set(fieldSets))) + outSPCs  # SPCADD
 
 
 class SPCADD(ConstraintADD):

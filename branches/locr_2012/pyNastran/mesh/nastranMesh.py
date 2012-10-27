@@ -2,7 +2,7 @@ from itertools import izip
 from numpy import array, dot
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.fieldWriter import printCard
+from pyNastran.bdf.fieldWriter import print_card
 
 
 class NastranMesh(BDF):
@@ -255,11 +255,11 @@ class NastranMesh(BDF):
         coord = ['CORD2R', cid, rid, origin[0], origin[1], origin[2],
                  zAxis[0], zAxis[1], zAxis[2],
                  xAxis[0], xAxis[1], xAxis[2]]
-        f.write(printCard(coord))
+        f.write(print_card(coord))
         for nid, point in sorted(points.iteritems()):
             (x, y, z) = point
             node = ['GRID', nid, cid, x, y, z]
-            f.write(printCard(node))
+            f.write(print_card(node))
 
         pid = 123
         mid = pid
@@ -267,12 +267,12 @@ class NastranMesh(BDF):
         for eid, element in enumerate(elements):
             (n1, n2, n3) = element
             tri = ['CTRIA3', eid + eidStart, pid, n1, n2, n3]
-            f.write(printCard(tri))
+            f.write(print_card(tri))
 
         shell = ['PSHELL', pid, mid, 1.0]
-        f.write(printCard(shell))
+        f.write(print_card(shell))
         mat = ['MAT1', mid, 1e7, None, 0.3]
-        f.write(printCard(mat))
+        f.write(print_card(mat))
         #f.write('ENDDATA\n')
         f.close()
         return points, elements

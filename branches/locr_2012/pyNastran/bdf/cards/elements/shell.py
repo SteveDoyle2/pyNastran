@@ -854,7 +854,7 @@ class CQUAD4(QuadShell):
             self.thetaMcid, zOffset]
         fields2 = ['CTRIA3', newID, self.Pid()] + nodes2 + [
             self.thetaMcid, zOffset]
-        return self.printCard(fields1) + self.printCard(fields2)
+        return self.print_card(fields1) + self.print_card(fields2)
 
     def rawFields(self):
         fields = [self.type, self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid, self.zOffset, self.TFlag, self.T1, self.T2, self.T3, self.T4]

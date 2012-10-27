@@ -326,18 +326,18 @@ class NastranMatrix(BaseCard):
         msg += '\n$ %s Matrix %s\n' % (self.type, self.name)
         fields = [self.type, self.name, 0, self.ifo, self.tin,
                   self.tout, self.polar, None, self.ncol]
-        msg += self.printCard(fields)
+        msg += self.print_card(fields)
 
         if self.isComplex():
             for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
                 fields = [self.type, self.name, GCj[0], GCj[1],
                           None, GCi[0], GCi[1], reali, imagi]
-                msg += self.printCard(fields)
+                msg += self.print_card(fields)
         else:
             for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
                 fields = [self.type, self.name, GCj[0], GCj[1],
                           None, GCi[0], GCi[1], reali, None]
-                msg += self.printCard(fields)
+                msg += self.print_card(fields)
         return msg
 
 
@@ -531,15 +531,15 @@ class DMI(BaseCard):
         msg += '\n$ %s Matrix %s\n' % (self.type, self.name)
         fields = [self.type, self.name, 0, self.form, self.tin,
                   self.tout, None, self.nRows, self.nCols]
-        msg += self.printCard(fields)
-        #msg += self.printCard(fields,size=16,isD=False)
+        msg += self.print_card(fields)
+        #msg += self.print_card(fields,size=16,isD=False)
 
         if self.isComplex():
             for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
                 fields = [self.type, self.name, GCj, GCi, reali, imagi]
-                msg += self.printCard(fields)
+                msg += self.print_card(fields)
         else:
             for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
                 fields = [self.type, self.name, GCj, GCi, reali]
-                msg += self.printCard(fields)
+                msg += self.print_card(fields)
         return msg

@@ -192,7 +192,7 @@ def print_card_16(fields, tol=0.):
      format where the first 8 is the card name or blank (continuation).
      The last 8-character field indicates an optional continuation,
      but because it's a left-justified unneccessary field,
-     printCard doesnt use it.
+     print_card doesnt use it.
     """
     nFieldsMain = len(fields) - 1  # chop off the card name
     nBDFLines = nFieldsMain // 8
