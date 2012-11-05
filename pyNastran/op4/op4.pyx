@@ -872,7 +872,6 @@ def Save(                                                  # {{{1
             continue
             sparse  = 2
             nNZ     = 0   # mxGetNzmax(prhs[i])
-            Ar_ptr  = 0
             Ai_ptr  = 0
 
             if not nR*nC: # zero rows and/or columns; make null 1x1
@@ -931,34 +930,45 @@ def Save(                                                  # {{{1
         for c in xrange(nC):
             print('column %d' % c)
             if sparse_mat:
+                Ar_ptr  = 0
+                #print('A n_ptr=%d  Ar_ptr=%d' % (n_ptr, Ar_ptr))
                 row_ind, col_ind = kwargs[name].getcol(c).nonzero()
                 # col_ind will always be an array of zeros since
                 # kwargs[name].getcol(c) returns a single column
                 col_values       = kwargs[name].getcol(c)
 #               C_col_values     = <DTYPE_t *> col_values.data
 #               C_col_values     = col_values.data
+                print('len(row_ind)=%d  len(col_ind)=%d' % (
+                       len(row_ind), len(col_ind)))
                 print('row_ind', row_ind)
+                print('col_ind', col_ind)
                 print('col_val', col_values.data)
 #               for iI in range(len(col_values)):
 #                   print(' colval[%d]=%e' % (C_col_values[iI]))
-                strings_in_list(len(col_ind),      # in  # terms
+                strings_in_list(len(row_ind),      # in  # terms
                         <int *> row_ind.data,      # in  row indices
                                &n_str       ,      # out # strings
                                 start_ind   ,      # out leading index
                                 str_len     ,      # out string lengths
                                &max_length)
                 m.S_start[0] = 0
-                m.N_start[0] = 0
                 m.S_start[1] = n_str
+                m.N_start[0] = 0
                 n_ptr        = 0
 #               m.N          = <DTYPE_t *> col_values.data
                 for s in range(n_str):
-                    m.S[s].start_row = row_ind[col_ind[c] + start_ind[s] ]
+                    print('s=%s  c=%d len(start_ind)=%d   len(col_ind)=%d' % (
+                        s, c, m.H[n_STR], len(col_ind)))
+                    print('start_ind[s=%d]=%d  col_ind[%d]=%d' % (
+                        s, start_ind[s], start_ind[s], row_ind[start_ind[s]]))
+                    m.S[s].start_row = row_ind[ start_ind[s] ]
                     m.S[s].len       = str_len[s]
                     m.S[s].N_idx     = n_ptr
 
+                    print('B n_ptr=%d  Ar_ptr=%d' % (n_ptr, Ar_ptr))
                     for j in range(str_len[s]):
-                        m.N[n_ptr] = <DTYPE_t> col_values[Ar_ptr]
+                        print('C n_ptr=%d  Ar_ptr=%d' % (n_ptr, Ar_ptr))
+                        m.N[n_ptr] = <DTYPE_t> col_values.data[Ar_ptr]
                         n_ptr  += 1
                         Ar_ptr += 1
                         if op4_complx:
@@ -975,7 +985,7 @@ def Save(                                                  # {{{1
 #                              c  ,
 #                              0  ,
 #                              nC ,
-#                              m  ,
+#               <SparseMatrix> m  ,
 #                              op4_complx,
 #                              digits)
             else:  # dense
