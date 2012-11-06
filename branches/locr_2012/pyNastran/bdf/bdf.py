@@ -449,6 +449,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.tsteps = {}
         ## stores TSTEPNL
         self.tstepnls = {}
+        
+        self.pbusht = {}
+        self.pdampt = {}
+        self.pelast = {}
 
         ## direct matrix input - DMIG
         self.dmis = {}

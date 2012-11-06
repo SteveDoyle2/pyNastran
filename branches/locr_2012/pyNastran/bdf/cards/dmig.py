@@ -9,7 +9,7 @@ from math import log
 from numpy import zeros  # average
 from scipy.sparse import coo_matrix
 
-from pyNastran.bdf.cards.baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard, print_card
 
 
 def ssq(*listA):
@@ -326,18 +326,18 @@ class NastranMatrix(BaseCard):
         msg += '\n$ %s Matrix %s\n' % (self.type, self.name)
         fields = [self.type, self.name, 0, self.ifo, self.tin,
                   self.tout, self.polar, None, self.ncol]
-        msg += self.print_card(fields)
+        msg += print_card(fields)
 
         if self.isComplex():
             for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
                 fields = [self.type, self.name, GCj[0], GCj[1],
                           None, GCi[0], GCi[1], reali, imagi]
-                msg += self.print_card(fields)
+                msg += print_card(fields)
         else:
             for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
                 fields = [self.type, self.name, GCj[0], GCj[1],
                           None, GCi[0], GCi[1], reali, None]
-                msg += self.print_card(fields)
+                msg += print_card(fields)
         return msg
 
 
