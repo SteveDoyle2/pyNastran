@@ -60,22 +60,6 @@ cdef extern from "stdlib.h":
     void free(void* ptr)
     void* malloc(size_t size)
 
-ctypedef struct str_t:
-    int     len         # Number of terms in the string (a complex     
-                        # number counts as a single term).             
-    int     start_row   # Zero based, so first row has start_row = 0.  
-    int     N_idx       # Index into N[] to first numeric term for this
-                        # string.                                      
-
-ctypedef struct SparseMatrix:
-    int     *magic              #
-    int     *H                  # size = SPARSE_HDR_SIZE 
-    int     *S_start            # size = # columns + 1   
-    int     *N_start            # size = # columns + 1   
-    str_t   *S                  # size = n_strings_total 
-    double  *N                  # size = n_nonzeros_total
-    char    *data               # main data block        
-
 ctypedef enum:
     ROWS     = 0
     COLS     = 1
@@ -97,12 +81,23 @@ cimport numpy as np
 
 cdef extern from "libop4.c":
     ctypedef np.int_t      itype_t   # can't get this to do anything useful
+
     ctypedef struct str_t:
         int     len         # Number of terms in the string (a complex     
                             # number counts as a single term).             
         int     start_row   # Zero based, so first row has start_row = 0.  
         int     N_idx       # Index into N[] to first numeric term for this
                             # string.                                      
+
+    ctypedef struct SparseMatrix:
+        int     *magic              #
+        int     *H                  # size = SPARSE_HDR_SIZE 
+        int     *S_start            # size = # columns + 1   
+        int     *N_start            # size = # columns + 1   
+        str_t   *S                  # size = n_strings_total 
+        double  *N                  # size = n_nonzeros_total
+        char    *data               # main data block        
+
     ctypedef np.float64_t  dtype_t
     float  *op4_load_S(FILE   *fp         ,
                        int     filetype   ,  # in  1=text, other is binary  
@@ -500,7 +495,6 @@ class OP4:                                                 # {{{1
         cdef str_t  *unused_s
         cdef str_t  *str_data
         cdef int     n_nnz = self.nnz[skip]
-####### cdef int    *N_index
         cdef float  *array_RS
         cdef float  *array_CS
         cdef double *array_RD
@@ -868,8 +862,6 @@ def Save(                                                  # {{{1
         one_column = <DTYPE_t*>malloc(sizeof(double) * nR * npt)
 
         if sparse_mat:
-            print('Sparse matrix op4 save not yet implemented')
-            continue
             sparse  = 2
             nNZ     = 0   # mxGetNzmax(prhs[i])
             Ai_ptr  = 0
@@ -928,21 +920,20 @@ def Save(                                                  # {{{1
                 return
 
         for c in xrange(nC):
-            print('column %d' % c)
+#           print('column %d' % c)
             if sparse_mat:
                 Ar_ptr  = 0
-                #print('A n_ptr=%d  Ar_ptr=%d' % (n_ptr, Ar_ptr))
+#               print('A n_ptr=%d  Ar_ptr=%d' % (n_ptr, Ar_ptr))
                 row_ind, col_ind = kwargs[name].getcol(c).nonzero()
                 # col_ind will always be an array of zeros since
                 # kwargs[name].getcol(c) returns a single column
                 col_values       = kwargs[name].getcol(c)
-#               C_col_values     = <DTYPE_t *> col_values.data
-#               C_col_values     = col_values.data
-                print('len(row_ind)=%d  len(col_ind)=%d' % (
-                       len(row_ind), len(col_ind)))
-                print('row_ind', row_ind)
-                print('col_ind', col_ind)
-                print('col_val', col_values.data)
+                if False:
+                    print('len(row_ind)=%d  len(col_ind)=%d' % (
+                           len(row_ind), len(col_ind)))
+                    print('row_ind', row_ind)
+                    print('col_ind', col_ind)
+                    print('col_val', col_values.data)
 #               for iI in range(len(col_values)):
 #                   print(' colval[%d]=%e' % (C_col_values[iI]))
                 strings_in_list(len(row_ind),      # in  # terms
@@ -955,19 +946,18 @@ def Save(                                                  # {{{1
                 m.S_start[1] = n_str
                 m.N_start[0] = 0
                 n_ptr        = 0
-#               m.N          = <DTYPE_t *> col_values.data
                 for s in range(n_str):
-                    print('s=%s  c=%d len(start_ind)=%d   len(col_ind)=%d' % (
-                        s, c, m.H[n_STR], len(col_ind)))
-                    print('start_ind[s=%d]=%d  col_ind[%d]=%d' % (
-                        s, start_ind[s], start_ind[s], row_ind[start_ind[s]]))
+#                   print('s=%s  c=%d len(start_ind)=%d   len(col_ind)=%d' % (
+#                       s, c, m.H[n_STR], len(col_ind)))
+#                   print('start_ind[s=%d]=%d  col_ind[%d]=%d' % (
+#                       s, start_ind[s], start_ind[s], row_ind[start_ind[s]]))
                     m.S[s].start_row = row_ind[ start_ind[s] ]
                     m.S[s].len       = str_len[s]
                     m.S[s].N_idx     = n_ptr
 
-                    print('B n_ptr=%d  Ar_ptr=%d' % (n_ptr, Ar_ptr))
+#                   print('B n_ptr=%d  Ar_ptr=%d' % (n_ptr, Ar_ptr))
                     for j in range(str_len[s]):
-                        print('C n_ptr=%d  Ar_ptr=%d' % (n_ptr, Ar_ptr))
+#                       print('C n_ptr=%d  Ar_ptr=%d' % (n_ptr, Ar_ptr))
                         m.N[n_ptr] = <DTYPE_t> col_values.data[Ar_ptr]
                         n_ptr  += 1
                         Ar_ptr += 1
@@ -976,18 +966,14 @@ def Save(                                                  # {{{1
                             Ar_ptr += 1
                             n_ptr  += 1
 
-########################### m.N[n_ptr] = Ai[Ai_ptr]
-########################### Ai_ptr += 1
-########################### n_ptr  += 1
-
                 m.N_start[1] = n_ptr
-#               op4_wrt_col_sp(fp ,
-#                              c  ,
-#                              0  ,
-#                              nC ,
-#               <SparseMatrix> m  ,
-#                              op4_complx,
-#                              digits)
+                op4_wrt_col_sp(fp ,
+                               c  ,
+                               0  ,
+                               nC ,
+                <SparseMatrix> m  ,
+                               op4_complx,
+                               digits)
             else:  # dense
                 # probably a better way to make the column copies below
                 if   op4_type in [1,2]:
