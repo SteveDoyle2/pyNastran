@@ -155,7 +155,7 @@ def print_float_16(value, tol=0.):
                 return field
         field = field.strip(' 0')
         field = '%16s' % (field)
-    ###
+
     assert len(field) == 16, ('value=|%s| field=|%s| is not 16 characters '
                               'long, its %s' % (value, field, len(field)))
     return field

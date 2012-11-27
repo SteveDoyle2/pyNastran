@@ -414,7 +414,7 @@ class Cord2x(Coord):
 
         * \f$ g  \f$ is the global directional vector (e.g. \f$ g_x = [1,0,0]\f$)
         * \f$ ijk \f$ is the ith direction in the local coordinate system
-        
+
         @param self the coordinate system object
         @param p the point to be transformed.  Type=NUMPY.NDARRAY
         @param resolveAltCoord should the CD field be resolved (default=True)
@@ -624,7 +624,7 @@ class CORD3G(Coord):  # not done
     CORD3G 100 E313   EQN  110      111      112      0
     @endcode
     """
-    
+
     type = 'CORD3G'
 
     def __init__(self, card=[0, 0, 0, 0, 0, 0, 0], data=None):

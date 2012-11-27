@@ -366,9 +366,6 @@ class CTETRA4(SolidElement):
                     #B = self.B()
                     K += w * J * self.BtEB(pz)
                     #K += w*J*B.T*E*B
-                ###
-            ###
-        ###
         return K
 
     def BtEB(self, pz):

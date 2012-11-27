@@ -81,16 +81,18 @@ class CREEP(Material):
         return self.mid.mid
 
     def rawFields(self):
-        fields = ['CREEP', self.Mid(), self.T0, self.exp, self.form, self.tidkp, self.tidcp, self.tidcs, self.thresh,
-                  self.Type, self.a, self.b, self.c, self.d, self.e, self.f, self.g]
+        fields = ['CREEP', self.Mid(), self.T0, self.exp, self.form,
+                  self.tidkp, self.tidcp, self.tidcs, self.thresh, self.Type,
+                  self.a, self.b, self.c, self.d, self.e, self.f, self.g]
         return fields
 
     def reprFields(self):
         thresh = set_blank_if_default(self.thresh, 1e-5)
         exp = set_blank_if_default(self.exp, 4.1e-9)
         T0 = set_blank_if_default(self.T0, 0.0)
-        fields = ['CREEP', self.Mid(), T0, exp, self.form, self.tidkp, self.tidcp, self.tidcs, thresh,
-                  self.Type, self.a, self.b, self.c, self.d, self.e, self.f, self.g]
+        fields = ['CREEP', self.Mid(), T0, exp, self.form, self.tidkp,
+                  self.tidcp, self.tidcs, thresh, self.Type,
+                  self.a, self.b, self.c, self.d, self.e, self.f, self.g]
         return fields
 
 
@@ -217,8 +219,8 @@ class MAT1(Material):
         #pass
 
     def rawFields(self):
-        fields = ['MAT1', self.mid, self.e, self.g, self.nu, self.rho, self.a, self.TRef, self.ge,
-                  self.St, self.Sc, self.Ss, self.Mcsid]
+        fields = ['MAT1', self.mid, self.e, self.g, self.nu, self.rho, self.a,
+                  self.TRef, self.ge, self.St, self.Sc, self.Ss, self.Mcsid]
         return fields
 
     def getG_default(self):
@@ -384,8 +386,9 @@ class MAT2(AnisotropicMaterial):
         return msg
 
     def rawFields(self):
-        fields = ['MAT2', self.mid, self.G11, self.G12, self.G13, self.G22, self.G23, self.G33, self.rho,
-                  self.a1, self.a2, self.a3, self.TRef, self.ge, self.St, self.Sc, self.Ss,
+        fields = ['MAT2', self.mid, self.G11, self.G12, self.G13, self.G22,
+                  self.G23, self.G33, self.rho, self.a1, self.a2, self.a3,
+                  self.TRef, self.ge, self.St, self.Sc, self.Ss,
                   self.Mcsid]
         return fields
 
@@ -400,8 +403,8 @@ class MAT2(AnisotropicMaterial):
         TRef = set_blank_if_default(self.TRef, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
         fields = ['MAT2', self.mid, G11, G12, G13, G22, G23, G33, rho,
-                  self.a1, self.a2, self.a3, TRef, ge, self.St, self.Sc, self.Ss,
-                  self.Mcsid]
+                  self.a1, self.a2, self.a3, TRef, ge,
+                  self.St, self.Sc, self.Ss, self.Mcsid]
         return fields
 
 
@@ -450,16 +453,18 @@ class MAT3(AnisotropicMaterial):
             self.ge = data[13]
 
     def rawFields(self):
-        fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth, self.nuthz, self.nuzx, self.rho,
-                  None, None, self.gzx, self.ax, self.ath, self.az, self.TRef, self.ge]
+        fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth,
+                  self.nuthz, self.nuzx, self.rho, None, None, self.gzx,
+                  self.ax, self.ath, self.az, self.TRef, self.ge]
         return fields
 
     def reprFields(self):
         rho = set_blank_if_default(self.rho, 0.0)
         TRef = set_blank_if_default(self.TRef, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
-        fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth, self.nuthz, self.nuzx, rho,
-                  None, None, self.gzx, self.ax, self.ath, self.az, TRef, ge]
+        fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth,
+                  self.nuthz, self.nuzx, rho, None, None, self.gzx,
+                  self.ax, self.ath, self.az, TRef, ge]
         return fields
 
 
@@ -503,16 +508,17 @@ class MAT4(ThermalMaterial):
             self.qlat = data[10]
 
     def rawFields(self):
-        fields = ['MAT4', self.mid, self.k, self.cp, self.rho, self.H, self.mu, self.hgen, self.refEnthalpy,
-                          self.tch, self.tdelta, self.qlat]
+        fields = ['MAT4', self.mid, self.k, self.cp, self.rho, self.H, self.mu,
+                  self.hgen, self.refEnthalpy, self.tch, self.tdelta,
+                  self.qlat]
         return fields
 
     def reprFields(self):
         rho = set_blank_if_default(self.rho, 1.0)
         hgen = set_blank_if_default(self.hgen, 1.0)
         cp = set_blank_if_default(self.cp, 0.0)
-        fields = ['MAT4', self.mid, self.k, cp, rho, self.H, self.mu, hgen, self.refEnthalpy,
-                          self.tch, self.tdelta, self.qlat]
+        fields = ['MAT4', self.mid, self.k, cp, rho, self.H, self.mu, hgen,
+                  self.refEnthalpy, self.tch, self.tdelta, self.qlat]
         return fields
 
 
@@ -562,8 +568,8 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         return k
 
     def rawFields(self):
-        fields = ['MAT5', self.mid, self.kxx, self.kxy, self.kxz, self.kyy, self.kyz, self.kzz, self.cp,
-                          self.rho, self.hgen]
+        fields = ['MAT5', self.mid, self.kxx, self.kxy, self.kxz, self.kyy,
+                  self.kyz, self.kzz, self.cp, self.rho, self.hgen]
         return fields
 
     def reprFields(self):
@@ -577,8 +583,8 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         rho = set_blank_if_default(self.rho, 1.0)
         hgen = set_blank_if_default(self.hgen, 1.0)
         cp = set_blank_if_default(self.cp, 0.0)
-        fields = ['MAT5', self.mid, kxx, kxy, kxz, kyy, kyz, kzz, cp,
-                  rho, hgen]
+        fields = ['MAT5', self.mid, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho,
+                  hgen]
         return fields
 
 
@@ -667,9 +673,10 @@ class MAT8(AnisotropicMaterial):
         return D
 
     def rawFields(self):
-        fields = ['MAT8', self.mid, self.e11, self.e22, self.nu12, self.g12, self.g1z, self.g2z, self.rho,
-                  self.a1, self.a2, self.TRef, self.Xt, self.Xc, self.Yt, self.Yc, self.S,
-                  self.ge, self.F12, self.strn]
+        fields = ['MAT8', self.mid, self.e11, self.e22, self.nu12, self.g12,
+                  self.g1z, self.g2z, self.rho, self.a1, self.a2, self.TRef,
+                  self.Xt, self.Xc, self.Yt, self.Yc, self.S, self.ge,
+                  self.F12, self.strn]
         return fields
 
     def reprFields(self):
@@ -693,9 +700,8 @@ class MAT8(AnisotropicMaterial):
         F12 = set_blank_if_default(self.F12, 0.0)
         strn = set_blank_if_default(self.strn, 0.0)
 
-        fields = ['MAT8', self.mid, self.e11, self.e22, self.nu12, G12, G1z, G2z, rho,
-                  a1, a2, TRef, Xt, Xc, Yt, Yc, S,
-                  ge, F12, strn]
+        fields = ['MAT8', self.mid, self.e11, self.e22, self.nu12, G12, G1z,
+                  G2z, rho, a1, a2, TRef, Xt, Xc, Yt, Yc, S, ge, F12, strn]
         return fields
 
 
@@ -782,9 +788,11 @@ class MAT9(AnisotropicMaterial):
         return D
 
     def rawFields(self):
-        fields = ['MAT9', self.mid, self.G11, self.G12, self.G13, self.G14, self.G15, self.G16, self.G22,
-                          self.G23, self.G24, self.G25, self.G26, self.G33, self.G34, self.G35, self.G36,
-                          self.G44, self.G45, self.G46, self.G55, self.G56, self.G66, self.rho] + self.A + [self.TRef, self.ge]
+        fields = (['MAT9', self.mid, self.G11, self.G12, self.G13, self.G14,
+                   self.G15, self.G16, self.G22, self.G23, self.G24, self.G25,
+                   self.G26, self.G33, self.G34, self.G35, self.G36, self.G44,
+                   self.G45, self.G46, self.G55, self.G56, self.G66, self.rho]
+                   + self.A + [self.TRef, self.ge])
         return fields
 
     def reprFields(self):
@@ -796,9 +804,11 @@ class MAT9(AnisotropicMaterial):
         rho = set_blank_if_default(self.rho, 0.0)
         TRef = set_blank_if_default(self.TRef, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
-        fields = ['MAT9', self.mid, self.G11, self.G12, self.G13, self.G14, self.G15, self.G16, self.G22,
-                          self.G23, self.G24, self.G25, self.G26, self.G33, self.G34, self.G35, self.G36,
-                          self.G44, self.G45, self.G46, self.G55, self.G56, self.G66, rho] + A + [TRef, ge]
+        fields = (['MAT9', self.mid, self.G11, self.G12, self.G13, self.G14,
+                   self.G15, self.G16, self.G22, self.G23, self.G24, self.G25,
+                   self.G26, self.G33, self.G34, self.G35, self.G36, self.G44,
+                   self.G45, self.G46, self.G55, self.G56, self.G66, rho] +
+                   A + [TRef, ge])
         return fields
 
 
@@ -1027,7 +1037,8 @@ class MATHP(HyperelasticMaterial):
                           a30, a21, a12, a03, d3, None, None, None,
                           a40, a31, a22, a13, a04, d4, None, None,
                           a50, a41, a32, a23, a14, a05, d5, None,
-                          self.tab1, self.tab2, self.tab3, self.tab4, None, None, None, self.tabd]
+                          self.tab1, self.tab2, self.tab3, self.tab4,
+                          None, None, None, self.tabd]
         return fields
 
 
@@ -1083,7 +1094,8 @@ class MATS1(MaterialDependence):
             elif Type == 2:
                 self.Type = 'PLASTIC'
             else:
-                raise RuntimeError('invalid Type:  Type=%s; must be 1=NLELAST or 2=PLASTIC' % (Type))
+                raise RuntimeError('Invalid Type:  Type=%s; must be 1=NLELAST '
+                                   'or 2=PLASTIC' % (Type))
             self.h = h
             self.yf = yf
             self.hr = hr

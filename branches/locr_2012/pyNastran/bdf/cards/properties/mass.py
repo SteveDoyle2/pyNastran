@@ -41,7 +41,6 @@ class NSM(PointProperty):
             self.Type = data[1]
             self.id = data[2]
             self.value = data[3]
-        ###
 
     def rawFields(self):
         #nodes = self.nodeIDs()
@@ -63,7 +62,6 @@ class PMASS(PointProperty):
         else:
             self.pid = data[0]
             self.mass = data[1]
-        ###
 
     def Mass(self):
         return self.mass

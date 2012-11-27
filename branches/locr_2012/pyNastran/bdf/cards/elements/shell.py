@@ -11,13 +11,13 @@ from pyNastran.bdf.fieldWriter import (set_blank_if_default,
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.utils.mathematics import (Area, norm)
 
-def _triangle_area_centroid_normal(nodes): 
+def _triangle_area_centroid_normal(nodes):
     """
     Returns area,centroid,unitNormal
-    
+
     @param nodes:
       list of three triangle vertices
-      
+
     @code
     n = Normal = a x b
     Area   = 1/2 * |a x b|
@@ -48,7 +48,6 @@ def _normal(a, b):
 
 class ShellElement(Element):
     type = 'ShellElement'
-
     def __init__(self, card, data):
         Element.__init__(self, card, data)
 
@@ -152,7 +151,6 @@ class CTRIA3(TriShell):
     type = 'CTRIA3'
     asterType = 'TRIA3'
     calculixType = 'S3'
-
     def __init__(self, card=None, data=None):
         TriShell.__init__(self, card, data)
         if card:
@@ -186,7 +184,7 @@ class CTRIA3(TriShell):
                 self.T2 = 1.0
             if self.T3 == -1.0:
                 self.T3 = 1.0
-        ###
+
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 3
 
@@ -261,7 +259,6 @@ class CTRIA6(TriShell):
     type = 'CTRIA6'
     asterType = 'TRIA6'
     calculixType = 'S6'
-
     def __init__(self, card=None, data=None):
         TriShell.__init__(self, card, data)
         if card:
@@ -373,7 +370,6 @@ class CTRIA6(TriShell):
 
 class CTRIAR(TriShell):
     type = 'CTRIAR'
-
     def __init__(self, card=None, data=None):
         TriShell.__init__(self, card, data)
         ## element ID number
@@ -432,7 +428,6 @@ class CTRIAR(TriShell):
 class CTRIAX(TriShell):
     type = 'CTRIAX'
     calculixType = 'CAX6'
-
     def __init__(self, card=None, data=None):
         TriShell.__init__(self, card, data)
         ## element ID number
@@ -463,7 +458,6 @@ class CTRIAX6(TriShell):
     """
     type = 'CTRIAX6'
     #calculixType = 'CAX6'
-
     def __init__(self, card=None, data=None):
         TriShell.__init__(self, card, data)
         ## element ID number
@@ -517,8 +511,8 @@ class CTRIAX6(TriShell):
         self.nodes = [n1, n6, n5, n4, n3, n2]
 
     def rawFields(self):
-        fields = ['CTRIAX6', self.eid, self.Mid(), self.Pid()] + self.nodeIDs() + [
-            self.th]
+        fields = (['CTRIAX6', self.eid, self.Mid(), self.Pid()] +
+                  self.nodeIDs() +  [self.th])
         return fields
 
     def reprFields(self):
@@ -580,7 +574,6 @@ class QuadShell(ShellElement):
             print("type(centroid=%s centroid=%s \n" %
                  (type(centroid), centroid))
         return(area, centroid)
-    ###
 
     def Centroid(self, debug=False):
         #nodes = self.nodePositions()
@@ -597,7 +590,6 @@ class QuadShell(ShellElement):
         b = n2 - n4
         area = Area(a, b)
         return area
-    ###
 
     def MassMatrix(self, isLumped=True, gauss=1):
         """
@@ -674,7 +666,6 @@ class QuadShell(ShellElement):
 class CSHEAR(QuadShell):
     type = 'CSHEAR'
     calculixType = 'S4'
-
     def __init__(self, card=None, data=None):
         QuadShell.__init__(self, card, data)
         if card:
@@ -685,7 +676,6 @@ class CSHEAR(QuadShell):
             self.eid = data[0]
             self.pid = data[1]
             nids = data[2:]
-        ###
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4
 
@@ -735,7 +725,6 @@ class CSHEAR(QuadShell):
             print("type(centroid=%s centroid=%s \n" %
                  (type(centroid), centroid))
         return(area, centroid)
-    ###
 
     def Centroid(self, debug=False):
         (area, centroid) = self.AreaCentroid(debug)
@@ -751,7 +740,6 @@ class CSHEAR(QuadShell):
         b = n2 - n4
         area = Area(a, b)
         return area
-    ###
 
     def flipNormal(self):
         """
@@ -777,7 +765,6 @@ class CQUAD4(QuadShell):
     type = 'CQUAD4'
     asterType = 'QUAD4 # CQUAD4'
     calculixType = 'S4'
-
     def __init__(self, card=None, data=None):
         QuadShell.__init__(self, card, data)
         if card:
@@ -815,7 +802,7 @@ class CQUAD4(QuadShell):
                 self.T3 = 1.0
             if self.T4 == -1.0:
                 self.T4 = 1.0
-        ###
+
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4, 'CQUAD4'
 
@@ -857,7 +844,9 @@ class CQUAD4(QuadShell):
         return self.print_card(fields1) + self.print_card(fields2)
 
     def rawFields(self):
-        fields = [self.type, self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid, self.zOffset, self.TFlag, self.T1, self.T2, self.T3, self.T4]
+        fields = ([self.type, self.eid, self.Pid()] + self.nodeIDs() +
+                  [self.thetaMcid, self.zOffset, self.TFlag, self.T1, self.T2,
+                   self.T3, self.T4])
         return fields
 
     def reprFields(self):
@@ -865,15 +854,14 @@ class CQUAD4(QuadShell):
         (thetaMcid, zOffset, TFlag, T1, T2, T3,
             T4) = self.getReprDefaults(debug=debug)
 
-        fields = ['CQUAD4', self.eid, self.Pid()] + self.nodeIDs() + [thetaMcid, zOffset,
-                                                                      None, TFlag, T1, T2, T3, T4]
+        fields = (['CQUAD4', self.eid, self.Pid()] + self.nodeIDs() +
+                  [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
         return fields
 
 
 class CQUADR(QuadShell):
     type = 'CQUADR'
     #calculixType = 'CAX8'
-
     def __init__(self, card=None, data=None):
         QuadShell.__init__(self, card, data)
         if card:
@@ -911,7 +899,6 @@ class CQUADR(QuadShell):
                 self.T3 = 1.0
             if self.T4 == -1.0:
                 self.T4 = 1.0
-        ###
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4, 'CQUADR'
 
@@ -944,7 +931,6 @@ class CQUADR(QuadShell):
 
 class CQUAD(QuadShell):
     type = 'CQUAD'
-
     def __init__(self, card=None, data=None):
         QuadShell.__init__(self, card, data)
         ## element ID number
@@ -993,7 +979,6 @@ class CQUAD(QuadShell):
 class CQUAD8(QuadShell):
     type = 'CQUAD8'
     asterType = 'QUAD8'
-
     def __init__(self, card=None, data=None):
         QuadShell.__init__(self, card, data)
         if card:
@@ -1025,7 +1010,7 @@ class CQUAD8(QuadShell):
             self.thetaMcid = data[14]
             self.zOffset = data[14]
             self.TFlag = data[15]
-        ###
+
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 8
 
@@ -1084,7 +1069,6 @@ class CQUAD8(QuadShell):
             print("type(centroid=%s centroid=%s \n" %
                  (type(centroid), centroid))
         return(area, centroid)
-    ###
 
     def Area(self):
         r"""
@@ -1096,7 +1080,6 @@ class CQUAD8(QuadShell):
         b = n2 - n4
         area = Area(a, b)
         return area
-    ###
 
     def rawFields(self):
         fields = ['CQUAD8', self.eid, self.Pid()] + self.nodeIDs() + [
@@ -1106,16 +1089,14 @@ class CQUAD8(QuadShell):
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self.getReprDefaults()
-        fields = ['CQUAD8', self.eid, self.Pid()] + self.nodeIDs() + [
-            T1, T2, T3, T4, thetaMcid, zOffset,
-            TFlag]
+        fields = (['CQUAD8', self.eid, self.Pid()] + self.nodeIDs() + [
+                   T1, T2, T3, T4, thetaMcid, zOffset, TFlag])
         return fields
 
 
 class CQUADX(QuadShell):
     type = 'CQUADX'
     calculixType = 'CAX8'
-
     def __init__(self, card=None, data=None):
         QuadShell.__init__(self, card, data)
         ## element ID number

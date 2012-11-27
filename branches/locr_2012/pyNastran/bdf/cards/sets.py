@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import izip
@@ -339,25 +339,26 @@ class SESET(SetSuper):
         self.cleanIDs()
 
     def rawFields(self):
-        return ['SESET',self.seid]+collapse_thru(self.IDs)
+        return ['SESET', self.seid] + collapse_thru(self.IDs)
 
     def __repr__(self):
         thruFields = collapse_thru(self.IDs)
-        
-        fields = ['SESET', self.seid]
-        
-        i = 0
+
+        #fields = ['SESET', self.seid]
+
+        #i = 0
         cards = []
-        print("thruFields",thruFields)
+        print("thruFields", thruFields)
         while 'THRU' in thruFields:
-            print("thruFields",thruFields)
+            print("thruFields", thruFields)
             iThru = thruFields.index('THRU')
-            card = print_card_8(['SESET',self.seid]+thruFields[iThru-1:iThru+2])
+            card = print_card_8(['SESET', self.seid] + 
+                                thruFields[iThru-1:iThru+2])
             cards.append(card)
-            thruFields = thruFields[0:iThru-1]+thruFields[iThru+2:]
-        print("thruFields",thruFields)
+            thruFields = thruFields[0:iThru-1] + thruFields[iThru+2:]
+        print("thruFields", thruFields)
         if thruFields:
-            card = print_card_8(['SESET',self.seid]+thruFields)
+            card = print_card_8(['SESET', self.seid] + thruFields)
             cards.append(card)
         #print("cards",cards)
         return ''.join(cards)
@@ -375,10 +376,10 @@ class SEBSET(Set):
         ## Identifiers of grids points. (Integer > 0)
         self.components = []
         self.IDs = []
-        
+
         fields = str(card.fields(1))
         nfields = len(fields)
-        for i in range(nfields,2):
+        for i in range(nfields, 2):
             component = fields[i]
             ID = fields[i+1]
             self.components.append(component)
@@ -388,7 +389,7 @@ class SEBSET(Set):
         """gets the "raw" card without any processing as a list for printing"""
         fields = ['SEBSET1']
         for (component, ID) in zip(self.components, self.IDs):
-            fields += [component,ID]
+            fields += [component, ID]
         return fields
 
 class SEBSET1(Set):

@@ -192,12 +192,10 @@ class CaseControlDeck(object):
                 msg = 'too many lines in Case Control Deck < %i...' %(
                     self.nlines_max)
                 raise RuntimeError(msg)
-        ###
         #print "done with while loop...\n"
 
         #print str(self)
         self.finish_subcases()
-    ###
 
     def _parse_entry(self, lines):
         """
@@ -328,8 +326,6 @@ class CaseControlDeck(object):
                             i += 1
                             break
                         i += 1
-                    ###
-                ###
                 #print "len(fivalues) = ",len(fivalues)
                 value = fivalues
 
@@ -342,8 +338,7 @@ class CaseControlDeck(object):
             else:  # STRESS-type; TITLE = stuff
                 #print 'B ??? line = ',line
                 pass
-            ###
-        ### = in line
+
         elif line_upper.startswith('BEGIN'):  # begin bulk
             try:
                 (key, value) = line_upper.split(' ')
@@ -368,7 +363,7 @@ class CaseControlDeck(object):
             value = line
             options = None
             param_type = 'KEY-type'
-        ###
+
         i += 1
         #print "done with ",key
         return (i, key, value, options, param_type)

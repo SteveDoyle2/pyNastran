@@ -829,7 +829,7 @@ class PBARL(LineProperty):
                 self.nsm = set_default_if_blank(self.dim.pop(), 0.0)
             else:
                 self.nsm = 0.0
-            ###
+
             assert isinstance(self.nsm, float)
         else:
             self.pid = data[0]
@@ -1114,7 +1114,6 @@ class PBEAM(IntegratedLineProperty):
             self.n2b = card.field(x + 15, self.n1b)
         else:
             raise NotImplementedError('not supported')
-        ###
 
     #def Area(self):
     #    """@warning area field not supported fully on PBEAM card"""
@@ -1174,7 +1173,7 @@ class PBEAM(IntegratedLineProperty):
                              self.e1, self.e2, self.f1, self.f2):
             fields += [so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
                        e1, e2, f1, f2]
-        ###
+
         footer = [self.k1, self.k2, self.s1, self.s2, self.nsia, self.nsib,
                   self.cwa, self.cwb, self.m1a, self.m2a, self.m1b, self.m2b,
                   self.n1a, self.n2a, self.n1b, self.n2b]
@@ -1323,9 +1322,8 @@ class PBEAML(IntegratedLineProperty):
                     self.dim.append(Dim)
                     Dim = []
                     j = 0
-                ###
                 #print("i=%s ii=%s j=%s Dim=%s" %(i, ii, j, Dim))
-            ###
+
             if j <= nDim:  # if the last field is blank
                 #print "DimB = ",Dim
                 self.dim.append(Dim)
@@ -1334,7 +1332,6 @@ class PBEAML(IntegratedLineProperty):
                     msg = 'nsm is a string...nsm=|%s|' % (self.nsm)
                     raise RuntimeError(msg)
 
-            ###
             #print("nsm = %s" %(self.nsm))
             #print self
 
@@ -1378,7 +1375,6 @@ class PBEAML(IntegratedLineProperty):
             assert self.mid.type in ['MAT4', 'MAT5']
         else:
             assert self.mid.type in ['MAT1']
-        ###
 
     def _J(self):
         j = []

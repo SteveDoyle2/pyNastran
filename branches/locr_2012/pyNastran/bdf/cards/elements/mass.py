@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import zeros, array
@@ -36,7 +36,6 @@ class CMASS1(PointMass):
     CMASS1 EID PID G1 C1 G2 C2
     """
     type = 'CMASS1'
-
     def __init__(self, card=None, data=None):
         PointMass.__init__(self, card, data)
         if card:
@@ -53,7 +52,6 @@ class CMASS1(PointMass):
             self.g2 = data[3]
             self.c1 = data[4]
             self.c2 = data[5]
-        ###
 
     def Mass(self):
         return self.pid.mass
@@ -80,7 +78,6 @@ class CMASS2(PointMassElement):
     CMASS2 EID M G1 C1 G2 C2
     """
     type = 'CMASS2'
-
     def __init__(self, card=None, data=None):
         PointMassElement.__init__(self, card, data)
         if card:
@@ -97,7 +94,6 @@ class CMASS2(PointMassElement):
             self.g2 = data[3]
             self.c1 = data[4]
             self.c2 = data[5]
-        ###
 
     def nodeIDs(self):
         g1 = self.G1()
@@ -126,7 +122,6 @@ class CMASS2(PointMassElement):
         if self.g2 is not None:
             p2 = self.g2.Position()
             f += 1.
-
         c = (p1 + p2) / f
         return c
 
@@ -135,7 +130,6 @@ class CMASS2(PointMassElement):
             self.g1 = mesh.Node(self.g1)
         if isinstance(self.g2, int):
             self.g2 = mesh.Node(self.g2)
-        ###
 
     def G1(self):
         if isinstance(self.g1, int):
@@ -160,7 +154,6 @@ class CMASS2(PointMassElement):
         mass = set_blank_if_default(self.mass, 0.)
         fields = ['CMASS2', self.eid, mass, self.G1(), self.c1,
                   self.G2(), self.c2]
-        #print "cmass2 fields = ",fields
         return fields
 
 
@@ -170,7 +163,6 @@ class CMASS3(PointMassElement):
     CMASS3 EID PID S1 S2
     """
     type = 'CMASS3'
-
     def __init__(self, card=None, data=None):
         PointMass.__init__(self, card, data)
 
@@ -370,8 +362,6 @@ class CONM1(PointMass):
             val = set_blank_if_default(field, 0.)
             #print "field=%s value=%s" %(field,val)
             fields2.append(val)
-        #print "fields  = ",fields
-        #print "fields2 = ",fields2
         return fields2
 
 
@@ -383,15 +373,14 @@ class CONM2(PointMassElement):  ## @todo not done
     @param cid coordinate frame of the offset (-1=absolute coordinates)
     @param X offset vector
     @param I mass moment of inertia matrix about the CG
+    @code
+    CONM2    501274  11064          132.274
+    @endcode
     """
     type = 'CONM2'
-    # 'CONM2    501274  11064          132.274'
-
     def __init__(self, card=None, data=None):
         PointMassElement.__init__(self, card, data)
         if card:
-            #self.nids  = [ card[1] ]
-            #del self.nids
             self.eid = card.field(1)
             self.nid = card.field(2)
             self.cid = card.field(3, 0)
@@ -466,8 +455,8 @@ class CONM2(PointMassElement):  ## @todo not done
         return msg
 
     def rawFields(self):
-        fields = ['CONM2', self.eid, self.Nid(), self.Cid(),
-                  self.mass] + list(self.X) + [None] + list(self.I)
+        fields = (['CONM2', self.eid, self.Nid(), self.Cid(), self.mass] +
+                  list(self.X) + [None] + list(self.I))
         return fields
 
     def reprFields(self):
@@ -485,5 +474,6 @@ class CONM2(PointMassElement):  ## @todo not done
                 X.append(x)
 
         cid = set_blank_if_default(self.Cid(), 0)
-        fields = ['CONM2', self.eid, self.Nid(), cid, self.mass] + X + [None] + I
+        fields = (['CONM2', self.eid, self.Nid(), cid, self.mass] + X +
+                  [None] + I)
         return fields

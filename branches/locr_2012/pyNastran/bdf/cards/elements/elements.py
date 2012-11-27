@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
@@ -8,7 +8,6 @@ from pyNastran.bdf.cards.baseCard import Element
 
 class CFAST(Element):
     type = 'CFAST'
-
     def __init__(self, card=None, data=None):
         Element.__init__(self, card, data)
         self.eid = card.field(1)
@@ -32,8 +31,8 @@ class CFAST(Element):
         self.gb = model.Node(self.gb)
 
     def rawFields(self):
-        fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb, self.gs, self.ga, self.gb,
-                  self.xs, self.ys, self.zs]
+        fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,
+                  self.gs, self.ga, self.gb, self.xs, self.ys, self.zs]
         return fields
 
     def reprFields(self):
@@ -42,7 +41,6 @@ class CFAST(Element):
 
 class CGAP(Element):
     type = 'CGAP'
-
     def __init__(self, card=None, data=None):
         Element.__init__(self, card, data)
         if card:
@@ -78,7 +76,6 @@ class CGAP(Element):
             x3 = data[7]
             self.x = [x1, x2, x3]
             self.cid = data[8]
-        ###
 
     def cross_reference(self, model):
         self.ga = model.Node(self.ga)
@@ -89,7 +86,7 @@ class CGAP(Element):
         self.pid = model.Property(self.pid)
         if self.cid:
             self.cid = model.Coord(self.cid)
-        ###
+
     def Cid(self):
         if isinstance(self.cid, int) or self.cid is None:
             return self.cid
@@ -100,7 +97,8 @@ class CGAP(Element):
             x = [self.g0, None, None]
         else:
             x = self.x
-        fields = ['CGAP', self.eid, self.Pid(), self.ga, self.gb] + x + [self.Cid()]
+        fields = (['CGAP', self.eid, self.Pid(), self.ga, self.gb] + x +
+                  [self.Cid()])
         return fields
 
 
@@ -119,7 +117,6 @@ class CrackElement(Element):
 
 class CRAC2D(CrackElement):
     type = 'CRAC2D'
-
     def __init__(self, card=None, data=None):
         CrackElement.__init__(self, card, data)
         if card:
@@ -133,10 +130,12 @@ class CRAC2D(CrackElement):
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 18
 
+    #def rawFields(self):
+        #raise NotImplementedError()
+
 
 class CRAC3D(CrackElement):
     type = 'CRAC3D'
-
     def __init__(self, card=None, data=None):
         CrackElement.__init__(self, card, data)
         if card:
@@ -149,3 +148,6 @@ class CRAC3D(CrackElement):
             nids = data[2:]
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 64
+
+    #def rawFields(self):
+        #raise NotImplementedError()

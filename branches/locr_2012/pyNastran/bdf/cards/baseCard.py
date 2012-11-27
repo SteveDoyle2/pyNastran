@@ -1,12 +1,12 @@
-# pylint: disable=R0904,R0902
+# pylint: disable=R0904,R0902,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
+#import sys
 from itertools import izip
 
-from pyNastran.bdf.fieldWriter import (print_card, print_card_8, set_default_if_blank,
-                                       is_same)
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.fieldWriter import print_card, print_card_8, is_same
+                                       #set_default_if_blank, print_card
+#from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 
 
@@ -19,7 +19,8 @@ class BaseCard(BDFCard):
                 % self.type)
 
     def writeCodeAsterLoad(self, model, gridWord='node'):
-        return '# skipping %s (lid=%s) because writeCodeAsterLoad is not implemented\n' % (self.type, self.lid)
+        return ('# skipping %s (lid=%s) because writeCodeAsterLoad is '
+                'not implemented\n' % (self.type, self.lid))
 
     #def verify(self, model, iSubcase):
         #"""
@@ -46,7 +47,7 @@ class BaseCard(BDFCard):
 
     def cross_reference(self, model):
         #self.mid = model.Material(self.mid)
-        msg = "%s needs to implement the 'cross_reference' method" % (self.type)
+        msg = "%s needs to implement the 'cross_reference' method" % self.type
         raise NotImplementedError(msg)
 
     def buildTableLines(self, fields, nStart=1, nEnd=0):
@@ -57,14 +58,19 @@ class BaseCard(BDFCard):
                  DVID8 -etc.-
         'UM'     VAL1  VAL2  -etc.-
         @endcode
-        
-        and then pads the rest of the fields with None's
-        @param fields the fields to enter, including DESVAR
-        @param nStart the number of blank fields at the start of the line (default=1)
-        @param nEnd the number of blank fields at the end of the line (default=0)
 
-        @note will be used for DVPREL2, RBE1, RBE3
-        @warning only works for small field format???
+        and then pads the rest of the fields with None's
+        @param fields
+            the fields to enter, including DESVAR
+        @param nStart
+            the number of blank fields at the start of the line (default=1)
+        @param nEnd
+            the number of blank fields at the end of the line (default=0)
+
+        @note
+            will be used for DVPREL2, RBE1, RBE3
+        @warning
+            only works for small field format???
         """
         fieldsOut = []
         n = 8 - nStart - nEnd
@@ -104,10 +110,10 @@ class BaseCard(BDFCard):
 
     def reprFields(self):
         return self.rawFields()
-    
+
     def print_card(self, fields, size=8):
         return print_card(fields, size=size)
-    
+
     def print_card(self, size=8):
         fields = self.reprFields()
         return print_card(fields, size=size)
@@ -137,7 +143,6 @@ def Mid(self):
 class Property(BaseCard):
     def __init__(self, card, data):
         assert card is None or data is None
-        pass
 
     def Mid(self):
         return Mid(self)
@@ -248,7 +253,9 @@ class Element(BaseCard):
                 self.nodes.append(nid)
             else:  # string???
                 self.nodes.append(int(nid))
-                #raise RuntimeError('this element may not have missing nodes...nids=%s allowEmptyNodes=False' %(nids))
+                #raise RuntimeError('this element may not have missing '
+                #                   'nodes...nids=%s allowEmptyNodes=False'
+                #                   %(nids))
 
     #def Normal(self,a,b):
     #    """finds the unit normal vector of 2 vectors"""
@@ -434,18 +441,18 @@ def condense(valueList):
         return [[valueList[0], valueList[0], 1]]
     valueList.sort()
     packs = []
-    
+
     dvOld = None
     firstVal = valueList[0]
     lastVal = firstVal
 
     for val in valueList[1:]:
         dv = val - lastVal
-        
+
         # sets up the first item of the pack
         if dvOld is None:
             dvOld = dv
-        
+
         # fill up the pack
         if dvOld == dv:
             lastVal = val

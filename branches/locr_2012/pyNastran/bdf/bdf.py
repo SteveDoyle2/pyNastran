@@ -251,7 +251,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             # other
             'INCLUDE',  # '='
             'ENDDATA',
-            ])
+        ])
 
         caseControlCards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
                                 'TEMP', 'TSTEPNL', 'INCLUDE'])
@@ -336,7 +336,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             #'DIVERGE'  : None,
             'FLUTTER': 145,
             'SAERO': 146,
-            }
+        }
 
         self.rsolmap_toStr = {
             66: 'NONLIN',
@@ -395,7 +395,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.nodes = {}
         ## stores POINT cards
         self.points = {}
-        
+
         self.spoints = None
         ## stores GRIDSET card
         self.gridSet = None
@@ -449,7 +449,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.tsteps = {}
         ## stores TSTEPNL
         self.tstepnls = {}
-        
+
         self.pbusht = {}
         self.pdampt = {}
         self.pelast = {}
@@ -494,7 +494,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.methods = {}
         # EIGC, EIGP methods
         self.cMethods = {}
-        
 
     def _init_aero_defaults(self):
         """
@@ -546,11 +545,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ## defines the MAT4, MAT5, MATT4, etc. @todo verify MATT4
         self.thermalMaterials = {}
 
-        # elements
-        # see self.elements
-
-        # properties
-        ## stores other thermal properties - unused ???
         #self.thermalProperties    = {}
         ## stores PHBDY
         self.phbdys = {}
@@ -579,7 +573,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         if not punch:
             self._read_executive_control_deck()
             self._read_case_control_deck(self.bdf_filename)
-            
+
         self._read_bulk_data_deck()
         self.cross_reference(xref=xref)
 
@@ -640,10 +634,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
                 #print "solValue = |%s|" %(solValue)
                 sol = solValue[3:].strip()
-                
+
                 if self.sol is not None:
                     raise ValueError('cannot overwrite solution existing='
-                                    '|SOL %s| new =|%s|' % (self.sol, uline))
+                                     '|SOL %s| new =|%s|' % (self.sol, uline))
                 self.iSolLine = i
 
                 try:
@@ -688,7 +682,9 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         #print "sol=%s method=%s" %(self.sol,self.solMethod)
 
     def setDynamicSyntax(self, dictOfVars):
-        """@see set_dynamic_syntax"""
+        """
+        @see set_dynamic_syntax
+        """
         warnings.warn('setDynamicSyntax has been deprecated; use '
                       'set_dynamic_syntax', DeprecationWarning, stacklevel=2)
         self.set_dynamic_syntax(dictOfVars)
@@ -710,7 +706,9 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self._is_dynamic_syntax = True
 
     def _is_case_control_deck(self, line):
-        """@todo not done..."""
+        """
+        @todo not done...
+        """
         #print "line = |%r|" %(line)
         lineUpper = line.upper().strip()
         #print "line = |%s|" %(lineUpper)
@@ -936,7 +934,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             if 'ENDDATA' in cardName:
                 #print cardName
                 break  # exits while loop
-          
+
             nCards = 1
             #special = False
             if '=' in cardName:
@@ -949,7 +947,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                     #print "iCard = ",iCard
                 self.add_card(card, cardName, icard=0, old_card_obj=None)
 
-
             if self.doneReading or len(self.linesPack[-1]) == 0:
                 #print("doneReading=%s len(pack)=%s"
                 #    %(self.doneReading, len(self.linesPack[-1])))
@@ -960,7 +957,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
             #print "self.linesPack[-1] = ",len(self.linesPack[-1])
             #print "self._active_filenames = ",self._active_filenames
-        ### end of while loop
 
         #self.debug = True
         if self.debug:
@@ -975,9 +971,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 #print ''.join(reject)
             self.log.debug("***read_bulk_data_deck")
 
-
     def addCard(self, card, cardName, iCard=0, oldCardObj=None):
-        """@see add_card"""
+        """
+        @see add_card
+        """
         warnings.warn('addCard has been deprecated; use add_card',
                       DeprecationWarning, stacklevel=2)
         return self.add_card(card, cardName, icard=iCard,
@@ -1009,12 +1006,11 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         @warning
           cardObject is not returned
         """
-        
         card_obj = BDFCard(card, oldCardObj=None)
         # function that gets by name the initialized object (from global scope)
         _get_cls = lambda name: globals()[name](card_obj)
         _cls = lambda name: globals()[name]
-        
+
         if card == [] or card_name == '':
             return card_obj
 
@@ -1024,95 +1020,102 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             return card_obj
         try:
             # cards that have their own method add_CARDNAME to add them
-            if card_name in ['LSEQ', 'PHBDY', 'AERO', 'AEROS', 'AEFACT', 'AELINK',
-              'AELIST', 'AEPARM', 'AESTAT', 'AESURF', 'TRIM', 'FLUTTER', 
-              'FLFACT', 'GUST', 'NLPARM', 'TSTEP', 'TSTEPNL', 'SESET', 'DCONSTR',
-              'DESVAR', 'DDVAL', 'DLINK', 'PARAM', 'PDAMPT', 'PELAST', 'PBUSHT']:
+            if card_name in ['LSEQ', 'PHBDY', 'AERO', 'AEROS', 'AEFACT',
+              'AELINK', 'AELIST', 'AEPARM', 'AESTAT', 'AESURF', 'TRIM',
+              'FLUTTER', 'FLFACT', 'GUST', 'NLPARM', 'TSTEP', 'TSTEPNL',
+              'SESET', 'DCONSTR', 'DESVAR', 'DDVAL', 'DLINK', 'PARAM',
+              'PDAMPT', 'PELAST', 'PBUSHT']:
                 getattr(self, 'add_' + card_name)(_get_cls(card_name))
                 return card_obj
 
-            # dictionary of cards. Key is the name of the function to add the card 
+            # dictionary of cards. Key is the name of the function to add the
+            # card
             # 'PCOMPG':  # hasnt been verified
             # 'MAT8':  # note there is no MAT6 or MAT7
             _cards = {
-             'add_node' : ['GRID'],
+             'add_node': ['GRID'],
              'add_element': ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CQUADX',
-               'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6', 'CBAR', 'CBEAM',
-               'CBEAM3', 'CROD', 'CONROD', 'CTUBE', 'CBEND', 'CELAS1', 'CELAS2',
-               'CELAS3', 'CELAS4', 'CONM1',  'CONM2', 'CMASS1', 'CMASS2','CMASS3',
-               'CMASS4', 'CVISC', 'CSHEAR', 'CGAP', 'CRAC2D', 'CRAC3D'],
-             'add_damper_element' : ['CBUSH', 'CBUSH1D', 'CFAST', 'CDAMP1',
-               'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5'],
-             'add_rigid_element' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3'],
-             'add_property' : ['PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PSOLID',
-               'PBAR', 'PBARL', 'PBEAM', 'PBCOMP', 'PBEAML', 'PROD', 'PTUBE',
-               'PLSOLID', 'PBUSH1D', 'PBUSH', 'PFAST', 'PDAMP5',
-               'PGAP', 'PRAC2D', 'PRAC3D'],
-             'add_creep_material' : ['CREEP'], # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
-             'add_material': ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 
-               'MATHP'],
+                             'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
+                             'CBAR', 'CBEAM', 'CBEAM3', 'CROD', 'CONROD',
+                             'CTUBE', 'CBEND', 'CELAS1', 'CELAS2', 'CELAS3',
+                             'CELAS4', 'CONM1',  'CONM2', 'CMASS1', 'CMASS2',
+                             'CMASS3', 'CMASS4', 'CVISC', 'CSHEAR', 'CGAP',
+                             'CRAC2D', 'CRAC3D'],
+             'add_damper_element': ['CBUSH', 'CBUSH1D', 'CFAST', 'CDAMP1',
+                                    'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5'],
+             'add_rigid_element': ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3'],
+             'add_property': ['PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PSOLID',
+                              'PBAR', 'PBARL', 'PBEAM', 'PBCOMP', 'PBEAML',
+                              'PROD', 'PTUBE', 'PLSOLID', 'PBUSH1D', 'PBUSH',
+                              'PFAST', 'PDAMP5', 'PGAP', 'PRAC2D', 'PRAC3D'],
+             'add_creep_material': ['CREEP'], # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
+             'add_material': ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10',
+                              'MATHP'],
              'add_thermal_material': ['MAT4', 'MAT5'],
              'add_material_dependence': ['MATS1'],
-             'add_load': ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 
-               'MOMENT2', 'GRAV', 'ACCEL1', 'LOAD', 'PLOAD', 'PLOAD1', 'PLOAD2',
-               'PLOAD4', 'PLOADX1', 'RFORCE', 'DLOAD', 'SLOAD', 'TLOAD1',
-               'TLOAD2', 'RLOAD1', 'RLOAD2', 'RANDPS'],
+             'add_load': ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1',
+                          'MOMENT2', 'GRAV', 'ACCEL1', 'LOAD', 'PLOAD',
+                              'PLOAD1', 'PLOAD2', 'PLOAD4', 'PLOADX1',
+                              'RFORCE', 'DLOAD', 'SLOAD', 'TLOAD1', 'TLOAD2',
+                              'RLOAD1', 'RLOAD2', 'RANDPS'],
              'add_thermal_load': ['TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY'],
-             'add_thermal_element' : ['CHBDYE', 'CHBDYG', 'CHBDYP'],
-             'add_convection_property' : ['PCONV', 'PCONVM'],
-             'add_thermal_BC' : ['CONV', 'RADBC'],
-             'add_constraint_MPC' : ['MPC', 'MPCADD'],
-             'add_constraint_SPC' : ['SPC', 'SPC1', 'SPCAX', 'SPCD', 'SPCADD'],
-             'add_suport' : ['SUPORT'], # pseudo-constraint
-             'add_constraint' : ['SUPORT1'], # pseudo-constraint
-             'add_SPLINE' : ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5'],
-             'add_CAERO' : ['CAERO1', 'CAERO2'],
-             'add_PAERO' : ['PAERO1', 'PAERO2'],
-             'add_MKAERO' : ['MKAERO1', 'MKAERO2'],
-             'add_FREQ' : ['FREQ', 'FREQ1', 'FREQ2'],
-             'add_ASET' : ['ASET', 'ASET1'], 'add_BSET' : ['BSET', 'BSET1'],
-             'add_CSET' : ['CSET', 'CSET1'], 'add_QSET' : ['QSET', 'QSET1'],
-             'add_SET' : ['SET1', 'SET3'],
-             'add_DRESP' : ['DRESP1', 'DRESP2'],
-             'add_DVPREL' : ['DVPREL1', 'DVPREL2'],
-             'add_coord' : ['CORD2R', 'CORD2C', 'CORD2S'],
-             'add_table' : ['TABLED1', 'TABLED2', 'TABLED3', 'TABLEM1',
-               'TABLEM2', 'TABLEM3', 'TABLEM4', 'TABLES1', 'TABLEST'],
-             'add_random_table' : ['TABRND1', 'TABRNDG'],
-             'add_method' : ['EIGB', 'EIGR', 'EIGRL'],
-             'add_cmethod' : ['EIGC', 'EIGP'], 'add_DVMREL' : ['DVMREL1']
+             'add_thermal_element': ['CHBDYE', 'CHBDYG', 'CHBDYP'],
+             'add_convection_property': ['PCONV', 'PCONVM'],
+             'add_thermal_BC': ['CONV', 'RADBC'],
+             'add_constraint_MPC': ['MPC', 'MPCADD'],
+             'add_constraint_SPC': ['SPC', 'SPC1', 'SPCAX', 'SPCD', 'SPCADD'],
+             'add_suport': ['SUPORT'],  # pseudo-constraint
+             'add_constraint': ['SUPORT1'],  # pseudo-constraint
+             'add_SPLINE': ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5'],
+             'add_CAERO': ['CAERO1', 'CAERO2'],
+             'add_PAERO': ['PAERO1', 'PAERO2'],
+             'add_MKAERO': ['MKAERO1', 'MKAERO2'],
+             'add_FREQ': ['FREQ', 'FREQ1', 'FREQ2'],
+             'add_ASET': ['ASET', 'ASET1'], 'add_BSET': ['BSET', 'BSET1'],
+             'add_CSET': ['CSET', 'CSET1'], 'add_QSET': ['QSET', 'QSET1'],
+             'add_SET': ['SET1', 'SET3'],
+             'add_DRESP': ['DRESP1', 'DRESP2'],
+             'add_DVPREL': ['DVPREL1', 'DVPREL2'],
+             'add_coord': ['CORD2R', 'CORD2C', 'CORD2S'],
+             'add_table': ['TABLED1', 'TABLED2', 'TABLED3', 'TABLEM1',
+                           'TABLEM2', 'TABLEM3', 'TABLEM4', 'TABLES1',
+                           'TABLEST'],
+             'add_random_table': ['TABRND1', 'TABRNDG'],
+             'add_method': ['EIGB', 'EIGR', 'EIGRL'],
+             'add_cmethod': ['EIGC', 'EIGP'],
+             'add_DVMREL': ['DVMREL1'],
             }
 
             for func, nams in _cards.iteritems():
                 if card_name in nams:
                     getattr(self, func)(_get_cls(card_name))
                     return card_obj
-                
+
             ############ card that requires more careful processing ###########
-            _dct = {'CTETRA': (7, CTETRA4, CTETRA10), 'CHEXA': (11, CHEXA8, 
-                    CHEXA20), 'CPENTA' : (9, CPENTA6, CPENTA15)}
-            if card_name in _dct:                
+            _dct = {'CTETRA': (7, CTETRA4, CTETRA10), 'CHEXA': (11, CHEXA8,
+                    CHEXA20), 'CPENTA': (9, CPENTA6, CPENTA15)}
+            if card_name in _dct:
                 d = _dct[card_name]
                 self.add_element((d[1] if card_obj.nFields() == d[0] else d[2])(card_obj))
                 return card_obj
-            
-            _dct = {'PELAS': (5,), 'PVISC': (5,), 'PDAMP' : (3, 5)}
+
+            _dct = {'PELAS': (5,), 'PVISC': (5,), 'PDAMP': (3, 5)}
             if card_name in _dct:
                 self.add_property(_get_cls(card_name))
                 for i in _dct[card_name]:
                     if card_obj.field(i):
                         self.add_property(_cls(card_name)(card_obj, 1))
                 return card_obj
-        
+
             if card_name in ['DEQATN']:  # buggy for commas
                 #print 'DEQATN:  card_obj.card=%s' %(card_obj.card)
-                #self.add_DEQATN(DEQATN(card_obj)) # should be later moved to 
-                self.rejects.append(card)          # for loop below            
+                #self.add_DEQATN(DEQATN(card_obj)) # should be later moved to
+                self.rejects.append(card)          # for loop below
             elif card_name == 'GRDSET':
                 self.gridSet = GRDSET(card_obj)
             elif card_name == 'DOPTPRM':
                 self.doptprm = DOPTPRM(card_obj)
-                
+
             elif card_name == 'DMIG':  # not done...
                 if card_obj.field(2) == 'UACCEL':  # special DMIG card
                     self.reject_cards.append(card)
@@ -1120,7 +1123,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                     self.add_DMIG(DMIG(card_obj))
                 else:
                     self.dmigs[card_obj.field(1)].addColumn(card_obj)
-                    
+
             elif card_name in ['DMI', 'DMIJ', 'DMIJI', 'DMIK']:
                 if card_obj.field(2) == 0:
                     getattr(self, 'add_' + card_name)(_get_cls(card_name))
@@ -1140,10 +1143,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
             elif card_name == 'PMASS':
                 self.add_property(PMASS(card_obj, nOffset=0))
-                for i,j in enumerate([3,5,7]):
+                for (i, j) in enumerate([3, 5, 7]):
                     if card_obj.field(j) is not None:
-                        self.add_property(PMASS(card_obj, nOffset = i + 1))
-            
+                        self.add_property(PMASS(card_obj, nOffset=i+1))
+
             elif card_name == 'SPOINT':
                 self.add_SPOINT(SPOINTs(card_obj))
             elif 'ENDDATA' in card_name:
@@ -1154,7 +1157,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 if '=' not in card[0]:
                     self.log.info('rejecting processed %s' % (card))
                 self.reject_cards.append(card)
-            ###
         except Exception as e:
             print(str(e))
             self.log.debug("card_name = |%r|" % (card_name))
@@ -1171,71 +1173,73 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
           if a card is not supported and not added to the proper lists,
           this method will fail
         """
-        card_stats = ['params', 'nodes', 'points', 'elements', 'rigidElements',
-                      'properties', 'materials', 'materialDeps',
-                      'creepMaterials', 'coords', 'mpcs', 'mpcadds',
+        card_stats = [
+            'params', 'nodes', 'points', 'elements', 'rigidElements',
+            'properties', 'materials', 'materialDeps', 'creepMaterials',
+            'coords', 'mpcs', 'mpcadds',
 
-                      # dynamic cards
-                      'dareas', 'nlparms', 'tsteps', 'tstepnls',
+            # dynamic cards
+            'dareas', 'nlparms', 'tsteps', 'tstepnls',
 
-                      # direct matrix input - DMIG - dict
-                      'dmis', 'dmigs', 'dmijs', 'dmijis', 'dmiks', 'dequations',
+            # direct matrix input - DMIG - dict
+            'dmis', 'dmigs', 'dmijs', 'dmijis', 'dmiks',
+            'dequations',
 
-                      # frequencies - dict
-                      'frequencies',
+            # frequencies - dict
+            'frequencies',
 
-                      # optimization - dict
-                      'dconstrs', 'desvars', 'ddvals', 'dlinks', 'dresps',
-                      'dvprels', 'dvmrels',
+            # optimization - dict
+            'dconstrs', 'desvars', 'ddvals', 'dlinks', 'dresps',
+            'dvprels', 'dvmrels',
 
-                      # SESETx - dict
-                      'setsSuper',
+            # SESETx - dict
+            'setsSuper',
 
-                      # tables
-                      'tables', 'randomTables',
+            # tables
+            'tables', 'randomTables',
 
-                      # methods
-                      'methods', 'cMethods',
+            # methods
+            'methods', 'cMethods',
 
-                      # aero
-                      'caeros', 'paeros', 'aero', 'aeros', 'aefacts',
-                      'aelinks', 'aelists', 'aeparams', 'aesurfs', 'aestats',
-                      'gusts', 'flfacts', 'flutters', 'splines', 'trims',
+            # aero
+            'caeros', 'paeros', 'aero', 'aeros', 'aefacts', 'aelinks',
+            'aelists', 'aeparams', 'aesurfs', 'aestats', 'gusts', 'flfacts',
+            'flutters', 'splines', 'trims',
 
-                      # thermal
-                      'bcs', 'thermalMaterials', 'phbdys',
-                      'convectionProperties',]
+            # thermal
+            'bcs', 'thermalMaterials', 'phbdys',
+            'convectionProperties', ]
 
         ignored_types = set([
             'spoints', 'spointi',  # singleton
             'gridSet',  # singleton
-            
-            'spcs', 'spcadds', 
 
-            'suports', # suport, suport1 - list
+            'spcs', 'spcadds',
+
+            'suports',  # suport, suport1 - list
             'doptprm',  # singleton
 
             # SETx - list
             'sets', 'asets', 'bsets', 'csets', 'qsets',
-            ])
+        ])
 
         ignored_types2 = set([
-                              'caseControlDeck','spcObject2', 'mpcObject2',
-                              
-                              # done
-                              'sol', 'loads', 'mkaeros', 
-                               'rejects', 'reject_cards ',
+            'caseControlDeck', 'spcObject2', 'mpcObject2',
 
-                              # not cards
-                              'debug',  'executive_control_lines ',
-                              'case_control_lines', 'cardsToRead', 'cardCount',
-                              'isStructured', 'uniqueBulkDataCards', 
-                              'nCardLinesMax', 'modelType', 'includeDir',
-                              'cardsToWrite', 'solMethod', 'log', 'doneReading',
-                              'linesPack', 'lineNumbers', 'iSolLine', 
-                              'rejectCount', 'relpath', 'isOpened',
-                              'foundEndData', 'specialCards', 
-                              'infilesPack'])
+            # done
+            'sol', 'loads', 'mkaeros',
+            'rejects', 'reject_cards',
+
+            # not cards
+            'debug',  'executive_control_lines',
+            'case_control_lines', 'cardsToRead', 'cardCount',
+            'isStructured', 'uniqueBulkDataCards',
+            'nCardLinesMax', 'modelType', 'includeDir',
+            'cardsToWrite', 'solMethod', 'log', 'doneReading',
+            'linesPack', 'lineNumbers', 'iSolLine',
+            'rejectCount', 'relpath', 'isOpened',
+            'foundEndData', 'specialCards',
+            'infilesPack'])
 
         all_params = object_attributes(self)
         # removing variables that are not supported
@@ -1248,11 +1252,11 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
         msg = ['---BDF Statistics---']
         # sol
-        msg.append('SOL %s\n' %(self.sol))
-        
+        msg.append('SOL %s\n' % self.sol)
+
         # loads
-        for lid, loads in sorted(self.loads.iteritems()):
-            msg.append('bdf.loads[%s]' %(lid))
+        for (lid, loads) in sorted(self.loads.iteritems()):
+            msg.append('bdf.loads[%s]' % lid)
             groups = {}
             for load in loads:
                 groups[load.type] = groups.get(load.type, 0) + 1

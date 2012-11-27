@@ -55,12 +55,12 @@ class constraintObject2(object):
         This function returns all the constraints with an given constraint ID.
         For example an MPCADD that references 2 MPCADDs which reference 4 MPCs
         should return 4 MPCs (or rather the IDs of those MPCs).
-        
+
         @todo This function *should* also find unassociated constraints.
          not really done yet, idea needs to be integrated/separated from
          cross-referencing.  no point in doing it twice
         """
-        
+
         constraints2 = {}
         referencedConstraints = {}
         # some of the ADDConstraint keys are MPCADDs/SPCADDs, some are not
@@ -380,7 +380,7 @@ class SPC(Constraint):
     """
     Defines enforced displacement/temperature (static analysis)
     velocity/acceleration (dynamic analysis)
-    
+
     @code
     SPC SID G1 C1 D1   G2 C2 D2
     SPC 2   32 3  -2.6  5
@@ -438,7 +438,7 @@ class SPCD(SPC):
     """
     Defines an enforced displacement value for static analysis and an enforced
     motion value (displacement, velocity or acceleration) in dynamic analysis.
-    
+
     @code
     SPCD SID G1  C1   D1 G2 C2  D2
     SPCD 100 32 436 -2.6  5    2.9
@@ -462,7 +462,7 @@ class SPCAX(Constraint):
     """
     Defines a set of single-point constraints or enforced displacements
     for conical shell coordinates.
-    
+
     @code
     SPCAX SID RID HID C    D
     SPCAX 2   3     4 13 6.0
@@ -572,7 +572,7 @@ class SPCADD(ConstraintADD):
     """
     Defines a single-point constraint set as a union of single-point constraint
     sets defined on SPC or SPC1 entries.
-    
+
     @code
     SPCADD   2       1       3
     @endcode

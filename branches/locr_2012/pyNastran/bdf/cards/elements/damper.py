@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
@@ -21,7 +21,6 @@ class LineDamper(DamperElement):
 
 class CVISC(LineDamper):
     type = 'CVISC'
-
     def __init__(self, card=None, data=None):
         LineDamper.__init__(self, card, data)
         if card:
@@ -32,10 +31,9 @@ class CVISC(LineDamper):
             self.eid = data[0]
             self.pid = data[1]
             nids = data[2:4]
-        ###
+
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 2
-    ###
 
     def B(self):
         return self.pid.ce
@@ -50,7 +48,6 @@ class CVISC(LineDamper):
 
 class CDAMP1(LineDamper):
     type = 'CDAMP1'
-
     def __init__(self, card=None, data=None):
         LineDamper.__init__(self, card, data)
 
@@ -100,7 +97,6 @@ class CDAMP1(LineDamper):
 
 class CDAMP2(LineDamper):
     type = 'CDAMP2'
-
     def __init__(self, card=None, data=None):
         LineDamper.__init__(self, card, data)
 
@@ -142,7 +138,6 @@ class CDAMP2(LineDamper):
 
 class CDAMP3(LineDamper):
     type = 'CDAMP3'
-
     def __init__(self, card=None, data=None):
         LineDamper.__init__(self, card, data)
 
@@ -173,7 +168,6 @@ class CDAMP3(LineDamper):
 
 class CDAMP4(LineDamper):
     type = 'CDAMP4'
-
     def __init__(self, card=None, data=None):
         LineDamper.__init__(self, card, data)
 
@@ -204,7 +198,6 @@ class CDAMP4(LineDamper):
 
 class CDAMP5(LineDamper):
     type = 'CDAMP5'
-
     def __init__(self, card=None, data=None):
         LineDamper.__init__(self, card, data)
 
@@ -217,7 +210,6 @@ class CDAMP5(LineDamper):
             self.eid = data[0]
             self.pid = data[1]
             nids = [data[2], data[3]]
-        ###
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
 

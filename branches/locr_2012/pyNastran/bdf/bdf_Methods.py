@@ -44,8 +44,6 @@ class BDFMethods(object):
             except:
                 self.log().warning("could not get inertia for element"
                                    "...\n%s" % (element))
-            ###
-        ###
         cg = cg / mass
         return (mass, cg, I)
 

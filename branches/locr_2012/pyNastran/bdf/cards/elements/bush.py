@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
@@ -64,7 +64,8 @@ class CBUSH(BushElement):
             
             ## Element coordinate system identification. A 0 means the basic
             ## coordinate system. If CID is blank, then the element coordinate
-            ## system is determined from GO or Xi.  (default=blank=element-based)
+            ## system is determined from GO or Xi.
+            ## (default=blank=element-based)
             self.cid = card.field(8)
             ## Location of spring damper (0 <= s <= 1.0)
             self.s = card.field(9, 0.5)
@@ -94,7 +95,7 @@ class CBUSH(BushElement):
     def OCid(self):
         if self.ocid is None:
             return None
-        elif isinstance(self.ocid,int):
+        elif isinstance(self.ocid, int):
             return self.ocid
         return self.ocid.cid
 
@@ -117,8 +118,8 @@ class CBUSH(BushElement):
             x = [self.g0, None, None]
         else:
             x = self.x
-        fields = ['CBUSH', self.eid, self.Pid(), self.Ga(), self.Gb()] + x + [self.Cid(),
-                                                            self.s, self.ocid] + self.si
+        fields = (['CBUSH', self.eid, self.Pid(), self.Ga(), self.Gb()] + x +
+                  [self.Cid(), self.s, self.ocid] + self.si)
         return fields
 
     def reprFields(self):
@@ -129,8 +130,8 @@ class CBUSH(BushElement):
 
         ocid = set_blank_if_default(self.OCid(), -1)
         s = set_blank_if_default(self.s, 0.5)
-        fields = ['CBUSH', self.eid, self.Pid(), self.Ga(), self.Gb()] + x + [self.Cid(),
-                                                                       s, ocid] + self.si
+        fields = (['CBUSH', self.eid, self.Pid(), self.Ga(), self.Gb()] +
+                   x + [self.Cid(), s, ocid] + self.si)
         return fields
 
 
@@ -148,7 +149,6 @@ class CBUSH1D(BushElement):
             self.eid = data[0]
             self.pid = data[1]
             nids = data[2:4]
-        ###
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 2
 
@@ -166,7 +166,8 @@ class CBUSH1D(BushElement):
 
     def reprFields(self):
         nodeIDs = self.nodeIDs()
-        fields = ['CBUSH1D', self.eid, self.Pid(), nodeIDs[0], nodeIDs[1], self.Cid()]
+        fields = ['CBUSH1D', self.eid, self.Pid(), nodeIDs[0], nodeIDs[1],
+                  self.Cid()]
         return fields
 
 
@@ -194,7 +195,6 @@ class CBUSH2D(BushElement):
             self.eid = data[0]
             self.pid = data[1]
             nids = data[2:4]
-        ###
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 2
 

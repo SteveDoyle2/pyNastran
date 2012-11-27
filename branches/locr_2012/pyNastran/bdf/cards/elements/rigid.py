@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
@@ -15,7 +15,6 @@ class RigidElement(Element):
 
 class RBAR(RigidElement):
     type = 'RBAR'
-
     def __init__(self, card=None, data=None):
         """
         RBAR EID GA GB CNA    CNB CMA CMB ALPHA
@@ -40,7 +39,6 @@ class RBAR(RigidElement):
             self.cma = data[5]
             self.cmb = data[6]
             self.alpha = data[7]
-        ###
 
     def convertToMPC(self, mpcID):
         """
@@ -77,14 +75,13 @@ class RBAR(RigidElement):
 
     def reprFields(self):
         alpha = set_blank_if_default(self.alpha, 0.0)
-        fields = ['RBAR', self.eid, self.ga, self.gb, self.cna,
-                  self.cnb, self.cma, self.cmb, alpha]
+        fields = ['RBAR', self.eid, self.ga, self.gb, self.cna, self.cnb,
+                  self.cma, self.cmb, alpha]
         return fields
 
 
 class RBAR1(RigidElement):
     type = 'RBAR1'
-
     def __init__(self, card=None, data=None):
         """
         RBAR1 EID GA GB CB  ALPHA
@@ -103,7 +100,6 @@ class RBAR1(RigidElement):
             self.gb = data[2]
             self.cb = data[3]
             self.alpha = data[4]
-        ###
 
     def rawFields(self):
         fields = ['RBAR1', self.eid, self.ga, self.gb, self.cb, self.alpha]
@@ -117,7 +113,6 @@ class RBAR1(RigidElement):
 
 class RBE1(RigidElement):  # maybe not done, needs testing
     type = 'RBE1'
-
     def __init__(self, card=None, data=None):
         RigidElement.__init__(self, card, data)
         self.eid = card.field(1)
@@ -146,7 +141,6 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             if i % 6 == 0:
                 i += 2
             i += 2
-        ###
 
         self.Gmi = []
         self.Cmi = []
@@ -165,7 +159,6 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             #if i%8==0:
             #    i+=2
             i += 2
-        ###
         #print self
 
     def rawFields(self):
@@ -181,8 +174,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             fields += [gn, cn]
             if i % 6 == 0:
                 fields += [None]
-            ###
-        ###
+
         nSpaces = 8 - (len(fields) - 1) % 8  # puts ALPHA onto next line
         if nSpaces < 8:
             fields += [None] * nSpaces
@@ -206,8 +198,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
                 #print "---"
                 j -= 3
             j += 1
-            ###
-        ###
+
         nSpaces = 8 - (len(fields) - 1) % 8  # puts ALPHA onto next line
         if nSpaces == 1:
             fields += [None, None]
@@ -221,7 +212,6 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
 class RBE2(RigidElement):
     type = 'RBE2'
-
     def __init__(self, card=None, data=None):
         """
         RBE2 EID GN CM GM1 GM2 GM3 GM4 GM5
@@ -247,7 +237,6 @@ class RBE2(RigidElement):
                 self.alpha = self.Gmi.pop()  # the last field is not part of Gmi
             else:
                 self.alpha = 0.0
-            ###
         else:
             self.eid = data[0]
             self.gn = data[1]
@@ -257,7 +246,7 @@ class RBE2(RigidElement):
             print("eid=%s gn=%s cm=%s Gmi=%s alpha=%s"
                   % (self.eid, self.gn, self.cm, self.Gmi, self.alpha))
             raise NotImplementedError('RBE2 data...')
-        ###
+
         assert self.gn is not None
         assert self.cm is not None
         self.gn = str(self.gn)
@@ -326,7 +315,6 @@ class RBE2(RigidElement):
 
 class RBE3(RigidElement):  # not done, needs testing badly
     type = 'RBE3'
-
     def __init__(self, card=None, data=None):
         """
         eid
@@ -381,12 +369,9 @@ class RBE3(RigidElement):  # not done, needs testing badly
                     if gij is not None:
                         Gij.append(gij)
                     i += 1
-                ###
                 self.WtCG_groups.append([wt, ci, Gij])
             else:
                 i += 1
-            ###
-        ###
 
         self.Gmi = []
         self.Cmi = []
@@ -401,15 +386,12 @@ class RBE3(RigidElement):  # not done, needs testing badly
                     #print "gmi=%s cmi=%s" %(gmi,cmi)
                     self.Gmi.append(gmi)
                     self.Cmi.append(cmi)
-                ###
-            ###
-        ###
+
         if iAlpha:
             self.alpha = card.field(iAlpha + 1)
         else:
             ## thermal expansion coefficient
             self.alpha = 0.0
-        ###
         #print self
 
     def convertToMPC(self, mpcID):
@@ -439,7 +421,7 @@ class RBE3(RigidElement):  # not done, needs testing badly
             #print 'wt=%s ci=%s Gij=%s' %(wt,ci,Gij)
             fields += [wt, ci] + Gij
         nSpaces = 8 - (len(fields) - 1) % 8  # puts UM onto next line
-        #print "nSpaces = ",nSpaces
+
         if nSpaces < 8:
             fields += [None] * nSpaces
 
@@ -447,7 +429,6 @@ class RBE3(RigidElement):  # not done, needs testing badly
             fields2 = ['UM']
             for (gmi, cmi) in izip(self.Gmi, self.Cmi):
                 fields2 += [gmi, cmi]
-            ###
             fields += self.buildTableLines(fields2, i=1, j=1)
 
         if self.Gmi:
@@ -457,12 +438,11 @@ class RBE3(RigidElement):  # not done, needs testing badly
             #print "Cmi = ",self.Cmi
             for (gmi, cmi) in izip(self.Gmi, self.Cmi):
                 fields += [gmi, cmi]
-            ###
-        ###
+
         nSpaces = 8 - (len(fields) - 1) % 8  # puts ALPHA onto next line
         if nSpaces < 8:
             fields += [None] * nSpaces
-        #print "nSpaces = ",nSpaces
+
         if self.alpha > 0.:  # handles the default value
             fields += ['ALPHA', self.alpha]
         return fields

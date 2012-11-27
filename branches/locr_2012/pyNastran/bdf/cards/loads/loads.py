@@ -64,7 +64,6 @@ class LoadCombination(Load):  # LOAD, DLOAD
             self.scaleFactors = data[2]
             self.loadIDs = data[3]
             assert len(data) == 4, '%s data=%s' % (self.type, data)
-        ###
 
     def cross_reference(self, model):
         loadIDs2 = []
@@ -115,7 +114,6 @@ class LoadCombination(Load):  # LOAD, DLOAD
             for load in allLoads:
                 loads += load.getLoads()
             #loads += self.ID  # @todo:  what does this mean, was uncommented
-        ###
         return loads
 
 
@@ -147,7 +145,6 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         #    return [node for node in nodes]
         #else:
         #    return [node.nid for node in nodes]
-        ###
 
     def cross_reference(self, model):
         self.lid = model.Load(self.lid)
@@ -218,12 +215,10 @@ class SLOAD(Load):
             j = 2 * i
             self.nids.append(fields[j])
             self.mags.append(fields[j + 1])
-        ###
 
     def cross_reference(self, model):
         for (i, nid) in enumerate(self.nids):
             self.nids[i] = model.Node(nid)
-        ###
 
     def Nid(self, node):
         if isinstance(node, int):
@@ -249,7 +244,6 @@ class DLOAD(LoadCombination):
     #def cross_reference(self, model):
     #    for (i, sid) in enumerate(self.sids):
     #        self.sids[i] = model.Load(sid)
-    #    ###
 
     #def Sid(self, sid):
     #    if isinstance(sid, int):
@@ -289,7 +283,6 @@ class DAREA(BaseCard):
             self.c = data[2]
             self.scale = data[3]
             assert len(data) == 4, 'data = %s' % data
-        ###
 
     def rawFields(self):
         fields = ['DAREA', self.sid, self.p, self.c, self.scale]

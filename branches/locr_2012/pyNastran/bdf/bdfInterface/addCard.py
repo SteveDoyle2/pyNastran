@@ -16,7 +16,6 @@ class AddMethods(object):
                 #self.params[key] = param
         #else:
         self.dmis[name] = dmi
-        ###
 
     def add_DMIG(self, dmig, allowOverwrites=False):
         name = dmig.name
@@ -27,7 +26,6 @@ class AddMethods(object):
                 #self.params[key] = param
         #else:
         self.dmigs[name] = dmig
-        ###
 
     def add_DMIJ(self, dmij, allowOverwrites=False):
         name = dmij.name
@@ -49,7 +47,6 @@ class AddMethods(object):
                 #self.params[key] = param
         #else:
         self.dmijis[name] = dmiji
-        ###
 
     def add_DMIK(self, dmik, allowOverwrites=False):
         name = dmik.name
@@ -60,7 +57,6 @@ class AddMethods(object):
                 #self.params[key] = param
         #else:
         self.dmiks[name] = dmik
-        ###
 
     def add_PARAM(self, param, allowOverwrites=False):
         key = param.key
@@ -92,14 +88,12 @@ class AddMethods(object):
         else:
             assert key > 0, 'nid=%s node=%s' % (key, node)
             self.nodes[key] = node
-        ###
 
     def add_SPOINT(self, spoint):
         if self.spoints is None:
             self.spoints = spoint
         else:
             self.spoints.addSPoints(spoint.spoints)
-        ###
 
     def add_element(self, elem, allowOverwrites=False):
         key = elem.eid
@@ -114,7 +108,6 @@ class AddMethods(object):
         else:
             assert key > 0, 'eid=%s elem=%s' % (key, elem)
             self.elements[key] = elem
-        ###
 
     def add_mass_element(self, elem, allowOverwrites=False):
         key = elem.eid
@@ -129,7 +122,6 @@ class AddMethods(object):
         else:
             assert key > 0, 'eid=%s elem=%s' % (key, elem)
             self.massElements[key] = elem
-        ###
 
     def add_damper_element(self, elem, allowOverwrites=False):
         """@warning can dampers have the same ID as a standard element?"""

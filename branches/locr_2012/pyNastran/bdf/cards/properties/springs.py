@@ -33,7 +33,6 @@ class PELAS(SpringProperty):
             self.k = data[1]
             self.ge = data[2]
             self.s = data[3]
-        ###
 
     def cross_reference(self, model):
         #if self.sol in [108,129]:
@@ -67,7 +66,6 @@ class PELAS(SpringProperty):
             msg += "VALE=(0.,0.,%g)\n" % (self.k)
         else:
             raise ValueError('unsupported value of c1=%s' % (self.c1))
-        ###
         return msg
 
     def rawFields(self):

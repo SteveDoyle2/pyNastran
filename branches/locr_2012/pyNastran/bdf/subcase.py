@@ -399,7 +399,6 @@ class Subcase(object):
             #      "param_type=%s" %(self.id, key, value, options, param_type))
             if value.isdigit():  # PARAM,DBFIXED,-1
                 value = value
-            ###
         else:
             #a = 'key=|%s|'       %(key)
             #b = 'value=|%s|'     %(value)
@@ -496,11 +495,10 @@ class Subcase(object):
             #            'DESOBJ', 'DESSUB', 'FMETHOD', 'SEALL']:
             else:
                 op2Params[key.lower()] = value
-            ###
+
             #else:
             #    raise NotImplementedErrror('unsupported entry...\n%s' %(msg))
-            ###
-        ###
+
         op2Params['thermal'] = thermal
 
         print("\nThe estimated results...")
@@ -524,7 +522,6 @@ class Subcase(object):
         if param_type == 'SUBCASE-type':
             if self.id > 0:
                 msg += 'SUBCASE %s\n' % (self.id)
-            ###
             #else:  global subcase ID=0 and is not printed
             #    pass
         elif param_type == 'KEY-type':
@@ -571,7 +568,6 @@ class Subcase(object):
                     msg2 = ' ' * nChars + newString
                 else:
                     msg2 += newString
-                ###
                 i += 1
 
             msg += msg2.rstrip(' \n,') + '\n'
@@ -660,8 +656,6 @@ class Subcase(object):
                         msg += self.print_param(key, param,
                                                 printBeginBulk=False)
                         #print ""
-                    ###
-                ###
 
         ## self.id>0 and 'BEGIN' in self.params used to prevent printing of
         ## BEGIN BULK multiple times

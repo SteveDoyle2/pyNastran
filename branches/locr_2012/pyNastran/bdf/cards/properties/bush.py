@@ -56,12 +56,10 @@ class PBUSH(BushingProperty):
                 else:
                     break
                 iStart += 8
-            ###
         else:
             self.pid = data[0]
             self.b = data[1]
             raise NotImplementedError('PBUSH data...')
-        ###
         #print self
 
     def getK(self, card, iStart):
@@ -196,12 +194,10 @@ class PBUSH1D(BushingProperty):
                 else:
                     break
                 iStart += 8
-            ###
         else:
             self.pid = data[0]
             self.b = data[1]
             raise NotImplementedError('PBUSH1D data...')
-        ###
 
     def getShockA(self, card, iStart):
         self.shockType = card.field(iStart + 1)
@@ -280,10 +276,8 @@ class PBUSH1D(BushingProperty):
                                    (var))
             nSpaces = 8 - (len(fields) - 1) % 8
 
-            #print "nSpaces = ",nSpaces
             if nSpaces < 8:
                 fields += [None] * (nSpaces)
-            ###
         return fields
 
     def reprFields(self):

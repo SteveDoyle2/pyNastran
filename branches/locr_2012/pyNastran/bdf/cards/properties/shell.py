@@ -323,8 +323,6 @@ class PCOMP(ShellProperty):
                     raise RuntimeError('unsupported sout...needs debugging...'
                                        '\nPCOMP = %s' % (data))
                 self.plies.append([mid, t, theta, sout])
-            ###
-        ###
 
     def hasCoreLayer(self):
         """is there a center layer (matters most for a symmetrical ply)"""
@@ -576,7 +574,6 @@ class PCOMPG(PCOMP):
                 self.z0 = card.field(2, -0.5 * T)
         else:
             raise NotImplementedError('PCOMPG data')
-        ###
 
     def GlobalPlyID(self, iPly):
         gPlyID = self.plies[iPly][4]

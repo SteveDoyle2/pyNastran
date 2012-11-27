@@ -67,8 +67,8 @@ class EIGB(Method):
         ndn = set_blank_if_default(self.ndn, 3 * self.nep)
         #print "nep = ",self.nep,ndn
         norm = set_blank_if_default(self.norm, 'MAX')
-        fields = ['EIGB', self.sid, self.method, self.L1, self.L2, nep, ndp, ndn, None,
-                  norm, self.G, self.C]
+        fields = ['EIGB', self.sid, self.method, self.L1, self.L2, nep, ndp,
+                  ndn, None, norm, self.G, self.C]
         return fields
 
 
@@ -80,6 +80,19 @@ class EIGC(Method):  ## not done
 
     def __init__(self, card=None, data=None):
         Method.__init__(self, card, data)
+        # CLAN
+        self.mblkszs = []
+        self.iblkszs = []
+        self.ksteps = []
+        self.NJIs = []
+        
+        # HESS
+        self.alphaBjs = []
+        self.omegaBjs = []
+        self.LJs = []
+        self.NEJs = []
+        self.NDJs = []
+
         if card:
             ## Set identification number. (Unique Integer > 0)
             self.sid = card.field(1)
@@ -124,10 +137,6 @@ class EIGC(Method):  ## not done
             raise NotImplementedError('EIGC')
 
     def loadCLAN(self, nRows, card):
-        self.mblkszs = []
-        self.iblkszs = []
-        self.ksteps = []
-        self.NJIs = []
         for iRow in xrange(nRows):
             #NDJ_default = None
             self.alphaAjs.append(card.field(9 + 8 * iRow, 0.0))
@@ -143,12 +152,6 @@ class EIGC(Method):  ## not done
             self.NJIs.append(card.field(9 + 8 * iRow + 6))
 
     def loadHESS_INV(self, nRows, card):
-        self.alphaBjs = []
-        self.omegaBjs = []
-        self.LJs = []
-        self.NEJs = []
-        self.NDJs = []
-
         alphaOmega_default = None
         LJ_default = None
         if self.method == 'INV':
@@ -199,7 +202,7 @@ class EIGC(Method):  ## not done
                 kstep = set_blank_if_default(kstep, 5)
 
                 fields += [alphaA, omegaA, mblksz, iblksz,
-                    kstep, None, Nj, None]
+                           kstep, None, Nj, None]
         else:
             msg = 'invalid EIGC method...method=|%r|' % (self.method)
             raise RuntimeError(msg)
@@ -236,8 +239,8 @@ class EIGR(Method):
         if card:
             ## Set identification number. (Unique Integer > 0)
             self.sid = card.field(1)
-            ## Method of eigenvalue extraction. (Character: 'INV' for inverse power
-            ## method or 'SINV' for enhanced inverse power method.)
+            ## Method of eigenvalue extraction. (Character: 'INV' for inverse
+            ## power method or 'SINV' for enhanced inverse power method.)
             self.method = card.field(2, 'LAN')
             ## Frequency range of interest
             self.f1 = card.field(3)
@@ -247,12 +250,15 @@ class EIGR(Method):
             self.ne = card.field(5)
             ## Desired number of roots (default=600 for SINV 3*ne for INV)
             self.nd = card.field(6)
-            ## Method for normalizing eigenvectors. ('MAX' or 'POINT';Default='MAX')
+            ## Method for normalizing eigenvectors. ('MAX' or 'POINT';
+            ## Default='MAX')
             self.norm = card.field(9, 'MASS')
             assert self.norm in ['POINT', 'MASS', 'MAX']
-            ## Grid or scalar point identification number. Required only if NORM='POINT'. (Integer>0)
+            ## Grid or scalar point identification number. Required only if
+            ## NORM='POINT'. (Integer>0)
             self.G = card.field(10)
-            ## Component number. Required only if NORM='POINT' and G is a geometric grid point. (1<Integer<6)
+            ## Component number. Required only if NORM='POINT' and G is a
+            ## geometric grid point. (1<Integer<6)
             self.C = card.field(11)
         else:
             raise NotImplementedError('EIGR')
@@ -275,7 +281,8 @@ class EIGR(Method):
 
 class EIGP(Method):
     """
-    Defines poles that are used in complex eigenvalue extraction by the Determinant method.
+    Defines poles that are used in complex eigenvalue extraction by the
+    Determinant method.
     """
     type = 'EIGP'
 
@@ -327,8 +334,8 @@ class EIGRL(Method):
         if card:
             ## Set identification number. (Unique Integer > 0)
             self.sid = card.field(1)
-            ## For vibration analysis: frequency range of interest. For buckling
-            ## analysis: eigenvalue range of interest. See Remark 4.
+            ## For vibration analysis: frequency range of interest. For
+            ## buckling analysis: eigenvalue range of interest. See Remark 4.
             ## (Real or blank, -5 10e16 <= V1 < V2 <= 5.10e16)
             self.v1 = card.field(2)
             self.v2 = card.field(3)

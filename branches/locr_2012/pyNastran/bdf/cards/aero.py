@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,C0302,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
@@ -19,7 +19,6 @@ class AEFACT(BaseCard):
     @endcode
     """
     type = 'AEFACT'
-
     def __init__(self, card=None, data=None):  ## @todo doesnt support data
         ## Set identification number. (Unique Integer > 0)
         self.sid = card.field(1)
@@ -38,7 +37,7 @@ class AELINK(BaseCard):
     r"""
     Defines relationships between or among AESTAT and AESURF entries, such that:
     \f[ u^D + \Sigma_{i=1}^n C_i u_i^I = 0.0\f]
-    
+
     @code
     AELINK ID LABLD LABL1 C1 LABL2 C2 LABL3 C3
            LABL4 C4 -etc.-
@@ -46,7 +45,6 @@ class AELINK(BaseCard):
     @endcode
     """
     type = 'AELINK'
-
     def __init__(self, card=None, data=None):  ## @todo doesnt support data
         ## an ID=0 is applicable to the global subcase, ID=1 only subcase 1
         self.id = card.field(1)
@@ -80,21 +78,19 @@ class AELIST(BaseCard):
     """
     Defines a list of aerodynamic elements to undergo the motion prescribed
     with the AESURF Bulk Data entry for static aeroelasticity.
-    
+
     @code
     AELIST SID E1 E2 E3 E4 E5 E6 E7 E8...
     AELIST 75 1001 THRU 1075 1101 THRU 1109 1201 1202
     @endcode
 
     Remarks:
-    
     1. These entries are referenced by the AESURF entry.
     2. When the THRU option is used, all intermediate grid points must exist.
        The word THRU may not appear in field 3 or 9 (2 or 9 for continuations).
     3. Intervening blank fields are not allowed.
     """
     type = 'AELIST'
-
     def __init__(self, card=None, data=None):  ## @todo doesnt support data
         ## Set identification number. (Integer > 0)
         self.sid = card.field(1)
@@ -117,14 +113,13 @@ class AEPARM(BaseCard):
     Defines a general aerodynamic trim variable degree-of-freedom (aerodynamic
     extra point). The forces associated with this controller will be derived
     from AEDW, AEFORCE and AEPRESS input data.
-    
+
     @code
     AEPARM ID LABEL UNITS
     AEPARM 5 THRUST LBS
     @endcode
     """
     type = 'AEPARM'
-
     def __init__(self, card=None, data=None):
         if card:
             self.id = card.field(1)
@@ -145,14 +140,13 @@ class AESTAT(BaseCard):
     """
     Specifies rigid body motions to be used as trim variables in static
     aeroelasticity.
-    
+
     @code
     AESTAT ID   LABEL
     AESTAT 5001 ANGLEA
     @endcode
     """
     type = 'AESTAT'
-
     def __init__(self, card=None, data=None):
         if card:
             self.id = card.field(1)
@@ -181,7 +175,6 @@ class AESURF(BaseCard):
     @endcode
     """
     type = 'AESURF'
-
     def __init__(self, card=None, data=None):  ## @todo doesnt support data
         ## Set identification number. (Integer > 0)
         self.aesid = card.field(1)
@@ -229,8 +222,10 @@ class AESURF(BaseCard):
         self.tqulim = card.field(17)
 
     def rawFields(self):
-        fields = ['AESURF', self.aesid, self.cntlid, self.label, self.cid1, self.alid1, self.cid2, self.alid2, self.eff, self.ldw,
-                  self.crefc, self.crefs, self.pllim, self.pulim, self.hmllim, self.hmulim, self.tqllim, self.tqulim]
+        fields = ['AESURF', self.aesid, self.cntlid, self.label, self.cid1,
+                  self.alid1, self.cid2, self.alid2, self.eff, self.ldw,
+                  self.crefc, self.crefs, self.pllim, self.pulim, self.hmllim,
+                  self.hmulim, self.tqllim, self.tqulim]
         return fields
 
     def reprFields(self):
@@ -242,8 +237,10 @@ class AESURF(BaseCard):
         pllim = set_blank_if_default(self.pllim, -pi / 2.)
         pulim = set_blank_if_default(self.pulim, pi / 2.)
 
-        fields = ['AESURF', self.aesid, self.cntlid, self.label, self.cid1, self.alid1, self.cid2, self.alid2, eff, ldw,
-                  crefc, crefs, pllim, pulim, self.hmllim, self.hmulim, self.tqllim, self.tqulim]
+        fields = ['AESURF', self.aesid, self.cntlid, self.label, self.cid1,
+                  self.alid1, self.cid2, self.alid2, eff, ldw, crefc, crefs,
+                  pllim, pulim, self.hmllim, self.hmulim, self.tqllim,
+                  self.tqulim]
         return fields
 
 
@@ -255,14 +252,13 @@ class AESURFS(BaseCard):  # not integrated
     moment(s) of inertia about the hinge line(s).
     Specifies rigid body motions to be used as trim variables in static
     aeroelasticity.
-    
+
     @code
     AESURFS ID   LABEL - LIST1 - LIST2
     AESURFS 6001 ELEV  - 6002  - 6003
     @endcode
     """
     type = 'AESURFS'
-
     def __init__(self, card=None, data=None):
         if card:
             self.id = card.field(1)
@@ -277,8 +273,8 @@ class AESURFS(BaseCard):  # not integrated
             assert len(data) == 4, 'data = %s' % (data)
 
     def rawFields(self):
-        fields = ['AESURFS', self.id, self.label, None, self.list1,
-                  None, self.list2]
+        fields = ['AESURFS', self.id, self.label, None, self.list1, None,
+                  self.list2]
         return fields
 
 
@@ -317,14 +313,13 @@ class Aero(BaseCard):
 class AERO(Aero):
     """
     Gives basic aerodynamic parameters for unsteady aerodynamics.
-    
+
     @code
     AERO ACSID VELOCITY REFC RHOREF SYMXZ SYMXY
     AERO 3     1.3+4    100.  1.-5  1     -1
     @endcode
     """
     type = 'AERO'
-
     def __init__(self, card=None, data=None):
         Aero.__init__(self, card, data)
         if card:
@@ -362,14 +357,13 @@ class AERO(Aero):
 class AEROS(Aero):
     """
     Gives basic aerodynamic parameters for unsteady aerodynamics.
-    
+
     @code
     AEROS ACSID RCSID REFC REFB REFS SYMXZ SYMXY
     AEROS 10   20     10.  100. 1000. 1
     @endcode
     """
     type = 'AEROS'
-
     def __init__(self, card=None, data=None):
         Aero.__init__(self, card, data)
         if card:
@@ -407,13 +401,12 @@ class CSSCHD(BaseCard):
     """
     Defines a scheduled control surface deflection as a function of Mach number
     and angle of attack.
-    
+
     @code
     CSSCHD SlD AESID LALPHA LMACH LSCHD
     @endcode
     """
     type = 'ASSCHD'
-
     def __init__(self, card=None, data=None):
         Aero.__init__(self, card, data)
         if card:
@@ -469,14 +462,13 @@ class CAERO1(BaseCard):
     Defines an aerodynamic macro element (panel) in terms of two leading edge
     locations and side chords. This is used for Doublet-Lattice theory for
     subsonic aerodynamics and the ZONA51 theory for supersonic aerodynamics.
-    
+
     @code
     CAERO1 EID PID CP NSPAN NCHORD LSPAN LCHORD IGID
     X1 Y1 Z1 X12 X4 Y4 Z4 X43
     @endcode
     """
     type = 'CAERO1'
-
     def __init__(self, card=None, data=None):
         """
         @code
@@ -552,7 +544,8 @@ class CAERO1(BaseCard):
         self.x43 = x43[0]
 
     def rawFields(self):
-        fields = ['CAERO1', self.eid, self.Pid(), self.Cp(), self.nspan, self.nchord, self.lspan, self.lchord, self.igid,
+        fields = ['CAERO1', self.eid, self.Pid(), self.Cp(), self.nspan,
+                  self.nchord, self.lspan, self.lchord, self.igid,
                   ] + list(self.p1) + [self.x12] + list(self.p4) + [self.x43]
         return fields
 
@@ -560,8 +553,9 @@ class CAERO1(BaseCard):
         cp = set_blank_if_default(self.Cp(), 0)
         nspan = set_blank_if_default(self.nspan, 0)
         nchord = set_blank_if_default(self.nchord, 0)
-        fields = ['CAERO1', self.eid, self.Pid(), cp, nspan, nchord, self.lspan, self.lchord, self.igid,
-                  ] + list(self.p1) + [self.x12] + list(self.p4) + [self.x43]
+        fields = (['CAERO1', self.eid, self.Pid(), cp, nspan, nchord,
+                   self.lspan, self.lchord, self.igid] + list(self.p1) +
+                   [self.x12] + list(self.p4) + [self.x43])
         return fields
 
 
@@ -572,7 +566,6 @@ class CAERO2(BaseCard):
     Doublet-Lattice aerodynamics.
     """
     type = 'CAERO2'
-
     def __init__(self, card=None, data=None):
         """
         @code
@@ -592,9 +585,9 @@ class CAERO2(BaseCard):
         self.pid = card.field(2)
         ## Coordinate system for locating point 1.
         self.cp = card.field(3, 0)
-        ## Number of slender body elements. If NSB > 0, then NSB equal divisions
-        ## are assumed; if zero or blank, specify a list of divisions in LSB.
-        ## (Integer >= 0)
+        ## Number of slender body elements. If NSB > 0, then NSB equal
+        ## divisions are assumed; if zero or blank, specify a list of divisions
+        ## in LSB. (Integer >= 0)
         self.nsb = card.field(4)
         ## Number of interference elements. If NINT > 0, then NINT equal
         ## divisions are assumed; if zero or blank, specify a list of divisions
@@ -653,21 +646,21 @@ class CAERO2(BaseCard):
         self.x12 = x12[0]
 
     def rawFields(self):
-        fields = ['CAERO2', self.eid, self.Pid(), self.Cp(), self.nsb,
-                  self.nint, self.lsb, self.lint, self.igid, ] + list(self.p1
-                  ) + [self.x12]
+        fields = (['CAERO2', self.eid, self.Pid(), self.Cp(), self.nsb,
+                  self.nint, self.lsb, self.lint, self.igid, ] + list(self.p1)
+                  + [self.x12])
         return fields
 
     def reprFields(self):
         cp = set_blank_if_default(self.Cp(), 0)
-        fields = ['CAERO2', self.eid, self.Pid(), cp, self.nsb, self.nint,
-                  self.lsb, self.lint, self.igid, ] + list(self.p1) + [self.x12]
+        fields = (['CAERO2', self.eid, self.Pid(), cp, self.nsb, self.nint,
+                  self.lsb, self.lint, self.igid, ] + list(self.p1) +
+                  [self.x12])
         return fields
 
 
 class CAERO3(BaseCard):
     type = 'CAERO3'
-
     def __init__(self, card=None, data=None):
         self.eid = card.field(1)
         self.pid = card.field(2)
@@ -692,16 +685,16 @@ class CAERO3(BaseCard):
         #self.list_c2 = model.AeFact(self.list_c2) # not added
 
     def rawFields(self):
-        fields = ['CAERO3', self.eid, self.Pid(), self.Cp(), self.list_w,
-                  self.list_c1, self.list_c2] + list(self.p1) + [self.x12
-                  ] + list(self.p4) + [self.x34]
+        fields = (['CAERO3', self.eid, self.Pid(), self.Cp(), self.list_w,
+                   self.list_c1, self.list_c2] + list(self.p1) + [self.x12] +
+                   list(self.p4) + [self.x34])
         return fields
 
     def reprFields(self):
         cp = set_blank_if_default(self.Cp(), 0)
-        fields = ['CAERO3', self.eid, self.Pid(), cp, self.list_w,
-                  self.list_c1, self.list_c2] + list(self.p1) + [self.x12
-                  ] + list(self.p4) + [self.x34]
+        fields = (['CAERO3', self.eid, self.Pid(), cp, self.list_w,
+                   self.list_c1, self.list_c2] + list(self.p1) + [self.x12] +
+                   list(self.p4) + [self.x34])
         return fields
 
 
@@ -746,13 +739,14 @@ class FLFACT(BaseCard):
         return fields
 
     def __repr__(self):
+        fields = self.rawFields()
         return self.print_card(fields)
 
 
 class FLUTTER(BaseCard):
     """
     Defines data needed to perform flutter analysis.
-    
+
     @code
     FLUTTER SID METHOD DENS MACH RFREQ IMETH NVALUE/OMAX EPS
     FLUTTER 19  K      119  219  319       S 5           1.-4
@@ -824,15 +818,17 @@ class FLUTTER(BaseCard):
         return fields
 
     #def reprFields(self):
-    #    (imethod, nValue) = self._reprNValueOMax()
-    #    fields = ['FLUTTER', self.sid, self.method, self.density, self.mach, self.rfreqVel, imethod, nValue, self.epsilon]
-    #    return fields
+        #(imethod, nValue) = self._reprNValueOMax()
+        #fields = ['FLUTTER', self.sid, self.method, self.density, self.mach,
+        #          self.rfreqVel, imethod, nValue, self.epsilon]
+        #return fields
 
 
 class GUST(BaseCard):
     """
-    Defines a stationary vertical gust for use in aeroelastic response analysis.
-    
+    Defines a stationary vertical gust for use in aeroelastic response
+    analysis.
+
     @code
     GUST SID DLOAD WG  X0   V
     GUST 133 61    1.0 0.   1.+4
@@ -867,7 +863,7 @@ class MKAERO1(BaseCard):
     """
     Provides a table of Mach numbers (m) and reduced frequencies (k) for
     aerodynamic matrix calculation
-    
+
     @code
     MKAERO1 m1 m2 m3 m4 m5 m6 m7 m8
             k1 k2 k3 k4 k5 k6 k7 k8
@@ -921,7 +917,7 @@ class MKAERO2(BaseCard):
     """
     Provides a table of Mach numbers (m) and reduced frequencies (k) for
     aerodynamic matrix calculation
-    
+
     @code
     MKAERO2 m1 k1 m2 k2 m3 k3 m4 k4
     @endcode
@@ -963,13 +959,12 @@ class MKAERO2(BaseCard):
 class PAERO1(BaseCard):
     """
     Defines associated bodies for the panels in the Doublet-Lattice method.
-    
+
     @code
     PAERO1 PID B1 B2 B3 B4 B5 B6
     @endcode
     """
     type = 'PAERO1'
-
     def __init__(self, card=None, data=None):
         self.pid = card.field(1)
         Bi = card.fields(2)
@@ -997,14 +992,13 @@ class PAERO1(BaseCard):
 class PAERO2(BaseCard):
     """
     Defines the cross-sectional properties of aerodynamic bodies
-    
+
     @code
     PAERO2 PID ORIENT WIDTH AR LRSB LRIB LTH1 LTH2
     THI1 THN1 THI2 THN2 THI3 THN3
     @endcode
     """
     type = 'PAERO2'
-
     def __init__(self, card=None, data=None):
         ## Property identification number. (Integer > 0)
         self.pid = card.field(1)
@@ -1017,13 +1011,15 @@ class PAERO2(BaseCard):
         self.width = card.field(3)
         ## Aspect ratio of the interference tube (height/width). float>0.
         self.AR = card.field(4)
-        ## Identification number of an AEFACT entry containing a list of slender
-        ## body half-widths at the end points of the slender body elements. If
-        ## blank, the value of WIDTH will be used. (Integer > 0 or blank)
+        ## Identification number of an AEFACT entry containing a list of
+        ## slender body half-widths at the end points of the slender body
+        ## elements. If blank, the value of WIDTH will be used.
+        ## (Integer > 0 or blank)
         self.lrsb = card.field(5)
-        ## Identification number of an AEFACT entry containing a list of slender
-        ## body half-widths at the end points of the interference elements. If
-        ## blank, the value of WIDTH will be used. (Integer > 0 or blank)
+        ## Identification number of an AEFACT entry containing a list of
+        ## slender body half-widths at the end points of the interference
+        ## elements. If blank, the value of WIDTH will be used.
+        ## (Integer > 0 or blank)
         self.lrib = card.field(6)
         ## dentification number of AEFACT entries for defining ? arrays for
         ## interference calculations. (Integer >= 0)
@@ -1059,7 +1055,7 @@ class SPLINE1(Spline):
     Defines a surface spline for interpolating motion and/or forces for
     aeroelastic problems on aerodynamic geometries defined by regular arrays of
     aerodynamic points.
-    
+
     @code
     SPLINE1 EID CAERO BOX1 BOX2 SETG DZ METH USAGE
     NELEM MELEM
@@ -1114,8 +1110,9 @@ class SPLINE1(Spline):
         self.setg = model.Set(self.setg)
 
     def rawFields(self):
-        fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2, self.Set(), self.dz, self.method, self.usage,
-                  self.nelements, self.melements]
+        fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2,
+                  self.Set(), self.dz, self.method, self.usage, self.nelements,
+                  self.melements]
         return fields
 
     def reprFields(self):
@@ -1125,8 +1122,8 @@ class SPLINE1(Spline):
         nelements = set_blank_if_default(self.nelements, 10)
         melements = set_blank_if_default(self.melements, 10)
 
-        fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2, self.Set(), dz, method, usage,
-                  nelements, melements]
+        fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2,
+                  self.Set(), dz, method, usage, nelements, melements]
         fields = self._wipeEmptyFields(fields)
         return fields
 
@@ -1137,7 +1134,7 @@ class SPLINE2(Spline):
     Defines a surface spline for interpolating motion and/or forces for
     aeroelastic problems on aerodynamic geometries defined by regular arrays of
     aerodynamic points.
-    
+
     @code
     SPLINE2 EID CAERO ID1 ID2 SETG DZ DTOR CID
     DTHX DTHY None USAGE
@@ -1185,25 +1182,27 @@ class SPLINE2(Spline):
         return self.setg.sid
 
     def rawFields(self):
-        fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2, self.Set(), self.dz, self.dtor, self.Cid(),
-                  self.thx, self.thy, None, self.usage]
+        fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
+                  self.Set(), self.dz, self.dtor, self.Cid(), self.thx,
+                  self.thy, None, self.usage]
         return fields
 
     def reprFields(self):
         dz = set_blank_if_default(self.dz, 0.)
         usage = set_blank_if_default(self.usage, 'BOTH')
-        fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2, self.Set(), dz, self.dtor, self.Cid(),
-                  self.thx, self.thy, None, usage]
+        fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
+                  self.Set(), dz, self.dtor, self.Cid(), self.thx, self.thy,
+                  None, usage]
         return fields
 
 
 class SPLINE4(Spline):
     """
     Surface Spline Methods
-    Defines a curved surface spline for interpolating motion and/or forces for aeroelastic
-    problems on general aerodynamic geometries using either the Infinite Plate, Thin
-    Plate or Finite Plate splining method.
-    
+    Defines a curved surface spline for interpolating motion and/or forces for
+    aeroelastic problems on general aerodynamic geometries using either the
+    Infinite Plate, Thin Plate or Finite Plate splining method.
+
     @code
     SPLINE4 EID CAERO AELIST --- SETG DZ METH USAGE
     NELEM MELEM
@@ -1262,8 +1261,9 @@ class SPLINE4(Spline):
         self.aelist = model.AEList(self.aelist)
 
     def rawFields(self):
-        fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None, self.Set(), self.dz, self.method, self.usage,
-                  self.nelements, self.melements]
+        fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None,
+                  self.Set(), self.dz, self.method, self.usage, self.nelements,
+                  self.melements]
         return fields
 
     def reprFields(self):
@@ -1273,8 +1273,8 @@ class SPLINE4(Spline):
         nelements = set_blank_if_default(self.nelements, 10)
         melements = set_blank_if_default(self.melements, 10)
 
-        fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None, self.Set(), dz, method, usage,
-                  nelements, melements]
+        fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None,
+                  self.Set(), dz, method, usage, nelements, melements]
         fields = self._wipeEmptyFields(fields)
         return fields
 
@@ -1338,15 +1338,17 @@ class SPLINE5(Spline):
         self.aelist = model.AEList(self.aelist)
 
     def rawFields(self):
-        fields = ['SPLINE2', self.eid, self.CAero(), self.AEList(), None, self.Set(), self.dz, self.dtor, self.Cid(),
-                  self.thx, self.thy, None, self.usage]
+        fields = ['SPLINE2', self.eid, self.CAero(), self.AEList(), None,
+                  self.Set(), self.dz, self.dtor, self.Cid(), self.thx,
+                  self.thy, None, self.usage]
         return fields
 
     def reprFields(self):
         dz = set_blank_if_default(self.dz, 0.)
         usage = set_blank_if_default(self.usage, 'BOTH')
-        fields = ['SPLINE5', self.eid, self.CAero(), self.AEList(), None, self.Set(), dz, self.dtor, self.Cid(),
-                  self.thx, self.thy, None, usage]
+        fields = ['SPLINE5', self.eid, self.CAero(), self.AEList(), None,
+                  self.Set(), dz, self.dtor, self.Cid(), self.thx, self.thy,
+                  None, usage]
         return fields
 
 
@@ -1378,7 +1380,9 @@ class TRIM(BaseCard):
             while i < nFields:  ## @todo doesnt support aeqr
                 label = fields[i]
                 ux = fields[i + 1]
-                assert isinstance(label, unicode), 'TRIM card doesnt support AEQR field...iField=%s label=%s fields=%s' % (i, label, card.fields(0))
+                msg = ('TRIM card doesnt support AEQR field...iField=%s '
+                       'label=%s fields=%s' % (i, label, card.fields(0)))
+                assert isinstance(label, unicode), msg
                 self.labels.append(label)
                 self.uxs.append(ux)
                 if i == 2:

@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
@@ -10,7 +10,6 @@ from pyNastran.utils import list_print
 
 class Table(BaseCard):
     type = 'TABLE??'
-
     def __init__(self, card, data):
         pass
 
@@ -88,7 +87,6 @@ class TableObj(object):
 
 class TABLED1(Table):
     type = 'TABLED1'
-
     def __init__(self, card=None, data=None):
         Table.__init__(self, card, data)
         if card:
@@ -113,16 +111,13 @@ class TABLED1(Table):
         return fields
 
     def reprFields(self):
-        #xaxis = set_blank_if_default(self.xaxis,'LINEAR')
-        #yaxis = set_blank_if_default(self.yaxis,'LINEAR')
+        #xaxis = set_blank_if_default(self.xaxis, 'LINEAR')
+        #yaxis = set_blank_if_default(self.yaxis, 'LINEAR')
         return self.rawFields()
-        #fields = ['TABLED1',self.tid,self.xaxis,self.yaxis,None,None,None,None,None]+self.table.fields()+['ENDT']
-        #return fields
 
 
 class TABLED2(Table):
     type = 'TABLED2'
-
     def __init__(self, card=None, data=None):
         Table.__init__(self, card, data)
         if card:
@@ -148,7 +143,6 @@ class TABLED2(Table):
 
 class TABLED3(Table):
     type = 'TABLED3'
-
     def __init__(self, card=None, data=None):
         Table.__init__(self, card, data)
         if card:
@@ -176,7 +170,6 @@ class TABLED3(Table):
 
 class TABLEM1(Table):
     type = 'TABLEM1'
-
     def __init__(self, card=None, data=None):
         Table.__init__(self, card, data)
         if card:
@@ -197,7 +190,6 @@ class TABLEM1(Table):
 
 class TABLEM2(Table):
     type = 'TABLEM2'
-
     def __init__(self, card=None, data=None):
         Table.__init__(self, card, data)
         if card:
@@ -223,7 +215,6 @@ class TABLEM2(Table):
 
 class TABLEM3(Table):
     type = 'TABLEM3'
-
     def __init__(self, card=None, data=None):
         Table.__init__(self, card, data)
         if card:
@@ -251,7 +242,6 @@ class TABLEM3(Table):
 
 class TABLEM4(Table):
     type = 'TABLEM4'
-
     def __init__(self, card=None, data=None):
         Table.__init__(self, card, data)
         if card:
@@ -398,8 +388,8 @@ class TABRNDG(RandomTable):
             self.LU = card.field(3)
             ## Root-mean-square gust velocity. (Real)
             self.WG = card.field(4)
-            assert self.Type in [1,
-                                 2], 'Type must be 1 or 2.  Type=%s' % (self.Type)
+            assert self.Type in [1, 2], ('Type must be 1 or 2.  '
+                                         'Type=%s' % (self.Type))
         else:
             raise NotImplementedError()
 

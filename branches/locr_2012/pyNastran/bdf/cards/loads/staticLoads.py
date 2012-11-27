@@ -13,7 +13,6 @@ from ..baseCard import BaseCard, expand_thru, expand_thru_by
 
 class LOAD(LoadCombination):
     type = 'LOAD'
-
     def __init__(self, card=None, data=None):
         LoadCombination.__init__(self, card, data)
 
@@ -41,8 +40,6 @@ class LOAD(LoadCombination):
                            '%s' % (load.__class__.__name__, str(load)))
                     raise NotImplementedError(msg)
 
-                ###
-        ###
         load_IDs = list(set(load_IDs))
         #print "load_IDs = ",load_IDs
         return load_IDs
@@ -65,8 +62,7 @@ class LOAD(LoadCombination):
                     loadTypes += [load.type]
                 else:
                     raise RuntimeError(load)
-                ###
-        ###
+
         loadTypes = list(set(loadTypes))
         #print "loadTypes = ",loadTypes
         return loadTypes
@@ -170,9 +166,7 @@ class LOAD(LoadCombination):
                     msg = ('%s isnt supported in getReducedLoads method'
                         % (load.__class__.__name__))
                     raise NotImplementedError(msg)
-                ###
-            ###
-        ###
+
         return (scaleFactors, loads)
 
     def organizeLoads(self, model):
@@ -201,14 +195,12 @@ class LOAD(LoadCombination):
                         forceLoads[node] = vector * scaleFactor
                     else:
                         forceLoads[node] += vector * scaleFactor
-                    ###
                 else:  # constraint
                     if node not in forceLoads:
                         forceConstraints[node] = vector * scaleFactor
                     else:
                         forceConstraints[node] += vector * scaleFactor
-                    ###
-                ###
+
             elif isinstance(load, Moment):
                 (isLoad, node, vector) = out
                 if isLoad:  # load
@@ -216,14 +208,12 @@ class LOAD(LoadCombination):
                         momentLoads[node] = vector * scaleFactor
                     else:
                         momentLoads[node] += vector * scaleFactor
-                    ###
                 else:  # constraint
                     if node not in momentLoads:
                         momentConstraints[node] = vector * scaleFactor
                     else:
                         momentConstraints[node] += vector * scaleFactor
-                    ###
-                ###
+
             elif isinstance(load, PLOAD4):
                 (isLoad, nodes, vectors) = out
                 for (nid, vector) in izip(nodes, vectors):
@@ -236,8 +226,7 @@ class LOAD(LoadCombination):
             else:
                 msg = '%s not supported' % (load.__class__.__name__)
                 raise NotImplementedError(msg)
-            ###
-        ###
+
         return (typesFound, forceLoads, momentLoads, forceConstraints,
                 momentConstraints, gravityLoads)
 
@@ -382,7 +371,6 @@ class ACCEL1(BaseCard):
             nodeIDs = [node for node in nodes]
         else:
             nodeIDs = [node.nid for node in nodes]
-        ###
         assert 0 not in nodeIDs, 'nodeIDs = %s' % (nodeIDs)
         return nodeIDs
 
@@ -559,7 +547,6 @@ class FORCE1(Force):
             self.mag = data[2]
             self.g1 = data[3]
             self.g2 = data[4]
-        ###
 
     def cross_reference(self, model):
         """@todo cross reference and fix repr function"""
@@ -621,7 +608,6 @@ class FORCE2(Force):
             self.g2 = data[4]
             self.g3 = data[5]
             self.g4 = data[6]
-        ###
 
     def cross_reference(self, model):
         """@todo cross reference and fix repr function"""
@@ -769,7 +755,6 @@ class MOMENT2(Moment):
             self.g3 = data[5]
             self.g4 = data[6]
             xyz = data[7:10]
-        ###
         assert len(xyz) == 3, 'xyz=%s' % (xyz)
         self.xyz = array(xyz)
 
@@ -850,7 +835,6 @@ class PLOAD1(Load):
             self.p1 = data[5]
             self.x2 = data[6]
             self.p2 = data[7]
-        ###
         assert self.Type in self.validTypes, '%s is an invalid type on the PLOAD1 card' % (self.Type)
         assert self.scale in self.validScales, '%s is an invalid scale on the PLOAD1 card' % (self.scale)
 
@@ -959,7 +943,6 @@ class PLOAD4(Load):
             self.g1 = self.g1
             self.g34 = self.g34
             self.eids = [self.eid]
-        ###
 
     def getLoads(self):
         return [self]

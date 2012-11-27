@@ -162,7 +162,7 @@ def print_float_8(value, tol=0.):
                 return field
         field = field.strip(' 0')
         field = '%8s' % (field)
-    ###
+
     assert len(field) == 8, ('value=|%s| field=|%s| is not 8 characters '
                              'long, its %s' % (value, field, len(field)))
     return field

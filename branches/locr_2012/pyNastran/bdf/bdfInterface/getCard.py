@@ -1,8 +1,7 @@
-# pylint: disable=E1101,C0103
+# pylint: disable=E1101,C0103,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
-#import copy
 
 from pyNastran.bdf.cards.nodes import SPOINT
 

@@ -103,7 +103,6 @@ class PGAP(Property):
             self.tmax = data[8]
             self.mar = data[9]
             self.trmin = data[10]
-        ###
 
     def cross_reference(self, model):
         pass
@@ -163,7 +162,6 @@ class PLSOLID(SolidProperty):
             self.mid = data[1]
             self.ge = data[2]
             self.str = data[3]
-        ###
         assert self.str in ['GRID', 'GAUS'], 'STR=|%s| doesnt have a valid stress/strain output value set\n' % (self.str)
 
     def cross_reference(self, model):
@@ -207,7 +205,6 @@ class PSOLID(SolidProperty):
 
             if self.fctn == 'SMEC':
                 self.fctn = 'SMECH'
-        ###
 
     def writeCalculix(self, elementSet=999):
         msg = '*SOLID SECTION,MATERIAL=M%s,ELSET=E_Mat%s\n' % (
@@ -267,7 +264,6 @@ class PRAC2D(CrackProperty):
 
         else:
             raise NotImplementedError('not supported')
-        ###
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)  # MAT1, MAT2, MAT8
@@ -310,7 +306,6 @@ class PRAC3D(CrackProperty):
 
         else:
             raise NotImplementedError('not supported')
-        ###
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)  # MAT1, MAT9
@@ -341,7 +336,6 @@ class PCONEAX(Property):  # not done
             self.dim = []  # confusing entry...
         else:
             raise NotImplementedError('not supported')
-        ###
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)

@@ -121,7 +121,7 @@ class CELAS1(SpringElement):
             nids = [data[2], data[3]]
             self.c1 = data[4]
             self.c2 = data[5]
-        ###
+
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % (str(self), self.c1)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % (str(self), self.c2)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
@@ -182,7 +182,7 @@ class CELAS2(SpringElement):
             self.c2 = data[5]
             self.ge = data[6]
             self.s = data[7]
-        ###
+
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % (str(self), self.c1)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % (str(self), self.c2)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
@@ -227,7 +227,6 @@ class CELAS2(SpringElement):
             msg += "VALE=(0.,0.,%g)\n" % (self.k)
         else:
             raise ValueError('unsupported value of c1=%s' % (self.c1))
-        ###
         return msg
 
     def rawFields(self):
@@ -271,7 +270,6 @@ class CELAS3(SpringElement):
             self.pid = data[1]
             self.s1 = data[2]
             self.s2 = data[3]
-        ###
 
     def isSameCard(self, elem, debug=False):
         if self.type != elem.type:
@@ -325,7 +323,6 @@ class CELAS4(SpringElement):
             self.k = data[1]
             self.s1 = data[2]
             self.s2 = data[3]
-        ###
 
     def isSameCard(self, elem, debug=False):
         if self.type != elem.type:

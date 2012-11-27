@@ -16,7 +16,6 @@ class OptConstraint(BaseCard):
 
 class DCONSTR(OptConstraint):
     type = 'DCONSTR'
-
     def __init__(self, card=None, data=None):
         if card:
             self.oid = card.field(1)
@@ -49,7 +48,6 @@ class DCONSTR(OptConstraint):
 
 class DESVAR(OptConstraint):
     type = 'DESVAR'
-
     def __init__(self, card=None, data=None):
         self.oid = card.field(1)
         self.label = card.field(2)
@@ -60,8 +58,8 @@ class DESVAR(OptConstraint):
         self.ddval = card.field(7)
 
     def rawFields(self):
-        fields = ['DESVAR', self.oid, self.label, self.xinit, self.xlb, self.xub,
-                  self.delx, self.ddval]
+        fields = ['DESVAR', self.oid, self.label, self.xinit, self.xlb,
+                  self.xub, self.delx, self.ddval]
         return fields
 
     def reprFields(self):
@@ -96,13 +94,13 @@ class DOPTPRM(OptConstraint):
         """
         Design Optimization Parameters
         Overrides default values of parameters used in design optimization
-        
+
         @code
         DOPTPRM PARAM1 VAL1 PARAM2 VAL2 PARAM3 VAL3 PARAM4 VAL4
                 PARAM5 VAL5 -etc.-
         @endcode
         """
-        
+
         fields = card.fields(1)
         nFields = len(fields)
 
@@ -126,7 +124,7 @@ class DLINK(OptConstraint):
         """
         Multiple Design Variable Linking
         Relates one design variable to one or more other design variables
-        
+
         @code
         DLINK ID DDVID C0 CMULT IDV1 C1 IDV2 C2
               IDV3 C3 -etc.-
@@ -208,8 +206,8 @@ class DRESP1(OptConstraint):
         #assert len(self.others)==0
 
     def rawFields(self):
-        fields = ['DRESP1', self.oid, self.label, self.rtype, self.ptype, self.region, self.atta, self.attb, self.atti
-                  ] + self.others
+        fields = ['DRESP1', self.oid, self.label, self.rtype, self.ptype,
+                  self.region, self.atta, self.attb, self.atti] + self.others
         return fields
 
 
@@ -256,7 +254,8 @@ class DRESP2(OptConstraint):
         #print self
 
     def packParams(self):
-        packLength = {  # the amount of padding at the [beginning,end] of the 2nd line
+        # # the amount of padding at the [beginning,end] of the 2nd line
+        packLength = {  
                         'DESVAR': [1, 0],
                         'DTABLE': [1, 0],
                         'DRESP1': [1, 0],
@@ -447,7 +446,7 @@ class DVPREL2(OptConstraint):
                  LABL8 -etc.-
         @endcode
         """
-        
+
         ## Unique identification number
         self.oid = card.field(1)
         ## Name of a property entry, such as PBAR, PBEAM, etc
@@ -455,9 +454,10 @@ class DVPREL2(OptConstraint):
         ## Property entry identification number
         self.pid = card.field(3)
         ## Property name, such as 'T', 'A', or field position of the property
-        ## entry, or word position in the element property table of the analysis
-        ## model. Property names that begin with an integer such as 12I/T**3
-        ## may only be referred to by field position. (Character or Integer 0)
+        ## entry, or word position in the element property table of the
+        ## analysis model. Property names that begin with an integer such as
+        ## 12I/T**3 may only be referred to by field position.
+        ## (Character or Integer 0)
         self.pnameFid = card.field(4)
         ## Minimum value allowed for this property. If FID references a stress
         ## recovery location field, then the default value for PMIN is -1.0+35.

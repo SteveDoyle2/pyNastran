@@ -29,7 +29,6 @@ class PVISC(DamperProperty):
             self.pid = data[0]
             self.ce = data[1]
             self.cr = data[2]
-        ###
 
     def cross_reference(self, model):
         pass
