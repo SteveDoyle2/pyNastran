@@ -202,12 +202,10 @@ class F06Writer(object):
                     self.beamStrain, self.ctriaxStrain, self.hyperelasticPlateStress,
 
                     self.rodStress, self.nonlinearRodStrain, self.barStress, self.plateStress, self.nonlinearPlateStress, self.compositePlateStress, self.solidStress,
-                    self.beamStress, self.ctriaxStress, self.hyperelasticPlateStrain,
-
+                    self.bush1dStressStrain, self.beamStress, self.ctriaxStress, self.hyperelasticPlateStrain,
 
                     # beam, shear...not done
                     #self.shearStrain,self.shearStress,
-
 
                     self.gridPointStresses, self.gridPointVolumeStresses,
             #self.gridPointForces,
@@ -238,27 +236,19 @@ class F06Writer(object):
                             raise
                         if deleteObjects:
                             del result
-                        ###
                         f.write(msg)
                         pageNum += 1
-                    ###
-                ###
-            ###
         if 0:
             for res in resTypes:
                 for iSubcase, result in sorted(res.iteritems()):
                     (msg, pageNum) = result.writeF06(header, pageStamp, pageNum=pageNum, f=f, isMagPhase=False)
                     if deleteObjects:
                         del result
-                    ###
                     f.write(msg)
                     pageNum += 1
-                ###
-            ###
         f.write(makeEnd())
         if not makeFile:
             print(f.getvalue())
-        ###
         f.close()
 
 if __name__ == '__main__':

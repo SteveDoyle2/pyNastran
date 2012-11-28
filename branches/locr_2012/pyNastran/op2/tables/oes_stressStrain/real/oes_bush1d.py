@@ -136,10 +136,10 @@ class Bush1DStressObject(stressObject):
         self.is_failed[dt][eid] = fail
 
     def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        raise NotImplementedError('CBUSH1D')
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
 
+        raise NotImplementedError('CBUSH1D')
         msg = header + [
             '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
             '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
@@ -147,22 +147,25 @@ class Bush1DStressObject(stressObject):
         ]
 
         for eid, S1s in sorted(self.s1.iteritems()):
-            eType = self.eType[eid]
-            axial = self.axial[eid]
-            s1 = self.s1[eid]
-            s2 = self.s2[eid]
-            s3 = self.s3[eid]
-            s4 = self.s4[eid]
+            element_force = self.element_force[eid]
+            axial_displacement = self.axial_displacement[eid]
+            axial_velocity = self.axial_velocity[eid]
+            axial_stress = self.axial_stress[eid]
+            axial_strain = self.axial_strain[eid]
+            plastic_strain = self.plastic_strain[eid]
+            is_failed = self.is_failed[eid]
+            #eType = self.eType[eid]
+            #axial = self.axial[eid]
+            #s1 = self.s1[eid]
+            #s2 = self.s2[eid]
+            #s3 = self.s3[eid]
+            #s4 = self.s4[eid]
 
-            vals = [s1[0], s2[0], s3[0], s4[0], axial,
-                    s1[1], s2[1], s3[1], s4[1], ]
+            vals = [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed]
             (vals2, isAllZeros) = self.writeImagFloats13E(vals, isMagPhase)
-            [s1ar, s2ar, s3ar, s4ar, axialr,
-             s1br, s2br, s3br, s4br,
-             s1ai, s2ai, s3ai, s4ai, axiali,
-             s1bi, s2bi, s3bi, s4bi, ] = vals2
+            [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed] = vals2
             msg.append('0%8i   %13s  %13s  %13s  %13s  %-s\n' %
-                       (eid, s1ar, s2ar, s3ar, s4ar, axialr.rstrip()))
+                       (eid, element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed.rstrip()))
             msg.append(' %8s   %13s  %13s  %13s  %13s  %-s\n' %
                        ('', s1ai, s2ai, s3ai, s4ai, axiali.rstrip()))
 
@@ -175,39 +178,33 @@ class Bush1DStressObject(stressObject):
         return (''.join(msg), pageNum)
 
     def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        raise NotImplementedError('CBUSH1D')
+        #raise NotImplementedError('CBUSH1D')
         words = [
-            '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
-            '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
-            '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
+#      ELEMENT-ID =    7001
+                    '                    S T R E S S E S   ( F O R C E S )   I N   B U S H 1 D   E L E M E N T S   ( C B U S H 1 D )',
+                    ' \n',
+                    '                        AXIAL          AXIAL          AXIAL       AXIAL         AXIAL         PLASTIC\n',
+                    '        TIME            FORCE       DISPLACEMENT    VELOCITY      STRESS        STRAIN        STRAIN        STATUS\n',
         ]
         msg = []
-        for dt, S1s in sorted(self.s1.iteritems()):
+        for dt, ElementForce in sorted(self.element_force.iteritems()):
             header[1] = ' %s = %10.4E\n' % (self.dataCode['name'], dt)
             msg += header + words
-            for eid, S1 in sorted(S1s.iteritems()):
-                eType = self.eType[eid]
-                axial = self.axial[dt][eid]
-                s1 = self.s1[dt][eid]
-                s2 = self.s2[dt][eid]
-                s3 = self.s3[dt][eid]
-                s4 = self.s4[dt][eid]
-                vals = [s1[0], s2[0], s3[0], s4[0], axial,
-                        s1[1], s2[1], s3[1], s4[1], ]
-                (vals2, isAllZeros) = self.writeImagFloats13E(vals, isMagPhase)
-                [s1ar, s2ar, s3ar, s4ar, axialr,
-                 s1br, s2br, s3br, s4br,
-                 s1ai, s2ai, s3ai, s4ai, axiali,
-                 s1bi, s2bi, s3bi, s4bi, ] = vals2
-                msg.append('0%8i   %13s  %13s  %13s  %13s  %-s\n' % (eid,
-                                                                     s1ar, s2ar, s3ar, s4ar, axialr.rstrip()))
-                msg.append(' %8s   %13s  %13s  %13s  %13s  %-s\n' % ('',
-                                                                     s1ai, s2ai, s3ai, s4ai, axiali.rstrip()))
+            for eid, element_force in sorted(ElementForce.iteritems()):
+                #eType = self.eType[eid]
+                #element_force = self.element_force[dt][eid]
+                axial_displacement = self.axial_displacement[dt][eid]
+                axial_velocity = self.axial_velocity[dt][eid]
+                axial_stress = self.axial_stress[dt][eid]
+                axial_strain = self.axial_strain[dt][eid]
+                plastic_strain = self.plastic_strain[dt][eid]
+                is_failed = self.is_failed[dt][eid]
+                vals = [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed]
+                (vals2, isAllZeros) = self.writeFloats13E(vals)
+                [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed] = vals2
 
-                msg.append(' %8s   %13s  %13s  %13s  %-s\n' %
-                           ('', s1br, s2br, s3br, s4br.rstrip()))
-                msg.append(' %8s   %13s  %13s  %13s  %-s\n' %
-                           ('', s1bi, s2bi, s3bi, s4bi.rstrip()))
+                msg.append(' %13s   %13s  %13s  %13s  %13s  %13s  %13s  %-s\n' % (eid,
+                                                                     element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed.rstrip()))
 
             msg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1

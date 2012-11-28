@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 from types import MethodType
 import os
-from os.path import splitext
+from os.path import splitext, getsize
 from os.path import join as pjoin
-from os.path import getsize
 from numpy import ndarray
 import io
 
@@ -64,7 +63,6 @@ def de_obscure(num, debug = False):
     @param debug display additional information about conversion process
     @retval integer value of shortened version of a number, @see obscure
     """
-    
     dict_vals = dict(zip(list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'),xrange(52)))
     val = 0
     for i, letter in enumerate(list(num)):
@@ -81,7 +79,6 @@ def get_files_of_type(dirname, extension='.txt', maxSize=100.):
     @param maxSize size in MB for max file size
     @retval list of all the files with a given extension in the specified directory 
     """
-
     return [pjoin(dirname, f) for f in os.listdir(dirname) if extension in 
             splitext(f)[1] and getsize(pjoin(dirname, f)) / (1048576.) <= maxSize]
 
@@ -108,25 +105,28 @@ def list_print(lst):
     @param lst list, numpy array or numpy matrix
     @retval the clean string representation of the object
     """
-    if len(lst) == 0:
-        return '[]'
-
-    if isinstance(lst, ndarray) and lst.ndim == 2:
-        r,c = lst.shape
-        return ("["+",\n ".join(["["+",".join(['%-10g' % lst[i, j] 
-                            for j in range(c)])+"]" for i in range(r)])+"]")
-
-    def _print(a):
-        if a is None or isinstance(a, basestring):
-            return str(a)
-        if isinstance(a, float):
-            return '%-4.2f' % (a)
+    def _print(val):
+        if val is None or isinstance(val, basestring):
+            return str(val)
+        if isinstance(val, float):
+            return '%-4.2f' % (val)
         try:
-            return '%g' % (a)
+            return '%g' % (val)
         except TypeError:
-            print("parameter = |%s|" % (a))
+            print("parameter = |%s|" % (val))
             raise
-    return "[" + ", ".join([_print(a) for a in lst]) + "]"
+
+    try: # TODO: remove try block and fix bug in OP2 code or add a warning message
+        if len(lst) == 0:
+            return '[]'
+
+        if isinstance(lst, ndarray) and lst.ndim == 2:
+            r,c = lst.shape
+            return ("["+",\n ".join(["["+",".join(['%-10g' % lst[i, j] 
+                                for j in range(c)])+"]" for i in range(r)])+"]")
+        return "[" + ", ".join([_print(a) for a in lst]) + "]"
+    except: # not a list
+        return _print(lst)
 
 # list object attributes of a given type 
 def __object_attr(obj, mode, attr_type):

@@ -4,7 +4,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from struct import unpack, pack
 
 
-
 class FortranFile(object):
     def __init__(self):
         ## the endian of the processor (typically '<' for Windows/Linux/Mac,
@@ -378,7 +377,7 @@ class FortranFile(object):
                         markers, foundMarkers)
                     msg += 'tableName=%s found=%s expected=%s leftover=%s' % (tableName, tableCode, marker, self.printSection(40))
                     #print(msg)
-                raise SyntaxError("Invalid Markers: %s", msg)
+                raise SyntaxError("Invalid Markers: %s" % msg)
             foundMarkers.append(marker)
 
         msg = ''
