@@ -1,7 +1,16 @@
-#pylint: disable=C0103
+#pylint: disable=C0103,W0101,C0111
+"""
+All shell properties are defined in this file.  This includes:
+ * PCOMP
+ * PCOMPG
+ * PSHEAR
+ * PSHELL
+
+All shell properties are ShellProperty and Property objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
+#import sys
 import copy
 from math import sin, cos, radians
 from itertools import izip
@@ -14,12 +23,11 @@ from pyNastran.bdf.cards.baseCard import Property, Material
 
 class ShellProperty(Property):
     type = 'ShellProperty'
-
     def __init__(self, card=None, data=None):
         Property.__init__(self, card, data)
 
     def S(self):
-        r""""
+        r"""
         Calculates the compliance matrix for a lamina
         \f[ \large [Q] = [S]^{-1}  \f]
         """
@@ -232,7 +240,6 @@ class PCOMP(ShellProperty):
     @endcode
     """
     type = 'PCOMP'
-
     def __init__(self, card=None, data=None):  # not done, cleanup
         ShellProperty.__init__(self, card, data)
 
@@ -262,7 +269,7 @@ class PCOMP(ShellProperty):
             plies = []
             midLast = None
             tLast = None
-
+            ply = None
             iPly = 1
             ## supports single ply per line
             for i in xrange(9, 9 + nplies * 4, 4):
@@ -321,7 +328,7 @@ class PCOMP(ShellProperty):
                     sout = 'NO'
                 else:
                     raise RuntimeError('unsupported sout...needs debugging...'
-                                       '\nPCOMP = %s' % (data))
+                                       '\nPCOMP = %s' % data)
                 self.plies.append([mid, t, theta, sout])
 
     def hasCoreLayer(self):
@@ -446,7 +453,7 @@ class PCOMP(ShellProperty):
 
     def Theta(self, iPly):
         """
-        gets the ply angle of the ith ply (not the ID)
+        Gets the ply angle of the ith ply (not the ID)
         @param self the object pointer
         @param iPly the ply ID (starts from 0)
         """
@@ -474,8 +481,8 @@ class PCOMP(ShellProperty):
             massPerArea = 0.
             nplies = len(self.plies)
             for iply in xrange(nplies):
-                rho = self.Rho(iPly)
-                t = self.plies[iPly][1]
+                rho = self.Rho(iply)
+                t = self.plies[iply][1]
                 massPerArea += rho * t
 
             if self.isSymmetrical():
@@ -514,8 +521,7 @@ class PCOMP(ShellProperty):
         ge = set_blank_if_default(self.ge, 0.0)
         z0 = set_blank_if_default(self.z0, -0.5 * self.Thickness())
 
-        fields = ['PCOMP', self.pid, z0, nsm, sb, self.ft, TRef,
-                  ge, self.lam, ]
+        fields = ['PCOMP', self.pid, z0, nsm, sb, self.ft, TRef, ge, self.lam]
         for (iPly, ply) in enumerate(self.plies):
             (_mid, t, theta, sout) = ply
             mid = self.Mid(iPly)
@@ -551,7 +557,7 @@ class PCOMPG(PCOMP):
             while i < len(fields):
                 gPlyID = card.field(9 + i)
                 mid = card.field(9 + i + 1, midLast)
-                thickness = card.field(9+i+2, tLast) # can be blank 2nd time thru
+                thickness = card.field(9 + i + 2, tLast) # can be blank 2nd time thru
                 theta = card.field(9 + i + 3, 0.0)
                 sout = card.field(9 + i + 4, 'NO')
                 #print('n=%s gPlyID=%s mid=%s thickness=%s len=%s' %(
@@ -564,8 +570,8 @@ class PCOMPG(PCOMP):
 
                 assert mid is not None
                 assert thickness is not None
-                assert isinstance(mid, int), 'mid=%s' % (mid)
-                assert isinstance(thickness, float), 'thickness=%s' % (thickness)
+                assert isinstance(mid, int), 'mid=%s' % mid
+                assert isinstance(thickness, float), 'thickness=%s' % thickness
                 midLast = mid
                 tLast = thickness
                 T += thickness
@@ -608,7 +614,6 @@ class PCOMPG(PCOMP):
 
 class PSHEAR(ShellProperty):
     type = 'PSHEAR'
-
     def __init__(self, card=None, data=None):
         """
         Defines the properties of a shear panel (CSHEAR entry).
@@ -654,7 +659,6 @@ class PSHELL(ShellProperty):
     Z1 Z2 MID4
     PSHELL   41111   1      1.0000   1               1               0.02081"""
     type = 'PSHELL'
-
     def __init__(self, card=None, data=None):
         ShellProperty.__init__(self, card, data)
         if card:

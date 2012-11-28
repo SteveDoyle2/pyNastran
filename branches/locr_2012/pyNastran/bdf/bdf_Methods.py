@@ -10,10 +10,15 @@ from pyNastran.bdf.cards.elements.shell import ShellElement
 class BDFMethods(object):
     def __init__(self):
         pass
-    #--------------------
-    # METHODS
 
     def MassProperties(self):
+        """
+        @see mass_properties
+        @warning will be removed after v0.7 in favor of mass_properties
+        """
+        return self.mass_properties()
+
+    def mass_properties(self):
         """
         Caclulates mass properties in the global system about <0,0,0>
         I   = mass*centroid*centroid
@@ -48,14 +53,21 @@ class BDFMethods(object):
         return (mass, cg, I)
 
     def Mass(self):
-        """Caclulates mass in the global coordinate system"""
+        """
+        @see mass
+        @warning will be removed after v0.7 in favor of mass
+        """
+        return self.mass_properties()
+
+    def mass(self):
+        """Calculates mass in the global coordinate system"""
         mass = 0.
         for element in self.elements.itervalues():
             m = element.Mass()
             mass += m
         return (mass)
 
-    def flipNormals(self, starterEid, eids=None, flipStarter=False):
+    def flip_normals(self, starterEid, eids=None, flipStarter=False):
         """
         Takes the normals of SHELL elements and flips it to a common direction
         This method follows the contour of the body, so assuming
@@ -119,10 +131,10 @@ class BDFMethods(object):
         while 1:
             elem = self.Element(goEid)
             nids = elem.getNodeIDs()
-            normals = self._getAdjacentNormals(nids, nidToEidMap)
+            normals = self._get_adjacent_normals(nids, nidToEidMap)
             normal = normals[goEid]
 
-    def _getAdjacentElements(self, nids, nidToEidMap):
+    def _get_adjacent_elements(self, nids, nidToEidMap):
         """
         @todo doesnt work...
         """
@@ -131,6 +143,13 @@ class BDFMethods(object):
         #for nid in
 
     def resolveGrids(self, cid=0):
+        """
+        @see sum_forces
+        @warning will be removed after v0.7 in favor of resolve_grids
+        """
+        return self.resolve_grids(cid)
+
+    def resolve_grids(self, cid=0):
         """
         Puts all nodes in a common coordinate system (mainly for cid testing)
         @param self the object pointer
@@ -145,6 +164,13 @@ class BDFMethods(object):
             node.UpdatePosition(self, p, cid)
 
     def unresolveGrids(self, femOld):
+        """
+        @see sum_forces
+        @warning will be removed after v0.7 in favor of unresolve_grids
+        """
+        return self.unresolve_grids(fem_old)
+
+    def unresolve_grids(self, fem_old):
         """
         Puts all nodes back to original coordinate system.
         @param self
@@ -162,6 +188,13 @@ class BDFMethods(object):
             self.nodes[nid].UpdatePosition(self, p2, coord.cid)
 
     def sumForces(self):
+        """
+        @see sum_forces
+        @warning will be removed after v0.7 in favor of sum_forces
+        """
+        return self.sum_forces()
+
+    def sum_forces(self):
         """
         Sums applied forces for all load cases.
         Considers FORCE, FORCE1, FORCE2.
@@ -181,6 +214,13 @@ class BDFMethods(object):
         return F
 
     def sumMoments(self, p0):
+        """
+        @see sum_moments
+        @warning will be removed after v0.7 in favor of sum_moments
+        """
+        return self.sum_moments(p0)
+
+    def sum_moments(self, p0):
         """
         Sums applied forces & moments about a reference point p0
         for all load cases.

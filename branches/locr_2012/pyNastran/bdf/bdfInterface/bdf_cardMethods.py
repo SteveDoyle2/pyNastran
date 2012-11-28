@@ -1,4 +1,13 @@
 # pylint: disable=E1101,C0103,R0902,R0904,R0914
+"""
+All damper properties are defined in this file.  This includes:
+ *   PDAMP
+ *   PDAMP5 (not implemented)
+ *   PDAMPT
+ *   PVISC
+
+All bush properties are BushingProperty and Property objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
@@ -11,7 +20,7 @@ class CardMethods(object):
     def _make_lines_pack(self, debug=False):
         if not self.linesPack:
             return ['']
-        
+
         emptyLines = 0
         while (len(self.linesPack[-1]) < self.nCardLinesMax) and emptyLines != 500:
             line = self.infilesPack[-1].readline().split('$')[0].rstrip('\n\r\t ')
@@ -102,7 +111,6 @@ class CardMethods(object):
             #print "line = ",self.lines[i]
             self.doneReading = True
             #raise
-        ###
         #print "i = ",i
 
         #try:
@@ -116,7 +124,7 @@ class CardMethods(object):
         upperCard = [line.upper() for line in tempcard]
         cardName = self._get_card_name(upperCard)
         #print "|%s|" %(cardName)
-        #if cardName=='CTRIA3':
+
         if debug:
         #if 1:
             self.log.debug("cardName  = |%s|" % (cardName))
@@ -148,11 +156,11 @@ class CardMethods(object):
         #    iline = self.lines[i].rstrip()
 
         sCardName = iline[0:8].rstrip()  # trying to find if it's blank...
-        isNotDone = len(iline) > 0 and (iline.rstrip()[0] in ['*', '+', ',','\t']
+        isNotDone = len(iline) > 0 and (iline.rstrip()[0] in ['*', '+', ',', '\t']
                                         or sCardName == ''
                                         or not sCardName[0].isalpha())
 
-    #debug = True
+        #debug = True
         if debug:
             print("_get_multi_line_card...i=%s" % (i))
             print("tempcard1 = %s" % (tempcard))
@@ -197,7 +205,7 @@ class CardMethods(object):
             #if '\t' in slot0:
             #    slot0 = slot0.expandtabs()
             #sCardName = slot0.strip()  # trying to find if it's blank...
-            isNotDone = len(iline) > 0 and (iline.rstrip()[0] in ['*', '+', ',','\t']
+            isNotDone = len(iline) > 0 and (iline.rstrip()[0] in ['*', '+', ',', '\t']
                                             or sCardName == ''
                                             or not sCardName[0].isalpha())
             if debug:
@@ -208,7 +216,7 @@ class CardMethods(object):
                 self.log.debug("  iline[0]   = %-10s -> line[0] in [*,+,','] = %s" % ('|' + iline[0] + '|', iline.strip()[0] in ['*', '+', ',']))
                 self.log.debug("  sCardName  = %-10s -> name=''              = %s" % ('|' + sCardName + '|', sCardName == ''))
                 self.log.debug("  isNotDone B = %s" % isNotDone)
-        ###
+
         #if debug:
         #self.log.debug("tempcard2 = |%s|" %(tempcard))
             #print ""
@@ -216,15 +224,6 @@ class CardMethods(object):
             print("done...i=%s" % (i))
             print("")
         return (i, tempcard)
-
-    def isLargeField(self, card):
-        """returns True if the card is in 16-character width fields"""
-        starField = ['*' in field for field in card]
-        #print "starField = ",starField
-
-        if any(starField):
-            return True
-        return False
 
     def process_card(self, tempcard, debug=False):
         """
@@ -248,8 +247,9 @@ class CardMethods(object):
                 break
             if debug:
                 self.log.debug("  line2 = |%r|" % (sline))
-
-            if ',' in sline:  # CSV - doesnt support large field CSV cards which I'd never used...
+            
+            ## TODO: doesnt support large field CSV cards which I'd never used
+            if ',' in sline:
                 try:
                     sline = parse_csv(sline)
                 except:
@@ -281,11 +281,10 @@ class CardMethods(object):
                         self.log.error("card = |%r|" % (card))
                         raise
                     card.append(value)
-                    #print "fieldCounter=%s valueIn=%s value=%s type=%s" %(fieldCounter,valueIn,value,type(value))
-                ###
-            ###
+                    print("fieldCounter=%s valueIn=%s value=%s type=%s"
+                          % (fieldCounter,valueIn,value,type(value)))
             #print "cardEnd temp = ",card
-        ###
+
         #print "cardOut&& = ",card
         #if debug:
             #self.log.debug("  sline2 = %s" %(card))
@@ -363,9 +362,9 @@ class CardMethods(object):
 
         #print "valueIn = |%s|" %(valueIn)
         if ' ' in valueIn:
-            msg = ('there are embedded blanks in the field (mixed tabs/commas/spaces).\n'
-                   'valueRaw=|%s| valueIn=|%s| card=%s' % (valueRaw, valueIn,
-                                                           card))
+            msg = ('there are embedded blanks in the field (mixed '
+                   'tabs/commas/spaces).\nvalueRaw=|%s| valueIn=|%s| card=%s'
+                   % (valueRaw, valueIn, card))
             raise SyntaxError(msg)
 
         if '=' in valueIn or '(' in valueIn or '*' in valueRaw:
@@ -376,7 +375,8 @@ class CardMethods(object):
         # int, float, string, exponent
         valuePositive = valueIn.strip('+-')
         if debug:
-            print("isDigit = %s" % (valuePositive.isdigit()))
+            print("valuePositive=|%r| isDigit=%s" % (valuePositive,
+                                                     valuePositive.isdigit()))
         if valuePositive.isdigit():
             if debug:
                 print("INT!")
@@ -456,6 +456,14 @@ class CardMethods(object):
             print("SCIENTIFIC!")
         return value
 
+    def isLargeField(self, card):
+        """returns True if the card is in 16-character width fields"""
+        star_fields = ['*' in field for field in card]
+
+        if any(star_fields):
+            return True
+        return False
+
 
 def parse_csv(sline):
     slineA = sline.split(',')[:9]
@@ -489,23 +497,27 @@ def make_single_streamed_card(log, card, debug=False):
         n += 1
     #print "cardOut = ",cardOut
     return cardOut
-    #return collapse(cardOut)
 
 
-def nastran_split(log, line, isLargeField, debug=False):
+def nastran_split(log, line, is_large_field, debug=False):
     """
     Splits a single BDF line into large field or small field format
-    @param self the object pointer
-    @param line the BDF line
-    @param a flag indicating small/large field format (True/False)
-    @param debug extra developer debug
-    @retval fields the 9 (small) or 5 (large) fields for the line
+    @param line
+      the BDF line
+    @param is_large_field
+      a flag indicating small/large field format (True/False)
+    @param
+      debug extra developer debug
+
+    @retval fields
+      the 9 (small) or 5 (large) fields for the line
+
     @note CSV Format is handled by parse_csv
     @note tabs are handled prior to running this
     """
     if debug:
-        print("isLargeField = %s" % (isLargeField))
-    if isLargeField:
+        print("is_large_field = %s" % (is_large_field))
+    if is_large_field:
         fields = [line[0:8], line[8:24], line[24:40], line[40:56], line[56:72]]
     else:  # small field
         fields = [line[0:8], line[8:16], line[16:24], line[24:32],
@@ -598,7 +610,8 @@ def interpretValue(valueRaw, card='', debug=False):
     elif v0 == '+' or v0.isdigit():
         vFactor = 1.
     else:
-        msg = 'the only 2 cases for a float/scientific are +/- for v0...valueRaw=|%s| v0=|%s| card=%s' % (valueRaw, v0, card)
+        msg = ('the only 2 cases for a float/scientific are +/- for v0...'
+               'valueRaw=|%s| v0=|%s| card=%s' % (valueRaw, v0, card))
         raise SyntaxError(msg)
 
     vm = valueIn.find(
@@ -611,7 +624,10 @@ def interpretValue(valueRaw, card='', debug=False):
         sline = valueLeft.split('+')
         expFactor = 1.
     else:
-        msg = 'thought this was in scientific notation, but i cant find the exponent sign...valueRaw=|%s| valueLeft=|%s| card=%s\nYou also might have mixed tabs/spaces/commas.' % (valueRaw, valueLeft, card)
+        msg = ("I thought this was in scientific notation, but i can't find "
+               "the exponent sign...valueRaw=|%s| valueLeft=|%s| "
+               "card=%s\nYou also might have mixed tabs/spaces/commas."
+               % (valueRaw, valueLeft, card))
         raise SyntaxError(msg)
 
     try:
@@ -619,7 +635,9 @@ def interpretValue(valueRaw, card='', debug=False):
         s1 = expFactor * int(sline[1])
     except ValueError:
         msg = "vm=%s vp=%s valueRaw=|%s| sline=%s" % (vm, vp, valueRaw, sline)
-        raise SyntaxError('cannot parse sline[0] into a float and sline[1] into an integer\n%s\nYou HAVE mixed tabs/spaces/commas!  Fix it!' % (msg))
+        raise SyntaxError('cannot parse sline[0] into a float and sline[1] '
+                          'into an integer\n%s\nYou HAVE mixed '
+                          'tabs/spaces/commas!  Fix it!' % msg)
 
     value = s0 * 10 ** (s1)
     #print "valueOut = |%s|" %value
@@ -649,7 +667,6 @@ def stringParser(stringIn):
         else:
             msg = "s=|%r|" % (s)
             raise SyntaxError(msg)
-        ###
 
         #print "s=%s stringIn[i-1]=%s" % (state,typeCheck[i-1])
         #print "i=%s s=%s typeCheck=%s" % (i,s,typeCheck)
@@ -661,8 +678,7 @@ def stringParser(stringIn):
             n += 1
         elif state in 'e .+':  # double e, space, dot, plus
             return 'string'
-        ###
-    ###
+
     if typeCheck == ' ':
         return None
 

@@ -1,4 +1,4 @@
-# pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302
+# pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
@@ -28,7 +28,7 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         r"""
         Returns the length of the element
         \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
-        @param self the object pointer
+        @param self the CROD/CONROD/CTUBE element
         """
         L = norm(self.nodes[1].Position() - self.nodes[0].Position())
         return L
@@ -379,13 +379,11 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
 
         #M[2,4] =  -sL
         #M[1,1] = M[3,3] = fLL
-
         return kMag * K
 
 
 class CROD(RodElement):
     type = 'CROD'
-
     def __init__(self, card=None, data=None):
         RodElement.__init__(self, card, data)
         if card:
@@ -591,7 +589,6 @@ class CBAR(LineElement):
             #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
 
             main = data[0]
-
             flag = data[1][0]
             if flag in [0, 1]:
                 self.g0 = None
@@ -750,20 +747,21 @@ class CBAR(LineElement):
         print("K[%s] = \n%s\n" % (self.eid, K))
         #print("Fg[%s] = %s\n" %(self.eid,Fg))
 
-        nodes = self.nodeIDs()
+        n0, n1 = self.nodeIDs()
                  # u1          v1          theta1         u2,v2,w2
+                 
         nIJV = [
-                 (nodes[0],1),(nodes[0],2),(nodes[0],5),  (nodes[1],1),(nodes[1],2),(nodes[1],5),  # X1
-                 (nodes[0],1),(nodes[0],2),(nodes[0],5),  (nodes[1],1),(nodes[1],2),(nodes[1],5),  # Y1
-                 (nodes[0],1),(nodes[0],2),(nodes[0],5),  (nodes[1],1),(nodes[1],2),(nodes[1],5),  # M1
+                 (n0,1),(n0,2),(n0,5),  (n1,1),(n1,2),(n1,5),  # X1
+                 (n0,1),(n0,2),(n0,5),  (n1,1),(n1,2),(n1,5),  # Y1
+                 (n0,1),(n0,2),(n0,5),  (n1,1),(n1,2),(n1,5),  # M1
 
-                 (nodes[0],1),(nodes[0],2),(nodes[0],5),  (nodes[1],1),(nodes[1],2),(nodes[1],5),  # X2
-                 (nodes[0],1),(nodes[0],2),(nodes[0],5),  (nodes[1],1),(nodes[1],2),(nodes[1],5),  # Y2
-                 (nodes[0],1),(nodes[0],2),(nodes[0],5),  (nodes[1],1),(nodes[1],2),(nodes[1],5),  # M2
+                 (n0,1),(n0,2),(n0,5),  (n1,1),(n1,2),(n1,5),  # X2
+                 (n0,1),(n0,2),(n0,5),  (n1,1),(n1,2),(n1,5),  # Y2
+                 (n0,1),(n0,2),(n0,5),  (n1,1),(n1,2),(n1,5),  # M2
                 ]
         #print("nIJV = ",nIJV)
-        nGrav = [(nodes[0], 1), (nodes[0], 2), (nodes[0], 3),
-                 (nodes[1], 1), (nodes[1], 2), (nodes[1], 3)]
+        nGrav = [(n0, 1), (n0, 2), (n0, 3),
+                 (n1, 1), (n1, 2), (n1, 3)]
 
         return(K, nIJV, Fg, nGrav)
 

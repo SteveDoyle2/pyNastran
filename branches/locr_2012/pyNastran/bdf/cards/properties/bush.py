@@ -1,4 +1,13 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,C0111
+"""
+All bush properties are defined in this file.  This includes:
+ *   PBUSH
+ *   PBUSH1D
+ *   PBUSH2D (not implemented)
+ *   PBUSHT (not implemented)
+
+All bush properties are BushingProperty and Property objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
@@ -240,8 +249,10 @@ class PBUSH1D(BushingProperty):
         self.vars.append('GENER')
 
     def _shockFields(self):
-        fields = ['SHOCKA', self.shockType, self.shockCVT, self.shockCVC, self.shockExpVT, self.shockExpVC, self.shockIDTS,
-                  None, None, self.shockIDETS, self.shockIDECS, self.shockIDETSD, self.shockIDECSD]
+        fields = ['SHOCKA', self.shockType, self.shockCVT, self.shockCVC,
+                  self.shockExpVT, self.shockExpVC, self.shockIDTS, None, None,
+                  self.shockIDETS, self.shockIDECS, self.shockIDETSD,
+                  self.shockIDECSD]
         return fields
 
     def _springFields(self):
@@ -260,8 +271,8 @@ class PBUSH1D(BushingProperty):
         return fields
 
     def rawFields(self):
-        fields = ['PBUSH1D', self.pid, self.k, self.c, self.m,
-                  None, self.sa, self.se, None]
+        fields = ['PBUSH1D', self.pid, self.k, self.c, self.m, None, self.sa,
+                  self.se, None]
         for var in self.vars:
             if var == 'SHOCKA':
                 fields += self._shockFields()
@@ -272,8 +283,8 @@ class PBUSH1D(BushingProperty):
             elif var == 'GENER':
                 fields += self._generFields()
             else:
-                raise RuntimeError('var=%s not supported PBUSH1D field...' %
-                                   (var))
+                msg = 'var=%s not supported PBUSH1D field...' % var
+                raise RuntimeError(msg)
             nSpaces = 8 - (len(fields) - 1) % 8
 
             if nSpaces < 8:

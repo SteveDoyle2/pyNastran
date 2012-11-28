@@ -53,9 +53,10 @@ class GetMethods(object):
         """
         Returns a series of node objects given a list of node IDs
         """
-        #print "nids",nids
+        #print("nids",nids)
         nodes = []
         for nid in nids:
+            #print("nid = %s" %(nid))
             nodes.append(self.Node(nid, allowEmptyNodes))
         return nodes
 

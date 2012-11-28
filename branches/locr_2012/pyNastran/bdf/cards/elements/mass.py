@@ -1,4 +1,15 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
+"""
+All mass elements are defined in this file.  This includes:
+ * CMASS1
+ * CMASS2
+ * CMASS3
+ * CMASS4
+ * CONM1
+ * CONM2
+
+All mass elements are PointMassElement and Element objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import zeros, array

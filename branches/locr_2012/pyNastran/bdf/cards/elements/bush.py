@@ -1,4 +1,12 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
+"""
+All bush elements are defined in this file.  This includes:
+ * CBUSH
+ * CBUSH1D
+ * CBUSH2D
+
+All bush elements are BushElement and Element objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
@@ -38,7 +46,6 @@ class BushElement(Element):
 
 class CBUSH(BushElement):
     type = 'CBUSH'
-
     def __init__(self, card=None, data=None):
         BushElement.__init__(self, card, data)
 
@@ -137,7 +144,6 @@ class CBUSH(BushElement):
 
 class CBUSH1D(BushElement):
     type = 'CBUSH1D'
-
     def __init__(self, card=None, data=None):
         BushElement.__init__(self, card, data)
         if card:
@@ -177,7 +183,6 @@ class CBUSH2D(BushElement):
     Defines the connectivity of a two-dimensional Linear-Nonlinear element.
     """
     type = 'CBUSH2D'
-
     def __init__(self, card=None, data=None):
         BushElement.__init__(self, card, data)
         if card:
@@ -188,8 +193,8 @@ class CBUSH2D(BushElement):
             self.plane = card.field(6, 'XY')
             self.sptid = card.field(7)
             if self.plane not in ['XY', 'YZ', 'ZX']:
-                msg = 'plane not in required list, plane=|%s|\n' % (self.plane)
-                msg += "expected planes = ['XY','YZ','ZX']"
+                msg = ("plane not in required list, plane=|%s|\n" 
+                       "expected planes = ['XY','YZ','ZX']" % self.plane)
                 raise RuntimeError(msg)
         else:
             self.eid = data[0]
@@ -200,8 +205,8 @@ class CBUSH2D(BushElement):
 
     def rawFields(self):
         nodeIDs = self.nodeIDs()
-        fields = ['CBUSH1D', self.eid, self.Pid(), nodeIDs[0],
-                  nodeIDs[0], self.Cid(), self.plane, self.sptid]
+        fields = ['CBUSH1D', self.eid, self.Pid(), nodeIDs[0], nodeIDs[1],
+                  self.Cid(), self.plane, self.sptid]
         return fields
 
     def cross_reference(self, model):

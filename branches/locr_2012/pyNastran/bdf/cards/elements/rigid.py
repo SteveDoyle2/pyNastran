@@ -1,4 +1,14 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
+"""
+All rigid elements are defined in this file.  This includes:
+ * RBAR
+ * RBAR1
+ * RBE1
+ * RBE2
+ * RBE3
+
+All rigid elements are RigidElement and Element objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys

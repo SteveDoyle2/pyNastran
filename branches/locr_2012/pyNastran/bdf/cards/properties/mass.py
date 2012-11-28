@@ -1,4 +1,11 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,C0111
+"""
+All mass properties are defined in this file.  This includes:
+ * NSM
+ * PMASS
+
+All mass properties are PointProperty and Property objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
@@ -7,7 +14,6 @@ from pyNastran.bdf.cards.baseCard import Property
 
 class PointProperty(Property):
     type = 'PointProperty'
-
     def __init__(self, card, data):
         Property.__init__(self, card, data)
 
@@ -24,7 +30,6 @@ class NSM(PointProperty):
     validProperties = [
         'PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
         'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PCONEAX', 'PRAC2D']
-
     def __init__(self, card=None, nOffset=0, data=None):
         PointProperty.__init__(self, card, data)
         if card:

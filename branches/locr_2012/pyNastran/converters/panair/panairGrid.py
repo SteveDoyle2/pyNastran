@@ -173,7 +173,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         $symmetry - xz plane of symmetry
         =misymm   mjsymm
         1.        0.
-		@endcode
+        @endcode
 
         @warning
             doesnt consider antisymmetryic

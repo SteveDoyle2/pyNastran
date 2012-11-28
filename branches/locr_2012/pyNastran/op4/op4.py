@@ -28,7 +28,7 @@ class OP4(FortranFile):
         be read.  The resulting output is a dictionary of matrices that are
         accessed by their name.
 
-		@code
+        @code
         from pyNastran.op4.op4 import OP4
         op4 = OP4()
         #alternative way to get all the matrices
@@ -45,7 +45,7 @@ class OP4(FortranFile):
         # or because you only want A
         matrices = op4.readOP4(op4Name,matrixNames='A')
         (formA,A) = matrices['A']
-		@endcode
+        @endcode
 
         @param op4Name an OP4 filename.  Type=STRING.
         @param matrixNames list of matrix names (or None); Type=LIST OF STRINGS / NONE.

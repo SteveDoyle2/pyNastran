@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
@@ -22,7 +22,6 @@ class QBDY1(ThermalLoad):
     Defines a uniform heat flux into CHBDYj elements.
     """
     type = 'QBDY1'
-
     def __init__(self, card=None, data=None):
         ThermalLoad.__init__(self, card, data)
 
@@ -34,7 +33,7 @@ class QBDY1(ThermalLoad):
             self.qFlux = card.field(2)
             eids = card.fields(3)
             ## CHBDYj element identification numbers (Integer)
-            self.eids = expand_thru(eids)  ## @warning should this use expand_thru_by ???
+            self.eids = expand_thru(eids)  ## TODO should this use expand_thru_by ???
         else:
             self.sid = data[0]
             self.qFlux = data[1]
@@ -52,8 +51,8 @@ class QBDY1(ThermalLoad):
         return len(self.qFlux)
 
     def rawFields(self):
-        fields = ['QBDY1', self.sid, self.qFlux] + list(
-            self.eids) + [self.qFlux]
+        fields = (['QBDY1', self.sid, self.qFlux] + list(self.eids) +
+                  [self.qFlux])
         return fields
 
     def reprFields(self):
@@ -67,7 +66,6 @@ class QBDY2(ThermalLoad):  # not tested
     Defines a uniform heat flux load for a boundary surface.
     """
     type = 'QBDY2'
-
     def __init__(self, card=None, data=None):
         ThermalLoad.__init__(self, card, data)
 
@@ -76,7 +74,8 @@ class QBDY2(ThermalLoad):  # not tested
             self.sid = card.field(1)
             ## Identification number of an CHBDYj element. (Integer > 0)
             self.eid = card.field(2)
-            ## Heat flux at the i-th grid point on the referenced CHBDYj element. (Real or blank)
+            ## Heat flux at the i-th grid point on the referenced CHBDYj
+            ## element. (Real or blank)
             self.qFlux = self.removeTrailingNones(card.fields(3))
         else:
             self.sid = data[0]
@@ -107,7 +106,6 @@ class QBDY3(ThermalLoad):
     Defines a uniform heat flux load for a boundary surface.
     """
     type = 'QBDY3'
-
     def __init__(self, card=None, data=None):
         ThermalLoad.__init__(self, card, data)
 
@@ -161,7 +159,6 @@ class QHBDY(ThermalLoad):
     Defines a uniform heat flux into a set of grid points.
     """
     type = 'QHBDY'
-
     def __init__(self, card=None, data=None):
         ThermalLoad.__init__(self, card, data)
 
@@ -170,17 +167,19 @@ class QHBDY(ThermalLoad):
             self.sid = card.field(1)
 
             self.flag = card.field(2)
-            assert self.flag in ['POINT', 'LINE', 'REV',
-                                 'AREA3', 'AREA4', 'AREA6', 'AREA8']
+            assert self.flag in ['POINT', 'LINE', 'REV', 'AREA3', 'AREA4',
+                                 'AREA6', 'AREA8']
 
-            ## Magnitude of thermal flux into face. Q0 is positive for heat into the surface. (Real)
+            ## Magnitude of thermal flux into face. Q0 is positive for heat
+            ## into the surface. (Real)
             self.Q0 = card.field(3)
 
             ## Area factor depends on type. (Real > 0.0 or blank)
             self.af = card.field(4)
             self.grids = card.fields(5)
 
-            ## Grid point identification of connected grid points. (Integer > 0 or blank)
+            ## Grid point identification of connected grid points.
+            ## (Integer > 0 or blank)
             self.grids = expand_thru_by(self.grids)
         else:
             self.sid = data[0]
@@ -206,7 +205,6 @@ class TEMP(ThermalLoad):
     temperature-dependent material properties, or stress recovery.
     """
     type = 'TEMP'
-
     def __init__(self, card=None, data=None):
         ThermalLoad.__init__(self, card, data)
 
@@ -218,7 +216,8 @@ class TEMP(ThermalLoad):
             nFields = len(fields)
             assert nFields % 2 == 0
 
-            ## dictionary of temperatures where the key is the grid ID (Gi) and the value is the temperature (Ti)
+            ## dictionary of temperatures where the key is the grid ID (Gi)
+            ## and the value is the temperature (Ti)
             self.temperatures = {}
             for i in xrange(0, nFields, 2):
                 self.temperatures[fields[i]] = fields[i + 1]
@@ -257,11 +256,10 @@ class TEMP(ThermalLoad):
 
 class TEMPD(ThermalLoadDefault):
     """
-    Defines a temperature value for all grid points of the structural model that have not
-    been given a temperature on a TEMP entry
+    Defines a temperature value for all grid points of the structural model
+    that have not been given a temperature on a TEMP entry
     """
     type = 'TEMPD'
-
     def __init__(self, card=None, data=None):
         ThermalLoadDefault.__init__(self, card, data)
         if card:
@@ -269,7 +267,8 @@ class TEMPD(ThermalLoadDefault):
             nFields = len(fields)
             assert nFields % 2 == 0
 
-            ## dictionary of temperatures where the key is the set ID (SIDi) and the value is the temperature (Ti)
+            ## dictionary of temperatures where the key is the set ID (SIDi)
+            ## and the value is the temperature (Ti)
             self.temperatures = {}
             for i in xrange(0, nFields, 2):
                 self.temperatures[fields[i]] = fields[i + 1]

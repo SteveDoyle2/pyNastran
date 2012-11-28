@@ -1,4 +1,20 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+"""
+All shell elements are defined in this file.  This includes:
+ * CTRIA3
+ * CTRIA6
+ * CTRIAX
+ * CTRIAX6
+ * CSHEAR
+ * CQUAD
+ * CQUAD4
+ * CQUAD8
+ * CQUADR
+ * CQUADX
+
+All tris are TriShell, ShellElement, and Element objects.
+All quads are QuadShell, ShellElement, and Element objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys

@@ -193,7 +193,7 @@ class PanairPatch(object):
     def getEdge(self, edgeNumber):
         """
         gets all the points associated with a given edge
-		@code
+        @code
                 edge1
               0  1  2   -> i (row)
         edge4 3  4  5

@@ -1,4 +1,15 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
+"""
+All damper elements are defined in this file.  This includes:
+ * CDAMP1
+ * CDAMP2
+ * CDAMP3
+ * CDAMP4
+ * CDAMP5
+ * CVISC
+
+All damper elements are DamperElement and Element objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
@@ -17,33 +28,6 @@ class LineDamper(DamperElement):
     def cross_reference(self, mesh):
         self.nodes = mesh.Nodes(self.nodes)
         self.pid = mesh.Property(self.pid)
-
-
-class CVISC(LineDamper):
-    type = 'CVISC'
-    def __init__(self, card=None, data=None):
-        LineDamper.__init__(self, card, data)
-        if card:
-            self.eid = int(card.field(1))
-            self.pid = int(card.field(2, self.eid))
-            nids = card.fields(3, 5)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:4]
-
-        self.prepareNodeIDs(nids)
-        assert len(self.nodes) == 2
-
-    def B(self):
-        return self.pid.ce
-
-    def rawFields(self):
-        fields = ['CVISC', self.eid, self.Pid()] + self.nodeIDs()
-        return fields
-
-    def reprFields(self):
-        return self.rawFields()
 
 
 class CDAMP1(LineDamper):
@@ -90,8 +74,8 @@ class CDAMP1(LineDamper):
 
     def rawFields(self):
         nodes = self.nodeIDs(allowEmptyNodes=True)
-        fields = ['CDAMP1', self.eid, self.Pid(), nodes[0],
-                  self.c1, nodes[1], self.c2]
+        fields = ['CDAMP1', self.eid, self.Pid(), nodes[0], self.c1,
+                  nodes[1], self.c2]
         return fields
 
 
@@ -221,3 +205,30 @@ class CDAMP5(LineDamper):
         nodes = self.nodeIDs(allowEmptyNodes=True)
         fields = ['CDAMP5', self.eid, self.Pid(), nodes[0], nodes[1]]
         return fields
+
+
+class CVISC(LineDamper):
+    type = 'CVISC'
+    def __init__(self, card=None, data=None):
+        LineDamper.__init__(self, card, data)
+        if card:
+            self.eid = int(card.field(1))
+            self.pid = int(card.field(2, self.eid))
+            nids = card.fields(3, 5)
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids = data[2:4]
+
+        self.prepareNodeIDs(nids)
+        assert len(self.nodes) == 2
+
+    def B(self):
+        return self.pid.ce
+
+    def rawFields(self):
+        fields = ['CVISC', self.eid, self.Pid()] + self.nodeIDs()
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()

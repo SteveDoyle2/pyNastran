@@ -18,7 +18,7 @@ class RealElementsStressStrain(object):
                        self.tableName))
         print(self.codeInformation())
         print("**************skipping**************")
-        asdf
+        #asdf
         self.handleResultsBuffer3(self.dummyPass, None, debug=True)
 
     def dummyPass(self):
@@ -66,7 +66,9 @@ class RealElementsStressStrain(object):
             (eid, sideID, hbdyID, cnvCoeff, fApplied, fConv,
                 fRad, fTotal) = out
             eid = extract(eid, dt)
-            #print "eid=%s sideID=%s hbdyID=%s coeff=%s fApplied=%s fConv=%s fRad=%s fTotal=%s" % (eid,sideID,hbdyID,cnvCoeff,fApplied,fConv,fRad,fTotal)
+            #print('eid=%s sideID=%s hbdyID=%s coeff=%s fApplied=%s fConv=%s '
+            #      'fRad=%s fTotal=%s' % (eid,sideID,hbdyID,cnvCoeff,fApplied,
+            #                             fConv,fRad,fTotal))
             #self.obj.addNewEid(eid,axial,axialMS,torsion,torsionMS)
 
             #print "eid=%i axial=%i torsion=%i" % (eid,axial,torsion)

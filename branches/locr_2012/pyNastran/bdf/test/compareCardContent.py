@@ -24,10 +24,10 @@ def assert_fields(card1, card2):
 
     for (i, field1, field2) in izip(count(), fields1, fields2):
         value1a = print_field(field1)
-        value2b = print_field(field2)
-        if value1a != value2b:
+        value2a = print_field(field2)
+        if value1a != value2a:
             value1 = print_field(interpretValue(value1a))
-            value2 = print_field(interpretValue(value2b))
+            value2 = print_field(interpretValue(value2a))
 
             if value1 != value2:
                 msg = 'value1 != value2\n'

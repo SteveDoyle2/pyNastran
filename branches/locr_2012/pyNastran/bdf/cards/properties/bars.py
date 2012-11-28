@@ -1,6 +1,5 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,C0111
 """
-
 All beam properties are defined in this file.  This includes:
  *   PBEAM
  *   PBEAML
@@ -60,7 +59,6 @@ def getInertiaRectangular(sections):
     @retval interiaParameters
         list of [Area,Iyy,Izz,Iyz]
     @see http://www.webs1.uidaho.edu/mindworks/Machine_Design/Posters/PDF/Moment%20of%20Inertia.pdf
-    
     """
     As = []
     Ax = 0.
@@ -1308,7 +1306,9 @@ class PBEAML(IntegratedLineProperty):
                     #print "*2",
                     #print "dim = ",Dim
                     if isinstance(dim, unicode):
-                        raise RuntimeError('nsm is a string...nsm=|%s|; fields=%s' % (dim, card.fields()))
+                        msg = ('nsm is a string...nsm=|%s|; fields=%s'
+                               % (dim, card.fields()))
+                        raise RuntimeError(msg)
                     self.nsm.append(dim)
                     if n > 0:
                         so = card.field(i + 1, 'YES')
@@ -1364,8 +1364,10 @@ class PBEAML(IntegratedLineProperty):
 
     def cross_reference(self, model):
         """
-        @warning For structural problems, PBEAML entries must reference a MAT1 material entry
-        @warning For heat-transfer problems, the MID must reference a MAT4 or MAT5 material entry.
+        @warning For structural problems, PBEAML entries must reference a MAT1
+         material entry
+        @warning For heat-transfer problems, the MID must reference a MAT4 or
+         MAT5 material entry.
         @note what happens when there are 2 subcases?
         """
         self.mid = model.Material(self.mid)
@@ -1424,11 +1426,12 @@ class PBEAML(IntegratedLineProperty):
         return (msg + msg2, iCut, iFace, iStart)
 
     def rawFields(self):
-        fields = ['PBEAML', self.pid, self.Mid(), self.group,
-            self.Type, None, None, None, None]
+        fields = ['PBEAML', self.pid, self.Mid(), self.group, self.Type, None,
+                  None, None, None]
         #print "self.nsm = ",self.nsm
         #print "xxb=%s so=%s dim=%s nsm=%s" %(self.xxb,self.so,self.dim,self.nsm)
-        for (i, xxb, so, dim, nsm) in izip(count(), self.xxb, self.so, self.dim, self.nsm):
+        for (i, xxb, so, dim, nsm) in izip(count(), self.xxb, self.so,
+                                           self.dim, self.nsm):
             if i == 0:
                 fields += dim + [nsm]
             else:
@@ -1467,7 +1470,6 @@ class PBEAM3(LineProperty):  # not done, cleanup
             self.dz = card.field(14)
             self.fy = card.field(15)
             self.fz = card.field(16)
-
             # more...
         else:
             raise NotImplementedError('not implemented...')
@@ -1552,8 +1554,8 @@ class PBEND(LineProperty):
             self.nsm = card.field(19)
             ## Radial offset of the geometric centroid from points GA and GB
             self.rc = card.field(20)
-            ## Offset of the geometric centroid in a direction perpendicular to the
-            ## plane of points GA and GB and vector v
+            ## Offset of the geometric centroid in a direction perpendicular
+            ## to the plane of points GA and GB and vector v
             self.zc = card.field(21)
         else:
             raise NotImplementedError('PBEND')
@@ -1570,8 +1572,9 @@ class PBEND(LineProperty):
         fields = ['PBEND', self.pid, self.Mid(), ]  # other
         if self.beamType == 1:
             fields += [self.A, self.i1, self.i2, self.j, self.rb, self.thetab,
-                       self.c1, self.c2, self.d1, self.d2, self.e1, self.e2, self.f1, self.f2,
-                       self.k1, self.k2, self.nsm, self.rc, self.zc, self.deltaN]
+                       self.c1, self.c2, self.d1, self.d2, self.e1, self.e2,
+                       self.f1, self.f2, self.k1, self.k2, self.nsm, self.rc,
+                       self.zc, self.deltaN]
         elif self.beamType == 2:
             fields += [self.fsi, self.rm, self.t, self.p, self.rb, self.thetab,
                        None, None, self.nsm, self.rc, self.zc]

@@ -1,8 +1,15 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+"""
+All spring properties are defined in this file.  This includes:
+ * PELAS
+ * PELAST
+
+All spring properties are SpringProperty and Property objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-import sys
+#simport sys
 #from numpy import zeros,pi
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -11,7 +18,6 @@ from pyNastran.bdf.cards.baseCard import Property
 
 class SpringProperty(Property):
     type = 'SpringProperty'
-
     def __init__(self, card, data):
         Property.__init__(self, card, data)
         pass
@@ -19,7 +25,6 @@ class SpringProperty(Property):
 
 class PELAS(SpringProperty):
     type = 'PELAS'
-
     def __init__(self, card=None, nPELAS=0, data=None):
         SpringProperty.__init__(self, card, data)
         nOffset = nPELAS * 5
@@ -41,7 +46,9 @@ class PELAS(SpringProperty):
 
     def writeCodeAster(self):
         """
-        @todo check if there are 1 (DISCRET=>K_T_D_N) or 2 (DISCRET_2D=>K_T_D_L) nodes
+        @todo
+          check if there are 1 (DISCRET    => K_T_D_N) or
+                             2 (DISCRET_2D => K_T_D_L) nodes
         """
         nodes = self.nodeIDs()
         msg = ''
@@ -89,11 +96,12 @@ class PELAST(SpringProperty):
     """
     type = 'PELAST'
 
-    def __init__(self, card=None, nPELAS=0, data=None):
+    def __init__(self, card=None, data=None):
         SpringProperty.__init__(self, card, data)
         self.pid = card.field(1)
-        ## Identification number of a TABLEDi entry that defines the force per unit
-        ## displacement vs. frequency relationship. (Integer > 0; Default = 0)
+        ## Identification number of a TABLEDi entry that defines the
+        ## force per unit displacement vs. frequency relationship.
+        ## (Integer > 0; Default = 0)
         self.tkid = card.field(2, 0)
         ## Identification number of a TABLEDi entry that defines the
         ## nondimensional structural damping coefficient vs. frequency

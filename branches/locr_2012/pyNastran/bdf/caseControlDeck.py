@@ -1,4 +1,7 @@
 # pylint: disable=R0904,R0902,C0103
+"""
+CaseControlDeck parsing and extraction class
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
@@ -10,6 +13,9 @@ from pyNastran.utils.log import get_logger
 
 
 class CaseControlDeck(object):
+    """
+    CaseControlDeck parsing and extraction class
+    """
     nlines_max = 10000
     def __init__(self, lines, log=None):
         """
@@ -46,6 +52,14 @@ class CaseControlDeck(object):
             return self.subcases[isubcase].has_parameter(param_name.upper())
 
     def get_subcase_parameter(self, isubcase, param_name):
+        """
+        Get the [value, options] of a subcase's parameter.  For example, for
+        STRESS(PLOT,POST)=ALL, param_name=STRESS, value=ALL, options=['PLOT',
+        'POST']
+        @param self the CaseControl object
+        @param isubcase the subcase ID to check
+        @param param_name the parameter name to get the [value, options] for
+        """
         if self.has_subcase(isubcase):
             return self.subcases[isubcase].get_parameter(param_name.upper())
         raise RuntimeError('isubcase=%s does not exist...' % isubcase)
@@ -169,8 +183,6 @@ class CaseControlDeck(object):
         i = 0
         while i < len(lines):
             line = lines[i]
-            #print "rawLine = |%s|" %(line)
-            #self.log.debug("rawLine = |%r|" %(line))
 
             lines2 = [line]
             while ',' in lines[i][-1]:
@@ -183,16 +195,16 @@ class CaseControlDeck(object):
                     raise RuntimeError(msg)
             (j, key, value, options, paramType) = self._parse_entry(lines2)
             i += 1
-            #print ""
-            #print "key=|%s| value=|%s| options=|%s| paramType=%s" %(key,value, options,paramType)
+            #print("")
+            #print("key=|%s| value=|%s| options=|%s| paramType=%s" %(key, value,
+            #                                                        options,
+            #                                                          paramType))
             iSubcase = self._add_parameter_to_subcase(key, value, options,
                                                       paramType, iSubcase)
-            #print "--------------"
             if i == self.nlines_max:
                 msg = 'too many lines in Case Control Deck < %i...' %(
                     self.nlines_max)
                 raise RuntimeError(msg)
-        #print "done with while loop...\n"
 
         #print str(self)
         self.finish_subcases()
@@ -363,9 +375,7 @@ class CaseControlDeck(object):
             value = line
             options = None
             param_type = 'KEY-type'
-
         i += 1
-        #print "done with ",key
         return (i, key, value, options, param_type)
 
     def finish_subcases(self):
@@ -456,14 +466,14 @@ class CaseControlDeck(object):
 
 
 if __name__ == '__main__':
-    test1()
     lines = [
         'SUBCASE 1',
         '    ACCELERATION(PLOT,PRINT,PHASE) = ALL',
         '    DISPLACEMENT(PLOT,PRINT,PHASE) = ALL',
         '    DLOAD = 32',
         '    M2GG = 111',
-        '    SET 88  = 5, 6, 7, 8, 9, 10 THRU 55 EXCEPT 15, 16, 77, 78, 79, 100 THRU 300',
+        '    SET 88  = 5, 6, 7, 8, 9, 10 THRU 55 EXCEPT 15, 16, 77, 78, 79, '
+        '100 THRU 300',
         '    SET 99  = 1 THRU 10',
         '    SET 105 = 1.009, 10.2, 13.4, 14.0, 15.0',
         '    SET 111 = MAAX1,MAAX2',

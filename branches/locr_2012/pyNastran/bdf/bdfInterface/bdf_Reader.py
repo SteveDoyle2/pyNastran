@@ -33,7 +33,7 @@ class BDFReader(object):
         This method is used in order to support INCLUDE files.
         """
         #print self.isOpened
-        if self.isOpened[infileName] == False:
+        if self.isOpened[infileName] is False:
             self._active_filenames.append(infileName)
             #self.log.info("*openFile bdf=|%s|  pwd=|%s|" %(infileName,
             #                                               os.getcwd()))

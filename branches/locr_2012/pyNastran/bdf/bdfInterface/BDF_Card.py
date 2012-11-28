@@ -30,7 +30,8 @@ class BDFCard(object):
 
     def _wipeEmptyFields(self, card):
         """
-        Removes an trailing Nones from the card.  Also converts empty strings to None.
+        Removes an trailing Nones from the card.  Also converts empty strings
+        to None.
         @param self the object pointer
         @param card the fields on the card as a list
         @retval shortCard the card with no trailing blank fields
@@ -71,8 +72,10 @@ class BDFCard(object):
         gets multiple fields on the card
         @param self the object pointer
         @param i the ith field on the card (following list notation)
-        @param j the jth field on the card (None means till the end of the card)
-        @param defaults the default value for the field (as a list) len(defaults)=i-j-1
+        @param j the jth field on the card (None means till the end of the
+         card)
+        @param defaults the default value for the field (as a list)
+         len(defaults)=i-j-1
         @param debug prints out the values at intermediate steps
         @retval the values on the ith-jth fields
         """
@@ -107,8 +110,8 @@ class BDFCard(object):
         @param default the default value for the field
         @retval the value on the ith field
         """
-        if (i < self.nfields and self.card[i] is not None
-            and self.card[i] is not ''):
+        if(i < self.nfields and self.card[i] is not None and
+           self.card[i] is not ''):
             return self.card[i]
         else:
             return default

@@ -1,4 +1,13 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
+"""
+All ungrouped elements are defined in this file.  This includes:
+ * CFAST
+ * CGAP
+ * CRAC2D
+ * CRAC3D
+
+All ungrouped elements are Element objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys

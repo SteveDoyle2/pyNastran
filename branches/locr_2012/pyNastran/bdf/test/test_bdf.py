@@ -63,11 +63,10 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         except:
             traceback.print_exc(file=sys.stdout)
             #raise
-        ###
         print('-' * 80)
         if not isPassed:
             failedFiles.append(absFilename)
-    ###
+
     print('*' * 80)
     try:
         print("diffCards1 = %s" % (list(set(diffCards))))
@@ -75,7 +74,6 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         #print "type(diffCards) =",type(diffCards)
         print("diffCards2 = %s" % (diffCards))
     return failedFiles
-###
 
 
 def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, cid=None,
@@ -112,7 +110,7 @@ def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, cid=None,
         #print msg
         print("-" * 80)
         raise
-    ###
+
     print("-" * 80)
     return (fem1, fem2, diffCards)
 
@@ -223,7 +221,6 @@ def compute_ints(cards1, cards2, fem1):
                                                        value2) + factorMsg  # +'\n'
         msg = msg.rstrip()
         print(msg)
-    ###
     return listKeys1 + listKeys2
 
 
@@ -342,14 +339,10 @@ def get_element_stats(fem1, fem2):
                 #    print("e.type = ",e.type)
                 #except:
                 #    print(str(e))
-                ###
-            ###
         except:
             print("*stats - e.type=%s eid=%s  element=\n%s"
                 % (e.type, e.eid, str(e)))
             raise
-        ###
-    ###
 
 
 def get_matrix_stats(fem1, fem2):
@@ -364,7 +357,6 @@ def get_matrix_stats(fem1, fem2):
             print("*stats - matrix.type=%s name=%s  matrix=\n%s"
                 % (dmig.type, dmig.name, str(dmig)))
             raise
-        ###
 
 
 def compare(fem1, fem2, xref=True, check=True):

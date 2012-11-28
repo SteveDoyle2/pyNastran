@@ -68,8 +68,7 @@ def parseSetType(i, line, lines, key, value):
                 i += 1
                 break
             i += 1
-        ###
-    ###
+
     #print "len(fivalues) = ",len(fivalues)
     value = fivalues
 
@@ -157,7 +156,6 @@ def _parseEntry(lines):
                 value = parseSetSline(sline)
             else:
                 value = interpretValue(value)
-        ###
     ### = in line
     elif lineUpper.startswith('BEGIN'):  # begin bulk
         try:
@@ -171,7 +169,6 @@ def _parseEntry(lines):
         if len(sline) != 3:
             raise SyntaxError("Param Parse: trying to parse |%s|..." % (line))
         (key, value, options) = sline
-        ###
         paramType = 'CSV-type'
     elif ' ' not in line:
         key = line.strip()
@@ -186,7 +183,6 @@ def _parseEntry(lines):
         value = line
         options = None
         paramType = 'KEY-type'
-    ###
     i += 1
     #print "done with ",key
     return (i, key, value, options, paramType)

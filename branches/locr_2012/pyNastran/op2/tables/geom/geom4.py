@@ -243,7 +243,7 @@ class Geometry4(object):
         n = 0
         nEntries = len(data) // 8  # 2*4
         for i in xrange(nEntries):
-            self.add_suport(SUPORT(None, list(unpack(b'ii', data[n:n + 8]))))
+            self.add_suport(SUPORT(None, list(unpack(b'ii', data[n:n + 8])))) # extracts [sid, c]
             n += 8
         data = data[n:]
 

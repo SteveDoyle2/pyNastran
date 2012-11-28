@@ -1,8 +1,11 @@
 # pylint: disable=C0103,C0302,R0902,R0904,R0914,W0201,W0611
+"""
+Main BDF class
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
-import sys
+#import sys
 import warnings
 
 from pyNastran.utils import list_print
@@ -545,7 +548,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ## defines the MAT4, MAT5, MATT4, etc. @todo verify MATT4
         self.thermalMaterials = {}
 
-        #self.thermalProperties    = {}
         ## stores PHBDY
         self.phbdys = {}
         ## stores convection properties - PCONV, PCONVM ???
@@ -651,6 +653,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
     def updateSolution(self, sol, method=None):
         """
         @see update_solution
+        @warning will be removed after v0.7 in favor of update_solution
         """
         warnings.warn('updateSolution has been deprecated; use '
                       'update_solution', DeprecationWarning, stacklevel=2)
@@ -684,24 +687,25 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
     def setDynamicSyntax(self, dictOfVars):
         """
         @see set_dynamic_syntax
+        @warning will be removed after v0.7 in favor of set_dynamic_syntax
         """
         warnings.warn('setDynamicSyntax has been deprecated; use '
                       'set_dynamic_syntax', DeprecationWarning, stacklevel=2)
         self.set_dynamic_syntax(dictOfVars)
 
-    def set_dynamic_syntax(self, dictOfVars):
+    def set_dynamic_syntax(self, dict_of_vars):
         """
         uses the OpenMDAO syntax of %varName in an embedded BDF to
         update the values for an optimization study.
         Variables should be 7 characters to fit in an 8-character field.
         %varName
-        dictOfVars = {'varName': 10}
+        dict_of_vars = {'varName': 10}
         """
-        self.dictOfVars = {}
-        for (key, value) in sorted(dictOfVars.iteritems()):
+        self.dict_of_vars = {}
+        for (key, value) in sorted(dict_of_vars.iteritems()):
             assert len(key) <= 7, ('max length for key is 7; '
                                    'len(%s)=%s' % (key, len(key)))
-            self.dictOfVars[key.upper()] = value
+            self.dict_of_vars[key.upper()] = value
 
         self._is_dynamic_syntax = True
 
@@ -837,12 +841,9 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
     def _is_reject(self, cardName):
         """Can the card be read"""
-        #cardName = self._get_card_name(card)
         if cardName.startswith('='):
             return False
         elif cardName in self.cardsToRead:
-            #print "*card = ",card
-            #print "RcardName = |%s|" %(cardName)
             return False
         if cardName:
             if cardName not in self.rejectCount:
@@ -897,7 +898,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         while len(self._active_filenames) > 0:  # keep going until finished
             ## gets the cardLines
             (rawCard, card, cardName) = self._get_card(debug=False)
-            #print "outcard = ",card
+            print("outcard = ", card)
 
             if cardName == 'INCLUDE':
                 #print "rawCard = ",rawCard
@@ -974,6 +975,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
     def addCard(self, card, cardName, iCard=0, oldCardObj=None):
         """
         @see add_card
+        @warning will be removed after v0.7 in favor of add_card
         """
         warnings.warn('addCard has been deprecated; use add_card',
                       DeprecationWarning, stacklevel=2)
@@ -1048,7 +1050,8 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                               'PBAR', 'PBARL', 'PBEAM', 'PBCOMP', 'PBEAML',
                               'PROD', 'PTUBE', 'PLSOLID', 'PBUSH1D', 'PBUSH',
                               'PFAST', 'PDAMP5', 'PGAP', 'PRAC2D', 'PRAC3D'],
-             'add_creep_material': ['CREEP'], # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
+             # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
+             'add_creep_material': ['CREEP'],
              'add_material': ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10',
                               'MATHP'],
              'add_thermal_material': ['MAT4', 'MAT5'],
@@ -1096,7 +1099,8 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                     CHEXA20), 'CPENTA': (9, CPENTA6, CPENTA15)}
             if card_name in _dct:
                 d = _dct[card_name]
-                self.add_element((d[1] if card_obj.nFields() == d[0] else d[2])(card_obj))
+                self.add_element((d[1] if card_obj.nFields() == d[0]
+                                       else d[2])(card_obj))
                 return card_obj
 
             _dct = {'PELAS': (5,), 'PVISC': (5,), 'PDAMP': (3, 5)}
@@ -1155,13 +1159,13 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 ## @warning cards with = signs in them
                 ## are not announced when they are rejected
                 if '=' not in card[0]:
-                    self.log.info('rejecting processed %s' % (card))
+                    self.log.info('rejecting processed %s' % card)
                 self.reject_cards.append(card)
         except Exception as e:
             print(str(e))
             self.log.debug("card_name = |%r|" % (card_name))
-            self.log.debug("failed! Unreduced Card=%s\n" % (list_print(card)))
-            self.log.debug("filename = %s\n" % (self.bdf_filename))
+            self.log.debug("failed! Unreduced Card=%s\n" % list_print(card) )
+            self.log.debug("filename = %s\n" % self.bdf_filename)
             raise
 
         return card_obj

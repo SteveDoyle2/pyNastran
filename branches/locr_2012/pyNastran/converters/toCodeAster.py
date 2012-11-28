@@ -6,7 +6,6 @@ class CodeAsterConverter(BDF):
     """
     Converts a BDF to Code Aster (comm/mail/py files).
     How:
-    
      * Nodes/Coordinate Systems/Elements/Properties/Materials are
        directly extracted from the BDF.  All objects must reference
        each other properly.

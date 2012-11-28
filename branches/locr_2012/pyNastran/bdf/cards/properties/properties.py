@@ -1,4 +1,16 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,C0111
+"""
+All ungrouped properties are defined in this file.  This includes:
+ * PFAST
+ * PGAP
+ * PLSOLID
+ * PSOLID
+ * PRAC2D
+ * PRAC3D
+ * PCONEAX (not done)
+
+All mass properties are PointProperty and Property objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
@@ -44,8 +56,9 @@ class PFAST(Property):
         return self.mass
 
     def rawFields(self):
-        fields = ['PFAST', self.pid, self.d, self.Mcid(), self.mflag, self.kt1, self.kt2, self.kt3, self.kr1,
-                          self.kr2, self.kr3, self.mass, self.ge]
+        fields = ['PFAST', self.pid, self.d, self.Mcid(), self.mflag, self.kt1,
+                  self.kt2, self.kt3, self.kr1, self.kr2, self.kr3, self.mass,
+                  self.ge]
         return fields
 
     def reprFields(self):
@@ -57,8 +70,8 @@ class PFAST(Property):
 
         mass = set_blank_if_default(self.mass, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
-        fields = ['PFAST', self.pid, self.d, mcid, mflag, self.kt1, self.kt2, self.kt3, kr1,
-                          kr2, kr3, mass, ge]
+        fields = ['PFAST', self.pid, self.d, mcid, mflag, self.kt1, self.kt2,
+                  self.kt3, kr1, kr2, kr3, mass, ge]
         return fields
 
 
@@ -108,8 +121,8 @@ class PGAP(Property):
         pass
 
     def rawFields(self):
-        fields = ['PGAP', self.pid, self.u0, self.f0, self.ka, self.kb, self.kt, self.mu1, self.mu2,
-                  self.tmax, self.mar, self.trmin]
+        fields = ['PGAP', self.pid, self.u0, self.f0, self.ka, self.kb,
+                  self.kt, self.mu1, self.mu2, self.tmax, self.mar, self.trmin]
         return fields
 
     def reprFields(self):
@@ -136,18 +149,17 @@ class SolidProperty(Property):
         Property.__init__(self, card, data)
 
     def Rho(self):
-        self.mid.rho
+        return self.mid.rho
 
 
 class PLSOLID(SolidProperty):
     """
-    Defines a fully nonlinear (i.e., large strain and large rotation) hyperelastic solid
-    element.
+    Defines a fully nonlinear (i.e., large strain and large rotation)
+    hyperelastic solid element.
     PLSOLID PID MID STR
     PLSOLID 20 21
     """
     type = 'PLSOLID'
-
     def __init__(self, card=None, data=None):
         SolidProperty.__init__(self, card, data)
         if card:
@@ -162,7 +174,9 @@ class PLSOLID(SolidProperty):
             self.mid = data[1]
             self.ge = data[2]
             self.str = data[3]
-        assert self.str in ['GRID', 'GAUS'], 'STR=|%s| doesnt have a valid stress/strain output value set\n' % (self.str)
+        if self.str not in ['GRID', 'GAUS']:
+            raise RuntimeError('STR=|%s| doesnt have a valid stress/strain '
+                               'output value set\n' % self.str)
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
@@ -212,15 +226,15 @@ class PSOLID(SolidProperty):
         return msg
 
     def rawFields(self):
-        fields = ['PSOLID', self.pid, self.Mid(), self.cordm,
-                  self.integ, self.stress, self.isop, self.fctn]
+        fields = ['PSOLID', self.pid, self.Mid(), self.cordm, self.integ,
+                  self.stress, self.isop, self.fctn]
         return fields
 
     def reprFields(self):
         cordm = set_blank_if_default(self.cordm, 0)
         fctn = set_blank_if_default(self.fctn, 'SMECH')
-        fields = ['PSOLID', self.pid, self.Mid(), cordm,
-                  self.integ, self.stress, self.isop, fctn]
+        fields = ['PSOLID', self.pid, self.Mid(), cordm, self.integ,
+                  self.stress, self.isop, fctn]
         return fields
 
 
@@ -237,11 +251,10 @@ class CrackProperty(Property):
 class PRAC2D(CrackProperty):
     """
     CRAC2D Element Property
-    Defines the properties and stress evaluation techniques to be used with the CRAC2D
-    structural element.
+    Defines the properties and stress evaluation techniques to be used with
+    the CRAC2D structural element.
     """
     type = 'PRAC2D'
-
     def __init__(self, card=None, data=None):
         CrackProperty.__init__(self, card, data)
         if card:
@@ -250,16 +263,20 @@ class PRAC2D(CrackProperty):
             ## Material ID
             self.mid = card.field(2)
             self.thick = card.field(3)
-            ## Plane strain or plane stress option. Use 0 for plane strain; 1 for plane
-            ## stress. (Integer = 0 or 1)
+            ## Plane strain or plane stress option.
+            ## Use 0 for plane strain; 1 for plane stress. (Integer = 0 or 1)
             self.iPlane = card.field(4)
-            assert self.iPlane in [0, 1], 'Invalid value for iPlane on PRAC2D, can only be 0,1 iPlane=|%s|' % (self.iPlane)
+            if self.iPlane not in [0, 1]:
+                raise RuntimeError('Invalid value for iPlane on PRAC2D, can '
+                                   'only be 0,1 iPlane=|%s|' % self.iPlane)
             ## Non-structural mass per unit area.(Real >= 0.0; Default = 0)
             self.nsm = card.field(5, 0.)
-            ## Exponent used in the displacement field. See Remark 4. (Real; Default = 0.5)
+            ## Exponent used in the displacement field. See Remark 4.
+            ## (Real; Default = 0.5)
             self.gamma = card.field(6, 0.5)
-            ## Angle (in degrees) relative to the element x-axis along which stress
-            ## intensity factors are to be calculated. See Remark 4. (Real; Default = 180.0)
+            ## Angle (in degrees) relative to the element x-axis along which
+            ## stress intensity factors are to be calculated. See Remark 4.
+            ## (Real; Default = 180.0)
             self.phi = card.field(7, 180.)
 
         else:
@@ -288,7 +305,6 @@ class PRAC3D(CrackProperty):
     Defines the properties of the CRAC3D structural element.
     """
     type = 'PRAC3D'
-
     def __init__(self, card=None, data=None):
         CrackProperty.__init__(self, card, data)
         if card:
@@ -323,7 +339,6 @@ class PRAC3D(CrackProperty):
 
 class PCONEAX(Property):  # not done
     type = 'PCONEAX'
-
     def __init__(self, card=None, data=None):
         Property.__init__(self, card, data)
         if card:
@@ -344,4 +359,3 @@ class PCONEAX(Property):  # not done
         fields = ['PCONEAX', self.pid, self.Mid(), self.group, self.Type]
         raise NotImplementedError('not supported')
         return fields
-

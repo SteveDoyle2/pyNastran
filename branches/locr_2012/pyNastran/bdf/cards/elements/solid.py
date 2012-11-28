@@ -1,4 +1,15 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+"""
+All solid elements are defined in this file.  This includes:
+ * CHEXA8
+ * CHEXA20
+ * CPENTA6
+ * CPENTA15
+ * CTETRA4
+ * CTETRA10
+
+All solid elements are SolidElement and Element objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import dot, cross, array, matrix, zeros
