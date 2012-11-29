@@ -153,7 +153,7 @@ class Coord(BaseCard):
           (pc-e1)*m+e1 = pG
 
         @note
-          be very careful of when you apply e1.  It gets removed whenever
+          Be very careful of when you apply e1.  It gets removed whenever
           rotations are applied.  These equations need some TLC, but the
           methods are ok.
         """
@@ -166,7 +166,6 @@ class Coord(BaseCard):
             print("pLocal = %s\n" % (pLocal))
             print("pCoord = %s" % (pCoord))
         return pLocal
-        #return pGlobal
 
     def normalize(self, v):
         """
@@ -302,7 +301,7 @@ class SphericalCoord(object):
 class Cord2x(Coord):
     def __init__(self, card, data):
         """
-        defines the CORD2x class
+        Defines the CORD2x class
         @param self the coordinate system object
         @param card a BDFCard object
         @param data a list analogous to the card
@@ -491,7 +490,6 @@ class Cord1x(Coord):
 
     def __init__(self, card, nCoord, data):
         Coord.__init__(self, card, data)
-
         self.isResolved = False
         if nCoord is not None:
             assert nCoord == 0 or nCoord == 1, 'nCoord=|%s|' % (nCoord)
@@ -525,7 +523,7 @@ class Cord1x(Coord):
 
     def to_CORD2x(self, model):
         """
-        converts a coordinate system from a CORD1x to a CORD2x
+        Converts a coordinate system from a CORD1x to a CORD2x
         @param self the coordinate system object
         @param model a BDF model
         """
@@ -576,7 +574,7 @@ class Cord1x(Coord):
 
     def resolveCid(self):
         """
-        finds the position of the nodes used define the coordinate system
+        Finds the position of the nodes used define the coordinate system
         and sets the ijk vectors
         @param self the coordinate system object
         """
@@ -605,8 +603,8 @@ class Cord1x(Coord):
 
     def NodeIDs(self):
         """
-        returns [g1,g2,g3]
-        @param self  the coordinate system object
+        Returns [g1,g2,g3]
+        @param self the coordinate system object
         """
         grids = [self.G1(), self.G2(), self.G3()]
         return grids
@@ -719,13 +717,10 @@ class CORD1R(Cord1x, RectangularCoord):
     def __init__(self, card=None, nCoord=0, data=None):
         """
         Intilizes the CORD1R
-        @param self
-          the CORD1R coordinate system object
-        @param nCoord
-          the coordinate location on the line (there are possibly 2 coordinates
-          on 1 card)
-        @param card
-          a list version of the fields (1 CORD1R only)
+        @param self the CORD1R coordinate system object
+        @param nCoord the coordinate location on the line
+         (there are possibly 2 coordinates on 1 card)
+        @param card a list version of the fields (1 CORD1R only)
         """
         Cord1x.__init__(self, card, nCoord, data)
 
@@ -743,16 +738,11 @@ class CORD1C(Cord1x, CylindricalCoord):
     def __init__(self, card=None, nCoord=0, data=None):
         """
         Intilizes the CORD1R
-        @param self
-          the CORD1C coordinate system object
-        @param card
-          a BDFCard object
-        @param nCoord
-          the coordinate location on the line (there are possibly 2 coordinates
-          on 1 card)
-        @param data
-          a list version of the fields (1 CORD1R only)
-
+        @param self the CORD1C coordinate system object
+        @param card a BDFCard object
+        @param nCoord the coordinate location on the line
+         (there are possibly 2 coordinates on 1 card)
+        @param data a list version of the fields (1 CORD1R only)
         """
         Cord1x.__init__(self, card, nCoord, data)
 
@@ -762,22 +752,19 @@ class CORD1C(Cord1x, CylindricalCoord):
 
 
 class CORD1S(Cord1x, SphericalCoord):
-    type = 'CORD1S'
     """
     CORD1S CIDA G1A G2A G3A CIDB G1B G2B G3B
     """
+    type = 'CORD1S'
+
     def __init__(self, card=None, nCoord=0, data=None):
         """
         Intilizes the CORD1S
-        @param self
-            the CORD1S coordinate system object
-        @param card
-          a BDFCard object
-        @param nCoord
-          the coordinate location on the line (there are possibly 2 coordinates
-          on 1 card)
-        @param data
-          a list version of the fields (1 CORD1S only)
+        @param self the CORD1S coordinate system object
+        @param card a BDFCard object
+        @param nCoord the coordinate location on the line
+         (there are possibly 2 coordinates on 1 card)
+        @param data a list version of the fields (1 CORD1S only)
         """
         Cord1x.__init__(self, card, nCoord, data)
 
@@ -815,12 +802,9 @@ class CORD2S(Cord2x, SphericalCoord):
     def __init__(self, card=None, data=None):
         """
         Intilizes the CORD2R
-        @param self
-            the CORD2S coordinate system object
-        @param card
-          a BDFCard object
-        @param data
-          a list version of the fields (1 CORD2S only)
+        @param self the CORD2S coordinate system object
+        @param card a BDFCard object
+        @param data a list version of the fields (1 CORD2S only)
         """
         Cord2x.__init__(self, card, data)
 
@@ -837,12 +821,9 @@ class CORD2C(Cord2x, CylindricalCoord):
     def __init__(self, card=None, data=None):
         """
         Intilizes the CORD2C
-        @param self
-            the CORD2C coordinate system object
-        @param card
-          a BDFCard object
-        @param data
-          a list version of the fields (1 CORD2C only)
+        @param self the CORD2C coordinate system object
+        @param card a BDFCard object
+        @param data a list version of the fields (1 CORD2C only)
         """
         Cord2x.__init__(self, card, data)
 

@@ -429,7 +429,8 @@ class SPC(Constraint):
 
     def rawFields(self):
         fields = ['SPC', self.conid]
-        for (gid, constraint, enforced) in izip(self.gids, self.constraints, self.enforced):
+        for (gid, constraint, enforced) in izip(self.gids, self.constraints,
+             self.enforced):
             fields += [gid, constraint, enforced]
         return fields
 
@@ -453,7 +454,8 @@ class SPCD(SPC):
 
     def rawFields(self):
         fields = ['SPCD', self.conid]
-        for (gid, constraint, enforced) in izip(self.gids, self.constraints, self.enforced):
+        for (gid, constraint, enforced) in izip(self.gids, self.constraints,
+             self.enforced):
             fields += [gid, constraint, enforced]
         return fields
 
@@ -565,7 +567,9 @@ class ConstraintADD(Constraint):
                 #outSPCs += str(spcsets.conid)
                 for (key, spcset) in sorted(spcsets.iteritems()):
                     fieldSets.append(spcsets.conid)
-        return self.print_card(fields + list(set(fieldSets))) + outSPCs  # SPCADD
+
+        # SPCADD
+        return self.print_card(fields + list(set(fieldSets))) + outSPCs
 
 
 class SPCADD(ConstraintADD):

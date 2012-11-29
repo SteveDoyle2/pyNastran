@@ -294,5 +294,16 @@ class PBUSH1D(BushingProperty):
     def reprFields(self):
         return self.rawFields()
 
-#class PBUSH2D
-#class PBUSHT
+class PBUSH2D(BushingProperty):
+    type = 'PBUSH2D'
+
+    def __init__(self, card=None, data=None):
+        BushingProperty.__init__(self, card, data)
+        raise NotImplementedError()
+
+class PBUSHT(BushingProperty):
+    type = 'PBUSHT'
+
+    def __init__(self, card=None, data=None):
+        BushingProperty.__init__(self, card, data)
+        raise NotImplementedError()

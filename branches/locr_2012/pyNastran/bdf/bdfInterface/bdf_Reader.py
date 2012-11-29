@@ -5,6 +5,7 @@ import os
 import sys
 from pyNastran.utils.log import get_logger
 
+
 class BDFReader(object):
     def __init__(self, debug, log):
         self.relpath = True

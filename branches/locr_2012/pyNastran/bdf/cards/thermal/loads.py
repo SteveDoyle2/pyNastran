@@ -22,9 +22,9 @@ class QBDY1(ThermalLoad):
     Defines a uniform heat flux into CHBDYj elements.
     """
     type = 'QBDY1'
+
     def __init__(self, card=None, data=None):
         ThermalLoad.__init__(self, card, data)
-
         if card:
             ## Load set identification number. (Integer > 0)
             self.sid = card.field(1)
@@ -66,9 +66,9 @@ class QBDY2(ThermalLoad):  # not tested
     Defines a uniform heat flux load for a boundary surface.
     """
     type = 'QBDY2'
+
     def __init__(self, card=None, data=None):
         ThermalLoad.__init__(self, card, data)
-
         if card:
             ## Load set identification number. (Integer > 0)
             self.sid = card.field(1)
@@ -106,9 +106,9 @@ class QBDY3(ThermalLoad):
     Defines a uniform heat flux load for a boundary surface.
     """
     type = 'QBDY3'
+
     def __init__(self, card=None, data=None):
         ThermalLoad.__init__(self, card, data)
-
         if card:
             ## Load set identification number. (Integer > 0)
             self.sid = card.field(1)
@@ -142,8 +142,8 @@ class QBDY3(ThermalLoad):
     def rawFields(self):
         eids = self.Eids()
         eids.sort()
-        fields = ['QBDY3', self.sid, self.Q0, self.cntrlnd
-                 ] + collapse_thru_by(eids)
+        fields = (['QBDY3', self.sid, self.Q0, self.cntrlnd] +
+                  collapse_thru_by(eids))
         return fields
 
     def reprFields(self):
@@ -159,9 +159,9 @@ class QHBDY(ThermalLoad):
     Defines a uniform heat flux into a set of grid points.
     """
     type = 'QHBDY'
+
     def __init__(self, card=None, data=None):
         ThermalLoad.__init__(self, card, data)
-
         if card:
             ## Load set identification number. (Integer > 0)
             self.sid = card.field(1)
@@ -205,9 +205,9 @@ class TEMP(ThermalLoad):
     temperature-dependent material properties, or stress recovery.
     """
     type = 'TEMP'
+
     def __init__(self, card=None, data=None):
         ThermalLoad.__init__(self, card, data)
-
         if card:
             ## Load set identification number. (Integer > 0)
             self.sid = card.field(1)
@@ -260,6 +260,7 @@ class TEMPD(ThermalLoadDefault):
     that have not been given a temperature on a TEMP entry
     """
     type = 'TEMPD'
+
     def __init__(self, card=None, data=None):
         ThermalLoadDefault.__init__(self, card, data)
         if card:

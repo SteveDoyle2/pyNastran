@@ -17,7 +17,7 @@ All quads are QuadShell, ShellElement, and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
+#import sys
 
 from numpy import array, eye, cross, allclose  # zeros,dot
 from numpy.linalg import det  # inv
@@ -48,12 +48,13 @@ def _triangle_area_centroid_normal(nodes):
     vector = cross(n0 - n1, n0 - n2)
     length = norm(vector)
     normal = vector / length
-    if allclose(norm(normal), 1.) == False:
-        raise RuntimeError('function _triangle_area_centroid_normal, check...'
-                    '\na = {0}\nb = {1}\nnormal = {2}\nlength = {3}\n'.format(
-                    n0 - n1, n0 - n2, normal, length))
+    if not allclose(norm(normal), 1.):
+        msg = ('function _triangle_area_centroid_normal, check...\n'
+               'a = {0}\nb = {1}\nnormal = {2}\nlength = {3}\n'.format(
+               n0 - n1, n0 - n2, normal, length))
+        raise RuntimeError(msg)
+    return (0.5 * length, (n0 + n1 + n2) / 3., normal)
 
-    return (0.5 * length, (n0 + n1 + n2) /3, normal)
 
 def _normal(a, b):
     """Finds the unit normal vector of 2 vectors"""
@@ -62,8 +63,10 @@ def _normal(a, b):
     assert allclose(norm(normal), 1.)
     return normal
 
+
 class ShellElement(Element):
     type = 'ShellElement'
+
     def __init__(self, card, data):
         Element.__init__(self, card, data)
 
@@ -111,14 +114,15 @@ class TriShell(ShellElement):
 
     def AreaCentroidNormal(self):
         """
-        returns area,centroid, normal as it's more efficient to do them together
+        Returns area,centroid, normal as it's more efficient to do them
+        together
         """
         (n0, n1, n2) = self.nodePositions()
         return _triangle_area_centroid_normal([n0, n1, n2])
 
     def Area(self):
         r"""
-        returns the normal vector
+        Returns the normal vector
         \f[ \large A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)  \f]
         """
         (n0, n1, n2) = self.nodePositions()
@@ -138,7 +142,7 @@ class TriShell(ShellElement):
 
     def Centroid(self, debug=False):
         r"""
-        returns the centroid
+        Returns the centroid
         \f[ \large CG = \frac{1}{3} (n_0+n_1+n_2)  \f]
         """
         (n0, n1, n2) = self.nodePositions()
@@ -167,6 +171,7 @@ class CTRIA3(TriShell):
     type = 'CTRIA3'
     asterType = 'TRIA3'
     calculixType = 'S3'
+
     def __init__(self, card=None, data=None):
         TriShell.__init__(self, card, data)
         if card:
@@ -246,7 +251,7 @@ class CTRIA3(TriShell):
         J = array([[nx0, nx1 - nx0, nx2 - nx0],
                    [ny0, ny1 - ny0, ny2 - ny0],
                    [nz0, nz1 - nz0, nz2 - nz0], ])
-        detJ = J.det()
+        #detJ = J.det()
         return J
 
     def getReprDefaults(self):
@@ -260,14 +265,15 @@ class CTRIA3(TriShell):
         return (thetaMcid, zOffset, TFlag, T1, T2, T3)
 
     def rawFields(self):
-        fields = ['CTRIA3', self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid, self.zOffset, None] + [
-            None, self.TFlag, self.T1, self.T2, self.T3]
+        fields = (['CTRIA3', self.eid, self.Pid()] + self.nodeIDs() +
+                  [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
+                   self.T1, self.T2, self.T3])
         return fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
-        fields = [self.type, self.eid, self.Pid()] + self.nodeIDs() + [thetaMcid, zOffset, None] + [
-            None, TFlag, T1, T2, T3]
+        fields = ([self.type, self.eid, self.Pid()] + self.nodeIDs() +
+                  [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
         return fields
 
 
@@ -275,6 +281,7 @@ class CTRIA6(TriShell):
     type = 'CTRIA6'
     asterType = 'TRIA6'
     calculixType = 'S6'
+
     def __init__(self, card=None, data=None):
         TriShell.__init__(self, card, data)
         if card:
@@ -314,14 +321,15 @@ class CTRIA6(TriShell):
 
     def AreaCentroidNormal(self):
         """
-        returns area,centroid, normal as it's more efficient to do them together
+        Returns area,centroid, normal as it's more efficient to do them
+        together
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         return _triangle_area_centroid_normal([n1, n2, n3])
 
     def Area(self):
         r"""
-        returns the normal vector
+        Returns the normal vector
         \f[ \large A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)  \f]
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
@@ -332,7 +340,7 @@ class CTRIA6(TriShell):
 
     def Normal(self):
         r"""
-        returns the normal vector
+        Returns the normal vector
         \f[ \large a = (n_0-n_1) \times (n_0-n_2)  \f]
         \f[ \large n = \frac{n}{norm(N)}           \f]
         """
@@ -341,7 +349,7 @@ class CTRIA6(TriShell):
 
     def Centroid(self, debug=False):
         r"""
-        returns the centroid
+        Returns the centroid
         \f[ \large CG = \frac{1}{3} (n_1+n_2+n_3)  \f]
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
@@ -995,6 +1003,7 @@ class CQUAD(QuadShell):
 class CQUAD8(QuadShell):
     type = 'CQUAD8'
     asterType = 'QUAD8'
+
     def __init__(self, card=None, data=None):
         QuadShell.__init__(self, card, data)
         if card:
@@ -1106,13 +1115,14 @@ class CQUAD8(QuadShell):
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self.getReprDefaults()
         fields = (['CQUAD8', self.eid, self.Pid()] + self.nodeIDs() + [
-                   T1, T2, T3, T4, thetaMcid, zOffset, TFlag])
+            T1, T2, T3, T4, thetaMcid, zOffset, TFlag])
         return fields
 
 
 class CQUADX(QuadShell):
     type = 'CQUADX'
     calculixType = 'CAX8'
+
     def __init__(self, card=None, data=None):
         QuadShell.__init__(self, card, data)
         ## element ID number

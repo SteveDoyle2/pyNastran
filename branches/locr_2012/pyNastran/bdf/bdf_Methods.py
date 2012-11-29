@@ -168,21 +168,21 @@ class BDFMethods(object):
         @see sum_forces
         @warning will be removed after v0.7 in favor of unresolve_grids
         """
-        return self.unresolve_grids(fem_old)
+        return self.unresolve_grids(femOld)
 
     def unresolve_grids(self, fem_old):
         """
         Puts all nodes back to original coordinate system.
         @param self
           the object pointer
-        @param femOld
+        @param fem_old
           the old model that hasnt lost it's connection to the node cids
         @warning
           hasnt been tested well...
         """
         debug = False
-        for (nid, nodeOld) in femOld.nodes.iteritems():
-            coord = femOld.node.cp
+        for (nid, node_old) in fem_old.nodes.iteritems():
+            coord = node_old.cp
             (p, matrix) = coord.transformToGlobal(self.xyz, debug=debug)
             p2 = coord.transformToLocal(p, matrix, debug=debug)
             self.nodes[nid].UpdatePosition(self, p2, coord.cid)

@@ -14,6 +14,7 @@ from pyNastran.bdf.cards.baseCard import Property
 
 class PointProperty(Property):
     type = 'PointProperty'
+
     def __init__(self, card, data):
         Property.__init__(self, card, data)
 
@@ -30,6 +31,7 @@ class NSM(PointProperty):
     validProperties = [
         'PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
         'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PCONEAX', 'PRAC2D']
+
     def __init__(self, card=None, nOffset=0, data=None):
         PointProperty.__init__(self, card, data)
         if card:

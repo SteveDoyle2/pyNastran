@@ -18,6 +18,7 @@ from pyNastran.bdf.cards.baseCard import Property
 
 class SpringProperty(Property):
     type = 'SpringProperty'
+
     def __init__(self, card, data):
         Property.__init__(self, card, data)
         pass
@@ -25,12 +26,13 @@ class SpringProperty(Property):
 
 class PELAS(SpringProperty):
     type = 'PELAS'
+
     def __init__(self, card=None, nPELAS=0, data=None):
         SpringProperty.__init__(self, card, data)
         nOffset = nPELAS * 5
         if card:
             self.pid = card.field(1 + nOffset)  # 2 PELAS properties can be defined on 1 PELAS card
-            self.k   = card.field(2+nOffset) # these are split into 2 separate cards
+            self.k = card.field(2 + nOffset) # these are split into 2 separate cards
             self.ge = card.field(3 + nOffset, 0.)
             self.s = card.field(4 + nOffset, 0.)
         else:

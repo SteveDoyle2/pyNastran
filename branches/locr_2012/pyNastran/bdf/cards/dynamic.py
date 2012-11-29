@@ -1,4 +1,18 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+"""
+All dynamic control cards are defined in this file.  This includes:
+ * FREQ
+ * FREQ1
+ * FREQ2 (not implemented)
+ * FREQ3
+ * FREQ4
+ * FREQ5 (not implemented)
+ * TSTEP
+ * TSTEPNL
+ * NLPARM
+
+All cards are BaseCard objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import log, exp
@@ -16,6 +30,7 @@ class FREQ(BaseCard):
     F8 F9 F10
     """
     type = 'FREQ'
+
     def __init__(self, card=None, data=None):
         self.sid = card.field(1)
         self.freqs = card.fields(2)
@@ -63,6 +78,7 @@ class FREQ1(FREQ):
     @note this card rewrites as a FREQ card
     """
     type = 'FREQ1'
+
     def __init__(self, card=None, data=None):
         self.sid = card.field(1)
         f1 = card.field(2, 0.0)
@@ -84,6 +100,7 @@ class FREQ2(FREQ):
     @note this card rewrites as a FREQ card
     """
     type = 'FREQ2'
+
     def __init__(self, card=None, data=None):
         self.sid = card.field(1)
         f1 = card.field(2, 0.0)
@@ -96,8 +113,11 @@ class FREQ2(FREQ):
             self.freqs.append(f1 * exp(i * d))  # 0 based index
         self.cleanFreqs()
 
-#class FREQ3(FREQ):
+class FREQ3(FREQ):
+    type = 'FREQ3'
 
+    def __init__(self, card=None, data=None):
+        raise NotImplementedError()
 
 class FREQ4(FREQ):
     """
@@ -110,6 +130,7 @@ class FREQ4(FREQ):
     @todo not done...
     """
     type = 'FREQ4'
+
     def __init__(self, card=None, data=None):
         self.sid = card.field(1)
         self.f1 = card.field(2, 0.0)
@@ -125,7 +146,12 @@ class FREQ4(FREQ):
         return self.rawFields()
 
 
-#class FREQ5(FREQ):
+class FREQ5(FREQ):
+    type = 'FREQ5'
+
+    def __init__(self, card=None, data=None):
+        raise NotImplementedError()
+
 
 class TSTEP(BaseCard):
     """
@@ -134,6 +160,7 @@ class TSTEP(BaseCard):
     output in transient analysis.
     """
     type = 'TSTEP'
+
     def __init__(self, card=None, data=None):
         self.sid = card.field(1)
         self.N = []
@@ -166,6 +193,7 @@ class TSTEPNL(BaseCard):
     Parameters for Nonlinear Transient Analysis
     """
     type = 'TSTEPNL'
+
     def __init__(self, card=None, data=None):
         if card:
             self.sid = card.field(1)

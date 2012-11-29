@@ -15,7 +15,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 from itertools import izip, count
-from numpy import zeros, pi, sqrt
+from numpy import zeros, pi
 
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
@@ -216,8 +216,8 @@ class LineProperty(Property):
             ## *-------*          I_{xx}=\frac{bh^3}{12}
             Iyy = 1 / 12. * w1 * h1 ** 3
             ## w1             I_{yy}=\frac{hb^3}{12}
-            Izz = 1 / 12. * h1 * w1 ** 3  
-            Iyz = 0.  ## @todo is the Ixy of a bar 0 ???
+            Izz = 1 / 12. * h1 * w1 ** 3
+            Iyz = 0.  # TODO is the Ixy of a bar 0 ???
 
         else:
             msg = 'Type=%s is not supported for %s class...' % (self.Type,
@@ -592,7 +592,7 @@ class PTUBE(LineProperty):
         #A2 = pi*t*( (D1+D2)/2.-t )
 
         #if A != A2:
-            #msg = 'AREA method has problem in PTUBE Aold=%s != Anew=%s' %(A,A2)
+            #msg = 'AREA method has problem in PTUBE Aold=%s != Anew=%s' %(A, A2)
             #raise RuntimeError(msg)
         return A
 
@@ -638,7 +638,6 @@ class PBAR(LineProperty):
             support solution 600 default
             do a check for mid -> MAT1      for structural
             do a check for mid -> MAT4/MAT5 for thermal
-            
         """
         LineProperty.__init__(self, card, data)
         if card:
@@ -807,7 +806,7 @@ class PBARL(LineProperty):
         "HAT": 4,
         "HAT1": 5,
         "DBOX": 10,  # was 12
-        }  # for GROUP="MSCBML0"
+    }  # for GROUP="MSCBML0"
 
     def __init__(self, card=None, data=None):
         LineProperty.__init__(self, card, data)
@@ -948,32 +947,32 @@ class PBCOMP(LineProperty):
             nrows = nfields // 8
             if nfields % 8 > 0:
                 nrows += 1
-            
+
             for row in xrange(nrows):
-                i = 8*row + 17
+                i = 8 * row + 17
                 yi = card.field(i)
-                zi = card.field(i+1)
-                ci = card.field(i+2, 0.0)
-                mid = card.field(i+3, self.mid)
+                zi = card.field(i + 1)
+                ci = card.field(i + 2, 0.0)
+                mid = card.field(i + 3, self.mid)
                 self.y.append(yi)
                 self.z.append(zi)
                 self.c.append(ci)
                 self.mids.append(mid)
-            
+
     def MassPerLength(self):
-        return self.nsm+self.mid.Rho()*self.A
+        return self.nsm + self.mid.Rho() * self.A
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def rawFields(self):
         fields = ['PBCOMP', self.pid, self.Mid(), self.A, self.i1, self.i2,
-             self.i12, self.j, self.nsm, self.k1, self.k2, self.m1, self.m2,
-             self.n1, self.n2, self.symopt, None]
-        for (yi, zi, ci, mid) in zip(self.y,self.z,self.c,self.mids):
+                  self.i12, self.j, self.nsm, self.k1, self.k2, self.m1,
+                  self.m2, self.n1, self.n2, self.symopt, None]
+        for (yi, zi, ci, mid) in zip(self.y, self.z, self.c, self.mids):
             fields += [yi, zi, ci, mid, None, None, None, None]
         return fields
-                
+
     def reprFields(self):
         area = set_blank_if_default(self.A, 0.0)
         j = set_blank_if_default(self.j, 0.0)
@@ -1150,7 +1149,7 @@ class PBEAM(IntegratedLineProperty):
         msg += "              VALE=(%g,  %g,  %g,  %g),\n" % (a, iy, iz, j)
 
         msg += "              ORIENTATION=_F( \n"
-        msg += "                  CARA=('VECT_Y'), # direction of beam ???\n"  # @todo is this correct
+        msg += "                  CARA=('VECT_Y'), # direction of beam ???\n"  # TODO is this correct
         msg += "                  VALE=(1.0,0.0,0.0,)"
 
         if [self.n1a, self.n1b] != [0., 0.]:
@@ -1167,10 +1166,11 @@ class PBEAM(IntegratedLineProperty):
 
         for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2,
              f1, f2) in izip(self.so, self.xxb, self.A, self.i1, self.i2,
-                             self.i12, self.j, self.nsm, self.c1, self.c2, self.d1, self.d2,
-                             self.e1, self.e2, self.f1, self.f2):
-            fields += [so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
-                       e1, e2, f1, f2]
+                             self.i12, self.j, self.nsm, self.c1, self.c2,
+                             self.d1, self.d2, self.e1, self.e2, self.f1,
+                             self.f2):
+            fields += [so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2,
+                       f1, f2]
 
         footer = [self.k1, self.k2, self.s1, self.s2, self.nsia, self.nsib,
                   self.cwa, self.cwb, self.m1a, self.m2a, self.m1b, self.m2b,
@@ -1182,9 +1182,10 @@ class PBEAM(IntegratedLineProperty):
         fields = ['PBEAM', self.pid, self.Mid()]
 
         i = 0
-        for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2, f1, f2) in izip(
-            self.so, self.xxb, self.A, self.i1, self.i2, self.i12, self.j, self.nsm,
-            self.c1, self.c2, self.d1, self.d2, self.e1, self.e2, self.f1, self.f2):
+        for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2, f1, f2
+            ) in izip(self.so, self.xxb, self.A, self.i1, self.i2, self.i12,
+                      self.j, self.nsm, self.c1, self.c2, self.d1, self.d2,
+                      self.e1, self.e2, self.f1, self.f2):
 
             i1 = set_blank_if_default(i1, 0.0)
             i2 = set_blank_if_default(i2, 0.0)
@@ -1202,13 +1203,12 @@ class PBEAM(IntegratedLineProperty):
             e2 = set_blank_if_default(e2, 0.0)
             f2 = set_blank_if_default(f2, 0.0)
 
-            #print "  i = ",i
             if i == 0:  # the 1st 2 fields aren't written
                 fields += [A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
-                                    e1, e2, f1, f2]
+                           e1, e2, f1, f2]
             else:
                 fields += [so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
-                                    e1, e2, f1, f2]
+                           e1, e2, f1, f2]
             i += 1
         k1 = set_blank_if_default(self.k1, 1.0)
         k2 = set_blank_if_default(self.k2, 1.0)
@@ -1239,7 +1239,8 @@ class PBEAM(IntegratedLineProperty):
         footer = [k1, k2, s1, s2, nsia, nsib, cwa, cwb,
                   m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b]
 
-        #if footer == [self.k1,None,None,None,None,None,None,None,   None,None,None,None,None,None,None,None]:
+        #if footer == [self.k1,None,None,None,None,None,None,None,
+        #              None,None,None,None,None,None,None,None]:
         #    footer = []
         fields += footer
         #print fields
@@ -1270,7 +1271,7 @@ class PBEAML(IntegratedLineProperty):
         "HAT": 4,
         "HAT1": 5,
         "DBOX": 10,  # was 12
-        }  # for GROUP="MSCBML0"
+    }  # for GROUP="MSCBML0"
 
     def __init__(self, card=None, data=None):
         IntegratedLineProperty.__init__(self, card, data)
@@ -1296,7 +1297,9 @@ class PBEAML(IntegratedLineProperty):
             n = 0  # there is no SO or XXB for the first section (n=0)
             i = 9  # the index in the card
             #print "dimAll = ",dimAll,nDim,i
-            for (ii, dim) in enumerate(dimAll):  ## ii is the counter starting from 9
+            
+            # ii is the counter starting from 9
+            for (ii, dim) in enumerate(dimAll):
                 if j < nDim:  # the first block, n=0 ???
                     #print "*1"
                     Dim.append(dim)
@@ -1315,7 +1318,6 @@ class PBEAML(IntegratedLineProperty):
                         xxb = card.field(i + 2, 1.0)
                         self.so.append(so)  # dimAll[i+1]
                         self.xxb.append(xxb)  # dimAll[i+2]
-                    #j =
                     n += 1
                     i += 2
                     #print "Dim = ",Dim
@@ -1428,8 +1430,9 @@ class PBEAML(IntegratedLineProperty):
     def rawFields(self):
         fields = ['PBEAML', self.pid, self.Mid(), self.group, self.Type, None,
                   None, None, None]
-        #print "self.nsm = ",self.nsm
-        #print "xxb=%s so=%s dim=%s nsm=%s" %(self.xxb,self.so,self.dim,self.nsm)
+        #print("self.nsm = ",self.nsm)
+        #print("xxb=%s so=%s dim=%s nsm=%s" %(self.xxb,self.so,
+        #                                     self.dim,self.nsm))
         for (i, xxb, so, dim, nsm) in izip(count(), self.xxb, self.so,
                                            self.dim, self.nsm):
             if i == 0:

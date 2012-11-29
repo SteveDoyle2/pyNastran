@@ -413,6 +413,7 @@ def collapse_thru_by(fields):
     #assert fields == expand_thru_by(fields2)  # why doesn't this work?
     return fields2
 
+
 def collapse_thru_by_float(fields):
     assert 'THRU' not in fields, fields
     fields.sort()
@@ -514,6 +515,7 @@ def build_thru(packs, maxDV=None):
                 for v in xrange(firstVal, lastVal + dv, dv):
                     fields.append(v)
     return fields
+
 
 def build_thru_float(packs, maxDV=None):
     """

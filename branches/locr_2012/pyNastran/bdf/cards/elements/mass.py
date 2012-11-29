@@ -47,6 +47,7 @@ class CMASS1(PointMass):
     CMASS1 EID PID G1 C1 G2 C2
     """
     type = 'CMASS1'
+
     def __init__(self, card=None, data=None):
         PointMass.__init__(self, card, data)
         if card:
@@ -89,6 +90,7 @@ class CMASS2(PointMassElement):
     CMASS2 EID M G1 C1 G2 C2
     """
     type = 'CMASS2'
+
     def __init__(self, card=None, data=None):
         PointMassElement.__init__(self, card, data)
         if card:
@@ -361,9 +363,10 @@ class CONM1(PointMass):
         cid = set_blank_if_default(self.Cid(), 0)
         nid = self.Nid()
         m = self.massMatrix
-        fields = ['CONM1', self.eid, nid, cid, m[0, 0], m[1, 0], m[1, 1], m[2, 0], m[2, 1],
-                  m[2, 2], m[3, 0], m[3, 1], m[3, 2], m[3, 3], m[4, 0], m[4, 1], m[4, 2],
-                  m[4, 3], m[4, 4], m[5, 0], m[5, 1], m[5, 2], m[5, 3], m[5, 4], m[5, 5]]
+        fields = ['CONM1', self.eid, nid, cid, m[0, 0], m[1, 0], m[1, 1],
+                  m[2, 0], m[2, 1], m[2, 2], m[3, 0], m[3, 1], m[3, 2],
+                  m[3, 3], m[4, 0], m[4, 1], m[4, 2], m[4, 3], m[4, 4],
+                  m[5, 0], m[5, 1], m[5, 2], m[5, 3], m[5, 4], m[5, 5]]
         return fields
 
     def reprFields(self):
@@ -376,7 +379,7 @@ class CONM1(PointMass):
         return fields2
 
 
-class CONM2(PointMassElement):  ## @todo not done
+class CONM2(PointMassElement):  # TODO not done
     """
     @param self the CONM2 object
     @param eid element ID
@@ -389,6 +392,7 @@ class CONM2(PointMassElement):  ## @todo not done
     @endcode
     """
     type = 'CONM2'
+
     def __init__(self, card=None, data=None):
         PointMassElement.__init__(self, card, data)
         if card:

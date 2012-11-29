@@ -32,6 +32,7 @@ class LineDamper(DamperElement):
 
 class CDAMP1(LineDamper):
     type = 'CDAMP1'
+
     def __init__(self, card=None, data=None):
         LineDamper.__init__(self, card, data)
 
@@ -51,8 +52,9 @@ class CDAMP1(LineDamper):
             self.c1 = data[3]
             self.c2 = data[5]
 
-        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % (str(self), self.c1)
-        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % (str(self), self.c2)
+        msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
+        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
+        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
 
@@ -81,6 +83,7 @@ class CDAMP1(LineDamper):
 
 class CDAMP2(LineDamper):
     type = 'CDAMP2'
+
     def __init__(self, card=None, data=None):
         LineDamper.__init__(self, card, data)
 
@@ -102,8 +105,9 @@ class CDAMP2(LineDamper):
             self.c1 = data[3]
             self.c2 = data[5]
 
-        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % (str(self), self.c1)
-        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % (str(self), self.c2)
+        msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
+        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
+        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
 
@@ -122,6 +126,7 @@ class CDAMP2(LineDamper):
 
 class CDAMP3(LineDamper):
     type = 'CDAMP3'
+
     def __init__(self, card=None, data=None):
         LineDamper.__init__(self, card, data)
 
@@ -152,6 +157,7 @@ class CDAMP3(LineDamper):
 
 class CDAMP4(LineDamper):
     type = 'CDAMP4'
+
     def __init__(self, card=None, data=None):
         LineDamper.__init__(self, card, data)
 
@@ -182,6 +188,7 @@ class CDAMP4(LineDamper):
 
 class CDAMP5(LineDamper):
     type = 'CDAMP5'
+
     def __init__(self, card=None, data=None):
         LineDamper.__init__(self, card, data)
 
@@ -209,6 +216,7 @@ class CDAMP5(LineDamper):
 
 class CVISC(LineDamper):
     type = 'CVISC'
+
     def __init__(self, card=None, data=None):
         LineDamper.__init__(self, card, data)
         if card:

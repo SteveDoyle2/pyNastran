@@ -241,19 +241,19 @@ class CardMethods(object):
             isLargeField = self.isLargeField(line)
             #print "i = ",i
             if debug:
-                self.log.debug("  line  = |%r|" % (line))
+                self.log.debug("  line  = |%r|" % line)
             sline = line[0:72]
             if not(sline):
                 break
             if debug:
-                self.log.debug("  line2 = |%r|" % (sline))
-            
+                self.log.debug("  line2 = |%r|" % sline)
+
             ## TODO: doesnt support large field CSV cards which I'd never used
             if ',' in sline:
                 try:
                     sline = parse_csv(sline)
                 except:
-                    print("cant parse sline=%s" % (sline))
+                    print("cant parse sline=%s" % sline)
                     raise
                 #print "sline  = ",sline
                 #self.log.debug("sline = %s" %(sline))
@@ -278,11 +278,11 @@ class CardMethods(object):
                     try:
                         value = self.getValue(valueIn, sline, debug=debug)
                     except:
-                        self.log.error("card = |%r|" % (card))
+                        self.log.error("card = |%r|" % card)
                         raise
                     card.append(value)
                     print("fieldCounter=%s valueIn=%s value=%s type=%s"
-                          % (fieldCounter,valueIn,value,type(value)))
+                          % (fieldCounter, valueIn, value, type(value)))
             #print "cardEnd temp = ",card
 
         #print "cardOut&& = ",card
@@ -339,7 +339,7 @@ class CardMethods(object):
         return self.dictOfVars[key]
 
     def getValue(self, valueRaw, card, debug=False):
-        """converts a value from nastran format into python format."""
+        """Converts a value from nastran format into python format."""
         if debug:
             print("v1 = |%s|" % (valueRaw))
         lvalue = valueRaw.lstrip()
@@ -446,7 +446,7 @@ class CardMethods(object):
                    % (vm, vp, valueRaw, sline0, sline1, card))
             msg2 = ('cannot parse sline0 into a float and sline1 into an '
                     'integer\n%s\nYou might have mixed tabs/spaces/commas!  '
-                    'Fix it!' % (msg))
+                    'Fix it!' % msg)
             raise SyntaxError(msg2)
 
         value = s0 * 10 ** (s1)

@@ -51,7 +51,7 @@ def print_scientific_8(value):
     exponent = int(sExponent)  # removes 0s
 
     sign = '-' if abs(value) < 0.01 else '+'
-    
+
     sExp2 = str(exponent).strip('-+')  # the exponent will be added later...
     value2 = float(svalue)
 
@@ -186,6 +186,7 @@ def print_field(value):
         raise RuntimeError(msg)
     return field
 
+
 def print_card(fields, size=8):
     """
     prints a nastran-style card with 8 or 16-character width fields
@@ -201,6 +202,7 @@ def print_card(fields, size=8):
         msg = 'fields = %s\nsize = %s' % (fields, size)
         raise ValueError(msg)
 
+
 def printCard(fields, tol=0.):
     """
     @see print_card
@@ -209,6 +211,7 @@ def printCard(fields, tol=0.):
     warnings.warn('update printCard to print_card', DeprecationWarning,
                   stacklevel=2)
     return print_card_8(fields)
+
 
 def print_card_8(fields):
     """

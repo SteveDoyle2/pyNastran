@@ -13,6 +13,7 @@ from ..baseCard import BaseCard, expand_thru, expand_thru_by
 
 class LOAD(LoadCombination):
     type = 'LOAD'
+
     def __init__(self, card=None, data=None):
         LoadCombination.__init__(self, card, data)
 

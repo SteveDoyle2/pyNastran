@@ -23,6 +23,7 @@ from pyNastran.bdf.cards.baseCard import Property, Material
 
 class ShellProperty(Property):
     type = 'ShellProperty'
+
     def __init__(self, card=None, data=None):
         Property.__init__(self, card, data)
 
@@ -61,14 +62,14 @@ class ShellProperty(Property):
           \end{array} \right]
         \f]
 
-		@code
+        @code
         [Nx] = [            ] [ e_xx0    ]
         [Ny] = [  [A]   [B] ] [ e_yy0    ]
         [Nz] = [            ] [ gamma_xy0]
         [Mx] = [            ] [ k_xx0    ]
         [My] = [  [B]   [D] ] [ k_yy0    ]
         [Mz] = [            ] [ k_xy0    ]
-		@endcode
+        @endcode
 		
         \f[ \large  A_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k  -z_{k-1}   \right) = \Sigma_{k=1}^N (Q_{ij})_k t_k                                                                                    \f]
         \f[ \large  B_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k^2-z_{k-1}^2 \right) = \Sigma_{k=1}^N (Q_{ij})_k                           \left( \overline{z} t_k                      \right)         \f]
@@ -138,7 +139,6 @@ class ShellProperty(Property):
         r"""
         Calculates the stiffness matrix \f$ [Q] \f$ for a lamina
         @todo is this done?
-        
         p. 114 "Introduction to Composite Material Design"
         """
         raise NotImplementedError()
@@ -188,11 +188,11 @@ class ShellProperty(Property):
           \end{array} \right]
         \f]
         
-		@code
+        @code
                  [ m^2  n^2       -2mn]
         [T]^-1 = [ n^2  m^2        2mn]   # inverse transform
                  [ mn   -mn    m^2-n^2]
-		@endcode
+        @endcode
 
         \f[ \large  \left[
             \begin{array}{c}
@@ -240,6 +240,7 @@ class PCOMP(ShellProperty):
     @endcode
     """
     type = 'PCOMP'
+
     def __init__(self, card=None, data=None):  # not done, cleanup
         ShellProperty.__init__(self, card, data)
 
@@ -322,7 +323,7 @@ class PCOMP(ShellProperty):
             self.plies = []
             #ply = [mid,t,theta,sout]
             for (mid, t, theta, sout) in izip(Mid, T, Theta, Sout):
-                if sout == 1:  ## @todo not sure  0=NO,1=YES (most likely)
+                if sout == 1:  # TODO not sure  0=NO,1=YES (most likely)
                     sout = 'YES'
                 elif sout == 0:
                     sout = 'NO'
@@ -486,7 +487,7 @@ class PCOMP(ShellProperty):
                 massPerArea += rho * t
 
             if self.isSymmetrical():
-                return 2. * massPerArea  + self.nsm
+                return 2. * massPerArea + self.nsm
             return massPerArea + self.nsm
         else:
             rho = self.Rho(iPly)
@@ -557,7 +558,10 @@ class PCOMPG(PCOMP):
             while i < len(fields):
                 gPlyID = card.field(9 + i)
                 mid = card.field(9 + i + 1, midLast)
-                thickness = card.field(9 + i + 2, tLast) # can be blank 2nd time thru
+
+                # can be blank 2nd time thru
+                thickness = card.field(9 + i + 2, tLast)
+
                 theta = card.field(9 + i + 3, 0.0)
                 sout = card.field(9 + i + 4, 'NO')
                 #print('n=%s gPlyID=%s mid=%s thickness=%s len=%s' %(
@@ -614,6 +618,7 @@ class PCOMPG(PCOMP):
 
 class PSHEAR(ShellProperty):
     type = 'PSHEAR'
+
     def __init__(self, card=None, data=None):
         """
         Defines the properties of a shear panel (CSHEAR entry).
@@ -659,6 +664,7 @@ class PSHELL(ShellProperty):
     Z1 Z2 MID4
     PSHELL   41111   1      1.0000   1               1               0.02081"""
     type = 'PSHELL'
+
     def __init__(self, card=None, data=None):
         ShellProperty.__init__(self, card, data)
         if card:

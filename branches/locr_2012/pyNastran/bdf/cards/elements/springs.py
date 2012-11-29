@@ -10,7 +10,7 @@ All spring elements are SpringElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
+#import sys
 from numpy import matrix, zeros, dot, transpose
 from numpy.linalg import norm
 

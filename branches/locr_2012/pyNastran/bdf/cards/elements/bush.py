@@ -46,6 +46,7 @@ class BushElement(Element):
 
 class CBUSH(BushElement):
     type = 'CBUSH'
+
     def __init__(self, card=None, data=None):
         BushElement.__init__(self, card, data)
 
@@ -68,7 +69,7 @@ class CBUSH(BushElement):
             else:
                 self.g0 = None
                 self.x = [None, None, None]
-            
+
             ## Element coordinate system identification. A 0 means the basic
             ## coordinate system. If CID is blank, then the element coordinate
             ## system is determined from GO or Xi.
@@ -138,12 +139,13 @@ class CBUSH(BushElement):
         ocid = set_blank_if_default(self.OCid(), -1)
         s = set_blank_if_default(self.s, 0.5)
         fields = (['CBUSH', self.eid, self.Pid(), self.Ga(), self.Gb()] +
-                   x + [self.Cid(), s, ocid] + self.si)
+                  x + [self.Cid(), s, ocid] + self.si)
         return fields
 
 
 class CBUSH1D(BushElement):
     type = 'CBUSH1D'
+
     def __init__(self, card=None, data=None):
         BushElement.__init__(self, card, data)
         if card:
@@ -183,6 +185,7 @@ class CBUSH2D(BushElement):
     Defines the connectivity of a two-dimensional Linear-Nonlinear element.
     """
     type = 'CBUSH2D'
+
     def __init__(self, card=None, data=None):
         BushElement.__init__(self, card, data)
         if card:
@@ -193,7 +196,7 @@ class CBUSH2D(BushElement):
             self.plane = card.field(6, 'XY')
             self.sptid = card.field(7)
             if self.plane not in ['XY', 'YZ', 'ZX']:
-                msg = ("plane not in required list, plane=|%s|\n" 
+                msg = ("plane not in required list, plane=|%s|\n"
                        "expected planes = ['XY','YZ','ZX']" % self.plane)
                 raise RuntimeError(msg)
         else:

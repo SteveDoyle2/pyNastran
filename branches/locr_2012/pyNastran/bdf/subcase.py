@@ -151,7 +151,7 @@ class Subcase(object):
         displacment.  This has an OP2 table code of 1, unless you're running a
         modal solution, in which case it makes an OUGV1 table of eigenvectors
         and has a table code of 7.
-        
+
         @param self the Subcase object
         @param options the options for a parameter
         @param value the value of the parameter
@@ -170,7 +170,6 @@ class Subcase(object):
                  #(144, 'ACCELERATION'): 11,
                   (145, 'ACCELERATION'): 11,
                   (146, 'ACCELERATION'): 11,
-
 
                   (101, 'DISPLACEMENT'): 1,
                   (103, 'DISPLACEMENT'): 7,  # VECTOR
@@ -726,24 +725,24 @@ class Subcase(object):
             msg += self.print_param('BEGIN', self.params['BEGIN'])
         return msg
 
-    def subcase_sorted(self, listA):
+    def subcase_sorted(self, lst):
         """
         Does a "smart" sort on the keys such that SET cards increment in
         numerical order.  Also puts the sets first.
         @param self the Subcase object
-        @param listA the list of subcase list objects
+        @param lst the list of subcase list objects
         @retval listB the sorted version of listA
         """
         # presort the list to put all the SET cards next to each other
         # instead of listA.sort() as it allows lst to be any iterable
-        listA = sorted(listA) 
+        lst = sorted(lst) 
 
         i = 0  # needed in case the loop doesn't execute
         iSet = None  # index of first SET card in the deck
         setDict = {}
         listBefore = []
         setKeys = []
-        for (i, entry) in enumerate(listA):
+        for (i, entry) in enumerate(lst):
             key = entry[0]
             if 'SET' in key[0:3]:
                 if key == 'SET':  # handles "SET = ALL"
@@ -762,7 +761,7 @@ class Subcase(object):
                     break
 
         # grab the other entries
-        listAfter = listA[i + 1:]
+        listAfter = lst[i + 1:]
 
         # write the SET cards in a sorted order
         setList = []
@@ -770,7 +769,7 @@ class Subcase(object):
             setList.append(setDict[key])
 
         # combine all the cards
-        listB =  setList + listBefore + listAfter
+        listB = setList + listBefore + listAfter
         return listB
 
     def __repr__(self):

@@ -17,6 +17,7 @@ from pyNastran.bdf.cards.baseCard import Element
 
 class CFAST(Element):
     type = 'CFAST'
+
     def __init__(self, card=None, data=None):
         Element.__init__(self, card, data)
         self.eid = card.field(1)
@@ -50,6 +51,7 @@ class CFAST(Element):
 
 class CGAP(Element):
     type = 'CGAP'
+
     def __init__(self, card=None, data=None):
         Element.__init__(self, card, data)
         if card:
@@ -126,6 +128,7 @@ class CrackElement(Element):
 
 class CRAC2D(CrackElement):
     type = 'CRAC2D'
+
     def __init__(self, card=None, data=None):
         CrackElement.__init__(self, card, data)
         if card:
@@ -145,6 +148,7 @@ class CRAC2D(CrackElement):
 
 class CRAC3D(CrackElement):
     type = 'CRAC3D'
+
     def __init__(self, card=None, data=None):
         CrackElement.__init__(self, card, data)
         if card:

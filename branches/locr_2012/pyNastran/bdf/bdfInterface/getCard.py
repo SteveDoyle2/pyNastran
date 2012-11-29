@@ -1,7 +1,7 @@
 # pylint: disable=E1101,C0103,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
+#import sys
 
 from pyNastran.bdf.cards.nodes import SPOINT
 
@@ -350,4 +350,3 @@ class GetMethods(object):
     # MATRIX ENTRY CARDS
     def DMIG(self, dname):
         return self.dmig[dname]
-    #--------------------

@@ -1,4 +1,14 @@
 ## pylint: disable=C0103,R0902,R0904,R0914
+"""
+All method cards are defined in this file.  This includes:
+ * EIGB
+ * EIGC
+ * EIGR
+ * EIGP
+ * EIGRL
+
+All cards are Method objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
@@ -362,13 +372,18 @@ class EIGRL(Method):
                 self.values.append(value)
 
             ## Method for normalizing eigenvectors
-            if sol in [103, 115, 146]:  # normal modes,cyclic normal modes, flutter
+            if sol in [103, 115, 146]:
+                # normal modes,cyclic normal modes, flutter
                 self.norm = card.field(8, 'MASS')
-            elif sol in [105, 110, 111, 116]:  # buckling, modal complex eigenvalues,modal frequency response,cyclic buckling
+            elif sol in [105, 110, 111, 116]:
+                # buckling, modal complex eigenvalues,
+                # modal frequency response,cyclic buckling
                 self.norm = card.field(8, 'MAX')
             else:
                 self.norm = card.field(8)
-            #assert self.norm in ['MASS', 'MAX'],'norm=%s sol=%s' %(self.norm,sol)
+            
+            #msg = 'norm=%s sol=%s' % (self.norm, sol)
+            #assert self.norm in ['MASS', 'MAX'],msg
             #assert card.nFields()<9,'card = %s' %(card.fields(0))
         else:
             raise NotImplementedError('EIGRL')
@@ -377,16 +392,16 @@ class EIGRL(Method):
         pass
 
     def rawFields(self):
-        fields = ['EIGRL', self.sid, self.v1, self.v2, self.nd,
-                  self.msglvl, self.maxset, self.shfscl, self.norm]
+        fields = ['EIGRL', self.sid, self.v1, self.v2, self.nd, self.msglvl,
+                  self.maxset, self.shfscl, self.norm]
         for (option, value) in izip(self.options, self.values):
             fields += [option + '=' + str(value)]
         return fields
 
     def reprFields(self):
         msglvl = set_blank_if_default(self.msglvl, 0)
-        fields = ['EIGRL', self.sid, self.v1, self.v2, self.nd,
-                  msglvl, self.maxset, self.shfscl, self.norm]
+        fields = ['EIGRL', self.sid, self.v1, self.v2, self.nd, msglvl,
+                  self.maxset, self.shfscl, self.norm]
         for (option, value) in izip(self.options, self.values):
             fields += [option + '=' + str(value)]
         return fields

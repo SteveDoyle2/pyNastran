@@ -17,6 +17,7 @@ from pyNastran.bdf.cards.baseCard import Property
 
 class DamperProperty(Property):
     type = 'DamperProperty'
+
     def __init__(self, card, data):
         Property.__init__(self, card, data)
         pass
@@ -27,14 +28,18 @@ class DamperProperty(Property):
 
 class PDAMP(DamperProperty):
     type = 'PDAMP'
+
     def __init__(self, card=None, nPDAMP=0, data=None):
         DamperProperty.__init__(self, card, data)
         nOffset = nPDAMP * 2
         if card:
+            # 3 PDAMP properties can be defined on 1 PDAMP card
             ## Property ID
-            self.pid = card.field(1 + nOffset)  # 3 PDAMP properties can be defined on 1 PDAMP card
+            self.pid = card.field(1 + nOffset)
+            
+            # these are split into 2 separate cards
             ## Force per unit velocity (Real)
-            self.b = card.field(2 + nOffset) # these are split into 2 separate cards
+            self.b = card.field(2 + nOffset)
         else:
             self.pid = data[0]
             self.b = data[1]
@@ -49,6 +54,7 @@ class PDAMP(DamperProperty):
 
 class PDAMP5(DamperProperty):
     type = 'PDAMP5'
+
     def __init__(self, card=None, data=None):
         """
         Defines the damping multiplier and references the material properties
@@ -87,6 +93,7 @@ class PDAMP5(DamperProperty):
 
 class PDAMPT(DamperProperty):
     type = 'PDAMPT'
+
     def __init__(self, card=None, data=None):
         DamperProperty.__init__(self, card, data)
         if card:
@@ -119,6 +126,7 @@ class PDAMPT(DamperProperty):
 
 class PVISC(DamperProperty):
     type = 'PVISC'
+
     def __init__(self, card=None, nPVISC=0, data=None):
         if card:
             self.pid = card.field(1 + 4 * nPVISC)

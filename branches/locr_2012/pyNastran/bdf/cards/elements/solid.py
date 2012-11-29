@@ -48,8 +48,6 @@ class SolidElement(Element):
         except AttributeError:
             print("self.pid = %s" % (self.pid))
             print("self.pid.mid = %s" % (str(self.pid.mid)))
-            #print("self.pid = %s" %(self.pid))
-            #print("self.pid = %s" %(self.pid))
             raise
 
     def isSameCard(self, elem, debug=False):
@@ -382,7 +380,7 @@ class CTETRA4(SolidElement):
     def BtEB(self, pz):
         #E = self.Dsolid()
 
-        #o = E*e
+        #o = E * e
         #e = [exx,eyy,ezz,2exy,2eyz,2ezx]
         #C = array([[Bxi*E11+Byi*E14+Bzi*E16, Byi*E12+Bxi*E14+Bzi*E15, Bzi*E13+Byi*E15+Bxi*E16]
         #           [Bxi*E12+Byi*E24+Bzi*E26, Byi*E22+Bxi*E24+Bzi*E25, Bzi*E23+Byi*E25+Bxi*E26]

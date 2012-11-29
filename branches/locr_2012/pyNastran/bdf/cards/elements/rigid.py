@@ -25,6 +25,7 @@ class RigidElement(Element):
 
 class RBAR(RigidElement):
     type = 'RBAR'
+
     def __init__(self, card=None, data=None):
         """
         RBAR EID GA GB CNA    CNB CMA CMB ALPHA
@@ -92,6 +93,7 @@ class RBAR(RigidElement):
 
 class RBAR1(RigidElement):
     type = 'RBAR1'
+
     def __init__(self, card=None, data=None):
         """
         RBAR1 EID GA GB CB  ALPHA
@@ -123,6 +125,7 @@ class RBAR1(RigidElement):
 
 class RBE1(RigidElement):  # maybe not done, needs testing
     type = 'RBE1'
+
     def __init__(self, card=None, data=None):
         RigidElement.__init__(self, card, data)
         self.eid = card.field(1)
@@ -222,6 +225,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
 class RBE2(RigidElement):
     type = 'RBE2'
+
     def __init__(self, card=None, data=None):
         """
         RBE2 EID GN CM GM1 GM2 GM3 GM4 GM5
@@ -244,7 +248,8 @@ class RBE2(RigidElement):
             if len(self.Gmi) > 0 and isinstance(self.Gmi[-1], float):
                 ## Thermal expansion coefficient. See Remark 11.
                 ## (Real > 0.0 or blank)
-                self.alpha = self.Gmi.pop()  # the last field is not part of Gmi
+                self.alpha = self.Gmi.pop()  # the last field is not part of
+                                             # Gmi
             else:
                 self.alpha = 0.0
         else:
@@ -325,6 +330,7 @@ class RBE2(RigidElement):
 
 class RBE3(RigidElement):  # not done, needs testing badly
     type = 'RBE3'
+
     def __init__(self, card=None, data=None):
         """
         eid

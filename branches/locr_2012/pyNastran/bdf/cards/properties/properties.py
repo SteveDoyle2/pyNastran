@@ -160,6 +160,7 @@ class PLSOLID(SolidProperty):
     PLSOLID 20 21
     """
     type = 'PLSOLID'
+
     def __init__(self, card=None, data=None):
         SolidProperty.__init__(self, card, data)
         if card:
@@ -255,6 +256,7 @@ class PRAC2D(CrackProperty):
     the CRAC2D structural element.
     """
     type = 'PRAC2D'
+
     def __init__(self, card=None, data=None):
         CrackProperty.__init__(self, card, data)
         if card:
@@ -305,6 +307,7 @@ class PRAC3D(CrackProperty):
     Defines the properties of the CRAC3D structural element.
     """
     type = 'PRAC3D'
+
     def __init__(self, card=None, data=None):
         CrackProperty.__init__(self, card, data)
         if card:
@@ -339,6 +342,7 @@ class PRAC3D(CrackProperty):
 
 class PCONEAX(Property):  # not done
     type = 'PCONEAX'
+
     def __init__(self, card=None, data=None):
         Property.__init__(self, card, data)
         if card:

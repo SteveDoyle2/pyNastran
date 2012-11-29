@@ -1,4 +1,19 @@
 # pylint: disable=C0103,R0902,R0904,R0914,E1101,W0612,E0602
+"""
+All dynamic control cards are defined in this file.  This includes:
+ * CREEP
+ * MAT1 (isotropic solid/shell)
+ * MAT2 (anisotropic)
+ * MAT3 (linear orthotropic)
+ * MAT4 (thermal)
+ * MAT5 (thermal)
+ * MAT8 (orthotropic shell)
+ * MAT9 (anisotropic solid)
+ * MAT10 (fluid element)
+ * MATHP (hyperelastic)
+
+All cards are Material objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import zeros, array
