@@ -148,7 +148,7 @@ class Subcase(object):
         """
         Gets the table code of a given parameter.  For example, the
         DISPLACMENT(PLOT,POST)=ALL makes an OUGV1 table and stores the
-        displacment.  This has an OP2 table code of 1, unless you're running a
+        displacement.  This has an OP2 table code of 1, unless you're running a
         modal solution, in which case it makes an OUGV1 table of eigenvectors
         and has a table code of 7.
 

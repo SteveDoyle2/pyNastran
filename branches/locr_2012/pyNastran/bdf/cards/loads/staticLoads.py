@@ -1,4 +1,19 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+"""
+All static loads are defined in this file.  This includes:
+ * LOAD
+ * GRAV
+ * ACCEL1
+ * FORCE1
+ * FORCE2
+ * MOMENT
+ * PLOAD
+ * PLOAD2
+ * PLOAD3
+ * PLOAD4
+ * PLOADX1
+
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import izip
@@ -149,26 +164,29 @@ class LOAD(LoadCombination):
         only base objects (no LOAD cards) will be returned.
         @todo lots more object types to support
         """
-        scaleFactors = []
+        scale_factors = []
         loads = []
-        scale = self.scale
-        for (loadsPack, scaleFactorI) in izip(self.loadIDs, self.scaleFactors):
-            scale2 = scaleFactorI * scale
+        load_scale = self.scale # global
+        for (loadsPack, i_scale) in izip(self.loadIDs, self.scaleFactors):
+            scale = i_scale * load_scale # actual scale = global * local
             for load in loadsPack:
                 if (isinstance(load, Force) or isinstance(load, Moment) or
                     isinstance(load, PLOAD4) or isinstance(load, GRAV)):
                     loads.append(load)
-                    scaleFactors.append(scale2)
+                    scale_factors.append(scale) # local
                 elif isinstance(load, LOAD):
-                    (scaleFactorsi, loadsi) = load.getReducedLoads()
-                    loads += loadsi
-                    scaleFactors += [scale2 * scalei for scalei in scaleFactorsi]
+                    load_data = load.getReducedLoads()
+                    (reduced_scale_factors, reduced_loads) = load_data
+
+                    loads += reduced_loads
+                    scale_factors += [scale * j_scale for j_scale
+                                      in reduced_scale_factors]
                 else:
                     msg = ('%s isnt supported in getReducedLoads method'
-                        % (load.__class__.__name__))
+                           % load.__class__.__name__)
                     raise NotImplementedError(msg)
 
-        return (scaleFactors, loads)
+        return (scale_factors, loads)
 
     def organizeLoads(self, model):
         """
@@ -440,8 +458,8 @@ class Force(OneDeeLoad):
         momentConstraints = {}
         gravityLoads = []
         return (typesFound, forceLoads, momentLoads,
-                           forceConstraints, momentConstraints,
-                           gravityLoads)
+                forceConstraints, momentConstraints,
+                gravityLoads)
 
 
 class Moment(OneDeeLoad):
@@ -468,8 +486,8 @@ class Moment(OneDeeLoad):
         momentConstraints = {}
         gravityLoads = []
         return (typesFound, forceLoads, momentLoads,
-                            forceConstraints, momentConstraints,
-                            gravityLoads)
+                forceConstraints, momentConstraints,
+                gravityLoads)
 
     def M(self):
         return self.xyz * self.mag
@@ -517,8 +535,8 @@ class FORCE(Force):
         self.cid = model.Coord(self.cid)
 
     def rawFields(self):
-        fields = ['FORCE', self.sid, self.node, self.Cid(), self.mag
-                 ] + list(self.xyz)
+        fields = ['FORCE', self.sid, self.node, self.Cid(),
+                  self.mag] + list(self.xyz)
         return fields
 
     def reprFields(self):
@@ -663,18 +681,18 @@ class MOMENT(Moment):
         return self.cid.cid
 
     def cross_reference(self, model):
-        """@todo cross reference and fix repr function"""
+        # TODO cross reference and fix repr function
         pass
 
     def rawFields(self):
-        fields = ['MOMENT', self.sid, self.node, self.Cid(), self.mag
-                 ] + list(self.xyz)
+        fields = ['MOMENT', self.sid, self.node, self.Cid(),
+                  self.mag] + list(self.xyz)
         return fields
 
     def reprFields(self):
         cid = set_blank_if_default(self.Cid(), 0)
-        fields = ['MOMENT', self.sid, self.node, cid, self.mag
-                 ] + list(self.xyz)
+        fields = ['MOMENT', self.sid, self.node, cid,
+                  self.mag] + list(self.xyz)
         return fields
 
 
@@ -771,7 +789,7 @@ class MOMENT2(Moment):
 
     def rawFields(self):
         (node, g1, g2, g3, g4) = self.nodeIDs([self.node, self.g1, self.g2,
-                                                          self.g3, self.g4])
+                                               self.g3, self.g4])
         fields = ['MOMENT2', self.sid, node, self.mag, g1, g2, g3, g4]
         return fields
 
@@ -836,7 +854,9 @@ class PLOAD1(Load):
             self.p1 = data[5]
             self.x2 = data[6]
             self.p2 = data[7]
-        assert self.Type in self.validTypes, '%s is an invalid type on the PLOAD1 card' % (self.Type)
+        if self.Type not in self.validTypes:
+            msg = '%s is an invalid type on the PLOAD1 card' % (self.Type)
+            raise RuntimeError(msg)
         assert self.scale in self.validScales, '%s is an invalid scale on the PLOAD1 card' % (self.scale)
 
     def cross_reference(self, model):

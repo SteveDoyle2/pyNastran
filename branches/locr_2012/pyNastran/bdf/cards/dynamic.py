@@ -113,11 +113,13 @@ class FREQ2(FREQ):
             self.freqs.append(f1 * exp(i * d))  # 0 based index
         self.cleanFreqs()
 
+
 class FREQ3(FREQ):
     type = 'FREQ3'
 
     def __init__(self, card=None, data=None):
         raise NotImplementedError()
+
 
 class FREQ4(FREQ):
     """

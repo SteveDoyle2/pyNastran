@@ -176,6 +176,7 @@ class CMASS3(PointMassElement):
     CMASS3 EID PID S1 S2
     """
     type = 'CMASS3'
+
     def __init__(self, card=None, data=None):
         PointMass.__init__(self, card, data)
 
@@ -217,7 +218,8 @@ class CMASS3(PointMassElement):
 
 class CMASS4(PointMassElement):
     """
-    Defines a scalar mass element that is connected only to scalar points, without reference to a property entry
+    Defines a scalar mass element that is connected only to scalar points,
+    without reference to a property entry
     CMASS4 EID M S1 S2
     """
     type = 'CMASS4'

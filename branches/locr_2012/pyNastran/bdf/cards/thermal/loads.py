@@ -33,7 +33,7 @@ class QBDY1(ThermalLoad):
             self.qFlux = card.field(2)
             eids = card.fields(3)
             ## CHBDYj element identification numbers (Integer)
-            self.eids = expand_thru(eids)  ## TODO should this use expand_thru_by ???
+            self.eids = expand_thru(eids)  ## TODO use expand_thru_by ???
         else:
             self.sid = data[0]
             self.qFlux = data[1]
@@ -276,8 +276,8 @@ class TEMPD(ThermalLoadDefault):
         else:
             self.temperatures = {data[0]: data[1]}
 
-    def add(self, tempdObj):
-        for (lid, tempd) in self.tempdObj.temperatures.iteritems():
+    def add(self, tempd_obj):
+        for (lid, tempd) in tempd_obj.temperatures.iteritems():
             self.temperatures[lid] = tempd
 
     def cross_reference(self, model):

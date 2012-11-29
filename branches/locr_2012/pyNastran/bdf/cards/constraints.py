@@ -167,7 +167,9 @@ class constraintObject(object):
         #print "xref spcadds..."
         #print "spcadds = ",self.add_constraints
         if self.add_constraints:
-            for (key, add_constraint) in sorted(self.add_constraints.iteritems()):  # SPCADDs
+            
+            # SPCADDs
+            for (key, add_constraint) in sorted(self.add_constraints.iteritems()):
                 self.crossReference_AddConstraint(key, add_constraint)
             #print "spcadds2 = ",self.add_constraints
         else:
@@ -176,7 +178,9 @@ class constraintObject(object):
         # xrefs nodes...not done...
         #print "xref spc/spc1/spcd..."
         return
-        for key, constraints in sorted(self.constraints.iteritems()):  # SPC, SPC1, SPCD
+        
+        # SPC, SPC1, SPCD
+        for key, constraints in sorted(self.constraints.iteritems()):
             for constraint in constraints:
                 #constraint.crossR
                 pass
@@ -367,7 +371,8 @@ class MPC(Constraint):
 
     def rawFields(self):  # MPC
         fields = ['MPC', self.conid]
-        for (i, gid, constraint, enforced) in izip(count(), self.gids, self.constraints, self.enforced):
+        for (i, gid, constraint, enforced) in izip(count(), self.gids,
+             self.constraints, self.enforced):
             #print [gid,constraint,enforced]
             fields += [gid, constraint, enforced]
             if i % 2 == 1 and i > 0:
@@ -430,7 +435,7 @@ class SPC(Constraint):
     def rawFields(self):
         fields = ['SPC', self.conid]
         for (gid, constraint, enforced) in izip(self.gids, self.constraints,
-             self.enforced):
+                self.enforced):
             fields += [gid, constraint, enforced]
         return fields
 
@@ -455,7 +460,7 @@ class SPCD(SPC):
     def rawFields(self):
         fields = ['SPCD', self.conid]
         for (gid, constraint, enforced) in izip(self.gids, self.constraints,
-             self.enforced):
+                self.enforced):
             fields += [gid, constraint, enforced]
         return fields
 

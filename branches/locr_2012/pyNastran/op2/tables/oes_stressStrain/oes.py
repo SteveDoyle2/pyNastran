@@ -7,7 +7,7 @@ from struct import unpack
 from .real.elementsStressStrain import RealElementsStressStrain
 from .real.oes_bars import BarStressObject, BarStrainObject
 from .real.oes_beams import BeamStressObject, BeamStrainObject
-from .real.oes_bush import BushStressObject, BushStrainObject
+from .real.oes_bush import BushStressObject #, BushStrainObject
 from .real.oes_bush1d import Bush1DStressObject
 from .real.oes_compositePlates import CompositePlateStressObject, CompositePlateStrainObject
 from .real.oes_gap import NonlinearGapStressObject
@@ -97,7 +97,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             ## mode number
             self.addDataParameter(data, 'mode', 'i', 5)
             ## real eigenvalue            self.addDataParameter(data, 'eign', 'f', 6, False)
-            ## mode or cycle @todo confused on the type - F1???
+            ## mode or cycle TODO confused on the type - F1???
             self.addDataParameter(data, 'modeCycle', 'f', 7, False)
             self.applyDataCodeValue('dataNames', ['mode', 'eigr', 'modeCycle'])
         #elif self.analysisCode==3: # differential stiffness
@@ -493,9 +493,9 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                        12: 2,          # CELAS2
                        13: 2,          # CELAS3
                       #14:  2,          # CELAS4
-                       24: 3,          # CVISC   ## @todo:  ?????
+                       24: 3,          # CVISC   ## TODO:  ?????
                        33: 9,          # CQUAD4
-                       34: None,       # CBAR   ## @todo: 19 stress; 10 for strain???
+                       34: None,       # CBAR   ## TODO: 19 stress; 10 for strain???
                        35: None,       # CCONEAX
                        38: None,       # CGAP
                        39: 4 + (11 - 4) * 5,  # CTETRA
@@ -807,7 +807,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                 resultName = self.makeOES_Object(self.nonlinearPlateStress, NonlinearQuadObject, 'nonlinearPlateStress',
                                                  self.nonlinearPlateStrain, NonlinearQuadObject, 'nonlinearPlateStrain')
                 self.handleResultsBuffer3(self.OES_CQUAD4NL_90, resultName)
-            elif self.numWide == numWideImag:  # @todo switch to ComplexNonlinearPlateObject
+            elif self.numWide == numWideImag:  # TODO switch to ComplexNonlinearPlateObject
                 resultName = self.makeOES_Object(self.nonlinearPlateStress, NonlinearQuadObject, 'nonlinearPlateStress',
                                                  self.nonlinearPlateStrain, NonlinearQuadObject, 'nonlinearPlateStrain')
                 self.handleResultsBuffer3(self.OES_CQUAD4NL_90_alt, resultName)

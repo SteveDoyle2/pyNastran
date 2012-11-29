@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914,C0111
+# pylint: disable=C0103,R0902,R0904,R0915
 """
 All bush properties are defined in this file.  This includes:
  *   PBUSH
@@ -294,12 +294,14 @@ class PBUSH1D(BushingProperty):
     def reprFields(self):
         return self.rawFields()
 
+
 class PBUSH2D(BushingProperty):
     type = 'PBUSH2D'
 
     def __init__(self, card=None, data=None):
         BushingProperty.__init__(self, card, data)
         raise NotImplementedError()
+
 
 class PBUSHT(BushingProperty):
     type = 'PBUSHT'

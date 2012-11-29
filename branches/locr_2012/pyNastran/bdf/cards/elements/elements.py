@@ -114,16 +114,14 @@ class CGAP(Element):
 
 
 class CrackElement(Element):
+    type = 'Crack'
+
     def __init__(self, card, data):
         pass
 
     def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes)
         self.pid = model.Property(self.pid)
-
-    def rawFields(self):
-        fields = [self.type, self.eid, self.Pid()] + self.nodeIDs()
-        return fields
 
 
 class CRAC2D(CrackElement):
@@ -142,8 +140,9 @@ class CRAC2D(CrackElement):
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 18
 
-    #def rawFields(self):
-        #raise NotImplementedError()
+    def rawFields(self):
+        fields = [self.type, self.eid, self.Pid()] + self.nodeIDs()
+        return fields
 
 
 class CRAC3D(CrackElement):
@@ -162,5 +161,6 @@ class CRAC3D(CrackElement):
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 64
 
-    #def rawFields(self):
-        #raise NotImplementedError()
+    def rawFields(self):
+        fields = [self.type, self.eid, self.Pid()] + self.nodeIDs()
+        return fields

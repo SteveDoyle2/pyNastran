@@ -1,4 +1,17 @@
 # pylint: disable=C0103,R0902,R0904,R0914,W0231,R0201
+"""
+All static loads are defined in this file.  This includes:
+ * LSEQ
+ * SLOAD
+ * DLOAD
+ * DAREA
+ * TLOAD1
+ * TLOAD2
+ * RFORCE
+ * RLOAD1
+ * RLOAD2
+ * RANDPS
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys

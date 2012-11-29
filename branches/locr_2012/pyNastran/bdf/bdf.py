@@ -277,7 +277,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
     def is_thermal_solution(self):
         """
-        @todo implement case control deck checker
+        TODO implement case control deck checker
         @warning dont use this...returns False
         """
         return False

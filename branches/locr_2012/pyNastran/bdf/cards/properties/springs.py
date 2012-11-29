@@ -21,19 +21,32 @@ class SpringProperty(Property):
 
     def __init__(self, card, data):
         Property.__init__(self, card, data)
-        pass
 
 
 class PELAS(SpringProperty):
+    """
+    Specifies the stiffness, damping coefficient, and stress coefficient of a
+    scalar elastic (spring) element (CELAS1 or CELAS3 entry).
+    """
     type = 'PELAS'
 
     def __init__(self, card=None, nPELAS=0, data=None):
         SpringProperty.__init__(self, card, data)
         nOffset = nPELAS * 5
         if card:
-            self.pid = card.field(1 + nOffset)  # 2 PELAS properties can be defined on 1 PELAS card
-            self.k = card.field(2 + nOffset) # these are split into 2 separate cards
+            # 2 PELAS properties can be defined on 1 PELAS card
+            # these are split into 2 separate cards
+
+            ## Property identification number. (Integer > 0)
+            self.pid = card.field(1 + nOffset)
+            ## Ki Elastic property value. (Real)
+            self.k = card.field(2 + nOffset)
+
+            ## Damping coefficient, . See Remarks 5. and 6. (Real)
+            ## To obtain the damping coefficient GE, multiply the
+            ## critical damping ratio c/c0 by 2.0.
             self.ge = card.field(3 + nOffset, 0.)
+            ## Stress coefficient. (Real)
             self.s = card.field(4 + nOffset, 0.)
         else:
             self.pid = data[0]
@@ -100,6 +113,7 @@ class PELAST(SpringProperty):
 
     def __init__(self, card=None, data=None):
         SpringProperty.__init__(self, card, data)
+        ## Property identification number. (Integer > 0)
         self.pid = card.field(1)
         ## Identification number of a TABLEDi entry that defines the
         ## force per unit displacement vs. frequency relationship.
@@ -128,16 +142,27 @@ class PELAST(SpringProperty):
         return self.pid.pid
 
     def Tkid(self):
+        """
+        Returns the table ID for force per unit displacement vs frequency
+        (k=F/d vs freq)
+        """
         if isinstance(self.tkid, int):
             return self.tkid
         return self.tkid.tid
 
     def Tknid(self):
+        """
+        Returns the table ID for nondimensional force vs. displacement
+        """
         if isinstance(self.tknid, int):
             return self.tknid
         return self.tknid.tid
 
     def Tgeid(self):
+        """
+        Returns the table ID for nondimensional structural damping
+        coefficient vs. frequency (c/c0 vs freq)
+        """
         if isinstance(self.tgeid, int):
             return self.tgeid
         return self.tgeid.tid

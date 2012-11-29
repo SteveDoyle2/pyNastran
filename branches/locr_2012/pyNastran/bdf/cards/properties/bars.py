@@ -583,7 +583,7 @@ class PTUBE(LineProperty):
 
         #A1 = pi*D1^2/4 - pi*((D1-2t)^2)/4
         #A2 = pi*D2^2/4 - pi*((D2-2t)^2)/4
-        #A = A1+A2
+        #A = A1 + A2
 
         #A = pi*D1*t/2 + pi*D2*t/2 - pi*t
         #A = pi*t*(D1/2 + D2/2 - t)
@@ -592,7 +592,8 @@ class PTUBE(LineProperty):
         #A2 = pi*t*( (D1+D2)/2.-t )
 
         #if A != A2:
-            #msg = 'AREA method has problem in PTUBE Aold=%s != Anew=%s' %(A, A2)
+            #msg = ('AREA method has problem in PTUBE '
+            #       'Aold=%s != Anew=%s' %(A, A2))
             #raise RuntimeError(msg)
         return A
 
@@ -991,14 +992,15 @@ class PBCOMP(LineProperty):
         n2 = set_blank_if_default(self.n2, 0.0)
 
         symopt = set_blank_if_default(self.symopt, 0)
-        
+
         fields = ['PBCOMP', self.pid, self.Mid(), area, i1, i2, i12, j, nsm,
                   k1, k2, m1, m2, n1, n2, symopt, None]
 
-        for (yi, zi, ci, mid) in zip(self.y,self.z,self.c,self.mids):
+        for (yi, zi, ci, mid) in zip(self.y, self.z, self.c, self.mids):
             ci = set_blank_if_default(ci, 0.0)
             fields += [yi, zi, ci, mid, None, None, None, None]
         return fields
+
 
 class PBEAM(IntegratedLineProperty):
     type = 'PBEAM'
@@ -1182,10 +1184,10 @@ class PBEAM(IntegratedLineProperty):
         fields = ['PBEAM', self.pid, self.Mid()]
 
         i = 0
-        for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2, f1, f2
-            ) in izip(self.so, self.xxb, self.A, self.i1, self.i2, self.i12,
-                      self.j, self.nsm, self.c1, self.c2, self.d1, self.d2,
-                      self.e1, self.e2, self.f1, self.f2):
+        for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2, f1,
+             f2) in izip(self.so, self.xxb, self.A, self.i1, self.i2, self.i12,
+                         self.j, self.nsm, self.c1, self.c2, self.d1, self.d2,
+                         self.e1, self.e2, self.f1, self.f2):
 
             i1 = set_blank_if_default(i1, 0.0)
             i2 = set_blank_if_default(i2, 0.0)
@@ -1296,8 +1298,8 @@ class PBEAML(IntegratedLineProperty):
             j = 0  # the dimension counter
             n = 0  # there is no SO or XXB for the first section (n=0)
             i = 9  # the index in the card
-            #print "dimAll = ",dimAll,nDim,i
-            
+            #print("dimAll = ", dimAll, nDim, i)
+
             # ii is the counter starting from 9
             for (ii, dim) in enumerate(dimAll):
                 if j < nDim:  # the first block, n=0 ???

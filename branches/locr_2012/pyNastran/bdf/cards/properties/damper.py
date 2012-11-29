@@ -20,7 +20,6 @@ class DamperProperty(Property):
 
     def __init__(self, card, data):
         Property.__init__(self, card, data)
-        pass
 
     def cross_reference(self, model):
         pass
@@ -36,7 +35,7 @@ class PDAMP(DamperProperty):
             # 3 PDAMP properties can be defined on 1 PDAMP card
             ## Property ID
             self.pid = card.field(1 + nOffset)
-            
+
             # these are split into 2 separate cards
             ## Force per unit velocity (Real)
             self.b = card.field(2 + nOffset)
@@ -128,6 +127,7 @@ class PVISC(DamperProperty):
     type = 'PVISC'
 
     def __init__(self, card=None, nPVISC=0, data=None):
+        DamperProperty.__init__(self, card, data)
         if card:
             self.pid = card.field(1 + 4 * nPVISC)
             self.ce = card.field(2 + 4 * nPVISC)

@@ -41,12 +41,18 @@ class EIGB(Method):
             ## Method of eigenvalue extraction. (Character: 'INV' for inverse
             ## power method or 'SINV' for enhanced inverse power method.)
             self.method = card.field(2)
-            assert self.method in ['INV', 'SINV'], 'method must be INV or SINV.  method=|%s|' % (self.method)
+            
+            if self.method not in ['INV', 'SINV']:
+                msg = 'method must be INV or SINV.  method=|%s|' % self.method
+                raise RuntimeError(msg)
+
             ## Eigenvalue range of interest. (Real, L1 < L2)
             self.L1 = card.field(3)
             self.L2 = card.field(4)
-            assert self.L1 < self.L2, 'L1=%s L2=%s; L1<L2 is requried' % (
-                self.L1, self.L2)
+            if not(self.L1 < self.L2):
+                msg = 'L1=%s L2=%s; L1<L2 is requried' % (self.L1, self.L2)
+                raise RuntimeError(msg)
+
             ## Estimate of number of roots in positive range not used for
             ## METHOD = 'SINV'. (Integer > 0)
             self.nep = card.field(5, 0)
@@ -82,7 +88,7 @@ class EIGB(Method):
         return fields
 
 
-class EIGC(Method):  ## not done
+class EIGC(Method):  # TODO: not done
     """
     Defines data needed to perform complex eigenvalue analysis
     """
@@ -95,7 +101,7 @@ class EIGC(Method):  ## not done
         self.iblkszs = []
         self.ksteps = []
         self.NJIs = []
-        
+
         # HESS
         self.alphaBjs = []
         self.omegaBjs = []
@@ -193,8 +199,8 @@ class EIGC(Method):  ## not done
         fields = []
         if self.method in ['HESS', 'INV']:
             for (alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj) in izip(
-                self.alphaAjs, self.omegaAjs, self.alphaBjs, self.omegaBjs,
-                self.LJs, self.NEJs, self.NDJs):
+                    self.alphaAjs, self.omegaAjs, self.alphaBjs, self.omegaBjs,
+                    self.LJs, self.NEJs, self.NDJs):
                 alphaA = set_blank_if_default(alphaA, 0.0)
                 omegaA = set_blank_if_default(omegaA, 0.0)
                 alphaB = set_blank_if_default(alphaB, 0.0)
@@ -203,8 +209,8 @@ class EIGC(Method):  ## not done
 
         elif self.method == 'CLAN':
             for (alphaA, omegaA, mblksz, iblksz, kstep, Nj) in izip(
-                 self.alphaAjs, self.omegaAjs, self.mblkszs, self.iblkszs,
-                 self.ksteps, self.NJIs):
+                    self.alphaAjs, self.omegaAjs, self.mblkszs, self.iblkszs,
+                    self.ksteps, self.NJIs):
                 alphaA = set_blank_if_default(alphaA, 0.0)
                 omegaA = set_blank_if_default(omegaA, 0.0)
                 mblksz = set_blank_if_default(mblksz, 7)
@@ -222,8 +228,8 @@ class EIGC(Method):  ## not done
         return self.rawMethod()
 
     def rawFields(self):
-        fields = ['EIGC', self.sid, self.method, self.norm, self.G,
-            self.C, self.E, self.ndo, None]
+        fields = ['EIGC', self.sid, self.method, self.norm, self.G, self.C,
+                  self.E, self.ndo, None]
         fields += self.rawMethod()
         return fields
 
@@ -232,8 +238,8 @@ class EIGC(Method):  ## not done
             E = None
         else:
             E = str(self.E)
-        fields = ['EIGC', self.sid, self.method, self.norm, self.G,
-            self.C, E, self.ndo, None]
+        fields = ['EIGC', self.sid, self.method, self.norm, self.G, self.C,
+                  E, self.ndo, None]
         fields += self.reprMethod()
         return fields
 
@@ -381,7 +387,7 @@ class EIGRL(Method):
                 self.norm = card.field(8, 'MAX')
             else:
                 self.norm = card.field(8)
-            
+
             #msg = 'norm=%s sol=%s' % (self.norm, sol)
             #assert self.norm in ['MASS', 'MAX'],msg
             #assert card.nFields()<9,'card = %s' %(card.fields(0))

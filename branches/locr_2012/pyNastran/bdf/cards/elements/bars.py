@@ -67,16 +67,15 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
 
         if is3D:
             return matrix([  # global rod
-                       [dot(v1x, g1x), dot(v1y, g1x), dot(v1z, g1x)],
-                       [dot(v1x, g1y), dot(v1y, g1y), dot(v1z, g1y)],
-                       [dot(v1x, g1z), dot(v1y, g1z), dot(v1z, g1z)],
-                       ])  # rod
+                           [dot(v1x, g1x), dot(v1y, g1x), dot(v1z, g1x)],
+                           [dot(v1x, g1y), dot(v1y, g1y), dot(v1z, g1y)],
+                           [dot(v1x, g1z), dot(v1y, g1z), dot(v1z, g1z)],
+                          ])  # rod
 
         return matrix([  # there can be no z component
-                       [dot(v1x, g1x), dot(v1y, g1x)],
-                       [dot(v1x, g1y), dot(v1y, g1y)],
-                       ])  # rod
-
+                        [dot(v1x, g1x), dot(v1y, g1x)],
+                        [dot(v1x, g1y), dot(v1y, g1y)],
+                      ])  # rod
 
     def Lambda(self, model, debug=True):
         """
@@ -423,6 +422,7 @@ class CROD(RodElement):
 
 class CTUBE(RodElement):
     type = 'CTUBE'
+
     def __init__(self, card=None, data=None):
         RodElement.__init__(self, card, data)
         if card:
@@ -450,6 +450,7 @@ class CTUBE(RodElement):
 
 class CONROD(RodElement):
     type = 'CONROD'
+
     def __init__(self, card=None, data=None):
         RodElement.__init__(self, card, data)
         if card:
@@ -606,7 +607,7 @@ class CBAR(LineElement):
             self.ga = main[2]
             self.gb = main[3]
             #self.offt = str(data[4]) # GGG
-            self.offt = 'GGG'  ## @todo offt can be an integer; translate to char
+            self.offt = 'GGG'  # TODO offt can be an integer; translate to char
             self.pa = main[4]
             self.pb = main[5]
 
@@ -620,7 +621,7 @@ class CBAR(LineElement):
         #print("offt = %s" %(self.offt))
         if not isinstance(self.offt, unicode):
             raise SyntaxError('invalid offt expected a string of length 3 '
-                              'offt=|%s|' % (self.offt))
+                              'offt=|%s|' % self.offt)
 
         msg = 'invalid offt parameter of %s...offt=%s' % (self.type, self.offt)
         # B,G,O
@@ -676,7 +677,7 @@ class CBAR(LineElement):
             self.x2 = 0.
             self.x3 = 0.
         #if self.eid==14100238:
-            #print "g0=%s x1=%s x2=%s x3=%s" %(self.g0, self.x1, self.x2, 
+            #print "g0=%s x1=%s x2=%s x3=%s" %(self.g0, self.x1, self.x2,
             #                                  self.x3)
 
     def cross_reference(self, mesh):
@@ -751,13 +752,13 @@ class CBAR(LineElement):
                  # u1          v1          theta1         u2,v2,w2
                  
         nIJV = [
-                 (n0,1),(n0,2),(n0,5),  (n1,1),(n1,2),(n1,5),  # X1
-                 (n0,1),(n0,2),(n0,5),  (n1,1),(n1,2),(n1,5),  # Y1
-                 (n0,1),(n0,2),(n0,5),  (n1,1),(n1,2),(n1,5),  # M1
+                 (n0, 1), (n0, 2), (n0, 5),  (n1, 1), (n1, 2), (n1, 5),  # X1
+                 (n0, 1), (n0, 2), (n0, 5),  (n1, 1), (n1, 2), (n1, 5),  # Y1
+                 (n0, 1), (n0, 2), (n0, 5),  (n1, 1), (n1, 2), (n1, 5),  # M1
 
-                 (n0,1),(n0,2),(n0,5),  (n1,1),(n1,2),(n1,5),  # X2
-                 (n0,1),(n0,2),(n0,5),  (n1,1),(n1,2),(n1,5),  # Y2
-                 (n0,1),(n0,2),(n0,5),  (n1,1),(n1,2),(n1,5),  # M2
+                 (n0, 1), (n0, 2), (n0, 5),  (n1, 1), (n1, 2), (n1, 5),  # X2
+                 (n0, 1), (n0, 2), (n0, 5),  (n1, 1), (n1, 2), (n1, 5),  # Y2
+                 (n0, 1), (n0, 2), (n0, 5),  (n1, 1), (n1, 2), (n1, 5),  # M2
                 ]
         #print("nIJV = ",nIJV)
         nGrav = [(n0, 1), (n0, 2), (n0, 3),
@@ -904,6 +905,7 @@ class CBEAM3(CBAR):
     Defines a three-node beam element
     """
     type = 'CBEAM3'
+
     def __init__(self, card=None, data=None):
         LineElement.__init__(self, card, data)
         if card:
@@ -996,6 +998,7 @@ class CBEAM(CBAR):
     SA SB
     """
     type = 'CBEAM'
+
     def __init__(self, card=None, data=None):
         LineElement.__init__(self, card, data)
         if card:
@@ -1020,9 +1023,11 @@ class CBEAM(CBAR):
             self.sa = card.field(17)
             self.sb = card.field(18)
 
-        else:  ## @todo verify
-            #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
-            #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
+        else:  # TODO verify
+            #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
+            #        [f,g0]]
+            #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
+            #        [f,x1,x2,x3]]
 
             main = data[0]
 
@@ -1045,9 +1050,9 @@ class CBEAM(CBAR):
             self.sa = main[4]
             self.sb = main[5]
 
-            self.isOfft = True  ## @todo is this correct???
+            self.isOfft = True  # TODO is this correct???
             #self.offt = str(data[6]) # GGG
-            self.offt = 'GGG'  ## @todo is this correct???
+            self.offt = 'GGG'  # TODO is this correct???
 
             self.pa = main[6]
             self.pb = main[7]
@@ -1196,6 +1201,7 @@ class CBEAM(CBAR):
 
 class CBEND(LineElement):
     type = 'CBEND'
+
     def __init__(self, card=None, data=None):
         LineElement.__init__(self, card, data)
         self.eid = int(card.field(1))

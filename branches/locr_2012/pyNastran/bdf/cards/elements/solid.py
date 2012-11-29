@@ -223,8 +223,8 @@ class CPENTA6(SolidElement):
                     [3, 4]: [1, 3, 6, 4],
 
                     [2, 6]: [2, 5, 6, 3],  # right
-                    [3, 5]: [2, 3, 6, 5],
-        }
+                    [3, 5]: [2, 3, 6, 5], }
+
         pack2 = mapper[pack]
         if len(pack2) == 3:
             (n1, n2, n3) = pack2

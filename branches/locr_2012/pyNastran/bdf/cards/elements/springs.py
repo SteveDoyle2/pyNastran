@@ -42,8 +42,8 @@ class SpringElement(Element):
         return p
 
     def K(self):
-        raise NotImplementedError('K not implemented in the '
-                                  '%s class' % (self.type))
+        raise NotImplementedError('K not implemented in the %s class'
+                                  % self.type)
 
     def Lambda(self, model):
         """
@@ -91,8 +91,7 @@ class SpringElement(Element):
         Returns the length of a bar/rod/beam element
         \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
         @param self the object pointer
-        @note
-            the model must be cross-referenced already
+        @note the model must be cross-referenced already
         """
         #print self.type
         return self.Length_noXref(self.nodes[1], self.nodes[0])
@@ -131,8 +130,9 @@ class CELAS1(SpringElement):
             self.c1 = data[4]
             self.c2 = data[5]
 
-        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % (str(self), self.c1)
-        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % (str(self), self.c2)
+        msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
+        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
+        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
 
@@ -192,8 +192,9 @@ class CELAS2(SpringElement):
             self.ge = data[6]
             self.s = data[7]
 
-        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % (str(self), self.c1)
-        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % (str(self), self.c2)
+        msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
+        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
+        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
 

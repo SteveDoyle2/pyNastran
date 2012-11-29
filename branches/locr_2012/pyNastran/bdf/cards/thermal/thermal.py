@@ -13,7 +13,7 @@ class ThermalCard(BaseCard):
 
     def cross_reference(self, model):
         raise NotImplementedError('%s has not defined the cross_reference'
-                                  'method' % (self.type))
+                                  'method' % self.type)
 
     def isSameCard(self, obj, debug=False):
         return False
@@ -26,6 +26,7 @@ class ThermalBC(ThermalCard):
 
 class ThermalElement(ThermalCard):
     pid = 0
+
     def __init__(self, card, data):
         pass
 
@@ -479,6 +480,7 @@ class CONV(ThermalBC):
         cntrlnd = set_blank_if_default(self.cntrlnd, 0)
         fields = ['CONV', self.eid, self.pconID, flmnd, cntrlnd] + self.ta
         return fields
+
 
 class CONVM(ThermalBC):
     """

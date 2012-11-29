@@ -1,11 +1,11 @@
-# pylint: disable=R0904,R0902,C0111
+# pylint: disable=R0904,R0902,C0111,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 from itertools import izip
 
-from pyNastran.bdf.fieldWriter import print_card, print_card_8, is_same
-                                       #set_default_if_blank, print_card
+from pyNastran.bdf.fieldWriter import print_card, is_same
+                               #print_card_8, set_default_if_blank, print_card
 #from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 
@@ -110,9 +110,6 @@ class BaseCard(BDFCard):
 
     def reprFields(self):
         return self.rawFields()
-
-    def print_card(self, fields, size=8):
-        return print_card(fields, size=size)
 
     def print_card(self, size=8):
         fields = self.reprFields()
@@ -261,9 +258,7 @@ class Element(BaseCard):
     #    """finds the unit normal vector of 2 vectors"""
     #    return Normal(a,b)
 
-    def CentroidTriangle(self, n1, n2, n3, debug=False):
-        if debug:
-            print("n1=%s \nn2=%s \nn3=%s" % (n1, n2, n3))
+    def CentroidTriangle(self, n1, n2, n3):
         centroid = (n1 + n2 + n3) / 3.
         return centroid
 
@@ -363,7 +358,7 @@ def expand_thru_by(fields):
                 byCase = True
             minValue = fields[i - 1]
             maxValue = fields[i + 1]
-            maxR = int((maxValue - minValue) // by + 1) # max range value
+            maxR = int((maxValue - minValue) // by + 1)  # max range value
 
             for j in xrange(0, maxR):  # +1 is to include final point
                 value = minValue + by * j
@@ -458,14 +453,14 @@ def condense(valueList):
         if dvOld == dv:
             lastVal = val
         else:
-            packs.append([firstVal,lastVal,dvOld])
+            packs.append([firstVal, lastVal, dvOld])
             lastVal = val
             dvOld = None
             firstVal = val
 
     # fills the last pack
     if dvOld == dv:
-        packs.append([firstVal,val,dv])
+        packs.append([firstVal, val, dv])
     else:
         packs.append([firstVal, val, dvOld])
     return packs
@@ -502,7 +497,7 @@ def build_thru(packs, maxDV=None):
                 fields.append(lastVal)
         else:
             if maxDV is None:
-                if lastVal - firstVal > 4*dv:
+                if lastVal - firstVal > 4 * dv:
                     fields.append(firstVal)
                     fields.append('THRU')
                     fields.append(lastVal)
@@ -532,15 +527,15 @@ def build_thru_float(packs, maxDV=None):
     """
     fields = []
     for (firstVal, lastVal, dv) in packs:
-        if lastVal - firstVal > 4*dv:
+        if lastVal - firstVal > 4 * dv:
             fields.append(firstVal)
             fields.append('THRU')
             fields.append(lastVal)
             fields.append('BY')
             fields.append(dv)
         else:
-            nv = int(round((lastVal-firstVal)/dv))+1
+            nv = int(round((lastVal - firstVal) / dv)) + 1
             for i in xrange(nv):
-                v = firstVal + i*dv
+                v = firstVal + i * dv
                 fields.append(v)
     return fields

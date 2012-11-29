@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914,E1101,W0612,E0602
+# pylint: disable=C0103,C0111,C0302,R0902,R0904,R0914,E1101,W0612,E0602
 """
 All dynamic control cards are defined in this file.  This includes:
  * CREEP
@@ -206,7 +206,8 @@ class MAT1(Material):
         self.nu = nu
 
     def writeCalculix(self, elementSet='ELSetDummyMat'):
-        temperature = self.TRef  # default value - same properties for all values
+        # default value - same properties for all values
+        temperature = self.TRef
         msg = '*ELASTIC,TYPE=ISO,ELSET=%s\n' % (elementSet)
         msg += '** E,NU,TEMPERATURE\n'
         msg += '%s,%s,%s\n' % (self.e, self.nu, temperature)
@@ -244,7 +245,8 @@ class MAT1(Material):
         else:
             #G_default = self.e/2./(1+self.nu)
             G = self.e / 2. / (1 + self.nu)
-        #print "MAT1 - self.e=%s self.nu=%s self.g=%s Gdef=%s G=%s" %(self.e, self.nu,self.g, G_default, G)
+        print("MAT1 - self.e=%s self.nu=%s self.g=%s Gdef=%s G=%s"
+              % (self.e, self.nu,self.g, G_default, G))
         return G
 
     def reprFields(self):
@@ -253,7 +255,7 @@ class MAT1(Material):
 
         rho = set_blank_if_default(self.rho, 0.)
         a = set_blank_if_default(self.a, 0.)
-        TRef = set_blank_if_default(self.TRef, 0.0)
+        TRef = set_blank_if_default(self.TRef, 0.)
         ge = set_blank_if_default(self.ge, 0.)
         St = set_blank_if_default(self.St, 0.)
         Sc = set_blank_if_default(self.Sc, 0.)
@@ -350,7 +352,7 @@ class MAT2(AnisotropicMaterial):
         E = self.E()
         nu12 = self.Nu()
         nu = nu12
-        G12 = self.G()
+        #G12 = self.G()
 
         D = zeros((3, 3))
         mu = 1. - nu12 * nu12  # *E11/E22    # not necessary b/c they're equal
@@ -382,7 +384,7 @@ class MAT2(AnisotropicMaterial):
         msg += '%s,%s,%s,%s,%s,%s,%s,%s\n\n' % (
             D1111, D1122, D2222, D1133, D2233, D3333, D1212, D1313)
 
-        G23
+        #G23
         temperature = self.TRef
         msg = '*ELASTIC,TYPE=ENGINEERING CONSTANTS  ** MAT2,mid=%s\n' % (
             self.mid)
@@ -425,8 +427,8 @@ class MAT2(AnisotropicMaterial):
 
 class MAT3(AnisotropicMaterial):
     """
-    Defines the material properties for linear orthotropic materials used by the
-    CTRIAX6 element entry.
+    Defines the material properties for linear orthotropic materials used by
+    the CTRIAX6 element entry.
     MAT3 MID EX  ETH EZ  NUXTH NUTHZ NUZX RHO
     -    -   GZX AX  ATH AZ TREF GE
     """
@@ -615,9 +617,9 @@ class MAT8(AnisotropicMaterial):
         AnisotropicMaterial.__init__(self, card, data)
         if card:
             self.mid = card.field(1)
-            self.e11 = card.field(2)  ## @todo is this the correct default
-            self.e22 = card.field(3)  ## @todo is this the correct default
-            self.nu12 = card.field(4)  ## @todo is this the correct default
+            self.e11 = card.field(2)  # TODO is this the correct default
+            self.e22 = card.field(3)  # TODO is this the correct default
+            self.nu12 = card.field(4)  # TODO is this the correct default
 
             self.g12 = card.field(5, 0.0)
             self.g1z = card.field(6, 1e8)
@@ -807,7 +809,7 @@ class MAT9(AnisotropicMaterial):
                    self.G15, self.G16, self.G22, self.G23, self.G24, self.G25,
                    self.G26, self.G33, self.G34, self.G35, self.G36, self.G44,
                    self.G45, self.G46, self.G55, self.G56, self.G66, self.rho]
-                   + self.A + [self.TRef, self.ge])
+                  + self.A + [self.TRef, self.ge])
         return fields
 
     def reprFields(self):
@@ -822,8 +824,8 @@ class MAT9(AnisotropicMaterial):
         fields = (['MAT9', self.mid, self.G11, self.G12, self.G13, self.G14,
                    self.G15, self.G16, self.G22, self.G23, self.G24, self.G25,
                    self.G26, self.G33, self.G34, self.G35, self.G36, self.G44,
-                   self.G45, self.G46, self.G55, self.G56, self.G66, rho] +
-                   A + [TRef, ge])
+                   self.G45, self.G46, self.G55, self.G56, self.G66, rho]
+                  + A + [TRef, ge])
         return fields
 
 
@@ -1000,12 +1002,17 @@ class MATHP(HyperelasticMaterial):
             self.tabd = tab5
 
     def rawFields(self):
-        fields = ['MATHP', self.mid, self.a10, self.a01, self.d1, self.rho, self.av, self.TRef, self.ge,
+        fields = ['MATHP', self.mid, self.a10, self.a01, self.d1, self.rho,
+                  self.av, self.TRef, self.ge,
                   None, self.na, self.nd, None, None, None, None, None,
-                  self.a20, self.a11, self.a02, self.d2, None, None, None, None,
-                  self.a30, self.a21, self.a12, self.a03, self.d3, None, None, None,
-                  self.a40, self.a31, self.a22, self.a13, self.a04, self.d4, None, None,
-                  self.a50, self.a41, self.a32, self.a23, self.a14, self.a05, self.d5, None,
+                  self.a20, self.a11, self.a02, self.d2, None, None, None,
+                  None,
+                  self.a30, self.a21, self.a12, self.a03, self.d3, None,
+                  None, None,
+                  self.a40, self.a31, self.a22, self.a13, self.a04, self.d4,
+                  None, None,
+                  self.a50, self.a41, self.a32, self.a23, self.a14, self.a05,
+                  self.d5, None,
                   self.tab1, self.tab2, self.tab4, None, None, None, self.tabd]
         return fields
 
@@ -1047,13 +1054,13 @@ class MATHP(HyperelasticMaterial):
         TRef = set_blank_if_default(self.TRef, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
         fields = ['MATHP', self.mid, a10, a01, d1, self.rho, av, TRef, ge,
-                          None, na, nd, None, None, None, None, None,
-                          a20, a11, a02, d2, None, None, None, None,
-                          a30, a21, a12, a03, d3, None, None, None,
-                          a40, a31, a22, a13, a04, d4, None, None,
-                          a50, a41, a32, a23, a14, a05, d5, None,
-                          self.tab1, self.tab2, self.tab3, self.tab4,
-                          None, None, None, self.tabd]
+                  None, na, nd, None, None, None, None, None,
+                  a20, a11, a02, d2, None, None, None, None,
+                  a30, a21, a12, a03, d3, None, None, None,
+                  a40, a31, a22, a13, a04, d4, None, None,
+                  a50, a41, a32, a23, a14, a05, d5, None,
+                  self.tab1, self.tab2, self.tab3, self.tab4,
+                  None, None, None, self.tabd]
         return fields
 
 
@@ -1085,11 +1092,12 @@ class MATS1(MaterialDependence):
             ## Work hardening slope (slope of stress versus plastic strain) in
             ## units of stress. For elastic-perfectly plastic cases, H=0.0.
             ## For more than a single slope in the plastic range, the
-            ## stress-strain data must be supplied on a TABLES1 entry referenced
-            ## by TID, and this field must be blank
+            ## stress-strain data must be supplied on a TABLES1 entry
+            ## referenced by TID, and this field must be blank
             self.h = card.field(4)
-            ## Yield function criterion, selected by one of the following values
-            ## (1) Von Mises (2) Tresca (3) Mohr-Coulomb (4) Drucker-Prager
+            ## Yield function criterion, selected by one of the following
+            ## values (1) Von Mises (2) Tresca (3) Mohr-Coulomb
+            ## (4) Drucker-Prager
             self.yf = card.field(5, 1)
             ## Hardening Rule, selected by one of the following values
             ## (Integer): (1) Isotropic (Default) (2) Kinematic

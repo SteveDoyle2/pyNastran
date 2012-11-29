@@ -7,15 +7,6 @@ from .oes_objects import stressObject, strainObject
 
 class BushStressObject(stressObject):
     """
-    # sCode=0
-                           C O M P L E X   S T R E S S E S   I N   B A R   E L E M E N T S   ( C B A R )
-                                                         (MAGNITUDE/PHASE)
-
-            ELEMENT                    LOCATION       LOCATION       LOCATION       LOCATION             AVERAGE
-              ID.                          1              2              3              4             AXIAL STRESS
-
-                  1     ENDA          9.331276E+04   9.331276E+04   9.331276E+04   9.331276E+04        0.0
-                                      180.0000         0.0            0.0          180.0000              0.0
     """
     def __init__(self, dataCode, isSort1, iSubcase, dt=None):
         stressObject.__init__(self, dataCode, iSubcase)
@@ -228,12 +219,9 @@ class BushStressObject(stressObject):
 
 class BushStrainObject(strainObject):
     """
-    # sCode=10
-                                     S T R A I N S   I N   B A R   E L E M E N T S          ( C B A R )
-    ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
-      ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C
     """
     def __init__(self, dataCode, isSort1, iSubcase, dt=None):
+        raise NotImplementedError('is this used?')
         strainObject.__init__(self, dataCode, iSubcase)
         self.eType = {}
 

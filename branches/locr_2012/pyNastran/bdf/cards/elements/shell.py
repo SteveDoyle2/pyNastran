@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,C0302
 """
 All shell elements are defined in this file.  This includes:
  * CTRIA3
@@ -25,7 +25,8 @@ from numpy.linalg import det  # inv
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
 from pyNastran.bdf.cards.baseCard import Element
-from pyNastran.utils.mathematics import (Area, norm)
+from pyNastran.utils.mathematics import Area, norm
+
 
 def _triangle_area_centroid_normal(nodes):
     """
@@ -140,13 +141,13 @@ class TriShell(ShellElement):
         (n0, n1, n2) = self.nodePositions()
         return _normal(n0 - n1, n0 - n2)
 
-    def Centroid(self, debug=False):
+    def Centroid(self):
         r"""
         Returns the centroid
         \f[ \large CG = \frac{1}{3} (n_0+n_1+n_2)  \f]
         """
         (n0, n1, n2) = self.nodePositions()
-        centroid = self.CentroidTriangle(n0, n1, n2, debug)
+        centroid = self.CentroidTriangle(n0, n1, n2)
         return centroid
 
     def MassMatrix(self, isLumped=True):
@@ -347,13 +348,13 @@ class CTRIA6(TriShell):
         (n0, n1, n2) = self.nodePositions()[:3]
         return _normal(n0 - n1, n0 - n2)
 
-    def Centroid(self, debug=False):
+    def Centroid(self):
         r"""
         Returns the centroid
         \f[ \large CG = \frac{1}{3} (n_1+n_2+n_3)  \f]
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
-        centroid = self.CentroidTriangle(n1, n2, n3, debug)
+        centroid = self.CentroidTriangle(n1, n2, n3)
         return centroid
 
     def flipNormal(self):
@@ -381,14 +382,15 @@ class CTRIA6(TriShell):
         return (thetaMcid, zOffset, TFlag, T1, T2, T3)
 
     def rawFields(self):
-        fields = ['CTRIA6', self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid, self.zOffset, None] + [
-            None, self.TFlag, self.T1, self.T2, self.T3]
+        fields = (['CTRIA6', self.eid, self.Pid()] + self.nodeIDs() +
+                  [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
+                  self.T1, self.T2, self.T3])
         return fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
-        fields = ['CTRIA6', self.eid, self.Pid()] + self.nodeIDs() + [thetaMcid, zOffset, None] + [
-            None, TFlag, T1, T2, T3]
+        fields = (['CTRIA6', self.eid, self.Pid()] + self.nodeIDs() +
+                  [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
         return fields
 
 
@@ -444,8 +446,8 @@ class CTRIAR(TriShell):
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
-        fields = ['CTRIAR', self.eid, self.Pid()] + self.nodeIDs() + [thetaMcid, zOffset, None,
-                                                                      None, TFlag, T1, T2, T3]
+        fields = (['CTRIAR', self.eid, self.Pid()] + self.nodeIDs() +
+                  [thetaMcid, zOffset, None, None, TFlag, T1, T2, T3])
         return fields
 
 
@@ -561,7 +563,7 @@ class QuadShell(ShellElement):
         normal = self.Normal()
         return (area, centroid, normal)
 
-    def AreaCentroid(self, debug=False):
+    def AreaCentroid(self):
         """
         @code
         1-----2
@@ -578,8 +580,6 @@ class QuadShell(ShellElement):
              A=area
         @endcode
         """
-        #if debug:
-        #    print("nodes = %s" %(self.nodes))
         (n1, n2, n3, n4) = self.nodePositions()
         a = n1 - n2
         b = n2 - n4
@@ -593,15 +593,11 @@ class QuadShell(ShellElement):
 
         area = area1 + area2
         centroid = (c1 * area1 + c2 * area2) / area
-        if debug:
-            print("c1=%s \n c2=%s \n a1=%s a2=%s" % (c1, c2, area1, area2))
-            print("type(centroid=%s centroid=%s \n" %
-                 (type(centroid), centroid))
         return(area, centroid)
 
-    def Centroid(self, debug=False):
+    def Centroid(self):
         #nodes = self.nodePositions()
-        (area, centroid) = self.AreaCentroid(debug)
+        (area, centroid) = self.AreaCentroid()
         return centroid
 
     def Area(self):
@@ -653,7 +649,7 @@ class QuadShell(ShellElement):
         |   |  -->   |   |
         |   |        |   |
         4---3        2---3
-		@endcode
+        @endcode
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -669,21 +665,21 @@ class QuadShell(ShellElement):
         T4 = set_blank_if_default(self.T4, 1.0)
         if debug:
         #if 1:
-            print("eid       = %s" % (self.eid))
-            print("nodes     = %s" % (self.nodes))
+            print("eid       = %s" % self.eid)
+            print("nodes     = %s" % self.nodes)
 
-            print("self.zOffset   = %s" % (self.zOffset))
-            print("self.TFlag     = %s" % (self.TFlag))
-            print("self.thetaMcid = %s" % (self.thetaMcid))
+            print("self.zOffset   = %s" % self.zOffset)
+            print("self.TFlag     = %s" % self.TFlag)
+            print("self.thetaMcid = %s" % self.thetaMcid)
 
-            print("zOffset   = %s" % (zOffset))
-            print("TFlag     = %s" % (TFlag))
-            print("thetaMcid = %s" % (thetaMcid))
+            print("zOffset   = %s" % zOffset)
+            print("TFlag     = %s" % TFlag)
+            print("thetaMcid = %s" % thetaMcid)
 
-            print("T1 = %s" % (T1))
-            print("T2 = %s" % (T2))
-            print("T3 = %s" % (T3))
-            print("T4 = %s\n" % (T4))
+            print("T1 = %s" % T1)
+            print("T2 = %s" % T2)
+            print("T3 = %s" % T3)
+            print("T4 = %s\n" % T4)
         return (thetaMcid, zOffset, TFlag, T1, T2, T3, T4)
 
 
@@ -789,6 +785,7 @@ class CQUAD4(QuadShell):
     type = 'CQUAD4'
     asterType = 'QUAD4 # CQUAD4'
     calculixType = 'S4'
+
     def __init__(self, card=None, data=None):
         QuadShell.__init__(self, card, data)
         if card:
@@ -886,6 +883,7 @@ class CQUAD4(QuadShell):
 class CQUADR(QuadShell):
     type = 'CQUADR'
     #calculixType = 'CAX8'
+
     def __init__(self, card=None, data=None):
         QuadShell.__init__(self, card, data)
         if card:
@@ -942,19 +940,21 @@ class CQUADR(QuadShell):
         self.nodes = [n1, n4, n3, n2]
 
     def rawFields(self):
-        fields = ['CQUADR', self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid, self.zOffset,
-                                                                      None, self.TFlag, self.T1, self.T2, self.T3, self.T4, ]
+        fields = (['CQUADR', self.eid, self.Pid()] + self.nodeIDs() +
+                  [self.thetaMcid, self.zOffset, None, self.TFlag, self.T1,
+                   self.T2, self.T3, self.T4])
         return fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self.getReprDefaults()
-        fields = ['CQUADR', self.eid, self.Pid()] + self.nodeIDs() + [thetaMcid, zOffset,
-                                                                      None, TFlag, T1, T2, T3, T4]
+        fields = (['CQUADR', self.eid, self.Pid()] + self.nodeIDs() +
+                  [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
         return fields
 
 
 class CQUAD(QuadShell):
     type = 'CQUAD'
+
     def __init__(self, card=None, data=None):
         QuadShell.__init__(self, card, data)
         ## element ID number
@@ -991,12 +991,15 @@ class CQUAD(QuadShell):
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]
 
     def rawFields(self):
-        fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
+        fields = (['CQUAD', self.eid, self.Pid()] + self.nodeIDs() +
+                  [self.thetaMcid, self.zOffset, self.TFlag, self.T1,
+                   self.T2, self.T3, self.T4])
         return fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self.getReprDefaults()
-        fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
+        fields = (['CQUAD', self.eid, self.Pid()] + self.nodeIDs() +
+                  [thetaMcid, zOffset, TFlag, T1, T2, T3, T4])
         return fields
 
 
@@ -1057,7 +1060,7 @@ class CQUAD8(QuadShell):
         (n1, n2, n3, n4) = self.nodePositions()[:4]
         return _normal(n1 - n3, n2 - n4)
 
-    def AreaCentroid(self, debug=False):
+    def AreaCentroid(self):
         """
         @code
         1-----2
@@ -1074,8 +1077,6 @@ class CQUAD8(QuadShell):
              A=area
         @endcode
         """
-        #if debug:
-        #    print("nodes = %s" %(self.nodes))
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()
         a = n1 - n2
         b = n2 - n4
@@ -1089,10 +1090,6 @@ class CQUAD8(QuadShell):
 
         area = area1 + area2
         centroid = (c1 * area1 + c2 * area2) / area
-        if debug:
-            print("c1=%s \n c2=%s \n a1=%s a2=%s" % (c1, c2, area1, area2))
-            print("type(centroid=%s centroid=%s \n" %
-                 (type(centroid), centroid))
         return(area, centroid)
 
     def Area(self):

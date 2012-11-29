@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0103
 from __future__ import print_function
 
-from numpy import (float32, float64, complex64, complex128, array, cross, 
+import sys
+from numpy import (float32, float64, complex64, complex128, array, cross,
                    allclose, zeros, matrix, insert, diag)
 from numpy.linalg import norm  # , solve
 
@@ -11,9 +13,18 @@ from scipy.integrate import quad
 
 from math import sqrt
 
-#if sys.version_info < (3, 0):
-#    # "fixes" bug where scipy screws up return code handling
-#    import scipy.weave
+if sys.version_info < (3, 0):
+    """
+    "fixes" bug where scipy screws up return code handling
+    for example:
+        >>> import sys
+        >>> import scipy.sparse
+        >>> sys.exit(1)
+
+    The program's return code is 0
+    @note Python v3.0+ doesn't have scipy.weave
+    """
+    import scipy.weave
 
 
 def integrate_line(x, y):
@@ -125,9 +136,9 @@ def list_print(listA, tol=1e-8):
     def _print(a):
         if isinstance(a, str):
             return a
-        for i,j in ((float,'%-3.2g'), (float32,'%-3.2g'), (float64,'%-3.2g'),
-                    (int, '%3i') ):
-            if isinstance(a,i):
+        for i, j in ((float, '%-3.2g'), (float32, '%-3.2g'),
+                     (float64, '%-3.2g'), (int, '%3i') ):
+            if isinstance(a, i):
                 return j % (0. if abs(a) < tol else a)
 
         if isinstance(a, complex) or isinstance(a, complex64) or isinstance(a, complex128):
@@ -142,8 +153,6 @@ def list_print(listA, tol=1e-8):
 
     return '[ '+ ', '.join([_print(a) for a in listA])+ ']'
 
-
-        
 
 def augmented_identity(A):
     """
@@ -172,54 +181,51 @@ def solve_tridag(A, D):
 
 Area = lambda a, b: 0.5 * norm(cross(a, b))
 
+
 def gauss(n):
     r"""
     A quadrature rule: an approximation of the definite integral of a function.
     Currently implementation supports up to 5 quadrature points.
-    
+
     Function returns following values depending on n (number of points):
-    
+
     * n = 1:
-    
+
      * \f$ 0 \f$ --> \f$ 2 \f$
-    
+
     * n = 2:
-    
+
      * \f$ \pm 1/\sqrt{3} \f$ --> \f$ 1 \f$ 
-    
+
     * n = 3
-    
+
      * \f$ 0 \f$   --> \f$ 8/9 \f$
      * \f$ \pm\sqrt{3/5} \f$ --> \f$ 5/9 \f$ 
-    
+
     * n = 4:
-    
+
      * \f$ \pm\sqrt{\left( 3 - 2\sqrt{6/5} \right)/7} \f$ --> \f$ (18+\sqrt{30})/36 \f$
      * \f$ \pm\sqrt{\left( 3 + 2\sqrt{6/5} \right)/7} \f$ --> \f$ (18-\sqrt{30})/36 \f$ 
-    
+
     * n = 5:
-     
+
      - \f$ 0 \f$ --> \f$ 128/225 \f$     
      - \f$ \pm\frac{1}{3}\sqrt{5-2\sqrt{10/7}} \f$ --> \f$ (322+13\sqrt{70})/900 \f$ 
      - \f$ \pm\frac{1}{3}\sqrt{5+2\sqrt{10/7}} \f$ --> \f$ (322-13\sqrt{70})/900 \f$ 
-    
-    
-    @param n
-      Number of quadrature points
-    @retval
-      Two lists: points and corresponding weights, sorted by points value
-      
+
+
+    @param n Number of quadrature points
+    @retval Two lists: points and corresponding weights, sorted by points value
     @see http://en.wikipedia.org/wiki/Gaussian_quadrature
     """
- 
     if n == 1:
         return ([0.], [2.])
     if n == 2:
         p = 1. / sqrt(3)
-        return ([-p, p], [1.,1.])
+        return ([-p, p], [1., 1.])
     if n == 3:
         p = sqrt(3 / 5.)
-        return ([-p, 0., p], [5 / 9., 8 / 9., 5 / 9.])     
+        return ([-p, 0., p], [5 / 9., 8 / 9., 5 / 9.])
     if n == 4:
         p1 = (3 - 2. * sqrt(6 / 5)) / 7.
         p2 = (3 + 2. * sqrt(6 / 5)) / 7.
@@ -232,6 +238,6 @@ def gauss(n):
         w1 = (322 + 13 * sqrt(70)) / 900.
         w2 = (322 - 13 * sqrt(70)) / 900.
         return ([-p2, -p1, 0, p1, p2], [w2, w1, 128 / 225., w1, w2])
-        
-    raise NotImplementedError('The current implementation only supports up to ' 
+
+    raise NotImplementedError('The current implementation only supports up to '
                               '5 quadrature points')

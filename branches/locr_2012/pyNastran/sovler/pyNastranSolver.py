@@ -77,7 +77,7 @@ def partition_sparse_vector(F, dofs):
 
 def departition_dense_vector(n, IsVs):
     V = zeros(n)
-    for IV in IVs:
+    for IV in IsVs:
         (Is, Vs) = IV
         for (i, v) in izip(Is, Vs):
             V[i] = v
@@ -127,7 +127,7 @@ class Solver(F06, OP2):
         self.nUs = 0
         self.nUm = 0
 
-        # displacments
+        # displacements
         self.U = []
         self.Us = []
         self.Um = []
@@ -538,8 +538,8 @@ class Solver(F06, OP2):
         for loadSet in LoadSet:
             print(loadSet)
             (typesFound, forceLoads, momentLoads,
-                         forceConstraints, momentConstraints,
-                         gravityLoad) = loadSet.organizeLoads(model)
+             forceConstraints, momentConstraints,
+             gravityLoad) = loadSet.organizeLoads(model)
 
             nids = []
             for nid in forceLoads:
@@ -680,7 +680,8 @@ def get_cards():
 
                       # properties
                       'PELAS',
-                      'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PTUBE', 'PBEND',
+                      'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PTUBE',
+                      'PBEND',
                       'PSHELL', 'PCOMP', 'PSHEAR',  # 'PCOMPG',
                       'PSOLID',
 

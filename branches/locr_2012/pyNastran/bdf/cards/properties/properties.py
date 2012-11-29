@@ -3,13 +3,11 @@
 All ungrouped properties are defined in this file.  This includes:
  * PFAST
  * PGAP
- * PLSOLID
- * PSOLID
- * PRAC2D
- * PRAC3D
+ * PLSOLID (SolidProperty)
+ * PSOLID (SolidProperty)
+ * PRAC2D (CrackProperty)
+ * PRAC3D (CrackProperty)
  * PCONEAX (not done)
-
-All mass properties are PointProperty and Property objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -205,7 +203,8 @@ class PSOLID(SolidProperty):
             self.mid = card.field(2)
             self.cordm = card.field(3, 0)
             self.integ = card.field(4)
-            #validIntegration = ['THREE','TWO','FULL','BUBBLE',2,3,None,'REDUCED']
+            #validIntegration = ['THREE', 'TWO', 'FULL', 'BUBBLE',
+            #                    2, 3, None, 'REDUCED']
             self.stress = card.field(5)
             self.isop = card.field(6)
             self.fctn = card.field(7, 'SMECH')
@@ -241,7 +240,7 @@ class PSOLID(SolidProperty):
 
 class CrackProperty(Property):
     def __init__(self, card, data):
-        pass
+        Property.__init__(self, card, data)
 
     def Mid(self):
         if isinstance(self.mid, int):
