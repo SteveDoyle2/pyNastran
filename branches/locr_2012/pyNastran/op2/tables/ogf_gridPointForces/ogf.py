@@ -15,16 +15,16 @@ class OGF(object):
         table3 = self.readTable_OGF_3
         table4Data = self.readOGF_Data
         self.readResultsTable(table3, table4Data)
-        self.deleteAttributes_OGF()
+        self._delete_attributes_OGF()
 
-    def deleteAttributes_OGF(self):
+    def _delete_attributes_OGF(self):
         params = ['formatCode', 'appCode', 'numWide', 'value1', 'value2', ]
-        self.deleteAttributes(params)
+        self._delete_attributes(params)
 
     #def addDataParameter(self,data,Name,Type,FieldNum,applyNonlinearFactor=True):
-    #    #self.mode = self.getValues(data,'i',5) ## mode number
-    #    value = self.getValues(data,Type,FieldNum)
-    #    setattr(self,Name,value)
+    #    #self.mode = self.get_values(data, 'i', 5) ## mode number
+    #    value = self.get_values(data, Type, FieldNum)
+    #    setattr(self, Name, value)
     #    self.dataCode[Name] = value
     #
     #    if applyNonlinearFactor:
@@ -36,17 +36,17 @@ class OGF(object):
         self.dataCode[Name] = value
 
     def readTable_OGF_3(self, iTable):  # iTable=-3
-        bufferWords = self.getMarker()
+        bufferWords = self.get_marker()
         if self.makeOp2Debug:
             self.op2Debug.write('bufferWords=%s\n' % (str(bufferWords)))
         #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
-        data = self.getData(4)
+        data = self.get_data(4)
         bufferSize, = unpack(b'i', data)
-        data = self.getData(4 * 50)
+        data = self.get_data(4 * 50)
         #print self.printBlock(data)
 
-        (three) = self.parseApproachCode(data)
+        (three) = self.parse_approach_code(data)
         ## format code
         self.addDataParameter(data,'formatCode', 'i', 9, False)
         ## approach code ???
@@ -71,7 +71,7 @@ class OGF(object):
             self.applyDataCodeValue('dataNames', ['mode'])
         #elif self.analysisCode==3: # differential stiffness
             ## load set number
-            #self.lsdvmn = self.getValues(data,'i',5)
+            #self.lsdvmn = self.get_values(data,'i',5)
             #self.extractDt = self.extractInt
         #elif self.analysisCode==4: # differential stiffness
             #self.extractDt = self.extractInt
@@ -118,7 +118,7 @@ class OGF(object):
         #print "*iSubcase=%s"%(self.iSubcase)
         #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
         #self.printBlock(data)
-        self.readTitle()
+        self.read_title()
 
     def readOGF_Data(self):
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
@@ -127,7 +127,7 @@ class OGF(object):
         #print "tfsCode=%s" %(tfsCode)
 
         if self.tableCode == 19:  # grid point forces
-            assert self.tableName in ['OGPFB1'], 'tableName=%s tableCode=%s' % (self.tableName, self.tableCode)
+            assert self.tablename in ['OGPFB1'], 'tablename=%s tableCode=%s' % (self.tablename, self.tableCode)
             self.readOGF_Data_table19()
         else:
             self.NotImplementedOrSkip('bad OGF table')

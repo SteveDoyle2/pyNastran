@@ -17,27 +17,27 @@ class OPG(object):
         table3 = self.readTable_OPG_3
         table4Data = self.readOPG_Data
         self.readResultsTable(table3, table4Data)
-        self.deleteAttributes_OPG()
+        self._delete_attributes_OPG()
 
-    def deleteAttributes_OPG(self):
+    def _delete_attributes_OPG(self):
         params = ['lsdvm', 'mode', 'eigr', 'eign', 'eigi', 'modeCycle', 'freq',
                   'time', 'lftsfq', 'dLoadID', 'formatCode', 'numWide', 'oCode']
-        self.deleteAttributes(params)
+        self._delete_attributes(params)
 
     def readTable_OPG_3(self, iTable):  # iTable=-3
-        bufferWords = self.getMarker()
+        bufferWords = self.get_marker()
         #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
-        data = self.getData(4)
+        data = self.get_data(4)
         bufferSize, = unpack(b'i', data)
-        data = self.getData(4 * 50)
+        data = self.get_data(4 * 50)
 
         #self.printBlock(data)
 
-        aCode = self.getBlockIntEntry(data, 1)
+        aCode = self.get_block_int_entry(data, 1)
         #print "aCode = ",aCode
-        self.parseApproachCode(data)
-        #iSubcase = self.getValues(data,'i',4)
+        self.parse_approach_code(data)
+        #iSubcase = self.get_values(data,'i',4)
 
         ## dynamic load set ID/random code
         self.addDataParameter(data, 'dLoadID', 'i', 8, False)
@@ -73,10 +73,10 @@ class OPG(object):
             self.applyDataCodeValue('dataNames', ['mode', 'eign', 'modeCycle'])
         #elif self.analysisCode == 3: # differential stiffness
         #    ## load set number
-        #    self.lsdvmn = self.getValues(data,'i',5) 
+        #    self.lsdvmn = self.get_values(data,'i',5) 
         #elif self.analysisCode == 4: # differential stiffness
         #    ## load set number
-        #    self.lsdvmn = self.getValues(data,'i',5)
+        #    self.lsdvmn = self.get_values(data,'i',5)
         elif self.analysisCode == 5:   # frequency
             ## frequency
             self.addDataParameter(data, 'freq', 'f', 5)
@@ -121,40 +121,40 @@ class OPG(object):
 
         # tCode=2
         #if self.analysisCode==2: # sort2
-        #    self.lsdvmn = self.getValues(data,'i',5) ## load set, Mode number
+        #    self.lsdvmn = self.get_values(data,'i',5) ## load set, Mode number
 
         #print "*iSubcase=%s"%(self.iSubcase)
         #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
         #print self.codeInformation()
 
         #self.printBlock(data)
-        self.readTitle()
+        self.read_title()
 
     def readOPG_Data(self):
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
 
         if self.tableCode == 19:
-            assert self.tableName in [None], 'tableName=%s tableCode=%s' % (
-                self.tableName, self.tableCode)
+            assert self.tablename in [None], 'tablename=%s tableCode=%s' % (
+                self.tablename, self.tableCode)
             self.readOPG_Data_table19()  # grid point force balance
         elif self.tableCode == 2:  # load vector
-            assert self.tableName in ['OPG1', 'OPGV1'], 'tableName=%s tableCode=%s' % (self.tableName, self.tableCode)
+            assert self.tablename in ['OPG1', 'OPGV1'], 'tablename=%s tableCode=%s' % (self.tablename, self.tableCode)
             self.readOPG_Data_table2()
         elif self.tableCode == 12:  # nonlinear force vector
-            assert self.tableName in ['OPNL1'], 'tableName=%s tableCode=%s' % (
-                self.tableName, self.tableCode)
+            assert self.tablename in ['OPNL1'], 'tablename=%s tableCode=%s' % (
+                self.tablename, self.tableCode)
             self.readOPG_Data_table12()
         elif self.tableCode == 26:  # OGS1 - grid point stresses - surface
-            assert self.tableName in ['OGS1'], 'tableName=%s tableCode=%s' % (
-                self.tableName, self.tableCode)
+            assert self.tablename in ['OGS1'], 'tablename=%s tableCode=%s' % (
+                self.tablename, self.tableCode)
             self.readOGS1_Data_table26()
         elif self.tableCode == 27:  # OGS1 - grid point stresses - volume direct
-            assert self.tableName in ['OGS1'], 'tableName=%s tableCode=%s' % (
-                self.tableName, self.tableCode)
+            assert self.tablename in ['OGS1'], 'tablename=%s tableCode=%s' % (
+                self.tablename, self.tableCode)
             self.readOGS1_Data_table27()
 
         #elif self.tableCode == 28:  # OGS1- grid point stresses - principal
-            #assert self.tableName in ['OGS1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
+            #assert self.tablename in ['OGS1'],'tablename=%s tableCode=%s' %(self.tablename,self.tableCode)
             #self.readOGS1_Data_table28()
             #self.NotImplementedOrSkip()
 

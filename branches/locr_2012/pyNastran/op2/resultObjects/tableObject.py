@@ -14,7 +14,7 @@ except ImportError:
 class TableObject(scalarObject):  # displacement style table
     def __init__(self, dataCode, isSort1, iSubcase, dt):
         self.nonlinearFactor = None
-        self.tableName = None
+        self.tablename = None
         self.analysisCode = None
         scalarObject.__init__(self, dataCode, iSubcase)
         self.gridTypes = {}
@@ -400,31 +400,31 @@ class TableObject(scalarObject):  # displacement style table
 
     def isATO(self):
         """Auto-Correlation Function"""
-        if 'ATO' in self.tableName:
+        if 'ATO' in self.tablename:
             return True
         return False
 
     def isCRM(self):
         """Correlated Root-Mean Square"""
-        if 'CRM' in self.tableName:
+        if 'CRM' in self.tablename:
             return True
         return False
 
     def isPSD(self):
         """Power Spectral Density"""
-        if 'PSD' in self.tableName:
+        if 'PSD' in self.tablename:
             return True
         return False
 
     def isRMS(self):
         """Root-Mean Square"""
-        if 'RMS' in self.tableName:
+        if 'RMS' in self.tablename:
             return True
         return False
 
     def isZERO(self):
         """Zero Crossings"""
-        if 'NO' in self.tableName:
+        if 'NO' in self.tablename:
             return True
         return False
 
@@ -517,7 +517,7 @@ class TableObject(scalarObject):  # displacement style table
 class ComplexTableObject(scalarObject):
     def __init__(self, dataCode, isSort1, iSubcase, dt):
         self.nonlinearFactor = None
-        self.tableName = None
+        self.tablename = None
         self.analysisCode = None
         scalarObject.__init__(self, dataCode, iSubcase)
         self.gridTypes = {}

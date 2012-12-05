@@ -18,7 +18,7 @@ class OQG(object):
 
         dataCode = {'log': self.log, 'analysisCode': analysisCode,
                     'deviceCode': 1, 'tableCode': 3, 'sortCode': 0,
-                    'sortBits': [0, 0, 0], 'numWide': 8, 'tableName': 'OQG',
+                    'sortBits': [0, 0, 0], 'numWide': 8, 'tablename': 'OQG',
                     'nonlinearFactor': dt, }
 
         if iSubcase in self.spcForces:
@@ -42,7 +42,7 @@ class OQG(object):
         dataCode = {'log': self.log, 'analysisCode': analysisCode,
                     'deviceCode': 1, 'tableCode': 39,
                     'sortCode': 0, 'sortBits': [0, 0, 0], 'numWide': 8,
-                    'tableName': 'OQG', 'nonlinearFactor': dt, }
+                    'tablename': 'OQG', 'nonlinearFactor': dt, }
 
         if iSubcase in self.mpcForces:
             self.mpcForces[iSubcase].addF06Data(data, transient)

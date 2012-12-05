@@ -244,13 +244,10 @@ class MatlabWriter(object):
                         except:
                             #print "result name = %s" %(result.name())
                             raise
-                        ###
+
                         if deleteObjects:
                             del result
-                        ###
-                    ###
-                ###
-            ###
+
         if 0:
             for res in resTypes:
                 for iSubcase, result in sorted(res.iteritems()):
@@ -258,9 +255,7 @@ class MatlabWriter(object):
                         iSubcase, f=f, isMagPhase=False)
                     f.write(msg)
                     pageNum += 1
-                ###
-            ###
-        ###
+
         f.close()
 
 if __name__ == '__main__':

@@ -39,37 +39,37 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
         table4Data = self.readTable_OES_4_Data
         self.readResultsTable(
             table3, table4Data, flag=1)  # flag=1 defines old style
-        self.deleteAttributes_OES()
+        self._delete_attributes_OES()
 
-    def deleteAttributes_OES(self):
+    def _delete_attributes_OES(self):
         params = ['sCode', 'elementType', 'obj', 'markerStart', 'loadSet', 'formatCode', 'sCode', 'thermal',
                   'lsdvmn', 'mode', 'eign', 'modeCycle', 'freq', 'mode', 'eigr', 'eigi', 'dt']
-        self.deleteAttributes(params)
+        self._delete_attributes(params)
 
     def readTable_OES_3(self, iTable):
         #print "*iTable3 = ", iTable
         #if 0:
-            #markers = self.readMarkers([0,2])
+            #markers = self.read_markers([0,2])
             #print "markers=%s" % (markers)
-            #block = self.readBlock()
+            #block = self.read_block()
             #print "block = ",block
-            #markers = self.readMarkers([-1,7])
+            #markers = self.read_markers([-1,7])
             #print "markers=%s" % (markers)
-            #print self.printSection(200)
+            #print self.print_section(200)
 
-        bufferWords = self.getBufferWords()
+        bufferWords = self.get_buffer_words()
 
-        data = self.getData(4)
+        data = self.get_data(4)
         bufferSize, = unpack(b'i', data)
         if self.makeOp2Debug:
-            self.op2Debug.write('bufferSize=|%s|\n' % (str(bufferSize)))
+            self.op2Debug.write('bufferSize=|%s|\n' % str(bufferSize))
 
-        data = self.getData(4 * 50)
+        data = self.get_data(4 * 50)
         #self.printBlock(data)
         if self.makeOp2Debug:
             self.op2Debug.write('block3header\n')
 
-        self.parseApproachCode(data)  # 3
+        self.parse_approach_code(data)  # 3
         ## element type
         self.addDataParameter(data, 'elementType', 'i', 3, False)
         ## load set ID
@@ -101,10 +101,10 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             self.addDataParameter(data, 'modeCycle', 'f', 7, False)
             self.applyDataCodeValue('dataNames', ['mode', 'eigr', 'modeCycle'])
         #elif self.analysisCode==3: # differential stiffness
-            #self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            #self.lsdvmn = self.get_values(data,'i',5) ## load set number
             #self.dataCode['lsdvmn'] = self.lsdvmn
         #elif self.analysisCode==4: # differential stiffness
-        #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
+        #    self.lsdvmn = self.get_values(data,'i',5) ## load set number
         elif self.analysisCode == 5:   # frequency
             ## frequency
             self.addDataParameter(data, 'freq', 'f', 5)
@@ -146,15 +146,15 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                                (self.analysisCode))
         # tCode=2
         #if self.analysisCode==2: # sort2
-        #    self.lsdvmn = self.getValues(data,'i',5)
+        #    self.lsdvmn = self.get_values(data,'i',5)
 
         if not self.isSort1():
             raise NotImplementedError('sort2...')
 
-        self.readTitle()
+        self.read_title()
         #print "n4 = ",self.n
 
-    def parseStressCode(self):
+    def parse_stress_code(self):
         """
         sCode =  0 -> stressBits = [0,0,0,0,0]
         sCode =  1 -> stressBits = [0,0,0,0,1]
@@ -190,19 +190,19 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
     def readTable_OES_4_Data(self, iTable):
         isTable4Done = False
         isBlockDone = False
-        #print self.printSection(100)
+        #print self.print_section(100)
 
-        data = self.getData(16)
+        data = self.get_data(16)
         #print self.printBlock(data) # on
         #print "16 block..."
         #self.printBlock(data)
         bufferWords, = unpack(b'i', data[4:8])
         #print "bufferWords = ",bufferWords
         if self.makeOp2Debug:
-            self.op2Debug.write('bufferWords=|%s|\n' % (str(bufferWords)))
+            self.op2Debug.write('bufferWords=|%s|\n' % str(bufferWords))
 
         #print "*********************"
-        #bufferWords = self.getMarker() # 87 - buffer
+        #bufferWords = self.get_marker() # 87 - buffer
         #print "OES4 bufferWords = ",bufferWords,bufferWords*4
         #self.verifyBufferSize(bufferWords)
 
@@ -218,20 +218,20 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             #print "bufferWords 0 - done with Table4"
             isTable4Done = True
             #isBlockDone  = True
-            self.printSection(40)
+            self.print_section(40)
             #print "exitB"
             return (isTable4Done, isBlockDone)
 
-        self.readElementTable()
+        self._read_element_table()
         return isTable4Done, isBlockDone
 
-    def readElementTable(self):
+    def _read_element_table(self):
         #print "**self.readElementTable"
         #print "*elementType = ",self.elementType
         #print "op2.tell=%s n=%s" % (self.op2.tell(),self.n)
 
         self.rewind(4)
-        self.data = self.readBlock()  # 348
+        self.data = self.read_block()  # 348
         #print "len(self.data) = ",len(self.data)
 
         if self.makeOp2Debug:
@@ -239,28 +239,28 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
         #print self.printBlock(self.data)
 
         #msg = 'elementType=%s -> %s' % (self.elementType,self.ElementType(self.elementType))
-        self.parseStressCode()
+        self.parse_stress_code()
 
-        if not self.isValidSubcase():  # lets the user skip a certain subcase
+        if not self.is_valid_subcase():  # lets the user skip a certain subcase
             self.log.debug("***skipping table=%s iSubcase=%s" %
-                           (self.tableName, self.iSubcase))
+                           (self.tablename, self.iSubcase))
             print("***skipping table=%s iSubcase=%s" % (
-                self.tableName, self.iSubcase))
+                self.tablename, self.iSubcase))
             self.skipOES_Element()
             return
         
         if not self.isSort1():
             raise NotImplementedError('SORT2')
 
-        if self.tableName in ['OES1', 'OES1X', 'OES1X1', 'OES1C',
+        if self.tablename in ['OES1', 'OES1X', 'OES1X1', 'OES1C',
                               'OESNLXR', 'OESNLXD', 'OESNL1X', 'OESCP', 'OESTRCP',
                               'OSTR1X', 'OSTR1C']:
             if self.thermal == 0:
                 # Stress / Strain
                 self.dataCode['elementName'] = self.ElementType(self.elementType)
                 if self.tableCode == 5:
-                    assert self.tableName in ['OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESNLXR', 'OESNLXD', 'OESNL1X', 'OESCP', 'OESTRCP',
-                                              'OSTR1X', 'OSTR1C'], '%s is not supported' % (self.tableName)
+                    assert self.tablename in ['OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESNLXR', 'OESNLXD', 'OESNL1X', 'OESCP', 'OESTRCP',
+                                              'OSTR1X', 'OSTR1C'], '%s is not supported' % (self.tablename)
                     self.readOES_Data()
                 else:
                     self.NotImplementedOrSkip('bad OES table')
@@ -268,7 +268,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                 self.OES_Thermal()
             else:
                 self.NotImplementedOrSkip('bad OES-thermal table')
-        elif self.tableName in ['OESRT']:
+        elif self.tablename in ['OESRT']:
             if self.tableCode == 25:  # failure indices for layered composite elements
                 self.readOESRT_Data()
             else:
@@ -588,7 +588,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
         return (Real, Imag, Random)
 
     def readOESRT_Data(self):
-        #msg = '%s-OES elementType=%-3s -> %-6s\n' % (self.tableName,self.elementType,self.ElementType(self.elementType))
+        #msg = '%s-OES elementType=%-3s -> %-6s\n' % (self.tablename,self.elementType,self.ElementType(self.elementType))
         msg = ''
         #if self.analysisCode not in [1,6,10]:
             #raise InvalidATFSCodeError('self.atfsCode=%s' % (self.atfsCode))
@@ -612,7 +612,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
         asdf
 
     def readOES_Data(self):
-        #msg = '%s-OES elementType=%-3s -> %-6s\n' % (self.tableName,self.elementType,self.ElementType(self.elementType))
+        #msg = '%s-OES elementType=%-3s -> %-6s\n' % (self.tablename,self.elementType,self.ElementType(self.elementType))
         msg = ''
         
         readCase = True
@@ -911,10 +911,10 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
         #                        self.barStrain,barStrainObject)
         #    self.handleResultsBuffer3(self.OES_basicElement)
         #elif self.elementType in [75,89,90,92,93]:
-        #    msg = '%s-OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' % (self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
+        #    msg = '%s-OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' % (self.tablename,self.elementType,self.ElementType(self.elementType),self.op2FileName)
         #    raise AddNewElementError(msg)
         else:
-            msg = '%s-OES format%s elementType=%-3s -> %s is not supported - fname=%s\n' % (self.tableName, self.formatCode, self.elementType, self.ElementType(self.elementType), self.op2FileName.strip())
+            msg = '%s-OES format%s elementType=%-3s -> %s is not supported - fname=%s\n' % (self.tablename, self.formatCode, self.elementType, self.ElementType(self.elementType), self.op2FileName.strip())
             self.log.debug(msg)
             self.skippedCardsFile.write(msg)
             self.NotImplementedOrSkip()

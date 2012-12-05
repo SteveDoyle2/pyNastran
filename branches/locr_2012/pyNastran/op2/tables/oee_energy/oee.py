@@ -14,28 +14,28 @@ class OEE(object):
         table3 = self.readTable_OEE_3
         table4Data = self.readOEE_Data
         self.readResultsTable(table3, table4Data)
-        self.deleteAttributes_OEE()
+        self._delete_attributes_OEE()
 
-    def deleteAttributes_OEE(self):  # no thermal
+    def _delete_attributes_OEE(self):  # no thermal
         params = ['lsdvm', 'mode', 'eigr', 'freq', 'dt', 'lftsfq',
                   'formatCode', 'numWide']
-        self.deleteAttributes(params)
+        self._delete_attributes(params)
 
     def readTable_OEE_3(self, iTable):  # iTable=-3
-        bufferWords = self.getMarker()
+        bufferWords = self.get_marker()
         if self.makeOp2Debug:
             self.op2Debug.write('bufferWords=%s\n' % (str(bufferWords)))
         #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
-        data = self.getData(4)
+        data = self.get_data(4)
         bufferSize, = unpack(b'i', data)
-        data = self.getData(4 * 50)
+        data = self.get_data(4 * 50)
         #print self.printBlock(data)
 
-        aCode = self.getBlockIntEntry(data, 1)
+        aCode = self.get_block_int_entry(data, 1)
         ## total energy of all elements in iSubcase/mode
-        self.eTotal = self.parseApproachCode(data)
-        #print(self.printSection(100))
+        self.eTotal = self.parse_approach_code(data)
+        #print(self.print_section(100))
         elementName, = unpack(b'8s', data[24:32])
         #print("elementName = %s" %(elementName))
         try:
@@ -82,10 +82,10 @@ class OEE(object):
             self.applyDataCodeValue('dataNames', ['mode'])
             #print "mode(5)=%s eigr(6)=%s modeCycle(7)=%s" %(self.mode,self.eigr,self.modeCycle)
         #elif self.analysisCode==3: # differential stiffness
-            #self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            #self.lsdvmn = self.get_values(data,'i',5) ## load set number
             #self.dataCode['lsdvmn'] = self.lsdvmn
         #elif self.analysisCode==4: # differential stiffness
-            #self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            #self.lsdvmn = self.get_values(data,'i',5) ## load set number
         elif self.analysisCode == 5:   # frequency
             self.addDataParameter(data, 'freq2', 'f', 5)  ## frequency
             self.applyDataCodeValue('dataNames', ['freq2'])
@@ -117,14 +117,14 @@ class OEE(object):
         #print self.codeInformation()
 
         #self.printBlock(data)
-        self.readTitle()
+        self.read_title()
 
     def readOEE_Data(self):
-        #print "self.analysisCode=%s tableCode(1)=%s" %(self.analysisCode,self.tableCode)
-        #tfsCode = [self.tableCode,self.formatCode,self.sortCode]
+        #print "self.analysiscode=%s tablecode(1)=%s" %(self.analysiscode,self.tablecode)
+        #tfsCode = [self.tablecode,self.formatcode,self.sortcode]
 
         if self.tableCode == 18:
-            assert self.tableName in ['ONRGY1', 'ONRGY2'], 'tableName=%s tableCode=%s' % (self.tableName, self.tableCode)
+            assert self.tablename in ['ONRGY1', 'ONRGY2'], 'tablename=%s tablecode=%s' % (self.tablename, self.tablecode)
             self.readStrainEnergy_table18()
         else:
             self.NotImplementedOrSkip('bad OEE table')

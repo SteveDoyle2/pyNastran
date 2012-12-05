@@ -69,7 +69,7 @@ class PanairIO(object):
             elem.GetPointIds().SetId(2, p3)
             elem.GetPointIds().SetId(3, p4)
             self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-        ###
+
         print "eid = ", eid
         self.grid.SetPoints(points)
         #self.grid2.SetPoints(points2)

@@ -372,7 +372,7 @@ class F06(OES, OUG, OQG, F06Writer):
                     'sortBits': [0, 0, 0], 'numWide': 8, 'formatCode': 1,
                     'mode': iMode, 'eigr': transient[1], 'modeCycle': cycle,
                     'dataNames': ['mode', 'eigr', 'modeCycle'],
-                    'name': 'mode', 'tableName': 'OUGV1',
+                    'name': 'mode', 'tablename': 'OUGV1',
                     'nonlinearFactor': iMode,
                     #'sCode':0,
                     #'elementName':'CBAR','elementType':34,'stressBits':stressBits,

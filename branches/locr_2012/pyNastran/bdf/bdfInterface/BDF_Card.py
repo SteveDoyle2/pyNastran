@@ -99,7 +99,6 @@ class BDFCard(object):
                 print("  self.field(%s) = %s" % (n, self.field(n)))
             out.append(value)
             d += 1
-        ###
         return out
 
     def field(self, i, default=None):
@@ -187,7 +186,7 @@ class BDFCard(object):
                     pass
                 else:  # replace = with str(expression)
                     fieldNew = self.replaceExpression(fieldNew, fieldOld)
-                ###
+
             elif '' == fieldNew:
                 fieldNew = fieldOld
             else:

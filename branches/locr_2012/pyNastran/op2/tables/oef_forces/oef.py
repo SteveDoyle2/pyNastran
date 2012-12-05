@@ -31,26 +31,26 @@ class OEF(ThermalElements, RealForces, ComplexForces):
         table3 = self.readTable_OEF_3
         table4Data = self.readOEF_Data
         self.readResultsTable(table3, table4Data)
-        self.deleteAttributes_OEF()
+        self._delete_attributes_OEF()
 
-    def deleteAttributes_OEF(self):
+    def _delete_attributes_OEF(self):
         params = ['elementType', 'dLoadID', 'loadID', 'obj', 'markerStart', 'oCode',
                   'eigr', 'eigi', 'eign', 'mode', 'freq', 'time', 'thermal', ]
-        self.deleteAttributes(params)
+        self._delete_attributes(params)
         #print self.obj
 
     def readTable_OEF_3(self, iTable):  # iTable=-3
-        bufferWords = self.getMarker()
+        bufferWords = self.get_marker()
         #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
-        data = self.getData(4)
+        data = self.get_data(4)
         bufferSize, = unpack('i', data)
-        data = self.getData(4 * 50)
+        data = self.get_data(4 * 50)
         #self.printBlock(data)
 
-        aCode = self.getBlockIntEntry(data, 1)
+        aCode = self.get_block_int_entry(data, 1)
 
-        self.parseApproachCode(data)
+        self.parse_approach_code(data)
         ## element type
         self.addDataParameter( data, 'elementType', 'i', 3, False)  
         ## dynamic load set ID/random code        self.addDataParameter(data, 'dLoadID', 'i', 8, False)
@@ -132,7 +132,7 @@ class OEF(ThermalElements, RealForces, ComplexForces):
 
         # tCode=2
         #if self.analysisCode==2: # sort2
-        #    self.loadID = self.getValues(data,'i',5) ## load set ID number
+        #    self.loadID = self.get_values(data,'i',5) ## load set ID number
 
         if not self.isSort1():
             raise NotImplementedError('sort2...')
@@ -143,7 +143,7 @@ class OEF(ThermalElements, RealForces, ComplexForces):
 
         #self.printBlock(data)
         #print '-'*80
-        self.readTitle()
+        self.read_title()
 
     def OEF_ForceCode(self):
         """
@@ -260,10 +260,10 @@ class OEF(ThermalElements, RealForces, ComplexForces):
         OEF1X -
         DOEF1 -
         """
-        if self.tableCode == 4 and self.tableName in ['OEF1X', 'DOEF1']:  # Forces/Heat Flux
-            assert self.tableName in ['OEF1X', 'DOEF1'], 'tableName=%s tableCode=%s' % (self.tableName, self.tableCode)
+        if self.tableCode == 4 and self.tablename in ['OEF1X', 'DOEF1']:  # Forces/Heat Flux
+            assert self.tablename in ['OEF1X', 'DOEF1'], 'tablename=%s tableCode=%s' % (self.tablename, self.tableCode)
             self.readOEF_Data_table4()
-        #elif self.tableName in ['OEFATO2','OEFCRM2','OEFPSD2','OEFRMS2','OEFNO2',]:
+        #elif self.tablename in ['OEFATO2','OEFCRM2','OEFPSD2','OEFRMS2','OEFNO2',]:
             #self.skipOES_Element() # skipping entire table
         else:
             self.NotImplementedOrSkip()

@@ -16,40 +16,40 @@ class DESTAB(object):
         #self.readData(8)
 
     def readTable_DesTab(self):
-        self.tableName = 'DESTAB'
-        tableName = self.readTableName(rewind=False)  # DESTAB
-        self.tableInit(tableName)
-        #print "tableName = |%r|" %(tableName)
+        self.tablename = 'DESTAB'
+        tablename = self.read_table_name(rewind=False)  # DESTAB
+        self.table_init(tablename)
+        #print "tablename = |%r|" % (tablename)
 
-        self.readMarkers([-1, 7], 'DESTAB')
-        ints = self.readIntBlock()
+        self.read_markers([-1, 7], 'DESTAB')
+        ints = self.read_int_block()
         #print "*ints = ",ints
 
-        self.readMarkers([-2, 1, 0], 'DESTAB')
-        bufferWords = self.getMarker()
+        self.read_markers([-2, 1, 0], 'DESTAB')
+        bufferWords = self.get_marker()
         #print "bufferWords = ",bufferWords
-        word = self.readStringBlock()  # DESTAB
+        word = self.read_string_block()  # DESTAB
         #print "word = |%s|" %(word)
 
         iTable = -3
         #imax   = -244
 
         while bufferWords:  # read until bufferWords=0
-            self.readMarkers([iTable, 1, 0], 'DESTAB')
+            self.read_markers([iTable, 1, 0], 'DESTAB')
             nOld = self.n
-            bufferWords = self.getMarker()
+            bufferWords = self.get_marker()
             #print "bufferWords = ",bufferWords
             if bufferWords == 0:  # maybe read new buffer...
                 self.goto(nOld)
                 break
-            data = self.readBlock()
+            data = self.read_block()
             #print "len(data) = ",len(data)
             self.readDesvar(data)
             iTable -= 1
 
-        self.printSection(80)
+        self.print_section(80)
 
         #self.op2Debug.write('bufferWords=%s\n' %(str(bufferWords)))
         #print "1-bufferWords = ",bufferWords,bufferWords*4
 
-        #print self.printSection(300)
+        #print self.print_section(300)

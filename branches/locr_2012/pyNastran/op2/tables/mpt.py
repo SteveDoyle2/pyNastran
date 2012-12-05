@@ -11,7 +11,7 @@ from pyNastran.bdf.cards.dynamic import NLPARM, TSTEP, TSTEPNL
 class MPT(object):
 
     def readTable_MPTS(self):
-        self.tableName = 'MPT'
+        self.tablename = 'MPT'
         self.bigMaterials = {}
         self.iTableMap = {
             (1003, 10, 245): self.readCREEP,  # record 1

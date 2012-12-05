@@ -46,7 +46,6 @@ class CodeAsterConverter(BDF):
         for eid, element in self.elements.iteritems():
             pid = element.Pid()
             props[pid].append(eid)
-        ###
         return mats
 
     def getElementsByMid(self):
@@ -61,7 +60,6 @@ class CodeAsterConverter(BDF):
                 mats[mid].append(eid)
             except:
                 mats[0].append(eid)
-        ###
         return mats
 
     def getElementsByType(self):
@@ -77,7 +75,6 @@ class CodeAsterConverter(BDF):
             elems[Type].append(eid)
             #mid = element.Mid()
             #mats[mid].append(eid)
-        ###
         return elems
 
     def getPropertiesByMid(self):
@@ -92,7 +89,6 @@ class CodeAsterConverter(BDF):
                 mats[mid].append(pid)
             except:
                 mats[0].append(pid)
-        ###
         return mats
 
     def CA_Executive(self):
@@ -139,7 +135,6 @@ class CodeAsterConverter(BDF):
         for nid, node in sorted(self.nodes.iteritems()):
             p = node.Position()
             mail += form % (gridWord, nid, p[0], p[1], p[2])
-        ###
         mail += 'FINSF\n\n'
         mail += self.breaker()
         return mail
@@ -201,7 +196,7 @@ class CodeAsterConverter(BDF):
                 isSkipped = False
                 if 'skipped' in prop:
                     isSkipped = True
-            ###
+
         if not isSkipped:
             comm = comm[:-2]
         comm += ');\n'
@@ -263,9 +258,8 @@ class CodeAsterConverter(BDF):
                 comm += "'P%s'," % (pid)
             comm = comm[:-1] + '),\n'
             comm += "                      MATER=M%s),\n" % (mid)
-        ###
-        comm = comm[:-1] + '));\n'
 
+        comm = comm[:-1] + '));\n'
         comm += self.breaker()
         return comm
 
@@ -305,12 +299,9 @@ class CodeAsterConverter(BDF):
                 #except:
                     #print 'failed printing load...type=%s key=%s' %(load.type,key)
                     #raise
-                ###
             #loadcase.
             #for ID,grav in sorted(self.gravs.iteritems()):
             #    comm += grav.writeCodeAster(mag)
-            ###
-        ###
 
         #for lid_loadType,commi in sorted(skippedLids.iteritems()):
             #comm += commi
@@ -382,7 +373,6 @@ class CodeAsterConverter(BDF):
             print "writing fname=%s" % (fname + '.py')
             f.write(pyCA)
             f.close()
-        ###
 
 
 def main():

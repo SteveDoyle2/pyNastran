@@ -53,7 +53,7 @@ class OES(object):
         @endcode
         """
         (iSubcase, transient, dataCode) = self.getRodHeader(False)
-        dataCode['tableName'] = 'OES1X'
+        dataCode['tablename'] = 'OES1X'
         data = self.readRodStress()
         if iSubcase in self.rodStress:
             self.rodStress[iSubcase].addF06Data(data, transient)
@@ -66,7 +66,7 @@ class OES(object):
 
     def getRodStrain(self):
         (iSubcase, transient, dataCode) = self.getRodHeader(False)
-        dataCode['tableName'] = 'OSTR1X'
+        dataCode['tablename'] = 'OSTR1X'
         data = self.readRodStress()
         if iSubcase in self.rodStrain:
             self.rodStrain[iSubcase].addF06Data(data, transient)
@@ -150,7 +150,7 @@ class OES(object):
         (iSubcase, transient, dt, dataCode) = self.getBarHeader(False)
 
         data = self.readBarStress()
-        dataCode['tableName'] = 'OES1X'
+        dataCode['tablename'] = 'OES1X'
         if iSubcase in self.barStress:
             self.barStress[iSubcase].addF06Data(data, transient)
         else:
@@ -162,7 +162,7 @@ class OES(object):
 
     def getBarStrain(self):
         (iSubcase, transient, dt, dataCode) = self.getBarHeader(False)
-        dataCode['tableName'] = 'OSTR1X'
+        dataCode['tablename'] = 'OSTR1X'
 
         data = self.readBarStress()
         if iSubcase in self.barStrain:
@@ -255,7 +255,7 @@ class OES(object):
                     'sortBits': [0, 0, 0], 'numWide': 8, 'sCode': sCode,
                     'stressBits': stressBits, 'formatCode': 1,
                     'elementName': 'CQUAD4', 'elementType': 33,
-                    'tableName': 'OES1X', 'nonlinearFactor': dt,
+                    'tablename': 'OES1X', 'nonlinearFactor': dt,
                     }
 
         if iSubcase in self.compositePlateStress:
@@ -287,7 +287,7 @@ class OES(object):
         @endcode
         """
         (iSubcase, transient, dataCode) = self.getTriHeader(False)
-        dataCode['tableName'] = 'OES1X'
+        dataCode['tablename'] = 'OES1X'
         data = self.readTriStress(['CTRIA3'])
         if iSubcase in self.plateStress:
             self.plateStress[iSubcase].addF06Data(data, transient)
@@ -300,7 +300,7 @@ class OES(object):
 
     def getTriStrain(self):
         (iSubcase, transient, dataCode) = self.getTriHeader(True)
-        dataCode['tableName'] = 'OST1X'
+        dataCode['tablename'] = 'OST1X'
         data = self.readTriStress(['CTRIA3'])
         if iSubcase in self.plateStrain:
             self.plateStrain[iSubcase].addF06Data(data, transient)
@@ -378,7 +378,7 @@ class OES(object):
 
     def getQuadStress(self):
         (iSubcase, transient, dataCode) = self.getQuadHeader(2, False, 33)
-        dataCode['tableName'] = 'OES1X'
+        dataCode['tablename'] = 'OES1X'
         data = self.readTriStress(['CQUAD4'])
         if iSubcase in self.plateStress:
             self.plateStress[iSubcase].addF06Data(data, transient)
@@ -392,7 +392,7 @@ class OES(object):
 
     def getQuadStrains(self):
         (iSubcase, transient, dataCode) = self.getQuadHeader(2, True, 33)
-        dataCode['tableName'] = 'OSTR1X'
+        dataCode['tablename'] = 'OSTR1X'
         data = self.readTriStress(['CQUAD4'])
         if iSubcase in self.plateStrain:
             self.plateStrain[iSubcase].addF06Data(data, transient)
@@ -418,7 +418,7 @@ class OES(object):
         @endcode
         """
         (iSubcase, transient, dataCode) = self.getQuadHeader(3, False, 144)
-        dataCode['tableName'] = 'OES1X',
+        dataCode['tablename'] = 'OES1X',
         data = self.readQuadBilinear()
         if iSubcase in self.plateStress:
             self.plateStress[iSubcase].addF06Data(data, transient)
@@ -507,7 +507,7 @@ class OES(object):
 
     def readSolidStress(self, eType, n):
         (iSubcase, transient, dataCode) = self.getSolidHeader(eType, n, False)
-        dataCode['tableName'] = 'OES1X'
+        dataCode['tablename'] = 'OES1X'
 
         data = self.read3DStress(eType, n)
         if iSubcase in self.solidStress:
@@ -521,7 +521,7 @@ class OES(object):
 
     def readSolidStrain(self, eType, n):
         (iSubcase, transient, dataCode) = self.getSolidHeader(eType, n, True)
-        dataCode['tableName'] = 'OSTR1X'
+        dataCode['tablename'] = 'OSTR1X'
 
         data = self.read3DStress(eType, n)
         if iSubcase in self.solidStrain:

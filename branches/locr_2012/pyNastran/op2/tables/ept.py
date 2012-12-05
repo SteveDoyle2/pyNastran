@@ -14,7 +14,7 @@ from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
 class EPT(object):
 
     def readTable_EPT(self):
-        self.tableName = 'EPT'
+        self.tablename = 'EPT'
         self.bigProperties = {}
         self.iTableMap = {
             #(3201,32,55):    self.readNSM,     # record 2  - needs an object holder (e.g. self.elements/self.properties)
@@ -140,7 +140,7 @@ class EPT(object):
             #print "PBARL = ",dataIn
             prop = PBARL(None, dataIn)
             self.addOp2Property(prop)
-            #print self.printSection(20)
+            #print self.print_section(20)
 
 # PBCOMP
 

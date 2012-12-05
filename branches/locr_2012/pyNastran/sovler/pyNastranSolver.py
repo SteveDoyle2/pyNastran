@@ -295,7 +295,7 @@ class Solver(F06, OP2):
 
         dataCode = {'log': self.log, 'analysisCode': analysisCode,
                     'deviceCode': 1, 'tableCode': 1, 'sortCode': 0,
-                    'sortBits': [0, 0, 0], 'numWide': 8, 'tableName': 'OUG',
+                    'sortBits': [0, 0, 0], 'numWide': 8, 'tablename': 'OUG',
                     'nonlinearFactor': None}
         #print "headers = %s" %(headers)
 

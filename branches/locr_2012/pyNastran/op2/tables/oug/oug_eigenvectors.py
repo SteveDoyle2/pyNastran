@@ -39,7 +39,6 @@ class EigenVectorObject(TableObject):  # approachCode=2, sortCode=0, thermal=0
             self.gridTypes[nid] = gridType
             self.translations[iMode][nid] = array([t1, t2, t3])
             self.rotations[iMode][nid] = array([r1, r2, r3])
-        ###
 
     def updateMode(self, dataCode, iMode):
         """
@@ -101,13 +100,11 @@ class EigenVectorObject(TableObject):  # approachCode=2, sortCode=0, thermal=0
                 (vals2, isAllZeros) = self.writeFloats13E(vals)
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
-            ###
             msg.append(pageStamp + str(pageNum) + '\n')
             if f is not None:
                 f.write(''.join(msg))
                 msg = ['']
             pageNum += 1
-        ###
         return (''.join(msg), pageNum - 1)
 
     def __repr__(self):
@@ -139,9 +136,7 @@ class EigenVectorObject(TableObject):  # approachCode=2, sortCode=0, thermal=0
                         msg += '%10s ' % (0)
                     else:
                         msg += '%10.3g ' % (val)
-                    ###
                 msg += '\n'
-            ###
             msg += '\n'
             #print msg
         return msg
@@ -213,7 +208,6 @@ class realEigenVectorObject(scalarObject):  # approachCode=2, sortCode=0, therma
         #print "d = ",self.translations
         self.translations[self.caseVal][nodeID] = [v1, v2, v3]
         self.rotations[self.caseVal][nodeID] = [v4, v5, v6]
-    ###
 
     def modes(self):
         return sorted(self.translations.keys())
@@ -255,10 +249,8 @@ class realEigenVectorObject(scalarObject):  # approachCode=2, sortCode=0, therma
                 (vals2, isAllZeros) = self.writeFloats13E(vals)
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
-            ###
             msg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
-        ###
         return (''.join(msg), pageNum - 1)
 
     def __repr__(self):
@@ -355,13 +347,12 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approachCode=2, sortCode=
 
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
                 msg.append('%14s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
-            ###
+
             msg.append(pageStamp + str(pageNum) + '\n')
             if f is not None:
                 f.write(''.join(msg))
                 msg = ['']
             pageNum += 1
-        ###
         return (''.join(msg), pageNum - 1)
 
     def __repr__(self):

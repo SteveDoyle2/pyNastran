@@ -11,37 +11,38 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
         table4Data = self.readTable_OES_4_Data
         self.readResultsTable(
             table3, table4Data, flag=1)  # flag=1 defines old style
-        self.deleteAttributes_OES()
+        self._delete_attributes_OES()
 
-    def deleteAttributes_OESNLXR(self):
-        params = ['sCode', 'elementType', 'obj', 'markerStart', 'loadSet', 'formatCode', 'sCode', 'thermal',
-                  'lsdvmn', 'mode', 'eign', 'modeCycle', 'freq', 'mode', 'eigr', 'eigi', 'dt']
-        self.deleteAttributes(params)
+    def _delete_attributes_OESNLXR(self):
+        params = ['sCode', 'elementType', 'obj', 'markerStart', 'loadSet',
+                  'formatCode', 'sCode', 'thermal', 'lsdvmn', 'mode', 'eign',
+                  'modeCycle', 'freq', 'mode', 'eigr', 'eigi', 'dt']
+        self._delete_attributes(params)
 
     def readTable_OESNLXR_3(self, iTable):
         #print "*iTable3 = ",iTable
         #if 0:
-            #markers = self.readMarkers([0,2])
+            #markers = self.read_markers([0,2])
             #print "markers=%s" %(markers)
-            #block = self.readBlock()
+            #block = self.read_block()
             #print "block = ",block
-            #markers = self.readMarkers([-1,7])
+            #markers = self.read_markers([-1,7])
             #print "markers=%s" %(markers)
-            #print self.printSection(200)
+            #print self.print_section(200)
 
-        bufferWords = self.getBufferWords()
+        bufferWords = self.get_buffer_words()
 
-        data = self.getData(4)
+        data = self.get_data(4)
         bufferSize, = unpack('i', data)
         if self.makeOp2Debug:
-            self.op2Debug.write('bufferSize=|%s|\n' % (str(bufferSize)))
+            self.op2Debug.write('bufferSize=|%s|\n' % str(bufferSize))
 
-        data = self.getData(4 * 50)
+        data = self.get_data(4 * 50)
         #self.printBlock(data)
         if self.makeOp2Debug:
             self.op2Debug.write('block3header\n')
 
-        self.parseApproachCode(data)  # 3
+        self.parse_approach_code(data)  # 3
         ## element type
         self.addDataParameter(data, 'elementType', 'i', 3, False)
         ## load set ID
@@ -73,9 +74,9 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
             self.addDataParameter(data, 'modeCycle', 'f', 7, False)
         #elif self.analysisCode==3: # differential stiffness
         #    ## load set number
-        #    self.lsdvmn = self.getValues(data,'i',5)
+        #    self.lsdvmn = self.get_values(data,'i',5)
         #elif self.analysisCode==4: # differential stiffness
-        #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
+        #    self.lsdvmn = self.get_values(data,'i',5) ## load set number
 
         elif self.analysisCode == 5:   # frequency
             ## frequency
@@ -115,20 +116,20 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
             self.addDataParameter(data, 'dt', 'f', 5)
         else:
             raise RuntimeError('Invalid Analysis Code: analysisCode=%s' % (self.analysisCode))
-        ###
+
         # tCode=2
         #if self.analysisCode==2: # sort2
-        #    self.lsdvmn = self.getValues(data,'i',5)
+        #    self.lsdvmn = self.get_values(data,'i',5)
 
-        self.readTitle()
+        self.read_title()
         #print "n4 = ",self.n
 
     def readTable_OESNLXR_4_Data(self, iTable):
         isTable4Done = False
         isBlockDone = False
-        #print self.printSection(100)
+        #print self.print_section(100)
 
-        data = self.getData(16)
+        data = self.get_data(16)
         #print self.printBlock(data) # on
         #print "16 block..."
         #self.printBlock(data)
@@ -139,7 +140,7 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
             self.op2Debug.write('bufferWords=|%s|\n' % (str(bufferWords)))
 
         #print "*********************"
-        #bufferWords = self.getMarker() # 87 - buffer
+        #bufferWords = self.get_marker() # 87 - buffer
         #print "OES4 bufferWords = ",bufferWords,bufferWords*4
         #self.verifyBufferSize(bufferWords)
 
@@ -155,7 +156,7 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
             #print "bufferWords 0 - done with Table4"
             isTable4Done = True
             #isBlockDone  = True
-            self.printSection(40)
+            self.print_section(40)
             #print "exitB"
             return isTable4Done, isBlockDone
 
@@ -168,7 +169,7 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
         #print "op2.tell=%s n=%s" %(self.op2.tell(),self.n)
 
         self.rewind(4)
-        self.data = self.readBlock()  # 348
+        self.data = self.read_block()  # 348
         #print "len(self.data) = ",len(self.data)
 
         if self.makeOp2Debug:
@@ -178,11 +179,11 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
         #msg = 'elementType=%s -> %s' %(self.elementType,self.ElementType(self.elementType))
         tfsCode = [self.tableCode, self.formatCode, self.sortCode]
 
-        self.parseStressCode()
+        self.parse_stress_code()
 
-        if not self.isValidSubcase():  # lets the user skip a certain subcase
+        if not self.is_valid_subcase():  # lets the user skip a certain subcase
             self.log.debug("***skipping table=%s iSubcase=%s" %
-                           (self.tableName, self.iSubcase))
+                           (self.tablename, self.iSubcase))
             self.skipOES_Element()
         elif self.thermal == 0:
             # Stress / Strain
@@ -195,7 +196,6 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
                 pass
         else:
             raise RuntimeError('invalid thermal option...')
-        ###
 
         #print self.obj
 
@@ -317,4 +317,3 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
             #msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
             #raise RuntimeError(msg)
             self.skippedCardsFile.write(msg)
-        ###

@@ -66,7 +66,7 @@ def runF06(f06file, iSubcases=[], writeF06=True, printF06=False, debug=False, st
             f06.writeF06(model + '.f06.out')
 
         if printF06:
-            f06.printResults()
+            f06.print_results()
         #print "subcases = ",f06.subcases
 
         #assert tableNamesF06==tableNamesF06,'tableNamesF06=%s tableNamesF06=%s' %(tableNamesF06,tableNamesF06)

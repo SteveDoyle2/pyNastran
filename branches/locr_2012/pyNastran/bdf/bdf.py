@@ -1094,7 +1094,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                     getattr(self, func)(_get_cls(card_name))
                     return card_obj
 
-            ############ card that requires more careful processing ###########
+            # card that requires more careful processing, elements
             _dct = {'CTETRA': (7, CTETRA4, CTETRA10), 'CHEXA': (11, CHEXA8,
                     CHEXA20), 'CPENTA': (9, CPENTA6, CPENTA15)}
             if card_name in _dct:
@@ -1102,7 +1102,8 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 self.add_element((d[1] if card_obj.nFields() == d[0]
                                        else d[2])(card_obj))
                 return card_obj
-
+            
+            # dampers
             _dct = {'PELAS': (5,), 'PVISC': (5,), 'PDAMP': (3, 5)}
             if card_name in _dct:
                 self.add_property(_get_cls(card_name))

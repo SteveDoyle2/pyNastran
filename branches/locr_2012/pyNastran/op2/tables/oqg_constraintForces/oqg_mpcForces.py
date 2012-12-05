@@ -29,8 +29,7 @@ class MPCForcesObject(TableObject):
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
-            ###
-        ###
+
         msg.append(pageStamp + str(pageNum) + '\n')
         if f is not None:
             f.write(''.join(msg))
@@ -89,9 +88,7 @@ class MPCForcesObject(TableObject):
                         msg += '%10s ' % (0)
                     else:
                         msg += '%10.2f ' % (val)
-                    ###
                 msg += '\n'
-            ###
         return msg
 
     def __repr__(self):

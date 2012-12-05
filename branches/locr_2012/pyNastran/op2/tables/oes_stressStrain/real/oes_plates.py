@@ -666,8 +666,8 @@ class PlateStressObject(stressObject):
                                 msg.append(out)
                     else:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (self.dataCode[
-                                'name'], dt)
+                            header[1] = ' %s = %10.4E\n' % (
+                                self.dataCode['name'], dt)
                             msg += header + msgPack
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid)
@@ -788,7 +788,6 @@ class PlateStressObject(stressObject):
                     msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip())
                 else:
                     msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip())
-
         return msg
 
     def writeF06_Tri3Transient(self, dt, eid):
@@ -980,7 +979,7 @@ class PlateStrainObject(strainObject):
                         self.minorP[eid][nid] = [e21, e22]
                         self.evmShear[eid][nid] = [evm1, evm2]
                     else:
-                        assert len(line) == 19, 'len(line)=%s' % (len(line))
+                        assert len(line) == 19, 'len(line)=%s' % len(line)
                         raise NotImplementedError()
                 else:
                     msg = 'line=%s not supported...' % (line)

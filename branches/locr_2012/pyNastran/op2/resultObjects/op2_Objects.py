@@ -205,7 +205,7 @@ class scalarObject(baseScalarObject):
 
     def setDataMembers(self):
         if 'dataNames' not in self.dataCode:
-            msg = 'No "transient" variable was set for %s\n' % (self.tableName)
+            msg = 'No "transient" variable was set for %s\n' % (self.tablename)
             raise NotImplementedError(msg + self.codeInformation())
 
         for name in self.dataCode['dataNames']:

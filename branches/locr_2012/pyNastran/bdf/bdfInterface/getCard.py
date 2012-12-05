@@ -35,7 +35,6 @@ class GetMethods(object):
             self.log.debug("element.pid = %s" % (element.pid))
             nids = set(element.nids)
             nids2 = nids2.union(nids)
-        ###
         return nids2
 
     def Node(self, nid, allowEmptyNodes=False):
@@ -47,7 +46,6 @@ class GetMethods(object):
             return SPOINT(nid)
         else:
             raise RuntimeError('nid=%s is not a GRID or SPOINT' % (nid))
-        ###
 
     def Nodes(self, nids, allowEmptyNodes=False):
         """
@@ -80,8 +78,6 @@ class GetMethods(object):
             element = self.Element(eid)
             if element.Pid() in pids:
                 eids2.append(eid)
-            ###
-        ###
         return (eids2)
 
     def getNodeIDToElementIDsMap(self):
@@ -99,8 +95,7 @@ class GetMethods(object):
         if self.spoints:  # SPOINTs
             for nid in sorted(self.spoints.spoints):  # SPOINTs
                 nidToElementsMap[nid] = []
-            ###
-        ###
+
         for (eid, element) in self.elements.iteritems():  # load the mapper
             try:
                 # not supported for 0-D and 1-D elements
@@ -109,8 +104,6 @@ class GetMethods(object):
                     nidToElementsMap[nid].append(eid)
             except:
                 pass
-            ###
-        ###
         return nidToElementsMap
 
     def getPropertyIDToElementIDsMap(self):
@@ -130,8 +123,6 @@ class GetMethods(object):
                 if pid == 0:  # CONM2
                     continue
                 pidToEidsMap[pid].append(eid)
-            ###
-        ###
         return (pidToEidsMap)
 
     def getMaterialIDToPropertyIDsMap(self):

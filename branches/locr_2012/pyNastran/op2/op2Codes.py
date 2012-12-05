@@ -300,7 +300,7 @@ class Op2Codes(object):
             54: 'OLMPF2M - ???',
             55: 'OGMPF2M - ???',
         }
-        msg += 'n=%s table=%s-%s' % (self.n, self.tableName,
+        msg += 'n=%s table=%s-%s' % (self.n, self.tablename,
                                      tableContent[tableCodeContent])
         return msg
 
@@ -562,7 +562,7 @@ class Op2Codes(object):
         msg += "  deviceCode   = %-3s %s\n" % (self.deviceCode, device)
         msg += "  analysisCode = %-3s %s\n" % (self.analysisCode, analysis)
         msg += "  tableCode    = %-3s %s-%s\n" % (
-            self.tableCode, self.tableName, table)
+            self.tableCode, self.tablename, table)
         msg += "  formatCode   = %-3s %s\n" % (formatCode, formatWord)
 
         msg += "  sortType     = %-3s %s\n" % (self.sortBits[0], sortWord1)

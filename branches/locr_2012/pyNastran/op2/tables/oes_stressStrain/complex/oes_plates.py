@@ -535,8 +535,7 @@ class ComplexPlateStressObject(stressObject):
                 if f is not None:
                     f.write(''.join(msg))
                     msg = ['']
-            ### eids
-        ### all eTypes
+
         return (''.join(msg), pageNum - 1)
 
     def writeF06_Quad4_Bilinear(self, eid, n, isMagPhase):

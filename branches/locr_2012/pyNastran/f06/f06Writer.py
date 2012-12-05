@@ -123,13 +123,12 @@ class F06Writer(object):
         """If this class is inherited, the PAGE stamp may be overwritten"""
         return makeStamp(Title)
 
-    def writeF06(self, f06OutName, isMagPhase=False, makeFile=True, deleteObjects=True):
+    def writeF06(self, f06OutName, isMagPhase=False, makeFile=True,
+                 deleteObjects=True):
         """
         Writes an F06 file based on the data we have stored in the object
-        @param self
-               the object pointer
-        @param f06OutName
-               the name of the F06 file to write
+        @param self the F06 object
+        @param f06OutName the name of the F06 file to write
         @param isMagPhase
                should complex data be written using
                Magnitude/Phase instead of Real/Imaginary (default=False; Real/Imag)
@@ -163,11 +162,11 @@ class F06Writer(object):
                                              pageNum=pageNum, f=f, isMagPhase=isMagPhase)
             if deleteObjects:
                 del result
-            ###
             f.write(msg)
             pageNum += 1
 
-        for iSubcase, result in sorted(self.eigenvectors.iteritems()):  # has a special header
+        # has a special header
+        for iSubcase, result in sorted(self.eigenvectors.iteritems()):
             (subtitle, label) = self.iSubcaseNameMap[iSubcase]
             subtitle = subtitle.strip()
             header[0] = '     %s\n' % (subtitle)
@@ -177,7 +176,6 @@ class F06Writer(object):
                                              pageNum=pageNum, f=f, isMagPhase=isMagPhase)
             if deleteObjects:
                 del result
-            ###
             f.write(msg)
             pageNum += 1
 

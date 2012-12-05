@@ -6,7 +6,6 @@ class MaxDisplacement(object):
             sid = line[0]
             self.translations[sid] = line[1:4]
             self.rotations[sid] = line[4:]
-        ###
 
     def writeF06(self, pageStamp='', pageNum=1):
         msg = ['0                                                  MAXIMUM  DISPLACEMENTS',

@@ -107,7 +107,6 @@ class TemperatureObject(scalarObject):  # approachCode=1, sortCode=0, thermal=1
    #     for nodeID,T in sorted(self.temperatures.iteritems()):
    #         grid = nodeID*10+deviceCode
    #         msg += pack('iffffff',grid,T,0,0,0,0,0)
-   #     ###
    #     return msg
    #
    # def writeOp2Transient(self,block3,deviceCode=1):
@@ -125,8 +124,6 @@ class TemperatureObject(scalarObject):  # approachCode=1, sortCode=0, thermal=1
    #         for nodeID,T in sorted(temperatures.iteritems()):
    #             grid = nodeID*10+deviceCode
    #             msg += pack('iffffff',grid,T,0,0,0,0,0)
-   #         ###
-   #     ###
    #     return msg
 
     def writeHeader(self):

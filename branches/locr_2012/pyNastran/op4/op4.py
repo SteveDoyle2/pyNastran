@@ -408,7 +408,7 @@ class OP4(FortranFile):
 
     def readStartMarker(self, f):
         #print '--------------------------------------'
-        #print self.printSection(60)
+        #print self.print_section(60)
         data = f.read(4)
         self.n += 4
         (recordLength,) = unpack(self.endian + 'i', data)
@@ -450,7 +450,7 @@ class OP4(FortranFile):
 
     def readMatrixBinary(self, f, floatType, matrixNames=None):
         """reads a matrix"""
-        #print self.printSection(60)
+        #print self.print_section(60)
         #print "*************************"
         data = f.read(4)
         self.n += 4
@@ -458,7 +458,7 @@ class OP4(FortranFile):
         assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
         #print "RL = %s" %(recordLength)
 
-        #print self.printSection(60)
+        #print self.print_section(60)
         if recordLength == 24:
             data = f.read(recordLength)
             self.n += recordLength
@@ -531,13 +531,13 @@ class OP4(FortranFile):
         else:
             raise NotImplementedError(d)
         #f.read(recordLength); self.n+=recordLength
-        #self.printSection(10)
+        #self.print_section(10)
         #f.read(4); self.n+=4
 
         #if isSparse:  # Initialize a real matrix
         #    A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType)
         #print '------end1--------'
-        #print self.printSection(60)
+        #print self.print_section(60)
         #print '------end2--------'
         return (name, form, A)
 
@@ -578,7 +578,7 @@ class OP4(FortranFile):
         while icol < ncols + 1:  # if isDense
             #if recordLength==0:
             assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-            (icol, irow, nWords) = self.getMarkers(f, isSparse, isBigMat)
+            (icol, irow, nWords) = self.get_markers(f, isSparse, isBigMat)
             L = nWords
             if 0:
                 print("N=%s icol=%s irow=%s nWords=%s" % (
@@ -661,7 +661,7 @@ class OP4(FortranFile):
 
                 valueList = unpack(strValues, data[0:nValues * NBW])
                 assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-                #print self.printSection(4)
+                #print self.print_section(4)
                 if 0:
                     print("valueList = %s" % (valueList))
 
@@ -732,7 +732,7 @@ class OP4(FortranFile):
         while icol < ncols + 1:  # if isDense
             #if recordLength==0:
             assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-            (icol, irow, nWords) = self.getMarkers(f, isSparse, isBigMat)
+            (icol, irow, nWords) = self.get_markers(f, isSparse, isBigMat)
             if 0:
                 print("N=%s icol=%s irow=%s nWords=%s" % (
                     self.n, icol, irow, nWords))
@@ -789,7 +789,7 @@ class OP4(FortranFile):
                           (nValues * NBW, len(data)))
                 valueList = unpack(strValues, data[0:nValues * NBW])
                 assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-                #print self.printSection(4)
+                #print self.print_section(4)
                 #print self.printBlock(data)
                 if 0:
                     print("valueList = %s" % (valueList))
@@ -845,7 +845,7 @@ class OP4(FortranFile):
             self.n += 4
         return A
 
-    def getMarkers(self, f, isSparse, isBigMat):
+    def get_markers(self, f, isSparse, isBigMat):
         if isSparse:
             if isBigMat:
                 (a, icol, irow, nWords) = self.readStartMarker(f)
@@ -1276,11 +1276,10 @@ if __name__ == '__main__':
         matrices = op4.readOP4(
             fname, matrixNames=matrixNames, precision='default')
         print("keys = %s" % (matrices.keys()))
-        #print "#####################################################"
-        print("fname=%s" % (fname))
+        print("fname=%s" % fname)
         for name, (form, matrix) in sorted(matrices.items()):
             print("-----------------------------------")
-            print("name = |%s|" % (name))
+            print("name = |%s|" % name)
             if isinstance(matrix, coo_matrix):
                 print("SPARSE")
                 #matrix = matrix.todense()

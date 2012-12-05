@@ -500,7 +500,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         """
         #self.printoutSection = '\n'.join(section)+'\n'
 
-        ########  ROW 1 #######
+        #  ROW 1
         self.isings = float(section[1][0:10])
         #self.isings = 5.
         #2.0 output wake singularity grid-singularity strength and gradients at 9 pts/panel
@@ -533,8 +533,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         # 1.0 outputs edge-matching diagnositic data
         #print "igeomp=|%s| isingp=|%s| icontp=|%s| ibconp=|%s| iedgep=|%s|" %(igeomp,isingp,icontp,ibconp,iedgep)
 
-        ########  ROW 2 #######
-
+        #  ROW 2
         self.ipraic = float(section[2][0:10])
         #self.ipraic = 3.
         # xxx inputs control point sequence number for
@@ -655,7 +654,6 @@ class PanairGrid(PanairGridHelper, PanairWrite):
                        tWake]
             patch = self.addWakePatch(netName, options, X, Y, Z)
             n += 1
-        ###
         return True
 
     def getPartialEdgeAbutments(self, section):

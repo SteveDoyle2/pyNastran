@@ -67,9 +67,7 @@ class TemperatureGradientAndFluxObject(TableObject):
                         msg += '%10s ' % (0)
                     else:
                         msg += '%10.2f ' % (val)
-                    ###
                 msg += '\n'
-            ###
         return msg
 
     def __repr__(self):

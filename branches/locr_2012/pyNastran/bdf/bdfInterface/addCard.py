@@ -36,7 +36,6 @@ class AddMethods(object):
                 #self.params[key] = param
         #else:
         self.dmijs[name] = dmij
-        ###
 
     def add_DMIJI(self, dmiji, allowOverwrites=False):
         name = dmiji.name
@@ -68,7 +67,6 @@ class AddMethods(object):
                 self.params[key] = param
         else:
             self.params[key] = param
-        ###
 
     def add_node(self, node, allowOverwrites=False):
         #print node
@@ -363,7 +361,6 @@ class AddMethods(object):
         else:
             assert darea.sid > 0
             self.dareas[key] = darea
-        ###
 
     def add_AERO(self, aero):
         key = aero.acsid

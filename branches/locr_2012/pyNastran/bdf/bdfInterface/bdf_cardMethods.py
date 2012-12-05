@@ -69,7 +69,6 @@ class CardMethods(object):
                     raise SyntaxError('tabs and commas in the same line are '
                                       'not supported...line=|%r|' % (line))
                 line = line.expandtabs()
-            ###
             lines2.append(line)
         return lines2
 

@@ -15,25 +15,25 @@ class OQG(object):
         table3 = self.readTable_OQG_3
         table4Data = self.readOQG_Data
         self.readResultsTable(table3, table4Data)
-        self.deleteAttributes_OQG()
+        self._delete_attributes_OQG()
 
-    def deleteAttributes_OQG(self):
+    def _delete_attributes_OQG(self):
         #print self.obj
         params = ['lsdvm', 'mode', 'eigr', 'modeCycle', 'freq', 'dt', 'lftsfq', 'thermal', 'rCode', 'fCode', 'numWide', 'acousticFlag', 'thermal']
-        self.deleteAttributes(params)
+        self._delete_attributes(params)
 
     def readTable_OQG_3(self, iTable):  # iTable=-3
-        bufferWords = self.getMarker()
+        bufferWords = self.get_marker()
         if self.makeOp2Debug:
             self.op2Debug.write('bufferWords=%s\n' % (str(bufferWords)))
         #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
-        data = self.getData(4)
+        data = self.get_data(4)
         bufferSize, = unpack('i', data)
-        data = self.getData(4 * 50)
+        data = self.get_data(4 * 50)
         #print self.printBlock(data)
 
-        (three) = self.parseApproachCode(data)
+        (three) = self.parse_approach_code(data)
 
         ## random code
         self.addDataParameter( data, 'randomCode', 'i', 8, False)
@@ -70,10 +70,10 @@ class OQG(object):
             self.addDataParameter(data, 'modeCycle', 'f', 7, False)
             self.applyDataCodeValue('dataNames', ['mode', 'eigr', 'modeCycle'])
         #elif self.analysisCode==3: # differential stiffness
-            #self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            #self.lsdvmn = self.get_values(data,'i',5) ## load set number
             #self.dataCode['lsdvmn'] = self.lsdvmn
         #elif self.analysisCode==4: # differential stiffness
-            #self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            #self.lsdvmn = self.get_values(data,'i',5) ## load set number
         elif self.analysisCode == 5:   # frequency
             ## frequency
             self.addDataParameter(data, 'freq', 'f', 5)
@@ -117,14 +117,14 @@ class OQG(object):
             raise RuntimeError(msg)
         # tCode=2
         #if self.analysisCode==2: # sort2
-        #    self.lsdvmn = self.getValues(data,'i',5)
+        #    self.lsdvmn = self.get_values(data,'i',5)
 
         #print "*iSubcase=%s"%(self.iSubcase)
         #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
         #print self.codeInformation()
 
         #self.printBlock(data)
-        self.readTitle()
+        self.read_title()
 
     def readOQG_Data(self):
         #tfsCode = [self.tableCode,self.formatCode,self.sortCode]
@@ -133,11 +133,11 @@ class OQG(object):
         assert self.thermal in [0, 1, 8], self.codeInformation()
 
         if   self.tableCode == 3:   # SPC Forces
-            assert self.tableName in ['OQG1', 'OQGV1', 'OQP1'], 'tableName=%s tableCode=%s' % (self.tableName, self.tableCode)
+            assert self.tablename in ['OQG1', 'OQGV1', 'OQP1'], 'tablename=%s tableCode=%s' % (self.tablename, self.tableCode)
             self.readOQG_Data_table3()
         elif self.tableCode == 39:  # MPC Forces
-            assert self.tableName in ['OQMG1'], 'tableName=%s tableCode=%s' % (
-                self.tableName, self.tableCode)
+            assert self.tablename in ['OQMG1'], 'tablename=%s tableCode=%s' % (
+                self.tablename, self.tableCode)
             self.readOQG_Data_table3()
         else:
             self.NotImplementedOrSkip('bad OQG table')

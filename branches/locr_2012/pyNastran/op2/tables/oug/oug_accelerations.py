@@ -76,9 +76,7 @@ class AccelerationObject(TableObject):  # approachCode=11, thermal=0
                         msg += '%10s ' % (0)
                     else:
                         msg += '%10.3e ' % (val)
-                    ###
                 msg += '\n'
-            ###
         return msg
 
 

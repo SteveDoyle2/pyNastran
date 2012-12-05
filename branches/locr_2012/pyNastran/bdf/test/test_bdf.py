@@ -257,7 +257,6 @@ def compute(cards1, cards2):
                                                              value1, value2)
         msg = msg.rstrip()
         print(msg)
-    ###
 
 
 def get_element_stats(fem1, fem2):

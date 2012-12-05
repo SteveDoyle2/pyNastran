@@ -180,7 +180,6 @@ class TestCoords(unittest.TestCase):
                 msg += 'n=%s rcoord=\n%s' % (node.nid, coord.rid)
                 coord = coord.rid
             assert allclose(n, pos), msg
-        ###
 
 if __name__ == '__main__':
     unittest.main()

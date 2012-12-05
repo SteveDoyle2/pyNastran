@@ -144,7 +144,7 @@ class Subcase(object):
         #print 'approachCode = ',approachCode
         return approachCode
 
-    def get_table_code(self, sol, tableName, options):
+    def get_table_code(self, sol, tablename, options):
         """
         Gets the table code of a given parameter.  For example, the
         DISPLACMENT(PLOT,POST)=ALL makes an OUGV1 table and stores the
@@ -156,11 +156,11 @@ class Subcase(object):
         @param options the options for a parameter
         @param value the value of the parameter
         """
-        if tableName in ['VECTOR', 'PRESSURE']:
-            tableName = 'DISPLACEMENT'  # equivalent tables...
+        if tablename in ['VECTOR', 'PRESSURE']:
+            tablename = 'DISPLACEMENT'  # equivalent tables...
 
-        key = (sol, tableName)
-        tables = {  # SOL, tableName      tableCode
+        key = (sol, tablename)
+        tables = {  # SOL, tablename      tableCode
                   (101, 'ACCELERATION'): 11,
                   (103, 'ACCELERATION'): 11,
                   (106, 'ACCELERATION'): 11,

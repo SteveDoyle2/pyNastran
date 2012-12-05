@@ -57,7 +57,7 @@ class Op2Writer(Ougv1Writer, Oes1Writer):
         just set nChars and dont overthink it too much
         """
         m = self.writeMarkers([1])
-        #word = self.readStringBlock()
+        #word = self.read_string_block()
         ## creating a %Xs - where x is the number of
         ## words*4,left justifying it, and setting the value
         value = '%%-%ss' % (nChars) % (word)

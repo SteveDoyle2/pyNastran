@@ -33,7 +33,7 @@ class OUG(object):
         dataCode = {'log': self.log, 'analysisCode': analysisCode,
                     'deviceCode': 1, 'tableCode': 1,
                     'sortCode': 0, 'sortBits': [0, 0, 0], 'numWide': 8,
-                    'tableName': 'OUG', 'nonlinearFactor': dt}
+                    'tablename': 'OUG', 'nonlinearFactor': dt}
         #print "headers = %s" %(headers)
         dataTypes = [int, str, float, float, float, float, float, float]
         data = self.readTable(dataTypes)
@@ -74,7 +74,7 @@ class OUG(object):
 
         dataCode = {'log': self.log, 'analysisCode': 5, 'deviceCode': 1,
                     'tableCode': 1, 'sortCode': 2, 'sortBits': [0, 1, 1],
-                    'numWide': 14, 'formatCode': 3, 'tableName': 'OUGV1',
+                    'numWide': 14, 'formatCode': 3, 'tablename': 'OUGV1',
                     'nonlinearFactor': dt,
                     #'mode':iMode,'eigr':transient[1], 'modeCycle':cycle,
                     #'dataNames':['mode', 'eigr', 'modeCycle'],
@@ -137,7 +137,7 @@ class OUG(object):
 
         dataCode = {'log': self.log, 'analysisCode': 1, 'deviceCode': 1,
                     'tableCode': 1, 'sortCode': 0, 'sortBits': [0, 0, 0],
-                    'numWide': 8, 'tableName': 'OUG', 'nonlinearFactor': dt,
+                    'numWide': 8, 'tablename': 'OUG', 'nonlinearFactor': dt,
                     #'thermalCode':1,
                     #'formatCode':1,
                     #'elementName':eType,'sCode':0,'stressBits':stressBits

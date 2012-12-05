@@ -1,8 +1,12 @@
 #pylint: disable=C0103,W0201,W0223,R0901,R0902,R0904
+"""
+Main OP2 class
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
+import warnings
 from numpy import array
 from struct import unpack
 
@@ -22,15 +26,24 @@ class OP2(BDF,
           FortranFile, Op2Codes, GeometryTables, ResultTable, F06Writer,
           MatlabWriter):
 
-    def setSubcases(self, iSubcases=None):
+    def setSubcases(self, iSubcases):
+        """
+        @see set_subcases
+        @warning will be removed after v0.7 in favor of set_subcases
+        """
+        warnings.warn('setSubcases has been deprecated; use '
+                      'set_subcases', DeprecationWarning, stacklevel=2)
+        self.set_subcases(iSubcases)
+
+    def set_subcases(self, subcases=None):
         """
         Allows you to read only the subcases in the list of iSubcases
-        @param iSubcases
+        @param subcases
           list of [subcase1_ID,subcase2_ID]  (default=None; all subcases)
         """
         ## stores the set of all subcases that are in the OP2
         self.subcases = set()
-        if iSubcases is None or iSubcases == []:
+        if subcases is None or subcases == []:
             ## stores if the user entered [] for iSubcases
             self.isAllSubcases = True
             self.validSubcases = []
@@ -38,12 +51,21 @@ class OP2(BDF,
             ## should all the subcases be read (default=True)
             self.isAllSubcases = False
             ## the set of valid subcases -> set([1,2,3])
-            self.validSubcases = set(iSubcases)
-        self.log.debug("setSubcases - iSubcases = %s" % (self.validSubcases))
+            self.validSubcases = set(subcases)
+        self.log.debug("setSubcases - subcases = %s" % (self.validSubcases))
 
-    def setTransientTimes(self, times):  ## @todo this name sucks...
+    def setTransientTimes(self, times):  # TODO this name sucks...
         """
-        takes a dictionary of list of times in a transient case and
+        @see set_transient_times
+        @warning will be removed after v0.7 in favor of set_transient_times
+        """
+        warnings.warn('setTransientTimes has been deprecated; use '
+                      'set_transient_times', DeprecationWarning, stacklevel=2)
+        self.set_transient_times(times)
+
+    def set_transient_times(self, times):  # TODO this name sucks...
+        """
+        Takes a dictionary of list of times in a transient case and
         gets the output closest to those timse
         @code
         times = {subcaseID_1: [time1, time2],
@@ -57,9 +79,9 @@ class OP2(BDF,
             expectedTimes[iSubcase] = array(eTimes)
         self.expectedTimes = expectedTimes
 
-    def isValidSubcase(self):
+    def is_valid_subcase(self):
         """
-        lets the code check whether or not to read a subcase
+        Lets the code check whether or not to read a subcase
         """
         if not self.isAllSubcases:
             if self.iSubcase in self.validSubcases:
@@ -69,23 +91,20 @@ class OP2(BDF,
 
     def __init__(self, op2FileName, makeGeom=False, debug=True, log=None):
         """
-        Initializes the Op2 object
-        @param op2FileName
-          the file to be parsed
-        @param makeGeom
-          reads the BDF tables (default=False)
-        @param debug
-          prints data about how the OP2 was parsed (default=False)
-        @param log
-          a logging object to write debug messages to (@see import logging)
+        Initializes the OP2 object
+        @param op2FileName the file to be parsed
+        @param makeGeom reads the BDF tables (default=False)
+        @param debug prints data about how the OP2 was parsed (default=False)
+        @param log a logging object to write debug messages to
+         (@see import logging)
         """
         BDF.__init__(self, debug=debug, log=log)
-        self.setSubcases()  # initializes the variables
+        self.set_subcases()  # initializes the variables
         self.log.debug('op2FileName = %s' % (op2FileName))
         bdfExtension = '.bdf'
         f06Extension = '.f06'
         (fname, extension) = os.path.splitext(op2FileName)
-        self.tableName = 'temp'
+        self.tablename = 'temp'
 
         ## should the BDF tables be parsed
         self.makeGeom = makeGeom
@@ -189,11 +208,11 @@ class OP2(BDF,
 
         ## list of OP2 tables that were read
         ## mainly for debugging
-        self.tableNames = []
+        self.tablenames = []
 
-        self.__objectsInit__()
+        self.__objects_init__()
 
-    def __objectsInit__(self):
+    def __objects_init__(self):
         ## ESE
         self.eigenvalues = {}
 
@@ -306,7 +325,7 @@ class OP2(BDF,
         ## OES - CSHEAR strain
         self.shearStrain = {}
 
-        ## OES - CELAS1 224, CELAS3 225, 
+        ## OES - CELAS1 224, CELAS3 225,
         self.nonlinearSpringStress = {}
         ## OES - GAPNL 86
         self.nonlinearGapStress = {}
@@ -316,7 +335,7 @@ class OP2(BDF,
         # OQG - spc/mpc forces
         self.spcForces = {}  # tCode=3?
         self.mpcForces = {}  # tCode=39
-        
+
         # OQG - thermal forces
         self.thermalGradientAndFlux = {}
 
@@ -456,7 +475,7 @@ class OP2(BDF,
             ## OES - CTRIAX6
             'ctriaxStress',
             'ctriaxStrain',
-            
+
             'bushStress',
             'bushStrain',
             'bush1dStressStrain',
@@ -496,166 +515,168 @@ class OP2(BDF,
 
         return ''.join(msg)
 
-    def readTapeCode(self):
+    def read_tape_code(self):
         """
         Reads the OP2 header.  This table is still very much in development.
         @todo whats in this table?
         """
-        #self.printSection(500)
+        #self.print_section(500)
         #sys.exit('op2-readTapeCode')
 
-        self.readMarkers([3])
-        #print(self.printSection(20))
-        ints = self.readIntBlock()
+        self.read_markers([3])
+        #print(self.print_section(20))
+        ints = self.read_int_block()
         if self.makeOp2Debug:
-            self.op2Debug.write('%s\n' % (str(ints)))
+            self.op2Debug.write('%s\n' % str(ints))
         #print "*ints = ",ints
-        self.readMarkers([7])
+        self.read_markers([7])
 
-        word = self.readStringBlock()  # Nastran Fort Tape ID Code -
+        word = self.read_string_block()  # Nastran Fort Tape ID Code -
         #print "word = |%r|" %(word)
 
-        self.readMarkers([2])
-        ints = self.readIntBlock()
+        self.read_markers([2])
+        ints = self.read_int_block()
         #print "*ints = ",ints
 
-        self.readMarkers([-1])
+        self.read_markers([-1])
 
-        #data = self.getData(60)
-        #self.printBlock(data)
+        #data = self.get_data(60)
+        #self.print_block(data)
 
-    def readTapeCodePost2(self):
+    def read_tape_code_post2(self):
         # PVTO
-        #self.readMarkers([2])
-        #ints = self.readIntBlock()
+        #self.read_markers([2])
+        #ints = self.read_int_block()
         #print("*ints = ",ints)
-        
-        #ints = self.readBlock()
-        #print("*ints = ",ints)
-        #print(self.printSection(40))
 
-        block = self.readNewBlock()
+        #ints = self.read_block()
+        #print("*ints = ",ints)
+        #print(self.print_section(40))
+
+        block = self.read_new_block()
         #print("len(block) = %s" %(len(block)))
-        if len(block)==12:  # post = -1
+        if len(block) == 12:  # post = -1
             form = -1
-            (month,day,year) = unpack(b'iii',block)
-            print("date = %s/%s/%s" %(month,day,2000+year))
+            (month, day, year) = unpack(b'iii', block)
+            print("date = %s/%s/%s" %(month, day, 2000+year))
 
-            block = self.readNewBlock()
+            block = self.read_new_block()
             #print("len(block) = %s" %(len(block)))
-            print(self.printBlock(block))
-            
-            block = self.readNewBlock()
+            print(self.print_block(block))
+
+            block = self.read_new_block()
             #print("len(block) = %s" %(len(block)))
-            print(self.printBlock(block))
+            print(self.print_block(block))
 
-            self.readMarkers([-1,0])
+            self.read_markers([-1, 0])
 
-            block = self.readNewBlock()
+            block = self.read_new_block()
             #print("len(block) = %s" %(len(block)))
-            tableName, = unpack(b'8s',block)
-            print("tableName=%s self.n=%s" %(tableName,self.n))
+            tablename, = unpack(b'8s', block)
+            print("tablename=%s self.n=%s" % (tablename, self.n))
 
-            marker = self.readMarker()
-            print('marker = %s' %(marker))
-            #self.readMarkers([-1])
-            block = self.readNewBlock()
-            print(self.printBlock(block))
+            marker = self.read_marker()
+            print('marker = %s' % marker)
+            #self.read_markers([-1])
+            block = self.read_new_block()
+            print(self.print_block(block))
 
-            self.readMarkers([-2])
-            block = self.readNewBlock()
-            print(self.printBlock(block))
-            
-            marker = self.readMarker()
-            print('marker = %s' %(marker))
+            self.read_markers([-2])
+            block = self.read_new_block()
+            print(self.print_block(block))
 
-            #self.readMarkers([-1])
+            marker = self.read_marker()
+            print('marker = %s' % marker)
+
+            #self.read_markers([-1])
             #self.readPartOfNewTable()  # PVTO
 
             #self.readNewTable()
             #self.readNewTable()
-            print(self.printSection(100))
-            
+            print(self.print_section(100))
+
             sys.exit('stoppingD')
 
-        elif len(block)==8: # post = -2
+        elif len(block) == 8: # post = -2
             self.n = 0
             self.op2.seek(self.n)
-            tableName, = unpack(b'8s',block)
-            print("tableName = |%s|\n" %(tableName))
+            tablename, = unpack(b'8s', block)
+            print("tablename = |%s|\n" % tablename)
             #sys.exit('stoppingA')
 
-            block = self.readNewBlock()
+            block = self.read_new_block()
             #print(self.printBlock(block))
-            self.readMarkers([-1])
+            self.read_markers([-1])
             #print("")
 
-            self.readPartOfNewTable()  # PVTO
+            self.read_part_of_new_table()  # PVTO
 
-            block = self.readNewBlock()
-            print(self.printBlock(block))
-            self.readPartOfNewTable()  # PRTMAXIM=YES AUTOSPC=NO
-            
+            block = self.read_new_block()
+            print(self.print_block(block))
+            self.read_part_of_new_table()  # PRTMAXIM=YES AUTOSPC=NO
+
             #block = self.readNewBlock()
-            #print(self.printSection(200))
+            #print(self.print_section(200))
             #return
-            
-            self.readNewTable()
-            self.readNewTable()
-            self.readNewTable()
-            #print(self.printSection(40))
+
+            self.read_new_table()
+            self.read_new_table()
+            self.read_new_table()
+            #print(self.print_section(40))
             sys.exit('stoppingB')
 
             return
 
-        
+
         sys.exit()
-        
+
         # -----------------------
-        
+
         foundMoreTables = True
-        while foundMoreTables and tableName:
-            print("tableName=%s self.n=%s" %(tableName,self.n))
+        while foundMoreTables and tablename:
+            print("tablename=%s self.n=%s" % (tablename, self.n))
             print("-----------------------------")
             try:
                 n = self.n
-                tableName = self.readNewTable()
+                tablename = self.read_new_table()
             except:
                 self.op2.seek(n)
                 foundMoreTables = False
 
         print("**************")
         self.op2.seek(n)
-        print(self.printSection(240))
+        print(self.print_section(240))
         sys.exit('stoppingC')
-    
-    def readNewTable(self):
-        self.op2.read(8); self.n+=8
-        data = self.op2.read(8); self.n+=12
 
-        if len(data)<8:
+    def read_new_table(self):
+        self.op2.read(8)
+        self.n += 8
+        data = self.op2.read(8)
+        self.n += 12
+
+        if len(data) < 8:
             return
 
         self.op2.seek(self.n)
-        tableName, = unpack(b'8s',data)
-        print("tableName = |%s|\n" %(tableName))
+        tablename, = unpack(b'8s', data)
+        print("tablename = |%s|\n" % tablename)
 
-        self.readMarkers([-1])
-        block = self.readNewBlock()
+        self.read_markers([-1])
+        block = self.read_new_block()
         #print(self.printBlock(block))
 
-        self.readPartOfNewTable()
-        return tableName
+        self.read_part_of_new_table()
+        return tablename
 
-    def readPartOfNewTable(self):
+    def read_part_of_new_table(self):
         n = -2
         keepGoingOnTable = True
         while keepGoingOnTable:
-            print("n = %s" %(n))
+            print("n = %s" % n)
             try:
                 nStar = self.n
-                self.readMarkers([n,1,0])
-                block = self.readNewBlock()
+                self.read_markers([n, 1, 0])
+                block = self.read_new_block()
                 #print(self.printBlock(block))
                 n -= 1
             except:
@@ -663,22 +684,22 @@ class OP2(BDF,
                 self.op2.seek(nStar)
                 keepGoingOnTable = False
 
-    def readNewBlock(self):
+    def read_new_block(self):
         data = self.op2.read(16)
         #print(self.printBlock(data))
-        (four,n,four,fourN) = unpack(b'iiii',data)
+        (four, n, four, fourN) = unpack(b'iiii', data)
         #print('n = %s' %(n))
         self.n += 16
-        
+
         if n > 70000:
             asf
-        data = self.op2.read(n*4)
-        self.n += n*4+4
+        data = self.op2.read(n * 4)
+        self.n += n * 4 + 4
         #print("self.n = ",self.n)
         self.op2.seek(self.n)
-        
+
         return data
-        
+
     def readOP2(self):
         """
         reads the op2 file
@@ -694,7 +715,7 @@ class OP2(BDF,
 
         try:
             #self.readTapeCodePost2()
-            self.readTapeCode()
+            self.read_tape_code()
         except:
             raise
             msg = ('When this happens, the analysis failed or '
@@ -705,15 +726,15 @@ class OP2(BDF,
                   '      2.  Run the problem on a different Operating System\n'
                   '      3.  Are you running an OP2? :)  \n'
                   'fname=%s' % (self.op2FileName))
-            raise RuntimeError("Tape Code Error: %s", msg)
+            raise RuntimeError("Tape Code Error: %s" % msg)
 
         isAnotherTable = True
         while isAnotherTable:
             self.log.debug('-' * 80)
             try:
-                tableName = self.readTableName(
-                    rewind=True, stopOnFailure=False)
-                print("tableName = %s" % (tableName))
+                tablename = self.read_table_name(rewind=True,
+                                                 stopOnFailure=False)
+                print("tablename = %s" % tablename)
             except EOFError:  # the isAnotherTable method sucks...
                 isAnotherTable = False
                 self.log.debug("***ok exit, but it could be better...")
@@ -725,230 +746,230 @@ class OP2(BDF,
                 break
             except:
                 raise
-            self.log.debug("tableName = |%r|" % (tableName))
-            #print("tableName = |%r|" %(tableName))
+            self.log.debug("tablename = |%r|" % tablename)
+            #print("tablename = |%r|" % tablename)
 
-            if tableName is None:
+            if tablename is None:
                 break
             else:
-                isAnotherTable = self.readTable(tableName)
+                isAnotherTable = self.read_table(tablename)
 
         self.log.debug("---end of all tables---")
         self.skippedCardsFile.close()
 
-    def readTable(self, tableName):
-        if tableName in self.tablesToRead:
-            self.tableName = tableName
+    def read_table(self, tablename):
+        if tablename in self.tablesToRead:
+            self.tablename = tablename
             self.isRegular = True
             try:
                 #print("startTell = %s" %(self.op2.tell()))
-                if tableName == 'GEOM1':  # nodes,coords,etc.
+                if tablename == 'GEOM1':  # nodes,coords,etc.
                     self.readTable_Geom1()
-                elif tableName == 'GEOM1S':  # superelements
+                elif tablename == 'GEOM1S':  # superelements
                     self.readTable_Geom1S()  #  - nodes,coords,etc.
-                elif tableName == 'GEOM2S':  # superelements
+                elif tablename == 'GEOM2S':  # superelements
                     self.readTable_Geom2S()  #  - elements
-                elif tableName == 'GEOM3S':  # superelements
+                elif tablename == 'GEOM3S':  # superelements
                     self.readTable_Geom3S()  #  - static/thermal loads
-                elif tableName == 'GEOM4S':  # superelements
+                elif tablename == 'GEOM4S':  # superelements
                     self.readTable_Geom4S()  #  - constraints
 
-                #elif tableName=='GEOM1OLD':
+                #elif tablename=='GEOM1OLD':
                 #    self.readTable_Geom1Old()
-                #elif tableName=='GEOM1N':
+                #elif tablename=='GEOM1N':
                 #    self.readTable_Geom1N()
-                elif tableName == 'GEOM2':  # elements
+                elif tablename == 'GEOM2':  # elements
                     self.readTable_Geom2()
-                elif tableName == 'GEOM3':  # static/thermal loads
+                elif tablename == 'GEOM3':  # static/thermal loads
                     self.readTable_Geom3()
-                elif tableName == 'GEOM4':  # constraints
+                elif tablename == 'GEOM4':  # constraints
                     self.readTable_Geom4()
 
-                elif tableName in ['EPT', 'EPTS']:  # element properties
+                elif tablename in ['EPT', 'EPTS']:  # element properties
                     self.readTable_EPT()
-                elif tableName in ['MPT', 'MPTS']:  # material properties
+                elif tablename in ['MPT', 'MPTS']:  # material properties
                     self.readTable_MPTS()
-                elif tableName in ['DYNAMIC', 'DYNAMICS']:  # dyanmic info
+                elif tablename in ['DYNAMIC', 'DYNAMICS']:  # dyanmic info
                     self.readTable_DYNAMICS()
-                elif  tableName in ['DIT']:  # tables...
+                elif  tablename in ['DIT']:  # tables...
                     self.readTable_DIT()     # TABLED1/TABLEM1/TABLES1/GUST
-                elif tableName in ['LAMA', 'BLAMA']:  # eigenvalue
+                elif tablename in ['LAMA', 'BLAMA']:  # eigenvalue
                     self.readTable_LAMA()
 
-                elif tableName in ['VIEWTB', 'EQEXIN', 'EQEXINS', 'OEFIT',
+                elif tablename in ['VIEWTB', 'EQEXIN', 'EQEXINS', 'OEFIT',
                                    'GEOM1N', 'OGPWG', 'GEOM1OLD']:
-                    self.readTable_DUMMY_GEOM(tableName)
-                elif tableName in ['OMM2']:
+                    self.readTable_DUMMY_GEOM(tablename)
+                elif tablename in ['OMM2']:
                     self.readTable_OMM2()
-                elif tableName in ['DESTAB']:  # design variable table
+                elif tablename in ['DESTAB']:  # design variable table
                     self.readTable_DesTab()
-                elif tableName in ['R1TABRG']:  # not done - response table
+                elif tablename in ['R1TABRG']:  # not done - response table
                     self.readTable_R1TAB()
                     self.isOptimization = True
-                elif tableName in ['HISADD']:  # not done
+                elif tablename in ['HISADD']:  # not done
                     self.readTable_R1TAB()
                     self.isOptimization = True
-                elif tableName in ['ERRORN']:  # not done
+                elif tablename in ['ERRORN']:  # not done
                     self.readTable_R1TAB()
 
-                elif tableName in ['OPG1', 'OPNL1', 'OGS1', 'OPGV1']:
+                elif tablename in ['OPG1', 'OPNL1', 'OGS1', 'OPGV1']:
                     self.readTable_OPG()  # table of applied loads
-                elif tableName in ['OGPFB1', ]:
+                elif tablename in ['OGPFB1', ]:
                     self.readTable_OGF()
-                elif tableName in ['OCRUG', 'OCRPG']:  # totally guessing...
+                elif tablename in ['OCRUG', 'OCRPG']:  # totally guessing...
                     self.readTable_OUG()
 
-                elif tableName in ['OEF1X', 'DOEF1', 'OEFPSD2', 'OEFATO2',
+                elif tablename in ['OEF1X', 'DOEF1', 'OEFPSD2', 'OEFATO2',
                                    'OEFRMS2', 'OEFNO2', 'OEFCRM2', ]:
                     self.readTable_OEF()  # applied loads
-                elif tableName in ['OQG1', 'OQGV1', 'OQP1', ]:  # spc forces
+                elif tablename in ['OQG1', 'OQGV1', 'OQP1', ]:  # spc forces
                     self.readTable_OQG()
-                elif tableName in ['OQMG1', 'OQMPSD2', 'OQMATO2', 'OQMRMS2',
+                elif tablename in ['OQMG1', 'OQMPSD2', 'OQMATO2', 'OQMRMS2',
                                    'OQMNO2', 'OQMCRM2', ]:  # mpc forces
                     #self.readTable_OQG()
-                    self.readTable_DUMMY_GEOM(tableName)
+                    self.readTable_DUMMY_GEOM(tablename)
 
-                elif tableName in ['OUGV1', 'OUPV1', 'OUG1']:
+                elif tablename in ['OUGV1', 'OUPV1', 'OUG1']:
                     self.readTable_OUG()  # displacements/velocity/acceleration
-                elif tableName in ['OUGPSD2', 'OUGATO2', 'OUGRMS2', 'OUGNO2',
+                elif tablename in ['OUGPSD2', 'OUGATO2', 'OUGRMS2', 'OUGNO2',
                                    'OUGCRM2']:  # OUG tables???
                     self.readTable_OUG2()
                     #self.readTable_OUG()
 
-                elif tableName in ['OES1', 'OES1X', 'OES1X1', 'OSTR1X',
+                elif tablename in ['OES1', 'OES1X', 'OES1X1', 'OSTR1X',
                                    'OES1C', 'OESCP', 'OESRT', 'OESNLXR',
                                    'OESNL1X']:
                     self.readTable_OES()  # stress
-                elif tableName in ['OSTR1X', 'OSTR1C', ]:
+                elif tablename in ['OSTR1X', 'OSTR1C', ]:
                     self.readTable_OES()  # strain
-                elif tableName in ['OESTRCP', 'OESNLXD', 'OESNLXR', ]:
+                elif tablename in ['OESTRCP', 'OESNLXD', 'OESNLXR', ]:
                     self.readTable_OES()  # ??? stress/strain
-                elif tableName in ['OSTRATO2', 'OSTRPSD2', 'OESRMS2', 'OESNO2',
+                elif tablename in ['OSTRATO2', 'OSTRPSD2', 'OESRMS2', 'OESNO2',
                                    'OESCRM2', 'OSTRRMS2', 'OESRMS2', 'OSTRNO2',
                                    'OESCRM2', 'OSTRCRM2', ]:  # unhandled
                     self.readTable_OES()
 
-                #elif tableName in ['OESNLXD',]: # dont use this, testing only
+                #elif tablename in ['OESNLXD',]: # dont use this, testing only
                     #self.readTable_OES() # NLXD
-                #elif tableName in ['OESNLXR',]: # dont use this
+                #elif tablename in ['OESNLXR',]: # dont use this
                     #self.readTable_OES()  # NLXR
 
-                elif tableName in ['ONRGY1']:  # energy
+                elif tablename in ['ONRGY1']:  # energy
                     self.readTable_OEE()
-                elif tableName in ['ONRGY2']:
+                elif tablename in ['ONRGY2']:
                     self.readTable_OEE()
 
-                elif tableName in ['PCOMPTS']:
+                elif tablename in ['PCOMPTS']:
                     self.readTable_PCOMPTS()
-                elif tableName in ['SDF']:  # ???
+                elif tablename in ['SDF']:  # ???
                     self.readTable_SDF()
-                #elif tableName in ['CASECC']:
+                #elif tablename in ['CASECC']:
                     #self.readTable_CASECC()
 
                 # not done
-                elif tableName in []:
+                elif tablename in []:
                     self.readTableB_DUMMY()
-                elif tableName in ['MONITOR']:
-                    self.readMonitor()
-                elif tableName in ['PMRF', 'PERF', 'PFRF',
+                elif tablename in ['MONITOR']:
+                    self.read_monitor()
+                elif tablename in ['PMRF', 'PERF', 'PFRF',
                                    'AEMONPT', 'FOL', 'AFRF', 'AGRF', ]:
                     self.readTableB_DUMMY()
-                #elif tableName in []:
+                #elif tablename in []:
                 #    self.readTableB_DUMMY()
 
-                elif tableName in ['STDISP', 'FOL', 'OFMPF2M', 'OSMPF2M',
+                elif tablename in ['STDISP', 'FOL', 'OFMPF2M', 'OSMPF2M',
                                    'OPMPF2M', 'OGPMPF2M', 'OLMPF2M',
                                    'OVGPSD2']:
-                    self.readTable_DUMMY_GEOM(tableName)
-                elif tableName in ['OVGATO2', 'OVGRMS2', 'OVGNO2']:
-                    self.readTable_DUMMY_GEOM(tableName)
+                    self.readTable_DUMMY_GEOM(tablename)
+                elif tablename in ['OVGATO2', 'OVGRMS2', 'OVGNO2']:
+                    self.readTable_DUMMY_GEOM(tablename)
 
-                elif tableName in ['OESNLXR', 'OESNL1X', 'OESPSD2', 'OESNLBR',
+                elif tablename in ['OESNLXR', 'OESNL1X', 'OESPSD2', 'OESNLBR',
                                    'OESATO2', ]:
-                    self.readTable_DUMMY_GEOM(tableName)
-                elif tableName in ['OVGCRM2', 'OAGPSD2', 'OAGATO2', 'OAGRMS2',
+                    self.readTable_DUMMY_GEOM(tablename)
+                elif tablename in ['OVGCRM2', 'OAGPSD2', 'OAGATO2', 'OAGRMS2',
                                    'OAGNO2', 'OAGCRM2', 'OPGPSD2', 'OPGPSD2',
                                    'OPGPSD2', 'OPGATO2']:
-                    self.readTable_DUMMY_GEOM(tableName)
-                elif tableName in ['OPGRMS2', 'OPGNO2', 'OPGCRM2', 'OQGPSD2']:
-                    self.readTable_DUMMY_GEOM(tableName)
-                elif tableName in ['OQGPSD2', 'OQGATO2', 'OQGRMS2', 'OQGNO2',
+                    self.readTable_DUMMY_GEOM(tablename)
+                elif tablename in ['OPGRMS2', 'OPGNO2', 'OPGCRM2', 'OQGPSD2']:
+                    self.readTable_DUMMY_GEOM(tablename)
+                elif tablename in ['OQGPSD2', 'OQGATO2', 'OQGRMS2', 'OQGNO2',
                                    'OQGCRM2', 'PVT0', 'CASECC', 'EDOM', ]:
-                    self.readTable_DUMMY_GEOM(tableName)
-                elif tableName in ['BGPDT', 'BGPDTS', 'EDTS', ]:
-                    self.readTable_DUMMY_GEOM(tableName)
+                    self.readTable_DUMMY_GEOM(tablename)
+                elif tablename in ['BGPDT', 'BGPDTS', 'EDTS', ]:
+                    self.readTable_DUMMY_GEOM(tablename)
                 else:
-                    msg = 'unhandled tableName=|%s|' % (tableName)
+                    msg = 'unhandled tablename=|%s|' % tablename
                     raise KeyError(msg)
                 #print("endTell   = ",self.op2.tell())
                 #print("---isAnotherTable---")
-                (isAnotherTable) = self.hasMoreTables()
+                (isAnotherTable) = self.has_more_tables()
                 #isAnotherTable = True
             except EOFError:
                 isAnotherTable = False
         else:
-            if tableName not in [None]:
-                raise NotImplementedError('%s is not supported' % (tableName))
-            (isAnotherTable) = self.skipNextTable()
+            if tablename not in [None]:
+                raise NotImplementedError('%s is not supported' % tablename)
+            (isAnotherTable) = self.skip_next_table()
             #return isAnotherTable
-        #print(self.printSection(140))
-        self.log.debug("*** finished tableName = |%r|" % (tableName))
+        #print(self.print_section(140))
+        self.log.debug("*** finished tablename = |%r|" % tablename)
         return isAnotherTable
 
-    def readMonitor(self):
-        tableName = self.readTableName(rewind=False)  # LAMA
-        self.tableInit(tableName)
-        print("tableName1 = |%r|" %(tableName))
-        print("tableName2 = |%r|" %(self.tableName))
+    def read_monitor(self):
+        tablename = self.read_table_name(rewind=False)  # LAMA
+        self.table_init(tablename)
+        print("tablename1 = |%r|" % tablename)
+        print("tablename2 = |%r|" % self.tablename)
 
-        self.readMarkers([-1, 7], 'MONITOR')
-        ints = self.readIntBlock()
-        print("*ints = ",ints)
+        self.read_markers([-1, 7], 'MONITOR')
+        ints = self.read_int_block()
+        print("*ints = ", ints)
 
-        self.readMarkers([-2, 1, 0], 'MONITOR')
-        bufferWords = self.getMarker()
-        print("bufferWords = ",bufferWords)
+        self.read_markers([-2, 1, 0], 'MONITOR')
+        bufferWords = self.get_marker()
+        print("bufferWords = ", bufferWords)
 
-        word = self.readStringBlock()  # MONITOR
-        print("word = |%s|" %(word))
+        word = self.read_string_block()  # MONITOR
+        print("word = |%s|" % word)
 
-        self.readMarkers([-3, 1, 0], 'MONITOR')
-        bufferWords = self.getMarker()
-        print("bufferWords = ",bufferWords,bufferWords*4)
-        
+        self.read_markers([-3, 1, 0], 'MONITOR')
+        bufferWords = self.get_marker()
+        print("bufferWords = ", bufferWords, bufferWords * 4)
+
         data = self.op2.read(4)
-        data = self.op2.read(bufferWords*4)
+        data = self.op2.read(bufferWords * 4)
         Format = str(bufferWords*4) + 's'
         Format = bytes(Format)
         word, = unpack(Format, data)
-        print("word = ",word)
+        print("word = ", word)
         data = self.op2.read(4)
-        self.n += bufferWords*4+8
-        
+        self.n += bufferWords * 4 + 8
 
-        self.readMarkers([-4, 1, 0], 'MONITOR')
-        bufferWords = self.getMarker()
-        print("bufferWords = ",bufferWords,bufferWords*4)
+
+        self.read_markers([-4, 1, 0], 'MONITOR')
+        bufferWords = self.get_marker()
+        print("bufferWords = ", bufferWords, bufferWords * 4)
         data = self.op2.read(4)
-        data = self.op2.read(bufferWords*4)
-        Format = str(bufferWords*4) + 's'
+        data = self.op2.read(bufferWords * 4)
+        Format = str(bufferWords * 4) + 's'
         Format = bytes(Format)
         word, = unpack(Format, data)
-        print("word = ",word)
+        print("word = ", word)
         data = self.op2.read(4)
-        self.n += bufferWords*4+8
+        self.n += bufferWords * 4 + 8
 
-        self.readMarkers([-5, 1, 0], 'MONITOR')
+        self.read_markers([-5, 1, 0], 'MONITOR')
 
-        #word = self.readStringBlock()  # MONITOR
+        #word = self.read_string_block()  # MONITOR
         #print("word = |%s|" %(word))
 
 
 
-        #print(self.printSection(200))
+        #print(self.print_section(200))
         #sys.exit()
 
-    def parseSortCode(self):
+    def parse_sort_code(self):
         """
         sortCode = 0 -> sortBits = [0,0,0]
         sortCode = 1 -> sortBits = [0,0,1]
@@ -979,7 +1000,7 @@ class OP2(BDF,
 
         self.dataCode['sortBits'] = self.sortBits
 
-    def parseApproachCode(self, data):
+    def parse_approach_code(self, data):
         """
         int3 is the 3rd word in table=-3 and may be
         elementType or something else depending on the table type
@@ -1021,16 +1042,16 @@ class OP2(BDF,
                          'log': self.log,
                          }
         #print("iSubcase = ",self.iSubcase)
-        self.parseSortCode()
+        self.parse_sort_code()
 
         #print('aCode(1)=%s analysisCode=%s deviceCode=%s '
         #      'tCode(2)=%s tableCode=%s sortCode=%s iSubcase(4)=%s'
-        #      %(aCode, self.analysisCode, self.deviceCode, tCode, 
+        #      %(aCode, self.analysisCode, self.deviceCode, tCode,
         #        self.tableCode, self.sortCode, self.iSubcase))
         #self.log.debug(self.printTableCode(self.tableCode))
         return (int3)
 
-    def parseApproachCode2(self, data):
+    def parse_approach_code2(self, data):
         """
         int3 is the 3rd word in table=-3 and may be
         elementType or something else depending on the table type
@@ -1072,21 +1093,21 @@ class OP2(BDF,
                          'log': self.log,
                          }
         #print("iSubcase = ",self.iSubcase)
-        self.parseSortCode()
+        self.parse_sort_code()
 
         #print('aCode(1)=%s analysisCode=%s deviceCode=%s '
         #      'tCode(2)=%s tableCode=%s sortCode=%s iSubcase(4)=%s'
-        #      %(aCode, self.analysisCode, self.deviceCode, tCode, 
+        #      %(aCode, self.analysisCode, self.deviceCode, tCode,
         #        self.tableCode, self.sortCode, self.iSubcase))
         #self.log.debug(self.printTableCode(self.tableCode))
         return (int3)
 
-    def getValues(self, data, iFormat, iWordStart, iWordStop=None):
+    def get_values(self, data, iFormat, iWordStart, iWordStop=None):
         """
         extracts the ith word from the data structure as the provided type
         supports multiple inputs with iWordStop (note this is words,
         not outputs)
-        
+
         @param self the object pointer
         @param data the binary data that is as long as the buffer size
         @param iWordStart the word to start reading from
@@ -1105,7 +1126,7 @@ class OP2(BDF,
         ds = data[(iWordStart - 1) * 4:(iWordStop - 1) * 4]
         return unpack(iFormat, ds)
 
-    def deleteAttributes(self, params):
+    def _delete_attributes(self, params):
         """
         deletes any parameters before going to the next table to avoid
         messing up data
@@ -1117,27 +1138,27 @@ class OP2(BDF,
             if hasattr(self, param):
                 delattr(self, param)
 
-    def getBufferWords(self):
-        bufferWords = self.getMarker()
-        #print("buffMarker = |%s|" %(bufferWords))
-        #print("bufferWords = ",bufferWords,bufferWords*4)
-        if bufferWords <= 0:
-            raise BufferError('An invalid buffersize was found...'
-                              'bufferWords=%s tableName=%s section=\n%s'
-                              % (bufferWords, self.tableName,
-                                 self.printSection(200)))
-        return bufferWords
+    def get_buffer_words(self):
+        buffer_words = self.get_marker()
+        #print("buff_marker = |%s|" % buffer_words)
+        #print("buffer_words = ",buffer_words, buffer_words * 4)
+        if buffer_words <= 0:
+            msg = ('An invalid buffer_size was found...buffer_words=%s '
+                   'tablename=%s section=\n%s' % (buffer_words,
+                    self.tablename, self.print_section(200)))
+            raise BufferError(msg)
+        return buffer_words
 
-    def verifyBufferSize(self, bufferWords):
-        assert bufferWords > 0, self.printSection(220)
+    def verify_buffer_size(self, buffer_words):
+        assert buffer_words > 0, self.print_section(220)
 
-    def readTitle(self):
+    def read_title(self):
         """
         reads the Title, Subtitle, and Label.
         Puts them in self.iSubcaseNameMap[iSubcase] = [Subtitle,Label]
         """
         ## the title of the analysis
-        word = self.readString(384)  # titleSubtitleLabel
+        word = self.read_string(384)  # titleSubtitleLabel
         self.Title = word[0:128].strip()
         ## the subtitle of the subcase
         self.subtitle = word[128:256].strip()
@@ -1145,35 +1166,36 @@ class OP2(BDF,
         self.label = word[256:328].strip()
 
         # not really a hollerith, just the end of the block (so bufferWords*4)
-        self.readHollerith()
+        self.read_hollerith()
 
         self.dataCode['subtitle'] = self.subtitle
         self.dataCode['label'] = self.label
 
         if hasattr(self,'iSubcase'):
             if self.iSubcase not in self.iSubcaseNameMap:
-                self.iSubcaseNameMap[self.iSubcase] = [self.subtitle, self.label]
+                self.iSubcaseNameMap[self.iSubcase] = [self.subtitle,
+                                                       self.label]
         else:
             pass
 
-    def tableInit(self, word):
+    def table_init(self, word):
         """
-        starts a new table
+        Starts a new table
         """
         ## the local table name
-        self.tableName = word.strip()
+        self.tablename = word.strip()
         ## the names of all the tables
-        self.tableNames.append(word)
+        self.tablenames.append(word)
         #msg = '*' * 20 + word + '*' * 20 + '\n'
         #print(msg)
 
-    def getTableNamesFromOP2(self):
+    def get_table_names_from_op2(self):
         """
-        returns the list of parsed tables
+        Returns the list of parsed tables
         """
-        return self.tableNames
+        return self.tablenames
 
-    def printResults(self):
+    def print_results(self):
         results = [
             # OUG - Displacements/Velocity/Acceleration/Temperature
             self.displacements, self.displacementsPSD,
@@ -1215,8 +1237,8 @@ class OP2(BDF,
 
         msg = '---ALL RESULTS---\n'
         for result in results:
-            for (iSubcase, res) in sorted(result.iteritems()):
-                msg += 'iSubcase = %s\n' % (iSubcase)
+            for (isubcase, res) in sorted(result.iteritems()):
+                msg += 'isubcase = %s\n' % (isubcase)
                 try:
                     msg += str(res) + '\n'
                 except:

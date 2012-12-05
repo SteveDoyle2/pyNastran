@@ -30,11 +30,11 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 
     def readTableB_DUMMY(self):
         """reads a dummy results table"""
-        self.tableName = 'DUMMY'
+        self.tablename = 'DUMMY'
         table3 = self.readTable_DUMMY_3
         table4Data = self.readDUMMY_Data
         self.readResultsTable(table3, table4Data)
-        self.deleteAttributes_OPG()
+        self._delete_attributes_OPG()
 
     def readTable_DUMMY_3(self, iTable):
         """sets dummy parameters"""
@@ -68,9 +68,9 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 
     def addDataParameter(self, data, Name, Type, fieldNum, applyNonlinearFactor=True, fixDeviceCode=False):
         """
-        self.mode = self.getValues(data,'i',5) ## mode number
+        self.mode = self.get_values(data,'i',5) ## mode number
         """
-        value = self.getValues(data, Type, fieldNum)
+        value = self.get_values(data, Type, fieldNum)
         if fixDeviceCode:
             value = (value - self.deviceCode) // 10
         #print "Name=%s Type=%s fieldNum=%s aCode=%s value=%s" %(Name,Type,fieldNum,self.analysisCode,value)
@@ -131,7 +131,6 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 self.obj = storageObj[self.ID]
             else:
                 storageObj[self.ID] = self.obj
-        ###
 
     def createThermalTransientObject(self, resultName, objClass, isSort1):
         #print resultName
@@ -147,30 +146,30 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 
     def readResultsTable(self, table3, table4Data, flag=0):
         self.dtMap = {}
-        tableName = self.readTableName(rewind=False)  # OEF
-        self.tableInit(tableName)
-        #print "tableName = |%r|" %(tableName)
+        tablename = self.read_table_name(rewind=False)  # OEF
+        self.table_init(tablename)
+        #print("tablename = |%r|" % tablename)
 
-        self.readMarkers([-1, 7], tableName)
-        ints = self.readIntBlock()
+        self.read_markers([-1, 7], tablename)
+        ints = self.read_int_block()
         #print "*ints = ",ints
 
-        self.readMarkers([-2, 1, 0], tableName)  # 7
-        bufferWords = self.getMarker()
+        self.read_markers([-2, 1, 0], tablename)  # 7
+        bufferWords = self.get_marker()
         #print "1-bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
+        ints = self.read_int_block()
         #print "*ints = ",ints
 
         markerA = -4
         markerB = 0
 
         iTable = -3
-        self.readMarkers([iTable, 1, 0], tableName)
+        self.read_markers([iTable, 1, 0], tablename)
 
         exitFast = False
         while [markerA, markerB] != [0, 2]:
             self.isBufferDone = False
-            #print self.printSection(140)
+            #print self.print_section(140)
             #print "reading iTable3=%s" %(iTable)
             #self.obj = None
 
@@ -181,7 +180,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             self.dataCode = {}
 
             n = self.op2.tell()
-            marker = self.getMarker()
+            marker = self.get_marker()
             self.goto(n)
             if marker != 146:
                 self.log.debug("marker = %s" % (marker))
@@ -189,7 +188,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 break
 
             table3(iTable)
-            self.dataCode['tableName'] = self.tableName
+            self.dataCode['tablename'] = self.tablename
             ## developer parameter - Analysis/Table/Format/Sort Codes
             #self.atfsCode = [self.analysisCode, self.tableCode,
             #                 self.formatCode, self.sortCode]
@@ -210,23 +209,23 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 #self.op2.seek(self.n)
                 break
             n = self.n
-            #print self.printSection(100)
-            self.readMarkers([iTable, 1, 0], tableName)
+            #print self.print_section(100)
+            self.read_markers([iTable, 1, 0], tablename)
             #self.log.debug("")
-        ###
+
         nOld = self.op2.tell()
         #try:
         if not(exitFast):
-            #print self.printSection(100000)
-            self.readMarkers([iTable, 1, 0], tableName)
-            #self.getMarker()
-            #self.getMarker()
-            #self.getMarker()
+            #print self.print_section(100000)
+            self.read_markers([iTable, 1, 0], tablename)
+            #self.get_marker()
+            #self.get_marker()
+            #self.get_marker()
         #except SyntaxError: # Invalid Markers
         #    self.goto(nOld)
             #print self.printBlock(self.data)
-            #print self.printSection(100)
-            #markerZero = self.getMarker()
+            #print self.print_section(100)
+            #markerZero = self.get_marker()
             #assert markerZero==0
             #self.goto(nOld)
             #print "finished markerZero"
@@ -234,18 +233,18 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 
         #print str(self.obj)
         if self.makeOp2Debug:
-            self.op2Debug.write("***end of %s table***\n" % (tableName))
+            self.op2Debug.write("***end of %s table***\n" % tablename)
         del self.dtMap
 
     def readTable4(self, table4Data, flag, iTable):
         """loops over repeated table -4s"""
-        #self.readMarkers([iTable,1,0])
+        #self.read_markers([iTable,1,0])
         markerA = 4
 
         while markerA is not None:
             self.markerStart = copy.deepcopy(self.n)
-            #self.printSection(180)
-            self.readMarkers([iTable, 1, 0])
+            #self.print_section(180)
+            self.read_markers([iTable, 1, 0])
             #print "starting OEF table 4..."
             if flag:
                 isTable4Done, isBlockDone = table4Data(iTable)
@@ -258,7 +257,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 self.op2.seek(self.n)
                 break
             #print "finished reading oef table..."
-            markerA = self.getMarker('A')
+            markerA = self.get_marker('A')
             self.n -= 12
             self.op2.seek(self.n)
 
@@ -267,7 +266,6 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 
             iTable -= 1
             #print "isBlockDone = ",isBlockDone
-        ###
         #print "isBlockDone = ",isBlockDone
         return isBlockDone
 
@@ -276,10 +274,10 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         isTable4Done = False
         isBlockDone = False
 
-        bufferWords = self.getMarker(self.tableName)
+        bufferWords = self.get_marker(self.tablename)
         #print "bufferWords = ",bufferWords
         #print len(bufferWords)
-        self.data = self.readBlock()
+        self.data = self.read_block()
         #self.printBlock(data)
 
         if bufferWords == 146:  # table -4 is done, restarting table -3
@@ -293,13 +291,12 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 
         isBlockDone = not(bufferWords)
 
-        if self.isValidSubcase():  # lets the user skip a certain subcase
+        if self.is_valid_subcase():  # lets the user skip a certain subcase
             table4Data()
         else:
             self.log.debug("***skipping table=%s iSubcase=%s" %
-                           (self.tableName, self.iSubcase))
+                           (self.tablename, self.iSubcase))
             self.skipOES_Element()
-        ###
         return (isTable4Done, isBlockDone)
 
     def updateDtMap(self):
@@ -375,14 +372,14 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
     def handleResultsBufferShort(self, func, debug=False):
         raise RuntimeError('this function has been removed...')
         nOld = self.n
-        markers = self.readHeader()
+        markers = self.read_header()
 
         if markers < 0:  # not a buffer, the table may be done
             self.goto(nOld)
             if markers is not None and markers % 2 == 1:
                 self.isBufferDone = True
         else:
-            data = self.readBlock()
+            data = self.read_block()
             self.data += data
             func()
 
@@ -393,18 +390,16 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         while not(stopBuffer):
             f()
             nOld = self.n
-            markers = self.readHeader()
+            markers = self.read_header()
 
             if markers < 0:  # not a buffer, the table may be done
                 self.goto(nOld)
                 if markers is not None and markers % 2 == 1:
                     self.isBufferDone = True
             else:
-                data = self.readBlock()
+                data = self.read_block()
                 self.data += data
                 stopBuffer = True
-            ###
-        ###
 
     def NotImplementedOrSkip(self, msg=''):
         """stops if code is in development and continues otherwise"""
@@ -428,7 +423,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             #sys.stdout.flush()
             f()
             nOld = self.n
-            markers = self.readHeader()
+            markers = self.read_header()
             #print "nOld=%s markers=%s" %(nOld,markers)
 
             if markers < 0:  # not a buffer, the table may be done
@@ -437,7 +432,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 if markers is not None and markers % 2 == 1:
                     self.isBufferDone = True
             else:
-                data = self.readBlock()
+                data = self.read_block()
                 if type(data) != type(self.data):
                     msg = 'The function f=%s has a unicode error\n' % (
                         f.__name__)
@@ -496,38 +491,37 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         #    self.log.debug("found a 4 - end of unbuffered table")
 
         #if debug:
-        #    self.log.debug(self.printSection(120))
+        #    self.log.debug(self.print_section(120))
 
         nOld = self.n
         #try:
-        markers = self.readHeader()
+        markers = self.read_header()
         #except AssertionError:  # end of table - poor catch
         #    self.goto(nOld)
-        #   self.log.debug(self.printSection(120))
+        #   self.log.debug(self.print_section(120))
         #    return
 
         #print "markers = ",markers
-        #print self.printSection(160)
+        #print self.print_section(160)
 
         if markers < 0:  # not a buffer, the table may be done
             self.goto(nOld)
             if markers is not None and markers % 2 == 1:
                 self.isBufferDone = True
 
-            #print self.printSection(120)
+            #print self.print_section(120)
             #sys.exit('found a marker')
             #print 'found a marker'
 
         else:
             #print "*******len(self.data)=%s...assuming a buffer block" %(len(self.data))
-            #markers = self.readHeader()
+            #markers = self.read_header()
             #print "markers = ",markers
-            data = self.readBlock()
+            data = self.read_block()
             #if len(data)<marker:
             #    self.goto(self.n-4) # handles last buffer not having an extra 4
             self.data += data
             func()
-        ###
 
     def readMappedScalarsOut(self, debug=False):
         raise RuntimeError('this function must be modified...')
@@ -566,7 +560,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             self.obj.add(out)
             n += nTotal
         self.data = data[n:]
-        #print self.printSection(200)
+        #print self.print_section(200)
         self.handleResultsBuffer(self.readScalarsOut, debug=False)
 
 

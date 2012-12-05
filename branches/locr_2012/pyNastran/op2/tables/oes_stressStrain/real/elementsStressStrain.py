@@ -15,7 +15,7 @@ class RealElementsStressStrain(object):
         self.log.debug('skipping approachCode=%s, tableCode=%s, formatCode-%s '
                        'sortCode=%s on %s table' % (self.analysisCode,
                        self.tableCode, self.formatCode, self.sortCode,
-                       self.tableName))
+                       self.tablename))
         print(self.codeInformation())
         print("**************skipping**************")
         #asdf
@@ -57,7 +57,7 @@ class RealElementsStressStrain(object):
         format1 += '2i5f'  # 1+2+5=8
         format1 = bytes(format1)
         while len(self.data) >= 32:  # 4*8
-            #print self.printSection(40)
+            #print self.print_section(40)
             eData = self.data[0:32]
             self.data = self.data[32:]
             #print "len(data) = ",len(eData)
@@ -141,7 +141,7 @@ class RealElementsStressStrain(object):
         format1 = bytes(format1)
 
         nNodes = 0  # centroid + 4 corner points
-        #self.printSection(20)
+        #self.print_section(20)
         #term = data[0:4] CEN/
         #data = data[4:]
         #print "*****"
@@ -189,7 +189,7 @@ class RealElementsStressStrain(object):
             #print "len(data) = ",len(self.data)
             #print "tell = ",self.op2.tell()
 
-            #self.printSection(100)
+            #self.print_section(100)
             #self.dn += 348
 
     def OES_CBAR_34(self):
@@ -279,7 +279,7 @@ class RealElementsStressStrain(object):
         format1 = bytes(format1)
 
         #nNodes = 5 # 1 centroid + 4 corner points
-        #self.printSection(20)
+        #self.print_section(20)
         #term      = self.data[0:4] CEN/
         #self.data = self.data[4:]
         #print "*****"
@@ -631,7 +631,7 @@ class RealElementsStressStrain(object):
         """
         eType = self.ElementType(self.elementType)
 
-        #self.printSection(20)
+        #self.print_section(20)
         #term = data[0:4] CEN/
         #data = data[4:]
         assert self.numWide == 11, 'invalid numWide...numWide=%s' % (
@@ -817,7 +817,8 @@ class RealElementsStressStrain(object):
         format1 = bytes(format1)
 
         while len(self.data) >= nTotal:
-            (eid, parent, coord, icord, theta, itype) = unpack(b'i4s', self.data[0:8])
+            (eid, parent, coord, icord, theta, itype) = unpack(b'i4s',
+                                                               self.data[0:8])
             self.data = self.data[8:]  # 2
             eid = extract(eid, dt)
             eData = self.data[0:68]
