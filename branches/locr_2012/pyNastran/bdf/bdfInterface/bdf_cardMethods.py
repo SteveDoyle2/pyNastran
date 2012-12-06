@@ -275,13 +275,13 @@ class CardMethods(object):
                 else:
                     #debug = True
                     try:
-                        value = self.getValue(valueIn, sline, debug=debug)
+                        value = self.get_value(valueIn, sline, debug=debug)
                     except:
                         self.log.error("card = |%r|" % card)
                         raise
                     card.append(value)
-                    print("fieldCounter=%s valueIn=%s value=%s type=%s"
-                          % (fieldCounter, valueIn, value, type(value)))
+                    #print("fieldCounter=%s valueIn=%s value=%s type=%s"
+                    #      % (fieldCounter, valueIn, value, type(value)))
             #print "cardEnd temp = ",card
 
         #print "cardOut&& = ",card
@@ -337,7 +337,7 @@ class CardMethods(object):
         #self.dictOfVars = {'P5':0.5,'ONEK':1000.}
         return self.dictOfVars[key]
 
-    def getValue(self, valueRaw, card, debug=False):
+    def get_value(self, valueRaw, card, debug=False):
         """Converts a value from nastran format into python format."""
         if debug:
             print("v1 = |%s|" % (valueRaw))
@@ -445,7 +445,7 @@ class CardMethods(object):
                    % (vm, vp, valueRaw, sline0, sline1, card))
             msg2 = ('cannot parse sline0 into a float and sline1 into an '
                     'integer\n%s\nYou might have mixed tabs/spaces/commas!  '
-                    'Fix it!' % msg)
+                    'Fix it!\nfem=%s' % (msg, self.bdf_filename))
             raise SyntaxError(msg2)
 
         value = s0 * 10 ** (s1)

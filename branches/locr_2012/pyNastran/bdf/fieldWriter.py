@@ -74,8 +74,9 @@ def print_float_8(value):
     Prints a float in nastran 8-character width syntax using the
     highest precision possbile.
     """
-    if value > 0.:  # positive, not perfect...
-
+    if value == 0.0:
+        return '%8s' %('0.')
+    elif value > 0.:  # positive, not perfect...
         if value < 5e-8:
             field = print_scientific_8(value)
             return field

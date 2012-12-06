@@ -49,7 +49,8 @@ def runLotsOfFiles(files, debug=True, saveCases=True, skipFiles=[],
     sys.exit('-----done with all models %s/%s=%.2f%%  nFailed=%s-----' % (nPassed, nTotal, 100. * nPassed / float(nTotal), nTotal - nPassed))
 
 
-def runF06(f06file, iSubcases=[], write_f06=True, printF06=False, debug=False, stopOnFailure=True):
+def runF06(f06file, iSubcases=[], write_f06=True, printF06=False, debug=False,
+           stopOnFailure=True):
     isPassed = False
     stopOnFailure = False
     #debug = True

@@ -29,7 +29,7 @@ def get_failed_files(filename):
         files.append(line.strip())
     return files
 
-def runLotsOfFiles(files ,makeGeom=True, writeBDF=False, write_f06=True,
+def run_lots_of_files(files ,makeGeom=True, writeBDF=False, write_f06=True,
                    writeMatlab=True, deleteF06=True, print_results=True,
                    debug=True, saveCases=True, skipFiles=[],
                    stopOnFailure=False, nStart=0, nStop=1000000000):

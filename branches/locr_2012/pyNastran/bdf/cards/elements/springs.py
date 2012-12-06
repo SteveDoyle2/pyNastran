@@ -21,6 +21,7 @@ from pyNastran.bdf.cards.baseCard import Element
 class SpringElement(Element):
     def __init__(self, card, data):
         Element.__init__(self, card, data)
+        self.nodes = [None, None]
 
     def Length_noXref(self, n1=None, n2=None):
         r"""
@@ -212,7 +213,6 @@ class CELAS2(SpringElement):
 
     def cross_reference(self, model):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True)
-        #print("nodes = ",self.nodes)
 
     def writeCodeAster(self):
         nodes = self.nodeIDs()

@@ -100,7 +100,7 @@ def _parseEntry(lines):
         sline = line2.split()
         if len(sline) != 2:
             msg = "trying to parse |%s|..." % (line)
-            raise SyntaxError("Invalid Subcase: %s", (msg)) 
+            raise SyntaxError("Invalid Subcase: %s", (msg))
         (key, isubcase) = sline
         #print "key=|%s| isubcase=|%s|" %(key,isubcase)
         value = int(isubcase)

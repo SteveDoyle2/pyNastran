@@ -353,7 +353,9 @@ class WriteMesh(object):
             for pelast in sorted(self.pelast.itervalues()):
                 msg.append(str(pelast))
             for missingProperty in missingProperties:
-                msg.append(missingProperty.print_card(size))
+                #print("missingProperty = ",missingProperty)
+                #msg.append(missingProperty.print_card(size))
+                msg.append(missingProperty)
         return ''.join(msg)
 
     def write_materials(self, size):

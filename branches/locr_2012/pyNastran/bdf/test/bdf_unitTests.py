@@ -157,10 +157,10 @@ class CaseControlTest(unittest.TestCase):
                  'SPC = 2',
                  'STRESS = ALL',
                  'SUBCASE 1',
-                 '    ANALYSIS = SAERO',
-                 '    STRAIN = 7',
                  '    SET 1 = 100',
                  '    SET 2 = 200',
+                 '    ANALYSIS = SAERO',
+                 '    STRAIN = 7',
                  'SUBCASE 2',
                  '    ANALYSIS = STATIC',]
         deck_string = '%s' %(deck)

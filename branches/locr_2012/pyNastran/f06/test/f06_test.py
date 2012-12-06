@@ -2,7 +2,7 @@ import os
 import sys
 #import time
 from pyNastran.op2.test.test_op2 import get_failed_files
-from pyNastran.f06.test.test_f06 import runLotsOfFiles
+from pyNastran.f06.test.test_f06 import run_lots_of_files
 from pyNastran.utils import get_files_of_type
 
 
@@ -85,10 +85,10 @@ def main():
     except:
         pass
 
-    print("nFiles = %s" % (len(files)))
-    runLotsOfFiles(files, debug, saveCases, skipFiles,
+    print("nFiles = %s" % len(files))
+    run_lots_of_files(files, debug, saveCases, skipFiles,
                    stopOnFailure, nStart, nStop)
-    #runLotsOfFiles(files,debug,saveCases,stopOnFailure,nStart,nStop)
+    #run_lots_of_files(files,debug,saveCases,stopOnFailure,nStart,nStop)
     sys.exit('final stop...')
 
 if __name__ == '__main__':

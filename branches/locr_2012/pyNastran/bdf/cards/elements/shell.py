@@ -654,7 +654,7 @@ class QuadShell(ShellElement):
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
 
-    def getReprDefaults(self, debug=False):
+    def getReprDefaults(self):
         zOffset = set_blank_if_default(self.zOffset, 0.0)
         TFlag = set_blank_if_default(self.TFlag, 0)
         thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
@@ -663,8 +663,8 @@ class QuadShell(ShellElement):
         T2 = set_blank_if_default(self.T2, 1.0)
         T3 = set_blank_if_default(self.T3, 1.0)
         T4 = set_blank_if_default(self.T4, 1.0)
-        if debug:
-        #if 1:
+
+        if 0:
             print("eid       = %s" % self.eid)
             print("nodes     = %s" % self.nodes)
 
@@ -708,7 +708,7 @@ class CSHEAR(QuadShell):
         normal = self.Normal()
         return (area, centroid, normal)
 
-    def AreaCentroid(self, debug=False):
+    def AreaCentroid(self):
         """
         @code
         1-----2
@@ -725,8 +725,6 @@ class CSHEAR(QuadShell):
              A=area
         @endcode
         """
-        #if debug:
-        #    print("nodes = %s" %(self.nodes))
         (n1, n2, n3, n4) = self.nodePositions()
         a = n1 - n2
         b = n2 - n4
@@ -740,14 +738,10 @@ class CSHEAR(QuadShell):
 
         area = area1 + area2
         centroid = (c1 * area1 + c2 * area2) / area
-        if debug:
-            print("c1=%s \n c2=%s \n a1=%s a2=%s" % (c1, c2, area1, area2))
-            print("type(centroid=%s centroid=%s \n" %
-                 (type(centroid), centroid))
         return(area, centroid)
 
-    def Centroid(self, debug=False):
-        (area, centroid) = self.AreaCentroid(debug)
+    def Centroid(self):
+        (area, centroid) = self.AreaCentroid()
         return centroid
 
     def Area(self):
@@ -827,17 +821,6 @@ class CQUAD4(QuadShell):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4, 'CQUAD4'
 
-        #print "self.xi = ",self.xi
-        #print "nodes = ",self.nodes
-        #for nid in nids:
-        #    self.nodes.append(int(nid))
-
-        #print 'self.T1 = ',self.T1
-        #if self.id==20020:
-            #print "thetaMcid = ",card.field(7)
-            #print "actual = ",self.thetaMcid
-            #print str(self)
-
     def flipNormal(self):
         """
         @code
@@ -871,9 +854,8 @@ class CQUAD4(QuadShell):
         return fields
 
     def reprFields(self):
-        debug = False
         (thetaMcid, zOffset, TFlag, T1, T2, T3,
-            T4) = self.getReprDefaults(debug=debug)
+            T4) = self.getReprDefaults()
 
         fields = (['CQUAD4', self.eid, self.Pid()] + self.nodeIDs() +
                   [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
@@ -965,15 +947,6 @@ class CQUAD(QuadShell):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 9
 
-        self.thetaMcid = card.field(7, 0.0)
-        self.zOffset = card.field(8, 0.0)
-
-        self.TFlag = card.field(10, 0)
-        self.T1 = card.field(11, 1.0)
-        self.T2 = card.field(12, 1.0)
-        self.T3 = card.field(13, 1.0)
-        self.T4 = card.field(14, 1.0)
-
     def Thickness(self):
         return self.pid.Thickness()
 
@@ -989,19 +962,16 @@ class CQUAD(QuadShell):
         """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]
+        assert len(self.nodes) == 9
 
     def rawFields(self):
-        fields = (['CQUAD', self.eid, self.Pid()] + self.nodeIDs() +
-                  [self.thetaMcid, self.zOffset, self.TFlag, self.T1,
-                   self.T2, self.T3, self.T4])
+        fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
         return fields
 
     def reprFields(self):
-        (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self.getReprDefaults()
-        fields = (['CQUAD', self.eid, self.Pid()] + self.nodeIDs() +
-                  [thetaMcid, zOffset, TFlag, T1, T2, T3, T4])
+        fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
         return fields
-
+        
 
 class CQUAD8(QuadShell):
     type = 'CQUAD8'

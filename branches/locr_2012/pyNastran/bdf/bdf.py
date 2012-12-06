@@ -898,7 +898,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         while len(self._active_filenames) > 0:  # keep going until finished
             ## gets the cardLines
             (rawCard, card, cardName) = self._get_card(debug=False)
-            print("outcard = ", card)
+            #print("outcard = ", card)
 
             if cardName == 'INCLUDE':
                 #print "rawCard = ",rawCard
