@@ -6,7 +6,7 @@ from datetime import date
 import pyNastran
 
 
-def makeStamp(Title):
+def make_stamp(Title):
     #pageStamp = '1    MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23                      NOVEMBER  14, 2011  MSC.NASTRAN  6/17/05   PAGE '
     #Title = 'MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23'
     t = date.today()
@@ -14,14 +14,14 @@ def makeStamp(Title):
               'July', 'August', 'September', 'October', 'November', 'December']
     today = '%-9s %s, %s' % (months[t.month - 1], t.day, t.year)
 
-    releaseDate = '02/08/12'  # pyNastran.__releaseDate__
-    releaseDate = ''
-    build = 'pyNastran v%s %s' % (pyNastran.__version__, releaseDate)
+    release_date = '02/08/12'  # pyNastran.__releaseDate__
+    release_date = ''
+    build = 'pyNastran v%s %s' % (pyNastran.__version__, release_date)
     out = '1    %-67s %20s  %-22s PAGE ' % (Title, today, build)
     return out
 
 
-def makeF06Header():
+def make_f06_header():
     n = ''
     lines1 = [
         n + '/* -------------------------------------------------------------------  */\n',
@@ -118,13 +118,13 @@ class MatlabWriter(object):
         self.compositePlateStress = op2.compositePlateStress
         self.compositePlateStrain = op2.compositePlateStrain
 
-    def makeF06Header(self):
+    def make_f06_header(self):
         """If this class is inherited, the F06 Header may be overwritten"""
-        return makeF06Header()
+        return make_f06_header()
 
-    def makeStamp(self, Title):
+    def make_stamp(self, Title):
         """If this class is inherited, the PAGE stamp may be overwritten"""
-        return makeStamp(Title)
+        return make_stamp(Title)
 
     def writeMatlab(self, mFileOutName, isMagPhase=False, deleteObjects=True):
         """
@@ -140,12 +140,12 @@ class MatlabWriter(object):
         """
         f = open(mFileOutName, 'wb')
 
-        strLines = self.makeF06Header()
+        strLines = self.make_f06_header()
         lines = strLines.split('\n')
         for line in lines:
             f.write('%% %s\n' % (line))
 
-        #pageStamp = self.makeStamp(self.Title)
+        #pageStamp = self.make_stamp(self.Title)
         #print "pageStamp = |%r|" %(pageStamp)
         #print "stamp     = |%r|" %(stamp)
 
@@ -161,11 +161,11 @@ class MatlabWriter(object):
         iSubcaseMsg = 'fem.iSubcases = ['
 
         nSubcases = {}
-        for n, (iSubcase, (subtitle, label)) in enumerate(sorted(self.iSubcaseNameMap.items())):
+        for n, (isubcase, (subtitle, label)) in enumerate(sorted(self.iSubcaseNameMap.items())):
             labelMsg += "'%s'," % (label)
             subtitleMsg += "'%s'," % (subtitle)
-            iSubcaseMsg += '%s,' % (iSubcase)
-            nSubcases[iSubcase] = n + 1
+            iSubcaseMsg += '%s,' % (isubcase)
+            nSubcases[isubcase] = n + 1
         labelMsg += '};\n'
         subtitleMsg += '};\n'
         iSubcaseMsg += '];\n'
@@ -173,23 +173,23 @@ class MatlabWriter(object):
         f.write(subtitleMsg)
         f.write(iSubcaseMsg)
 
-        for iSubcase, result in sorted(self.eigenvalues.iteritems()):  # goes first
-            (subtitle, label) = self.iSubcaseNameMap[iSubcase]
+        for isubcase, result in sorted(self.eigenvalues.iteritems()):  # goes first
+            (subtitle, label) = self.iSubcaseNameMap[isubcase]
             subtitle = subtitle.strip()
             header[0] = '     %s\n' % (subtitle)
-            header[1] = '0                                                                                                            SUBCASE %i\n \n' % (iSubcase)
+            header[1] = '0                                                                                                            SUBCASE %i\n \n' % (isubcase)
             print(result.__class__.__name__)
-            nSubcase = nSubcases[iSubcase]
+            nSubcase = nSubcases[isubcase]
             result.writeMatlab(nSubcase, f=f, isMagPhase=isMagPhase)
            #result.writeMatlab(f=f)
 
-        for iSubcase, result in sorted(self.eigenvectors.iteritems()):  # has a special header
-            (subtitle, label) = self.iSubcaseNameMap[iSubcase]
+        for isubcase, result in sorted(self.eigenvectors.iteritems()):  # has a special header
+            (subtitle, label) = self.iSubcaseNameMap[isubcase]
             subtitle = subtitle.strip()
             header[0] = '     %s\n' % (subtitle)
-            header[1] = '0                                                                                                            SUBCASE %i\n' % (iSubcase)
+            header[1] = '0                                                                                                            SUBCASE %i\n' % (isubcase)
             print(result.__class__.__name__)
-            nSubcase = nSubcases[iSubcase]
+            nSubcase = nSubcases[isubcase]
             result.writeMatlab(nSubcase, f=f, isMagPhase=isMagPhase)
            #result.writeMatlab(f=f)
 
@@ -226,20 +226,20 @@ class MatlabWriter(object):
 
         if 1:
             iSubcases = self.iSubcaseNameMap.keys()
-            for iSubcase in sorted(iSubcases):
-                (subtitle, label) = self.iSubcaseNameMap[iSubcase]
+            for isubcase in sorted(iSubcases):
+                (subtitle, label) = self.iSubcaseNameMap[isubcase]
                 subtitle = subtitle.strip()
                 label = label.strip()
                 #print "label = ",label
                 header[0] = '     %-127s\n' % (subtitle)
-                header[1] = '0    %-72s                                SUBCASE %-15i\n' % (label, iSubcase)
-                #header[1] = '0    %-72s                                SUBCASE %-15i\n' %('',iSubcase)
+                header[1] = '0    %-72s                                SUBCASE %-15i\n' % (label, isubcase)
+                #header[1] = '0    %-72s                                SUBCASE %-15i\n' %('',isubcase)
                 for resType in resTypes:
-                    if iSubcase in resType:
-                        result = resType[iSubcase]
+                    if isubcase in resType:
+                        result = resType[isubcase]
                         try:
                             print(result.__class__.__name__)
-                            nSubcase = nSubcases[iSubcase]
+                            nSubcase = nSubcases[isubcase]
                             result.writeMatlab(nSubcase, f=f, isMagPhase=False)
                         except:
                             #print "result name = %s" %(result.name())
@@ -250,9 +250,9 @@ class MatlabWriter(object):
 
         if 0:
             for res in resTypes:
-                for iSubcase, result in sorted(res.iteritems()):
+                for isubcase, result in sorted(res.iteritems()):
                     (msg, pageNum) = result.writeMatlab(
-                        iSubcase, f=f, isMagPhase=False)
+                        isubcase, f=f, isMagPhase=False)
                     f.write(msg)
                     pageNum += 1
 
@@ -260,7 +260,7 @@ class MatlabWriter(object):
 
 if __name__ == '__main__':
     #Title = 'MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23'
-    #stamp = makeStamp(Title) # doesnt have pageNum
+    #stamp = make_stamp(Title) # doesnt have pageNum
     #print "|%s|" %(stamp+'22')
 
     model = sys.argv[1]

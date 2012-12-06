@@ -2,10 +2,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 
-from ..real.oes_objects import stressObject, strainObject
+from ..real.oes_objects import StressObject, StrainObject
 
 
-class ComplexPlateStressObject(stressObject):
+class ComplexPlateStressObject(StressObject):
     """
     @code
                 C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )
@@ -17,14 +17,14 @@ class ComplexPlateStressObject(stressObject):
                        2.500000E-02    0.0          /  0.0             0.0          /  0.0             0.0          /  0.0
     @endcode
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
         #print "making complex plate stress obj"
-        stressObject.__init__(self, dataCode, iSubcase)
+        StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
-        #self.appendDataMember('sCodes','sCode')
-        #print "self.sCode = ",self.sCode
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        #self.append_data_member('sCodes','s_code')
+        #print "self.s_code = ",self.s_code
+        self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.fiberCurvature = {}
         self.oxx = {}
@@ -32,22 +32,22 @@ class ComplexPlateStressObject(stressObject):
         self.txy = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
                 self.addNewNode = self.addNewNodeSort1
         else:
             assert dt is not None
             self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
             self.addNewNode = self.addNewNodeSort2
 
     def get_stats(self):
         nelements = len(self.eType)
 
         msg = self.get_data_code()
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.oxx)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -57,7 +57,7 @@ class ComplexPlateStressObject(stressObject):
         msg.append('  eType, fiberCurvature, oxx, oyy, txy\n')
         return msg
 
-    def addF06Data(self, data, transient):
+    def add_f06_data(self, data, transient):
         if transient is None:
             eType = data[0][0]
             for line in data:
@@ -109,18 +109,18 @@ class ComplexPlateStressObject(stressObject):
             #print line
         raise NotImplementedError('transient results not supported')
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         #del self.fiberCurvature[dt]
         del self.oxx[dt]
         del self.oyy[dt]
         del self.txy[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.oxx.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         """
@@ -130,8 +130,8 @@ class ComplexPlateStressObject(stressObject):
         self.oyy[dt] = {}
         self.txy[dt] = {}
 
-    def addNewEid(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy):
-        #print "***addNewEid..."
+    def add_new_eid(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy):
+        #print "***add_new_eid..."
         #if eid in self.oxx:
             #return self.add(dt,eid,nodeID,fd,oxx,oyy,txy)
 
@@ -149,8 +149,8 @@ class ComplexPlateStressObject(stressObject):
         if nodeID == 0:
             raise ValueError(msg)
 
-    def addNewEidSort1(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy):
-        #print "***addNewEidSort1..."
+    def add_new_eid_sort1(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy):
+        #print "***add_new_eid_sort1..."
         #msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%s oyy=%s txy=%s" %(dt,eid,nodeID,fd,oxx,oyy,txy)
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%s" % (
             dt, eid, nodeID, fd, oxx)
@@ -161,13 +161,13 @@ class ComplexPlateStressObject(stressObject):
         if dt in self.oxx and eid in self.oxx[dt]:  # SOL200, erase the old result
             nid = nodeID
             #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s" %(dt,eid,nodeID,str(self.fiberCurvature[eid][nid]),str(self.oxx[dt][eid][nid])))
-            self.deleteTransient(dt)
-            self.addNewTransient(dt)
+            self.delete_transient(dt)
+            self.add_new_transient(dt)
 
         assert isinstance(eid, int)
         self.eType[eid] = eType
         if dt not in self.oxx:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.fiberCurvature[eid] = {nodeID: [fd]}
         self.oxx[dt][eid] = {nodeID: [oxx]}
         self.oyy[dt][eid] = {nodeID: [oyy]}
@@ -191,8 +191,8 @@ class ComplexPlateStressObject(stressObject):
         if nodeID == 0:
             raise Exception(msg)
 
-    def addSort1(self, dt, eid, nodeID, fd, oxx, oyy, txy):
-        #print "***addSort1"
+    def add_sort1(self, dt, eid, nodeID, fd, oxx, oyy, txy):
+        #print "***add_sort1"
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%s oyy=%s txy=%s" % (
             dt, eid, nodeID, fd, oxx, oyy, txy)
         #print msg
@@ -258,7 +258,7 @@ class ComplexPlateStressObject(stressObject):
 
         #print self.oxx.keys()
         for dt, oxxs in sorted(self.oxx.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for eid, oxxNodes in sorted(oxxs.iteritems()):
                 eType = self.eType[eid]
                 k = oxxNodes.keys()
@@ -286,9 +286,9 @@ class ComplexPlateStressObject(stressObject):
                         msg += '\n'
         return msg
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         assert f is not None
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
 
         #if self.isVonMises():
@@ -465,7 +465,7 @@ class ComplexPlateStressObject(stressObject):
                 if eType in ['CQUAD4']:
                     if isBilinear:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (self.dataCode[
+                            header[1] = ' %s = %10.4E\n' % (self.data_code[
                                 'name'], dt)
                             msg += header + msgPack
                             for eid in eids:
@@ -478,7 +478,7 @@ class ComplexPlateStressObject(stressObject):
                                 msg = ['']
                     else:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (self.dataCode[
+                            header[1] = ' %s = %10.4E\n' % (self.data_code[
                                 'name'], dt)
                             msg += header + msgPack
                             for eid in eids:
@@ -492,7 +492,7 @@ class ComplexPlateStressObject(stressObject):
                 elif eType in ['CTRIA3']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
-                            self.dataCode['name'], dt)
+                            self.data_code['name'], dt)
                         msg += header + msgPack
                         for eid in eids:
                             out = self.writeF06_Tri3Transient(dt,
@@ -506,7 +506,7 @@ class ComplexPlateStressObject(stressObject):
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
-                            self.dataCode['name'], dt)
+                            self.data_code['name'], dt)
                         msg += header + msgPack
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3, isMagPhase)
@@ -519,7 +519,7 @@ class ComplexPlateStressObject(stressObject):
                 elif eType in ['CQUAD8']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
-                            self.dataCode['name'], dt)
+                            self.data_code['name'], dt)
                         msg += header + msgPack
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 8, isMagPhase)
@@ -629,7 +629,7 @@ class ComplexPlateStressObject(stressObject):
 
     def __repr__(self):
         #print "sCodes = ",self.sCodes
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---ISOTROPIC PLATE STRESS---\n'
@@ -668,56 +668,56 @@ class ComplexPlateStressObject(stressObject):
         return msg
 
 
-class ComplexPlateStrainObject(strainObject):
+class ComplexPlateStrainObject(StrainObject):
     """
     @code
     # ??? - is this just 11
     ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)
       ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
 
-    # sCode=11
+    # s_code=11
                            S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
     ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)
       ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       VON MISES
 
-    # sCode=15
+    # s_code=15
                            S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )
     ELEMENT      FIBER                STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)
       ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
 
-    # sCode=10
+    # s_code=10
                            S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
     ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)          MAX
       ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR         SHEAR
     @endcode
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        strainObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
 
-        #print self.dataCode
+        #print self.data_code
         self.fiberCurvature = {}
         self.exx = {}
         self.eyy = {}
         self.exy = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
 
         msg = self.get_data_code()
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.exx)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -727,7 +727,7 @@ class ComplexPlateStrainObject(strainObject):
         msg.append('  eType, fiberCurvature, exx, eyy, exy\n')
         return msg
 
-    def addF06Data(self, data, transient):
+    def add_f06_data(self, data, transient):
         if transient is None:
             eType = data[0][0]
             for line in data:
@@ -778,18 +778,18 @@ class ComplexPlateStrainObject(strainObject):
             return
         raise NotImplementedError('transient results not supported')
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         #del self.fiberCurvature[dt]
         del self.exx[dt]
         del self.eyy[dt]
         del self.exy[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.exx.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         """
@@ -798,7 +798,7 @@ class ComplexPlateStrainObject(strainObject):
         self.eyy[dt] = {}
         self.exy[dt] = {}
 
-    def addNewEid(self, eType, dt, eid, nodeID, curvature, exx, eyy, exy):
+    def add_new_eid(self, eType, dt, eid, nodeID, curvature, exx, eyy, exy):
         #print "Plate add..."
         msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" % (
             eid, nodeID, curvature, exx, eyy, exy)
@@ -818,7 +818,7 @@ class ComplexPlateStrainObject(strainObject):
         if nodeID == 0:
             raise ValueError(msg)
 
-    def addNewEidSort1(self, eType, dt, eid, nodeID, curvature, exx, eyy, exy):
+    def add_new_eid_sort1(self, eType, dt, eid, nodeID, curvature, exx, eyy, exy):
         #print "Plate add..."
         msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" % (
             eid, nodeID, curvature, exx, eyy, exy)
@@ -828,12 +828,12 @@ class ComplexPlateStrainObject(strainObject):
             assert 0 < nodeID < 1000000000, 'nodeID=%s %s' % (nodeID, msg)
 
         if dt not in self.exx:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         #if eid in self.exx[dt]:  # SOL200, erase the old result
             #nid = nodeID
             #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s" %(dt,eid,nodeID,str(self.fiberCurvature[eid][nid]),str(self.oxx[dt][eid][nid]))
-            #self.deleteTransient(dt)
-            #self.addNewTransient()
+            #self.delete_transient(dt)
+            #self.add_new_transient()
 
         self.eType[eid] = eType
         self.fiberCurvature[eid] = {nodeID: [curvature]}
@@ -860,7 +860,7 @@ class ComplexPlateStrainObject(strainObject):
         if nodeID == 0:
             raise ValueError(msg)
 
-    def addSort1(self, dt, eid, nodeID, curvature, exx, eyy, exy):
+    def add_sort1(self, dt, eid, nodeID, curvature, exx, eyy, exy):
         #print "***add"
         msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" % (
             eid, nodeID, curvature, exx, eyy, exy)
@@ -904,9 +904,9 @@ class ComplexPlateStrainObject(strainObject):
             headers.append('maxShear')
         return headers
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         assert f is not None
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f)
 
         if self.isVonMises():
@@ -1094,7 +1094,7 @@ class ComplexPlateStrainObject(strainObject):
                 if eType in ['CQUAD4']:
                     if isBilinear:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (self.dataCode['name'], dt)
+                            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                             for eid in eids:
                                 out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4, isMagPhase)
                                 msg.append(out)
@@ -1105,7 +1105,7 @@ class ComplexPlateStrainObject(strainObject):
                             pageNum += 1
                     else:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (self.dataCode[
+                            header[1] = ' %s = %10.4E\n' % (self.data_code[
                                 'name'], dt)
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid, isMagPhase)
@@ -1118,7 +1118,7 @@ class ComplexPlateStrainObject(strainObject):
                 elif eType in ['CTRIA3']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
-                            self.dataCode['name'], dt)
+                            self.data_code['name'], dt)
                         for eid in eids:
                             out = self.writeF06_Tri3Transient(dt,
                                                               eid, isMagPhase)
@@ -1131,7 +1131,7 @@ class ComplexPlateStrainObject(strainObject):
                 elif eType in ['CQUAD8']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
-                            self.dataCode['name'], dt)
+                            self.data_code['name'], dt)
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 5, isMagPhase)
                             msg.append(out)
@@ -1143,7 +1143,7 @@ class ComplexPlateStrainObject(strainObject):
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
-                            self.dataCode['name'], dt)
+                            self.data_code['name'], dt)
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3, isMagPhase)
                             msg.append(out)
@@ -1247,8 +1247,8 @@ class ComplexPlateStrainObject(strainObject):
 
     def __repr__(self):
         #print "dt = ",self.dt
-        #print "nf = ",self.nonlinearFactor
-        if self.nonlinearFactor is not None:
+        #print "nf = ",self.nonlinear_factor
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---ISOTROPIC PLATE STRAIN---\n'
@@ -1289,7 +1289,7 @@ class ComplexPlateStrainObject(strainObject):
         msg += "".join(['%10s ' % (h) for h in self.getHeaders()]) + '\n'
 
         for dt, exx in sorted(self.exx.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for eid, exxNodes in sorted(exx.iteritems()):
                 eType = self.eType[eid]
                 k = exxNodes.keys()

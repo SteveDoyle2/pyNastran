@@ -5,10 +5,10 @@ from pyNastran.op2.resultObjects.op2_Objects import baseScalarObject
 
 
 class RealEigenvalues(baseScalarObject):
-    def __init__(self, iSubcase):
+    def __init__(self, isubcase):
         #self.modeNumber = []
         baseScalarObject.__init__(self)
-        self.iSubcase = iSubcase
+        self. subcase = isubcase
         self.extractionOrder = {}
         self.eigenvalues = {}
         self.radians = {}
@@ -21,7 +21,7 @@ class RealEigenvalues(baseScalarObject):
         neigenvalues = len(self.extractionOrder)
         msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__,
                                                  neigenvalues))
-        msg.append('  iSubcase, extractionOrder, eigenvalues, radians, '
+        msg.append('  isubcase, extractionOrder, eigenvalues, radians, '
                    'cycles, generalizedMass, generalizedStiffness\n')
         return msg
 
@@ -40,18 +40,18 @@ class RealEigenvalues(baseScalarObject):
         self.generalizedMass[modeNum] = genM
         self.generalizedStiffness[modeNum] = genK
 
-    def addF06Data(self, data):
+    def add_f06_data(self, data):
         for line in data:
             self.addF06Line(line)
 
-    def writeMatlab(self, iSubcase, f=None, isMagPhase=False):
-        iModesMsg = 'fem.eigenvalues(%i).iModes    = [' % (iSubcase)
-        modesMsg = 'fem.eigenvalues(%i).modes     = [' % (iSubcase)
-        orderMsg = 'fem.eigenvalues(%i).order     = [' % (iSubcase)
-        omegaMsg = 'fem.eigenvalues(%i).radians   = [' % (iSubcase)
-        cyclesMsg = 'fem.eigenvalues(%i).cycles    = [' % (iSubcase)
-        massMsg = 'fem.eigenvalues(%i).mass      = [' % (iSubcase)
-        stiffMsg = 'fem.eigenvalues(%i).stiffness = [' % (iSubcase)
+    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
+        iModesMsg = 'fem.eigenvalues(%i).iModes    = [' % (isubcase)
+        modesMsg = 'fem.eigenvalues(%i).modes     = [' % (isubcase)
+        orderMsg = 'fem.eigenvalues(%i).order     = [' % (isubcase)
+        omegaMsg = 'fem.eigenvalues(%i).radians   = [' % (isubcase)
+        cyclesMsg = 'fem.eigenvalues(%i).cycles    = [' % (isubcase)
+        massMsg = 'fem.eigenvalues(%i).mass      = [' % (isubcase)
+        stiffMsg = 'fem.eigenvalues(%i).stiffness = [' % (isubcase)
 
         for (iMode, order) in sorted(self.extractionOrder.iteritems()):
             iModesMsg += '%s,' % (iMode)
@@ -69,7 +69,7 @@ class RealEigenvalues(baseScalarObject):
         f.write(massMsg + '];\n')
         f.write(stiffMsg + '];\n')
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         msg = header + ['                                              R E A L   E I G E N V A L U E S\n',
                         '   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED\n',
                         '    NO.       ORDER                                                                       MASS              STIFFNESS\n']
@@ -98,10 +98,10 @@ class RealEigenvalues(baseScalarObject):
 
 
 class ComplexEigenvalues(baseScalarObject):
-    def __init__(self, iSubcase):
+    def __init__(self, isubcase):
         baseScalarObject.__init__(self)
         #self.rootNumber = []
-        self.iSubcase = iSubcase
+        self. subcase = isubcase
         self.extractionOrder = {}
         self.eigenvalues = {}
         self.cycles = {}
@@ -112,7 +112,7 @@ class ComplexEigenvalues(baseScalarObject):
         msg = []
         msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__,
                                                  neigenvalues))
-        msg.append('  iSubcase, extractionOrder, eigenvalues, '
+        msg.append('  isubcase, extractionOrder, eigenvalues, '
                    'cycles, damping\n')
         return msg
 
@@ -129,11 +129,11 @@ class ComplexEigenvalues(baseScalarObject):
         self.cycles[rootNum] = cycle
         self.damping[rootNum] = damping
 
-    def addF06Data(self, data):
+    def add_f06_data(self, data):
         for line in data:
             self.addF06Line(line)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):  # not proper msg start
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):  # not proper msg start
         msg = header + ['                                        C O M P L E X   E I G E N V A L U E S\n',
                         '   MODE    EXTRACTION      EIGENVALUE            CYCLES            DAMPING\n',
                         '    NO.       ORDER\n']

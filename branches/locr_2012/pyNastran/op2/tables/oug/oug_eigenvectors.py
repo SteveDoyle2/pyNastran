@@ -4,7 +4,7 @@ from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
 
 
-class EigenVectorObject(TableObject):  # approachCode=2, sortCode=0, thermal=0
+class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
     """
     @code
     EIGENVALUE =  6.158494E+07
@@ -16,23 +16,23 @@ class EigenVectorObject(TableObject):  # approachCode=2, sortCode=0, thermal=0
         2003      G      0.0            0.0            0.0            0.0            0.0            0.0
     @endcode
     """
-    def __init__(self, dataCode, isSort1, iSubcase, iMode):
-        TableObject.__init__(self, dataCode, isSort1, iSubcase, iMode)
+    def __init__(self, data_code, is_sort1, isubcase, iMode):
+        TableObject.__init__(self, data_code, is_sort1, isubcase, iMode)
         #self.caseVal = mode
-        self.updateDt = self.updateMode
+        self.update_dt = self.updateMode
         #print "mode = %s" %(mode)
-        #print "dataCode = ",self.dataCode
-        self.setDataMembers()
+        #print "data_code = ",self.data_code
+        self.set_data_members()
 
         #assert mode>=0.
         self.gridTypes = {}
         #self.translations = {iMode: {}}
         #self.rotations    = {iMode: {}}
 
-    def readF06Data(self, dataCode, data):
-        iMode = dataCode['mode']
+    def readF06Data(self, data_code, data):
+        iMode = data_code['mode']
         if iMode not in self.translations:
-            self.updateMode(dataCode, iMode)
+            self.updateMode(data_code, iMode)
 
         for line in data:
             (nid, gridType, t1, t2, t3, r1, r2, r3) = line
@@ -40,18 +40,18 @@ class EigenVectorObject(TableObject):  # approachCode=2, sortCode=0, thermal=0
             self.translations[iMode][nid] = array([t1, t2, t3])
             self.rotations[iMode][nid] = array([r1, r2, r3])
 
-    def updateMode(self, dataCode, iMode):
+    def updateMode(self, data_code, iMode):
         """
         this method is called if the object
         already exits and a new time step is found
         """
         #assert mode>=0.
-        self.dataCode = dataCode
-        self.applyDataCode()
+        self.data_code = data_code
+        self.apply_data_code()
         #self.caseVal = iMode
         #print "mode = %s" %(str(mode))
         self.addNewMode(iMode)
-        self.setDataMembers()
+        self.set_data_members()
 
     def addNewMode(self, iMode):
         self.translations[iMode] = {}
@@ -60,11 +60,11 @@ class EigenVectorObject(TableObject):  # approachCode=2, sortCode=0, thermal=0
     def eigenvalues(self):
         return self.eigrs
 
-    def writeMatlab(self, iSubcase, f=None, isMagPhase=False):
+    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
         name = 'eigenvectors'
-        return self._writeMatlabTransient(name, iSubcase, f, isMagPhase)
+        return self._writeMatlabTransient(name, isubcase, f, isMagPhase)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         """
         @code
         EIGENVALUE =  6.158494E+07
@@ -77,7 +77,7 @@ class EigenVectorObject(TableObject):  # approachCode=2, sortCode=0, thermal=0
         @endcode
         """
         msg = []
-        hasCycle = hasattr(self, 'modeCycle')
+        hasCycle = hasattr(self, 'mode_cycle')
 
         for i, (iMode, eigVals) in enumerate(sorted(self.translations.iteritems())):
             msg += header
@@ -85,7 +85,7 @@ class EigenVectorObject(TableObject):  # approachCode=2, sortCode=0, thermal=0
             msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
 
             if hasCycle:
-                msg.append('%16s = %13E         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', self.modeCycle, iMode))
+                msg.append('%16s = %13E         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', self.mode_cycle, iMode))
             else:
                 msg.append('                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % (iMode))
 
@@ -109,8 +109,8 @@ class EigenVectorObject(TableObject):  # approachCode=2, sortCode=0, thermal=0
 
     def __repr__(self):
         msg = '---EIGENVECTORS---\n'
-        msg += self.printDataMembers()
-        name = self.dataCode['name']
+        msg += self.print_data_members()
+        name = self.data_code['name']
 
         headers = ['Tx', 'Ty', 'Tz', 'Rx', 'Ry', 'Rz']
         headerLine = '%-8s %8s ' % ('nodeID', 'GridType',)
@@ -142,7 +142,7 @@ class EigenVectorObject(TableObject):  # approachCode=2, sortCode=0, thermal=0
         return msg
 
 
-class realEigenVectorObject(scalarObject):  # approachCode=2, sortCode=0, thermal=0
+class realEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, thermal=0
     """
     @code
                                          R E A L   E I G E N V E C T O R   N O .          1
@@ -151,12 +151,12 @@ class realEigenVectorObject(scalarObject):  # approachCode=2, sortCode=0, therma
              7      G      9.999849E-01   0.0            6.728968E-03   0.0            8.021386E-03   0.0
     @endcode
     """
-    def __init__(self, dataCode, iSubcase, iMode):
-        scalarObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, isubcase, iMode):
+        scalarObject.__init__(self, data_code, isubcase)
         #self.caseVal = mode
         #print "mode = %s" %(iMode)
         self.caseVal = self.getUnsteadyValue()
-        self.setDataMembers()
+        self.set_data_members()
 
         #assert mode>=0.
         self.gridTypes = {}
@@ -167,22 +167,22 @@ class realEigenVectorObject(scalarObject):  # approachCode=2, sortCode=0, therma
         self.translations[iMode] = {}
         self.rotations[iMode] = {}
 
-    def updateDt(self, dataCode, dt):
-        #print " self.dataCode = ",self.dataCode
-        self.dataCode = dataCode
-        self.applyDataCode()
-        self.setDataMembers()
+    def update_dt(self, data_code, dt):
+        #print " self.data_code = ",self.data_code
+        self.data_code = data_code
+        self.apply_data_code()
+        self.set_data_members()
         self.caseVal = dt
 
-        #print "*self.dataCode = ",self.dataCode
+        #print "*self.data_code = ",self.data_code
         self.translations[self.caseVal] = {}
         self.rotations[self.caseVal] = {}
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.translations[dt]
         del self.rotations[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.translations.keys()
         k.sort()
         return k
@@ -215,11 +215,11 @@ class realEigenVectorObject(scalarObject):  # approachCode=2, sortCode=0, therma
     def eigenvalues(self):
         return self.eigrs
 
-    def writeMatlab(self, iSubcase, f=None, isMagPhase=False):
+    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
         name = 'eigenvectors'
-        return self._writeMatlabTransient(name, iSubcase, f, isMagPhase)
+        return self._writeMatlabTransient(name, isubcase, f, isMagPhase)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         """
         @code
         EIGENVALUE =  6.158494E+07
@@ -232,7 +232,7 @@ class realEigenVectorObject(scalarObject):  # approachCode=2, sortCode=0, therma
         @endcode
         """
         msg = []
-        #print self.dataCode
+        #print self.data_code
         for i, (iMode, eigVals) in enumerate(sorted(self.translations.iteritems())):
             msg += header
             freq = self.eigrs[i]
@@ -255,8 +255,8 @@ class realEigenVectorObject(scalarObject):  # approachCode=2, sortCode=0, therma
 
     def __repr__(self):
         msg = '---REAL EIGENVECTORS---\n'
-        msg += self.printDataMembers()
-        name = self.dataCode['name']
+        msg += self.print_data_members()
+        name = self.data_code['name']
 
         headers = ['T']
         headerLine = '%-8s %8s ' % ('nodeID', 'GridType',)
@@ -286,12 +286,12 @@ class realEigenVectorObject(scalarObject):  # approachCode=2, sortCode=0, therma
         return msg
 
 
-class ComplexEigenVectorObject(ComplexTableObject):  # approachCode=2, sortCode=0, thermal=0
-    def __init__(self, dataCode, isSort1, iSubcase, iMode):
-        ComplexTableObject.__init__(self, dataCode, isSort1, iSubcase, iMode)
+class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_code=0, thermal=0
+    def __init__(self, data_code, is_sort1, isubcase, iMode):
+        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, iMode)
         self.caseVal = iMode
-        self.updateDt = self.updateMode
-        self.setDataMembers()
+        self.update_dt = self.updateMode
+        self.set_data_members()
 
         #print "mode = %s" %(mode)
 
@@ -300,16 +300,16 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approachCode=2, sortCode=
         #self.translations = {iMode: {}}
         #self.rotations    = {iMode: {}}
 
-    def updateMode(self, dataCode, iMode):
+    def updateMode(self, data_code, iMode):
         """
         this method is called if the object
         already exits and a new time step is found
         """
         #assert mode>=0.
         self.caseVal = iMode
-        self.dataCode = dataCode
-        self.applyDataCode()
-        self.setDataMembers()
+        self.data_code = data_code
+        self.apply_data_code()
+        self.set_data_members()
         #print "mode = %s" %(str(mode))
         self.addNewMode(iMode)
 
@@ -320,17 +320,17 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approachCode=2, sortCode=
     def eigenvalues(self):
         return sorted(self.translations.keys())
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         msg = []
-        #print self.dataCode
-        hasCycle = hasattr(self, 'modeCycle')
+        #print self.data_code
+        hasCycle = hasattr(self, 'mode_cycle')
         for i, (iMode, eigVals) in enumerate(sorted(self.translations.iteritems())):
             msg += header
             freq = self.eigrs[i]
             #freq = 0.0
             msg.append('%16s = %12E\n' % ('EIGENVALUE', freq))
             if hasCycle:
-                msg.append('%16s = %12E          C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', self.modeCycle, iMode))
+                msg.append('%16s = %12E          C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', self.mode_cycle, iMode))
             else:
                 msg.append('                                         C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' % (iMode))
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
@@ -357,14 +357,14 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approachCode=2, sortCode=
 
     def __repr__(self):
         msg = '---EIGENVECTORS---\n'
-        msg += self.printDataMembers()
+        msg += self.print_data_members()
 
         headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
         headerLine = '%-8s %8s ' % ('nodeID', 'GridType',)
         for header in headers:
             headerLine += '%10s ' % (header)
         headerLine += '\n'
-        name = self.dataCode['name']
+        name = self.data_code['name']
 
         for i, (iMode, eigVals) in enumerate(sorted(self.translations.iteritems())):
             msg += '%s = %g\n' % (name, iMode)

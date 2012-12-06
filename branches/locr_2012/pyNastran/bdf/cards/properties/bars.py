@@ -684,7 +684,7 @@ class PBAR(LineProperty):
             self.j = data[5]
 
             self.nsm = data[6]
-            #self.fe  = data[7] ## @todo not documented....
+            #self.fe  = data[7] # TODO not documented....
             self.C1 = data[8]
             self.C2 = data[9]
             self.D1 = data[10]
@@ -1376,8 +1376,8 @@ class PBEAML(IntegratedLineProperty):
         """
         self.mid = model.Material(self.mid)
 
-    def verify(self, model, iSubcase):
-        if model.is_thermal_solution(iSubcase):
+    def verify(self, model, isubcase):
+        if model.is_thermal_solution(isubcase):
             assert self.mid.type in ['MAT4', 'MAT5']
         else:
             assert self.mid.type in ['MAT1']

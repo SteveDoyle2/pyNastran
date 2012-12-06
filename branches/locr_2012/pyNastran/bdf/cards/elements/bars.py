@@ -585,7 +585,7 @@ class CBAR(LineElement):
             self.w1b = float(card.field(14, 0.0))
             self.w2b = float(card.field(15, 0.0))
             self.w3b = float(card.field(16, 0.0))
-        else:  ## @todo verify
+        else:  # TODO verify
             #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
             #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
 

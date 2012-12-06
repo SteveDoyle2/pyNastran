@@ -585,7 +585,7 @@ class PSHELL(ShellProperty):
         #msg += "              VECTEUR=(1.0,0.0,0.0,)  #  local coordinate system\n"
         msg += "              EXCENTREMENT=%g,  # offset-Z1\n" % self.z1
         msg += "              COQUE_NCOU=1,  # Number of Integration Layers\n"
-        msg += "              CARA=('NSM'), # ???\n"  ## @todo check
+        msg += "              CARA=('NSM'), # ???\n"  # TODO check
         msg += "              VALE=(%g),),\n" % self.nsm
         return msg
 

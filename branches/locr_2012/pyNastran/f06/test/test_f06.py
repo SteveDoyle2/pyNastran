@@ -49,21 +49,21 @@ def runLotsOfFiles(files, debug=True, saveCases=True, skipFiles=[],
     sys.exit('-----done with all models %s/%s=%.2f%%  nFailed=%s-----' % (nPassed, nTotal, 100. * nPassed / float(nTotal), nTotal - nPassed))
 
 
-def runF06(f06file, iSubcases=[], writeF06=True, printF06=False, debug=False, stopOnFailure=True):
+def runF06(f06file, iSubcases=[], write_f06=True, printF06=False, debug=False, stopOnFailure=True):
     isPassed = False
     stopOnFailure = False
     #debug = True
     try:
         f06 = F06(f06file, debug=debug)
-        #f06.setSubcases(iSubcases)  ## @todo not supported
+        #f06.set_subcases(iSubcases)  # TODO not supported
 
         #f06.readBDF(f06.bdf_filename,includeDir=None,xref=False)
         f06.readF06()
         #tableNamesF06 = parseTableNamesFromF06(f06.f06FileName)
         #tableNamesF06 = f06.getTableNamesFromF06()
-        if writeF06:
+        if write_f06:
             (model, ext) = os.path.splitext(f06file)
-            f06.writeF06(model + '.f06.out')
+            f06.write_f06(model + '.f06.out')
 
         if printF06:
             f06.print_results()
@@ -73,7 +73,7 @@ def runF06(f06file, iSubcases=[], writeF06=True, printF06=False, debug=False, st
         pass
         #f06.caseControlDeck.sol = f06.sol
         #print f06.caseControlDeck.getF06Data()
-        #print f06.printResults()
+        #print f06.print_results()
         #print f06.caseControlDeck.getF06Data()
         isPassed = True
     except KeyboardInterrupt:
@@ -135,7 +135,7 @@ def runF06(f06file, iSubcases=[], writeF06=True, printF06=False, debug=False, st
     return isPassed
 
 
-def runArgParse():
+def run_arg_parse():
     import argparse
 
     ver = str(pyNastran.__version__)
@@ -146,7 +146,7 @@ def runArgParse():
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-q', '--quiet', dest='quiet', action='store_true',
                        help='Prints   debug messages (default=True)')
-    parser.add_argument('-f', '--writeF06', dest='writeF06',
+    parser.add_argument('-f', '--write_f06', dest='write_f06',
                         action='store_true', help='Writes the f06 to fem.f06.out')
     parser.add_argument('-p', '--printF06', dest='printF06',
                         action='store_true', help='Prints the F06 to the screen, slow & uses a lot of memory for large files')
@@ -160,18 +160,18 @@ def runArgParse():
     print("debug       = %s" % (not(args.quiet)))
 
     debug = not(args.quiet)
-    writeF06 = args.writeF06
+    write_f06 = args.write_f06
     printF06 = args.printF06
     f06FileName = args.f06FileName[0]
 
-    return (f06FileName, writeF06, printF06, debug)
+    return (f06FileName, write_f06, printF06, debug)
 
 
 def main():
-    (f06FileName, writeF06, printF06, debug) = runArgParse()
+    (f06FileName, write_f06, printF06, debug) = run_arg_parse()
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
-    runF06(f06FileName, writeF06=writeF06, printF06=printF06, debug=debug)
+    runF06(f06FileName, write_f06=write_f06, printF06=printF06, debug=debug)
 
 if __name__ == '__main__':  # f06
     main()

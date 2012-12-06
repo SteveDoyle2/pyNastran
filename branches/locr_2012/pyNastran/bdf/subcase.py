@@ -64,15 +64,15 @@ class Subcase(object):
         @param value the value of the parameter
         @todo not done...only supports REAL, IMAG, PHASE, not RANDOM
         """
-        formatCode = 0
+        format_code = 0
         if 'REAL' in options:
-            formatCode += 1
+            format_code += 1
         if 'IMAG' in options:
-            formatCode += 2
+            format_code += 2
         if 'PHASE' in options:
-            formatCode += 4
-        formatCode = max(formatCode, 1)
-        return formatCode
+            format_code += 4
+        format_code = max(format_code, 1)
+        return format_code
 
     def get_sort_code(self, options, value):
         """
@@ -81,14 +81,14 @@ class Subcase(object):
         @param options the options for a parameter
         @param value the value of the parameter
         """
-        sortCode = 0
+        sort_code = 0
         if 'COMPLEX' in options:
-            sortCode += 1
+            sort_code += 1
         if 'SORT2' in options:
-            sortCode += 2
+            sort_code += 2
         if 'RANDOM' in options:
-            sortCode += 4
-        return sortCode
+            sort_code += 4
+        return sort_code
 
     def get_device_code(self, options, value):
         """
@@ -97,17 +97,17 @@ class Subcase(object):
         @param options the options for a parameter
         @param value the value of the parameter
         """
-        deviceCode = 0
+        device_code = 0
         if 'PRINT' in options:
-            deviceCode += 1
+            device_code += 1
         if 'PLOT' in options:
-            deviceCode += 2
+            device_code += 2
         if 'PUNCH' in options:
-            deviceCode += 4
-        deviceCode = max(deviceCode, 1)
-        #if deviceCode==0:
-        #    deviceCode=1  # PRINT
-        return deviceCode
+            device_code += 4
+        device_code = max(device_code, 1)
+        #if device_code==0:
+        #    device_code=1  # PRINT
+        return device_code
 
     def get_analysis_code(self, sol):
         """
@@ -140,11 +140,11 @@ class Subcase(object):
             159: 6,  # transient thermal
         }
         #print "sol=%s" %(sol)
-        approachCode = codes[sol]
-        #print 'approachCode = ',approachCode
-        return approachCode
+        approach_code = codes[sol]
+        #print 'approach_code = ',approach_code
+        return approach_code
 
-    def get_table_code(self, sol, tablename, options):
+    def get_table_code(self, sol, table_name, options):
         """
         Gets the table code of a given parameter.  For example, the
         DISPLACMENT(PLOT,POST)=ALL makes an OUGV1 table and stores the
@@ -156,11 +156,11 @@ class Subcase(object):
         @param options the options for a parameter
         @param value the value of the parameter
         """
-        if tablename in ['VECTOR', 'PRESSURE']:
-            tablename = 'DISPLACEMENT'  # equivalent tables...
+        if table_name in ['VECTOR', 'PRESSURE']:
+            table_name = 'DISPLACEMENT'  # equivalent tables...
 
-        key = (sol, tablename)
-        tables = {  # SOL, tablename      tableCode
+        key = (sol, table_name)
+        tables = {  # SOL, table_name      table_code
                   (101, 'ACCELERATION'): 11,
                   (103, 'ACCELERATION'): 11,
                   (106, 'ACCELERATION'): 11,
@@ -335,8 +335,8 @@ class Subcase(object):
         print("key=%s" % (str(key)))
         if key not in tables:
             raise KeyError(key)
-        tableCode = tables[key]
-        return tableCode
+        table_code = tables[key]
+        return table_code
 
     def has_parameter(self, paramName):
         """
@@ -433,7 +433,7 @@ class Subcase(object):
 
     def _simplify_data(self, key, value, options, param_type):
         if param_type == 'SET-type':
-            #print("adding iSubcase=%s key=|%s| value=|%s| options=|%s| "
+            #print("adding isubcase=%s key=|%s| value=|%s| options=|%s| "
             #      "param_type=%s" %(self.id, key, value, options, param_type))
             values2 = []
             for (i, ivalue) in enumerate(value):
@@ -447,16 +447,16 @@ class Subcase(object):
                         raise RuntimeError(msg)
                     values2.append(ivalue)
 
-            ## @todo expand values with THRU and EXCLUDE
-            ## @todo sort values
-            ## @todo collapse values when printing
+            # TODO expand values with THRU and EXCLUDE
+            # TODO sort values
+            # TODO collapse values when printing
 
             #print "values2 = ",values2
             options = int(options)
             return (key, values2, options)
 
         elif param_type == 'CSV-type':
-            #print("adding iSubcase=%s key=|%s| value=|%s| options=|%s| "
+            #print("adding isubcase=%s key=|%s| value=|%s| options=|%s| "
             #      "param_type=%s" %(self.id, key, value, options, param_type))
             if value.isdigit():  # PARAM,DBFIXED,-1
                 value = value
@@ -465,7 +465,7 @@ class Subcase(object):
             #b = 'value=|%s|'     % value
             #c = 'options=|%s|'   % options
             #d = 'param_type=|%s|' % param_type
-            #print("_adding iSubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a,
+            #print("_adding isubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a,
             #                                                      b, c, d))
             if isinstance(value, int) or value is None:
                 pass
@@ -477,8 +477,8 @@ class Subcase(object):
     def get_op2_data(self, sol, solmap_toValue):
         self.sol = sol
         label = 'SUBCASE %s' % (self.id)
-        op2Params = {'iSubcase': None, 'tables': [], 'analysisCodes': [],
-                     'deviceCodes': [], 'sortCodes': [], 'tableCodes': [],
+        op2Params = {'isubcase': None, 'tables': [], 'analysisCodes': [],
+                     'device_codes': [], 'sortCodes': [], 'tableCodes': [],
                      'label': label, 'subtitle': None, 'title': None,
                      'formatCodes': [], 'stressCodes': [], 'thermal': None}
 
@@ -519,14 +519,14 @@ class Subcase(object):
             #print(msg)
             #msg += self.printParam(key, param, printBeginBulk=False)
             if paramType == 'SUBCASE-type':
-                op2Params['iSubcase'].append(value)
+                op2Params['isubcase'].append(value)
             elif key in ['BEGIN', 'ECHO', 'ANALYSIS'] or 'SET' in key:
                 pass
             elif key == 'TEMPERATURE':
                 thermal = 1
             elif key in results:
-                sortCode = self.get_sort_code(options, value)
-                deviceCode = self.get_device_code(options, value)
+                sort_code = self.get_sort_code(options, value)
+                device_code = self.get_device_code(options, value)
 
                 if key in ['STRESS', 'STRAIN']:
                     stressCode = self.get_stress_code(key, options, value)
@@ -534,20 +534,20 @@ class Subcase(object):
                 else:
                     op2Params['stressCodes'].append(0)
 
-                formatCode = self.get_format_code(options, value)
-                tableCode = self.get_table_code(sol, key, options)
-                analysisCode = self.get_analysis_code(sol)
+                format_code = self.get_format_code(options, value)
+                table_code = self.get_table_code(sol, key, options)
+                analysis_code = self.get_analysis_code(sol)
 
-                approachCode = analysisCode * 10 + deviceCode
-                tCode = tableCode * 1000 + sortCode
+                approach_code = analysis_code * 10 + device_code
+                tCode = table_code * 1000 + sort_code
                 op2Params['tables'].append(key)
 
-                op2Params['analysisCodes'].append(analysisCode)
-                op2Params['approachCodes'].append(approachCode)
-                op2Params['deviceCodes'].append(deviceCode)
-                op2Params['formatCodes'].append(formatCode)
-                op2Params['sortCodes'].append(sortCode)
-                op2Params['tableCodes'].append(tableCode)
+                op2Params['analysisCodes'].append(analysis_code)
+                op2Params['approachCodes'].append(approach_code)
+                op2Params['device_codes'].append(device_code)
+                op2Params['formatCodes'].append(format_code)
+                op2Params['sortCodes'].append(sort_code)
+                op2Params['tableCodes'].append(table_code)
                 op2Params['tCodes'].append(tCode)
                 #analysisMethod = value
 
@@ -615,7 +615,7 @@ class Subcase(object):
                 msg = ''
 
         elif param_type == 'SET-type':
-            ## @todo collapse data...not written yet
+            # TODO collapse data...not written yet
             starter = 'SET %s = ' % (options)
             msg2 = spaces + starter
             nChars = len(msg2)

@@ -5,19 +5,19 @@ import sys
 from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
 
 
-class AccelerationObject(TableObject):  # approachCode=11, thermal=0
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        TableObject.__init__(self, dataCode, isSort1, iSubcase, dt)
+class AccelerationObject(TableObject):  # approach_code=11, thermal=0
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, iSubcase, f=None, isMagPhase=False):
+    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
         name = 'accelerations'
-        if self.nonlinearFactor is None:
-            return self._writeMatlab(name, iSubcase, f)
+        if self.nonlinear_factor is None:
+            return self._writeMatlab(name, isubcase, f)
         else:
-            return self._writeMatlabTransient(name, iSubcase, f)
+            return self._writeMatlabTransient(name, isubcase, f)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f)
         words = ['                                             A C C E L E R A T I O N   V E C T O R\n',
                  ' \n',
@@ -34,7 +34,7 @@ class AccelerationObject(TableObject):  # approachCode=11, thermal=0
 
     def __repr__(self):
         #return ''
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---ACCELERATIONS---\n'
@@ -62,7 +62,7 @@ class AccelerationObject(TableObject):  # approachCode=11, thermal=0
         msg += self.writeHeader()
 
         for dt, translations in sorted(self.translations.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
@@ -80,19 +80,19 @@ class AccelerationObject(TableObject):  # approachCode=11, thermal=0
         return msg
 
 
-class ComplexAccelerationObject(ComplexTableObject):  # tableCode=11, approachCode=???
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        ComplexTableObject.__init__(self, dataCode, isSort1, iSubcase, dt)
+class ComplexAccelerationObject(ComplexTableObject):  # table_code=11, approach_code=???
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, iSubcase, f=None, isMagPhase=False):
+    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
         name = 'accelerations'
-        if self.nonlinearFactor is None:
-            return self._writeMatlab(name, iSubcase, f, isMagPhase)
+        if self.nonlinear_factor is None:
+            return self._writeMatlab(name, isubcase, f, isMagPhase)
         else:
-            return self._writeMatlabTransient(name, iSubcase, f, isMagPhase)
+            return self._writeMatlabTransient(name, isubcase, f, isMagPhase)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
 
         words = ['                                       C O M P L E X   A C C E L E R A T I O N   V E C T O R\n']
@@ -103,13 +103,13 @@ class ComplexAccelerationObject(ComplexTableObject):  # tableCode=11, approachCo
         return self._writeF06TransientBlock(words, header, pageStamp, pageNum, f, isMagPhase)
 
     def __repr__(self):
-        return self.writeF06(['', '', ''], 'PAGE ', 1)[0]
-        #if self.nonlinearFactor is not None:
+        return self.write_f06(['', '', ''], 'PAGE ', 1)[0]
+        #if self.nonlinear_factor is not None:
             #return self.__reprTransient__()
 
         msg = '---COMPLEX ACCELERATIONS---\n'
-        #if self.nonlinearFactor is not None:
-        #    msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
+        #if self.nonlinear_factor is not None:
+        #    msg += '%s = %g\n' %(self.data_code['name'],self.dt)
         headers = ['DxReal', 'DxImag', 'DyReal', 'DyImag', 'DzReal', 'DyImag', 'RxReal', 'RxImag', 'RyReal', 'RyImag', 'RzReal', 'RzImag']
         msg += '%-10s ' % ('nodeID')
         for header in headers:
@@ -117,7 +117,7 @@ class ComplexAccelerationObject(ComplexTableObject):  # tableCode=11, approachCo
         msg += '\n'
 
         for freq, translations in sorted(self.translations.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], freq)
+            msg += '%s = %g\n' % (self.data_code['name'], freq)
 
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[freq][nodeID]

@@ -22,7 +22,7 @@ class BaseCard(BDFCard):
         return ('# skipping %s (lid=%s) because writeCodeAsterLoad is '
                 'not implemented\n' % (self.type, self.lid))
 
-    #def verify(self, model, iSubcase):
+    #def verify(self, model, isubcase):
         #"""
         #this method checks performs checks on the cards such as
         #that the PBEAML has a proper material type

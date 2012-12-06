@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 
 class Op2Codes(object):
-    def ElementType(self, eCode):
+    def get_element_type(self, eCode):
         elements = {
             None: '',
             0: 'GRID',
@@ -246,9 +246,9 @@ class Op2Codes(object):
         }
         return elements[eCode]  # +'_'+str(eCode)
 
-    def printTableCode(self, tableCode):
-        tableCodeContent = tableCode % 1000
-        #dataFormat = tableCode/1000
+    def print_table_code(self, table_code):
+        tableCodeContent = table_code % 1000
+        #dataFormat = table_code/1000
         msg = ''
         #msg += 'tableCodeContent=%s dataFormat=%s\n' %(tableCodeContent,dataFormat)
 
@@ -300,108 +300,108 @@ class Op2Codes(object):
             54: 'OLMPF2M - ???',
             55: 'OGMPF2M - ???',
         }
-        msg += 'n=%s table=%s-%s' % (self.n, self.tablename,
+        msg += 'n=%s table=%s-%s' % (self.n, self.table_name,
                                      tableContent[tableCodeContent])
         return msg
 
-    def codeInformation(self):
+    def code_information(self):
         """
         prints the general table information
         DMAP - page 60-63
         """
-        deviceCode = self.deviceCode
-        #analysisCode = self.analysisCode
-        #tableCode    = self.tableCode
-        sortCode = self.sortCode
+        device_code = self.device_code
+        #analysis_code = self.analysis_code
+        #table_code    = self.table_code
+        sort_code = self.sort_code
 
-        formatCode = None
-        if hasattr(self, 'formatCode'):
-            formatCode = self.formatCode
+        format_code = None
+        if hasattr(self, 'format_code'):
+            format_code = self.format_code
 
-        sCode = None
-        if hasattr(self, 'sCode'):
-            sCode = self.sCode
+        s_code = None
+        if hasattr(self, 's_code'):
+            s_code = self.s_code
 
         thermal = None
         if hasattr(self, 'thermal'):
             thermal = self.thermal
 
         stressWord = ''
-        if hasattr(self, 'stressBits'):
+        if hasattr(self, 'stress_bits'):
             if self.isStress():
                 stressWord = 'Stress'
             else:
                 stressWord = 'Strain'
 
-        elementType = None
-        if hasattr(self, 'elementType'):
-            elementType = self.elementType
+        element_type = None
+        if hasattr(self, 'element_type'):
+            element_type = self.element_type
 
         sWord = ''
-        if(sCode == 0):
+        if(s_code == 0):
             sWord += 'Coordinate Element - Stress Max Shear (Octahedral)'
-        elif(sCode == 14):
+        elif(s_code == 14):
             sWord += 'Coordinate Element - Strain Fiber Max Shear (Octahedral)'
 
-        elif(sCode == 1):
+        elif(s_code == 1):
             sWord += 'Coordinate Element - Stress von Mises'
-        elif(sCode == 10):
+        elif(s_code == 10):
             sWord += 'Coordinate Element - Strain Curvature Max Shear (Octahedral)'
 
-        elif(sCode == 11):
+        elif(s_code == 11):
             sWord += 'Coordinate Element - Strain Curvature von Mises'
-        elif(sCode == 15):
+        elif(s_code == 15):
             sWord += 'Coordinate Element - Strain Fiber von Mises'
 
-        elif(sCode == 16):
+        elif(s_code == 16):
             sWord += 'Coordinate Material - Stress Max Shear (Octahedral)'
-        elif(sCode == 17):
+        elif(s_code == 17):
             sWord += 'Coordinate Material - Stress von Mises'
 
-        elif(sCode == 26):
+        elif(s_code == 26):
             sWord += 'Coordinate Material - Strain Curvature Max Shear'
-        elif(sCode == 30):
+        elif(s_code == 30):
             sWord += 'Coordinate Material - Strain Fiber Max Shear (Octahedral)'
 
-        elif(sCode == 27):
+        elif(s_code == 27):
             sWord += 'Coordinate Material - Strain Curvature von Mises'
-        elif(sCode == 31):
+        elif(s_code == 31):
             sWord += 'Coordinate Material - Strain Fiber von Mises'
         else:
             #sWord = 'Stress or Strain - UNDEFINED'
             sWord = ''
 
         formatWord = '???'
-        if(formatCode == 1):
+        if(format_code == 1):
             formatWord = "Real"
-        elif(formatCode == 2):
+        elif(format_code == 2):
             formatWord = "Real/Imaginary"
-        elif(formatCode == 3):
+        elif(format_code == 3):
             formatWord = "Magnitude/Phase"
         else:
             formatWord = '???'
-            #msg = 'unsupported formatCode:  formatCode=%s\n' %(formatCode)
+            #msg = 'unsupported format_code:  format_code=%s\n' %(format_code)
             #raise InvalidFormatCodeError(msg)
 
-        if   self.sortBits[0] == 0:
+        if   self.sort_bits[0] == 0:
             sortWord1 = 'Sort1'
         else:
             sortWord1 = 'Sort2'
-        if   self.sortBits[1] == 0:
+        if   self.sort_bits[1] == 0:
             sortWord2 = 'Real'
         else:
             sortWord2 = 'Real/Imaginary'
-        if   self.sortBits[2] == 0:
+        if   self.sort_bits[2] == 0:
             sortWord3 = 'Sorted Responses'
         else:
             sortWord3 = 'Random Responses'
 
-        #if(  self.sortCode==0): sortWord = 'Real'
-        #elif(self.sortCode==1): sortWord = 'Real/Imaginary'
-        #elif(self.sortCode==2): sortWord = 'Random Responses'
+        #if(  self.sort_code==0): sortWord = 'Real'
+        #elif(self.sort_code==1): sortWord = 'Real/Imaginary'
+        #elif(self.sort_code==2): sortWord = 'Random Responses'
         #else:
             #sortWord = '???'
-            #msg = 'unsupported sortCode:  sortCode=%s\n' %(sortCode)
+            #msg = 'unsupported sort_code:  sort_code=%s\n' %(sort_code)
             #print msg
             #raise RuntimeError(msg)
 
@@ -423,43 +423,43 @@ class Op2Codes(object):
             #raise ValueError(msg)
 
         analysis = '???'
-        if(self.analysisCode == 1):
+        if(self.analysis_code == 1):
             analysis = "Statics"
-        elif(self.analysisCode == 2):
+        elif(self.analysis_code == 2):
             analysis = "Normal modes or buckling (real eigenvalues)"
-        elif(self.analysisCode == 3):
+        elif(self.analysis_code == 3):
             analysis = "Differential Stiffness 0 - obsolete"
-        elif(self.analysisCode == 4):
+        elif(self.analysis_code == 4):
             analysis = "Differential Stiffness 1 - obsolete"
-        elif(self.analysisCode == 5):
+        elif(self.analysis_code == 5):
             analysis = "Frequency"
-        elif(self.analysisCode == 6):
+        elif(self.analysis_code == 6):
             analysis = "Transient"
-        elif(self.analysisCode == 7):
+        elif(self.analysis_code == 7):
             analysis = "Pre-buckling"
-        elif(self.analysisCode == 8):
+        elif(self.analysis_code == 8):
             analysis = "Post-buckling"
-        elif(self.analysisCode == 9):
+        elif(self.analysis_code == 9):
             analysis = "Complex eigenvalues"
-        elif(self.analysisCode == 10):
+        elif(self.analysis_code == 10):
             analysis = "Nonlinear statics"
-        elif(self.analysisCode == 11):
+        elif(self.analysis_code == 11):
             analysis = "Geometric nonlinear statics"
 
         device = '???'
-        if(self.deviceCode == 1):
+        if(self.device_code == 1):
             device = "Print"
-        elif(self.deviceCode == 2):
+        elif(self.device_code == 2):
             device = "Plot"
-        elif(self.deviceCode == 3):
+        elif(self.device_code == 3):
             device = "Print and Plot"
-        elif(self.deviceCode == 4):
+        elif(self.device_code == 4):
             device = "Punch"
-        elif(self.deviceCode == 5):
+        elif(self.device_code == 5):
             device = "Print and Punch"
-        elif(self.deviceCode == 6):
+        elif(self.device_code == 6):
             device = "Plot and Punch"
-        elif(self.deviceCode == 7):
+        elif(self.device_code == 7):
             device = "Print, Plot, and Punch"
 
         if thermal == 0:
@@ -477,108 +477,108 @@ class Op2Codes(object):
             DispTemp = 'Displacement/Temperature'
 
         table = '???'
-        if(self.tableCode == 1):
+        if(self.table_code == 1):
             table = "OUG - %s vector/scalar" % (DispTemp)
-        elif(self.tableCode == 2):
+        elif(self.table_code == 2):
             table = "OPG - Load vector"
-        elif(self.tableCode == 3):
+        elif(self.table_code == 3):
             table = "OQG - SPC Force vector"
-        elif(self.tableCode == 4):
+        elif(self.table_code == 4):
             table = "OEF - Element %s" % (ForceFlux)
-        elif(self.tableCode == 5):
+        elif(self.table_code == 5):
             table = "OES - Element %s" % (stressWord)
-        elif(self.tableCode == 6):
+        elif(self.table_code == 6):
             table = "LAMA - Eigenvalue summary"
-        elif(self.tableCode == 7):
+        elif(self.table_code == 7):
             table = "OUG - Eigenvector"
-        elif(self.tableCode == 8):
+        elif(self.table_code == 8):
             table = "none - Grid point singularity table (obsolete)"
-        elif(self.tableCode == 9):
+        elif(self.table_code == 9):
             table = "OEIGS - Eigenvalue analysis summary"
-        elif(self.tableCode == 10):
+        elif(self.table_code == 10):
             table = "OUG - Velocity vector"
-        elif(self.tableCode == 11):
+        elif(self.table_code == 11):
             table = "OUG - Acceleration vector"
-        elif(self.tableCode == 12):
+        elif(self.table_code == 12):
             table = "OPG - Nonlinear force vector"
-        elif(self.tableCode == 13):
+        elif(self.table_code == 13):
             table = "OGPWG - Grid point weight generator"
-        elif(self.tableCode == 14):
+        elif(self.table_code == 14):
             table = "OUG - Eigenvector (solution set)"
-        elif(self.tableCode == 15):
+        elif(self.table_code == 15):
             table = "OUG - Displacement vector (solution set)"
-        elif(self.tableCode == 16):
+        elif(self.table_code == 16):
             table = "OUG - Velocity vector (solution set)"
-        elif(self.tableCode == 17):
+        elif(self.table_code == 17):
             table = "OUG - Acceleration vector (solution set)"
-        elif(self.tableCode == 18):
+        elif(self.table_code == 18):
             table = "OEE - Element strain energy"
-        elif(self.tableCode == 19):
+        elif(self.table_code == 19):
             table = "OGF - Grid point force balance"
-        elif(self.tableCode == 20):
+        elif(self.table_code == 20):
             table = "OES - Stresses at grid points (from the CURV module)"
-        elif(self.tableCode == 21):
+        elif(self.table_code == 21):
             table = "OES - Strain/curvature at grid points"
-        elif(self.tableCode == 22):
+        elif(self.table_code == 22):
             table = "OELOF1 - Element internal forces and moments"
-        elif(self.tableCode == 23):
+        elif(self.table_code == 23):
             table = "OELOP1 - Summation of element oriented forces on adjacent elements"
-        elif(self.tableCode == 24):
+        elif(self.table_code == 24):
             table = "OEP - Element pressures"
-        elif(self.tableCode == 25):
+        elif(self.table_code == 25):
             table = "OEF - Composite failure indicies"
-        elif(self.tableCode == 26):
+        elif(self.table_code == 26):
             table = "OGS - Grid point stresses (surface)"
-        elif(self.tableCode == 27):
+        elif(self.table_code == 27):
             table = "OGS - Grid point stresses (volume -- direct)"
-        elif(self.tableCode == 28):
+        elif(self.table_code == 28):
             table = "OGS - Grid point stresses (volume -- principal)"
-        elif(self.tableCode == 29):
+        elif(self.table_code == 29):
             table = "OGS - Element stress discontinuities (surface)"
-        elif(self.tableCode == 30):
+        elif(self.table_code == 30):
             table = "OGS - Element stress discontinuities (volume -- direct)"
-        elif(self.tableCode == 31):
+        elif(self.table_code == 31):
             table = "OGS - Element stress discontinuities (volume -- principal)"
-        elif(self.tableCode == 32):
+        elif(self.table_code == 32):
             table = "OGS - Grid point stress discontinuities (surface)"
-        elif(self.tableCode == 33):
+        elif(self.table_code == 33):
             table = "OGS - Grid point stress discontinuities (volume -- direct)"
-        elif(self.tableCode == 34):
+        elif(self.table_code == 34):
             table = "OGS - Grid point stress discontinuities (volume -- principal)"
-        elif(self.tableCode == 35):
+        elif(self.table_code == 35):
             table = "OGS - Grid point stress discontinuities (plane strain)"
-        elif(self.tableCode == 36):
+        elif(self.table_code == 36):
             table = "OEE - Element kinetic energy"
-        elif(self.tableCode == 37):
+        elif(self.table_code == 37):
             table = "OEE - Element energy loss"
-        elif(self.tableCode == 38):
+        elif(self.table_code == 38):
             table = "OMM - Max/Min summary"
-        elif(self.tableCode == 39):
+        elif(self.table_code == 39):
             table = "OQG - MPC Forces"
-        elif(self.tableCode == 40):
+        elif(self.table_code == 40):
             table = "OGPKE - Grip point kinetic energy"
 
         msg = '--Table3Data--\n\n'
-        msg += "  deviceCode   = %-3s %s\n" % (self.deviceCode, device)
-        msg += "  analysisCode = %-3s %s\n" % (self.analysisCode, analysis)
-        msg += "  tableCode    = %-3s %s-%s\n" % (
-            self.tableCode, self.tablename, table)
-        msg += "  formatCode   = %-3s %s\n" % (formatCode, formatWord)
+        msg += "  device_code   = %-3s %s\n" % (self.device_code, device)
+        msg += "  analysis_code = %-3s %s\n" % (self.analysis_code, analysis)
+        msg += "  table_code    = %-3s %s-%s\n" % (
+            self.table_code, self.table_name, table)
+        msg += "  format_code   = %-3s %s\n" % (format_code, formatWord)
 
-        msg += "  sortType     = %-3s %s\n" % (self.sortBits[0], sortWord1)
-        msg += "  dataFormat   = %-3s %s\n" % (self.sortBits[1], sortWord2)
-        msg += "  isRandom     = %-3s %s\n" % (self.sortBits[2], sortWord3)
+        msg += "  sortType     = %-3s %s\n" % (self.sort_bits[0], sortWord1)
+        msg += "  dataFormat   = %-3s %s\n" % (self.sort_bits[1], sortWord2)
+        msg += "  isRandom     = %-3s %s\n" % (self.sort_bits[2], sortWord3)
 
-        if elementType is not None:
-            msg += "  elementType  = %-3s %s\n" % (
-                elementType, self.ElementType(elementType))
+        if element_type is not None:
+            msg += "  element_type  = %-3s %s\n" % (
+                element_type, self.get_element_type(element_type))
         if sWord:  # stress code
-            msg += "  sCode        = %-3s %s\n" % (sCode, sWord)
+            msg += "  s_code        = %-3s %s\n" % (s_code, sWord)
         if thermal is not None:
             msg += "  thermal      = %-3s %s\n" % (thermal, thermalWord)
-        msg += "  numWide      = %-3s\n" % (self.numWide)
-        if hasattr(self,'iSubcase'):
-            msg += "  iSubcase     = %-3s\n" % (self.iSubcase)
+        msg += "  num_wide      = %-3s\n" % (self.num_wide)
+        if hasattr(self,'isubcase'):
+            msg += "  isubcase     = %-3s\n" % (self.isubcase)
         else:
             msg += "  ID           = %-3s\n" % (self.ID)
         #print msg
@@ -593,38 +593,38 @@ class Op2Codes(object):
         return '???'
 
     #----
-    # formatCode 3
-    def isMagnitudePhase(self):
-        if self.formatCode == 3:
+    # format_code 3
+    def is_magnitude_phase(self):
+        if self.format_code == 3:
             return True
         return False
 
     #----
-    # sortCode 0
-    def isSort1(self):
-        if self.sortBits[0] == 0:
+    # sort_code 0
+    def is_sort1(self):
+        if self.sort_bits[0] == 0:
             return True
         return False
 
     def isSort2(self):
-        return not(self.isSort1())
+        return not(self.is_sort1())
 
     #----
-    # sortCode 1
-    def isReal(self):  # formatCode=1, this one is tricky b/c you can overwrite the Real code
-        #if self.formatCode==1:
+    # sort_code 1
+    def isReal(self):  # format_code=1, this one is tricky b/c you can overwrite the Real code
+        #if self.format_code==1:
         #    return True
-        if self.sortBits[1] == 0:
+        if self.sort_bits[1] == 0:
             return True
         return False
 
-    def isRealImaginary(self):  # formatCode=2...does that dominate?
+    def is_real_imaginary(self):  # format_code=2...does that dominate?
         return not(self.isReal())
 
     #----
-    # sortCode 2
+    # sort_code 2
     def isSortedResponse(self):
-        if self.sortBits[2] == 0:
+        if self.sort_bits[2] == 0:
             return True
         return False
 
@@ -637,10 +637,10 @@ class Op2Codes(object):
         return self.isReal() or self.isRandom()
 
     def isRealImaginaryOrMagnitudePhase(self):
-        return self.isRealImaginary or self.MagnitudePhase()
+        return self.is_real_imaginary or self.MagnitudePhase()
 
     #----
     def isStress(self):
-        if self.stressBits[1] == 0:
+        if self.stress_bits[1] == 0:
             return True
         return False

@@ -2,8 +2,8 @@ from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 
 class GridPointStressesObject(scalarObject):
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        scalarObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        scalarObject.__init__(self, data_code, isubcase)
         self.nx = {}
         self.ny = {}
         self.txy = {}
@@ -17,16 +17,16 @@ class GridPointStressesObject(scalarObject):
         self.eids = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
+                self.add = self.add_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
 
     def get_stats(self):
         msg = self.get_data_code()
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.nx)
             times0 = self.nx.keys()[0]
             nelements = len(self. nx[times0])
@@ -39,7 +39,7 @@ class GridPointStressesObject(scalarObject):
         msg.append('  nx, ny, txy, angle, majorP, minorP, tmax, ovm\n')
         return msg
 
-    def addNewTransient(self, dt):  # eKey
+    def add_new_transient(self, dt):  # eKey
         """initializes the transient variables"""
         self.nx[dt] = {}
         self.ny[dt] = {}
@@ -77,11 +77,11 @@ class GridPointStressesObject(scalarObject):
         self.elemName[eKey].append(elemName)
         self.eids[eKey].append(eid)
 
-    def addSort1(self, dt, eKey, eid, elemName, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
+    def add_sort1(self, dt, eKey, eid, elemName, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
         if dt not in self.nx:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
 
-        #print "%s=%s eKey=%s eid=%s elemName=%s f1=%s" %(self.dataCode['name'],dt,eKey,eid,elemName,f1)
+        #print "%s=%s eKey=%s eid=%s elemName=%s f1=%s" %(self.data_code['name'],dt,eKey,eid,elemName,f1)
         if eKey not in self.nx[dt]:
             self.eids[eKey] = []
             self.elemName[eKey] = []
@@ -105,7 +105,7 @@ class GridPointStressesObject(scalarObject):
         self.tmax[dt][eKey].append(tmax)
         self.ovm[dt][eKey].append(ovm)
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.nx[dt]
         del self.ny[dt]
         del self.txy[dt]
@@ -115,7 +115,7 @@ class GridPointStressesObject(scalarObject):
         del self.tmax[dt]
         del self.ovm[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.nx.keys()
         k.sort()
         return k
@@ -125,8 +125,8 @@ class GridPointStressesObject(scalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f)
 
         msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
@@ -166,7 +166,7 @@ class GridPointStressesObject(scalarObject):
         return (''.join(msg), pageNum)
 
     def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        return 'GridPointStressesObject writeF06 is not implemented...', pageNum
+        return 'GridPointStressesObject write_f06 is not implemented...', pageNum
         #raise NotImplementedError()
         msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
                         '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
@@ -201,13 +201,13 @@ class GridPointStressesObject(scalarObject):
         return (''.join(msg), pageNum - 1)
 
     def __repr__(self):
-        return self.writeF06([], 'PAGE ', 1)[0]
+        return self.write_f06([], 'PAGE ', 1)[0]
         #return '---gridPointStressesObject---'
 
 
 class GridPointStressesVolumeObject(scalarObject):
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        scalarObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        scalarObject.__init__(self, data_code, isubcase)
         self.nx = {}
         self.ny = {}
         self.nz = {}
@@ -221,16 +221,16 @@ class GridPointStressesVolumeObject(scalarObject):
         self.eids = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
+                self.add = self.add_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
 
     def get_stats(self):
         msg = self.get_data_code()
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.nx)
             times0 = self.nx.keys()[0]
             nelements = len(self. nx[times0])
@@ -243,7 +243,7 @@ class GridPointStressesVolumeObject(scalarObject):
         msg.append('  nx, ny, nz, txy, tyz, txz, pressure, ovm\n')
         return msg
 
-    def addNewTransient(self, dt):  # eKey
+    def add_new_transient(self, dt):  # eKey
         """initializes the transient variables"""
         self.nx[dt] = {}
         self.ny[dt] = {}
@@ -281,11 +281,11 @@ class GridPointStressesVolumeObject(scalarObject):
         #self.elemName[eKey].append(elemName)
         #self.eids[eKey].append(eid)
 
-    def addSort1(self, dt, eKey, nx, ny, nz, txy, tyz, txz, pressure, ovm):
+    def add_sort1(self, dt, eKey, nx, ny, nz, txy, tyz, txz, pressure, ovm):
         if dt not in self.nx:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
 
-        #print "%s=%s eKey=%s eid=%s elemName=%s f1=%s" %(self.dataCode['name'],dt,eKey,eid,elemName,f1)
+        #print "%s=%s eKey=%s eid=%s elemName=%s f1=%s" %(self.data_code['name'],dt,eKey,eid,elemName,f1)
         if eKey not in self.nx[dt]:
             #self.eids[eKey] = []
             #self.elemName[eKey] = []
@@ -309,7 +309,7 @@ class GridPointStressesVolumeObject(scalarObject):
         self.pressure[dt][eKey].append(pressure)
         self.ovm[dt][eKey].append(ovm)
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.nx[dt]
         del self.ny[dt]
         del self.nz[dt]
@@ -319,7 +319,7 @@ class GridPointStressesVolumeObject(scalarObject):
         del self.pressure[dt]
         del self.ovm[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.nx.keys()
         k.sort()
         return k
@@ -329,10 +329,10 @@ class GridPointStressesVolumeObject(scalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        return 'GridPointStressesVolumeObject writeF06 is not implemented...', pageNum
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        return 'GridPointStressesVolumeObject write_f06 is not implemented...', pageNum
         #raise NotImplementedError()
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f)
 
         msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
@@ -405,5 +405,5 @@ class GridPointStressesVolumeObject(scalarObject):
         return (''.join(msg), pageNum - 1)
 
     def __repr__(self):
-        return self.writeF06([], 'PAGE ', 1)[0]
+        return self.write_f06([], 'PAGE ', 1)[0]
         #return '---gridPointStressesVolumeObject---'

@@ -30,18 +30,18 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 
     def readTableB_DUMMY(self):
         """reads a dummy results table"""
-        self.tablename = 'DUMMY'
+        self.table_name = 'DUMMY'
         table3 = self.readTable_DUMMY_3
         table4Data = self.readDUMMY_Data
-        self.readResultsTable(table3, table4Data)
+        self.read_results_table(table3, table4Data)
         self._delete_attributes_OPG()
 
     def readTable_DUMMY_3(self, iTable):
         """sets dummy parameters"""
-        self.analysisCode = None
-        self.tableCode = None
-        self.formatCode = None
-        self.sortCode = None
+        self.analysis_code = None
+        self.table_code = None
+        self.format_code = None
+        self.sort_code = None
 
     def readDUMMY_Data(self):
         """creates a dummy object and skips the results"""
@@ -58,59 +58,59 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 
     def extractSort1(self, eidDevice, dt):
         #eidDevice, = unpack(b'i',data)
-        #print "eidDevice=%s dt=%s eid-dev=%s out=%s" %(eidDevice,dt,eidDevice-self.deviceCode,(eidDevice-self.deviceCode)/10.)
-        return (eidDevice - self.deviceCode) // 10
+        #print "eidDevice=%s dt=%s eid-dev=%s out=%s" %(eidDevice,dt,eidDevice-self.device_code,(eidDevice-self.device_code)/10.)
+        return (eidDevice - self.device_code) // 10
 
     def extractSort2(self, timeFreq, eid):
         #print "timeFreq=%s eid=%s" %(timeFreq,eid)
-        #gridDevice, = unpack(b'i',data)
+        #grid_device, = unpack(b'i',data)
         return timeFreq
 
-    def addDataParameter(self, data, Name, Type, fieldNum, applyNonlinearFactor=True, fixDeviceCode=False):
+    def add_data_parameter(self, data, Name, Type, fieldNum, applyNonlinearFactor=True, fixDeviceCode=False):
         """
         self.mode = self.get_values(data,'i',5) ## mode number
         """
         value = self.get_values(data, Type, fieldNum)
         if fixDeviceCode:
-            value = (value - self.deviceCode) // 10
-        #print "Name=%s Type=%s fieldNum=%s aCode=%s value=%s" %(Name,Type,fieldNum,self.analysisCode,value)
+            value = (value - self.device_code) // 10
+        #print "Name=%s Type=%s fieldNum=%s aCode=%s value=%s" %(Name,Type,fieldNum,self.analysis_code,value)
         setattr(self, Name, value)
-        self.dataCode[Name] = value
+        self.data_code[Name] = value
 
         if applyNonlinearFactor:
-            self.nonlinearFactor = value
-            self.dataCode['nonlinearFactor'] = value
-            self.dataCode['name'] = Name
+            self.nonlinear_factor = value
+            self.data_code['nonlinear_factor'] = value
+            self.data_code['name'] = Name
 
     def setNullNonlinearFactor(self):
-        self.nonlinearFactor = None
-        self.dataCode['nonlinearFactor'] = None
+        self.nonlinear_factor = None
+        self.data_code['nonlinear_factor'] = None
 
-    def applyDataCodeValue(self, Name, value):
-        self.dataCode[Name] = value
+    def apply_data_code_value(self, Name, value):
+        self.data_code[Name] = value
 
-    def createTransientObject(self, storageObj, classObj, debug=False):
+    def create_transient_object(self, storageObj, classObj, debug=False):
         """
         Creates a transient object (or None if the subcase should be skippied).
         @param storageObj  the dictionary to store the object in (e.g. self.bars)
         @param classObj    the class object to instantiate
-        @note dt can also be loadStep depending on the class
+        @note dt can also be load_step depending on the class
         """
         if debug:
             print("create Transient Object")
-            print("***NF = %s" % (self.nonlinearFactor))
-            #print "DC = ",self.dataCode
+            print("***NF = %s" % (self.nonlinear_factor))
+            #print "DC = ",self.data_code
 
-        if hasattr(self,'iSubcase'):
-            if self.iSubcase in storageObj:
+        if hasattr(self,'isubcase'):
+            if self.isubcase in storageObj:
                 #print "updating dt..."
-                self.obj = storageObj[self.iSubcase]
+                self.obj = storageObj[self.isubcase]
                 #print "obj = ",self.obj.__class__.__name__
-                #print self.obj.writeF06(['',''],'PAGE ',1)[0]
+                #print self.obj.write_f06(['',''],'PAGE ',1)[0]
 
                 try:
-                    self.obj.updateDataCode(self.dataCode)
-                    #self.obj.updateDt(self.dataCode,self.nonlinearFactor)
+                    self.obj.update_data_code(self.data_code)
+                    #self.obj.update_dt(self.data_code,self.nonlinear_factor)
                 except:
                     #try:
                         #print "objName = ",self.obj.name()
@@ -119,12 +119,12 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                     raise
             else:
                 #if self.isRegular:
-                    #self.obj = classObj(self.dataCode,not(self.isRegular),self.iSubcase,self.nonlinearFactor)
+                    #self.obj = classObj(self.data_code,not(self.isRegular),self.isubcase,self.nonlinear_factor)
                 #else:
-                self.obj = classObj(self.dataCode, self.isSort1(
-                ), self.iSubcase, self.nonlinearFactor)
+                self.obj = classObj(self.data_code, self.is_sort1(
+                ), self.isubcase, self.nonlinear_factor)
                 #print "obj2 = ",self.obj.__class__.__name__
-            storageObj[self.iSubcase] = self.obj
+            storageObj[self.isubcase] = self.obj
         else:
             if self.ID in storageObj:
                 #print "updating dt..."
@@ -132,31 +132,31 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             else:
                 storageObj[self.ID] = self.obj
 
-    def createThermalTransientObject(self, resultName, objClass, isSort1):
+    def createThermalTransientObject(self, resultName, objClass, is_sort1):
         #print resultName
-        if self.iSubcase in resultName:
-            self.obj = resultName[self.iSubcase]
-            #print "returning iSubcase result=%s" %(self.iSubcase)
+        if self.isubcase in resultName:
+            self.obj = resultName[self.isubcase]
+            #print "returning isubcase result=%s" %(self.isubcase)
         else:
-            self.obj = objClass(self.dataCode, isSort1,
-                                self.iSubcase, self.nonlinearFactor)
-            resultName[self.iSubcase] = self.obj
-            #print "creating iSubcase result=%s" %(self.iSubcase)
+            self.obj = objClass(self.data_code, is_sort1,
+                                self.isubcase, self.nonlinear_factor)
+            resultName[self.isubcase] = self.obj
+            #print "creating isubcase result=%s" %(self.isubcase)
         #return self.obj
 
-    def readResultsTable(self, table3, table4Data, flag=0):
+    def read_results_table(self, table3, table4Data, flag=0):
         self.dtMap = {}
-        tablename = self.read_table_name(rewind=False)  # OEF
-        self.table_init(tablename)
-        #print("tablename = |%r|" % tablename)
+        table_name = self.read_table_name(rewind=False)  # OEF
+        self.table_init(table_name)
+        #print("table_name = |%r|" % table_name)
 
-        self.read_markers([-1, 7], tablename)
+        self.read_markers([-1, 7], table_name)
         ints = self.read_int_block()
         #print "*ints = ",ints
 
-        self.read_markers([-2, 1, 0], tablename)  # 7
-        bufferWords = self.get_marker()
-        #print "1-bufferWords = ",bufferWords,bufferWords*4
+        self.read_markers([-2, 1, 0], table_name)  # 7
+        buffer_words = self.get_marker()
+        #print "1-buffer_words = ",buffer_words,buffer_words*4
         ints = self.read_int_block()
         #print "*ints = ",ints
 
@@ -164,7 +164,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         markerB = 0
 
         iTable = -3
-        self.read_markers([iTable, 1, 0], tablename)
+        self.read_markers([iTable, 1, 0], table_name)
 
         exitFast = False
         while [markerA, markerB] != [0, 2]:
@@ -175,9 +175,9 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 
             ## the results object
             self.obj = None
-            ## dt/loadFactor/frequency/loadStep value (or None for static)
-            self.nonlinearFactor = None
-            self.dataCode = {}
+            ## dt/loadFactor/frequency/load_step value (or None for static)
+            self.nonlinear_factor = None
+            self.data_code = {}
 
             n = self.op2.tell()
             marker = self.get_marker()
@@ -188,10 +188,10 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 break
 
             table3(iTable)
-            self.dataCode['tablename'] = self.tablename
+            self.data_code['table_name'] = self.table_name
             ## developer parameter - Analysis/Table/Format/Sort Codes
-            #self.atfsCode = [self.analysisCode, self.tableCode,
-            #                 self.formatCode, self.sortCode]
+            #self.atfsCode = [self.analysis_code, self.table_code,
+            #                 self.format_code, self.sort_code]
             #print "self.tellA = ",self.op2.tell()
 
             self.isMarker = False
@@ -210,20 +210,20 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 break
             n = self.n
             #print self.print_section(100)
-            self.read_markers([iTable, 1, 0], tablename)
+            self.read_markers([iTable, 1, 0], table_name)
             #self.log.debug("")
 
         nOld = self.op2.tell()
         #try:
         if not(exitFast):
             #print self.print_section(100000)
-            self.read_markers([iTable, 1, 0], tablename)
+            self.read_markers([iTable, 1, 0], table_name)
             #self.get_marker()
             #self.get_marker()
             #self.get_marker()
         #except SyntaxError: # Invalid Markers
         #    self.goto(nOld)
-            #print self.printBlock(self.data)
+            #print self.print_block(self.data)
             #print self.print_section(100)
             #markerZero = self.get_marker()
             #assert markerZero==0
@@ -232,8 +232,8 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             #return
 
         #print str(self.obj)
-        if self.makeOp2Debug:
-            self.op2Debug.write("***end of %s table***\n" % tablename)
+        if self.make_op2_debug:
+            self.op2Debug.write("***end of %s table***\n" % table_name)
         del self.dtMap
 
     def readTable4(self, table4Data, flag, iTable):
@@ -274,32 +274,32 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         isTable4Done = False
         isBlockDone = False
 
-        bufferWords = self.get_marker(self.tablename)
-        #print "bufferWords = ",bufferWords
-        #print len(bufferWords)
+        buffer_words = self.get_marker(self.table_name)
+        #print "buffer_words = ",buffer_words
+        #print len(buffer_words)
         self.data = self.read_block()
-        #self.printBlock(data)
+        #self.print_block(data)
 
-        if bufferWords == 146:  # table -4 is done, restarting table -3
+        if buffer_words == 146:  # table -4 is done, restarting table -3
             isTable4Done = True
             return isTable4Done, isBlockDone
-        elif bufferWords == 0:
-            #print "bufferWords 0 - done with Table4"
+        elif buffer_words == 0:
+            #print "buffer_words 0 - done with Table4"
             isTable4Done = True
             isBlockDone = True
             return isTable4Done, isBlockDone
 
-        isBlockDone = not(bufferWords)
+        isBlockDone = not(buffer_words)
 
         if self.is_valid_subcase():  # lets the user skip a certain subcase
             table4Data()
         else:
-            self.log.debug("***skipping table=%s iSubcase=%s" %
-                           (self.tablename, self.iSubcase))
+            self.log.debug("***skipping table=%s isubcase=%s" %
+                           (self.table_name, self.isubcase))
             self.skipOES_Element()
         return (isTable4Done, isBlockDone)
 
-    def updateDtMap(self):
+    def update_dt_map(self):
         """
         Interfaces with setTransientTimes(times) to limit the amount
         of output that is in the transient results.  This allows
@@ -321,11 +321,11 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         an existing value to a given case, that case will not be read.
         """
         #numArray = array([1.,2.])
-        iSubcase = self.iSubcase
-        numArray = self.expectedTimes[iSubcase]
+        isubcase = self.isubcase
+        numArray = self.expected_times[isubcase]
         #nums = [0.9,1.11,  1.89,2.1]
         # they're sorted so the last value is the current dt
-        num = self.obj.getTransients()[-1]
+        num = self.obj.get_transients()[-1]
 
         readCase = True
         delta = numArray - num
@@ -334,29 +334,29 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         iclose = absDelta.index(closest)
         actualValue = numArray[iclose]
 
-        if iSubcase not in self.dtMap:
-            self.dtMap[iSubcase] = {}
-        if iclose in self.dtMap[iSubcase]:
-            v1 = self.dtMap[iSubcase][iclose]
+        if isubcase not in self.dtMap:
+            self.dtMap[isubcase] = {}
+        if iclose in self.dtMap[isubcase]:
+            v1 = self.dtMap[isubcase][iclose]
             vact = get_close_num(v1, num, actualValue)
 
-            if vact != self.dtMap[iSubcase][iclose]:
-                del self.dtMap[iSubcase][iclose]
-                self.obj.deleteTransient(v1)
+            if vact != self.dtMap[isubcase][iclose]:
+                del self.dtMap[isubcase][iclose]
+                self.obj.delete_transient(v1)
                 #print "num=%s closest=%s iclose=%s" %(num,actualValue,iclose)
                 #print "***deleted v1=%s num=%s vact=%s actual=%s" %(v1,num,vact,actualValue)
-                self.dtMap[iSubcase][iclose] = vact
+                self.dtMap[isubcase][iclose] = vact
                 readCase = True
                 #print self.dtMap
                 #print "A"
-            else:  # cleanup previous creation of empty dt case (happened in updateDt outside this function)
+            else:  # cleanup previous creation of empty dt case (happened in update_dt outside this function)
                 readCase = False
                 #print self.dtMap
                 #print "num=%s closest=%s iclose=%s" %(num,actualValue,iclose)
                 #print "B"
-                self.obj.deleteTransient(num)
+                self.obj.delete_transient(num)
         else:  # read case
-            self.dtMap[iSubcase][iclose] = num
+            self.dtMap[isubcase][iclose] = num
             readCase = True
             #print "num=%s closest=%s iclose=%s" %(num,actualValue,iclose)
             #print self.dtMap
@@ -364,7 +364,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         #print "delta = ",delta,'\n'
         #print "readCase = ",readCase
         #if num>=0.14:
-            #print self.obj.getTransients()
+            #print self.obj.get_transients()
             #sys.exit('OUG !!!')
 
         return readCase
@@ -401,51 +401,16 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 self.data += data
                 stopBuffer = True
 
-    def NotImplementedOrSkip(self, msg=''):
+    def not_implemented_or_skip(self, msg=''):
         """stops if code is in development and continues otherwise"""
         if False:
             raise NotImplementedError(msg)
         else:
             #self.log.info("skipping...")
-            #self.log.info("\n" + self.codeInformation())
+            #self.log.info("\n" + self.code_information())
             self.skipOES_Element()
 
-    def handleResultsBuffer3(self, f, resultName, debug=False):
-        """method for getting results without recursion"""
-        #if resultName not in self.allowedResultNames:
-        #    return self.self.skipOES_Element()
-
-        #stopBuffer = False
-        i = 0
-        #print self.codeInformation()
-        while not(self.isBufferDone):
-            #print "n=%s len(data)=%s" %(self.n,len(self.data))
-            #sys.stdout.flush()
-            f()
-            nOld = self.n
-            markers = self.read_header()
-            #print "nOld=%s markers=%s" %(nOld,markers)
-
-            if markers < 0:  # not a buffer, the table may be done
-                self.goto(nOld)
-                #print "markers%%2 = %s" %(markers%2)
-                if markers is not None and markers % 2 == 1:
-                    self.isBufferDone = True
-            else:
-                data = self.read_block()
-                if type(data) != type(self.data):
-                    msg = 'The function f=%s has a unicode error\n' % (
-                        f.__name__)
-                    msg += ("type(self.data)=%s type(data)=%s"
-                            % (type(self.data), type(data)))
-                sys.stdout.flush()
-                self.data += data
-            i += 1
-            if i == 2000:
-                raise RuntimeError('Infinite Loop or a really big model...')
-            #print "isBufferDone=%s" %(self.isBufferDone)
-
-    def handleResultsBuffer(self, func, debug=False):
+    def handle_results_buffer(self, f, resultName, debug=False):
         """
         Works by knowing that:
         
@@ -476,14 +441,47 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
           this end shift.  An extra marker value is read, but no big deal.
           Beyond that it's just appending some data to the binary string and
           calling the function that's passed in
-        @note
-          this will soon be replaced by handleResultsBuffer3 (and then
-          renamed to handleResultsBuffer after this is removed)
 
         @warning
           Dont modify this without LOTS of testing.
           It's a VERY important function
+        
+        method for getting results without recursion
         """
+        #if resultName not in self.allowedResultNames:
+        #    return self.self.skipOES_Element()
+
+        #stopBuffer = False
+        i = 0
+        #print self.code_information()
+        while not(self.isBufferDone):
+            #print "n=%s len(data)=%s" %(self.n,len(self.data))
+            #sys.stdout.flush()
+            f()
+            nOld = self.n
+            markers = self.read_header()
+            #print "nOld=%s markers=%s" %(nOld,markers)
+
+            if markers < 0:  # not a buffer, the table may be done
+                self.goto(nOld)
+                #print "markers%%2 = %s" %(markers%2)
+                if markers is not None and markers % 2 == 1:
+                    self.isBufferDone = True
+            else:
+                data = self.read_block()
+                if type(data) != type(self.data):
+                    msg = 'The function f=%s has a unicode error\n' % (
+                        f.__name__)
+                    msg += ("type(self.data)=%s type(data)=%s"
+                            % (type(self.data), type(data)))
+                sys.stdout.flush()
+                self.data += data
+            i += 1
+            if i == 2000:
+                raise RuntimeError('Infinite Loop or a really big model...')
+            #print "isBufferDone=%s" %(self.isBufferDone)
+
+    def handle_results_buffer_old(self, func, debug=False):
         raise RuntimeError('this function has been removed...')
         #print self.obj
         #print "len(data) = ",len(self.data)
@@ -524,44 +522,16 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             func()
 
     def readMappedScalarsOut(self, debug=False):
-        raise RuntimeError('this function must be modified...')
+        raise RuntimeError('this function must be modified to call ...')
         readCase = True
-        #print "isSort1() = ",self.isSort1()
-        if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase]) > 0:
-            readCase = self.updateDtMap()
+        #print "is_sort1() = ",self.is_sort1()
+        if self.isubcase in self.expected_times and len(self.expected_times[self.isubcase]) > 0:
+            readCase = self.update_dt_map()
 
-        if self.obj and readCase and self.isSort1():
+        if self.obj and readCase and self.is_sort1():
             self.readScalarsOut(debug=False)
         else:
             self.skipOES_Element()
-
-    def readScalarsOut(self, debug=False):
-        """
-        reads len(strFormat) values and puts it into the result object
-        the "o" in readScalars4o means "out" b/c it creates an out tuple
-        instead of 4 values like readScalars4
-        @note
-            nTotal is the number of bytes
-            strFormat = 'iiii'
-        """
-        raise RuntimeError('this function has been removed...')
-        data = self.data
-        #print type(self.obj)
-        (nTotal, iFormat) = self.obj.getLength()
-        iFormat = bytes(iFormat)
-        n = 0
-        #print  "strFormat = ",strFormat
-        nEntries = len(data) // nTotal
-        for i in xrange(nEntries):
-            eData = data[n:n + nTotal]
-            out = unpack(iFormat, eData)
-            if debug:
-                self.log.debug("*out = %s" % (out))
-            self.obj.add(out)
-            n += nTotal
-        self.data = data[n:]
-        #print self.print_section(200)
-        self.handleResultsBuffer(self.readScalarsOut, debug=False)
 
 
 def get_close_num(v1, v2, closePoint):

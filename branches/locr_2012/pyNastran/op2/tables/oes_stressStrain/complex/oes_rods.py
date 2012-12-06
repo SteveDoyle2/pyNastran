@@ -2,44 +2,44 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 
-from ..real.oes_objects import stressObject, strainObject
+from ..real.oes_objects import StressObject, StrainObject
 
 
-class ComplexRodDamperObject(stressObject):
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        stressObject.__init__(self, dataCode, iSubcase)
+class ComplexRodDamperObject(StressObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StressObject.__init__(self, data_code, isubcase)
         self.eType = 'CBUSH'
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
         self.axial = {}
         self.torsion = {}
 
 
-class ComplexRodStressObject(stressObject):
+class ComplexRodStressObject(StressObject):
     """
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        stressObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StressObject.__init__(self, data_code, isubcase)
         self.eType = 'CROD'
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
         self.axial = {}
         self.torsion = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                #self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                #self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             #self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
     def getLength(self):
         return (20, 'ffff')
 
-    def addF06Data(self, data, transient):
+    def add_f06_data(self, data, transient):
         if transient is None:
             for line in data:
                 (eid, axial, torsion) = line
@@ -49,25 +49,25 @@ class ComplexRodStressObject(stressObject):
 
         (dtName, dt) = transient
         self.dt = dt
-        self.dataCode['name'] = dtName
+        self.data_code['name'] = dtName
         if dt not in self.s1:
-            self.updateDt(self.dataCode, dt)
+            self.update_dt(self.data_code, dt)
 
         for line in data:
             (eid, axial, torsion) = line
             self.axial[dt][eid] = axial
             self.torsion[dt][eid] = torsion
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.axial[dt]
         del self.torsion[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.axial.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         """
@@ -75,26 +75,26 @@ class ComplexRodStressObject(stressObject):
         self.axial[dt] = {}
         self.torsion[dt] = {}
 
-    def addNewEid(self, dt, eid, out):
+    def add_new_eid(self, dt, eid, out):
         #print "Rod Stress add..."
         (axial, torsion) = out
         assert isinstance(eid, int)
         self.axial[eid] = axial
         self.torsion[eid] = torsion
 
-    def addNewEidSort1(self, dt, eid, out):
+    def add_new_eid_sort1(self, dt, eid, out):
         (axial, torsion) = out
 
         if dt not in self.axial:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.axial[dt][eid] = axial
         self.torsion[dt][eid] = torsion
 
-    def addNewEidSort2(self, eid, dt, out):
+    def add_new_eid_sort2(self, eid, dt, out):
         (axial, torsion) = out
 
         if dt not in self.axial:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.axial[dt][eid] = axial
         self.torsion[dt][eid] = torsion
 
@@ -107,7 +107,7 @@ class ComplexRodStressObject(stressObject):
         msg += '\n'
 
         for dt, axial in sorted(self.axial.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for eid in sorted(axial):
                 axial = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
@@ -122,10 +122,10 @@ class ComplexRodStressObject(stressObject):
                 #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        return 'ComplexRodStress writeF06 not implemented...', pageNum
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        return 'ComplexRodStress write_f06 not implemented...', pageNum
         raise NotImplementedError()
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
 
         msg = header + ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
@@ -163,7 +163,7 @@ class ComplexRodStressObject(stressObject):
                  '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
         msg = []
         for dt, axials in sorted(self.axial.iteritems()):
-            dtLine = '%14s = %12.5E\n' % (self.dataCode['name'], dt)
+            dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
             header[2] = dtLine
             msg += header + words
             out = []
@@ -192,7 +192,7 @@ class ComplexRodStressObject(stressObject):
         return(''.join(msg), pageNum - 1)
 
     def __repr__(self):
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         #print 'axial = ',self.axial
@@ -219,29 +219,29 @@ class ComplexRodStressObject(stressObject):
         return msg
 
 
-class ComplexRodStrainObject(strainObject):
+class ComplexRodStrainObject(StrainObject):
     """
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        strainObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StrainObject.__init__(self, data_code, isubcase)
         self.eType = 'CROD'  # {} # 'CROD/CONROD/CTUBE'
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.axial = {}
         self.torsion = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                #self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                #self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             #self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
-    def addF06Data(self, data, transient):
+    def add_f06_data(self, data, transient):
         if transient is None:
             for line in data:
                 (eid, axial, torsion) = line
@@ -251,25 +251,25 @@ class ComplexRodStrainObject(strainObject):
 
         (dtName, dt) = transient
         self.dt = dt
-        self.dataCode['name'] = dtName
+        self.data_code['name'] = dtName
         if dt not in self.s1:
-            self.updateDt(self.dataCode, dt)
+            self.update_dt(self.data_code, dt)
 
         for line in data:
             (eid, axial, torsion) = line
             self.axial[dt][eid] = axial
             self.torsion[dt][eid] = torsion
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.axial[dt]
         del self.torsion[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.axial.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         """
@@ -277,28 +277,28 @@ class ComplexRodStrainObject(strainObject):
         self.axial[self.dt] = {}
         self.torsion[self.dt] = {}
 
-    def addNewEid(self, dt, eid, out):
+    def add_new_eid(self, dt, eid, out):
         (axial, torsion) = out
         assert eid >= 0
         #self.eType = self.eType
         self.axial[eid] = axial
         self.torsion[eid] = torsion
 
-    def addNewEidSort1(self, dt, eid, out):
+    def add_new_eid_sort1(self, dt, eid, out):
         (axial, torsion) = out
         assert eid >= 0
-        #self.eType[eid] = self.elementType
+        #self.eType[eid] = self.element_type
         if dt not in self.axial:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.axial[dt][eid] = axial
         self.torsion[dt][eid] = torsion
 
-    def addNewEidSort2(self, eid, dt, out):
+    def add_new_eid_sort2(self, eid, dt, out):
         (axial, torsion) = out
         assert eid >= 0
-        #self.eType[eid] = self.elementType
+        #self.eType[eid] = self.element_type
         if dt not in self.axial:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.axial[dt][eid] = axial
         self.torsion[dt][eid] = torsion
 
@@ -311,7 +311,7 @@ class ComplexRodStrainObject(strainObject):
         msg += '\n'
 
         for dt, axial in sorted(self.axial.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for eid in sorted(axial):
                 axial = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
@@ -326,8 +326,8 @@ class ComplexRodStrainObject(strainObject):
                 #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        return 'ComplexRodStrain writeF06 not implemented...', pageNum
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        return 'ComplexRodStrain write_f06 not implemented...', pageNum
         raise NotImplementedError()
         if self.dt is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
@@ -366,7 +366,7 @@ class ComplexRodStrainObject(strainObject):
                  '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']
         msg = []
         for dt, axials in sorted(self.axial.iteritems()):
-            dtLine = '%14s = %12.5E\n' % (self.dataCode['name'], dt)
+            dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
             header[2] = dtLine
             msg += header + words
             out = []

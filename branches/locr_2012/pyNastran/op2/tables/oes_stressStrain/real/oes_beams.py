@@ -1,10 +1,10 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from .oes_objects import stressObject, strainObject
+from .oes_objects import StressObject, StrainObject
 
 
-class BeamStressObject(stressObject):
+class BeamStressObject(StressObject):
     """
     @code
     [1,0,0]
@@ -15,11 +15,11 @@ class BeamStressObject(stressObject):
                     2   1.000   -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04
 	@endcode
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        stressObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StressObject.__init__(self, data_code, isubcase)
         self.eType = 'CBEAM'
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
         self.xxb = {}
         self.grids = {}
         self.smax = {}
@@ -36,14 +36,14 @@ class BeamStressObject(stressObject):
         #self.isImaginary = False
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -70,7 +70,7 @@ class BeamStressObject(stressObject):
     def getLength2(self):
         return (40, 'ifffffffff')
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.sxc[dt]
         del self.sxd[dt]
         del self.sxe[dt]
@@ -80,12 +80,12 @@ class BeamStressObject(stressObject):
         del self.MS_tension[dt]
         del self.MS_compression[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.smax.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         """
@@ -100,8 +100,8 @@ class BeamStressObject(stressObject):
         self.MS_tension[dt] = {}
         self.MS_compression[dt] = {}
 
-    def addNewEid(self, dt, eid, out):
-        #print "Beam Stress addNewEid..."
+    def add_new_eid(self, dt, eid, out):
+        #print "Beam Stress add_new_eid..."
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
         #print "eid=%s grid=%s" %(eid,grid)
         assert eid >= 0
@@ -119,13 +119,13 @@ class BeamStressObject(stressObject):
         self.MS_compression[eid] = [msc]
         return eid
 
-    def addNewEidSort1(self, dt, eid, out):
-        #print "Beam Transient Stress addNewEid..."
+    def add_new_eid_sort1(self, dt, eid, out):
+        #print "Beam Transient Stress add_new_eid..."
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
 
         assert eid >= 0
         if dt not in self.sxc:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.grids[eid] = [grid]
         self.xxb[eid] = [sd]
         self.sxc[dt][eid] = [sxc]
@@ -153,7 +153,7 @@ class BeamStressObject(stressObject):
             self.MS_tension[eid].append(mst)
             self.MS_compression[eid].append(msc)
 
-    def addSort1(self, dt, eid, out):
+    def add_sort1(self, dt, eid, out):
         #print "Beam Transient Stress add..."
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
         if grid:
@@ -169,8 +169,8 @@ class BeamStressObject(stressObject):
             self.MS_tension[dt][eid].append(mst)
             self.MS_compression[dt][eid].append(msc)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f)
 
         msg = header + ['                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
@@ -208,7 +208,7 @@ class BeamStressObject(stressObject):
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
         msg = []
         for dt, SMaxs in sorted(self.smax.iteritems()):
-            header[1] = ' %s = %10.4E\n' % (self.dataCode['name'], dt)
+            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for eid, Smax in sorted(SMaxs.iteritems()):
                 msg.append('0  %8i\n' % (eid))
@@ -244,7 +244,7 @@ class BeamStressObject(stressObject):
         msg += '\n'
 
         for dt, smax in sorted(self.smax.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for eid in sorted(smax):
                 for i, nid in enumerate(self.grids[eid]):
                     xxb = self.xxb[eid][i]
@@ -267,7 +267,7 @@ class BeamStressObject(stressObject):
         return msg
 
     def __repr__(self):
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---BEAM STRESSES---\n'
@@ -300,12 +300,12 @@ class BeamStressObject(stressObject):
         return msg
 
 
-class BeamStrainObject(strainObject):
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        strainObject.__init__(self, dataCode, iSubcase)
+class BeamStrainObject(StrainObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StrainObject.__init__(self, data_code, isubcase)
         self.eType = 'CBEAM'  # {} # 'CBEAM/CONBEAM'
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.xxb = {}
         self.grids = {}
@@ -321,18 +321,18 @@ class BeamStrainObject(strainObject):
         if self.code in [[1, 0, 10]]:
             #self.isImaginary = False
             if dt is not None:
-                self.addNewTransient = self.addNewTransient
-                self.addNewEid = self.addNewEidTransient
+                self.add_new_transient = self.add_new_transient
+                self.add_new_eid = self.addNewEidTransient
                 self.add = self.addTransient
             else:
-                self.addNewEid = self.addNewEid
+                self.add_new_eid = self.add_new_eid
                 self.add = self.add
         else:
             raise  RuntimeError("Invalid Code: beamStress - get the format/sort/stressCode=%s" % (self.code))
         if dt is not None:
             self.isTransient = True
-            self.dt = self.nonlinearFactor
-            self.addNewTransient()
+            self.dt = self.nonlinear_factor
+            self.add_new_transient()
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -361,7 +361,7 @@ class BeamStrainObject(strainObject):
     def getLength2(self):
         return (40, 'ifffffffff')
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.sxc[dt]
         del self.sxd[dt]
         del self.sxe[dt]
@@ -371,12 +371,12 @@ class BeamStrainObject(strainObject):
         del self.MS_tension[dt]
         del self.MS_compression[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.smax.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         @note make sure you set self.dt first
@@ -392,8 +392,8 @@ class BeamStrainObject(strainObject):
         self.MS_tension[dt] = {}
         self.MS_compression[dt] = {}
 
-    def addNewEid(self, dt, eid, out):
-        #print "Beam Stress addNewEid..."
+    def add_new_eid(self, dt, eid, out):
+        #print "Beam Stress add_new_eid..."
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
         #print "eid=%s grid=%s" %(eid,grid)
         assert eid >= 0
@@ -411,13 +411,13 @@ class BeamStrainObject(strainObject):
         self.MS_compression[eid] = [msc]
         return eid
 
-    def addNewEidSort1(self, dt, eid, out):
-        #print "Beam Transient Stress addNewEid..."
+    def add_new_eid_sort1(self, dt, eid, out):
+        #print "Beam Transient Stress add_new_eid..."
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
 
         assert eid >= 0
         if dt not in self.sxc:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.grids[eid] = [grid]
         self.xxb[eid] = [sd]
         self.sxc[dt][eid] = [sxc]
@@ -445,7 +445,7 @@ class BeamStrainObject(strainObject):
             self.MS_tension[eid].append(mst)
             self.MS_compression[eid].append(msc)
 
-    def addSort1(self, dt, eid, out):
+    def add_sort1(self, dt, eid, out):
         #print "Beam Transient Stress add..."
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
         if grid:
@@ -456,8 +456,8 @@ class BeamStrainObject(strainObject):
             self.MS_tension[dt][eid].append(mst)
             self.MS_compression[dt][eid].append(msc)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f)
 
         msg = header + ['                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
@@ -494,7 +494,7 @@ class BeamStrainObject(strainObject):
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
         msg = []
         for dt, SMaxs in sorted(self.smax.iteritems()):
-            header[1] = ' %s = %10.4E\n' % (self.dataCode['name'], dt)
+            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for eid, Smax in sorted(SMaxs.iteritems()):
                 msg.append('0  %8i\n' % (eid))
@@ -521,7 +521,7 @@ class BeamStrainObject(strainObject):
         return (''.join(msg), pageNum - 1)
 
     def __repr__(self):
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---BEAM STRAINS---\n'

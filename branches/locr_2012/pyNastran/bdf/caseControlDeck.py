@@ -87,7 +87,7 @@ class CaseControlDeck(object):
                              (isubcase))
         self.copy_subcase(i_from_subcase=0, i_to_subcase=isubcase,
                           overwrite_subcase=True)
-        #self.subcases[iSubcase] = Subcase(id=iSubcase)
+        #self.subcases[isubcase] = Subcase(id=isubcase)
 
     def delete_subcase(self, isubcase):
         if not self.has_subcase(isubcase):
@@ -178,7 +178,7 @@ class CaseControlDeck(object):
             doesnt check for 72 character width lines, but will follow that
             when it's written out
         """
-        iSubcase = 0
+        isubcase = 0
         lines = self._clean_lines(lines)
         i = 0
         while i < len(lines):
@@ -199,8 +199,8 @@ class CaseControlDeck(object):
             #print("key=|%s| value=|%s| options=|%s| paramType=%s" %(key, value,
             #                                                        options,
             #                                                          paramType))
-            iSubcase = self._add_parameter_to_subcase(key, value, options,
-                                                      paramType, iSubcase)
+            isubcase = self._add_parameter_to_subcase(key, value, options,
+                                                      paramType, isubcase)
             if i == self.nlines_max:
                 msg = 'too many lines in Case Control Deck < %i...' %(
                     self.nlines_max)
@@ -272,9 +272,9 @@ class CaseControlDeck(object):
                 msg = "trying to parse |%s|..." % (line)
                 raise RuntimeError(msg)
             (key, param_type) = sline
-            #print "key=|%s| iSubcase=|%s|" %(key,iSubcase)
+            #print "key=|%s| isubcase=|%s|" %(key,isubcase)
             value = int(param_type)
-            #self.iSubcase = int(iSubcase)
+            #self.isubcase = int(isubcase)
             param_type = 'SUBCASE-type'
         elif (line_upper.startswith('LABEL') or
               line_upper.startswith('SUBTITLE') or
@@ -324,7 +324,7 @@ class CaseControlDeck(object):
                     self.log.debug('SET-type key=%s ID=%s' % (key, ID))
                 fivalues = value.rstrip(' ,').split(',')  # float/int values
 
-                ## @todo should be more efficient multiline reader...
+                # TODO should be more efficient multiline reader...
                 # read more lines....
                 if line[-1].strip() == ',':
                     i += 1
@@ -432,7 +432,7 @@ class CaseControlDeck(object):
         return isubcase
 
     def cross_reference(self, model):
-        for (iSubcase, subcase) in sorted(self.subcases.iteritems()):
+        for (isubcase, subcase) in sorted(self.subcases.iteritems()):
             subcase.cross_reference(model)
 
     def get_op2_data(self):
@@ -440,9 +440,9 @@ class CaseControlDeck(object):
         returns the relevant op2 parameters required for a given subcase
         """
         cases = {}
-        for (iSubcase, subcase) in sorted(self.subcases.iteritems()):
-            if iSubcase:
-                cases[iSubcase] = subcase.getOp2Data(self.sol,
+        for (isubcase, subcase) in sorted(self.subcases.iteritems()):
+            if isubcase:
+                cases[isubcase] = subcase.getOp2Data(self.sol,
                                                      subcase.solmap_toValue)
         return cases
 

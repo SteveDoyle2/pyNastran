@@ -2,18 +2,18 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 
-from .oes_objects import stressObject
+from .oes_objects import StressObject
 
 
-class NonlinearGapStressObject(stressObject):
+class NonlinearGapStressObject(StressObject):
     """
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        stressObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
-        self.elementName = self.dataCode['elementName']
+        self.element_name = self.data_code['element_name']
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
         self.compX = {}
         self.shearY = {}
         self.shearZ = {}
@@ -24,14 +24,14 @@ class NonlinearGapStressObject(stressObject):
         self.slipW = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                #self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                #self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             #self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -51,17 +51,17 @@ class NonlinearGapStressObject(stressObject):
     def getLength(self):
         return (8, 'f')
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.compX[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.compX.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """initializes the transient variables"""
-        self.elementName = self.dataCode['elementName']
+        self.element_name = self.data_code['element_name']
         self.dt = dt
         self.compX[dt] = {}
         self.shearY[dt] = {}
@@ -73,9 +73,9 @@ class NonlinearGapStressObject(stressObject):
         self.slipW[dt] = {}
 
 
-    def addNewEid(self, dt, eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2):
+    def add_new_eid(self, dt, eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2):
         (stress,) = out
-        self.eType[eid] = self.elementName
+        self.eType[eid] = self.element_name
         self.compX[eid] = cpx
         self.shearY[eid] = shy
         self.shearZ[eid] = shz
@@ -85,10 +85,10 @@ class NonlinearGapStressObject(stressObject):
         self.slipV[eid] = slv
         self.slipW[eid] = slp
 
-    def addNewEidSort1(self, dt, eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2):
+    def add_new_eid_sort1(self, dt, eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2):
         if dt not in self.compX:
-            self.addNewTransient(dt)
-        self.eType[eid] = self.elementName
+            self.add_new_transient(dt)
+        self.eType[eid] = self.element_name
         self.compX[dt][eid] = cpx
         self.shearY[dt][eid] = shy
         self.shearZ[dt][eid] = shz
@@ -98,11 +98,11 @@ class NonlinearGapStressObject(stressObject):
         self.slipV[dt][eid] = slv
         self.slipW[dt][eid] = slp
 
-    def addNewEidSort2(self, eid, dt, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2):
+    def add_new_eid_sort2(self, eid, dt, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2):
         if dt not in self.compX:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         (stress,) = out
-        self.eType[eid] = self.elementName
+        self.eType[eid] = self.element_name
         self.compX[dt][eid] = cpx
         self.shearY[dt][eid] = shy
         self.shearZ[dt][eid] = shz
@@ -122,7 +122,7 @@ class NonlinearGapStressObject(stressObject):
         msg += '\n'
 
         for dt, stress in sorted(self.stress.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for eid, istress in sorted(stress.iteritems()):
                 msg += '%-6g %6s ' % (eid, self.eType[eid])
                 if abs(istress) < 1e-6:

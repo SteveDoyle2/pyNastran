@@ -5,19 +5,19 @@ from pyNastran.op2.resultObjects.tableObject import (TableObject,
                                                      ComplexTableObject)
 
 
-class DisplacementObject(TableObject):  # approachCode=1, thermal=0
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        TableObject.__init__(self, dataCode, isSort1, iSubcase, dt)
+class DisplacementObject(TableObject):  # approach_code=1, thermal=0
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, iSubcase, f=None, isMagPhase=False):
+    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
         name = 'displacements'
-        if self.nonlinearFactor is None:
-            return self._writeMatlab(name, iSubcase, f)
+        if self.nonlinear_factor is None:
+            return self._writeMatlab(name, isubcase, f)
         else:
-            return self._writeMatlabTransient(name, iSubcase, f)
+            return self._writeMatlabTransient(name, isubcase, f)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f)
         words = ['                                             D I S P L A C E M E N T   V E C T O R\n',
                  ' \n',
@@ -33,7 +33,7 @@ class DisplacementObject(TableObject):  # approachCode=1, thermal=0
         return self._writeF06TransientBlock(words, header, pageStamp, pageNum, f)
 
     def __repr__(self):
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = ['---DISPLACEMENTS---\n']
@@ -62,7 +62,7 @@ class DisplacementObject(TableObject):  # approachCode=1, thermal=0
         msg.append(self.writeHeader())
 
         for dt, translations in sorted(self.translations.iteritems()):
-            msg2 = '%s = %g\n' % (self.dataCode['name'], dt)
+            msg2 = '%s = %g\n' % (self.data_code['name'], dt)
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
@@ -81,19 +81,19 @@ class DisplacementObject(TableObject):  # approachCode=1, thermal=0
         return ''.join(msg)
 
 
-class ComplexDisplacementObject(ComplexTableObject):  # approachCode=1, sortCode=0, thermal=0
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        ComplexTableObject.__init__(self, dataCode, isSort1, iSubcase, dt)
+class ComplexDisplacementObject(ComplexTableObject):  # approach_code=1, sort_code=0, thermal=0
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, iSubcase, f=None, isMagPhase=False):
+    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
         name = 'displacements'
-        if self.nonlinearFactor is None:
-            return self._writeMatlab(name, iSubcase, f, isMagPhase)
+        if self.nonlinear_factor is None:
+            return self._writeMatlab(name, isubcase, f, isMagPhase)
         else:
-            return self._writeMatlabTransient(name, iSubcase, f, isMagPhase)
+            return self._writeMatlabTransient(name, isubcase, f, isMagPhase)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
 
         words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n']
@@ -104,11 +104,11 @@ class ComplexDisplacementObject(ComplexTableObject):  # approachCode=1, sortCode
         return self._writeF06TransientBlock(words, header, pageStamp, pageNum, f, isMagPhase)
 
     def __repr__(self):
-        return self.writeF06(['', '', ''], 'PAGE ', 1)[0]
+        return self.write_f06(['', '', ''], 'PAGE ', 1)[0]
 
         msg = '---COMPLEX DISPLACEMENTS---\n'
         #if self.dt is not None:
-        #    msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
+        #    msg += '%s = %g\n' %(self.data_code['name'],self.dt)
         headers = ['DxReal', 'DxImag', 'DyReal', 'DyImag', 'DzReal', 'DyImag', 'RxReal', 'RxImag', 'RyReal', 'RyImag', 'RzReal', 'RzImag']
         msg += '%-10s ' % ('nodeID')
         for header in headers:
@@ -116,7 +116,7 @@ class ComplexDisplacementObject(ComplexTableObject):  # approachCode=1, sortCode
         msg += '\n'
 
         for freq, translations in sorted(self.translations.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], freq)
+            msg += '%s = %g\n' % (self.data_code['name'], freq)
 
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[freq][nodeID]

@@ -9,14 +9,14 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
     def readTable_OESNLXR(self):
         table3 = self.readTable_OESNLXR_3
         table4Data = self.readTable_OES_4_Data
-        self.readResultsTable(
+        self.read_results_table(
             table3, table4Data, flag=1)  # flag=1 defines old style
         self._delete_attributes_OES()
 
     def _delete_attributes_OESNLXR(self):
-        params = ['sCode', 'elementType', 'obj', 'markerStart', 'loadSet',
-                  'formatCode', 'sCode', 'thermal', 'lsdvmn', 'mode', 'eign',
-                  'modeCycle', 'freq', 'mode', 'eigr', 'eigi', 'dt']
+        params = ['s_code', 'element_type', 'obj', 'markerStart', 'load_set',
+                  'format_code', 's_code', 'thermal', 'lsdvmn', 'mode', 'eign',
+                  'mode_cycle', 'freq', 'mode', 'eigr', 'eigi', 'dt']
         self._delete_attributes(params)
 
     def readTable_OESNLXR_3(self, iTable):
@@ -30,95 +30,95 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
             #print "markers=%s" %(markers)
             #print self.print_section(200)
 
-        bufferWords = self.get_buffer_words()
+        buffer_words = self.get_buffer_words()
 
         data = self.get_data(4)
-        bufferSize, = unpack('i', data)
-        if self.makeOp2Debug:
-            self.op2Debug.write('bufferSize=|%s|\n' % str(bufferSize))
+        buffer_size, = unpack('i', data)
+        if self.make_op2_debug:
+            self.op2Debug.write('buffer_size=|%s|\n' % str(buffer_size))
 
         data = self.get_data(4 * 50)
-        #self.printBlock(data)
-        if self.makeOp2Debug:
+        #self.print_block(data)
+        if self.make_op2_debug:
             self.op2Debug.write('block3header\n')
 
         self.parse_approach_code(data)  # 3
         ## element type
-        self.addDataParameter(data, 'elementType', 'i', 3, False)
+        self.add_data_parameter(data, 'element_type', 'i', 3, False)
         ## load set ID
-        self.addDataParameter(data, 'loadSet', 'i', 8, False)
+        self.add_data_parameter(data, 'load_set', 'i', 8, False)
         ## format code
-        self.addDataParameter(data, 'formatCode', 'i', 9, False)
+        self.add_data_parameter(data, 'format_code', 'i', 9, False)
         ## number of words per entry in record
         ## @note is this needed for this table ???
-        self.addDataParameter(data, 'numWide', 'i', 10, False)
+        self.add_data_parameter(data, 'num_wide', 'i', 10, False)
         ## stress/strain codes
-        self.addDataParameter(data, 'sCode', 'i', 11, False)
+        self.add_data_parameter(data, 's_code', 'i', 11, False)
         ## thermal flag; 1 for heat ransfer, 0 otherwise
-        self.addDataParameter(data, 'thermal', 'i', 23, False)
+        self.add_data_parameter(data, 'thermal', 'i', 23, False)
 
-        #print "loadset=%s formatCode=%s numWordsEntry=%s sCode=%s" %(self.loadSet,self.formatCode,self.numWide,self.sCode)
-        #print "thermal(23)=%s elementType(3)=%s" %(self.thermal,self.elementType)
+        #print "loadset=%s format_code=%s numWordsEntry=%s s_code=%s" %(self.load_set,self.format_code,self.num_wide,self.s_code)
+        #print "thermal(23)=%s element_type(3)=%s" %(self.thermal,self.element_type)
 
         ## assuming tCode=1
-        if self.analysisCode == 1:   # statics / displacement / heat flux
+        if self.analysis_code == 1:   # statics / displacement / heat flux
             ## load set number
-            self.addDataParameter(data, 'lsdvmn', 'i', 5, False)
-        elif self.analysisCode == 2:  # real eigenvalues
+            self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
+        elif self.analysis_code == 2:  # real eigenvalues
             ## mode number
-            self.addDataParameter(data, 'mode', 'i', 5)
+            self.add_data_parameter(data, 'mode', 'i', 5)
             ## real eigenvalue
-            self.addDataParameter(data, 'eign', 'f', 6, False)
+            self.add_data_parameter(data, 'eign', 'f', 6, False)
             ## mode or cycle
-            ## @todo confused on the type - F1???
-            self.addDataParameter(data, 'modeCycle', 'f', 7, False)
-        #elif self.analysisCode==3: # differential stiffness
+            # TODO confused on the type - F1???
+            self.add_data_parameter(data, 'mode_cycle', 'f', 7, False)
+        #elif self.analysis_code==3: # differential stiffness
         #    ## load set number
         #    self.lsdvmn = self.get_values(data,'i',5)
-        #elif self.analysisCode==4: # differential stiffness
+        #elif self.analysis_code==4: # differential stiffness
         #    self.lsdvmn = self.get_values(data,'i',5) ## load set number
 
-        elif self.analysisCode == 5:   # frequency
+        elif self.analysis_code == 5:   # frequency
             ## frequency
-            self.addDataParameter(data, 'freq', 'f', 5)
-        elif self.analysisCode == 6:  # transient
+            self.add_data_parameter(data, 'freq', 'f', 5)
+        elif self.analysis_code == 6:  # transient
             ## time step
-            self.addDataParameter(data, 'dt', 'f', 5)
+            self.add_data_parameter(data, 'dt', 'f', 5)
             #print "DT(5)=%s" %(self.dt)
-        elif self.analysisCode == 7:  # pre-buckling
+        elif self.analysis_code == 7:  # pre-buckling
             ## load set
-            self.addDataParameter(data, 'lsdvmn', 'i', 5)
+            self.add_data_parameter(data, 'lsdvmn', 'i', 5)
             #print "LSDVMN(5)=%s" %(self.lsdvmn)
-        elif self.analysisCode == 8:  # post-buckling
+        elif self.analysis_code == 8:  # post-buckling
             ## mode number
-            self.addDataParameter(data, 'lsdvmn', 'i', 5)
+            self.add_data_parameter(data, 'lsdvmn', 'i', 5)
             ## real eigenvalue
-            self.addDataParameter(data, 'eigr', 'f', 6, False)
+            self.add_data_parameter(data, 'eigr', 'f', 6, False)
             #print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
-        elif self.analysisCode == 9:  # complex eigenvalues
+        elif self.analysis_code == 9:  # complex eigenvalues
             ## mode number
-            self.addDataParameter(data, 'mode', 'i', 5)
+            self.add_data_parameter(data, 'mode', 'i', 5)
             ## real eigenvalue
-            self.addDataParameter(data, 'eigr', 'f', 6, False)
+            self.add_data_parameter(data, 'eigr', 'f', 6, False)
             ## imaginary eigenvalue
-            self.addDataParameter(data, 'eigi', 'f', 7, False)
+            self.add_data_parameter(data, 'eigi', 'f', 7, False)
             #print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
-        elif self.analysisCode == 10:  # nonlinear statics
+        elif self.analysis_code == 10:  # nonlinear statics
             ## load step
-            self.addDataParameter(data, 'lftsfq', 'f', 5)
+            self.add_data_parameter(data, 'lftsfq', 'f', 5)
             #print "LFTSFQ(5) = %s" %(self.lftsfq)
-        elif self.analysisCode == 11:  # old geometric nonlinear statics
+        elif self.analysis_code == 11:  # old geometric nonlinear statics
             ## load set number
-            self.addDataParameter(data, 'lsdvmn', 'i', 5)
+            self.add_data_parameter(data, 'lsdvmn', 'i', 5)
             #print "LSDVMN(5)=%s" %(self.lsdvmn)
-        elif self.analysisCode == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+        elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             ## Time step ??? --> straight from DMAP
-            self.addDataParameter(data, 'dt', 'f', 5)
+            self.add_data_parameter(data, 'dt', 'f', 5)
         else:
-            raise RuntimeError('Invalid Analysis Code: analysisCode=%s' % (self.analysisCode))
+            raise RuntimeError('Invalid Analysis Code: analysis_code=%s' % (self.analysis_code))
 
         # tCode=2
-        #if self.analysisCode==2: # sort2
+        #if self.analysis_code==2: # sort2
         #    self.lsdvmn = self.get_values(data,'i',5)
 
         self.read_title()
@@ -130,21 +130,21 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
         #print self.print_section(100)
 
         data = self.get_data(16)
-        #print self.printBlock(data) # on
+        #print self.print_block(data) # on
         #print "16 block..."
-        #self.printBlock(data)
-        #self.printBlock(data)
-        bufferWords, = unpack('i', data[4:8])
-        #print "bufferWords = ",bufferWords
-        if self.makeOp2Debug:
-            self.op2Debug.write('bufferWords=|%s|\n' % (str(bufferWords)))
+        #self.print_block(data)
+        #self.print_block(data)
+        buffer_words, = unpack('i', data[4:8])
+        #print "buffer_words = ",buffer_words
+        if self.make_op2_debug:
+            self.op2Debug.write('buffer_words=|%s|\n' % (str(buffer_words)))
 
         #print "*********************"
-        #bufferWords = self.get_marker() # 87 - buffer
-        #print "OES4 bufferWords = ",bufferWords,bufferWords*4
-        #self.verifyBufferSize(bufferWords)
+        #buffer_words = self.get_marker() # 87 - buffer
+        #print "OES4 buffer_words = ",buffer_words,buffer_words*4
+        #self.verifyBufferSize(buffer_words)
 
-        isBlockDone = not(bufferWords)
+        isBlockDone = not(buffer_words)
         #print "self.firstPass = ",self.firstPass
 
         ## table -4 is done, restarting table -3
@@ -152,8 +152,8 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
             isTable4Done = True
             #print "exitA"
             return isTable4Done, isBlockDone
-        if bufferWords == 0:
-            #print "bufferWords 0 - done with Table4"
+        if buffer_words == 0:
+            #print "buffer_words 0 - done with Table4"
             isTable4Done = True
             #isBlockDone  = True
             self.print_section(40)
@@ -165,29 +165,29 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
 
     def readOESNLXR_ElementTable(self):
         #print "**self.readElementTable"
-        #print "*elementType = ",self.elementType
+        #print "*element_type = ",self.element_type
         #print "op2.tell=%s n=%s" %(self.op2.tell(),self.n)
 
         self.rewind(4)
         self.data = self.read_block()  # 348
         #print "len(self.data) = ",len(self.data)
 
-        if self.makeOp2Debug:
+        if self.make_op2_debug:
             self.op2Debug.write('reading big data block\n')
-        #print self.printBlock(self.data)
+        #print self.print_block(self.data)
 
-        #msg = 'elementType=%s -> %s' %(self.elementType,self.ElementType(self.elementType))
-        tfsCode = [self.tableCode, self.formatCode, self.sortCode]
+        #msg = 'element_type=%s -> %s' %(self.element_type,self.get_element_type(self.element_type))
+        tfsCode = [self.table_code, self.format_code, self.sort_code]
 
         self.parse_stress_code()
 
         if not self.is_valid_subcase():  # lets the user skip a certain subcase
-            self.log.debug("***skipping table=%s iSubcase=%s" %
-                           (self.tablename, self.iSubcase))
+            self.log.debug("***skipping table=%s isubcase=%s" %
+                           (self.table_name, self.isubcase))
             self.skipOES_Element()
         elif self.thermal == 0:
             # Stress / Strain
-            self.dataCode['elementName'] = self.ElementType(self.elementType)
+            self.data_code['element_name'] = self.get_element_type(self.element_type)
             if   tfsCode == [5, 1, 0]:
                 self.readOESNLXR_Data_format1_sort0()
             else:
@@ -201,91 +201,91 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
 
     def readOESNLXR_Data_format1_sort0(self):
         raise NotImplementedError('code this...')
-        #msg = 'OES elementType=%-3s -> %-6s\n' %(self.elementType,self.ElementType(self.elementType))
+        #msg = 'OES element_type=%-3s -> %-6s\n' %(self.element_type,self.get_element_type(self.element_type))
         msg = ''
         
-        if self.elementType in [1, 3, 10]:  # crod/ctube/conrod
+        if self.element_type in [1, 3, 10]:  # crod/ctube/conrod
             self.makeOES_Object(self.rodStress, rodStressObject,
                                 self.rodStrain, rodStrainObject)
             self.basicElement()
-        elif self.elementType == 2:   # cbeam
+        elif self.element_type == 2:   # cbeam
             #print "    found cbeam_2"
-            self.dataCode['elementName'] = 'CBEAM'
+            self.data_code['element_name'] = 'CBEAM'
             self.makeOES_Object(self.beamStress, beamStressObject,
                                 self.beamStrain, beamStrainObject)
             self.CBEAM_2()
 
-        elif self.elementType in [4]:  # cshear
+        elif self.element_type in [4]:  # cshear
             #print "    found crod_1"
-            self.dataCode['elementName'] = 'CSHEAR'
+            self.data_code['element_name'] = 'CSHEAR'
             self.makeOES_Object(self.shearStress, shearStressObject,
                                 self.shearStrain, shearStrainObject)
             self.basicElement()
-        elif self.elementType in [11, 12, 13]:   # celas1/celas2/celas3
+        elif self.element_type in [11, 12, 13]:   # celas1/celas2/celas3
             self.makeOES_Object(self.celasStress, celasStressObject,
                                 self.celasStrain, celasStrainObject)
             self.basicElement()
-        elif self.elementType == 34:   # cbar
+        elif self.element_type == 34:   # cbar
             #print "    found cbar_34"
-            self.dataCode['elementName'] = 'CBAR'
+            self.data_code['element_name'] = 'CBAR'
             self.makeOES_Object(self.barStress, barStressObject,
                                 self.barStrain, barStrainObject)
             self.CBAR_34()
 
-        elif self.elementType == 33:  # cquad4_33
+        elif self.element_type == 33:  # cquad4_33
             #print "    found cquad_33"
-            self.dataCode['elementName'] = 'CQUAD4'
+            self.data_code['element_name'] = 'CQUAD4'
             self.makeOES_Object(self.plateStress, plateStressObject,
                                 self.plateStrain, plateStrainObject)
             self.CQUAD4_33()
-        elif self.elementType == 74:  # ctria
+        elif self.element_type == 74:  # ctria
             #print "    found ctria_74"
-            self.dataCode['elementName'] = 'CTRIA3'
+            self.data_code['element_name'] = 'CTRIA3'
             self.makeOES_Object(self.plateStress, plateStressObject,
                                 self.plateStrain, plateStrainObject)
             self.CTRIA3_74()  # ctria3
-        elif self.elementType in [64, 144, 70, 75]:  # cquad8/cquad4/ctriar/ctria6
+        elif self.element_type in [64, 144, 70, 75]:  # cquad8/cquad4/ctriar/ctria6
             #print "    found cquad_144"
-            if     self.elementType == 64:
-                self.dataCode['elementName'] = 'CQUAD8'
-            elif   self.elementType == 144:
-                self.dataCode['elementName'] = 'CQUAD4'
-            elif   self.elementType == 70:
-                self.dataCode['elementName'] = 'CTRIAR'
-            elif   self.elementType == 75:
-                self.dataCode['elementName'] = 'CTRIA6'
+            if     self.element_type == 64:
+                self.data_code['element_name'] = 'CQUAD8'
+            elif   self.element_type == 144:
+                self.data_code['element_name'] = 'CQUAD4'
+            elif   self.element_type == 70:
+                self.data_code['element_name'] = 'CTRIAR'
+            elif   self.element_type == 75:
+                self.data_code['element_name'] = 'CTRIA6'
             else:
-                raise NotImplementedError(self.elementType)
+                raise NotImplementedError(self.element_type)
             self.makeOES_Object(self.plateStress, plateStressObject,
                                 self.plateStrain, plateStrainObject)
             self.CQUAD4_144()
 
-        elif self.elementType in [39, 67, 68]:   # ctetra/chexa/cpenta
+        elif self.element_type in [39, 67, 68]:   # ctetra/chexa/cpenta
             #print "    found ctetra_39 / hexa_67 / cpenta_68"
             self.makeOES_Object(self.solidStress, solidStressObject,
                                 self.solidStrain, solidStrainObject)
             self.CSOLID_67()
 
-        elif self.elementType in [85]:   # ctetra/chexa/cpenta (91,93)
+        elif self.element_type in [85]:   # ctetra/chexa/cpenta (91,93)
             #print "    found ctetra_85 / hexa_93 / cpenta_91"
             self.makeOES_Object(self.solidStress, solidStressObject,
                                 self.solidStrain, solidStrainObject)
             self.CSOLID_85()
 
-        elif self.elementType in [89, 92]:   # RODNL
+        elif self.element_type in [89, 92]:   # RODNL
             #print "    found RODNL_89"
             self.makeOES_Object(self.rodStress, nonlinearRodObject,
                                 self.rodStrain, nonlinearRodObject)
             self.RODNL_89_92()
 
-        #elif self.elementType in [91]: # CPENTANL
+        #elif self.element_type in [91]: # CPENTANL
         #    #print "hexa_93"
         #    self.CPENTANL_91()
-        #elif self.elementType in [93]: # CHEXANL
+        #elif self.element_type in [93]: # CHEXANL
         #    #print "hexa_93"
         #    self.CHEXANL_93()
 
-        elif self.elementType in [95, 96, 97, 98]:  # CQUAD4, CQUAD8, CTRIA3, CTRIA6 (composite)
+        elif self.element_type in [95, 96, 97, 98]:  # CQUAD4, CQUAD8, CTRIA3, CTRIA6 (composite)
             #print "    found a 95/96/97 or 98!"
             self.eid2 = None  # stores the previous elementID
             self.makeOES_Object(
@@ -294,7 +294,7 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
             self.CQUAD4_95()
             del self.eid2
 
-        elif self.elementType in [94]:  # CBEAM (nonlinear)
+        elif self.element_type in [94]:  # CBEAM (nonlinear)
             print "    found a 94!"
             #self.eid2 = None # stores the previous elementID
             self.makeOES_Object(self.beamStress, beamStressObject,
@@ -303,17 +303,17 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
             #sys.exit('stoping at end of CBEAM_94')
             #del self.eid2
 
-        elif self.elementType in [139]:   # QUAD4FD
+        elif self.element_type in [139]:   # QUAD4FD
             #print "    found QUAD4FD_139"
             self.makeOES_Object(self.plateStress, nonlinearQuadObject,
                                 self.plateStrain, nonlinearQuadObject)
             self.QUAD4FD_139()
 
         else:
-            #self.printBlock(self.data[0:100])
+            #self.print_block(self.data[0:100])
             self.skipOES_Element()
-            msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' % (self.elementType, self.ElementType(self.elementType), self.op2FileName)
+            msg = 'OES format1_sort0 element_type=%-3s -> %s is not supported - fname=%s\n' % (self.element_type, self.get_element_type(self.element_type), self.op2FileName)
             self.log.debug(msg)
-            #msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
+            #msg = 'OES format1_sort0 element_type=%-3s -> %s is not supported' %(self.element_type,self.get_element_type(self.element_type))
             #raise RuntimeError(msg)
             self.skippedCardsFile.write(msg)

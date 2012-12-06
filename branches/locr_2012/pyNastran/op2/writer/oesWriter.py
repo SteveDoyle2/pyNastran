@@ -5,9 +5,9 @@ class Oes1Writer(object):
     def writeOES1(self):
         """
         writes isotropic/composite stress/strain
-        @todo assumes sCode=0 (stress) or 10 (strain)
+        @todo assumes s_code=0 (stress) or 10 (strain)
         """
-        msg += self.printHeader('OES1X1', 8)
+        msg += self.print_header('OES1X1', 8)
         # OES1X1
         stress = [
             self.rodStress,
@@ -18,16 +18,16 @@ class Oes1Writer(object):
         ]
         cstress = [self.compositePlateStress, ]  # OES1C
 
-        # approachCode=1, tableCode=1
+        # approach_code=1, table_code=1
         for data in stress:
-            for iSubcase in data:
-                msg += self.writeMarkers([self.iTable, 1, 0])
-                msg += self.writeOES(iSubcase, data)
+            for isubcase in data:
+                msg += self.write_markers([self.iTable, 1, 0])
+                msg += self.writeOES(isubcase, data)
                 self.iTable -= 1
-        msg += self.writeMarkers([self.iTable, 1, 0])
+        msg += self.write_markers([self.iTable, 1, 0])
 
         # ----------------
-        msg += self.printHeader('OSTR1X', 8)
+        msg += self.print_header('OSTR1X', 8)
         # OSTR1X
         strain = [
             self.rodStrain,
@@ -38,18 +38,18 @@ class Oes1Writer(object):
             self.compositePlateStrain,
         ]
         for data in strain:
-            for iSubcase in data:
-                msg += self.writeMarkers([self.iTable, 1, 0])
-                msg += self.writeOES(iSubcase, data)
+            for isubcase in data:
+                msg += self.write_markers([self.iTable, 1, 0])
+                msg += self.writeOES(isubcase, data)
                 self.iTable -= 1
-        msg += self.writeMarkers([self.iTable, 1, 0])
+        msg += self.write_markers([self.iTable, 1, 0])
 
         # ----------------
-        msg = self.printHeader('OSTRIC', 8)
+        msg = self.print_header('OSTRIC', 8)
         cstrain = [self.compositePlateStrain, ]  # OSTR1C
         for data in cstrain:
-            for iSubcase in data:
-                msg += self.writeMarkers([self.iTable, 1, 0])
-                msg += self.writeOES(iSubcase, data)
+            for isubcase in data:
+                msg += self.write_markers([self.iTable, 1, 0])
+                msg += self.writeOES(isubcase, data)
                 self.iTable -= 1
-        msg += self.writeMarkers([self.iTable, 1, 0])
+        msg += self.write_markers([self.iTable, 1, 0])

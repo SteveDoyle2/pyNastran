@@ -7,46 +7,46 @@ from numpy import array
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 
-class nonlinearFluxObject(scalarObject):  # approachCode=10, sortCode=0
-    def __init__(self, dataCode, iSubcase, loadStep):
-        scalarObject.__init__(self, dataCode, iSubcase)
+class nonlinearFluxObject(scalarObject):  # approach_code=10, sort_code=0
+    def __init__(self, data_code, isubcase, load_step):
+        scalarObject.__init__(self, data_code, isubcase)
 
-        self.loadStep = loadStep
+        self.load_step = load_step
         self.eTypes = {}
         self.fluxes = {}
         self.gradients = {}
-        if loadStep is not None:
-            self.addNewTransient()
+        if load_step is not None:
+            self.add_new_transient()
             #self.isTransient = True
             #raise Exception('transient not supported for flux yet...')
 
-    def updateDt(self, dataCode, loadStep):
-        self.dataCode = dataCode
-        self.applyDataCode()
-        assert loadStep >= 0.
-        self.loadStep = loadStep
-        self.addNewTransient()
+    def update_dt(self, data_code, load_step):
+        self.data_code = data_code
+        self.apply_data_code()
+        assert load_step >= 0.
+        self.load_step = load_step
+        self.add_new_transient()
 
-    def addNewTransient(self):
+    def add_new_transient(self):
         """
         initializes the transient variables
         @note make sure you set self.dt first
         """
-        self.fluxes[self.loadStep] = {}
-        self.gradients[self.loadStep] = {}
+        self.fluxes[self.load_step] = {}
+        self.gradients[self.load_step] = {}
 
     def add(self, nodeID, eType, v1, v2, v3, v4=None, v5=None, v6=None):
         assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
         #print("nodeID=%s eType=%s v1=%s v2=%s v3=%s v4=%s v5=%s v6=%s"
         #    %(nodeID,eType,v1,v2,v3,v4,v5,v6))
-        assert nodeID not in self.fluxes[self.loadStep], 'nodeID=%s' % (nodeID)
-        self.gradients[self.loadStep][nodeID] = array([v1, v2, v3])
-        self.fluxes[self.loadStep][nodeID] = array([v4, v5, v6])
+        assert nodeID not in self.fluxes[self.load_step], 'nodeID=%s' % (nodeID)
+        self.gradients[self.load_step][nodeID] = array([v1, v2, v3])
+        self.fluxes[self.load_step][nodeID] = array([v4, v5, v6])
         self.eTypes[nodeID] = eType
 
     def __repr__(self):
         msg = '---NONLINEAR GRADIENTS & HEAT FLUX---\n'
-        msg += 'loadStep = %g\n' % (self.loadStep)
+        msg += 'load_step = %g\n' % (self.load_step)
 
         for (dt, fluxPack) in sorted(self.fluxes.iteritems()):
             msg += ('%-10s %-8s %-10s %-10s %-10s %-10s %-10s %-10s\n'

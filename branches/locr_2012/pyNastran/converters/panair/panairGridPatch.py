@@ -35,7 +35,7 @@ class PanairPatch(object):
         msg = '     network # being processed %3i\n\n' % (self.iNetwork + 1)
         return msg
 
-    def quickSummary(self, cumPts, cumPn):
+    def quick_summary(self, cumPts, cumPn):
         msg = ''
         if self.kt == 1:
             src = 1
@@ -92,30 +92,30 @@ class PanairPatch(object):
     def nPoints(self):
         return (self.nRows) * (self.nCols)
 
-    def getPanelPoints(self, iPanel):
+    def get_panel_points(self, iPanel):
         r = iPanel % (self.nRows - 1)
         c = iPanel / (self.nRows - 1)
 
         #print "r=%s c=%s" %(r,c)
-        p1 = self.getPoint(r, c)
-        p2 = self.getPoint(r, c + 1)
-        p3 = self.getPoint(r + 1, c + 1)
-        p4 = self.getPoint(r + 1, c)
+        p1 = self.get_point(r, c)
+        p2 = self.get_point(r, c + 1)
+        p3 = self.get_point(r + 1, c + 1)
+        p4 = self.get_point(r + 1, c)
         return (p1, p2, p3, p4)
 
-    def getPanelPointIDs(self, iPanel):
+    def get_panel_point_IDs(self, iPanel):
         r = iPanel % (self.nRows - 1)
         c = iPanel / (self.nRows - 1)
 
         #print "r=%s c=%s" %(r,c)
-        p1 = self.getPointID(r, c)
-        p2 = self.getPointID(r, c + 1)
-        p3 = self.getPointID(r + 1, c + 1)
-        p4 = self.getPointID(r + 1, c)
+        p1 = self.get_point_ID(r, c)
+        p2 = self.get_point_ID(r, c + 1)
+        p3 = self.get_point_ID(r + 1, c + 1)
+        p4 = self.get_point_ID(r + 1, c)
         return (p1, p2, p3, p4)
 
-    def getSubpanelProperties(self, iPanel):
-        (p1, p2, p3, p4) = self.getPanelPoints(iPanel)
+    def get_subpanel_properties(self, iPanel):
+        (p1, p2, p3, p4) = self.get_panel_points(iPanel)
         p5 = 0.5 * (p1 + p2)
         p6 = 0.5 * (p2 + p3)
         p7 = 0.5 * (p3 + p4)
@@ -132,8 +132,8 @@ class PanairPatch(object):
         N2 = cross(p5 - p7, p6 - p8)
         n2 = N2 / norm(N2)
 
-    def getPanelProperties(self, iPanel):
-        (p1, p2, p3, p4) = self.getPanelPoints(iPanel)
+    def get_panel_properties(self, iPanel):
+        (p1, p2, p3, p4) = self.get_panel_points(iPanel)
         a = p1 - p3
         b = p2 - p4
         centroid = 0.25 * (p1 + p2 + p3 + p4)
@@ -155,8 +155,8 @@ class PanairPatch(object):
 
         return (S, n, centroid, diameter, u, p, o)
 
-    def getPanelAreaNormal(self, iPanel):
-        (p1, p2, p3, p4) = self.getPanelPoints(iPanel)
+    def get_panel_area_normal(self, iPanel):
+        (p1, p2, p3, p4) = self.get_panel_points(iPanel)
         a = p1 - p3
         b = p2 - p4
 
@@ -167,30 +167,30 @@ class PanairPatch(object):
         S = 0.5 * normN
         return (S, n)
 
-    def getPanelArea(self, iPanel):
+    def get_panel_area(self, iPanel):
         # iPanel=200
-        (p1, p2, p3, p4) = self.getPanelPoints(iPanel)
+        (p1, p2, p3, p4) = self.get_panel_points(iPanel)
 
         a = p1 - p3
         b = p2 - p4
         S = 0.5 * norm(cross(a, b))
         return S
 
-    def getPoint(self, row, col):
+    def get_point(self, row, col):
         return array([self.x[row][col],
                       self.y[row][col],
                       self.z[row][col]])
 
-    def getPointID(self, row, col):
+    def get_point_ID(self, row, col):
         return col * self.nRows + row
 
-    def getIPoint(self, iPoint):
+    def get_ipoint(self, iPoint):
         iRow = iPoint / (self.nCols)
         iCol = iPoint % (self.nCols)
         #self.log.debug("iPoint=%s iRow=%s iCol=%s" %(iPoint,iRow,iCol))
-        return self.getPoint(iRow, iCol)
+        return self.get_point(iRow, iCol)
 
-    def getEdge(self, edgeNumber):
+    def get_edge(self, edgeNumber):
         """
         gets all the points associated with a given edge
         @code
@@ -243,12 +243,12 @@ class PanairPatch(object):
         p = [iPoint for iPoint in xrange(self.nPoints())]
         for pointID in p:
             #pointID = 2
-            p2 = self.getIPoint(pointID)
+            p2 = self.get_ipoint(pointID)
             #print "point[%s]=%s" %(pointID,p2)
 
         return (p, x, y, z)
 
-    def getEdges(self):
+    def get_edges(self):
         nx = 2 * (self.nRows + self.nCols) - 2
         p = zeros(nx)
         x = zeros(nx)
@@ -257,7 +257,7 @@ class PanairPatch(object):
 
         i = 0
         for edgeID in xrange(1, 4 + 1):
-            (p1, x1, y1, z1) = self.getEdge(edgeID)
+            (p1, x1, y1, z1) = self.get_edge(edgeID)
             nx1 = len(x1)
             p[i:i + nx1] = p1[0:nx1]
             x[i:i + nx1] = x1[0:nx1]
@@ -266,11 +266,11 @@ class PanairPatch(object):
             self.log.debug("-----")
         return (p, x, y, z)
 
-    def getElements(self, pointI):
+    def get_elements(self, pointI):
         panels = []
         #print "pointI=%s" %(pointI)
         for iPanel in xrange(self.nPanels()):
-            panel = self.getPanelPointIDs(iPanel)
+            panel = self.get_panel_point_IDs(iPanel)
             panel2 = []
 
             for p in panel:
@@ -279,7 +279,7 @@ class PanairPatch(object):
             panels.append(panel2)
         return panels
 
-    def getPoints(self):
+    def get_points(self):
         points = []
         #self.log.debug("size(X) = %s" %( str( self.x.shape ) ))
         #print "size(X) = %s" %( str(X.size())
@@ -291,7 +291,7 @@ class PanairPatch(object):
 
         return points, len(points)
 
-    def writeAsPlot3D(self):
+    def write_as_plot3d(self):
         out = ''
         x = self.x.ravel()  # unravel
         y = self.y.ravel()  # unravel
@@ -334,7 +334,7 @@ class PanairPatch(object):
         =nm       nn                                                          netname
         4.        2.                                                          awbw
         """
-        #x = self.writeAsPlot3D()
+        #x = self.write_as_plot3d()
 
         self.log.debug("*******")
         header = '$points - surface panels\n'
@@ -364,29 +364,29 @@ class PanairPatch(object):
                     x2 = self.x[r + 1][c]
                     y2 = self.y[r + 1][c]
                     z2 = self.z[r + 1][c]
-                    points += self.writePoints([x1, y1, z1], [x2, y2, z2])
+                    points += self.write_points([x1, y1, z1], [x2, y2, z2])
                 else:
                     x1 = self.x[r][c]
                     y1 = self.y[r][c]
                     z1 = self.z[r][c]
-                    points += self.writePoint([x1, y1, z1])
+                    points += self.write_point([x1, y1, z1])
                 nPointsLeft -= 2
         return header + points
 
-    def writePoints(self, point1, point2):
-        point1 = self.fixPoint(point1)
-        point2 = self.fixPoint(point2)
+    def write_points(self, point1, point2):
+        point1 = self.fix_point(point1)
+        point2 = self.fix_point(point2)
 
         out = "%-10s" * 6 % (point1[0], point1[1], point1[2],
                              point2[0], point2[1], point2[2])
         return out + '\n'
 
-    def writePoint(self, point1):
-        point1 = self.fixPoint(point1)
+    def write_point(self, point1):
+        point1 = self.fix_point(point1)
         out = "%-10s" * 3 % (point1[0], point1[1], point1[2])
         return out + '\n'
 
-    def fixPoint(self, pointIn):
+    def fix_point(self, pointIn):
         pointOut = []
         for value in pointIn:
             sValue = '%s' % (value)
@@ -440,7 +440,7 @@ class PanairGridHelper(object):
         self.log.debug("ncases = %s" % (self.ncases))
         return True
 
-    def getMach(self, section):
+    def get_mach(self, section):
         """
         $mach number
         =amach
@@ -450,20 +450,20 @@ class PanairGridHelper(object):
         self.log.debug("mach = %s" % (self.mach))
         return True
 
-    def setMach(self, mach):
+    def set_mach(self, mach):
         self.mach = mach
 
-    def writeMach(self):
+    def write_mach(self):
         out = '$mach number\n'
         out += '%-10s' % (self.mach) + '\n'
         return out
 
-    def writeCases(self):
+    def write_cases(self):
         out = '$cases - number of solutions\n'
         out += '%-10s' % (sInt(self.ncases)) + '\n'
         return out
 
-    def getAlphas(self, section):
+    def get_alphas(self, section):
         """
         $angles-of-attack
         =alpc
@@ -478,18 +478,18 @@ class PanairGridHelper(object):
         self.log.debug("alphaC=%s alphas=%s" % (self.alphaC, self.alphas))
         return True
 
-    def setAlphas(self, alphas, alphaC):
+    def set_alphas(self, alphas, alphaC):
         self.alphaC = alphaC
         self.alphas = alphas
         self.ncases = len(alphas)
 
-    def writeAlphas(self):
+    def write_alphas(self):
         out = '$angles-of-attack\n'
         out += '%-10s' % (self.alphaC) + '\n'
         out += '%-10s' * len(self.alphas) % (tuple(self.alphas)) + '\n'
         return out
 
-    def getBetas(self, section):
+    def get_betas(self, section):
         """
         $angles-of-attack
         =alpc
@@ -504,18 +504,18 @@ class PanairGridHelper(object):
         self.log.debug("betaC=%s betas=%s" % (self.betaC, self.betas))
         return True
 
-    def setBetas(self, betas, betaC):
+    def set_betas(self, betas, betaC):
         self.betaC = betaC
         self.betas = betas
         self.ncases = len(betas)
 
-    def writeBetas(self):
+    def write_betas(self):
         out = '$yaw\n'
         out += '%-10s' % (self.betaC) + '\n'
         out += '%-10s' * len(self.betas) % (tuple(self.betas)) + '\n'
         return out
 
-    def getReferenceQuantities(self, section):
+    def get_reference_quantities(self, section):
         """
         $references for accumulated forces and moments
         =xref     yref      zref      nref
@@ -537,18 +537,18 @@ class PanairGridHelper(object):
             self.sref, self.bref, self.cref, self.dref))
         return True
 
-    def writeReferenceQuantities(self):
+    def write_reference_quantities(self):
         out = '$references for accumulated forces and moments\n'
         out += '%-10s' * 3 % (self.xref, self.yref, self.zref) + '\n'
         out += '%-10s' * 4 % (self.sref, self.bref, self.cref,
                               self.dref) + '\n'
         return out
 
-    def getEnd(self, section):
+    def get_end(self, section):
         self.isEnd = True
         self.log.debug("end...")
         return True
 
-    def writeEnd(self):
+    def write_end(self):
         if self.isEnd:
             return '$end of panair inputs\n '

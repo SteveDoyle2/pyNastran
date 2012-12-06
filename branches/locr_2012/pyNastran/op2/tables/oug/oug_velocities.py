@@ -3,19 +3,19 @@ import sys
 from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
 
 
-class VelocityObject(TableObject):  # approachCode=10, thermal=0
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        TableObject.__init__(self, dataCode, isSort1, iSubcase, dt)
+class VelocityObject(TableObject):  # approach_code=10, thermal=0
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, iSubcase, f=None, isMagPhase=False):
+    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
         name = 'velocities'
-        if self.nonlinearFactor is None:
-            return self._writeMatlab(name, iSubcase, f)
+        if self.nonlinear_factor is None:
+            return self._writeMatlab(name, isubcase, f)
         else:
-            return self._writeMatlabTransient(name, iSubcase, f)
+            return self._writeMatlabTransient(name, isubcase, f)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f)
         words = ['                                                   V E L O C I T Y   V E C T O R\n',
                  ' \n',
@@ -31,7 +31,7 @@ class VelocityObject(TableObject):  # approachCode=10, thermal=0
         return self._writeF06TransientBlock(words, header, pageStamp, pageNum, f)
 
     def __repr__(self):
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---VELOCITIES---\n'
@@ -59,7 +59,7 @@ class VelocityObject(TableObject):  # approachCode=10, thermal=0
         msg += self.writeHeader()
 
         for dt, translations in sorted(self.translations.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
@@ -77,19 +77,19 @@ class VelocityObject(TableObject):  # approachCode=10, thermal=0
         return msg
 
 
-class ComplexVelocityObject(ComplexTableObject):  # tableCode=10, approachCode=???
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        ComplexTableObject.__init__(self, dataCode, isSort1, iSubcase, dt)
+class ComplexVelocityObject(ComplexTableObject):  # table_code=10, approach_code=???
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, iSubcase, f=None, isMagPhase=False):
+    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
         name = 'velocities'
-        if self.nonlinearFactor is None:
-            return self._writeMatlab(name, iSubcase, f, isMagPhase)
+        if self.nonlinear_factor is None:
+            return self._writeMatlab(name, isubcase, f, isMagPhase)
         else:
-            return self._writeMatlabTransient(name, iSubcase, f, isMagPhase)
+            return self._writeMatlabTransient(name, isubcase, f, isMagPhase)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
 
         words = ['                                       C O M P L E X   V E L O C I T Y   V E C T O R\n']
@@ -100,11 +100,11 @@ class ComplexVelocityObject(ComplexTableObject):  # tableCode=10, approachCode=?
         return self._writeF06TransientBlock(words, header, pageStamp, pageNum, f, isMagPhase)
 
     def __repr__(self):
-        return self.writeF06(['', '', ''], 'PAGE ', 1)[0]
+        return self.write_f06(['', '', ''], 'PAGE ', 1)[0]
 
         msg = '---COMPLEX VELOCITIES---\n'
         #if self.dt is not None:
-        #    msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
+        #    msg += '%s = %g\n' %(self.data_code['name'],self.dt)
         headers = ['DxReal', 'DxImag', 'DyReal', 'DyImag', 'DzReal', 'DyImag', 'RxReal', 'RxImag', 'RyReal', 'RyImag', 'RzReal', 'RzImag']
         msg += '%-10s ' % ('nodeID')
         for header in headers:
@@ -112,7 +112,7 @@ class ComplexVelocityObject(ComplexTableObject):  # tableCode=10, approachCode=?
         msg += '\n'
 
         for freq, translations in sorted(self.translations.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], freq)
+            msg += '%s = %g\n' % (self.data_code['name'], freq)
 
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[freq][nodeID]

@@ -246,7 +246,7 @@ class CalculixConverter(BDF):
         #else:
             #inp += ''
 
-        iSubcase = 1
+         subcase = 1
         paramName = 'LOAD'
 
         #skippedLids = {}
@@ -255,7 +255,7 @@ class CalculixConverter(BDF):
             loadKeys = self.loads.keys()
             if 1:
                 key = self.caseControlDeck.getSubcaseParameter(
-                    iSubcase, paramName)[0]
+                    isubcase, paramName)[0]
                 loadcase = self.loads[key]
                 #print loadcase
                 for i, load in enumerate(loadcase):

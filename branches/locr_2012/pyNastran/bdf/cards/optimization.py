@@ -317,7 +317,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         self.Type = card.field(2)
         self.mid = card.field(3)
         self.mpName = card.field(4)
-        self.mpMin = card.field(5)  ## @todo bad default
+        self.mpMin = card.field(5)  # TODO bad default
         self.mpMax = card.field(6, 1e20)
         self.c0 = card.field(7, 0.0)
 
@@ -382,7 +382,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         self.Type = card.field(2)
         self.pid = card.field(3)
         self.pNameFid = card.field(4)
-        self.pMin = card.field(5)  ## @todo bad default
+        self.pMin = card.field(5)  # TODO bad default
         self.pMax = card.field(6, 1e20)
         self.c0 = card.field(7, 0.0)
 
@@ -515,7 +515,7 @@ class DVPREL2(OptConstraint):
         self.pid = model.Property(self.pid)
         #self.eqID = model.DEquation(self.eqID)
 
-    def OptValue(self):  ## @todo not implemented
+    def OptValue(self):  # TODO not implemented
         self.pid.OptValue(self.pnameFid)
 
     def rawFields(self):

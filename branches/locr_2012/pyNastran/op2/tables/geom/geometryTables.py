@@ -29,22 +29,22 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
         if self.makeGeom == False:
             self.iTableMap = {}
 
-        tablename = self.read_table_name(rewind=False)  # GEOM1
-        self.table_init(tablename)
-        #print "*tablename = |%r|" %(tablename)
+        table_name = self.read_table_name(rewind=False)  # GEOM1
+        self.table_init(table_name)
+        #print "*table_name = |%r|" %(table_name)
 
         self.read_markers([-1, 7])
         fields = self.read_int_block()
         #print "fields = ",fields
 
         self.read_markers([-2, 1, 0])  # 2
-        bufferWords = self.get_marker()
-        #print "bufferWords = ",bufferWords,bufferWords*4
+        buffer_words = self.get_marker()
+        #print "buffer_words = ",buffer_words,buffer_words*4
         word = self.read_string_block()
 
         iTable = -3
-        while 1:  ## @todo could this cause an infinite loop...i dont this so...
-            (tablename, isNextTable, isNextSubTable,
+        while 1:  # TODO could this cause an infinite loop...i dont this so...
+            (table_name, isNextTable, isNextSubTable,
                 isFileDone) = self.readGeomSubTable(iTable)
 
             if self.checkForNextTable() or isFileDone:
@@ -109,10 +109,10 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
         self.read_markers([iTable, 1, 0])
         #print self.iTableMap
 
-        tablename = self.read_table_name(rewind=True, stopOnFailure=False)
-        if tablename:
-            #print "**tablename = |%r|" %(tablename)
-            return tablename, isNextTable, isNextSubTable, False
+        table_name = self.read_table_name(rewind=True, stopOnFailure=False)
+        if table_name:
+            #print "**table_name = |%r|" %(table_name)
+            return table_name, isNextTable, isNextSubTable, False
 
         data = b''
         isTableActive = False
@@ -136,7 +136,7 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
             else:
                 if not(tableType[0] == tableType[1] == tableType[2]):
                     msg = "skipping %s iTable=%-3s with tableType=%s" % (
-                        self.tablename, iTable, tableType)
+                        self.table_name, iTable, tableType)
                     #self.skippedCardsFile.write(msg+'\n')
                     if self.makeGeom:
                         self.log.debug(msg)
@@ -155,20 +155,20 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
             isTableActive = True
 
         #print "exiting the geom sub table"
-        return (tablename, isNextTable, isNextSubTable, isFileDone)
+        return (table_name, isNextTable, isNextSubTable, isFileDone)
 
     def readTable_PCOMPTS(self):
         #self.iTableMap = {
         #                 }
         #self.readRecordTable('PCOMPTS')
 
-        tablename = self.read_table_name(rewind=False)  # PCOMP
-        self.table_init(tablename)
+        table_name = self.read_table_name(rewind=False)  # PCOMP
+        self.table_init(table_name)
         self.read_markers([-1, 7])
         ints = self.read_int_block()  # ??? ints
         #print(ints)
         #data = self.read_block()
-        #print self.printBlock(data)
+        #print self.print_block(data)
         #print("fields = ",fields)
 
         #-------------------------------------------
@@ -184,29 +184,29 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
             self.read_markers([iTable, 1, 0])  # 3
             n = self.op2.tell()
             try:
-                bufferWords = self.get_marker()
-                if bufferWords == 0:
+                buffer_words = self.get_marker()
+                if buffer_words == 0:
                     self.goto(n)
                     #print "returning from table=-3"
                     return
-                elif bufferWords < 0:
+                elif buffer_words < 0:
                     self.goto(n)
                 else:
-                    #print "bufferWords = ",bufferWords,bufferWords*4
+                    #print "buffer_words = ",buffer_words,buffer_words*4
                     data = self.get_data(4)
-                    bufferSize, = unpack('i', data)
+                    buffer_size, = unpack('i', data)
 
-                    #print "bufferSize = ",bufferSize
-                    data = self.get_data(bufferWords * 4)
+                    #print "buffer_size = ",buffer_size
+                    data = self.get_data(buffer_words * 4)
                     data = self.get_data(4)
             except:
                 raise RuntimeError('error in iTable=% of %s...' %
-                                   (self.iTable, self.tablename))
+                                   (self.iTable, self.table_name))
             iTable -= 1
 
     def readTable_SDF(self):
-        tablename = self.read_table_name(rewind=False)  # SDF
-        self.table_init(tablename)
+        table_name = self.read_table_name(rewind=False)  # SDF
+        self.table_init(table_name)
         self.read_markers([-1, 7])
         ints = self.read_int_block()  # ??? ints
         #print ints
@@ -217,21 +217,21 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
 
         #print "iTable = ",iTable
         self.read_markers([iTable, 1, 0])  # 2
-        bufferWords = self.get_marker()
-        #print "bufferWords = ",bufferWords
+        buffer_words = self.get_marker()
+        #print "buffer_words = ",buffer_words
         data = self.get_data(4)
-        bufferSize, = unpack('i', data)
-        data = self.get_data(bufferWords * 4)
-        #print self.printBlock(data)
+        buffer_size, = unpack('i', data)
+        data = self.get_data(buffer_words * 4)
+        #print self.print_block(data)
         data = self.get_data(4)
         iTable -= 1
 
         self.read_markers([iTable, 1, 1])  # 3
-        bufferWords = self.get_marker()  # 12
+        buffer_words = self.get_marker()  # 12
         data = self.get_data(4)
-        bufferSize, = unpack('i', data)  # 52
-        data = self.get_data(bufferSize)
-        #print self.printBlock(data)
+        buffer_size, = unpack('i', data)  # 52
+        data = self.get_data(buffer_size)
+        #print self.print_block(data)
         data = self.get_data(4)
         iTable -= 1
 
@@ -241,38 +241,38 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
         #print self.print_section(240)
         #sys.exit('SDF...')
     def readTable_CASECC(self):
-        tablename = self.read_table_name(rewind=False)  # CASECC
-        #print '*tablename = ',tablename
-        self.table_init(tablename)
+        table_name = self.read_table_name(rewind=False)  # CASECC
+        #print '*table_name = ',table_name
+        self.table_init(table_name)
         self.read_markers([-1, 7])
         data = self.get_data(4)
-        bufferSize, = unpack('i', data)
-        #print "bufferSize = ",bufferSize
-        data = self.get_data(bufferSize)
-        #print self.printBlock(data)
+        buffer_size, = unpack('i', data)
+        #print "buffer_size = ",buffer_size
+        data = self.get_data(buffer_size)
+        #print self.print_block(data)
         data = self.get_data(4)
         #print "---------------"
 
         self.read_markers([-2, 1, 0])
-        bufferWords = self.get_marker()
+        buffer_words = self.get_marker()
         data = self.get_data(4)
-        bufferSize, = unpack('i', data)
-        #print "bufferSize = ",bufferSize
-        data = self.get_data(bufferSize)
-        #print self.printBlock(data)
+        buffer_size, = unpack('i', data)
+        #print "buffer_size = ",buffer_size
+        data = self.get_data(buffer_size)
+        #print self.print_block(data)
         data = self.get_data(4)
 
         #data = self.read_block()
-        #print self.printBlock(data)
+        #print self.print_block(data)
         #print "---------------"
         self.read_markers([-3, 1, 0])
-        bufferWords = self.get_marker()
+        buffer_words = self.get_marker()
         data = self.get_data(4)
-        bufferSize, = unpack('i', data)
-        #print "bufferWords = ",bufferWords
-        #print "bufferSize = ",bufferSize
-        data = self.get_data(bufferSize)
-        #print self.printBlock(data)
+        buffer_size, = unpack('i', data)
+        #print "buffer_words = ",buffer_words
+        #print "buffer_size = ",buffer_size
+        data = self.get_data(buffer_size)
+        #print self.print_block(data)
         data = self.get_data(4)
 
         #print "---------------"
@@ -283,8 +283,8 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
 
     def readTable_OMM2(self):
         #-------------------------------------------
-        tablename = self.read_table_name(rewind=False)  # PCOMP
-        self.table_init(tablename)
+        table_name = self.read_table_name(rewind=False)  # PCOMP
+        self.table_init(table_name)
         self.read_markers([-1, 7])
         ints = self.read_int_block()  # ??? ints
         #print ints
@@ -296,13 +296,13 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
             try:
                 n = self.op2.tell()
                 #print "iTable = ",iTable
-                bufferWords = self.get_marker()
-                #print "bufferWords = ",bufferWords
+                buffer_words = self.get_marker()
+                #print "buffer_words = ",buffer_words
                 data = self.get_data(4)
-                bufferSize, = unpack('i', data)
-                #print "bufferSize = ",bufferSize
-                data = self.get_data(bufferWords * 4)
-                #print self.printBlock(data)
+                buffer_size, = unpack('i', data)
+                #print "buffer_size = ",buffer_size
+                data = self.get_data(buffer_words * 4)
+                #print self.print_block(data)
                 data = self.get_data(4)
                 iTable -= 1
             except:
@@ -313,6 +313,6 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
         #print self.print_section(400)
         #sys.exit('OMM2...stop...')
 
-    def readTable_DUMMY_GEOM(self, tablename):
+    def readTable_DUMMY_GEOM(self, table_name):
         self.iTableMap = {}
-        self.readRecordTable(tablename)
+        self.readRecordTable(table_name)

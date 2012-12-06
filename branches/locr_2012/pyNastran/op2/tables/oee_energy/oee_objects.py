@@ -18,25 +18,25 @@ class StrainEnergyObject(scalarObject):
                13   1.582968E+07        1.6124            1.055312E+02
                14   6.576075E+07        6.6982            3.288037E+02
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        scalarObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        scalarObject.__init__(self, data_code, isubcase)
         self.energy = {}
         self.percent = {}
         self.density = {}
-        #print self.dataCode
-        #print "numWide = %s %s"  %(self.dataCode['numWide'],type(self.dataCode['numWide']))
+        #print self.data_code
+        #print "num_wide = %s %s"  %(self.data_code['num_wide'],type(self.data_code['num_wide']))
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
+                self.add = self.add_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
 
     def get_stats(self):
         msg = self.get_data_code()
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.energy)
             time0 = self.energy.keys()[0]
             nelements = len(self.energy[time0])
@@ -49,33 +49,33 @@ class StrainEnergyObject(scalarObject):
         msg.append('  energy, percent, density\n')
         return msg
 
-    def updateDt(self, dataCode, dt):
+    def update_dt(self, data_code, dt):
         """
         this method is called if the object
         already exits and a new time step is found
         """
-        self.dataCode = dataCode
-        self.applyDataCode()
+        self.data_code = data_code
+        self.apply_data_code()
         #assert dt>=0.
-        self.log.debug("updating %s...%s=%s  iSubcase=%s" % (
-            self.name, self.name, dt, self.iSubcase))
-        #print "dataCode = ",self.dataCode
+        self.log.debug("updating %s...%s=%s  isubcase=%s" % (
+            self.name, self.name, dt, self.isubcase))
+        #print "data_code = ",self.data_code
         if dt is not None:
             self.dt = dt
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.updateNumWide()
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.energy[dt]
         del self.percent[dt]
         del self.density[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.energy.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         """
@@ -94,9 +94,9 @@ class StrainEnergyObject(scalarObject):
         self.percent[eid] = percent
         self.density[eid] = density
 
-    def addSort1(self, dt, out):
+    def add_sort1(self, dt, out):
         if dt not in self.energy:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
 
         (eid, energy, percent, density) = out
         #print str(self)
@@ -112,7 +112,7 @@ class StrainEnergyObject(scalarObject):
     def __reprTransient__(self):
         msg = '---Transient Strain Energy Object---\n'
         for dt, Energy in sorted(self.energy.iteritems()):
-            msg += "%s = %s\n" % (self.dataCode['name'], dt)
+            msg += "%s = %s\n" % (self.data_code['name'], dt)
             msg += "%-10s %-14s% -14s% -14s\n" % (
                 'EID', 'Energy', 'PercentTotal', 'Density')
             #print "dt=%s Energy=%s" %(dt,Energy)
@@ -135,7 +135,7 @@ class StrainEnergyObject(scalarObject):
         return msg
 
     def __repr__(self):
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---Strain Energy Object---\n'

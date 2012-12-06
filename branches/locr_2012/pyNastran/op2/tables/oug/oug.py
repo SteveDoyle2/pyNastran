@@ -3,38 +3,38 @@ import sys
 from struct import unpack
 
 from pyNastran.op2.tables.oug.oug_displacements import (
-    DisplacementObject,              # tableCode=1     formatCode=1 sortCode=0
-    ComplexDisplacementObject)       # analysisCode=5  formatCode=3 sortCode=1
+    DisplacementObject,              # table_code=1     format_code=1 sort_code=0
+    ComplexDisplacementObject)       # analysis_code=5  format_code=3 sort_code=1
 
-# tableCode=10 formatCode=1 sortCode=0
+# table_code=10 format_code=1 sort_code=0
 from pyNastran.op2.tables.oug.oug_velocities import (
     VelocityObject, ComplexVelocityObject)
 
-# tableCode=11 formatCode=1 sortCode=0
+# table_code=11 format_code=1 sort_code=0
 from pyNastran.op2.tables.oug.oug_accelerations import (
     AccelerationObject, ComplexAccelerationObject)
 
-# tableCode=1 formatCode=1 sortCode=0
+# table_code=1 format_code=1 sort_code=0
 from pyNastran.op2.tables.oug.oug_temperatures import (
     TemperatureObject)
 
 from pyNastran.op2.tables.oug.oug_eigenvectors import (
-     EigenVectorObject,                     # analysisCode=2, sortCode=0 formatCode   tableCode=7
-     ComplexEigenVectorObject,              # analysisCode=5, sortCode=1 formatCode=1 tableCode=7
-    #RealEigenVectorObject,                 # analysisCode=9, sortCode=1 formatCode=1 tableCode=7
+     EigenVectorObject,                     # analysis_code=2, sort_code=0 format_code   table_code=7
+     ComplexEigenVectorObject,              # analysis_code=5, sort_code=1 format_code=1 table_code=7
+    #RealEigenVectorObject,                 # analysis_code=9, sort_code=1 format_code=1 table_code=7
 )
 from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import ThermalVelocityVectorObject
-from pyNastran.op2.op2_helper import polarToRealImag
+from pyNastran.op2.op2_helper import polar_to_real_imag
 
 
 class OUG(object):
     """Table of displacements/velocities/acceleration/heat flux/temperature"""
 
     def readTable_OUG2(self):  # OUGPSD
-        #self.tablename = 'OUG'
+        #self.table_name = 'OUG'
         table3 = self.readTable_OUG2_3
         table4Data = self.readOUG2_Data
-        self.readResultsTable(table3, table4Data)
+        self.read_results_table(table3, table4Data)
         self._delete_attributes_OUG()
 
         sys.exit('stopping...')
@@ -43,209 +43,209 @@ class OUG(object):
         self.readOUG_Data_table1(debug=True)
 
     def readTable_OUG2_3(self, iTable):  # iTable=-3
-        bufferWords = self.get_marker()
-        if self.makeOp2Debug:
-            self.op2Debug.write('bufferWords=%s\n' % (str(bufferWords)))
-        #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
+        buffer_words = self.get_marker()
+        if self.make_op2_debug:
+            self.op2Debug.write('buffer_words=%s\n' % (str(buffer_words)))
+        #print "2-buffer_words = ",buffer_words,buffer_words*4,'\n'
 
         data = self.get_data(4)
-        bufferSize, = unpack('i', data)
+        buffer_size, = unpack('i', data)
         data = self.get_data(4 * 50)
-        #print self.printBlock(data)
+        #print self.print_block(data)
 
         (three) = self.parse_approach_code2(data)
 
         ## random code
-        self.addDataParameter(data, 'randomCode', 'i', 8, False)
+        self.add_data_parameter(data, 'randomCode', 'i', 8, False)
         ## format code
-        self.addDataParameter(data, 'formatCode', 'i', 9, False)
+        self.add_data_parameter(data, 'format_code', 'i', 9, False)
         ## number of words per entry in record; @note is this needed for this table ???
-        self.addDataParameter(data, 'numWide', 'i', 10, False)
+        self.add_data_parameter(data, 'num_wide', 'i', 10, False)
         ## acoustic pressure flag
-        self.addDataParameter(data, 'acousticFlag', 'f', 13, False)
+        self.add_data_parameter(data, 'acousticFlag', 'f', 13, False)
         ## thermal flag; 1 for heat transfer, 0 otherwise
-        self.addDataParameter(data, 'thermal', 'i', 23, False)
+        self.add_data_parameter(data, 'thermal', 'i', 23, False)
         self.isFlipped = False
 
         eidDevice = self.get_values(data, 'i', 5)
         floatVal = self.get_values(data, 'f', 5)
-        eid = (eidDevice-self.deviceCode)//10
+        eid = (eidDevice-self.device_code)//10
         #print("EID = %s" %(eidDevice))
         #print("floatVal = %s" %(floatVal))
 
-        if self.tablename == 'OUGRMS2' and self.analysisCode == 1:
-            self.addDataParameter(data, 'nodeID', 'i',
+        if self.table_name == 'OUGRMS2' and self.analysis_code == 1:
+            self.add_data_parameter(data, 'nodeID', 'i',
                                   5, fixDeviceCode=True)  # frequency
-            self.applyDataCodeValue('dataNames', ['nodeID'])
+            self.apply_data_code_value('dataNames', ['nodeID'])
             #print("nodeID = %s" %(self.nodeID))
 
         #self.isRegular = False
-        elif self.analysisCode in [1, 5]:  # 5 # freq
-            self.addDataParameter(data, 'nodeID', 'i',
+        elif self.analysis_code in [1, 5]:  # 5 # freq
+            self.add_data_parameter(data, 'nodeID', 'i',
                                   5, fixDeviceCode=True)  # frequency
-            self.applyDataCodeValue('dataNames', ['nodeID'])
+            self.apply_data_code_value('dataNames', ['nodeID'])
             #print("nodeID = %s" %(self.nodeID))
             #sys.exit(self.nodeID)
-        elif self.analysisCode == 6:  # transient dt
-            self.addDataParameter(data, 'nodeID', 'i',
+        elif self.analysis_code == 6:  # transient dt
+            self.add_data_parameter(data, 'nodeID', 'i',
                                   5, fixDeviceCode=True)  # time step
-            self.applyDataCodeValue('dataNames', ['nodeID'])
-        elif self.analysisCode == 10:  # freq/time step fqts
-            self.addDataParameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)  # frequency / time step
-            self.applyDataCodeValue('dataNames', ['nodeID'])
+            self.apply_data_code_value('dataNames', ['nodeID'])
+        elif self.analysis_code == 10:  # freq/time step fqts
+            self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)  # frequency / time step
+            self.apply_data_code_value('dataNames', ['nodeID'])
         else:
             self.isRegular = True
-            self.addDataParameter(data, 'nodeID', 'i',
+            self.add_data_parameter(data, 'nodeID', 'i',
                                   5, fixDeviceCode=True)  # node ID
-            self.applyDataCodeValue('dataNames', ['nodeID'])
+            self.apply_data_code_value('dataNames', ['nodeID'])
         # tCode=2
-        #if self.analysisCode==2: # sort2
+        #if self.analysis_code==2: # sort2
         #    self.lsdvmn = self.get_values(data,'i',5)
 
-        #print "*iSubcase=%s"%(self.iSubcase)
-        #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
-        print(self.codeInformation())
+        #print "*isubcase=%s"%(self.isubcase)
+        #print "analysis_code=%s table_code=%s thermal=%s" %(self.analysis_code,self.table_code,self.thermal)
+        print(self.code_information())
 
-        #self.printBlock(data)
+        #self.print_block(data)
         self.read_title()
 
 
     def readTable_OUG(self):
-        #self.tablename = 'OUG'
+        #self.table_name = 'OUG'
         table3 = self.readTable_OUG_3
         table4Data = self.readOUG_Data
-        self.readResultsTable(table3, table4Data)
+        self.read_results_table(table3, table4Data)
         self._delete_attributes_OUG()
 
     def _delete_attributes_OUG(self):
-        params = ['lsdvm', 'mode', 'eigr', 'modeCycle', 'freq', 'dt', 'lftsfq',
-                  'thermal', 'randomCode', 'fCode', 'numWide', 'acousticFlag']
+        params = ['lsdvm', 'mode', 'eigr', 'mode_cycle', 'freq', 'dt', 'lftsfq',
+                  'thermal', 'randomCode', 'fCode', 'num_wide', 'acousticFlag']
         self._delete_attributes(params)
 
     def readTable_OUG_3(self, iTable):  # iTable=-3
-        bufferWords = self.get_marker()
-        if self.makeOp2Debug:
-            self.op2Debug.write('bufferWords=%s\n' % (str(bufferWords)))
-        #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
+        buffer_words = self.get_marker()
+        if self.make_op2_debug:
+            self.op2Debug.write('buffer_words=%s\n' % (str(buffer_words)))
+        #print "2-buffer_words = ",buffer_words,buffer_words*4,'\n'
 
         data = self.get_data(4)
-        bufferSize, = unpack('i', data)
+        buffer_size, = unpack('i', data)
         data = self.get_data(4 * 50)
-        #print self.printBlock(data)
+        #print self.print_block(data)
 
         (three) = self.parse_approach_code(data)
 
         ## random code
-        self.addDataParameter(data, 'randomCode', 'i', 8, False)
+        self.add_data_parameter(data, 'randomCode', 'i', 8, False)
         ## format code
-        self.addDataParameter(data, 'formatCode', 'i', 9, False)
+        self.add_data_parameter(data, 'format_code', 'i', 9, False)
         ## number of words per entry in record; @note is this needed for this table ???
-        self.addDataParameter(data, 'numWide', 'i', 10, False)
+        self.add_data_parameter(data, 'num_wide', 'i', 10, False)
         ## acoustic pressure flag
-        self.addDataParameter(data, 'acousticFlag', 'f', 13, False)
+        self.add_data_parameter(data, 'acousticFlag', 'f', 13, False)
         ## thermal flag; 1 for heat transfer, 0 otherwise
-        self.addDataParameter(data, 'thermal', 'i', 23, False)
+        self.add_data_parameter(data, 'thermal', 'i', 23, False)
         self.isFlipped = False
-        if self.isSort1():
+        if self.is_sort1():
             ## assuming tCode=1
-            if self.analysisCode == 1:   # statics / displacement / heat flux
-                self.addDataParameter(data, 'lsdvmn', 'i',
+            if self.analysis_code == 1:   # statics / displacement / heat flux
+                self.add_data_parameter(data, 'lsdvmn', 'i',
                                       5, False)  # load set number
-                self.applyDataCodeValue('dataNames', ['lsdvmn'])
+                self.apply_data_code_value('dataNames', ['lsdvmn'])
                 self.setNullNonlinearFactor()
-            elif self.analysisCode == 2:  # real eigenvalues
-                self.addDataParameter(data, 'mode',
+            elif self.analysis_code == 2:  # real eigenvalues
+                self.add_data_parameter(data, 'mode',
                                       'i', 5)  # mode number
-                self.addDataParameter(data, 'eigr',
+                self.add_data_parameter(data, 'eigr',
                                       'f', 6, False)  # real eigenvalue
-                self.addDataParameter(data, 'modeCycle', 'i', 7, False)  # mode or cycle @todo confused on the type - F1???
-                self.applyDataCodeValue('dataNames', [
-                    'mode', 'eigr', 'modeCycle'])
-            #elif self.analysisCode==3: # differential stiffness
+                self.add_data_parameter(data, 'mode_cycle', 'i', 7, False)  # mode or cycle @todo confused on the type - F1???
+                self.apply_data_code_value('dataNames', [
+                    'mode', 'eigr', 'mode_cycle'])
+            #elif self.analysis_code==3: # differential stiffness
                 #self.lsdvmn = self.get_values(data,'i',5) ## load set number
-                #self.dataCode['lsdvmn'] = self.lsdvmn
-            #elif self.analysisCode==4: # differential stiffness
+                #self.data_code['lsdvmn'] = self.lsdvmn
+            #elif self.analysis_code==4: # differential stiffness
                 #self.lsdvmn = self.get_values(data,'i',5) ## load set number
-            elif self.analysisCode == 5:   # frequency
-                self.addDataParameter(data, 'freq', 'f', 5)  # frequency
-                self.applyDataCodeValue('dataNames', ['freq'])
-            elif self.analysisCode == 6:  # transient
-                self.addDataParameter(data, 'dt', 'f', 5)  # time step
-                self.applyDataCodeValue('dataNames', ['dt'])
-            elif self.analysisCode == 7:  # pre-buckling
-                self.addDataParameter(data, 'lsdvmn', 'i',
+            elif self.analysis_code == 5:   # frequency
+                self.add_data_parameter(data, 'freq', 'f', 5)  # frequency
+                self.apply_data_code_value('dataNames', ['freq'])
+            elif self.analysis_code == 6:  # transient
+                self.add_data_parameter(data, 'dt', 'f', 5)  # time step
+                self.apply_data_code_value('dataNames', ['dt'])
+            elif self.analysis_code == 7:  # pre-buckling
+                self.add_data_parameter(data, 'lsdvmn', 'i',
                                       5)  # load set number
-                self.applyDataCodeValue('dataNames', ['lsdvmn'])
-            elif self.analysisCode == 8:  # post-buckling
-                self.addDataParameter(data, 'lsdvmn', 'i',
+                self.apply_data_code_value('dataNames', ['lsdvmn'])
+            elif self.analysis_code == 8:  # post-buckling
+                self.add_data_parameter(data, 'lsdvmn', 'i',
                                       5)  # load set number
-                self.addDataParameter(data, 'eigr', 'f',
+                self.add_data_parameter(data, 'eigr', 'f',
                                       6, False)  # real eigenvalue
-                self.applyDataCodeValue('dataNames', ['lsdvmn', 'eigr'])
-            elif self.analysisCode == 9:  # complex eigenvalues
-                self.addDataParameter(data, 'mode', 'i', 5)  # mode number
-                self.addDataParameter(data, 'eigr', 'f', 6,
+                self.apply_data_code_value('dataNames', ['lsdvmn', 'eigr'])
+            elif self.analysis_code == 9:  # complex eigenvalues
+                self.add_data_parameter(data, 'mode', 'i', 5)  # mode number
+                self.add_data_parameter(data, 'eigr', 'f', 6,
                                       False)  # real eigenvalue
-                self.addDataParameter(data, 'eigi', 'f', 7,
+                self.add_data_parameter(data, 'eigi', 'f', 7,
                                       False)  # imaginary eigenvalue
-                self.applyDataCodeValue('dataNames', ['mode', 'eigr', 'eigi'])
-            elif self.analysisCode == 10:  # nonlinear statics
-                self.addDataParameter(data, 'lftsfq', 'f', 5)  # load step
-                self.applyDataCodeValue('dataNames', ['lftsfq'])
-            elif self.analysisCode == 11:  # old geometric nonlinear statics
-                self.addDataParameter(data, 'lsdvmn', 'i',
+                self.apply_data_code_value('dataNames', ['mode', 'eigr', 'eigi'])
+            elif self.analysis_code == 10:  # nonlinear statics
+                self.add_data_parameter(data, 'lftsfq', 'f', 5)  # load step
+                self.apply_data_code_value('dataNames', ['lftsfq'])
+            elif self.analysis_code == 11:  # old geometric nonlinear statics
+                self.add_data_parameter(data, 'lsdvmn', 'i',
                                       5)  # load set number
-                self.applyDataCodeValue('dataNames', ['lsdvmn'])
-            elif self.analysisCode == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-                self.addDataParameter(data, 'lsdvmn', 'i',
+                self.apply_data_code_value('dataNames', ['lsdvmn'])
+            elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+                self.add_data_parameter(data, 'lsdvmn', 'i',
                                       5)  # load set number
-                self.applyDataCodeValue('dataNames', ['lsdvmn'])
+                self.apply_data_code_value('dataNames', ['lsdvmn'])
             else:
-                raise RuntimeError('invalid analysisCode...analysisCode=%s' %
-                                   (self.analysisCode))
+                raise RuntimeError('invalid analysis_code...analysis_code=%s' %
+                                   (self.analysis_code))
         else:  # sort2
             eidDevice = self.get_values(data, 'i', 5)
             floatVal = self.get_values(data, 'f', 5)
-            #eid = (eidDevice-self.deviceCode)//10
+            #eid = (eidDevice-self.device_code)//10
             #print("EID = %s" %(eidDevice))
             #print("floatVal = %s" %(floatVal))
 
-            if self.tablename == 'OUGRMS2' and self.analysisCode == 1:
-                self.addDataParameter(data, 'nodeID', 'i',
+            if self.table_name == 'OUGRMS2' and self.analysis_code == 1:
+                self.add_data_parameter(data, 'nodeID', 'i',
                                       5, fixDeviceCode=True)  # frequency
-                self.applyDataCodeValue('dataNames', ['nodeID'])
+                self.apply_data_code_value('dataNames', ['nodeID'])
 
             #self.isRegular = False
-            elif self.analysisCode in [1, 5]:  # 5 # freq
-                self.addDataParameter(data, 'nodeID', 'i',
+            elif self.analysis_code in [1, 5]:  # 5 # freq
+                self.add_data_parameter(data, 'nodeID', 'i',
                                       5, fixDeviceCode=True)  # frequency
-                self.applyDataCodeValue('dataNames', ['nodeID'])
+                self.apply_data_code_value('dataNames', ['nodeID'])
                 #print("nodeID = %s" %(self.nodeID))
                 #sys.exit(self.nodeID)
-            elif self.analysisCode == 6:  # transient dt
-                self.addDataParameter(data, 'nodeID', 'i',
+            elif self.analysis_code == 6:  # transient dt
+                self.add_data_parameter(data, 'nodeID', 'i',
                                       5, fixDeviceCode=True)  # time step
-                self.applyDataCodeValue('dataNames', ['nodeID'])
-            elif self.analysisCode == 10:  # freq/time step fqts
-                self.addDataParameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)  # frequency / time step
-                self.applyDataCodeValue('dataNames', ['nodeID'])
+                self.apply_data_code_value('dataNames', ['nodeID'])
+            elif self.analysis_code == 10:  # freq/time step fqts
+                self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)  # frequency / time step
+                self.apply_data_code_value('dataNames', ['nodeID'])
             else:
                 self.isRegular = True
-                self.addDataParameter(data, 'nodeID', 'i',
+                self.add_data_parameter(data, 'nodeID', 'i',
                                       5, fixDeviceCode=True)  # node ID
-                self.applyDataCodeValue('dataNames', ['nodeID'])
+                self.apply_data_code_value('dataNames', ['nodeID'])
         # tCode=2
-        #if self.analysisCode==2: # sort2
+        #if self.analysis_code==2: # sort2
         #    self.lsdvmn = self.get_values(data,'i',5)
 
-        #print "*iSubcase=%s"%(self.iSubcase)
-        #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
-        #print(self.codeInformation())
+        #print "*isubcase=%s"%(self.isubcase)
+        #print "analysis_code=%s table_code=%s thermal=%s" %(self.analysis_code,self.table_code,self.thermal)
+        #print(self.code_information())
 
-        if not self.isSort1():
+        if not self.is_sort1():
             raise NotImplementedError('sort2...')
 
-        #self.printBlock(data)
+        #self.print_block(data)
         self.read_title()
 
     def getOUG_FormatStart(self):
@@ -253,92 +253,92 @@ class OUG(object):
         Returns an i or an f depending on if it's SORT2 or not.
         Also returns an extraction function that is called on the first argument
         """
-        isSort1 = self.isSort1()
-        #print('isSort1 = %s' %isSort1)
-        if self.tablename == 'OUGRMS2':
-            if self.analysisCode == 1:
+        is_sort1 = self.is_sort1()
+        #print('is_sort1 = %s' %is_sort1)
+        if self.table_name == 'OUGRMS2':
+            if self.analysis_code == 1:
                 format1 = 'f'  # SORT2
                 extract = self.extractSort2
             else:
-                raise KeyError('invalid analysisCode...analysisCode=%s' %
-                               (self.analysisCode))
+                raise KeyError('invalid analysis_code...analysis_code=%s' %
+                               (self.analysis_code))
         else:
-            if isSort1:
-                #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            if is_sort1:
+                #print "SORT1 - %s" %(self.get_element_type(self.element_type))
                 #print "SORT1"
                 format1 = 'i'  # SORT1
                 extract = self.extractSort1
-                #if self.analysisCode in [5]:
+                #if self.analysis_code in [5]:
                     #extract==self.extractSort2
             else:  # values from IDENT   #@todo test this...
                 #print "SORT2"
-                #print "SORT2 - %s" %(self.ElementType(self.elementType))
-                if self.analysisCode in [2, 3, 4, 6, 7, 8, 11]:
+                #print "SORT2 - %s" %(self.get_element_type(self.element_type))
+                if self.analysis_code in [2, 3, 4, 6, 7, 8, 11]:
                     format1 = 'f'  # SORT2
                     extract = self.extractSort2
-                elif self.analysisCode in [5]:
+                elif self.analysis_code in [5]:
                     format1 = 'f'
                     extract = self.extractSort2
-                elif self.analysisCode in [1, 9, 10, 12]:
+                elif self.analysis_code in [1, 9, 10, 12]:
                     format1 = 'f'  # SORT1
                     extract = self.extractSort2
                 else:
-                    raise KeyError('invalid analysisCode...analysisCode=%s' %
-                                   (self.analysisCode))
-                #eid = self.nonlinearFactor
+                    raise KeyError('invalid analysis_code...analysis_code=%s' %
+                                   (self.analysis_code))
+                #eid = self.nonlinear_factor
         return (format1, extract)
 
     def readOUG_Data(self):
-        #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
-        #tfsCode = [self.tableCode,self.formatCode,self.sortCode]
+        #print "self.analysis_code=%s table_code(1)=%s thermal(23)=%g" %(self.analysis_code,self.table_code,self.thermal)
+        #tfsCode = [self.table_code,self.format_code,self.sort_code]
 
-        #print self.dataCode
+        #print self.data_code
         #print "tfsCode=%s" %(tfsCode)
 
-        if self.tableCode == 1 and self.tablename in ['OUGV1', 'OUG1', 'OUPV1']:    # displacement
-            if self.tablename in ['OUGV1', 'OUG1']:
-                assert self.tablename in ['OUGV1', 'OUG1'], 'tablename=%s tableCode=%s\n%s' % (self.tablename, self.tableCode, self.codeInformation())
+        if self.table_code == 1 and self.table_name in ['OUGV1', 'OUG1', 'OUPV1']:    # displacement
+            if self.table_name in ['OUGV1', 'OUG1']:
+                assert self.table_name in ['OUGV1', 'OUG1'], 'table_name=%s table_code=%s\n%s' % (self.table_name, self.table_code, self.code_information())
                 self.readOUG_Data_table1()
             else:  # 'OUPV1'
-                msg = ('bad approachCode=%s, tableCode=%s, formatCode-%s '
-                       'sortCode=%s on %s-OUG table' % (self.analysisCode,
-                        self.tableCode, self.formatCode, self.sortCode,
-                        self.tablename))
-                self.NotImplementedOrSkip(msg)
-        elif self.tableCode == 1 and self.tablename in ['OUGATO2', 'OUGCRM2', 'OUGPSD2', 'OUGRMS2', 'OUGNO2', ]:    # displacement
-            #assert self.tablename in ['OUGATO2','OUGCRM2','OUGPSD2','OUGRMS2','OUGNO2',],'tablename=%s tableCode=%s\n%s' %(self.tablename,self.tableCode,self.codeInformation())
+                msg = ('bad approach_code=%s, table_code=%s, format_code-%s '
+                       'sort_code=%s on %s-OUG table' % (self.analysis_code,
+                        self.table_code, self.format_code, self.sort_code,
+                        self.table_name))
+                self.not_implemented_or_skip(msg)
+        elif self.table_code == 1 and self.table_name in ['OUGATO2', 'OUGCRM2', 'OUGPSD2', 'OUGRMS2', 'OUGNO2', ]:    # displacement
+            #assert self.table_name in ['OUGATO2','OUGCRM2','OUGPSD2','OUGRMS2','OUGNO2',],'table_name=%s table_code=%s\n%s' %(self.table_name,self.table_code,self.code_information())
             self.readOUG_Data_table1()
-        elif self.tableCode == 7:  # modes
-            if self.tablename in ['OUGV1', 'OUG1']:
-                assert self.tablename in ['OUGV1', 'OUG1'], 'tablename=%s tableCode=%s\n%s' % (self.tablename, self.tableCode, self.codeInformation())
+        elif self.table_code == 7:  # modes
+            if self.table_name in ['OUGV1', 'OUG1']:
+                assert self.table_name in ['OUGV1', 'OUG1'], 'table_name=%s table_code=%s\n%s' % (self.table_name, self.table_code, self.code_information())
                 self.readOUG_Data_table7()
             else:
-                self.NotImplementedOrSkip('bad OUG table')
-        elif self.tableCode == 10:  # velocity
-            if self.tablename in ['OUGV1', 'OUG1']:
-                assert self.tablename in ['OUGV1', 'OUG1'], 'tablename=%s tableCode=%s\n%s' % (self.tablename, self.tableCode, self.codeInformation())
+                self.not_implemented_or_skip('bad OUG table')
+        elif self.table_code == 10:  # velocity
+            if self.table_name in ['OUGV1', 'OUG1']:
+                assert self.table_name in ['OUGV1', 'OUG1'], 'table_name=%s table_code=%s\n%s' % (self.table_name, self.table_code, self.code_information())
                 self.readOUG_Data_table10()
             else:
-                self.NotImplementedOrSkip('bad OUG table')
-        elif self.tableCode == 11:  # Acceleration vector
-            if self.tablename in ['OUGV1', 'OUG1']:
-                assert self.tablename in ['OUGV1', 'OUG1'], 'tablename=%s tableCode=%s\n%s' % (self.tablename, self.tableCode, self.codeInformation())
+                self.not_implemented_or_skip('bad OUG table')
+        elif self.table_code == 11:  # Acceleration vector
+            if self.table_name in ['OUGV1', 'OUG1']:
+                assert self.table_name in ['OUGV1', 'OUG1'], 'table_name=%s table_code=%s\n%s' % (self.table_name, self.table_code, self.code_information())
                 self.readOUG_Data_table11()
             else:
-                self.NotImplementedOrSkip('bad OUG table')
+                self.not_implemented_or_skip('bad OUG table')
         else:
-            self.NotImplementedOrSkip('bad OUG table')
+            self.not_implemented_or_skip('bad OUG table')
         #print self.obj
 
     def readThermal4(self):  # used on self.thermal in [2,4,8]:
-        #print self.codeInformation()
-        #print self.printBlock(self.data)
+        #print self.code_information()
+        #print self.print_block(self.data)
         n = 0
         nEntries = len(self.data) // 32
         for i in xrange(nEntries):
             eData = self.data[n:n + 32]
             out = unpack('2i6f', eData)
-            #nid = (out[0]-self.deviceCode)//10    ## @todo fix the deviceCode
+            #nid = (out[0]-self.device_code)//10    # TODO fix the device_code
 
             #print out
             n += 32
@@ -354,129 +354,129 @@ class OUG(object):
         """
         self.debug = debug
         isSkip = False
-        if self.numWide == 8:  # real/random
+        if self.num_wide == 8:  # real/random
             if self.thermal == 0:
-                #print self.dataCode
-                if self.tablename in ['OUGV1', 'OUG1']:
+                #print self.data_code
+                if self.table_name in ['OUGV1', 'OUG1']:
                     resultName = 'displacements'
-                    self.createTransientObject(self.displacements,
+                    self.create_transient_object(self.displacements,
                                                DisplacementObject)
-                elif self.tablename in ['OUGATO2']:
+                elif self.table_name in ['OUGATO2']:
                     resultName = 'displacementsATO'
-                    self.createTransientObject(self.displacementsATO,
+                    self.create_transient_object(self.displacementsATO,
                                                DisplacementObject)
-                elif self.tablename in ['OUGCRM2']:
+                elif self.table_name in ['OUGCRM2']:
                     resultName = 'displacementsCRM'
-                    self.createTransientObject(self.displacementsCRM,
+                    self.create_transient_object(self.displacementsCRM,
                                                DisplacementObject)
-                elif self.tablename in ['OUGPSD2']:
+                elif self.table_name in ['OUGPSD2']:
                     resultName = 'displacementsPSD'
-                    self.createTransientObject(self.displacementsPSD,
+                    self.create_transient_object(self.displacementsPSD,
                                                DisplacementObject)
-                elif self.tablename in ['OUGRMS2']:
+                elif self.table_name in ['OUGRMS2']:
                     resultName = 'displacementsRMS'
-                    self.createTransientObject(self.displacementsRMS,
+                    self.create_transient_object(self.displacementsRMS,
                                                DisplacementObject)
-                elif self.tablename in ['OUGNO2']:
+                elif self.table_name in ['OUGNO2']:
                     resultName = 'displacementsNO'
-                    self.createTransientObject(self.displacementsNO,
+                    self.create_transient_object(self.displacementsNO,
                                                DisplacementObject)
                 else:
                     isSkip = True
-                    self.NotImplementedOrSkip('***table=%s***\n%s' % (self.tablename, self.codeInformation()))
+                    self.not_implemented_or_skip('***table=%s***\n%s' % (self.table_name, self.code_information()))
                 if not isSkip:
-                    self.handleResultsBuffer3(self.OUG_RealTable, resultName)
+                    self.handle_results_buffer(self.OUG_RealTable, resultName)
             elif self.thermal == 1:
                 resultName = 'temperatures'
-                self.createTransientObject(
+                self.create_transient_object(
                     self.temperatures, TemperatureObject)
-                self.handleResultsBuffer3(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName)
             #elif self.thermal == 8:
                 #resultName = 'scaledDisplacements'
-                #self.createTransientObject(self.scaledDisplacements,displacementObject)
-                #self.handleResultsBuffer3(self.OUG_RealTable,resultName)
+                #self.create_transient_object(self.scaledDisplacements,displacementObject)
+                #self.handle_results_buffer(self.OUG_RealTable,resultName)
             else:
-                self.NotImplementedOrSkip('***thermal=%s***\n%s' %
-                                          (self.thermal, self.codeInformation()))
-        elif self.numWide == 14:  # real/imaginary or mag/phase
+                self.not_implemented_or_skip('***thermal=%s***\n%s' %
+                                          (self.thermal, self.code_information()))
+        elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'displacements'
-                self.createTransientObject(self.displacements,
+                self.create_transient_object(self.displacements,
                                            ComplexDisplacementObject)
-                self.handleResultsBuffer3(self.OUG_ComplexTable, resultName)
+                self.handle_results_buffer(self.OUG_ComplexTable, resultName)
             else:
-                self.NotImplementedOrSkip()
+                self.not_implemented_or_skip()
         else:
-            self.NotImplementedOrSkip('only numWide=8 or 14 is allowed  numWide=%s' % (self.numWide))
+            self.not_implemented_or_skip('only num_wide=8 or 14 is allowed  num_wide=%s' % (self.num_wide))
 
     def readOUG_Data_table7(self):  # eigenvector
-        #isSort1 = self.isSort1()
-        if self.numWide == 8:  # real/random
+        #is_sort1 = self.is_sort1()
+        if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'eigenvectors'
-                self.createTransientObject(self.eigenvectors,
+                self.create_transient_object(self.eigenvectors,
                                            EigenVectorObject)
-                self.handleResultsBuffer3(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName)
             else:
-                self.NotImplementedOrSkip()
-        elif self.numWide == 14:  # real/imaginary or mag/phase
+                self.not_implemented_or_skip()
+        elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'eigenvectors'
-                self.createTransientObject(self.eigenvectors,
+                self.create_transient_object(self.eigenvectors,
                                            ComplexEigenVectorObject)
-                self.handleResultsBuffer3(self.OUG_ComplexTable, resultName)
+                self.handle_results_buffer(self.OUG_ComplexTable, resultName)
             else:
-                self.NotImplementedOrSkip()
+                self.not_implemented_or_skip()
         else:
-            self.NotImplementedOrSkip('only numWide=8 or 14 is allowed  numWide=%s' % (self.numWide))
+            self.not_implemented_or_skip('only num_wide=8 or 14 is allowed  num_wide=%s' % (self.num_wide))
 
     def readOUG_Data_table10(self):  # velocity
-        if self.numWide == 8:  # real/random
+        if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'velocities'
-                self.createTransientObject(
+                self.create_transient_object(
                     self.velocities, VelocityObject)
-                self.handleResultsBuffer3(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName)
             elif self.thermal == 1:
                 resultName = 'velocities'
-                self.createTransientObject(self.velocities,
+                self.create_transient_object(self.velocities,
                                            ThermalVelocityVectorObject)
-                self.handleResultsBuffer3(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName)
             else:
-                self.NotImplementedOrSkip()
-        elif self.numWide == 14:  # real/imaginary or mag/phase
+                self.not_implemented_or_skip()
+        elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'velocities'
-                self.createTransientObject(self.velocities,
+                self.create_transient_object(self.velocities,
                                            ComplexVelocityObject)
-                self.handleResultsBuffer3(self.OUG_ComplexTable, resultName)
+                self.handle_results_buffer(self.OUG_ComplexTable, resultName)
             else:
-                self.NotImplementedOrSkip()
+                self.not_implemented_or_skip()
         else:
-            self.NotImplementedOrSkip('only numWide=8 or 14 is allowed  numWide=%s' % (self.numWide))
+            self.not_implemented_or_skip('only num_wide=8 or 14 is allowed  num_wide=%s' % (self.num_wide))
 
     def readOUG_Data_table11(self):  # acceleration
-        if self.numWide == 8:  # real/random
+        if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'accelerations'
-                self.createTransientObject(self.accelerations,
+                self.create_transient_object(self.accelerations,
                                            AccelerationObject)
-                self.handleResultsBuffer3(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName)
             else:
-                self.NotImplementedOrSkip()
-        elif self.numWide == 14:  # real/imaginary or mag/phase
+                self.not_implemented_or_skip()
+        elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'accelerations'
-                self.createTransientObject(self.accelerations,
+                self.create_transient_object(self.accelerations,
                                            ComplexAccelerationObject)
-                self.handleResultsBuffer3(self.OUG_ComplexTable, resultName)
+                self.handle_results_buffer(self.OUG_ComplexTable, resultName)
             else:
-                self.NotImplementedOrSkip()
+                self.not_implemented_or_skip()
         else:
-            self.NotImplementedOrSkip('only numWide=8 or 14 is allowed  numWide=%s' % (self.numWide))
+            self.not_implemented_or_skip('only num_wide=8 or 14 is allowed  num_wide=%s' % (self.num_wide))
 
     def OUG_RealTable(self):
-        dt = self.nonlinearFactor
+        dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
         #format1 = 'f'
         format1 += 'i6f'
@@ -496,20 +496,20 @@ class OUG(object):
             dataIn = [eid2, gridType, tx, ty, tz, rx, ry, rz]
             #if self.debug:
             #    print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid, gridType, tx, ty, tz, rx, ry, rz))
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #print "%s" %(self.tablename),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #print "%s" %(self.table_name),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
 
     def OUG_ComplexTable(self):
-        dt = self.nonlinearFactor
+        dt = self.nonlinear_factor
 
         (format1, extract) = self.getOUG_FormatStart()
         
         format1 += 'i12f'
         #print "format1 = ",format1
-        isMagnitudePhase = self.isMagnitudePhase()
+        is_magnitude_phase = self.is_magnitude_phase()
 
         while len(self.data) >= 56:  # 14*4
             eData = self.data[0:56]
@@ -520,13 +520,13 @@ class OUG(object):
             (eid, gridType, txr, tyr, tzr, rxr, ryr, rzr,
              txi, tyi, tzi, rxi, ryi, rzi) = out
 
-            if isMagnitudePhase:
-                tx = polarToRealImag(txr, txi)
-                rx = polarToRealImag(rxr, rxi)
-                ty = polarToRealImag(tyr, tyi)
-                ry = polarToRealImag(ryr, ryi)
-                tz = polarToRealImag(tzr, tzi)
-                rz = polarToRealImag(rzr, rzi)
+            if is_magnitude_phase:
+                tx = polar_to_real_imag(txr, txi)
+                rx = polar_to_real_imag(rxr, rxi)
+                ty = polar_to_real_imag(tyr, tyi)
+                ry = polar_to_real_imag(ryr, ryi)
+                tz = polar_to_real_imag(tzr, tzi)
+                rz = polar_to_real_imag(rzr, rzi)
             else:
                 tx = complex(txr, txi)
                 rx = complex(rxr, rxi)
@@ -539,8 +539,8 @@ class OUG(object):
             #print "eType=%s" %(eType)
 
             dataIn = [eid2, gridType, tx, ty, tz, rx, ry, rz]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
 

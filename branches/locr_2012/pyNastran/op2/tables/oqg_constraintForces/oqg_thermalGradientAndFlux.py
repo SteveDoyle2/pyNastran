@@ -2,18 +2,18 @@ from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObj
 
 
 class TemperatureGradientAndFluxObject(TableObject):
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        TableObject.__init__(self, dataCode, isSort1, iSubcase, dt)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, iSubcase, f=None, isMagPhase=False):
+    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
         name = 'spcForces'
-        if self.nonlinearFactor is None:
-            return self._writeMatlab(name, iSubcase, f)
+        if self.nonlinear_factor is None:
+            return self._writeMatlab(name, isubcase, f)
         else:
-            return self._writeMatlabTransient(name, iSubcase, f)
+            return self._writeMatlabTransient(name, isubcase, f)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f)
         msg = header + ['                   F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S\n',
                         ' \n',
@@ -44,7 +44,7 @@ class TemperatureGradientAndFluxObject(TableObject):
 
     def __reprTransient__(self):
         msg = '---SPC FORCES---\n'
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             msg += 'dt = %g\n' % (self.dt)
 
         headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
@@ -71,9 +71,9 @@ class TemperatureGradientAndFluxObject(TableObject):
         return msg
 
     def __repr__(self):
-        return self.writeF06(['', ''], 'PAGE ', 1)[0]
+        return self.write_f06(['', ''], 'PAGE ', 1)[0]
 
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---SPC FORCES---\n'
@@ -103,19 +103,19 @@ class TemperatureGradientAndFluxObject(TableObject):
 
 
 class ComplexTemperatureGradientAndFluxObject(ComplexTableObject):
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
         asdf
-        ComplexTableObject.__init__(self, dataCode, isSort1, iSubcase, dt)
+        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, iSubcase, f=None, isMagPhase=False):
+    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
         name = 'spcForces'
-        if self.nonlinearFactor is None:
-            return self._writeMatlab(name, iSubcase, f)
+        if self.nonlinear_factor is None:
+            return self._writeMatlab(name, isubcase, f)
         else:
-            return self._writeMatlabTransient(name, iSubcase, f)
+            return self._writeMatlabTransient(name, isubcase, f)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
         msg = header + ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
                         ' \n',
@@ -151,7 +151,7 @@ class ComplexTemperatureGradientAndFluxObject(ComplexTableObject):
 
     def __reprTransient__(self):
         msg = '---COMPLEX SPC FORCES---\n'
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             msg += 'dt = %g\n' % (self.dt)
 
         raise RuntimeError('is this valid...')
@@ -176,12 +176,12 @@ class ComplexTemperatureGradientAndFluxObject(ComplexTableObject):
         return msg
 
     def __repr__(self):
-        return self.writeF06(['', ''], 'PAGE ', 1)[0]
-        if self.nonlinearFactor is not None:
+        return self.write_f06(['', ''], 'PAGE ', 1)[0]
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---COMPLEX SPC FORCES---\n'
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             msg += 'dt = %g\n' % (self.dt)
 
         raise RuntimeError('is this valid...')

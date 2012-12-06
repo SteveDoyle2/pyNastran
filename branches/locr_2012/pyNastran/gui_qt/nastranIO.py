@@ -197,13 +197,13 @@ class NastranIO(object):
 
         op2 = OP2(op2FileName, debug=True)
         op2.readOP2()
-        #print op2.printResults()
+        #print op2.print_results()
 
         #case = op2.displacements[1]
         #print "case = ",case
         #for nodeID,translation in sorted(case.translations.iteritems()):
             #print "nodeID=%s t=%s" %(nodeID,translation)
-        #self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
+        #self.iSubcaseNameMap[self.isubcase] = [Subtitle,Label]
 
         cases = {}
         subcaseIDs = op2.iSubcaseNameMap.keys()

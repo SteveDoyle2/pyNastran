@@ -3,12 +3,12 @@ from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 
-#class staticFluxObj(scalarObject): # approachCode=1, tableCode=3 - whatever the static version of this is...
+#class staticFluxObj(scalarObject): # approach_code=1, table_code=3 - whatever the static version of this is...
 
 
-class fluxObject(scalarObject):  # approachCode=1, tableCode=3, thermal=1
-    def __init__(self, dataCode, iSubcase, dt=None):
-        scalarObject.__init__(self, dataCode, iSubcase)
+class fluxObject(scalarObject):  # approach_code=1, table_code=3, thermal=1
+    def __init__(self, data_code, isubcase, dt=None):
+        scalarObject.__init__(self, data_code, isubcase)
 
         self.dt = dt
         self.fluxes = {}
@@ -17,10 +17,10 @@ class fluxObject(scalarObject):  # approachCode=1, tableCode=3, thermal=1
             self.isTransient = True
             raise NotImplementedError('transient fluxObject is supported...')
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.fluxes[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.fluxes.keys()
         k.sort()
         return k
@@ -30,14 +30,14 @@ class fluxObject(scalarObject):  # approachCode=1, tableCode=3, thermal=1
         assert nodeID not in self.fluxes
         self.fluxes[nodeID] = array([v1, v2, v3])
 
-    def writeOp2(self, block3, deviceCode=1):
+    def writeOp2(self, block3, device_code=1):
         """
         creates the binary data for writing the table
         @warning hasnt been tested...
         """
         msg = block3
         for nodeID, flux in sorted(self.fluxes.iteritems()):
-            grid = nodeID * 10 + deviceCode
+            grid = nodeID * 10 + device_code
             msg += pack('iffffff', grid, flux[0], flux[1], flux[2], 0, 0, 0)
         return msg
 

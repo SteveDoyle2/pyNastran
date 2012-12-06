@@ -2,18 +2,18 @@ from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObj
 
 
 class MPCForcesObject(TableObject):
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        TableObject.__init__(self, dataCode, isSort1, iSubcase, dt)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, iSubcase, f=None, isMagPhase=False):
+    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
         name = 'mpcForces'
-        if self.nonlinearFactor is None:
-            return self._writeMatlab(name, iSubcase, f)
+        if self.nonlinear_factor is None:
+            return self._writeMatlab(name, isubcase, f)
         else:
-            return self._writeMatlabTransient(name, iSubcase, f)
+            return self._writeMatlabTransient(name, isubcase, f)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum)
         msg = header + ['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
                         ' \n',
@@ -42,7 +42,7 @@ class MPCForcesObject(TableObject):
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         msg = []
         for dt, translations in sorted(self.translations.iteritems()):
-            header[1] = ' %s = %10.4E\n' % (self.dataCode['name'], dt)
+            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
@@ -65,7 +65,7 @@ class MPCForcesObject(TableObject):
 
     def __reprTransient__(self):
         msg = '---MPC FORCES---\n'
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             msg += 'dt = %g\n' % (self.dt)
 
         headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
@@ -92,7 +92,7 @@ class MPCForcesObject(TableObject):
         return msg
 
     def __repr__(self):
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---MPC FORCES---\n'
@@ -123,18 +123,18 @@ class MPCForcesObject(TableObject):
 
 
 class ComplexMPCForcesObject(ComplexTableObject):
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        ComplexTableObject.__init__(self, dataCode, isSort1, iSubcase, dt)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, iSubcase, f=None, isMagPhase=False):
+    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
         name = 'mpcForces'
-        if self.nonlinearFactor is None:
-            return self._writeMatlab(name, iSubcase, f, isMagPhase)
+        if self.nonlinear_factor is None:
+            return self._writeMatlab(name, isubcase, f, isMagPhase)
         else:
-            return self._writeMatlabTransient(name, iSubcase, f, isMagPhase)
+            return self._writeMatlabTransient(name, isubcase, f, isMagPhase)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
         msg = header + ['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
                         ' \n',
@@ -171,7 +171,7 @@ class ComplexMPCForcesObject(ComplexTableObject):
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         msg = []
         for dt, translations in sorted(self.translations.iteritems()):
-            header[1] = ' %s = %10.4E\n' % (self.dataCode['name'], dt)
+            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
@@ -197,7 +197,7 @@ class ComplexMPCForcesObject(ComplexTableObject):
 
     def __reprTransient__(self):
         msg = '---COMPLEX MPC FORCES---\n'
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             msg += 'dt = %g\n' % (self.dt)
 
         raise RuntimeError('is this valid...')
@@ -222,7 +222,7 @@ class ComplexMPCForcesObject(ComplexTableObject):
         return msg
 
     def __repr__(self):
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---COMPLEX MPC FORCES---\n'

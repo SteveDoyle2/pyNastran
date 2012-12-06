@@ -245,8 +245,8 @@ class MAT1(Material):
         else:
             #G_default = self.e/2./(1+self.nu)
             G = self.e / 2. / (1 + self.nu)
-        print("MAT1 - self.e=%s self.nu=%s self.g=%s Gdef=%s G=%s"
-              % (self.e, self.nu,self.g, G_default, G))
+        #print("MAT1 - self.e=%s self.nu=%s self.g=%s Gdef=%s G=%s"
+        #      % (self.e, self.nu,self.g, G_default, G))
         return G
 
     def reprFields(self):

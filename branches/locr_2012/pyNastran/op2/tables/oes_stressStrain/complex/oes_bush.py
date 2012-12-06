@@ -2,12 +2,12 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 
-from ..real.oes_objects import stressObject, strainObject
+from ..real.oes_objects import StressObject, StrainObject
 
 
-class ComplexBushStressObject(stressObject):
+class ComplexBushStressObject(StressObject):
     """
-    # sCode=0
+    # s_code=0
                            C O M P L E X   S T R E S S E S   I N   B A R   E L E M E N T S   ( C B A R )
                                                          (MAGNITUDE/PHASE)
 
@@ -17,22 +17,22 @@ class ComplexBushStressObject(stressObject):
                   1     ENDA          9.331276E+04   9.331276E+04   9.331276E+04   9.331276E+04        0.0
                                       180.0000         0.0            0.0          180.0000              0.0
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        stressObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.translations = {}
         self.rotations = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                self.addNewEid = self.addNewEidSort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -48,7 +48,7 @@ class ComplexBushStressObject(stressObject):
         msg.append('  eType, translations, rotations\n')
         return msg
 
-    def addF06Data(self, data, transient):
+    def add_f06_data(self, data, transient):
         if transient is None:
             for line in data:
                 (eType, eid, tx, ty, tz, rx, ry, rz) = line
@@ -58,10 +58,10 @@ class ComplexBushStressObject(stressObject):
             return
 
         (dtName, dt) = transient
-        self.dataCode['name'] = dtName
+        self.data_code['name'] = dtName
 
         if dt not in self.translations:
-            self.updateDt(self.dataCode, dt)
+            self.update_dt(self.data_code, dt)
 
         for line in data:
             (eType, eid, tx, ty, tz, rx, ry, rz) = line
@@ -69,16 +69,16 @@ class ComplexBushStressObject(stressObject):
             self.translations[dt][eid] = [tx, ty, tz]
             self.rotations[dt][eid] = [rx, ry, rz]
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.translations[dt]
         del self.rotations[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.translations.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         """
@@ -86,21 +86,21 @@ class ComplexBushStressObject(stressObject):
         self.translations[dt] = {}
         self.rotations[dt] = {}
 
-    def addNewEid(self, eType, dt, eid, tx, ty, tz, rx, ry, rz):
+    def add_new_eid(self, eType, dt, eid, tx, ty, tz, rx, ry, rz):
         self.eType[eid] = eType
         self.translations[eid] = [tx, ty, tz]
         self.rotations[eid] = [rx, ry, rz]
 
-    def addNewEidSort1(self, eType, dt, eid, tx, ty, tz, rx, ry, rz):
+    def add_new_eid_sort1(self, eType, dt, eid, tx, ty, tz, rx, ry, rz):
         if dt not in self.translations:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.eType[eid] = eType
         self.translations[dt][eid] = [tx, ty, tz]
         self.rotations[dt][eid] = [rx, ry, rz]
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         raise NotImplementedError('CBUSH')
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
 
         msg = header + [
@@ -146,7 +146,7 @@ class ComplexBushStressObject(stressObject):
         ]
         msg = []
         for dt, S1s in sorted(self.s1.iteritems()):
-            header[1] = ' %s = %10.4E\n' % (self.dataCode['name'], dt)
+            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for eid, S1 in sorted(S1s.iteritems()):
                 eType = self.eType[eid]
@@ -178,7 +178,7 @@ class ComplexBushStressObject(stressObject):
 
     def __repr__(self):
         raise NotImplementedError('CBUSH')
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---BAR STRESS---\n'
@@ -230,7 +230,7 @@ class ComplexBushStressObject(stressObject):
         msg += '\n'
 
         for dt, S1ss in sorted(self.s1.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for eid, S1s in sorted(S1ss.iteritems()):
                 eType = self.eType[eid]
                 axial = self.axial[dt][eid]
@@ -259,29 +259,29 @@ class ComplexBushStressObject(stressObject):
         return msg
 
 
-class ComplexBushStrainObject(strainObject):
+class ComplexBushStrainObject(StrainObject):
     """
-    # sCode=10
+    # s_code=10
                                      S T R A I N S   I N   B A R   E L E M E N T S          ( C B A R )
     ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
       ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        strainObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
         self.translations = {}
         self.rotations = {}
 
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                #self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                #self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             #self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -297,7 +297,7 @@ class ComplexBushStrainObject(strainObject):
         msg.append('  eType, translations, rotations\n')
         return msg
 
-    def addF06Data(self, data, transient):
+    def add_f06_data(self, data, transient):
         if transient is None:
             for line in data:
                 (eType, eid, tx, ty, tz, rx, ry, rz) = line
@@ -307,10 +307,10 @@ class ComplexBushStrainObject(strainObject):
             return
 
         (dtName, dt) = transient
-        self.dataCode['name'] = dtName
+        self.data_code['name'] = dtName
 
         if dt not in self.translations:
-            self.updateDt(self.dataCode, dt)
+            self.update_dt(self.data_code, dt)
 
         for line in data:
             (eType, eid, tx, ty, tz, rx, ry, rz) = line
@@ -318,16 +318,16 @@ class ComplexBushStrainObject(strainObject):
             self.translations[dt][eid] = [tx, ty, tz]
             self.rotations[dt][eid] = [rx, ry, rz]
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.translations[dt]
         del self.rotations[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.translations.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         """
@@ -335,23 +335,23 @@ class ComplexBushStrainObject(strainObject):
         self.translations[dt] = {}
         self.rotations[dt] = {}
 
-    def addNewEid(self, eType, dt, eid, tx, ty, tz, rx, ry, rz):
+    def add_new_eid(self, eType, dt, eid, tx, ty, tz, rx, ry, rz):
         self.eType[eid] = eType
         self.translations[eid] = [tx, ty, tz]
         self.rotations[eid] = [rx, ry, rz]
 
-    def addNewEidSort1(self, eType, dt, eid, tx, ty, tz, rx, ry, rz):
+    def add_new_eid_sort1(self, eType, dt, eid, tx, ty, tz, rx, ry, rz):
         if dt not in self.translations:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.eType[eid] = eType
         self.translations[dt][eid] = [tx, ty, tz]
         self.rotations[dt][eid] = [rx, ry, rz]
 
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         raise NotImplementedError('CBUSH')
-        return 'ComplexBarStress writeF06 not implemented...', pageNum
-        if self.nonlinearFactor is not None:
+        return 'ComplexBarStress write_f06 not implemented...', pageNum
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
 
         msg = header + [
@@ -387,7 +387,7 @@ class ComplexBushStrainObject(strainObject):
         ]
         msg = []
         for dt, E1s in sorted(self.e1.iteritems()):
-            header[1] = ' %s = %10.4E\n' % (self.dataCode['name'], dt)
+            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for eid, e1s in sorted(E1s.iteritems()):
                 eType = self.eType[eid]
@@ -411,7 +411,7 @@ class ComplexBushStrainObject(strainObject):
 
     def __repr__(self):
         raise NotImplementedError('CBUSH')
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---BAR STRAIN---\n'
@@ -463,7 +463,7 @@ class ComplexBushStrainObject(strainObject):
         msg += '\n'
 
         for dt, E1s in sorted(self.e1.iteritems()):
-            msg += "%s = %g\n" % (self.dataCode['name'], dt)
+            msg += "%s = %g\n" % (self.data_code['name'], dt)
             for eid, e1s in sorted(Els.iteritems()):
                 eType = self.eType[eid]
                 axial = self.axial[dt][eid]

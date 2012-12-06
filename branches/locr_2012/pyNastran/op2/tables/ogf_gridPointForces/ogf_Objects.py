@@ -4,17 +4,17 @@ from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 
 class gridPointForcesObject(scalarObject):
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        scalarObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        scalarObject.__init__(self, data_code, isubcase)
         self.forces = {}
         self.moments = {}
         self.elemName = {}
         self.eids = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
+                self.add = self.add_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
@@ -33,7 +33,7 @@ class gridPointForcesObject(scalarObject):
         msg.append('  forces, moments, elemName, eids\n')
         return msg
 
-    def addNewTransient(self, dt):  # eKey
+    def add_new_transient(self, dt):  # eKey
         """initializes the transient variables"""
         self.forces[dt] = {}
         self.moments[dt] = {}
@@ -55,12 +55,12 @@ class gridPointForcesObject(scalarObject):
         self.elemName[eKey].append(elemName)
         self.eids[eKey].append(eid)
 
-    def addSort1(self, dt, eKey, eid, elemName, f1, f2, f3, m1, m2, m3):
+    def add_sort1(self, dt, eKey, eid, elemName, f1, f2, f3, m1, m2, m3):
         if dt not in self.forces:
             #print "new transient"
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
 
-        #print "%s=%s eKey=%s eid=%s elemName=%s f1=%s" %(self.dataCode['name'],dt,eKey,eid,elemName,f1)
+        #print "%s=%s eKey=%s eid=%s elemName=%s f1=%s" %(self.data_code['name'],dt,eKey,eid,elemName,f1)
         if eKey not in self.forces[dt]:
             self.eids[eKey] = []
             self.forces[dt][eKey] = []
@@ -71,20 +71,20 @@ class gridPointForcesObject(scalarObject):
         self.elemName[eKey].append(elemName)
         self.eids[eKey].append(eid)
 
-    def updateDt(self, dataCode, freq):
-        self.dataCode = dataCode
-        self.applyDataCode()
+    def update_dt(self, data_code, freq):
+        self.data_code = data_code
+        self.apply_data_code()
         if freq is not None:
-            self.log.debug("updating %s...%s=%s  iSubcase=%s" % (self.dataCode['name'], self.dataCode['name'], freq, self.iSubcase))
+            self.log.debug("updating %s...%s=%s  isubcase=%s" % (self.data_code['name'], self.data_code['name'], freq, self.isubcase))
             self.dt = dt
-            self.addNewTransient()
+            self.add_new_transient()
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.forces[dt]
         del self.moments[dt]
         del self.elemName[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.forces.keys()
         k.sort()
         return k
@@ -94,8 +94,8 @@ class gridPointForcesObject(scalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f)
 
         msg = header + ['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
@@ -161,13 +161,13 @@ class gridPointForcesObject(scalarObject):
 
     def __repr__(self):
         return ''
-        return self.writeF06([], 'PAGE ', 1)[0]
+        return self.write_f06([], 'PAGE ', 1)[0]
         #return '---gridPointForceObject---'
 
 
 class complexGridPointForcesObject(scalarObject):
-    def __init__(self, dataCode, isSort1, iSubcase, freq=None):
-        scalarObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, freq=None):
+        scalarObject.__init__(self, data_code, isubcase)
         raise NotImplementedError()
 
     def get_stats(self):

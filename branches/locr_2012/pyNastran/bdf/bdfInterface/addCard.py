@@ -70,7 +70,7 @@ class AddMethods(object):
 
     def add_node(self, node, allowOverwrites=False):
         #print node
-        #assert node.nid not in self.nodes,'nid=%s\noldNode=\n%snewNode=\n%s' %(node.nid,self.nodes[node.nid],node)  ## @todo enable before release...
+        #assert node.nid not in self.nodes,'nid=%s\noldNode=\n%snewNode=\n%s' %(node.nid,self.nodes[node.nid],node)  # TODO enable before release...
         #assert node.nid>0,'nid=%s node=\n%s' %(node.nid,node)
         #self.nodes[key] = node
 
@@ -95,8 +95,8 @@ class AddMethods(object):
 
     def add_element(self, elem, allowOverwrites=False):
         key = elem.eid
-        #self.elements[key] = elem  ## @todo temporary
-        #return                     ## @todo temporary
+        #self.elements[key] = elem  # TODO temporary
+        #return                     # TODO temporary
 
         if key in self.elements and not allowOverwrites:
             if not elem.isSameCard(self.elements[key]):
@@ -109,8 +109,8 @@ class AddMethods(object):
 
     def add_mass_element(self, elem, allowOverwrites=False):
         key = elem.eid
-        #self.massElements[key] = elem  ## @todo temporary
-        #return                         ## @todo temporary
+        #self.massElements[key] = elem  # TODO temporary
+        #return                         # TODO temporary
 
         if key in self.massElements and not allowOverwrites:
             if not elem.isSameCard(self.massElements[key]):
@@ -159,8 +159,8 @@ class AddMethods(object):
 
     def add_property(self, prop, allowOverwrites=False):
         key = prop.pid
-        #self.properties[key] = prop  ## @todo temporary
-        #return                       ## @todo temporary
+        #self.properties[key] = prop  # TODO temporary
+        #return                       # TODO temporary
 
         if key in self.properties and not allowOverwrites:
             if not prop.isSameCard(self.properties[key]):

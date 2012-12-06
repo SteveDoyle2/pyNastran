@@ -58,7 +58,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
     def DisplayEdges(self, event):
         self.isEdges = not(self.isEdges)
         if 0:
-            self.getEdges()
+            self.get_edges()
 
         try:
             hasEdgeActor = hasattr(self, edgeActor)
@@ -155,7 +155,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         #Filter.SetInput(aQuadGrid)
         #Filter.Update()
 
-    def getEdges(self):
+    def get_edges(self):
         edges = vtk.vtkExtractEdges()
 
         edges.SetInput(self.grid)
@@ -357,7 +357,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
 
         # Create the usual rendering stuff.
         if self.isEdges:
-            self.getEdges()
+            self.get_edges()
         self.rend.GetActiveCamera().ParallelProjectionOn()
         self.rend.SetBackground(.1, .2, .4)
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
@@ -465,7 +465,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
             else:
                 print("***%s skipping" % (location))
 
-            #self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
+            #self.iSubcaseNameMap[self.isubcase] = [Subtitle,Label]
             caseName = self.iSubcaseNameMap[subcaseID]
             (subtitle, label) = caseName
 
@@ -517,7 +517,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
             #print "fontSize = ",fontSize
             #prop.SetFontSize(40)
 
-            ## @todo results can only go from centroid->node and not back to
+            # TODO results can only go from centroid->node and not back to
             ## centroid
             #print dir(self.grid)
             #self.grid.Reset()

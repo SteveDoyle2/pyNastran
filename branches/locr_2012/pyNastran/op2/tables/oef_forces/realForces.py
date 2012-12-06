@@ -7,54 +7,54 @@ from struct import unpack
 class RealForces(object):
 
     def OEF_aCode(self):
-        if self.analysisCode == 1:   # statics
+        if self.analysis_code == 1:   # statics
             format1 = 'i'  # loadID
-            #self.addDataParameter(data,'loadID','i',5,False)   ## load set ID number
-        elif self.analysisCode == 2:  # normal modes/buckling (real eigenvalues)
+            #self.add_data_parameter(data,'loadID','i',5,False)   ## load set ID number
+        elif self.analysis_code == 2:  # normal modes/buckling (real eigenvalues)
             format1 = 'i'  # mode
-            #self.addDataParameter(data,'mode','i',5)   ## mode number
-            #self.addDataParameter(data,'eign','f',6,False)   ## eigenvalue
-        elif self.analysisCode == 3:  # differential stiffness 0
+            #self.add_data_parameter(data,'mode','i',5)   ## mode number
+            #self.add_data_parameter(data,'eign','f',6,False)   ## eigenvalue
+        elif self.analysis_code == 3:  # differential stiffness 0
             format1 = 'i'  # loadID
-            #self.addDataParameter(data,'loadID','i',5)   ## load set ID number
-        elif self.analysisCode == 4:  # differential stiffness 1
+            #self.add_data_parameter(data,'loadID','i',5)   ## load set ID number
+        elif self.analysis_code == 4:  # differential stiffness 1
             format1 = 'i'  # loadID
             ## load set ID number
-            self.addDataParameter(data, 'loadID', 'i', 5)
-        elif self.analysisCode == 5:   # frequency
+            self.add_data_parameter(data, 'loadID', 'i', 5)
+        elif self.analysis_code == 5:   # frequency
             format1 = 'f'  # freq
-            #self.addDataParameter(data,'freq','f',5)   ## frequency
+            #self.add_data_parameter(data,'freq','f',5)   ## frequency
 
-        elif self.analysisCode == 6:  # transient
+        elif self.analysis_code == 6:  # transient
             format1 = 'f'  # time
-            #self.addDataParameter(data,'time','f',5)   ## time step
+            #self.add_data_parameter(data,'time','f',5)   ## time step
             #print "time(5)=%s" %(self.time)
-        elif self.analysisCode == 7:  # pre-buckling
+        elif self.analysis_code == 7:  # pre-buckling
             format1 = 'i'  # loadID
-            #self.addDataParameter(data,'loadID','i',5)   ## load set ID number
+            #self.add_data_parameter(data,'loadID','i',5)   ## load set ID number
             #print "loadID(5)=%s" %(self.loadID)
-        elif self.analysisCode == 8:  # post-buckling
+        elif self.analysis_code == 8:  # post-buckling
             format1 = 'i'  # loadID
-            #self.addDataParameter(data,'loadID','i',5)       ## load set ID number
-            #self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
+            #self.add_data_parameter(data,'loadID','i',5)       ## load set ID number
+            #self.add_data_parameter(data,'eigr','f',6,False)   ## real eigenvalue
             #print "loadID(5)=%s  eigr(6)=%s" %(self.loadID,self.eigr)
-        elif self.analysisCode == 9:  # complex eigenvalues
+        elif self.analysis_code == 9:  # complex eigenvalues
             format1 = 'i'  # mode
-            #self.addDataParameter(data,'mode','i',5)         ## mode number
-            #self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
-            #self.addDataParameter(data,'eigi','f',7,False)   ## imaginary eigenvalue
+            #self.add_data_parameter(data,'mode','i',5)         ## mode number
+            #self.add_data_parameter(data,'eigr','f',6,False)   ## real eigenvalue
+            #self.add_data_parameter(data,'eigi','f',7,False)   ## imaginary eigenvalue
             #print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
-        elif self.analysisCode == 10:  # nonlinear statics
-            format1 = 'f'  # loadStep
+        elif self.analysis_code == 10:  # nonlinear statics
+            format1 = 'f'  # load_step
             ## load step
-            self.addDataParameter(data, 'loadStep', 'f', 5)
-            #print "loadStep(5) = %s" %(self.loadStep)
-        elif self.analysisCode == 11:  # geometric nonlinear statics
+            self.add_data_parameter(data, 'load_step', 'f', 5)
+            #print "load_step(5) = %s" %(self.load_step)
+        elif self.analysis_code == 11:  # geometric nonlinear statics
             format1 = 'i'  # loadID
-            #self.addDataParameter(data,'loadID','i',5)   ## load set ID number
+            #self.add_data_parameter(data,'loadID','i',5)   ## load set ID number
             #print "loadID(5)=%s" %(self.loadID)
         else:
-            raise RuntimeError('invalid analysisCode...analysisCode=%s' % (str(self.analysisCode) + '\n' + self.codeInformation()))
+            raise RuntimeError('invalid analysis_code...analysis_code=%s' % (str(self.analysis_code) + '\n' + self.code_information()))
         return format1
 
     def getOEF_FormatStart(self):
@@ -62,21 +62,21 @@ class RealForces(object):
         Returns an i or an f depending on if it's SORT2 or not.
         Also returns an extraction function that is called on the first argument
         """
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+        is_sort1 = self.is_sort1()
+        if is_sort1:
+            #print "SORT1 - %s" %(self.get_element_type(self.element_type))
             format1 = 'i'  # SORT1
             extract = self.extractSort1
-            #dt = self.nonlinearFactor
+            #dt = self.nonlinear_factor
         else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            #print "SORT2 - %s" %(self.get_element_type(self.element_type))
             format1 = 'f'  # SORT2
             extract = self.extractSort2
-            #eid = self.nonlinearFactor
+            #eid = self.nonlinear_factor
         return (format1, extract)
 
     def OEF_Rod(self):  # 1-CROD, 3-CTUBE, 10-CONROD
-        dt = self.nonlinearFactor
+        dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ff'
         format1 = bytes(format1)
@@ -92,14 +92,14 @@ class RealForces(object):
             #print "eType=%s" %(eType)
 
             dataIn = [eid2, axial, torque]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
         #print self.rodForces
 
     def OEF_CVisc(self):  # 24-CVISC
-        dt = self.nonlinearFactor
+        dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ff'
         format1 = bytes(format1)
@@ -115,16 +115,16 @@ class RealForces(object):
             #print "eType=%s" %(eType)
 
             dataIn = [eid2, axial, torque]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
         #print self.viscForces
 
-    def OEF_Beam(self):  # 2-CBEAM   ## @todo is this correct???
-        dt = self.nonlinearFactor
+    def OEF_Beam(self):  # 2-CBEAM   # TODO is this correct???
+        dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
-        #print self.codeInformation()
+        #print self.code_information()
         formatAll = 'iffffffff'
         format1 = bytes(format1)
         formatAll = bytes(formatAll)
@@ -149,8 +149,8 @@ class RealForces(object):
                 #print "sd = ",sd
 
                 dataIn = [eid2, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
-                #print "%s        " %(self.ElementType(self.elementType)),dataIn
-                #eid = self.obj.addNewEid(out)
+                #print "%s        " %(self.get_element_type(self.element_type)),dataIn
+                #eid = self.obj.add_new_eid(out)
                 if i == 0:  # isNewElement:
                     self.obj.addNewElement(dt, dataIn)
                     #print
@@ -162,7 +162,7 @@ class RealForces(object):
         #print self.beamForces
 
     def OEF_Shear(self):  # 4-CSHEAR
-        dt = self.nonlinearFactor
+        dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ffffffffffffffff'
         format1 = bytes(format1)
@@ -180,14 +180,14 @@ class RealForces(object):
 
             dataIn = [eid2, f41, f21, f12, f32, f23, f43, f34,
                       f14, kf1, s12, kf2, s23, kf3, s34, kf4, s41]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
         #print self.shearForces
 
     def OEF_Spring(self):  # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
-        dt = self.nonlinearFactor
+        dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'f'
         format1 = bytes(format1)
@@ -203,14 +203,14 @@ class RealForces(object):
             #print "eType=%s" %(eType)
 
             dataIn = [eid2, force]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
         #print self.springForces
 
     def OEF_CBar(self):  # 34-CBAR
-        dt = self.nonlinearFactor
+        dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
         format1 = bytes(format1)
@@ -226,14 +226,14 @@ class RealForces(object):
             #print "eType=%s" %(eType)
 
             dataIn = [eid2, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
         #print self.barForces
 
     def OEF_CBar100(self):  # 100-CBAR
-        dt = self.nonlinearFactor
+        dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'fffffff'
         format1 = bytes(format1)
@@ -249,14 +249,14 @@ class RealForces(object):
             #print "eType=%s" %(eType)
 
             dataIn = [eid2, sd, bm1, bm2, ts1, ts2, af, trq]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
         #print self.bar100Forces
 
     def OEF_Plate(self):  # 33-CQUAD4,74-CTRIA3
-        dt = self.nonlinearFactor
+        dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
         format1 = bytes(format1)
@@ -272,23 +272,23 @@ class RealForces(object):
             #print "eType=%s" %(eType)
 
             dataIn = [eid2, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
         #print self.plateForces
 
     def OEF_Plate2(self):  # 64-CQUAD8,70-CTRIAR,75-CTRIA6,82-CQUAD8,144-CQUAD4-bilinear
-        dt = self.nonlinearFactor
+        dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '4s'
 
-        if self.elementType in [70, 75]:  # CTRIAR,CTRIA6
+        if self.element_type in [70, 75]:  # CTRIAR,CTRIA6
             nNodes = 4
-        elif self.elementType in [64, 82, 144]:  # CQUAD8,CQUADR,CQUAD4-bilinear
+        elif self.element_type in [64, 82, 144]:  # CQUAD8,CQUADR,CQUAD4-bilinear
             nNodes = 5
         else:
-            raise NotImplementedError(self.codeInformation())
+            raise NotImplementedError(self.code_information())
 
         allFormat = 'fffffffff'
         format1 = bytes(format1)
@@ -298,7 +298,7 @@ class RealForces(object):
         while len(self.data) >= nTotal:
             eData = self.data[0:44]
             self.data = self.data[44:]
-            #print self.printBlock(eData)
+            #print self.print_block(eData)
             #print "len(data) = ",len(eData)
 
             out = unpack(format1 + allFormat, eData)
@@ -309,7 +309,7 @@ class RealForces(object):
             eid2 = extract(eid, dt)
 
             dataIn = [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
             self.obj.addNewElement(eid2, dt, dataIn)
 
             for i in xrange(nNodes - 1):
@@ -318,7 +318,7 @@ class RealForces(object):
                 dataIn = unpack(allFormat, eData)
                 #(nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty) = out
                 #dataIn = [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty]
-                #print "***%s    " %(self.ElementType(self.elementType)),dataIn
+                #print "***%s    " %(self.get_element_type(self.element_type)),dataIn
 
                 self.obj.add(eid2, dt, dataIn)
                 #print "len(data) = ",len(self.data)
@@ -326,7 +326,7 @@ class RealForces(object):
         #print self.plateForces2
 
     def OEF_ConeAx(self):  # 35-CCONEAX
-        dt = self.nonlinearFactor
+        dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '6f'
         format1 = bytes(format1)
@@ -342,14 +342,14 @@ class RealForces(object):
             #print "eType=%s" %(eType)
 
             dataIn = [eid2, hopa, bmu, bmv, tm, su, sv]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
         #print self.shearForces
 
     def OEF_CGap(self):  # 38-CGAP
-        dt = self.nonlinearFactor
+        dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
         format1 = bytes(format1)
@@ -365,14 +365,14 @@ class RealForces(object):
             #print "eType=%s" %(eType)
 
             dataIn = [eid2, fx, sfy, sfz, u, v, w, sv, sw]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
         #print self.plateForces
 
     def OEF_Bend(self):  # 69-CBEND
-        dt = self.nonlinearFactor
+        dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'i13f'
         format1 = bytes(format1)
@@ -390,14 +390,14 @@ class RealForces(object):
 
             dataIn = [eid2, nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
                       nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
         #print self.bendForces
 
     def OEF_PentaPressure(self):  # 77-CPENTA_PR,78-CTETRA_PR
-        dt = self.nonlinearFactor
+        dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '8s7f'
         format1 = bytes(format1)
@@ -413,14 +413,14 @@ class RealForces(object):
             #print "eType=%s" %(eType)
 
             dataIn = [eid2, eName, ax, ay, az, vx, vy, vz, pressure]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
         #print self.pentaPressureForces
 
     def OEF_CBush(self):  # 102-CBUSH
-        dt = self.nonlinearFactor
+        dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '6f'
         format1 = bytes(format1)
@@ -436,22 +436,22 @@ class RealForces(object):
             #print "eType=%s" %(eType)
 
             dataIn = [eid2, fx, fy, fz, mx, my, mz]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
         #print self.bushForces
 
     def OEF_Force_VU(self):  # 191-VUBEAM
-        dt = self.nonlinearFactor
+        dt = self.nonlinear_factor
 
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ii4s'
 
-        if self.elementType in [191]:
+        if self.element_type in [191]:
             nNodes = 2
         else:
-            raise NotImplementedError(self.codeInformation())
+            raise NotImplementedError(self.code_information())
 
         formatAll = 'i7f'
         format1 = bytes(format1)
@@ -481,22 +481,22 @@ class RealForces(object):
             #print "eType=%s" %(eType)
 
             #dataIn = [vugrid,posit,forceX,shearY,shearZ,torsion,bendY,bendZ]
-            #print "force %s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "force %s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(nNodes, dt, dataIn)
             #print "len(data) = ",len(self.data)
 
     def OEF_Force_VUTRIA(self):  # 189-VUQUAD,190-VUTRIA
-        dt = self.nonlinearFactor
+        dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ii4sii'
 
-        if self.elementType in [189]:  # VUQUAD
+        if self.element_type in [189]:  # VUQUAD
             nNodes = 4
-        elif self.elementType in [190]:  # VUTRIA
+        elif self.element_type in [190]:  # VUTRIA
             nNodes = 3
         else:
-            raise NotImplementedError(self.codeInformation())
+            raise NotImplementedError(self.code_information())
 
         formatAll = 'ifffiiifffffi'
         format1 = bytes(format1)
@@ -528,8 +528,8 @@ class RealForces(object):
             #print "eType=%s" %(eType)
 
             #dataIn = [vugrid,mfx,mfy,mfxy,a,b,c,bmx,bmy,bmxy,syz,szx,d]
-            #print "force %s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "force %s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(nNodes, dt, dataIn)
             #print "len(data) = ",len(self.data)
 

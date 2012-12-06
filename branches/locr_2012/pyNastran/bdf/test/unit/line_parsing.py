@@ -52,7 +52,7 @@ def parseSetType(i, line, lines, key, value):
     sline = value.strip(' ,').split(',')  # float/int values
     fivalues = parseSetSline(sline)
 
-    ## @todo should be more efficient multiline reader...
+    # TODO should be more efficient multiline reader...
     # read more lines....
     if line[-1].strip() == ',':
         i += 1
@@ -101,10 +101,10 @@ def _parseEntry(lines):
         if len(sline) != 2:
             msg = "trying to parse |%s|..." % (line)
             raise SyntaxError("Invalid Subcase: %s", (msg)) 
-        (key, iSubcase) = sline
-        #print "key=|%s| iSubcase=|%s|" %(key,iSubcase)
-        value = int(iSubcase)
-        #self.iSubcase = int(iSubcase)
+        (key, isubcase) = sline
+        #print "key=|%s| isubcase=|%s|" %(key,isubcase)
+        value = int(isubcase)
+        #self. subcase = int(isubcase)
         paramType = 'SUBCASE-type'
     elif (lineUpper.startswith('LABEL') or lineUpper.startswith('SUBTITLE')
           or lineUpper.startswith('TITLE')):

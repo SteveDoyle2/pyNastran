@@ -277,8 +277,8 @@ def setCol(Kg, nid, value):
 def getForces(model, Dofs):
     Fvector = zeros(model.nNodes() * 3, 'd')
     print model.loads
-    for loadSet, loads in model.loads.iteritems():
-        ## @todo if loadset in required loadsets...
+    for load_set, loads in model.loads.iteritems():
+        # TODO if loadset in required loadsets...
         #print loads
         for load in loads:
             if load.type == 'FORCE':

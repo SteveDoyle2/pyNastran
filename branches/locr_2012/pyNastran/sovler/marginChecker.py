@@ -24,7 +24,7 @@ class MarginChecker(object):
         User Info:
         UnitCase  Tension      Compression   Bending
         Filename  tension.op2  compBend.op2  compBend.op2
-        iSubcase  1            1             2
+        isubcase  1            1             2
 
         unitLoad  100.         1.            1.
         ReqLoad   100.         100.          100.
@@ -90,7 +90,7 @@ class MarginChecker(object):
             print "subcaseList[%s] = %s" % (fname, subcaseList)
 
             op2 = OP2(fname, debug=False)
-            op2.setSubcases(subcaseList)
+            op2.set_subcases(subcaseList)
             op2.readOP2()
 
             for subcaseID in subcaseList:

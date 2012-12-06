@@ -74,21 +74,21 @@ class Cart3dToPanair(PanairGridHelper):
                          ".0        .0        1.        0.                  3.\n")
         self.run(cart3dGeom, oname, BCMap)
 
-    def writePoints(self, point1, point2):
-        point1 = self.fixPoint(point1)
-        point2 = self.fixPoint(point2)
+    def write_points(self, point1, point2):
+        point1 = self.fix_point(point1)
+        point2 = self.fix_point(point2)
         #print point1
         #print point2
         out = "%-10s" * 6 % (point1[0], point1[1], point1[2],
                              point2[0], point2[1], point2[2])
         return out + '\n'
 
-    def writePoint(self, point1):
-        point1 = self.fixPoint(point1)
+    def write_point(self, point1):
+        point1 = self.fix_point(point1)
         out = "%-10s" * 3 % (point1[0], point1[1], point1[2])
         return out + '\n'
 
-    def fixPoint(self, pointIn):
+    def fix_point(self, pointIn):
         pointOut = []
         for value in pointIn:
             sValue = '%s' % (value)
@@ -119,11 +119,11 @@ class Cart3dToPanair(PanairGridHelper):
             self.isEnd = True
             msg = ''
             #msg += self.writeTitle()
-            msg += self.writeMach()
-            msg += self.writeCases()
-            msg += self.writeAlphas()
-            msg += self.writeBetas()
-            msg += self.writeReferenceQuantities()
+            msg += self.write_mach()
+            msg += self.write_cases()
+            msg += self.write_alphas()
+            msg += self.write_betas()
+            msg += self.write_reference_quantities()
             msg += self.printout
             f.write(msg)
 
@@ -163,8 +163,8 @@ class Cart3dToPanair(PanairGridHelper):
                 header += '%-10s\n' % (sInt(kt))
                 header += '%-10s%-10s%50s%-10s\n' % (
                     sInt(2), sInt(2), '', netName)
-                pointsOut = self.writePoints(n1, n2)
-                pointsOut += self.writePoints(n3, n3)
+                pointsOut = self.write_points(n1, n2)
+                pointsOut += self.write_points(n3, n3)
                 f.write(header + pointsOut)
                 #break
             #print points

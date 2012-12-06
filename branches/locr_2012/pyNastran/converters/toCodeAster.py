@@ -271,7 +271,7 @@ class CodeAsterConverter(BDF):
         #else:
             #comm += ''
 
-        iSubcase = 1
+        isubcase = 1
         paramName = 'LOAD'
 
         #skippedLids = {}
@@ -280,7 +280,7 @@ class CodeAsterConverter(BDF):
             #loadKeys = self.loads.keys()
 
             key = self.caseControlDeck.getSubcaseParameter(
-                iSubcase, paramName)[0]
+                isubcase, paramName)[0]
             loadcase = self.loads[key]
             #print loadcase
             for i, load in enumerate(loadcase):

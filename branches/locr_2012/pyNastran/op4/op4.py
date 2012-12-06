@@ -79,14 +79,14 @@ class OP4(FortranFile):
             matrices = {}
             name = 'dummyName'
             while name is not None:
-                (name, form, matrix) = self.readMatrixAscii(
+                (name, form, matrix) = self._read_matrix_ascii(
                     f, matrixNames, precision)
                 if name is not None:
                     if matrixNames is None or name in matrixNames:  # save the matrix
                         matrices[name] = (form, matrix)
         return matrices
 
-    def readMatrixAscii(self, f, matrixNames=None, precision='default'):
+    def _read_matrix_ascii(self, f, matrixNames=None, precision='default'):
         """reads a matrix"""
         line = f.readline().rstrip()
         if line == '':
@@ -123,10 +123,10 @@ class OP4(FortranFile):
             isSparse = True
 
         if Type in [1, 2]:  # real
-            (A) = self.readRealAscii(f, nrows, ncols, lineSize,
+            (A) = self.read_real_ascii(f, nrows, ncols, lineSize,
                                      line, dType, isSparse, isBigMat)
         elif Type in [3, 4]:  # complex
-            (A) = self.readComplexAscii(f, nrows, ncols,
+            (A) = self.read_complex_ascii(f, nrows, ncols,
                                         lineSize, line, dType, isSparse, isBigMat)
         else:
             raise RuntimeError('invalid matrix type.  Type=%s' % (Type))
@@ -136,7 +136,7 @@ class OP4(FortranFile):
         #print "form=%s name=%s A=\n%s" %(form,name,str(A))
         return (name, form, A)
 
-    def readRealAscii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
+    def read_real_ascii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
         """
         Method readRealAscii:
         @todo possibly split this into readDenseReal and readSparseReal
@@ -217,7 +217,7 @@ class OP4(FortranFile):
             #A = A.todense()
         return A
 
-    def readComplexAscii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
+    def read_complex_ascii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
         """
         Method readComplexAscii:
         @todo possibly split this into readDenseComplex and readSparseComplex
@@ -293,7 +293,7 @@ class OP4(FortranFile):
 
     def getIRowAscii(self, f, line, sline, nWords, irow, isSparse, isBigMat):
         if isSparse:
-            #nWords = (nWords-1)//2  ## @todo this cant be right...
+            #nWords = (nWords-1)//2  # TODO this cant be right...
             sline = line.strip().split()
             if isBigMat:
                 if len(sline) == 2:
@@ -327,7 +327,7 @@ class OP4(FortranFile):
         """matrixNames must be a list or None, but basically the same"""
         self.op4 = io.open(op4Name, mode = 'rb')
         self.op2 = self.op4
-        self.makeOp2Debug = False
+        self.make_op2_debug = False
 
         # get the endian
         data = self.op4.read(4)
@@ -467,7 +467,7 @@ class OP4(FortranFile):
                 self.endian + '4i8s', data)
             #print "nrows=%s ncols=%s form=%s Type=%s name=%s" %(nrows,ncols,form,Type,name)
         else:
-            msg = recordLength + self.printBlock(data)
+            msg = recordLength + self.print_block(data)
             raise NotImplementedError('recordLength=%s\n%s' % (msg))
 
         name = name.strip()
@@ -692,7 +692,7 @@ class OP4(FortranFile):
                           (recordLength, NBW, len(data)))
                     #print(A)
                     print("********")  # ,data
-                    print(self.printBlock(data))
+                    print(self.print_block(data))
                 i += 1
             #print "-------------------------------"
 
@@ -790,7 +790,7 @@ class OP4(FortranFile):
                 valueList = unpack(strValues, data[0:nValues * NBW])
                 assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
                 #print self.print_section(4)
-                #print self.printBlock(data)
+                #print self.print_block(data)
                 if 0:
                     print("valueList = %s" % (valueList))
 

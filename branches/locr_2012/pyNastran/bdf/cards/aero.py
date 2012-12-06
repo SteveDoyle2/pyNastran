@@ -182,7 +182,7 @@ class AESURF(BaseCard):
     """
     type = 'AESURF'
 
-    def __init__(self, card=None, data=None):  ## @todo doesnt support data
+    def __init__(self, card=None, data=None):  # TODO doesnt support data
         ## Set identification number. (Integer > 0)
         self.aesid = card.field(1)
         ## Controller identification number

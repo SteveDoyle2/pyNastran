@@ -3,7 +3,7 @@ import sys
 from pyNastran.op2.test.test_op2 import get_failed_files,runLotsOfFiles
 from pyNastran.utils import get_files_of_type
 
-def parseSkippedCards(fname):
+def parse_skipped_cards(fname):
     f = open(fname,'r')
     lines = f.readlines()
     f.close()
@@ -13,7 +13,7 @@ def parseSkippedCards(fname):
         if 'OES' in line[0:3]:
             (fore,aft) = line.strip().split('->')
             (oes,form,elementTypeNum) = fore.strip().split(' ')
-            (elementType,eType) = elementTypeNum.strip().split('=')
+            (element_type,eType) = elementTypeNum.strip().split('=')
             (msg,fpath) = aft.strip().split('-')
             #print "fpath=|%s|" %(fpath)
             fpath = fpath.lstrip()[6:]
@@ -56,9 +56,9 @@ if __name__=='__main__':
     debug     = False
     makeGeom  = False
     writeBDF  = False
-    writeF06  = True
+    write_f06  = True
     writeMatlab = False
-    printResults = False
+    print_results = False
 
     deleteF06 = True
     saveCases = True
@@ -67,7 +67,7 @@ if __name__=='__main__':
     getSkipCards = False
 
     if getSkipCards:
-        files2 = parseSkippedCards('skippedCards.out')
+        files2 = parse_skipped_cards('skippedCards.out')
     elif regenerate:
         files2 = get_all_files(foldersFile,'.op2')
         files2 += files
@@ -85,8 +85,8 @@ if __name__=='__main__':
         pass
 
     print("nFiles = %s" %(len(files)))
-    runLotsOfFiles(files,makeGeom,writeBDF,writeF06,writeMatlab,deleteF06,
-                   printResults,debug,saveCases,skipFiles,stopOnFailure,
+    runLotsOfFiles(files,makeGeom,writeBDF,write_f06,writeMatlab,deleteF06,
+                   print_results,debug,saveCases,skipFiles,stopOnFailure,
                    nStart,nStop)
     sys.exit('final stop...')
     

@@ -41,7 +41,7 @@ def print_float_16(value, tol=0.):
     else:
         if value > 0.:  # positive, not perfect...
 
-            if value < 5e-16:  ## @todo does this work properly with tol
+            if value < 5e-16:  # TODO does this work properly with tol
                 field = print_scientific_16(value)
                 return field
             elif value < 0.001:
@@ -98,7 +98,7 @@ def print_float_16(value, tol=0.):
                     field = print_scientific_16(value)
                 return field
         else:
-            if value > -5e-15:  ## @todo does this work properly with tol
+            if value > -5e-15:  # TODO does this work properly with tol
                 field = print_scientific_16(value)
                 return field
             elif value > -0.01:  # -0.001

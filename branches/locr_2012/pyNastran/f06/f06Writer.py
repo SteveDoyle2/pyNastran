@@ -5,7 +5,7 @@ from datetime import date
 import pyNastran
 
 
-def makeStamp(Title):
+def make_stamp(Title):
     #pageStamp = '1    MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23                      NOVEMBER  14, 2011  MSC.NASTRAN  6/17/05   PAGE '
     #Title = 'MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23'
     t = date.today()
@@ -13,14 +13,14 @@ def makeStamp(Title):
               'July', 'August', 'September', 'October', 'November', 'December']
     today = '%-9s %s, %s' % (months[t.month - 1], t.day, t.year)
 
-    releaseDate = '02/08/12'  # pyNastran.__releaseDate__
-    releaseDate = ''
-    build = 'pyNastran v%s %s' % (pyNastran.__version__, releaseDate)
+    release_date = '02/08/12'  # pyNastran.__releaseDate__
+    release_date = ''
+    build = 'pyNastran v%s %s' % (pyNastran.__version__, release_date)
     out = '1    %-67s %20s  %-22s PAGE ' % (Title, today, build)
     return out
 
 
-def makeF06Header():
+def make_f06_header():
     n = ''
     lines1 = [
         n + '/* -------------------------------------------------------------------  */\n',
@@ -90,7 +90,7 @@ class F06Writer(object):
 
     def loadOp2(self, isTesting=False):
         print("self.class = ",self.__class__.__name__)
-        if isTesting == False:  ## @todo implement in way that doesnt require a variable (e.g. check parent class)
+        if isTesting == False:  # TODO implement in way that doesnt require a variable (e.g. check parent class)
             raise RuntimeError("Don't call this method unless you're testing the F06Writer.  It breaks the F06 and OP2 classes.")
         from pyNastran.op2.op2 import OP2
         self.op2Name = model + '.op2'
@@ -115,15 +115,15 @@ class F06Writer(object):
         self.compositePlateStress = op2.compositePlateStress
         self.compositePlateStrain = op2.compositePlateStrain
 
-    def makeF06Header(self):
+    def make_f06_header(self):
         """If this class is inherited, the F06 Header may be overwritten"""
-        return makeF06Header()
+        return make_f06_header()
 
-    def makeStamp(self, Title):
+    def make_stamp(self, Title):
         """If this class is inherited, the PAGE stamp may be overwritten"""
-        return makeStamp(Title)
+        return make_stamp(Title)
 
-    def writeF06(self, f06OutName, isMagPhase=False, makeFile=True,
+    def write_f06(self, f06OutName, isMagPhase=False, makeFile=True,
                  deleteObjects=True):
         """
         Writes an F06 file based on the data we have stored in the object
@@ -143,8 +143,8 @@ class F06Writer(object):
             from StringIO import StringIO
             f = StringIO()
 
-        #f.write(self.makeF06Header())
-        pageStamp = self.makeStamp(self.Title)
+        #f.write(self.make_f06_header())
+        pageStamp = self.make_stamp(self.Title)
         #print "pageStamp = |%r|" %(pageStamp)
         #print "stamp     = |%r|" %(stamp)
 
@@ -152,13 +152,13 @@ class F06Writer(object):
         pageNum = 1
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n']
-        for iSubcase, result in sorted(self.eigenvalues.iteritems()):  # goes first
-            (subtitle, label) = self.iSubcaseNameMap[iSubcase]
+        for isubcase, result in sorted(self.eigenvalues.iteritems()):  # goes first
+            (subtitle, label) = self.iSubcaseNameMap[isubcase]
             subtitle = subtitle.strip()
             header[0] = '     %s\n' % (subtitle)
-            header[1] = '0                                                                                                            SUBCASE %i\n \n' % (iSubcase)
+            header[1] = '0                                                                                                            SUBCASE %i\n \n' % (isubcase)
             print(result.__class__.__name__)
-            (msg, pageNum) = result.writeF06(header, pageStamp,
+            (msg, pageNum) = result.write_f06(header, pageStamp,
                                              pageNum=pageNum, f=f, isMagPhase=isMagPhase)
             if deleteObjects:
                 del result
@@ -166,13 +166,13 @@ class F06Writer(object):
             pageNum += 1
 
         # has a special header
-        for iSubcase, result in sorted(self.eigenvectors.iteritems()):
-            (subtitle, label) = self.iSubcaseNameMap[iSubcase]
+        for isubcase, result in sorted(self.eigenvectors.iteritems()):
+            (subtitle, label) = self.iSubcaseNameMap[isubcase]
             subtitle = subtitle.strip()
             header[0] = '     %s\n' % (subtitle)
-            header[1] = '0                                                                                                            SUBCASE %i\n' % (iSubcase)
+            header[1] = '0                                                                                                            SUBCASE %i\n' % (isubcase)
             print(result.__class__.__name__)
-            (msg, pageNum) = result.writeF06(header, pageStamp,
+            (msg, pageNum) = result.write_f06(header, pageStamp,
                                              pageNum=pageNum, f=f, isMagPhase=isMagPhase)
             if deleteObjects:
                 del result
@@ -212,23 +212,23 @@ class F06Writer(object):
         if 1:
             iSubcases = self.iSubcaseNameMap.keys()
             #print("self.iSubcaseNameMap = %s" %(self.iSubcaseNameMap))
-            for iSubcase in sorted(iSubcases):
-                #print("***subcase = %s" %(iSubcase))
-                (subtitle, label) = self.iSubcaseNameMap[iSubcase]
+            for isubcase in sorted(iSubcases):
+                #print("***subcase = %s" %(isubcase))
+                (subtitle, label) = self.iSubcaseNameMap[isubcase]
                 subtitle = subtitle.strip()
                 label = label.strip()
                 #print "label = ",label
                 header[0] = '     %-127s\n' % (subtitle)
-                header[1] = '0    %-72s                                SUBCASE %-15i\n' % (label, iSubcase)
-                #header[1] = '0    %-72s                                SUBCASE %-15i\n' %('',iSubcase)
+                header[1] = '0    %-72s                                SUBCASE %-15i\n' % (label, isubcase)
+                #header[1] = '0    %-72s                                SUBCASE %-15i\n' %('',isubcase)
                 for resType in resTypes:
                     #print "resType = ",resType
-                    if iSubcase in resType:
+                    if isubcase in resType:
                         header = copy.deepcopy(headerOld)  # fixes bug in case
-                        result = resType[iSubcase]
+                        result = resType[isubcase]
                         try:
                             print(result.__class__.__name__)
-                            (msg, pageNum) = result.writeF06(header, pageStamp, pageNum=pageNum, f=f, isMagPhase=False)
+                            (msg, pageNum) = result.write_f06(header, pageStamp, pageNum=pageNum, f=f, isMagPhase=False)
                         except:
                             #print "result name = %s" %(result.name())
                             raise
@@ -238,8 +238,8 @@ class F06Writer(object):
                         pageNum += 1
         if 0:
             for res in resTypes:
-                for iSubcase, result in sorted(res.iteritems()):
-                    (msg, pageNum) = result.writeF06(header, pageStamp, pageNum=pageNum, f=f, isMagPhase=False)
+                for isubcase, result in sorted(res.iteritems()):
+                    (msg, pageNum) = result.write_f06(header, pageStamp, pageNum=pageNum, f=f, isMagPhase=False)
                     if deleteObjects:
                         del result
                     f.write(msg)
@@ -251,10 +251,10 @@ class F06Writer(object):
 
 if __name__ == '__main__':
     #Title = 'MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23'
-    #stamp = makeStamp(Title) # doesnt have pageNum
+    #stamp = make_stamp(Title) # doesnt have pageNum
     #print "|%s|" %(stamp+'22')
 
     model = sys.argv[1]
     f06 = F06Writer(model)
     f06.loadOp2(isTesting=True)
-    f06.writeF06()
+    f06.write_f06()

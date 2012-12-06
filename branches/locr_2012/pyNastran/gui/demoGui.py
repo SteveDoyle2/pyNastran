@@ -48,7 +48,7 @@ class FrameVTK(object):
         #Filter.SetNumberOfCopies(1)
         #Filter.SetInput(aQuadGrid)
         #Filter.Update()
-    def getEdges(self):
+    def get_edges(self):
         edges = vtk.vtkExtractEdges()
         edges.SetInput(self.grid)
         self.edgeMapper = vtk.vtkPolyDataMapper()
@@ -101,7 +101,7 @@ class FrameVTK(object):
 
         # Create the usual rendering stuff.
         if self.isEdges:
-            self.getEdges()
+            self.get_edges()
         self.rend.GetActiveCamera().ParallelProjectionOn()
         self.rend.SetBackground(.1, .2, .4)
         self.rend.ResetCamera()

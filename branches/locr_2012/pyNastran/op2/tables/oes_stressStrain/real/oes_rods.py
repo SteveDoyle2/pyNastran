@@ -1,22 +1,22 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from .oes_objects import stressObject, strainObject
+from .oes_objects import StressObject, StrainObject
 
 
-class RodDamperObject(stressObject):
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        stressObject.__init__(self, dataCode, iSubcase)
+class RodDamperObject(StressObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StressObject.__init__(self, data_code, isubcase)
         self.eType = 'CBUSH'
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
         self.axial = {}
         self.torsion = {}
 
     def get_stats(self):
         msg = self.get_data_code()
         eTypes = list(set(self.eType.values()))
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.axial)
             a0 = self.stress.keys()[0]
             nelements = len(self.axial[a0])
@@ -31,26 +31,26 @@ class RodDamperObject(stressObject):
         return msg
 
 
-class RodStressObject(stressObject):
+class RodStressObject(StressObject):
     """
     @code
-    # formatCode=1 stressCode=0
+    # format_code=1 stressCode=0
                                      S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
        ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
          ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
              1    5.000000E+03              0.0                               2    0.0                       0.0
 
-    # formatCode=1 stressCode=0
+    # format_code=1 stressCode=0
                                      S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
     @endcode
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        stressObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StressObject.__init__(self, data_code, isubcase)
         self.eType = 'CROD'
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
         self.axial = {}
         self.torsion = {}
 
@@ -59,14 +59,14 @@ class RodStressObject(stressObject):
         self.isImaginary = False
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                #self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                #self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             #self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -86,7 +86,7 @@ class RodStressObject(stressObject):
     def getLength(self):
         return (20, 'ffff')
 
-    def addF06Data(self, data, transient):
+    def add_f06_data(self, data, transient):
         if transient is None:
             for line in data:
                 (eid, axial, MSa, torsion, MSt) = line
@@ -102,9 +102,9 @@ class RodStressObject(stressObject):
 
         (dtName, dt) = transient
         self.dt = dt
-        self.dataCode['name'] = dtName
+        self.data_code['name'] = dtName
         if dt not in self.s1:
-            self.updateDt(self.dataCode, dt)
+            self.update_dt(self.data_code, dt)
 
         for line in data:
             (eid, axial, MSa, torsion, MSt) = line
@@ -120,18 +120,18 @@ class RodStressObject(stressObject):
     def getLength(self):
         return (20, 'ffff')
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.axial[dt]
         del self.torsion[dt]
         del self.MS_axial[dt]
         del self.MS_torsion[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.axial.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         """
@@ -141,7 +141,7 @@ class RodStressObject(stressObject):
         self.torsion[dt] = {}
         self.MS_torsion[dt] = {}
 
-    def addNewEid(self, dt, eid, out):
+    def add_new_eid(self, dt, eid, out):
         #print "Rod Stress add..."
         (axial, SMa, torsion, SMt) = out
         assert isinstance(eid, int)
@@ -150,21 +150,21 @@ class RodStressObject(stressObject):
         self.torsion[eid] = torsion
         self.MS_torsion[eid] = SMt
 
-    def addNewEidSort1(self, dt, eid, out):
+    def add_new_eid_sort1(self, dt, eid, out):
         (axial, SMa, torsion, SMt) = out
 
         if dt not in self.axial:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.axial[dt][eid] = axial
         self.MS_axial[dt][eid] = SMa
         self.torsion[dt][eid] = torsion
         self.MS_torsion[dt][eid] = SMt
 
-    def addNewEidSort2(self, eid, dt, out):
+    def add_new_eid_sort2(self, eid, dt, out):
         (axial, SMa, torsion, SMt) = out
 
         if dt not in self.axial:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.axial[dt][eid] = axial
         self.MS_axial[dt][eid] = SMa
         self.torsion[dt][eid] = torsion
@@ -179,7 +179,7 @@ class RodStressObject(stressObject):
         msg += '\n'
 
         for dt, axial in sorted(self.axial.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for eid in sorted(axial):
                 axial = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
@@ -196,8 +196,8 @@ class RodStressObject(stressObject):
                 #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f)
 
         msg = header + ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
@@ -238,7 +238,7 @@ class RodStressObject(stressObject):
                  '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
         msg = []
         for dt, axials in sorted(self.axial.iteritems()):
-            dtLine = '%14s = %12.5E\n' % (self.dataCode['name'], dt)
+            dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
             header[2] = dtLine
             msg += header + words
             out = []
@@ -272,7 +272,7 @@ class RodStressObject(stressObject):
         return(''.join(msg), pageNum - 1)
 
     def __repr__(self):
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         #print 'axial = ',self.axial
@@ -301,26 +301,26 @@ class RodStressObject(stressObject):
         return msg
 
 
-class RodStrainObject(strainObject):
+class RodStrainObject(StrainObject):
     """
     @code
-    # sCode=1
+    # s_code=1
                                      S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )
     ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
       ID.        STRAIN       MARGIN        STRAIN      MARGIN
 
-    # sCode=10
+    # s_code=10
                                        S T R A I N S   I N   R O D   E L E M E N T S      ( C O N R O D )
     ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
       ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN
        1001    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00         1007    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00
     @endcode
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        strainObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StrainObject.__init__(self, data_code, isubcase)
         self.eType = 'CROD'  # {} # 'CROD/CONROD/CTUBE'
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.axial = {}
         self.torsion = {}
@@ -330,14 +330,14 @@ class RodStrainObject(strainObject):
         self.isImaginary = False
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                #self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                #self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             #self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -354,7 +354,7 @@ class RodStrainObject(strainObject):
         msg.append('  eType, axial, torsion, MS_axial, MS_torsion\n')
         return msg
 
-    def addF06Data(self, data, transient):
+    def add_f06_data(self, data, transient):
         if transient is None:
             for line in data:
                 (eid, axial, MSa, torsion, MSt) = line
@@ -370,9 +370,9 @@ class RodStrainObject(strainObject):
 
         (dtName, dt) = transient
         self.dt = dt
-        self.dataCode['name'] = dtName
+        self.data_code['name'] = dtName
         if dt not in self.s1:
-            self.updateDt(self.dataCode, dt)
+            self.update_dt(self.data_code, dt)
 
         for line in data:
             (eid, axial, MSa, torsion, MSt) = line
@@ -388,18 +388,18 @@ class RodStrainObject(strainObject):
     def getLength(self):
         return (20, 'ffff')
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.axial[dt]
         del self.torsion[dt]
         del self.MS_axial[dt]
         del self.MS_torsion[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.axial.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         """
@@ -409,7 +409,7 @@ class RodStrainObject(strainObject):
         self.torsion[self.dt] = {}
         self.MS_torsion[self.dt] = {}
 
-    def addNewEid(self, dt, eid, out):
+    def add_new_eid(self, dt, eid, out):
         (axial, SMa, torsion, SMt) = out
         assert eid >= 0
         #self.eType = self.eType
@@ -418,23 +418,23 @@ class RodStrainObject(strainObject):
         self.torsion[eid] = torsion
         self.MS_torsion[eid] = SMt
 
-    def addNewEidSort1(self, dt, eid, out):
+    def add_new_eid_sort1(self, dt, eid, out):
         (axial, SMa, torsion, SMt) = out
         assert eid >= 0
-        #self.eType[eid] = self.elementType
+        #self.eType[eid] = self.element_type
         if dt not in self.axial:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.axial[dt][eid] = axial
         self.MS_axial[dt][eid] = SMa
         self.torsion[dt][eid] = torsion
         self.MS_torsion[dt][eid] = SMt
 
-    def addNewEidSort2(self, eid, dt, out):
+    def add_new_eid_sort2(self, eid, dt, out):
         (axial, SMa, torsion, SMt) = out
         assert eid >= 0
-        #self.eType[eid] = self.elementType
+        #self.eType[eid] = self.element_type
         if dt not in self.axial:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.axial[dt][eid] = axial
         self.MS_axial[dt][eid] = SMa
         self.torsion[dt][eid] = torsion
@@ -449,7 +449,7 @@ class RodStrainObject(strainObject):
         msg += '\n'
 
         for dt, axial in sorted(self.axial.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for eid in sorted(axial):
                 axial = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
@@ -466,7 +466,7 @@ class RodStrainObject(strainObject):
                 #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.dt is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f)
 
@@ -507,7 +507,7 @@ class RodStrainObject(strainObject):
                  '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']
         msg = []
         for dt, axials in sorted(self.axial.iteritems()):
-            dtLine = '%14s = %12.5E\n' % (self.dataCode['name'], dt)
+            dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
             header[2] = dtLine
             msg += header + words
             out = []

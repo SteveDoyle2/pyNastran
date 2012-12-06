@@ -12,10 +12,10 @@ class FortranFile(object):
         ## currently does nothing
         self.endian = '<'
         ## currently does nothing
-        self.bufferSize = 65535
-        self.tablename = None
+        self.buffer_size = 65535
+        self.table_name = None
         self.op2 = None
-        self.makeOp2Debug = False
+        self.make_op2_debug = False
         self.op2Debug = None
         self.log = None
         self.n = 0
@@ -50,7 +50,7 @@ class FortranFile(object):
             ## flag to help know if a buffer was found
             self.hasBuffer = True
             ints = self.read_full_int_block()
-            if debug and self.makeOp2Debug:
+            if debug and self.make_op2_debug:
                 self.op2Debug.write('bufferBlock = |%s|\n' % str(ints))
 
         elif len(ints) == 0:
@@ -63,7 +63,7 @@ class FortranFile(object):
                    "PARAM,POST,-1 first) the code should work.\n"
                    "header ints=(%s) expected=%s\n" % (str(ints[0:5]),
                                  expected))
-            msg += 'tablename=|%s|' % self.tablename
+            msg += 'table_name=|%s|' % self.table_name
             raise SyntaxError("Invalid Marker: %s" % msg)
 
         #if ints[1]==2:  # buffer???
@@ -72,7 +72,7 @@ class FortranFile(object):
         #    ints = self.read_full_int_block()
         #    print("bufferInts2=%s" % (ints))
         #print("marker=%s" % (ints[1]))
-        if debug and self.makeOp2Debug:
+        if debug and self.make_op2_debug:
             self.op2Debug.write('[4,%s,4]\n' % ints[1])
         return ints[1]
 
@@ -82,7 +82,7 @@ class FortranFile(object):
         """
         data = self.op2.read(nData)
         string = self.get_strings(data)
-        if self.makeOp2Debug:
+        if self.make_op2_debug:
             self.op2Debug.write('|%s|\n' % str(string))
         self.n += nData
         return string
@@ -98,7 +98,7 @@ class FortranFile(object):
         Reads a list of nIntegers
         @param self the object pointer
         @param nInts the number of ints to read
-        @param debug for developer: debug combined with makeOp2Debug
+        @param debug for developer: debug combined with make_op2_debug
         """
         nData = 4 * nInts
         #print "nData = ",nData
@@ -107,7 +107,7 @@ class FortranFile(object):
         iFormat = str(nInts) + 'i'
         iFormat = bytes(iFormat)
         ints = unpack(iFormat, data)
-        if debug and self.makeOp2Debug:
+        if debug and self.make_op2_debug:
             self.op2Debug.write('|%s|\n' % str(ints))
         self.n += nData
         return ints
@@ -117,12 +117,12 @@ class FortranFile(object):
         Reads a list of nDoubles
         @param self the object pointer
         @param nData the number of doubles to read
-        @param debug for developer: debug combined with makeOp2Debug
+        @param debug for developer: debug combined with make_op2_debug
         """
         data = self.op2.read(nData)
         self.n += nData
         doubles = self.get_doubles(data)
-        if debug and self.makeOp2Debug:
+        if debug and self.make_op2_debug:
             self.op2Debug.write('|%s|\n' % str(doubles))
         return doubles
 
@@ -133,7 +133,7 @@ class FortranFile(object):
         data = self.op2.read(nData)
         self.n += nData
         floats = self.get_floats(data)
-        if debug and self.makeOp2Debug:
+        if debug and self.make_op2_debug:
             self.op2Debug.write('|%s|\n' % str(floats))
         return floats
 
@@ -352,7 +352,7 @@ class FortranFile(object):
     def read_marker(self, expected=None):
         return self.get_marker(expected)
 
-    def read_markers(self, markers, tablename=None, debug=False,
+    def read_markers(self, markers, table_name=None, debug=False,
                      printErrorOnFailure=True):
         """
         Reads a set of predefined markers e.g. [-3,1,0]
@@ -374,19 +374,19 @@ class FortranFile(object):
         #print("markers = ",markers)
         foundMarkers = []
         for marker in markers:
-            tableCode = self.read_header(marker, debug)
-            #if tableCode==2:
-            #    tableCode = self.read_header(marker,debug)
+            table_code = self.read_header(marker, debug)
+            #if table_code==2:
+            #    table_code = self.read_header(marker,debug)
 
-            #print("tableCode=",tableCode)
-            if tableCode is None:
+            #print("table_code=",table_code)
+            if table_code is None:
                 return
-            if marker != tableCode:
+            if marker != table_code:
                 msg = ''
                 if printErrorOnFailure:
                     msg = '\nmarkers=%s foundMarkers=%s\n' % (markers,
                                                               foundMarkers)
-                    msg += 'tablename=%s found=%s expected=%s leftover=%s' % (tablename, tableCode, marker, self.print_section(40))
+                    msg += 'table_name=%s found=%s expected=%s leftover=%s' % (table_name, table_code, marker, self.print_section(40))
                     #print(msg)
                 raise SyntaxError("Invalid Markers: %s" % msg)
             foundMarkers.append(marker)
@@ -394,7 +394,7 @@ class FortranFile(object):
         msg = ''
         for i in markers:
             msg += '[4,' + str(i) + ',4] + '
-        if self.makeOp2Debug:
+        if self.make_op2_debug:
             self.op2Debug.write(msg[:-3] + '\n')
         if debug:
             self.log.debug("@markers = %s" % (markers))
@@ -404,8 +404,8 @@ class FortranFile(object):
         """gets the next N markers, verifies they're correct"""
         markers = []
         for iMarker in xrange(nMarkers):
-            tableCode = self.read_header(None)
-            markers.append(tableCode)
+            table_code = self.read_header(None)
+            markers.append(table_code)
 
         if rewind:
             self.n -= 12 * nMarkers
@@ -513,7 +513,7 @@ class FortranFile(object):
 
         #print "word = |%s|" % (word)
         #print "nLetters=%s word=|%s|" % (nLetters,word)
-        if debug and self.makeOp2Debug:
+        if debug and self.make_op2_debug:
             self.op2Debug.write('|%s|\n' % (str(word)))
         return word
 
@@ -586,8 +586,8 @@ class FortranFile(object):
             #print "n      = ",n
             #print "self.n = ",self.n
             #print "op2.tell = ",self.op2.tell()
-            tablename = word.strip()
-            return tablename.decode('utf-8')
+            table_name = word.strip()
+            return table_name.decode('utf-8')
         except:
             if rewind and not stopOnFailure:
                 self.n = n
@@ -595,17 +595,17 @@ class FortranFile(object):
                 return
             raise
 
-    def skip_next_table(self, bufferSize=10000):
+    def skip_next_table(self, buffer_size=10000):
         """
         skips a table
         @todo fix bugs
         """
-        tablename = self.read_table_name(rewind=False)  # GEOM1
-        self.table_init(tablename)
-        self.log.debug("skippingTable |%s|" % tablename)
+        table_name = self.read_table_name(rewind=False)  # GEOM1
+        self.table_init(table_name)
+        self.log.debug("skippingTable |%s|" % table_name)
         self.log.debug("self.n = %s" % self.n)
 
-        self.read_markers([-1, 7], tablename)
+        self.read_markers([-1, 7], table_name)
 
         dataPack = (4, 1, 4, 4, 0, 4, 4, 0, 4)  # marks the end of the table
         binaryData = pack('9i', *dataPack)
@@ -617,19 +617,19 @@ class FortranFile(object):
         endIndex = -1
         data = "dummy"
         while endIndex == -1 and len(data) > 0:
-            data = self.op2.read(bufferSize + error)
+            data = self.op2.read(buffer_size + error)
             endIndex = data.find(binaryData)
 
-            self.op2.seek(n + i * bufferSize)
+            self.op2.seek(n + i * buffer_size)
             i += 1
 
         #print "i = ",i
         assert endIndex > 0, 'couldnt find the end of the table'
 
         # 36 so it gets to the end of the table markersNext=[0] or [2]
-        self.n = self.n + (i - 1) * bufferSize + endIndex
+        self.n = self.n + (i - 1) * buffer_size + endIndex
         n = self.n
-        self.n += 36  ## @todo sometimes this is needed
+        self.n += 36  # TODO sometimes this is needed
         #ints = self.read_int_block()
         #print "*?*ints = ",ints
         #if len(ints)==0:
@@ -650,7 +650,7 @@ class FortranFile(object):
         self.n -= 24  # subtract off the header [0,2] or [0,0]
         self.op2.seek(self.n)
         self.log.debug("self.n = %s" % (self.n))
-        self.log.debug("---table %s is skipped---" % tablename)
+        self.log.debug("---table %s is skipped---" % table_name)
 
         return isAnotherTable
 

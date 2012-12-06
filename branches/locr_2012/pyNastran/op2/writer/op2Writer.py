@@ -10,9 +10,9 @@ class Op2Writer(Ougv1Writer, Oes1Writer):
         return [str(val) for val in vals]
 
     def writeStart(self):
-        self.writeMarkers([3, 7])
-        self.writeStringBlock('NASTRAN FORT TAPE ID CODE - ', 28)
-        self.writeMarkers([2, -1])
+        self.write_markers([3, 7])
+        self.write_string_block('NASTRAN FORT TAPE ID CODE - ', 28)
+        self.write_markers([2, -1])
 
     def writeOp2(self, op2Name):
         op2 = open(op2Name, 'wb')
@@ -32,21 +32,21 @@ class Op2Writer(Ougv1Writer, Oes1Writer):
         #self.writeOGF1()
         self.writeOES1()  # stress
 
-    def printHeader(self, word, nChars):
-        self.deviceCode = 1  # print the OP2...
+    def print_header(self, word, nChars):
+        self.device_code = 1  # print the OP2...
 
-        self.writeStringBlock(word, nChars)
+        self.write_string_block(word, nChars)
 
-        msg += writeMarkers([-1, 7])
-        out = [101, 0, 4136, 0, 0, 0, 1]  ## @todo what this is - DMAP -> "no def or month,year,one,one"...huh???
+        msg += write_markers([-1, 7])
+        out = [101, 0, 4136, 0, 0, 0, 1]  # TODO what this is - DMAP -> "no def or month,year,one,one"...huh???
         msg += pack('iiiiiii', *out)
 
-        msg += writeMarkers([-2, 1, 0])
+        msg += write_markers([-2, 1, 0])
 
-        # approachCode=1, tableCode=1
+        # approach_code=1, table_code=1
         self.iTable = -3
 
-    def writeStringBlock(self, word, nChars):
+    def write_string_block(self, word, nChars):
         """
         'OUG'      - 1 word  = 4 characters
         'OUGV'     - 1 word  = 4 characters
@@ -56,7 +56,7 @@ class Op2Writer(Ougv1Writer, Oes1Writer):
         nChars = nWords*4 != len(word)
         just set nChars and dont overthink it too much
         """
-        m = self.writeMarkers([1])
+        m = self.write_markers([1])
         #word = self.read_string_block()
         ## creating a %Xs - where x is the number of
         ## words*4,left justifying it, and setting the value
@@ -66,14 +66,14 @@ class Op2Writer(Ougv1Writer, Oes1Writer):
         out = ''
         return m + out + m
 
-    def packTitle(iSubcase):
+    def packTitle(isubcase):
         Title = self.Title
-        subtitle, label = self.iSubcaseNameMap[iSubcase]
+        subtitle, label = self.iSubcaseNameMap[isubcase]
         titleSubtitleLabel = '%128s%128s%128s' % (Title, subtitle, label)
         msg = pack('c' * 384, list(titleSubtitleLabel)) + self.hollerith
         return msg
 
-    def writeMarkers(markers):
+    def write_markers(markers):
         """
         takes -5,1,0  -> [4,5,4,  4,1,4,  4,0,4]
         and puts it into binary
@@ -84,15 +84,15 @@ class Op2Writer(Ougv1Writer, Oes1Writer):
         n = len(out)
         return pack('i' * n, *out)
 
-    def combineApproachDeviceCodes(self, approachCode):
-        aCode = approachCode * 10 + self.deviceCode
+    def combineApproachDeviceCodes(self, approach_code):
+        aCode = approach_code * 10 + self.device_code
         return aCode
 
-    def combineTableSortCodes(self, tableCode, sortCode):
-        tCode = sortCode * 1000 + tableCode
+    def combineTableSortCodes(self, table_code, sort_code):
+        tCode = sort_code * 1000 + table_code
         return tCode
 
-    def aCode_tCode(self, approachCode, tableCode, sortCode):
-        aCode = self.combineApproachDeviceCodes(approachCode)
-        tCode = self.combineTableDeviceCodes(tableCode, sortCode)
+    def aCode_tCode(self, approach_code, table_code, sort_code):
+        aCode = self.combineApproachDeviceCodes(approach_code)
+        tCode = self.combineTableDeviceCodes(table_code, sort_code)
         return (aCode, tCode)

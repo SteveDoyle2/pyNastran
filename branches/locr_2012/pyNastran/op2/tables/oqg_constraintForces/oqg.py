@@ -14,184 +14,184 @@ class OQG(object):
     def readTable_OQG(self):
         table3 = self.readTable_OQG_3
         table4Data = self.readOQG_Data
-        self.readResultsTable(table3, table4Data)
+        self.read_results_table(table3, table4Data)
         self._delete_attributes_OQG()
 
     def _delete_attributes_OQG(self):
         #print self.obj
-        params = ['lsdvm', 'mode', 'eigr', 'modeCycle', 'freq', 'dt', 'lftsfq', 'thermal', 'rCode', 'fCode', 'numWide', 'acousticFlag', 'thermal']
+        params = ['lsdvm', 'mode', 'eigr', 'mode_cycle', 'freq', 'dt', 'lftsfq', 'thermal', 'rCode', 'fCode', 'num_wide', 'acousticFlag', 'thermal']
         self._delete_attributes(params)
 
     def readTable_OQG_3(self, iTable):  # iTable=-3
-        bufferWords = self.get_marker()
-        if self.makeOp2Debug:
-            self.op2Debug.write('bufferWords=%s\n' % (str(bufferWords)))
-        #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
+        buffer_words = self.get_marker()
+        if self.make_op2_debug:
+            self.op2Debug.write('buffer_words=%s\n' % (str(buffer_words)))
+        #print "2-buffer_words = ",buffer_words,buffer_words*4,'\n'
 
         data = self.get_data(4)
-        bufferSize, = unpack('i', data)
+        buffer_size, = unpack('i', data)
         data = self.get_data(4 * 50)
-        #print self.printBlock(data)
+        #print self.print_block(data)
 
         (three) = self.parse_approach_code(data)
 
         ## random code
-        self.addDataParameter( data, 'randomCode', 'i', 8, False)
+        self.add_data_parameter( data, 'randomCode', 'i', 8, False)
 
         ## format code
-        self.addDataParameter( data, 'formatCode', 'i', 9, False)
+        self.add_data_parameter( data, 'format_code', 'i', 9, False)
 
         ## number of words per entry in record
-        self.addDataParameter(data, 'numWide', 'i', 10, False)
+        self.add_data_parameter(data, 'num_wide', 'i', 10, False)
 
         ## acoustic pressure flag
-        self.addDataParameter(data, 'acousticFlag', 'f', 13, False)
+        self.add_data_parameter(data, 'acousticFlag', 'f', 13, False)
 
         ## thermal flag; 1 for heat ransfer, 0 otherwise
-        self.addDataParameter(data, 'thermal', 'i', 23, False)
+        self.add_data_parameter(data, 'thermal', 'i', 23, False)
 
-        if not self.isSort1():
+        if not self.is_sort1():
             raise NotImplementedError('sort2...')
         #assert self.isThermal()==False,self.thermal
 
-        #self.printBlock(data) # on
+        #self.print_block(data) # on
         ## assuming tCode=1
-        if self.analysisCode == 1:   # statics / displacement / heat flux
+        if self.analysis_code == 1:   # statics / displacement / heat flux
             ## load set number
-            self.addDataParameter(data, 'lsdvmn', 'i', 5, False)
-            self.applyDataCodeValue('dataNames', ['lsdvmn'])
+            self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
+            self.apply_data_code_value('dataNames', ['lsdvmn'])
             self.setNullNonlinearFactor()
-        elif self.analysisCode == 2:  # real eigenvalues
+        elif self.analysis_code == 2:  # real eigenvalues
             ## mode number
-            self.addDataParameter(data, 'mode', 'i', 5)
+            self.add_data_parameter(data, 'mode', 'i', 5)
             ## real eigenvalue
-            self.addDataParameter(data, 'eigr', 'f', 6, False)
+            self.add_data_parameter(data, 'eigr', 'f', 6, False)
             ## mode or cycle @todo confused on the type - F1???
-            self.addDataParameter(data, 'modeCycle', 'f', 7, False)
-            self.applyDataCodeValue('dataNames', ['mode', 'eigr', 'modeCycle'])
-        #elif self.analysisCode==3: # differential stiffness
+            self.add_data_parameter(data, 'mode_cycle', 'f', 7, False)
+            self.apply_data_code_value('dataNames', ['mode', 'eigr', 'mode_cycle'])
+        #elif self.analysis_code==3: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
-            #self.dataCode['lsdvmn'] = self.lsdvmn
-        #elif self.analysisCode==4: # differential stiffness
+            #self.data_code['lsdvmn'] = self.lsdvmn
+        #elif self.analysis_code==4: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
-        elif self.analysisCode == 5:   # frequency
+        elif self.analysis_code == 5:   # frequency
             ## frequency
-            self.addDataParameter(data, 'freq', 'f', 5)
-            self.applyDataCodeValue('dataNames', ['freq'])
-        elif self.analysisCode == 6:  # transient
+            self.add_data_parameter(data, 'freq', 'f', 5)
+            self.apply_data_code_value('dataNames', ['freq'])
+        elif self.analysis_code == 6:  # transient
             ## time step
-            self.addDataParameter(data, 'dt', 'f', 5)
-            self.applyDataCodeValue('dataNames', ['dt'])
-        elif self.analysisCode == 7:  # pre-buckling
+            self.add_data_parameter(data, 'dt', 'f', 5)
+            self.apply_data_code_value('dataNames', ['dt'])
+        elif self.analysis_code == 7:  # pre-buckling
             ## load set number
-            self.addDataParameter(data, 'lsdvmn', 'i', 5)
-            self.applyDataCodeValue('dataNames', ['lsdvmn'])
-        elif self.analysisCode == 8:  # post-buckling
+            self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+            self.apply_data_code_value('dataNames', ['lsdvmn'])
+        elif self.analysis_code == 8:  # post-buckling
             ## load set number
-            self.addDataParameter(data, 'lsdvmn', 'i', 5)
+            self.add_data_parameter(data, 'lsdvmn', 'i', 5)
             ## real eigenvalue
-            self.addDataParameter(data, 'eigr', 'f', 6, False)
-            self.applyDataCodeValue('dataNames', ['lsdvmn', 'eigr'])
-        elif self.analysisCode == 9:  # complex eigenvalues
+            self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.apply_data_code_value('dataNames', ['lsdvmn', 'eigr'])
+        elif self.analysis_code == 9:  # complex eigenvalues
             ## mode number
-            self.addDataParameter(data, 'mode', 'i', 5)
+            self.add_data_parameter(data, 'mode', 'i', 5)
             ## real eigenvalue
-            self.addDataParameter(data, 'eigr', 'f', 6, False)
+            self.add_data_parameter(data, 'eigr', 'f', 6, False)
             ## imaginary eigenvalue
-            self.addDataParameter(data, 'eigi', 'f', 7, False)
-            self.applyDataCodeValue('dataNames', ['mode', 'eigr', 'eigi'])
-        elif self.analysisCode == 10:  # nonlinear statics
+            self.add_data_parameter(data, 'eigi', 'f', 7, False)
+            self.apply_data_code_value('dataNames', ['mode', 'eigr', 'eigi'])
+        elif self.analysis_code == 10:  # nonlinear statics
             ## load step
-            self.addDataParameter(data, 'lftsfq', 'f', 5)
-            self.applyDataCodeValue('dataNames', ['lftsfq'])
-        elif self.analysisCode == 11:  # old geometric nonlinear statics
+            self.add_data_parameter(data, 'lftsfq', 'f', 5)
+            self.apply_data_code_value('dataNames', ['lftsfq'])
+        elif self.analysis_code == 11:  # old geometric nonlinear statics
             ## load set number
-            self.addDataParameter(data, 'lsdvmn', 'i', 5)
-            self.applyDataCodeValue('dataNames', ['lsdvmn'])
-        elif self.analysisCode == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+            self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+            self.apply_data_code_value('dataNames', ['lsdvmn'])
+        elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             ## load set number
-            self.addDataParameter(data, 'lsdvmn', 'i', 5)
-            self.applyDataCodeValue('dataNames', ['lsdvmn'])
+            self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+            self.apply_data_code_value('dataNames', ['lsdvmn'])
         else:
-            msg = 'invalid analysisCode...analysisCode=%s' % (self.analysisCode)
+            msg = 'invalid analysis_code...analysis_code=%s' % (self.analysis_code)
             raise RuntimeError(msg)
         # tCode=2
-        #if self.analysisCode==2: # sort2
+        #if self.analysis_code==2: # sort2
         #    self.lsdvmn = self.get_values(data,'i',5)
 
-        #print "*iSubcase=%s"%(self.iSubcase)
-        #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
-        #print self.codeInformation()
+        #print "*isubcase=%s"%(self.isubcase)
+        #print "analysis_code=%s table_code=%s thermal=%s" %(self.analysis_code,self.table_code,self.thermal)
+        #print self.code_information()
 
-        #self.printBlock(data)
+        #self.print_block(data)
         self.read_title()
 
     def readOQG_Data(self):
-        #tfsCode = [self.tableCode,self.formatCode,self.sortCode]
+        #tfsCode = [self.table_code,self.format_code,self.sort_code]
 
-        #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
-        assert self.thermal in [0, 1, 8], self.codeInformation()
+        #print "self.analysis_code=%s table_code(1)=%s thermal(23)=%g" %(self.analysis_code,self.table_code,self.thermal)
+        assert self.thermal in [0, 1, 8], self.code_information()
 
-        if   self.tableCode == 3:   # SPC Forces
-            assert self.tablename in ['OQG1', 'OQGV1', 'OQP1'], 'tablename=%s tableCode=%s' % (self.tablename, self.tableCode)
+        if   self.table_code == 3:   # SPC Forces
+            assert self.table_name in ['OQG1', 'OQGV1', 'OQP1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             self.readOQG_Data_table3()
-        elif self.tableCode == 39:  # MPC Forces
-            assert self.tablename in ['OQMG1'], 'tablename=%s tableCode=%s' % (
-                self.tablename, self.tableCode)
+        elif self.table_code == 39:  # MPC Forces
+            assert self.table_name in ['OQMG1'], 'table_name=%s table_code=%s' % (
+                self.table_name, self.table_code)
             self.readOQG_Data_table3()
         else:
-            self.NotImplementedOrSkip('bad OQG table')
+            self.not_implemented_or_skip('bad OQG table')
         #print self.obj
 
     def readOQG_Data_table3(self):  # SPC Forces
-        #isSort1 = self.isSort1()
-        #print(self.codeInformation())
-        magPhase = self.isMagnitudePhase()
-        if magPhase or self.numWide == 14:  # real/imaginary or mag/phase
+        #is_sort1 = self.is_sort1()
+        #print(self.code_information())
+        magPhase = self.is_magnitude_phase()
+        if magPhase or self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'spcForces'
-                self.createTransientObject(self.spcForces,
+                self.create_transient_object(self.spcForces,
                                            ComplexSPCForcesObject)
-                self.handleResultsBuffer3(self.OUG_ComplexTable, resultName)
+                self.handle_results_buffer(self.OUG_ComplexTable, resultName)
             else:
-                self.NotImplementedOrSkip()
-        elif self.numWide == 8:  # real/random
+                self.not_implemented_or_skip()
+        elif self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'spcForces'
-                self.createTransientObject(
+                self.create_transient_object(
                     self.spcForces, SPCForcesObject)
-                self.handleResultsBuffer3(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName)
             elif self.thermal == 1:
                 resultName = 'thermalGradientAndFlux' #'finite element temperature gradients and fluxes'
-                self.createTransientObject(
+                self.create_transient_object(
                     self.thermalGradientAndFlux, TemperatureGradientAndFluxObject)
-                self.handleResultsBuffer3(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName)
             else:
-                self.NotImplementedOrSkip()
+                self.not_implemented_or_skip()
         else:
-            self.NotImplementedOrSkip('only numWide=8 or 14 is allowed  numWide=%s' % (self.numWide))
+            self.not_implemented_or_skip('only num_wide=8 or 14 is allowed  num_wide=%s' % (self.num_wide))
 
         #if self.thermal not in [0,1]:
             #print self.obj
             #raise RuntimeError('check the printout for thermal...')
 
     def readOQG_Data_table39(self):  # MPC Forces
-        #isSort1 = self.isSort1()
-        if self.numWide == 8:  # real/random
+        #is_sort1 = self.is_sort1()
+        if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'mpcForces'
-                self.createTransientObject(
+                self.create_transient_object(
                     self.mpcForces, MPCForcesObject)
-                self.handleResultsBuffer3(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName)
             else:
-                self.NotImplementedOrSkip()
-        elif self.numWide == 14:  # real/imaginary or mag/phase
+                self.not_implemented_or_skip()
+        elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'mpcForces'
-                self.createTransientObject(self.mpcForces,
+                self.create_transient_object(self.mpcForces,
                                            ComplexMPCForcesObject)
-                self.handleResultsBuffer3(self.OUG_ComplexTable, resultName)
+                self.handle_results_buffer(self.OUG_ComplexTable, resultName)
             else:
-                self.NotImplementedOrSkip()
+                self.not_implemented_or_skip()
         else:
-            self.NotImplementedOrSkip('only numWide=8 or 14 is allowed  numWide=%s' % (self.numWide))
+            self.not_implemented_or_skip('only num_wide=8 or 14 is allowed  num_wide=%s' % (self.num_wide))

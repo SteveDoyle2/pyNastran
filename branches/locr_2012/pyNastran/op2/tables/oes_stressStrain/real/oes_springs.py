@@ -2,10 +2,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 
-from .oes_objects import stressObject, strainObject
+from .oes_objects import StressObject, StrainObject
 
 
-class CelasStressObject(stressObject):
+class CelasStressObject(StressObject):
     """
     @code
                               S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )
@@ -14,23 +14,23 @@ class CelasStressObject(stressObject):
     2.000000E-01   0.0               2.500000E-01   0.0               3.000000E-01   0.0               3.500000E-01   0.0
     @endcode
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        stressObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
-        self.elementName = self.dataCode['elementName']
+        self.element_name = self.data_code['element_name']
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
         self.stress = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                #self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                #self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             #self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -51,37 +51,37 @@ class CelasStressObject(stressObject):
     def getLength(self):
         return (8, 'f')
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.stress[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.stress.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """initializes the transient variables"""
-        self.elementName = self.dataCode['elementName']
+        self.element_name = self.data_code['element_name']
         self.dt = dt
         self.stress[dt] = {}
 
-    def addNewEid(self, dt, eid, out):
+    def add_new_eid(self, dt, eid, out):
         (stress,) = out
-        self.eType[eid] = self.elementName
+        self.eType[eid] = self.element_name
         self.stress[eid] = stress
 
-    def addNewEidSort1(self, dt, eid, out):
+    def add_new_eid_sort1(self, dt, eid, out):
         if dt not in self.stress:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         (stress,) = out
-        self.eType[eid] = self.elementName
+        self.eType[eid] = self.element_name
         self.stress[dt][eid] = stress
 
-    def addNewEidSort2(self, eid, dt, out):
+    def add_new_eid_sort2(self, eid, dt, out):
         if dt not in self.stress:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         (stress,) = out
-        self.eType[eid] = self.elementName
+        self.eType[eid] = self.element_name
         self.stress[dt][eid] = stress
 
     def __reprTransient__(self):
@@ -93,7 +93,7 @@ class CelasStressObject(stressObject):
         msg += '\n'
 
         for dt, stress in sorted(self.stress.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for eid, istress in sorted(stress.iteritems()):
                 msg += '%-6g %6s ' % (eid, self.eType[eid])
                 if abs(istress) < 1e-6:
@@ -126,26 +126,26 @@ class CelasStressObject(stressObject):
         return msg
 
 
-class CelasStrainObject(strainObject):
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        strainObject.__init__(self, dataCode, iSubcase)
+class CelasStrainObject(StrainObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
-        self.elementName = self.dataCode['elementName']
+        self.element_name = self.data_code['element_name']
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.isTransient = False
         self.strain = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                #self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                #self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             #self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -166,31 +166,31 @@ class CelasStrainObject(strainObject):
     def getLength(self):
         return (8, 'f')
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.strain[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.strain.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         """
         self.strain[dt] = {}
 
-    def addNewEid(self, dt, eid, out):
+    def add_new_eid(self, dt, eid, out):
         (strain,) = out
         assert eid >= 0
-        self.eType[eid] = self.elementName
+        self.eType[eid] = self.element_name
         self.strain[eid] = strain
 
-    def addNewEidSort1(self, dt, eid, out):
+    def add_new_eid_sort1(self, dt, eid, out):
         (strain,) = out
         assert eid >= 0
 
-        self.eType[eid] = self.elementType
+        self.eType[eid] = self.element_type
         self.strain[dt][eid] = strain
 
     def __repr__(self):
@@ -216,25 +216,25 @@ class CelasStrainObject(strainObject):
         return msg
 
 
-class NonlinearSpringStressObject(stressObject):
+class NonlinearSpringStressObject(StressObject):
     """
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        stressObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
-        self.elementName = self.dataCode['elementName']
+        self.element_name = self.data_code['element_name']
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
         self.force = {}
         self.stress = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                self.addNewEid = self.addNewEidSort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -252,36 +252,36 @@ class NonlinearSpringStressObject(stressObject):
         msg.append('  eTypes = %s\n' %(', '.join(eTypes)))
         return msg
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.force[dt]
         del self.stress[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.stress.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """initializes the transient variables"""
         self.dt = dt
         self.force[dt] = {}
         self.stress[dt] = {}
 
-    def addNewEid(self, eType, dt, eid, force, stress):
+    def add_new_eid(self, eType, dt, eid, force, stress):
         self.eType[eid] = eType
         self.force[eid] = force
         self.stress[eid] = stress
 
-    def addNewEidSort1(self, eType, dt, eid, force, stress):
+    def add_new_eid_sort1(self, eType, dt, eid, force, stress):
         if dt not in self.stress:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.eType[eid] = eType
         self.force[dt][eid] = force
         self.stress[dt][eid] = stress
 
-    def addNewEidSort2(self, eType, eid, dt, force, stress):
+    def add_new_eid_sort2(self, eType, eid, dt, force, stress):
         if dt not in self.stress:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.eType[eid] = eType
         self.force[dt][eid] = force
         self.stress[dt][eid] = stress
@@ -296,7 +296,7 @@ class NonlinearSpringStressObject(stressObject):
         msg += '\n'
 
         for dt, stress in sorted(self.stress.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for eid, istress in sorted(stress.iteritems()):
                 msg += '%-6g %6s ' % (eid, self.eType[eid])
                 if abs(istress) < 1e-6:

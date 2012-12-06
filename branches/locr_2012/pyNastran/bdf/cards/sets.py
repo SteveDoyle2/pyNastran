@@ -53,7 +53,7 @@ class ABCQSet(Set):
     ASET ID1 C1 ID2 C2   ID3 C3 ID4 C4
     ASET 16  2  23  3516 1   4
     """
-    def __init__(self, card=None, data=None): ## @todo doesnt support data
+    def __init__(self, card=None, data=None): # TODO doesnt support data
         Set.__init__(self, card, data)
 
         ## Identifiers of grids points. (Integer > 0)
@@ -85,7 +85,7 @@ class ASET(ABCQSet):
     """
     type = 'ASET'
 
-    def __init__(self, card=None, data=None):  ## @todo doesnt support data
+    def __init__(self, card=None, data=None):  # TODO doesnt support data
         ABCQSet.__init__(self, card, data)
 
 
@@ -98,7 +98,7 @@ class BSET(ABCQSet):
     """
     type = 'BSET'
 
-    def __init__(self, card=None, data=None):  ## @todo doesnt support data
+    def __init__(self, card=None, data=None):  # TODO doesnt support data
         ABCQSet.__init__(self, card, data)
 
 
@@ -111,7 +111,7 @@ class CSET(ABCQSet):
     """
     type = 'CSET'
 
-    def __init__(self, card=None, data=None):  ## @todo doesnt support data
+    def __init__(self, card=None, data=None):  # TODO doesnt support data
         ABCQSet.__init__(self, card, data)
 
 
@@ -124,7 +124,7 @@ class QSET(ABCQSet):
     """
     type = 'QSET'
 
-    def __init__(self, card=None, data=None):  ## @todo doesnt support data
+    def __init__(self, card=None, data=None):  # TODO doesnt support data
         ABCQSet.__init__(self, card, data)
 
 
@@ -137,7 +137,7 @@ class ABQSet1(Set):
     ID8 ID9
     ASET1 C ID1 'THRU' ID2
     """
-    def __init__(self, card=None, data=None):  ## @todo doesnt support data
+    def __init__(self, card=None, data=None):  # TODO doesnt support data
         Set.__init__(self, card, data)
         ## Component number. (Integer zero or blank for scalar points or any
         ## unique combination of the Integers 1 through 6 for grid points with
@@ -186,7 +186,7 @@ class CSET1(Set):
     CSET1 C ID1 'THRU' ID2
     CSET1,,'ALL'
     """
-    def __init__(self, card=None, data=None):  ## @todo doesnt support data
+    def __init__(self, card=None, data=None):  # TODO doesnt support data
         Set.__init__(self, card, data)
 
         ## Identifiers of grids points. (Integer > 0)
@@ -230,7 +230,7 @@ class SET1(Set):
     """
     type = 'SET1'
 
-    def __init__(self, card=None, data=None):  ## @todo doesnt support data
+    def __init__(self, card=None, data=None):  # TODO doesnt support data
         Set.__init__(self, card, data)
         ## Unique identification number. (Integer > 0)
         self.sid = card.field(1)
@@ -270,7 +270,7 @@ class SET3(Set):
     """
     type = 'SET1'
 
-    def __init__(self, card=None, data=None):  ## @todo doesnt support data
+    def __init__(self, card=None, data=None):  # TODO doesnt support data
         Set.__init__(self, card, data)
         ## Unique identification number. (Integer > 0)
         self.sid = card.field(1)
@@ -370,7 +370,7 @@ class SEBSET(Set):
     SEBSET SEID ID1 C1 ID2 C2 ID3 C3
     SEBSET C ID1 'THRU' ID2
     """
-    def __init__(self, card=None, data=None):  ## @todo doesnt support data
+    def __init__(self, card=None, data=None):  # TODO doesnt support data
         Set.__init__(self, card, data)
 
         ## Identifiers of grids points. (Integer > 0)
@@ -400,7 +400,7 @@ class SEBSET1(Set):
     ID8 ID9
     SEBSET1 C ID1 'THRU' ID2
     """
-    def __init__(self, card=None, data=None):  ## @todo doesnt support data
+    def __init__(self, card=None, data=None):  # TODO doesnt support data
         Set.__init__(self, card, data)
 
         ## Identifiers of grids points. (Integer > 0)
@@ -425,7 +425,7 @@ class SEQSET1(Set):
     ID8 ID9
     SEQSET1 C ID1 'THRU' ID2
     """
-    def __init__(self, card=None, data=None):  ## @todo doesnt support data
+    def __init__(self, card=None, data=None):  # TODO doesnt support data
         Set.__init__(self, card, data)
 
         ## Identifiers of grids points. (Integer > 0)

@@ -13,140 +13,140 @@ class OEE(object):
     def readTable_OEE(self):
         table3 = self.readTable_OEE_3
         table4Data = self.readOEE_Data
-        self.readResultsTable(table3, table4Data)
+        self.read_results_table(table3, table4Data)
         self._delete_attributes_OEE()
 
     def _delete_attributes_OEE(self):  # no thermal
         params = ['lsdvm', 'mode', 'eigr', 'freq', 'dt', 'lftsfq',
-                  'formatCode', 'numWide']
+                  'format_code', 'num_wide']
         self._delete_attributes(params)
 
     def readTable_OEE_3(self, iTable):  # iTable=-3
-        bufferWords = self.get_marker()
-        if self.makeOp2Debug:
-            self.op2Debug.write('bufferWords=%s\n' % (str(bufferWords)))
-        #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
+        buffer_words = self.get_marker()
+        if self.make_op2_debug:
+            self.op2Debug.write('buffer_words=%s\n' % (str(buffer_words)))
+        #print "2-buffer_words = ",buffer_words,buffer_words*4,'\n'
 
         data = self.get_data(4)
-        bufferSize, = unpack(b'i', data)
+        buffer_size, = unpack(b'i', data)
         data = self.get_data(4 * 50)
-        #print self.printBlock(data)
+        #print self.print_block(data)
 
         aCode = self.get_block_int_entry(data, 1)
-        ## total energy of all elements in iSubcase/mode
+        ## total energy of all elements in isubcase/mode
         self.eTotal = self.parse_approach_code(data)
         #print(self.print_section(100))
-        elementName, = unpack(b'8s', data[24:32])
-        #print("elementName = %s" %(elementName))
+        element_name, = unpack(b'8s', data[24:32])
+        #print("element_name = %s" %(element_name))
         try:
-            elementName = elementName.decode('utf-8').strip()  # element name
+            element_name = element_name.decode('utf-8').strip()  # element name
         except UnicodeDecodeError:
-            print("elementName = ", str(elementName))
+            print("element_name = ", str(element_name))
             raise
-        #print("elementName = %s" %(elementName))
-        if elementName.isalpha():
-            self.dataCode['elementName'] = elementName
+        #print("element_name = %s" %(element_name))
+        if element_name.isalpha():
+            self.data_code['element_name'] = element_name
 
         ## Load set or zero
-        self.addDataParameter(data, 'loadSet', 'i', 8, False)
+        self.add_data_parameter(data, 'load_set', 'i', 8, False)
         ## format code
-        self.addDataParameter(data, 'formatCode', 'i', 9, False)
-        self.addDataParameter(data, 'numWide', 'i', 10, False)  ## number of words per entry in record; @note is this needed for this table ???
+        self.add_data_parameter(data, 'format_code', 'i', 9, False)
+        self.add_data_parameter(data, 'num_wide', 'i', 10, False)  ## number of words per entry in record; @note is this needed for this table ???
         ## C
-        self.addDataParameter(data, 'cvalres', 'i', 11, False)
+        self.add_data_parameter(data, 'cvalres', 'i', 11, False)
         
         ## Set identification number Number
-        self.addDataParameter(data, 'setID', 'i', 13, False)
+        self.add_data_parameter(data, 'setID', 'i', 13, False)
         
-        self.addDataParameter(data, 'eigenReal', 'i', 14, False)
+        self.add_data_parameter(data, 'eigenReal', 'i', 14, False)
             ## Natural eigenvalue - real part
-        self.addDataParameter(data, 'eigenImag', 'i', 15, False)
+        self.add_data_parameter(data, 'eigenImag', 'i', 15, False)
             ## Natural eigenvalue - imaginary part
-        self.addDataParameter(
+        self.add_data_parameter(
             data, 'freq', 'f', 16, False)  ## Natural frequency
-        self.addDataParameter(data, 'etotpos', 'f', 18)
+        self.add_data_parameter(data, 'etotpos', 'f', 18)
             ## Total positive energy
-        self.addDataParameter(data, 'etotneg', 'f', 19, False)
+        self.add_data_parameter(data, 'etotneg', 'f', 19, False)
             ## Total negative energy
 
-        if not self.isSort1():
+        if not self.is_sort1():
             raise NotImplementedError('sort2...')
 
-        #self.printBlock(data) # on
-        if self.analysisCode == 1:   # statics / displacement / heat flux
-            #del self.dataCode['nonlinearFactor']
-            self.applyDataCodeValue('dataNames', ['lsdvmn'])
+        #self.print_block(data) # on
+        if self.analysis_code == 1:   # statics / displacement / heat flux
+            #del self.data_code['nonlinear_factor']
+            self.apply_data_code_value('dataNames', ['lsdvmn'])
             self.setNullNonlinearFactor()
-        elif self.analysisCode == 2:  # real eigenvalues
-            self.addDataParameter(data, 'mode', 'i', 5)  ## mode number
-            self.applyDataCodeValue('dataNames', ['mode'])
-            #print "mode(5)=%s eigr(6)=%s modeCycle(7)=%s" %(self.mode,self.eigr,self.modeCycle)
-        #elif self.analysisCode==3: # differential stiffness
+        elif self.analysis_code == 2:  # real eigenvalues
+            self.add_data_parameter(data, 'mode', 'i', 5)  ## mode number
+            self.apply_data_code_value('dataNames', ['mode'])
+            #print "mode(5)=%s eigr(6)=%s mode_cycle(7)=%s" %(self.mode,self.eigr,self.mode_cycle)
+        #elif self.analysis_code==3: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
-            #self.dataCode['lsdvmn'] = self.lsdvmn
-        #elif self.analysisCode==4: # differential stiffness
+            #self.data_code['lsdvmn'] = self.lsdvmn
+        #elif self.analysis_code==4: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
-        elif self.analysisCode == 5:   # frequency
-            self.addDataParameter(data, 'freq2', 'f', 5)  ## frequency
-            self.applyDataCodeValue('dataNames', ['freq2'])
-        elif self.analysisCode == 6:  # transient
-            self.addDataParameter(data, 'time', 'f', 5)  ## time step
-            self.applyDataCodeValue('dataNames', ['time'])
-        #elif self.analysisCode==7: # pre-buckling
-            #self.applyDataCodeValue('dataNames',['lsdvmn'])
-        elif self.analysisCode == 8:  # post-buckling
-            self.addDataParameter(data, 'mode', 'i', 5)  ## mode number
-            self.applyDataCodeValue('dataNames', ['mode'])
-        elif self.analysisCode == 9:  # complex eigenvalues
-            self.addDataParameter(data, 'mode', 'i', 5)  ## mode number
-            self.applyDataCodeValue('dataNames', ['mode'])
-        elif self.analysisCode == 10:  # nonlinear statics
-            self.addDataParameter(data, 'loadFactor', 'f', 5)  ## load factor
-            self.applyDataCodeValue('dataNames', ['loadFactor'])
-        #elif self.analysisCode==11: # old geometric nonlinear statics
-            #self.applyDataCodeValue('dataNames',['lsdvmn'])
-        elif self.analysisCode == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            self.addDataParameter(data, 'time', 'f', 5)  ## time step
-            self.applyDataCodeValue('dataNames', ['time'])
+        elif self.analysis_code == 5:   # frequency
+            self.add_data_parameter(data, 'freq2', 'f', 5)  ## frequency
+            self.apply_data_code_value('dataNames', ['freq2'])
+        elif self.analysis_code == 6:  # transient
+            self.add_data_parameter(data, 'time', 'f', 5)  ## time step
+            self.apply_data_code_value('dataNames', ['time'])
+        #elif self.analysis_code==7: # pre-buckling
+            #self.apply_data_code_value('dataNames',['lsdvmn'])
+        elif self.analysis_code == 8:  # post-buckling
+            self.add_data_parameter(data, 'mode', 'i', 5)  ## mode number
+            self.apply_data_code_value('dataNames', ['mode'])
+        elif self.analysis_code == 9:  # complex eigenvalues
+            self.add_data_parameter(data, 'mode', 'i', 5)  ## mode number
+            self.apply_data_code_value('dataNames', ['mode'])
+        elif self.analysis_code == 10:  # nonlinear statics
+            self.add_data_parameter(data, 'loadFactor', 'f', 5)  ## load factor
+            self.apply_data_code_value('dataNames', ['loadFactor'])
+        #elif self.analysis_code==11: # old geometric nonlinear statics
+            #self.apply_data_code_value('dataNames',['lsdvmn'])
+        elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+            self.add_data_parameter(data, 'time', 'f', 5)  ## time step
+            self.apply_data_code_value('dataNames', ['time'])
         else:
-            raise RuntimeError('invalid analysisCode...analysisCode=%s' %
-                               (self.analysisCode))
+            raise RuntimeError('invalid analysis_code...analysis_code=%s' %
+                               (self.analysis_code))
 
-        #print "*iSubcase=%s elementName=|%s|"%(self.iSubcase,self.elementName)
-        #print "analysisCode=%s tableCode=%s" %(self.analysisCode,self.tableCode)
-        #print self.codeInformation()
+        #print "*isubcase=%s element_name=|%s|"%(self.isubcase,self.element_name)
+        #print "analysis_code=%s table_code=%s" %(self.analysis_code,self.table_code)
+        #print self.code_information()
 
-        #self.printBlock(data)
+        #self.print_block(data)
         self.read_title()
 
     def readOEE_Data(self):
         #print "self.analysiscode=%s tablecode(1)=%s" %(self.analysiscode,self.tablecode)
         #tfsCode = [self.tablecode,self.formatcode,self.sortcode]
 
-        if self.tableCode == 18:
-            assert self.tablename in ['ONRGY1', 'ONRGY2'], 'tablename=%s tablecode=%s' % (self.tablename, self.tablecode)
+        if self.table_code == 18:
+            assert self.table_name in ['ONRGY1', 'ONRGY2'], 'table_name=%s tablecode=%s' % (self.table_name, self.tablecode)
             self.readStrainEnergy_table18()
         else:
-            self.NotImplementedOrSkip('bad OEE table')
+            self.not_implemented_or_skip('bad OEE table')
         #print str(self.obj)
 
     def readStrainEnergy_table18(self):  # real ???
-        self.createTransientObject(self.strainEnergy, StrainEnergyObject)
-        if self.numWide == 4:
-            self.handleResultsBuffer3(
+        self.create_transient_object(self.strainEnergy, StrainEnergyObject)
+        if self.num_wide == 4:
+            self.handle_results_buffer(
                 self.OEE_Strain4, resultName='strainEnergy')
-        elif self.numWide == 5:
-            self.handleResultsBuffer3(
+        elif self.num_wide == 5:
+            self.handle_results_buffer(
                 self.OEE_Strain5, resultName='strainEnergy')
         else:
-            self.NotImplementedOrSkip()
+            self.not_implemented_or_skip()
         #self.readMappedScalarsOut(debug=False) # handles dtMap, not correct...
 
     def OEE_Strain4(self):
-        #deviceCode = self.deviceCode
-        dt = self.nonlinearFactor
+        #device_code = self.device_code
+        dt = self.nonlinear_factor
 
-        (format1, extract) = self.getOUG_FormatStart()  ## @todo change to OEE
+        (format1, extract) = self.getOUG_FormatStart()  # TODO change to OEE
         format1 += 'fff'
         format1 = bytes(format1)
 
@@ -161,17 +161,17 @@ class OEE(object):
             #print "eType=%s" %(eType)
 
             dataIn = [eid2, energy, percent, density]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
         #print self.strainEnergy
 
     def OEE_Strain5(self):
-        #deviceCode = self.deviceCode
-        dt = self.nonlinearFactor
+        #device_code = self.device_code
+        dt = self.nonlinear_factor
 
-        #(format1,extract) = self.getOUG_FormatStart()  ## @todo change to OEE
+        #(format1,extract) = self.getOUG_FormatStart()  # TODO change to OEE
         format1 = b'8s3f'
 
         while len(self.data) >= 16:  # 5*4
@@ -186,8 +186,8 @@ class OEE(object):
             #print "eType=%s" %(eType)
 
             dataIn = [word, energy, percent, density]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
         #print self.strainEnergy

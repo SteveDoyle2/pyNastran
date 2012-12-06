@@ -2,7 +2,7 @@ class PanairWrite(object):
     def __init__(self):
         pass
 
-    def printAbutments(self):
+    def print_abutments(self):
         msg = ''
         msg += '               SUMMARY OF FACING SURFACES (+:upper, -:lower)\n'
         msg += ' abutment   nw-ident  ntd  knet.edge    nw-ident  ntd  knet.edge\n'
@@ -13,7 +13,7 @@ class PanairWrite(object):
         msg += '            bodyl      12     3.4-      1st p-o-s   0    -1.0\n'
 
         for patchID, patch in self.patches.items():
-            (p1, x1, y1, z1) = patch.getEdges()
+            (p1, x1, y1, z1) = patch.get_edges()
             self.log.debug("p[%s] = %s" % (patchID, p1))
             #print "x = ",x1
             #print "y = ",y1
@@ -21,7 +21,7 @@ class PanairWrite(object):
 
         return msg
 
-    def printOptions(self):
+    def print_options(self):
         msg = ''
         msg += '0               print options\n'
         msg += '            %i = singularity grid print flag\n' % (
@@ -41,7 +41,7 @@ class PanairWrite(object):
         msg += '            %i = print flag for detailed cost information during execution of job\n' % (self.icostp)
         msg += '            1 = print flag for singularity parameter maps\n'
         msg += '0               abutment processing options\n'
-        msg += '   %10s = global edge abutment tolerance specified by user.  if this value is zero, a default value will be calculated\n' % (fortranValue(self.epsgeo))
+        msg += '   %10s = global edge abutment tolerance specified by user.  if this value is zero, a default value will be calculated\n' % (fortran_value(self.epsgeo))
         msg += '                later.   this default value is taken as:  .001  * (minimum panel diameter)\n'
         msg += '            %i = print flag controlling geometry printout  b e f o r e  the abutment processing.  ( nonzero ==> do print )\n' % (self.igeoin)
         msg += '            %i = print flag controlling geometry printout  a f t e r    the abutment processing.  ( nonzero ==> do print )\n' % (self.igeout)
@@ -50,21 +50,21 @@ class PanairWrite(object):
         msg += '            %i = abutment/abutment-intersection (short listing) print flag ( 0 ==> suppress, nonzero ==> generate usual print )\n' % (2)
         msg += ' \n'
         msg += '                force and moment reference parameters\n'
-        msg += '   %10s = reference area for force and moment calculations.    (sref)\n' % (fortranValue(self.sref))
+        msg += '   %10s = reference area for force and moment calculations.    (sref)\n' % (fortran_value(self.sref))
         msg += '   %10s = rolling moment reference length  (bref)\n' % (
-            fortranValue(self.bref))
+            fortran_value(self.bref))
         msg += '   %10s = pitching moment reference length (cref)\n' % (
-            fortranValue(self.cref))
+            fortran_value(self.cref))
         msg += '   %10s = yawing moment reference length   (dref)\n' % (
-            fortranValue(self.dref))
-        msg += '   %10s = x - coordinate for the point about which moments will be calculated  (xref)\n' % (fortranValue(self.xref))
-        msg += '   %10s = y - coordinate for the point about which moments will be calculated  (yref)\n' % (fortranValue(self.yref))
-        msg += '   %10s = z - coordinate for the point about which moments will be calculated  (zref)\n' % (fortranValue(self.zref))
+            fortran_value(self.dref))
+        msg += '   %10s = x - coordinate for the point about which moments will be calculated  (xref)\n' % (fortran_value(self.xref))
+        msg += '   %10s = y - coordinate for the point about which moments will be calculated  (yref)\n' % (fortran_value(self.yref))
+        msg += '   %10s = z - coordinate for the point about which moments will be calculated  (zref)\n' % (fortran_value(self.zref))
         msg += '            3 = pressure coefficient index (nprcof) (1=linear, 2=slenderbody, 3=2nd, 4=isentropic)\n'
         msg += '1\n'
         return msg
 
-    def printOutHeader(self):
+    def print_out_header(self):
         msg = """\n
          ****************************************************************************************************
 
@@ -107,7 +107,7 @@ class PanairWrite(object):
                                - list of a502 input data cards -\n"""
         return msg
 
-    def printGridSummary(self):
+    def print_grid_summary(self):
         msg = ''
         msg2 = ''
         msg3 = ''
@@ -147,7 +147,7 @@ class PanairWrite(object):
         totalPanels = 0
         for patchID in xrange(self.nPatches()):
             patch = self.patch(patchID)
-            msg3 += patch.quickSummary(totalPoints, totalPanels)
+            msg3 += patch.quick_summary(totalPoints, totalPanels)
             totalPanels += patch.nPanels()
             totalPoints += patch.nPoints()
 
@@ -172,12 +172,12 @@ class PanairWrite(object):
 
         return msg + msg2 + msg3
 
-    def writeDataCheck(self):
+    def write_data_check(self):
         msg = '$datacheck\n'
         msg += '%s.\n' % (self.dataCheck)
         return msg
 
-    def writePrintout(self):
+    def write_printout(self):
         msg = '$printout options\n'
         msg += "%-10s%-10s%-10s%-10s%-10s%-10s\n" % (self.isings, self.igeomp,
                                                      self.isingp, self.icontp, self.ibconp, self.iedgep)

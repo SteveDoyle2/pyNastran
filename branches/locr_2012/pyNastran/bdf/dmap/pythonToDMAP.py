@@ -158,7 +158,7 @@ class PythonToDMAP(object):
 
         expr = expr.strip()
         if '(' in expr:  # order of operations or a function
-            ## @todo not done
+            # TODO not done
 
             i = expr.index('(')
             (pre, aft) = (expr[:i], expr[i:])

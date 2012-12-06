@@ -52,57 +52,57 @@ class OES(object):
              14    2.514247E+04              1.758725E+02                     15    2.443757E+04              2.924619E+01
         @endcode
         """
-        (iSubcase, transient, dataCode) = self.getRodHeader(False)
-        dataCode['tablename'] = 'OES1X'
+        (isubcase, transient, data_code) = self.getRodHeader(False)
+        data_code['table_name'] = 'OES1X'
         data = self.readRodStress()
-        if iSubcase in self.rodStress:
-            self.rodStress[iSubcase].addF06Data(data, transient)
+        if isubcase in self.rodStress:
+            self.rodStress[isubcase].add_f06_data(data, transient)
         else:
-            isSort1 = True
-            self.rodStress[iSubcase] = RodStressObject(
-                dataCode, isSort1, iSubcase, transient)
-            self.rodStress[iSubcase].addF06Data(data, transient)
-        self.iSubcases.append(iSubcase)
+            is_sort1 = True
+            self.rodStress[isubcase] = RodStressObject(
+                data_code, is_sort1, isubcase, transient)
+            self.rodStress[isubcase].add_f06_data(data, transient)
+        self.iSubcases.append(isubcase)
 
     def getRodStrain(self):
-        (iSubcase, transient, dataCode) = self.getRodHeader(False)
-        dataCode['tablename'] = 'OSTR1X'
+        (isubcase, transient, data_code) = self.getRodHeader(False)
+        data_code['table_name'] = 'OSTR1X'
         data = self.readRodStress()
-        if iSubcase in self.rodStrain:
-            self.rodStrain[iSubcase].addF06Data(data, transient)
+        if isubcase in self.rodStrain:
+            self.rodStrain[isubcase].add_f06_data(data, transient)
         else:
-            isSort1 = True
-            self.rodStrain[iSubcase] = RodStrainObject(
-                dataCode, isSort1, iSubcase, transient)
-            self.rodStrain[iSubcase].addF06Data(data, transient)
-        self.iSubcases.append(iSubcase)
+            is_sort1 = True
+            self.rodStrain[isubcase] = RodStrainObject(
+                data_code, is_sort1, isubcase, transient)
+            self.rodStrain[isubcase].add_f06_data(data, transient)
+        self.iSubcases.append(isubcase)
 
     def getRodHeader(self, isStrain):
         """
         @code
-        analysisCode = 1 (Statics)
-        deviceCode   = 1 (Print)
-        tableCode    = 5 (Stress)
-        sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
-        formatCode   = 1 (Real)
-        sCode        = 0 (Stress)
-        numWide      = 8 (???)
+        analysis_code = 1 (Statics)
+        device_code   = 1 (Print)
+        table_code    = 5 (Stress)
+        sort_code     = 0 (Sort2,Real,Sorted Results) => sort_bits = [0,0,0]
+        format_code   = 1 (Real)
+        s_code        = 0 (Stress)
+        num_wide      = 8 (???)
         @endcode
         """
-        (subcaseName, iSubcase, transient, dt, analysisCode,
-            isSort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code,
+            is_sort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
-        (stressBits, sCode) = self.makeStressBits(
+        (stress_bits, s_code) = self.make_stress_bits(
             isStrain=False, isRodOrSolid=True)
-        dataCode = {'log': self.log, 'analysisCode': analysisCode,
-                    'deviceCode': 1, 'tableCode': 5, 'sortCode': 0,
-                    'sortBits': [0, 0, 0], 'numWide': 8, 'sCode': sCode,
-                    'stressBits': stressBits, 'formatCode': 1,
-                    'elementName': 'ROD', 'elementType': 1, 'nonlinearFactor': dt,
+        data_code = {'log': self.log, 'analysis_code': analysis_code,
+                    'device_code': 1, 'table_code': 5, 'sort_code': 0,
+                    'sort_bits': [0, 0, 0], 'num_wide': 8, 's_code': s_code,
+                    'stress_bits': stress_bits, 'format_code': 1,
+                    'element_name': 'ROD', 'element_type': 1, 'nonlinear_factor': dt,
                     }
-        return (iSubcase, transient, dataCode)
+        return (isubcase, transient, data_code)
 
     def readRodStress(self):
         """
@@ -138,59 +138,59 @@ class OES(object):
           ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C
              12    0.0            0.0            0.0            0.0            1.020730E+04   1.020730E+04   1.020730E+04
                    0.0            0.0            0.0            0.0                           1.020730E+04   1.020730E+04
-        analysisCode = 1 (Statics)
-        deviceCode   = 1 (Print)
-        tableCode    = 5 (Stress)
-        sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
-        formatCode   = 1 (Real)
-        sCode        = 0 (Stress)
-        numWide      = 8 (???)
+        analysis_code = 1 (Statics)
+        device_code   = 1 (Print)
+        table_code    = 5 (Stress)
+        sort_code     = 0 (Sort2,Real,Sorted Results) => sort_bits = [0,0,0]
+        format_code   = 1 (Real)
+        s_code        = 0 (Stress)
+        num_wide      = 8 (???)
         @endcode
         """
-        (iSubcase, transient, dt, dataCode) = self.getBarHeader(False)
+        (isubcase, transient, dt, data_code) = self.getBarHeader(False)
 
         data = self.readBarStress()
-        dataCode['tablename'] = 'OES1X'
-        if iSubcase in self.barStress:
-            self.barStress[iSubcase].addF06Data(data, transient)
+        data_code['table_name'] = 'OES1X'
+        if isubcase in self.barStress:
+            self.barStress[isubcase].add_f06_data(data, transient)
         else:
-            isSort1 = True
-            self.barStress[iSubcase] = BarStressObject(
-                dataCode, isSort1, iSubcase, dt)
-            self.barStress[iSubcase].addF06Data(data, transient)
-        self.iSubcases.append(iSubcase)
+            is_sort1 = True
+            self.barStress[isubcase] = BarStressObject(
+                data_code, is_sort1, isubcase, dt)
+            self.barStress[isubcase].add_f06_data(data, transient)
+        self.iSubcases.append(isubcase)
 
     def getBarStrain(self):
-        (iSubcase, transient, dt, dataCode) = self.getBarHeader(False)
-        dataCode['tablename'] = 'OSTR1X'
+        (isubcase, transient, dt, data_code) = self.getBarHeader(False)
+        data_code['table_name'] = 'OSTR1X'
 
         data = self.readBarStress()
-        if iSubcase in self.barStrain:
-            self.barStrain[iSubcase].addF06Data(data, transient)
+        if isubcase in self.barStrain:
+            self.barStrain[isubcase].add_f06_data(data, transient)
         else:
-            isSort1 = True
-            self.barStrain[iSubcase] = BarStrainObject(
-                dataCode, isSort1, iSubcase, dt)
-            self.barStrain[iSubcase].addF06Data(data, transient)
-        self.iSubcases.append(iSubcase)
+            is_sort1 = True
+            self.barStrain[isubcase] = BarStrainObject(
+                data_code, is_sort1, isubcase, dt)
+            self.barStrain[isubcase].add_f06_data(data, transient)
+        self.iSubcases.append(isubcase)
 
     def getBarHeader(self, isStrain):
-        (subcaseName, iSubcase, transient, dt, analysisCode,
-            isSort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code,
+            is_sort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
-        (stressBits, sCode) = self.makeStressBits(
+        (stress_bits, s_code) = self.make_stress_bits(
             isStrain=isStrain, isRodOrSolid=True)
-        dataCode = {'log': self.log, 'analysisCode': analysisCode,
-                    'deviceCode': 1, 'tableCode': 5, 'sortCode': 0,
-                    'sortBits': [0, 0, 0], 'numWide': 8, 'sCode': sCode,
-                    'stressBits': stressBits, 'formatCode': 1,
-                    'elementName': 'CBAR', 'elementType': 34,
-                    'nonlinearFactor': dt,
+        data_code = {'log': self.log, 'analysis_code': analysis_code,
+                    'device_code': 1, 'table_code': 5, 'sort_code': 0,
+                    'sort_bits': [0, 0, 0], 'num_wide': 8, 's_code': s_code,
+                    'stress_bits': stress_bits, 'format_code': 1,
+                    'element_name': 'CBAR', 'element_type': 34,
+                    'nonlinear_factor': dt,
                     }
 
-        return (iSubcase, transient, dt, dataCode)
+        return (isubcase, transient, dt, data_code)
 
     def readBarStress(self):
         """
@@ -233,11 +233,11 @@ class OES(object):
             181    1   3.18013E+04  5.33449E+05  1.01480E+03   -7.06668E+01  1.90232E+04   89.88  5.33451E+05  3.17993E+04  2.50826E+05
             181    2   1.41820E+05  1.40805E+05  1.25412E+05   -1.06000E+02  2.85348E+04   44.88  2.66726E+05  1.58996E+04  1.25413E+05
 
-        elementType = 33 b/c not bilinear
+        element_type = 33 b/c not bilinear
         @endcode
         """
-        (subcaseName, iSubcase, transient, dt, analysisCode,
-            isSort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code,
+            is_sort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         dataTypes = [int, int, float, float, float, float,
@@ -248,26 +248,26 @@ class OES(object):
         sHeaders = headers.rstrip()
         if 'SHEAR' in sHeaders[-5:]:  # last 5 letters of the line to avoid 'SHEAR YZ-MAT'
             isMaxShear = True
-        (stressBits, sCode) = self.makeStressBits(
+        (stress_bits, s_code) = self.make_stress_bits(
             isMaxShear=isMaxShear, isStrain=False)
-        dataCode = {'log': self.log, 'analysisCode': analysisCode,
-                    'deviceCode': 1, 'tableCode': 5, 'sortCode': 0,
-                    'sortBits': [0, 0, 0], 'numWide': 8, 'sCode': sCode,
-                    'stressBits': stressBits, 'formatCode': 1,
-                    'elementName': 'CQUAD4', 'elementType': 33,
-                    'tablename': 'OES1X', 'nonlinearFactor': dt,
+        data_code = {'log': self.log, 'analysis_code': analysis_code,
+                    'device_code': 1, 'table_code': 5, 'sort_code': 0,
+                    'sort_bits': [0, 0, 0], 'num_wide': 8, 's_code': s_code,
+                    'stress_bits': stress_bits, 'format_code': 1,
+                    'element_name': 'CQUAD4', 'element_type': 33,
+                    'table_name': 'OES1X', 'nonlinear_factor': dt,
                     }
 
-        if iSubcase in self.compositePlateStress:
-            self.compositePlateStress[iSubcase].addF06Data(
+        if isubcase in self.compositePlateStress:
+            self.compositePlateStress[isubcase].add_f06_data(
                 data, transient, 'CQUAD4')
         else:
-            assert 'nonlinearFactor' in dataCode
-            self.compositePlateStress[iSubcase] = CompositePlateStressObject(
-                dataCode, iSubcase, transient)
-            self.compositePlateStress[iSubcase].addF06Data(
+            assert 'nonlinear_factor' in data_code
+            self.compositePlateStress[isubcase] = CompositePlateStressObject(
+                data_code, isubcase, transient)
+            self.compositePlateStress[isubcase].add_f06_data(
                 data, transient, 'CQUAD4')
-        self.iSubcases.append(iSubcase)
+        self.iSubcases.append(isubcase)
 
     def getTriStress(self):
         """
@@ -277,55 +277,55 @@ class OES(object):
           ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
               8   -1.250000E-01     -1.303003E+02   1.042750E+04  -1.456123E+02   -89.2100    1.042951E+04   -1.323082E+02   1.049629E+04
                    1.250000E-01     -5.049646E+02   1.005266E+04  -2.132942E+02   -88.8431    1.005697E+04   -5.092719E+02   1.032103E+04
-        analysisCode = 1 (Statics)
-        deviceCode   = 1 (Print)
-        tableCode    = 5 (Stress)
-        sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
-        formatCode   = 1 (Real)
-        sCode        = 0 (Stress)
-        numWide      = 8 (???)
+        analysis_code = 1 (Statics)
+        device_code   = 1 (Print)
+        table_code    = 5 (Stress)
+        sort_code     = 0 (Sort2,Real,Sorted Results) => sort_bits = [0,0,0]
+        format_code   = 1 (Real)
+        s_code        = 0 (Stress)
+        num_wide      = 8 (???)
         @endcode
         """
-        (iSubcase, transient, dataCode) = self.getTriHeader(False)
-        dataCode['tablename'] = 'OES1X'
+        (isubcase, transient, data_code) = self.getTriHeader(False)
+        data_code['table_name'] = 'OES1X'
         data = self.readTriStress(['CTRIA3'])
-        if iSubcase in self.plateStress:
-            self.plateStress[iSubcase].addF06Data(data, transient)
+        if isubcase in self.plateStress:
+            self.plateStress[isubcase].add_f06_data(data, transient)
         else:
-            isSort1 = True
-            self.plateStress[iSubcase] = PlateStressObject(
-                dataCode, isSort1, iSubcase, transient)
-            self.plateStress[iSubcase].addF06Data(data, transient)
-        self.iSubcases.append(iSubcase)
+            is_sort1 = True
+            self.plateStress[isubcase] = PlateStressObject(
+                data_code, is_sort1, isubcase, transient)
+            self.plateStress[isubcase].add_f06_data(data, transient)
+        self.iSubcases.append(isubcase)
 
     def getTriStrain(self):
-        (iSubcase, transient, dataCode) = self.getTriHeader(True)
-        dataCode['tablename'] = 'OST1X'
+        (isubcase, transient, data_code) = self.getTriHeader(True)
+        data_code['table_name'] = 'OST1X'
         data = self.readTriStress(['CTRIA3'])
-        if iSubcase in self.plateStrain:
-            self.plateStrain[iSubcase].addF06Data(data, transient)
+        if isubcase in self.plateStrain:
+            self.plateStrain[isubcase].add_f06_data(data, transient)
         else:
-            isSort1 = True
-            assert 'nonlinearFactor' in dataCode
-            self.plateStrain[iSubcase] = PlateStrainObject(
-                dataCode, isSort1, iSubcase, transient)
-            self.plateStrain[iSubcase].addF06Data(data, transient)
-        self.iSubcases.append(iSubcase)
+            is_sort1 = True
+            assert 'nonlinear_factor' in data_code
+            self.plateStrain[isubcase] = PlateStrainObject(
+                data_code, is_sort1, isubcase, transient)
+            self.plateStrain[isubcase].add_f06_data(data, transient)
+        self.iSubcases.append(isubcase)
 
     def getTriHeader(self, isStrain):
         """
         @code
-        analysisCode = 1 (Statics)
-        deviceCode   = 1 (Print)
-        tableCode    = 5 (Stress)
-        sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
-        formatCode   = 1 (Real)
-        sCode        = 0 (Stress)
-        numWide      = 8 (???)
+        analysis_code = 1 (Statics)
+        device_code   = 1 (Print)
+        table_code    = 5 (Stress)
+        sort_code     = 0 (Sort2,Real,Sorted Results) => sort_bits = [0,0,0]
+        format_code   = 1 (Real)
+        s_code        = 0 (Stress)
+        num_wide      = 8 (???)
         @endcode
         """
-        (subcaseName, iSubcase, transient, dt, analysisCode,
-            isSort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code,
+            is_sort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
@@ -335,16 +335,16 @@ class OES(object):
             isFiberDistance = True
         if 'MAX SHEAR' in headers:
             isMaxShear = True
-        (stressBits, sCode) = self.makeStressBits(
+        (stress_bits, s_code) = self.make_stress_bits(
             isFiberDistance, isMaxShear, isStrain=isStrain)
-        dataCode = {'log': self.log, 'analysisCode': analysisCode,
-                    'deviceCode': 1, 'tableCode': 5, 'sortCode': 0,
-                    'sortBits': [0, 0, 0], 'numWide': 8, 'sCode': sCode,
-                    'stressBits': stressBits, 'formatCode': 1,
-                    'elementName': 'CTRIA3', 'elementType': 74,
-                    'nonlinearFactor': dt,
+        data_code = {'log': self.log, 'analysis_code': analysis_code,
+                    'device_code': 1, 'table_code': 5, 'sort_code': 0,
+                    'sort_bits': [0, 0, 0], 'num_wide': 8, 's_code': s_code,
+                    'stress_bits': stress_bits, 'format_code': 1,
+                    'element_name': 'CTRIA3', 'element_type': 74,
+                    'nonlinear_factor': dt,
                     }
-        return (iSubcase, transient, dataCode)
+        return (isubcase, transient, data_code)
 
     def readTriStress(self, eType):
         """
@@ -377,31 +377,31 @@ class OES(object):
         return data
 
     def getQuadStress(self):
-        (iSubcase, transient, dataCode) = self.getQuadHeader(2, False, 33)
-        dataCode['tablename'] = 'OES1X'
+        (isubcase, transient, data_code) = self.getQuadHeader(2, False, 33)
+        data_code['table_name'] = 'OES1X'
         data = self.readTriStress(['CQUAD4'])
-        if iSubcase in self.plateStress:
-            self.plateStress[iSubcase].addF06Data(data, transient)
+        if isubcase in self.plateStress:
+            self.plateStress[isubcase].add_f06_data(data, transient)
         else:
-            isSort1 = True
-            assert 'nonlinearFactor' in dataCode
-            self.plateStress[iSubcase] = PlateStressObject(
-                dataCode, isSort1, iSubcase, transient)
-            self.plateStress[iSubcase].addF06Data(data, transient)
-        self.iSubcases.append(iSubcase)
+            is_sort1 = True
+            assert 'nonlinear_factor' in data_code
+            self.plateStress[isubcase] = PlateStressObject(
+                data_code, is_sort1, isubcase, transient)
+            self.plateStress[isubcase].add_f06_data(data, transient)
+        self.iSubcases.append(isubcase)
 
     def getQuadStrains(self):
-        (iSubcase, transient, dataCode) = self.getQuadHeader(2, True, 33)
-        dataCode['tablename'] = 'OSTR1X'
+        (isubcase, transient, data_code) = self.getQuadHeader(2, True, 33)
+        data_code['table_name'] = 'OSTR1X'
         data = self.readTriStress(['CQUAD4'])
-        if iSubcase in self.plateStrain:
-            self.plateStrain[iSubcase].addF06Data(data, transient)
+        if isubcase in self.plateStrain:
+            self.plateStrain[isubcase].add_f06_data(data, transient)
         else:
-            isSort1 = True
-            self.plateStrain[iSubcase] = PlateStrainObject(
-                dataCode, isSort1, iSubcase, transient)
-            self.plateStrain[iSubcase].addF06Data(data, transient)
-        self.iSubcases.append(iSubcase)
+            is_sort1 = True
+            self.plateStrain[isubcase] = PlateStrainObject(
+                data_code, is_sort1, isubcase, transient)
+            self.plateStrain[isubcase].add_f06_data(data, transient)
+        self.iSubcases.append(isubcase)
 
     def getQuadStressBilinear(self):
         """
@@ -417,22 +417,22 @@ class OES(object):
                            1.250000E-01  -8.924081E+01  1.187899E+04 -4.174177E+01   -89.8002   1.187913E+04 -8.938638E+01  1.192408E+04
         @endcode
         """
-        (iSubcase, transient, dataCode) = self.getQuadHeader(3, False, 144)
-        dataCode['tablename'] = 'OES1X',
+        (isubcase, transient, data_code) = self.getQuadHeader(3, False, 144)
+        data_code['table_name'] = 'OES1X',
         data = self.readQuadBilinear()
-        if iSubcase in self.plateStress:
-            self.plateStress[iSubcase].addF06Data(data, transient)
+        if isubcase in self.plateStress:
+            self.plateStress[isubcase].add_f06_data(data, transient)
         else:
-            isSort1 = True
-            assert 'nonlinearFactor' in dataCode
-            self.plateStress[iSubcase] = PlateStressObject(
-                dataCode, isSort1, iSubcase, transient)
-            self.plateStress[iSubcase].addF06Data(data, transient)
-        self.iSubcases.append(iSubcase)
+            is_sort1 = True
+            assert 'nonlinear_factor' in data_code
+            self.plateStress[isubcase] = PlateStressObject(
+                data_code, is_sort1, isubcase, transient)
+            self.plateStress[isubcase].add_f06_data(data, transient)
+        self.iSubcases.append(isubcase)
 
     def getQuadHeader(self, nHeaderLines, isStrain, elementNumber):
-        (subcaseName, iSubcase, transient, dt, analysisCode,
-            isSort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code,
+            is_sort1) = self.readSubcaseNameID()
         headers = self.skip(nHeaderLines)
         #print "headers = %s" %(headers)
 
@@ -442,16 +442,16 @@ class OES(object):
             isFiberDistance = True
         if 'MAX SHEAR' in headers:
             isMaxShear = True
-        (stressBits, sCode) = self.makeStressBits(
+        (stress_bits, s_code) = self.make_stress_bits(
             isFiberDistance, isMaxShear, isStrain)
-        dataCode = {'log': self.log, 'analysisCode': analysisCode,
-                    'deviceCode': 1, 'tableCode': 5, 'sortCode': 0,
-                    'sortBits': [0, 0, 0], 'numWide': 8, 'sCode': sCode,
-                    'stressBits': stressBits, 'formatCode': 1,
-                    'elementName': 'CQUAD4', 'elementType': elementNumber,
-                    'nonlinearFactor': dt,
+        data_code = {'log': self.log, 'analysis_code': analysis_code,
+                    'device_code': 1, 'table_code': 5, 'sort_code': 0,
+                    'sort_bits': [0, 0, 0], 'num_wide': 8, 's_code': s_code,
+                    'stress_bits': stress_bits, 'format_code': 1,
+                    'element_name': 'CQUAD4', 'element_type': elementNumber,
+                    'nonlinear_factor': dt,
                     }
-        return (iSubcase, transient, dataCode)
+        return (isubcase, transient, data_code)
 
     def readQuadBilinear(self):
         data = []
@@ -506,47 +506,47 @@ class OES(object):
         return self.readSolidStrain('CTETRA', 4)
 
     def readSolidStress(self, eType, n):
-        (iSubcase, transient, dataCode) = self.getSolidHeader(eType, n, False)
-        dataCode['tablename'] = 'OES1X'
+        (isubcase, transient, data_code) = self.getSolidHeader(eType, n, False)
+        data_code['table_name'] = 'OES1X'
 
         data = self.read3DStress(eType, n)
-        if iSubcase in self.solidStress:
-            self.solidStress[iSubcase].addF06Data(data, transient)
+        if isubcase in self.solidStress:
+            self.solidStress[isubcase].add_f06_data(data, transient)
         else:
-            isSort1 = True
-            self.solidStress[iSubcase] = SolidStressObject(
-                dataCode, isSort1, iSubcase, transient)
-            self.solidStress[iSubcase].addF06Data(data, transient)
-        self.iSubcases.append(iSubcase)
+            is_sort1 = True
+            self.solidStress[isubcase] = SolidStressObject(
+                data_code, is_sort1, isubcase, transient)
+            self.solidStress[isubcase].add_f06_data(data, transient)
+        self.iSubcases.append(isubcase)
 
     def readSolidStrain(self, eType, n):
-        (iSubcase, transient, dataCode) = self.getSolidHeader(eType, n, True)
-        dataCode['tablename'] = 'OSTR1X'
+        (isubcase, transient, data_code) = self.getSolidHeader(eType, n, True)
+        data_code['table_name'] = 'OSTR1X'
 
         data = self.read3DStress(eType, n)
-        if iSubcase in self.solidStrain:
-            self.solidStrain[iSubcase].addF06Data(data, transient)
+        if isubcase in self.solidStrain:
+            self.solidStrain[isubcase].add_f06_data(data, transient)
         else:
-            isSort1 = True
-            self.solidStrain[iSubcase] = SolidStrainObject(
-                dataCode, isSort1, iSubcase, transient)
-            self.solidStrain[iSubcase].addF06Data(data, transient)
-        self.iSubcases.append(iSubcase)
+            is_sort1 = True
+            self.solidStrain[isubcase] = SolidStrainObject(
+                data_code, is_sort1, isubcase, transient)
+            self.solidStrain[isubcase].add_f06_data(data, transient)
+        self.iSubcases.append(isubcase)
 
     def getSolidHeader(self, eType, n, isStrain):
         """
         @code
-        analysisCode = 1 (Statics)
-        deviceCode   = 1 (Print)
-        tableCode    = 5 (Stress/Strain)
-        sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
-        formatCode   = 1 (Real)
-        sCode        = 0 (Stress/Strain)
-        numWide      = 8 (???)
+        analysis_code = 1 (Statics)
+        device_code   = 1 (Print)
+        table_code    = 5 (Stress/Strain)
+        sort_code     = 0 (Sort2,Real,Sorted Results) => sort_bits = [0,0,0]
+        format_code   = 1 (Real)
+        s_code        = 0 (Stress/Strain)
+        num_wide      = 8 (???)
         @endcode
         """
-        (subcaseName, iSubcase, transient, dt, analysisCode,
-            isSort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code,
+            is_sort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
@@ -554,14 +554,14 @@ class OES(object):
         if 'VON MISES' in headers:
             isMaxShear = False
 
-        (stressBits, sCode) = self.makeStressBits(
+        (stress_bits, s_code) = self.make_stress_bits(
             isMaxShear=False, isStrain=isStrain, isRodOrSolid=True)
-        dataCode = {'log': self.log, 'analysisCode': 1, 'deviceCode': 1,
-                    'tableCode': 5, 'sortCode': 0, 'sortBits': [0, 0, 0],
-                    'numWide': 8, 'elementName': eType, 'formatCode': 1,
-                    'sCode': sCode, 'stressBits': stressBits,
-                    'nonlinearFactor': dt}
-        return (iSubcase, transient, dataCode)
+        data_code = {'log': self.log, 'analysis_code': 1, 'device_code': 1,
+                    'table_code': 5, 'sort_code': 0, 'sort_bits': [0, 0, 0],
+                    'num_wide': 8, 'element_name': eType, 'format_code': 1,
+                    's_code': s_code, 'stress_bits': stress_bits,
+                    'nonlinear_factor': dt}
+        return (isubcase, transient, data_code)
 
     def read3DStress(self, eType, n):
         data = []
@@ -578,7 +578,7 @@ class OES(object):
 
         return data
 
-    def makeStressBits(self, isFiberDistance=False, isMaxShear=True, isStrain=True, isRodOrSolid=False):
+    def make_stress_bits(self, isFiberDistance=False, isMaxShear=True, isStrain=True, isRodOrSolid=False):
         #print "isMaxShear=%s isFiberDistance=%s" %(isMaxShear,isFiberDistance)
 
        #code = (isVonMises,isFiberCurvatur,isStress,isNotRod)
@@ -595,17 +595,17 @@ class OES(object):
             (True, False, False, False): ([0, 0, 0, 0, 0], 0),  # 0,  composite
             (False, True, False, False): ([0, 0, 0, 0, 1], 1),  # cquad4 bilinear ??? why do i need this...
         }
-        (stressBits, sCode) = mapper[code]
+        (stress_bits, s_code) = mapper[code]
 
         #if isMaxShear==False:
-        #    stressBits[4] = 1 # Von Mises
+        #    stress_bits[4] = 1 # Von Mises
         #if isStrain:
-        #    #stressBits[1] = stressBits[3] = 1 # Strain
-        #    stressBits[1] = stressBits[3] = 1 # Strain
+        #    #stress_bits[1] = stress_bits[3] = 1 # Strain
+        #    stress_bits[1] = stress_bits[3] = 1 # Strain
         #if isFiberDistance:
-        #    stressBits[2] = 1 # FiberDistance
-        #print stressBits
-        #sCode = 0
-        #for i,bit in enumerate(stressBits):
-        #    sCode += bit*2**i
-        return (stressBits, sCode)
+        #    stress_bits[2] = 1 # FiberDistance
+        #print stress_bits
+        #s_code = 0
+        #for i,bit in enumerate(stress_bits):
+        #    s_code += bit*2**i
+        return (stress_bits, s_code)

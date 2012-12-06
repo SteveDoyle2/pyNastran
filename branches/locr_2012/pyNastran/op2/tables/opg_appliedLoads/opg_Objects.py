@@ -2,9 +2,9 @@ from numpy import array
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 
-class AppliedLoadsObject(scalarObject):  # approachCode=1, sortCode=0
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        scalarObject.__init__(self, dataCode, iSubcase)
+class AppliedLoadsObject(scalarObject):  # approach_code=1, sort_code=0
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        scalarObject.__init__(self, data_code, isubcase)
         self.dt = dt
 
         self.eids = {}

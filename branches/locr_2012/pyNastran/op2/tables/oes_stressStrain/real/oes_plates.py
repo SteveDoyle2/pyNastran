@@ -2,10 +2,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 
-from .oes_objects import stressObject, strainObject
+from .oes_objects import StressObject, StrainObject
 
 
-class PlateStressObject(stressObject):
+class PlateStressObject(StressObject):
     """
     @code
     ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)
@@ -21,13 +21,13 @@ class PlateStressObject(stressObject):
                        1.250000E-01   5.406062E+02  1.201854E+04 -4.174177E+01   -89.7916   1.201869E+04  5.404544E+02  5.739119E+03
     @endcode
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        stressObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
-        #self.appendDataMember('sCodes','sCode')
-        #print "self.sCode = ",self.sCode
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        #self.append_data_member('sCodes','s_code')
+        #print "self.s_code = ",self.s_code
+        self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.fiberCurvature = {}
         self.oxx = {}
@@ -39,22 +39,22 @@ class PlateStressObject(stressObject):
         self.ovmShear = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
                 self.addNewNode = self.addNewNodeSort1
         else:
             assert dt is not None
             self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
             self.addNewNode = self.addNewNodeSort2
 
     def get_stats(self):
         nelements = len(self.eType)
 
         msg = self.get_data_code()
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.oxx)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -65,7 +65,7 @@ class PlateStressObject(stressObject):
                    'majorP, minorP, ovmShear\n')
         return msg
 
-    def addF06Data(self, data, transient):
+    def add_f06_data(self, data, transient):
         if transient is None:
             eType = data[0][0]
             for line in data:
@@ -133,7 +133,7 @@ class PlateStressObject(stressObject):
             #print line
         raise NotImplementedError('transient results not supported')
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         #del self.fiberCurvature[dt]
         del self.oxx[dt]
         del self.oyy[dt]
@@ -143,12 +143,12 @@ class PlateStressObject(stressObject):
         del self.minorP[dt]
         del self.ovmShear[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.oxx.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         """
@@ -162,8 +162,8 @@ class PlateStressObject(stressObject):
         self.minorP[dt] = {}
         self.ovmShear[dt] = {}
 
-    def addNewEid(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #print "***addNewEid..."
+    def add_new_eid(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        #print "***add_new_eid..."
         #if eid in self.oxx:
             #return self.add(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
 
@@ -183,7 +183,7 @@ class PlateStressObject(stressObject):
         if nodeID == 0:
             raise Exception(msg)
 
-    def addNewEidSort1(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
+    def add_new_eid_sort1(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
         #print "***addNewEidTransient..."
         #msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g major=%g vm=%g" % (
@@ -195,13 +195,13 @@ class PlateStressObject(stressObject):
         if dt in self.oxx and eid in self.oxx[dt]:  # SOL200, erase the old result
             #nid = nodeID
             #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s major=%s vm=%s" %(dt,eid,nodeID,str(self.fiberCurvature[eid][nid]),str(self.oxx[dt][eid][nid]),str(self.majorP[dt][eid][nid]),str(self.ovmShear[dt][eid][nid]))
-            self.deleteTransient(dt)
-            self.addNewTransient(dt)
+            self.delete_transient(dt)
+            self.add_new_transient(dt)
 
         assert isinstance(eid, int)
         self.eType[eid] = eType
         if dt not in self.oxx:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.fiberCurvature[eid] = {nodeID: [fd]}
         self.oxx[dt][eid] = {nodeID: [oxx]}
         self.oyy[dt][eid] = {nodeID: [oyy]}
@@ -232,7 +232,7 @@ class PlateStressObject(stressObject):
         if nodeID == 0:
             raise ValueError(msg)
 
-    def addSort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
+    def add_sort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
         #print "***addTransient"
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" % (dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
         #print msg
@@ -307,7 +307,7 @@ class PlateStressObject(stressObject):
 
         #print self.oxx.keys()
         for dt, oxxs in sorted(self.oxx.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for eid, oxxNodes in sorted(oxxs.iteritems()):
                 eType = self.eType[eid]
                 for nid in sorted(oxxNodes):
@@ -336,9 +336,9 @@ class PlateStressObject(stressObject):
                         msg += '\n'
         return msg
 
-    def writeMatlab(self, name, iSubcase, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
-            return self.writeMatlabTransient(name, iSubcase, f, isMagPhase)
+    def writeMatlab(self, name, isubcase, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
+            return self.writeMatlabTransient(name, isubcase, f, isMagPhase)
 
         #if self.isVonMises():
         #    vonMises = 'vonMises'
@@ -420,8 +420,8 @@ class PlateStressObject(stressObject):
 
                 elif eType in ['CTRIA3']:
                     a = 'fem.plateStress(%i).tri3.elementIDs = %s\n' % (
-                        iSubcase, eids)
-                    b = 'fem.plateStress(%i).tri3.oxx = [' % (iSubcase)
+                        isubcase, eids)
+                    b = 'fem.plateStress(%i).tri3.oxx = [' % (isubcase)
                     for eid in eids:
                         out = self.writeMatlab_Tri3(eid)
                         msg.append(out)
@@ -461,8 +461,8 @@ class PlateStressObject(stressObject):
                     msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip())
         return msg
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
 
         if self.isVonMises():
@@ -657,7 +657,7 @@ class PlateStressObject(stressObject):
                 if eType in ['CQUAD4']:
                     if isBilinear:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (self.dataCode[
+                            header[1] = ' %s = %10.4E\n' % (self.data_code[
                                 'name'], dt)
                             msg += header + msgPack
                             for eid in eids:
@@ -667,7 +667,7 @@ class PlateStressObject(stressObject):
                     else:
                         for dt in dts:
                             header[1] = ' %s = %10.4E\n' % (
-                                self.dataCode['name'], dt)
+                                self.data_code['name'], dt)
                             msg += header + msgPack
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid)
@@ -675,7 +675,7 @@ class PlateStressObject(stressObject):
                 elif eType in ['CTRIA3']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
-                            self.dataCode['name'], dt)
+                            self.data_code['name'], dt)
                         msg += header + msgPack
                         for eid in eids:
                             out = self.writeF06_Tri3Transient(dt, eid)
@@ -683,7 +683,7 @@ class PlateStressObject(stressObject):
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
-                            self.dataCode['name'], dt)
+                            self.data_code['name'], dt)
                         msg += header + msgPack
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(
@@ -692,7 +692,7 @@ class PlateStressObject(stressObject):
                 elif eType in ['CQUAD8']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
-                            self.dataCode['name'], dt)
+                            self.data_code['name'], dt)
                         msg += header + msgPack
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(
@@ -814,7 +814,7 @@ class PlateStressObject(stressObject):
 
     def __repr__(self):
         #print "sCodes = ",self.sCodes
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---ISOTROPIC PLATE STRESS---\n'
@@ -854,36 +854,36 @@ class PlateStressObject(stressObject):
         return msg
 
 
-class PlateStrainObject(strainObject):
+class PlateStrainObject(StrainObject):
     """
     @code
     # ??? - is this just 11
     ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)
       ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
 
-    # sCode=11
+    # s_code=11
                            S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
     ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)
       ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       VON MISES
 
-    # sCode=15
+    # s_code=15
                            S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )
     ELEMENT      FIBER                STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)
       ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
 
-    # sCode=10
+    # s_code=10
                            S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
     ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)          MAX
       ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR         SHEAR
     @endcode
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        strainObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
 
-        #print self.dataCode
+        #print self.data_code
         self.fiberCurvature = {}
         self.exx = {}
         self.eyy = {}
@@ -894,20 +894,20 @@ class PlateStrainObject(strainObject):
         self.evmShear = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
 
         msg = self.get_data_code()
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.exx)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -918,7 +918,7 @@ class PlateStrainObject(strainObject):
                    'majorP, minorP, evmShear\n')
         return msg
 
-    def addF06Data(self, data, transient):
+    def add_f06_data(self, data, transient):
         if transient is None:
             eType = data[0][0]
             for line in data:
@@ -987,7 +987,7 @@ class PlateStrainObject(strainObject):
             return
         raise NotImplementedError('transient results not supported')
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         #del self.fiberCurvature[dt]
         del self.exx[dt]
         del self.eyy[dt]
@@ -997,12 +997,12 @@ class PlateStrainObject(strainObject):
         del self.minorP[dt]
         del self.evmShear[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.exx.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         """
@@ -1015,7 +1015,7 @@ class PlateStrainObject(strainObject):
         self.minorP[dt] = {}
         self.evmShear[dt] = {}
 
-    def addNewEid(self, eType, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
+    def add_new_eid(self, eType, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
         #print "Plate add..."
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
 
@@ -1038,7 +1038,7 @@ class PlateStrainObject(strainObject):
         if nodeID == 0:
             raise ValueError(msg)
 
-    def addNewEidSort1(self, eType, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
+    def add_new_eid_sort1(self, eType, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
         #print "Plate add..."
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
         #print msg
@@ -1047,12 +1047,12 @@ class PlateStrainObject(strainObject):
             assert 0 < nodeID < 1000000000, 'nodeID=%s %s' % (nodeID, msg)
 
         if dt not in self.exx:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         #if eid in self.evmShear[dt]:  # SOL200, erase the old result
             #nid = nodeID
             #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s major=%s vm=%s" %(dt,eid,nodeID,str(self.fiberCurvature[eid][nid]),str(self.oxx[dt][eid][nid]),str(self.majorP[dt][eid][nid]),str(self.ovmShear[dt][eid][nid]))
-            #self.deleteTransient(dt)
-            #self.addNewTransient()
+            #self.delete_transient(dt)
+            #self.add_new_transient()
 
         self.eType[eid] = eType
         self.fiberCurvature[eid] = {nodeID: [curvature]}
@@ -1086,7 +1086,7 @@ class PlateStrainObject(strainObject):
         if nodeID == 0:
             raise ValueError(msg)
 
-    def addSort1(self, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
+    def add_sort1(self, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
         #print "***add"
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
         #print msg
@@ -1136,8 +1136,8 @@ class PlateStrainObject(strainObject):
             headers.append('maxShear')
         return headers
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f)
 
         if self.isVonMises():
@@ -1323,7 +1323,7 @@ class PlateStrainObject(strainObject):
                 if eType in ['CQUAD4']:
                     if isBilinear:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (self.dataCode[
+                            header[1] = ' %s = %10.4E\n' % (self.data_code[
                                 'name'], dt)
                             for eid in eids:
                                 out = self.writeF06_Quad4_BilinearTransient(dt,
@@ -1333,7 +1333,7 @@ class PlateStrainObject(strainObject):
                             pageNum += 1
                     else:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (self.dataCode[
+                            header[1] = ' %s = %10.4E\n' % (self.data_code[
                                 'name'], dt)
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid)
@@ -1343,7 +1343,7 @@ class PlateStrainObject(strainObject):
                 elif eType in ['CTRIA3']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
-                            self.dataCode['name'], dt)
+                            self.data_code['name'], dt)
                         for eid in eids:
                             out = self.writeF06_Tri3Transient(dt, eid)
                             msg.append(out)
@@ -1352,7 +1352,7 @@ class PlateStrainObject(strainObject):
                 elif eType in ['CQUAD8']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
-                            self.dataCode['name'], dt)
+                            self.data_code['name'], dt)
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(
                                 dt, eid, 5)
@@ -1362,7 +1362,7 @@ class PlateStrainObject(strainObject):
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
-                            self.dataCode['name'], dt)
+                            self.data_code['name'], dt)
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(
                                 dt, eid, 3)
@@ -1481,7 +1481,7 @@ class PlateStrainObject(strainObject):
         return msg
 
     def __repr__(self):
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---ISOTROPIC PLATE STRAIN---\n'
@@ -1526,7 +1526,7 @@ class PlateStrainObject(strainObject):
         msg += '\n'
 
         for dt, exx in sorted(self.exx.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for eid, exxNodes in sorted(exx.iteritems()):
                 eType = self.eType[eid]
                 for nid in sorted(exxNodes):

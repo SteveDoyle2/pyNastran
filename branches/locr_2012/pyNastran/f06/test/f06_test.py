@@ -6,7 +6,7 @@ from pyNastran.f06.test.test_f06 import runLotsOfFiles
 from pyNastran.utils import get_files_of_type
 
 
-def parseSkippedCards(fname):
+def parse_skipped_cards(fname):
     f = open(fname, 'r')
     lines = f.readlines()
     f.close()
@@ -17,7 +17,7 @@ def parseSkippedCards(fname):
             #print line
             (fore, aft) = line.strip().split('->')
             (oes, form, elementTypeNum) = fore.strip().split(' ')
-            (elementType, eType) = elementTypeNum.strip().split('=')
+            (element_type, eType) = elementTypeNum.strip().split('=')
             (msg, fpath) = aft.strip().split('-')
             #print "fpath=|%s|" %(fpath)
             fpath = fpath.lstrip()[6:]
@@ -58,7 +58,7 @@ def main():
     getSkipCards = False
 
     if getSkipCards:
-        files2 = parseSkippedCards('skippedCards.out')
+        files2 = parse_skipped_cards('skippedCards.out')
     elif regenerate:
         files2 = get_files_of_type(moveDir, '.f06')
         files2 = []

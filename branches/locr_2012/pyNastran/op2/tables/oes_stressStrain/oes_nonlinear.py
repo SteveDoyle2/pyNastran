@@ -3,15 +3,15 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import sys
 from math import isnan
 
-from .real.oes_objects import stressObject, strainObject  # ,array
+from .real.oes_objects import StressObject, StrainObject  # ,array
 
 
-class NonlinearQuadObject(stressObject):
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        stressObject.__init__(self, dataCode, iSubcase)
+class NonlinearQuadObject(StressObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StressObject.__init__(self, data_code, isubcase)
         #self.eType = 'QUAD4FD' # or CTRIA3
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
         self.eType = {}
         self.fiberDistance = {}
         self.oxx = {}
@@ -29,20 +29,20 @@ class NonlinearQuadObject(stressObject):
         self.ecs = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
 
         msg = self.get_data_code()
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.oxx)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -53,7 +53,7 @@ class NonlinearQuadObject(stressObject):
                    'exx, eyy, ezz, exy, es, eps, ecs\n')
         return msg
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.fiberDistance[dt]
         del self.oxx[dt]
         del self.oyy[dt]
@@ -69,12 +69,12 @@ class NonlinearQuadObject(stressObject):
         del self.eps[dt]
         del self.ecs[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.oxx.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         self.fiberDistance[dt] = {}
         self.oxx[dt] = {}
         self.oyy[dt] = {}
@@ -90,9 +90,9 @@ class NonlinearQuadObject(stressObject):
         self.eps[dt] = {}
         self.ecs[dt] = {}
 
-    def addNewEidSort1(self, eType, dt, data):
+    def add_new_eid_sort1(self, eType, dt, data):
         if dt not in self.oxx:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         (eid, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy) = data
         self.fiberDistance[dt][eid] = [fd]
         if isnan(sz):
@@ -114,7 +114,7 @@ class NonlinearQuadObject(stressObject):
         self.eps[dt][eid] = [eps]
         self.ecs[dt][eid] = [ecs]
 
-    def addSort1(self, dt, data):
+    def add_sort1(self, dt, data):
         (eid, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy) = data
         self.fiberDistance[dt][eid].append(fd)
         if isnan(sz):
@@ -136,7 +136,7 @@ class NonlinearQuadObject(stressObject):
         self.eps[dt][eid].append(eps)
         self.ecs[dt][eid].append(ecs)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=None):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=None):
         msgStart = ['      ELEMENT-ID =     129\n'
                     '               N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )\n'
                     ' \n',
@@ -146,7 +146,7 @@ class NonlinearQuadObject(stressObject):
         msgE = {}
         msgT = {}
         for (dt, Oxxs) in sorted(self.oxx.iteritems()):
-            header[1] = ' %s = %10.4E\n' % (self.dataCode['name'], dt)
+            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
 
             for (eid, oxxs) in sorted(Oxxs.iteritems()):
                 msgE[eid] = header + ['      ELEMENT-ID = %8i\n' % (eid)]
@@ -182,15 +182,15 @@ class NonlinearQuadObject(stressObject):
         return (''.join(msg), pageNum - 1)
 
     def __repr__(self):
-        return self.writeF06([], 'PAGE ', 1)[0]
+        return self.write_f06([], 'PAGE ', 1)[0]
 
 
-class HyperelasticQuadObject(stressObject):
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        stressObject.__init__(self, dataCode, iSubcase)
+class HyperelasticQuadObject(StressObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StressObject.__init__(self, data_code, isubcase)
         self.eType = 'QUAD4FD'
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
         self.Type = {}
         self.IDs = {}
         self.oxx = {}
@@ -201,20 +201,20 @@ class HyperelasticQuadObject(stressObject):
         self.minorP = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
 
         msg = self.get_data_code()
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.oxx)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -224,7 +224,7 @@ class HyperelasticQuadObject(stressObject):
         msg.append('  Type, oxx, oyy, txy, angle, majorP, minorP\n')
         return msg
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.fiberDistance[dt]
         del self.oxx[dt]
         del self.oyy[dt]
@@ -234,12 +234,12 @@ class HyperelasticQuadObject(stressObject):
         del self.majorP[dt]
         del self.minorP[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.oxx.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         self.oxx[dt] = {}
         self.oyy[dt] = {}
         self.txy[dt] = {}
@@ -247,9 +247,9 @@ class HyperelasticQuadObject(stressObject):
         self.majorP[dt] = {}
         self.minorP[dt] = {}
 
-    def addNewEidSort1(self, dt, data):
+    def add_new_eid_sort1(self, dt, data):
         if dt not in self.oxx:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         (eid, Type, oxx, oyy, txy, angle, majorP, minorP) = data
         self.Type[eid] = Type
         self.oxx[dt] = {eid: [oxx]}
@@ -259,7 +259,7 @@ class HyperelasticQuadObject(stressObject):
         self.majorP[dt] = {eid: [majorP]}
         self.minorP[dt] = {eid: [minorP]}
 
-    def addSort1(self, dt, eid, data):
+    def add_sort1(self, dt, eid, data):
         (ID, oxx, oyy, txy, angle, majorP, minorP) = data
         self.oxx[dt][eid].append(oxx)
         self.oyy[dt][eid].append(oyy)
@@ -268,7 +268,7 @@ class HyperelasticQuadObject(stressObject):
         self.majorP[dt][eid].append(majorP)
         self.minorP[dt][eid].append(minorP)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):  # @todo doesnt support CTRIA3NL (calls them CQUAD4s)
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):  # @todo doesnt support CTRIA3NL (calls them CQUAD4s)
         msg = ['           S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUAD4FD )\n',
                '  ELEMENT     GRID/    POINT       ---------CAUCHY STRESSES--------             PRINCIPAL STRESSES (ZERO SHEAR)\n',
                '     ID       GAUSS      ID      NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR\n', ]
@@ -296,15 +296,15 @@ class HyperelasticQuadObject(stressObject):
         return (''.join(msg), pageNum)
 
     def __repr__(self):
-        return self.writeF06([], 'PAGE ', 1)[0]
+        return self.write_f06([], 'PAGE ', 1)[0]
 
 
-class NonlinearRodObject(stressObject):
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        stressObject.__init__(self, dataCode, iSubcase)
+class NonlinearRodObject(StressObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StressObject.__init__(self, data_code, isubcase)
         #self.eType = 'CROD'
         self.eTypeMap = {89: 'CRODNL', 92: 'CONRODNL'}
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.eType = {}
         self.axialStress = {}
@@ -315,19 +315,19 @@ class NonlinearRodObject(stressObject):
         self.linearTorsionalStress = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
-                #self.addNewEid = self.addNewEidSort1
+                self.add = self.add_sort1
+                #self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
-            #self.addNewEid = self.addNewEidSort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
         msg = self.get_data_code()
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.axialStress)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -339,7 +339,7 @@ class NonlinearRodObject(stressObject):
                    'linearTorsionalStress\n')
         return msg
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.axialStress[dt]
         del self.equivStress[dt]
         del self.totalStrain[dt]
@@ -348,12 +348,12 @@ class NonlinearRodObject(stressObject):
         del self.effectiveCreepStrain[dt]
         del self.linearTorsionalStress[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.axialStress.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         self.axialStress[dt] = {}
         self.equivStress[dt] = {}
         self.totalStrain[dt] = {}
@@ -361,9 +361,9 @@ class NonlinearRodObject(stressObject):
         self.effectiveCreepStrain[dt] = {}
         self.linearTorsionalStress[dt] = {}
 
-    def addSort1(self, eType, dt, data):
+    def add_sort1(self, eType, dt, data):
         if dt not in self.axialStress:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         eid = data[0]
         self.eType[eid] = eType
         self.axialStress[dt][eid] = data[1]
@@ -374,7 +374,7 @@ class NonlinearRodObject(stressObject):
         self.linearTorsionalStress[dt][eid] = data[6]
         #print data
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):  # @todo doesnt support CONROD/CTUBE (calls them CRODs)
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):  # @todo doesnt support CONROD/CTUBE (calls them CRODs)
         """
         @code
         ELEMENT-ID =     102
@@ -412,4 +412,4 @@ class NonlinearRodObject(stressObject):
         return (''.join(msg), pageNum)
 
     def __repr__(self):
-        return self.writeF06([], 'PAGE ', 1)[0]
+        return self.write_f06([], 'PAGE ', 1)[0]

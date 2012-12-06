@@ -536,9 +536,9 @@ class Cart3DAsciiReader(object):
             print lengths[a]
             print len(segments[a])
 
-            eidA = self.getSegment(a, eid, segments)
-            eidB = self.getSegment(b, eid, segments)
-            eidC = self.getSegment(c, eid, segments)
+            eidA = self.get_segment(a, eid, segments)
+            eidB = self.get_segment(b, eid, segments)
+            eidC = self.get_segment(c, eid, segments)
             print "eidA=%s eidB=%s eidC=%s" % (eidA, eidB, eidC)
             if eidA:
                 i = 0
@@ -609,7 +609,7 @@ class Cart3DAsciiReader(object):
 
         asdf
 
-    def getSegment(self, a, eid, segments):
+    def get_segment(self, a, eid, segments):
         if a in segments:
             aElems = segments[a]
             print aElems
@@ -642,7 +642,7 @@ class Cart3DBinaryReader(FortranFile, Cart3DAsciiReader):
         self.readHalf = False
         self.isNodeArray = True
 
-        self.makeOp2Debug = False
+        self.make_op2_debug = False
         self.n = 0
 
         self.log = get_logger(log, 'debug' if debug else 'info')

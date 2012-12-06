@@ -2,19 +2,19 @@ import sys
 from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
 
 
-class LoadVectorObject(TableObject):  # tableCode=2, sortCode=0, thermal=0
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        TableObject.__init__(self, dataCode, isSort1, iSubcase, dt)
+class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, iSubcase, f=None, isMagPhase=False):
+    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
         name = 'loadVector'
-        if self.nonlinearFactor is None:
-            return self._writeMatlab(name, iSubcase, f)
+        if self.nonlinear_factor is None:
+            return self._writeMatlab(name, isubcase, f)
         else:
-            return self._writeMatlabTransient(name, iSubcase, f)
+            return self._writeMatlabTransient(name, isubcase, f)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f)
 
         msg = header + ['                                                     L O A D   V E C T O R\n',
@@ -45,7 +45,7 @@ class LoadVectorObject(TableObject):  # tableCode=2, sortCode=0, thermal=0
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
 
         for dt, translations in sorted(self.translations.iteritems()):
-            header[1] = ' %s = %10.4E\n' % (self.dataCode['name'], dt)
+            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
@@ -69,11 +69,11 @@ class LoadVectorObject(TableObject):  # tableCode=2, sortCode=0, thermal=0
 
     def __reprTransient__(self):
         msg = '---TRANSIENT LOAD VECTOR---\n'
-        #msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
+        #msg += '%s = %g\n' %(self.data_code['name'],self.dt)
         msg += self.writeHeader()
 
         for dt, translations in sorted(self.translations.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
@@ -91,7 +91,7 @@ class LoadVectorObject(TableObject):  # tableCode=2, sortCode=0, thermal=0
         return msg
 
     def __repr__(self):
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---LOAD VECTOR---\n'
@@ -118,19 +118,19 @@ class LoadVectorObject(TableObject):  # tableCode=2, sortCode=0, thermal=0
         return self.writeF06Transient(['', ''], 'PAGE ', 1)[0]
 
 
-class ComplexLoadVectorObject(ComplexTableObject):  # tableCode=11, approachCode=???
-    def __init__(self, dataCode, isSort1, iSubcase, dt):
-        ComplexTableObject.__init__(self, dataCode, isSort1, iSubcase, dt)
+class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_code=???
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, iSubcase, f=None, isMagPhase=False):
+    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
         name = 'loadVector'
-        if self.nonlinearFactor is None:
-            return self._writeMatlab(name, iSubcase, f, isMagPhase)
+        if self.nonlinear_factor is None:
+            return self._writeMatlab(name, isubcase, f, isMagPhase)
         else:
-            return self._writeMatlabTransient(name, iSubcase, f, isMagPhase)
+            return self._writeMatlabTransient(name, isubcase, f, isMagPhase)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
         msg = header + ['                                               C O M P L E X   L O A D   V E C T O R\n',
                         '                                                          (REAL/IMAGINARY)\n',
@@ -193,7 +193,7 @@ class ComplexLoadVectorObject(ComplexTableObject):  # tableCode=11, approachCode
         #return self._writeF06TransientBlock(words,header,pageStamp,pageNum,f,isMagPhase)
         msg = []
         for dt, translations in sorted(self.translations.iteritems()):
-            header[2] = ' %s = %10.4E\n' % (self.dataCode['name'], dt)
+            header[2] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
@@ -248,11 +248,11 @@ class ComplexLoadVectorObject(ComplexTableObject):  # tableCode=11, approachCode
         return (''.join(msg), pageNum - 1)
 
     def __repr__(self):
-        return self.writeF06(['', '', ''], 'PAGE ', 1)[0]
+        return self.write_f06(['', '', ''], 'PAGE ', 1)[0]
 
         msg = '---COMPLEX LOAD VECTOR---\n'
         #if self.dt is not None:
-        #    msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
+        #    msg += '%s = %g\n' %(self.data_code['name'],self.dt)
         headers = ['DxReal', 'DxImag', 'DyReal', 'DyImag', 'DzReal', 'DyImag', 'RxReal', 'RxImag', 'RyReal', 'RyImag', 'RzReal', 'RzImag']
         msg += '%-10s ' % ('nodeID')
         for header in headers:
@@ -260,7 +260,7 @@ class ComplexLoadVectorObject(ComplexTableObject):  # tableCode=11, approachCode
         msg += '\n'
 
         for freq, translations in sorted(self.translations.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
 
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[freq][nodeID]
@@ -277,11 +277,11 @@ class ComplexLoadVectorObject(ComplexTableObject):  # tableCode=11, approachCode
 
 
 class ThermalVector(TableObject):
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        TableObject.__init__(self, dataCode, isSort1, iSubcase, dt)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
             return self.writeF06Transient(header, pageStamp, pageNum, f)
 
         msg = header + ['                                              T E M P E R A T U R E   V E C T O R\n',
@@ -312,7 +312,7 @@ class ThermalVector(TableObject):
                  '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
 
         for dt, translations in sorted(self.translations.iteritems()):
-            header[1] = ' %s = %10.4E\n' % (self.dataCode['name'], dt)
+            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
@@ -336,11 +336,11 @@ class ThermalVector(TableObject):
 
     def __reprTransient__(self):
         msg = '---TRANSIENT LOAD VECTOR---\n'
-        #msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
+        #msg += '%s = %g\n' %(self.data_code['name'],self.dt)
         msg += self.writeHeader()
 
         for dt, translations in sorted(self.translations.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
@@ -358,7 +358,7 @@ class ThermalVector(TableObject):
         return msg
 
     def __repr__(self):
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---LOAD VECTOR---\n'
@@ -385,11 +385,11 @@ class ThermalVector(TableObject):
         return self.writeF06Transient(['', ''], 'PAGE ', 1)[0]
 
 
-class ThermalLoadVectorObject(ThermalVector):     # tableCode=2, thermal=1
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        ThermalVector.__init__(self, dataCode, isSort1, iSubcase, dt)
+class ThermalLoadVectorObject(ThermalVector):     # table_code=2, thermal=1
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        ThermalVector.__init__(self, data_code, is_sort1, isubcase, dt)
 
 
-class ThermalVelocityVectorObject(ThermalVector):  # tableCode=10, thermal=1
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        ThermalVector.__init__(self, dataCode, isSort1, iSubcase, dt)
+class ThermalVelocityVectorObject(ThermalVector):  # table_code=10, thermal=1
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        ThermalVector.__init__(self, data_code, is_sort1, isubcase, dt)
