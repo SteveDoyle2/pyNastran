@@ -483,9 +483,14 @@ class PanairGridHelper(object):
         self.alphas = alphas
         self.ncases = len(alphas)
 
+    def write_title(self):
+        out = '$title\n'
+        out += '%s\n' % self.title.strip()
+        return out
+
     def write_alphas(self):
         out = '$angles-of-attack\n'
-        out += '%-10s' % (self.alphaC) + '\n'
+        out += '%-s\n' % self.alphaC
         out += '%-10s' * len(self.alphas) % (tuple(self.alphas)) + '\n'
         return out
 
@@ -511,7 +516,7 @@ class PanairGridHelper(object):
 
     def write_betas(self):
         out = '$yaw\n'
-        out += '%-10s' % (self.betaC) + '\n'
+        out += '%s\n' % self.betaC
         out += '%-10s' * len(self.betas) % (tuple(self.betas)) + '\n'
         return out
 
@@ -539,9 +544,11 @@ class PanairGridHelper(object):
 
     def write_reference_quantities(self):
         out = '$references for accumulated forces and moments\n'
-        out += '%-10s' * 3 % (self.xref, self.yref, self.zref) + '\n'
-        out += '%-10s' * 4 % (self.sref, self.bref, self.cref,
-                              self.dref) + '\n'
+        out += '=%-10s%-10s%s\n' % ('Xref', 'Yref', 'Zref')
+        out += '%-10s%-10s%-s\n' % (self.xref, self.yref, self.zref)
+        out += '=%-10s%-10s%-10s%s\n' % ('Sref', 'Bref', 'Cref', 'Dref')
+        out += '%-10s%-10s%-10s%s\n' % (self.sref, self.bref, self.cref,
+                                        self.dref)
         return out
 
     def get_end(self, section):
