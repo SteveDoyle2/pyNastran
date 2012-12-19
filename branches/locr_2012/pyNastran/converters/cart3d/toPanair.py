@@ -1,5 +1,5 @@
 import os
-#import sys
+import sys
 
 from pyNastran.converters.panair.panairGridPatch import PanairGridHelper
 from pyNastran.converters.cart3d.cart3d_reader import generic_cart3d_reader
@@ -231,9 +231,12 @@ class Cart3dToPanair(PanairGridHelper):
 
 
 if __name__ == '__main__':
-    varmap = load_panair_file('panair.in')
-    cart3dGeom = os.path.join('models', 'threePlugs.tri')
+    panairIn = sys.argv[1]
+    cart3dGeom = sys.argv[2]
+    outfilename = sys.argv[3]
+    varmap = load_panair_file(panairIn)
+    #cart3dGeom = os.path.join('models', 'threePlugs.tri')
     #cart3dGeom  = os.path.join('models','spike.a.tri')
-    outfilename = os.path.join('models', 'panair.inp')
+    #outfilename = os.path.join('models', 'panair.inp')
     Cart3dToPanair(cart3dGeom, outfilename, varmap)
     print "done..."
