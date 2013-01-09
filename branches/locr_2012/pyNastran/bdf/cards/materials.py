@@ -939,6 +939,16 @@ class MAT11(Material):
             self.a3 = data[13]
             self.TRef = data[14]
             self.ge = data[15]
+        msg = 'MAT11 mid=%s does not have ' % self.mid
+        assert self.e1 is not None, msg + 'E1 defined'
+        assert self.e2 is not None, msg + 'E2 defined'
+        assert self.e3 is not None, msg + 'E3 defined'
+        assert self.g12 is not None, msg + 'G12 defined'
+        assert self.g13 is not None, msg + 'G13 defined'
+        assert self.g23 is not None, msg + 'G23 defined'
+        assert self.nu12 is not None, msg + 'NU12 defined'
+        assert self.nu13 is not None, msg + 'NU13 defined'
+        assert self.nu23 is not None, msg + 'NU23 defined'
 
     def rawFields(self):
         fields = ['MAT11', self.mid, self.e1, self.e2, self.e3, self.nu12,
