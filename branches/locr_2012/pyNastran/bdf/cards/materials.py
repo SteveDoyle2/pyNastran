@@ -890,6 +890,76 @@ class MAT10(Material):
         return fields
 
 
+class MAT11(Material):
+    """
+    Defines the material properties for a 3D orthotropic material for
+    isoparametric solid elements.
+    MAT10 MID E1 E2 E3 NU12 Nu13 NU23 G12
+    - G13 G23 RHO A1 A2 A3 TREF GE
+    """
+    type = 'MAT11'
+
+    def __init__(self, card=None, data=None):
+        Material.__init__(self, card, data)
+        if card:
+            self.mid = card.field(1)
+            self.e1 = card.field(2)
+            self.e2 = card.field(3)
+            self.e3 = card.field(4)
+            
+            self.nu12 = card.field(5)
+            self.nu13 = card.field(6)
+            self.nu23 = card.field(7)
+            
+            self.g12 = card.field(8)
+            self.g13 = card.field(9)
+            self.g23 = card.field(10)
+            
+            self.rho = card.field(11, 0.0)
+            self.a1 = card.field(12, 0.0)
+            self.a2 = card.field(13, 0.0)
+            self.a3 = card.field(14, 0.0)
+            
+            self.TRef = card.field(15, 0.0)
+            self.ge = card.field(16, 0.0)
+        else:
+            self.mid = data[0]
+            self.e1 = data[1]
+            self.e2 = data[2]
+            self.e3 = data[3]
+            self.nu12 = data[4]
+            self.nu13 = data[5]
+            self.nu23 = data[6]
+            self.g12 = data[7]
+            self.g13 = data[8]
+            self.g23 = data[9]
+            self.rho = data[10]
+            self.a1 = data[11]
+            self.a2 = data[12]
+            self.a3 = data[13]
+            self.TRef = data[14]
+            self.ge = data[15]
+
+    def rawFields(self):
+        fields = ['MAT11', self.mid, self.e1, self.e2, self.e3, self.nu12,
+                  self.nu13, self.g12, self.g13, self.g23, self.rho, self.a1,
+                  self.a2, self.a3, self.TRef, self.ge]
+        return fields
+
+    def reprFields(self):
+        a1 = set_blank_if_default(self.a1, 0.0)
+        a2 = set_blank_if_default(self.a2, 0.0)
+        a3 = set_blank_if_default(self.a3, 0.0)
+
+        TRef = set_blank_if_default(self.TRef, 0.0)
+        ge = set_blank_if_default(self.ge, 0.0)
+
+        fields = ['MAT11', self.mid, self.e1, self.e2, self.e3, self.nu12,
+                  self.nu13, self.g12, self.g13, self.g23, rho, a1,
+                  a2, a3, TRef, ge]
+        return fields
+
+
 class MATHP(HyperelasticMaterial):
     type = 'MATHP'
 

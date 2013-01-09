@@ -58,7 +58,7 @@ from .cards.loads.staticLoads import (LOAD, GRAV, ACCEL1, FORCE,
                                       PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1)
 
 from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
-                              MAT8, MAT9, MAT10,
+                              MAT8, MAT9, MAT10, MAT11,
                               MATHP, CREEP, MATS1)
 from .cards.methods import (EIGB, EIGC, EIGR, EIGP, EIGRL)
 from .cards.nodes import GRID, GRDSET, SPOINTs
@@ -171,7 +171,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             'CREEP',
 
             # materials
-            'MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MATHP',
+            'MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11', 'MATHP',
             #'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
             'MATS1',
 
@@ -411,7 +411,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         #self.massElements = {}
         ## stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}
-        ## stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
+        ## stores MAT1, MAT2, MAT3,...MAT11 (no MAT4, MAT5)
         self.materials = {}
         ## stores MATS1
         self.materialDeps = {}
@@ -1053,7 +1053,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
              # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
              'add_creep_material': ['CREEP'],
              'add_material': ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10',
-                              'MATHP'],
+                              'MAT11', 'MATHP'],
              'add_thermal_material': ['MAT4', 'MAT5'],
              'add_material_dependence': ['MATS1'],
              'add_load': ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1',
