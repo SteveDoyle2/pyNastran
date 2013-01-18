@@ -13,20 +13,34 @@ All solid elements are SolidElement and Element objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import dot, cross, array, matrix, zeros
-from numpy.linalg import solve
+from numpy.linalg import solve, norm
 
 from pyNastran.bdf.cards.elements.elements import Element
 from pyNastran.utils.mathematics import Area, gauss
 
 
-def Volume4(n1, n2, n3, n4):
+def volume4(n1, n2, n3, n4):
     r"""
     V = (a-d) * ((b-d) x (c-d))/6   where x is cross and * is dot
     \f[ \large V = \frac{(a-d) \cdot \left( (b-d) \times (c-d) \right) }{6} \f]
     """
-    V = dot((n1 - n4), cross(n2 - n4, n3 - n4)) / 6.
+    V = -dot((n1 - n4), cross(n2 - n4, n3 - n4)) / 6.
     return V
 
+def area_centroid(n1, n2, n3, n4):
+    a = n1 - n2
+    b = n2 - n4
+    area1 = Area(a, b)
+    c1 = (n1 + n2 + n4) / 3.
+
+    a = n2 - n4
+    b = n2 - n3
+    area2 = Area(a, b)
+    c2 = (n2 + n3 + n4) / 3.
+
+    area = area1 + area2
+    centroid = (c1 * area1 + c2 * area2) / area
+    return(area, centroid)
 
 class SolidElement(Element):
     def __init__(self, card, data):
@@ -78,7 +92,6 @@ class CHEXA8(SolidElement):
     def __init__(self, card=None, data=None):
         SolidElement.__init__(self, card, data)
         if card:
-            #print "hexa = ",card
             self.eid = card.field(1)
             self.pid = card.field(2)
             nids = card.fields(3, 11)
@@ -87,37 +100,24 @@ class CHEXA8(SolidElement):
             self.pid = data[1]
             nids = data[2:]
             assert len(data) == 10, 'len(data)=%s data=%s' % (len(data), data)
-        #print "nids = ",nids
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 8
 
-    def areaCentroid(self, n1, n2, n3, n4):
-        a = n1 - n2
-        b = n2 - n4
-        area1 = Area(a, b)
-        c1 = (n1 + n2 + n4) / 3.
-
-        a = n2 - n4
-        b = n2 - n3
-        area2 = Area(a, b)
-        c2 = (n2 + n3 + n4) / 3.
-
-        area = area1 + area2
-        centroid = (c1 * area1 + c2 * area2) / area
-        return(area, centroid)
-
     def Centroid(self):
+        """
+        Averages the centroids at the two faces
+        """
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()
-        A1, c1 = self.areaCentroid(n1, n2, n3, n4)
-        A2, c2 = self.areaCentroid(n5, n6, n7, n8)
+        A1, c1 = area_centroid(n1, n2, n3, n4)
+        A2, c2 = area_centroid(n5, n6, n7, n8)
         c = (c1 + c2) / 2.
         return c
 
     def Volume(self):
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()
-        (A1, c1) = self.areaCentroid(n1, n2, n3, n4)
-        (A2, c2) = self.areaCentroid(n5, n6, n7, n8)
-        V = (A1 + A2) / 2. * (c1 - c2)
+        (A1, c1) = area_centroid(n1, n2, n3, n4)
+        (A2, c2) = area_centroid(n5, n6, n7, n8)
+        V = (A1 + A2) / 2. * norm(c1 - c2)
         return abs(V)
 
 
@@ -149,23 +149,29 @@ class CHEXA20(CHEXA8):
         assert len(self.nodes) <= 20, msg
 
     def Centroid(self):
+        """
+        @see CHEXA8.Centroid
+        """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13, n14, n15,
          n16, n17, n18, n19, n20) = self.nodePositions()
-        (A1, c1) = self.areaCentroid(n1, n2, n3, n4)
-        (A2, c2) = self.areaCentroid(n5, n6, n7, n8)
+        (A1, c1) = area_centroid(n1, n2, n3, n4)
+        (A2, c2) = area_centroid(n5, n6, n7, n8)
         c = (c1 + c2) / 2.
         return c
 
     def Volume(self):
+        """
+        @see CHEXA8.Volume
+        """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13, n14, n15,
          n16, n17, n18, n19, n20) = self.nodePositions()
-        (A1, c1) = self.areaCentroid(n1, n2, n3, n4)
-        (A2, c2) = self.areaCentroid(n5, n6, n7, n8)
-        V = (A1 + A2) / 2. * (c1 - c2)
+        (A1, c1) = area_centroid(n1, n2, n3, n4)
+        (A2, c2) = area_centroid(n5, n6, n7, n8)
+        V = (A1 + A2) / 2. * norm(c1 - c2)
         return abs(V)
 
 
@@ -177,7 +183,7 @@ class CPENTA6(SolidElement):
      / \        / \
     / A \      / c \
     *---*-----*-----*
-    V = (A1+A2)/2  * (c1-c2)
+    V = (A1+A2)/2  * norm(c1-c2)
     C = (c1-c2)/2
     @endcode
     """
@@ -268,7 +274,7 @@ class CPENTA6(SolidElement):
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
 
-        V = (A1 + A2) / 2. * (c1 - c2)
+        V = (A1 + A2) / 2. * norm(c1 - c2)
         return abs(V)
 
 
@@ -300,6 +306,9 @@ class CPENTA15(CPENTA6):
         assert len(self.nodes) <= 15
 
     def Centroid(self):
+        """
+        @see CPENTA6.Centroid
+        """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13, n14, n15) = self.nodePositions()
@@ -309,6 +318,9 @@ class CPENTA15(CPENTA6):
         return c
 
     def Volume(self):
+        """
+        @see CPENTA6.Volume
+        """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13, n14, n15) = self.nodePositions()
@@ -317,7 +329,7 @@ class CPENTA15(CPENTA6):
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
 
-        V = (A1 + A2) / 2. * (c1 - c2)
+        V = (A1 + A2) / 2. * norm(c1 - c2)
         return abs(V)
 
 
@@ -347,7 +359,7 @@ class CTETRA4(SolidElement):
 
     def Volume(self):
         (n1, n2, n3, n4) = self.nodePositions()
-        return Volume4(n1, n2, n3, n4)
+        return volume4(n1, n2, n3, n4)
 
     def Centroid(self):
         (n1, n2, n3, n4) = self.nodePositions()
@@ -477,10 +489,16 @@ class CTETRA10(CTETRA4):
         return (N1, N2, N3, N4, N5, N6, N7, N8, N9, N10)
 
     def Volume(self):
+        """
+        @see CTETRA4.Volume
+        """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.nodePositions()
-        return Volume4(n1, n2, n3, n4)
+        return volume4(n1, n2, n3, n4)
 
     def Centroid(self):
+        """
+        @see CTETRA4.Centroid
+        """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.nodePositions()
         return (n1 + n2 + n3 + n4) / 4.
 

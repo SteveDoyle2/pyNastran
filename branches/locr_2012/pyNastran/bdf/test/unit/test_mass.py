@@ -13,26 +13,37 @@ testpath = os.path.join(rootpath, 'bdf', 'test', 'unit')
 class TestMass(unittest.TestCase):
         
     def verify_pcomp_element(self, element, mass, area, centroid, normal):
-        #print object_methods(quad,'all')
-        self.assertAlmostEqual(element.Mass(),mass)
-        self.assertAlmostEqual(element.Area(),area)
-        self.assertTrue(all(element.Centroid() == centroid))
-        self.assertTrue(all(element.Normal()   == normal))
+        #print object_methods(element,'all')
+        self.assertAlmostEqual(element.Mass(),mass, msg='mass=%s expected=%s' % (element.Mass(), mass))
+        self.assertAlmostEqual(element.Area(),area, msg='area=%s expected=%s' % (element.Area(), area))
+        self.assertTrue(all(element.Centroid() == centroid),msg='centroid=%s expected=%s' % (element.Centroid(), centroid))
+        self.assertTrue(all(element.Normal() == normal),msg='normal=%s expected=%s' % (element.Normal(), normal))
         with self.assertRaises(NotImplementedError): #  TODO: remove method (quad/tri)
             element.Volume()
         with self.assertRaises(NotImplementedError): #  TODO: remove method (quad/tri)
             element.Length()
 
     def verify_pshell_element(self, element, mass, area, centroid, normal, nsm):
-        #print object_methods(quad,'all')
-        self.assertAlmostEqual(element.Mass(),mass)
-        self.assertAlmostEqual(element.Area(),area)
-        self.assertAlmostEqual(element.Nsm(),nsm)
-        self.assertTrue(all(element.Centroid() == centroid))
-        self.assertTrue(all(element.Normal()   == normal))
+        #print object_methods(element,'all')
+        self.assertAlmostEqual(element.Mass(),mass, msg='mass=%s expected=%s' % (element.Mass(), mass))
+        self.assertAlmostEqual(element.Mass(),mass, msg='area=%s expected=%s' % (element.Area(), area))
+        self.assertAlmostEqual(element.Nsm(),nsm, msg='nsm=%s expected=%s' % (element.Nsm(), nsm))
+        self.assertTrue(all(element.Centroid() == centroid),msg='centroid=%s expected=%s' % (element.Centroid(), centroid))
+        self.assertTrue(all(element.Normal() == normal),msg='normal=%s expected=%s' % (element.Normal(), normal))
         with self.assertRaises(NotImplementedError): #  TODO: remove method (quad/tri)
             element.Volume()
         with self.assertRaises(NotImplementedError): #  TODO: remove method (quad/tri)
+            element.Length()
+
+    def verify_psolid_element(self, element, mass, volume, centroid, rho):
+        #print object_methods(element,'all')
+        self.assertAlmostEqual(element.Mass(),mass, msg='mass=%s expected=%s' % (element.Mass(), mass))
+        self.assertAlmostEqual(element.Volume(),volume, msg='volume=%s expected=%s' % (element.Volume(), volume))
+        self.assertAlmostEqual(element.Rho(),rho, msg='rho=%s expected=%s' % (element.Rho(), rho))
+        self.assertTrue(all(element.Centroid() == centroid),msg='centroid=%s expected=%s' % (element.Centroid(), centroid))
+        with self.assertRaises(NotImplementedError): #  TODO: remove method (hexa)
+            element.Area()
+        with self.assertRaises(NotImplementedError): #  TODO: remove method (hexa)
             element.Length()
 
     def test_mass1(self):  # passes
@@ -79,7 +90,30 @@ class TestMass(unittest.TestCase):
         mass = 0.50625 # mass w/o nsm + 0.5 b/c area=0.5
         nsm = 1.
         self.verify_pshell_element(tri, mass, area, centroid, normal, nsm)
+        
+        # hexa - psolid - nsm = 0
+        hexa = mesh.elements[7]
+        mass = 0.2
+        volume = 2.
+        rho = 0.1
+        centroid = array([0.5, 0.5, 1.0])
+        self.verify_psolid_element(hexa, mass, volume, centroid, rho)
 
+        # tetra - psolid
+        tetra = mesh.elements[8]
+        mass = 1/30.
+        volume = 1/3.
+        rho = 0.1
+        centroid = array([0.5, 0.25, 0.5])
+        self.verify_psolid_element(tetra, mass, volume, centroid, rho)
+
+        # penta - psolid
+        penta = mesh.elements[9]
+        mass = 0.1
+        volume = 1.0
+        rho = 0.1
+        centroid = array([2/3., 1/3., 1.])
+        self.verify_psolid_element(penta, mass, volume, centroid, rho)
 
 if __name__ == '__main__':
     unittest.main()
