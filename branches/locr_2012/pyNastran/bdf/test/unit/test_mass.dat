@@ -29,5 +29,18 @@ GRID           1       0      0.      0.      0.       0
 GRID           2       0      1.      0.      0.       0
 GRID           3       0      1.      1.      0.       0
 GRID           4       0      0.      1.      0.       0
-CQUAD4         1       1       1       2       3       4      0.        
-ENDDATA 
+$ PCOMP test
+CQUAD4         1       1       1       2       3       4      0.
+CTRIA3         2       1       1       2       3
+
+$ PSHELL, NSM = 0.0
+PSHELL         2       1    .125       1               1              0.
+CQUAD4         3       2       1       2       3       4      0.
+CTRIA3         4       2       1       2       3
+
+$ PSHELL, NSM = 1.0
+PSHELL         3       1    .125       1               1              1.
+CQUAD4         5       3       1       2       3       4      0.
+CTRIA3         6       3       1       2       3
+
+ENDDATA
