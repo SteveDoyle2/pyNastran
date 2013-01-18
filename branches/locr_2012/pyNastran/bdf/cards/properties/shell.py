@@ -67,7 +67,7 @@ class PCOMP(ShellProperty):
             midLast = None
             tLast = None
             ply = None
-            iPly = 1
+            iply = 1
             ## supports single ply per line
             for i in xrange(9, 9 + nplies * 4, 4):
                 defaults = [midLast, tLast, 0.0, 'NO']
@@ -77,14 +77,14 @@ class PCOMP(ShellProperty):
                 if not t > 0.:
                     msg = ('thickness of PCOMP layer is invalid pid=%s'
                            ' iLayer=%s t=%s ply=[mid,t,theta,'
-                           'sout]=%s' % (self.pid, iPly, t, ply))
+                           'sout]=%s' % (self.pid, iply, t, ply))
                     raise RuntimeError(msg)
 
                 # if this card has 2 plies on the line
                 if actual != [None, None, None, None]:
                     ply = [mid, t, theta, sout]
                     plies.append(ply)
-                    iPly += 1
+                    iply += 1
                 midLast = mid
                 tLast = t
             #print "nplies = ",nplies
@@ -183,20 +183,20 @@ class PCOMP(ShellProperty):
         @param self the object pointer
         @param model a BDF object
         """
-        for iPly in xrange(len(self.plies)):
-            mid = self.plies[iPly][0]
-            self.plies[iPly][0] = model.Material(mid)  # mid
+        for iply in xrange(len(self.plies)):
+            mid = self.plies[iply][0]
+            self.plies[iply][0] = model.Material(mid)  # mid
 
     def Nsm(self):
         return self.nsm
 
-    def Mid(self, iPly):
+    def Mid(self, iply):
         """
         gets the material ID of the ith ply
         @param self the object pointer
-        @param iPly the ply ID (starts from 0)
+        @param iply the ply ID (starts from 0)
         """
-        Mid = self.Material(iPly)
+        Mid = self.Material(iply)
         if isinstance(Mid, int):
             return Mid
         return Mid.mid
@@ -208,37 +208,37 @@ class PCOMP(ShellProperty):
         @retval mids the material IDs
         """
         mids = []
-        for iPly in xrange(len(self.plies)):
-            mids.append(self.Mid(iPly))
+        for iply in xrange(len(self.plies)):
+            mids.append(self.Mid(iply))
         return mids
 
-    def Rho(self, iPly):
+    def Rho(self, iply):
         """
         gets the density of the ith ply
         @param self the object pointer
-        @param iPly the ply ID (starts from 0)
+        @param iply the ply ID (starts from 0)
         """
-        mid = self.Material(iPly)
+        mid = self.Material(iply)
         return mid.rho
 
-    def Material(self, iPly):
+    def Material(self, iply):
         """
         gets the material of the ith ply (not the ID unless it's not
         cross-referenced)
         @param self the object pointer
-        @param iPly the ply ID (starts from 0)
+        @param iply the ply ID (starts from 0)
         """
-        Mid = self.plies[iPly][0]
+        Mid = self.plies[iply][0]
         return Mid
 
-    def Thickness(self, iPly='all'):
+    def Thickness(self, iply='all'):
         """
         gets the thickness of the ith ply
         @param self the object pointer
-        @param iPly the string 'all' (default) or the mass per area of the ith
+        @param iply the string 'all' (default) or the mass per area of the ith
          ply
         """
-        if iPly == 'all':  # get all layers
+        if iply == 'all':  # get all layers
             t = 0.
             for iply in xrange(len(self.plies)):
                 t += self.Thickness(iply)
@@ -247,23 +247,23 @@ class PCOMP(ShellProperty):
                 return t * 2.
             return t
         else:
-            t = self.plies[iPly][1]
+            t = self.plies[iply][1]
             return t
 
-    def Theta(self, iPly):
+    def Theta(self, iply):
         """
         Gets the ply angle of the ith ply (not the ID)
         @param self the object pointer
-        @param iPly the ply ID (starts from 0)
+        @param iply the ply ID (starts from 0)
         """
-        Theta = self.plies[iPly][2]
+        Theta = self.plies[iply][2]
         return Theta
 
-    def sout(self, iPly):
-        Sout = self.plies[iPly][3]
+    def sout(self, iply):
+        Sout = self.plies[iply][3]
         return Sout
 
-    def MassPerArea(self, iPly='all'):
+    def MassPerArea(self, iply='all'):
         r"""
         \f[ \large  m = A ( \rho t + nsm ) \f]
         mass = rho*A*t
@@ -273,10 +273,10 @@ class PCOMP(ShellProperty):
         the final mass calculation will be done later
         @param self
           the PCOMP object
-        @param iPly
+        @param iply
           the string 'all' (default) or the mass per area of the ith ply
         """
-        if iPly == 'all':  # get all layers
+        if iply == 'all':  # get all layers
             massPerArea = 0.
             nplies = len(self.plies)
             for iply in xrange(nplies):
@@ -288,16 +288,16 @@ class PCOMP(ShellProperty):
                 return 2. * massPerArea + self.nsm
             return massPerArea + self.nsm
         else:
-            rho = self.Rho(iPly)
-            t = self.plies[iPly][1]
+            rho = self.Rho(iply)
+            t = self.plies[iply][1]
             return rho * t + self.nsm
 
     def rawFields(self):
         fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
                   self.TRef, self.ge, self.lam, ]
-        for (iPly, ply) in enumerate(self.plies):
+        for (iply, ply) in enumerate(self.plies):
             (_mid, t, theta, sout) = ply
-            mid = self.Mid(iPly)
+            mid = self.Mid(iply)
             fields += [mid, t, theta, sout]
         return fields
 
@@ -309,9 +309,9 @@ class PCOMP(ShellProperty):
         z0 = set_blank_if_default(self.z0, -0.5 * self.Thickness())
 
         fields = ['PCOMP', self.pid, z0, nsm, sb, self.ft, TRef, ge, self.lam]
-        for (iPly, ply) in enumerate(self.plies):
+        for (iply, ply) in enumerate(self.plies):
             (_mid, t, theta, sout) = ply
-            mid = self.Mid(iPly)
+            mid = self.Mid(iply)
             #theta = set_blank_if_default(theta,0.0)
             sout = set_blank_if_default(sout, 'NO')
             fields += [mid, t, theta, sout]
@@ -371,16 +371,16 @@ class PCOMPG(PCOMP):
         else:
             raise NotImplementedError('PCOMPG data')
 
-    def GlobalPlyID(self, iPly):
-        gPlyID = self.plies[iPly][4]
+    def GlobalPlyID(self, iply):
+        gPlyID = self.plies[iply][4]
         return gPlyID
 
     def rawFields(self):
         fields = ['PCOMPG', self.pid, self.z0, self.nsm, self.sb, self.ft,
                   self.TRef, self.ge, self.lam, ]
-        for (iPly, ply) in enumerate(self.plies):
+        for (iply, ply) in enumerate(self.plies):
             (_mid, t, theta, sout, gPlyID) = ply
-            mid = self.Mid(iPly)
+            mid = self.Mid(iply)
             fields += [gPlyID, mid, t, theta, sout, None, None, None]
         return fields
 
@@ -393,9 +393,9 @@ class PCOMPG(PCOMP):
 
         fields = ['PCOMPG', self.pid, z0, nsm, sb, self.ft, TRef, ge, self.lam]
 
-        for (iPly, ply) in enumerate(self.plies):
+        for (iply, ply) in enumerate(self.plies):
             (_mid, t, theta, sout, gPlyID) = ply
-            mid = self.Mid(iPly)
+            mid = self.Mid(iply)
             #theta = set_blank_if_default(theta,0.0)
             sout = set_blank_if_default(sout, 'NO')
             fields += [gPlyID, mid, t, theta, sout, None, None, None]
