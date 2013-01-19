@@ -181,6 +181,9 @@ def solve_tridag(A, D):
 
 Area = lambda a, b: 0.5 * norm(cross(a, b))
 
+def centroid_triangle(n1, n2, n3):
+    centroid = (n1 + n2 + n3) / 3.
+    return centroid
 
 def gauss(n):
     r"""
