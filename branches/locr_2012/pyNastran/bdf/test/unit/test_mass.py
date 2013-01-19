@@ -18,9 +18,9 @@ class TestMass(unittest.TestCase):
         self.assertAlmostEqual(element.Area(),area, msg='area=%s expected=%s' % (element.Area(), area))
         self.assertTrue(all(element.Centroid() == centroid),msg='centroid=%s expected=%s' % (element.Centroid(), centroid))
         self.assertTrue(all(element.Normal() == normal),msg='normal=%s expected=%s' % (element.Normal(), normal))
-        with self.assertRaises(NotImplementedError): #  TODO: remove method (quad/tri)
+        with self.assertRaises(AttributeError):
             element.Volume()
-        with self.assertRaises(NotImplementedError): #  TODO: remove method (quad/tri)
+        with self.assertRaises(AttributeError):
             element.Length()
 
     def verify_pshell_element(self, element, mass, area, centroid, normal, nsm):
@@ -30,9 +30,9 @@ class TestMass(unittest.TestCase):
         self.assertAlmostEqual(element.Nsm(),nsm, msg='nsm=%s expected=%s' % (element.Nsm(), nsm))
         self.assertTrue(all(element.Centroid() == centroid),msg='centroid=%s expected=%s' % (element.Centroid(), centroid))
         self.assertTrue(all(element.Normal() == normal),msg='normal=%s expected=%s' % (element.Normal(), normal))
-        with self.assertRaises(NotImplementedError): #  TODO: remove method (quad/tri)
+        with self.assertRaises(AttributeError):
             element.Volume()
-        with self.assertRaises(NotImplementedError): #  TODO: remove method (quad/tri)
+        with self.assertRaises(AttributeError):
             element.Length()
 
     def verify_psolid_element(self, element, mass, volume, centroid, rho):
@@ -41,9 +41,9 @@ class TestMass(unittest.TestCase):
         self.assertAlmostEqual(element.Volume(),volume, msg='volume=%s expected=%s' % (element.Volume(), volume))
         self.assertAlmostEqual(element.Rho(),rho, msg='rho=%s expected=%s' % (element.Rho(), rho))
         self.assertTrue(all(element.Centroid() == centroid),msg='centroid=%s expected=%s' % (element.Centroid(), centroid))
-        with self.assertRaises(NotImplementedError): #  TODO: remove method (hexa)
+        with self.assertRaises(AttributeError):
             element.Area()
-        with self.assertRaises(NotImplementedError): #  TODO: remove method (hexa)
+        with self.assertRaises(AttributeError):
             element.Length()
 
     def test_mass1(self):  # passes
@@ -94,7 +94,7 @@ class TestMass(unittest.TestCase):
         # hexa - psolid - nsm = 0
         hexa = mesh.elements[7]
         mass = 0.2
-        volume = 2.
+        volume = 2. # l * w * h = 1 * 1 * 2
         rho = 0.1
         centroid = array([0.5, 0.5, 1.0])
         self.verify_psolid_element(hexa, mass, volume, centroid, rho)
@@ -102,7 +102,7 @@ class TestMass(unittest.TestCase):
         # tetra - psolid
         tetra = mesh.elements[8]
         mass = 1/30.
-        volume = 1/3.
+        volume = 1/3. # 1/3 * b * h = 1/3 * 0.5 * 2.0
         rho = 0.1
         centroid = array([0.5, 0.25, 0.5])
         self.verify_psolid_element(tetra, mass, volume, centroid, rho)
@@ -110,7 +110,7 @@ class TestMass(unittest.TestCase):
         # penta - psolid
         penta = mesh.elements[9]
         mass = 0.1
-        volume = 1.0
+        volume = 1.0 # b * h = 0.5 * 2
         rho = 0.1
         centroid = array([2/3., 1/3., 1.])
         self.verify_psolid_element(penta, mass, volume, centroid, rho)

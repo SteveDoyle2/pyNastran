@@ -25,7 +25,7 @@ from numpy.linalg import det  # inv
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
 from pyNastran.bdf.cards.baseCard import Element
-from pyNastran.utils.mathematics import Area, norm
+from pyNastran.utils.mathematics import Area, norm, centroid_triangle
 
 
 def _triangle_area_centroid_normal(nodes):
@@ -147,7 +147,7 @@ class TriShell(ShellElement):
         \f[ \large CG = \frac{1}{3} (n_0+n_1+n_2)  \f]
         """
         (n0, n1, n2) = self.nodePositions()
-        centroid = self.CentroidTriangle(n0, n1, n2)
+        centroid = centroid_triangle(n0, n1, n2)
         return centroid
 
     def MassMatrix(self, isLumped=True):
@@ -354,7 +354,7 @@ class CTRIA6(TriShell):
         \f[ \large CG = \frac{1}{3} (n_1+n_2+n_3)  \f]
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
-        centroid = self.CentroidTriangle(n1, n2, n3)
+        centroid = centroid_triangle(n1, n2, n3)
         return centroid
 
     def flipNormal(self):
@@ -584,12 +584,12 @@ class QuadShell(ShellElement):
         a = n1 - n2
         b = n2 - n4
         area1 = Area(a, b)
-        c1 = self.CentroidTriangle(n1, n2, n4)
+        c1 = centroid_triangle(n1, n2, n4)
 
         a = n2 - n4
         b = n2 - n3
         area2 = Area(a, b)
-        c2 = self.CentroidTriangle(n2, n3, n4)
+        c2 = centroid_triangle(n2, n3, n4)
 
         area = area1 + area2
         centroid = (c1 * area1 + c2 * area2) / area
@@ -729,12 +729,12 @@ class CSHEAR(QuadShell):
         a = n1 - n2
         b = n2 - n4
         area1 = Area(a, b)
-        c1 = self.CentroidTriangle(n1, n2, n4)
+        c1 = centroid_triangle(n1, n2, n4)
 
         a = n2 - n4
         b = n2 - n3
         area2 = Area(a, b)
-        c2 = self.CentroidTriangle(n2, n3, n4)
+        c2 = centroid_triangle(n2, n3, n4)
 
         area = area1 + area2
         centroid = (c1 * area1 + c2 * area2) / area
@@ -1051,12 +1051,12 @@ class CQUAD8(QuadShell):
         a = n1 - n2
         b = n2 - n4
         area1 = Area(a, b)
-        c1 = self.CentroidTriangle(n1, n2, n4)
+        c1 = centroid_triangle(n1, n2, n4)
 
         a = n2 - n4
         b = n2 - n3
         area2 = Area(a, b)
-        c2 = self.CentroidTriangle(n2, n3, n4)
+        c2 = centroid_triangle(n2, n3, n4)
 
         area = area1 + area2
         centroid = (c1 * area1 + c2 * area2) / area

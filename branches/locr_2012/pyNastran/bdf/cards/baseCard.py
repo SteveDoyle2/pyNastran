@@ -1,7 +1,6 @@
 # pylint: disable=R0904,R0902,C0111,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
 from itertools import izip
 
 from pyNastran.bdf.fieldWriter import print_card, is_same
@@ -10,9 +9,9 @@ from pyNastran.bdf.fieldWriter import print_card, is_same
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 
 
-class BaseCard(BDFCard):
-    #def __init__(self,card):
-    #    pass
+class BaseCard(object):
+    def __init__(self):
+        pass
 
     def writeCodeAster(self):
         return ('# skipping %s  because writeCodeAster is not implemented\n'
@@ -44,11 +43,6 @@ class BaseCard(BDFCard):
     #def removeTrailingNones(self, fields):
         #"""removes blank fields at the end of a card object"""
         #self._wipeEmptyFields(fields)
-
-    def cross_reference(self, model):
-        #self.mid = model.Material(self.mid)
-        msg = "%s needs to implement the 'cross_reference' method" % self.type
-        raise NotImplementedError(msg)
 
     def buildTableLines(self, fields, nStart=1, nEnd=0):
         """
@@ -160,8 +154,7 @@ class Property(BaseCard):
 class Material(BaseCard):
     """Base Material Class"""
     def __init__(self, card, data):
-        pass
-        #self.type = card[0]
+        BaseCard.__init__(self)
 
     def isSameCard(self, mat, debug=False):
         if self.type != mat.type:
@@ -183,11 +176,11 @@ class Element(BaseCard):
     pid = 0  # CONM2, rigid
 
     def __init__(self, card, data):
+        BaseCard.__init__(self)
         assert card is None or data is None
         ## the list of node IDs for an element (default=None)
         self.nodes = None
         #self.nids = []
-        pass
 
     def isSameCard(self, element, debug=False):
         if self.type != element.type:
@@ -245,7 +238,7 @@ class Element(BaseCard):
         self.nodes = []
         for nid in nids:
             if isinstance(nid, int):
-                self.nodes.append(int(nid))
+                self.nodes.append(nid)
             elif nid is None and allowEmptyNodes:
                 self.nodes.append(nid)
             else:  # string???
@@ -253,64 +246,6 @@ class Element(BaseCard):
                 #raise RuntimeError('this element may not have missing '
                 #                   'nodes...nids=%s allowEmptyNodes=False'
                 #                   %(nids))
-
-    #def Normal(self,a,b):
-    #    """finds the unit normal vector of 2 vectors"""
-    #    return Normal(a,b)
-
-    def CentroidTriangle(self, n1, n2, n3):
-        centroid = (n1 + n2 + n3) / 3.
-        return centroid
-
-    def Centroid(self):
-        msg = 'Centroid not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def Length(self):
-        msg = 'Length not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def Area(self):
-        msg = 'Area not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def Volume(self):
-        msg = 'Volume not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def Mass(self):
-        msg = 'Mass not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def B(self):
-        msg = 'B matrix not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def D(self):
-        msg = 'D matrix not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def Jacobian(self):
-        msg = 'Jacobian not implemented for %s' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def stiffnessMatrix(self):
-        msg = 'stiffnessMatrix not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def massMatrix(self):
-        msg = 'massMatrix not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
 
 
 def expand_thru(fields):
