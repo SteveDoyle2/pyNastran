@@ -375,7 +375,7 @@ class OP4:                                                 # {{{1
                  4 : 'CD' ,}  # complex double precision
     def __init__(self          ,                # {{{2
                  char *filename,
-                 mode          ):
+                 mode='r'      ):
         cdef int  Max_Matrices_Per_OP4 = 100
         cdef int  nmat_in_file
 #       cdef char name[Max_Matrices_Per_OP4][9]   # not allowed
@@ -993,4 +993,70 @@ def Save(                                                  # {{{1
     fclose(fp)
 
     return
+# 1}}}
+def Load(                                                  # {{{1
+         filename ,
+         *args    ,
+         nmat=1   ,
+         skip=0   ,
+         ):
+    """
+
+    K = cop4.Load('kd.op4')
+        Load the first matrix from the file kd.op4.
+
+    K, D, M = cop4.Load('kd.op4', nmat=3)
+        Load the first three matrices from file kd.op4.
+
+    D, M = cop4.Load('kd.op4', nmat=2, skip=1)
+        Skip the first matrix, then load the next two matrices from kd.op4.
+
+    K, M = cop4.Load('kd.op4', 'Kxx', 'Mxx')
+        Load the matrices named Kxx and Mxx from kd.op4.
+
+    Dict = cop4.Load('kd.op4', '*')
+        Load all matrices from kd.op4.  Returns a dictionary of
+        matrices keyed by matrix name.
+
+    Dict = cop4.Load('kd.op4', '*', skip=1)
+        Skip the first matrix, then load all remaining matrices from 
+        kd.op4.  Returns a dictionary of matrices keyed by matrix name.
+
+    """
+    All_Matrices = []
+
+    fh = OP4(filename, 'r')
+#   print('op4.Load: file %s contains %s' % (filename, ', '.join(fh.name)))
+    for desired_name in args:
+#       print('op4.Load: considering %s' % (desired_name))
+
+        if desired_name == '*':
+            # get all matrices after skip
+#           print('op4.Load: got star')
+            nmat = len(fh.name) - skip
+#           print('op4.Load will get %d matrices' % (nmat))
+            if nmat <= 0:
+                print('op4.Load: %s only has %d matrices.' % (
+                    filename, len(fh.name)))
+                return None
+            All_Matrices = {}
+            for i in range(skip, len(fh.name)):
+                All_Matrices[fh.name[i]] = fh.Load(skip=i) # get the i-th mat.
+            return All_Matrices
+
+        elif desired_name not in fh.name:
+            print("op4.Load: matrix name '%s' not found in %s; ignoring." % (
+                desired_name, filename))
+            continue
+
+        offset = fh.name.index(desired_name)
+#       print('op4.Load will get %s at index %d' % (desired_name, offset))
+        All_Matrices.append(fh.Load(skip=offset))
+
+    if   len(All_Matrices) == 0:
+        return None
+    elif len(All_Matrices) == 1:
+        return All_Matrices[0]
+    else:
+        return All_Matrices
 # 1}}}
