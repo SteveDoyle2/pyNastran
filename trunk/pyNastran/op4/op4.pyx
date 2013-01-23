@@ -1027,31 +1027,43 @@ def Load(                                                  # {{{1
 
     fh = OP4(filename, 'r')
 #   print('op4.Load: file %s contains %s' % (filename, ', '.join(fh.name)))
-    for desired_name in args:
-#       print('op4.Load: considering %s' % (desired_name))
+    if args:
+        for desired_name in args:
+#           print('op4.Load: considering %s' % (desired_name))
 
-        if desired_name == '*':
-            # get all matrices after skip
-#           print('op4.Load: got star')
-            nmat = len(fh.name) - skip
-#           print('op4.Load will get %d matrices' % (nmat))
-            if nmat <= 0:
-                print('op4.Load: %s only has %d matrices.' % (
-                    filename, len(fh.name)))
-                return None
-            All_Matrices = {}
-            for i in range(skip, len(fh.name)):
-                All_Matrices[fh.name[i]] = fh.Load(skip=i) # get the i-th mat.
-            return All_Matrices
+            if desired_name == '*':
+                # get all matrices after skip
+#               print('op4.Load: got star')
+                nmat = len(fh.name) - skip
+#               print('op4.Load will get %d matrices' % (nmat))
+                if nmat <= 0:
+                    print('op4.Load: %s only has %d matrices.' % (
+                        filename, len(fh.name)))
+                    return None
+                All_Matrices = {}
+                for i in range(skip, len(fh.name)):
+                    All_Matrices[fh.name[i]] = fh.Load(skip=i) # get the i-th mat.
+                return All_Matrices
 
-        elif desired_name not in fh.name:
-            print("op4.Load: matrix name '%s' not found in %s; ignoring." % (
-                desired_name, filename))
-            continue
+            elif desired_name not in fh.name:
+                print("op4.Load: matrix name '%s' not found in %s; ignoring." % (
+                    desired_name, filename))
+                continue
 
-        offset = fh.name.index(desired_name)
-#       print('op4.Load will get %s at index %d' % (desired_name, offset))
-        All_Matrices.append(fh.Load(skip=offset))
+            offset = fh.name.index(desired_name)
+#           print('op4.Load will get %s at index %d' % (desired_name, offset))
+            All_Matrices.append(fh.Load(skip=offset))
+    else:
+        # no name arguments given
+        nmat = len(fh.name) - skip
+#       print('op4.Load will get %d matrices' % (nmat))
+        if nmat <= 0:
+            print('op4.Load: %s only has %d matrices.' % (
+                filename, len(fh.name)))
+            return None
+        All_Matrices = []
+        for i in range(skip, len(fh.name)):
+            All_Matrices.append(fh.Load(skip=i))
 
     if   len(All_Matrices) == 0:
         return None
