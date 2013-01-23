@@ -23,7 +23,7 @@ class Method(BaseCard):
     Generic class for all methods.
     Part of self.methods
     """
-    def __init__(self, card=None, data=None):
+    def __init__(self, card, data):
         pass
 
 

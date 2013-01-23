@@ -161,7 +161,9 @@ class FREQ4(FREQ):
 class FREQ5(FREQ):
     type = 'FREQ5'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         raise NotImplementedError()
 
 

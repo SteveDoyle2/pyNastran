@@ -26,12 +26,14 @@ class RigidElement(Element):
 class RBAR(RigidElement):
     type = 'RBAR'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         RBAR EID GA GB CNA    CNB CMA CMB ALPHA
         RBAR 5   1   2 123456             6.5-6
         """
         RigidElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             self.ga = card.field(2)
@@ -94,12 +96,14 @@ class RBAR(RigidElement):
 class RBAR1(RigidElement):
     type = 'RBAR1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         RBAR1 EID GA GB CB  ALPHA
         RBAR1 5    1  2 123 6.5-6
         """
         RigidElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             self.ga = card.field(2)
@@ -126,8 +130,10 @@ class RBAR1(RigidElement):
 class RBE1(RigidElement):  # maybe not done, needs testing
     type = 'RBE1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         RigidElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         self.eid = card.field(1)
         self.Gni = []
         self.Cni = []
@@ -226,12 +232,14 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 class RBE2(RigidElement):
     type = 'RBE2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         RBE2 EID GN CM GM1 GM2 GM3 GM4 GM5
         GM6 GM7 GM8 -etc.- ALPHA
         """
         RigidElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Element identification number
             self.eid = card.field(1)
@@ -328,10 +336,10 @@ class RBE2(RigidElement):
         return fields
 
 
-class RBE3(RigidElement):  # not done, needs testing badly
+class RBE3(RigidElement):  # TODO: not done, needs testing badly
     type = 'RBE3'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         eid
         refgrid
@@ -342,6 +350,8 @@ class RBE3(RigidElement):  # not done, needs testing badly
         alpha
         """
         RigidElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         self.eid = card.field(1)
         self.refgrid = card.field(3)
         self.refc = card.field(4)

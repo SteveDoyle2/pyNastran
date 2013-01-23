@@ -53,8 +53,10 @@ class ABCQSet(Set):
     ASET ID1 C1 ID2 C2   ID3 C3 ID4 C4
     ASET 16  2  23  3516 1   4
     """
-    def __init__(self, card=None, data=None): # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''): # TODO doesnt support data
         Set.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
         ## Identifiers of grids points. (Integer > 0)
         self.IDs = []
@@ -85,8 +87,10 @@ class ASET(ABCQSet):
     """
     type = 'ASET'
 
-    def __init__(self, card=None, data=None):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
         ABCQSet.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
 
 class BSET(ABCQSet):
@@ -98,8 +102,10 @@ class BSET(ABCQSet):
     """
     type = 'BSET'
 
-    def __init__(self, card=None, data=None):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
         ABCQSet.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
 
 class CSET(ABCQSet):
@@ -111,8 +117,10 @@ class CSET(ABCQSet):
     """
     type = 'CSET'
 
-    def __init__(self, card=None, data=None):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
         ABCQSet.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
 
 class QSET(ABCQSet):
@@ -124,8 +132,10 @@ class QSET(ABCQSet):
     """
     type = 'QSET'
 
-    def __init__(self, card=None, data=None):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
         ABCQSet.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
 
 class ABQSet1(Set):
@@ -137,8 +147,10 @@ class ABQSet1(Set):
     ID8 ID9
     ASET1 C ID1 'THRU' ID2
     """
-    def __init__(self, card=None, data=None):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
         Set.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         ## Component number. (Integer zero or blank for scalar points or any
         ## unique combination of the Integers 1 through 6 for grid points with
         ## no embedded blanks.)
@@ -166,15 +178,19 @@ class ASET1(ABQSet1):
     """
     type = 'ASET1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ABQSet1.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
 
 class BSET1(ABQSet1):
     type = 'BSET1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ABQSet1.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
 
 class CSET1(Set):
@@ -186,8 +202,10 @@ class CSET1(Set):
     CSET1 C ID1 'THRU' ID2
     CSET1,,'ALL'
     """
-    def __init__(self, card=None, data=None):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
         Set.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
         ## Identifiers of grids points. (Integer > 0)
         self.IDs = []
@@ -214,8 +232,10 @@ class QSET1(ABQSet1):
     """
     type = 'QSET1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ABQSet1.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
 
 class SET1(Set):
@@ -230,8 +250,10 @@ class SET1(Set):
     """
     type = 'SET1'
 
-    def __init__(self, card=None, data=None):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
         Set.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         ## Unique identification number. (Integer > 0)
         self.sid = card.field(1)
 
@@ -270,8 +292,10 @@ class SET3(Set):
     """
     type = 'SET1'
 
-    def __init__(self, card=None, data=None):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
         Set.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         ## Unique identification number. (Integer > 0)
         self.sid = card.field(1)
 
@@ -324,8 +348,10 @@ class SESET(SetSuper):
     """
     type = 'SESET'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SetSuper.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         self.seid = card.field(1, 0)
         ## Grid or scalar point identification number.
         ## (0 < Integer < 1000000; G1 < G2)
@@ -370,8 +396,10 @@ class SEBSET(Set):
     SEBSET SEID ID1 C1 ID2 C2 ID3 C3
     SEBSET C ID1 'THRU' ID2
     """
-    def __init__(self, card=None, data=None):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
         Set.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
         ## Identifiers of grids points. (Integer > 0)
         self.components = []
@@ -400,8 +428,10 @@ class SEBSET1(Set):
     ID8 ID9
     SEBSET1 C ID1 'THRU' ID2
     """
-    def __init__(self, card=None, data=None):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
         Set.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
         ## Identifiers of grids points. (Integer > 0)
         self.IDs = []
@@ -425,8 +455,10 @@ class SEQSET1(Set):
     ID8 ID9
     SEQSET1 C ID1 'THRU' ID2
     """
-    def __init__(self, card=None, data=None):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
         Set.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
         ## Identifiers of grids points. (Integer > 0)
         self.IDs = []
@@ -446,8 +478,10 @@ class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
     """
     type = 'SEQSEP'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SetSuper.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         ## Identification number for secondary superelement. (Integer >= 0).
         self.ssid = card.field(1)
         ## Identification number for the primary superelement. (Integer >= 0).
@@ -475,8 +509,10 @@ class RADSET(Set):  # not integrated
     """
     type = 'RADSET'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Set.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         self.seid = card.field(1)
         ## Grid or scalar point identification number.
         ## (0 < Integer < 1000000; G1 < G2)

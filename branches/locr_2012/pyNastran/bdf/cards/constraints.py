@@ -276,8 +276,10 @@ class SUPORT1(Constraint):
     """
     type = 'SUPORT1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Constraint.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         self.conid = card.field(1)  # really a support id sid
         fields = card.fields(2)
 
@@ -303,8 +305,10 @@ class SUPORT(Constraint):
     """
     type = 'SUPORT'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Constraint.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             fields = card.fields(1)
         else:
@@ -326,8 +330,10 @@ class SUPORT(Constraint):
 class MPC(Constraint):
     type = 'MPC'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Constraint.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         self.conid = card.field(1)
         #self.gids        = [card.field(2),card.field(5,None)]
         #self.constraints = [card.field(3),card.field(6,None)] # 0 if scalar point 1-6 if grid
@@ -393,9 +399,11 @@ class SPC(Constraint):
     """
     type = 'SPC'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Constraint.__init__(self, card, data)
 
+        if comment:
+            self._comment = comment
         if card:
             self.conid = card.field(1)
             self.gids = [card.field(2), card.field(5, None)]
@@ -452,10 +460,12 @@ class SPCD(SPC):
     """
     type = 'SPCD'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         # defines everything :) at least until cross-referencing methods are
         # implemented
         SPC.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
     def rawFields(self):
         fields = ['SPCD', self.conid]
@@ -477,10 +487,12 @@ class SPCAX(Constraint):
     """
     type = 'SPCAX'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         # defines everything :) at least until cross-referencing methods are
         # implemented
         SPC.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
         ## Identification number of a single-point constraint set.
         self.conid = card.field(1)
@@ -518,8 +530,10 @@ class SPC1(Constraint):
     """
     type = 'SPC1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Constraint.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         self.conid = card.field(1)
         self.constraints = str(card.field(2, ''))  # 246 = y; dx, dz dir
         nodes = card.fields(3)
@@ -588,8 +602,10 @@ class SPCADD(ConstraintADD):
     """
     type = 'SPCADD'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ConstraintADD.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         self.conid = card.field(1)
         sets = card.fields(2)
         self.sets = expand_thru(sets)
@@ -628,8 +644,10 @@ class MPCADD(ConstraintADD):
     """
     type = 'MPCADD'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ConstraintADD.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         self.conid = card.field(1)
         sets = card.fields(2)
         self.sets = expand_thru(sets)

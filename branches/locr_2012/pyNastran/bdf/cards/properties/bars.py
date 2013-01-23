@@ -502,9 +502,11 @@ class IntegratedLineProperty(LineProperty):
 class PROD(LineProperty):
     type = 'PROD'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LineProperty.__init__(self, card, data)
 
+        if comment:
+            self._comment = comment
         if card:
             self.pid = card.field(1)
             self.mid = card.field(2)
@@ -557,8 +559,10 @@ class PROD(LineProperty):
 class PTUBE(LineProperty):
     type = 'PTUBE'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LineProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.pid = card.field(1)
             self.mid = card.field(2)
@@ -633,7 +637,7 @@ class PTUBE(LineProperty):
 class PBAR(LineProperty):
     type = 'PBAR'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         @todo
             support solution 600 default
@@ -641,6 +645,8 @@ class PBAR(LineProperty):
             do a check for mid -> MAT4/MAT5 for thermal
         """
         LineProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## property ID -> use Pid()
             self.pid = card.field(1)
@@ -809,8 +815,10 @@ class PBARL(LineProperty):
         "DBOX": 10,  # was 12
     }  # for GROUP="MSCBML0"
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LineProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.pid = card.field(1)
             self.mid = card.field(2)
@@ -919,8 +927,10 @@ class PBARL(LineProperty):
 class PBCOMP(LineProperty):
     type = 'PBCOMP'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LineProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Property ID
             self.pid = card.field(1)
@@ -1005,11 +1015,13 @@ class PBCOMP(LineProperty):
 class PBEAM(IntegratedLineProperty):
     type = 'PBEAM'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         @todo fix 0th entry of self.so, self.xxb
         """
         IntegratedLineProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.pid = card.field(1)
             self.mid = card.field(2)
@@ -1275,8 +1287,10 @@ class PBEAML(IntegratedLineProperty):
         "DBOX": 10,  # was 12
     }  # for GROUP="MSCBML0"
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         IntegratedLineProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.pid = card.field(1)
             self.mid = card.field(2)
@@ -1454,8 +1468,10 @@ class PBEAML(IntegratedLineProperty):
 class PBEAM3(LineProperty):  # not done, cleanup
     type = 'PBEAM3'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LineProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.pid = card.field(1)
             self.mid = card.field(2)
@@ -1495,8 +1511,10 @@ class PBEAM3(LineProperty):  # not done, cleanup
 class PBEND(LineProperty):
     type = 'PBEND'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LineProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.pid = card.field(1)
             self.mid = card.field(2)

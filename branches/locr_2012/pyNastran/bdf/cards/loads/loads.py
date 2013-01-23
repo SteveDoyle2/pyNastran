@@ -137,7 +137,9 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     """
     type = 'LSEQ'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
             self.sid = card.field(1)
             self.exciteID = card.field(2)
@@ -211,7 +213,9 @@ class SLOAD(Load):
     """
     type = 'SLOAD'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         ## load ID
         self.sid = card.field(1)
 
@@ -251,8 +255,10 @@ class SLOAD(Load):
 class DLOAD(LoadCombination):
     type = 'DLOAD'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LoadCombination.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
     #def cross_reference(self, model):
     #    for (i, sid) in enumerate(self.sids):
@@ -283,7 +289,9 @@ class DAREA(BaseCard):
     """
     type = 'DAREA'
 
-    def __init__(self, card=None, nOffset=0, data=None):
+    def __init__(self, card=None, nOffset=0, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
             nOffset *= 3
             self.sid = card.field(1)
@@ -316,8 +324,10 @@ class TLOAD1(TabularLoad):
     """
     type = 'TLOAD1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         TabularLoad.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         ## load ID
         self.sid = card.field(1)
 
@@ -393,8 +403,10 @@ class TLOAD2(TabularLoad):
     """
     type = 'TLOAD2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         TabularLoad.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         ## load ID
         ## SID must be unique for all TLOAD1, TLOAD2, RLOAD1, RLOAD2, and ACSRCE entries.
         self.sid = card.field(1)
@@ -428,7 +440,7 @@ class TLOAD2(TabularLoad):
         ## (Real; Default = 0.0)
         self.vs0 = card.field(12, 0.)
 
-        if   self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+        if self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
             self.Type = 'LOAD'
         elif self.Type in [1, 'D', 'DI', 'DIS', 'DISP']:
             self.Type = 'DISP'
@@ -475,7 +487,9 @@ class TLOAD2(TabularLoad):
 class RFORCE(Load):
     type = 'RFORCE'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
             self.sid = card.field(1)
             self.nid = card.field(2)
@@ -529,8 +543,10 @@ class RLOAD1(TabularLoad):
     """
     type = 'RLOAD1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         TabularLoad.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         self.sid = card.field(1)  # was sid
         self.exciteID = card.field(2)
         self.delay = card.field(3)
@@ -601,8 +617,10 @@ class RLOAD2(TabularLoad):
     """
     type = 'RLOAD2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         TabularLoad.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         self.sid = card.field(1)
         self.exciteID = card.field(2)
         self.delay = card.field(3)
@@ -678,7 +696,9 @@ class RANDPS(RandomLoad):
     """
     type = 'RANDPS'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
             ## Random analysis set identification number. (Integer > 0)
             ## Defined by RANDOM in the Case Control Deck.

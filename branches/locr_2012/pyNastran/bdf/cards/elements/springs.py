@@ -111,8 +111,10 @@ class CELAS1(SpringElement):
     type = 'CELAS1'
     asterType = 'CELAS1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SpringElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
 
@@ -164,9 +166,10 @@ class CELAS2(SpringElement):
     type = 'CELAS2'
     asterType = 'CELAS2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SpringElement.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
 
@@ -260,9 +263,11 @@ class CELAS3(SpringElement):
     type = 'CELAS3'
     asterType = 'CELAS3'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SpringElement.__init__(self, card, data)
 
+        if comment:
+            self._comment = comment
         if card:
             #nids = [card.field(3),card.field(5)]
             #self.prepareNodeIDs(nids)
@@ -312,9 +317,11 @@ class CELAS4(SpringElement):
     type = 'CELAS4'
     asterType = 'CELAS4'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SpringElement.__init__(self, card, data)
 
+        if comment:
+            self._comment = comment
         if card:
             #nids = [card.field(3),card.field(5)]
             #self.prepareNodeIDs(nids)

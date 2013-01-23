@@ -27,8 +27,10 @@ class BushingProperty(Property):
 class PBUSH(BushingProperty):
     type = 'PBUSH'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         BushingProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
         # K parameter
         self.Ki = []
@@ -139,8 +141,10 @@ class PBUSH(BushingProperty):
 class PBUSH1D(BushingProperty):
     type = 'PBUSH1D'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         BushingProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
         # SPRING parameters
         self.springType = None
@@ -298,14 +302,18 @@ class PBUSH1D(BushingProperty):
 class PBUSH2D(BushingProperty):
     type = 'PBUSH2D'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         BushingProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         raise NotImplementedError()
 
 
 class PBUSHT(BushingProperty):
     type = 'PBUSHT'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         BushingProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         raise NotImplementedError()

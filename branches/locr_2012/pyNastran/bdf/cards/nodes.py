@@ -53,8 +53,10 @@ class RINGAX(Ring):
     """
     type = 'RINGAX'
 
-    def __init__(self, card=None, data=None):  # this card has missing fields
+    def __init__(self, card=None, data=None, comment=''):  # this card has missing fields
         Ring.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         self.nid = card.field(1)
         self.R = card.field(3)
         self.z = card.field(4)

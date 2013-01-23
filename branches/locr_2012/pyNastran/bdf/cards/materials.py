@@ -916,8 +916,10 @@ class MAT11(Material):
     """
     type = 'MAT11'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Material.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.mid = card.field(1)
             self.e1 = card.field(2)

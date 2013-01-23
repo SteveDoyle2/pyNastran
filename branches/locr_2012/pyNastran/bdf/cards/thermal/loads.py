@@ -23,8 +23,10 @@ class QBDY1(ThermalLoad):
     """
     type = 'QBDY1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalLoad.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Load set identification number. (Integer > 0)
             self.sid = card.field(1)
@@ -67,8 +69,10 @@ class QBDY2(ThermalLoad):  # not tested
     """
     type = 'QBDY2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalLoad.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Load set identification number. (Integer > 0)
             self.sid = card.field(1)
@@ -107,8 +111,10 @@ class QBDY3(ThermalLoad):
     """
     type = 'QBDY3'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalLoad.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Load set identification number. (Integer > 0)
             self.sid = card.field(1)
@@ -160,8 +166,10 @@ class QHBDY(ThermalLoad):
     """
     type = 'QHBDY'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalLoad.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Load set identification number. (Integer > 0)
             self.sid = card.field(1)
@@ -206,8 +214,10 @@ class TEMP(ThermalLoad):
     """
     type = 'TEMP'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalLoad.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Load set identification number. (Integer > 0)
             self.sid = card.field(1)
@@ -261,8 +271,10 @@ class TEMPD(ThermalLoadDefault):
     """
     type = 'TEMPD'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalLoadDefault.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             fields = card.fields(1)
             nFields = len(fields)

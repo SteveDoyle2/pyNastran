@@ -81,7 +81,7 @@ from .bdfInterface.addCard import AddMethods
 from .bdfInterface.BDF_Card import BDFCard
 from .bdfInterface.bdf_Reader import BDFReader
 from .bdfInterface.bdf_writeMesh import WriteMesh
-from .bdfInterface.bdf_cardMethods import CardMethods, parse_csv, nastran_split
+from .bdfInterface.bdf_cardMethods import CardMethods, parse_csv, nastran_split, isLargeField
 from .bdfInterface.crossReference import XrefMesh
 
 
@@ -1009,7 +1009,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
           cardObject is not returned
         """
         card_obj = BDFCard(card, oldCardObj=None)
-        print("card_obj = ", card_obj)
+        #print("card_obj = ", card_obj)
 
         # function that gets by name the initialized object (from global scope)
         _get_cls = lambda name: globals()[name](card_obj)
@@ -1387,13 +1387,13 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         """
         #debug = True
         card = []
-        #isLargeField = self.isLargeField(tempcard)
-        #print "*** isLargeField = ",isLargeField
+        #islargefield = isLargeField(tempcard)
+        #print "*** islargefield = ",islargefield
 
         #print "tempcard = ",tempcard
         for (i, line) in enumerate(tempcard):
             #print "line = ",line
-            isLargeField = self.isLargeField(line)
+            islargefield = isLargeField(line)
             #print "i = ",i
             if debug:
                 self.log.debug("  line  = |%r|" % line)
@@ -1413,7 +1413,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 #print "sline  = ",sline
                 #self.log.debug("sline = %s" %(sline))
             else:  # standard
-                sline = nastran_split(self.log, sline, isLargeField,
+                sline = nastran_split(self.log, sline, islargefield,
                                       debug=debug)
             #name = sline[0]
             #nFields = len(sline)

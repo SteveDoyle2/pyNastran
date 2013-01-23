@@ -32,8 +32,10 @@ class NSM(PointProperty):
         'PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
         'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PCONEAX', 'PRAC2D']
 
-    def __init__(self, card=None, nOffset=0, data=None):
+    def __init__(self, card=None, nOffset=0, data=None, comment=''):
         PointProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             nOffset *= 2
             self.sid = card.field(1)
@@ -59,8 +61,10 @@ class NSM(PointProperty):
 
 
 class PMASS(PointProperty):
-    def __init__(self, card=None, nOffset=0, data=None):
+    def __init__(self, card=None, nOffset=0, data=None, comment=''):
         PointProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             nOffset *= 2
             ## Property ID

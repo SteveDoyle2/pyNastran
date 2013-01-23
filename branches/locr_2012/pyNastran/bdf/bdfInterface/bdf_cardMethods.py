@@ -154,13 +154,13 @@ class CardMethods(object):
             print("SCIENTIFIC!")
         return value
 
-    def isLargeField(self, card):
-        """returns True if the card is in 16-character width fields"""
-        star_fields = ['*' in field for field in card]
+def isLargeField(card):
+    """returns True if the card is in 16-character width fields"""
+    star_fields = ['*' in field for field in card]
 
-        if any(star_fields):
-            return True
-        return False
+    if any(star_fields):
+        return True
+    return False
 
 
 def parse_csv(sline):

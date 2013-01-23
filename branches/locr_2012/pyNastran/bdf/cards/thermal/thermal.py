@@ -79,8 +79,10 @@ class CHBDYE(ThermalElement):
     sideMaps = {'CHEXA': hexMap, 'CPENTA': pentMap, 'CTETRA': tetMap,
                 'CTRIA3': [1, 2, 3], 'CQUAD4': [1, 2, 3, 4]}
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         ## Surface element ID number for a side of an
         ## element. (0 < Integer < 100,000,000)
         self.eid = card.field(1)
@@ -137,9 +139,10 @@ class CHBDYG(ThermalElement):
     """
     type = 'CHBDYG'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalElement.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
             ## Surface element ID
             self.eid = card.field(1)
@@ -203,8 +206,10 @@ class CHBDYP(ThermalElement):
     """
     type = 'CHBDYP'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Surface element ID
             self.eid = card.field(1)
@@ -293,7 +298,9 @@ class PCONV(ThermalProperty):
     """
     type = 'PCONV'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         ## Convection property identification number. (Integer > 0)
         self.pconid = card.field(1)
         ## Material property identification number. (Integer > 0)
@@ -353,7 +360,9 @@ class PCONVM(ThermalProperty):
     """
     type = 'PCONVM'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         ## Convection property identification number. (Integer > 0)
         self.pconid = card.field(1)
         ## Material property identification number. (Integer > 0)
@@ -402,7 +411,9 @@ class PHBDY(ThermalProperty):
     """
     type = 'PHBDY'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         ## Property identification number. (Unique Integer among all PHBDY
         ## entries). (Integer > 0)
         self.pid = card.field(1)
@@ -441,7 +452,9 @@ class CONV(ThermalBC):
     """
     type = 'CONV'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         #ThermalBC.__init__(self, card, data)
         ## CHBDYG, CHBDYE, or CHBDYP surface element identification number.
         ## (Integer > 0)
@@ -489,7 +502,9 @@ class CONVM(ThermalBC):
     """
     type = 'CONV'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         self.eid = card.field(1)
         self.pconvmID = card.field(2)
         self.filmNode = card.field(3, 0)
@@ -529,8 +544,10 @@ class RADM(ThermalBC):
     """
     type = 'RADM'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalBC.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         ## Material identification number
         self.radmid = card.field(1)
         self.absorb = card.field(2)
@@ -555,9 +572,10 @@ class RADBC(ThermalBC):
     """
     type = 'RADBC'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalBC.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         ## NODAMB Ambient point for radiation exchange. (Integer > 0)
         self.nodamb = card.field(1)
         ## Radiation view factor between the face and the ambient point.

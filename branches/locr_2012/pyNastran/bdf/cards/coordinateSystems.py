@@ -548,11 +548,11 @@ class Cord1x(Coord):
         data = [type1, self.cid, rid1, list(p1) + list(p2) + list(p3)]
 
         if type1 == 'CORD2R':
-            coord = CORD2R(card=None, data=data)
+            coord = CORD2R(card=None, data=data, comment=self.comment())
         elif type1 == 'CORD2C':
-            coord = CORD2R(card=None, data=data)
+            coord = CORD2R(card=None, data=data, comment=self.comment())
         elif type1 == 'CORD2C':
-            coord = CORD2R(card=None, data=data)
+            coord = CORD2R(card=None, data=data, comment=self.comment())
         else:
             raise RuntimeError('coordinate type of \n%s is %s' % (str(self),
                                                                   type1))
@@ -724,9 +724,9 @@ class CORD1R(Cord1x, RectangularCoord):
          (there are possibly 2 coordinates on 1 card)
         @param card a list version of the fields (1 CORD1R only)
         """
+        Cord1x.__init__(self, card, nCoord, data)
         if comment:
             self._comment = comment
-        Cord1x.__init__(self, card, nCoord, data)
 
     def rawFields(self):
         fields = ['CORD1R', self.cid] + self.NodeIDs()
@@ -748,9 +748,9 @@ class CORD1C(Cord1x, CylindricalCoord):
          (there are possibly 2 coordinates on 1 card)
         @param data a list version of the fields (1 CORD1R only)
         """
+        Cord1x.__init__(self, card, nCoord, data)
         if comment:
             self._comment = comment
-        Cord1x.__init__(self, card, nCoord, data)
 
     def rawFields(self):
         fields = ['CORD1C', self.cid] + self.NodeIDs()
@@ -772,9 +772,9 @@ class CORD1S(Cord1x, SphericalCoord):
          (there are possibly 2 coordinates on 1 card)
         @param data a list version of the fields (1 CORD1S only)
         """
+        Cord1x.__init__(self, card, nCoord, data)
         if comment:
             self._comment = comment
-        Cord1x.__init__(self, card, nCoord, data)
 
     def rawFields(self):
         fields = ['CORD1S', self.cid] + self.NodeIDs()
@@ -795,9 +795,9 @@ class CORD2R(Cord2x, RectangularCoord):
         @param data
           a list version of the fields (1 CORD2R only)
         """
+        Cord2x.__init__(self, card, data)
         if comment:
             self._comment = comment
-        Cord2x.__init__(self, card, data)
 
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
@@ -816,9 +816,9 @@ class CORD2S(Cord2x, SphericalCoord):
         @param card a BDFCard object
         @param data a list version of the fields (1 CORD2S only)
         """
+        Cord2x.__init__(self, card, data)
         if comment:
             self._comment = comment
-        Cord2x.__init__(self, card, data)
 
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
@@ -837,9 +837,9 @@ class CORD2C(Cord2x, CylindricalCoord):
         @param card a BDFCard object
         @param data a list version of the fields (1 CORD2C only)
         """
+        Cord2x.__init__(self, card, data)
         if comment:
             self._comment = comment
-        Cord2x.__init__(self, card, data)
 
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)

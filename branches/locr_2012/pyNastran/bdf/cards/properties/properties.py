@@ -20,8 +20,10 @@ from pyNastran.bdf.cards.baseCard import Property
 class PFAST(Property):
     type = 'PFAST'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Property.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         ## Property ID
         self.pid = card.field(1)
         ## diameter of the fastener
@@ -76,11 +78,13 @@ class PFAST(Property):
 class PGAP(Property):
     type = 'PGAP'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Defines the properties of the gap element (CGAP entry).
         """
         Property.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Property ID
             self.pid = card.field(1)
@@ -159,8 +163,10 @@ class PLSOLID(SolidProperty):
     """
     type = 'PLSOLID'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SolidProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Property ID
             self.pid = card.field(1)
@@ -194,8 +200,10 @@ class PSOLID(SolidProperty):
     """
     type = 'PSOLID'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SolidProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Property ID
             self.pid = card.field(1)
@@ -256,8 +264,10 @@ class PRAC2D(CrackProperty):
     """
     type = 'PRAC2D'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         CrackProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Property ID
             self.pid = card.field(1)
@@ -307,8 +317,10 @@ class PRAC3D(CrackProperty):
     """
     type = 'PRAC3D'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         CrackProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Property ID
             self.pid = card.field(1)
@@ -342,8 +354,10 @@ class PRAC3D(CrackProperty):
 class PCONEAX(Property):  # not done
     type = 'PCONEAX'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Property.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Property ID
             self.pid = card.field(1)

@@ -87,8 +87,10 @@ class TableObj(object):
 
 class TABLED1(Table):
     type = 'TABLED1'
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Table.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.tid = card.field(1)
             self.xaxis = card.field(2, 'LINEAR')
@@ -118,8 +120,10 @@ class TABLED1(Table):
 
 class TABLED2(Table):
     type = 'TABLED2'
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Table.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.tid = card.field(1)
             self.x1 = card.field(2)
@@ -143,8 +147,10 @@ class TABLED2(Table):
 
 class TABLED3(Table):
     type = 'TABLED3'
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Table.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.tid = card.field(1)
             self.x1 = card.field(2)
@@ -170,8 +176,10 @@ class TABLED3(Table):
 
 class TABLEM1(Table):
     type = 'TABLEM1'
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Table.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.tid = card.field(1)
             fields = card.fields(9)
@@ -190,8 +198,10 @@ class TABLEM1(Table):
 
 class TABLEM2(Table):
     type = 'TABLEM2'
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Table.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.tid = card.field(1)
             self.x1 = card.field(2)
@@ -215,8 +225,10 @@ class TABLEM2(Table):
 
 class TABLEM3(Table):
     type = 'TABLEM3'
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Table.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.tid = card.field(1)
             self.x1 = card.field(2)
@@ -242,8 +254,10 @@ class TABLEM3(Table):
 
 class TABLEM4(Table):
     type = 'TABLEM4'
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Table.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.tid = card.field(1)
             self.x1 = card.field(2)
@@ -274,8 +288,10 @@ class TABLEM4(Table):
 class TABLES1(Table):
     type = 'TABLES1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Table.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.tid = card.field(1)
             fields = card.fields(9)
@@ -298,8 +314,10 @@ class TABLES1(Table):
 class TABLEST(Table):
     type = 'TABLEST'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Table.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.tid = card.field(1)
             fields = card.fields(9)
@@ -329,8 +347,10 @@ class RandomTable(BaseCard):
 class TABRND1(RandomTable):
     type = 'TABRND1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         RandomTable.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.tid = card.field(1)
             self.xaxis = card.field(2, 'LINEAR')
@@ -377,8 +397,10 @@ class TABRNDG(RandomTable):
     """
     type = 'TABRNDG'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         RandomTable.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Table identification number. (Integer >0)
             self.tid = card.field(1)
@@ -405,7 +427,7 @@ class TIC(Table):
     """Transient Initial Condition"""
     type = 'TIC'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Defines values for the initial conditions of variables used in
         structural transient analysis. Both displacement and velocity values may
@@ -413,6 +435,8 @@ class TIC(Table):
         used for heat transfer analysis.
         """
         Table.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.sid = card.field(1)
             self.G = card.field(2)

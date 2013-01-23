@@ -29,8 +29,10 @@ from ..baseCard import BaseCard, expand_thru, expand_thru_by
 class LOAD(LoadCombination):
     type = 'LOAD'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LoadCombination.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
     def getLoadIDs(self):
         """
@@ -267,7 +269,9 @@ class GRAV(BaseCard):
     """
     type = 'GRAV'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
             ## Set identification number
             self.sid = card.field(1)
@@ -356,7 +360,9 @@ class ACCEL1(BaseCard):
     """
     type = 'ACCEL1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         ## Load set identification number (Integer>0)
         self.sid = card.field(1)
 
@@ -498,11 +504,13 @@ class Moment(OneDeeLoad):
 class FORCE(Force):
     type = 'FORCE'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         FORCE          3       1            100.      0.      0.      1.
         """
         Force.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.sid = card.field(1)
             self.node = card.field(2)
@@ -552,8 +560,10 @@ class FORCE1(Force):
     """
     type = 'FORCE1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Force.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.sid = card.field(1)
             self.node = card.field(2)
@@ -606,11 +616,13 @@ class FORCE2(Force):
     """
     type = 'FORCE2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         FORCE2 SID G F G1 G2 G3 G4
         """
         Force.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.sid = card.field(1)
             self.node = card.field(2)
@@ -657,7 +669,7 @@ class FORCE2(Force):
 class MOMENT(Moment):
     type = 'MOMENT'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Defines a static concentrated moment at a grid point by specifying a
         scale factor and a vector that determines the direction.
@@ -666,6 +678,8 @@ class MOMENT(Moment):
         MOMENT 2   5   6 2.9 0.0 1.0 0.0
         """
         Moment.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         self.sid = card.field(1)
         self.node = card.field(2)
         self.cid = card.field(3, 0)
@@ -699,7 +713,7 @@ class MOMENT(Moment):
 class MOMENT1(Moment):
     type = 'MOMENT1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Defines a static concentrated moment at a grid point by specifying a
         magnitude and two grid points that determine the direction
@@ -707,6 +721,8 @@ class MOMENT1(Moment):
         MOMENT1 SID G M G1 G2
         """
         Moment.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.sid = card.field(1)
             self.node = card.field(2)
@@ -748,7 +764,7 @@ class MOMENT1(Moment):
 class MOMENT2(Moment):
     type = 'MOMENT2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Defines a static concentrated moment at a grid point by specification
         of a magnitude and four grid points that determine the direction.
@@ -756,6 +772,8 @@ class MOMENT2(Moment):
         MOMENT2 SID G M G1 G2 G3 G4
         """
         Moment.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.sid = card.field(1)
             self.node = card.field(2)
@@ -800,7 +818,9 @@ class MOMENT2(Moment):
 class PLOAD(Load):
     type = 'PLOAD'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
             self.sid = card.field(1)
             self.p = card.field(2)
@@ -835,7 +855,9 @@ class PLOAD1(Load):
                   'MX', 'MY', 'MZ', 'MXE', 'MYE', 'MZE']
     validScales = ['LE', 'FR', 'LEPR', 'FRPR']
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
             self.sid = card.field(1)
             self.eid = card.field(2)
@@ -878,7 +900,9 @@ class PLOAD1(Load):
 class PLOAD2(Load):
     type = 'PLOAD2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
             self.sid = card.field(1)
             self.p = card.field(2)
@@ -915,7 +939,9 @@ class PLOAD2(Load):
 class PLOAD4(Load):
     type = 'PLOAD4'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
             self.sid = card.field(1)
             self.eid = card.field(2)
@@ -1072,7 +1098,9 @@ class PLOAD4(Load):
 class PLOADX1(Load):
     type = 'PLOADX1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
             self.sid = card.field(1)
             self.eid = card.field(2)

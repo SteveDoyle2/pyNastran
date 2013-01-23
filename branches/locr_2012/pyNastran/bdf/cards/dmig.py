@@ -65,7 +65,9 @@ def db(p, pref):
 class DEQATN(BaseCard):  # needs work...
     type = 'DEQATN'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         newCard = ''
         foundNone = False
         for field in card.card:
@@ -111,7 +113,9 @@ class NastranMatrix(BaseCard):
     """
     Base class for the DMIG, DMIJ, DMIJI, DMIK matrices
     """
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         self.name = card.field(1)
         #zero
 
@@ -349,8 +353,10 @@ class DMIG(NastranMatrix):
     """
     type = 'DMIG'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         NastranMatrix.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
 
 class DMIJ(NastranMatrix):
@@ -367,8 +373,10 @@ class DMIJ(NastranMatrix):
     """
     type = 'DMIJ'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         NastranMatrix.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
 
 class DMIJI(NastranMatrix):
@@ -384,8 +392,10 @@ class DMIJI(NastranMatrix):
     """
     type = 'DMIJI'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         NastranMatrix.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
 
 class DMIK(NastranMatrix):
@@ -399,14 +409,18 @@ class DMIK(NastranMatrix):
     """
     type = 'DMIK'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         NastranMatrix.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
 
 class DMI(BaseCard):
     type = 'DMI'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         self.name = card.field(1)
         #zero
 

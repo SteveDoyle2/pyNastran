@@ -19,12 +19,12 @@ from pyNastran.bdf.cards.baseCard import Element, BaseCard
 
 
 class PointElement(Element):
-    def __init__(self, card=None, data=None):
+    def __init__(self, card, data):
         Element.__init__(self, card, data)
 
 
 class PointMassElement(PointElement):
-    def __init__(self, card=None, data=None):
+    def __init__(self, card, data):
         self.mass = None
         PointElement.__init__(self, card, data)
 
@@ -33,7 +33,7 @@ class PointMassElement(PointElement):
 
 
 class PointMass(BaseCard):
-    def __init__(self, card=None, data=None):
+    def __init__(self, card, data):
         self.mass = None
 
     def Mass(self):
@@ -48,8 +48,10 @@ class CMASS1(PointMass):
     """
     type = 'CMASS1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         PointMass.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2, self.eid)
@@ -91,8 +93,10 @@ class CMASS2(PointMassElement):
     """
     type = 'CMASS2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         PointMassElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             self.mass = card.field(2, 0.)
@@ -177,9 +181,10 @@ class CMASS3(PointMassElement):
     """
     type = 'CMASS3'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         PointMass.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2, self.eid)
@@ -224,9 +229,10 @@ class CMASS4(PointMassElement):
     """
     type = 'CMASS4'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         PointMass.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             self.mass = card.field(2, 0.)
@@ -265,7 +271,7 @@ class CMASS4(PointMassElement):
 class CONM1(PointMass):
     type = 'CONM1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Concentrated Mass Element Connection, General Form
         Defines a 6 x 6 symmetric mass matrix at a geometric grid point
@@ -282,6 +288,8 @@ class CONM1(PointMass):
               [                    M66]
         """
         PointMass.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         m = zeros((6, 6))
         if card:
             #self.nids  = [ card[1] ]
@@ -381,7 +389,7 @@ class CONM1(PointMass):
         return fields2
 
 
-class CONM2(PointMassElement):  # TODO not done
+class CONM2(PointMassElement):  # TODO: not done
     """
     @param self the CONM2 object
     @param eid element ID
@@ -395,8 +403,10 @@ class CONM2(PointMassElement):  # TODO not done
     """
     type = 'CONM2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         PointMassElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             self.nid = card.field(2)

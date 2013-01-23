@@ -33,9 +33,10 @@ class LineDamper(DamperElement):
 class CDAMP1(LineDamper):
     type = 'CDAMP1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LineDamper.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2)
@@ -84,9 +85,10 @@ class CDAMP1(LineDamper):
 class CDAMP2(LineDamper):
     type = 'CDAMP2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LineDamper.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
 
@@ -127,9 +129,10 @@ class CDAMP2(LineDamper):
 class CDAMP3(LineDamper):
     type = 'CDAMP3'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LineDamper.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2)
@@ -158,9 +161,10 @@ class CDAMP3(LineDamper):
 class CDAMP4(LineDamper):
     type = 'CDAMP4'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LineDamper.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             ## Value of the scalar damper (Real)
@@ -189,9 +193,10 @@ class CDAMP4(LineDamper):
 class CDAMP5(LineDamper):
     type = 'CDAMP5'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LineDamper.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             ## Property ID
@@ -217,8 +222,10 @@ class CDAMP5(LineDamper):
 class CVISC(LineDamper):
     type = 'CVISC'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LineDamper.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = int(card.field(1))
             self.pid = int(card.field(2, self.eid))

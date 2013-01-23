@@ -28,8 +28,10 @@ class DamperProperty(Property):
 class PDAMP(DamperProperty):
     type = 'PDAMP'
 
-    def __init__(self, card=None, nPDAMP=0, data=None):
+    def __init__(self, card=None, nPDAMP=0, data=None, comment=''):
         DamperProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         nOffset = nPDAMP * 2
         if card:
             # 3 PDAMP properties can be defined on 1 PDAMP card
@@ -54,12 +56,14 @@ class PDAMP(DamperProperty):
 class PDAMP5(DamperProperty):
     type = 'PDAMP5'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Defines the damping multiplier and references the material properties
         for damping. CDAMP5 is intended for heat transfer analysis only.
         """
         DamperProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Property ID
             self.pid = card.field(1)
@@ -93,8 +97,10 @@ class PDAMP5(DamperProperty):
 class PDAMPT(DamperProperty):
     type = 'PDAMPT'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         DamperProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Property ID
             self.pid = card.field(1)
@@ -126,8 +132,10 @@ class PDAMPT(DamperProperty):
 class PVISC(DamperProperty):
     type = 'PVISC'
 
-    def __init__(self, card=None, nPVISC=0, data=None):
+    def __init__(self, card=None, nPVISC=0, data=None, comment=''):
         DamperProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.pid = card.field(1 + 4 * nPVISC)
             self.ce = card.field(2 + 4 * nPVISC)

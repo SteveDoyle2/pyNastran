@@ -30,8 +30,10 @@ class PELAS(SpringProperty):
     """
     type = 'PELAS'
 
-    def __init__(self, card=None, nPELAS=0, data=None):
+    def __init__(self, card=None, nPELAS=0, data=None, comment=''):
         SpringProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         nOffset = nPELAS * 5
         if card:
             # 2 PELAS properties can be defined on 1 PELAS card
@@ -111,8 +113,10 @@ class PELAST(SpringProperty):
     """
     type = 'PELAST'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SpringProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         ## Property identification number. (Integer > 0)
         self.pid = card.field(1)
         ## Identification number of a TABLEDi entry that defines the

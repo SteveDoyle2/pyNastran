@@ -47,9 +47,10 @@ class BushElement(Element):
 class CBUSH(BushElement):
     type = 'CBUSH'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         BushElement.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2)
@@ -146,8 +147,10 @@ class CBUSH(BushElement):
 class CBUSH1D(BushElement):
     type = 'CBUSH1D'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         BushElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = int(card.field(1))
             self.pid = int(card.field(2, self.eid))
@@ -186,8 +189,10 @@ class CBUSH2D(BushElement):
     """
     type = 'CBUSH2D'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         BushElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = int(card.field(1))
             self.pid = int(card.field(2))

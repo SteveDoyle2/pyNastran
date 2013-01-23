@@ -383,8 +383,10 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
 
 class CROD(RodElement):
     type = 'CROD'
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         RodElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = int(card.field(1))
             self.pid = int(card.field(2, self.eid))
@@ -423,8 +425,10 @@ class CROD(RodElement):
 class CTUBE(RodElement):
     type = 'CTUBE'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         RodElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = int(card.field(1))
             self.pid = int(card.field(2, self.eid))
@@ -451,8 +455,10 @@ class CTUBE(RodElement):
 class CONROD(RodElement):
     type = 'CONROD'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         RodElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = int(card.field(1))
             #print "self.eid = ",self.eid
@@ -563,8 +569,10 @@ class CBAR(LineElement):
     """
     type = 'CBAR'
     asterType = 'CBAR'
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LineElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = int(card.field(1))
             self.pid = int(card.field(2, self.eid))
@@ -906,8 +914,10 @@ class CBEAM3(CBAR):
     """
     type = 'CBEAM3'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LineElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = int(card.field(1))
             self.eid = int(card.field(1))
@@ -999,8 +1009,10 @@ class CBEAM(CBAR):
     """
     type = 'CBEAM'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LineElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = int(card.field(1))
             self.pid = int(card.field(2, self.eid))
@@ -1202,8 +1214,10 @@ class CBEAM(CBAR):
 class CBEND(LineElement):
     type = 'CBEND'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LineElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         self.eid = int(card.field(1))
         self.pid = card.field(2, self.eid)
         self.ga = card.field(3)

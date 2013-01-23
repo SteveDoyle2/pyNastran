@@ -20,7 +20,7 @@ from pyNastran.bdf.cards.baseCard import Property, Material
 class ShellProperty(Property):
     type = 'ShellProperty'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card, data):
         Property.__init__(self, card, data)
 
 

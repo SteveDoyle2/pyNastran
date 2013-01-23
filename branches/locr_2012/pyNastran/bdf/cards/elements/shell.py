@@ -558,7 +558,7 @@ class CTRIAX6(TriShell):
 
 
 class QuadShell(ShellElement):
-    def __init__(self, card=None, data=None):
+    def __init__(self, card, data):
         ShellElement.__init__(self, card, data)
 
     def Thickness(self):
