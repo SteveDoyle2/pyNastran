@@ -73,7 +73,9 @@ class SPOINT(Node):
     type = 'SPOINT'
 
     def __init__(self, nid):
-        Node.__init__(self, card=None, data=None)
+        Node.__init__(self, card=None, data=None, comment='')
+        if comment:
+            self._comment = comment
         self.nid = nid
 
     def cross_reference(self, model):
@@ -105,7 +107,9 @@ class SPOINTs(Node):
     """
     type = 'SPOINT'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         Node.__init__(self, card, data)
         #nFields = card.nFields()
 
@@ -158,7 +162,9 @@ class GRDSET(Node):
     """
     type = 'GRDSET'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         ## Grid point coordinate system
         self.cp = card.field(2, 0)
 
@@ -193,11 +199,13 @@ class GRDSET(Node):
 class GRIDB(Node):
     type = 'GRIDB'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         if coming from a BDF object, card is used
         if coming from the OP2, data is used
         """
+        if comment:
+            self._comment = comment
         Node.__init__(self, card, data)
 
         if card:
@@ -233,11 +241,13 @@ class GRIDB(Node):
 class GRID(Node):
     type = 'GRID'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         if coming from a BDF object, card is used
         if coming from the OP2, data is used
         """
+        if comment:
+            self._comment = comment
         Node.__init__(self, card, data)
 
         if card:
@@ -350,11 +360,13 @@ class GRID(Node):
 class POINT(Node):
     type = 'POINT'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         if coming from a BDF object, card is used
         if coming from the OP2, data is used
         """
+        if comment:
+            self._comment = comment
         Node.__init__(self, card, data)
 
         if card:

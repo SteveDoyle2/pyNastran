@@ -33,8 +33,10 @@ class EIGB(Method):
     """
     type = 'EIGB'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Method.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Set identification number. (Unique Integer > 0)
             self.sid = card.field(1)
@@ -94,8 +96,10 @@ class EIGC(Method):  # TODO: not done
     """
     type = 'EIGC'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Method.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         # CLAN
         self.mblkszs = []
         self.iblkszs = []
@@ -250,8 +254,10 @@ class EIGR(Method):
     """
     type = 'EIGR'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Method.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Set identification number. (Unique Integer > 0)
             self.sid = card.field(1)
@@ -302,8 +308,10 @@ class EIGP(Method):
     """
     type = 'EIGP'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Method.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Set identification number. (Unique Integer > 0)
             self.sid = card.field(1)
@@ -345,8 +353,10 @@ class EIGRL(Method):
     """
     type = 'EIGRL'
 
-    def __init__(self, card=None, data=None, sol=None):
+    def __init__(self, card=None, data=None, sol=None, comment=''):
         Method.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Set identification number. (Unique Integer > 0)
             self.sid = card.field(1)

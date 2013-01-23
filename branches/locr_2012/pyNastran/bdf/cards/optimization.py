@@ -16,7 +16,9 @@ class OptConstraint(BaseCard):
 
 class DCONSTR(OptConstraint):
     type = 'DCONSTR'
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
             self.oid = card.field(1)
             self.rid = card.field(2)
@@ -48,7 +50,9 @@ class DCONSTR(OptConstraint):
 
 class DESVAR(OptConstraint):
     type = 'DESVAR'
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         self.oid = card.field(1)
         self.label = card.field(2)
         self.xinit = card.field(3)
@@ -74,7 +78,9 @@ class DESVAR(OptConstraint):
 class DDVAL(OptConstraint):
     type = 'DDVAL'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         self.oid = card.field(1)
         ddvals = [ddval for ddval in card.fields(2) if ddval is not None]
         self.ddvals = expand_thru_by(ddvals)
@@ -90,7 +96,7 @@ class DDVAL(OptConstraint):
 class DOPTPRM(OptConstraint):
     type = 'DOPTPRM'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Design Optimization Parameters
         Overrides default values of parameters used in design optimization
@@ -100,7 +106,8 @@ class DOPTPRM(OptConstraint):
                 PARAM5 VAL5 -etc.-
         @endcode
         """
-
+        if comment:
+            self._comment = comment
         fields = card.fields(1)
         nFields = len(fields)
 
@@ -120,7 +127,7 @@ class DOPTPRM(OptConstraint):
 class DLINK(OptConstraint):
     type = 'DLINK'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Multiple Design Variable Linking
         Relates one design variable to one or more other design variables
@@ -130,6 +137,8 @@ class DLINK(OptConstraint):
               IDV3 C3 -etc.-
         @endcode
         """
+        if comment:
+            self._comment = comment
         self.oid = card.field(1)
         self.ddvid = card.field(2)
         self.c0 = card.field(3, 0.)
@@ -162,7 +171,9 @@ class DLINK(OptConstraint):
 class DSCREEN(OptConstraint):
     type = 'DSCREEN'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         ## Response type for which the screening criteria apply. (Character)
         self.rType = card.field(1)
         ## Truncation threshold. (Real; Default = -0.5)
@@ -185,12 +196,14 @@ class DSCREEN(OptConstraint):
 class DRESP1(OptConstraint):
     type = 'DRESP1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         @code
         DRESP1         1S1      CSTRAIN PCOMP                  1       1   10000
         @endcode
         """
+        if comment:
+            self._comment = comment
         self.oid = card.field(1)
         self.label = card.field(2)
         self.rtype = card.field(3)
@@ -214,12 +227,14 @@ class DRESP1(OptConstraint):
 class DRESP2(OptConstraint):
     type = 'DRESP2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Design Sensitivity Equation Response Quantities
         Defines equation responses that are used in the design, either as
         constraints or as an objective.
         """
+        if comment:
+            self._comment = comment
         self.oid = card.field(1)
         self.label = card.field(2)
         self.eqidFunc = card.field(3)
@@ -304,7 +319,7 @@ class DRESP2(OptConstraint):
 class DVMREL1(OptConstraint):  # similar to DVPREL1
     type = 'DVMREL1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Design Variable to Material Relation
         Defines the relation between a material property and design variables
@@ -313,6 +328,8 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
                 DVID1 COEF1 DVID2 COEF2 DVID3 COEF3 -etc.-
         @endcode
         """
+        if comment:
+            self._comment = comment
         self.oid = card.field(1)
         self.Type = card.field(2)
         self.mid = card.field(3)
@@ -371,13 +388,15 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
 class DVPREL1(OptConstraint):  # similar to DVMREL1
     type = 'DVPREL1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         @code
         DVPREL1   200000   PCOMP    2000      T2
                   200000     1.0
         @endcode
         """
+        if comment:
+            self._comment = comment
         self.oid = card.field(1)
         self.Type = card.field(2)
         self.pid = card.field(3)
@@ -436,7 +455,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 class DVPREL2(OptConstraint):
     type = 'DVPREL2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         @code
         DVPREL2 ID TYPE PID PNAME/FID PMIN PMAX EQID
@@ -446,7 +465,8 @@ class DVPREL2(OptConstraint):
                  LABL8 -etc.-
         @endcode
         """
-
+        if comment:
+            self._comment = comment
         ## Unique identification number
         self.oid = card.field(1)
         ## Name of a property entry, such as PBAR, PBEAM, etc

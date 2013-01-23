@@ -31,7 +31,9 @@ class FREQ(BaseCard):
     """
     type = 'FREQ'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         self.sid = card.field(1)
         self.freqs = card.fields(2)
         self.cleanFreqs()
@@ -79,7 +81,9 @@ class FREQ1(FREQ):
     """
     type = 'FREQ1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         self.sid = card.field(1)
         f1 = card.field(2, 0.0)
         df = card.field(3)
@@ -101,7 +105,9 @@ class FREQ2(FREQ):
     """
     type = 'FREQ2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         self.sid = card.field(1)
         f1 = card.field(2, 0.0)
         f2 = card.field(3)
@@ -117,7 +123,9 @@ class FREQ2(FREQ):
 class FREQ3(FREQ):
     type = 'FREQ3'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         raise NotImplementedError()
 
 
@@ -133,7 +141,9 @@ class FREQ4(FREQ):
     """
     type = 'FREQ4'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         self.sid = card.field(1)
         self.f1 = card.field(2, 0.0)
         self.f2 = card.field(3, 1.e20)
@@ -163,7 +173,9 @@ class TSTEP(BaseCard):
     """
     type = 'TSTEP'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         self.sid = card.field(1)
         self.N = []
         self.DT = []
@@ -196,7 +208,9 @@ class TSTEPNL(BaseCard):
     """
     type = 'TSTEPNL'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
             self.sid = card.field(1)
             self.ndt = card.field(2)
@@ -323,7 +337,9 @@ class NLPARM(BaseCard):
     """
     type = 'NLPARM'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
             self.nid = card.field(1)
             self.ninc = card.field(2, 10)

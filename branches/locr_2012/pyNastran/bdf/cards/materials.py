@@ -50,8 +50,10 @@ class HyperelasticMaterial(Material):
 class CREEP(Material):
     type = 'CREEP'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Material.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.mid = card.field(1)
             self.T0 = card.field(2, 0.0)
@@ -118,9 +120,11 @@ class MAT1(Material):
     """
     type = 'MAT1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Material.__init__(self, card, data)
-
+        print("****",comment)
+        if comment:
+            self._comment = comment
         if card:
             self.mid = card.field(1)
             self.set_E_G_nu(card)
@@ -278,9 +282,10 @@ class MAT2(AnisotropicMaterial):
     """
     type = 'MAT2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         AnisotropicMaterial.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
             self.mid = card.field(1)
             self.G11 = card.field(2, 0.0)
@@ -434,8 +439,10 @@ class MAT3(AnisotropicMaterial):
     """
     type = 'MAT3'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         AnisotropicMaterial.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.mid = card.field(1)
             self.ex = card.field(2)
@@ -497,8 +504,10 @@ class MAT4(ThermalMaterial):
     """
     type = 'MAT4'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalMaterial.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.mid = card.field(1)
             self.k = card.field(2)
@@ -548,8 +557,10 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
     """
     type = 'MAT5'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalMaterial.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.mid = card.field(1)
             ## Thermal conductivity (assumed default=0.0)
@@ -613,8 +624,10 @@ class MAT8(AnisotropicMaterial):
     """
     type = 'MAT8'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         AnisotropicMaterial.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.mid = card.field(1)
             self.e11 = card.field(2)  # TODO is this the correct default
@@ -735,8 +748,10 @@ class MAT9(AnisotropicMaterial):
     """
     type = 'MAT9'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         AnisotropicMaterial.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.mid = card.field(1)
             self.G11 = card.field(2, 0.0)
@@ -837,8 +852,10 @@ class MAT10(Material):
     """
     type = 'MAT10'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Material.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.mid = card.field(1)
             self.getBulkRhoC(card)
@@ -973,8 +990,10 @@ class MAT11(Material):
 class MATHP(HyperelasticMaterial):
     type = 'MATHP'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         HyperelasticMaterial.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.mid = card.field(1)
             self.a10 = card.field(2, 0.)
@@ -1158,8 +1177,10 @@ class MATS1(MaterialDependence):
     """
     type = 'MATS1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         MaterialDependence.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Identification number of a MAT1, MAT2, or MAT9 entry.
             self.mid = card.field(1)

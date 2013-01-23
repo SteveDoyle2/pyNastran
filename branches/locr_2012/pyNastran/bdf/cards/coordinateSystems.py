@@ -625,12 +625,14 @@ class CORD3G(Coord):  # not done
 
     type = 'CORD3G'
 
-    def __init__(self, card=[0, 0, 0, 0, 0, 0, 0], data=None):
+    def __init__(self, card=[0, 0, 0, 0, 0, 0, 0], data=None, comment=''):
         """
         Intilizes the CORD3G
         @param self the CORD3G coordinate system object
         @param card a list version of the fields
         """
+        if comment:
+            self._comment = comment
         if isinstance(card, list):
             assert len(card) == 8
             card = BDFCard(card)
@@ -714,7 +716,7 @@ class CORD1R(Cord1x, RectangularCoord):
     """
     type = 'CORD1R'
 
-    def __init__(self, card=None, nCoord=0, data=None):
+    def __init__(self, card=None, nCoord=0, data=None, comment=''):
         """
         Intilizes the CORD1R
         @param self the CORD1R coordinate system object
@@ -722,6 +724,8 @@ class CORD1R(Cord1x, RectangularCoord):
          (there are possibly 2 coordinates on 1 card)
         @param card a list version of the fields (1 CORD1R only)
         """
+        if comment:
+            self._comment = comment
         Cord1x.__init__(self, card, nCoord, data)
 
     def rawFields(self):
@@ -735,7 +739,7 @@ class CORD1C(Cord1x, CylindricalCoord):
     """
     type = 'CORD1C'
 
-    def __init__(self, card=None, nCoord=0, data=None):
+    def __init__(self, card=None, nCoord=0, data=None, comment=''):
         """
         Intilizes the CORD1R
         @param self the CORD1C coordinate system object
@@ -744,6 +748,8 @@ class CORD1C(Cord1x, CylindricalCoord):
          (there are possibly 2 coordinates on 1 card)
         @param data a list version of the fields (1 CORD1R only)
         """
+        if comment:
+            self._comment = comment
         Cord1x.__init__(self, card, nCoord, data)
 
     def rawFields(self):
@@ -757,7 +763,7 @@ class CORD1S(Cord1x, SphericalCoord):
     """
     type = 'CORD1S'
 
-    def __init__(self, card=None, nCoord=0, data=None):
+    def __init__(self, card=None, nCoord=0, data=None, comment=''):
         """
         Intilizes the CORD1S
         @param self the CORD1S coordinate system object
@@ -766,6 +772,8 @@ class CORD1S(Cord1x, SphericalCoord):
          (there are possibly 2 coordinates on 1 card)
         @param data a list version of the fields (1 CORD1S only)
         """
+        if comment:
+            self._comment = comment
         Cord1x.__init__(self, card, nCoord, data)
 
     def rawFields(self):
@@ -777,7 +785,7 @@ class CORD2R(Cord2x, RectangularCoord):
     type = 'CORD2R'
 
     def __init__(self, card=None,
-                 data=[0, 0, 0., 0., 0., 0., 0., 1., 1., 0., 0.]):
+                 data=[0, 0, 0., 0., 0., 0., 0., 1., 1., 0., 0.], comment=''):
         """
         Intilizes the CORD2R
         @param self
@@ -787,6 +795,8 @@ class CORD2R(Cord2x, RectangularCoord):
         @param data
           a list version of the fields (1 CORD2R only)
         """
+        if comment:
+            self._comment = comment
         Cord2x.__init__(self, card, data)
 
     def rawFields(self):
@@ -799,13 +809,15 @@ class CORD2R(Cord2x, RectangularCoord):
 class CORD2S(Cord2x, SphericalCoord):
     type = 'CORD2S'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Intilizes the CORD2R
         @param self the CORD2S coordinate system object
         @param card a BDFCard object
         @param data a list version of the fields (1 CORD2S only)
         """
+        if comment:
+            self._comment = comment
         Cord2x.__init__(self, card, data)
 
     def rawFields(self):
@@ -818,13 +830,15 @@ class CORD2S(Cord2x, SphericalCoord):
 class CORD2C(Cord2x, CylindricalCoord):
     type = 'CORD2C'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Intilizes the CORD2C
         @param self the CORD2C coordinate system object
         @param card a BDFCard object
         @param data a list version of the fields (1 CORD2C only)
         """
+        if comment:
+            self._comment = comment
         Cord2x.__init__(self, card, data)
 
     def rawFields(self):

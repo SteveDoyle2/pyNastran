@@ -36,9 +36,11 @@ class PCOMP(ShellProperty):
     """
     type = 'PCOMP'
 
-    def __init__(self, card=None, data=None):  # not done, cleanup
+    def __init__(self, card=None, data=None, comment=''):  # not done, cleanup
         ShellProperty.__init__(self, card, data)
 
+        if comment:
+            self._comment = comment
         if card:
             ## Property ID
             self.pid = card.field(1)
@@ -321,8 +323,10 @@ class PCOMP(ShellProperty):
 class PCOMPG(PCOMP):
     type = 'PCOMPG'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ShellProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.pid = card.field(1)
             # z0 will be calculated later
@@ -405,12 +409,14 @@ class PCOMPG(PCOMP):
 class PSHEAR(ShellProperty):
     type = 'PSHEAR'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Defines the properties of a shear panel (CSHEAR entry).
         PSHEAR PID MID T NSM F1 F2
         """
         ShellProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Property ID
             self.pid = card.field(1)
@@ -451,8 +457,10 @@ class PSHELL(ShellProperty):
     PSHELL   41111   1      1.0000   1               1               0.02081"""
     type = 'PSHELL'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ShellProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.pid = int(card.field(1))
             self.mid1 = card.field(2)

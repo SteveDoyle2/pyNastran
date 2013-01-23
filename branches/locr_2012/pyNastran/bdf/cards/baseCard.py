@@ -13,6 +13,11 @@ class BaseCard(object):
     def __init__(self):
         pass
 
+    def comment(self):
+        if hasattr(self, '_comment'):
+            return '%s' % self._comment
+        return ''
+
     def writeCodeAster(self):
         return ('# skipping %s  because writeCodeAster is not implemented\n'
                 % self.type)
@@ -107,7 +112,7 @@ class BaseCard(object):
 
     def print_card(self, size=8):
         fields = self.reprFields()
-        return print_card(fields, size=size)
+        return self.comment() + print_card(fields, size=size)
 
     def __repr__(self):
         """

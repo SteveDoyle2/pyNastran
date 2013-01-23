@@ -89,8 +89,10 @@ class CHEXA8(SolidElement):
     asterType = 'HEXA8'
     calculixType = 'C3D8'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2)
@@ -133,9 +135,11 @@ class CHEXA20(CHEXA8):
     asterType = 'HEXA20'
     calculixType = 'C3D20'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
 
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2)
@@ -191,9 +195,11 @@ class CPENTA6(SolidElement):
     asterType = 'PENTA6'
     calculixType = 'C3D6'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
 
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2)
@@ -290,9 +296,11 @@ class CPENTA15(CPENTA6):
     asterType = 'PENTA15'
     calculixType = 'C3D15'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
 
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2)
@@ -343,8 +351,10 @@ class CTETRA4(SolidElement):
     asterType = 'TETRA4'
     calculixType = 'C3D4'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2)
@@ -461,8 +471,10 @@ class CTETRA10(CTETRA4):
     asterType = 'TETRA10'
     calculixType = 'C3D10'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2)

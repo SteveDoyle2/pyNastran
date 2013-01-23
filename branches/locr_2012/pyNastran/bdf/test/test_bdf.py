@@ -11,7 +11,8 @@ numpy.seterr(all='raise')
 import traceback
 
 from pyNastran.utils import print_bad_path
-from pyNastran.bdf.bdf import BDF, CTRIAX, CTRIAX6
+from pyNastran.bdf.bdf import CTRIAX, CTRIAX6, BDF
+from pyNastran.bdf.bdf2 import BDF
 from pyNastran.bdf.bdf import (ShellElement, SolidElement, LineElement,
                                RigidElement, SpringElement, PointElement,
                                DamperElement, RodElement, NastranMatrix)

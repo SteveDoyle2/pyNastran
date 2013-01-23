@@ -8,7 +8,9 @@ from pyNastran.bdf.cards.baseCard import BaseCard
 class PARAM(BaseCard):
     type = 'PARAM'
 
-    def __init__(self, card, data=None):
+    def __init__(self, card, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
             self.key = card.field(1)
             self.value = card.field(2)
