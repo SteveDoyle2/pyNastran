@@ -21,7 +21,8 @@ from numpy import zeros, array
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, Material
 from pyNastran.bdf.cards.tables import Table
-from pyNastran.bdf.format import double, double_or_blank, integer, integer_or_blank
+from pyNastran.bdf.format import (double, double_or_blank, integer,
+                                 integer_or_blank)
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""
@@ -634,20 +635,20 @@ class MAT8(AnisotropicMaterial):
             self.nu12 = card.field(4)  # TODO is this the correct default
 
             self.g12 = double_or_blank(card, 5, 'g12', 0.0)
-            self.g1z = card.field(6, 1e8)
-            self.g2z = card.field(7, 1e8)
-            self.rho = card.field(8, 0.0)
-            self.a1 = card.field(9, 0.0)
-            self.a2 = card.field(10, 0.0)
-            self.TRef = card.field(11, 0.0)
-            self.Xt = card.field(12, 0.0)
-            self.Xc = card.field(13, self.Xt)
-            self.Yt = card.field(14, 0.0)
-            self.Yc = card.field(15, self.Yt)
-            self.S = card.field(16, 0.0)
-            self.ge = card.field(17, 0.0)
-            self.F12 = card.field(18, 0.0)
-            self.strn = card.field(19, 0.0)
+            self.g1z = double_or_blank(card, 6, 'g1z', 1e8)
+            self.g2z = double_or_blank(card, 7, 'g2z', 1e8)
+            self.rho = double_or_blank(card, 8, 'rho', 0.0)
+            self.a1 = double_or_blank(card, 9, 'a1', 0.0)
+            self.a2 = double_or_blank(card, 10, 'a2', 0.0)
+            self.TRef = double_or_blank(card, 11, 'TRef', 0.0)
+            self.Xt = double_or_blank(card, 12, 'Xt', 0.0)
+            self.Xc = double_or_blank(card, 13, 'Xc', self.Xt)
+            self.Yt = double_or_blank(card, 14, 'Yt', 0.0)
+            self.Yc = double_or_blank(card, 15, 'Yc', self.Yt)
+            self.S = double_or_blank(card, 16, 'S', 0.0)
+            self.ge = double_or_blank(card, 17, 'ge', 0.0)
+            self.F12 = double_or_blank(card, 18, 'F12', 0.0)
+            self.strn = double_or_blank(card, 19, 'strn', 0.0)
         else:
             self.mid = data[0]
             self.e11 = data[1]
@@ -753,31 +754,31 @@ class MAT9(AnisotropicMaterial):
             self._comment = comment
         if card:
             self.mid = card.field(1)
-            self.G11 = card.field(2, 0.0)
-            self.G12 = card.field(3, 0.0)
-            self.G13 = card.field(4, 0.0)
-            self.G14 = card.field(5, 0.0)
-            self.G15 = card.field(6, 0.0)
-            self.G16 = card.field(7, 0.0)
-            self.G22 = card.field(8, 0.0)
-            self.G23 = card.field(9, 0.0)
-            self.G24 = card.field(10, 0.0)
-            self.G25 = card.field(11, 0.0)
-            self.G26 = card.field(12, 0.0)
-            self.G33 = card.field(13, 0.0)
-            self.G34 = card.field(14, 0.0)
-            self.G35 = card.field(15, 0.0)
-            self.G36 = card.field(16, 0.0)
-            self.G44 = card.field(17, 0.0)
-            self.G45 = card.field(18, 0.0)
-            self.G46 = card.field(19, 0.0)
-            self.G55 = card.field(20, 0.0)
-            self.G56 = card.field(21, 0.0)
-            self.G66 = card.field(22, 0.0)
-            self.rho = card.field(23, 0.0)
+            self.G11 = double_or_blank(card, 2, 'G11', 0.0)
+            self.G12 = double_or_blank(card, 3, 'G12', 0.0)
+            self.G13 = double_or_blank(card, 4, 'G13', 0.0)
+            self.G14 = double_or_blank(card, 5, 'G14', 0.0)
+            self.G15 = double_or_blank(card, 6, 'G15', 0.0)
+            self.G16 = double_or_blank(card, 7, 'G16', 0.0)
+            self.G22 = double_or_blank(card, 8, 'G22', 0.0)
+            self.G23 = double_or_blank(card, 9, 'G23', 0.0)
+            self.G24 = double_or_blank(card, 10, 'G24', 0.0)
+            self.G25 = double_or_blank(card, 11, 'G25', 0.0)
+            self.G26 = double_or_blank(card, 12, 'G26', 0.0)
+            self.G33 = double_or_blank(card, 13, 'G33', 0.0)
+            self.G34 = double_or_blank(card, 14, 'G34', 0.0)
+            self.G35 = double_or_blank(card, 15, 'G35', 0.0)
+            self.G36 = double_or_blank(card, 16, 'G36', 0.0)
+            self.G44 = double_or_blank(card, 17, 'G44', 0.0)
+            self.G45 = double_or_blank(card, 18, 'G45', 0.0)
+            self.G46 = double_or_blank(card, 19, 'G46', 0.0)
+            self.G55 = double_or_blank(card, 20, 'G55', 0.0)
+            self.G56 = double_or_blank(card, 21, 'G56', 0.0)
+            self.G66 = double_or_blank(card, 22, 'G66', 0.0)
+            self.rho = double_or_blank(card, 23, 'rho', 0.0)
             self.A = card.fields(24, 30, [0.] * 6)
-            self.TRef = card.field(30, 0.0)
-            self.ge = card.field(31, 0.0)
+            self.TRef = double_or_blank(card, 30, 'TRef', 0.0)
+            self.ge = double_or_blank(card, 31, 'ge', 0.0)
         else:
             self.mid = data[0]
             self.G11 = data[1][0]
@@ -933,13 +934,13 @@ class MAT11(Material):
             self.g13 = card.field(9)
             self.g23 = card.field(10)
             
-            self.rho = card.field(11, 0.0)
-            self.a1 = card.field(12, 0.0)
-            self.a2 = card.field(13, 0.0)
-            self.a3 = card.field(14, 0.0)
+            self.rho = double_or_blank(card, 11, 'rho', 0.0)
+            self.a1 = double_or_blank(card, 12, 'a1', 0.0)
+            self.a2 = double_or_blank(card, 13, 'a2', 0.0)
+            self.a3 = double_or_blank(card, 14, 'a3', 0.0)
             
-            self.TRef = card.field(15, 0.0)
-            self.ge = card.field(16, 0.0)
+            self.TRef = double_or_blank(card, 15, 'TRef', 0.0)
+            self.ge = double_or_blank(card, 16, 'ge', 0.0)
         else:
             self.mid = data[0]
             self.e1 = data[1]
@@ -980,6 +981,7 @@ class MAT11(Material):
         a3 = set_blank_if_default(self.a3, 0.0)
 
         TRef = set_blank_if_default(self.TRef, 0.0)
+        rho = set_blank_if_default(self.rho, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
 
         fields = ['MAT11', self.mid, self.e1, self.e2, self.e3, self.nu12,
@@ -997,7 +999,7 @@ class MATHP(HyperelasticMaterial):
             self._comment = comment
         if card:
             self.mid = card.field(1)
-            self.a10 = card.field(2, 0.)
+            self.a10 = double_or_blank(card, 2, 'a10', 0.)
             self.a01 = card.field(3, 0.)
             self.d1 = card.field(4, (self.a10 + self.a01) * 1000)
             self.rho = card.field(5, 0.)
