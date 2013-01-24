@@ -374,15 +374,15 @@ class SESET(SetSuper):
 
         #i = 0
         cards = []
-        print("thruFields", thruFields)
+        #print("thruFields", thruFields)
         while 'THRU' in thruFields:
-            print("thruFields", thruFields)
+            #print("thruFields", thruFields)
             iThru = thruFields.index('THRU')
             card = print_card_8(['SESET', self.seid] + 
                                 thruFields[iThru-1:iThru+2])
             cards.append(card)
             thruFields = thruFields[0:iThru-1] + thruFields[iThru+2:]
-        print("thruFields", thruFields)
+        #print("thruFields", thruFields)
         if thruFields:
             card = print_card_8(['SESET', self.seid] + thruFields)
             cards.append(card)

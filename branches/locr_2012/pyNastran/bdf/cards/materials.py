@@ -122,7 +122,6 @@ class MAT1(Material):
 
     def __init__(self, card=None, data=None, comment=''):
         Material.__init__(self, card, data)
-        print("****",comment)
         if comment:
             self._comment = comment
         if card:

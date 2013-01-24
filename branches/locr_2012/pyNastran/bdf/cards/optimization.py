@@ -1,7 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
 from itertools import izip
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -271,21 +270,21 @@ class DRESP2(OptConstraint):
     def packParams(self):
         # # the amount of padding at the [beginning,end] of the 2nd line
         packLength = {  
-                        'DESVAR': [1, 0],
-                        'DTABLE': [1, 0],
-                        'DRESP1': [1, 0],
-                        'DNODE': [1, 1],  # unique entry
-                        'DVPREL1': [1, 0],
-                        'DVCREL1': [1, 0],
-                        'DVMREL1': [1, 0],
-                        'DVPREL2': [1, 0],
-                        'DVCREL2': [1, 0],
-                        'DVMREL2': [1, 0],
-                        'DRESP2': [1, 0],
-                        'DESVAR': [1, 0],
-                        'DESVAR': [1, 0],
-                        'DESVAR': [1, 0],
-                        'DESVAR': [1, 0],
+             'DESVAR':  [1, 0],
+             'DTABLE':  [1, 0],
+             'DRESP1':  [1, 0],
+             'DNODE':   [1, 1],  # unique entry
+             'DVPREL1': [1, 0],
+             'DVCREL1': [1, 0],
+             'DVMREL1': [1, 0],
+             'DVPREL2': [1, 0],
+             'DVCREL2': [1, 0],
+             'DVMREL2': [1, 0],
+             'DRESP2':  [1, 0],
+             'DESVAR':  [1, 0],
+             'DESVAR':  [1, 0],
+             'DESVAR':  [1, 0],
+             'DESVAR':  [1, 0],
         }
         fields = []
         for (key, valueList) in sorted(self.params.iteritems()):

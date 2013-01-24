@@ -3,7 +3,7 @@ import unittest
 import os
 from numpy import array
 import pyNastran
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf2 import BDF
 from pyNastran.utils import object_methods
 
 rootpath = pyNastran.__path__[0]
@@ -49,7 +49,7 @@ class TestMass(unittest.TestCase):
     def test_mass1(self):  # passes
         mesh = BDF(debug=True, log=None)
         bdfname = os.path.join(testpath, 'test_mass.dat')
-        mesh.readBDF(bdfname, includeDir=None, xref=True)
+        mesh.readBDF(bdfname, include_dir=None, xref=True)
         
         # quad - pcomp
         quad = mesh.elements[1]

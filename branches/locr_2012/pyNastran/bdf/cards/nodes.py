@@ -74,8 +74,8 @@ class RINGAX(Ring):
 class SPOINT(Node):
     type = 'SPOINT'
 
-    def __init__(self, nid):
-        Node.__init__(self, card=None, data=None, comment='')
+    def __init__(self, nid, comment=''):
+        Node.__init__(self, card=None, data=None)
         if comment:
             self._comment = comment
         self.nid = nid

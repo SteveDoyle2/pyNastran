@@ -152,8 +152,9 @@ class CELAS1(SpringElement):
         return self.pid.k
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True)
-        self.pid = model.Property(self.pid)
+        msg = ' which is required by CELAS1 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def rawFields(self):
         nodes = self.nodeIDs(allowEmptyNodes=True)
@@ -215,7 +216,8 @@ class CELAS2(SpringElement):
         return self.k
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True)
+        msg = ' which is required by CELAS2 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
 
     def writeCodeAster(self):
         nodes = self.nodeIDs()
@@ -299,8 +301,9 @@ class CELAS3(SpringElement):
         return self.pid.k
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes)
-        self.pid = model.Property(self.pid)
+        msg = ' which is required by CELAS3 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def rawFields(self):
         fields = ['CELAS3', self.eid, self.Pid(), self.s1, self.s2]
@@ -354,7 +357,8 @@ class CELAS4(SpringElement):
         return self.k
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes)
+        msg = ' which is required by CELAS4 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, msg=msg)
 
     def rawFields(self):
         fields = ['CELAS4', self.eid, self.k, self.s1, self.s2]

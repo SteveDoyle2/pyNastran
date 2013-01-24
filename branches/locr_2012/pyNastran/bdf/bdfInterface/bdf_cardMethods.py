@@ -18,7 +18,7 @@ class CardMethods(object):
         self.nCardLinesMax = nCardLinesMax
         pass
 
-    def parseDynamicSyntax(self, key):
+    def parse_dynamic_syntax(self, key):
         """
         Applies the dynamic syntax for %varName
         @param self the object pointer
@@ -42,7 +42,7 @@ class CardMethods(object):
             print("v1 = |%s|" % (valueRaw))
         lvalue = valueRaw.lstrip()
         if self._is_dynamic_syntax and '%' in lvalue[0:1]:
-            return self.parseDynamicSyntax(valueRaw)
+            return self.parse_dynamic_syntax(valueRaw)
         valueIn = valueRaw.lstrip().rstrip(' *').upper()
 
         if debug:

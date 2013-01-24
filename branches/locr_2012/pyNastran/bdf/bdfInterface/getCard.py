@@ -37,7 +37,7 @@ class GetMethods(object):
             nids2 = nids2.union(nids)
         return nids2
 
-    def Node(self, nid, allowEmptyNodes=False):
+    def Node(self, nid, allowEmptyNodes=False, msg=''):
         if nid == 0 and allowEmptyNodes:
             return None
         elif nid in self.nodes:
@@ -45,9 +45,9 @@ class GetMethods(object):
         elif self.spoints and nid in self.spoints.spoints:
             return SPOINT(nid)
         else:
-            raise RuntimeError('nid=%s is not a GRID or SPOINT' % (nid))
+            raise RuntimeError('nid=%s is not a GRID or SPOINT%s' % (nid, msg))
 
-    def Nodes(self, nids, allowEmptyNodes=False):
+    def Nodes(self, nids, allowEmptyNodes=False, msg=''):
         """
         Returns a series of node objects given a list of node IDs
         """
@@ -55,7 +55,7 @@ class GetMethods(object):
         nodes = []
         for nid in nids:
             #print("nid = %s" %(nid))
-            nodes.append(self.Node(nid, allowEmptyNodes))
+            nodes.append(self.Node(nid, allowEmptyNodes, msg))
         return nodes
 
     #--------------------
@@ -168,12 +168,12 @@ class GetMethods(object):
     def propertyIDs(self):
         return self.properties.keys()
 
-    def Property(self, pid):
+    def Property(self, pid, msg):
         try:
             return self.properties[pid]
         except KeyError:
-            raise KeyError('pid=%s not found.  Allowed Pids=%s'
-                           % (pid, self.propertyIDs()))
+            raise KeyError('pid=%s not found%s.  Allowed Pids=%s'
+                           % (pid, msg, self.propertyIDs()))
 
     def Properties(self, pids):
         properties = []
