@@ -10,6 +10,7 @@ from numpy.linalg import norm
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, BDFCard
 from pyNastran.utils import list_print
+from pyNastran.bdf.format import integer, double_or_blank, string_or_blank
 
 
 class Coord(BaseCard):
@@ -311,9 +312,9 @@ class Cord2x(Coord):
 
         if card:
             ## coordinate system ID
-            self.cid = card.field(1)
+            self.cid = integer(card, 1, 'cid')
             ## reference coordinate system ID
-            self.rid = card.field(2, 0)
+            self.rid = integer_or_blank(card, 2, 'rid', 0)
 
             ## origin in a point relative to the rid coordinate system
             self.e1 = array(card.fields(3, 6, [0., 0., 0.]))
@@ -496,13 +497,13 @@ class Cord1x(Coord):
             nCoord *= 4  # 0 if the 1st coord, 4 if the 2nd
 
             ## the coordinate ID
-            self.cid = card.field(1 + nCoord)
+            self.cid = integer(card, 1 + nCoord, 'cid')
             ## a Node at the origin
-            self.g1 = card.field(2 + nCoord)
+            self.g1 = integer(card, 2 + nCoord, 'g1')
             ## a Node on the z-axis
-            self.g2 = card.field(3 + nCoord)
+            self.g2 = integer(card, 3 + nCoord, 'g2')
             ## a Node on the xz-plane
-            self.g3 = card.field(4 + nCoord)
+            self.g3 = integer(card, 4 + nCoord, 'g3')
         else:
             self.cid = data[0]
             self.g1 = data[1]
@@ -638,14 +639,14 @@ class CORD3G(Coord):  # not done
             card = BDFCard(card)
         Coord.__init__(self, card, data)
 
-        self.cid = card.field(1)
-        method = card.field(2)
+        self.cid = integer(card, 1, 'cid')
+        method = string_or_blank(card, 2, 'E313')
         self.methodES = method[0]
         self.methodInt = int(method[1:])
         assert self.methodES in ['E', 'S']
         assert 0 < self.methodInt < 1000
 
-        self.form = card.field(3, 'EQN')
+        self.form = string_or_blank(card, 3, 'form', 'EQN')
         self.thetas = card.field(4, 7)
         assert len(self.thetas) == 3, 'thetas=%s' % (self.thetas)
         self.cidRef = card.field(7)

@@ -58,10 +58,10 @@ class RINGAX(Ring):
         Ring.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.nid = card.field(1)
-        self.R = card.field(3)
-        self.z = card.field(4)
-        self.ps = card.field(7)
+        self.nid = integer(card, 1, 'nid')
+        self.R = double(card, 3, 'R')
+        self.z = double(card, 4, 'z')
+        self.ps = integer_or_blank(card, 7, 'ps')
 
     def Position(self):
         return array([0., 0., 0.])

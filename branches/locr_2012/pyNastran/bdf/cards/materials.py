@@ -22,7 +22,7 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, Material
 from pyNastran.bdf.cards.tables import Table
 from pyNastran.bdf.format import (double, double_or_blank, integer,
-                                 integer_or_blank)
+                                 integer_or_blank, string_or_blank)
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""
@@ -59,12 +59,12 @@ class CREEP(Material):
             self.mid = integer(card, 1, 'mid')
             self.T0 = double_or_blank(card, 2, 'T0', 0.0)
             self.exp = double_or_blank(card, 3, 'exp', 1e-9)
-            self.form = card.field(4)
-            self.tidkp = card.field(5)
-            self.tidcp = card.field(6)
-            self.tidcs = card.field(7)
+            self.form = string_or_blank(card, 4, 'form') # blank?
+            self.tidkp = integer_or_blank(card, 5, 'tidkp') # blank?
+            self.tidcp = integer_or_blank(card, 6, 'tidcp') # blank?
+            self.tidcs = integer_or_blank(card, 7, 'tidcs') # blank?
             self.thresh = double_or_blank(card, 8, 'thresh', 1e-5)
-            self.Type = card.field(9)
+            self.Type = integer(card, 9, 'Type') # 111, 112, 121, 122, 211, 212, 221, 222, 300 (or blank?)
             self.a = card.field(10)
             self.b = card.field(11)
             self.c = card.field(12)
@@ -182,9 +182,9 @@ class MAT1(Material):
         r"""
         \f[ \large G = \frac{E}{2 (1+\nu)} \f]
         """
-        E = card.field(2)
-        G = card.field(3)
-        nu = card.field(4)
+        E = double_or_blank(card, 2, 'E')
+        G = double_or_blank(card, 3, 'G')
+        nu = double_or_blank(card, 4, 'nu')
 
         if G is None and E is None:  # no E,G
             raise RuntimeError('G=%s E=%s cannot both be None' % (G, E))
@@ -296,15 +296,15 @@ class MAT2(AnisotropicMaterial):
             self.G33 = double_or_blank(card, 7, 'G33', 0.0)
 
             self.rho = double_or_blank(card, 8, 'rho', 0.0)
-            self.a1 = card.field(9)
-            self.a2 = card.field(10)
-            self.a3 = card.field(11)
+            self.a1 = double_or_blank(card, 9, 'a1') # blank?
+            self.a2 = double_or_blank(card, 10, 'a2') # blank?
+            self.a3 = double_or_blank(card, 11, 'a3') # blank?
             self.TRef = double_or_blank(card, 12, 'TRef', 0.0)
             self.ge = double_or_blank(card, 13, 'ge', 0.0)
-            self.St = card.field(14)
-            self.Sc = card.field(15)
-            self.Ss = card.field(16)
-            self.Mcsid = card.field(17)
+            self.St = double_or_blank(card, 14, 'St') # or blank?
+            self.Sc = double_or_blank(card, 15, 'Sc') # or blank?
+            self.Ss = double_or_blank(card, 16, 'Ss') # or blank?
+            self.Mcsid = integer_or_blank(card, 17, 'Mcsid')
         else:
             self.mid = data[0]
             self.G11 = data[1]
@@ -444,19 +444,19 @@ class MAT3(AnisotropicMaterial):
         if comment:
             self._comment = comment
         if card:
-            self.mid = card.field(1)
-            self.ex = card.field(2)
-            self.eth = card.field(3)
-            self.ez = card.field(4)
-            self.nuxth = card.field(5)
-            self.nuthz = card.field(6)
-            self.nuzx = card.field(7)
+            self.mid = integer(card, 1, 'mid')
+            self.ex = double(card, 2, 'ex')
+            self.eth = double(card, 3, 'eth')
+            self.ez = double(card, 4, 'ez')
+            self.nuxth = double(card, 5, 'nuxth')
+            self.nuthz = double(card, 6, 'nuthz')
+            self.nuzx = double(card, 7, 'nuzx')
             self.rho = double_or_blank(card, 8, 'rho', 0.0)
 
-            self.gzx = card.field(11)
-            self.ax = card.field(12)
-            self.ath = card.field(13)
-            self.az = card.field(14)
+            self.gzx = double(card, 11, 'gzx')
+            self.ax = double_or_blank(card, 12, 'ax', 0.0)
+            self.ath = double_or_blank(card, 13, 'ath', 0.0)
+            self.az = double_or_blank(card, 14, 'az', 0.0)
             self.TRef = double_or_blank(card, 15, 'TRef', 0.0)
             self.ge = double_or_blank(card, 16, 'ge', 0.0)
         else:
@@ -483,12 +483,15 @@ class MAT3(AnisotropicMaterial):
         return fields
 
     def reprFields(self):
+        ax = set_blank_if_default(self.ax, 0.0)
+        ath = set_blank_if_default(self.ath, 0.0)
+        az = set_blank_if_default(self.az, 0.0)
         rho = set_blank_if_default(self.rho, 0.0)
         TRef = set_blank_if_default(self.TRef, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
         fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth,
                   self.nuthz, self.nuzx, rho, None, None, self.gzx,
-                  self.ax, self.ath, self.az, TRef, ge]
+                  ax, ath, az, TRef, ge]
         return fields
 
 
@@ -509,17 +512,17 @@ class MAT4(ThermalMaterial):
         if comment:
             self._comment = comment
         if card:
-            self.mid = card.field(1)
-            self.k = card.field(2)
+            self.mid = integer(card, 1, 'mid')
+            self.k = double_or_blank(card, 2, 'k')
             self.cp = double_or_blank(card, 3, 'cp', 0.0)
             self.rho = double_or_blank(card, 4, 'rho', 1.0)
-            self.H = card.field(5)
-            self.mu = card.field(6)
+            self.H = double_or_blank(card, 5, 'H')
+            self.mu = double_or_blank(card, 6, 'mu')
             self.hgen = double_or_blank(card, 7, 'hgen', 1.0)
-            self.refEnthalpy = card.field(8)
-            self.tch = card.field(9)
-            self.tdelta = card.field(10)
-            self.qlat = card.field(11)
+            self.refEnthalpy = double_or_blank(card, 8, 'refEnthalpy')
+            self.tch = double_or_blank(card, 9, 'tch')
+            self.tdelta = double_or_blank(card, 10, 'tdelta')
+            self.qlat = double_or_blank(card, 11, 'qlat')
         else:
             self.mid = data[0]
             self.k = data[1]
@@ -561,8 +564,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         ThermalMaterial.__init__(self, card, data)
         if comment:
             self._comment = comment
-        if card:
-            self.mid = card.field(1)
+        if card:integer(card, 1, 'mid')
             ## Thermal conductivity (assumed default=0.0)
             self.kxx = double_or_blank(card, 2, 'kxx', 0.0)
             self.kxy = double_or_blank(card, 3, 'kxy', 0.0)
@@ -629,10 +631,10 @@ class MAT8(AnisotropicMaterial):
         if comment:
             self._comment = comment
         if card:
-            self.mid = card.field(1)
-            self.e11 = card.field(2)  # TODO is this the correct default
-            self.e22 = card.field(3)  # TODO is this the correct default
-            self.nu12 = card.field(4)  # TODO is this the correct default
+            self.mid = integer(card, 1, 'mid')
+            self.e11 = double(card, 2, 'E11')  # TODO is this the correct default
+            self.e22 = double(card, 3, 'E22')  # TODO is this the correct default
+            self.nu12 = double(card, 4, 'nu12')  # TODO is this the correct default
 
             self.g12 = double_or_blank(card, 5, 'g12', 0.0)
             self.g1z = double_or_blank(card, 6, 'g1z', 1e8)
@@ -753,7 +755,7 @@ class MAT9(AnisotropicMaterial):
         if comment:
             self._comment = comment
         if card:
-            self.mid = card.field(1)
+            self.mid = integer(card, 1, 'mid')
             self.G11 = double_or_blank(card, 2, 'G11', 0.0)
             self.G12 = double_or_blank(card, 3, 'G12', 0.0)
             self.G13 = double_or_blank(card, 4, 'G13', 0.0)
@@ -857,9 +859,9 @@ class MAT10(Material):
         if comment:
             self._comment = comment
         if card:
-            self.mid = card.field(1)
+            self.mid = integer(card, 1, 'mid')
             self.getBulkRhoC(card)
-            self.ge = card.field(5, 0.0)
+            self.ge = double_or_blank(card, 5, 'ge', 0.0)
         else:
             self.mid = data[0]
             self.bulk = data[1]
@@ -871,9 +873,9 @@ class MAT10(Material):
         r"""
         \f[ \large bulk = c^2 \rho \f]
         """
-        bulk = card.field(2)
-        rho = card.field(3)
-        c = card.field(4)
+        bulk = double_or_blank(card, 2, 'bulk')
+        rho = double_or_blank(card, 3, 'rho')
+        c = double_or_blank(card, 4, 'c')
 
         if c is not None:
             if rho is not None:
@@ -921,18 +923,18 @@ class MAT11(Material):
         if comment:
             self._comment = comment
         if card:
-            self.mid = card.field(1)
-            self.e1 = card.field(2)
-            self.e2 = card.field(3)
-            self.e3 = card.field(4)
+            self.mid = integer(card, 1, 'mid')
+            self.e1 = double(card, 2, 'E1')
+            self.e2 = double(card, 3, 'E2')
+            self.e3 = double(card, 4, 'E3')
             
-            self.nu12 = card.field(5)
-            self.nu13 = card.field(6)
-            self.nu23 = card.field(7)
+            self.nu12 = double(card, 5, 'nu12')
+            self.nu13 = double(card, 6, 'nu13')
+            self.nu23 = double(card, 7, 'nu23')
             
-            self.g12 = card.field(8)
-            self.g13 = card.field(9)
-            self.g23 = card.field(10)
+            self.g12 = double(card, 8, 'g12')
+            self.g13 = double(card, 9, 'g13')
+            self.g23 = double(card, 10, 'g23')
             
             self.rho = double_or_blank(card, 11, 'rho', 0.0)
             self.a1 = double_or_blank(card, 12, 'a1', 0.0)
@@ -998,49 +1000,49 @@ class MATHP(HyperelasticMaterial):
         if comment:
             self._comment = comment
         if card:
-            self.mid = card.field(1)
+            self.mid = integer(card, 1, 'mid')
             self.a10 = double_or_blank(card, 2, 'a10', 0.)
-            self.a01 = card.field(3, 0.)
-            self.d1 = card.field(4, (self.a10 + self.a01) * 1000)
-            self.rho = card.field(5, 0.)
-            self.av = card.field(6, 0.)
-            self.TRef = card.field(7, 0.)
-            self.ge = card.field(8, 0.)
+            self.a01 = double_or_blank(card, 3, 'a01', 0.)
+            self.d1 = double_or_blank(card, 4, 'd1', (self.a10 + self.a01) * 1000)
+            self.rho = double_or_blank(card, 5, 'rho', 0.)
+            self.av = double_or_blank(card, 6, 'av', 0.)
+            self.TRef = double_or_blank(card, 7, 'TRef', 0.)
+            self.ge = double_or_blank(card, 8, 'ge', 0.)
 
-            self.na = card.field(10, 1)
-            self.nd = card.field(11, 1)
+            self.na = double_or_blank(card, 10, 'na', 1)
+            self.nd = integer_or_blank(card, 11, 'nd', 1)
 
-            self.a20 = card.field(17, 0.)
-            self.a11 = card.field(18, 0.)
-            self.a02 = card.field(19, 0.)
-            self.d2 = card.field(20, 0.)
+            self.a20 = double_or_blank(card, 17, 'a20', 0.)
+            self.a11 = double_or_blank(card, 18, 'a11', 0.)
+            self.a02 = double_or_blank(card, 19, 'a02', 0.)
+            self.d2 = double_or_blank(card, 20, 'd2', 0.)
 
-            self.a30 = card.field(25, 0.)
-            self.a21 = card.field(26, 0.)
-            self.a12 = card.field(27, 0.)
-            self.a03 = card.field(28, 0.)
-            self.d3 = card.field(29, 0.)
+            self.a30 = double_or_blank(card, 25, 'a30', 0.)
+            self.a21 = double_or_blank(card, 26, 'a21', 0.)
+            self.a12 = double_or_blank(card, 27, 'a12', 0.)
+            self.a03 = double_or_blank(card, 28, 'a03', 0.)
+            self.d3 = double_or_blank(card, 29, 'd3', 0.)
 
-            self.a40 = card.field(33, 0.)
-            self.a31 = card.field(34, 0.)
-            self.a22 = card.field(35, 0.)
-            self.a13 = card.field(36, 0.)
-            self.a04 = card.field(37, 0.)
-            self.d4 = card.field(38, 0.)
+            self.a40 = double_or_blank(card, 33, 'a40', 0.)
+            self.a31 = double_or_blank(card, 34, 'a31', 0.)
+            self.a22 = double_or_blank(card, 35, 'a22', 0.)
+            self.a13 = double_or_blank(card, 36, 'a13', 0.)
+            self.a04 = double_or_blank(card, 37, 'a04', 0.)
+            self.d4 = double_or_blank(card, 38, 'd4', 0.)
 
-            self.a50 = card.field(41, 0.)
-            self.a41 = card.field(42)
-            self.a32 = card.field(43)
-            self.a23 = card.field(44)
-            self.a14 = card.field(45)
-            self.a05 = card.field(46)
-            self.d5 = card.field(47, 0.)
+            self.a50 = double_or_blank(card, 41, 'a50', 0.)
+            self.a41 = double_or_blank(card, 42, 'a41', 0.)
+            self.a32 = double_or_blank(card, 43, 'a32', 0.)
+            self.a23 = double_or_blank(card, 44, 'a23', 0.)
+            self.a14 = double_or_blank(card, 45, 'a14', 0.)
+            self.a05 = double_or_blank(card, 46, 'a05', 0.)
+            self.d5 = double_or_blank(card, 47, 'd5', 0.)
 
-            self.tab1 = card.field(49)
-            self.tab2 = card.field(50)
-            self.tab3 = card.field(51)
-            self.tab4 = card.field(52)
-            self.tabd = card.field(56)
+            self.tab1 = integer_or_blank(card, 49, 'tab1')
+            self.tab2 = integer_or_blank(card, 50, 'tab2')
+            self.tab3 = integer_or_blank(card, 51, 'tab3')
+            self.tab4 = integer_or_blank(card, 52, 'tab4')
+            self.tabd = integer_or_blank(card, 56, 'tabd')
         else:
             main = data[0]
             (mid, a10, a01, d1, rho, av, alpha, tref, ge, sf, na, nd, kp,
@@ -1186,32 +1188,32 @@ class MATS1(MaterialDependence):
             self._comment = comment
         if card:
             ## Identification number of a MAT1, MAT2, or MAT9 entry.
-            self.mid = card.field(1)
+            self.mid = integer(card, 1, 'mid')
             ## Identification number of a TABLES1 or TABLEST entry. If H is
             ## given, then this field must be blank.
-            self.tid = card.field(2)
+            self.tid = integer_or_blank(card, 2, 'tid')
             ## Type of material nonlinearity. ('NLELAST' for nonlinear elastic
             ## or 'PLASTIC' for elastoplastic.)
-            self.Type = card.field(3)
+            self.Type = string(card, 3, 'Type')
             ## Work hardening slope (slope of stress versus plastic strain) in
             ## units of stress. For elastic-perfectly plastic cases, H=0.0.
             ## For more than a single slope in the plastic range, the
             ## stress-strain data must be supplied on a TABLES1 entry
             ## referenced by TID, and this field must be blank
-            self.h = card.field(4)
+            self.h = double_or_blank(card, 4, 'H')
             ## Yield function criterion, selected by one of the following
             ## values (1) Von Mises (2) Tresca (3) Mohr-Coulomb
             ## (4) Drucker-Prager
-            self.yf = card.field(5, 1)
+            self.yf = integer(card, 5, 'yf', 1)
             ## Hardening Rule, selected by one of the following values
             ## (Integer): (1) Isotropic (Default) (2) Kinematic
             ## (3) Combined isotropic and kinematic hardening
-            self.hr = card.field(6, 1)
+            self.hr = integer(card, 6, 'hr', 1)
             ## Initial yield point
-            self.limit1 = card.field(7)
+            self.limit1 = double(card, 7, 'limit1')
             ## Internal friction angle, measured in degrees, for the
             ## Mohr-Coulomb and Drucker-Prager yield criteria
-            self.limit2 = card.field(8)
+            self.limit2 = double(card, 8, 'limit2')
         else:
             (mid, tid, Type, h, yf, hr, limit1, limit2) = data
             self.mid = mid

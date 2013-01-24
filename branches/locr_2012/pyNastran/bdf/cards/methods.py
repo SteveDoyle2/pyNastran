@@ -16,7 +16,7 @@ from itertools import izip
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
-
+from pyNastran.bdf.format import integer, string_or_blank
 
 class Method(BaseCard):
     """
@@ -39,7 +39,7 @@ class EIGB(Method):
             self._comment = comment
         if card:
             ## Set identification number. (Unique Integer > 0)
-            self.sid = card.field(1)
+            self.sid = integer(card, 1, 'sid')
             ## Method of eigenvalue extraction. (Character: 'INV' for inverse
             ## power method or 'SINV' for enhanced inverse power method.)
             self.method = card.field(2)
@@ -64,7 +64,7 @@ class EIGB(Method):
             self.ndn = card.field(7, 3 * self.nep)
             ## Method for normalizing eigenvectors.
             ## ('MAX' or 'POINT';Default='MAX')
-            self.norm = card.field(9, 'MAX')
+            self.norm = string_or_blank(card, 9, 'norm', 'MAX')
             self.G = card.field(10)
             self.C = card.field(11)
         else:
@@ -115,7 +115,7 @@ class EIGC(Method):  # TODO: not done
 
         if card:
             ## Set identification number. (Unique Integer > 0)
-            self.sid = card.field(1)
+            self.sid = integer(card, 1, 'sid')
             ## Method of complex eigenvalue extraction
             self.method = card.field(2)
             assert self.method in ['INV', 'HESS', 'CLAN'],(

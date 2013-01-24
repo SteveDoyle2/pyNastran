@@ -20,6 +20,8 @@ from itertools import izip
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
+from pyNastran.bdf.format import (integer, integer_or_blank,
+                                  double, double_or_blank)
 
 
 class FREQ(BaseCard):
@@ -34,7 +36,7 @@ class FREQ(BaseCard):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.sid = card.field(1)
+        self.sid = integer(card, 1, 'sid')
         self.freqs = card.fields(2)
         self.cleanFreqs()
 
@@ -84,10 +86,10 @@ class FREQ1(FREQ):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.sid = card.field(1)
-        f1 = card.field(2, 0.0)
-        df = card.field(3)
-        ndf = card.field(4, 1)
+        self.sid = integer(card, 1, 'sid')
+        f1 = double_or_blank(card, 2, 'f1', 0.0)
+        df = double(card, 3, 'df')
+        ndf = integer_or_blank(card, 4, 'ndf', 1)
 
         self.freqs = []
         for i in xrange(ndf):
@@ -108,8 +110,8 @@ class FREQ2(FREQ):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.sid = card.field(1)
-        f1 = card.field(2, 0.0)
+        self.sid = integer(card, 1, 'sid')
+        f1 = double_or_blank(card, 2, 'f1', 0.0)
         f2 = card.field(3)
         nf = card.field(4, 1)
 
