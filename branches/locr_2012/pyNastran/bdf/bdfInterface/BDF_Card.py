@@ -9,7 +9,7 @@ class BDFCard(object):
     def __init__(self, card=None, oldCardObj=None, debug=False):
         self.debug = debug
         if card:
-            self.card = wipeEmptyFields(card)
+            self.card = wipe_empty_fields(card)
             #self.oldCard = oldCardObj
             self.nfields = len(self.card)
         else:
@@ -204,7 +204,7 @@ class BDFCard(object):
         return self.oldCard.field(i)
 
 
-def wipeEmptyFields(card):
+def wipe_empty_fields(card):
     """
     Removes an trailing Nones from the card.
     Also converts empty strings to None.

@@ -2,15 +2,15 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import izip, count
 
-from pyNastran.bdf.bdfInterface.BDF_Card import wipeEmptyFields
+from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
 from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpretValue
 from pyNastran.bdf.fieldWriter import print_field, print_card
 
 
 def assert_fields(card1, card2):
     try:
-        fields1 = wipeEmptyFields(card1.reprFields())
-        fields2 = wipeEmptyFields(card2.reprFields())
+        fields1 = wipe_empty_fields(card1.reprFields())
+        fields2 = wipe_empty_fields(card2.reprFields())
     except:
         print("card1 = \n%s" % (card1))
         print("card2 = \n%s" % (card2))

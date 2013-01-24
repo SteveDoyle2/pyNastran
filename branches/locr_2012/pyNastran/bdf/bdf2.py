@@ -82,7 +82,7 @@ from pyNastran.bdf.caseControlDeck import CaseControlDeck
 from pyNastran.bdf.bdf_Methods import BDFMethods
 from .bdfInterface.getCard import GetMethods
 from .bdfInterface.addCard import AddMethods
-from .bdfInterface.BDF_Card import BDFCard, wipeEmptyFields
+from .bdfInterface.BDF_Card import BDFCard, wipe_empty_fields
 from .bdfInterface.bdf_Reader import BDFReader
 from .bdfInterface.bdf_writeMesh import WriteMesh
 from .bdfInterface.bdf_cardMethods import CardMethods, interpretValue
@@ -988,7 +988,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
         cardname = self.get_card_name(lines)
         #print("cardname = |%s|" % cardname)
-        #lines = wipeEmptyFields(lines)
+        #lines = wipe_empty_fields(lines)
         #print('lines =',lines)
         return lines, comments, cardname
 
@@ -1081,7 +1081,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 fields = [self.parse_dynamic_syntax(field) if '%' in field[0:1]
                           else field for field in fields]
 
-            card = wipeEmptyFields([interpretValue(field, fields) for field in fields])
+            card = wipe_empty_fields([interpretValue(field, fields) for field in fields])
             #print("fields = ",fields)
             #print("card_1050 = ",card)
             card_obj = BDFCard(card)

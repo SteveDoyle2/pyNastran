@@ -6,7 +6,7 @@ from itertools import izip
 from pyNastran.bdf.fieldWriter import print_card, is_same
                                #print_card_8, set_default_if_blank, print_card
 #from pyNastran.bdf.fieldWriter16 import print_card_16
-from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard, wipeEmptyFields
+from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard, wipe_empty_fields
 
 
 class BaseCard(object):
@@ -47,7 +47,7 @@ class BaseCard(object):
 
     #def removeTrailingNones(self, fields):
         #"""removes blank fields at the end of a card object"""
-        #self._wipeEmptyFields(fields)
+        #wipe_empty_fields(fields)
 
     def buildTableLines(self, fields, nStart=1, nEnd=0):
         """
@@ -84,7 +84,7 @@ class BaseCard(object):
                 fieldsOut += [None] * (nStart + nEnd)
 
         # make sure they're aren't any trailing None's (from a new line)
-        fieldsOut = wipeEmptyFields(fieldsOut)
+        fieldsOut = wipe_empty_fields(fieldsOut)
         #print "fieldsOut = ",fieldsOut,len(fieldsOut)
 
         # push the next key (aka next fields[0]) onto the next line
