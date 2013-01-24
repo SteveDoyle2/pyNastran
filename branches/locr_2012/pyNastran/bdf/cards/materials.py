@@ -21,7 +21,7 @@ from numpy import zeros, array
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, Material
 from pyNastran.bdf.cards.tables import Table
-
+from pyNastran.bdf.format import double, double_or_blank, integer, integer_or_blank
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""
@@ -55,14 +55,14 @@ class CREEP(Material):
         if comment:
             self._comment = comment
         if card:
-            self.mid = card.field(1)
-            self.T0 = card.field(2, 0.0)
-            self.exp = card.field(3, 1e-9)
+            self.mid = integer(card, 1, 'mid')
+            self.T0 = double_or_blank(card, 2, 'T0', 0.0)
+            self.exp = double_or_blank(card, 3, 'exp', 1e-9)
             self.form = card.field(4)
             self.tidkp = card.field(5)
             self.tidcp = card.field(6)
             self.tidcs = card.field(7)
-            self.thresh = card.field(8, 1e-5)
+            self.thresh = double_or_blank(card, 8, 'thresh', 1e-5)
             self.Type = card.field(9)
             self.a = card.field(10)
             self.b = card.field(11)
@@ -125,16 +125,16 @@ class MAT1(Material):
         if comment:
             self._comment = comment
         if card:
-            self.mid = card.field(1)
+            self.mid = double(card, 1, 'mid')
             self.set_E_G_nu(card)
-            self.rho = card.field(5, 0.)
-            self.a = card.field(6, 0.0)
-            self.TRef = card.field(7, 0.0)
-            self.ge = card.field(8, 0.0)
-            self.St = card.field(9, 0.0)
-            self.Sc = card.field(10, 0.0)
-            self.Ss = card.field(11, 0.0)
-            self.Mcsid = card.field(12, 0)
+            self.rho = double_or_blank(card, 5, 'rho', 0.)
+            self.a = double_or_blank(card, 6, 'a', 0.0)
+            self.TRef = double_or_blank(card, 7, 'TRef', 0.0)
+            self.ge = double_or_blank(card, 8, 'ge', 0.0)
+            self.St = double_or_blank(card, 9, 'St', 0.0)
+            self.Sc = double_or_blank(card, 10, 'Sc', 0.0)
+            self.Ss = double_or_blank(card, 11, 'Ss', 0.0)
+            self.Mcsid = integer_or_blank(card, 12, 'Mcsid', 0)
         else:
             self.mid = data[0]
             self.e = data[1]
@@ -286,20 +286,20 @@ class MAT2(AnisotropicMaterial):
         if comment:
             self._comment = comment
         if card:
-            self.mid = card.field(1)
-            self.G11 = card.field(2, 0.0)
-            self.G12 = card.field(3, 0.0)
-            self.G13 = card.field(4, 0.0)
-            self.G22 = card.field(5, 0.0)
-            self.G23 = card.field(6, 0.0)
-            self.G33 = card.field(7, 0.0)
+            self.mid = integer(card, 1, 'mid')
+            self.G11 = double_or_blank(card, 2, 'G11', 0.0)
+            self.G12 = double_or_blank(card, 3, 'G12', 0.0)
+            self.G13 = double_or_blank(card, 4, 'G13', 0.0)
+            self.G22 = double_or_blank(card, 5, 'G22', 0.0)
+            self.G23 = double_or_blank(card, 6, 'G23', 0.0)
+            self.G33 = double_or_blank(card, 7, 'G33', 0.0)
 
-            self.rho = card.field(8, 0.)
+            self.rho = double_or_blank(card, 8, 'rho', 0.0)
             self.a1 = card.field(9)
             self.a2 = card.field(10)
             self.a3 = card.field(11)
-            self.TRef = card.field(12, 0.0)
-            self.ge = card.field(13, 0.0)
+            self.TRef = double_or_blank(card, 12, 'TRef', 0.0)
+            self.ge = double_or_blank(card, 13, 'ge', 0.0)
             self.St = card.field(14)
             self.Sc = card.field(15)
             self.Ss = card.field(16)
@@ -450,14 +450,14 @@ class MAT3(AnisotropicMaterial):
             self.nuxth = card.field(5)
             self.nuthz = card.field(6)
             self.nuzx = card.field(7)
-            self.rho = card.field(8, 0.)
+            self.rho = double_or_blank(card, 8, 'rho', 0.0)
 
             self.gzx = card.field(11)
             self.ax = card.field(12)
             self.ath = card.field(13)
             self.az = card.field(14)
-            self.TRef = card.field(15, 0.0)
-            self.ge = card.field(16, 0.0)
+            self.TRef = double_or_blank(card, 15, 'TRef', 0.0)
+            self.ge = double_or_blank(card, 16, 'ge', 0.0)
         else:
             self.mid = data[0]
             self.ex = data[1]
@@ -510,11 +510,11 @@ class MAT4(ThermalMaterial):
         if card:
             self.mid = card.field(1)
             self.k = card.field(2)
-            self.cp = card.field(3, 0.0)
-            self.rho = card.field(4, 1.0)
+            self.cp = double_or_blank(card, 3, 'cp', 0.0)
+            self.rho = double_or_blank(card, 4, 'rho', 1.0)
             self.H = card.field(5)
             self.mu = card.field(6)
-            self.hgen = card.field(7, 1.0)
+            self.hgen = double_or_blank(card, 7, 'hgen', 1.0)
             self.refEnthalpy = card.field(8)
             self.tch = card.field(9)
             self.tdelta = card.field(10)
@@ -563,16 +563,16 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         if card:
             self.mid = card.field(1)
             ## Thermal conductivity (assumed default=0.0)
-            self.kxx = card.field(2, 0.)
-            self.kxy = card.field(3, 0.)
-            self.kxz = card.field(4, 0.)
-            self.kyy = card.field(5, 0.)
-            self.kyz = card.field(6, 0.)
-            self.kzz = card.field(7, 0.)
+            self.kxx = double_or_blank(card, 2, 'kxx', 0.0)
+            self.kxy = double_or_blank(card, 3, 'kxy', 0.0)
+            self.kxz = double_or_blank(card, 4, 'kxz', 0.0)
+            self.kyy = double_or_blank(card, 5, 'kyy', 0.0)
+            self.kyz = double_or_blank(card, 6, 'kyz', 0.0)
+            self.kzz = double_or_blank(card, 7, 'kzz', 0.0)
 
-            self.cp = card.field(8, 0.0)
-            self.rho = card.field(9, 1.0)
-            self.hgen = card.field(10, 1.0)
+            self.cp = double_or_blank(card, 8, 'cp', 0.0)
+            self.rho = double_or_blank(card, 9, 'rho', 1.0)
+            self.hgen = double_or_blank(card, 10, 'hgen', 1.0)
         else:
             self.mid = data[0]
             self.kxx = data[1]
@@ -633,7 +633,7 @@ class MAT8(AnisotropicMaterial):
             self.e22 = card.field(3)  # TODO is this the correct default
             self.nu12 = card.field(4)  # TODO is this the correct default
 
-            self.g12 = card.field(5, 0.0)
+            self.g12 = double_or_blank(card, 5, 'g12', 0.0)
             self.g1z = card.field(6, 1e8)
             self.g2z = card.field(7, 1e8)
             self.rho = card.field(8, 0.0)

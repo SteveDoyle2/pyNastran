@@ -258,6 +258,8 @@ def expand_thru(fields):
     expands a list of values of the form [1,5,THRU,9,13]
     to be [1,5,6,7,8,9,13]
     """
+    if isinstance(fields, int):
+        return [fields]
     if len(fields) == 1:
         return fields
     out = []

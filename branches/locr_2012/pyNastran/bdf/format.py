@@ -1,12 +1,34 @@
 def field(card, n, fieldname):
     return integer_double_string_or_blank(card, n, fieldname, default=None)
 
-def fields(card, fieldname, i, j):
-    pass
+def integer_double_string_or_blank(card, n, fieldname, default=None):
+    svalue = card.field(n)
+    if svalue is None:
+        return default
+    elif isinstance(svalue, int) or isinstance(svalue, float):
+        return svalue
+    
+    svalue = svalue.strip()
+    if '.' in svalue:
+        return double(card, field, n)
+    elif svalue.isdigit():
+        return int(svalue)
+    elif len(svalue) == 0:
+        return default
+    else:
+        return svalue
+    
+def fields(f, card, fieldname, i, j=None):
+    fs = []
+    if j is None:
+        j = len(card)
+    for ii in range(i,j):
+        fs.append( f(card, ii, fieldname) )
+    return fs
 
 def integer(card, n, fieldname):
     try:
-        svalue = card[n]
+        svalue = card.field(n)
     except IndexError:
         raise RuntimeError('%s (field # %s) on card must be an integer.\ncard=\n%s' % (fieldname, n, card) )
 
@@ -17,11 +39,15 @@ def integer(card, n, fieldname):
 
 def integer_or_blank(card, n, fieldname, default=None):
     try:
-        svalue = card[n]
+        svalue = card.field(n)
     except IndexError:
         return default
 
-    if svalue.strip():
+    if isinstance(svalue, int):
+        return svalue
+    elif svalue is None:
+        return default
+    elif isinstance(svalue, str):
         try:
             return int(svalue)
         except:
@@ -30,9 +56,11 @@ def integer_or_blank(card, n, fieldname, default=None):
     
 def double(card, n, fieldname):
     try:
-        svalue = card[n]
+        svalue = card.field(n)
     except IndexError:
         raise RuntimeError('%s (field # %s) on card must be an float.\ncard=\n%s' % (fieldname, n, card) )
+    if isinstance(svalue, float):
+        return svalue
 
     try:  # 1.0, 1.0E+3, 1.0E-3
         value = float(svalue)
@@ -60,11 +88,12 @@ def double(card, n, fieldname):
 
 def double_or_blank(card, n, fieldname, default=None):
     try:
-        svalue = card[n]
+        svalue = card.field(n)
     except IndexError:
         return default
-
-    if svalue:
+    if isinstance(svalue, float):
+        return svalue
+    elif isinstance(svalue, str):
         try:
             return double(card, n, fieldname)
         except:
@@ -73,10 +102,12 @@ def double_or_blank(card, n, fieldname, default=None):
     
 def double_or_string(card, n, fieldname):
     try:
-        svalue = card[n]
+        svalue = card.field(n)
     except IndexError:
         raise RuntimeError('%s (field # %s) on card must be an integer.\ncard=\n%s' % (fieldname, n, card) )
-
+    if isinstance(svalue, float):
+        return svalue
+    
     if '.' in svalue: # float
         try:
             return double(card, n, fieldname)
@@ -88,8 +119,12 @@ def double_or_string(card, n, fieldname):
     
 def double_string_or_blank(card, n, fieldname, default):
     try:
-        svalue = card[n].strip()
+        svalue = card.field(n)
     except IndexError:
+        return default
+    if isinstance(svalue, float):
+        return svalue
+    elif svalue is None:
         return default
 
     if '.' in svalue:
@@ -103,9 +138,11 @@ def double_string_or_blank(card, n, fieldname, default):
     
 def integer_or_double(card, n, fieldname):
     try:
-        svalue = card[n]
+        svalue = card.field(n)
     except IndexError:
         raise RuntimeError('%s (field # %s) on card must be an integer or float.\ncard=\n%s' % (fieldname, n, card) )
+    if isinstance(svalue, int) or isinstance(svalue, float):
+        return svalue
 
     if '.' in svalue:  # float/exponent
         try:
@@ -121,8 +158,13 @@ def integer_or_double(card, n, fieldname):
 
 def integer_double_or_blank(card, n, fieldname, default=None):
     try:
-        svalue = card[n].strip()
+        svalue = card[n]
     except IndexError:
+        return default
+
+    if isinstance(svalue, int) or isinstance(svalue, float):
+        return svalue
+    elif svalue is None:
         return default
 
     if svalue:  # integer/float
@@ -134,9 +176,11 @@ def integer_double_or_blank(card, n, fieldname, default=None):
     
 def integer_or_string(card, n, fieldname):
     try:
-        svalue = card[n].strip()
+        svalue = card.field(n)
     except IndexError:
         raise RuntimeError('%s (field # %s) on card must be an integer or string.\ncard=\n%s' % (fieldname, n, card) )
+    if isinstance(svalue, int):
+        return svalue
 
     if svalue.isdigit():  # int
         try:
@@ -149,8 +193,12 @@ def integer_or_string(card, n, fieldname):
 
 def integer_string_or_default(card, n, fieldname, default=None):
     try:
-        svalue = card[n]
+        svalue = card.field(n)
     except IndexError:
+        return default
+    if isinstance(svalue, int):
+        return svalue
+    elif svalue is None:
         return default
 
     if svalue.strip():  # integer/string
@@ -162,10 +210,13 @@ def integer_string_or_default(card, n, fieldname, default=None):
 
 def integer_float_string(card, n, fieldname):
     try:
-        svalue = card[n].strip()
+        svalue = card.field(n)
     except IndexError:
         raise RuntimeError('%s (field # %s) on card must be an integer, float, or string.\ncard=\n%s' % (fieldname, n, card) )
-
+    if isinstance(svalue, int) or isinstance(svalue, float):
+        return svalue
+    
+    svalue = svalue.strip()
     if svalue:  # integer/float/string
         if '.' in svalue:  # float
             value = double(card, n, fieldname)
@@ -181,10 +232,16 @@ def integer_float_string(card, n, fieldname):
 
 def integer_float_string_or_blank(card, n, fieldname, default=None):
     try:
-        svalue = card[n].strip()
+        svalue = card.field(n)
     except IndexError:
         raise RuntimeError('%s (field # %s) on card must be an integer, float, string, or blank.\ncard=\n%s' % (fieldname, n, card) )
 
+    if isinstance(svalue, int):
+        return svalue
+    elif svalue is None:
+        return default
+
+    svalue = svalue.strip()
     if svalue:  # integer/float/string
         if '.' in svalue:  # float
             value = double(card, n, fieldname)
@@ -199,13 +256,16 @@ def integer_float_string_or_blank(card, n, fieldname, default=None):
     return default
 
 def string(card, n, fieldname):
-    svalue = card[n].strip()
+    svalue = card.field(n).strip()
     if svalue:  # string
         return svalue
     raise RuntimeError('%s = %s (field # %s) on card must be an string (not blank).\ncard=\n%s' % (fieldname, svalue, n, card) )
 
 def string_or_blank(card, n, fieldname, default=None):
-    svalue = card[n].strip()
+    svalue = card.field(n)
+    if svalue is None:
+        return default
+    svalue = svalue.strip()
     if svalue:  # string
         return svalue
     return default

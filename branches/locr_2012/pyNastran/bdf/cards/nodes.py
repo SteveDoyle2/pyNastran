@@ -6,6 +6,7 @@ from numpy import array
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
+from pyNastran.bdf.format import integer, integer_or_blank, double_or_blank
 
 
 class Ring(BaseCard):
@@ -116,7 +117,7 @@ class SPOINTs(Node):
         #nFields = card.nFields()
 
         if card:
-            fields = card.fields(1)
+            fields = integer(card, 1, 'ID')
         else:
             fields = data
         self.spoints = set(expand_thru(fields))
@@ -168,16 +169,16 @@ class GRDSET(Node):
         if comment:
             self._comment = comment
         ## Grid point coordinate system
-        self.cp = card.field(2, 0)
+        self.cp = integer_or_blank(card, 2, 'cp', 0)
 
         ## Analysis coordinate system
-        self.cd = card.field(6, 0)
+        self.cd = integer_or_blank(card, 6, 'cd', 0)
 
         ## Default SPC constraint on undefined nodes
-        self.ps = str(card.field(7, ''))
+        self.ps = str(integer_or_blank(card, 7, 'ps', ''))
 
         ## Superelement ID
-        self.seid = card.field(8, 0)
+        self.seid = integer_or_blank(card, 8, 'seid', 0)
 
     def cross_reference(self, model):
         self.cp = model.Coord(self.cp)
@@ -254,23 +255,26 @@ class GRID(Node):
 
         if card:
             ## Node ID
-            self.nid = int(card.field(1))
+            self.nid = integer(card, 1, 'nid')
 
             ## Grid point coordinate system
-            self.cp = card.field(2, 0)
-
-            xyz = card.fields(3, 6, [0., 0., 0.])
+            self.cp = integer_or_blank(card, 2, 'cp', 0)
+            
+            x = double_or_blank(card, 3, 'x1', 0.)
+            y = double_or_blank(card, 4, 'x2', 0.)
+            z = double_or_blank(card, 5, 'x3', 0.)
+            #xyz = card.fields(3, 6, [0., 0., 0.])
             ## node location in local frame
-            self.xyz = array(xyz)
+            self.xyz = array([x, y, z])
 
             ## Analysis coordinate system
-            self.cd = card.field(6, 0)
+            self.cd = integer_or_blank(card, 6, 'cd', 0)
 
             ## SPC constraint
-            self.ps = str(card.field(7, ''))
+            self.ps = str(integer_or_blank(card, 7, 'ps', ''))
 
             ## Superelement ID
-            self.seid = card.field(8, 0)
+            self.seid = integer_or_blank(card, 8, 'seid', 0)
         else:
             self.nid = data[0]
             self.cp = data[1]
@@ -373,23 +377,26 @@ class POINT(Node):
 
         if card:
             ## Node ID
-            self.nid = int(card.field(1))
+            self.nid = integer(card, 1, 'nid')
 
             ## Grid point coordinate system
-            self.cp = card.field(2, 0)
+            self.cp = integer_or_blank(card, 2, 'cp', 0)
 
-            xyz = card.fields(3, 6, [0., 0., 0.])
+            x = double_or_blank(card, 3, 'x1', 0.)
+            y = double_or_blank(card, 4, 'x2', 0.)
+            z = double_or_blank(card, 5, 'x3', 0.)
+            #xyz = card.fields(3, 6, [0., 0., 0.])
             ## node location in local frame
-            self.xyz = array(xyz)
+            self.xyz = array([x, y, z])
 
             ## Analysis coordinate system
-            self.cd = card.field(6, 0)
+            self.cd = integer_or_blank(card, 6, 'cd', 0)
 
             ## SPC constraint
-            self.ps = str(card.field(7, ''))
+            self.ps = str(integer_or_blank(card, 7, 'ps', ''))
 
             ## Superelement ID
-            self.seid = card.field(8, 0)
+            self.seid = integer_or_blank(card, 8, 'seid', 0)
         else:
             #print data
             self.nid = data[0]

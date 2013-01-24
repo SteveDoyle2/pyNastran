@@ -1078,7 +1078,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
             # apply OPENMDAO syntax
             if self._is_dynamic_syntax:
-                fields = [self.parse_dynamic_syntax(valueRaw) if '%' in field[0:1]
+                fields = [self.parse_dynamic_syntax(field) if '%' in field[0:1]
                           else field for field in fields]
 
             card = wipeEmptyFields([interpretValue(field, fields) for field in fields])
@@ -1424,7 +1424,6 @@ def to_fields(card_lines, card_name):
 
     if '*' in line:  # large field
         if ',' in line:  # csv
-            large = [None for field in range(5)]
             new_fields = line[:72].split(',')
             fields += new_fields
             for i in range(5-len(new_fields)):
