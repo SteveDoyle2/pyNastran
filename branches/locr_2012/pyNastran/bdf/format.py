@@ -1,3 +1,24 @@
+def components(card, n, fieldname):
+    svalue = card.field(n)
+    try:
+        value = int(svalue)
+    except:
+        raise RuntimeError('%s (field # %s) on card must be an integer.\ncard=\n%s' % (fieldname, n, card) )
+
+    svalue2 = str(value)
+    svalue3 = ''.join(sorted(svalue2))
+    for i,v in enumerate(svalue3):
+        assert v not in svalue3[i+1:]
+    return svalue3
+
+def components_or_blank(card, n, fieldname, default=0):
+    svalue = card.field(n)
+    svalue = svalue.strip()
+    if svalue:
+        components(card, n, fieldname):
+    else:
+        return default
+    
 def field(card, n, fieldname):
     return integer_double_string_or_blank(card, n, fieldname, default=None)
 

@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import izip, count
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
-
+from pyNastran.bdf.format import integer, integer_or_blank, double, double_or_blank, components, components_or_blank
 
 class constraintObject2(object):
     def __init__(self):
@@ -280,13 +280,15 @@ class SUPORT1(Constraint):
         Constraint.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.conid = card.field(1)  # really a support id sid
-        fields = card.fields(2)
+        self.conid = integer(card, 1, 'conid')  # really a support id sid
+        #fields = card.fields(2)
 
         self.IDs = []
         self.Cs = []
-        for i in xrange(0, len(fields), 2):
-            self.IDs.append(fields[i])
+        nFields = card.nFields()
+        for i in xrange(0, nFields, 2):
+            ID = integer(card, i+1, 'ID%s' % (i + 1)) 
+            self.IDs.append(ID)
             self.Cs.append(fields[i + 1])
 
     def rawFields(self):
@@ -334,32 +336,31 @@ class MPC(Constraint):
         Constraint.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.conid = card.field(1)
-        #self.gids        = [card.field(2),card.field(5,None)]
-        #self.constraints = [card.field(3),card.field(6,None)] # 0 if scalar point 1-6 if grid
-        #self.enforced    = [card.field(4),card.field(7,None)]
-
+        
+        ## Set identification number. (Integer > 0)
+        self.conid = integer(card, 1, 'conid')
+        ## Identification number of grid or scalar point. (Integer > 0)
         self.gids = []
-        self.constraints = []  # 0 if scalar point 1-6 if grid
+        ## Component number. (Any one of the Integers 1 through 6 for grid
+        ## points; blank or zero for scalar points.)
+        self.constraints = []
+        ## Coefficient. (Real; Default = 0.0 except A1 must be nonzero.)
         self.enforced = []
-        #print "-----------"
 
         fields = card.fields(0)
         nFields = len(fields) - 1
-        #print "fields = ",fields
-        #print "nFields = ",nFields
         for iField in xrange(2, nFields, 8):
-            pack1 = [card.field(iField),
-                     card.field(iField + 1, 0),
-                     card.field(iField + 2, 0.)]
+            pack1 = [integer(card, iField, 'gid'),
+                     components_or_blank(card, iField + 1, 'constraint', 0),
+                     double_or_blank(card, iField + 2, 'enforced', 0.0)]
             #print "pack1 = ",pack1
             self.gids.append(pack1[0])
             self.constraints.append(pack1[1])  # default=0 scalar point
-            self.enforced.append(pack1[2])  # default=0.0
+            self.enforced.append(pack1[2])     # default=0.0
 
-            pack2 = [card.field(iField + 3),
-                     card.field(iField + 4, 0),
-                     card.field(iField + 5, 0.)]
+            pack2 = [integer(card, iField + 3, 'gid'),
+                     integer(card, iField + 4, 'constraint', 0),
+                     double_or_blank(card, iField + 5, 'enforced', 0.0)]
             if pack2 != [None, 0, 0.]:
                 #print "pack2 = ",pack2
                 #print "adding pack2"
@@ -405,11 +406,12 @@ class SPC(Constraint):
         if comment:
             self._comment = comment
         if card:
-            self.conid = card.field(1)
-            self.gids = [card.field(2), card.field(5, None)]
+            self.conid = integer(card, 1, 'conid')
+            self.gids = [integer(card, 2, 'gid1'), integer_or_blank(card, 5, 'gid2')]
             ## 0 if scalar point 1-6 if grid
-            self.constraints = [card.field(3), card.field(6, None)]
-            self.enforced = [card.field(4), card.field(7, None)]
+            
+            self.constraints = [components(card, 3, 'constraint1'), components_or_blank(card, 6, 'constraint2')]
+            self.enforced = [double(card, 3, 'enforced1'), double_or_blank(card, 7, 'enforced2')]
 
             # reduce the size if there are duplicate Nones
             nConstraints = max(len(self.gids),
@@ -495,16 +497,16 @@ class SPCAX(Constraint):
             self._comment = comment
 
         ## Identification number of a single-point constraint set.
-        self.conid = card.field(1)
+        self.conid = integer(card, 1, 'conid')
         ## Ring identification number. See RINGAX entry.
-        self.rid = card.field(2)
+        self.rid = integer(card, 2, 'rid')
         ## Harmonic identification number. (Integer >= 0)
-        self.hid = card.field(3)
+        self.hid = integer(card, 3, 'hid')
         ## Component identification number. (Any unique combination of the
         ## Integers 1 through 6.)
-        self.c = card.field(4)
+        self.c = components(card, 4, 'c')
         ## Enforced displacement value
-        self.d = card.field(5)
+        self.d = double(card, 5, 'd')
 
     def cross_reference(self, i, node):
         pass
@@ -534,8 +536,8 @@ class SPC1(Constraint):
         Constraint.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.conid = card.field(1)
-        self.constraints = str(card.field(2, ''))  # 246 = y; dx, dz dir
+        self.conid = integer(card, 1, 'conid')
+        self.constraints = components(card, 2, 'constraints')  # 246 = y; dx, dz dir
         nodes = card.fields(3)
         self.nodes = expand_thru(nodes)
         self.nodes.sort()
@@ -606,7 +608,7 @@ class SPCADD(ConstraintADD):
         ConstraintADD.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.conid = card.field(1)
+        self.conid = integer(card, 1, 'conid')
         sets = card.fields(2)
         self.sets = expand_thru(sets)
         self.sets.sort()
@@ -648,7 +650,7 @@ class MPCADD(ConstraintADD):
         ConstraintADD.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.conid = card.field(1)
+        self.conid = integer(card, 1, 'conid')
         sets = card.fields(2)
         self.sets = expand_thru(sets)
         self.sets.sort()
