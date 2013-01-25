@@ -6,7 +6,9 @@ from itertools import izip
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
     collapse_thru_by_float)
-from pyNastran.bdf.format import integer, integer_or_string, double, double_or_blank, string, string_or_blank
+from pyNastran.bdf.format import (integer, integer_or_blank, integer_or_string,
+                                  double, double_or_blank, string,
+                                  string_or_blank)
 
 class OptConstraint(BaseCard):
     def __init__(self):
@@ -212,11 +214,11 @@ class DRESP2(OptConstraint):
         self.oid = integer(card, 1, 'oid')
         self.label = string(card, 2, 'label')
         self.eqidFunc = integer_or_string(card, 3, 'eqid_Func')
-        self.region = integer(card, 4, 'region')
+        self.region = integer_or_blank(card, 4, 'region')
         self.method = string_or_blank(card, 5, 'method', 'MIN')
         self.c1 = double_or_blank(card, 6, 'c1', 100.)
         self.c2 = double_or_blank(card, 7, 'c2', 0.005)
-        self.c3 = double(card, 8, 'c3') # TODO: or blank?
+        self.c3 = double_or_blank(card, 8, 'c3') # TODO: or blank?
 
         i = 0
         fields = card.fields(9)
@@ -330,7 +332,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         if comment:
             self._comment = comment
         self.oid = integer(card, 1, 'oid')
-        self.Type = string)card, 2, 'Type')
+        self.Type = string(card, 2, 'Type')
         self.mid = integer(card, 3, 'mid')
         self.mpName = string(card, 4, 'mpName')
         #if self.mpName in ['E', 'RHO', 'NU']:  positive values
@@ -539,11 +541,11 @@ class DVPREL2(OptConstraint):
         #self.eqID = model.DEquation(self.eqID)
 
     def OptValue(self):  # TODO not implemented
-        self.pid.OptValue(self.pnameFid)
+        self.pid.OptValue(self.pNameFid)
 
     def rawFields(self):
         fields = ['DVPREL2', self.oid, self.Type, self.Pid(),
-                  self.pnameFid, self.pmin, self.pmax, self.eqID, None]
+                  self.pNameFid, self.pMin, self.pMax, self.eqID, None]
 
         if self.dvids:
             fields2 = ['DESVAR'] + self.dvids

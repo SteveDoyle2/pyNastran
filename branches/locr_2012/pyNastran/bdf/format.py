@@ -62,8 +62,11 @@ def double(card, n, fieldname):
     if isinstance(svalue, float):
         return svalue
 
+    #svalue = svalue.strip()
     try:  # 1.0, 1.0E+3, 1.0E-3
         value = float(svalue)
+    except TypeError:
+            raise RuntimeError('%s = %s (field # %s) on card must be an float.\ncard=\n%s' % (fieldname, svalue, n, card) )
     except ValueError:
         try:
             svalue = svalue.upper()
@@ -158,7 +161,7 @@ def integer_or_double(card, n, fieldname):
 
 def integer_double_or_blank(card, n, fieldname, default=None):
     try:
-        svalue = card[n]
+        svalue = card.field(n)
     except IndexError:
         return default
 

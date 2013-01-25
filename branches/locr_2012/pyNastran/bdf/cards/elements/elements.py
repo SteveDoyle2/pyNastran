@@ -164,7 +164,7 @@ class CRAC2D(CrackElement):
         assert len(self.nodes) == 18
 
     def rawFields(self):
-        fields = [self.type, self.eid, self.Pid()] + self.nodeIDs()
+        fields = ['CRAC2D', self.eid, self.Pid()] + self.nodeIDs()
         return fields
 
 
@@ -190,5 +190,5 @@ class CRAC3D(CrackElement):
         assert len(self.nodes) == 64
 
     def rawFields(self):
-        fields = [self.type, self.eid, self.Pid()] + self.nodeIDs()
+        fields = ['CRAC3D', self.eid, self.Pid()] + self.nodeIDs()
         return fields

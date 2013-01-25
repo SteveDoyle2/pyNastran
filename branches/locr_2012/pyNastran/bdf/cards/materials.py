@@ -64,7 +64,7 @@ class CREEP(Material):
             self.tidcp = integer_or_blank(card, 6, 'tidcp') # blank?
             self.tidcs = integer_or_blank(card, 7, 'tidcs') # blank?
             self.thresh = double_or_blank(card, 8, 'thresh', 1e-5)
-            self.Type = integer(card, 9, 'Type') # 111, 112, 121, 122, 211, 212, 221, 222, 300 (or blank?)
+            self.Type = integer_or_blank(card, 9, 'Type') # 111, 112, 121, 122, 211, 212, 221, 222, 300 (or blank?)
             self.a = card.field(10)
             self.b = card.field(11)
             self.c = card.field(12)
@@ -453,7 +453,7 @@ class MAT3(AnisotropicMaterial):
             self.nuzx = double(card, 7, 'nuzx')
             self.rho = double_or_blank(card, 8, 'rho', 0.0)
 
-            self.gzx = double(card, 11, 'gzx')
+            self.gzx = double_or_blank(card, 11, 'gzx')
             self.ax = double_or_blank(card, 12, 'ax', 0.0)
             self.ath = double_or_blank(card, 13, 'ath', 0.0)
             self.az = double_or_blank(card, 14, 'az', 0.0)
@@ -564,7 +564,8 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         ThermalMaterial.__init__(self, card, data)
         if comment:
             self._comment = comment
-        if card:integer(card, 1, 'mid')
+        if card:
+            self.mid = integer(card, 1, 'mid')
             ## Thermal conductivity (assumed default=0.0)
             self.kxx = double_or_blank(card, 2, 'kxx', 0.0)
             self.kxy = double_or_blank(card, 3, 'kxy', 0.0)

@@ -47,8 +47,9 @@ class SolidElement(Element):
         Element.__init__(self, card, data)
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes)
-        self.pid = model.Property(self.pid)
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def Mass(self):
         return self.Rho() * self.Volume()

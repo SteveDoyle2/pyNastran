@@ -8,14 +8,16 @@ from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element, Mid
-from pyNastran.bdf.format import integer, integer_or_blank, double, double_or_blank, string_or_blank
+from pyNastran.bdf.format import (integer, integer_or_blank,
+                                  integer_double_or_blank, double,
+                                  double_or_blank, string_or_blank)
 
 class RodElement(Element):  # CROD, CONROD, CTUBE
     def __init__(self, card, data):
         Element.__init__(self, card, data)
 
     def cross_reference(self, model):
-        msg = ' which is required by %s eid=%s' % (self.type self.eid)
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
@@ -286,7 +288,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         return mass
 
     def cross_reference(self, model):
-        msg = ' which is required by %s eid=%s' % (self.type self.eid)
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
@@ -391,7 +393,7 @@ class CROD(RodElement):
             self._comment = comment
         if card:
             self.eid = integer(card, 1, 'eid')
-            self.pid = integer(card, 2, 'pid', self.eid))
+            self.pid = integer(card, 2, 'pid', self.eid)
             nids = [integer(card, 3, 'n1'),
                     integer(card, 4, 'n2')]
         else:
@@ -434,7 +436,7 @@ class CTUBE(RodElement):
             self._comment = comment
         if card:
             self.eid = integer(card, 1, 'eid')
-            self.pid = integer(card, 2, 'pid', self.eid))
+            self.pid = integer(card, 2, 'pid', self.eid)
             nids = [integer(card, 3, 'n1'),
                     integer(card, 4, 'n2')]
         else:
@@ -485,7 +487,7 @@ class CONROD(RodElement):
         #print self.nodes
 
     def cross_reference(self, model):
-        msg = ' which is required by %s eid=%s' % (self.type self.eid)
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.mid = model.Material(self.mid, msg=msg)
 
@@ -579,7 +581,7 @@ class CBAR(LineElement):
             self._comment = comment
         if card:
             self.eid = integer(card, 1, 'eid')
-            self.pid = integer(card, 2, 'pid', self.eid)
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
             self.ga = integer(card, 3, 'ga')
             self.gb = integer(card, 4, 'gb')
             self.initX_G0(card)
@@ -701,7 +703,7 @@ class CBAR(LineElement):
         #    self.x1 = v[0]
         #    self.x2 = v[1]
         #    self.x3 = v[2]
-        msg = ' which is required by %s eid=%s' % (self.type self.eid)
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = mesh.Node(self.ga, msg=msg)
         self.gb = mesh.Node(self.gb, msg=msg)
         self.pid = mesh.Property(self.pid, msg=msg)
@@ -931,7 +933,7 @@ class CBEAM3(CBAR):
 
             self.initX_G0(card)
 
-            self.w1a = double_or_blank(card, 9, 'w1a', 0.0))
+            self.w1a = double_or_blank(card, 9, 'w1a', 0.0)
             self.w2a = double_or_blank(card, 10, 'w2a', 0.0)
             self.w3a = double_or_blank(card, 11, 'w3a', 0.0)
 
@@ -1025,8 +1027,8 @@ class CBEAM(CBAR):
 
             self.initX_G0(card)
             self.initOfftBit(card)
-            self.pa = integer(card, 9, 'pa')
-            self.pb = integer(card, 10, 'pb')
+            self.pa = integer_or_blank(card, 9, 'pa')
+            self.pb = integer_or_blank(card, 10, 'pb')
 
             self.w1a = double_or_blank(card, 11, 'w1a', 0.0)
             self.w2a = double_or_blank(card, 12, 'w2a', 0.0)
@@ -1123,7 +1125,7 @@ class CBEAM(CBAR):
         return field8
 
     def cross_reference(self, model):
-        msg = ' which is required by %s eid=%s' % (self.type self.eid)
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.ga, msg=msg)
         self.gb = model.Node(self.gb, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
