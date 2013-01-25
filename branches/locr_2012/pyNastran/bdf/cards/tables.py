@@ -6,7 +6,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.utils import list_print
-
+from pyNastran.bdf.format import integer, double, double_or_string
 
 class Table(BaseCard):
     type = 'TABLE??'
@@ -125,7 +125,7 @@ class TABLED2(Table):
         if comment:
             self._comment = comment
         if card:
-            self.tid = card.field(1)
+            self.tid = integer(card, 1, 'tid')
             self.x1 = card.field(2)
             fields = card.fields(9)
             isData = False
@@ -152,7 +152,7 @@ class TABLED3(Table):
         if comment:
             self._comment = comment
         if card:
-            self.tid = card.field(1)
+            self.tid = integer(card, 1, 'tid')
             self.x1 = card.field(2)
             self.x2 = card.field(3)
             fields = card.fields(9)
@@ -181,7 +181,7 @@ class TABLEM1(Table):
         if comment:
             self._comment = comment
         if card:
-            self.tid = card.field(1)
+            self.tid = integer(card, 1, 'tid')
             fields = card.fields(9)
             isData = False
         else:
@@ -203,7 +203,7 @@ class TABLEM2(Table):
         if comment:
             self._comment = comment
         if card:
-            self.tid = card.field(1)
+            self.tid = integer(card, 1, 'tid')
             self.x1 = card.field(2)
             fields = card.fields(9)
             isData = False
@@ -230,7 +230,7 @@ class TABLEM3(Table):
         if comment:
             self._comment = comment
         if card:
-            self.tid = card.field(1)
+            self.tid = integer(card, 1, 'tid')
             self.x1 = card.field(2)
             self.x2 = card.field(3)
             fields = card.fields(9)
@@ -259,7 +259,7 @@ class TABLEM4(Table):
         if comment:
             self._comment = comment
         if card:
-            self.tid = card.field(1)
+            self.tid = integer(card, 1, 'tid')
             self.x1 = card.field(2)
             self.x2 = card.field(3)
             self.x3 = card.field(4)
@@ -293,7 +293,7 @@ class TABLES1(Table):
         if comment:
             self._comment = comment
         if card:
-            self.tid = card.field(1)
+            self.tid = integer(card, 1, 'tid')
             fields = card.fields(9)
             isData = False
         else:
@@ -319,7 +319,7 @@ class TABLEST(Table):
         if comment:
             self._comment = comment
         if card:
-            self.tid = card.field(1)
+            self.tid = integer(card, 1, 'tid')
             fields = card.fields(9)
             isData = False
         else:
@@ -352,7 +352,7 @@ class TABRND1(RandomTable):
         if comment:
             self._comment = comment
         if card:
-            self.tid = card.field(1)
+            self.tid = integer(card, 1, 'tid')
             self.xaxis = card.field(2, 'LINEAR')
             self.yaxis = card.field(3, 'LINEAR')
             fields = card.fields(9)
@@ -403,7 +403,7 @@ class TABRNDG(RandomTable):
             self._comment = comment
         if card:
             ## Table identification number. (Integer >0)
-            self.tid = card.field(1)
+            self.tid = integer(card, 1, 'tid')
             ## PSD Type: 1. von Karman; 2. Dryden
             self.Type = card.field(2)
             ## Scale of turbulence divided by velocity (units of time; Real)
@@ -438,7 +438,7 @@ class TIC(Table):
         if comment:
             self._comment = comment
         if card:
-            self.sid = card.field(1)
+            self.sid = integer(card, 1, 'sid')
             self.G = card.field(2)
             self.C = card.field(3)
             self.U0 = card.field(4)

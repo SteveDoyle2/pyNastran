@@ -6,7 +6,7 @@ from itertools import izip
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
     collapse_thru_by_float)
-
+from pyNastran.bdf.format import integer, integer_or_string, double, double_or_blank, string, string_or_blank
 
 class OptConstraint(BaseCard):
     def __init__(self):
@@ -19,12 +19,12 @@ class DCONSTR(OptConstraint):
         if comment:
             self._comment = comment
         if card:
-            self.oid = card.field(1)
-            self.rid = card.field(2)
-            self.lid = card.field(3, -1e20)
-            self.uid = card.field(4, 1e20)
-            self.lowfq = card.field(5, 0.0)
-            self.highfq = card.field(6, 1e20)
+            self.oid = integer(card, 1, 'oid')
+            self.rid = integer(card, 2, 'rid')
+            self.lid = double_or_blank(card, 3, 'lid', -1e20)
+            self.uid = double_or_blank(card, 4, 'uid',  1e20)
+            self.lowfq = double_or_blank(card, 5, 'lowfq', 0.0)
+            self.highfq = double_or_blank(card, 6, 'highfq', 1e20)
         else:
             self.oid = data[0]
             self.rid = data[1]
@@ -52,12 +52,12 @@ class DESVAR(OptConstraint):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.oid = card.field(1)
-        self.label = card.field(2)
-        self.xinit = card.field(3)
-        self.xlb = card.field(4, -1e20)
-        self.xub = card.field(5, 1e20)
-        self.delx = card.field(6, 1e20)
+        self.oid = integer(card, 1, 'oid')
+        self.label = string(card, 2, 'label')
+        self.xinit = double(card, 3, 'xinit')
+        self.xlb = double_or_blank(card, 4, 'xlb', -1e20)
+        self.xub = double_or_blank(card, 5, 'xub', 1e20)
+        self.delx = double_or_blank(card, 6, 'delx', 1e20)
         self.ddval = card.field(7)
 
     def rawFields(self):
@@ -80,7 +80,7 @@ class DDVAL(OptConstraint):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.oid = card.field(1)
+        self.oid = integer(card, 1, 'oid')
         ddvals = [ddval for ddval in card.fields(2) if ddval is not None]
         self.ddvals = expand_thru_by(ddvals)
         self.ddvals.sort()
@@ -138,10 +138,10 @@ class DLINK(OptConstraint):
         """
         if comment:
             self._comment = comment
-        self.oid = card.field(1)
-        self.ddvid = card.field(2)
-        self.c0 = card.field(3, 0.)
-        self.cmult = card.field(4, 1.)
+        self.oid = integer(card, 1, 'oid')
+        self.ddvid = integer(card, 2, 'ddvid')
+        self.c0 = double_or_blank(card, 3, 'c0', 0.)
+        self.cmult = double_or_blank(card, 4, 'cmult', 1.)
 
         fields = card.fields(5)
         nFields = len(fields)
@@ -167,31 +167,6 @@ class DLINK(OptConstraint):
         return fields
 
 
-class DSCREEN(OptConstraint):
-    type = 'DSCREEN'
-
-    def __init__(self, card=None, data=None, comment=''):
-        if comment:
-            self._comment = comment
-        ## Response type for which the screening criteria apply. (Character)
-        self.rType = card.field(1)
-        ## Truncation threshold. (Real; Default = -0.5)
-        self.trs = card.field(2, -0.5)
-        ## Maximum number of constraints to be retained per region per load
-        ## case. (Integer > 0; Default = 20)
-        self.nstr = card.field(3, 20)
-
-    def rawFields(self):
-        fields = ['DSCREEN', self.rType, self.trs, self.nstr]
-        return fields
-
-    def reprFields(self):
-        trs = set_blank_if_default(self.trs, -0.5)
-        nstr = set_blank_if_default(self.nstr, 20)
-        fields = ['DSCREEN', self.rType, trs, nstr]
-        return fields
-
-
 class DRESP1(OptConstraint):
     type = 'DRESP1'
 
@@ -203,11 +178,11 @@ class DRESP1(OptConstraint):
         """
         if comment:
             self._comment = comment
-        self.oid = card.field(1)
-        self.label = card.field(2)
-        self.rtype = card.field(3)
-        self.ptype = card.field(4)
-        self.region = card.field(5)
+        self.oid = integer(card, 1, 'oid')
+        self.label = string(card, 2, 'label')
+        self.rtype = string(card, 3, 'rtype')
+        self.ptype = string(card, 4, 'ptype') # elem, pbar, pshell, etc. (ELEM flag or Prop Name)
+        self.region = integer(card, 5, 'region')
         self.atta = card.field(6)
         self.attb = card.field(7)
         self.atti = card.field(8)
@@ -234,14 +209,14 @@ class DRESP2(OptConstraint):
         """
         if comment:
             self._comment = comment
-        self.oid = card.field(1)
-        self.label = card.field(2)
-        self.eqidFunc = card.field(3)
-        self.region = card.field(4)
-        self.method = card.field(5, 'MIN')
-        self.c1 = card.field(6, 100.)
-        self.c2 = card.field(7, 0.005)
-        self.c3 = card.field(8)
+        self.oid = integer(card, 1, 'oid')
+        self.label = string(card, 2, 'label')
+        self.eqidFunc = integer_or_string(card, 3, 'eqid_Func')
+        self.region = integer(card, 4, 'region')
+        self.method = string_or_blank(card, 5, 'method', 'MIN')
+        self.c1 = double_or_blank(card, 6, 'c1', 100.)
+        self.c2 = double_or_blank(card, 7, 'c2', 0.005)
+        self.c3 = double(card, 8, 'c3') # TODO: or blank?
 
         i = 0
         fields = card.fields(9)
@@ -315,6 +290,31 @@ class DRESP2(OptConstraint):
         return fields
 
 
+class DSCREEN(OptConstraint):
+    type = 'DSCREEN'
+
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
+        ## Response type for which the screening criteria apply. (Character)
+        self.rType = string(card, 1, 'rType')
+        ## Truncation threshold. (Real; Default = -0.5)
+        self.trs = double_or_blank(card, 2, 'trs', -0.5)
+        ## Maximum number of constraints to be retained per region per load
+        ## case. (Integer > 0; Default = 20)
+        self.nstr = integer(card, 3, 'nstr', 20)
+
+    def rawFields(self):
+        fields = ['DSCREEN', self.rType, self.trs, self.nstr]
+        return fields
+
+    def reprFields(self):
+        trs = set_blank_if_default(self.trs, -0.5)
+        nstr = set_blank_if_default(self.nstr, 20)
+        fields = ['DSCREEN', self.rType, trs, nstr]
+        return fields
+
+
 class DVMREL1(OptConstraint):  # similar to DVPREL1
     type = 'DVMREL1'
 
@@ -329,13 +329,17 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         """
         if comment:
             self._comment = comment
-        self.oid = card.field(1)
-        self.Type = card.field(2)
-        self.mid = card.field(3)
-        self.mpName = card.field(4)
-        self.mpMin = card.field(5)  # TODO bad default
-        self.mpMax = card.field(6, 1e20)
-        self.c0 = card.field(7, 0.0)
+        self.oid = integer(card, 1, 'oid')
+        self.Type = string)card, 2, 'Type')
+        self.mid = integer(card, 3, 'mid')
+        self.mpName = string(card, 4, 'mpName')
+        #if self.mpName in ['E', 'RHO', 'NU']:  positive values
+            #self.mpMin = double_or_blank(card, 5, 'mpMin', 1e-15)
+        #else: # negative
+            #self.mpMin = double_or_blank(card, 5, 'mpMin', -1e-35)
+        self.mpMin = double_or_blank(card, 5, 'mpMin')  # TODO: bad default
+        self.mpMax = double_or_blank(card, 6, 'mpMax', 1e20)
+        self.c0 = double_or_blank(card, 7, 'c0', 0.0)
 
         self.dvids = []
         self.coeffs = []
@@ -396,13 +400,13 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         """
         if comment:
             self._comment = comment
-        self.oid = card.field(1)
-        self.Type = card.field(2)
-        self.pid = card.field(3)
-        self.pNameFid = card.field(4)
-        self.pMin = card.field(5)  # TODO bad default
-        self.pMax = card.field(6, 1e20)
-        self.c0 = card.field(7, 0.0)
+        self.oid = integer(card, 1, 'oid')
+        self.Type = string(card, 2, 'Type')
+        self.pid = integer(card, 3, 'pid')
+        self.pNameFid = integer_or_string(card, 4, 'pName_FID')
+        self.pMin = double_or_blank(card, 5, 'pMin')  # TODO bad default (see DVMREL1)
+        self.pMax = double_or_blank(card, 6, 'pMax', 1e20)
+        self.c0 = double_or_blank(card, 7, 'c0', 0.0)
 
         self.dvids = []
         self.coeffs = []
@@ -467,27 +471,27 @@ class DVPREL2(OptConstraint):
         if comment:
             self._comment = comment
         ## Unique identification number
-        self.oid = card.field(1)
+        self.oid = integer(card, 1, 'oid')
         ## Name of a property entry, such as PBAR, PBEAM, etc
-        self.Type = card.field(2)
+        self.Type = string(card, 2, 'Type')
         ## Property entry identification number
-        self.pid = card.field(3)
+        self.pid = integer(card, 3, 'pid')
         ## Property name, such as 'T', 'A', or field position of the property
         ## entry, or word position in the element property table of the
         ## analysis model. Property names that begin with an integer such as
         ## 12I/T**3 may only be referred to by field position.
         ## (Character or Integer 0)
-        self.pnameFid = card.field(4)
+        self.pNameFid = integer_or_string(card, 4, 'pName_FID')
         ## Minimum value allowed for this property. If FID references a stress
         ## recovery location field, then the default value for PMIN is -1.0+35.
         ## PMIN must be explicitly set to a negative number for properties that
         ## may be less than zero (for example, field ZO on the PCOMP entry).
         ## (Real; Default = 1.E-15)
-        self.pmin = card.field(5, 1e-15)
+        self.pMin = double_or_blank(card, 5, 'pMin')  # TODO bad default (see DVMREL1)
         ## Maximum value allowed for this property. (Real; Default = 1.0E20)
-        self.pmax = card.field(6, 1e20)
+        self.pMax = double_or_blank(card, 6, 'pMax', 1e20)
         ## DEQATN entry identification number. (Integer > 0)
-        self.eqID = card.field(7)
+        self.eqID = integer_or_blank(card, 7, 'eqID') # TODO:  or blank?
 
         fields = card.fields(9)
         #print "fields = ",fields
