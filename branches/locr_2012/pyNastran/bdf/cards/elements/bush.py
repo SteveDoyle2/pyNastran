@@ -14,6 +14,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
+from pyNastran.bdf.format import (integer, integer_or_blank,
+                                  integer_double_or_blank, double,
+                                  double_or_blank, string, string_or_blank)
 
 
 class BushElement(Element):
@@ -52,20 +55,20 @@ class CBUSH(BushElement):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            self.ga = card.field(3)
-            self.gb = card.field(4)
-            #self.nodes = [card.field(3), card.field(4)]
-            x1G0 = card.field(5)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+            self.ga = integer(card, 3, 'ga')
+            self.gb = integer_or_blank(card, 4, 'gb')
+
+            x1G0 = integer_double_or_blank(card, 5, 'x1_g0')
             if isinstance(x1G0, int):
                 self.g0 = x1G0
                 self.x = None
             elif isinstance(x1G0, float):
                 self.g0 = None
                 x1 = x1G0
-                x2 = card.field(6)
-                x3 = card.field(7)
+                x2 = double(card, 6, 'x2')
+                x3 = double(card, 7, 'x3')
                 self.x = [x1, x2, x3]
             else:
                 self.g0 = None
@@ -75,21 +78,21 @@ class CBUSH(BushElement):
             ## coordinate system. If CID is blank, then the element coordinate
             ## system is determined from GO or Xi.
             ## (default=blank=element-based)
-            self.cid = card.field(8)
+            self.cid = integer_or_blank(card, 8, 'cid')
             ## Location of spring damper (0 <= s <= 1.0)
-            self.s = card.field(9, 0.5)
+            self.s = double_or_blank(card, 9, 's', 0.5)
             ## Coordinate system identification of spring-damper offset. See
             ## Remark 9. (Integer > -1; Default = -1, which means the offset
             ## point lies on the line between GA and GB
-            self.ocid = card.field(10, -1)
+            self.ocid = integer_or_blank(card, 10, 'ocid', -1)
             ## Components of spring-damper offset in the OCID coordinate system
             ## if OCID > 0.
-            self.si = card.fields(i=11, j=13)
+            self.si = [double_or_blank(card, 11, 's1'),
+                       double_or_blank(card, 12, 's2'),
+                       double_or_blank(card, 13, 's3')]
         else:
             self.eid = data[0]
             raise NotImplementedError('CBUSH data...')
-        #self.prepareNodeIDs(nids,allowEmptyNodes=True)
-        #assert len(self.nodes)==2
 
     def Ga(self):
         if isinstance(self.ga, int):
@@ -116,11 +119,12 @@ class CBUSH(BushElement):
         return self.cid.cid
 
     def cross_reference(self, model):
-        self.ga = model.Node(self.ga)
-        self.gb = model.Node(self.gb)
-        self.pid = model.Property(self.pid)
+        msg = ' which is required by CBUSH eid=%s' % self.eid
+        self.ga = model.Node(self.ga, msg=msg)
+        self.gb = model.Node(self.gb, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
         if self.cid is not None:
-            self.cid = model.Coord(self.cid)
+            self.cid = model.Coord(self.cid, msg=msg)
 
     def rawFields(self):
         if self.g0 is not None:
@@ -152,34 +156,42 @@ class CBUSH1D(BushElement):
         if comment:
             self._comment = comment
         if card:
-            self.eid = int(card.field(1))
-            self.pid = int(card.field(2, self.eid))
-            nids = card.fields(3, 5)
-            self.cid = card.field(5)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+            self.ga = integer(card, 3, 'ga')
+            self.gb = integer_or_blank(card, 4, 'gb')
+            self.cid = integer_or_blank(card, 5, 'cid')
         else:
             self.eid = data[0]
             self.pid = data[1]
-            nids = data[2:4]
-        self.prepareNodeIDs(nids)
-        assert len(self.nodes) == 2
+            self.ga = data[2]
+            self.gb = data[3]
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes)
+        msg = ' which is required by CBUSH1D eid=%s' % self.eid
+        self.ga = model.Node(self.ga, msg=msg)
+        self.gb = model.Node(self.gb, msg=msg)
         self.pid = model.Property(self.pid)
         if self.cid is not None:
             self.cid = model.Coord(self.cid)
 
-    def rawFields(self):
-        nodeIDs = self.nodeIDs()
-        fields = ['CBUSH1D', self.eid, self.Pid(), nodeIDs[0],
-                  nodeIDs[1], self.Cid()]
-        return fields
+    def Ga(self):
+        if isinstance(self.ga, int):
+            return self.ga
+        return self.ga.nid
 
-    def reprFields(self):
-        nodeIDs = self.nodeIDs()
-        fields = ['CBUSH1D', self.eid, self.Pid(), nodeIDs[0], nodeIDs[1],
+    def Gb(self):
+        if isinstance(self.gb, int):
+            return self.gb
+        return self.gb.nid
+
+    def rawFields(self):
+        fields = ['CBUSH1D', self.eid, self.Pid(), self.Ga(), self.Gb(),
                   self.Cid()]
         return fields
+
+    #def reprFields(self):
+        #return self.rawFields()
 
 
 class CBUSH2D(BushElement):
@@ -194,12 +206,13 @@ class CBUSH2D(BushElement):
         if comment:
             self._comment = comment
         if card:
-            self.eid = int(card.field(1))
-            self.pid = int(card.field(2))
-            nids = card.fields(3, 5)
-            self.cid = int(card.field(5))
-            self.plane = card.field(6, 'XY')
-            self.sptid = card.field(7)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer_or_blank(card, 2, 'pid')
+            self.ga = integer(card, 3, 'ga')
+            self.gb = integer(card, 4, 'gb')
+
+            self.cid = integer_or_blank(card, 5, 'cid', 0)
+            self.plane = string_or_blank(card, 6, 'plane', 'XY')
             if self.plane not in ['XY', 'YZ', 'ZX']:
                 msg = ("plane not in required list, plane=|%s|\n"
                        "expected planes = ['XY','YZ','ZX']" % self.plane)
@@ -207,21 +220,31 @@ class CBUSH2D(BushElement):
         else:
             self.eid = data[0]
             self.pid = data[1]
-            nids = data[2:4]
-        self.prepareNodeIDs(nids)
-        assert len(self.nodes) == 2
+            self.ga = data[2]
+            self.gb = data[3]
+
+    def Ga(self):
+        if isinstance(self.ga, int):
+            return self.ga
+        return self.ga.nid
+
+    def Gb(self):
+        if isinstance(self.gb, int):
+            return self.gb
+        return self.gb.nid
 
     def rawFields(self):
-        nodeIDs = self.nodeIDs()
-        fields = ['CBUSH1D', self.eid, self.Pid(), nodeIDs[0], nodeIDs[1],
+        fields = ['CBUSH2D', self.eid, self.Pid(), self.Ga(), self.Gb(),
                   self.Cid(), self.plane, self.sptid]
         return fields
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes)
+        msg = ' which is required by CBUSH2D eid=%s' % self.eid
+        self.ga = model.Node(self.ga, msg=msg)
+        self.gb = model.Node(self.gb, msg=msg)
         #self.pid = model.Property(self.pid)
         if self.cid is not None:
-            self.cid = model.Coord(self.cid)
+            self.cid = model.Coord(self.cid, msg=msg)
 
     #def reprFields(self):
         #return self.rawFields()

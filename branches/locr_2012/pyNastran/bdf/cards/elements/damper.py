@@ -14,7 +14,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.bdf.cards.baseCard import Element
-
+from pyNastran.bdf.format import integer, integer_or_blank, double
 
 class DamperElement(Element):
     def __init__(self, card, data):
@@ -26,8 +26,9 @@ class LineDamper(DamperElement):
         DamperElement.__init__(self, card, data)
 
     def cross_reference(self, mesh):
-        self.nodes = mesh.Nodes(self.nodes)
-        self.pid = mesh.Property(self.pid)
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = mesh.Nodes(self.nodes, msg=msg)
+        self.pid = mesh.Property(self.pid, msg=msg)
 
 
 class CDAMP1(LineDamper):
@@ -38,14 +39,15 @@ class CDAMP1(LineDamper):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
 
-            nids = [card.field(3, 0), card.field(5, 0)]
+            nids = [integer_or_blank(card, 3, 'g1', 0),
+                    integer_or_blank(card, 5, 'g2', 0)]
 
             ## component number
-            self.c1 = card.field(4, 0)
-            self.c2 = card.field(6, 0)
+            self.c1 = integer_or_blank(card, 4, 'c1', 0)
+            self.c2 = integer_or_blank(card, 6, 'c2', 0)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -72,8 +74,9 @@ class CDAMP1(LineDamper):
         return self.pid.b
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True)
-        self.pid = model.Property(self.pid)
+        msg = ' which is required by CDAMP1 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def rawFields(self):
         nodes = self.nodeIDs(allowEmptyNodes=True)
@@ -90,16 +93,16 @@ class CDAMP2(LineDamper):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
+            self.eid = integer(card, 1, 'eid')
 
             ## Value of the scalar damper (Real)
-            self.b = card.field(2)
-
-            nids = [card.field(3, 0), card.field(5, 0)]
+            self.b = double(card, 2, 'b')
+            nids = [integer_or_blank(card, 3, 'n1', 0),
+                    integer_or_blank(card, 5, 'n2', 0)]
 
             ## component number
-            self.c1 = card.field(4, 0)
-            self.c2 = card.field(6, 0)
+            self.c1 = integer_or_blank(card, 4, 'c1', 0)
+            self.c2 = integer_or_blank(card, 6, 'c2', 0)
         else:
             self.eid = data[0]
             self.b = data[1]
@@ -117,7 +120,8 @@ class CDAMP2(LineDamper):
         return self.b
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True)
+        msg = ' which is required by CDAMP2 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
 
     def rawFields(self):
         nodes = self.nodeIDs(allowEmptyNodes=True)
@@ -134,9 +138,10 @@ class CDAMP3(LineDamper):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            nids = [card.field(3, 0), card.field(4, 0)]
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = [integer_or_blank(card, 3, 'n1', 0),
+                    integer_or_blank(card, 5, 'n2', 0)]
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -149,8 +154,9 @@ class CDAMP3(LineDamper):
         return self.pid.b
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True)
-        self.pid = model.Property(self.pid)
+        msg = ' which is required by CDAMP4 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def rawFields(self):
         nodes = self.nodeIDs(allowEmptyNodes=True)
@@ -166,10 +172,11 @@ class CDAMP4(LineDamper):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
+            self.eid = integer(card, 1, 'eid')
             ## Value of the scalar damper (Real)
-            self.b = card.field(2)
-            nids = [card.field(3, 0), card.field(4, 0)]
+            self.b = double(card, 2, 'b')
+            nids = [integer_or_blank(card, 3, 'n1', 0),
+                    integer_or_blank(card, 4, 'n2', 0)]
         else:
             self.eid = data[0]
             self.b = data[1]
@@ -182,7 +189,8 @@ class CDAMP4(LineDamper):
         return self.b
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True)
+        msg = ' which is required by CDAMP4 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
 
     def rawFields(self):
         nodes = self.nodeIDs(allowEmptyNodes=True)
@@ -198,10 +206,11 @@ class CDAMP5(LineDamper):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
+            self.eid = integer(card, 1, 'eid')
             ## Property ID
-            self.pid = card.field(2)
-            nids = [card.field(3, 0), card.field(4, 0)]
+            self.pid = integer(card, 2, 'pid')
+            nids = [integer_or_blank(card, 3, 'n1', 0),
+                    integer_or_blank(card, 4, 'n2', 0)]
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -210,8 +219,9 @@ class CDAMP5(LineDamper):
         assert len(self.nodes) == 2
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True)
-        self.pid = model.Property(self.pid)
+        msg = ''
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def rawFields(self):
         nodes = self.nodeIDs(allowEmptyNodes=True)
@@ -227,9 +237,10 @@ class CVISC(LineDamper):
         if comment:
             self._comment = comment
         if card:
-            self.eid = int(card.field(1))
-            self.pid = int(card.field(2, self.eid))
-            nids = card.fields(3, 5)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+            nids = [integer_or_blank(card, 3, 'n1', 0),
+                    integer_or_blank(card, 4, 'n2', 0)]
         else:
             self.eid = data[0]
             self.pid = data[1]

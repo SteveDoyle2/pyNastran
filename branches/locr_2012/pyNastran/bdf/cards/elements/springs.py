@@ -16,6 +16,7 @@ from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
+from pyNastran.bdf.format import integer, integer_or_blank, double, double_or_blank
 
 
 class SpringElement(Element):
@@ -116,15 +117,15 @@ class CELAS1(SpringElement):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
+            self.eid = integer(card, 1, 'eid')
 
             ## property ID
-            self.pid = card.field(2, self.eid)
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
 
-            nids = [card.field(3, 0), card.field(5, 0)]
+            nids = [integer(card, 3, 'g1', 0), integer_or_blank(card, 5, 'g2, '0)]
             ## component number
-            self.c1 = card.field(4, 0)
-            self.c2 = card.field(6, 0)
+            self.c1 = integer_or_blank(card, 4, 'c1', 0)
+            self.c2 = integer_or_blank(card, 6, 'c2', 0)
 
         else:
             self.eid = data[0]
@@ -172,22 +173,23 @@ class CELAS2(SpringElement):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
+            self.eid = integer(card, 1, 'eid')
 
             ## stiffness of the scalar spring
-            self.k = card.field(2)
+            self.k = double(card, 2, 'k')
 
-            nids = [card.field(3, 0), card.field(5, 0)]
+            nids = [integer_or_blank(card, 3, 'g1', 0),
+                    integer_or_blank(card, 5, ''g2, 0)]
 
             ## component number
-            self.c1 = card.field(4, 0)
-            self.c2 = card.field(6, 0)
+            self.c1 = integer_or_blank(card, 4, 'c1', 0)
+            self.c2 = integer_or_blank(card, 6, 'c2', 0)
 
             ## damping coefficient
-            self.ge = card.field(7, 0.)
+            self.ge = double_or_blank(card, 7, 'ge', 0.)
 
             ## stress coefficient
-            self.s = card.field(8, 0.)
+            self.s = double_or_blank(card, 8, 's', 0.)
         else:
             self.eid = data[0]
             self.k = data[1]
@@ -271,17 +273,13 @@ class CELAS3(SpringElement):
         if comment:
             self._comment = comment
         if card:
-            #nids = [card.field(3),card.field(5)]
-            #self.prepareNodeIDs(nids)
-            #assert len(self.nodes)==2
-
-            self.eid = card.field(1)
+            self.eid = integer(card, 1, 'eid')
             ## property ID
-            self.pid = card.field(2, self.eid)
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
 
             ## Scalar point identification numbers
-            self.s1 = card.field(3, 0)
-            self.s2 = card.field(4, 0)
+            self.s1 = integer_or_blank(card, 3, 's1', 0)
+            self.s2 = integer_or_blank(card, 4, 's2', 0)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -326,18 +324,14 @@ class CELAS4(SpringElement):
         if comment:
             self._comment = comment
         if card:
-            #nids = [card.field(3),card.field(5)]
-            #self.prepareNodeIDs(nids)
-            #assert len(self.nodes)==2
-
-            self.eid = card.field(1)
+            self.eid = integer(card, 1, 'eid')
 
             ## stiffness of the scalar spring
-            self.k = card.field(2)
+            self.k = double(card, 2, 'k')
 
             ## Scalar point identification numbers
-            self.s1 = card.field(3, 0)
-            self.s2 = card.field(4, 0)
+            self.s1 = integer_or_blank(card, 3, 's1', 0)
+            self.s2 = integer_or_blank(card, 4, 's2', 0)
         else:
             self.eid = data[0]
             self.k = data[1]

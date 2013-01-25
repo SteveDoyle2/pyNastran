@@ -13,8 +13,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 
 from pyNastran.bdf.cards.baseCard import Element
-
-
+from pyNastran.bdf.format import (integer, integer_or_blank,
+                                  integer_double_or_blank, double,
+                                  double_or_blank, string)
+ 
 class CFAST(Element):
     type = 'CFAST'
 
@@ -22,25 +24,26 @@ class CFAST(Element):
         Element.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.eid = card.field(1)
-        self.pid = card.field(2)
-        self.Type = card.field(3)
-        self.ida = card.field(4)
-        self.idb = card.field(5)
-        self.gs = card.field(6)
-        self.ga = card.field(7)
-        self.gb = card.field(8)
-        self.xs = card.field(9)
-        self.ys = card.field(10)
-        self.zs = card.field(11)
+        self.eid = integer(card, 1, 'eid')
+        self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+        self.Type = string(card, 3, 'Type')
+        self.ida = integer(card, 4, 'ida')
+        self.idb = integer(card, 5, 'idb')
+        self.gs = integer_or_blank(card, 6, 'gs')
+        self.ga = integer_or_blank(card, 7, 'ga')
+        self.gb = integer_or_blank(card, 8, 'gb')
+        self.xs = double_or_blank(card, 9, 'xs')
+        self.ys = double_or_blank(card, 10, 'ys')
+        self.zs = double_or_blank(card, 11, 'zs')
 
         #if self.Type=='PROP': # PSHELL/PCOMP  ida & idb
 
     def cross_reference(self, model):
-        self.pid = model.Property(self.pid)
-        self.gs = model.Node(self.gs)
-        self.ga = model.Node(self.ga)
-        self.gb = model.Node(self.gb)
+        msg = ' which is required by CFAST eid=%s' % self.eid
+        self.pid = model.Property(self.pid, msg=msg)
+        self.gs = model.Node(self.gs, msg=msg)
+        self.ga = model.Node(self.ga, msg=msg)
+        self.gb = model.Node(self.gb, msg=msg)
 
     def rawFields(self):
         fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,
@@ -59,11 +62,11 @@ class CGAP(Element):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            self.ga = card.field(3)
-            self.gb = card.field(4)
-            x1G0 = card.field(5)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+            self.ga = integer_or_blank(card, 3, 'ga')
+            self.gb = integer_or_blank(card, 4, 'gb')
+            x1G0 = integer_double_or_blank(card, 5, 'x1_g0')
             if isinstance(x1G0, int):
                 self.g0 = x1G0
                 self.x = None
@@ -71,10 +74,10 @@ class CGAP(Element):
             elif isinstance(x1G0, float):
                 self.g0 = None
                 x1 = x1G0
-                x2 = card.field(6)
-                x3 = card.field(7)
+                x2 = double(card, 6, 'x2')
+                x3 = double(card, 7, 'x3')
                 self.x = [x1, x2, x3]
-                self.cid = card.field(8, 0)
+                self.cid = integer_or_blank(card, 8, 'cid', 0)
             else:
                 #raise RuntimeError('invalid CGAP...x1/g0 = |%s|' %(x1G0))
                 self.g0 = None
@@ -93,14 +96,15 @@ class CGAP(Element):
             self.cid = data[8]
 
     def cross_reference(self, model):
-        self.ga = model.Node(self.ga)
-        self.gb = model.Node(self.gb)
+        msg = ' which is required by CGAP eid=%s' % self.eid
+        self.ga = model.Node(self.ga, msg=msg)
+        self.gb = model.Node(self.gb, msg=msg)
         if self.g0:
-            self.g0 = model.Node(self.g0)
+            self.g0 = model.Node(self.g0, msg=msg)
             self.x = self.g0.Position()
-        self.pid = model.Property(self.pid)
+        self.pid = model.Property(self.pid, msg=msg)
         if self.cid:
-            self.cid = model.Coord(self.cid)
+            self.cid = model.Coord(self.cid, msg=msg)
 
     def Cid(self):
         if isinstance(self.cid, int) or self.cid is None:
@@ -124,8 +128,9 @@ class CrackElement(Element):
         pass
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes)
-        self.pid = model.Property(self.pid)
+        msg = ' which is required by %s eid=%s' % (self. type, self.eid)
+        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
 
 class CRAC2D(CrackElement):
@@ -136,9 +141,21 @@ class CRAC2D(CrackElement):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            nids = card.fields(3, 21)  # caps at 18
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = [integer(card, 3, 'n1'), integer(card, 4, 'n2'),
+                    integer(card, 5, 'n3'), integer(card, 6, 'n4'),
+                    integer(card, 7, 'n5'), integer(card, 8, 'n6'),
+                    integer(card, 9, 'n7'), integer(card, 10, 'n8'),
+                    integer(card, 11, 'n9'), integer(card, 12, 'n10'),
+                    integer_or_blank(card, 13, 'n11'),
+                    integer_or_blank(card, 14, 'n12'),
+                    integer_or_blank(card, 15, 'n13'),
+                    integer_or_blank(card, 16, 'n14'),
+                    integer_or_blank(card, 17, 'n15'),
+                    integer_or_blank(card, 18, 'n16'),
+                    integer_or_blank(card, 19, 'n17'),
+                    integer_or_blank(card, 20, 'n18')]
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -159,8 +176,11 @@ class CRAC3D(CrackElement):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            # required 1-10, 19-28
+            # optional 11-18, 29-36, 37-64
+            # all/none 37-46 
             nids = card.fields(3, 67)  # cap at +3 = 67
         else:
             self.eid = data[0]

@@ -8,15 +8,16 @@ from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element, Mid
-
+from pyNastran.bdf.format import integer, integer_or_blank, double, double_or_blank, string_or_blank
 
 class RodElement(Element):  # CROD, CONROD, CTUBE
     def __init__(self, card, data):
         Element.__init__(self, card, data)
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes)
-        self.pid = model.Property(self.pid)
+        msg = ' which is required by %s eid=%s' % (self.type self.eid)
+        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def Rho(self):
         r"""returns the material density  \f$ \rho \f$"""
@@ -285,8 +286,9 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         return mass
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes)
-        self.pid = model.Property(self.pid)
+        msg = ' which is required by %s eid=%s' % (self.type self.eid)
+        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def Length(self):
         r"""
@@ -388,9 +390,10 @@ class CROD(RodElement):
         if comment:
             self._comment = comment
         if card:
-            self.eid = int(card.field(1))
-            self.pid = int(card.field(2, self.eid))
-            nids = card.fields(3, 5)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid', self.eid))
+            nids = [integer(card, 3, 'n1'),
+                    integer(card, 4, 'n2')]
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -430,9 +433,10 @@ class CTUBE(RodElement):
         if comment:
             self._comment = comment
         if card:
-            self.eid = int(card.field(1))
-            self.pid = int(card.field(2, self.eid))
-            nids = card.fields(3, 5)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid', self.eid))
+            nids = [integer(card, 3, 'n1'),
+                    integer(card, 4, 'n2')]
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -460,15 +464,14 @@ class CONROD(RodElement):
         if comment:
             self._comment = comment
         if card:
-            self.eid = int(card.field(1))
-            #print "self.eid = ",self.eid
-            nids = card.fields(2, 4)
-
-            self.mid = int(card.field(4))
-            self.A = float(card.field(5))
-            self.j = float(card.field(6, 0.0))
-            self.c = float(card.field(7, 0.0))
-            self.nsm = float(card.field(8, 0.0))
+            self.eid = integer(card, 1, 'eid')
+            nids = [integer(card, 2, 'n1'),
+                    integer(card, 3, 'n2')]
+            self.mid = integer(card, 4, 'mid')
+            self.A = double(card, 5, 'A')
+            self.j = double_or_blank(card, 6, 'j', 0.0)
+            self.c = double_or_blank(card, 7, 'c', 0.0)
+            self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
         else:
             self.eid = data[0]
             nids = data[1:3]
@@ -482,8 +485,9 @@ class CONROD(RodElement):
         #print self.nodes
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes)
-        self.mid = model.Material(self.mid)
+        msg = ' which is required by %s eid=%s' % (self.type self.eid)
+        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.mid = model.Material(self.mid, msg=msg)
 
     def Centroid(self):
         return (self.nodes[0].Position() + self.nodes[1].Position()) / 2.
@@ -574,25 +578,25 @@ class CBAR(LineElement):
         if comment:
             self._comment = comment
         if card:
-            self.eid = int(card.field(1))
-            self.pid = int(card.field(2, self.eid))
-            self.ga = int(card.field(3))
-            self.gb = int(card.field(4))
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid', self.eid)
+            self.ga = integer(card, 3, 'ga')
+            self.gb = integer(card, 4, 'gb')
             self.initX_G0(card)
 
-            self.offt = card.field(8, 'GGG')
+            self.offt = string_or_blank(card, 8, 'offt', 'GGG')
             #print 'self.offt = |%s|' %(self.offt)
 
-            self.pa = card.field(9, 0)
-            self.pb = card.field(10, 0)
+            self.pa = integer_or_blank(card, 9, 'pa', 0)
+            self.pb = integer_or_blank(card, 10, 'pb', 0)
 
-            self.w1a = float(card.field(11, 0.0))
-            self.w2a = float(card.field(12, 0.0))
-            self.w3a = float(card.field(13, 0.0))
+            self.w1a = double_or_blank(card, 11, 'w1a', 0.0)
+            self.w2a = double_or_blank(card, 12, 'w2a', 0.0)
+            self.w3a = double_or_blank(card, 13, 'w3a', 0.0)
 
-            self.w1b = float(card.field(14, 0.0))
-            self.w2b = float(card.field(15, 0.0))
-            self.w3b = float(card.field(16, 0.0))
+            self.w1b = double_or_blank(card, 14, 'w1b', 0.0)
+            self.w2b = double_or_blank(card, 15, 'w2b', 0.0)
+            self.w3b = double_or_blank(card, 16, 'w3b', 0.0)
         else:  # TODO verify
             #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
             #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
@@ -665,7 +669,7 @@ class CBAR(LineElement):
         return (self.ga.Position() + self.gb.Position()) / 2.
 
     def initX_G0(self, card):
-        field5 = card.field(5)
+        field5 = integer_double_or_blank(card, 5, 'g0_x1')
         if isinstance(field5, int):
             self.g0 = field5
             self.x1 = None
@@ -673,9 +677,9 @@ class CBAR(LineElement):
             self.x3 = None
         elif isinstance(field5, float):
             self.g0 = None
-            self.x1 = float(card.field(5, 0.0))
-            self.x2 = float(card.field(6, 0.0))
-            self.x3 = float(card.field(7, 0.0))
+            self.x1 = field5
+            self.x2 = double_or_blank(card, 6, 'x2', 0.0)
+            self.x3 = double_or_blank(card, 7, 'x3', 0.0)
         else:
             #msg = 'field5 on %s is the wrong type...id=%s field5=%s '
             #      'type=%s' %(self.type,self.eid,field5,type(field5))
@@ -697,10 +701,10 @@ class CBAR(LineElement):
         #    self.x1 = v[0]
         #    self.x2 = v[1]
         #    self.x3 = v[2]
-
-        self.ga = mesh.Node(self.ga)
-        self.gb = mesh.Node(self.gb)
-        self.pid = mesh.Property(self.pid)
+        msg = ' which is required by %s eid=%s' % (self.type self.eid)
+        self.ga = mesh.Node(self.ga, msg=msg)
+        self.gb = mesh.Node(self.gb, msg=msg)
+        self.pid = mesh.Property(self.pid, msg=msg)
 
     #def updateNodes(self,nodes):
     #    """@todo maybe improve"""
@@ -919,42 +923,42 @@ class CBEAM3(CBAR):
         if comment:
             self._comment = comment
         if card:
-            self.eid = int(card.field(1))
-            self.eid = int(card.field(1))
-            self.pid = int(card.field(2, self.eid))
-            self.ga = int(card.field(3))
-            self.gb = int(card.field(4))
-            self.gc = int(card.field(5))
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid', self.eid)
+            self.ga = integer(card, 3, 'ga')
+            self.gb = integer(card, 4, 'gb')
+            self.gc = integer(card, 5, 'gc')
 
             self.initX_G0(card)
 
-            self.w1a = float(card.field(9, 0.0))
-            self.w2a = float(card.field(10, 0.0))
-            self.w3a = float(card.field(11, 0.0))
+            self.w1a = double_or_blank(card, 9, 'w1a', 0.0))
+            self.w2a = double_or_blank(card, 10, 'w2a', 0.0)
+            self.w3a = double_or_blank(card, 11, 'w3a', 0.0)
 
-            self.w1b = float(card.field(12, 0.0))
-            self.w2b = float(card.field(13, 0.0))
-            self.w3b = float(card.field(14, 0.0))
+            self.w1b = double_or_blank(card, 12, 'w1b', 0.0)
+            self.w2b = double_or_blank(card, 13, 'w2b', 0.0)
+            self.w3b = double_or_blank(card, 14, 'w3b', 0.0)
 
-            self.w1c = float(card.field(15, 0.0))
-            self.w2c = float(card.field(16, 0.0))
-            self.w3c = float(card.field(17, 0.0))
+            self.w1c = double_or_blank(card, 15, 'w1c', 0.0)
+            self.w2c = double_or_blank(card, 16, 'w2c', 0.0)
+            self.w3c = double_or_blank(card, 17, 'w3c', 0.0)
 
-            self.twa = card.field(18, 0.)
-            self.twb = card.field(19, 0.)
-            self.twc = card.field(20, 0.)
+            self.twa = double_or_blank(card, 18, 0., 'twa')
+            self.twb = double_or_blank(card, 19, 0., 'twb')
+            self.twc = double_or_blank(card, 20, 0., 'twc')
 
-            self.sa = card.field(21)
-            self.sb = card.field(22)
-            self.sc = card.field(23)
+            self.sa = integer_or_blank(card, 21, 'sa')
+            self.sb = integer_or_blank(card, 22, 'sb')
+            self.sc = integer_or_blank(card, 23, 'sc')
         else:
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
-        self.ga = model.Node(self.ga)
-        self.gb = model.Node(self.gb)
-        self.gc = model.Node(self.gc)
-        self.pid = model.Property(self.pid)
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.ga = model.Node(self.ga, msg=msg)
+        self.gb = model.Node(self.gb, msg=msg)
+        self.gc = model.Node(self.gc, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def Length(self):
         """
@@ -1014,26 +1018,26 @@ class CBEAM(CBAR):
         if comment:
             self._comment = comment
         if card:
-            self.eid = int(card.field(1))
-            self.pid = int(card.field(2, self.eid))
-            self.ga = int(card.field(3))
-            self.gb = int(card.field(4))
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+            self.ga = integer(card, 3, 'ga')
+            self.gb = integer(card, 4, 'gb')
 
             self.initX_G0(card)
             self.initOfftBit(card)
-            self.pa = card.field(9)
-            self.pb = card.field(10)
+            self.pa = integer(card, 9, 'pa')
+            self.pb = integer(card, 10, 'pb')
 
-            self.w1a = float(card.field(11, 0.0))
-            self.w2a = float(card.field(12, 0.0))
-            self.w3a = float(card.field(13, 0.0))
+            self.w1a = double_or_blank(card, 11, 'w1a', 0.0)
+            self.w2a = double_or_blank(card, 12, 'w2a', 0.0)
+            self.w3a = double_or_blank(card, 13, 'w3a', 0.0)
 
-            self.w1b = float(card.field(14, 0.0))
-            self.w2b = float(card.field(15, 0.0))
-            self.w3b = float(card.field(16, 0.0))
+            self.w1b = double_or_blank(card, 14, 'w1b', 0.0)
+            self.w2b = double_or_blank(card, 15, 'w2b', 0.0)
+            self.w3b = double_or_blank(card, 16, 'w3b', 0.0)
 
-            self.sa = card.field(17)
-            self.sb = card.field(18)
+            self.sa = integer_or_blank(card, 17, 'sa')
+            self.sb = integer_or_blank(card, 18, 'sb')
 
         else:  # TODO verify
             #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
@@ -1119,9 +1123,10 @@ class CBEAM(CBAR):
         return field8
 
     def cross_reference(self, model):
-        self.ga = model.Node(self.ga)
-        self.gb = model.Node(self.gb)
-        self.pid = model.Property(self.pid)
+        msg = ' which is required by %s eid=%s' % (self.type self.eid)
+        self.ga = model.Node(self.ga, msg=msg)
+        self.gb = model.Node(self.gb, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def Stiffness(self, model, r, A, E, I):  # CBEAM
         """
@@ -1218,12 +1223,11 @@ class CBEND(LineElement):
         LineElement.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.eid = int(card.field(1))
-        self.pid = card.field(2, self.eid)
-        self.ga = card.field(3)
-        self.gb = card.field(4)
-        x1Go = card.field(5)
-        #self.initX_G0(card)
+        self.eid = integer(card, 1, 'eid')
+        self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+        self.ga = integer(card, 3, 'ga')
+        self.gb = integer(card, 4, 'gb')
+        x1Go = integer_double_or_blank(card, 5, 'x1_g0')
         if isinstance(x1Go, int):
             self.g0 = x1Go
             self.x1 = None
