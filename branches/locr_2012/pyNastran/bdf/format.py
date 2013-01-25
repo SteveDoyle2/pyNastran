@@ -13,11 +13,23 @@ def components(card, n, fieldname):
 
 def components_or_blank(card, n, fieldname, default=0):
     svalue = card.field(n)
-    svalue = svalue.strip()
+    if svalue is None:
+        return default
+    elif isinstance(svalue, int):
+        svalue = str(svalue)
+    else:
+        svalue = svalue.strip()
+
     if svalue:
-        components(card, n, fieldname):
+        components(card, n, fieldname)
     else:
         return default
+
+def blank(card, n, fieldname, default=None):
+    svalue = card.field(n)
+    if svalue is None:
+        return default
+    raise RuntimeError('%s (field # %s) on card must be blank.\ncard=\n%s' % (fieldname, n, card) )
     
 def field(card, n, fieldname):
     return integer_double_string_or_blank(card, n, fieldname, default=None)

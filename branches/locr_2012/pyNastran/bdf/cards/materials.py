@@ -126,7 +126,7 @@ class MAT1(Material):
         if comment:
             self._comment = comment
         if card:
-            self.mid = double(card, 1, 'mid')
+            self.mid = integer(card, 1, 'mid')
             self.set_E_G_nu(card)
             self.rho = double_or_blank(card, 5, 'rho', 0.)
             self.a = double_or_blank(card, 6, 'a', 0.0)

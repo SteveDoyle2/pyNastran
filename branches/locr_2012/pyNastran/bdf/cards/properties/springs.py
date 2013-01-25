@@ -14,7 +14,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property
-
+from pyNastran.bdf.format import (integer, integer_or_blank,
+                                  double, double_or_blank)
 
 class SpringProperty(Property):
     type = 'SpringProperty'
@@ -40,16 +41,16 @@ class PELAS(SpringProperty):
             # these are split into 2 separate cards
 
             ## Property identification number. (Integer > 0)
-            self.pid = card.field(1 + nOffset)
+            self.pid = integer(card, 1 + nOffset, 'pid')
             ## Ki Elastic property value. (Real)
-            self.k = card.field(2 + nOffset)
+            self.k = double(card, 2 + nOffset, 'k')
 
             ## Damping coefficient, . See Remarks 5. and 6. (Real)
             ## To obtain the damping coefficient GE, multiply the
             ## critical damping ratio c/c0 by 2.0.
-            self.ge = card.field(3 + nOffset, 0.)
+            self.ge = double_or_blank(card, 3 + nOffset, 'ge', 0.)
             ## Stress coefficient. (Real)
-            self.s = card.field(4 + nOffset, 0.)
+            self.s = double_or_blank(card, 4 + nOffset, 's', 0.)
         else:
             self.pid = data[0]
             self.k = data[1]
@@ -118,18 +119,18 @@ class PELAST(SpringProperty):
         if comment:
             self._comment = comment
         ## Property identification number. (Integer > 0)
-        self.pid = card.field(1)
+        self.pid = integer(card, 1, 'pid')
         ## Identification number of a TABLEDi entry that defines the
         ## force per unit displacement vs. frequency relationship.
         ## (Integer > 0; Default = 0)
-        self.tkid = card.field(2, 0)
+        self.tkid = integer_or_blank(card, 2, 'tkid', 0)
         ## Identification number of a TABLEDi entry that defines the
         ## nondimensional structural damping coefficient vs. frequency
         ## relationship. (Integer > 0; Default = 0)
-        self.tgeid = card.field(3, 0)
+        self.tgeid = integer_or_blank(card, 3, 'tgeid', 0)
         ## Identification number of a TABELDi entry that defines the nonlinear
         ## force vs. displacement relationship. (Integer > 0; Default = 0)
-        self.tknid = card.field(4, 0)
+        self.tknid = integer_or_blank(card, 4, 'tknid', 0)
 
     def cross_reference(self, model):
         self.pid = model.Property(self.pid)

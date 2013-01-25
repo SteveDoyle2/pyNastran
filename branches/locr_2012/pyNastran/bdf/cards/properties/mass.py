@@ -10,6 +10,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.bdf.cards.baseCard import Property
+from pyNastran.bdf.format import (integer,
+                                  double, double_or_blank,
+                                  string)
 
 
 class PointProperty(Property):
@@ -38,10 +41,10 @@ class NSM(PointProperty):
             self._comment = comment
         if card:
             nOffset *= 2
-            self.sid = card.field(1)
-            self.Type = card.field(2)
-            self.id = card.field(3 + nOffset)
-            self.value = card.field(4 + nOffset)
+            self.sid = integer(card, 1, 'sid')
+            self.Type = string(card, 2, 'Type')
+            self.id = integer(card, 3 + nOffset, 'id')
+            self.value = double(card, 4 + nOffset, 'value')
         else:
             self.sid = data[0]
             #sid=9  propSet=PBEA ID=538976333 value=0.0
@@ -50,6 +53,7 @@ class NSM(PointProperty):
             self.Type = data[1]
             self.id = data[2]
             self.value = data[3]
+        assert self.Type in self.validProperties
 
     def rawFields(self):
         #nodes = self.nodeIDs()
@@ -68,8 +72,8 @@ class PMASS(PointProperty):
         if card:
             nOffset *= 2
             ## Property ID
-            self.pid = card.field(1 + nOffset)
-            self.mass = card.field(2 + nOffset, 0.)
+            self.pid = integer(card, 1 + nOffset, 'pid')
+            self.mass = double_or_blank(card, 2 + nOffset, 'mass', 0.)
         else:
             self.pid = data[0]
             self.mass = data[1]

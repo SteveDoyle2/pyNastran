@@ -15,6 +15,9 @@ from itertools import izip
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property, Material
+from pyNastran.bdf.format import (integer, integer_or_blank,
+                                  double, double_or_blank,
+                                  string_or_blank)
 
     
 class ShellProperty(Property):
@@ -43,16 +46,18 @@ class PCOMP(ShellProperty):
             self._comment = comment
         if card:
             ## Property ID
-            self.pid = card.field(1)
+            self.pid = integer(card, 1, 'pid')
             ## Non-Structural Mass
-            self.nsm = card.field(3, 0.0)
-            self.sb = card.field(4, 0.0)
-            self.ft = card.field(5)
-            self.TRef = card.field(6, 0.0)
-            self.ge = card.field(7, 0.0)
+            self.nsm = double_or_blank(card, 3, 'nsm', 0.0)
+            self.sb = double_or_blank(card, 4, 'sb', 0.0)
+            self.ft = string_or_blank(card, 5, 'ft')
+            assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN']
+            
+            self.TRef = double_or_blank(card, 6, 'TRef', 0.0)
+            self.ge = double_or_blank(card, 7, 'ge', 0.0)
 
             ## symmetric flag - default = No Symmetry (NO)
-            self.lam = card.field(8)
+            self.lam = string_or_blank(card, 8, 'lam')
 
             # -8 for the first 8 fields (1st line)
             nPlyFields = card.nFields() - 9
@@ -104,7 +109,7 @@ class PCOMP(ShellProperty):
             #    pliesLower = plies.reverse()
             #    self.plies = pliesLower+plies
             #    #print str(self)
-            self.z0 = card.field(2, -0.5 * self.Thickness())
+            self.z0 = double_or_blank(card, 2, 'z0', -0.5 * self.Thickness())
         else:
             #print "len(data) = ",len(data)
             self.pid = data[0]
@@ -328,14 +333,15 @@ class PCOMPG(PCOMP):
         if comment:
             self._comment = comment
         if card:
-            self.pid = card.field(1)
+            self.pid = integer(card, 1, 'pid')
             # z0 will be calculated later
-            self.nsm = card.field(3, 0.0)
-            self.sb = card.field(4, 0.0)
-            self.ft = card.field(5)
-            self.TRef = card.field(6, 0.0)
-            self.ge = card.field(7, 0.0)
-            self.lam = card.field(8)
+            self.nsm = double_or_blank(card, 3, 'nsm', 0.0)
+            self.sb = double_or_blank(card, 4, 'sb', 0.0)
+            self.ft = string_or_blank(card, 5, 'ft')
+            assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', None]
+            self.TRef = double_or_blank(card, 6, 'TRef', 0.0)
+            self.ge = double_or_blank(card, 7, 'ge', 0.0)
+            self.lam = string_or_blank(card, 8, 'lam')
             fields = card.fields(9)
 
             T = 0.  # thickness
@@ -346,14 +352,14 @@ class PCOMPG(PCOMP):
             i = 0
             n = 0
             while i < len(fields):
-                gPlyID = card.field(9 + i)
-                mid = card.field(9 + i + 1, midLast)
+                gPlyID = integer(card, 9 + i, 'gPlyID')
+                mid = integer_or_blank(card, 9 + i + 1, 'mid', midLast)
 
                 # can be blank 2nd time thru
-                thickness = card.field(9 + i + 2, tLast)
+                thickness = double_or_blank(card, 9 + i + 2, 'thickness', tLast)
 
-                theta = card.field(9 + i + 3, 0.0)
-                sout = card.field(9 + i + 4, 'NO')
+                theta = double_or_blank(card, 9 + i + 3, 'theta', 0.0)
+                sout = string_or_blank(card, 9 + i + 4, 'sout', 'NO')
                 #print('n=%s gPlyID=%s mid=%s thickness=%s len=%s' %(
                 #    n,gPlyID,mid,thickness,len(fields)))
 
@@ -371,7 +377,7 @@ class PCOMPG(PCOMP):
                 T += thickness
                 i += 8
                 n += 1
-                self.z0 = card.field(2, -0.5 * T)
+                self.z0 = double_or_blank(card, 2, 'z0', -0.5 * T)
         else:
             raise NotImplementedError('PCOMPG data')
 
@@ -419,13 +425,16 @@ class PSHEAR(ShellProperty):
             self._comment = comment
         if card:
             ## Property ID
-            self.pid = card.field(1)
+            self.pid = integer(card, 1, 'pid')
             ## Material ID
-            self.mid = card.field(2)
-            self.t = card.field(3)
-            self.nsm = card.field(4, 0.0)
-            self.f1 = card.field(5, 0.0)
-            self.f2 = card.field(6, 0.0)
+            self.mid = integer(card, 2)
+            self.t = double(card, 3, 't')
+            self.nsm = double_or_blank(card, 4, 0.0)
+            self.f1 = double_or_blank(card, 5, 0.0)
+            self.f2 = double_or_blank(card, 6, 0.0)
+            assert self.t > 0.0
+            assert self.f1 >= 0.0
+            assert self.f2 >= 0.0
         else:
             #(pid,mid,t,nsm,f1,f2) = out
             self.pid = data[0]
@@ -462,22 +471,23 @@ class PSHELL(ShellProperty):
         if comment:
             self._comment = comment
         if card:
-            self.pid = int(card.field(1))
-            self.mid1 = card.field(2)
-            self.t = card.field(3)
-
+            self.pid = integer(card, 1, 'pid')
+            self.mid1 = integer_or_blank(card, 2, 'mid1')
+            self.t = double_or_blank(card, 3, 't')
+            
             ## Material identification number for bending
-            self.mid2 = card.field(4)
+            self.mid2 = integer_or_blank(card, 4, 'mid2')
             ## \f$ \frac{12I}{t^3} \f$
-            self.twelveIt3 = card.field(5, 1.0)  # poor name
-            self.mid3 = card.field(6)
-            self.tst = card.field(7, 0.833333)
-            self.nsm = card.field(8, 0.0)
+            self.twelveIt3 = double_or_blank(card, 5, '12*I/t^3', 1.0)  # poor name
+            self.mid3 = integer_or_blank(card, 6, 'mid3')
+            self.tst = double_or_blank(card, 7, 'ts/t', 0.833333)
+            self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
 
             tOver2 = self.t / 2.
-            self.z1 = card.field(9, -tOver2)
-            self.z2 = card.field(10, tOver2)
-            self.mid4 = card.field(11)
+            self.z1 = double_or_blank(card, 9,  'z1', -tOver2)
+            self.z2 = double_or_blank(card, 10, 'z2',  tOver2)
+            self.mid4 = integer_or_blank(card, 11, 'mid4')
+
             #if self.mid2 is None:
             #    assert self.mid3 is None
             #else: # mid2 is defined
@@ -511,7 +521,7 @@ class PSHELL(ShellProperty):
 
     def Mid(self):
         if isinstance(self.mid1, Material):
-            return self.mid1.mid  # self.Mid1()
+            return self.mid1.mid
         return self.Mid2()
 
     def Mid1(self):

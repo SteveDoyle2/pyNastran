@@ -13,6 +13,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property
+from pyNastran.bdf.format import (integer, integer_or_blank,
+                                  double, double_or_blank)
 
 
 class DamperProperty(Property):
@@ -36,11 +38,11 @@ class PDAMP(DamperProperty):
         if card:
             # 3 PDAMP properties can be defined on 1 PDAMP card
             ## Property ID
-            self.pid = card.field(1 + nOffset)
+            self.pid = integer(card, 1 + nOffset, 'pid')
 
             # these are split into 2 separate cards
             ## Force per unit velocity (Real)
-            self.b = card.field(2 + nOffset)
+            self.b = double(card, 2 + nOffset, 'b')
         else:
             self.pid = data[0]
             self.b = data[1]
@@ -66,13 +68,13 @@ class PDAMP5(DamperProperty):
             self._comment = comment
         if card:
             ## Property ID
-            self.pid = card.field(1)
+            self.pid = integer(card, 1, 'pid')
             ## Material ID
-            self.mid = card.field(2)
+            self.mid = integer(card, 2, 'mid')
             ## Damping multiplier. (Real > 0.0)
             ## B is the mass that multiplies the heat capacity CP on the MAT4
             ## or MAT5 entry.
-            self.b = card.field(3)
+            self.b = double(card, 3, 'b')
         else:
             self.pid = data[0]
             self.mid = data[1]
@@ -103,10 +105,10 @@ class PDAMPT(DamperProperty):
             self._comment = comment
         if card:
             ## Property ID
-            self.pid = card.field(1)
+            self.pid = integer(card, 1, 'pid')
             ## Identification number of a TABLEDi entry that defines the
             ## damping force per-unit velocity versus frequency relationship
-            self.tbid = card.field(2, 0)
+            self.tbid = integer_or_blank(card, 2, 'tbid', 0)
         else:
             self.pid = data[0]
             self.tbid = data[1]
@@ -137,9 +139,9 @@ class PVISC(DamperProperty):
         if comment:
             self._comment = comment
         if card:
-            self.pid = card.field(1 + 4 * nPVISC)
-            self.ce = card.field(2 + 4 * nPVISC)
-            self.cr = card.field(3 + 4 * nPVISC, 0.)
+            self.pid = integer(card, 1 + 4 * nPVISC, 'pid')
+            self.ce = integer(card, 2 + 4 * nPVISC, 'ce')
+            self.cr = double_or_blank(card, 3 + 4 * nPVISC, 'cr', 0.)
         else:
             self.pid = data[0]
             self.ce = data[1]

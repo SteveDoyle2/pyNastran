@@ -442,10 +442,10 @@ class CSSCHD(BaseCard):
             self._comment = comment
         if card:
             self.sid = integer(card, 1, 'sid')
-            self.aesid = card.field(2)  # AESURF
-            self.lAlpha = card.field(3)  # AEFACT
-            self.lMach = card.field(4)  # AEFACT
-            self.lSchd = card.field(5)  # AEFACT
+            self.aesid = integer(card, 2, 'aesid')  # AESURF
+            self.lAlpha = integer_or_blank(card, 3, 'lAlpha')  # AEFACT
+            self.lMach = integer_or_blank(card, 4, 'lMach')  # AEFACT
+            self.lSchd = integer(card, 5, 'lSchd')  # AEFACT
         else:
             self.sid = data[0]
             self.aesid = data[1]  # AESURF
@@ -764,7 +764,7 @@ class FLFACT(BaseCard):
         if comment:
             self._comment = comment
         if card:
-            self.sid = card.field(1)
+            self.sid = integer(card, 1, 'sid')
             self.factors = card.fields(2)
 
             if len(self.factors) > 1 and self.factors[1] == 'THRU':
@@ -800,18 +800,18 @@ class FLUTTER(BaseCard):
         if comment:
             self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.method = card.field(2)
-            self.density = card.field(3)
-            self.mach = card.field(4)
-            self.rfreqVel = card.field(5)
+            self.sid = integer(card, 1, 'sid')
+            self.method = string(card, 2, 'method')
+            self.density = integer(card, 3, 'density')
+            self.mach = integer(card, 4, 'mach')
+            self.rfreq_vel = integer(card, 5, 'rfreq_vel')
         else:
             assert len(data) == 8, 'FLUTTER = %s' % (data)
             self.sid = data[0]
             self.method = data[1]
             self.density = data[2]
             self.mach = data[3]
-            self.rfreqVel = data[4]
+            self.rfreq_vel = data[4]
             self.method = data[5]
             self.imethod = data[6]
             self.nValue = data[7]
@@ -821,20 +821,20 @@ class FLUTTER(BaseCard):
         assert self.method in ['K', 'PK', 'PKNL', 'PKS', 'PKNLS', 'KE']
 
         if self.method in ['K', 'KE']:
-            self.imethod = card.field(6, 'L')
-            self.nValue = card.field(7)
+            self.imethod = string_or_blank(card, 6, 'imethod', 'L')
+            self.nValue = integer_or_blank(card, 7, 'nValue')
             self.omax = None
             assert self.imethod in ['L', 'S']
         elif self.method in ['PKS', 'PKNLS']:
             self.imethod = None
             self.nValue = None
-            self.omax = card.field(7)
+            self.omax = double_or_blank(card, 7, 'omax')
         else:
-            self.nValue = card.field(7)
+            self.nValue = integer_or_blank(card, 7, 'nValue')
             self.omax = None
             self.imethod = None
 
-        self.epsilon = card.field(8)  # no default listed...
+        self.epsilon = double(card, 8, 'epsilon')  # not defined in QRG
 
     def _rawNValueOMax(self):
         if self.method in ['K', 'KE']:
@@ -858,7 +858,7 @@ class FLUTTER(BaseCard):
     def rawFields(self):
         (imethod, nValue) = self._rawNValueOMax()
         fields = ['FLUTTER', self.sid, self.method, self.density,
-                  self.mach, self.rfreqVel, imethod, nValue, self.epsilon]
+                  self.mach, self.rfreq_vel, imethod, nValue, self.epsilon]
         return fields
 
     #def reprFields(self):
@@ -884,11 +884,11 @@ class GUST(BaseCard):
         if comment:
             self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.dload = card.field(2)
-            self.wg = card.field(3)
-            self.x0 = card.field(4)
-            self.V = card.field(5)
+            self.sid = integer(card, 1, 'sid')
+            self.dload = integer(card, 2, 'dload')
+            self.wg = double(card, 3, 'wg')
+            self.x0 = double(card, 4, 'x0')
+            self.V = double(card, 4, 'V')
         else:
             self.sid = data[0]
             self.dload = data[1]
@@ -926,8 +926,8 @@ class MKAERO1(BaseCard):
             self.machs = []
             self.rFreqs = []
             for i in xrange(1, 1 + nFields):
-                self.machs.append(card.field(i))
-                self.rFreqs.append(card.field(i + 8))
+                self.machs.append(double(card, i, 'mach'))
+                self.rFreqs.append(double(card, i + 8, 'rFreq'))
         else:
             raise NotImplementedError('MKAERO1')
 
@@ -981,8 +981,8 @@ class MKAERO2(BaseCard):
             self.machs = []
             self.rFreqs = []
             for i in xrange(1, 1 + nFields, 2):
-                self.machs.append(card.field(i))
-                self.rFreqs.append(card.field(i + 1))
+                self.machs.append(double(card, i, 'mach'))
+                self.rFreqs.append(double(card, i + 1, 'rFreq'))
         else:
             raise NotImplementedError('MKAERO2')
 
@@ -1018,7 +1018,7 @@ class PAERO1(BaseCard):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.pid = card.field(1)
+        self.pid = integer(card, 1, 'pid')
         Bi = card.fields(2)
         self.Bi = []
 
@@ -1056,37 +1056,37 @@ class PAERO2(BaseCard):
         if comment:
             self._comment = comment
         ## Property identification number. (Integer > 0)
-        self.pid = card.field(1)
+        self.pid = integer(card, 1, 'pid')
         ## Orientation flag. Type of motion allowed for bodies. Refers to the
         ## aerodynamic coordinate system of ACSID. See AERO entry.
         ## (Character = 'Z', 'Y', or 'ZY')
-        self.orient = card.field(2)
+        self.orient = string(card, 2, 'orient')
         ## Reference half-width of body and the width of the constant width
         ## interference tube. (Real > 0.0)
-        self.width = card.field(3)
+        self.width = double(card, 3, 'width')
         ## Aspect ratio of the interference tube (height/width). float>0.
-        self.AR = card.field(4)
+        self.AR = double(card, 4, 'AR')
         ## Identification number of an AEFACT entry containing a list of
         ## slender body half-widths at the end points of the slender body
         ## elements. If blank, the value of WIDTH will be used.
         ## (Integer > 0 or blank)
-        self.lrsb = card.field(5)
+        self.lrsb = integer_or_blank(card, 5, 'lrsb')
         ## Identification number of an AEFACT entry containing a list of
         ## slender body half-widths at the end points of the interference
         ## elements. If blank, the value of WIDTH will be used.
         ## (Integer > 0 or blank)
-        self.lrib = card.field(6)
+        self.lrib = integer_or_blank(card, 6, 'lrib')
         ## dentification number of AEFACT entries for defining ? arrays for
         ## interference calculations. (Integer >= 0)
-        self.lth1 = card.field(7)
-        self.lth2 = card.field(8)
+        self.lth1 = integer_or_blank(card, 7, 'lth1')
+        self.lth2 = integer_or_blank(card, 8, 'lth2')
         self.thi = []
         self.thn = []
         fields = card.fields(9)
         nFields = len(fields)
         for i in xrange(9, 9 + nFields, 2):
-            self.thi.append(card.field(i))
-            self.thi.append(card.field(i + 1))
+            self.thi.append(integer(card, i, 'lth'))
+            self.thi.append(integer(card, i + 1, 'thn'))
 
     def rawFields(self):
         fields = ['PAERO2', self.pid, self.orient, self.width,
@@ -1125,16 +1125,18 @@ class SPLINE1(Spline):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.caero = card.field(2)
-            self.box1 = card.field(3)
-            self.box2 = card.field(4)
-            self.setg = card.field(5)
-            self.dz = card.field(6, 0.0)
-            self.method = card.field(7, 'IPS')
-            self.usage = card.field(8, 'BOTH')
-            self.nelements = card.field(9, 10)
-            self.melements = card.field(10, 10)
+            self.eid = integer(card, 1, 'eid')
+            self.caero = integer(card, 2, 'caero')
+            self.box1 = integer(card, 3, 'box1')
+            self.box2 = integer(card, 4, 'box2')
+            self.setg = integer(card, 5, 'setg')
+            self.dz = double_or_blank(card, 6, 'dz', 0.0)
+            self.method = string_or_blank(card, 7, 'method', 'IPS')
+            self.usage = string_or_blank(card, 8, 'usage', 'BOTH')
+            self.nelements = integer_or_blank(card, 9, 'nelements', 10)
+            self.melements = integer_or_blank(card, 10, 'melements', 10)
+            assert self.nelements > 0
+            assert self.melements > 0
         else:
             self.eid = data[0]
             self.caero = data[1]
@@ -1206,7 +1208,7 @@ class SPLINE2(Spline):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
+            self.eid = integer(card, 1, 'eid')
             self.caero = card.field(2)
             self.id1 = card.field(3)
             self.id2 = card.field(4)
@@ -1423,11 +1425,13 @@ class TRIM(BaseCard):
             self._comment = comment
         if card:
             ## Trim set identification number. (Integer > 0)
-            self.sid = card.field(1)
+            self.sid = integer(card, 1, 'sid')
             ## Mach number. (Real > 0.0 and != 1.0)
-            self.mach = card.field(2)
+            self.mach = double(card, 2, 'mach')
+            assert self.mach >= 0.0 and self.mach != 1.0
             ## Dynamic pressure. (Real > 0.0)
-            self.q = card.field(3)
+            self.q = double(card, 3, 'q')
+            assert self.q > 0.0
             ## The label identifying aerodynamic trim variables defined on an
             ## AESTAT or AESURF entry.
             self.labels = []
