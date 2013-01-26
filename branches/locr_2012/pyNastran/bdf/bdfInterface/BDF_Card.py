@@ -28,6 +28,18 @@ class BDFCard(object):
             return True
         return False
 
+    def __setitem__(self, key, value):
+        self.card.__setitem__(key, value)
+        
+    def __getitem__(self, key):
+        return self.card.__getitem__(key)
+    
+    def __getslice__(self, i, j):
+        return self.card.__getslice__(i, j)
+    
+    def __setslice__(self, i, j, sequence):
+        self.card.__setslice__(i, j, sequence)
+
     def __repr__(self):
         """
         prints the card as a list
@@ -42,6 +54,9 @@ class BDFCard(object):
         @param self the object pointer
         @retval nFields the number of fields on the card
         """
+        return self.nfields
+
+    def __len__(self):
         return self.nfields
 
     def fields(self, i=0, j=None, defaults=None, debug=False):

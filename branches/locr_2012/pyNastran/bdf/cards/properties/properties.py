@@ -15,7 +15,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property
-
+from pyNastran.bdf.format import (integer, integer_or_blank, double, double_or_blank, string, string_or_blank, integer_string_or_blank)
 
 class PFAST(Property):
     type = 'PFAST'
@@ -25,24 +25,27 @@ class PFAST(Property):
         if comment:
             self._comment = comment
         ## Property ID
-        self.pid = card.field(1)
+        self.pid = integer(card, 1, 'pid')
         ## diameter of the fastener
-        self.d = card.field(2)
+        self.d = double(card, 2, 'd')
+        assert self.d > 0
         ## Specifies the element stiffness coordinate system
-        self.mcid = card.field(3, -1)
-        self.mflag = card.field(4, 0)  # 0-absolute 1-relative
+        self.mcid = integer_or_blank(card, 3, 'mcid', -1)
+        assert self.mcid >= -1
+        self.mflag = integer_or_blank(card, 4, 'mflag', 0)  # 0-absolute 1-relative
+        assert self.mflag in [0, 1]
         ## stiffness values in directions 1-3
-        self.kt1 = card.field(5)
-        self.kt2 = card.field(6)
-        self.kt3 = card.field(7)
+        self.kt1 = double(card, 5, 'kt1')
+        self.kt2 = double(card, 6, 'kt2')
+        self.kt3 = double(card, 7, 'kt3')
         ## Rotational stiffness values in directions 1-3
-        self.kr1 = card.field(8, 0.0)
-        self.kr2 = card.field(9, 0.0)
-        self.kr3 = card.field(10, 0.0)
+        self.kr1 = double_or_blank(card, 8, 'kr1', 0.0)
+        self.kr2 = double_or_blank(card, 9, 'kr2', 0.0)
+        self.kr3 = double_or_blank(card, 10, 'kr3', 0.0)
         ## Lumped mass of fastener
-        self.mass = card.field(11, 0.0)
+        self.mass = double_or_blank(card, 11, 'mass', 0.0)
         ## Structural damping
-        self.ge = card.field(12, 0.0)
+        self.ge = double_or_blank(card, 12, 'ge', 0.0)
 
     def cross_reference(self, model):
         self.mcid = model.Coord(self.mcid)
@@ -87,24 +90,24 @@ class PGAP(Property):
             self._comment = comment
         if card:
             ## Property ID
-            self.pid = card.field(1)
+            self.pid = integer(card, 1, 'pid')
             ## initial gap opening
-            self.u0 = card.field(2, 0.)
+            self.u0 = double_or_blank(card, 2, 'u0', 0.)
             ## preload
-            self.f0 = card.field(3, 0.)
+            self.f0 = double_or_blank(card, 3, 'f0', 0.)
             ## axial stiffness of closed gap
-            self.ka = card.field(4, 1.e8)
+            self.ka = double_or_blank(card, 4, 'ka', 1.e8)
             ## axial stiffness of open gap
-            self.kb = card.field(5, 1e-14 * self.ka)
+            self.kb = double_or_blank(card, 5, 'kb', 1e-14 * self.ka)
             ## static friction coeff
-            self.mu1 = card.field(7, 0.)
+            self.mu1 = double_or_blank(card, 7, 'mu1', 0.)
             ## transverse stiffness of closed gap
-            self.kt = card.field(6, self.mu1 * self.ka)
+            self.kt = double_or_blank(card, 6, 'kt', self.mu1 * self.ka)
             ## kinetic friction coeff
-            self.mu2 = card.field(8, self.mu1)
-            self.tmax = card.field(9, 0.)
-            self.mar = card.field(10, 100.)
-            self.trmin = card.field(11, 0.001)
+            self.mu2 = double_or_blank(card, 8, 'mu2', self.mu1)
+            self.tmax = double_or_blank(card, 9, 'tmax', 0.)
+            self.mar = double_or_blank(card, 10, 'mar', 100.)
+            self.trmin = double_or_blank(card, 11, 'trmin', 0.001)
         else:
             #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
             self.pid = data[0]
@@ -169,11 +172,11 @@ class PLSOLID(SolidProperty):
             self._comment = comment
         if card:
             ## Property ID
-            self.pid = card.field(1)
+            self.pid = integer(card, 1, 'pid')
             ## Material ID
-            self.mid = card.field(2)
-            self.ge = card.field(3)
-            self.str = card.field(4, 'GRID')
+            self.mid = integer(card, 2, 'mid')
+            self.ge = double_or_blank(card, 3, 'ge', 0.0)
+            self.str = string_or_blank(card, 4, 'str', 'GRID')
         else:
             self.pid = data[0]
             self.mid = data[1]
@@ -206,16 +209,16 @@ class PSOLID(SolidProperty):
             self._comment = comment
         if card:
             ## Property ID
-            self.pid = card.field(1)
+            self.pid = integer(card, 1, 'pid')
             ## Material ID
-            self.mid = card.field(2)
-            self.cordm = card.field(3, 0)
-            self.integ = card.field(4)
+            self.mid = integer(card, 2, 'mid')
+            self.cordm = integer_or_blank(card, 3, 'cordm', 0)
+            self.integ = integer_string_or_blank(card, 4, 'integ')
             #validIntegration = ['THREE', 'TWO', 'FULL', 'BUBBLE',
             #                    2, 3, None, 'REDUCED']
-            self.stress = card.field(5)
-            self.isop = card.field(6)
-            self.fctn = card.field(7, 'SMECH')
+            self.stress = integer_string_or_blank(card, 5, 'stress')
+            self.isop = integer_string_or_blank(card, 6, 'isop')
+            self.fctn = string_or_blank(card, 7, 'fctn', 'SMECH')
         else:
             self.pid = data[0]
             self.mid = data[1]
@@ -270,25 +273,25 @@ class PRAC2D(CrackProperty):
             self._comment = comment
         if card:
             ## Property ID
-            self.pid = card.field(1)
+            self.pid = integer(card, 1, 'pid')
             ## Material ID
-            self.mid = card.field(2)
-            self.thick = card.field(3)
+            self.mid = integer(card, 2, 'mid')
+            self.thick = double(card, 3, 'thick')
             ## Plane strain or plane stress option.
             ## Use 0 for plane strain; 1 for plane stress. (Integer = 0 or 1)
-            self.iPlane = card.field(4)
+            self.iPlane = integer(card, 4, 'iPlane')
             if self.iPlane not in [0, 1]:
                 raise RuntimeError('Invalid value for iPlane on PRAC2D, can '
                                    'only be 0,1 iPlane=|%s|' % self.iPlane)
             ## Non-structural mass per unit area.(Real >= 0.0; Default = 0)
-            self.nsm = card.field(5, 0.)
+            self.nsm = double_or_blank(card, 5, 'nsm', 0.)
             ## Exponent used in the displacement field. See Remark 4.
             ## (Real; Default = 0.5)
-            self.gamma = card.field(6, 0.5)
+            self.gamma = double_or_blank(card, 6, 'gamma', 0.5)
             ## Angle (in degrees) relative to the element x-axis along which
             ## stress intensity factors are to be calculated. See Remark 4.
             ## (Real; Default = 180.0)
-            self.phi = card.field(7, 180.)
+            self.phi = double_or_blank(card, 7, 'phi', 180.)
 
         else:
             raise NotImplementedError('not supported')
@@ -323,16 +326,16 @@ class PRAC3D(CrackProperty):
             self._comment = comment
         if card:
             ## Property ID
-            self.pid = card.field(1)
+            self.pid = integer(card, 1, 'pid')
             ## Material ID
-            self.mid = card.field(2)
+            self.mid = integer(card, 2, 'mid')
             ## Exponent used in the displacement field. See Remark 4.
             ## (Real; Default = 0.5)
-            self.gamma = card.field(3, 0.5)
+            self.gamma = double_or_blank(card, 3, 'gamma', 0.5)
             ## Angle (in degrees) relative to the element x-axis along which
             ## stress intensity factors are to be calculated. See Remark 4.
             ## (Real; Default = 180.0)
-            self.phi = card.field(4, 180.)
+            self.phi = double_or_blank(card, 4, 'gamma', 180.)
 
         else:
             raise NotImplementedError('not supported')
@@ -351,7 +354,7 @@ class PRAC3D(CrackProperty):
         return fields
 
 
-class PCONEAX(Property):  # not done
+class PCONEAX(Property):
     type = 'PCONEAX'
 
     def __init__(self, card=None, data=None, comment=''):
@@ -360,19 +363,71 @@ class PCONEAX(Property):  # not done
             self._comment = comment
         if card:
             ## Property ID
-            self.pid = card.field(1)
+            self.pid = integer(card, 1, 'pid')
             ## Material ID
-            self.mid = card.field(2)
-            self.group = card.field(3, 'MSCBMLO')
-            self.Type = card.field(4)
-            self.dim = []  # confusing entry...
+            self.mid1 = integer_or_blank(card, 2, 'mid1', 0)
+            self.t1 = double_or_blank(card, 3, 't1')
+
+            self.mid2 = integer(card, 4, 'mid2', 0)
+            if self.mid2 > 0:
+                self.i = double(card, 5, 'i')
+                assert self.i > 0.0
+            else:
+                self.i = blank(card, 5, 'i')
+
+            self.mid3 = integer(card, 6, 0)
+            if self.mid3 > 0:
+                self.t2 = double(card, 7, 't3')
+                assert self.t2 > 0.0
+            else:
+                self.t2 = blank(card, 7, 't3')
+
+            self.nsm = double(card, 8, 'nsm')
+            self.z1 = double(card, 9, 'z1')
+            self.z2 = double(card, 10, 'z2')
+            self.phi = fields(double, card, 'phi', i=11, j=len(card))
         else:
             raise NotImplementedError('not supported')
 
     def cross_reference(self, model):
-        self.mid = model.Material(self.mid)
+        if self.mid1 > 0:
+            self.mid1 = model.Material(self.mid1, msg=msg)
+        if self.mid2 > 0:
+            self.mid2 = model.Material(self.mid2, msg=msg)
+        if self.mid3 > 0:
+            self.mid3 = model.Material(self.mid3, msg=msg)
+        if self.mid4 > 0:
+            self.mid4 = model.Material(self.mid4, msg=msg)
+
+    def Mid1(self):
+        if isinstance(self.mid1, Material):
+            return self.mid1.mid
+        return self.mid1
+
+    def Mid2(self):
+        if isinstance(self.mid2, Material):
+            return self.mid2.mid
+        return self.mid2
+
+    def Mid3(self):
+        if isinstance(self.mid3, Material):
+            return self.mid3.mid
+        return self.mid3
 
     def rawFields(self):
-        fields = ['PCONEAX', self.pid, self.Mid(), self.group, self.Type]
-        raise NotImplementedError('not supported')
+        fields = ['PCONEAX', self.pid, self.Mid1(), self.t1,
+                  self.Mid2(), self.i, self.Mid3(), self.t2,
+                  self.nsm, self.z1, self.z2] + self.phi
+        return fields
+
+    def reprFields(self):
+        nsm = set_blank_if_default(self.nsm, 0.0)
+        mid1 = set_blank_if_default(self.Mid1(), 0)
+        mid2 = set_blank_if_default(self.Mid2(), 0)
+        mid3 = set_blank_if_default(self.Mid3(), 0)
+        i = set_blank_if_default(self.i, 0.0)
+        t1 = set_blank_if_default(self.t1, 0.0)
+        t2 = set_blank_if_default(self.t2, 0.0)
+        fields = ['PCONEAX', self.pid, mid1, t1, mid2, i, mid3, t2,
+                  nsm, self.z1, self.z2] + self.phi
         return fields

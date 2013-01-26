@@ -160,7 +160,7 @@ def print_float_8(value):
                 field = print_scientific_8(value)
             return field
     field = field.strip(' 0')
-    field = '%8s' % (field)
+    field = '%8s' % field
 
     assert len(field) == 8, ('value=|%s| field=|%s| is not 8 characters '
                              'long, its %s' % (value, field, len(field)))
@@ -174,7 +174,7 @@ def print_field(value):
     @retval field an 8-character (tested) string
     """
     if isinstance(value, int):
-        field = "%8s" % (value)
+        field = "%8s" % value
     elif isinstance(value, float):
         field = print_float_8(value)
     elif value is None:

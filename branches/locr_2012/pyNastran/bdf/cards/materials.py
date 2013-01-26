@@ -65,13 +65,13 @@ class CREEP(Material):
             self.tidcs = integer_or_blank(card, 7, 'tidcs') # blank?
             self.thresh = double_or_blank(card, 8, 'thresh', 1e-5)
             self.Type = integer_or_blank(card, 9, 'Type') # 111, 112, 121, 122, 211, 212, 221, 222, 300 (or blank?)
-            self.a = card.field(10)
-            self.b = card.field(11)
-            self.c = card.field(12)
-            self.d = card.field(13)
-            self.e = card.field(14)
-            self.f = card.field(15)
-            self.g = card.field(16)
+            self.a = double_or_blank(card, 10, 'a')
+            self.b = double_or_blank(card, 11, 'b')
+            self.c = double_or_blank(card, 12, 'c')
+            self.d = double_or_blank(card, 13, 'd')
+            self.e = double_or_blank(card, 14, 'e')
+            self.f = double_or_blank(card, 15, 'f')
+            self.g = double_or_blank(card, 16, 'g')
         else:
             self.mid = data[0]
             self.T0 = data[1]

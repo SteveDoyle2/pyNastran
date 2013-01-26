@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.bdf.cards.baseCard import BaseCard
-
+from pyNastran.bdf.format import string, integer_double_or_string
 
 class PARAM(BaseCard):
     type = 'PARAM'
@@ -12,8 +12,8 @@ class PARAM(BaseCard):
         if comment:
             self._comment = comment
         if card:
-            self.key = card.field(1)
-            self.value = card.field(2)
+            self.key = string(card, 1, 'key')
+            self.value = integer_double_or_string(card, 2, 'value')
         else:
             self.key = data[0]
             self.value = data[1]

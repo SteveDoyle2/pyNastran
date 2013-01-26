@@ -890,16 +890,40 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             #print("line* = ",line)
         return line, comment
         
+    def _clean_comment(self, comment):
+        """
+        Removes specific pyNastran comment lines so duplicate lines aren't
+        created.
+        @param self the BDF object
+        @param comment the comment to possibly remove
+        """
+        if comment[:-1] in ['$NODES', '$SPOINTS', '$ELEMENTS',
+                       '$PARAMS', '$PROPERTIES', '$ELEMENTS_WITH_PROPERTIES',
+                       '$ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
+                       '$UNASSOCIATED_PROPERTIES',
+                       '$MATERIALS', '$THERMAL MATERIALS',
+                       '$CONSTRAINTS', '$SPCs', '$MPCs', '$RIGID ELEMENTS',
+                       '$LOADS', '$AERO', '$AERO CONTROL SURFACES',
+                       '$FLUTTER', '$DYNAMIC', '$OPTIMIZATION',
+                       '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
+                       '$SETS', '$REJECTS', '$REJECT_LINES']:
+            comment = ''
+        return comment
+
     def get_next_bulk_line(self, access_stored_lines):
         """
-        @param self
-        @param access_stored_lines
+        @param self the BDF object
+        @param access_stored_lines Should all the stored lines be returned?
+               This happens on the first line of a new card.  This keeps
+               all the comments for it together.
         """
         comment = ''
         if access_stored_lines and self.active_filename and self.stored_lines[self.active_filename]:
             #print('stored_lines = ', self.stored_lines)
             if self.stored_comments[self.active_filename]:
-                comment = self.stored_comments[self.active_filename].pop(0)
+                #comment = self.stored_comments[self.active_filename].pop(0)
+                comment = ''.join(self.stored_comments[self.active_filename])
+                self.stored_comments[self.active_filename] = []
             else:
                 comment = ''
             line = self.stored_lines[self.active_filename].pop(0)
@@ -910,7 +934,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             #print("line=|%r|" % line)
             if '$' in line:
                 i = line.index('$')
-                comment = line[i:] + '\n'
+                comment = self._clean_comment(line[i:] + '\n')
                 line = line[:i].rstrip('\t ')
         except AttributeError:
             line = None

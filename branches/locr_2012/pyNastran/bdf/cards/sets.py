@@ -6,7 +6,7 @@ from itertools import izip
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
 from pyNastran.bdf.fieldWriter import print_int_card
 from pyNastran.bdf.fieldWriter import print_card_8
-
+from pyNastran.bdf.format import (integer, integer_or_blank, components, fields, integer_or_string)
 
 class Set(BaseCard):
     """Generic Class all SETx cards inherit from"""
@@ -63,9 +63,13 @@ class ABCQSet(Set):
         self.components = []
 
         fields = card.fields(1)
-        for i in xrange(0, fields, 2):
-            self.IDs.append(fields[i])
-            self.components.append(str(fields[i + 1]))
+        nfields = len(card) - 1
+        for n in xrange(nfields):
+            i = n * 2 + 1
+            ID = integer(card, i, 'ID' + str(n))
+            component = components(card, i + 1, 'component' + str(n))
+            self.IDs.append(ID)
+            self.components.append(component)
 
     def rawFields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -154,10 +158,11 @@ class ABQSet1(Set):
         ## Component number. (Integer zero or blank for scalar points or any
         ## unique combination of the Integers 1 through 6 for grid points with
         ## no embedded blanks.)
-        self.components = str(card.field(1, 0))
+        self.components = components(card, 1, 'components')
 
         ## Identifiers of grids points. (Integer > 0)
-        self.IDs = expand_thru(card.fields(2))
+        IDs = fields(integer_or_string, card, 'IDs', i=2, j=len(card))
+        self.IDs = expand_thru(IDs)
 
     def rawFields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -209,11 +214,12 @@ class CSET1(Set):
 
         ## Identifiers of grids points. (Integer > 0)
         self.IDs = []
-        if card.field(2) == 'ALL':
+        if string_or_blank(card, 2, 'C') == 'ALL':
             self.components = '123456'
         else:
-            self.components = str(card.field(1))
-            self.IDs = expand_thru(card.fields(2))
+            self.components = components(card, 1, 'components')
+            IDs = fields(integer_or_string, 'ID', i=2, j=len(card))
+            self.IDs = expand_thru(IDs)
 
     def rawFields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -255,20 +261,20 @@ class SET1(Set):
         if comment:
             self._comment = comment
         ## Unique identification number. (Integer > 0)
-        self.sid = card.field(1)
+        self.sid = integer(card, 1, 'sid')
 
         ## List of structural grid point or element identification numbers.
         ## (Integer > 0 or 'THRU'; for the 'THRU' option, ID1 < ID2 or 'SKIN';
         ## in field 3)
         self.IDs = []
 
-        fields = card.fields(2)
+        IDs = fields(integer_or_string, card, i=2, j=len(card))
         self.isSkin = False
         i = 0
-        if isinstance(fields[0], str) and fields[0].upper() == 'SKIN':
+        if isinstance(IDs[0], str) and IDs[0] == 'SKIN':
             self.isSkin = True
             i += 1
-        self.IDs = expand_thru(fields[i:])
+        self.IDs = expand_thru(IDs[i:])
         self.cleanIDs()
 
     def IsSkin(self):
@@ -297,19 +303,19 @@ class SET3(Set):
         if comment:
             self._comment = comment
         ## Unique identification number. (Integer > 0)
-        self.sid = card.field(1)
+        self.sid = integer(card, 1, 'sid')
 
         ## Set description (Character). Valid options are 'GRID', 'ELEM',
         ## 'POINT' and 'PROP'.
-        self.desc = card.field(2).upper()
+        self.desc = string(card, 2, 'desc')
         assert self.desc in ['GRID', 'POINT', 'ELEM', 'PROP']
 
         ## Identifiers of grids points, elements, points or properties.
         ## (Integer > 0)
         self.IDs = []
 
-        fields = card.fields(2)
-        self.IDs = expand_thru(fields)
+        IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))
+        self.IDs = expand_thru(IDs)
         self.cleanIDs()
 
     def IsGrid(self):
@@ -352,12 +358,13 @@ class SESET(SetSuper):
         SetSuper.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.seid = card.field(1, 0)
+        self.seid = integer_or_blank(card, 1, 'seid', 0)
         ## Grid or scalar point identification number.
         ## (0 < Integer < 1000000; G1 < G2)
         self.IDs = []
 
-        self.IDs = expand_thru(card.fields(2))
+        IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))
+        self.IDs = expand_thru(IDs)
         self.cleanIDs()
 
     def add_SESET_Object(self, seset):
@@ -406,10 +413,11 @@ class SEBSET(Set):
         self.IDs = []
 
         fields = str(card.fields(1))
-        nfields = len(fields)
-        for i in range(nfields, 2):
-            component = fields[i]
-            ID = fields[i+1]
+        nfields = (len(card) - 1 ) // 2
+        for n in range(nsets):
+            i = n * 2 + 1
+            component = components(card, i, 'component' + str(n))
+            ID = components(card, i + 1, 'ID' + str(n))
             self.components.append(component)
             self.IDs.append(ID)
 
@@ -435,8 +443,9 @@ class SEBSET1(Set):
 
         ## Identifiers of grids points. (Integer > 0)
         self.IDs = []
-        self.components = str(card.field(1))
-        self.IDs = expand_thru(card.fields(2))
+        self.components = components(card, 1, 'components')
+        IDs = fields(integer_or_string, card, 2, 'ID')
+        self.IDs = expand_thru(IDs)
 
     def rawFields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -462,8 +471,9 @@ class SEQSET1(Set):
 
         ## Identifiers of grids points. (Integer > 0)
         self.IDs = []
-        self.components = str(card.field(1))
-        self.IDs = expand_thru(card.fields(2))
+        self.components = components(card, 1, 'components')
+        IDs = fields(integer_or_string, card, i=2, j=len(card))
+        self.IDs = expand_thru(IDs)
 
     def rawFields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -483,15 +493,15 @@ class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
         if comment:
             self._comment = comment
         ## Identification number for secondary superelement. (Integer >= 0).
-        self.ssid = card.field(1)
+        self.ssid = integer(card, 1, 'ssid')
         ## Identification number for the primary superelement. (Integer >= 0).
-        self.psid = card.field(2)
+        self.psid = integer(card, 2, 'psid')
         ## Exterior grid point identification numbers for the primary
         ## superelement. (Integer > 0)
         self.IDs = []
 
-        fields = card.fields(3)
-        self.IDs = expand_thru(fields)
+        IDs = fields(integer_or_string, card, i=3, j=len(card))
+        self.IDs = expand_thru(IDs)
         self.cleanIDs()
 
     def rawFields(self):
@@ -513,12 +523,13 @@ class RADSET(Set):  # not integrated
         Set.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.seid = card.field(1)
+        self.seid = integer(card, 1, 'seid')
         ## Grid or scalar point identification number.
         ## (0 < Integer < 1000000; G1 < G2)
         self.IDs = []
 
-        self.IDs = expand_thru(card.fields(2))
+        IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))
+        self.IDs = expand_thru(IDs)
         self.cleanIDs()
 
     def addRadsetObject(self, radset):
