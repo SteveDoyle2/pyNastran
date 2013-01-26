@@ -50,13 +50,25 @@ def integer_double_string_or_blank(card, n, fieldname, default=None):
         return default
     else:
         return svalue
-    
-def fields(f, card, fieldname, i, j=None):
+
+#def assert_int_bounded_range(card, n, fieldname, lower=None, upper=None):
+
+def fields(f, card, fieldname, i, j=None):  ## TODO: improve fieldname
     fs = []
     if j is None:
         j = len(card)
     for ii in range(i,j):
         fs.append( f(card, ii, fieldname) )
+    return fs
+
+def fields_or_blank(f, card, fieldname, i, j=None, defaults=None):
+    fs = []
+    if j is None:
+        j = len(card)
+    
+    assert j - i == len(defaults)
+    for ii in enumerate(defaults):
+        fs.append( f(card, ii + i, fieldname + str(ii), default) )
     return fs
 
 def integer(card, n, fieldname):

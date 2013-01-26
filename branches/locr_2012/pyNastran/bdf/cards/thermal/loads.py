@@ -5,7 +5,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from .thermal import ThermalCard
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from ..baseCard import expand_thru, expand_thru_by, collapse_thru_by
-
+from pyNastran.bdf.format import (fields, integer, integer_or_blank, double, double_or_blank, integer_or_string, string)
 
 class ThermalLoadDefault(ThermalCard):
     def __init__(self, card, data):
@@ -29,11 +29,11 @@ class QBDY1(ThermalLoad):
             self._comment = comment
         if card:
             ## Load set identification number. (Integer > 0)
-            self.sid = card.field(1)
+            self.sid = integer(card, 1, 'sid')
 
             ## Heat flux into element (FLOAT)
-            self.qFlux = card.field(2)
-            eids = card.fields(3)
+            self.qFlux = double(card, 2, 'qFlux')
+            eids = fields(integer, card, i=3, j=nfields)
             ## CHBDYj element identification numbers (Integer)
             self.eids = expand_thru(eids)  ## TODO use expand_thru_by ???
         else:
@@ -75,12 +75,17 @@ class QBDY2(ThermalLoad):  # not tested
             self._comment = comment
         if card:
             ## Load set identification number. (Integer > 0)
-            self.sid = card.field(1)
+            self.sid = integer(card, 1, 'sid')
+
             ## Identification number of an CHBDYj element. (Integer > 0)
-            self.eid = card.field(2)
+            self.eid = integer(card, 2, 'eid')
+
+            nfields = card.nFields()
+            qFlux = fields(double_or_blank, card, 'qFlux', i=3, j=nfields)
+
             ## Heat flux at the i-th grid point on the referenced CHBDYj
             ## element. (Real or blank)
-            self.qFlux = self.removeTrailingNones(card.fields(3))
+            self.qFlux = self.removeTrailingNones(qFlux)
         else:
             self.sid = data[0]
             self.eid = data[1]
@@ -117,13 +122,16 @@ class QBDY3(ThermalLoad):
             self._comment = comment
         if card:
             ## Load set identification number. (Integer > 0)
-            self.sid = card.field(1)
+            self.sid = integer(card, 1, 'sid')
             ## Heat flux into element
-            self.Q0 = card.field(2)
+            self.Q0 = double(card, 2, 'Q0')
             ## Control point for thermal flux load. (Integer > 0; Default = 0)
-            self.cntrlnd = card.field(3, 0)
+            self.cntrlnd = integer_or_blank(card, 3, 'cntrlnd', 0)
+            
+            nfields = card.nFields()
+            eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
             ## CHBDYj element identification numbers
-            self.eids = expand_thru_by(card.fields(4))
+            self.eids = expand_thru_by(eids)
         else:
             self.sid = data[0]
             self.Q0 = data[1]
@@ -172,19 +180,22 @@ class QHBDY(ThermalLoad):
             self._comment = comment
         if card:
             ## Load set identification number. (Integer > 0)
-            self.sid = card.field(1)
+            self.sid = integer(card, 1, 'eid')
 
-            self.flag = card.field(2)
+            self.flag = string(card, 2, 'flag')
             assert self.flag in ['POINT', 'LINE', 'REV', 'AREA3', 'AREA4',
                                  'AREA6', 'AREA8']
 
             ## Magnitude of thermal flux into face. Q0 is positive for heat
             ## into the surface. (Real)
-            self.Q0 = card.field(3)
+            self.Q0 = double(card, 3, 'Q0')
 
             ## Area factor depends on type. (Real > 0.0 or blank)
-            self.af = card.field(4)
-            self.grids = card.fields(5)
+            self.af = double_or_blank(card, 4, 'af')
+            nfields = card.nFields()
+
+            ## grids
+            self.grids = fields(integer, card, 'grid', i=5, j=nfields)
 
             ## Grid point identification of connected grid points.
             ## (Integer > 0 or blank)
@@ -220,17 +231,19 @@ class TEMP(ThermalLoad):
             self._comment = comment
         if card:
             ## Load set identification number. (Integer > 0)
-            self.sid = card.field(1)
+            self.sid = integer(card, 1, 'sid')
 
-            fields = card.fields(2)
-            nFields = len(fields)
-            assert nFields % 2 == 0
+            nfields = len(fields) - 2
+            assert nfields % 2 == 0
 
             ## dictionary of temperatures where the key is the grid ID (Gi)
             ## and the value is the temperature (Ti)
             self.temperatures = {}
-            for i in xrange(0, nFields, 2):
-                self.temperatures[fields[i]] = fields[i + 1]
+            for i in xrange(0, nfields, 2):
+                n = i // 2
+                gi = integer(card, i, 'g' + str(n))
+                Ti = double(card, i + 1, 'T' + str(n))
+                self.temperatures[gi] = Ti
         else:
             #print "TEMP data = ",data
             self.sid = data[0]
@@ -276,15 +289,17 @@ class TEMPD(ThermalLoadDefault):
         if comment:
             self._comment = comment
         if card:
-            fields = card.fields(1)
-            nFields = len(fields)
-            assert nFields % 2 == 0
+            nfields = len(fields) - 1
+            assert nfields % 2 == 0
 
             ## dictionary of temperatures where the key is the set ID (SIDi)
             ## and the value is the temperature (Ti)
             self.temperatures = {}
-            for i in xrange(0, nFields, 2):
-                self.temperatures[fields[i]] = fields[i + 1]
+            for i in xrange(0, nfields, 2):
+                n = i // 2
+                sid = integer(card, i + 1, 'sid' + str(n))
+                temp = double(card, i + 2, 'temp' + str(n))
+                self.temperatures[sid] = temp
         else:
             self.temperatures = {data[0]: data[1]}
 
