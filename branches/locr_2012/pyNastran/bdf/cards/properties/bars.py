@@ -1034,7 +1034,7 @@ class PBEAM(IntegratedLineProperty):
 
             self.so = ['YES']  # @todo what are these values (so[0],xxb[0])???
             self.xxb = [0.]
-            self.A = [double(3)]
+            self.A = [double(card, 3, 'A')]
             self.i1 = [double_or_blank(card, 4, 'I1', 0.0)]
             self.i2 = [double_or_blank(card, 5, 'I2', 0.0)]
             self.i12 = [double_or_blank(card, 6, 'I12', 0.0)]

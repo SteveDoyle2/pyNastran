@@ -11,7 +11,8 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, BDFCard
 from pyNastran.utils import list_print
 from pyNastran.bdf.format import (integer, integer_or_blank,
-                                  double_or_blank, string_or_blank)
+                                  double, double_or_blank, string_or_blank,
+                                  fields)
 
 
 class Coord(BaseCard):
@@ -32,6 +33,7 @@ class Coord(BaseCard):
         self.e1 = None
         self.e2 = None
         self.e3 = None
+        print("card = \n", card)
 
     def Cid(self):
         """returns the coordinate ID"""
@@ -73,6 +75,18 @@ class Coord(BaseCard):
         try:
             ## k = (G3 cross G1) normalized
             self.k = self.normalize(e12)
+        except RuntimeError:
+            print("---InvalidUnitVectorError---")
+            print("Cp  = %s" % (self.Cid()))
+            print("e1  = %s" % (self.e1))
+            print("e2  = %s" % (self.e2))
+            print("e3  = %s" % (self.e3))
+            print("e13 = %s" % (e13))
+            print("e12 = %s" % (e12))
+            print("k = normalize(e12)")
+            raise
+
+        try:
             ## j = (k cross e13) normalized
             self.j = self.normalize(cross(self.k, e13))
         except RuntimeError:
@@ -98,7 +112,7 @@ class Coord(BaseCard):
             print("e3  = %s" % (self.e3))
             print("e13 = %s" % (e13))
             print("e12 = %s" % (e12))
-            print("k = norm(e12)")
+            print("k = normalize(e12)")
             print("k   = %s\n" % (self.k))
             print("j = norm(cross(k,e13))")
             print("j   = %s" % (self.j))
@@ -318,11 +332,21 @@ class Cord2x(Coord):
             self.rid = integer_or_blank(card, 2, 'rid', 0)
 
             ## origin in a point relative to the rid coordinate system
-            self.e1 = array(card.fields(3, 6, [0., 0., 0.]))
+            self.e1 = array([double_or_blank(card, 3, 'e1x', 0.0),
+                             double_or_blank(card, 4, 'e1y', 0.0),
+                             double_or_blank(card, 5, 'e1z', 0.0)])
             ## z-axis in a point relative to the rid coordinate system
-            self.e2 = array(card.fields(6, 9, [0., 0., 0.]))
+            self.e2 = array([double_or_blank(card, 6, 'e2x', 0.0),
+                             double_or_blank(card, 7, 'e2y', 0.0),
+                             double_or_blank(card, 8, 'e2z', 0.0)])
             ## a point on the xz-plane relative to the rid coordinate system
-            self.e3 = array(card.fields(9, 12, [0., 0., 0.]))
+            self.e3 = array([double_or_blank(card, 9, 'e3x', 0.0),
+                             double_or_blank(card, 10, 'e3y', 0.0),
+                             double_or_blank(card, 11, 'e3z', 0.0)])
+            print("card = ", card.fields())
+            print('e1 = ', self.e1)
+            print('e2 = ', self.e2)
+            print('e3 = ', self.e3)
         else:
             self.cid = data[0]
             self.rid = data[1]
@@ -567,12 +591,13 @@ class Cord1x(Coord):
         @param model the BDF object
         """
         self.isCrossReferenced = True
+        msg = ' which is required by %s cid=%s' % (self.type, self.cid)
         ## grid point 1
-        self.g1 = model.Node(self.g1)
+        self.g1 = model.Node(self.g1, msg=msg)
         ## grid point 2
-        self.g2 = model.Node(self.g2)
+        self.g2 = model.Node(self.g2, msg=msg)
         ## grid point 3
-        self.g3 = model.Node(self.g3)
+        self.g3 = model.Node(self.g3, msg=msg)
 
     def resolveCid(self):
         """
@@ -648,15 +673,18 @@ class CORD3G(Coord):  # not done
         assert 0 < self.methodInt < 1000
 
         self.form = string_or_blank(card, 3, 'form', 'EQN')
-        self.thetas = card.field(4, 7)
+        self.thetas = [integer(card, 4, 'theta1'),
+                       integer(card, 5, 'theta2'),
+                       integer(card, 6, 'theta3')]
         assert len(self.thetas) == 3, 'thetas=%s' % (self.thetas)
-        self.cidRef = card.field(7)
+        self.cidRef = integer_or_blank(card, 7, 'cidRef')
 
         # EQN for DEQATN, TABLE for TABLE3D
         assert self.form in ['EQN', 'TABLE']
 
     def cross_reference(self, model):
-        self.cidRef = model.Coord(self.cidRef)
+        msg = ' which is required by %s cid=%s' % (self.type, self.cid)
+        self.cidRef = model.Coord(self.cidRef, msg=msg)
 
     def CidRef(self):
         if isinstance(self.cidRef, int):

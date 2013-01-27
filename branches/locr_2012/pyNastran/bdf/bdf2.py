@@ -991,7 +991,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0]
         if len(card_name) == 0:
             return None
-        assert ' ' not in card_name and len(card_name) > 0, 'line=|%s| in filename=%s is invalid' % (lines[0], self.active_filename)
+        assert ' ' not in card_name and len(card_name) > 0, 'card_name=|%s|\nline=|%s| in filename=%s is invalid' % (card_name, lines[0], self.active_filename)
         return card_name.upper()
     
     def _read_bulk_data_deck(self):
@@ -1180,7 +1180,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             # dampers
             _dct = {'PELAS': (5,), 'PVISC': (5,), 'PDAMP': (3, 5)}
             if card_name in _dct:
-                self.add_property(_get_cls(card_name))
+                self.add_property(_get_cls(card_name, comment=comment))
                 for i in _dct[card_name]:
                     if card_obj.field(i):
                         self.add_property(_cls(card_name)(card_obj, 1,
@@ -1207,8 +1207,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             elif card_name in ['DMI', 'DMIJ', 'DMIJI', 'DMIK']:
                 if card_obj.field(2) == 0:
-                    getattr(self, 'add_' + card_name)(_get_cls(card_name,
-                                                      comment=comment))
+                    getattr(self, 'add_' + card_name)(_get_cls(card_name),
+                                                      comment=comment)
                 else:
                     getattr(self, card_name.lower() +
                             's')[card_obj.field(1)].addColumn(card_obj)
@@ -1219,13 +1219,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     self.add_DAREA(DAREA(card_obj, 1, comment=comment))
 
             elif card_name in ['CORD1R', 'CORD1C', 'CORD1S']:
-                self.add_coord(_get_cls(card_name, comment=comment))
+                self.add_coord(_get_cls(card_name))
                 if card_obj.field(5):
                     self.add_coord(_cls(card_name)(card_obj, nCoord=1,
                                                    comment=comment))
 
             elif card_name == 'PMASS':
-                self.add_property(PMASS(card_obj, nOffset=0))
+                self.add_property(PMASS(card_obj, nOffset=0, comment=comment))
                 for (i, j) in enumerate([3, 5, 7]):
                     if card_obj.field(j) is not None:
                         self.add_property(PMASS(card_obj, nOffset=i+1,

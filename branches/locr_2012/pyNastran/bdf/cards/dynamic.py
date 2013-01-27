@@ -181,7 +181,7 @@ class TSTEP(BaseCard):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.sid = integer(card, 'sid', 1)
+        self.sid = integer(card, 1, 'sid')
         self.N = []
         self.DT = []
         self.NO = []
@@ -189,8 +189,8 @@ class TSTEP(BaseCard):
         nrows = int(ceil((len(card) - 1.) / 8.))
         for i in range(nrows):
             n = 8 * i + 1
-            self.N.append(integer(card, i + 1, 'N' + str(i), 1))
-            self.DT.append(double(card, i + 2, 'dt' + str(i), 0.))
+            self.N.append(integer_or_blank(card, i + 1, 'N' + str(i), 1))
+            self.DT.append(double_or_blank(card, i + 2, 'dt' + str(i), 0.))
             self.NO.append(integer_or_blank(card, i + 3, 'NO' + str(i), 1))
 
     def rawFields(self):

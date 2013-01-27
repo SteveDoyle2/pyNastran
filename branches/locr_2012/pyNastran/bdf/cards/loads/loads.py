@@ -60,10 +60,6 @@ class LoadCombination(Load):  # LOAD, DLOAD
             ## overall scale factor
             self.scale = double(card, 2, 'scale')
 
-            #loads = card.fields(3)  # temp list
-            nLoadFields = len(card) - 2
-            #nLoads  = nLoadFields/2
-
             ## individual scale factors (corresponds to loadIDs)
             self.scaleFactors = []
 
@@ -150,7 +146,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             self.sid = integer(card, 1, 'sid')
             self.exciteID = integer(card, 2, 'exciteID')
             self.lid = integer(card, 3, 'lid')
-            self.tid = integer(card, 4, 'tid')
+            self.tid = integer_or_blank(card, 4, 'tid')
         else:
             self.sid = data[0]
             self.exciteID = data[1]
@@ -225,19 +221,19 @@ class SLOAD(Load):
         ## load ID
         self.sid = integer(card, 1, 'sid')
 
-        fields = card.fields(2)
-        n = len(fields) // 2
-        if len(fields) % 2 == 1:
+        nfields = len(card) - 2
+        n = nfields // 2
+        if nfields % 2 == 1:
             n += 1
-            msg = 'missing last magnitude on SLOAD card=%s' % (card.fields())
+            msg = 'Missing last magnitude on SLOAD card=%s' % (card.fields())
             raise RuntimeError(msg)
 
         self.nids = []
         self.mags = []
         for i in xrange(n):
-            j = 2 * i
-            self.nids.append(fields[j])
-            self.mags.append(fields[j + 1])
+            j = 2 * i + 2
+            self.nids.append(integer(card, j, 'nid' + str(i)))
+            self.mags.append(double(card, j + 1, 'mag' + str(i)))
 
     def cross_reference(self, model):
         for (i, nid) in enumerate(self.nids):
@@ -265,15 +261,6 @@ class DLOAD(LoadCombination):
         LoadCombination.__init__(self, card, data)
         if comment:
             self._comment = comment
-
-    #def cross_reference(self, model):
-    #    for (i, sid) in enumerate(self.sids):
-    #        self.sids[i] = model.Load(sid)
-
-    #def Sid(self, sid):
-    #    if isinstance(sid, int):
-    #        return sid
-    #    return sid.lid
 
     def rawFields(self):
         fields = ['DLOAD', self.sid, self.scale]
@@ -552,8 +539,8 @@ class RLOAD1(TabularLoad):
             self._comment = comment
         self.sid = integer(card, 1, 'sid')
         self.exciteID = integer(card, 2, 'exciteID')
-        self.delay = integer(card, 3, 'delay')
-        self.dphase = integer(card, 4, 'dphase')
+        self.delay = integer_or_blank(card, 3, 'delay')
+        self.dphase = integer_or_blank(card, 4, 'dphase')
         self.tc = integer_or_blank(card, 5, 'tc', 0)
         self.td = integer_or_blank(card, 6, 'td', 0)
         self.Type = string_or_blank(card, 7, 'Type', 'LOAD')
@@ -626,8 +613,8 @@ class RLOAD2(TabularLoad):
             self._comment = comment
         self.sid = integer(card, 1, 'sid')
         self.exciteID = integer(card, 2, 'exciteID')
-        self.delay = integer(card, 3, 'delay')
-        self.dphase = integer(card, 4, 'dphase')
+        self.delay = integer_or_blank(card, 3, 'delay')
+        self.dphase = integer_or_blank(card, 4, 'dphase')
         self.tb = integer_or_blank(card, 5, 'tb', 0)
         self.tp = integer_or_blank(card, 6, 'tp', 0)
         self.Type = string_or_blank(card, 7, 'Type', 'LOAD')

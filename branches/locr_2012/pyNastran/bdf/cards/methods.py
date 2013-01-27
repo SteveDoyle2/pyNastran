@@ -20,7 +20,7 @@ from pyNastran.bdf.format import (integer, integer_or_blank,
                                   double, double_or_blank,
                                   string, string_or_blank,
                                   components, components_or_blank,
-                                  integer_double_string_or_blank)
+                                  integer_double_string_or_blank, blank)
 
 class Method(BaseCard):
     """
@@ -149,7 +149,7 @@ class EIGC(Method):  # TODO: not done
             # 10^-4 for METHOD = "INV",
             # 10^-15 for METHOD = "HESS",
             ## E is machine dependent for METHOD = "CLAN".)
-            self.E = double(card, 6, 'E')
+            self.E = double_or_blank(card, 6, 'E')
             self.ndo = integer_double_string_or_blank(card, 7, 'ND0')
 
             # ALPHAAJ OMEGAAJ ALPHABJ OMEGABJ LJ NEJ NDJ
@@ -271,72 +271,6 @@ class EIGC(Method):  # TODO: not done
         return fields
 
 
-class EIGR(Method):
-    """
-    Defines data needed to perform real eigenvalue analysis
-    """
-    type = 'EIGR'
-
-    def __init__(self, card=None, data=None, comment=''):
-        Method.__init__(self, card, data)
-        if comment:
-            self._comment = comment
-        if card:
-            ## Set identification number. (Unique Integer > 0)
-            self.sid = integer(card, 1, 'sid')
-
-            ## Method of eigenvalue extraction. (Character: 'INV' for inverse
-            ## power method or 'SINV' for enhanced inverse power method.)
-            self.method = string(card, 2, 'method', 'LAN')
-            assert self.method in ['SINV', 'INV', 'GIV', 'MGIV', 'HOU', 'MHOU']
-
-            ## Frequency range of interest
-            self.f1 = double(card, 3, 'f1')
-            self.f2 = double(card, 4, 'f2')
-
-            ## Estimate of number of roots in range (Required for
-            ## METHOD = 'INV'). Not used by 'SINV' method.
-            self.ne = integer_or_blank(card, 5, 'ne')
-
-            ## Desired number of roots (default=600 for SINV 3*ne for INV)
-            if self.method in ['SINV']:
-                self.nd = integer(card, 6, 'nd', 600)
-            if self.method in ['INV']:
-                self.nd = integer_or_blank(card, 6, 'nd', 3 * self.ne)
-            elif self.method in ['GIV', 'MGIV', 'HOU', 'MHOU']:
-                self.nd = integer_or_blank(card, 6, 'nd', 0)
-
-            ## Method for normalizing eigenvectors. ('MAX' or 'POINT';
-            ## Default='MAX')
-            self.norm = string_or_blank(9, 'MASS')
-            assert self.norm in ['POINT', 'MASS', 'MAX']
-
-            ## Grid or scalar point identification number. Required only if
-            ## NORM='POINT'. (Integer>0)
-            self.G = integer(card, 10, 'G')
-
-            ## Component number. Required only if NORM='POINT' and G is a
-            ## geometric grid point. (1<Integer<6)
-            self.C = components(card, 11, 'C')
-        else:
-            raise NotImplementedError('EIGR')
-
-    def cross_reference(self, model):
-        pass
-
-    def rawFields(self):
-        fields = ['EIGR', self.sid, self.method, self.f1, self.f2, self.ne,
-                  self.nd, None, None, self.norm, self.G, self.C]
-        return fields
-
-    def reprFields(self):
-        method = set_blank_if_default(self.method, 'LAN')
-        norm = set_blank_if_default(self.norm, 'MASS')
-        fields = ['EIGR', self.sid, method, self.f1, self.f2, self.ne,
-                  self.nd, None, None, norm, self.G, self.C]
-        return fields
-
-
 class EIGP(Method):
     """
     Defines poles that are used in complex eigenvalue extraction by the
@@ -380,6 +314,76 @@ class EIGP(Method):
 
     def reprFields(self):
         return self.rawFields()
+
+
+class EIGR(Method):
+    """
+    Defines data needed to perform real eigenvalue analysis
+    """
+    type = 'EIGR'
+
+    def __init__(self, card=None, data=None, comment=''):
+        Method.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+        if card:
+            ## Set identification number. (Unique Integer > 0)
+            self.sid = integer(card, 1, 'sid')
+
+            ## Method of eigenvalue extraction. (Character: 'INV' for inverse
+            ## power method or 'SINV' for enhanced inverse power method.)
+            self.method = string_or_blank(card, 2, 'method', 'LAN')
+            assert self.method in ['SINV', 'INV', 'GIV', 'MGIV', 'HOU', 'MHOU']
+
+            ## Frequency range of interest
+            self.f1 = double_or_blank(card, 3, 'f1')
+            self.f2 = double_or_blank(card, 4, 'f2')
+
+            ## Estimate of number of roots in range (Required for
+            ## METHOD = 'INV'). Not used by 'SINV' method.
+            self.ne = integer_or_blank(card, 5, 'ne')
+
+            ## Desired number of roots (default=600 for SINV 3*ne for INV)
+            if self.method in ['SINV']:
+                self.nd = integer(card, 6, 'nd', 600)
+            if self.method in ['INV']:
+                self.nd = integer_or_blank(card, 6, 'nd', 3 * self.ne)
+            elif self.method in ['GIV', 'MGIV', 'HOU', 'MHOU']:
+                self.nd = integer_or_blank(card, 6, 'nd', 0)
+
+            ## Method for normalizing eigenvectors. ('MAX' or 'POINT';
+            ## Default='MAX')
+            self.norm = string_or_blank(card, 9, 'norm', 'MASS')
+            assert self.norm in ['POINT', 'MASS', 'MAX']
+
+            if self.method == 'POINT':
+                ## Grid or scalar point identification number. Required only if
+                ## NORM='POINT'. (Integer>0)
+                self.G = integer(card, 10, 'G')
+
+                ## Component number. Required only if NORM='POINT' and G is a
+                ## geometric grid point. (1<Integer<6)
+                self.C = components(card, 11, 'C')
+            else:
+                self.G = blank(card, 10, 'G')
+                self.C = blank(card, 11, 'C')
+        else:
+            raise NotImplementedError('EIGR')
+
+    def cross_reference(self, model):
+        pass
+
+    def rawFields(self):
+        fields = ['EIGR', self.sid, self.method, self.f1, self.f2, self.ne,
+                  self.nd, None, None, self.norm, self.G, self.C]
+        return fields
+
+    def reprFields(self):
+        method = set_blank_if_default(self.method, 'LAN')
+        norm = set_blank_if_default(self.norm, 'MASS')
+        fields = ['EIGR', self.sid, method, self.f1, self.f2, self.ne,
+                  self.nd, None, None, norm, self.G, self.C]
+        return fields
 
 
 class EIGRL(Method):

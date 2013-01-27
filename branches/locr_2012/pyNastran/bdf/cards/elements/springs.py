@@ -83,7 +83,6 @@ class SpringElement(Element):
         ki = self.K()
         k = ki * matrix([[1, -1, ]
                          [-1, 1]])
-
         Lambda = self.Lambda(model)
         K = dot(dot(transpose(Lambda), k), Lambda)
         return K
@@ -122,7 +121,7 @@ class CELAS1(SpringElement):
             ## property ID
             self.pid = integer_or_blank(card, 2, 'pid', self.eid)
 
-            nids = [integer(card, 3, 'g1', 0), integer_or_blank(card, 5, 'g2', 0)]
+            nids = [integer(card, 3, 'g1'), integer_or_blank(card, 5, 'g2', 0)]
             ## component number
             self.c1 = integer_or_blank(card, 4, 'c1', 0)
             self.c2 = integer_or_blank(card, 6, 'c2', 0)

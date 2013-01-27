@@ -368,7 +368,7 @@ class MPC(Constraint):
                 self.enforced.append(pack1[2])     # default=0.0
 
                 pack2 = [integer(card, iField + 3, 'gid'),
-                         integer(card, iField + 4, 'constraint', 0),
+                         components_or_blank(card, iField + 4, 'constraint', 0),
                          double_or_blank(card, iField + 5, 'enforced', 0.0)]
                 if pack2 != [None, 0, 0.]:
                     #print "pack2 = ",pack2

@@ -427,14 +427,14 @@ class PSHEAR(ShellProperty):
             ## Property ID
             self.pid = integer(card, 1, 'pid')
             ## Material ID
-            self.mid = integer(card, 2)
+            self.mid = integer(card, 2, 'mid')
             self.t = double(card, 3, 't')
             self.nsm = double_or_blank(card, 4, 0.0)
             self.f1 = double_or_blank(card, 5, 0.0)
             self.f2 = double_or_blank(card, 6, 0.0)
             assert self.t > 0.0
-            assert self.f1 >= 0.0
-            assert self.f2 >= 0.0
+            #assert self.f1 >= 0.0
+            #assert self.f2 >= 0.0
         else:
             #(pid,mid,t,nsm,f1,f2) = out
             self.pid = data[0]

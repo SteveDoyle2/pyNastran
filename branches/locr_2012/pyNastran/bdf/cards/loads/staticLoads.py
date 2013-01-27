@@ -24,7 +24,10 @@ from numpy.linalg import norm
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from ..baseCard import BaseCard, expand_thru, expand_thru_by
-
+from pyNastran.bdf.format import (integer, integer_or_blank,
+                                  double, double_or_blank,
+                                  string, string_or_blank,
+                                  integer_or_string, fields)
 
 class LOAD(LoadCombination):
     type = 'LOAD'
@@ -274,20 +277,22 @@ class GRAV(BaseCard):
             self._comment = comment
         if card:
             ## Set identification number
-            self.sid = card.field(1)
+            self.sid = integer(card, 1, 'sid')
             ## Coordinate system identification number.
-            self.cid = card.field(2, 0)
+            self.cid = integer_or_blank(card, 2, 'cid', 0)
             ## scale factor
-            self.scale = card.field(3)
+            self.scale = double(card, 3, 'scale')
             ## Acceleration vector components measured in coordinate system CID
-            self.N = array(card.fields(4, 7, [0., 0., 0.]))
+            self.N = array([double_or_blank(card, 4, 'N1', 0.0),
+                            double_or_blank(card, 5, 'N2', 0.0),
+                            double_or_blank(card, 6, 'N3', 0.0)])
             ## Indicates whether the CID coordinate system is defined in the
             ## main Bulk Data Section (MB = -1) or the partitioned superelement
             ## Bulk Data Section (MB = 0). Coordinate systems referenced in the
             ## main Bulk Data Section are considered stationary with respect to
             ## the assembly basic coordinate system. See Remark 10.
             ## (Integer; Default = 0)
-            self.mb = card.field(7, 0)
+            self.mb = integer_or_blank(card, 7, 'mb', 0)
         else:
             self.sid = data[0]
             self.cid = data[1]
@@ -363,21 +368,26 @@ class ACCEL1(BaseCard):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
+
         ## Load set identification number (Integer>0)
-        self.sid = card.field(1)
+        self.sid = integer(card, 1, 'sid')
 
         ## Coordinate system identification number. (Integer>0: Default=0)
-        self.cid = card.field(2, 0)
+        self.cid = integer_or_blank(card, 2, 'cid', 0)
 
         ## Acceleration vector scale factor. (Real)
-        self.scale = card.field(3)
+        self.scale = double(card, 3, 'scale')
 
         ## Components of the acceleration vector measured in coordinate system
         ## CID. (Real; at least one Ni != 0)
-        self.N = array(card.fields(4, 7, [0., 0., 0.]))
+        self.N = array([double_or_blank(card, 4, 'N1', 0.0),
+                        double_or_blank(card, 5, 'N2', 0.0),
+                        double_or_blank(card, 6, 'N3', 0.0)])
         assert max(abs(self.N)) > 0.
+
+        nodes = fields(integer_or_string, card, 'node', i=9, j=len(card))
         ## nodes to apply the acceleration to
-        self.nodes = expand_thru_by(card.fields(9))
+        self.nodes = expand_thru_by(nodes)
 
     def cross_reference(self, model):
         self.cid = model.Coord(self.cid)
@@ -498,8 +508,6 @@ class Moment(OneDeeLoad):
     def M(self):
         return self.xyz * self.mag
 
-#------------------------------------------------------------------------------
-
 
 class FORCE(Force):
     type = 'FORCE'
@@ -512,11 +520,13 @@ class FORCE(Force):
         if comment:
             self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.node = card.field(2)
-            self.cid = card.field(3, 0)
-            self.mag = card.field(4)
-            xyz = card.fields(5, 8, [0., 0., 0.])
+            self.sid = integer(card, 1, 'sid')
+            self.node = integer(card, 2, 'node')
+            self.cid = integer_or_blank(card, 3, 'cid', 0)
+            self.mag = double(card, 4, 'mag')
+            xyz = array([double_or_blank(card, 5, 'X1', 0.0),
+                         double_or_blank(card, 6, 'X2', 0.0),
+                         double_or_blank(card, 7, 'X3', 0.0)])
         else:
             self.sid = data[0]
             self.node = data[1]
@@ -565,11 +575,11 @@ class FORCE1(Force):
         if comment:
             self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.node = card.field(2)
-            self.mag = card.field(3)
-            self.g1 = card.field(4)
-            self.g2 = card.field(5)
+            self.sid = integer(card, 1, 'sid')
+            self.node = integer(card, 2, 'node')
+            self.mag = double(card, 3, 'mag')
+            self.g1 = integer(card, 4, 'g1')
+            self.g2 = integer(card, 5, 'g2')
         else:
             self.sid = data[0]
             self.node = data[1]
@@ -624,13 +634,13 @@ class FORCE2(Force):
         if comment:
             self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.node = card.field(2)
-            self.mag = card.field(3)
-            self.g1 = card.field(4)
-            self.g2 = card.field(5)
-            self.g3 = card.field(5)
-            self.g4 = card.field(5)
+            self.sid = integer(card, 1, 'sid')
+            self.node = integer(card, 2, 'node')
+            self.mag = double(card, 3, 'mag')
+            self.g1 = integer(card, 4, 'g1')
+            self.g2 = integer(card, 5, 'g2')
+            self.g3 = integer(card, 6, 'g3')
+            self.g4 = integer(card, 7, 'g4')
         else:
             self.sid = data[0]
             self.node = data[1]
@@ -646,8 +656,8 @@ class FORCE2(Force):
 
         v12 = model.Node(self.g2).Position() - model.Node(self.g1).Position()
         v34 = model.Node(self.g4).Position() - model.Node(self.g3).Position()
-        v12 = v12 / norm(v12)
-        v34 = v34 / norm(v34)
+        v12 /= norm(v12)
+        v34 /= norm(v34)
         self.xyz = cross(v12, v34)
         self.Normalize()
 
@@ -680,14 +690,16 @@ class MOMENT(Moment):
         Moment.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.sid = card.field(1)
-        self.node = card.field(2)
-        self.cid = card.field(3, 0)
-        self.mag = card.field(4)
+        self.sid = integer(card, 1, 'sid')
+        self.node = integer(card, 2, 'node')
+        self.cid = integer_or_blank(card, 3, 'cid', 0)
+        self.mag = double(card, 4, 'mag')
 
-        xyz = card.fields(5, 8, [0., 0., 0.])
+        xyz = array([double_or_blank(card, 5, 'X1', 0.0),
+                     double_or_blank(card, 6, 'X2', 0.0),
+                     double_or_blank(card, 7, 'X3', 0.0)])
         assert len(xyz) == 3, 'xyz=%s' % (xyz)
-        self.xyz = array(xyz)
+        self.xyz = xyz
 
     def Cid(self):
         if isinstance(self.cid, int):
@@ -724,14 +736,16 @@ class MOMENT1(Moment):
         if comment:
             self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.node = card.field(2)
-            self.mag = card.field(3)
-            self.g1 = card.field(4)
-            self.g2 = card.field(5)
-            self.g3 = card.field(6)
-            self.g4 = card.field(7)
-            xyz = card.fields(5, 8, [0., 0., 0.])
+            self.sid = integer(card, 1, 'sid')
+            self.node = integer(card, 2, 'node')
+            self.mag = double(card, 3, 'mag')
+            self.g1 = integer(card, 4, 'g1')
+            self.g2 = integer(card, 5, 'g2')
+            self.g3 = integer(card, 6, 'g3')
+            self.g4 = integer(card, 7, 'g4')
+            xyz = array([double_or_blank(card, 5, 'X1', 0.0),
+                         double_or_blank(card, 6, 'X2', 0.0),
+                         double_or_blank(card, 7, 'X3', 0.0)])
         else:
             self.sid = data[0]
             self.node = data[1]
@@ -775,14 +789,16 @@ class MOMENT2(Moment):
         if comment:
             self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.node = card.field(2)
-            self.mag = card.field(3)
-            self.g1 = card.field(4)
-            self.g2 = card.field(5)
-            self.g3 = card.field(6)
-            self.g4 = card.field(7)
-            xyz = card.fields(5, 8, [0., 0., 0.])
+            self.sid = integer(card, 1, 'sid')
+            self.node = integer(card, 2, 'node')
+            self.mag = double(card, 3, 'mag')
+            self.g1 = integer(card, 4, 'g1')
+            self.g2 = integer(card, 5, 'g2')
+            self.g3 = integer(card, 6, 'g3')
+            self.g4 = integer(card, 7, 'g4')
+            xyz = array([double_or_blank(card, 5, 'X1', 0.0),
+                         double_or_blank(card, 6, 'X2', 0.0),
+                         double_or_blank(card, 7, 'X3', 0.0)])
         else:
             self.sid = data[0]
             self.node = data[1]
@@ -822,10 +838,16 @@ class PLOAD(Load):
         if comment:
             self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.p = card.field(2)
-            nodes = card.fields(3, 7)
-            self.nodes = self._wipeEmptyFields(nodes)
+            self.sid = integer(card, 1, 'sid')
+            self.p = integer(card, 2, 'p')
+            nodes = [integer(card, 3, 'n1'),
+                     integer(card, 4, 'n2'),
+                     integer(card, 5, 'n3')]
+            n4 = integer_or_blank(card, 6, 'n5', 0)
+            if n4:
+                nodes.append(n4)
+            #self.nodes = self._wipeEmptyFields(nodes)
+            self.nodes = nodes
         else:
             self.sid = data[0]
             self.p = data[1]
@@ -859,14 +881,14 @@ class PLOAD1(Load):
         if comment:
             self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.eid = card.field(2)
-            self.Type = card.field(3)
-            self.scale = card.field(4)
-            self.x1 = card.field(5)
-            self.p1 = card.field(6)
-            self.x2 = card.field(7)
-            self.p2 = card.field(8)
+            self.sid = integer(card, 1, 'sid')
+            self.eid = integer(card, 2, 'eid')
+            self.Type = string(card, 3, 'Type')
+            self.scale = string(card, 4, 'scale')
+            self.x1 = double(card, 5, 'x1')
+            self.p1 = double(card, 6, 'p1')
+            self.x2 = double(card, 7, 'x2')
+            self.p2 = double(card, 8, 'p2')
         else:
             self.sid = data[0]
             self.eid = data[1]
@@ -904,12 +926,15 @@ class PLOAD2(Load):
         if comment:
             self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.p = card.field(2)
-            eids = card.fields(3, 9)
+            self.sid = integer(card, 1, 'sid')
+            self.p = double(card, 2, 'p')
 
-            if card.field(4) == 'THRU':
-                eids = [i for i in xrange(eids[0], eids[2] + 1)]
+            if string_or_blank(card, 4, 'THRU') == 'THRU':
+                e1 = integer(card, 3, 'Element1')
+                e2 = integer(card, 5, 'Element1')
+                eids = [i for i in xrange(e1, e2 + 1)]
+            else:
+                eids = fields(integer, card, 'eid', i=3, j=len(card))
             self.eids = eids
         else:
             self.sid = data[0]
@@ -943,15 +968,19 @@ class PLOAD4(Load):
         if comment:
             self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.eid = card.field(2)
-            p1 = card.field(3)
-            p = card.fields(4, 7, [p1, p1, p1])  # [p1,p1,p1] are the defaults
-            self.pressures = [p1] + p
+            self.sid = integer(card, 1, 'sid')
+            self.eid = integer(card, 2, 'eid')
+            p1 = double(card, 3, 'p1')
+            p = [p1,
+                 double_or_blank(card, 4, 'p2', p1),
+                 double_or_blank(card, 5, 'p3', p1),
+                 double_or_blank(card, 6, 'p4', p1)]
+            self.pressures = p
 
             self.eids = [self.eid]
-            if card.field(7) == 'THRU' and card.field(8):  # plates
-                eid2 = card.field(8)
+            if (string_or_blank(card, 7, 'THRU') == 'THRU' and
+                integer_or_blank(card, 8, 'eid2')):  # plates
+                eid2 = integer(card, 8, 'eid2')
                 if eid2:
                     self.eids = expand_thru([self.eid, 'THRU', eid2])
 
@@ -961,17 +990,19 @@ class PLOAD4(Load):
                 ## used for CPENTA, CHEXA
                 self.eids = [self.eid]
                 ## used for solid element only
-                self.g1 = card.field(7)
+                self.g1 = integer_or_blank(card, 7, 'g1')
                 ## g3/g4 - different depending on CHEXA/CPENTA or CTETRA
-                self.g34 = card.field(8)
+                self.g34 = integer_or_blank(card, 8, 'g34')
 
             ## Coordinate system identification number. See Remark 2.
             ## (Integer >= 0;Default=0)
-            self.cid = card.field(9, 0)
+            self.cid = integer_or_blank(card, 9, 'cid', 0)
             #print "PLOAD4 cid = ",self.cid
-            self.NVector = card.fields(10, 13, [0., 0., 0.])
-            self.sorl = card.field(13, 'SURF')
-            self.ldir = card.field(14, 'NORM')
+            self.NVector = array([double_or_blank(card, 10, 'N1', 0.0),
+                                  double_or_blank(card, 11, 'N2', 0.0),
+                                  double_or_blank(card, 12, 'N3', 0.0)])
+            self.sorl = string_or_blank(card, 13, 'sorl', 'SURF')
+            self.ldir = string_or_blank(card, 14, 'ldir', 'NORM')
         else:
             #print "PLOAD4 = ",data
             self.sid = data[0]
@@ -984,7 +1015,7 @@ class PLOAD4(Load):
             self.NVector = data[6]
 
             self.sorl = data[7]
-            #self.ldir    = data[8]
+            #self.ldir = data[8]
             #assert len(data)==8
 
             self.g1 = self.g1
@@ -1102,13 +1133,13 @@ class PLOADX1(Load):
         if comment:
             self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.eid = card.field(2)
-            self.pa = card.field(3)  # float
-            self.pb = card.field(4, self.pa)  # float
-            self.ga = card.field(5)  # int
-            self.gb = card.field(6)  # int
-            self.theta = card.field(7, 0.)
+            self.sid = integer(card, 1, 'sid')
+            self.eid = integer(card, 2, 'eid')
+            self.pa = double(card, 3, 'pa')
+            self.pb = double_or_blank(card, 4, 'pb', self.pa)
+            self.ga = integer(card, 5, 'ga')
+            self.gb = integer(card, 6, 'gb')
+            self.theta = double_or_blank(card, 7, 'theta', 0.)
         else:
             self.sid = data[0]
             print("PLOADX1 = %s" % (data))

@@ -174,10 +174,13 @@ def divide(value1, value2):
     return v
 
 
-def compare_card_count(fem1, fem2):
+def compare_card_count(fem1, fem2, print_stats=False):
     cards1 = fem1.cardCount
     cards2 = fem2.cardCount
-    print(fem1.card_stats())
+    if print_stats:
+        print(fem1.card_stats())
+    else:
+        fem1.card_stats()
     return compute_ints(cards1, cards2, fem1)
 
 

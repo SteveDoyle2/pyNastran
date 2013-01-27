@@ -3,7 +3,8 @@ def components(card, n, fieldname):
     try:
         value = int(svalue)
     except:
-        raise RuntimeError('%s (field #%s) on card must be an integer.\ncard=\n%s' % (fieldname, n, card) )
+        raise RuntimeError('%s (field #%s) on card must be an integer.\n'
+                           'card=\n%s' % (fieldname, n, card) )
 
     svalue2 = str(value)
     svalue3 = ''.join(sorted(svalue2))
@@ -29,7 +30,7 @@ def blank(card, n, fieldname, default=None):
     svalue = card.field(n)
     if svalue is None:
         return default
-    raise RuntimeError('%s (field #%s) on card must be blank.\ncard=\n%s' % (fieldname, n, card) )
+    raise RuntimeError('%s = %s (field #%s) on card must be blank.\ncard=\n%s' % (fieldname, svalue, n, card) )
     
 def field(card, n, fieldname):
     return integer_double_string_or_blank(card, n, fieldname, default=None)
@@ -67,7 +68,7 @@ def fields_or_blank(f, card, fieldname, i, j=None, defaults=None):
         j = len(card)
     
     assert j - i == len(defaults)
-    for ii in enumerate(defaults):
+    for ii, default in enumerate(defaults):
         fs.append( f(card, ii + i, fieldname + str(ii), default) )
     return fs
 
@@ -135,10 +136,11 @@ def double(card, n, fieldname):
     return value
 
 def double_or_blank(card, n, fieldname, default=None):
-    try:
-        svalue = card.field(n)
-    except IndexError:
-        return default
+    #try:
+    svalue = card.field(n)
+    #except IndexError:
+        #return default
+
     if isinstance(svalue, float):
         return svalue
     elif isinstance(svalue, str):
@@ -288,6 +290,8 @@ def integer_double_string_or_blank(card, n, fieldname, default=None):
         return svalue
     elif svalue is None:
         return default
+    elif isinstance(svalue, float):
+        return svalue
 
     svalue = svalue.strip()
     if svalue:  # integer/float/string
@@ -310,7 +314,6 @@ def string(card, n, fieldname):
     else:
         raise RuntimeError('%s = %s (field #%s) on card must be an string (not blank).\ncard=\n%s' % (fieldname, svalue, n, card) )
     
-    svalue = svalue.strip()
     if svalue.isdigit() or '.' in svalue:
         raise RuntimeError('%s = %s (field #%s) on card must be an string or blank.\ncard=\n%s' % (fieldname, svalue, n, card) )
 
@@ -322,6 +325,11 @@ def string_or_blank(card, n, fieldname, default=None):
     svalue = card.field(n)
     if svalue is None:
         return default
+    elif isinstance(svalue, str) or isinstance(svalue, unicode):
+        svalue = svalue.strip()
+    else:
+        raise RuntimeError('%s = %s (field #%s) on card must be an string (not blank).\ncard=\n%s' % (fieldname, svalue, n, card) )
+
     svalue = svalue.strip()
     if svalue.isdigit() or '.' in svalue:
         raise RuntimeError('%s = %s (field #%s) on card must be an string or blank.\ncard=\n%s' % (fieldname, svalue, n, card) )

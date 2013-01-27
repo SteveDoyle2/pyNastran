@@ -10,7 +10,8 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element, Mid
 from pyNastran.bdf.format import (integer, integer_or_blank,
                                   integer_double_or_blank, double,
-                                  double_or_blank, string_or_blank)
+                                  double_or_blank, string_or_blank,
+                                  integer_double_string_or_blank)
 
 class RodElement(Element):  # CROD, CONROD, CTUBE
     def __init__(self, card, data):
@@ -23,8 +24,6 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
 
     def Rho(self):
         r"""returns the material density  \f$ \rho \f$"""
-        #print str(self.pid),type(self.pid)
-        #raise NotImplementedError('implement self.Rho() for %s' % self.type)
         return self.pid.mid.rho
 
     def Length(self):
@@ -58,7 +57,7 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         """
         (n1, n2) = self.nodeIDs()
         v1 = model.Node(n2).xyz - model.Node(n1).xyz
-        v1 = v1 / norm(v1)
+        v1 /= norm(v1)
 
         v1x = array([v1[0], 0., 0.])
         v1y = array([0., v1[1], 0.])
@@ -393,7 +392,7 @@ class CROD(RodElement):
             self._comment = comment
         if card:
             self.eid = integer(card, 1, 'eid')
-            self.pid = integer(card, 2, 'pid', self.eid)
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
             nids = [integer(card, 3, 'n1'),
                     integer(card, 4, 'n2')]
         else:
@@ -436,7 +435,7 @@ class CTUBE(RodElement):
             self._comment = comment
         if card:
             self.eid = integer(card, 1, 'eid')
-            self.pid = integer(card, 2, 'pid', self.eid)
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
             nids = [integer(card, 3, 'n1'),
                     integer(card, 4, 'n2')]
         else:
@@ -1084,7 +1083,7 @@ class CBEAM(CBAR):
             self.w3b = main[13]
 
     def initOfftBit(self, card):
-        field8 = card.field(8)
+        field8 = integer_double_string_or_blank(card, 8, 'field8')
         if isinstance(field8, float):
             self.isOfft = False
             self.offt = None
@@ -1238,11 +1237,11 @@ class CBEND(LineElement):
         elif isinstance(x1Go, float):
             self.g0 = None
             self.x1 = x1Go
-            self.x2 = card.field(6)
-            self.x3 = card.field(7)
+            self.x2 = double(card, 6, 'x2')
+            self.x3 = double(card, 7, 'x3')
         else:
             raise ValueError('invalid x1Go=|%s| on CBEND' % x1Go)
-        self.geom = card.field(8)
+        self.geom = integer(card, 8, 'geom')
         assert self.geom in [1, 2, 3,
                              4], 'geom is invalid geom=|%s|' % self.geom
 

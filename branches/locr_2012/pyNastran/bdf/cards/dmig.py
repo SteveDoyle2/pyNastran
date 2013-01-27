@@ -10,7 +10,8 @@ from numpy import zeros  # average
 from scipy.sparse import coo_matrix
 
 from pyNastran.bdf.cards.baseCard import BaseCard, print_card
-
+from pyNastran.bdf.format import (integer, integer_or_blank,
+                                  double, string, blank, components)
 
 def ssq(*listA):
     """
@@ -116,18 +117,21 @@ class NastranMatrix(BaseCard):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.name = card.field(1)
+        self.name = string(card, 1, 'name')
         #zero
 
         ## 4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
-        self.ifo = int(card.field(3))
+        self.ifo = integer(card, 3, 'ifo')
         ## 1-Real, Single Precision; 2=Real,Double Precision; 3=Complex, Single; 4=Complex, Double
-        self.tin = int(card.field(4))
+        self.tin = integer(card, 4, 'tin')
         ## 0-Set by cell precision
-        self.tout = int(card.field(5, 0))
+        self.tout = integer_or_blank(card, 5, 'tout', 0)
 
-        self.polar = card.field(6)
-        self.ncol = card.field(8)
+        self.polar = integer_or_blank(card, 6, 'polar')
+        if self.ifo == 9:
+            self.ncol = integer(card, 8, 'ncol')
+        else:
+            self.ncol = blank(card, 8, 'ncol')
 
         self.GCj = []
         self.GCi = []
@@ -153,43 +157,47 @@ class NastranMatrix(BaseCard):
         comm = 'K_Mtx=ASSE_MATRICE(MATR_ELEM=ElMtx_K,NUME_DDL=%s,);'
         return comm
 
-    def addColumn(self, card=None, data=None):
-        #print "hi column"
-        Gj = card.field(2)
-        Cj = card.field(3)
+    def addColumn(self, card=None, data=None, comment=''):
+        if comment:
+            if hasattr(self, '_comment'):
+                self._comment += comment
+            else:
+                self._comment = comment
+        Gj = integer(card, 2, 'Gj')
+        Cj = components(card, 3, 'Cj')
 
-        nFields = card.nFields()
-        nLoops = (nFields - 5) // 4
-        minLoops = nLoops - 1
+        nfields = len(card)
+        nloops = (nfields - 5) // 4
+        minLoops = nloops - 1
         if minLoops <= 0:
             minLoops = 1
         #assert nFields <= 8,'nFields=%s' %(nFields)
 
         #print "minLoops = ",minLoops
-        #print "nLoops   = ",nLoops
+        #print "nloops   = ",nloops
         for i in xrange(minLoops):
             self.GCj.append((Gj, Cj))
 
         if self.isComplex():
             for i in xrange(minLoops):
                 n = 5 + 4 * i
-                Gi = card.field(n)
-                Ci = card.field(n + 1)
+                Gi = integer(card, n, 'Gi')
+                Ci = components(card, n + 1, 'Ci')
                 self.GCi.append((Gi, Ci))
-                self.Real.append(card.field(n + 2))
-                self.Complex.append(card.field(n + 3))
+                self.Real.append(double(card, n + 2, 'real'))
+                self.Complex.append(double(card, n + 3, 'complex'))
         else:
             for i in xrange(minLoops):
                 n = 5 + 4 * i
-                Gi = card.field(n)
-                Ci = card.field(n + 1)
+                Gi = integer(card, n, 'Gi')
+                Ci = components(card, n + 1, 'Ci')
                 self.GCi.append((Gi, Ci))
-                self.Real.append(card.field(n + 2))
+                self.Real.append(double(card, n + 2, 'real'))
 
         assert len(self.GCj) == len(self.GCi), '(len(GCj)=%s len(GCi)=%s' % (
             len(self.GCj), len(self.GCi))
         #if self.isComplex():
-            #self.Complex(card.field(v)
+            #self.Complex(double(card, v, 'complex')
 
     def getMatrix(self, isSparse=False):
         """
@@ -421,23 +429,23 @@ class DMI(BaseCard):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.name = card.field(1)
+        self.name = string(card, 1, 'name')
         #zero
 
         ## Form of the matrix:  1=Square (not symmetric); 2=Rectangular;
         ## 3=Diagonal (m=nRows,n=1);  4=Lower Triangular; 5=Upper Triangular;
         ## 6=Symmetric; 8=Identity (m=nRows, n=m)
-        self.form = int(card.field(3))
+        self.form = integer(card, 'form', 3)
 
         ## 1-Real, Single Precision; 2=Real,Double Precision;
         ## 3=Complex, Single; 4=Complex, Double
-        self.tin = int(card.field(4))
+        self.tin = integer(card, 4, 'tin')
 
         ## 0-Set by cell precision
-        self.tout = int(card.field(5, 0))
+        self.tout = integer_or_blank(card, 5, 'tout', 0)
 
-        self.nRows = int(card.field(7))
-        self.nCols = int(card.field(8))
+        self.nRows = integer(card, 7, 'nrows')
+        self.nCols = integer(card, 8, 'ncols')
 
         self.GCj = []
         self.GCi = []
@@ -453,11 +461,11 @@ class DMI(BaseCard):
 
     def readReal(self, card):
         ## column number
-        j = card.field(2)
+        j = integer(card, 2, 'icol')
 
         # counter
         i = 0
-        fields = card.fields(3)
+        fields = card[3:]
 
         # Real, starts at A(i1,j), goes to A(i2,j) in a column
         while i < len(fields):
@@ -497,11 +505,11 @@ class DMI(BaseCard):
         msg = 'complex matrices not supported in the DMI reader...'
         raise NotImplementedError(msg)
         ## column number
-        j = card.field(2)
+        j = integer(card, 2, 'icol')
 
         # counter
         i = 0
-        fields = card.fields(3)
+        fields = card[3:]
 
         # Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
         while i < len(fields):

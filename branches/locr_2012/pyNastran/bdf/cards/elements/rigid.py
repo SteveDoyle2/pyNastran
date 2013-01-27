@@ -16,6 +16,9 @@ from itertools import izip, count
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
+from pyNastran.bdf.format import (integer, #integer_or_blank,
+                                  double, double_or_blank,
+                                  components, components_or_blank, fields)
 
 
 class RigidElement(Element):
@@ -35,14 +38,14 @@ class RBAR(RigidElement):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.ga = card.field(2)
-            self.gb = card.field(3)
-            self.cna = card.field(4)
-            self.cnb = card.field(5)
-            self.cma = card.field(6)
-            self.cmb = card.field(7)
-            self.alpha = card.field(8, 0.0)
+            self.eid = integer(card, 1, 'eid')
+            self.ga = integer(card, 2, 'ga')
+            self.gb = integer(card, 3, 'gb')
+            self.cna = components_or_blank(card, 4, 'cna')
+            self.cnb = components_or_blank(card, 5, 'cnb')
+            self.cma = components_or_blank(card, 6, 'cma')
+            self.cmb = components_or_blank(card, 7, 'cmb')
+            self.alpha = double_or_blank(card, 8, 'alpha', 0.0)
         else:
             self.eid = data[0]
             self.ga = data[1]
@@ -105,11 +108,11 @@ class RBAR1(RigidElement):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.ga = card.field(2)
-            self.gb = card.field(3)
-            self.cb = card.field(4)
-            self.alpha = card.field(5)
+            self.eid = integer(card, 1, 'eid')
+            self.ga = integer(card, 2, 'ga')
+            self.gb = integer(card, 3, 'gb')
+            self.cb = components_or_blank(card, 4, 'cb')
+            self.alpha = double_or_blank(card, 5, 'alpha', 0.0)
         else:
             self.eid = data[0]
             self.ga = data[1]
@@ -134,17 +137,18 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         RigidElement.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.eid = card.field(1)
+
+        self.eid = integer(card, 1, 'eid')
         self.Gni = []
         self.Cni = []
 
-        fields = card.fields(2)
+        fields = card[2:]
         iUm = fields.index('UM') + 2
         if isinstance(fields[-1], float):
             self.alpha = fields.pop()  # the last field is not part of fields
-            nFields = card.nFields() - 1
+            nfields = len(card) - 1
         else:
-            nFields = card.nFields()
+            nfields = len(card)
             self.alpha = 0.
 
         # loop till UM, no field9,field10
@@ -166,7 +170,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         #print ""
         #print "i=%s iUm=%s card.field(iUm)=%s" %(i,iUm,card.field(iUm))
         # loop till alpha, no field9,field10
-        while i < nFields:  # dont grab alpha
+        while i < nfields:  # dont grab alpha
             gmi = card.field(i)
             cmi = card.field(i + 1)
             if gmi:
@@ -242,17 +246,20 @@ class RBE2(RigidElement):
             self._comment = comment
         if card:
             ## Element identification number
-            self.eid = card.field(1)
+            self.eid = integer(card, 1, 'eid')
+
             ## Identification number of grid point to which all six independent
             ## degrees-of-freedom for the element are assigned. (Integer > 0)
-            self.gn = card.field(2)
+            self.gn = integer(card, 2, 'gn')
+
             ## Component numbers of the dependent degrees-of-freedom in the
             ## global coordinate system at grid points GMi. (Integers 1 through
             ## 6 with no embedded blanks.)
-            self.cm = card.field(3)  # 123456 constraint or other
+            self.cm = components_or_blank(card, 3, 'cm')
+
             ## Grid point identification numbers at which dependent
             ## degrees-of-freedom are assigned. (Integer > 0)
-            self.Gmi = card.fields(4)  # get the rest of the fields
+            self.Gmi = fields(integer, card, 'Gm', i=4, j=len(card))
             if len(self.Gmi) > 0 and isinstance(self.Gmi[-1], float):
                 ## Thermal expansion coefficient. See Remark 11.
                 ## (Real > 0.0 or blank)
@@ -352,13 +359,12 @@ class RBE3(RigidElement):  # TODO: not done, needs testing badly
         RigidElement.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.eid = card.field(1)
-        self.refgrid = card.field(3)
-        self.refc = card.field(4)
-        #fields = card.fields(5)
+        self.eid = integer(card, 1, 'eid')
+        self.refgrid = integer(card, 3, 'refgrid')
+        self.refc = components_or_blank(card, 4, 'refc')
         #iUM = fields.index('UM')
 
-        fields = card.fields(5)
+        fields = card[5:]
         #print "fields = ",fields
         iOffset = 5
         iWtMax = len(fields) + iOffset
@@ -384,14 +390,14 @@ class RBE3(RigidElement):  # TODO: not done, needs testing badly
         i = iOffset
         while i < iWtMax:
             Gij = []
-            wt = card.field(i)
+            wt = double(card, i, 'wt')
             if wt is not None:
-                ci = card.field(i + 1)
+                ci = components_or_blank(card, i + 1, 'ci')
                 #print "wt=%s ci=%s" %(wt,ci)
                 i += 2
                 gij = 0
                 while isinstance(gij, int) and i < iWtMax:
-                    gij = card.field(i)
+                    gij = integer(card, i, 'gij')
                     if gij is not None:
                         Gij.append(gij)
                     i += 1
@@ -406,15 +412,15 @@ class RBE3(RigidElement):  # TODO: not done, needs testing badly
             i = iUm + 1
             #print "i=%s iUmStop=%s" %(i,iUmStop)
             for j in xrange(i, iUmStop, 2):
-                gmi = card.field(j)
+                gmi = integer(card, j, 'gmi')
                 if gmi is not None:
-                    cmi = card.field(j + 1)
+                    cmi = components(card, j + 1, 'cmi')
                     #print "gmi=%s cmi=%s" %(gmi,cmi)
                     self.Gmi.append(gmi)
                     self.Cmi.append(cmi)
 
         if iAlpha:
-            self.alpha = card.field(iAlpha + 1)
+            self.alpha = double_or_blank(card, iAlpha + 1, 'alpha')
         else:
             ## thermal expansion coefficient
             self.alpha = 0.0

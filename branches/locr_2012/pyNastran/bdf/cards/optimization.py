@@ -8,7 +8,7 @@ from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
     collapse_thru_by_float)
 from pyNastran.bdf.format import (integer, integer_or_blank, integer_or_string,
                                   double, double_or_blank, string,
-                                  string_or_blank)
+                                  string_or_blank, integer_double_or_blank)
 
 class OptConstraint(BaseCard):
     def __init__(self):
@@ -60,7 +60,7 @@ class DESVAR(OptConstraint):
         self.xlb = double_or_blank(card, 4, 'xlb', -1e20)
         self.xub = double_or_blank(card, 5, 'xub', 1e20)
         self.delx = double_or_blank(card, 6, 'delx', 1e20)
-        self.ddval = card.field(7)
+        self.ddval = integer_or_blank(card, 7, 'ddval')
 
     def rawFields(self):
         fields = ['DESVAR', self.oid, self.label, self.xinit, self.xlb,
@@ -83,7 +83,7 @@ class DDVAL(OptConstraint):
         if comment:
             self._comment = comment
         self.oid = integer(card, 1, 'oid')
-        ddvals = [ddval for ddval in card.fields(2) if ddval is not None]
+        ddvals = [ddval for ddval in card[2:] if ddval is not None]
         self.ddvals = expand_thru_by(ddvals)
         self.ddvals.sort()
 
@@ -109,13 +109,12 @@ class DOPTPRM(OptConstraint):
         """
         if comment:
             self._comment = comment
-        fields = card.fields(1)
-        nFields = len(fields)
 
+        nFields = len(card) - 1
         self.params = {}
         for i in xrange(0, nFields, 2):
-            param = fields[i]
-            val = fields[i + 1]
+            param = string(card, i + 1, 'param')
+            val = double(card, i + 2, 'value')
             self.params[param] = val
 
     def rawFields(self):
@@ -145,14 +144,17 @@ class DLINK(OptConstraint):
         self.c0 = double_or_blank(card, 3, 'c0', 0.)
         self.cmult = double_or_blank(card, 4, 'cmult', 1.)
 
-        fields = card.fields(5)
-        nFields = len(fields)
+        nfields = len(card) - 4
+        n = nfields // 2
         self.IDv = []
         self.Ci = []
 
-        for i in xrange(0, nFields, 2):
-            self.IDv.append(fields[i])
-            self.Ci.append(fields[i + 1])
+        for i in xrange(n):
+            j = 2 * i + 4
+            IDv = integer(card, j, 'IDv' + str(i))
+            Ci = double(card, j + 1, 'Ci' + str(i))
+            self.IDv.append(IDv)
+            self.Ci.append(Ci)
 
     def rawFields(self):
         fields = ['DLINK', self.oid, self.ddvid, self.c0, self.cmult]
@@ -185,10 +187,10 @@ class DRESP1(OptConstraint):
         self.rtype = string(card, 3, 'rtype')
         self.ptype = string(card, 4, 'ptype') # elem, pbar, pshell, etc. (ELEM flag or Prop Name)
         self.region = integer(card, 5, 'region')
-        self.atta = card.field(6)
-        self.attb = card.field(7)
-        self.atti = card.field(8)
-        self.others = card.fields(9)
+        self.atta = integer_double_or_blank(card, 6, 'atta')
+        self.attb = integer_double_or_blank(card, 7, 'attb')
+        self.atti = integer_double_or_blank(card, 8, 'atti')
+        self.others = card[9:]
         #if self.others:
         #    print("self.others = %s" %(self.others))
         #    print(str(self))
@@ -221,7 +223,7 @@ class DRESP2(OptConstraint):
         self.c3 = double_or_blank(card, 8, 'c3') # TODO: or blank?
 
         i = 0
-        fields = card.fields(9)
+        fields = card[9:]
         key = '$NULL$'  # dummy key
         self.params = {key: []}
         valueList = []
@@ -345,7 +347,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
 
         self.dvids = []
         self.coeffs = []
-        endFields = card.fields(9)
+        endFields = card[9:]
         #print "endFields = ",endFields
         nFields = len(endFields) - 1
         if nFields % 2 == 1:
@@ -412,7 +414,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
         self.dvids = []
         self.coeffs = []
-        endFields = card.fields(9)
+        endFields = card[9:]
 
         nFields = len(endFields) - 1
         if nFields % 2 == 1:
@@ -495,7 +497,7 @@ class DVPREL2(OptConstraint):
         ## DEQATN entry identification number. (Integer > 0)
         self.eqID = integer_or_blank(card, 7, 'eqID') # TODO:  or blank?
 
-        fields = card.fields(9)
+        fields = card[9:]
         #print "fields = ",fields
         iOffset = 9
         iEnd = len(fields) + iOffset
@@ -517,13 +519,13 @@ class DVPREL2(OptConstraint):
         self.dtables = []
         if iDesvar:
             for i in xrange(10, iDesStop):
-                dvid = card.field(i)
+                dvid = integer(card, i, 'dvid')
                 if dvid:
                     self.dvids.append(dvid)
 
         if iDTable:
             for i in xrange(iDTable + 1, iEnd):
-                dtable = card.field(i)
+                dtable = integer(card, i, 'dtable')
                 if dtable:
                     assert dtable is not 'DTABLE'
                     self.dtables.append(dtable)

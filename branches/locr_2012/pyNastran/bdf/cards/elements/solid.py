@@ -17,7 +17,7 @@ from numpy.linalg import solve, norm
 
 from pyNastran.bdf.cards.elements.elements import Element
 from pyNastran.utils.mathematics import Area, gauss
-
+from pyNastran.bdf.format import (integer, fields)
 
 def volume4(n1, n2, n3, n4):
     r"""
@@ -95,9 +95,9 @@ class CHEXA8(SolidElement):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            nids = card.fields(3, 11)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = fields(integer, card, 'nid', i=3, j=11)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -142,9 +142,9 @@ class CHEXA20(CHEXA8):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            nids = card.fields(3, 23)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = fields(integer, card, 'nid', i=3, j=23)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -202,9 +202,9 @@ class CPENTA6(SolidElement):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            nids = card.fields(3, 9)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = fields(integer, card, 'nid', i=3, j=9)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -303,9 +303,9 @@ class CPENTA15(CPENTA6):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            nids = card.fields(3, 18)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = fields(integer, card, 'nid', i=3, j=18)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -357,9 +357,9 @@ class CTETRA4(SolidElement):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            nids = card.fields(3, 7)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = fields(integer, card, 'nid', i=3, j=7)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -477,9 +477,9 @@ class CTETRA10(CTETRA4):
         if comment:
             self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            nids = card.fields(3, 13)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = fields(integer, card, 'nid', i=3, j=13)
         else:
             self.eid = data[0]
             self.pid = data[1]
