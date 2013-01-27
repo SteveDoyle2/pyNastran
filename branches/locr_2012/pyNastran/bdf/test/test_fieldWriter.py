@@ -114,12 +114,12 @@ class TestFieldWriter(unittest.TestCase):
 
     def test_floats_positive_8(self):
         tol = 1.0
-        self.assertEquals(print_float_8(1.2, tol), '     1.2',
-                          print_float_8(1.2, tol))
-        self.assertEquals(print_float_8(0.5, tol), '      0.',
-                          print_float_8(0.5, tol))
-        self.assertEquals(print_float_8(-0.5, tol), '      0.',
-                          print_float_8(-0.5, tol))
+        self.assertEquals(print_float_8(1.2), '     1.2',
+                          print_float_8(1.2))
+        self.assertEquals(print_float_8(0.5), '      .5',
+                          print_float_8(0.5))
+        self.assertEquals(print_float_8(-0.5), '     -.5',
+                          print_float_8(-0.5))
 
         self.assertEquals(print_field(1.2), '     1.2', 'a')
         self.assertEquals(print_field(1.23456789), '1.234568', 'b')

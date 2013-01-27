@@ -1,10 +1,13 @@
 # pylint: disable=R0904,R0902
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from math import ceil
 from itertools import izip, count
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
-from pyNastran.bdf.format import integer, integer_or_blank, double, double_or_blank, components, components_or_blank
+from pyNastran.bdf.format import (integer, integer_or_blank,
+                                  double, double_or_blank,
+                                  components, components_or_blank)
 
 class constraintObject2(object):
     def __init__(self):
@@ -280,16 +283,21 @@ class SUPORT1(Constraint):
         Constraint.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.conid = integer(card, 1, 'conid')  # really a support id sid
-        #fields = card.fields(2)
+        if card:
+            self.conid = integer(card, 1, 'conid')  # really a support id sid
 
-        self.IDs = []
-        self.Cs = []
-        nFields = card.nFields()
-        for i in xrange(0, nFields, 2):
-            ID = integer(card, i+1, 'ID%s' % (i + 1)) 
-            self.IDs.append(ID)
-            self.Cs.append(fields[i + 1])
+            self.IDs = []
+            self.Cs = []
+            nFields = len(card)
+            nceil = ceil((nFields - 1.) / 2.)
+            for i in xrange(nceil):
+                ID = integer(card, 2 * i, 'ID%s' + str(i))
+                C = components(card, i + 1, 'component%s' + str(i))
+                self.IDs.append(ID)
+                self.Cs.append(C)
+        else:  # TODO doesnt support data
+            msg = '%s has not implemented data parsing' % self.type
+            raise RuntimeError(msg)
 
     def rawFields(self):
         fields = ['SUPORT1', self.conid]
@@ -336,45 +344,49 @@ class MPC(Constraint):
         Constraint.__init__(self, card, data)
         if comment:
             self._comment = comment
-        
-        ## Set identification number. (Integer > 0)
-        self.conid = integer(card, 1, 'conid')
-        ## Identification number of grid or scalar point. (Integer > 0)
-        self.gids = []
-        ## Component number. (Any one of the Integers 1 through 6 for grid
-        ## points; blank or zero for scalar points.)
-        self.constraints = []
-        ## Coefficient. (Real; Default = 0.0 except A1 must be nonzero.)
-        self.enforced = []
 
-        fields = card.fields(0)
-        nFields = len(fields) - 1
-        for iField in xrange(2, nFields, 8):
-            pack1 = [integer(card, iField, 'gid'),
-                     components_or_blank(card, iField + 1, 'constraint', 0),
-                     double_or_blank(card, iField + 2, 'enforced', 0.0)]
-            #print "pack1 = ",pack1
-            self.gids.append(pack1[0])
-            self.constraints.append(pack1[1])  # default=0 scalar point
-            self.enforced.append(pack1[2])     # default=0.0
+        if card:
+            ## Set identification number. (Integer > 0)
+            self.conid = integer(card, 1, 'conid')
+            ## Identification number of grid or scalar point. (Integer > 0)
+            self.gids = []
+            ## Component number. (Any one of the Integers 1 through 6 for grid
+            ## points; blank or zero for scalar points.)
+            self.constraints = []
+            ## Coefficient. (Real; Default = 0.0 except A1 must be nonzero.)
+            self.enforced = []
 
-            pack2 = [integer(card, iField + 3, 'gid'),
-                     integer(card, iField + 4, 'constraint', 0),
-                     double_or_blank(card, iField + 5, 'enforced', 0.0)]
-            if pack2 != [None, 0, 0.]:
-                #print "pack2 = ",pack2
-                #print "adding pack2"
-                self.gids.append(pack2[0])
-                self.constraints.append(pack2[1])  # default=0 scalar point
-                self.enforced.append(pack2[2])  # default=0.0
+            fields = card.fields(0)
+            nFields = len(fields) - 1
+            for iField in xrange(2, nFields, 8):
+                pack1 = [integer(card, iField, 'gid'),
+                         components_or_blank(card, iField + 1, 'constraint', 0),
+                         double_or_blank(card, iField + 2, 'enforced', 0.0)]
+                #print "pack1 = ",pack1
+                self.gids.append(pack1[0])
+                self.constraints.append(pack1[1])  # default=0 scalar point
+                self.enforced.append(pack1[2])     # default=0.0
 
-        # reduce the size if there are duplicate Nones
-        #nConstraints = max(len(self.gids       ),
-        #                   len(self.constraints),
-        #                   len(self.enforced   ))
-        #self.gids        = self.gids[       0:nConstraints]
-        #self.constraints = self.constraints[0:nConstraints]
-        #self.enforced    = self.enforced[   0:nConstraints]
+                pack2 = [integer(card, iField + 3, 'gid'),
+                         integer(card, iField + 4, 'constraint', 0),
+                         double_or_blank(card, iField + 5, 'enforced', 0.0)]
+                if pack2 != [None, 0, 0.]:
+                    #print "pack2 = ",pack2
+                    #print "adding pack2"
+                    self.gids.append(pack2[0])
+                    self.constraints.append(pack2[1])  # default=0 scalar point
+                    self.enforced.append(pack2[2])  # default=0.0
+
+            # reduce the size if there are duplicate Nones
+            #nConstraints = max(len(self.gids       ),
+            #                   len(self.constraints),
+            #                   len(self.enforced   ))
+            #self.gids        = self.gids[       0:nConstraints]
+            #self.constraints = self.constraints[0:nConstraints]
+            #self.enforced    = self.enforced[   0:nConstraints]
+        else:  # TODO doesnt support data
+            msg = '%s has not implemented data parsing' % self.type
+            raise RuntimeError(msg)
 
     def rawFields(self):  # MPC
         fields = ['MPC', self.conid]
@@ -495,18 +507,21 @@ class SPCAX(Constraint):
         SPC.__init__(self, card, data)
         if comment:
             self._comment = comment
-
-        ## Identification number of a single-point constraint set.
-        self.conid = integer(card, 1, 'conid')
-        ## Ring identification number. See RINGAX entry.
-        self.rid = integer(card, 2, 'rid')
-        ## Harmonic identification number. (Integer >= 0)
-        self.hid = integer(card, 3, 'hid')
-        ## Component identification number. (Any unique combination of the
-        ## Integers 1 through 6.)
-        self.c = components(card, 4, 'c')
-        ## Enforced displacement value
-        self.d = double(card, 5, 'd')
+        if card:
+            ## Identification number of a single-point constraint set.
+            self.conid = integer(card, 1, 'conid')
+            ## Ring identification number. See RINGAX entry.
+            self.rid = integer(card, 2, 'rid')
+            ## Harmonic identification number. (Integer >= 0)
+            self.hid = integer(card, 3, 'hid')
+            ## Component identification number. (Any unique combination of the
+            ## Integers 1 through 6.)
+            self.c = components(card, 4, 'c')
+            ## Enforced displacement value
+            self.d = double(card, 5, 'd')
+        else:  # TODO doesnt support data
+            msg = '%s has not implemented data parsing' % self.type
+            raise RuntimeError(msg)
 
     def cross_reference(self, i, node):
         pass
@@ -536,11 +551,15 @@ class SPC1(Constraint):
         Constraint.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.conid = integer(card, 1, 'conid')
-        self.constraints = components(card, 2, 'constraints')  # 246 = y; dx, dz dir
-        nodes = card.fields(3)
-        self.nodes = expand_thru(nodes)
-        self.nodes.sort()
+        if card:
+            self.conid = integer(card, 1, 'conid')
+            self.constraints = components(card, 2, 'constraints')  # 246 = y; dx, dz dir
+            nodes = card.fields(3)
+            self.nodes = expand_thru(nodes)
+            self.nodes.sort()
+        else:  # TODO doesnt support data
+            msg = '%s has not implemented data parsing' % self.type
+            raise RuntimeError(msg)
 
     def cross_reference(self, i, node):
         self.nodes[i] = node
@@ -608,10 +627,14 @@ class SPCADD(ConstraintADD):
         ConstraintADD.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.conid = integer(card, 1, 'conid')
-        sets = card.fields(2)
-        self.sets = expand_thru(sets)
-        self.sets.sort()
+        if card:
+            self.conid = integer(card, 1, 'conid')
+            sets = card.fields(2)
+            self.sets = expand_thru(sets)
+            self.sets.sort()
+        else:  # TODO doesnt support data
+            msg = '%s has not implemented data parsing' % self.type
+            raise RuntimeError(msg)
 
     def organizeConstraints(self, model):
         """
@@ -650,10 +673,14 @@ class MPCADD(ConstraintADD):
         ConstraintADD.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.conid = integer(card, 1, 'conid')
-        sets = card.fields(2)
-        self.sets = expand_thru(sets)
-        self.sets.sort()
+        if card:
+            self.conid = integer(card, 1, 'conid')
+            sets = card.fields(2)
+            self.sets = expand_thru(sets)
+            self.sets.sort()
+        else:  # TODO doesnt support data
+            msg = '%s has not implemented data parsing' % self.type
+            raise RuntimeError(msg)
 
     def cross_reference(self, i, node):
         #dofCount = 0

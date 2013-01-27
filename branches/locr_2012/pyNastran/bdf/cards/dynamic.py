@@ -15,13 +15,14 @@ All cards are BaseCard objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from math import log, exp
+from math import log, exp, ceil
 from itertools import izip
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.format import (integer, integer_or_blank,
-                                  double, double_or_blank)
+                                  double, double_or_blank,
+                                  string_or_blank, blank, fields)
 
 
 class FREQ(BaseCard):
@@ -37,7 +38,7 @@ class FREQ(BaseCard):
         if comment:
             self._comment = comment
         self.sid = integer(card, 1, 'sid')
-        self.freqs = card.fields(2)
+        self.freqs = fields(double, card, 'freq', i=2, j=len(card))
         self.cleanFreqs()
 
     def cleanFreqs(self):
@@ -111,9 +112,9 @@ class FREQ2(FREQ):
         if comment:
             self._comment = comment
         self.sid = integer(card, 1, 'sid')
-        f1 = double_or_blank(card, 2, 'f1', 0.0)
-        f2 = card.field(3)
-        nf = card.field(4, 1)
+        f1 = double(card, 2, 'f1', 0.0)
+        f2 = double(card, 3, 'f2')
+        nf = integer(card, 4, 'nf', 1)
 
         d = 1. / nf * log(f2 / f1)
         self.freqs = []
@@ -146,11 +147,11 @@ class FREQ4(FREQ):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.sid = card.field(1)
-        self.f1 = card.field(2, 0.0)
-        self.f2 = card.field(3, 1.e20)
-        self.fspd = card.field(4, 0.1)
-        self.nfm = card.field(5, 3)
+        self.sid = integer(card, 1, 'sid')
+        self.f1 = double_or_blank(card, 2, 'f1', 0.0)
+        self.f2 = double_or_blank(card, 3, 'f2', 1.e20)
+        self.fspd = double_or_blank(card, 4, 'fspd', 0.1)
+        self.nfm = integer_or_blank(card, 5, 'nfm', 3)
 
     def rawFields(self):
         fields = ['FREQ4', self.sid, self.f1, self.f2, self.fspd, self.nfm]
@@ -180,19 +181,17 @@ class TSTEP(BaseCard):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.sid = card.field(1)
+        self.sid = integer(card, 'sid', 1)
         self.N = []
         self.DT = []
         self.NO = []
-        fields = card.fields(1)
 
-        i = 1
-        nFields = len(fields)
-        while i < nFields:
-            self.N.append(card.field(i + 1, 1))
-            self.DT.append(card.field(i + 2, 0.))
-            self.NO.append(card.field(i + 3, 1))
-            i += 8
+        nrows = int(ceil((len(card) - 1.) / 8.))
+        for i in range(nrows):
+            n = 8 * i + 1
+            self.N.append(integer(card, i + 1, 'N' + str(i), 1))
+            self.DT.append(double(card, i + 2, 'dt' + str(i), 0.))
+            self.NO.append(integer_or_blank(card, i + 3, 'NO' + str(i), 1))
 
     def rawFields(self):
         fields = ['TSTEP', self.sid]
@@ -216,42 +215,45 @@ class TSTEPNL(BaseCard):
         if comment:
             self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.ndt = card.field(2)
-            self.dt = card.field(3)
-            self.no = card.field(4, 1)
+            self.sid = integer(card, 1, 'sid')
+            self.ndt = integer(card, 2, 'ndt')
+            assert self.ndt >= 4
+            self.dt = double(card, 3, 'dt')
+            assert self.dt > 0.
+            self.no = integer_or_blank(card, 4, 'no', 1)
+
             ## @note not listed in all QRGs
-            self.method = card.field(5, 'ADAPT')
+            self.method = string_or_blank(card, 5, 'method', 'ADAPT')
             if self.method == 'ADAPT':
-                self.kStep = card.field(6, 2)
+                self.kStep = integer_or_blank(card, 6, 'kStep', 2)
             elif self.method == 'ITER':
-                self.kStep = card.field(6, 10)
+                self.kStep = integer_or_blank(card, 6, 'kStep', 10)
             elif self.method in ['AUTO', 'TSTEP']:
-                self.kStep = card.field(6)
+                self.kStep = blank(card, 'kStep', 6) ## TODO not blank
             else:
                 msg = 'invalid TSTEPNL Method.  method=|%s|' % (self.method)
                 raise RuntimeError(msg)
-            self.maxIter = card.field(7, 10)
-            self.conv = card.field(8, 'PW')
+            self.maxIter = integer_or_blank(card, 7, 'maxIter', 10)
+            self.conv = string_or_blank(card, 8, 'conv', 'PW')
 
             # line 2
-            self.epsU = card.field(9, 1.E-2)
-            self.epsP = card.field(10, 1.E-3)
-            self.epsW = card.field(11, 1.E-6)
-            self.maxDiv = card.field(12, 2)
-            self.maxQn = card.field(13, 10)
-            self.MaxLs = card.field(14, 2)
-            self.fStress = card.field(15, 0.2)
+            self.epsU = double_or_blank(card, 9, 'epsU', 1.E-2)
+            self.epsP = double_or_blank(card, 10, 'epsP', 1.E-3)
+            self.epsW = double_or_blank(card, 11, 'epsW', 1.E-6)
+            self.maxDiv = integer_or_blank(card, 12, 'maxDiv', 2)
+            self.maxQn = integer_or_blank(card, 13, 'maxQn', 10)
+            self.MaxLs = integer_or_blank(card, 14, 'MaxLs', 2)
+            self.fStress = double_or_blank(card, 15, 'fStress', 0.2)
 
             # line 3
-            self.maxBisect = card.field(17, 5)
-            self.adjust = card.field(18, 5)
-            self.mStep = card.field(19)
-            self.rb = card.field(20, 0.6)
-            self.maxR = card.field(21, 32.)
-            self.uTol = card.field(22, 0.1)
-            self.rTolB = card.field(23, 20.)
-            self.minIter = card.field(24)  # not listed in all QRGs
+            self.maxBisect = integer_or_blank(card, 17, 'maxBisect', 5)
+            self.adjust = integer_or_blank(card, 18, 'adjust', 5)
+            self.mStep = integer_or_blank(card, 19, 'mStep')
+            self.rb = double_or_blank(card, 20, 'rb', 0.6)
+            self.maxR = double_or_blank(card, 21, 'maxR', 32.)
+            self.uTol = double_or_blank(card, 22, 'uTol', 0.1)
+            self.rTolB = double_or_blank(card, 23, 'rTolB', 20.)
+            self.minIter = integer_or_blank(card, 24, 'minIter')  # not listed in all QRGs
         else:
             (sid, ndt, dt, no, method, kStep, maxIter, conv, epsU, epsP, epsW,
              maxDiv, maxQn, maxLs, fStress, maxBisect,
@@ -345,29 +347,29 @@ class NLPARM(BaseCard):
         if comment:
             self._comment = comment
         if card:
-            self.nid = card.field(1)
-            self.ninc = card.field(2, 10)
-            self.dt = card.field(3, 0.0)
-            self.kMethod = card.field(4, 'AUTO')
-            self.kStep = card.field(5, 5)
-            self.maxIter = card.field(6, 25)
-            self.conv = card.field(7, 'PW')
-            self.intOut = card.field(8, 'NO')
+            self.nid = integer(card, 1, 'nid')
+            self.ninc = integer_or_blank(card, 2, 'ninc', 10)
+            self.dt = double_or_blank(card, 3, 'dt', 0.0)
+            self.kMethod = double_or_blank(card, 4, 'kMethod', 'AUTO')
+            self.kStep = integer_or_blank(card, 5, 'kStep', 5)
+            self.maxIter = integer_or_blank(card, 6, 'maxIter', 25)
+            self.conv = string_or_blank(card, 7, 'conv', 'PW')
+            self.intOut = string_or_blank(card, 8, 'intOut', 'NO')
 
             # line 2
-            self.epsU = card.field(9, 0.01)
-            self.epsP = card.field(10, 0.01)
-            self.epsW = card.field(11, 0.01)
-            self.maxDiv = card.field(12, 3)
-            self.maxQn = card.field(13, self.maxIter)
-            self.maxLs = card.field(14, 4)
-            self.fStress = card.field(15, 0.2)
-            self.lsTol = card.field(16, 0.5)
+            self.epsU = double_or_blank(card, 9, 'epsU', 0.01)
+            self.epsP = double_or_blank(card, 10, 'epsP', 0.01)
+            self.epsW = double_or_blank(card, 11, 'epsW', 0.01)
+            self.maxDiv = integer_or_blank(card, 12, 'maxDiv', 3)
+            self.maxQn = double_or_blank(card, 13, 'maxQn', self.maxIter)
+            self.maxLs = integer_or_blank(card, 14, 'maxLs', 4)
+            self.fStress = double_or_blank(card, 15, 'fStress', 0.2)
+            self.lsTol = double_or_blank(card, 16, 'lsTol', 0.5)
 
             # line 3
-            self.maxBisect = card.field(17, 5)
-            self.maxR = card.field(21, 20.)
-            self.rTolB = card.field(23, 20.)
+            self.maxBisect = integer_or_blank(card, 17, '', 5)
+            self.maxR = double_or_blank(card, 21, 'maxR', 20.)
+            self.rTolB = double_or_blank(card, 23, 'rTolB', 20.)
         else:
             (sid, ninc, dt, kMethod, kStep, maxIter, conv, intOut, epsU, epsP,
              epsW, maxDiv, maxQn, maxLs, fStress, lsTol, maxBisect, maxR,

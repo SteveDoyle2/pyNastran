@@ -183,10 +183,6 @@ class EIGC(Method):  # TODO: not done
             self.mblkszs.append(
                 double_or_blank(card, i + 2, 'mblock' + str(irow), 7))
 
-            #self.alphaAjs.append(card.field(i  ,'ALPHA%s'%irow))
-            #self.omegaAjs.append(card.field(i+1,'OMEGA%s'%irow))
-            #self.mblkszs.append( card.field(i+2,'MBLOCK%s'%irow))
-
             self.iblkszs.append(
                 integer_or_blank(card, i + 3, 'iblksz' + str(irow), 2))
             self.ksteps.append(

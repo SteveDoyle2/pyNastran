@@ -8,12 +8,12 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 import sys
 import os
-import io
+#import io
 import warnings
-from types import NoneType
 
 from pyNastran.utils import list_print
 from pyNastran.utils import object_attributes
+from pyNastran.utils.log import get_logger
 
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
@@ -83,15 +83,12 @@ from pyNastran.bdf.bdf_Methods import BDFMethods
 from .bdfInterface.getCard import GetMethods
 from .bdfInterface.addCard import AddMethods
 from .bdfInterface.BDF_Card import BDFCard, wipe_empty_fields
-from .bdfInterface.bdf_Reader import BDFReader
+#from .bdfInterface.bdf_Reader import BDFReader
 from .bdfInterface.bdf_writeMesh import WriteMesh
-from .bdfInterface.bdf_cardMethods import CardMethods, interpretValue
+from .bdfInterface.bdf_cardMethods import interpretValue # CardMethods
 from .bdfInterface.crossReference import XrefMesh
 
-#from pyNastran.bdf.format import *
-
-class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
-          CardMethods, XrefMesh):
+class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     """
     NASTRAN BDF Reader/Writer/Editor class.
     """
@@ -100,12 +97,9 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
     def __init__(self, debug=True, log=None):
         """
         Initializes the BDF object
-        @param self
-          the object pointer
-        @param debug
-          used to set the logger if no logger is passed in
-        @param log
-          a python logging module object
+        @param self the BDF object
+        @param debug used to set the logger if no logger is passed in
+        @param log a python logging module object
         """
         debug = False
         self.active_file = None
@@ -114,21 +108,27 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.used_filenames = []
         self.stored_lines = {}
         self.stored_comments = {}
-        ## list of all read in cards - useful in determining if
-        ## entire BDF was read & really useful in debugging
+        ## list of all read in cards - useful in determining if entire BDF
+        ## was read & really useful in debugging
         self.cardCount = {}
         ## stores the cardCount of cards that have been rejected
         self.reject_count = {}
         ## was an ENDDATA card found
         self.foundEndData = False
 
+        #BDFReader.__init__(self, debug, log)
+        self.relpath = True
+        if sys.version_info < (2, 6):
+            self.relpath = False
+            #raise RuntimeError("must use python 2.6 or greater...version=%s"
+            #                   %(str(sys.version_info)))
+        self.log = get_logger(log, 'debug' if debug else 'info')
+
         ## allows the BDF variables to be scoped properly (i think...)
-        BDFReader.__init__(self, debug, log)
         GetMethods.__init__(self)
         AddMethods.__init__(self)
         BDFMethods.__init__(self)
         WriteMesh.__init__(self)
-        CardMethods.__init__(self)
         XrefMesh.__init__(self)
 
         ## useful in debugging errors in input
@@ -137,8 +137,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
         ## flag that allows for OpenMDAO-style optimization syntax to be used
         self._is_dynamic_syntax = False
-        ## lines that were rejected b/c they were for a card
-        ## that isnt supported
+        ## lines that were rejected b/c they were for a card that isnt supported
         self.rejects = []
         ## cards that were created, but not processed
         self.reject_cards = []
@@ -282,10 +281,23 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ## / is the delete from restart card
         self.specialCards = ['DEQATN', '/']
 
+    def print_filename(self, filename):
+        """
+        Takes a path such as C:/work/fem.bdf and locates the file using
+        relative paths.  If it's on another drive, the path is not modified.
+        @param self the BDF object
+        @param filename a filename string
+        @retval filenameString a shortened representation of the filename
+        """
+        driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
+        if driveLetter == os.path.splitdrive(os.curdir)[0] and self.relpath:
+            return os.path.relpath(filename)
+        return filename
+
     def disable_cards(self, cards):
         """
         Method for removing broken cards from the reader
-        @param self the object pointer
+        @param self the BDF object
         @param cards a list/set of cards that should not be read
         """
         disableSet = set(cards)
@@ -386,7 +398,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
     def _init_structural_defaults(self):
         """
-        creates storage objects for the BDF object
+        Creates storage objects for the BDF object
         this would be in the init but doing it this way allows for
         better inheritance
         """
@@ -508,7 +520,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
     def _init_aero_defaults(self):
         """
-        creates storage objects for the BDF object
+        Creates storage objects for the BDF object
         this would be in the init but doing it this way allows for
         better inheritance
         """
@@ -538,7 +550,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ## stores GUST cards
         self.gusts = {}
         ## stores FLFACT
-        self.flfacts = {}  # can this be simplified ???
+        self.flfacts = {}  ## TODO can this be simplified ???
         ## stores FLUTTER
         self.flutters = {}
         ## mkaeros
@@ -549,11 +561,11 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.trims = {}
 
     def _init_thermal_defaults(self):
-        """initializes some bdf parameters"""
+        """Initializes some bdf parameters"""
         # BCs
         ## stores thermal boundary conditions - CONV,RADBC
         self.bcs = {}  # e.g. RADBC
-        ## defines the MAT4, MAT5, MATT4, etc. @todo verify MATT4
+        ## defines the MAT4, MAT5, MATT4, etc. TODO verify MATT4
         self.thermalMaterials = {}
 
         ## stores PHBDY
@@ -564,15 +576,12 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
     def readBDF(self, bdf_filename, include_dir=None, xref=True, punch=False):
         """
         Read method for the bdf files
-        @param bdf_filename
-          the input bdf
-        @param include_dir
-          the relative path to any include files (default=None
+        @param self the BDF object
+        @param bdf_filename the input bdf
+        @param include_dir the relative path to any include files (default=None
           if no include files)
-        @param xref
-          should the bdf be cross referenced (default=True)
-        @param punch
-          indicates whether the file is a punch file (default=False)
+        @param xref should the bdf be cross referenced (default=True)
+        @param punch indicates whether the file is a punch file (default=False)
         """
         ## the active filename (string)
         self.bdf_filename = bdf_filename
@@ -608,38 +617,31 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self._parse_executive_control_deck()
 
     def _parse_executive_control_deck(self):
-        """Extracts the solution from the executive control deck"""
+        """
+        Extracts the solution from the executive control deck
+        """
         for (i, eline) in enumerate(self.executive_control_lines):
-            #print 'eLine = |%r|' %(eline)
             uline = eline.strip().upper()  # uppercase line
             uline = uline.split('$')[0]
             if 'SOL ' in uline[:4]:
-                #print "line = ",uline
                 if ',' in uline:
                     sline = uline.split(',')  # SOL 600,method
                     solValue = sline[0]
                     method = sline[1]
-
-                    #print "sline    = |%s|" %(sline)
-                    #print "sline2   = |%s|" %(sline2)
                 else:
                     solValue = uline
                     method = None
 
-                #print "solValue = |%s|" %(solValue)
                 sol = solValue[3:].strip()
-
                 if self.sol is not None:
                     raise ValueError('cannot overwrite solution existing='
                                      '|SOL %s| new =|%s|' % (self.sol, uline))
                 self.iSolLine = i
-
                 try:
                     self.update_solution(sol, method)
                 except:
                     msg = ('update_solution failed...line=%s' % uline)
                     raise RuntimeError(msg)
-
         #print("sol = ", sol)
 
     def updateSolution(self, sol, method=None):
@@ -671,8 +673,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         else:  # very common
             self.solMethod = None
 
-        #print "sol=%s method=%s" %(self.sol,self.solMethod)
-
     def setDynamicSyntax(self, dictOfVars):
         """
         @see set_dynamic_syntax
@@ -689,6 +689,8 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         Variables should be 7 characters to fit in an 8-character field.
         %varName
         dict_of_vars = {'varName': 10}
+        @param self the BDF object
+        @param dict_of_vars dictionary of 7 character variable names to map.
         """
         self.dict_of_vars = {}
         for (key, value) in sorted(dict_of_vars.iteritems()):
@@ -719,18 +721,13 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         """
         self.log.info("reading Case Control Deck...")
         line = ''
-        #print("case control deck")
-        #print(self.active_filenames)
         while len(self.active_filenames) > 0:  # keep going until finished
-        #while 'BEGIN BULK' not in line:
             lineIn, comment = self.get_next_line(False)
-            #print("case_control_deck lineIn = |%r|" % lineIn)
             if lineIn is None:
                 return  # file was closed
             line = lineIn.strip().split('$')[0].strip()
             lineUpper = line.upper()
 
-            #(line, lineUpper) = self._checkForIncludeFile_CaseControlDeck(lineIn, line, lineUpper)
             if lineUpper.startswith('INCLUDE'):
                 next_line, comment = self.get_next_line(False)
                 next_line = next_line.strip().split('$')[0].strip()
@@ -739,24 +736,19 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                     include_lines.append(next_line)
                     next_line, comment = self.get_next_line(False)
                     next_line = next_line.strip().split('$')[0].strip()
-                #print("include_lines = ", include_lines)
+
                 filename = self._get_include_file_name(include_lines)
 
                 self.open_file(filename)
                 line = next_line
-                #print "appending |%r|" %(nextLine)
                 self.case_control_lines.append(next_line)
             else:
                 self.case_control_lines.append(lineUpper)
 
-            #print("*line = |%s|" %(lineUpper))
             if 'BEGIN' in lineUpper and 'BULK' in lineUpper:
                 self.log.debug('found the end of the case control deck!')
-                #print("breaking from the case control deck")
                 break
-        #print("------------------------------------------------")
         #self.log.info("finished with Case Control Deck..")
-        #print("self.case_controlLines = ",self.case_control_lines)
 
         #for line in self.case_control_lines:
             #print "** line=|%r|" %(line)
@@ -765,54 +757,14 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.caseControlDeck.solmap_toValue = self._solmap_to_value
         self.caseControlDeck.rsolmap_toStr = self.rsolmap_toStr
 
-        #print "done w/ case control..."
-        #print '***********************'
         return self.case_control_lines
-
-    def _checkForIncludeFile_CaseControlDeck(self, lineIn, line, lineUpper):
-        """
-        Special parsing must be done if an INCLUDE file is found.
-        @param lineIn
-          the current line without any stripping of comments (defined by $)
-        @param line
-          the current line
-        @param lineUpper
-          the current line (in all caps)
-        @retval line
-          the new current line
-        @retval lineUpper
-          the new current line (in all caps)
-        """
-        if lineUpper.startswith('INCLUDE'):
-            nextLine, comment = self.get_next_line(False)
-            nextLine = nextLine.strip().split('$')[0].strip()
-            includeLines = [line]
-            while '\\' in nextLine or '/' in nextLine:  # more includes
-                includeLines.append(nextLine)
-                nextLine, comment = self.get_next_line(False)
-                nextLine = nextLine.strip().split('$')[0].strip()
-
-            filename = self._get_include_file_name(includeLines)
-
-            self.open_file(filename)
-            line = nextLine
-            #print "appending |%r|" %(nextLine)
-            self.case_control_lines.append(nextLine)
-        else:
-            #print "appending |%r|" %(lineIn)
-            self.case_control_lines.append(lineIn)
-
-        return (line, lineUpper)
 
     def _get_include_file_name(self, cardLines):
         """Parses an INCLUDE file split into multiple lines (as a list).
-        @param self
-          the BDF object
-        @param cardLines
-          the list of lines in the include card (all the lines!)
-        @param cardName
-          INCLUDE or include (needed to strip it off without converting
-          the case)
+        @param self the BDF object
+        @param cardLines the list of lines in the include card (all the lines!)
+        @param cardName INCLUDE or include (needed to strip it off without
+          converting the case)
         @retval filename the INCLUDE filename
         """
         cardLines2 = []
@@ -829,20 +781,30 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         filename = os.path.join(self.include_dir, filename)
         return filename
 
-    def is_reject(self, cardName):
-        """Can the card be read"""
-        if cardName.startswith('='):
+    def is_reject(self, card_name):
+        """
+        Can the card be read
+        @param self the BDF object
+        @param card_name the card_name -> 'GRID'
+        """
+        if card_name.startswith('='):
             return False
-        elif cardName in self.cardsToRead:
+        elif card_name in self.cardsToRead:
             return False
-        if cardName:
-            if cardName not in self.reject_count:
-                self.log.info("RejectCardName = |%s|" % cardName)
-                self.reject_count[cardName] = 0
-            self.reject_count[cardName] += 1
+        if card_name:
+            if card_name not in self.reject_count:
+                self.log.info("RejectCardName = |%s|" % card_name)
+                self.reject_count[card_name] = 0
+            self.reject_count[card_name] += 1
         return True
 
     def open_file(self, fname):
+        """
+        Opens the primary bdf/dat file and all subsequent INCLUDE files.
+        @param fname:  the name of the bdf/dat file to open
+        @return: None
+        @note Doesn't allow reuse of the same bdf/dat file twice.
+        """
         if fname in self.used_filenames:
             raise RuntimeError('fname=%s has already been opened once' % fname)
 
@@ -856,7 +818,11 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.stored_lines[self.active_filename] = []
         self.stored_comments[self.active_filename] = []
 
-    def close_file(self):
+    def _close_file(self):
+        """
+        Closes the primary bdf/dat file and all subsequent INCLUDE files.
+        @return: None
+        """
         self.log.info("closing %s" % self.active_filename)
         if len(self.active_files) > 1:
             self.active_file.close()
@@ -865,31 +831,44 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             self.active_files.pop()
             self.active_filenames.pop()
 
-            # set the final file
+            # set the next file
             self.active_file = self.active_files[-1]
             self.active_filename = self.active_filenames[-1]
-        else:
-            #print("self.active_file.tell() =",self.active_file.tell())
-            #print("os.fstat(self.active_file.fileno()).st_size = ",os.fstat(self.active_file.fileno()).st_size)
+        else: # all files are closed, any lines left have been loaded
             self.active_file = None
             self.active_filename = None
 
     def get_next_line(self, access_stored_lines):
+        """
+        Gets the next Executive or Case Control Deck line.
+        @param access_stored_lines: No purpose
+        @return: line, comment
+        """
         line = ''
         comment = ''
-        while not line and self.active_file.tell() != os.fstat(self.active_file.fileno()).st_size:
+        while not line and not self._is_end_of_file():
             line = self.active_file.readline().rstrip('\n\r\t ')
             if '$' in line:
                 i = line.index('$')
                 comment = line[i:] + '\n'
                 line = line[:i].rstrip('\t ')
-            if self.active_file.tell() == os.fstat(self.active_file.fileno()).st_size:
-                self.close_file()
+            if self._is_end_of_file():
+                self._close_file()
                 if self.active_file is None:
                     return None, None
-            #print("line* = ",line)
         return line, comment
-        
+
+    def _is_end_of_file(self):
+        """
+        Has the end of the current file been reached?
+        @param self the BDF object
+        @return:  True/False
+        """
+        if (self.active_file.tell() == os.fstat(
+            self.active_file.fileno()).st_size):
+            return True
+        return False
+
     def _clean_comment(self, comment):
         """
         Removes specific pyNastran comment lines so duplicate lines aren't
@@ -914,24 +893,22 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         """
         @param self the BDF object
         @param access_stored_lines Should all the stored lines be returned?
-               This happens on the first line of a new card.  This keeps
-               all the comments for it together.
+          This happens on the first line of a new card.  This keeps all the
+          comments for it together.
         """
         comment = ''
-        if access_stored_lines and self.active_filename and self.stored_lines[self.active_filename]:
-            #print('stored_lines = ', self.stored_lines)
+        stored_lines = self.stored_lines[self.active_filename]
+        if access_stored_lines and self.active_filename and stored_lines:
             if self.stored_comments[self.active_filename]:
-                #comment = self.stored_comments[self.active_filename].pop(0)
                 comment = ''.join(self.stored_comments[self.active_filename])
                 self.stored_comments[self.active_filename] = []
             else:
                 comment = ''
-            line = self.stored_lines[self.active_filename].pop(0)
+            line = stored_lines.pop(0)
             return line, comment
 
         try:
             line = self.active_file.readline().rstrip('\n\r\t ')
-            #print("line=|%r|" % line)
             if '$' in line:
                 i = line.index('$')
                 comment = self._clean_comment(line[i:] + '\n')
@@ -952,36 +929,29 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         @retval comment the comment for the card
         @retval cardname the name of the card
         """
-        #print('-------------------------------------------')
         lines = []
         comments = []
 
         line, comment = self.get_next_bulk_line(True)
         comments.append(comment)
-        #print("line = |%r|  len(line)=%s" % (line, len(line)))
-        #if isinstance(line, NoneType):
-            #return None, None, None
         if line is None:
             return None, None, None
-        #print("line = |%r|  len(line)=%s" % (line, len(line)))
 
         while line is None or len(line) == 0 or not line[0:1].isalpha():
             line, comment = self.get_next_bulk_line(False)
             comments.append(comment)
-            if self.active_file.tell() == os.fstat(self.active_file.fileno()).st_size:
+            if self._is_end_of_file():
                 lines.append(line)
                 cardname = self.get_card_name(lines)
-                self.close_file()
+                self._close_file()
                 return(lines, comments, cardname)
         lines.append(line)
 
         while 1:
             line2, comment = self.get_next_bulk_line(False)
-            #print("line2 = |%r|" % line2)
-            if line2 == None:
+            if line2 is None:
                 break
             elif len(line2) > 0 and line2[0].isalpha():  # new card
-                #print("A")
                 if self.active_filename is not None:
                     for line in self.stored_lines[self.active_filename]:
                         lines.append(line)
@@ -990,14 +960,11 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                         self.stored_comments[self.active_filename].append(comment)
                 break
             elif len(line2) == 0: # empty line
-                #print("B")
                 self.stored_lines[self.active_filename].append(line2)
                 if comment:
                     self.stored_comments[self.active_filename].append(comment)
             else:
-                #print("C")
                 if self.stored_lines[self.active_filename]:
-                    #print("C1")
                     lines += self.stored_lines[self.active_filename]
                     comments += self.stored_comments[self.active_filename]
                     self.stored_lines[self.active_filename] = []
@@ -1005,16 +972,13 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 lines.append(line2)
                 comments += comment
 
-            if self.active_file.tell() == os.fstat(self.active_file.fileno()).st_size:
+            if self._is_end_of_file():
                 lines.append(line)
                 cardname = self.get_card_name(lines)
-                self.close_file()
+                self._close_file()
                 return(lines, comments, cardname)
 
         cardname = self.get_card_name(lines)
-        #print("cardname = |%s|" % cardname)
-        #lines = wipe_empty_fields(lines)
-        #print('lines =',lines)
         return lines, comments, cardname
 
     def get_card_name(self, lines):
@@ -1036,53 +1000,53 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         @param self the BDF object
         """
         self.log.debug("*read_bulk_data_deck")
-
         while len(self.active_filenames) > 0 or self.stored_lines[self.active_filename]:
-            (rawcard, comment, cardname) = self.get_card()
+            (raw_card, comment, card_name) = self.get_card()
             
-            if cardname == 'INCLUDE':
-                filename = self._get_include_file_name(rawcard)
+            if card_name == 'INCLUDE':
+                filename = self._get_include_file_name(raw_card)
                 self.open_file(filename)
                 reject = '$ INCLUDE processed:  %s\n' % (filename)
                 self.rejects.append([reject])
                 continue
-            elif cardname is None:
+            elif card_name is None:
                 break
 
-            self._increase_card_count(cardname)
-            if not self.is_reject(cardname):
-                self.add_card(rawcard, cardname, comment)
+            self._increase_card_count(card_name)
+            if not self.is_reject(card_name):
+                self.add_card(raw_card, card_name, comment)
             else:
-                self.rejects.append(rawcard)
+                self.rejects.append(raw_card)
                 continue
 
-            if 'ENDDATA' in cardname:
+            if 'ENDDATA' in card_name:
                 break  # exits while loop
         ### end of while loop
-    
-    def _increase_card_count(self, cardName):
+
+    def _increase_card_count(self, card_name):
         """
         Used for testing to check that the number of cards going in is the
         same as each time the model is read verifies proper writing of cards
-        @warning
-            this wont guarantee proper reading of cards, but will help
+        @param self the BDF object
+        @param card_name the card_name -> 'GRID'
+        @warning this wont guarantee proper reading of cards, but will help
         """
-        if cardName == '':  # stupid null case
+        if card_name == '':  # stupid null case
             return
 
-        if cardName in self.cardCount:
-            self.cardCount[cardName] += 1
+        if card_name in self.cardCount:
+            self.cardCount[card_name] += 1
         else:
-            self.cardCount[cardName] = 1
+            self.cardCount[card_name] = 1
 
-    def add_card(self, cardlines, card_name, comment=''):
+    def add_card(self, card_lines, card_name, comment=''):
         """
         adds a card object to the BDF object.
         @param self the BDF object
-        @param card the list of the card fields -> ['GRID',1,2,]
+        @param card_lines the list of the card fields -> ['GRID',1,2,]
         @param card_name the card_name -> 'GRID'
         @param comment an optional the comment for the card
-        @retval cardObject the card object representation of card
+        @retval card_object the card object representation of card
         @note
           this is a very useful method for interfacing with the code
         @note
@@ -1095,20 +1059,18 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         """
         comment = ''.join(comment)
         if card_name in ['DEQATN']:
-            card_obj = cardlines
-            card = cardlines
+            card_obj = card_lines
+            card = card_lines
         else:
-            fields = to_fields(cardlines, card_name)
-            #print("fields = ",fields)
+            fields = to_fields(card_lines, card_name)
 
             # apply OPENMDAO syntax
             if self._is_dynamic_syntax:
                 fields = [self.parse_dynamic_syntax(field) if '%' in field[0:1]
                           else field for field in fields]
 
-            card = wipe_empty_fields([interpretValue(field, fields) for field in fields])
-            #print("fields = ",fields)
-            #print("card_1050 = ",card)
+            card = wipe_empty_fields([interpretValue(field, fields)
+                                      for field in fields])
             card_obj = BDFCard(card)
         
         # function that gets by name the initialized object (from global scope)
@@ -1157,6 +1119,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                               'PBAR', 'PBARL', 'PBEAM', 'PBCOMP', 'PBEAML',
                               'PROD', 'PTUBE', 'PLSOLID', 'PBUSH1D', 'PBUSH',
                               'PFAST', 'PDAMP5', 'PGAP', 'PRAC2D', 'PRAC3D'],
+
              # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
              'add_creep_material': ['CREEP'],
              'add_material': ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10',
@@ -1196,8 +1159,8 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
              'add_DVMREL': ['DVMREL1'],
             }
 
-            for func, nams in _cards.iteritems():
-                if card_name in nams:
+            for func, names in _cards.iteritems():
+                if card_name in names:
                     try:
                         getattr(self, func)(_get_cls(card_name))
                     except:
@@ -1290,6 +1253,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
     def card_stats(self):
         """
         Print statistics for the BDF
+        @param self the BDF object
         @note
           if a card is not supported and not added to the proper lists,
           this method will fail
@@ -1431,6 +1395,7 @@ def to_fields(card_lines, card_name):
     Converts a series of lines in a card into string versions of the field.
     Handles large, small, and CSV formatted cards.
     @param lines the lines of the BDF card object
+    @param card_name the card_name -> 'GRID'
     @retval fields the string formatted fields of the card
     """
     fields = []
@@ -1500,18 +1465,6 @@ def to_fields(card_lines, card_name):
                            line[40:48], line[48:56], line[56:64], line[64:72]]
     return fields
 
-def is_first_letter_a_letter(line):
-    """
-    Checks to see if the first letter of a line is a character.
-    @returns False if the length of the line is 0 (a TypeError is raised
-             internally).
-    """
-    try:
-        if line[0].isalpha():
-            return True
-        return False
-    except TypeError: # can't access 0th element of line because it's length=0
-        return False
 
 if __name__ == '__main__':
     bdf = BDF()
