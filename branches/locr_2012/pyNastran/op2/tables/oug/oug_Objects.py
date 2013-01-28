@@ -1,4 +1,3 @@
-import sys
 from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 

@@ -150,7 +150,7 @@ class DLINK(OptConstraint):
         self.Ci = []
 
         for i in xrange(n):
-            j = 2 * i + 4
+            j = 2 * i + 5
             IDv = integer(card, j, 'IDv' + str(i))
             Ci = double(card, j + 1, 'Ci' + str(i))
             self.IDv.append(IDv)
@@ -185,8 +185,8 @@ class DRESP1(OptConstraint):
         self.oid = integer(card, 1, 'oid')
         self.label = string(card, 2, 'label')
         self.rtype = string(card, 3, 'rtype')
-        self.ptype = string(card, 4, 'ptype') # elem, pbar, pshell, etc. (ELEM flag or Prop Name)
-        self.region = integer(card, 5, 'region')
+        self.ptype = string_or_blank(card, 4, 'ptype') # elem, pbar, pshell, etc. (ELEM flag or Prop Name)
+        self.region = integer_or_blank(card, 5, 'region')
         self.atta = integer_double_or_blank(card, 6, 'atta')
         self.attb = integer_double_or_blank(card, 7, 'attb')
         self.atti = integer_double_or_blank(card, 8, 'atti')

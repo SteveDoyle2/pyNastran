@@ -607,13 +607,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _read_executive_control_deck(self):
         """Reads the executive control deck"""
-        line = ''
-        while 'CEND' not in line.upper()[:4]:
+        lineUpper = ''
+        while 'CEND' not in lineUpper[:4] and 'BEGIN' not in lineUpper and 'BULK' not in lineUpper:
             line, comment = self.get_next_line(False)
             #print("exec line",line)
             line = line.rstrip('\n\r\t ')
             if len(line) > 0:
                 self.executive_control_lines.append(line)
+            lineUpper = line.upper()
         self._parse_executive_control_deck()
 
     def _parse_executive_control_deck(self):
@@ -864,9 +865,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         @param self the BDF object
         @return:  True/False
         """
-        if (self.active_file.tell() == os.fstat(
-            self.active_file.fileno()).st_size):
-            return True
+        try:
+            if (self.active_file.tell() == os.fstat(
+                self.active_file.fileno()).st_size):
+                return True
+        except:
+            print("self.active_file = ", self.active_file)
+            print("self.active_file.tell() = ", self.active_file.tell())
+            raise IOError('self.active_filename = |%s|' % self.active_filename)
         return False
 
     def _clean_comment(self, comment):
@@ -988,7 +994,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         @param lines the lines of the card
         @retval cardname the name of the card
         """
-        card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0]
+        card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('\t ')
         if len(card_name) == 0:
             return None
         assert ' ' not in card_name and len(card_name) > 0, 'card_name=|%s|\nline=|%s| in filename=%s is invalid' % (card_name, lines[0], self.active_filename)
@@ -1180,7 +1186,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             # dampers
             _dct = {'PELAS': (5,), 'PVISC': (5,), 'PDAMP': (3, 5)}
             if card_name in _dct:
-                self.add_property(_get_cls(card_name, comment=comment))
+                try:
+                    self.add_property(_get_cls(card_name))
+                except:
+                    print("card_name fail = ", card_obj.field(0))
+                    raise
                 for i in _dct[card_name]:
                     if card_obj.field(i):
                         self.add_property(_cls(card_name)(card_obj, 1,
@@ -1414,7 +1424,7 @@ def to_fields(card_lines, card_name):
 
     if '*' in line:  # large field
         if ',' in line:  # csv
-            new_fields = line[:72].split(',')
+            new_fields = line[:72].split(',')[:5]
             fields += new_fields
             for i in range(5-len(new_fields)):
                 fields.append('')
@@ -1423,7 +1433,7 @@ def to_fields(card_lines, card_name):
                       line[56:72]]
     else: # small field
         if ',' in line:  # csv
-            new_fields = line[:72].split(',')
+            new_fields = line[:72].split(',')[:8]
             fields += new_fields
             for i in range(9-len(new_fields)):
                 fields.append('')
@@ -1448,7 +1458,8 @@ def to_fields(card_lines, card_name):
         
         if '*' in line:  # large field
             if ',' in line:  # csv
-                new_fields = line[:72].split(',')[1:]
+                new_fields = line[:72].split(',')[1:5]
+                assert len(new_fields) == 4
                 fields += new_fields
                 for i in range(4-len(new_fields)):
                     fields.append('')
@@ -1456,7 +1467,7 @@ def to_fields(card_lines, card_name):
                 fields += [line[8:24], line[24:40], line[40:56], line[56:72]]
         else: # small field
             if ',' in line:  # csv
-                new_fields = line[:72].split(',')[1:]
+                new_fields = line[:72].split(',')[1:8]
                 fields += new_fields
                 for i in range(8-len(new_fields)):
                     fields.append('')

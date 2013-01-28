@@ -4,7 +4,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import izip
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
-from pyNastran.bdf.fieldWriter import print_int_card
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.format import (integer, integer_or_blank, components, fields, integer_or_string)
 
@@ -62,7 +61,7 @@ class ABCQSet(Set):
         self.IDs = []
         self.components = []
 
-        fields = card.fields(1)
+        fields = card[1:]
         nfields = len(card) - 1
         for n in xrange(nfields):
             i = n * 2 + 1
@@ -161,7 +160,7 @@ class ABQSet1(Set):
         self.components = components(card, 1, 'components')
 
         ## Identifiers of grids points. (Integer > 0)
-        IDs = fields(integer_or_string, card, 'IDs', i=2, j=len(card))
+        IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))
         self.IDs = expand_thru(IDs)
 
     def rawFields(self):
@@ -268,7 +267,7 @@ class SET1(Set):
         ## in field 3)
         self.IDs = []
 
-        IDs = fields(integer_or_string, card, i=2, j=len(card))
+        IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))
         self.isSkin = False
         i = 0
         if isinstance(IDs[0], str) and IDs[0] == 'SKIN':

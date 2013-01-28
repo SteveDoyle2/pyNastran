@@ -7,7 +7,7 @@ from pyNastran.bdf.fieldWriter import (print_field, print_float_8,
                                        set_default_if_blank,
                                        set_blank_if_default)
 from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_field_16, print_float_16
+from pyNastran.bdf.fieldWriter16 import print_field_16
 
 
 from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpretValue

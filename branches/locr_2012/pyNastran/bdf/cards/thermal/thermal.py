@@ -328,13 +328,13 @@ class PCONV(ThermalProperty):
         ## Identification number of a TABLEHT entry that specifies the two
         ## variable tabular function of the free convection heat transfer
         ## coefficient
-        self.tid = integer(card, 6, 'tid')
+        self.tid = integer_or_blank(card, 6, 'tid')
 
         ## Characteristic length
-        self.chlen = double(card, 9, 'chlen')
+        self.chlen = double_or_blank(card, 9, 'chlen')
 
         ## Grid ID of the referenced inlet point
-        self.gidin = double(card, 10, 'gidin')
+        self.gidin = double_or_blank(card, 10, 'gidin')
 
         ## Coordinate system for defining orientation vector.
         ## (Integer > 0;Default = 0
@@ -494,13 +494,13 @@ class CONV(ThermalBC):
 
         TA1 = integer(card, 5, 'TA1')
         assert TA1 > 0
-        nfields = card.nFields() - 1  # maybe off by 1...
-        defaults = [TA1] * nfields
+        nfields = len(card)  # maybe off by 1...
+        defaults = [TA1] * (nfields - 6)
 
         ## Ambient points used for convection 0's are allowed for TA2 and
         ## higher.  (Integer > 0 for TA1 and Integer > 0 for TA2 through TA8;
         ## Default for TA2 through TA8 is TA1.)
-        self.ta = fields_or_blank(integer_or_blank, card, i=5, j=nfields, defaults=defaults)
+        self.ta = fields_or_blank(integer_or_blank, card, 'ta', i=6, j=nfields, defaults=defaults)
 
     def cross_reference(self, model):
         self.eid = model.Element(self.eid)

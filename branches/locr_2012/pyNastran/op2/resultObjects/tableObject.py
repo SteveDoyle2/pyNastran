@@ -1,4 +1,3 @@
-import sys
 #from struct import pack
 from numpy import array, sqrt, abs, angle  # dot,
 

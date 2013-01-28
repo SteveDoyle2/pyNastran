@@ -1,4 +1,3 @@
-import sys
 from itertools import izip
 from math import sqrt, log10
 from numpy import array

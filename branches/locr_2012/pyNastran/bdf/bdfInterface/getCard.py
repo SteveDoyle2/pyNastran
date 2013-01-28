@@ -203,7 +203,7 @@ class GetMethods(object):
         elif mid in self.thermalMaterials:
             return self.thermalMaterials[mid]
         else:
-            raise KeyError('Invalid Material ID:  mid=%s' % (mid))
+            raise KeyError('Invalid Material ID:  mid=%s' % mid)
 
     def StructuralMaterial(self, mid):
         return self.materials[mid]
@@ -247,9 +247,13 @@ class GetMethods(object):
 
     #--------------------
     # COORDINATES CARDS
-    def Coord(self, cid):
-        return self.coords[cid]
-
+    def Coord(self, cid, msg=''):
+        try:
+            return self.coords[cid]
+        except KeyError:
+            raise KeyError('cid=%s not found%s.  Allowed Cids=%s'
+                           % (cid, msg, self.coordIDs()))
+        
     #--------------------
     # AERO CARDS
 

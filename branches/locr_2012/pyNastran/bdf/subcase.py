@@ -3,7 +3,6 @@
 Subcase creation/extraction class
 """
 #import sys
-import warnings
 
 
 class Subcase(object):

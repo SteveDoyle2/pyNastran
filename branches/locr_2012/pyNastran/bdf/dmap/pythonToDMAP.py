@@ -1,6 +1,3 @@
-import re
-
-
 def get_comment(line):
     sline = line.rstrip().split('#')
     cmd = sline[0].strip()
@@ -14,7 +11,7 @@ def get_comment(line):
     nspaces = len(sline[0]) - len(cmd)
     return (nspaces, cmd, comment)
 
-from builtins import INT, FLOAT, DOUBLE, STRING, ZEROS, ONES, ARRAY
+from builtins import INT, FLOAT, DOUBLE, STRING, ZEROS
 
 
 class PythonToDMAP(object):

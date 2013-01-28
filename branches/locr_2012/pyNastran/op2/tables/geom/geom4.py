@@ -1,4 +1,3 @@
-import sys
 from struct import unpack
 
 #from pyNastran.bdf.cards.constraints import SPC,SPCADD

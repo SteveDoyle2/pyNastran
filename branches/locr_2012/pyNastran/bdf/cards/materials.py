@@ -21,8 +21,9 @@ from numpy import zeros, array
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, Material
 from pyNastran.bdf.cards.tables import Table
-from pyNastran.bdf.format import (double, double_or_blank, integer,
-                                 integer_or_blank, string_or_blank)
+from pyNastran.bdf.format import (integer, integer_or_blank,
+                                 double, double_or_blank,
+                                 string, string_or_blank)
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""

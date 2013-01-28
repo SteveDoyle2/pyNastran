@@ -4,7 +4,6 @@ Links up the various cards in the BDF.
 # pylint: disable=E1101,C0103,R0902,R0904,R0914,W0611
 
 from __future__ import print_function
-import sys
 import warnings
 #from pyNastran.bdf.cards.constraints import constraintObject2
 

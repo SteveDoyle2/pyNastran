@@ -1,4 +1,3 @@
-import sys
 from struct import unpack
 
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import(

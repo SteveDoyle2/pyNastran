@@ -51,7 +51,7 @@ class PCOMP(ShellProperty):
             self.nsm = double_or_blank(card, 3, 'nsm', 0.0)
             self.sb = double_or_blank(card, 4, 'sb', 0.0)
             self.ft = string_or_blank(card, 5, 'ft')
-            assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN']
+            assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', None]
             
             self.TRef = double_or_blank(card, 6, 'TRef', 0.0)
             self.ge = double_or_blank(card, 7, 'ge', 0.0)
@@ -68,7 +68,7 @@ class PCOMP(ShellProperty):
             if nLeftover:
                 nMajor += 1
             nplies = nMajor
-            #print "nplies = ",nplies
+            #print("nplies = ",nplies)
 
             plies = []
             midLast = None
@@ -77,9 +77,11 @@ class PCOMP(ShellProperty):
             iply = 1
             ## supports single ply per line
             for i in xrange(9, 9 + nplies * 4, 4):
-                defaults = [midLast, tLast, 0.0, 'NO']
                 actual = card.fields(i, i + 4)
-                (mid, t, theta, sout) = card.fields(i, i + 4, defaults)
+                mid = integer_or_blank(card, i, 'mid', midLast)
+                t = double_or_blank(card, i + 1, 't', tLast)
+                theta = double_or_blank(card, i + 2, 'theta', 0.0)
+                sout = string_or_blank(card, i + 3, 'sout', 'NO')
 
                 if not t > 0.:
                     msg = ('thickness of PCOMP layer is invalid pid=%s'
@@ -90,6 +92,7 @@ class PCOMP(ShellProperty):
                 # if this card has 2 plies on the line
                 if actual != [None, None, None, None]:
                     ply = [mid, t, theta, sout]
+                    #print('ply =', ply)
                     plies.append(ply)
                     iply += 1
                 midLast = mid

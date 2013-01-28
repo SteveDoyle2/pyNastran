@@ -1,4 +1,4 @@
-import sys
+
 from struct import unpack
 
 from pyNastran.op2.tables.oes_stressStrain.real.elementsStressStrain import RealElementsStressStrain

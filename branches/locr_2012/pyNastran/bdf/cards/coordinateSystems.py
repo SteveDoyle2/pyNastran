@@ -11,8 +11,7 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, BDFCard
 from pyNastran.utils import list_print
 from pyNastran.bdf.format import (integer, integer_or_blank,
-                                  double, double_or_blank, string_or_blank,
-                                  fields)
+                                  double_or_blank, string_or_blank)
 
 
 class Coord(BaseCard):
@@ -33,7 +32,7 @@ class Coord(BaseCard):
         self.e1 = None
         self.e2 = None
         self.e3 = None
-        print("card = \n", card)
+        #print("card = \n", card)
 
     def Cid(self):
         """returns the coordinate ID"""
@@ -343,10 +342,10 @@ class Cord2x(Coord):
             self.e3 = array([double_or_blank(card, 9, 'e3x', 0.0),
                              double_or_blank(card, 10, 'e3y', 0.0),
                              double_or_blank(card, 11, 'e3z', 0.0)])
-            print("card = ", card.fields())
-            print('e1 = ', self.e1)
-            print('e2 = ', self.e2)
-            print('e3 = ', self.e3)
+            #print("card = ", card.fields())
+            #print('e1 = ', self.e1)
+            #print('e2 = ', self.e2)
+            #print('e3 = ', self.e3)
         else:
             self.cid = data[0]
             self.rid = data[1]

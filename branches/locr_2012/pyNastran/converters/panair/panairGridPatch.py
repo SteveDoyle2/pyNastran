@@ -1,4 +1,3 @@
-import sys
 from numpy import array, zeros, cross, transpose
 from numpy.linalg import norm
 
@@ -17,8 +16,8 @@ class PanairPatch(object):
 
         self.iNetwork = iNetwork  # lets it print out in order, does it need a deepcopy???
         self.netName = netName.strip()
-        self.log.debug('netName=|%s|' % (netName))
-        self.log.debug("****patch.netName=%s" % (self.netName))
+        #self.log.debug('netName=|%s|' % (netName))
+        #self.log.debug("****patch.netName=%s" % (self.netName))
         self.kt = kt
         self.cpNorm = cpNorm
         self.matchw = 0
@@ -29,7 +28,7 @@ class PanairPatch(object):
         self.nRows = shape[0]
         self.nCols = shape[1]
 
-        self.log.debug("shape = %s" % (str(shape)))
+        #self.log.debug("shape = %s" % (str(shape)))
 
     def process(self):
         msg = '     network # being processed %3i\n\n' % (self.iNetwork + 1)
@@ -63,7 +62,7 @@ class PanairPatch(object):
             ipot = 2
             if self.matchw == 1.:
                 nlopt2 = 6
-            self.log.debug("18...matchw = %s" % (self.matchw))
+            #self.log.debug("18...matchw = %s" % (self.matchw))
         elif self.kt == 20:
             src = 0
             dblt = 20
@@ -212,7 +211,7 @@ class PanairPatch(object):
             z = self.z[0][:]  # pretty sure edge 1 is the 0th row
             p = [iCol for iCol in xrange(self.nCols)]  # good
         elif edgeNumber == 2:
-            self.log.debug("x.shape = %s" % (str(self.x.shape)))
+            #self.log.debug("x.shape = %s" % (str(self.x.shape)))
             x = self.x[:][self.nCols - 1]
             y = self.y[:][self.nCols - 1]
             z = self.z[:][self.nCols - 1]  # pretty sure edge 2 is the 0th row
@@ -233,8 +232,8 @@ class PanairPatch(object):
             p = [self.nRows * iCol for iCol in xrange(self.nCols)]  # good
         else:
             raise ValueError('invalid edge; edgeNumber=%s' % (edgeNumber))
-        self.log.debug("nRows=%s nCols=%s edgeNumber=%s" % (
-            self.nRows, self.nCols, edgeNumber))
+        #self.log.debug("nRows=%s nCols=%s edgeNumber=%s" % (
+            #self.nRows, self.nCols, edgeNumber))
         #print "nx = ",len(x)
         #print "p = ",p
         #print "x = ",x
@@ -263,7 +262,7 @@ class PanairPatch(object):
             x[i:i + nx1] = x1[0:nx1]
             y[i:i + nx1] = y1[0:nx1]
             z[i:i + nx1] = z1[0:nx1]
-            self.log.debug("-----")
+            #self.log.debug("-----")
         return (p, x, y, z)
 
     def get_elements(self, pointI):
@@ -308,7 +307,7 @@ class PanairPatch(object):
         for zi in z:
             out += "%s " % (zi)
         out += "\n"
-        self.log.debug(out)
+        #self.log.debug(out)
         #print x
         #for c in xrange(self.nCols):
         #    nPointsLeft = nFullLines*2+nPartialLines
@@ -336,7 +335,7 @@ class PanairPatch(object):
         """
         #x = self.write_as_plot3d()
 
-        self.log.debug("*******")
+        #self.log.debug("*******")
         header = '$points - surface panels\n'
         points = ''
 
@@ -409,8 +408,8 @@ class PanairWakePatch(PanairPatch):
         self.edgeNumber = edgeNumber
         self.xWake = xWake
         self.tWake = tWake
-        self.log.debug("matchw = %s" % (self.matchw))
-        self.log.debug("wake patch")
+        #self.log.debug("matchw = %s" % (self.matchw))
+        #self.log.debug("wake patch")
 
     def __repr__(self):
         header = '$trailing wakes\n'
@@ -437,7 +436,7 @@ class PanairGridHelper(object):
         1.
         """
         self.ncases = int(float(section[1][0:10]))
-        self.log.debug("ncases = %s" % (self.ncases))
+        #self.log.debug("ncases = %s" % (self.ncases))
         return True
 
     def get_mach(self, section):
@@ -447,7 +446,7 @@ class PanairGridHelper(object):
         .6
         """
         self.mach = float(section[1][0:10])
-        self.log.debug("mach = %s" % (self.mach))
+        #self.log.debug("mach = %s" % (self.mach))
         return True
 
     def set_mach(self, mach):
@@ -475,7 +474,7 @@ class PanairGridHelper(object):
         self.alphaC = float(section[1][0:10])  # alphaCompressibility
         sline = section[2].split()
         self.alphas = [float(slot) for slot in sline]
-        self.log.debug("alphaC=%s alphas=%s" % (self.alphaC, self.alphas))
+        #self.log.debug("alphaC=%s alphas=%s" % (self.alphaC, self.alphas))
         return True
 
     def set_alphas(self, alphas, alphaC):
@@ -506,7 +505,7 @@ class PanairGridHelper(object):
         self.betaC = float(section[1][0:10])  # betaCompressibility
         sline = section[2].split()
         self.betas = [float(slot) for slot in sline]
-        self.log.debug("betaC=%s betas=%s" % (self.betaC, self.betas))
+        #self.log.debug("betaC=%s betas=%s" % (self.betaC, self.betas))
         return True
 
     def set_betas(self, betas, betaC):
@@ -536,10 +535,10 @@ class PanairGridHelper(object):
         self.bref = float(section[2][10:20])
         self.cref = float(section[2][20:30])
         self.dref = float(section[2][30:40])
-        self.log.debug("xref=%s yref=%s zref=%s" % (self.xref,
-                                                    self.yref, self.zref))
-        self.log.debug("sref=%s bref=%s cref=%s dref=%s " % (
-            self.sref, self.bref, self.cref, self.dref))
+        #self.log.debug("xref=%s yref=%s zref=%s" % (self.xref,
+        #                                            self.yref, self.zref))
+        #self.log.debug("sref=%s bref=%s cref=%s dref=%s " % (
+        #    self.sref, self.bref, self.cref, self.dref))
         return True
 
     def write_reference_quantities(self):
@@ -553,7 +552,7 @@ class PanairGridHelper(object):
 
     def get_end(self, section):
         self.isEnd = True
-        self.log.debug("end...")
+        #self.log.debug("end...")
         return True
 
     def write_end(self):

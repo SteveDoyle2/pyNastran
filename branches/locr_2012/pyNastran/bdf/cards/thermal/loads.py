@@ -222,6 +222,8 @@ class TEMP(ThermalLoad):
     """
     Defines temperature at grid points for determination of thermal loading,
     temperature-dependent material properties, or stress recovery.
+    TEMP SID G1 T1 G2 T2 G3 T3
+    TEMP 3 94 316.2 49 219.8
     """
     type = 'TEMP'
 
@@ -233,16 +235,16 @@ class TEMP(ThermalLoad):
             ## Load set identification number. (Integer > 0)
             self.sid = integer(card, 1, 'sid')
 
-            nfields = len(fields) - 2
+            nfields = len(card) - 2
             assert nfields % 2 == 0
 
             ## dictionary of temperatures where the key is the grid ID (Gi)
             ## and the value is the temperature (Ti)
             self.temperatures = {}
-            for i in xrange(0, nfields, 2):
-                n = i // 2
-                gi = integer(card, i, 'g' + str(n))
-                Ti = double(card, i + 1, 'T' + str(n))
+            for i in xrange(nfields // 2):
+                n = i * 2 + 2
+                gi = integer(card, n, 'g' + str(i))
+                Ti = double(card, n + 1, 'T' + str(i))
                 self.temperatures[gi] = Ti
         else:
             #print "TEMP data = ",data
@@ -289,7 +291,7 @@ class TEMPD(ThermalLoadDefault):
         if comment:
             self._comment = comment
         if card:
-            nfields = len(fields) - 1
+            nfields = len(card) - 1
             assert nfields % 2 == 0
 
             ## dictionary of temperatures where the key is the set ID (SIDi)

@@ -1,6 +1,5 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import os
 import platform
 
 import wx

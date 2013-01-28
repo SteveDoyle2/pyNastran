@@ -1,5 +1,4 @@
 import os
-import sys
 import unittest
 import pyNastran
 testPath = pyNastran.__path__[0]

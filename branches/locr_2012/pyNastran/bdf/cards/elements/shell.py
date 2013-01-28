@@ -26,7 +26,8 @@ from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.utils.mathematics import Area, norm, centroid_triangle
-from pyNastran.bdf.format import integer, integer_or_blank, double, double_or_blank, integer_double_or_blank
+from pyNastran.bdf.format import (integer, integer_or_blank,
+                                  double_or_blank, integer_double_or_blank)
 
 
 def _triangle_area_centroid_normal(nodes):
@@ -301,9 +302,9 @@ class CTRIA6(TriShell):
             nids = [integer(card, 3, 'n1'),
                     integer(card, 4, 'n2'),
                     integer(card, 5, 'n3'),
-                    integer(card, 6, 'n4'),
-                    integer(card, 7, 'n5'),
-                    integer(card, 8, 'n6')]
+                    integer_or_blank(card, 6, 'n4', 0),
+                    integer_or_blank(card, 7, 'n5', 0),
+                    integer_or_blank(card, 8, 'n6', 0)]
 
             self.thetaMcid = integer_double_or_blank(card, 9, 'thetaMcid', 0.0)
             self.zOffset = double_or_blank(card, 10, 'zOffset', 0.0)
@@ -330,6 +331,11 @@ class CTRIA6(TriShell):
 
         #print "self.xi = ",self.xi
         #raise
+
+    def cross_reference(self, model):
+        msg = ' which is required by CTRIA6 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def Thickness(self):
         return self.pid.Thickness()
@@ -396,14 +402,14 @@ class CTRIA6(TriShell):
         return (thetaMcid, zOffset, TFlag, T1, T2, T3)
 
     def rawFields(self):
-        fields = (['CTRIA6', self.eid, self.Pid()] + self.nodeIDs() +
+        fields = (['CTRIA6', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) +
                   [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
                   self.T1, self.T2, self.T3])
         return fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
-        fields = (['CTRIA6', self.eid, self.Pid()] + self.nodeIDs() +
+        fields = (['CTRIA6', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) +
                   [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
         return fields
 
@@ -549,7 +555,7 @@ class CTRIAX6(TriShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CTRIAX6 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.mid = model.Material(self.mid)
 
     def Mid(self):
@@ -1041,14 +1047,14 @@ class CQUAD8(QuadShell):
             ## element ID number
             self.eid = integer(card, 1, 'eid')
             self.pid = integer(card, 2, 'pid')
-            nids = [integer_or_blank(card, 3, 'n1'),
-                    integer_or_blank(card, 4, 'n2'),
-                    integer_or_blank(card, 5, 'n3'),
-                    integer_or_blank(card, 6, 'n4'),
-                    integer_or_blank(card, 7, 'n5'),
-                    integer_or_blank(card, 8, 'n6'),
-                    integer_or_blank(card, 9, 'n7'),
-                    integer_or_blank(card, 10, 'n8')]
+            nids = [integer(card, 3, 'n1'),
+                    integer(card, 4, 'n2'),
+                    integer(card, 5, 'n3'),
+                    integer(card, 6, 'n4'),
+                    integer_or_blank(card, 7, 'n5', 0),
+                    integer_or_blank(card, 8, 'n6', 0),
+                    integer_or_blank(card, 9, 'n7', 0),
+                    integer_or_blank(card, 10, 'n8', 0)]
 
             self.T1 = double_or_blank(card, 11, 'T1', 1.0)
             self.T2 = double_or_blank(card, 12, 'T2', 1.0)
@@ -1077,6 +1083,11 @@ class CQUAD8(QuadShell):
 
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 8
+
+    def cross_reference(self, mesh):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = mesh.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = mesh.Property(self.pid, msg=msg)
 
     def Thickness(self):
         return self.pid.Thickness()
@@ -1140,14 +1151,14 @@ class CQUAD8(QuadShell):
         return area
 
     def rawFields(self):
-        fields = ['CQUAD8', self.eid, self.Pid()] + self.nodeIDs() + [
+        fields = ['CQUAD8', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) + [
             self.T1, self.T2, self.T3, self.T4, self.thetaMcid, self.zOffset,
             self.TFlag]
         return fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self.getReprDefaults()
-        fields = (['CQUAD8', self.eid, self.Pid()] + self.nodeIDs() + [
+        fields = (['CQUAD8', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) + [
             T1, T2, T3, T4, thetaMcid, zOffset, TFlag])
         return fields
 

@@ -1,4 +1,3 @@
-import sys
 from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
 
 

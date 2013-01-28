@@ -6,11 +6,13 @@ from itertools import izip, count
 from numpy import array, pi, linspace
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
+from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru,
+                                          wipe_empty_fields)
 from pyNastran.bdf.format import (fields, double_or_string,
                                   integer, integer_or_blank,
-                                  double, double_or_blank,
-                                  string, string_or_blank, integer_or_string)
+                                  double, double_or_blank, 
+                                  string, string_or_blank,
+                                  integer_or_string, double_string_or_blank)
 
 class AEFACT(BaseCard):
     """
@@ -209,57 +211,55 @@ class AESURF(BaseCard):
         if comment:
             self._comment = comment
         if card:
-            ## Set identification number. (Integer > 0)
-            self.aesid = integer(card, 1, 'aesid')
             ## Controller identification number
-            self.cntlid = integer(card, 2, 'cntlid')
+            self.aesid = integer(card, 1, 'aesid')
             ## Controller name.
-            self.label = string(card, 3, 'label')
+            self.label = string(card, 2, 'label')
 
             ## Identification number of a rectangular coordinate system with a
             ## y-axis that defines the hinge line of the control surface
             ## component.
-            self.cid1 = integer(card, 4, 'cid1')
+            self.cid1 = integer(card, 3, 'cid1')
             ## Identification of an AELIST Bulk Data entry that identifies all
             ## aerodynamic elements that make up the control surface
             ## component. (Integer > 0)
-            self.alid1 = integer(card, 5, 'alid1')
+            self.alid1 = integer(card, 4, 'alid1')
 
-            self.cid2 = integer(card, 6, 'cid2')
-            self.alid2 = integer(card, 7, 'alid2')
+            self.cid2 = integer_or_blank(card, 5, 'cid2')
+            self.alid2 = integer_or_blank(card, 6, 'alid2')
 
             ## Control surface effectiveness. See Remark 4. (Real != 0.0;
             ## Default=1.0)
-            self.eff = double_or_blank(card, 8, 'eff', 1.0)
+            self.eff = double_or_blank(card, 7, 'eff', 1.0)
             ## Linear downwash flag. See Remark 2.
             ## (Character, one of LDW or NOLDW; Default=LDW).
-            self.ldw = string_or_blank(card, 9, 'ldw', 'LDW')
+            self.ldw = string_or_blank(card, 8, 'ldw', 'LDW')
             ## Reference chord length for the control surface. (Real>0.0;
             ## Default=1.0)
-            self.crefc = double_or_blank(card, 10, 'crefc', 1.0)
+            self.crefc = double_or_blank(card, 9, 'crefc', 1.0)
             ## Reference surface area for the control surface. (Real>0.0;
             ## Default=1.0)
-            self.crefs = double_or_blank(card, 11, 'crefs', 1.0)
+            self.crefs = double_or_blank(card, 10, 'crefs', 1.0)
             ## Lower and upper deflection limits for the control surface in
             ## radians. (Real, Default = +/- pi/2)
-            self.pllim = double_or_blank(card, 12, 'pllim', -pi / 2.)
-            self.pulim = double_or_blank(card, 13, 'pulim',  pi / 2.)
+            self.pllim = double_or_blank(card, 11, 'pllim', -pi / 2.)
+            self.pulim = double_or_blank(card, 12, 'pulim',  pi / 2.)
             ## Lower and upper hinge moment limits for the control surface in
             ## force-length units. (Real, Default = no limit) -> 1e8
-            self.hmllim = double(card, 14, 'hmllim')
-            self.hmulim = double(card, 15, 'hmulim')
+            self.hmllim = double_or_blank(card, 13, 'hmllim')
+            self.hmulim = double_or_blank(card, 14, 'hmulim')
             ## Set identification numbers of TABLEDi entries that provide the
             ## lower and upper deflection limits for the control surface as a
             ## function of the dynamic pressure. (Integer>0, Default = no limit)
-            self.tqllim = integer(card, 16, 'tqllim')
-            self.tqulim = integer(card, 17, 'tqulim')
+            self.tqllim = integer_or_blank(card, 15, 'tqllim')
+            self.tqulim = integer_or_blank(card, 16, 'tqulim')
         else:  # TODO doesnt support data
             msg = '%s has not implemented data parsing' % self.type
             raise RuntimeError(msg)
 
     def rawFields(self):
-        fields = ['AESURF', self.aesid, self.cntlid, self.label, self.cid1,
-                  self.alid1, self.cid2, self.alid2, self.eff, self.ldw,
+        fields = ['AESURF', self.aesid, self.label, self.cid1, self.alid1,
+                  self.cid2, self.alid2, self.eff, self.ldw,
                   self.crefc, self.crefs, self.pllim, self.pulim, self.hmllim,
                   self.hmulim, self.tqllim, self.tqulim]
         return fields
@@ -273,8 +273,8 @@ class AESURF(BaseCard):
         pllim = set_blank_if_default(self.pllim, -pi / 2.)
         pulim = set_blank_if_default(self.pulim, pi / 2.)
 
-        fields = ['AESURF', self.aesid, self.cntlid, self.label, self.cid1,
-                  self.alid1, self.cid2, self.alid2, eff, ldw, crefc, crefs,
+        fields = ['AESURF', self.aesid,self.label, self.cid1, self.alid1,
+                  self.cid2, self.alid2, eff, ldw, crefc, crefs,
                   pllim, pulim, self.hmllim, self.hmulim, self.tqllim,
                   self.tqulim]
         return fields
@@ -366,7 +366,7 @@ class AERO(Aero):
             self._comment = comment
         if card:
             self.acsid = integer_or_blank(card, 1, 'acsid', 0)
-            self.velocity = double(card, 2, 'velocity')
+            self.velocity = double_or_blank(card, 2, 'velocity')
             self.cRef = double(card, 3, 'cRef')
             self.rhoRef = double(card, 4, 'rhoRef')
             self.symXZ = integer_or_blank(card, 5, 'symXZ', 0)
@@ -547,10 +547,10 @@ class CAERO1(BaseCard):
             self.nchord = integer_or_blank(card, 5, 'nchord', 0)
 
             #if self.nspan==0:
-            self.lspan = integer(card, 6, 'lspan')
+            self.lspan = integer_or_blank(card, 6, 'lspan')
 
             #if self.nchord==0:
-            self.lchord = integer(card, 7, 'lchord')
+            self.lchord = integer_or_blank(card, 7, 'lchord')
 
             self.igid = integer(card, 8, 'igid')
 
@@ -804,7 +804,7 @@ class FLFACT(BaseCard):
             self._comment = comment
         if card:
             self.sid = integer(card, 1, 'sid')
-            field3 = double_or_string(card, 3, 'THRU')
+            field3 = double_string_or_blank(card, 3, 'THRU')
             if field3 == 'THRU':
                 f1 = double(card, 2, 'f1')
                 fnf = double(card, 4, 'fnf')
@@ -884,7 +884,7 @@ class FLUTTER(BaseCard):
             self.omax = None
             self.imethod = None
 
-        self.epsilon = double(card, 8, 'epsilon')  # not defined in QRG
+        self.epsilon = double_or_blank(card, 8, 'epsilon')  # not defined in QRG
 
     def _rawNValueOMax(self):
         if self.method in ['K', 'KE']:
@@ -938,7 +938,7 @@ class GUST(BaseCard):
             self.dload = integer(card, 2, 'dload')
             self.wg = double(card, 3, 'wg')
             self.x0 = double(card, 4, 'x0')
-            self.V = double(card, 4, 'V')
+            self.V = double_or_blank(card, 4, 'V')
         else:
             self.sid = data[0]
             self.dload = data[1]
@@ -976,8 +976,10 @@ class MKAERO1(BaseCard):
             self.machs = []
             self.rFreqs = []
             for i in xrange(1, 1 + nfields):
-                self.machs.append(double(card, i, 'mach'))
-                self.rFreqs.append(double(card, i + 8, 'rFreq'))
+                self.machs.append(double_or_blank(card, i, 'mach'))
+                self.rFreqs.append(double_or_blank(card, i + 8, 'rFreq'))
+            self.machs = wipe_empty_fields(self.machs)
+            self.v = wipe_empty_fields(self.rFreqs)
         else:  # TODO doesnt support data
             msg = '%s has not implemented data parsing' % self.type
             raise RuntimeError(msg)
@@ -1072,7 +1074,7 @@ class PAERO1(BaseCard):
             self._comment = comment
         if card:
             self.pid = integer(card, 1, 'pid')
-            Bi = fields[2:]
+            Bi = card[2:]
             self.Bi = []
 
             for bi in Bi:
@@ -1243,7 +1245,7 @@ class SPLINE1(Spline):
 
         fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2,
                   self.Set(), dz, method, usage, nelements, melements]
-        fields = self._wipeEmptyFields(fields)
+        fields = wipe_empty_fields(fields)
         return fields
 
 
@@ -1274,7 +1276,7 @@ class SPLINE2(Spline):
             self.id2 = integer(card, 4, 'id2')
             assert self.id2 > self.id1
             self.setg = integer(card, 5, 'setg')
-            self.dz = double_or_blank(6, 'dz', 0.0)
+            self.dz = double_or_blank(card, 6, 'dz', 0.0)
             self.dtor = double_or_blank(card, 7, 'dtor', 1.0)
             self.cid = integer_or_blank(card, 8, 'cid', 0)
             self.thx = double(card, 9, 'thx')
@@ -1506,7 +1508,7 @@ class TRIM(BaseCard):
             ## not supported
             self.aeqr = 1.0
 
-            i = 0
+            i = 4
             nfields = len(card) - 1
             while i < nfields:
                 label = string(card, i, 'label')
@@ -1516,8 +1518,8 @@ class TRIM(BaseCard):
                 assert isinstance(label, unicode), msg
                 self.labels.append(label)
                 self.uxs.append(ux)
-                if i == 2:
-                    self.aeqr = double_or_blank(card, 4 + i + 2, 'aeqr', 1.0)
+                if i == 6:
+                    self.aeqr = double_or_blank(card, 8, 'aeqr', 1.0)
                     i += 1
                 i += 2
         else:  # TODO doesnt support data

@@ -10,6 +10,13 @@ from pyNastran.op2.test.test_op2 import get_failed_files
 from pyNastran.op2.test.op2_test import get_all_files
 from pyNastran.utils import get_files_of_type
 
+def remove_marc_files(files):
+    files2 = []
+    for f in files:
+        if 'marc' not in f:
+            files2.append(f)
+    return files2
+
 if __name__ == '__main__':
     # works
     files = get_files_of_type('tests', '.bdf')
@@ -32,6 +39,7 @@ if __name__ == '__main__':
     else:
         files2 = get_failed_files('failedCases.in')
     files = files2
+    files = remove_marc_files(files)
 
     skipFiles = []  # giant
 

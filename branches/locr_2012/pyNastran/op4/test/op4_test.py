@@ -1,5 +1,4 @@
 import os
-import sys
 
 #print "f = ",op4.__file__
 from numpy import ndarray

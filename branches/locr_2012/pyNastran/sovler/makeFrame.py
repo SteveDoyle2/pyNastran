@@ -1,4 +1,3 @@
-import sys
 from itertools import izip
 from numpy import array, zeros, matrix
 from numpy.linalg import solve

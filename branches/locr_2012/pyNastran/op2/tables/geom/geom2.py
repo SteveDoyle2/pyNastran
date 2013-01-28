@@ -1,5 +1,4 @@
 # pylint: disable=E1101,C0103,R0902,R0904,R0914
-import sys
 from struct import unpack
 
 from pyNastran.bdf.cards.elements.elements import CGAP

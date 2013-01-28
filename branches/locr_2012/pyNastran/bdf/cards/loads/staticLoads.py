@@ -741,11 +741,6 @@ class MOMENT1(Moment):
             self.mag = double(card, 3, 'mag')
             self.g1 = integer(card, 4, 'g1')
             self.g2 = integer(card, 5, 'g2')
-            self.g3 = integer(card, 6, 'g3')
-            self.g4 = integer(card, 7, 'g4')
-            xyz = array([double_or_blank(card, 5, 'X1', 0.0),
-                         double_or_blank(card, 6, 'X2', 0.0),
-                         double_or_blank(card, 7, 'X3', 0.0)])
         else:
             self.sid = data[0]
             self.node = data[1]
@@ -755,9 +750,11 @@ class MOMENT1(Moment):
             self.g3 = data[5]
             self.g4 = data[6]
             xyz = data[7:10]
+            raise NotImplementedError('MOMENT1 is probably wrong')
 
-        assert len(xyz) == 3, 'xyz=%s' % (xyz)
-        self.xyz = array(xyz)
+        #assert len(xyz) == 3, 'xyz=%s' % (xyz)
+        #self.xyz = array(xyz)
+        self.xyz = None
 
     def cross_reference(self, model):
         """@todo cross reference and fix repr function"""

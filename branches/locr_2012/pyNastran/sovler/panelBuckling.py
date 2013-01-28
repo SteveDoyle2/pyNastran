@@ -1,4 +1,3 @@
-import sys
 import copy
 
 from math import acos, pi, asin

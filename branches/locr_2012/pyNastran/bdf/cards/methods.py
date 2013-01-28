@@ -333,7 +333,7 @@ class EIGR(Method):
             ## Method of eigenvalue extraction. (Character: 'INV' for inverse
             ## power method or 'SINV' for enhanced inverse power method.)
             self.method = string_or_blank(card, 2, 'method', 'LAN')
-            assert self.method in ['SINV', 'INV', 'GIV', 'MGIV', 'HOU', 'MHOU']
+            assert self.method in ['LAN', 'AHOU', 'INV', 'SINV', 'GIV', 'MGIV', 'HOU', 'MHOU', 'AGIV'], 'method=%s' % self.method
 
             ## Frequency range of interest
             self.f1 = double_or_blank(card, 3, 'f1')
@@ -350,7 +350,8 @@ class EIGR(Method):
                 self.nd = integer_or_blank(card, 6, 'nd', 3 * self.ne)
             elif self.method in ['GIV', 'MGIV', 'HOU', 'MHOU']:
                 self.nd = integer_or_blank(card, 6, 'nd', 0)
-
+            else:
+                self.nd = integer(card, 6, 'nd')
             ## Method for normalizing eigenvectors. ('MAX' or 'POINT';
             ## Default='MAX')
             self.norm = string_or_blank(card, 9, 'norm', 'MASS')
@@ -406,7 +407,7 @@ class EIGRL(Method):
             self.v1 = double_or_blank(card, 2, 'v1')
             self.v2 = double_or_blank(card, 3, 'v2')
             ## Number of roots desired
-            self.nd = integer(card, 4, 'nd')
+            self.nd = integer_or_blank(card, 4, 'nd')
             ## Diagnostic level. (0 < Integer < 4; Default = 0)
             self.msglvl = integer_or_blank(card, 5, 'msglvl', 0)
             ## Number of vectors in block or set. Default is machine dependent

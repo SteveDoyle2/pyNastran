@@ -1,4 +1,3 @@
-import sys
 from numpy import array
 from pyNastran.op2.resultObjects.op2_Objects import baseScalarObject
 #from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array

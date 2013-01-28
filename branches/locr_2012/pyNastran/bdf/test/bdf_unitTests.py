@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 import unittest
 import pyNastran
-from pyNastran.bdf.cards.baseCard import collapse_thru, collapse_thru_by
+from pyNastran.bdf.cards.baseCard import collapse_thru_by
 from pyNastran.bdf.caseControlDeck import CaseControlDeck
 
 testPath = pyNastran.__path__[0]

@@ -41,7 +41,6 @@ class CDAMP1(LineDamper):
         if card:
             self.eid = integer(card, 1, 'eid')
             self.pid = integer(card, 2, 'pid')
-
             nids = [integer_or_blank(card, 3, 'g1', 0),
                     integer_or_blank(card, 5, 'g2', 0)]
 
@@ -55,11 +54,11 @@ class CDAMP1(LineDamper):
             self.c1 = data[3]
             self.c2 = data[5]
 
+        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        assert len(self.nodes) == 2
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
-        assert len(self.nodes) == 2
 
     def isSameCard(self, elem, debug=False):
         if self.type != elem.type:
@@ -110,11 +109,11 @@ class CDAMP2(LineDamper):
             self.c1 = data[3]
             self.c2 = data[5]
 
+        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        assert len(self.nodes) == 2
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
-        assert len(self.nodes) == 2
 
     def B(self):
         return self.b
@@ -146,8 +145,7 @@ class CDAMP3(LineDamper):
             self.eid = data[0]
             self.pid = data[1]
             nids = [data[2], data[3]]
-
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.f(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
 
     def B(self):
@@ -181,7 +179,6 @@ class CDAMP4(LineDamper):
             self.eid = data[0]
             self.b = data[1]
             nids = [data[2], data[3]]
-
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
 
@@ -245,7 +242,6 @@ class CVISC(LineDamper):
             self.eid = data[0]
             self.pid = data[1]
             nids = data[2:4]
-
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 2
 

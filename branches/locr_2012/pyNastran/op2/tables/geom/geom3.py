@@ -1,4 +1,3 @@
-import sys
 from struct import unpack
 
 from pyNastran.bdf.cards.loads.staticLoads import (FORCE, FORCE1, FORCE2, GRAV,

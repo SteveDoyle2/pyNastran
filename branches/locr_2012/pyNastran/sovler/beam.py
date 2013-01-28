@@ -1,4 +1,4 @@
-from numpy import matrix, cos, sin, dot, cross
+from numpy import matrix, cos, sin
 from numpy.linalg import solve
 
 

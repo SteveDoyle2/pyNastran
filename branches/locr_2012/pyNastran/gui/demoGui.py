@@ -11,7 +11,6 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra, vtkQuadraticWedge, vtkQuadraticHexahedron)
 
 
-import sys
 import pyNastran
 from pyNastran.bdf.bdf import (BDF, CAERO1, CQUAD4, CQUAD8, CTRIA3, CTRIA6,
                                CTETRA4, CTETRA10, CPENTA6, CPENTA15,

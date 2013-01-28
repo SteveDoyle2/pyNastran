@@ -6,7 +6,7 @@ from itertools import izip
 from pyNastran.bdf.fieldWriter import print_card, is_same
                                #print_card_8, set_default_if_blank, print_card
 #from pyNastran.bdf.fieldWriter16 import print_card_16
-from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard, wipe_empty_fields
+from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
 
 
 class BaseCard(object):
@@ -207,7 +207,14 @@ class Element(BaseCard):
         """returns the positions of multiple node objects"""
         if not nodes:
             nodes = self.nodes
-        return [node.Position() for node in nodes]
+        
+        positions = []
+        for node in nodes:
+            if node is not None:
+                positions.append(node.Position())
+            else:
+                positions.append(None)
+        return positions
 
     def nodeIDs(self, nodes=None, allowEmptyNodes=False, msg=''):
         """returns nodeIDs for repr functions"""
@@ -226,16 +233,20 @@ class Element(BaseCard):
                         nodes2.append(node.nid)
                 return nodes2
             else:
-                if isinstance(nodes[0], int):
-                    nodeIDs = [node for node in nodes]
-                else:
-                    nodeIDs = [node.nid for node in nodes]
-
+                try:
+                    if isinstance(nodes[0], int):
+                        nodeIDs = [node for node in nodes]
+                    else:
+                        nodeIDs = [node.nid for node in nodes]
+                except:
+                    print("type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s" % (
+                          self.type, nodes, allowEmptyNodes, msg))
+                    raise
                 assert 0 not in nodeIDs, 'nodeIDs = %s' % (nodeIDs)
                 return nodeIDs
         except:
-            print("nodes=%s allowEmptyNodes=%s\nmsg=%s" % (
-                nodes, allowEmptyNodes, msg))
+            print("type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s" % (
+                  self.type, nodes, allowEmptyNodes, msg))
             raise
 
     def prepareNodeIDs(self, nids, allowEmptyNodes=False):
@@ -245,12 +256,12 @@ class Element(BaseCard):
             if isinstance(nid, int):
                 self.nodes.append(nid)
             elif nid is None and allowEmptyNodes:
-                self.nodes.append(nid)
+                self.nodes.append(None)
             else:  # string???
-                self.nodes.append(int(nid))
-                #raise RuntimeError('this element may not have missing '
-                #                   'nodes...nids=%s allowEmptyNodes=False'
-                #                   %(nids))
+                #self.nodes.append(int(nid))
+                raise RuntimeError('this element may not have missing '
+                                   'nodes...nids=%s allowEmptyNodes=False'
+                                   %(nids))
 
 
 def expand_thru(fields):

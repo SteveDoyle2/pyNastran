@@ -3,7 +3,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import sys
 import copy
 from numpy import array
-from struct import unpack
 
 from pyNastran.op2.tables.oug.oug import OUG
 from pyNastran.op2.tables.oes_stressStrain.oes import OES

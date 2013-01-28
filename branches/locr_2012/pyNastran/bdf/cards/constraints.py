@@ -289,8 +289,8 @@ class SUPORT1(Constraint):
             self.IDs = []
             self.Cs = []
             nFields = len(card)
-            nceil = ceil((nFields - 1.) / 2.)
-            for i in xrange(nceil):
+            nceil = int(ceil((nFields - 1.) / 2.))
+            for i in xrange(2, nceil):
                 ID = integer(card, 2 * i, 'ID%s' + str(i))
                 C = components(card, i + 1, 'component%s' + str(i))
                 self.IDs.append(ID)
