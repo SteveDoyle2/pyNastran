@@ -23,7 +23,8 @@ from pyNastran.bdf.cards.baseCard import BaseCard, Material
 from pyNastran.bdf.cards.tables import Table
 from pyNastran.bdf.format import (integer, integer_or_blank,
                                  double, double_or_blank,
-                                 string, string_or_blank)
+                                 string, string_or_blank,
+                                 blank)
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""
@@ -1197,25 +1198,39 @@ class MATS1(MaterialDependence):
             ## Type of material nonlinearity. ('NLELAST' for nonlinear elastic
             ## or 'PLASTIC' for elastoplastic.)
             self.Type = string(card, 3, 'Type')
-            ## Work hardening slope (slope of stress versus plastic strain) in
-            ## units of stress. For elastic-perfectly plastic cases, H=0.0.
-            ## For more than a single slope in the plastic range, the
-            ## stress-strain data must be supplied on a TABLES1 entry
-            ## referenced by TID, and this field must be blank
-            self.h = double_or_blank(card, 4, 'H')
-            ## Yield function criterion, selected by one of the following
-            ## values (1) Von Mises (2) Tresca (3) Mohr-Coulomb
-            ## (4) Drucker-Prager
-            self.yf = integer(card, 5, 'yf', 1)
-            ## Hardening Rule, selected by one of the following values
-            ## (Integer): (1) Isotropic (Default) (2) Kinematic
-            ## (3) Combined isotropic and kinematic hardening
-            self.hr = integer(card, 6, 'hr', 1)
-            ## Initial yield point
-            self.limit1 = double(card, 7, 'limit1')
-            ## Internal friction angle, measured in degrees, for the
-            ## Mohr-Coulomb and Drucker-Prager yield criteria
-            self.limit2 = double(card, 8, 'limit2')
+
+            if self.Type == 'NLELAST':
+                self.h = blank(card, 4, 'h')
+                self.hr = blank(card, 6, 'hr')
+                self.yf = blank(card, 5, 'yf')
+                self.limit1 = blank(card, 7, 'yf')
+                self.limit2 = blank(card, 8, 'yf')
+            else:
+                ## Work hardening slope (slope of stress versus plastic strain) in
+                ## units of stress. For elastic-perfectly plastic cases, H=0.0.
+                ## For more than a single slope in the plastic range, the
+                ## stress-strain data must be supplied on a TABLES1 entry
+                ## referenced by TID, and this field must be blank
+                self.h = double_or_blank(card, 4, 'H')
+
+                ## Yield function criterion, selected by one of the following
+                ## values (1) Von Mises (2) Tresca (3) Mohr-Coulomb
+                ## (4) Drucker-Prager
+                self.yf = integer_or_blank(card, 5, 'yf', 1)
+
+                ## Hardening Rule, selected by one of the following values
+                ## (Integer): (1) Isotropic (Default) (2) Kinematic
+                ## (3) Combined isotropic and kinematic hardening
+                self.hr = integer_or_blank(card, 6, 'hr', 1)
+                ## Initial yield point
+                self.limit1 = double(card, 7, 'limit1')
+
+                if self.yf == 3 or self.yf == 4:
+                    ## Internal friction angle, measured in degrees, for the
+                    ## Mohr-Coulomb and Drucker-Prager yield criteria
+                    self.limit2 = double(card, 8, 'limit2')
+                else:
+                    self.limit2 = blank(card, 8, 'limit2')
         else:
             (mid, tid, Type, h, yf, hr, limit1, limit2) = data
             self.mid = mid

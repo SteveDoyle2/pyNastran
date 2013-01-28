@@ -1082,9 +1082,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         # function that gets by name the initialized object (from global scope)
         try:
             _get_cls = lambda name: globals()[name](card_obj, comment=comment)
-        except:
-            print("name = ", card_obj.field(0))
-            raise
+        except Exception as e:
+            if not e.args: 
+                e.args=('',)
+            e.args = (e.args[0] + "\ncard = %s" % card,)+e.args[1:]
         _cls = lambda name: globals()[name]
 
         if self._auto_reject:
@@ -1100,9 +1101,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
               'PDAMPT', 'PELAST', 'PBUSHT']:
                 try:
                     getattr(self, 'add_' + card_name)(_get_cls(card_name))
-                except:
-                    print("name = ", card_obj.field(0))
-                    raise
+                except Exception as e:
+                    if not e.args: 
+                        e.args=('',)
+                    e.args = (e.args[0] + "\ncard = %s" % card,)+e.args[1:]
                 return card_obj
 
             # dictionary of cards. Key is the name of the function to add the
@@ -1169,8 +1171,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 if card_name in names:
                     try:
                         getattr(self, func)(_get_cls(card_name))
-                    except:
-                        print("card_name fail = ", card_obj.field(0))
+                    except Exception as e:
+                        if not e.args: 
+                            e.args=('',)
+                        e.args = (e.args[0] + "\ncard = %s" % card,)+e.args[1:]
                         raise
                     return card_obj
 
@@ -1188,8 +1192,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             if card_name in _dct:
                 try:
                     self.add_property(_get_cls(card_name))
-                except:
-                    print("card_name fail = ", card_obj.field(0))
+                except Exception as e:
+                    if not e.args: 
+                        e.args=('',)
+                    e.args = (e.args[0] + "\ncard = %s" % card,)+e.args[1:]
                     raise
                 for i in _dct[card_name]:
                     if card_obj.field(i):

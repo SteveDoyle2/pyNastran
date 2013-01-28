@@ -8,7 +8,8 @@ from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
     collapse_thru_by_float)
 from pyNastran.bdf.format import (integer, integer_or_blank, integer_or_string,
                                   double, double_or_blank, string,
-                                  string_or_blank, integer_double_or_blank)
+                                  string_or_blank, integer_double_or_blank,
+                                  integer_or_double)
 
 class OptConstraint(BaseCard):
     def __init__(self):
@@ -114,7 +115,7 @@ class DOPTPRM(OptConstraint):
         self.params = {}
         for i in xrange(0, nFields, 2):
             param = string(card, i + 1, 'param')
-            val = double(card, i + 2, 'value')
+            val = integer_or_double(card, i + 2, '%s_value' % param)
             self.params[param] = val
 
     def rawFields(self):
@@ -185,7 +186,13 @@ class DRESP1(OptConstraint):
         self.oid = integer(card, 1, 'oid')
         self.label = string(card, 2, 'label')
         self.rtype = string(card, 3, 'rtype')
-        self.ptype = string_or_blank(card, 4, 'ptype') # elem, pbar, pshell, etc. (ELEM flag or Prop Name)
+
+        # elem, pbar, pshell, etc. (ELEM flag or Prop Name)
+        self.ptype = string_or_blank(card, 4, 'ptype')
+        assert self.ptype in ['ELEM', 'PSHELL', 'PBAR', 'PROD', 'PCOMP',
+                              'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
+                              'PBEAML', 'PSHEAR', 'PTUBE', 
+                              None], 'DRESP1 ptype=%s' % self.ptype
         self.region = integer_or_blank(card, 5, 'region')
         self.atta = integer_double_or_blank(card, 6, 'atta')
         self.attb = integer_double_or_blank(card, 7, 'attb')

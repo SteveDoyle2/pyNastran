@@ -336,7 +336,7 @@ class TLOAD1(TabularLoad):
         self.delay = integer_double_or_blank(card, 3, 'delay')
 
         ## Defines the type of the dynamic excitation. (LOAD,DISP, VELO, ACCE)
-        self.Type = string_or_blank(card, 4, 'Type', 'LOAD')
+        self.Type = integer_string_or_blank(card, 4, 'Type', 'LOAD')
 
         ## Identification number of TABLEDi entry that gives F(t). (Integer > 0)
         self.tid = integer(card, 5, 'tid')

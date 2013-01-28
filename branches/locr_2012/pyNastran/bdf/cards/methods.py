@@ -132,7 +132,7 @@ class EIGC(Method):  # TODO: not done
             assert self.method in ['INV', 'HESS', 'CLAN'],(
                     'method=%s is not INV, HESS, CLAN' % (self.method))
             ## Method for normalizing eigenvectors
-            self.norm = string(card, 3, 'norm')
+            self.norm = string_or_blank(card, 3, 'norm')
             if self.norm == 'POINT':
                 ## Grid or scalar point identification number. Required only if
                 ## NORM='POINT'. (Integer>0)
@@ -142,8 +142,8 @@ class EIGC(Method):  # TODO: not done
                 ## geometric grid point. (1<Integer<6)
                 self.C = components(card, 5, 'C')
             else:
-                self.G = integer_or_blank(card, 4, 'G')
-                self.C = components_or_blank(card, 5, 'C')
+                self.G = blank(card, 4, 'G')
+                self.C = blank(card, 5, 'C')
             
             ## Convergence criterion. (Real > 0.0. Default values are:
             # 10^-4 for METHOD = "INV",
@@ -345,7 +345,7 @@ class EIGR(Method):
 
             ## Desired number of roots (default=600 for SINV 3*ne for INV)
             if self.method in ['SINV']:
-                self.nd = integer(card, 6, 'nd', 600)
+                self.nd = integer_or_blank(card, 6, 'nd', 600)
             if self.method in ['INV']:
                 self.nd = integer_or_blank(card, 6, 'nd', 3 * self.ne)
             elif self.method in ['GIV', 'MGIV', 'HOU', 'MHOU']:
