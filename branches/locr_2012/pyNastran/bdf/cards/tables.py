@@ -31,7 +31,7 @@ class TableObj(object):
         @param self the Table Object
         @param xy the X/Y data with an ENDT appended
         @param nrepeated ???
-        @param isData did this come from the OP2
+        @param isData did this come from the OP2/BDF (True -> OP2)
         """
         self.table = []
         xy = self._cleanup_xy(xy, isData)
@@ -57,6 +57,9 @@ class TableObj(object):
     def _crash_fields(self, xy, nrepeated, nxy):
         """
         Creates the print message if there was an error
+        @param xy the xy data as a table with alternating x, y entries
+        @param nrepeated
+        @param nxy
         """
         try:
             msg = ''
@@ -76,6 +79,11 @@ class TableObj(object):
             raise
 
     def _cleanup_xy(self, xy, isData=False):
+        """
+
+        @param xy the xy data as a table with alternating x, y entries
+        @param isData did this come from the OP2/BDF (True -> OP2)
+        """
         xy2 = []  # remove extra ENDTs
         
         if 1:  # hardcoded b/c ENDT has been removed

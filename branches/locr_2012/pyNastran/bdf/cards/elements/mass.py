@@ -397,7 +397,7 @@ class CONM1(PointMass):
         return fields2
 
 
-class CONM2(PointMassElement):  # TODO: not done
+class CONM2(PointMassElement):
     """
     @param self the CONM2 object
     @param eid element ID
@@ -455,7 +455,7 @@ class CONM2(PointMassElement):  # TODO: not done
         else:
             # transform to global
             (dx, matrix) = self.cid.transformToGlobal(self.X)
-            raise NotImplementedError()
+            raise NotImplementedError('CONM2 intertia method is not implemented.')
             A2 = A * matrix
             return A2  # correct for offset using dx???
 

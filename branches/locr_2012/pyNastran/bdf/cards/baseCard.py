@@ -261,7 +261,7 @@ class Element(BaseCard):
                 #self.nodes.append(int(nid))
                 raise RuntimeError('this element may not have missing '
                                    'nodes...nids=%s allowEmptyNodes=False'
-                                   %(nids))
+                                   % nids)
 
 
 def expand_thru(fields):

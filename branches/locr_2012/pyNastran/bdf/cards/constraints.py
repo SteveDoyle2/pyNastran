@@ -295,9 +295,9 @@ class SUPORT1(Constraint):
                 C = components(card, i + 1, 'component%s' + str(i))
                 self.IDs.append(ID)
                 self.Cs.append(C)
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def rawFields(self):
         fields = ['SUPORT1', self.conid]
@@ -384,9 +384,9 @@ class MPC(Constraint):
             #self.gids        = self.gids[       0:nConstraints]
             #self.constraints = self.constraints[0:nConstraints]
             #self.enforced    = self.enforced[   0:nConstraints]
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def rawFields(self):  # MPC
         fields = ['MPC', self.conid]
@@ -519,9 +519,9 @@ class SPCAX(Constraint):
             self.c = components(card, 4, 'c')
             ## Enforced displacement value
             self.d = double(card, 5, 'd')
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def cross_reference(self, i, node):
         pass
@@ -557,9 +557,9 @@ class SPC1(Constraint):
             nodes = card.fields(3)
             self.nodes = expand_thru(nodes)
             self.nodes.sort()
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def cross_reference(self, i, node):
         self.nodes[i] = node
@@ -632,9 +632,9 @@ class SPCADD(ConstraintADD):
             sets = card.fields(2)
             self.sets = expand_thru(sets)
             self.sets.sort()
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def organizeConstraints(self, model):
         """
@@ -678,9 +678,9 @@ class MPCADD(ConstraintADD):
             sets = card.fields(2)
             self.sets = expand_thru(sets)
             self.sets.sort()
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def cross_reference(self, i, node):
         #dofCount = 0

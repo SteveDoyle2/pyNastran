@@ -33,9 +33,9 @@ class AEFACT(BaseCard):
             self.sid = integer(card, 1, 'sid')
             ## Number (float)
             self.Di = card.fields(2)
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def rawFields(self):
         fields = ['AEFACT', self.sid] + self.Di
@@ -79,9 +79,9 @@ class AELINK(BaseCard):
                 Ci = fields[i + 1]
                 self.independentLabels.append(independentLabel)
                 self.Cis.append(Ci)
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def rawFields(self):
         fields = ['AELINK', self.id, self.label]
@@ -120,9 +120,9 @@ class AELIST(BaseCard):
             eids = fields(integer_or_string, card, 'eid', i=2, j=len(card))
             self.elements = expand_thru(eids)
             self.cleanIDs()
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def cleanIDs(self):
         self.elements = list(set(self.elements))
@@ -253,9 +253,9 @@ class AESURF(BaseCard):
             ## function of the dynamic pressure. (Integer>0, Default = no limit)
             self.tqllim = integer_or_blank(card, 15, 'tqllim')
             self.tqulim = integer_or_blank(card, 16, 'tqulim')
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def rawFields(self):
         fields = ['AESURF', self.aesid, self.label, self.cid1, self.alid1,
@@ -563,9 +563,9 @@ class CAERO1(BaseCard):
                              double_or_blank(card, 14, 'y4', 0.0),
                              double_or_blank(card, 15, 'z4', 0.0)])
             self.x43 = double_or_blank(card, 16, 'x43', 0.)
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def Cp(self):
         if isinstance(self.cp, int):
@@ -677,9 +677,9 @@ class CAERO2(BaseCard):
             ## Length of body in the x-direction of the aerodynamic coordinate
             ## system.  (Real > 0)
             self.x12 = double_or_blank(card, 12, 'x12', 0.)
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def Cp(self):
         if isinstance(self.cp, int):
@@ -752,9 +752,9 @@ class CAERO3(BaseCard):
                              double_or_blank(card, 14, 'y4', 0.0),
                              double_or_blank(card, 15, 'z4', 0.0)])
             self.x43 = double_or_blank(card, 16, 'x43', 0.0)
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def cross_reference(self, model):
         self.pid = model.PAero(self.pid)  # links to PAERO3
@@ -854,7 +854,7 @@ class FLUTTER(BaseCard):
             self.density = integer(card, 3, 'density')
             self.mach = integer(card, 4, 'mach')
             self.rfreq_vel = integer(card, 5, 'rfreq_vel')
-        else:  # TODO doesnt support data
+        else:
             assert len(data) == 8, 'FLUTTER = %s' % (data)
             self.sid = data[0]
             self.method = data[1]
@@ -866,7 +866,7 @@ class FLUTTER(BaseCard):
             self.nValue = data[7]
             self.omax = data[8]
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
         assert self.method in ['K', 'PK', 'PKNL', 'PKS', 'PKNLS', 'KE']
 
@@ -980,9 +980,9 @@ class MKAERO1(BaseCard):
                 self.rFreqs.append(double_or_blank(card, i + 8, 'rFreq'))
             self.machs = wipe_empty_fields(self.machs)
             self.v = wipe_empty_fields(self.rFreqs)
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
         #print "machs  = ",self.machs
         #print "rFreqs = ",self.rFreqs
@@ -1036,9 +1036,9 @@ class MKAERO2(BaseCard):
             for i in xrange(1, 1 + nFields, 2):
                 self.machs.append(double(card, i, 'mach'))
                 self.rFreqs.append(double(card, i + 1, 'rFreq'))
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def addFreqs(self, mkaero):
         self.getMach_rFreqs()
@@ -1084,9 +1084,9 @@ class PAERO1(BaseCard):
                     raise RuntimeError('invalid Bi value on PAERO1 bi=|%r|' % (bi))
                 #else:
                 #    pass
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def Bodies(self):
         return self.Bi
@@ -1146,9 +1146,9 @@ class PAERO2(BaseCard):
             for i in xrange(9, 9 + nFields, 2):
                 self.thi.append(integer(card, i, 'lth'))
                 self.thn.append(integer(card, i + 1, 'thn'))
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def rawFields(self):
         fields = ['PAERO2', self.pid, self.orient, self.width,
@@ -1283,9 +1283,9 @@ class SPLINE2(Spline):
             self.thy = double(card, 10, 'thy')
 
             self.usage = string_or_blank(card, 12, 'usage', 'BOTH')
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def cross_reference(self, model):
         self.caero = model.CAero(self.caero)
@@ -1438,9 +1438,9 @@ class SPLINE5(Spline):
             self.thy = double(card, 10, 'thy')
 
             self.usage = string_or_blank(card, 12, 'usage', 'BOTH')
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def Cid(self):
         if isinstance(self.cid, int):
@@ -1522,9 +1522,9 @@ class TRIM(BaseCard):
                     self.aeqr = double_or_blank(card, 8, 'aeqr', 1.0)
                     i += 1
                 i += 2
-        else:  # TODO doesnt support data
+        else:
             msg = '%s has not implemented data parsing' % self.type
-            raise RuntimeError(msg)
+            raise NotImplementedError(msg)
 
     def rawFields(self):
         fields = ['TRIM', self.sid, self.mach, self.q]

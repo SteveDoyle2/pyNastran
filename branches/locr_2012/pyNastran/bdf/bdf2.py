@@ -741,7 +741,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 filename = self._get_include_file_name(include_lines)
 
                 self.open_file(filename)
-                line = next_line
+                #line = next_line
                 self.case_control_lines.append(next_line)
             else:
                 self.case_control_lines.append(lineUpper)
@@ -764,8 +764,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """Parses an INCLUDE file split into multiple lines (as a list).
         @param self the BDF object
         @param cardLines the list of lines in the include card (all the lines!)
-        @param cardName INCLUDE or include (needed to strip it off without
-          converting the case)
         @retval filename the INCLUDE filename
         """
         cardLines2 = []
@@ -849,6 +847,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         comment = ''
         while not line and not self._is_end_of_file():
             line = self.active_file.readline().rstrip('\n\r\t ')
+            print("line =",line)
             if '$' in line:
                 i = line.index('$')
                 comment = line[i:] + '\n'
@@ -866,13 +865,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         @return:  True/False
         """
         try:
-            if (self.active_file.tell() == os.fstat(
-                self.active_file.fileno()).st_size):
+            fsize = os.fstat(self.active_file.fileno()).st_size
+            if self.active_file.tell() == fsize:
                 return True
         except:
             print("self.active_file = ", self.active_file)
-            print("self.active_file.tell() = ", self.active_file.tell())
-            raise IOError('self.active_filename = |%s|' % self.active_filename)
+            #print("self.active_file.tell() = ", self.active_file.tell())
+            print(self.active_file.readline())
+            #raise IOError('self.active_filename = |%s|' % self.active_filename)
+            raise
         return False
 
     def _clean_comment(self, comment):
@@ -950,7 +951,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 lines.append(line)
                 cardname = self.get_card_name(lines)
                 self._close_file()
-                return(lines, comments, cardname)
+                return lines, comments, cardname
         lines.append(line)
 
         while 1:

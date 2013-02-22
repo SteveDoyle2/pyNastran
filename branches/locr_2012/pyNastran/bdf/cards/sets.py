@@ -52,7 +52,7 @@ class ABCQSet(Set):
     ASET ID1 C1 ID2 C2   ID3 C3 ID4 C4
     ASET 16  2  23  3516 1   4
     """
-    def __init__(self, card=None, data=None, comment=''): # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):
         Set.__init__(self, card, data)
         if comment:
             self._comment = comment
@@ -90,7 +90,7 @@ class ASET(ABCQSet):
     """
     type = 'ASET'
 
-    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):
         ABCQSet.__init__(self, card, data)
         if comment:
             self._comment = comment
@@ -105,7 +105,7 @@ class BSET(ABCQSet):
     """
     type = 'BSET'
 
-    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):
         ABCQSet.__init__(self, card, data)
         if comment:
             self._comment = comment
@@ -120,7 +120,7 @@ class CSET(ABCQSet):
     """
     type = 'CSET'
 
-    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):
         ABCQSet.__init__(self, card, data)
         if comment:
             self._comment = comment
@@ -135,7 +135,7 @@ class QSET(ABCQSet):
     """
     type = 'QSET'
 
-    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):
         ABCQSet.__init__(self, card, data)
         if comment:
             self._comment = comment
@@ -150,7 +150,7 @@ class ABQSet1(Set):
     ID8 ID9
     ASET1 C ID1 'THRU' ID2
     """
-    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):
         Set.__init__(self, card, data)
         if comment:
             self._comment = comment
@@ -206,7 +206,7 @@ class CSET1(Set):
     CSET1 C ID1 'THRU' ID2
     CSET1,,'ALL'
     """
-    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):
         Set.__init__(self, card, data)
         if comment:
             self._comment = comment
@@ -255,7 +255,7 @@ class SET1(Set):
     """
     type = 'SET1'
 
-    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):
         Set.__init__(self, card, data)
         if comment:
             self._comment = comment
@@ -297,7 +297,7 @@ class SET3(Set):
     """
     type = 'SET1'
 
-    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):
         Set.__init__(self, card, data)
         if comment:
             self._comment = comment
@@ -402,7 +402,7 @@ class SEBSET(Set):
     SEBSET SEID ID1 C1 ID2 C2 ID3 C3
     SEBSET C ID1 'THRU' ID2
     """
-    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):
         Set.__init__(self, card, data)
         if comment:
             self._comment = comment
@@ -435,7 +435,7 @@ class SEBSET1(Set):
     ID8 ID9
     SEBSET1 C ID1 'THRU' ID2
     """
-    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):
         Set.__init__(self, card, data)
         if comment:
             self._comment = comment
@@ -463,7 +463,7 @@ class SEQSET1(Set):
     ID8 ID9
     SEQSET1 C ID1 'THRU' ID2
     """
-    def __init__(self, card=None, data=None, comment=''):  # TODO doesnt support data
+    def __init__(self, card=None, data=None, comment=''):
         Set.__init__(self, card, data)
         if comment:
             self._comment = comment
