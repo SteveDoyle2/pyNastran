@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,W0612
 """
 All solid elements are defined in this file.  This includes:
  * CHEXA8
@@ -28,6 +28,13 @@ def volume4(n1, n2, n3, n4):
     return V
 
 def area_centroid(n1, n2, n3, n4):
+    """
+    returns the area and centroid of a quad
+    1------2
+    |   /  |
+    | /    |
+    4------3
+    """
     a = n1 - n2
     b = n2 - n4
     area1 = Area(a, b)
@@ -50,14 +57,30 @@ class SolidElement(Element):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+    
+    def Volume(self):
+        """
+        Base volume method that should be overwritten
+        """
+        pass
 
     def Mass(self):
+        """
+        Calculates the mass of the solid element
+        Mass = Rho * Volume
+        """
         return self.Rho() * self.Volume()
 
     def Mid(self):
+        """
+        Returns the material ID as an integer
+        """
         return self.pid.Mid()
 
     def Rho(self):
+        """
+        Returns the density
+        """
         try:
             return self.pid.mid.rho
         except AttributeError:

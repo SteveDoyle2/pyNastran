@@ -77,21 +77,39 @@ class ShellElement(Element):
         raise NotImplementedError('Area undefined for %s' % self.type)
 
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def mid(self):
+        """
+        Returns the material
+        """
         return self.pid.mid()
 
     def Mid(self):
+        """
+        Returns the material ID
+        """
         return self.pid.Mid()
 
     def Rho(self):
+        """
+        Returns the density
+        """
         return self.pid.mid().rho
 
     def Nsm(self):
+        """
+        Returns the non-structural mass
+        """
         return self.pid.Nsm()
 
     def MassPerArea(self):
+        """
+        Returns the mass per area
+        """
         return self.pid.MassPerArea()
 
     def Mass(self):
@@ -114,6 +132,9 @@ class TriShell(ShellElement):
         ShellElement.__init__(self, card, data)
 
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def AreaCentroidNormal(self):
@@ -338,6 +359,9 @@ class CTRIA6(TriShell):
         self.pid = model.Property(self.pid, msg=msg)
 
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def AreaCentroidNormal(self):
@@ -440,6 +464,9 @@ class CTRIAR(TriShell):
         self.T3 = double_or_blank(card, 13, 'T3', 1.0)
 
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def flipNormal(self):
@@ -548,6 +575,9 @@ class CTRIAX6(TriShell):
         return area
 
     def Thickness(self):
+        """
+        CTRIAX doesn't have a thickness because ???
+        """
         raise AttributeError('CTRIAX6 does not have a thickness')
 
     def Nsm(self):
@@ -592,6 +622,9 @@ class QuadShell(ShellElement):
         ShellElement.__init__(self, card, data)
 
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def Normal(self):
@@ -960,6 +993,9 @@ class CQUADR(QuadShell):
         assert len(self.nodes) == 4, 'CQUADR'
 
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def flipNormal(self):
@@ -1010,6 +1046,9 @@ class CQUAD(QuadShell):
         assert len(self.nodes) == 9
 
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def flipNormal(self):
@@ -1090,6 +1129,9 @@ class CQUAD8(QuadShell):
         self.pid = mesh.Property(self.pid, msg=msg)
 
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def flipNormal(self):
@@ -1187,6 +1229,9 @@ class CQUADX(QuadShell):
         assert len(self.nodes) == 9
 
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def flipNormal(self):
