@@ -212,7 +212,7 @@ def double_string_or_blank(card, n, fieldname, default=None):
             raise RuntimeError(msg)
     elif svalue.isdigit():
         Type = getType(svalue)
-       raise RuntimeError('%s = %s (field #%s) on card must be a float, string or blank (not %s).' % (fieldname, svalue, n, Type) )
+        raise RuntimeError('%s = %s (field #%s) on card must be a float, string or blank (not %s).' % (fieldname, svalue, n, Type) )
     elif svalue == '':
         return default
     return svalue
