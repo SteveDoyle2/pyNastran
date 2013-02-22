@@ -3,8 +3,8 @@ def components(card, n, fieldname):
     try:
         value = int(svalue)
     except:
-        raise RuntimeError('%s (field #%s) on card must be an integer.\n'
-                           'card=\n%s' % (fieldname, n) )
+        Type = getType(svalue)
+        raise RuntimeError('%s = %s (field #%s) on card must be an integer (not %s).' % (fieldname, svalue, n, Type) )
 
     svalue2 = str(value)
     svalue3 = ''.join(sorted(svalue2))
@@ -30,7 +30,8 @@ def blank(card, n, fieldname, default=None):
     svalue = card.field(n)
     if svalue is None:
         return default
-    raise RuntimeError('%s = %s (field #%s) on card must be blank.' % (fieldname, svalue, n) )
+    Type = getType(svalue)
+    raise RuntimeError('%s = %s (field #%s) on card must be blank (not %s).' % (fieldname, svalue, n, Type) )
     
 def field(card, n, fieldname):
     return integer_double_string_or_blank(card, n, fieldname, default=None)
@@ -81,7 +82,8 @@ def integer(card, n, fieldname):
     try:
         return int(svalue)
     except:
-        raise RuntimeError('%s = %s (field #%s) on card must be an integer.' % (fieldname, svalue, n) )
+        Type = getType(svalue)
+        raise RuntimeError('%s = %s (field #%s) on card must be an integer (not %s).' % (fieldname, svalue, n, Type) )
 
 def integer_or_blank(card, n, fieldname, default=None):
     #try:
@@ -97,14 +99,15 @@ def integer_or_blank(card, n, fieldname, default=None):
         try:
             return int(svalue)
         except:
-            raise RuntimeError('%s = %s (field #%s) on card must be an integer.or blank.' % (fieldname, svalue, n) )
+            Type = getType(svalue)
+            raise RuntimeError('%s = %s (field #%s) on card must be an integer.or blank (not %s).' % (fieldname, svalue, n, Type) )
     return default
     
 def double(card, n, fieldname):
     try:
         svalue = card.field(n)
     except IndexError:
-        raise RuntimeError('%s (field #%s) on card must be an float.' % (fieldname, n) )
+        raise RuntimeError('%s (field #%s) on card must be an\ float.' % (fieldname, n) )
     if isinstance(svalue, float):
         return svalue
 
@@ -112,7 +115,8 @@ def double(card, n, fieldname):
     try:  # 1.0, 1.0E+3, 1.0E-3
         value = float(svalue)
     except TypeError:
-            raise RuntimeError('%s = %s (field #%s) on card must be an float.' % (fieldname, svalue, n) )
+        Type = getType(svalue)
+        raise RuntimeError('%s = %s (field #%s) on card must be a float (not %s).' % (fieldname, svalue, n, Type) )
     except ValueError:
         try:
             svalue = svalue.upper()
@@ -132,7 +136,8 @@ def double(card, n, fieldname):
 
             value = float(svalue)
         except ValueError:
-            raise RuntimeError('%s = %s (field #%s) on card must be an float.' % (fieldname, svalue, n) )
+            Type = getType(svalue)
+            raise RuntimeError('%s = %s (field #%s) on card must be a float (not %s).' % (fieldname, svalue, n, Type) )
     return value
 
 def double_or_blank(card, n, fieldname, default=None):
@@ -147,29 +152,46 @@ def double_or_blank(card, n, fieldname, default=None):
         try:
             return double(card, n, fieldname)
         except:
-            raise RuntimeError('%s = %s (field #%s) on card must be an float or blank.' % (fieldname, svalue, n) )
+            Type = getType(svalue)
+            raise RuntimeError('%s = %s (field #%s) on card must be a float or blank (not %s).' % (fieldname, svalue, n, Type) )
     return default
     
 def double_or_string(card, n, fieldname):
     #try:
     svalue = card.field(n)
     #except IndexError:
-        #raise RuntimeError('%s (field #%s) on card must be an float or string (not blank).' % (fieldname, n) )
+        #raise RuntimeError('%s (field #%s) on card must be a float or string (not blank).' % (fieldname, n) )
+
     if isinstance(svalue, float):
         return svalue
     elif svalue is None:
-        raise RuntimeError('%s (field #%s) on card must be an float or string (not blank).' % (fieldname, n) )
+        raise RuntimeError('%s (field #%s) on card must be a float or string (not blank).' % (fieldname, n) )
+    elif isinstance(svalue, str):
+        svalue = svalue.strip()
 
     if '.' in svalue: # float
         try:
             return double(card, n, fieldname)
         except:
-            raise RuntimeError('%s = %s (field #%s) on card must be an float or string (not blank).' % (fieldname, svalue, n) )
-    else: # string
-        return svalue.strip()
-    raise RuntimeError('%s = %s (field #%s) on card must be an float or string (not blank).' % (fieldname, svalue, n) )
-    
+            Type = getType(svalue)
+            raise RuntimeError('%s = %s (field #%s) on card must be an float or string (not %s).' % (fieldname, svalue, n, Type) )
+    elif svalue.isdigit(): # fail
+        pass
+    elif svalue: # string
+        return svalue
+    Type = getType(svalue)
+    raise RuntimeError('%s = %s (field #%s) on card must be an float or string (not %s).' % (fieldname, svalue, n, Type) )
+
+
 def double_string_or_blank(card, n, fieldname, default=None):
+    """
+
+    @param card BDF card as a list
+    @param n field number
+    @param fieldname name of field
+    @param default the default value for the field (default=None)
+    @return: @raise Runtime Error if there is an invalid type
+    """
     #try:
     svalue = card.field(n)
     #except IndexError:
@@ -178,17 +200,31 @@ def double_string_or_blank(card, n, fieldname, default=None):
         return svalue
     elif svalue is None:
         return default
+    elif isinstance(svalue, str):
+        svalue = svalue.strip()
 
     if '.' in svalue:
         try:
             return double(card, n, fieldname)
         except:
-            raise RuntimeError('%s = %s (field #%s) on card must be an float, string or blank.' % (fieldname, svalue, n) )
-    else:
-        return svalue
-    return default
-    
+            Type = getType(svalue)
+            msg = '%s = %s (field #%s) on card must be a float, string or blank (not %s).' % (fieldname, svalue, n, Type)
+            raise RuntimeError(msg)
+    elif svalue.isdigit():
+        Type = getType(svalue)
+       raise RuntimeError('%s = %s (field #%s) on card must be a float, string or blank (not %s).' % (fieldname, svalue, n, Type) )
+    elif svalue == '':
+        return default
+    return svalue
+
 def integer_or_double(card, n, fieldname):
+    """
+    @param card a BDF_card object
+    @param n the field index
+    @param fieldname the name of the field
+    @return the value with the proper type
+    @raise Runtime Error if there's an invalid type
+    """
     #try:
     svalue = card.field(n)
     #except IndexError:
@@ -196,18 +232,20 @@ def integer_or_double(card, n, fieldname):
     if isinstance(svalue, int) or isinstance(svalue, float):
         return svalue
     elif svalue is None:
-        raise RuntimeError('%s (field #%s) on card must be an integer or float (not None).' % (fieldname, n) )
+        raise RuntimeError('%s (field #%s) on card must be an integer or float (not blank).' % (fieldname, n) )
 
     if '.' in svalue:  # float/exponent
         try:
-            double(card, n, fieldname)
+            value = double(card, n, fieldname)
         except ValueError:
-            raise RuntimeError('%s = %s (field #%s) on card must be a integer or a float.' % (fieldname, svalue, n) )
+            Type = getType(svalue)
+            raise RuntimeError('%s = %s (field #%s) on card must be a integer or a float (not %s).' % (fieldname, svalue, n, Type) )
     else:  # int
         try:
             value = int(svalue)
-        except:           
-            raise RuntimeError('%s = %s (field #%s) on card must be an integer or a float.' % (fieldname, svalue, n) )
+        except:
+            Type = getType(svalue)
+            raise RuntimeError('%s = %s (field #%s) on card must be an integer or a float (not %s).' % (fieldname, svalue, n, Type) )
     return value
 
 def integer_double_or_blank(card, n, fieldname, default=None):
@@ -225,7 +263,8 @@ def integer_double_or_blank(card, n, fieldname, default=None):
         try:
             return integer_or_double(card, n, fieldname)
         except:
-            raise RuntimeError('%s = %s (field #%s) on card must be an integer, float, or blank.' % (fieldname, svalue, n) )
+            Type = getType(svalue)
+            raise RuntimeError('%s = %s (field #%s) on card must be an integer, float, or blank (not %s).' % (fieldname, svalue, n, Type) )
     return default
     
 def integer_or_string(card, n, fieldname):
@@ -239,8 +278,9 @@ def integer_or_string(card, n, fieldname):
     if svalue.isdigit():  # int
         try:
             value = int(svalue)
-        except ValueError:            
-            raise RuntimeError('%s = %s (field #%s) on card must be an integer or string.' % (fieldname, svalue, n) )
+        except ValueError:
+            Type = getType(svalue)
+            raise RuntimeError('%s = %s (field #%s) on card must be an integer or string (not %s).' % (fieldname, svalue, n, Type) )
     else:  # string
         return svalue
     return value
@@ -259,8 +299,23 @@ def integer_string_or_blank(card, n, fieldname, default=None):
         try:
             return integer_or_string(card, n, fieldname)
         except:
-            raise RuntimeError('%s = %s (field #%s) on card must be an integer, string, or blank.' % (fieldname, svalue, n) )
+            Type = getType(svalue)
+            raise RuntimeError('%s = %s (field #%s) on card must be an integer, string, or blank (not %s).' % (fieldname, svalue, n, Type) )
     return default
+
+def getType(value):
+    if value is None:
+        Type = 'blank'
+    elif isinstance(value, int):
+        Type = 'an integer'
+    elif isinstance(value, float):
+        Type = 'a double'
+    elif isinstance(value, str):
+        Type = 'a string'
+    else:
+        Type = str(type(value))
+    return Type
+
 
 def integer_double_or_string(card, n, fieldname):
     #try:
@@ -278,11 +333,13 @@ def integer_double_or_string(card, n, fieldname):
             try:
                 value = int(svalue)
             except ValueError:
+                print "type(val) =",type(svalue)
                 raise RuntimeError('%s = %s (field #%s) on card must be an integer, float, or string (not blank).' % (fieldname, svalue, n) )
         else:
             value = svalue
         return value
-    raise RuntimeError('%s = %s (field #%s) on card must be an integer, float, or string (not blank).' % (fieldname, svalue, n) )
+    Type = getType(svalue)
+    raise RuntimeError('%s = %s (field #%s) on card must be an integer, float, or string (not %s).' % (fieldname, svalue, n, Type) )
 
 def integer_double_string_or_blank(card, n, fieldname, default=None):
     #try:
@@ -305,7 +362,8 @@ def integer_double_string_or_blank(card, n, fieldname, default=None):
             try:
                 value = int(svalue)
             except ValueError:
-                raise RuntimeError('%s = %s (field #%s) on card must be an integer, float, or string.' % (fieldname, svalue, n) )
+                Type = getType(svalue)
+                raise RuntimeError('%s = %s (field #%s) on card must be an integer, float, or string (not %s).' % (fieldname, svalue, n, Type) )
         else:
             value = svalue
         return value
@@ -316,14 +374,19 @@ def string(card, n, fieldname):
     if isinstance(svalue, str) or isinstance(svalue, unicode):
         svalue = svalue.strip()
     else:
-        raise RuntimeError('%s = %s (field #%s) on card must be an string (not blank).' % (fieldname, svalue, n) )
+        Type = getType(svalue)
+        raise RuntimeError('%s = %s (field #%s) on card must be an string (not %s).' % (fieldname, svalue, n, Type) )
     
     if svalue.isdigit() or '.' in svalue:
-        raise RuntimeError('%s = %s (field #%s) on card must be an string or blank.' % (fieldname, svalue, n) )
+        Type = getType(svalue)
+        raise RuntimeError('%s = %s (field #%s) on card must be an string or blank (not %s).' % (fieldname, svalue, n, Type) )
 
     if svalue:  # string
         return svalue
-    raise RuntimeError('%s = %s (field #%s) on card must be an string (not blank).' % (fieldname, svalue, n) )
+    Type = getType(svalue)
+    msg = '%s = %s (field #%s) on card must be an string (not %s).' % (fieldname, svalue, n, Type)
+    raise RuntimeError(msg)
+
 
 def string_or_blank(card, n, fieldname, default=None):
     svalue = card.field(n)
@@ -332,11 +395,13 @@ def string_or_blank(card, n, fieldname, default=None):
     elif isinstance(svalue, str) or isinstance(svalue, unicode):
         svalue = svalue.strip()
     else:
-        raise RuntimeError('%s = %s (field #%s) on card must be an string (not blank).' % (fieldname, svalue, n) )
+        Type = getType(svalue)
+        raise RuntimeError('%s = %s (field #%s) on card must be an string (not %s).' % (fieldname, svalue, n, Type) )
 
     svalue = svalue.strip()
     if svalue.isdigit() or '.' in svalue:
-        raise RuntimeError('%s = %s (field #%s) on card must be an string or blank.' % (fieldname, svalue, n) )
+        Type = getType(svalue)
+        raise RuntimeError('%s = %s (field #%s) on card must be an string or blank (not %s).' % (fieldname, svalue, n, Type) )
         
     if svalue:  # string
         return svalue

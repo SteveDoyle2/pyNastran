@@ -728,10 +728,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 return  # file was closed
             line = lineIn.strip().split('$')[0].strip()
             lineUpper = line.upper()
-
+            #print("lineUpper = |%s|" % lineUpper)
             if lineUpper.startswith('INCLUDE'):
+                #print("INCLUDE!!!")
                 next_line, comment = self.get_next_line(False)
-                next_line = next_line.strip().split('$')[0].strip()
+                if next_line:
+                    next_line = next_line.strip().split('$')[0].strip()
+                else:
+                    next_line = ''
                 include_lines = [line]
                 while '\\' in next_line or '/' in next_line:  # more includes
                     include_lines.append(next_line)
@@ -806,12 +810,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         if fname in self.used_filenames:
             raise RuntimeError('fname=%s has already been opened once' % fname)
-
+        #print("fname!!",fname)
         self.log.info("opening %s" % fname)
         self.used_filenames.append(fname)
         self.active_filenames.append(fname)
         self.active_filename = fname
-        f = open(fname, 'r')
+        f = open(fname, 'rb')
         self.active_files.append(f)
         self.active_file = f
         self.stored_lines[self.active_filename] = []
@@ -845,17 +849,26 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         line = ''
         comment = ''
-        while not line and not self._is_end_of_file():
-            line = self.active_file.readline().rstrip('\n\r\t ')
-            print("line =",line)
-            if '$' in line:
-                i = line.index('$')
-                comment = line[i:] + '\n'
-                line = line[:i].rstrip('\t ')
-            if self._is_end_of_file():
-                self._close_file()
-                if self.active_file is None:
-                    return None, None
+        try:
+            while not line and not self._is_end_of_file():
+                line = self.active_file.readline().rstrip('\n\r\t ')
+                #print("*line = |%r|" % line)
+                if '$' in line:
+                    i = line.index('$')
+                    comment = line[i:] + '\n'
+                    line = line[:i].rstrip('\t ')
+                if self._is_end_of_file():
+                    self._close_file()
+                    if line:
+                        return line, comment
+                    elif self.active_file is None:
+                        return None, None
+        except AttributeError:
+            line = None
+            comment = None
+        # except ValueError:
+        #     line = None
+        #     comment = None
         return line, comment
 
     def _is_end_of_file(self):
@@ -1009,7 +1022,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.log.debug("*read_bulk_data_deck")
         while len(self.active_filenames) > 0 or self.stored_lines[self.active_filename]:
             (raw_card, comment, card_name) = self.get_card()
-            
+            #print("raw_card",raw_card)
             if card_name == 'INCLUDE':
                 filename = self._get_include_file_name(raw_card)
                 self.open_file(filename)

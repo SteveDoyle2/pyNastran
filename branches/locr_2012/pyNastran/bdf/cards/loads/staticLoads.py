@@ -82,7 +82,7 @@ class LOAD(LoadCombination):
                       isinstance(load, PLOAD4) or isinstance(load, GRAV)):
                     loadTypes += [load.type]
                 else:
-                    raise RuntimeError(load)
+                    raise NotImplementedError(load)
 
         loadTypes = list(set(loadTypes))
         #print "loadTypes = ",loadTypes
@@ -884,8 +884,8 @@ class PLOAD1(Load):
             self.scale = string(card, 4, 'scale')
             self.x1 = double(card, 5, 'x1')
             self.p1 = double(card, 6, 'p1')
-            self.x2 = double(card, 7, 'x2')
-            self.p2 = double(card, 8, 'p2')
+            self.x2 = double_or_blank(card, 7, 'x2')
+            self.p2 = double_or_blank(card, 8, 'p2')
         else:
             self.sid = data[0]
             self.eid = data[1]

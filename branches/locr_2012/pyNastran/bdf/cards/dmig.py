@@ -435,7 +435,7 @@ class DMI(BaseCard):
         ## Form of the matrix:  1=Square (not symmetric); 2=Rectangular;
         ## 3=Diagonal (m=nRows,n=1);  4=Lower Triangular; 5=Upper Triangular;
         ## 6=Symmetric; 8=Identity (m=nRows, n=m)
-        self.form = integer(card, 'form', 3)
+        self.form = integer(card, 3, 'form')
 
         ## 1-Real, Single Precision; 2=Real,Double Precision;
         ## 3=Complex, Single; 4=Complex, Double
