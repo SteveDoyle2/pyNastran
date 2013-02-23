@@ -27,7 +27,8 @@ from ..baseCard import BaseCard, expand_thru, expand_thru_by
 from pyNastran.bdf.format import (integer, integer_or_blank,
                                   double, double_or_blank,
                                   string, string_or_blank,
-                                  integer_or_string, fields)
+                                  integer_or_string, fields,
+                                  integer_string_or_blank)
 
 class LOAD(LoadCombination):
     type = 'LOAD'
@@ -884,8 +885,9 @@ class PLOAD1(Load):
             self.scale = string(card, 4, 'scale')
             self.x1 = double(card, 5, 'x1')
             self.p1 = double(card, 6, 'p1')
-            self.x2 = double_or_blank(card, 7, 'x2')
-            self.p2 = double_or_blank(card, 8, 'p2')
+            self.x2 = double_or_blank(card, 7, 'x2', self.x1)
+            self.p2 = double_or_blank(card, 8, 'p2', self.p1)
+            assert 0 <= self.x1 <= self.x2
         else:
             self.sid = data[0]
             self.eid = data[1]
@@ -975,7 +977,7 @@ class PLOAD4(Load):
             self.pressures = p
 
             self.eids = [self.eid]
-            if (string_or_blank(card, 7, 'THRU') == 'THRU' and
+            if (integer_string_or_blank(card, 7, 'g1/THRU') == 'THRU' and
                 integer_or_blank(card, 8, 'eid2')):  # plates
                 eid2 = integer(card, 8, 'eid2')
                 if eid2:

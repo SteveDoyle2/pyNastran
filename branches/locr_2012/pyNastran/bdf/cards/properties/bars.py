@@ -1088,19 +1088,22 @@ class PBEAM(IntegratedLineProperty):
                 self.so.append(propFields[0])
                 self.xxb.append(propFields[1])
                 self.A.append(propFields[2])
+
                 self.i1.append(set_default_if_blank(propFields[3], 0.0))
                 self.i2.append(set_default_if_blank(propFields[4], 0.0))
                 self.i12.append(set_default_if_blank(propFields[5], 0.0))
                 self.j.append(set_default_if_blank(propFields[6], 0.0))
                 self.nsm.append(set_default_if_blank(propFields[7], 0.0))
-                self.c1.append(set_default_if_blank(propFields[8], 0.0))
-                self.c2.append(set_default_if_blank(propFields[9], 0.0))
-                self.d1.append(set_default_if_blank(propFields[10], 0.0))
-                self.d2.append(set_default_if_blank(propFields[11], 0.0))
-                self.e1.append(set_default_if_blank(propFields[12], 0.0))
-                self.e2.append(set_default_if_blank(propFields[13], 0.0))
-                self.f1.append(set_default_if_blank(propFields[14], 0.0))
-                self.f2.append(set_default_if_blank(propFields[15], 0.0))
+
+                if propFields[0] in ['YES', 'NO']:  ## TODO: verify
+                    self.c1.append(set_default_if_blank(propFields[8], 0.0))
+                    self.c2.append(set_default_if_blank(propFields[9], 0.0))
+                    self.d1.append(set_default_if_blank(propFields[10], 0.0))
+                    self.d2.append(set_default_if_blank(propFields[11], 0.0))
+                    self.e1.append(set_default_if_blank(propFields[12], 0.0))
+                    self.e2.append(set_default_if_blank(propFields[13], 0.0))
+                    self.f1.append(set_default_if_blank(propFields[14], 0.0))
+                    self.f2.append(set_default_if_blank(propFields[15], 0.0))
             #print("nRepeated = %s" %(nRepeated))
 
             # footer fields
