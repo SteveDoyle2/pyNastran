@@ -46,7 +46,7 @@ from .cards.aero import (AEFACT, AELINK, AELIST, AEPARM, AESTAT, AESURF,
                          SPLINE5, TRIM)
 from .cards.constraints import (SPC, SPCADD, SPCD, SPCAX, SPC1,
                                 MPC, MPCADD, SUPORT1, SUPORT,
-                                constraintObject2)
+                                constraintObject)
 from .cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                       CORD2R, CORD2C, CORD2S, CORD3G)
 from .cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
@@ -434,9 +434,9 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.suports = []  # suport, suport1
 
         ## stores SPCADD,SPC,SPC1,SPCD,SPCAX
-        self.spcObject2 = constraintObject2()
+        self.spcObject2 = constraintObject()
         ## stores MPCADD,MPC
-        self.mpcObject2 = constraintObject2()
+        self.mpcObject2 = constraintObject()
 
         self.spcs = {}
         self.spcadds = {}

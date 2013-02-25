@@ -5,7 +5,7 @@ from itertools import izip
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
 from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.format import (integer, integer_or_blank, components, fields, integer_or_string)
+from pyNastran.bdf.format import (integer, integer_or_blank, components, fields, integer_or_string, string, string_or_blank)
 
 class Set(BaseCard):
     """Generic Class all SETx cards inherit from"""
@@ -313,7 +313,7 @@ class SET3(Set):
         ## (Integer > 0)
         self.IDs = []
 
-        IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))
+        IDs = fields(integer_or_string, card, 'ID', i=3, j=len(card))
         self.IDs = expand_thru(IDs)
         self.cleanIDs()
 
@@ -385,9 +385,9 @@ class SESET(SetSuper):
             #print("thruFields", thruFields)
             iThru = thruFields.index('THRU')
             card = print_card_8(['SESET', self.seid] + 
-                                thruFields[iThru-1:iThru+2])
+                                thruFields[iThru - 1:iThru + 2])
             cards.append(card)
-            thruFields = thruFields[0:iThru-1] + thruFields[iThru+2:]
+            thruFields = thruFields[0:iThru - 1]+thruFields[iThru + 2:]
         #print("thruFields", thruFields)
         if thruFields:
             card = print_card_8(['SESET', self.seid] + thruFields)

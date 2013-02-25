@@ -481,14 +481,14 @@ class RFORCE(Load):
         if comment:
             self._comment = comment
         if card:
-            self.sid = integer(card, 'sid', 1)
-            self.nid = integer(card, 'nid', 2)
+            self.sid = integer(card, 1, 'sid')
+            self.nid = integer(card, 2, 'nid')
             self.cid = integer_or_blank(card, 3, 'cid', 0)
             self.scale = double_or_blank(card, 4, 'scale', 1.)
             self.r1 = double_or_blank(card, 5, 'r1', 0.)
             self.r2 = double_or_blank(card, 6, 'r2', 0.)
             self.r3 = double_or_blank(card, 7, 'r3', 0.)
-            self.method = integer_or_blank(8, 'method', 1)
+            self.method = integer_or_blank(card, 8, 'method', 1)
             self.racc = double_or_blank(card, 9, 'racc', 0.)
             self.mb = integer_or_blank(card, 10, 'mb', 0)
             self.idrf = integer_or_blank(card, 11, 'idrf', 0)
@@ -703,10 +703,10 @@ class RANDPS(RandomLoad):
             self.k = integer(card, 3, 'k')
 
             ## Components of the complex number. (Real)
-            self.x = double(4, 'x')
-            self.y = double(5, 'y')
+            self.x = double(card, 4, 'x')
+            self.y = double(card, 5, 'y')
             ## Identification number of a TABRNDi entry that defines G(F).
-            self.tid = integer(6, 'tid', 0)
+            self.tid = integer_or_blank(card, 6, 'tid', 0)
 
     def cross_reference(self, model):
         if self.tid:

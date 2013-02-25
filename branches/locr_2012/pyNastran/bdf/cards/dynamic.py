@@ -112,9 +112,9 @@ class FREQ2(FREQ):
         if comment:
             self._comment = comment
         self.sid = integer(card, 1, 'sid')
-        f1 = double(card, 2, 'f1', 0.0)
+        f1 = double(card, 2, 'f1')  # default=0.0 ?
         f2 = double(card, 3, 'f2')
-        nf = integer(card, 4, 'nf', 1)
+        nf = integer_or_blank(card, 4, 'nf', 1)
 
         d = 1. / nf * log(f2 / f1)
         self.freqs = []

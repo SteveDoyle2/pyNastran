@@ -73,7 +73,7 @@ class AELINK(BaseCard):
             self.Cis = []
 
             fields = card[3:]
-            assert len(fields) % 2 == 0, 'fields=%s' % (fields)
+            assert len(fields) % 2 == 0, 'fields=%s' % fields
             for i in xrange(0, len(fields), 2):
                 independentLabel = fields[i]
                 Ci = fields[i + 1]
@@ -157,7 +157,7 @@ class AEPARM(BaseCard):
             self.id = data[0]
             self.label = data[1]
             self.units = data[2]
-            assert len(data) == 3, 'data = %s' % (data)
+            assert len(data) == 3, 'data = %s' % data
 
     def rawFields(self):
         fields = ['AEPARM', self.id, self.label, self.units]
@@ -185,7 +185,7 @@ class AESTAT(BaseCard):
         else:
             self.id = data[0]
             self.label = data[1]
-            assert len(data) == 2, 'data = %s' % (data)
+            assert len(data) == 2, 'data = %s' % data
 
     def rawFields(self):
         fields = ['AESTAT', self.id, self.label]
@@ -309,7 +309,7 @@ class AESURFS(BaseCard):  # not integrated
             self.label = data[1]
             self.list1 = data[2]
             self.list2 = data[3]
-            assert len(data) == 4, 'data = %s' % (data)
+            assert len(data) == 4, 'data = %s' % data
 
     def rawFields(self):
         fields = ['AESURFS', self.id, self.label, None, self.list1, None,
@@ -427,7 +427,7 @@ class AEROS(Aero):
             self.Sref = data[4]
             self.symXZ = data[5]
             self.symXY = data[6]
-            assert len(data) == 7, 'data = %s' % (data)
+            assert len(data) == 7, 'data = %s' % data
 
     def rawFields(self):
         fields = ['AEROS', self.acsid, self.rcsid, self.cRef,
@@ -747,7 +747,7 @@ class CAERO3(BaseCard):
                              double_or_blank(card, 10, 'y1', 0.0),
                              double_or_blank(card, 11, 'z1', 0.0)])
             self.x12 = double(card, 12, 'x12')
-            assert self.x12 > 0.
+            assert self.x12 > 0., 'x12=%s' % self.x12
             self.p4 = array([double_or_blank(card, 13, 'x4', 0.0),
                              double_or_blank(card, 14, 'y4', 0.0),
                              double_or_blank(card, 15, 'z4', 0.0)])
@@ -855,7 +855,7 @@ class FLUTTER(BaseCard):
             self.mach = integer(card, 4, 'mach')
             self.rfreq_vel = integer(card, 5, 'rfreq_vel')
         else:
-            assert len(data) == 8, 'FLUTTER = %s' % (data)
+            assert len(data) == 8, 'FLUTTER = %s' % data
             self.sid = data[0]
             self.method = data[1]
             self.density = data[2]
@@ -868,13 +868,13 @@ class FLUTTER(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-        assert self.method in ['K', 'PK', 'PKNL', 'PKS', 'PKNLS', 'KE']
+        assert self.method in ['K', 'PK', 'PKNL', 'PKS', 'PKNLS', 'KE'], 'method = %s' % self.method
 
         if self.method in ['K', 'KE']:
             self.imethod = string_or_blank(card, 6, 'imethod', 'L')
             self.nValue = integer_or_blank(card, 7, 'nValue')
             self.omax = None
-            assert self.imethod in ['L', 'S']
+            assert self.imethod in ['L', 'S'], 'imethod = %s' % self.imethod
         elif self.method in ['PKS', 'PKNLS']:
             self.imethod = None
             self.nValue = None
@@ -888,7 +888,7 @@ class FLUTTER(BaseCard):
 
     def _rawNValueOMax(self):
         if self.method in ['K', 'KE']:
-            #assert self.imethod in ['L', 'S']
+            #assert self.imethod in ['L', 'S'], 'imethod = %s' % self.imethod
             return(self.imethod, self.nValue)
         elif self.method in ['PKS', 'PKNLS']:
             return(self.imethod, self.omax)
@@ -898,7 +898,7 @@ class FLUTTER(BaseCard):
     def _reprNValueOMax(self):
         if self.method in ['K', 'KE']:
             imethod = set_blank_if_default(self.imethod, 'L')
-            #assert self.imethod in ['L', 'S']
+            #assert self.imethod in ['L', 'S'], 'imethod = %s' % self.imethods
             return (imethod, self.nValue)
         elif self.method in ['PKS', 'PKNLS']:
             return(self.imethod, self.omax)
@@ -945,7 +945,7 @@ class GUST(BaseCard):
             self.wg = data[2]
             self.x0 = data[3]
             self.V = data[4]
-            assert len(data) == 5, 'data = %s' % (data)
+            assert len(data) == 5, 'data = %s' % data
 
         ## angle = self.wg*self.t*(t-(x-self.x0)/self.V) # T is the tabular
         ## function
@@ -1197,8 +1197,8 @@ class SPLINE1(Spline):
             self.usage = string_or_blank(card, 8, 'usage', 'BOTH')
             self.nelements = integer_or_blank(card, 9, 'nelements', 10)
             self.melements = integer_or_blank(card, 10, 'melements', 10)
-            assert self.nelements > 0
-            assert self.melements > 0
+            assert self.nelements > 0, 'nelements = %s' % self.nelements
+            assert self.melements > 0, 'melements = %s' % self.melements
         else:
             self.eid = data[0]
             self.caero = data[1]
@@ -1210,11 +1210,11 @@ class SPLINE1(Spline):
             self.usage = data[7]
             self.nelements = data[8]
             self.melements = data[9]
-            assert len(data) == 10, 'data = %s' % (data)
+            assert len(data) == 10, 'data = %s' % data
 
-        assert self.box2 >= self.box1
-        assert self.method in ['IPS', 'TPS', 'FPS']
-        assert self.usage in ['FORCE', 'DISP', 'BOTH']
+        assert self.box2 >= self.box1, 'box1=%s box2=%s' % (self.box1, self.box2)
+        assert self.method in ['IPS', 'TPS', 'FPS'], 'method = %s' % self.method
+        assert self.usage in ['FORCE', 'DISP', 'BOTH'], 'usage = %s' % self.usage
 
     def CAero(self):
         if isinstance(self.caero, int):
@@ -1274,13 +1274,13 @@ class SPLINE2(Spline):
             self.caero = integer(card, 2, 'caero')
             self.id1 = integer(card, 3, 'id1')
             self.id2 = integer(card, 4, 'id2')
-            assert self.id2 > self.id1
             self.setg = integer(card, 5, 'setg')
             self.dz = double_or_blank(card, 6, 'dz', 0.0)
             self.dtor = double_or_blank(card, 7, 'dtor', 1.0)
             self.cid = integer_or_blank(card, 8, 'cid', 0)
             self.thx = double(card, 9, 'thx')
             self.thy = double(card, 10, 'thy')
+            assert self.id2 >= self.id1, 'id2=%s id1=%s' % (self.id2, self.id1)
 
             self.usage = string_or_blank(card, 12, 'usage', 'BOTH')
         else:
@@ -1364,8 +1364,8 @@ class SPLINE4(Spline):
             self.melements = data[8]
             assert len(data) == 9, 'data = %s' % (data)
 
-        assert self.method in ['IPS', 'TPS', 'FPS']
-        assert self.usage in ['FORCE', 'DISP', 'BOTH']
+        assert self.method in ['IPS', 'TPS', 'FPS'], 'method = %s' % self.method
+        assert self.usage in ['FORCE', 'DISP', 'BOTH'], 'uasge = %s' % self.usage
 
     def CAero(self):
         if isinstance(self.caero, int):
@@ -1493,10 +1493,10 @@ class TRIM(BaseCard):
             self.sid = integer(card, 1, 'sid')
             ## Mach number. (Real > 0.0 and != 1.0)
             self.mach = double(card, 2, 'mach')
-            assert self.mach >= 0.0 and self.mach != 1.0
+            assert self.mach >= 0.0 and self.mach != 1.0, 'mach = %s' % self.mach
             ## Dynamic pressure. (Real > 0.0)
             self.q = double(card, 3, 'q')
-            assert self.q > 0.0
+            assert self.q > 0.0, 'q=%s' % self.q
             ## The label identifying aerodynamic trim variables defined on an
             ## AESTAT or AESURF entry.
             self.labels = []

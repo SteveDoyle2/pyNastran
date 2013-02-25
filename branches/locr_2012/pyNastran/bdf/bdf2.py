@@ -50,7 +50,7 @@ from .cards.aero import (AEFACT, AELINK, AELIST, AEPARM, AESTAT, AESURF,
                          SPLINE5, TRIM)
 from .cards.constraints import (SPC, SPCADD, SPCD, SPCAX, SPC1,
                                 MPC, MPCADD, SUPORT1, SUPORT,
-                                constraintObject2)
+                                constraintObject)
 from .cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                       CORD2R, CORD2C, CORD2S, CORD3G)
 from .cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
@@ -236,7 +236,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'FREQ', 'FREQ1', 'FREQ2',
 
             # direct matrix input cards
-            'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
+            #'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
             'DEQATN',
 
             # optimization cards
@@ -453,9 +453,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.suports = []  # suport, suport1
 
         ## stores SPCADD,SPC,SPC1,SPCD,SPCAX
-        self.spcObject2 = constraintObject2()
+        self.spcObject2 = constraintObject()
         ## stores MPCADD,MPC
-        self.mpcObject2 = constraintObject2()
+        self.mpcObject2 = constraintObject()
 
         self.spcs = {}
         self.spcadds = {}
@@ -615,6 +615,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             if len(line) > 0:
                 self.executive_control_lines.append(line)
             lineUpper = line.upper()
+        #print('breaking')
+        if 'CEND' in lineUpper[:4]:
+            self.has_case_control_deck = True
+        else:
+            self.has_case_control_deck = False
+            line, comment = self.get_next_line(False)   # BEGIN BULK
+            #print('execline2 = ',line)
         self._parse_executive_control_deck()
 
     def _parse_executive_control_deck(self):
@@ -720,6 +727,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         reads the case control deck
         @note called with recursion if an INCLUDE file is found
         """
+        if not self.has_case_control_deck:
+            return
         self.log.info("reading Case Control Deck...")
         line = ''
         while len(self.active_filenames) > 0:  # keep going until finished
@@ -761,8 +770,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.caseControlDeck = CaseControlDeck(self.case_control_lines, self.log)
         self.caseControlDeck.solmap_toValue = self._solmap_to_value
         self.caseControlDeck.rsolmap_toStr = self.rsolmap_toStr
-
-        return self.case_control_lines
 
     def _get_include_file_name(self, cardLines):
         """Parses an INCLUDE file split into multiple lines (as a list).
@@ -837,7 +844,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             # set the next file
             self.active_file = self.active_files[-1]
             self.active_filename = self.active_filenames[-1]
-        else: # all files are closed, any lines left have been loaded
+        else:  # all files are closed, any lines left have been loaded
             self.active_file = None
             self.active_filename = None
 
@@ -858,6 +865,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     comment = line[i:] + '\n'
                     line = line[:i].rstrip('\t ')
                 if self._is_end_of_file():
+                    fname = self.active_filename
                     self._close_file()
                     if line:
                         return line, comment
@@ -1008,10 +1016,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         @param lines the lines of the card
         @retval cardname the name of the card
         """
-        card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('\t ')
+        card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('*\t ')
         if len(card_name) == 0:
             return None
-        assert ' ' not in card_name and len(card_name) > 0, 'card_name=|%s|\nline=|%s| in filename=%s is invalid' % (card_name, lines[0], self.active_filename)
+        assert ' ' not in card_name and len(card_name) > 0, 'card_name=|%r|\nline=|%s| in filename=%s is invalid' % (card_name, lines[0], self.active_filename)
         return card_name.upper()
     
     def _read_bulk_data_deck(self):
@@ -1034,7 +1042,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             self._increase_card_count(card_name)
             if not self.is_reject(card_name):
-                self.add_card(raw_card, card_name, comment)
+                self.add_card(raw_card, card_name)
             else:
                 self.rejects.append(raw_card)
                 continue
@@ -1237,8 +1245,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             elif card_name in ['DMI', 'DMIJ', 'DMIJI', 'DMIK']:
                 if card_obj.field(2) == 0:
-                    getattr(self, 'add_' + card_name)(_get_cls(card_name),
-                                                      comment=comment)
+                    getattr(self, 'add_' + card_name)(_get_cls(card_name))
                 else:
                     getattr(self, card_name.lower() +
                             's')[card_obj.field(1)].addColumn(card_obj)

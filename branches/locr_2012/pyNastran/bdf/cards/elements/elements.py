@@ -74,8 +74,8 @@ class CGAP(Element):
             elif isinstance(x1G0, float):
                 self.g0 = None
                 x1 = x1G0
-                x2 = double(card, 6, 'x2')
-                x3 = double(card, 7, 'x3')
+                x2 = double_or_blank(card, 6, 'x2', 0.0)
+                x3 = double_or_blank(card, 7, 'x3', 0.0)
                 self.x = [x1, x2, x3]
                 self.cid = integer_or_blank(card, 8, 'cid', 0)
             else:
@@ -111,12 +111,22 @@ class CGAP(Element):
             return self.cid
         return self.cid.cid
 
+    def Ga(self):
+        if isinstance(self.ga, int):
+            return self.ga
+        return self.ga.nid
+
+    def Gb(self):
+        if isinstance(self.gb, int):
+            return self.gb
+        return self.gb.nid
+
     def rawFields(self):
         if self.g0 is not None:
             x = [self.g0, None, None]
         else:
             x = self.x
-        fields = (['CGAP', self.eid, self.Pid(), self.ga, self.gb] + x +
+        fields = (['CGAP', self.eid, self.Pid(), self.Ga(), self.Gb()] + x +
                   [self.Cid()])
         return fields
 
