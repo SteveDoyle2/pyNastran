@@ -514,8 +514,8 @@ class AddMethods(object):
 
     def add_TSTEPNL(self, tstepnl, allowOverwrites=False):
         key = tstepnl.sid
-        if key in self.tsteps and not allowOverwrites:
-            if not tstepnl.isSameCard(self.tsteps[key]):
+        if key in self.tstepnls and not allowOverwrites:
+            if not tstepnl.isSameCard(self.tstepnls[key]):
                 assert key not in self.tstepnls, 'sid=%s\noldTSTEPNL=\n%snewTSTEPNL=\n%s' % (key, self.tstepnls[key], tstepnl)
         else:
             assert key > 0, 'sid=%s tstepnl=\n%s' % (key, tstepnl)

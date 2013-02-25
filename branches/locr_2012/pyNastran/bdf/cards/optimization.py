@@ -97,7 +97,63 @@ class DDVAL(OptConstraint):
 
 class DOPTPRM(OptConstraint):
     type = 'DOPTPRM'
+    defaults = {
+        'APRCOD' : 2,
+        'AUTOSE' : 0,
+        'CONV1' : 0.001,
+        'CONV2' : 1e-20,
+        'CONVDV' : 0.001,  # 0.0001 for topology optimization
+        'CONVPR' : 0.001,
+        'CT' : -0.03,
+        'CTMIN' : 0.003,
+        'DELB' : 0.0001,
+        'DELP' : 0.2,
+        'DELX' : 0.5,  # 0.2 for topology optimization
+        'DLXESL' : 0.5,
+        'DESMAX' : 5,  # 30 for topology optimization
+        'DISCOD' : 1,
+        'DISBEG' : 0,
+        'DPMAX' : 0.5,
+        'DPMIN' : 0.01,
+        'DRATIO' : 0.1,
+        'DSMXESL' : 20,
+        'DXMAX' : 1.0,
+        'DXMIN' : 0.05,  # 1e-5 for topology optimization
+        'ETA1' : 0.01,
+        'ETA2' : 0.25,
+        'ETA3' : 0.7,
+        'FSDALP' : 0.9,
+        'FSDMAX' : 0,
+        'GMAX' : 0.005,
+        'GSCAL' : 0.001,
+        'IGMAX' : 0,
+        'IPRINT' : 0,
+        'ISCAL' : 0,
+        'METHOD' : 0,
+        'NASPRO' : 0,
+        'OBJMOD' : 0,
+        'OPTCOD' : 0,
+        'P1' : 0,
+        'P2' : 1,
 
+        'P2CALL' : None,  # TODO: DEFAULT PRINTS ALL???
+        'P2CBL' : None,  # TODO: DEFAULT PRINTS ALL???
+        'P2CC' : None,  # TODO: DEFAULT PRINTS ALL???
+        'P2CDDV' : None,  # TODO: DEFAULT PRINTS ALL???
+        'P2CM' : None,  # TODO: DEFAULT PRINTS ALL???
+        'P2CP' : None,  # TODO: DEFAULT PRINTS ALL???
+        'P2CR' : None,  # TODO: DEFAULT PRINTS ALL???
+        'P2RSET' : None,  # TODO: DEFAULT PRINTS ALL???
+        'PENAL' : 0.0,
+        'PLVIOL' : 0,
+        'PTOL' : 1e35,
+        'STPSCL' : 1.0,
+        'TCHECK' : -1,
+        'TDMIN' : None,  # TODO: ???
+        'TREGION' : 0,
+        'UPDFAC1' : 2.0,
+        'UPDFAC2' : 0.5,
+        }
     def __init__(self, card=None, data=None, comment=''):
         """
         Design Optimization Parameters
@@ -114,8 +170,13 @@ class DOPTPRM(OptConstraint):
         nFields = len(card) - 1
         self.params = {}
         for i in xrange(0, nFields, 2):
-            param = string(card, i + 1, 'param')
-            val = integer_or_double(card, i + 2, '%s_value' % param)
+            param = string_or_blank(card, i + 1, 'param')
+            default_value = None
+            if param is None:
+                continue
+            if param in self.defaults:
+                default_value = self.defaults[param]
+            val = integer_double_or_blank(card, i + 2, '%s_value' % param, default_value)
             self.params[param] = val
 
     def rawFields(self):

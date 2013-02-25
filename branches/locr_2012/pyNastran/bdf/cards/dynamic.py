@@ -189,14 +189,17 @@ class TSTEP(BaseCard):
         nrows = int(ceil((len(card) - 1.) / 8.))
         for i in range(nrows):
             n = 8 * i + 1
-            self.N.append(integer_or_blank(card, i + 1, 'N' + str(i), 1))
-            self.DT.append(double_or_blank(card, i + 2, 'dt' + str(i), 0.))
-            self.NO.append(integer_or_blank(card, i + 3, 'NO' + str(i), 1))
+            N = integer_or_blank(card, n + 1, 'N' + str(i), 1)
+            dt = double_or_blank(card, n + 2, 'dt' + str(i), 0.)
+            no = integer_or_blank(card, n + 3, 'NO' + str(i), 1)
+            self.N.append(N)
+            self.DT.append(dt)
+            self.NO.append(no)
 
     def rawFields(self):
         fields = ['TSTEP', self.sid]
-        for (n, dt, no) in izip(self.N, self.DT, self.NO):
-            fields += [n, dt, no, None, None, None, None, None]
+        for (N, dt, no) in izip(self.N, self.DT, self.NO):
+            fields += [N, dt, no, None, None, None, None, None]
         return fields
 
     def reprFields(self):

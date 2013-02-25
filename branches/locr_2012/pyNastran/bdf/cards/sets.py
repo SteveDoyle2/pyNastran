@@ -5,7 +5,8 @@ from itertools import izip
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
 from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.format import (integer, integer_or_blank, components, fields, integer_or_string, string, string_or_blank)
+from pyNastran.bdf.format import (integer, integer_or_blank, components, components_or_blank,
+                                  fields, integer_or_string, string, string_or_blank)
 
 class Set(BaseCard):
     """Generic Class all SETx cards inherit from"""
@@ -157,7 +158,7 @@ class ABQSet1(Set):
         ## Component number. (Integer zero or blank for scalar points or any
         ## unique combination of the Integers 1 through 6 for grid points with
         ## no embedded blanks.)
-        self.components = components(card, 1, 'components')
+        self.components = components_or_blank(card, 1, 'components', 0)
 
         ## Identifiers of grids points. (Integer > 0)
         IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))

@@ -197,13 +197,14 @@ class GetMethods(object):
     def thermalMaterialIDs(self):
         return self.thermalMaterials.keys()
 
-    def Material(self, mid):
+    def Material(self, mid, msg=''):
         if mid in self.materials:
             return self.materials[mid]
         elif mid in self.thermalMaterials:
             return self.thermalMaterials[mid]
         else:
-            raise KeyError('Invalid Material ID:  mid=%s' % mid)
+            msg = '\n' + msg
+            raise KeyError('Invalid Material ID:  mid=%s%s' % (mid, msg))
 
     def StructuralMaterial(self, mid):
         return self.materials[mid]
