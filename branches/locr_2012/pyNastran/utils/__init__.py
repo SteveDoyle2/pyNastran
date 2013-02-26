@@ -21,6 +21,7 @@ def is_binary(filename):
                 return True
     return False
 
+
 def obscure(num, debug=False):
     """
     Takes a large positive number and shrinks it down...similar to binary, but base 52.
@@ -38,18 +39,19 @@ def obscure(num, debug=False):
     """
     vals = list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
     tmp = num
-    pack = ['a'] if tmp == 0 else [] 
+    pack = ['a'] if tmp == 0 else []
     while tmp > 0:
         if debug:
             print("num = %s\nfactor = %s" % (tmp, tmp % 52))
         pack.append(vals[tmp % 52])
         tmp //= 52
-        
+
     if debug:
         print(pack,"\n\nsize chacnge %s > %s" % (len(str(num)), len(pack)))
     return "".join(pack)
 
-def de_obscure(num, debug = False):
+
+def de_obscure(num, debug=False):
     """
     Unpacks an "obscured" positive number...similar to binary, but base 52.
     A base 52 value takes up a fewer characters than a base 10 number
@@ -71,6 +73,7 @@ def de_obscure(num, debug = False):
             print("letter = ", letter, "\nfactor = ", dict_vals[letter] * 52 ** i)
     return val
 
+
 def get_files_of_type(dirname, extension='.txt', maxSize=100.):
     """
     Gets the list of all the files with a given extension in the specified directory 
@@ -79,8 +82,9 @@ def get_files_of_type(dirname, extension='.txt', maxSize=100.):
     @param maxSize size in MB for max file size
     @retval list of all the files with a given extension in the specified directory 
     """
-    return [pjoin(dirname, f) for f in os.listdir(dirname) if extension in 
+    return [pjoin(dirname, f) for f in os.listdir(dirname) if extension in
             splitext(f)[1] and getsize(pjoin(dirname, f)) / (1048576.) <= maxSize]
+
 
 def print_bad_path(path):
     """
@@ -97,6 +101,7 @@ def print_bad_path(path):
         res.append(path)
     msg = {True: "passed", False: "failed"}
     return "\n".join(["%s: %s" % (msg[os.path.exists(i)], i) for i in res])
+
 
 def list_print(lst):
     """
@@ -122,7 +127,7 @@ def list_print(lst):
 
         if isinstance(lst, ndarray) and lst.ndim == 2:
             r,c = lst.shape
-            return ("["+",\n ".join(["["+",".join(['%-10g' % lst[i, j] 
+            return ("["+",\n ".join(["["+",".join(['%-10g' % lst[i, j]
                                 for j in range(c)])+"]" for i in range(r)])+"]")
         return "[" + ", ".join([_print(a) for a in lst]) + "]"
     except: # not a list
@@ -133,14 +138,14 @@ def __object_attr(obj, mode, attr_type):
     test = {"public":  lambda k: not k.startswith('_'),
             "private": lambda k: (k.startswith('_') and not k.startswith('__')),
             "both": lambda k: not k.startswith('__'),
-            "all":  lambda k: True  
+            "all":  lambda k: True
             }
 
     if not mode in test:
         print("Wrong mode! Accepted modes: public, private, both, all.")
         return None
     check = test[mode]
-    
+
     out = []
     for k in dir(obj):
         if check(k) and attr_type(getattr(obj, k)):
@@ -149,7 +154,8 @@ def __object_attr(obj, mode, attr_type):
     return out
     #return sorted([k for k in dir(obj) if (check(k) and  
     #                                           attr_type(getattr(obj, k)))])
-    
+
+
 def object_methods(obj, mode = "public"):
     """
     List the names of methods of a class as strings. Returns public methos
@@ -169,7 +175,7 @@ def object_methods(obj, mode = "public"):
       is wrong
     """
     return __object_attr(obj, mode, lambda x: isinstance(x, MethodType))
-    
+
 
 def object_attributes(obj, mode = "public"):
     """
@@ -190,153 +196,255 @@ def object_attributes(obj, mode = "public"):
       is wrong
     """
     return __object_attr(obj, mode, lambda x: not isinstance(x, MethodType))
-    
 
-def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=False):
+
+def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=False):
     """
     writes a series of nested objects
     """
     spaces = (nbase+nspaces) * ' '
     msg = spaces
+    xml = spaces
     if isClass:
         equals = '='
     else:
         equals = ':'
 
+    if debug:
+        print "attr=%s equals=|%s|" % (name, equals)
     ## name
     if isinstance(obj, dict):
         if nspaces == 0:
-            msg += '%s = {\n' % name
+            msg += '%s %s ' % (name, equals)
         else:
             if isinstance(name, tuple):
-                msg += "%s : {\n" % str(name)
+                msg += "%s %s " % (str(name), equals)
             else:
-                msg += "'%s' : {\n" % name
-    elif isinstance(name, str) or isinstance(name, unicode):
+                msg += "'%s' %s " % (name, equals)
+    elif isinstance(name, str):
         if isClass:
             key = '%s' % name
         else:
             key = "'%s'" % name
-    
+    elif isinstance(name, unicode):
+        if isClass:
+            key = u'%s' % name
+        else:
+            key = "u'%s'" % name
     elif isinstance(name, int) or isinstance(name, float) or isinstance(name, tuple) or name is None:
         key = "%s" % str(name)
     else:
         raise RuntimeError('key=%s is not a string.  Type=%s' % (name, type(name)))
-    
-    
+
+    if debug:
+        print "name=%s type=%s" % (name, type(obj))
+
     ## write the object
     if isinstance(obj, int) or isinstance(obj, float) or obj is None:
-        msg += '%s %s %s,\n' % (key, equals, str(obj))
+        xml += '<name=%s value=%s type=%s>' % (name, obj, type(obj))
+        msg += '%s %s %s,\n' % (key, equals, write_value(obj, nspaces, nbase, isClass))
     elif isinstance(obj, str) or isinstance(obj, unicode):
-        msg += "%s %s '%s',\n" % (key, equals, obj)
+        msg += "%s %s %s,\n" % (key, equals, write_value(obj, nspaces, nbase, isClass))
 
     elif isinstance(obj, dict):
-        nspaces2 = nspaces + 4
-        msg += write_dict(obj, spaces, nspaces, nspaces2, nbase, isClass)
-    elif isinstance(obj, tuple):
-        msg += '%s : %s,\n' % (key, str(obj))
-    elif isinstance(obj, list):
-        msg += '%s : [' % (key)
-        for value in obj:
-            msg += write_value(value) + ', '
-        msg += '],\n'
-        
+        msg += write_dict(obj, nspaces, nbase, isClass) + ',\n'
+    elif isinstance(obj, tuple) or isinstance(obj, list):
+        msg += '%s %s %s,\n' % (key, equals, write_value(obj, nspaces, nbase, isClass))
+
     elif isinstance(obj, ndarray):
-        #msg += '%s %s %s,\n' % (key, equals, write_array(obj))
-        msg += '%s %s %s,\n' % (key, equals, write_array(obj))
+        starter = '%s%s %s' % (nspaces, key, equals)
+        msg += '%s %s %s,\n' % (key, equals, write_array(obj, nspaces + 6 + len(starter)))
     else:  # generic class
         objectType = obj.__class__.__name__
         #raise RuntimeError('objectType=%s is not supported' % objectType)
-        obj_attrs = object_attributes(obj, 'public')
-        
-        nspaces2 = nspaces + 4
-        spaces2 = nspaces2 * ' '
-        msg += "'%s' : %s(\n" % (name, objectType)
-        for attr in obj_attrs:
-            value = getattr(obj, attr)
-            msg += write_object_attributes(attr, value, nspaces2, nbase, isClass=True)
-        if nspaces == 0: # bottom level, no comma
-            msg += '%s)\n'  % spaces
-        else:  # embedded dictionary
-            msg += '%s),\n'  % spaces
-
-        #print "dir(obj) =", dir(obj)
-        #print "obj_attrs =", obj_attrs
+        msg += "%s %s " % (key, equals)
+        msg += write_class(name, obj, nspaces, nbase) + ',\n'  # comma for class
+    if nspaces == 0:
+        msg = msg[:-2]
+    if debug:
+        print "|%r|" % msg
     return msg
 
-def write_dict(obj, spaces, nspaces, nspaces2, nbase, isClass):
-    msg = ''
-    spaces2 = nspaces2 * ' '
-    for key2, value in sorted(obj.iteritems()):
-        msg += write_object_attributes(key2, value, nspaces2, nbase, isClass=False)
-    if nspaces == 0: # bottom level, no comma
-        msg += '%s}\n'  % spaces
-    else:  # embedded dictionary
-        msg += '%s},\n'  % spaces
+
+def write_class(name, obj, nspaces=0, nbase=0):
+    objectType = obj.__class__.__name__
+    obj_attrs = object_attributes(obj, 'both')
+    if not obj_attrs:
+        return "%s()" % objectType
+
+    spaces = ' ' * nspaces
+    nspaces2 = nspaces + 4
+    #spaces2 = nspaces2 * ' '
+    msg = "%s(\n" % objectType
+    for attr in obj_attrs[:-1]:
+        value = getattr(obj, attr)
+        #msg += '?'
+        msg += write_object_attributes(attr, value, nspaces2, nbase, isClass=True)
+    attr = obj_attrs[-1]
+    value = getattr(obj, attr)
+    msg += write_object_attributes(attr, value, nspaces2, nbase, isClass=True)
+    msg += '%s)' % spaces
+
+    #print "dir(obj) =", dir(obj)
+    #print "obj_attrs =", obj_attrs
     return msg
 
-def write_value(obj, nspaces=0):
+
+def write_value(obj, nspaces, nbase=0, isClass=False):
     msg = ''
     if isinstance(obj, int) or isinstance(obj, float) or obj is None:
         msg += '%s' % (str(obj))
-    elif isinstance(obj, str) or isinstance(obj, unicode):
-        msg += "'%s'" % (obj)
+    elif isinstance(obj, str):
+        msg += "'%s'" % obj
+    elif isinstance(obj, unicode):
+        msg += "u'%s'" % obj
     elif isinstance(obj, list):
-        msg += write_list(obj)
+        msg += write_list(obj, nspaces, nbase, isClass)
+    elif isinstance(obj, tuple):
+        msg += write_tuple(obj, nspaces, nbase, isClass)
+    elif isinstance(obj, dict):
+        msg += write_dict(obj, nspaces, nbase, isClass)
     else:
-        raise RuntimeError('objectType=%s is not supported; value=%s' % objectType, obj)
-    return msg    
+        objectType = type(obj)
+        raise RuntimeError('objectType=%s is not supported; value=%s' % (objectType, obj))
+    return msg
 
-def write_list(obj):
-    msg = '['
+
+def write_dict(obj, nspaces, nbase, isClass):
+    spaces = (nbase+nspaces) * ' '
+    nspaces2 = nspaces + 4
+    if len(obj) == 0:
+        return '{}'
+
+    msg = '{\n'
+    for key, value in sorted(obj.iteritems()):
+        #msg += '#'
+        msg += write_object_attributes(key, value, nspaces2, nbase, isClass=False)
+    msg += '%s}' % spaces
+    return msg
+
+
+def write_list(obj, nspaces, nbase, isClass):
+    if len(obj) == 0:
+        return '[]'
+
+    spaces = ' ' * (nspaces + nbase)
+    msg = '[\n%s    ' % spaces
+    for value in obj[:-1]:
+        msg += write_value(value, nspaces+4, nbase, isClass) + ', '
+    msg += write_value(obj[-1], nspaces+4, nbase, isClass) + '\n%s]' % spaces
+    return msg
+
+
+def write_tuple(obj, nspaces, nbase, isClass):
+    msg = '('
     for value in obj:
-        msg += write_value(value) + ', '
-    msg += ']'
+        msg += write_value(value, nspaces, nbase, isClass) + ', '
+    msg += ')'
     return msg
 
-def write_array(a):
+
+def write_array(a, nspaces=0):
     shape = a.shape
-    if len(shape)==1:
+    dtype = a.dtype
+    if len(shape) == 1:
         msg = 'array(['
+        #print "a = ",a
         for ai in a[:-1]:
-            if not(isinstance(ai, int) or isinstance(ai, int) or isinstance(ai, float)):
-                return 'array(.not supported type.)'
+            #print "ai = ",ai
+            if isinstance(ai, int) or isinstance(ai, float):
+                msg += '%s, ' % ai
+            elif isinstance(ai, str):
+                msg += "'%s'," % ai
+            else:
+                objectType = type(ai)
+                raise RuntimeError('objectType=%s is not supported; value=%s' % (objectType, ai))
+                return "'array(.not supported type.)'"
             msg += '%s, ' % ai
-        msg += '%s])' % a[-1]
-    else:
-        return 'array(.not supported shape.)'
+        if len(a) > 0:
+            if isinstance(a[-1], int) or isinstance(a[-1], float):
+                msg += "%s], dtype='%s')" % (a[-1], dtype)
+            elif isinstance(a[-1], str):
+                msg += "'%s'], dtype='%s')" % (a[-1], dtype)
+            else:
+                objectType = type(ai)
+                raise RuntimeError('objectType=%s is not supported; value=%s' % (objectType, ai))
+                return "'array(.not supported type.)'"
+        else:
+            msg += '], dtype=%s)' % dtype
+    elif len(shape) == 2:
+        spaces = ' '*nspaces
+        msg = 'array(['
+        for i, ai in enumerate(a):
+            if i > 0:
+                msg += '%s[' % spaces
+            for bi in ai[:-1]:
+                msg += '%s, ' % bi
+            msg += '%s' % ai[-1]
+
+            if i+1 == len(a):
+                msg += '], dtype=%s)' % dtype
+            else:
+                msg += '],\n'
+    elif len(shape) == 3:
+        return "'array(.not supported shape.)'"
     return msg
+
 
 if __name__ == '__main__':
     from numpy import array, zeros
+    class C(object):
+        def __init__(self):
+            pass
+    class B(object):
+        def __init__(self, x=None, e=None):
+            self.x = 4
+            self.e = C()
+
     class A(object):
-        def __init__(self, a=None, b=None, c=None):
+        def __init__(self, a=None, b=None, c=None, d=None):
             self.a = a
             self.b = b
             self.c = c
+            self.d = {'a' : 4,
+                      'b' : [1,2,3],
+                      'c' : {1:2},
+                      'd' : B(),
+                    (1,2) : 4,
+            }
 
-    print zeros((2,2))
+    z = zeros(2, dtype='float64')
+    #print z
+    #print z.dtype
     dictA = {
             'strString' : 'a string',
             'strFloat' : 1.0,
             'strInt': 2,
             'strTuple': (1,2),
             'strNone' : None,
-            #'strClass' : A('a', 'b', 'c'),
+            'strClass' : A('a', 'b', 'c'),
             'strList' : [1,2,3],
+            'nullList' : [],
+            'nullArray' : array([]),
+            'stringArray' : array(['s']),
+            'stringArray2' : array(['a', 'b']),
+            'nullDict' : {},
+            u'unicode' : u'',
+            'ListOfLists' : [[[],[[],],2,{'a':3}]],
             1 : 1,
             None : 4,
             1.0 : 5,
             (1, 2) : 6,
             'strArray' : array([4,5,6]),
             'strArray2' : zeros((2,2)),
-            }
+            'strArray3' : zeros((2,2,2)),
+    }
     dictB = {
             'string2' : 'a string',
             'float2' : 1.0,
             'int2': 2,
             'dictA' : dictA,
-            }
+    }
 
 
     dictC = {
@@ -360,10 +468,15 @@ if __name__ == '__main__':
         'string2' : 'a string',
     }
     #assert sorted(dictB.items())==sorted(dictC.items())
-    #print write_object_attributes('dictA', dictA)
+    #print write_object_attributes('dictA', dictA, isClass=False)
     msg = write_object_attributes('dictB', dictB, nbase=0)
     print msg
-    
-    
+    f = open('junk.py', 'wb')
+    f.write(msg)
+    f.close()
+
+    import junk
+
+
     #dictB2 = eval(msg)
     
