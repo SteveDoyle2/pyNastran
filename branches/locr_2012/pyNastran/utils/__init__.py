@@ -141,8 +141,14 @@ def __object_attr(obj, mode, attr_type):
         return None
     check = test[mode]
     
-    return sorted([k for k in dir(obj) if (check(k) and  
-                                               attr_type(getattr(obj, k)))])
+    out = []
+    for k in dir(obj):
+        if check(k) and attr_type(getattr(obj, k)):
+            out.append(k)
+    out.sort()
+    return out
+    #return sorted([k for k in dir(obj) if (check(k) and  
+    #                                           attr_type(getattr(obj, k)))])
     
 def object_methods(obj, mode = "public"):
     """
@@ -184,4 +190,180 @@ def object_attributes(obj, mode = "public"):
       is wrong
     """
     return __object_attr(obj, mode, lambda x: not isinstance(x, MethodType))
+    
+
+def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=False):
+    """
+    writes a series of nested objects
+    """
+    spaces = (nbase+nspaces) * ' '
+    msg = spaces
+    if isClass:
+        equals = '='
+    else:
+        equals = ':'
+
+    ## name
+    if isinstance(obj, dict):
+        if nspaces == 0:
+            msg += '%s = {\n' % name
+        else:
+            if isinstance(name, tuple):
+                msg += "%s : {\n" % str(name)
+            else:
+                msg += "'%s' : {\n" % name
+    elif isinstance(name, str) or isinstance(name, unicode):
+        if isClass:
+            key = '%s' % name
+        else:
+            key = "'%s'" % name
+    
+    elif isinstance(name, int) or isinstance(name, float) or isinstance(name, tuple) or name is None:
+        key = "%s" % str(name)
+    else:
+        raise RuntimeError('key=%s is not a string.  Type=%s' % (name, type(name)))
+    
+    
+    ## write the object
+    if isinstance(obj, int) or isinstance(obj, float) or obj is None:
+        msg += '%s %s %s,\n' % (key, equals, str(obj))
+    elif isinstance(obj, str) or isinstance(obj, unicode):
+        msg += "%s %s '%s',\n" % (key, equals, obj)
+
+    elif isinstance(obj, dict):
+        nspaces2 = nspaces + 4
+        msg += write_dict(obj, spaces, nspaces, nspaces2, nbase, isClass)
+    elif isinstance(obj, tuple):
+        msg += '%s : %s,\n' % (key, str(obj))
+    elif isinstance(obj, list):
+        msg += '%s : [' % (key)
+        for value in obj:
+            msg += write_value(value) + ', '
+        msg += '],\n'
+        
+    elif isinstance(obj, ndarray):
+        #msg += '%s %s %s,\n' % (key, equals, write_array(obj))
+        msg += '%s %s %s,\n' % (key, equals, write_array(obj))
+    else:  # generic class
+        objectType = obj.__class__.__name__
+        #raise RuntimeError('objectType=%s is not supported' % objectType)
+        obj_attrs = object_attributes(obj, 'public')
+        
+        nspaces2 = nspaces + 4
+        spaces2 = nspaces2 * ' '
+        msg += "'%s' : %s(\n" % (name, objectType)
+        for attr in obj_attrs:
+            value = getattr(obj, attr)
+            msg += write_object_attributes(attr, value, nspaces2, nbase, isClass=True)
+        if nspaces == 0: # bottom level, no comma
+            msg += '%s)\n'  % spaces
+        else:  # embedded dictionary
+            msg += '%s),\n'  % spaces
+
+        #print "dir(obj) =", dir(obj)
+        #print "obj_attrs =", obj_attrs
+    return msg
+
+def write_dict(obj, spaces, nspaces, nspaces2, nbase, isClass):
+    msg = ''
+    spaces2 = nspaces2 * ' '
+    for key2, value in sorted(obj.iteritems()):
+        msg += write_object_attributes(key2, value, nspaces2, nbase, isClass=False)
+    if nspaces == 0: # bottom level, no comma
+        msg += '%s}\n'  % spaces
+    else:  # embedded dictionary
+        msg += '%s},\n'  % spaces
+    return msg
+
+def write_value(obj, nspaces=0):
+    msg = ''
+    if isinstance(obj, int) or isinstance(obj, float) or obj is None:
+        msg += '%s' % (str(obj))
+    elif isinstance(obj, str) or isinstance(obj, unicode):
+        msg += "'%s'" % (obj)
+    elif isinstance(obj, list):
+        msg += write_list(obj)
+    else:
+        raise RuntimeError('objectType=%s is not supported; value=%s' % objectType, obj)
+    return msg    
+
+def write_list(obj):
+    msg = '['
+    for value in obj:
+        msg += write_value(value) + ', '
+    msg += ']'
+    return msg
+
+def write_array(a):
+    shape = a.shape
+    if len(shape)==1:
+        msg = 'array(['
+        for ai in a[:-1]:
+            if not(isinstance(ai, int) or isinstance(ai, int) or isinstance(ai, float)):
+                return 'array(.not supported type.)'
+            msg += '%s, ' % ai
+        msg += '%s])' % a[-1]
+    else:
+        return 'array(.not supported shape.)'
+    return msg
+
+if __name__ == '__main__':
+    from numpy import array, zeros
+    class A(object):
+        def __init__(self, a=None, b=None, c=None):
+            self.a = a
+            self.b = b
+            self.c = c
+
+    print zeros((2,2))
+    dictA = {
+            'strString' : 'a string',
+            'strFloat' : 1.0,
+            'strInt': 2,
+            'strTuple': (1,2),
+            'strNone' : None,
+            #'strClass' : A('a', 'b', 'c'),
+            'strList' : [1,2,3],
+            1 : 1,
+            None : 4,
+            1.0 : 5,
+            (1, 2) : 6,
+            'strArray' : array([4,5,6]),
+            'strArray2' : zeros((2,2)),
+            }
+    dictB = {
+            'string2' : 'a string',
+            'float2' : 1.0,
+            'int2': 2,
+            'dictA' : dictA,
+            }
+
+
+    dictC = {
+        'dictA' : {
+            None : 4,
+            1 : 5,
+            'strClass' : A(
+                a = 'a',
+                b = 'b',
+                c = 'c',
+            ),
+            'strFloat' : 1.0,
+            'strInt' : 2,
+            'strNone' : None,
+            'strString' : 'a string',
+            'strTuple' : (1, 2),
+            (1, 2) : 6,
+        },
+        'float2' : 1.0,
+        'int2' : 2,
+        'string2' : 'a string',
+    }
+    #assert sorted(dictB.items())==sorted(dictC.items())
+    #print write_object_attributes('dictA', dictA)
+    msg = write_object_attributes('dictB', dictB, nbase=0)
+    print msg
+    
+    
+    #dictB2 = eval(msg)
     
