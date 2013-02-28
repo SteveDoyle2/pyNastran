@@ -277,8 +277,8 @@ class RBE2(RigidElement):
                   % (self.eid, self.gn, self.cm, self.Gmi, self.alpha))
             raise NotImplementedError('RBE2 data...')
 
-        assert self.gn is not None
-        assert self.cm is not None
+        assert self.gn is not None, 'gm=%s' % self.gm
+        assert self.cm is not None, 'cm=%s' % self.cm
         self.gn = str(self.gn)
         self.cm = str(self.cm)
 

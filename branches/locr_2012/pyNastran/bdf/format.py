@@ -22,7 +22,7 @@ def components_or_blank(card, n, fieldname, default=None):
         svalue = svalue.strip()
 
     if svalue:
-        components(card, n, fieldname)
+        return components(card, n, fieldname)
     else:
         return default
 

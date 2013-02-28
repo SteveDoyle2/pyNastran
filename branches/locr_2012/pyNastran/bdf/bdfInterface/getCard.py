@@ -221,13 +221,13 @@ class GetMethods(object):
     #--------------------
     # LOADS
 
-    def Load(self, sid):
+    def Load(self, sid, msg):
         #print 'sid=%s self.loads=%s' %(sid,(self.loads.keys()))
-        assert isinstance(sid, int), 'sid=%s is not an integer\n' % (sid)
+        assert isinstance(sid, int), 'sid=%s is not an integer\n' % sid
         if sid in self.loads:
             load = self.loads[sid]
         else:
-            raise KeyError('cannot find LoadID=|%s|.' % (sid))
+            raise KeyError('cannot find LoadID=|%s|%s.' % (sid, msg))
         return load
 
     def Grav(self, sid):
@@ -330,10 +330,10 @@ class GetMethods(object):
 
     #--------------------
     # TABLE CARDS
-    def Table(self, tid):
+    def Table(self, tid, msg=''):
         return self.tables[tid]
 
-    def RandomTable(self, tid):
+    def RandomTable(self, tid, msg=''):
         return self.randomTables[tid]
 
     #--------------------

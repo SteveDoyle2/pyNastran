@@ -150,7 +150,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.cardsToRead = set([
             'PARAM',
             'GRID', 'GRDSET', 'SPOINT',  # 'RINGAX',
-            'POINT',
+            #'POINT',
 
             # elements
             'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
@@ -923,6 +923,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         @param access_stored_lines Should all the stored lines be returned?
           This happens on the first line of a new card.  This keeps all the
           comments for it together.
+
+        @todo has a problem with comment lines that are embedded in a single line
+        TABLED1,1000,,,,,,,,+TAB1 $ THE ONE PER CENT DAMPING LINE
+        +TAB1   0.0     0.0     5.12    200.    100.    200.    200.    0.      +TAB2
+        $       F0      A0      F1      A1      F2      A2      F3      A3
+        +TAB2   1000.   0.      ENDT
+        $       F4      A4
+
+        but this should also be supported...
+        PBEAM,
+        +
+        1.0
+        where the + line represents a line (a + is not required, hence the difficulty)
         """
         comment = ''
         stored_lines = self.stored_lines[self.active_filename]
@@ -1164,7 +1177,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
              'add_thermal_load': ['TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY'],
              'add_thermal_element': ['CHBDYE', 'CHBDYG', 'CHBDYP'],
              'add_convection_property': ['PCONV', 'PCONVM'],
-             'add_thermal_BC': ['CONV', 'RADBC'],
              'add_constraint_MPC': ['MPC', 'MPCADD'],
              'add_constraint_SPC': ['SPC', 'SPC1', 'SPCAX', 'SPCD', 'SPCADD'],
              'add_suport': ['SUPORT'],  # pseudo-constraint
@@ -1267,6 +1279,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     if card_obj.field(j) is not None:
                         self.add_property(PMASS(card_obj, nOffset=i+1,
                                                 comment=comment))
+
+            elif card_name == 'CONV':
+                bc = CONV(card_obj, comment=comment)
+                self.add_thermal_BC(bc, bc.eid)
+            #elif card_name == 'RADM':
+            #    bc = RADM(card_obj, comment=comment)
+            #    self.add_thermal_BC(bc, bc.nodamb)
+            elif card_name == 'RADBC':
+                bc = RADBC(card_obj, comment=comment)
+                self.add_thermal_BC(bc, bc.nodamb)
 
             elif card_name == 'SPOINT':
                 self.add_SPOINT(SPOINTs(card_obj, comment=comment))
@@ -1436,7 +1458,7 @@ def to_fields(card_lines, card_name):
     @retval fields the string formatted fields of the card
     """
     fields = []
-    
+    #print('---------------')
     # first line
     line = card_lines.pop(0)
     if '=' in line:
@@ -1452,23 +1474,27 @@ def to_fields(card_lines, card_name):
     if '*' in line:  # large field
         if ',' in line:  # csv
             new_fields = line[:72].split(',')[:5]
-            fields += new_fields
             for i in range(5-len(new_fields)):
-                fields.append('')
+                new_fields.append('')
         else:  # standard
-            fields = [line[0:8], line[8:24], line[24:40], line[40:56],
-                      line[56:72]]
-    else: # small field
+            new_fields = [line[0:8], line[8:24], line[24:40], line[40:56],
+                          line[56:72]]
+        fields += new_fields
+        assert len(fields) == 5
+    else:  # small field
         if ',' in line:  # csv
-            new_fields = line[:72].split(',')[:8]
-            fields += new_fields
+            new_fields = line[:72].split(',')[:9]
             for i in range(9-len(new_fields)):
-                fields.append('')
+                new_fields.append('')
         else:  # standard
-            fields += [line[0:8], line[8:16], line[16:24], line[24:32],
-                       line[32:40], line[40:48], line[48:56], line[56:64],
-                       line[64:72]]
-    
+            new_fields = [line[0:8], line[8:16], line[16:24], line[24:32],
+                          line[32:40], line[40:48], line[48:56], line[56:64],
+                          line[64:72]]
+        fields += new_fields
+        assert len(fields) == 9
+
+    #print("new_fieldsA =",new_fields)
+
     for j, line in enumerate(card_lines): # ccntinuation lines
         #for i, field in enumerate(fields):
         #    if field.strip() == '+':
@@ -1486,21 +1512,24 @@ def to_fields(card_lines, card_name):
         if '*' in line:  # large field
             if ',' in line:  # csv
                 new_fields = line[:72].split(',')[1:5]
-                assert len(new_fields) == 4
-                fields += new_fields
                 for i in range(4-len(new_fields)):
-                    fields.append('')
+                    new_fields.append('')
             else:  # standard
-                fields += [line[8:24], line[24:40], line[40:56], line[56:72]]
-        else: # small field
+                new_fields = [line[8:24], line[24:40], line[40:56], line[56:72]]
+            assert len(new_fields) == 4
+        else:  # small field
             if ',' in line:  # csv
-                new_fields = line[:72].split(',')[1:8]
-                fields += new_fields
+                new_fields = line[:72].split(',')[1:9]
                 for i in range(8-len(new_fields)):
-                    fields.append('')
+                    new_fields.append('')
             else:  # standard
-                fields += [line[8:16], line[16:24], line[24:32], line[32:40],
-                           line[40:48], line[48:56], line[56:64], line[64:72]]
+                new_fields = [line[8:16], line[16:24], line[24:32], line[32:40],
+                              line[40:48], line[48:56], line[56:64], line[64:72]]
+            assert len(new_fields) == 8, 'nFields=%s new_fields=%s' % (len(new_fields), new_fields)
+
+        fields += new_fields
+        #print("new_fieldsB =",new_fields)
+
     return fields
 
 

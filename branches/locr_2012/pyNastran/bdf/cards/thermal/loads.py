@@ -167,6 +167,9 @@ class QBDY3(ThermalLoad):
         fields = ['QBDY3', self.sid, self.Q0, cntrlnd] + collapse_thru_by(eids)
         return fields
 
+    def getLoads(self):  ## TODO: return loads
+        return []
+
 
 class QHBDY(ThermalLoad):
     """
@@ -273,6 +276,9 @@ class TEMP(ThermalLoad):
     def reprFields(self):
         """Writes the TEMP card"""
         return self.rawFields()
+
+    def getLoads(self):  ## TODO: return loads
+        return []
 
 # Loads
 #-------------------------------------------------------

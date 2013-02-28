@@ -649,12 +649,12 @@ class CAERO2(BaseCard):
             ## Number of slender body elements. If NSB > 0, then NSB equal
             ## divisions are assumed; if zero or blank, specify a list of divisions
             ## in LSB. (Integer >= 0)
-            self.nsb = integer(card, 4, 'nsb')
+            self.nsb = integer_or_blank(card, 4, 'nsb')
 
             ## Number of interference elements. If NINT > 0, then NINT equal
             ## divisions are assumed; if zero or blank, specify a list of
             ## divisions in LINT. (Integer >= 0)
-            self.nint = integer(card, 5, 'nint')
+            self.nint = integer_or_blank(card, 5, 'nint')
 
             ## ID of an AEFACT Bulk Data entry for slender body division points;
             ## used only if NSB is zero or blank. (Integer >= 0)
@@ -1278,8 +1278,8 @@ class SPLINE2(Spline):
             self.dz = double_or_blank(card, 6, 'dz', 0.0)
             self.dtor = double_or_blank(card, 7, 'dtor', 1.0)
             self.cid = integer_or_blank(card, 8, 'cid', 0)
-            self.thx = double(card, 9, 'thx')
-            self.thy = double(card, 10, 'thy')
+            self.dthx = double_or_blank(card, 9, 'dthx')
+            self.dthy = double_or_blank(card, 10, 'dthy')
             assert self.id2 >= self.id1, 'id2=%s id1=%s' % (self.id2, self.id1)
 
             self.usage = string_or_blank(card, 12, 'usage', 'BOTH')
@@ -1308,15 +1308,15 @@ class SPLINE2(Spline):
 
     def rawFields(self):
         fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
-                  self.Set(), self.dz, self.dtor, self.Cid(), self.thx,
-                  self.thy, None, self.usage]
+                  self.Set(), self.dz, self.dtor, self.Cid(), self.dthx,
+                  self.dthy, None, self.usage]
         return fields
 
     def reprFields(self):
         dz = set_blank_if_default(self.dz, 0.)
         usage = set_blank_if_default(self.usage, 'BOTH')
         fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
-                  self.Set(), dz, self.dtor, self.Cid(), self.thx, self.thy,
+                  self.Set(), dz, self.dtor, self.Cid(), self.dthx, self.dthy,
                   None, usage]
         return fields
 

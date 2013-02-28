@@ -62,9 +62,8 @@ class ABCQSet(Set):
         self.IDs = []
         self.components = []
 
-        fields = card[1:]
-        nfields = len(card) - 1
-        for n in xrange(nfields):
+        nterms = len(card) // 2
+        for n in xrange(nterms):
             i = n * 2 + 1
             ID = integer(card, i, 'ID' + str(n))
             component = components(card, i + 1, 'component' + str(n))
@@ -92,9 +91,7 @@ class ASET(ABCQSet):
     type = 'ASET'
 
     def __init__(self, card=None, data=None, comment=''):
-        ABCQSet.__init__(self, card, data)
-        if comment:
-            self._comment = comment
+        ABCQSet.__init__(self, card, data, comment)
 
 
 class BSET(ABCQSet):
@@ -107,9 +104,7 @@ class BSET(ABCQSet):
     type = 'BSET'
 
     def __init__(self, card=None, data=None, comment=''):
-        ABCQSet.__init__(self, card, data)
-        if comment:
-            self._comment = comment
+        ABCQSet.__init__(self, card, data, comment)
 
 
 class CSET(ABCQSet):
@@ -122,9 +117,7 @@ class CSET(ABCQSet):
     type = 'CSET'
 
     def __init__(self, card=None, data=None, comment=''):
-        ABCQSet.__init__(self, card, data)
-        if comment:
-            self._comment = comment
+        ABCQSet.__init__(self, card, data, comment)
 
 
 class QSET(ABCQSet):
@@ -137,9 +130,7 @@ class QSET(ABCQSet):
     type = 'QSET'
 
     def __init__(self, card=None, data=None, comment=''):
-        ABCQSet.__init__(self, card, data)
-        if comment:
-            self._comment = comment
+        ABCQSet.__init__(self, card, data, comment)
 
 
 class ABQSet1(Set):
@@ -151,6 +142,7 @@ class ABQSet1(Set):
     ID8 ID9
     ASET1 C ID1 'THRU' ID2
     """
+
     def __init__(self, card=None, data=None, comment=''):
         Set.__init__(self, card, data)
         if comment:
@@ -160,8 +152,9 @@ class ABQSet1(Set):
         ## no embedded blanks.)
         self.components = components_or_blank(card, 1, 'components', 0)
 
+        nfields = len(card)
         ## Identifiers of grids points. (Integer > 0)
-        IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))
+        IDs = fields(integer_or_string, card, 'ID', i=2, j=nfields)
         self.IDs = expand_thru(IDs)
 
     def rawFields(self):
@@ -184,18 +177,14 @@ class ASET1(ABQSet1):
     type = 'ASET1'
 
     def __init__(self, card=None, data=None, comment=''):
-        ABQSet1.__init__(self, card, data)
-        if comment:
-            self._comment = comment
+        ABQSet1.__init__(self, card, data, comment)
 
 
 class BSET1(ABQSet1):
     type = 'BSET1'
 
     def __init__(self, card=None, data=None, comment=''):
-        ABQSet1.__init__(self, card, data)
-        if comment:
-            self._comment = comment
+        ABQSet1.__init__(self, card, data, comment)
 
 
 class CSET1(Set):
@@ -207,6 +196,8 @@ class CSET1(Set):
     CSET1 C ID1 'THRU' ID2
     CSET1,,'ALL'
     """
+    type = 'CSET1'
+
     def __init__(self, card=None, data=None, comment=''):
         Set.__init__(self, card, data)
         if comment:
@@ -239,9 +230,7 @@ class QSET1(ABQSet1):
     type = 'QSET1'
 
     def __init__(self, card=None, data=None, comment=''):
-        ABQSet1.__init__(self, card, data)
-        if comment:
-            self._comment = comment
+        ABQSet1.__init__(self, card, data, comment)
 
 
 class SET1(Set):
@@ -396,37 +385,37 @@ class SESET(SetSuper):
         #print("cards",cards)
         return ''.join(cards)
 
-class SEBSET(Set):
-    """
-    Defines boundary degrees-of-freedom to be fixed (b-set) during generalized dynamic
-    reduction or component mode calculations.
-    SEBSET SEID ID1 C1 ID2 C2 ID3 C3
-    SEBSET C ID1 'THRU' ID2
-    """
-    def __init__(self, card=None, data=None, comment=''):
-        Set.__init__(self, card, data)
-        if comment:
-            self._comment = comment
-
-        ## Identifiers of grids points. (Integer > 0)
-        self.components = []
-        self.IDs = []
-
-        fields = str(card.fields(1))
-        nfields = (len(card) - 1 ) // 2
-        for n in range(nsets):
-            i = n * 2 + 1
-            component = components(card, i, 'component' + str(n))
-            ID = components(card, i + 1, 'ID' + str(n))
-            self.components.append(component)
-            self.IDs.append(ID)
-
-    def rawFields(self):
-        """gets the "raw" card without any processing as a list for printing"""
-        fields = ['SEBSET1']
-        for (component, ID) in zip(self.components, self.IDs):
-            fields += [component, ID]
-        return fields
+# class SEBSET(Set):
+#     """
+#     Defines boundary degrees-of-freedom to be fixed (b-set) during generalized dynamic
+#     reduction or component mode calculations.
+#     SEBSET SEID ID1 C1 ID2 C2 ID3 C3
+#     SEBSET C ID1 'THRU' ID2
+#     """
+#     def __init__(self, card=None, data=None, comment=''):
+#         Set.__init__(self, card, data)
+#         if comment:
+#             self._comment = comment
+#
+#         ## Identifiers of grids points. (Integer > 0)
+#         self.components = []
+#         self.IDs = []
+#
+#         fields = str(card.fields(1))
+#         nfields = (len(card) - 1 ) // 2
+#         for n in range(nsets):
+#             i = n * 2 + 1
+#             component = components(card, i, 'component' + str(n))
+#             ID = components(card, i + 1, 'ID' + str(n))
+#             self.components.append(component)
+#             self.IDs.append(ID)
+#
+#     def rawFields(self):
+#         """gets the "raw" card without any processing as a list for printing"""
+#         fields = ['SEBSET1']
+#         for (component, ID) in zip(self.components, self.IDs):
+#             fields += [component, ID]
+#         return fields
 
 class SEBSET1(Set):
     """

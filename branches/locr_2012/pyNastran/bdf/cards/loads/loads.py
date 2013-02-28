@@ -22,7 +22,8 @@ from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.format import (integer, integer_or_blank,
                                   double, double_or_blank,
                                   blank, integer_string_or_blank,
-                                  string_or_blank, integer_double_or_blank)
+                                  string_or_blank, integer_double_or_blank,
+                                  components_or_blank)
 
 
 class Load(BaseCard):
@@ -82,8 +83,9 @@ class LoadCombination(Load):  # LOAD, DLOAD
 
     def cross_reference(self, model):
         loadIDs2 = []
+        msg = ' which is required by %s=%s' % (self.type, self.sid)
         for loadID in self.loadIDs:
-            loadID2 = model.Load(loadID)
+            loadID2 = model.Load(loadID, msg=msg)
             loadIDs2.append(loadID2)
         self.loadIDs = loadIDs2
 
@@ -164,9 +166,10 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         #    return [node.nid for node in nodes]
 
     def cross_reference(self, model):
-        self.lid = model.Load(self.lid)
+        msg = ' which is required by %s=%s' % (self.type, self.sid)
+        self.lid = model.Load(self.lid, msg=msg)
         if self.tid:
-            self.tid = model.Load(self.tid)
+            self.tid = model.Load(self.tid, msg=msg)
 
     def LoadID(self, lid):
         if isinstance(lid, int):
@@ -236,8 +239,9 @@ class SLOAD(Load):
             self.mags.append(double(card, j + 1, 'mag' + str(i)))
 
     def cross_reference(self, model):
+        msg = ' which is required by %s=%s' % (self.type, self.sid)
         for (i, nid) in enumerate(self.nids):
-            self.nids[i] = model.Node(nid)
+            self.nids[i] = model.Node(nid, msg=msg)
 
     def Nid(self, node):
         if isinstance(node, int):
@@ -289,7 +293,7 @@ class DAREA(BaseCard):
             nOffset *= 3
             self.sid = integer(card, 1, 'sid')
             self.p = integer(card, 2 + nOffset, 'p')
-            self.c = integer(card, 3 + nOffset, 'c')
+            self.c = components_or_blank(card, 3 + nOffset, 'c', 0)
             self.scale = double(card, 4 + nOffset, 'scale')
         else:
             self.sid = data[0]
@@ -365,7 +369,8 @@ class TLOAD1(TabularLoad):
 
     def cross_reference(self, model):
         if self.tid:
-            self.tid = model.Table(self.tid)
+            msg = ' which is required by %s=%s' % (self.type, self.sid)
+            self.tid = model.Table(self.tid, msg=msg)
 
     def Tid(self):
         if self.tid == 0:
@@ -412,10 +417,12 @@ class TLOAD2(TabularLoad):
         self.Type = integer_string_or_blank(card, 4, 'Type', 'LOAD')
 
         ## Time constant. (Real >= 0.0)
-        if self.delay == 0:
-            self.T1 = double_or_blank(card, 5, 'T1', 0.)
-        else:
-            self.T1 = blank(card, 5, 'T1')
+        self.T1 = double_or_blank(card, 5, 'T1', 0.0)
+        #if self.delay == 0:
+        #self.T1 = double_or_blank(card, 5, 'T1', 0.)
+        #else:
+        #self.T1 = blank(card, 5, 'T1')
+
         ## Time constant. (Real; T2 > T1)
         self.T2 = double_or_blank(card, 6, 'T2', self.T1)
         ## Frequency in cycles per unit time. (Real >= 0.0; Default = 0.0)
@@ -558,10 +565,11 @@ class RLOAD1(TabularLoad):
             raise RuntimeError(msg)
 
     def cross_reference(self, model):
+        msg = ' which is required by %s=%s' % (self.type, self.sid)
         if self.tc:
-            self.tc = model.Table(self.tc)
+            self.tc = model.Table(self.tc, msg=msg)
         if self.td:
-            self.td = model.Table(self.td)
+            self.td = model.Table(self.td, msg=msg)
 
     #def LoadID(self, lid):
         #return self.Lid()
@@ -632,10 +640,11 @@ class RLOAD2(TabularLoad):
             raise RuntimeError(msg)
 
     def cross_reference(self, model):
+        msg = ' which is required by %s=%s' % (self.type, self.sid)
         if self.tb:
-            self.tb = model.Table(self.tb)
+            self.tb = model.Table(self.tb, msg=msg)
         if self.tp:
-            self.tp = model.Table(self.tp)
+            self.tp = model.Table(self.tp, msg=msg)
 
     def getLoads(self):
         return [self]
@@ -703,14 +712,15 @@ class RANDPS(RandomLoad):
             self.k = integer(card, 3, 'k')
 
             ## Components of the complex number. (Real)
-            self.x = double(card, 4, 'x')
-            self.y = double(card, 5, 'y')
+            self.x = double_or_blank(card, 4, 'x', 0.0)
+            self.y = double_or_blank(card, 5, 'y', 0.0)
             ## Identification number of a TABRNDi entry that defines G(F).
             self.tid = integer_or_blank(card, 6, 'tid', 0)
 
     def cross_reference(self, model):
         if self.tid:
-            self.tid = model.Table(self.tid)
+            msg = ' which is required by %s=%s' % (self.type, self.sid)
+            self.tid = model.Table(self.tid, msg=msg)
 
     def getLoads(self):
         return [self]

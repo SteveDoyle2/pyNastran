@@ -221,16 +221,17 @@ class PBUSH1D(BushingProperty):
     def getShockA(self, card, iStart):
         self.shockType = string_or_blank(card, iStart + 1, 'shockType')
         self.shockCVT = double(card, iStart + 2, 'shockCVT')
-        self.shockCVC = double(card, iStart + 3, 'shockCVC')
+        self.shockCVC = double_or_blank(card, iStart + 3, 'shockCVC')
         self.shockExpVT = double_or_blank(card, iStart + 4, 'shockExpVT', 1.0)
         self.shockExpVC = double_or_blank(card, iStart + 5, 'shockExpVC', self.shockExpVT)
 
         if self.shockType == 'TABLE':
-            self.shockIDTS = integer(card, iStart + 6, 'shockIDTS')
-            self.shockIDETS = blank(card, iStart + 9, 'shockIDETS')
-            self.shockIDECS = blank(card, iStart + 10, 'shockIDECS')
-            self.shockIDETSD = blank(card, iStart + 11, 'shockIDETSD')
-            self.shockIDECSD = blank(card, iStart + 12, 'shockIDECSD')
+            pass
+            # self.shockIDTS = integer(card, iStart + 6, 'shockIDTS')
+            # self.shockIDETS = blank(card, iStart + 9, 'shockIDETS')
+            # self.shockIDECS = blank(card, iStart + 10, 'shockIDECS')
+            # self.shockIDETSD = blank(card, iStart + 11, 'shockIDETSD')
+            # self.shockIDECSD = blank(card, iStart + 12, 'shockIDECSD')
         elif self.shockType == 'EQUAT':
             self.shockIDTS = blank(card, iStart + 6, 'shockIDTS')
             self.shockIDETS = integer(card, iStart + 9, 'shockIDETS')

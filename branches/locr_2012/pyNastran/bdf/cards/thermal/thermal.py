@@ -7,7 +7,8 @@ from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
                                           collapse_thru_by)
 from pyNastran.bdf.format import (fields, fields_or_blank, integer,
                                   integer_or_blank, double, 
-                                  double_or_blank, integer_or_string, string)
+                                  double_or_blank, integer_or_string, string,
+                                  blank)
 
 class ThermalCard(BaseCard):
     def __init__(self, card, data):
@@ -237,7 +238,10 @@ class CHBDYP(ThermalElement):
             self.g1 = integer(card, 6, 'g1')
             ## Grid point identification numbers of grids bounding the surface.
             ## (Integer > 0)
-            self.g2 = integer(card, 7, 'g2')
+            if self.Type != 'POINT':
+                self.g2 = integer(card, 7, 'g2')
+            else:
+                self.g2 = blank(card, 7, 'g2')
 
             ## Orientation grid point. (Integer > 0; Default = 0)
             self.g0 = integer_or_blank(card, 8, 'g0', 0)
@@ -252,7 +256,7 @@ class CHBDYP(ThermalElement):
 
             ## Grid point identification number of a midside node if it is used
             ## with the line type surface element.
-            self.gmid = integer(card, 11, 'gmid')
+            self.gmid = integer_or_blank(card, 11, 'gmid')
             ## Coordinate system for defining orientation vector.
             ## (Integer > 0; Default = 0
             self.ce = integer_or_blank(card, 12, 'ce', 0)
@@ -494,13 +498,18 @@ class CONV(ThermalBC):
 
         TA1 = integer(card, 5, 'TA1')
         assert TA1 > 0
-        nfields = len(card)  # maybe off by 1...
-        defaults = [TA1] * (nfields - 6)
 
         ## Ambient points used for convection 0's are allowed for TA2 and
         ## higher.  (Integer > 0 for TA1 and Integer > 0 for TA2 through TA8;
         ## Default for TA2 through TA8 is TA1.)
-        self.ta = fields_or_blank(integer_or_blank, card, 'ta', i=6, j=nfields, defaults=defaults)
+        TA2 = integer_or_blank(card, 6, 'ta2', TA1)
+        TA3 = integer_or_blank(card, 7, 'ta3', TA1)
+        TA4 = integer_or_blank(card, 8, 'ta4', TA1)
+        TA5 = integer_or_blank(card, 9, 'ta5', TA1)
+        TA6 = integer_or_blank(card, 10, 'ta6', TA1)
+        TA7 = integer_or_blank(card, 11, 'ta7', TA1)
+        TA8 = integer_or_blank(card, 12, 'ta8', TA1)
+        self.ta = [TA1, TA2, TA3, TA4, TA5, TA6, TA7, TA8]
 
     def cross_reference(self, model):
         self.eid = model.Element(self.eid)
@@ -519,7 +528,13 @@ class CONV(ThermalBC):
     def reprFields(self):
         flmnd = set_blank_if_default(self.flmnd, 0)
         cntrlnd = set_blank_if_default(self.cntrlnd, 0)
-        fields = ['CONV', self.eid, self.pconID, flmnd, cntrlnd] + self.ta
+
+        ta0 = self.ta[0]
+        ta = [ta0]
+        for tai in self.ta[1:]:
+            ta.append(set_blank_if_default(tai, ta0))
+
+        fields = ['CONV', self.eid, self.pconID, flmnd, cntrlnd] + ta
         return fields
 
 
@@ -534,7 +549,6 @@ class CONVM(ThermalBC):
         if comment:
             self._comment = comment
         self.eid = integer(card, 1, 'eid')
-
         self.pconvmID = integer(card, 2, 'pconvmID')
 
         self.filmNode = integer_or_blank(card, 3, 'filmNode', 0)

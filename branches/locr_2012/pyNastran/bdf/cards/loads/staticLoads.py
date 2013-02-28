@@ -928,7 +928,7 @@ class PLOAD2(Load):
             self.sid = integer(card, 1, 'sid')
             self.p = double(card, 2, 'p')
 
-            if string_or_blank(card, 4, 'THRU') == 'THRU':
+            if integer_string_or_blank(card, 4, 'THRU') == 'THRU':
                 e1 = integer(card, 3, 'Element1')
                 e2 = integer(card, 5, 'Element1')
                 eids = [i for i in xrange(e1, e2 + 1)]

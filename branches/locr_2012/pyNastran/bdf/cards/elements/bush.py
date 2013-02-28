@@ -170,19 +170,24 @@ class CBUSH1D(BushElement):
     def cross_reference(self, model):
         msg = ' which is required by CBUSH1D eid=%s' % self.eid
         self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
-        self.pid = model.Property(self.pid)
+        if self.gb:
+            self.gb = model.Node(self.gb, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
         if self.cid is not None:
             self.cid = model.Coord(self.cid)
 
     def Ga(self):
         if isinstance(self.ga, int):
             return self.ga
+        #elif self.ga is None:
+            #return None
         return self.ga.nid
 
     def Gb(self):
         if isinstance(self.gb, int):
             return self.gb
+        elif self.gb is None:
+            return None
         return self.gb.nid
 
     def rawFields(self):
