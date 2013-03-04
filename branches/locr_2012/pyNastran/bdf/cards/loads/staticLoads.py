@@ -711,7 +711,9 @@ class MOMENT(Moment):
         return self.cid.cid
 
     def cross_reference(self, model):
-        # TODO cross reference and fix repr function
+        """
+        @todo cross reference and fix repr function
+        """
         pass
 
     def rawFields(self):

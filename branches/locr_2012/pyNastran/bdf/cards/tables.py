@@ -119,8 +119,16 @@ class TABLED1(Table):
             self.yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
 
             nfields = len(card) - 1
-            xy = fields(double, card, 'xydata', i=9, j=nfields)
-            endTable = string(card, nfields, 'ENDT')
+            nterms = (nfields - 9) // 2
+            xy = []
+            for i in range(nterms):
+                n = 9 + i * 2
+                if card.field(n) == 'ENDT':
+                    break
+                x = double(card, n, 'x' + str(i + 1))
+                y = double(card, n + 1, 'y' + str(i + 1))
+                xy += [x, y]
+            ENDT = string(card, nfields, 'ENDT')
             isData = False
         else:
             self.tid = data[0]
@@ -154,7 +162,15 @@ class TABLED2(Table):
             self.x1 = double(card, 2, 'x1')
             
             nfields = len(card) - 1
-            xy = fields(double, card, 'xy', i=9, j=nfields)
+            nterms = (nfields - 9) // 2
+            xy = []
+            for i in range(nterms):
+                n = 9 + i * 2
+                if card.field(n) == 'ENDT':
+                    break
+                x = double(card, n, 'x' + str(i + 1))
+                y = double(card, n + 1, 'y' + str(i + 1))
+                xy += [x, y]
             ENDT = string(card, nfields, 'ENDT')
             isData = False
         else:
@@ -166,7 +182,7 @@ class TABLED2(Table):
 
     def rawFields(self):
         list_fields = ['TABLED2', self.tid, self.x1, None, None, None,
-                  None, None, None] + self.table.fields() + ['ENDT']
+                       None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def reprFields(self):
@@ -186,7 +202,15 @@ class TABLED3(Table):
             assert self.x2 != 0.0
 
             nfields = len(card) - 1
-            xy = fields(double, card, 'xy', i=9, j=nfields)
+            nterms = (nfields - 9) // 2
+            xy = []
+            for i in range(nterms):
+                n = 9 + i * 2
+                if card.field(n) == 'ENDT':
+                    break
+                x = double(card, n, 'x' + str(i + 1))
+                y = double(card, n + 1, 'y' + str(i + 1))
+                xy += [x, y]
             ENDT = string(card, nfields, 'ENDT')
             isData = False
         else:
@@ -222,10 +246,9 @@ class TABLEM1(Table):
                 n = 9 + i * 2
                 if card.field(n) == 'ENDT':
                     break
-                x = double(card, n, 'x'+str(i+1))
-                y = double(card, n+1, 'y'+str(i+1))
+                x = double(card, n, 'x' + str(i + 1))
+                y = double(card, n + 1, 'y' + str(i + 1))
                 xy += [x, y]
-            #xy = fields(double, card, 'xy', i=9, j=nfields)
             ENDT = string(card, nfields, 'ENDT')
             isData = False
         else:
@@ -257,8 +280,8 @@ class TABLEM2(Table):
                 n = 9 + i * 2
                 if card.field(n) == 'ENDT':
                     break
-                x = double(card, n, 'x'+str(i+1))
-                y = double(card, n+1, 'y'+str(i+1))
+                x = double(card, n, 'x' + str(i + 1))
+                y = double(card, n + 1, 'y' + str(i + 1))
                 xy += [x, y]
             ENDT = string(card, nfields, 'ENDT')
             isData = False
@@ -271,7 +294,7 @@ class TABLEM2(Table):
 
     def rawFields(self):
         list_fields = ['TABLEM2', self.tid, self.x1, None, None, None,
-                  None, None, None] + self.table.fields() + ['ENDT']
+                       None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def reprFields(self):
@@ -291,7 +314,15 @@ class TABLEM3(Table):
             assert self.x2 != 0.0
 
             nfields = len(card) - 1
-            xy = fields(double, card, 'xy', i=9, j=nfields)
+            nterms = (nfields - 9) // 2
+            xy = []
+            for i in range(nterms):
+                n = 9 + i * 2
+                if card.field(n) == 'ENDT':
+                    break
+                x = double(card, n, 'x' + str(i + 1))
+                y = double(card, n + 1, 'y' + str(i + 1))
+                xy += [x, y]
             ENDT = string(card, nfields, 'ENDT')
             isData = False
         else:
@@ -333,8 +364,8 @@ class TABLEM4(Table):
                 n = 9 + i * 2
                 if card.field(n) == 'ENDT':
                     break
-                x = double(card, n, 'x'+str(i+1))
-                y = double(card, n+1, 'y'+str(i+1))
+                x = double(card, n, 'x' + str(i + 1))
+                y = double(card, n + 1, 'y' + str(i + 1))
                 xy += [x, y]
             ENDT = string(card, nfields, 'ENDT')
             isData = False
@@ -368,7 +399,15 @@ class TABLES1(Table):
             self.tid = integer(card, 1, 'tid')
 
             nfields = len(card) - 1
-            xy = fields(double, card, 'xy', i=9, j=nfields)
+            nterms = (nfields - 9) // 2
+            xy = []
+            for i in range(nterms):
+                n = 9 + i * 2
+                if card.field(n) == 'ENDT':
+                    break
+                x = double(card, n, 'x' + str(i + 1))
+                y = double(card, n + 1, 'y' + str(i + 1))
+                xy += [x, y]
             ENDT = string(card, nfields, 'ENDT')
             isData = False
         else:
@@ -397,7 +436,15 @@ class TABLEST(Table):
             self.tid = integer(card, 1, 'tid')
 
             nfields = len(card) - 1
-            xy = fields(double, card, 'xy', i=9, j=nfields)
+            nterms = (nfields - 9) // 2
+            xy = []
+            for i in range(nterms):
+                n = 9 + i * 2
+                if card.field(n) == 'ENDT':
+                    break
+                x = double(card, n, 'x' + str(i + 1))
+                y = double(card, n + 1, 'y' + str(i + 1))
+                xy += [x, y]
             ENDT = string(card, nfields, 'ENDT')
             isData = False
         else:
@@ -435,7 +482,15 @@ class TABRND1(RandomTable):
             self.yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
 
             nfields = len(card) - 1
-            xy = fields(double, card, 'xy', i=9, j=nfields)
+            nterms = (nfields - 9) // 2
+            xy = []
+            for i in range(nterms):
+                n = 9 + i * 2
+                if card.field(n) == 'ENDT':
+                    break
+                x = double(card, n, 'x' + str(i + 1))
+                y = double(card, n + 1, 'y' + str(i + 1))
+                xy += [x, y]
             ENDT = string(card, nfields, 'ENDT')
             isData = False
         else:
@@ -474,7 +529,8 @@ class TABRND1(RandomTable):
 class TABRNDG(RandomTable):
     """
     Gust Power Spectral Density
-    Defines the power spectral density (PSD) of a gust for aeroelastic response analysis.
+    Defines the power spectral density (PSD) of a gust for aeroelastic response
+    analysis.
     """
     type = 'TABRNDG'
 

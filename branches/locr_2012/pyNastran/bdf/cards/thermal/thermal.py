@@ -129,7 +129,7 @@ class CHBDYE(ThermalElement):
         return list_fields
 
     def reprFields(self):
-        #eids = collapse_thru_by(self.eids)  # TODO is this done
+        #eids = collapse_thru_by(self.eids)  ## @todo is this done
         list_fields = ['CHBDYE', self.eid, self.eid2, self.side,
                   self.iViewFront, self.iViewBack, self.radMidFront,
                   self.radMidBack]
@@ -453,11 +453,12 @@ class PHBDY(ThermalProperty):
 
         ## Diameters associated with the surface. Used with CHBDYP element
         ## TYPE='ELCYL','TUBE','FTUBE'
-        self.d1 = double(card, 3, 'd1')
+        self.d1 = double_or_blank(card, 3, 'd1')
         self.d2 = double_or_blank(card, 4, 'd2', self.d1)
 
     #def cross_reference(self,model):
     #    pass
+
     def rawFields(self):
         list_fields = ['PHBDY', self.pid, self.af, self.d1, self.d2]
         return list_fields

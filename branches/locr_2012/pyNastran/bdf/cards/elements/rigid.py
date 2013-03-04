@@ -343,7 +343,7 @@ class RBE2(RigidElement):
         return list_fields
 
 
-class RBE3(RigidElement):  # TODO: not done, needs testing badly
+class RBE3(RigidElement):  ## @todo: not done, needs testing badly
     type = 'RBE3'
 
     def __init__(self, card=None, data=None, comment=''):

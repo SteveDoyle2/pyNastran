@@ -24,7 +24,7 @@ from pyNastran.bdf.cards.baseCard import Property
 from pyNastran.bdf.format import (fields, integer, integer_or_blank,
                                   double, double_or_blank,
                                   string, string_or_blank,
-                                  integer_or_double)
+                                  integer_or_double, double_string_or_blank)
 
 def IyyBeam(b, h):
     return 1 / 12. * b * h ** 3
@@ -220,7 +220,7 @@ class LineProperty(Property):
             Iyy = 1 / 12. * w1 * h1 ** 3
             ## w1             I_{yy}=\frac{hb^3}{12}
             Izz = 1 / 12. * h1 * w1 ** 3
-            Iyz = 0.  # TODO is the Ixy of a bar 0 ???
+            Iyz = 0.  ## @todo is the Ixy of a bar 0 ???
 
         else:
             msg = 'Type=%s is not supported for %s class...' % (self.Type,
@@ -693,7 +693,7 @@ class PBAR(LineProperty):
             self.j = data[5]
 
             self.nsm = data[6]
-            #self.fe  = data[7] # TODO not documented....
+            #self.fe  = data[7] ## @todo not documented....
             self.C1 = data[8]
             self.C2 = data[9]
             self.D1 = data[10]
@@ -1031,7 +1031,7 @@ class PBEAM(IntegratedLineProperty):
 
             nFields = card.nFields() - 1  # -1 for PBEAM field
 
-            self.so = ['YES']  # @todo what are these values (so[0],xxb[0])???
+            self.so = ['YES']  ## @todo what are these values (so[0],xxb[0])???
             self.xxb = [0.]
             self.A = [double(card, 3, 'A')]
             self.i1 = [double_or_blank(card, 4, 'I1', 0.0)]
@@ -1067,8 +1067,8 @@ class PBEAM(IntegratedLineProperty):
             if nMajor == 0:
                 nMajor = 1
 
-            x = (nMajor) * 16 + 1
-            if string(card, x, 'so') in ['YES', 'YESA', 'NO']:  # there is no footer
+            x = nMajor * 16 + 1
+            if double_string_or_blank(card, x, 'so') in ['YES', 'YESA', 'NO']:  # there is no footer
                 nMajor += 1
                 x += 16
 
@@ -1094,7 +1094,7 @@ class PBEAM(IntegratedLineProperty):
                 self.j.append(set_default_if_blank(propFields[6], 0.0))
                 self.nsm.append(set_default_if_blank(propFields[7], 0.0))
 
-                if propFields[0] in ['YES', 'NO']:  ## TODO: verify
+                if propFields[0] in ['YES', 'NO']:  ## @todo: verify
                     self.c1.append(set_default_if_blank(propFields[8], 0.0))
                     self.c2.append(set_default_if_blank(propFields[9], 0.0))
                     self.d1.append(set_default_if_blank(propFields[10], 0.0))
@@ -1168,7 +1168,7 @@ class PBEAM(IntegratedLineProperty):
         msg += "              VALE=(%g,  %g,  %g,  %g),\n" % (a, iy, iz, j)
 
         msg += "              ORIENTATION=_F( \n"
-        msg += "                  CARA=('VECT_Y'), # direction of beam ???\n"  # TODO is this correct
+        msg += "                  CARA=('VECT_Y'), # direction of beam ???\n"  ## @todo is this correct
         msg += "                  VALE=(1.0,0.0,0.0,)"
 
         if [self.n1a, self.n1b] != [0., 0.]:
@@ -1507,7 +1507,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
-    def reprFields(self):  ## TODO: not done
+    def reprFields(self):  ## @todo: not done
         list_fields = ['PBEAM3', self.pid, self.Mid(), ]  # other
         return list_fields
 

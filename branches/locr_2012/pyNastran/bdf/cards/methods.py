@@ -101,7 +101,7 @@ class EIGB(Method):
         return list_fields
 
 
-class EIGC(Method):  # TODO: not done
+class EIGC(Method):  ## @todo: not done
     """
     Defines data needed to perform complex eigenvalue analysis
     """
@@ -454,8 +454,8 @@ class EIGRL(Method):
                 #self.norm = 'MAX'
 
     def rawFields(self):
-        list_fields = ['EIGRL', self.sid, self.v1, self.v2, self.nd, self.msglvl,
-                  self.maxset, self.shfscl, self.norm]
+        list_fields = ['EIGRL', self.sid, self.v1, self.v2, self.nd,
+                       self.msglvl, self.maxset, self.shfscl, self.norm]
         for (option, value) in izip(self.options, self.values):
             list_fields += [option + '=' + str(value)]
         return list_fields

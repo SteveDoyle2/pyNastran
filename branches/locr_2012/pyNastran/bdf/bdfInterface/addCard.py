@@ -114,14 +114,14 @@ class AddMethods(object):
     def add_damper_element(self, elem, allowOverwrites=False):
         """@warning can dampers have the same ID as a standard element?"""
         return self.add_element(elem, allowOverwrites)
-        key = elem.eid
-        if key in self.damperElements and not allowOverwrites:
-            if not elem.isSameCard(self.damperElements[key]):
-                #print 'eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.elements[key],elem)
-                assert elem.eid not in self.damperElements, 'eid=%s\noldDamperElement=\n%snewDamperElement=\n%s' % (elem.eid, self.damperElements[elem.eid], elem)
-        else:
-            assert key > 0, 'eid=%s elem=%s' % (key, elem)
-            self.damperElements[key] = elem
+        # key = elem.eid
+        # if key in self.damperElements and not allowOverwrites:
+        #     if not elem.isSameCard(self.damperElements[key]):
+        #         #print 'eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.elements[key],elem)
+        #         assert elem.eid not in self.damperElements, 'eid=%s\noldDamperElement=\n%snewDamperElement=\n%s' % (elem.eid, self.damperElements[elem.eid], elem)
+        # else:
+        #     assert key > 0, 'eid=%s elem=%s' % (key, elem)
+        #     self.damperElements[key] = elem
 
     def add_rigid_element(self, elem, allowOverwrites=False):
         key = elem.eid

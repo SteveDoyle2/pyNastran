@@ -136,20 +136,20 @@ class DOPTPRM(OptConstraint):
         'P1' : 0,
         'P2' : 1,
 
-        'P2CALL' : None,  # TODO: DEFAULT PRINTS ALL???
-        'P2CBL' : None,  # TODO: DEFAULT PRINTS ALL???
-        'P2CC' : None,  # TODO: DEFAULT PRINTS ALL???
-        'P2CDDV' : None,  # TODO: DEFAULT PRINTS ALL???
-        'P2CM' : None,  # TODO: DEFAULT PRINTS ALL???
-        'P2CP' : None,  # TODO: DEFAULT PRINTS ALL???
-        'P2CR' : None,  # TODO: DEFAULT PRINTS ALL???
-        'P2RSET' : None,  # TODO: DEFAULT PRINTS ALL???
+        'P2CALL' : None,  ## @todo: DEFAULT PRINTS ALL???
+        'P2CBL' : None,  ## @todo: DEFAULT PRINTS ALL???
+        'P2CC' : None,  ## @todo: DEFAULT PRINTS ALL???
+        'P2CDDV' : None,  ## @todo: DEFAULT PRINTS ALL???
+        'P2CM' : None,  ## @todo: DEFAULT PRINTS ALL???
+        'P2CP' : None,  ## @todo: DEFAULT PRINTS ALL???
+        'P2CR' : None,  ## @todo: DEFAULT PRINTS ALL???
+        'P2RSET' : None,  ## @todo: DEFAULT PRINTS ALL???
         'PENAL' : 0.0,
         'PLVIOL' : 0,
         'PTOL' : 1e35,
         'STPSCL' : 1.0,
         'TCHECK' : -1,
-        'TDMIN' : None,  # TODO: ???
+        'TDMIN' : None,  ## @todo: ???
         'TREGION' : 0,
         'UPDFAC1' : 2.0,
         'UPDFAC2' : 0.5,
@@ -288,7 +288,7 @@ class DRESP2(OptConstraint):
         self.method = string_or_blank(card, 5, 'method', 'MIN')
         self.c1 = double_or_blank(card, 6, 'c1', 100.)
         self.c2 = double_or_blank(card, 7, 'c2', 0.005)
-        self.c3 = double_or_blank(card, 8, 'c3') # TODO: or blank?
+        self.c3 = double_or_blank(card, 8, 'c3') ## @todo: or blank?
 
         i = 0
         fields = card[9:]
@@ -409,7 +409,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             #self.mpMin = double_or_blank(card, 5, 'mpMin', 1e-15)
         #else: # negative
             #self.mpMin = double_or_blank(card, 5, 'mpMin', -1e-35)
-        self.mpMin = double_or_blank(card, 5, 'mpMin')  # TODO: bad default
+        self.mpMin = double_or_blank(card, 5, 'mpMin')  ## @todo: bad default
         self.mpMax = double_or_blank(card, 6, 'mpMax', 1e20)
         self.c0 = double_or_blank(card, 7, 'c0', 0.0)
 
@@ -476,7 +476,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         self.Type = string(card, 2, 'Type')
         self.pid = integer(card, 3, 'pid')
         self.pNameFid = integer_or_string(card, 4, 'pName_FID')
-        self.pMin = double_or_blank(card, 5, 'pMin')  # TODO bad default (see DVMREL1)
+        self.pMin = double_or_blank(card, 5, 'pMin')  ## @todo bad default (see DVMREL1)
         self.pMax = double_or_blank(card, 6, 'pMax', 1e20)
         self.c0 = double_or_blank(card, 7, 'c0', 0.0)
 
@@ -558,11 +558,11 @@ class DVPREL2(OptConstraint):
         ## PMIN must be explicitly set to a negative number for properties that
         ## may be less than zero (for example, field ZO on the PCOMP entry).
         ## (Real; Default = 1.E-15)
-        self.pMin = double_or_blank(card, 5, 'pMin')  # TODO bad default (see DVMREL1)
+        self.pMin = double_or_blank(card, 5, 'pMin')  ## @todo bad default (see DVMREL1)
         ## Maximum value allowed for this property. (Real; Default = 1.0E20)
         self.pMax = double_or_blank(card, 6, 'pMax', 1e20)
         ## DEQATN entry identification number. (Integer > 0)
-        self.eqID = integer_or_blank(card, 7, 'eqID') # TODO:  or blank?
+        self.eqID = integer_or_blank(card, 7, 'eqID') ## @todo or blank?
 
         fields = card[9:]
         #print "fields = ",fields
@@ -609,7 +609,7 @@ class DVPREL2(OptConstraint):
         self.pid = model.Property(self.pid)
         #self.eqID = model.DEquation(self.eqID)
 
-    def OptValue(self):  # TODO not implemented
+    def OptValue(self):  ## @todo not implemented
         self.pid.OptValue(self.pNameFid)
 
     def rawFields(self):

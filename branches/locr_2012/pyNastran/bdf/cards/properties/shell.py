@@ -130,7 +130,7 @@ class PCOMP(ShellProperty):
             self.plies = []
             #ply = [mid,t,theta,sout]
             for (mid, t, theta, sout) in izip(Mid, T, Theta, Sout):
-                if sout == 1:  # TODO not sure  0=NO,1=YES (most likely)
+                if sout == 1:  ## @todo not sure  0=NO,1=YES (most likely)
                     sout = 'YES'
                 elif sout == 0:
                     sout = 'NO'
@@ -378,7 +378,7 @@ class PCOMPG(PCOMP):
                 tLast = thickness
                 T += thickness
                 i += 8
-                n += 1
+                #n += 1
                 self.z0 = double_or_blank(card, 2, 'z0', -0.5 * T)
         else:
             raise NotImplementedError('PCOMPG data')
@@ -403,7 +403,8 @@ class PCOMPG(PCOMP):
         ge = set_blank_if_default(self.ge, 0.0)
         z0 = set_blank_if_default(self.z0, -0.5 * self.Thickness())
 
-        list_fields = ['PCOMPG', self.pid, z0, nsm, sb, self.ft, TRef, ge, self.lam]
+        list_fields = ['PCOMPG', self.pid, z0, nsm, sb, self.ft, TRef, ge,
+                       self.lam]
         for (iply, ply) in enumerate(self.plies):
             (_mid, t, theta, sout, gPlyID) = ply
             mid = self.Mid(iply)
@@ -600,11 +601,11 @@ class PSHELL(ShellProperty):
         msg = ''
         msg += "    COQUE=_F(GROUP_MA='P%s', # COQUE=PSHELL\n" % self.pid
         msg += "              EPAIS=%g, # EPAIS=thickness\n" % self.t
-        msg += "              ANGL_REP=(0.,90.),  # ???\n"  # TODO what is this?
+        msg += "              ANGL_REP=(0.,90.),  # ???\n"  ## @todo what is this?
         #msg += "              VECTEUR=(1.0,0.0,0.0,)  #  local coordinate system\n"
         msg += "              EXCENTREMENT=%g,  # offset-Z1\n" % self.z1
         msg += "              COQUE_NCOU=1,  # Number of Integration Layers\n"
-        msg += "              CARA=('NSM'), # ???\n"  # TODO check
+        msg += "              CARA=('NSM'), # ???\n"  ## @todo check
         msg += "              VALE=(%g),),\n" % self.nsm
         return msg
 

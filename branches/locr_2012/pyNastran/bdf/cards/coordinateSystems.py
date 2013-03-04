@@ -501,7 +501,7 @@ class Cord2x(Coord):
         if isinstance(self.rid, int):
             return (p3, matrix)
         else:
-            # TODO do i need to multiply rid.transform(p3)[1]*matrix
+            ## @todo do i need to multiply rid.transform(p3)[1]*matrix
             return (self.rid.transformToGlobal(p3)[0], matrix)
 
     def Rid(self):

@@ -2,9 +2,9 @@
 """
 All static loads are defined in this file.  This includes:
  * LSEQ
- * SLOAD
  * DLOAD
  * DAREA
+ * SLOAD
  * TLOAD1
  * TLOAD2
  * RFORCE
@@ -206,58 +206,6 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         return self.rawFields()
 
 
-class SLOAD(Load):
-    """
-    Static Scalar Load
-    Defines concentrated static loads on scalar or grid points.
-
-    @note Can be used in statics OR dynamics.
-
-    If Si refers to a grid point, the load is applied to component T1 of the
-    displacement coordinate system (see the CD field on the GRID entry).
-    """
-    type = 'SLOAD'
-
-    def __init__(self, card=None, data=None, comment=''):
-        if comment:
-            self._comment = comment
-        ## load ID
-        self.sid = integer(card, 1, 'sid')
-
-        nfields = len(card) - 2
-        n = nfields // 2
-        if nfields % 2 == 1:
-            n += 1
-            msg = 'Missing last magnitude on SLOAD card=%s' % card.fields()
-            raise RuntimeError(msg)
-
-        self.nids = []
-        self.mags = []
-        for i in xrange(n):
-            j = 2 * i + 2
-            self.nids.append(integer(card, j, 'nid' + str(i)))
-            self.mags.append(double(card, j + 1, 'mag' + str(i)))
-
-    def cross_reference(self, model):
-        msg = ' which is required by %s=%s' % (self.type, self.sid)
-        for (i, nid) in enumerate(self.nids):
-            self.nids[i] = model.Node(nid, msg=msg)
-
-    def Nid(self, node):
-        if isinstance(node, int):
-            return node
-        return node.nid
-
-    def rawFields(self):
-        list_fields = ['SLOAD', self.sid]
-        for (nid, mag) in izip(self.nids, self.mags):
-            list_fields += [self.Nid(nid), mag]
-        return list_fields
-
-    def reprFields(self):
-        return self.rawFields()
-
-
 class DLOAD(LoadCombination):
     type = 'DLOAD'
 
@@ -310,6 +258,61 @@ class DAREA(BaseCard):
 class TabularLoad(BaseCard):
     def __init__(self, card, data):
         pass
+
+
+class SLOAD(Load):
+    """
+    Static Scalar Load
+    Defines concentrated static loads on scalar or grid points.
+
+    @note Can be used in statics OR dynamics.
+
+    If Si refers to a grid point, the load is applied to component T1 of the
+    displacement coordinate system (see the CD field on the GRID entry).
+    """
+    type = 'SLOAD'
+
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
+            ## load ID
+        self.sid = integer(card, 1, 'sid')
+
+        nfields = len(card) - 2
+        n = nfields // 2
+        if nfields % 2 == 1:
+            n += 1
+            msg = 'Missing last magnitude on SLOAD card=%s' % card.fields()
+            raise RuntimeError(msg)
+
+        self.nids = []
+        self.mags = []
+        for i in xrange(n):
+            j = 2 * i + 2
+            self.nids.append(integer(card, j, 'nid' + str(i)))
+            self.mags.append(double(card, j + 1, 'mag' + str(i)))
+
+    def cross_reference(self, model):
+        msg = ' which is required by %s=%s' % (self.type, self.sid)
+        for (i, nid) in enumerate(self.nids):
+            self.nids[i] = model.Node(nid, msg=msg)
+
+    def Nid(self, node):
+        if isinstance(node, int):
+            return node
+        return node.nid
+
+    def getLoads(self):  ## @todo:  not done
+        return []
+
+    def rawFields(self):
+        list_fields = ['SLOAD', self.sid]
+        for (nid, mag) in izip(self.nids, self.mags):
+            list_fields += [self.Nid(nid), mag]
+        return list_fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 
 class TLOAD1(TabularLoad):

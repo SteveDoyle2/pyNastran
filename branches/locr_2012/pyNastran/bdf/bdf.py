@@ -278,7 +278,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
     def is_thermal_solution(self):
         """
-        TODO implement case control deck checker
+        @todo implement case control deck checker
         @warning dont use this...returns False
         """
         return False
@@ -1404,7 +1404,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             if debug:
                 self.log.debug("  line2 = |%r|" % sline)
 
-            ## TODO: doesnt support large field CSV cards which I'd never used
+            ## @todo: doesnt support large field CSV cards which I'd never used
             if ',' in sline:
                 try:
                     sline = parse_csv(sline)

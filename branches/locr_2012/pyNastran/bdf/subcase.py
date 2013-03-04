@@ -446,9 +446,9 @@ class Subcase(object):
                         raise RuntimeError(msg)
                     values2.append(ivalue)
 
-            # TODO expand values with THRU and EXCLUDE
-            # TODO sort values
-            # TODO collapse values when printing
+            ## @todo expand values with THRU and EXCLUDE
+            ## @todo sort values
+            ## @todo collapse values when printing
 
             #print "values2 = ",values2
             options = int(options)
@@ -614,7 +614,7 @@ class Subcase(object):
                 msg = ''
 
         elif param_type == 'SET-type':
-            # TODO collapse data...not written yet
+            ## @todo collapse data...not written yet
             starter = 'SET %s = ' % (options)
             msg2 = spaces + starter
             nChars = len(msg2)

@@ -550,7 +550,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         ## stores GUST cards
         self.gusts = {}
         ## stores FLFACT
-        self.flfacts = {}  ## TODO can this be simplified ???
+        self.flfacts = {}  ## @todo can this be simplified ???
         ## stores FLUTTER
         self.flutters = {}
         ## mkaeros
@@ -565,7 +565,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         # BCs
         ## stores thermal boundary conditions - CONV,RADBC
         self.bcs = {}  # e.g. RADBC
-        ## defines the MAT4, MAT5, MATT4, etc. TODO verify MATT4
+        ## defines the MAT4, MAT5, MATT4, etc.  @todo verify MATT4
         self.thermalMaterials = {}
 
         ## stores PHBDY
@@ -1113,7 +1113,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             card = wipe_empty_fields([interpretValue(field, fields)
                                       for field in fields])
             card_obj = BDFCard(card)
-        
+
         # function that gets by name the initialized object (from global scope)
         try:
             _get_cls = lambda name: globals()[name](card_obj, comment=comment)
@@ -1135,11 +1135,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
               'SESET', 'DCONSTR', 'DESVAR', 'DDVAL', 'DLINK', 'PARAM',
               'PDAMPT', 'PELAST', 'PBUSHT']:
                 try:
+                    ## PHBDY -> add_PHBDY
                     getattr(self, 'add_' + card_name)(_get_cls(card_name))
                 except Exception as e:
                     if not e.args: 
-                        e.args=('',)
+                        e.args = ('',)
                     e.args = (e.args[0] + "\ncard = %s" % card,)+e.args[1:]
+                    raise
                 return card_obj
 
             # dictionary of cards. Key is the name of the function to add the

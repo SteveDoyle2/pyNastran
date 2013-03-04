@@ -598,7 +598,7 @@ class CBAR(LineElement):
             self.w1b = double_or_blank(card, 14, 'w1b', 0.0)
             self.w2b = double_or_blank(card, 15, 'w2b', 0.0)
             self.w3b = double_or_blank(card, 16, 'w3b', 0.0)
-        else:  # TODO verify
+        else:  ## @todo verify
             #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
             #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
 
@@ -620,7 +620,7 @@ class CBAR(LineElement):
             self.ga = main[2]
             self.gb = main[3]
             #self.offt = str(data[4]) # GGG
-            self.offt = 'GGG'  # TODO offt can be an integer; translate to char
+            self.offt = 'GGG'  ## @todo offt can be an integer; translate to char
             self.pa = main[4]
             self.pb = main[5]
 
@@ -1038,7 +1038,7 @@ class CBEAM(CBAR):
             self.sa = integer_or_blank(card, 17, 'sa')
             self.sb = integer_or_blank(card, 18, 'sb')
 
-        else:  # TODO verify
+        else:  ## @todo verify
             #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
             #        [f,g0]]
             #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
@@ -1065,9 +1065,9 @@ class CBEAM(CBAR):
             self.sa = main[4]
             self.sb = main[5]
 
-            self.isOfft = True  # TODO is this correct???
+            self.isOfft = True  ## @todo is this correct???
             #self.offt = str(data[6]) # GGG
-            self.offt = 'GGG'  # TODO is this correct???
+            self.offt = 'GGG'  ## @todo is this correct???
 
             self.pa = main[6]
             self.pb = main[7]

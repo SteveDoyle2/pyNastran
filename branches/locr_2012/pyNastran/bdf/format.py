@@ -55,7 +55,7 @@ def integer_double_string_or_blank(card, n, fieldname, default=None):
 
 #def assert_int_bounded_range(card, n, fieldname, lower=None, upper=None):
 
-def fields(f, card, fieldname, i, j=None):  ## TODO: improve fieldname
+def fields(f, card, fieldname, i, j=None):  ## @todo: improve fieldname
     fs = []
     if j is None:
         j = len(card)

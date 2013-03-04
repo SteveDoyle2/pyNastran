@@ -24,7 +24,7 @@ from pyNastran.bdf.cards.tables import Table
 from pyNastran.bdf.format import (integer, integer_or_blank,
                                  double, double_or_blank,
                                  string, string_or_blank,
-                                 blank)
+                                 blank, fields)
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""
@@ -635,9 +635,9 @@ class MAT8(AnisotropicMaterial):
             self._comment = comment
         if card:
             self.mid = integer(card, 1, 'mid')
-            self.e11 = double(card, 2, 'E11')  # TODO is this the correct default
-            self.e22 = double(card, 3, 'E22')  # TODO is this the correct default
-            self.nu12 = double(card, 4, 'nu12')  # TODO is this the correct default
+            self.e11 = double(card, 2, 'E11')  ## @todo is this the correct default
+            self.e22 = double(card, 3, 'E22')  ## @todo is this the correct default
+            self.nu12 = double(card, 4, 'nu12')  ## @todo is this the correct default
 
             self.g12 = double_or_blank(card, 5, 'g12', 0.0)
             self.g1z = double_or_blank(card, 6, 'g1z', 1e8)
@@ -781,7 +781,12 @@ class MAT9(AnisotropicMaterial):
             self.G56 = double_or_blank(card, 21, 'G56', 0.0)
             self.G66 = double_or_blank(card, 22, 'G66', 0.0)
             self.rho = double_or_blank(card, 23, 'rho', 0.0)
-            self.A = card.fields(24, 30, [0.] * 6)
+            self.A = [double_or_blank(card, 24, 'A1', 0.0),
+                      double_or_blank(card, 25, 'A2', 0.0),
+                      double_or_blank(card, 26, 'A3', 0.0),
+                      double_or_blank(card, 27, 'A4', 0.0),
+                      double_or_blank(card, 28, 'A5', 0.0),
+                      double_or_blank(card, 29, 'A6', 0.0)]
             self.TRef = double_or_blank(card, 30, 'TRef', 0.0)
             self.ge = double_or_blank(card, 31, 'ge', 0.0)
         else:
