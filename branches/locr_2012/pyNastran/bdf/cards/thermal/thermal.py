@@ -113,14 +113,14 @@ class CHBDYE(ThermalElement):
     #def cross_reference(self,model):
     #    pass
 
-    def sideToEIDs(self, eid):
-        sideIDs = self.sideMaps[eid.type][self.side]
-        ## [1,2,3]
-
-        # id-1 is for the 0 based python index
-        nodes = [enodes[id - 1] for id in xrange(len(eid.nodes))
-                 if id in sideIDs]
-        return side
+    # def sideToEIDs(self, eid):
+    #     sideIDs = self.sideMaps[eid.type][self.side]
+    #     ## [1,2,3]
+    #
+    #     # id-1 is for the 0 based python index
+    #     nodes = [enodes[id - 1] for id in xrange(len(eid.nodes))
+    #              if id in sideIDs]
+    #     return side
 
     def rawFields(self):
         list_fields = ['CHBDYE', self.eid, self.eid2, self.side,
@@ -188,10 +188,10 @@ class CHBDYG(ThermalElement):
         #self.pid = mesh.Phbdy(self.pid)
 
     def rawFields(self):
-        fields = ['CHBDYG', self.eid, None, self.Type, self.iViewFront,
+        list_fields = ['CHBDYG', self.eid, None, self.Type, self.iViewFront,
                   self.iViewBack, self.radMidFront, self.radMidBack, None,
                   ] + self.grids
-        return fields
+        return list_fields
 
     def reprFields(self):
         iViewFront = set_blank_if_default(self.iViewFront, 0)
@@ -199,9 +199,9 @@ class CHBDYG(ThermalElement):
         radMidFront = set_blank_if_default(self.radMidFront, 0)
         radMidBack = set_blank_if_default(self.radMidBack, 0)
 
-        fields = ['CHBDYG', self.eid, None, self.Type, iViewFront, iViewBack,
+        list_fields = ['CHBDYG', self.eid, None, self.Type, iViewFront, iViewBack,
                   radMidFront, radMidBack, None, ] + self.grids
-        return fields
+        return list_fields
 
 
 class CHBDYP(ThermalElement):
@@ -275,11 +275,11 @@ class CHBDYP(ThermalElement):
         self.pid = mesh.Phbdy(self.pid)
 
     def rawFields(self):
-        fields = ['CHBDYP', self.eid, self.Pid(), self.Type, self.iViewFront,
+        list_fields = ['CHBDYP', self.eid, self.Pid(), self.Type, self.iViewFront,
                   self.iViewBack, self.g1, self.g2, self.g0, self.radMidFront,
                   self.radMidBack, self.gmid, self.ce, self.e1, self.e2,
                   self.e3]
-        return fields
+        return list_fields
 
     def reprFields(self):
         iViewFront = set_blank_if_default(self.iViewFront, 0)
@@ -290,10 +290,10 @@ class CHBDYP(ThermalElement):
         g0 = set_blank_if_default(self.g0, 0)
         ce = set_blank_if_default(self.ce, 0)
 
-        fields = ['CHBDYP', self.eid, self.Pid(), self.Type, iViewFront,
+        list_fields = ['CHBDYP', self.eid, self.Pid(), self.Type, iViewFront,
                   iViewBack, self.g1, self.g2, g0, radMidFront, radMidBack,
                   self.gmid, ce, self.e1, self.e2, self.e3]
-        return fields
+        return list_fields
 
 # Elements
 #-------------------------------------------------------
@@ -355,20 +355,20 @@ class PCONV(ThermalProperty):
     #    pass
 
     def rawFields(self):
-        fields = ['PCONV', self.pconid, self.mid, self.form, self.expf,
+        list_fields = ['PCONV', self.pconid, self.mid, self.form, self.expf,
                   self.ftype, self.tid, None, None, self.chlen, self.gidin,
                   self.ce, self.e1, self.e2, self.e3]
-        return fields
+        return list_fields
 
     def reprFields(self):
         form = set_blank_if_default(self.form, 0)
         expf = set_blank_if_default(self.expf, 0.0)
         ftype = set_blank_if_default(self.ftype, 0)
         ce = set_blank_if_default(self.ce, 0)
-        fields = ['PCONV', self.pconid, self.mid, form, expf, ftype, self.tid,
+        list_fields = ['PCONV', self.pconid, self.mid, form, expf, ftype, self.tid,
                   None, None, self.chlen, self.gidin, ce, self.e1, self.e2,
                   self.e3]
-        return fields
+        return list_fields
 
 
 class PCONVM(ThermalProperty):
@@ -415,9 +415,9 @@ class PCONVM(ThermalProperty):
     #    pass
 
     def rawFields(self):
-        fields = ['PCONVM', self.pconid, self.mid, self.form,
+        list_fields = ['PCONVM', self.pconid, self.mid, self.form,
                   self.flag, self.coef, self.expr, self.exppi, self.exppo]
-        return fields
+        return list_fields
 
     def reprFields(self):
         form = set_blank_if_default(self.form, 0)
@@ -425,9 +425,9 @@ class PCONVM(ThermalProperty):
         expr = set_blank_if_default(self.expr, 0.0)
         exppi = set_blank_if_default(self.exppi, 0.0)
         exppo = set_blank_if_default(self.exppo, 0.0)
-        fields = ['PCONVM', self.pconid, self.mid, form, flag,
+        list_fields = ['PCONVM', self.pconid, self.mid, form, flag,
                   self.coef, expr, exppi, exppo]
-        return fields
+        return list_fields
 
 
 class PHBDY(ThermalProperty):

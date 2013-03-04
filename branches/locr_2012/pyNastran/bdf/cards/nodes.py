@@ -6,7 +6,8 @@ from numpy import array
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
-from pyNastran.bdf.format import integer, integer_or_blank, double_or_blank
+from pyNastran.bdf.format import (integer, integer_or_blank,
+                                  double, double_or_blank)
 
 
 class Ring(BaseCard):
@@ -21,7 +22,7 @@ class Node(BaseCard):
         assert card is None or data is None
 
     def cross_reference(self, model):
-        msg = '%s hasnt implemented a cross_reference method' % (self.type)
+        msg = '%s hasnt implemented a cross_reference method' % self.type
         raise NotImplementedError(msg)
 
     def Cp(self):
@@ -67,9 +68,9 @@ class RINGAX(Ring):
         return array([0., 0., 0.])
 
     def rawFields(self):
-        fields = ['RINGAX', self.nid, None, self.R, self.z, None,
+        list_fields = ['RINGAX', self.nid, None, self.R, self.z, None,
                   None, self.ps]
-        return fields
+        return list_fields
 
 
 class SPOINT(Node):
@@ -89,10 +90,10 @@ class SPOINT(Node):
 
     def rawFields(self):
         if isinstance(self.nid, int):
-            fields = ['SPOINT'] + self.nid
+            list_fields = ['SPOINT'] + self.nid
         else:
-            fields = ['SPOINT'] + collapse_thru(self.nid)
-        return fields
+            list_fields = ['SPOINT'] + collapse_thru(self.nid)
+        return list_fields
 
 
 class SPOINTs(Node):
@@ -152,8 +153,8 @@ class SPOINTs(Node):
         spoints.sort()
         #print("self.spoints = %s" %(self.spoints))
         spoints = collapse_thru(spoints)
-        fields = ['SPOINT'] + spoints
-        return fields
+        list_fields = ['SPOINT'] + spoints
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -186,17 +187,17 @@ class GRDSET(Node):
         #self.seid = model.SuperElement(self.seid)
 
     def rawFields(self):
-        fields = ['GRDSET', None, self.Cp(), None, None, None,
+        list_fields = ['GRDSET', None, self.Cp(), None, None, None,
                   self.Cd(), self.ps, self.Seid()]
-        return fields
+        return list_fields
 
     def reprFields(self):
         cp = set_blank_if_default(self.Cp(), 0)
         cd = set_blank_if_default(self.Cd(), 0)
         ps = set_blank_if_default(self.ps, 0)
         seid = set_blank_if_default(self.Seid(), 0)
-        fields = ['GRDSET', None, cp, None, None, None, cd, ps, seid]
-        return fields
+        list_fields = ['GRDSET', None, cp, None, None, None, cd, ps, seid]
+        return list_fields
 
 
 class GRIDB(Node):
@@ -228,17 +229,18 @@ class GRIDB(Node):
         assert self.idf >= 0, 'idf=%s' % (self.idf)
 
     def rawFields(self):
-        fields = ['GRIDB', self.nid, None, None, self.phi, None,
+        list_fields = ['GRIDB', self.nid, None, None, self.phi, None,
                   self.Cd(), self.ps, self.idf]
-        return fields
+        return list_fields
 
     def reprFields(self):
         #phi = set_blank_if_default(self.phi,0.0)
         cd = set_blank_if_default(self.Cd(), 0)
         ps = set_blank_if_default(self.ps, 0)
         idf = set_blank_if_default(self.idf, 0)
-        fields = ['GRIDB', self.nid, None, None, self.phi, None, cd, ps, idf]
-        return fields
+        list_fields = ['GRIDB', self.nid, None, None, self.phi, None, cd, ps,
+                       idf]
+        return list_fields
 
 
 class GRID(Node):
@@ -351,16 +353,17 @@ class GRID(Node):
         #self.xyzGlobal = coord.transformToGlobal(self.xyz)
 
     def rawFields(self):
-        fields = ['GRID', self.nid, self.Cp()] + list(self.xyz) + [self.Cd(),
-                  self.ps, self.Seid()]
-        return fields
+        list_fields = (['GRID', self.nid, self.Cp()] + list(self.xyz) +
+                       [self.Cd(), self.ps, self.Seid()])
+        return list_fields
 
     def reprFields(self):
         cp = set_blank_if_default(self.Cp(), 0)
         cd = set_blank_if_default(self.Cd(), 0)
         seid = set_blank_if_default(self.Seid(), 0)
-        fields = ['GRID', self.nid, cp] + list(self.xyz) + [cd, self.ps, seid]
-        return fields
+        list_fields = ['GRID', self.nid, cp] + list(self.xyz) + [cd, self.ps,
+                                                                 seid]
+        return list_fields
 
 
 class POINT(Node):
@@ -450,10 +453,10 @@ class POINT(Node):
         self.cp = model.Coord(self.cp)
 
     def rawFields(self):
-        fields = ['POINT', self.nid, self.Cp()] + list(self.xyz)
-        return fields
+        list_fields = ['POINT', self.nid, self.Cp()] + list(self.xyz)
+        return list_fields
 
     def reprFields(self):
         cp = set_blank_if_default(self.Cp(), 0)
-        fields = ['POINT', self.nid, cp] + list(self.xyz)
-        return fields
+        list_fields = ['POINT', self.nid, cp] + list(self.xyz)
+        return list_fields

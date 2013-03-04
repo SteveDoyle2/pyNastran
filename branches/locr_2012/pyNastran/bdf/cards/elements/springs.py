@@ -159,9 +159,9 @@ class CELAS1(SpringElement):
 
     def rawFields(self):
         nodes = self.nodeIDs(allowEmptyNodes=True)
-        fields = ['CELAS1', self.eid, self.Pid(), nodes[0],
+        list_fields = ['CELAS1', self.eid, self.Pid(), nodes[0],
                   self.c1, nodes[1], self.c2]
-        return fields
+        return list_fields
 
 
 class CELAS2(SpringElement):
@@ -249,18 +249,18 @@ class CELAS2(SpringElement):
     def rawFields(self):
         nodes = self.nodeIDs(allowEmptyNodes=True,
                              msg=str(['CELAS2', self.eid]))
-        fields = ['CELAS2', self.eid, self.k, nodes[0], self.c1,
+        list_fields = ['CELAS2', self.eid, self.k, nodes[0], self.c1,
                   nodes[1], self.c2, self.ge, self.s]
-        return fields
+        return list_fields
 
     def reprFields(self):
         nodes = self.nodeIDs(allowEmptyNodes=True,
                              msg=str(['CELAS2', self.eid]))
         ge = set_blank_if_default(self.ge, 0.)
         s = set_blank_if_default(self.s, 0.)
-        fields = ['CELAS2', self.eid, self.k, nodes[0], self.c1,
+        list_fields = ['CELAS2', self.eid, self.k, nodes[0], self.c1,
                   nodes[1], self.c2, ge, s]
-        return fields
+        return list_fields
 
 
 class CELAS3(SpringElement):
@@ -304,14 +304,14 @@ class CELAS3(SpringElement):
         self.pid = model.Property(self.pid, msg=msg)
 
     def rawFields(self):
-        fields = ['CELAS3', self.eid, self.Pid(), self.s1, self.s2]
-        return fields
+        list_fields = ['CELAS3', self.eid, self.Pid(), self.s1, self.s2]
+        return list_fields
 
     #def reprFields(self):
         #s1 = set_blank_if_default(self.s1,0)
         #s2 = set_blank_if_default(self.s2,0)
-        #fields = ['CELAS3',self.eid,self.Pid(),s1,s2]
-        #return fields
+        #list_fields = ['CELAS3',self.eid,self.Pid(),s1,s2]
+        #return list_fields
 
 
 class CELAS4(SpringElement):
@@ -355,11 +355,11 @@ class CELAS4(SpringElement):
         self.nodes = model.Nodes(self.nodes, msg=msg)
 
     def rawFields(self):
-        fields = ['CELAS4', self.eid, self.k, self.s1, self.s2]
-        return fields
+        list_fields = ['CELAS4', self.eid, self.k, self.s1, self.s2]
+        return list_fields
 
     #def reprFields(self):
         #s1 = set_blank_if_default(self.s1,0)
         #s2 = set_blank_if_default(self.s2,0)
-        #fields = ['CELAS4',self.eid,self.Pid(),s1,s2]
-        #return fields
+        #list_fields = ['CELAS4',self.eid,self.Pid(),s1,s2]
+        #return list_fields

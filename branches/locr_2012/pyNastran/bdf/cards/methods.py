@@ -85,9 +85,9 @@ class EIGB(Method):
         pass
 
     def rawFields(self):
-        fields = ['EIGB', self.sid, self.method, self.L1, self.L2, self.nep,
+        list_fields = ['EIGB', self.sid, self.method, self.L1, self.L2, self.nep,
                   self.ndp, self.ndn, None, self.norm, self.G, self.C]
-        return fields
+        return list_fields
 
     def reprFields(self):
         #method = set_blank_if_default(self.method,'INV')
@@ -96,9 +96,9 @@ class EIGB(Method):
         ndn = set_blank_if_default(self.ndn, 3 * self.nep)
         
         norm = set_blank_if_default(self.norm, 'MAX')
-        fields = ['EIGB', self.sid, self.method, self.L1, self.L2, nep, ndp,
+        list_fields = ['EIGB', self.sid, self.method, self.L1, self.L2, nep, ndp,
                   ndn, None, norm, self.G, self.C]
-        return fields
+        return list_fields
 
 
 class EIGC(Method):  # TODO: not done
@@ -223,7 +223,7 @@ class EIGC(Method):  # TODO: not done
         pass
 
     def rawMethod(self):
-        fields = []
+        list_fields = []
         if self.method in ['HESS', 'INV']:
             for (alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj) in izip(
                     self.alphaAjs, self.omegaAjs, self.alphaBjs, self.omegaBjs,
@@ -232,7 +232,7 @@ class EIGC(Method):  # TODO: not done
                 omegaA = set_blank_if_default(omegaA, 0.0)
                 alphaB = set_blank_if_default(alphaB, 0.0)
                 omegaB = set_blank_if_default(omegaB, 0.0)
-                fields += [alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj, None]
+                list_fields += [alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj, None]
 
         elif self.method == 'CLAN':
             for (alphaA, omegaA, mblksz, iblksz, kstep, Nj) in izip(
@@ -244,31 +244,31 @@ class EIGC(Method):  # TODO: not done
                 iblksz = set_blank_if_default(iblksz, 2)
                 kstep = set_blank_if_default(kstep, 5)
 
-                fields += [alphaA, omegaA, mblksz, iblksz,
+                list_fields += [alphaA, omegaA, mblksz, iblksz,
                            kstep, None, Nj, None]
         else:
             msg = 'invalid EIGC method...method=|%r|' % (self.method)
             raise RuntimeError(msg)
-        return fields
+        return list_fields
 
     def reprMethod(self):
         return self.rawMethod()
 
     def rawFields(self):
-        fields = ['EIGC', self.sid, self.method, self.norm, self.G, self.C,
+        list_fields = ['EIGC', self.sid, self.method, self.norm, self.G, self.C,
                   self.E, self.ndo, None]
-        fields += self.rawMethod()
-        return fields
+        list_fields += self.rawMethod()
+        return list_fields
 
     def reprFields(self):
         if self.E is None:
             E = None
         else:
             E = str(self.E)
-        fields = ['EIGC', self.sid, self.method, self.norm, self.G, self.C,
+        list_fields = ['EIGC', self.sid, self.method, self.norm, self.G, self.C,
                   E, self.ndo, None]
-        fields += self.reprMethod()
-        return fields
+        list_fields += self.reprMethod()
+        return list_fields
 
 
 class EIGP(Method):
@@ -308,9 +308,9 @@ class EIGP(Method):
         pass
 
     def rawFields(self):
-        fields = ['EIGP', self.alpha1, self.omega1, self.m1,
+        list_fields = ['EIGP', self.alpha1, self.omega1, self.m1,
                   self.alpha2, self.omega2, self.m2]
-        return fields
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -375,16 +375,16 @@ class EIGR(Method):
         pass
 
     def rawFields(self):
-        fields = ['EIGR', self.sid, self.method, self.f1, self.f2, self.ne,
+        list_fields = ['EIGR', self.sid, self.method, self.f1, self.f2, self.ne,
                   self.nd, None, None, self.norm, self.G, self.C]
-        return fields
+        return list_fields
 
     def reprFields(self):
         method = set_blank_if_default(self.method, 'LAN')
         norm = set_blank_if_default(self.norm, 'MASS')
-        fields = ['EIGR', self.sid, method, self.f1, self.f2, self.ne,
+        list_fields = ['EIGR', self.sid, method, self.f1, self.f2, self.ne,
                   self.nd, None, None, norm, self.G, self.C]
-        return fields
+        return list_fields
 
 
 class EIGRL(Method):
@@ -454,16 +454,16 @@ class EIGRL(Method):
                 #self.norm = 'MAX'
 
     def rawFields(self):
-        fields = ['EIGRL', self.sid, self.v1, self.v2, self.nd, self.msglvl,
+        list_fields = ['EIGRL', self.sid, self.v1, self.v2, self.nd, self.msglvl,
                   self.maxset, self.shfscl, self.norm]
         for (option, value) in izip(self.options, self.values):
-            fields += [option + '=' + str(value)]
-        return fields
+            list_fields += [option + '=' + str(value)]
+        return list_fields
 
     def reprFields(self):
         msglvl = set_blank_if_default(self.msglvl, 0)
-        fields = ['EIGRL', self.sid, self.v1, self.v2, self.nd, msglvl,
+        list_fields = ['EIGRL', self.sid, self.v1, self.v2, self.nd, msglvl,
                   self.maxset, self.shfscl, self.norm]
         for (option, value) in izip(self.options, self.values):
-            fields += [option + '=' + str(value)]
-        return fields
+            list_fields += [option + '=' + str(value)]
+        return list_fields

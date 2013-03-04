@@ -46,9 +46,9 @@ class CFAST(Element):
         self.gb = model.Node(self.gb, msg=msg)
 
     def rawFields(self):
-        fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,
+        list_fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,
                   self.gs, self.ga, self.gb, self.xs, self.ys, self.zs]
-        return fields
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -126,9 +126,9 @@ class CGAP(Element):
             x = [self.g0, None, None]
         else:
             x = self.x
-        fields = (['CGAP', self.eid, self.Pid(), self.Ga(), self.Gb()] + x +
+        list_fields = (['CGAP', self.eid, self.Pid(), self.Ga(), self.Gb()] + x +
                   [self.Cid()])
-        return fields
+        return list_fields
 
 
 class CrackElement(Element):
@@ -174,8 +174,8 @@ class CRAC2D(CrackElement):
         assert len(self.nodes) == 18
 
     def rawFields(self):
-        fields = ['CRAC2D', self.eid, self.Pid()] + self.nodeIDs()
-        return fields
+        list_fields = ['CRAC2D', self.eid, self.Pid()] + self.nodeIDs()
+        return list_fields
 
 
 class CRAC3D(CrackElement):
@@ -200,5 +200,5 @@ class CRAC3D(CrackElement):
         assert len(self.nodes) == 64
 
     def rawFields(self):
-        fields = ['CRAC3D', self.eid, self.Pid()] + self.nodeIDs()
-        return fields
+        list_fields = ['CRAC3D', self.eid, self.Pid()] + self.nodeIDs()
+        return list_fields

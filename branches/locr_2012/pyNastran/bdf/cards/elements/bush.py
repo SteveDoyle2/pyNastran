@@ -131,9 +131,9 @@ class CBUSH(BushElement):
             x = [self.g0, None, None]
         else:
             x = self.x
-        fields = (['CBUSH', self.eid, self.Pid(), self.Ga(), self.Gb()] + x +
+        list_fields = (['CBUSH', self.eid, self.Pid(), self.Ga(), self.Gb()] + x +
                   [self.Cid(), self.s, self.ocid] + self.si)
-        return fields
+        return list_fields
 
     def reprFields(self):
         if self.g0 is not None:
@@ -143,9 +143,9 @@ class CBUSH(BushElement):
 
         ocid = set_blank_if_default(self.OCid(), -1)
         s = set_blank_if_default(self.s, 0.5)
-        fields = (['CBUSH', self.eid, self.Pid(), self.Ga(), self.Gb()] +
+        list_fields = (['CBUSH', self.eid, self.Pid(), self.Ga(), self.Gb()] +
                   x + [self.Cid(), s, ocid] + self.si)
-        return fields
+        return list_fields
 
 
 class CBUSH1D(BushElement):
@@ -191,9 +191,9 @@ class CBUSH1D(BushElement):
         return self.gb.nid
 
     def rawFields(self):
-        fields = ['CBUSH1D', self.eid, self.Pid(), self.Ga(), self.Gb(),
+        list_fields = ['CBUSH1D', self.eid, self.Pid(), self.Ga(), self.Gb(),
                   self.Cid()]
-        return fields
+        return list_fields
 
     #def reprFields(self):
         #return self.rawFields()
@@ -239,9 +239,9 @@ class CBUSH2D(BushElement):
         return self.gb.nid
 
     def rawFields(self):
-        fields = ['CBUSH2D', self.eid, self.Pid(), self.Ga(), self.Gb(),
+        list_fields = ['CBUSH2D', self.eid, self.Pid(), self.Ga(), self.Gb(),
                   self.Cid(), self.plane, self.sptid]
-        return fields
+        return list_fields
 
     def cross_reference(self, model):
         msg = ' which is required by CBUSH2D eid=%s' % self.eid

@@ -294,16 +294,16 @@ class CTRIA3(TriShell):
         return (thetaMcid, zOffset, TFlag, T1, T2, T3)
 
     def rawFields(self):
-        fields = (['CTRIA3', self.eid, self.Pid()] + self.nodeIDs() +
+        list_fields = (['CTRIA3', self.eid, self.Pid()] + self.nodeIDs() +
                   [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
                    self.T1, self.T2, self.T3])
-        return fields
+        return list_fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
-        fields = ([self.type, self.eid, self.Pid()] + self.nodeIDs() +
+        list_fields = ([self.type, self.eid, self.Pid()] + self.nodeIDs() +
                   [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
-        return fields
+        return list_fields
 
 
 class CTRIA6(TriShell):
@@ -426,16 +426,16 @@ class CTRIA6(TriShell):
         return (thetaMcid, zOffset, TFlag, T1, T2, T3)
 
     def rawFields(self):
-        fields = (['CTRIA6', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) +
+        list_fields = (['CTRIA6', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) +
                   [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
                   self.T1, self.T2, self.T3])
-        return fields
+        return list_fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
-        fields = (['CTRIA6', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) +
+        list_fields = (['CTRIA6', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) +
                   [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
-        return fields
+        return list_fields
 
 
 class CTRIAR(TriShell):
@@ -492,15 +492,15 @@ class CTRIAR(TriShell):
         return (thetaMcid, zOffset, TFlag, T1, T2, T3)
 
     def rawFields(self):
-        fields = [self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid,
+        list_fields = [self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid,
                   self.zOffset, self.TFlag, self.T1, self.T2, self.T3]
-        return fields
+        return list_fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
-        fields = (['CTRIAR', self.eid, self.Pid()] + self.nodeIDs() +
+        list_fields = (['CTRIAR', self.eid, self.Pid()] + self.nodeIDs() +
                   [thetaMcid, zOffset, None, None, TFlag, T1, T2, T3])
-        return fields
+        return list_fields
 
 
 class CTRIAX(TriShell):
@@ -523,8 +523,8 @@ class CTRIAX(TriShell):
         assert len(nids) == 6, 'error on CTRIAX'
 
     def rawFields(self):
-        fields = ['CTRIAX', self.eid, self.Pid()] + self.nodeIDs()
-        return fields
+        list_fields = ['CTRIAX', self.eid, self.Pid()] + self.nodeIDs()
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -607,14 +607,14 @@ class CTRIAX6(TriShell):
         self.nodes = [n1, n6, n5, n4, n3, n2]
 
     def rawFields(self):
-        fields = (['CTRIAX6', self.eid, self.Mid(), self.Pid()] +
+        list_fields = (['CTRIAX6', self.eid, self.Mid(), self.Pid()] +
                   self.nodeIDs() +  [self.theta])
-        return fields
+        return list_fields
 
     def reprFields(self):
         theta = set_default_if_blank(self.theta, 0.0)
-        fields = ['CTRIAX6', self.eid, self.Mid()] + self.nodeIDs() + [theta]
-        return fields
+        list_fields = ['CTRIAX6', self.eid, self.Mid()] + self.nodeIDs() + [theta]
+        return list_fields
 
 
 class QuadShell(ShellElement):
@@ -846,8 +846,8 @@ class CSHEAR(QuadShell):
         self.nodes = [n1, n4, n3, n2]
 
     def rawFields(self):
-        fields = ['CSHEAR', self.eid, self.Pid()] + self.nodeIDs()
-        return fields
+        list_fields = ['CSHEAR', self.eid, self.Pid()] + self.nodeIDs()
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -930,18 +930,18 @@ class CQUAD4(QuadShell):
         return self.print_card(fields1) + self.print_card(fields2)
 
     def rawFields(self):
-        fields = ([self.type, self.eid, self.Pid()] + self.nodeIDs() +
+        list_fields = ([self.type, self.eid, self.Pid()] + self.nodeIDs() +
                   [self.thetaMcid, self.zOffset, self.TFlag, self.T1, self.T2,
                    self.T3, self.T4])
-        return fields
+        return list_fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3,
             T4) = self.getReprDefaults()
 
-        fields = (['CQUAD4', self.eid, self.Pid()] + self.nodeIDs() +
+        list_fields = (['CQUAD4', self.eid, self.Pid()] + self.nodeIDs() +
                   [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
-        return fields
+        return list_fields
 
 
 class CQUADR(QuadShell):
@@ -1011,16 +1011,16 @@ class CQUADR(QuadShell):
         self.nodes = [n1, n4, n3, n2]
 
     def rawFields(self):
-        fields = (['CQUADR', self.eid, self.Pid()] + self.nodeIDs() +
+        list_fields = (['CQUADR', self.eid, self.Pid()] + self.nodeIDs() +
                   [self.thetaMcid, self.zOffset, None, self.TFlag, self.T1,
                    self.T2, self.T3, self.T4])
-        return fields
+        return list_fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self.getReprDefaults()
-        fields = (['CQUADR', self.eid, self.Pid()] + self.nodeIDs() +
+        list_fields = (['CQUADR', self.eid, self.Pid()] + self.nodeIDs() +
                   [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
-        return fields
+        return list_fields
 
 
 class CQUAD(QuadShell):
@@ -1066,12 +1066,12 @@ class CQUAD(QuadShell):
         assert len(self.nodes) == 9
 
     def rawFields(self):
-        fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
-        return fields
+        list_fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
+        return list_fields
 
     def reprFields(self):
-        fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
-        return fields
+        list_fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
+        return list_fields
         
 
 class CQUAD8(QuadShell):
@@ -1193,16 +1193,16 @@ class CQUAD8(QuadShell):
         return area
 
     def rawFields(self):
-        fields = ['CQUAD8', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) + [
+        list_fields = ['CQUAD8', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) + [
             self.T1, self.T2, self.T3, self.T4, self.thetaMcid, self.zOffset,
             self.TFlag]
-        return fields
+        return list_fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self.getReprDefaults()
-        fields = (['CQUAD8', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) + [
+        list_fields = (['CQUAD8', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) + [
             T1, T2, T3, T4, thetaMcid, zOffset, TFlag])
-        return fields
+        return list_fields
 
 
 class CQUADX(QuadShell):
@@ -1248,8 +1248,8 @@ class CQUADX(QuadShell):
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]
 
     def rawFields(self):
-        fields = ['CQUADX', self.eid, self.Pid()] + self.nodeIDs()
-        return fields
+        list_fields = ['CQUADX', self.eid, self.Pid()] + self.nodeIDs()
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()

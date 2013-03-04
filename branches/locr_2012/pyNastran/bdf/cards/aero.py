@@ -8,7 +8,7 @@ from numpy import array, pi, linspace
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru,
                                           wipe_empty_fields)
-from pyNastran.bdf.format import (fields, double_or_string,
+from pyNastran.bdf.format import (fields,
                                   integer, integer_or_blank,
                                   double, double_or_blank, 
                                   string, string_or_blank,
@@ -129,8 +129,8 @@ class AELIST(BaseCard):
         self.elements.sort()
 
     def rawFields(self):
-        fields = ['AELIST', self.sid] + self.elements
-        return fields
+        list_fields = ['AELIST', self.sid] + self.elements
+        return list_fields
 
 
 class AEPARM(BaseCard):
@@ -160,8 +160,8 @@ class AEPARM(BaseCard):
             assert len(data) == 3, 'data = %s' % data
 
     def rawFields(self):
-        fields = ['AEPARM', self.id, self.label, self.units]
-        return fields
+        list_fields = ['AEPARM', self.id, self.label, self.units]
+        return list_fields
 
 
 class AESTAT(BaseCard):
@@ -188,8 +188,8 @@ class AESTAT(BaseCard):
             assert len(data) == 2, 'data = %s' % data
 
     def rawFields(self):
-        fields = ['AESTAT', self.id, self.label]
-        return fields
+        list_fields = ['AESTAT', self.id, self.label]
+        return list_fields
 
 
 class AESURF(BaseCard):
@@ -258,11 +258,11 @@ class AESURF(BaseCard):
             raise NotImplementedError(msg)
 
     def rawFields(self):
-        fields = ['AESURF', self.aesid, self.label, self.cid1, self.alid1,
+        list_fields = ['AESURF', self.aesid, self.label, self.cid1, self.alid1,
                   self.cid2, self.alid2, self.eff, self.ldw,
                   self.crefc, self.crefs, self.pllim, self.pulim, self.hmllim,
                   self.hmulim, self.tqllim, self.tqulim]
-        return fields
+        return list_fields
 
     def reprFields(self):
         eff = set_blank_if_default(self.eff, 1.0)
@@ -273,11 +273,11 @@ class AESURF(BaseCard):
         pllim = set_blank_if_default(self.pllim, -pi / 2.)
         pulim = set_blank_if_default(self.pulim, pi / 2.)
 
-        fields = ['AESURF', self.aesid,self.label, self.cid1, self.alid1,
+        list_fields = ['AESURF', self.aesid,self.label, self.cid1, self.alid1,
                   self.cid2, self.alid2, eff, ldw, crefc, crefs,
                   pllim, pulim, self.hmllim, self.hmulim, self.tqllim,
                   self.tqulim]
-        return fields
+        return list_fields
 
 
 class AESURFS(BaseCard):  # not integrated
@@ -312,9 +312,9 @@ class AESURFS(BaseCard):  # not integrated
             assert len(data) == 4, 'data = %s' % data
 
     def rawFields(self):
-        fields = ['AESURFS', self.id, self.label, None, self.list1, None,
+        list_fields = ['AESURFS', self.id, self.label, None, self.list1, None,
                   self.list2]
-        return fields
+        return list_fields
 
 
 class Aero(BaseCard):
@@ -384,16 +384,16 @@ class AERO(Aero):
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V)
 
     def rawFields(self):
-        fields = ['AERO', self.acsid, self.velocity, self.cRef,
+        list_fields = ['AERO', self.acsid, self.velocity, self.cRef,
                   self.rhoRef, self.symXZ, self.symXY]
-        return fields
+        return list_fields
 
     def reprFields(self):
         symXZ = set_blank_if_default(self.symXZ, 0)
         symXY = set_blank_if_default(self.symXY, 0)
-        fields = ['AERO', self.acsid, self.velocity, self.cRef,
+        list_fields = ['AERO', self.acsid, self.velocity, self.cRef,
                   self.rhoRef, symXZ, symXY]
-        return fields
+        return list_fields
 
 
 class AEROS(Aero):
@@ -430,16 +430,16 @@ class AEROS(Aero):
             assert len(data) == 7, 'data = %s' % data
 
     def rawFields(self):
-        fields = ['AEROS', self.acsid, self.rcsid, self.cRef,
+        list_fields = ['AEROS', self.acsid, self.rcsid, self.cRef,
                   self.bRef, self.Sref, self.symXZ, self.symXY]
-        return fields
+        return list_fields
 
     def reprFields(self):
         symXZ = set_blank_if_default(self.symXZ, 0)
         symXY = set_blank_if_default(self.symXY, 0)
-        fields = ['AEROS', self.acsid, self.rcsid, self.cRef,
+        list_fields = ['AEROS', self.acsid, self.rcsid, self.cRef,
                   self.bRef, self.Sref, symXZ, symXY]
-        return fields
+        return list_fields
 
 
 class CSSCHD(BaseCard):
@@ -497,9 +497,9 @@ class CSSCHD(BaseCard):
         return self.lSchd.sid
 
     def rawFields(self):
-        fields = ['CSSCHD', self.sid, self.AESid(), self.LAlpha(),
+        list_fields = ['CSSCHD', self.sid, self.AESid(), self.LAlpha(),
                   self.LMach(), self.LSchd()]
-        return fields
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -599,19 +599,19 @@ class CAERO1(BaseCard):
         self.x43 = x43[0]
 
     def rawFields(self):
-        fields = ['CAERO1', self.eid, self.Pid(), self.Cp(), self.nspan,
+        list_fields = ['CAERO1', self.eid, self.Pid(), self.Cp(), self.nspan,
                   self.nchord, self.lspan, self.lchord, self.igid,
                   ] + list(self.p1) + [self.x12] + list(self.p4) + [self.x43]
-        return fields
+        return list_fields
 
     def reprFields(self):
         cp = set_blank_if_default(self.Cp(), 0)
         nspan = set_blank_if_default(self.nspan, 0)
         nchord = set_blank_if_default(self.nchord, 0)
-        fields = (['CAERO1', self.eid, self.Pid(), cp, nspan, nchord,
+        list_fields = (['CAERO1', self.eid, self.Pid(), cp, nspan, nchord,
                    self.lspan, self.lchord, self.igid] + list(self.p1) +
                   [self.x12] + list(self.p4) + [self.x43])
-        return fields
+        return list_fields
 
 
 class CAERO2(BaseCard):
@@ -715,17 +715,17 @@ class CAERO2(BaseCard):
         self.x12 = x12[0]
 
     def rawFields(self):
-        fields = (['CAERO2', self.eid, self.Pid(), self.Cp(), self.nsb,
+        list_fields = (['CAERO2', self.eid, self.Pid(), self.Cp(), self.nsb,
                   self.nint, self.lsb, self.lint, self.igid, ] + list(self.p1)
                   + [self.x12])
-        return fields
+        return list_fields
 
     def reprFields(self):
         cp = set_blank_if_default(self.Cp(), 0)
-        fields = (['CAERO2', self.eid, self.Pid(), cp, self.nsb, self.nint,
+        list_fields = (['CAERO2', self.eid, self.Pid(), cp, self.nsb, self.nint,
                   self.lsb, self.lint, self.igid, ] + list(self.p1) +
                   [self.x12])
-        return fields
+        return list_fields
 
 
 class CAERO3(BaseCard):
@@ -764,17 +764,17 @@ class CAERO3(BaseCard):
         #self.list_c2 = model.AeFact(self.list_c2) # not added
 
     def rawFields(self):
-        fields = (['CAERO3', self.eid, self.Pid(), self.Cp(), self.list_w,
+        list_fields = (['CAERO3', self.eid, self.Pid(), self.Cp(), self.list_w,
                    self.list_c1, self.list_c2] + list(self.p1) + [self.x12] +
                    list(self.p4) + [self.x34])
-        return fields
+        return list_fields
 
     def reprFields(self):
         cp = set_blank_if_default(self.Cp(), 0)
-        fields = (['CAERO3', self.eid, self.Pid(), cp, self.list_w,
+        list_fields = (['CAERO3', self.eid, self.Pid(), cp, self.list_w,
                    self.list_c1, self.list_c2] + list(self.p1) + [self.x12] +
                    list(self.p4) + [self.x34])
-        return fields
+        return list_fields
 
 
 class CAERO4(BaseCard):
@@ -826,12 +826,12 @@ class FLFACT(BaseCard):
             self.factors = data[1:]
 
     def rawFields(self):
-        fields = ['FLFACT', self.sid] + self.factors
-        return fields
+        list_fields = ['FLFACT', self.sid] + self.factors
+        return list_fields
 
     def __repr__(self):
-        fields = self.rawFields()
-        return self.print_card(fields)
+        list_fields = self.rawFields()
+        return self.print_card(list_fields)
 
 
 class FLUTTER(BaseCard):
@@ -907,15 +907,15 @@ class FLUTTER(BaseCard):
 
     def rawFields(self):
         (imethod, nValue) = self._rawNValueOMax()
-        fields = ['FLUTTER', self.sid, self.method, self.density,
+        list_fields = ['FLUTTER', self.sid, self.method, self.density,
                   self.mach, self.rfreq_vel, imethod, nValue, self.epsilon]
-        return fields
+        return list_fields
 
     #def reprFields(self):
         #(imethod, nValue) = self._reprNValueOMax()
-        #fields = ['FLUTTER', self.sid, self.method, self.density, self.mach,
+        #list_fields = ['FLUTTER', self.sid, self.method, self.density, self.mach,
         #          self.rfreqVel, imethod, nValue, self.epsilon]
-        #return fields
+        #return list_fields
 
 
 class GUST(BaseCard):
@@ -951,8 +951,8 @@ class GUST(BaseCard):
         ## function
 
     def rawFields(self):
-        fields = ['GUST', self.sid, self.dload, self.wg, self.x0, self.V]
-        return fields
+        list_fields = ['GUST', self.sid, self.dload, self.wg, self.x0, self.V]
+        return list_fields
 
 
 class MKAERO1(BaseCard):
@@ -995,17 +995,17 @@ class MKAERO1(BaseCard):
             self.rFreqs.append(f)
 
     def rawFields(self):
-        #fields = ['MKAERO2']
+        #list_fields = ['MKAERO2']
         #for (i, mach, rfreq) in izip(count(), self.machs, self.rFreqs):
-        #    fields += [mach,rfreq]
+        #    list_fields += [mach,rfreq]
         machs = [None] * 8
         freqs = [None] * 8
         for i, mach in enumerate(self.machs):
             machs[i] = mach
         for i, freq in enumerate(self.rFreqs):
             freqs[i] = freq
-        fields = ['MKAERO1'] + machs + freqs
-        return fields
+        list_fields = ['MKAERO1'] + machs + freqs
+        return list_fields
 
     def getMach_rFreqs(self):
         return (self.machs, self.rFreqs)
@@ -1048,10 +1048,10 @@ class MKAERO2(BaseCard):
             self.rFreqs.append(f)
 
     def rawFields(self):
-        fields = ['MKAERO2']
+        list_fields = ['MKAERO2']
         for (i, mach, rfreq) in izip(count(), self.machs, self.rFreqs):
-            fields += [mach, rfreq]
-        return fields
+            list_fields += [mach, rfreq]
+        return list_fields
 
     def getMach_rFreqs(self):
         return (self.machs, self.rFreqs)
@@ -1092,8 +1092,8 @@ class PAERO1(BaseCard):
         return self.Bi
 
     def rawFields(self):
-        fields = ['PAERO1', self.pid] + self.Bi
-        return fields
+        list_fields = ['PAERO1', self.pid] + self.Bi
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -1151,11 +1151,11 @@ class PAERO2(BaseCard):
             raise NotImplementedError(msg)
 
     def rawFields(self):
-        fields = ['PAERO2', self.pid, self.orient, self.width,
+        list_fields = ['PAERO2', self.pid, self.orient, self.width,
                   self.AR, self.lrsb, self.lrib, self.lth1, self.lth2]
         for (thi, thn) in izip(self.thi, self.thn):
-            fields += [thi, thn]
-        return fields
+            list_fields += [thi, thn]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -1231,10 +1231,10 @@ class SPLINE1(Spline):
         self.setg = model.Set(self.setg)
 
     def rawFields(self):
-        fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2,
+        list_fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2,
                   self.Set(), self.dz, self.method, self.usage, self.nelements,
                   self.melements]
-        return fields
+        return list_fields
 
     def reprFields(self):
         dz = set_blank_if_default(self.dz, 0.)
@@ -1243,10 +1243,10 @@ class SPLINE1(Spline):
         nelements = set_blank_if_default(self.nelements, 10)
         melements = set_blank_if_default(self.melements, 10)
 
-        fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2,
+        list_fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2,
                   self.Set(), dz, method, usage, nelements, melements]
-        fields = wipe_empty_fields(fields)
-        return fields
+        list_fields = wipe_empty_fields(list_fields)
+        return list_fields
 
 
 class SPLINE2(Spline):
@@ -1307,18 +1307,18 @@ class SPLINE2(Spline):
         return self.setg.sid
 
     def rawFields(self):
-        fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
+        list_fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
                   self.Set(), self.dz, self.dtor, self.Cid(), self.dthx,
                   self.dthy, None, self.usage]
-        return fields
+        return list_fields
 
     def reprFields(self):
         dz = set_blank_if_default(self.dz, 0.)
         usage = set_blank_if_default(self.usage, 'BOTH')
-        fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
+        list_fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
                   self.Set(), dz, self.dtor, self.Cid(), self.dthx, self.dthy,
                   None, usage]
-        return fields
+        return list_fields
 
 
 class SPLINE4(Spline):
@@ -1388,10 +1388,10 @@ class SPLINE4(Spline):
         self.aelist = model.AEList(self.aelist)
 
     def rawFields(self):
-        fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None,
+        list_fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None,
                   self.Set(), self.dz, self.method, self.usage, self.nelements,
                   self.melements]
-        return fields
+        return list_fields
 
     def reprFields(self):
         dz = set_blank_if_default(self.dz, 0.)
@@ -1400,10 +1400,10 @@ class SPLINE4(Spline):
         nelements = set_blank_if_default(self.nelements, 10)
         melements = set_blank_if_default(self.melements, 10)
 
-        fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None,
+        list_fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None,
                   self.Set(), dz, method, usage, nelements, melements]
-        fields = self._wipeEmptyFields(fields)
-        return fields
+        list_fields = self._wipeEmptyFields(list_fields)
+        return list_fields
 
 
 class SPLINE5(Spline):
@@ -1468,18 +1468,18 @@ class SPLINE5(Spline):
         self.aelist = model.AEList(self.aelist)
 
     def rawFields(self):
-        fields = ['SPLINE2', self.eid, self.CAero(), self.AEList(), None,
+        list_fields = ['SPLINE2', self.eid, self.CAero(), self.AEList(), None,
                   self.Set(), self.dz, self.dtor, self.Cid(), self.thx,
                   self.thy, None, self.usage]
-        return fields
+        return list_fields
 
     def reprFields(self):
         dz = set_blank_if_default(self.dz, 0.)
         usage = set_blank_if_default(self.usage, 'BOTH')
-        fields = ['SPLINE5', self.eid, self.CAero(), self.AEList(), None,
+        list_fields = ['SPLINE5', self.eid, self.CAero(), self.AEList(), None,
                   self.Set(), dz, self.dtor, self.Cid(), self.thx, self.thy,
                   None, usage]
-        return fields
+        return list_fields
 
 
 class TRIM(BaseCard):
@@ -1527,9 +1527,9 @@ class TRIM(BaseCard):
             raise NotImplementedError(msg)
 
     def rawFields(self):
-        fields = ['TRIM', self.sid, self.mach, self.q]
+        list_fields = ['TRIM', self.sid, self.mach, self.q]
         for (i, label, ux) in izip(count(), self.labels, self.uxs):
-            fields += [label, ux]
+            list_fields += [label, ux]
             if i == 1:
-                fields += [self.aeqr]
-        return fields
+                list_fields += [self.aeqr]
+        return list_fields

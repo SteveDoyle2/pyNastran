@@ -172,7 +172,7 @@ class LineProperty(Property):
             msg2 += 'D%s,' % (iStart + i)
         msg2 += '1)\n'
         msg2 += "geompy.addToStudy(Face_%i, 'Face_%i')\n" % (iFace, iFace)
-        return (msg1 + msg2)
+        return msg1 + msg2
 
     def IAreaL(self, dim):
         if self.Type == 'ROD':
@@ -901,18 +901,18 @@ class PBARL(LineProperty):
     def writeCodeAster(self, iCut=0, iFace=0, iStart=0):  # PBARL
         msg = '# BAR Type=%s pid=%s\n' % (self.type, self.pid)
         msg2 = ''
-        (msg) += self.CA_Section(iFace, iStart, self.dim)
+        msg += self.CA_Section(iFace, iStart, self.dim)
         iFace += 1
         iStart += len(self.dim)
 
-        (msg) += self.CA_Section(iFace, iStart, self.dim)
+        msg += self.CA_Section(iFace, iStart, self.dim)
         iFace += 1
         msg2 += 'Cut_%s = geompy.MakeCut(Face_%i, Face_%i)\n' % (
             iCut + 1, iFace + 1, iFace + 2)
         msg2 += "geompy.addToStudy(Cut_%i,  'Cut_%i')\n" % (
             iCut + 1, iCut + 1)
         iStart += len(self.dim)
-        return (msg + msg2, iCut, iFace, iStart)
+        return msg + msg2, iCut, iFace, iStart
 
     def rawFields(self):
         list_fields = ['PBARL', self.pid, self.Mid(), self.group, self.Type,
@@ -1181,21 +1181,21 @@ class PBEAM(IntegratedLineProperty):
         return (msg)
 
     def rawFields(self):
-        fields = ['PBEAM', self.pid, self.Mid()]
+        list_fields = ['PBEAM', self.pid, self.Mid()]
 
         for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2,
              f1, f2) in izip(self.so, self.xxb, self.A, self.i1, self.i2,
                              self.i12, self.j, self.nsm, self.c1, self.c2,
                              self.d1, self.d2, self.e1, self.e2, self.f1,
                              self.f2):
-            fields += [so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2,
+            list_fields += [so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2,
                        f1, f2]
 
         footer = [self.k1, self.k2, self.s1, self.s2, self.nsia, self.nsib,
                   self.cwa, self.cwb, self.m1a, self.m2a, self.m1b, self.m2b,
                   self.n1a, self.n2a, self.n1b, self.n2b]
-        fields += footer
-        return fields
+        list_fields += footer
+        return list_fields
 
     def reprFields(self):
         list_fields = ['PBEAM', self.pid, self.Mid()]
@@ -1507,8 +1507,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
-    def reprFields(self):
-        raise NotImplementedError('not done...')
+    def reprFields(self):  ## TODO: not done
         list_fields = ['PBEAM3', self.pid, self.Mid(), ]  # other
         return list_fields
 

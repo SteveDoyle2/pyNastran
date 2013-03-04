@@ -1104,7 +1104,7 @@ class PLOAD4(Load):
             if len(self.eids) > 1:
                 #print("self.eids = %s" %(self.eids))
                 try:
-                    fields.append('THRU')
+                    list_fields.append('THRU')
                     eid = self.eids[-1]
                 except:
                     print("g1  = %s" % self.g1)

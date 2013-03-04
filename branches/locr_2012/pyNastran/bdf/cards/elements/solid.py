@@ -98,8 +98,8 @@ class SolidElement(Element):
         return self.isSameFields(fields1, fields2)
 
     def rawFields(self):
-        fields = [self.type, self.eid, self.Pid()] + self.nodeIDs()
-        return fields
+        list_fields = [self.type, self.eid, self.Pid()] + self.nodeIDs()
+        return list_fields
 
 
 class CHEXA8(SolidElement):

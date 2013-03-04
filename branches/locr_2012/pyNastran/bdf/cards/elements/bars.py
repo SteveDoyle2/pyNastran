@@ -419,8 +419,8 @@ class CROD(RodElement):
         return massPerLength
 
     def rawFields(self):
-        fields = ['CROD', self.eid, self.Pid()] + self.nodeIDs()
-        return fields
+        list_fields = ['CROD', self.eid, self.Pid()] + self.nodeIDs()
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -453,8 +453,8 @@ class CTUBE(RodElement):
         return (self.nodes[0].Position() + self.nodes[1].Position()) / 2.
 
     def rawFields(self):
-        fields = ['CTUBE', self.eid, self.Pid()] + self.nodeIDs()
-        return fields
+        list_fields = ['CTUBE', self.eid, self.Pid()] + self.nodeIDs()
+        return list_fields
 
 
 class CONROD(RodElement):
@@ -548,17 +548,17 @@ class CONROD(RodElement):
         return msg
 
     def rawFields(self):
-        fields = ['CONROD', self.eid] + self.nodeIDs() + [
+        list_fields = ['CONROD', self.eid] + self.nodeIDs() + [
                   self.Mid(), self.A, self.j, self.c, self.nsm]
-        return fields
+        return list_fields
 
     def reprFields(self):
         j = set_blank_if_default(self.j, 0.0)
         c = set_blank_if_default(self.c, 0.0)
         nsm = set_blank_if_default(self.nsm, 0.0)
-        fields = ['CONROD', self.eid] + self.nodeIDs() + [self.Mid(),
+        list_fields = ['CONROD', self.eid] + self.nodeIDs() + [self.Mid(),
                   self.A, j, c, nsm]
-        return fields
+        return list_fields
 
 
 class CBAR(LineElement):
@@ -889,11 +889,10 @@ class CBAR(LineElement):
         """@todo not perfectly accurate"""
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = set_blank_if_default(self.offt, 'GGG')
-        fields = ['CBAR', self.eid, self.Pid(), self.Ga(), self.Gb(), x1, x2,
+        list_fields = ['CBAR', self.eid, self.Pid(), self.Ga(), self.Gb(), x1, x2,
                   x3, offt, self.pa, self.pb, self.w1a, self.w2a, self.w3a,
                   self.w1b, self.w2b, self.w3b]
-
-        return fields
+        return list_fields
 
     def reprFields(self):
         pa = set_blank_if_default(self.pa, 0)
@@ -907,10 +906,9 @@ class CBAR(LineElement):
         w3b = set_blank_if_default(self.w3b, 0.0)
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = set_blank_if_default(self.offt, 'GGG')
-        fields = ['CBAR', self.eid, self.Pid(), self.Ga(), self.Gb(), x1, x2,
+        list_fields = ['CBAR', self.eid, self.Pid(), self.Ga(), self.Gb(), x1, x2,
                   x3, offt, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
-
-        return fields
+        return list_fields
 
 
 class CBEAM3(CBAR):
@@ -973,11 +971,11 @@ class CBEAM3(CBAR):
     def rawFields(self):
         (x1, x2, x3) = self.getX_G0_defaults()
         (ga, gb, gc) = self.nodeIDs()
-        fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3,
+        list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3,
                   self.w1a, self.w2a, self.w3a, self.w1b, self.w2b, self.w3b,
                   self.w1c, self.w2c, self.w3c, self.twa, self.twb, self.twc,
                   self.sa, self.sb, self.sc]
-        return fields
+        return list_fields
 
     def reprFields(self):
         w1a = set_blank_if_default(self.w1a, 0.0)
@@ -996,10 +994,10 @@ class CBEAM3(CBAR):
 
         (x1, x2, x3) = self.getX_G0_defaults()
         (ga, gb, gc) = self.nodeIDs()
-        fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, x1, x2, x3,
+        list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, x1, x2, x3,
                   w1a, w2a, w3a, w1b, w2b, w3b, w1c, w2c, w3c,
                   twa, twb, twc, self.sa, self.sb, self.sc]
-        return fields
+        return list_fields
 
 
 class CBEAM(CBAR):
@@ -1196,10 +1194,10 @@ class CBEAM(CBAR):
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = self.getOfft_Bit_defaults()
         ga, gb = self.nodeIDs()
-        fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,
+        list_fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,
                   self.pa, self.pb, self.w1a, self.w2a, self.w3a,
                   self.w1b, self.w2b, self.w3b, self.sa, self.sb]
-        return fields
+        return list_fields
 
     def reprFields(self):
         w1a = set_blank_if_default(self.w1a, 0.0)
@@ -1211,10 +1209,10 @@ class CBEAM(CBAR):
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = self.getOfft_Bit_defaults()
         ga, gb = self.nodeIDs()
-        fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,
+        list_fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,
                   self.pa, self.pb, w1a, w2a, w3a,
                   w1b, w2b, w3b, self.sa, self.sb]
-        return fields
+        return list_fields
 
 
 class CBEND(LineElement):
@@ -1250,9 +1248,9 @@ class CBEND(LineElement):
 
     def rawFields(self):
         (x1, x2, x3) = self.getX_G0_defaults()
-        fields = ['CBEND', self.eid, self.Pid(), self.Ga(), self.Gb(),
+        list_fields = ['CBEND', self.eid, self.Pid(), self.Ga(), self.Gb(),
                   x1, x2, x3, self.geom]
-        return fields
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()

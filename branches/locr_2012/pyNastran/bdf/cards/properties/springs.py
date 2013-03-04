@@ -94,14 +94,14 @@ class PELAS(SpringProperty):
         return msg
 
     def rawFields(self):
-        fields = ['PELAS', self.pid, self.k, self.ge, self.s]
-        return fields
+        list_fields = ['PELAS', self.pid, self.k, self.ge, self.s]
+        return list_fields
 
     def reprFields(self):
         ge = set_blank_if_default(self.ge, 0.)
         s = set_blank_if_default(self.s, 0.)
-        fields = ['PELAS', self.pid, self.k, ge, s]
-        return fields
+        list_fields = ['PELAS', self.pid, self.k, ge, s]
+        return list_fields
 
 
 class PELAST(SpringProperty):

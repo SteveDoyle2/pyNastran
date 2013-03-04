@@ -199,8 +199,8 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         return self.tid.tid
 
     def rawFields(self):
-        fields = ['LSEQ', self.sid, self.exciteID, self.Lid(), self.Tid()]
-        return fields
+        list_fields = ['LSEQ', self.sid, self.exciteID, self.Lid(), self.Tid()]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -228,7 +228,7 @@ class SLOAD(Load):
         n = nfields // 2
         if nfields % 2 == 1:
             n += 1
-            msg = 'Missing last magnitude on SLOAD card=%s' % (card.fields())
+            msg = 'Missing last magnitude on SLOAD card=%s' % card.fields()
             raise RuntimeError(msg)
 
         self.nids = []
@@ -249,10 +249,10 @@ class SLOAD(Load):
         return node.nid
 
     def rawFields(self):
-        fields = ['SLOAD', self.sid]
+        list_fields = ['SLOAD', self.sid]
         for (nid, mag) in izip(self.nids, self.mags):
-            fields += [self.Nid(nid), mag]
-        return fields
+            list_fields += [self.Nid(nid), mag]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -267,10 +267,10 @@ class DLOAD(LoadCombination):
             self._comment = comment
 
     def rawFields(self):
-        fields = ['DLOAD', self.sid, self.scale]
+        list_fields = ['DLOAD', self.sid, self.scale]
         for (scaleFactor, loadID) in izip(self.scaleFactors, self.loadIDs):
-            fields += [scaleFactor, self.LoadID(loadID)]
-        return fields
+            list_fields += [scaleFactor, self.LoadID(loadID)]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -303,8 +303,8 @@ class DAREA(BaseCard):
             assert len(data) == 4, 'data = %s' % data
 
     def rawFields(self):
-        fields = ['DAREA', self.sid, self.p, self.c, self.scale]
-        return fields
+        list_fields = ['DAREA', self.sid, self.p, self.c, self.scale]
+        return list_fields
 
 
 class TabularLoad(BaseCard):
@@ -380,16 +380,16 @@ class TLOAD1(TabularLoad):
         return self.tid.tid
 
     def rawFields(self):
-        fields = ['TLOAD1', self.sid, self.exciteID, self.delay, self.Type,
+        list_fields = ['TLOAD1', self.sid, self.exciteID, self.delay, self.Type,
                   self.Tid(), self.us0, self.vs0]
-        return fields
+        return list_fields
 
     def reprFields(self):
         us0 = set_blank_if_default(self.us0, 0.0)
         vs0 = set_blank_if_default(self.vs0, 0.0)
-        fields = ['TLOAD1', self.sid, self.exciteID, self.delay, self.Type,
+        list_fields = ['TLOAD1', self.sid, self.exciteID, self.delay, self.Type,
                   self.Tid(), us0, vs0]
-        return fields
+        return list_fields
 
 
 class TLOAD2(TabularLoad):
@@ -463,10 +463,10 @@ class TLOAD2(TabularLoad):
         # exciteID
 
     def rawFields(self):
-        fields = ['TLOAD2', self.sid, self.exciteID, self.delay, self.Type,
+        list_fields = ['TLOAD2', self.sid, self.exciteID, self.delay, self.Type,
                   self.T1, self.T2, self.frequency, self.phase, self.c, self.b,
                   self.us0, self.vs0]
-        return fields
+        return list_fields
 
     def reprFields(self):
         frequency = set_blank_if_default(self.frequency, 0.0)
@@ -476,9 +476,9 @@ class TLOAD2(TabularLoad):
 
         us0 = set_blank_if_default(self.us0, 0.0)
         vs0 = set_blank_if_default(self.vs0, 0.0)
-        fields = ['TLOAD2', self.sid, self.exciteID, self.delay, self.Type,
+        list_fields = ['TLOAD2', self.sid, self.exciteID, self.delay, self.Type,
                   self.T1, self.T2, frequency, phase, c, b, us0, vs0]
-        return fields
+        return list_fields
 
 
 class RFORCE(Load):
@@ -513,20 +513,20 @@ class RFORCE(Load):
         return [self]
 
     def rawFields(self):
-        fields = ['RFORCE', self.sid, self.nid, self.cid, self.scale,
+        list_fields = ['RFORCE', self.sid, self.nid, self.cid, self.scale,
                   self.r1, self.r2, self.r3, self.method, self.racc,
                   self.mb, self.idrf]
-        return fields
+        return list_fields
 
     def reprFields(self):
         #method = set_blank_if_default(self.method,1)
         racc = set_blank_if_default(self.racc, 0.)
         mb = set_blank_if_default(self.mb, 0)
         idrf = set_blank_if_default(self.idrf, 0)
-        fields = ['RFORCE', self.sid, self.nid, self.cid, self.scale,
+        list_fields = ['RFORCE', self.sid, self.nid, self.cid, self.scale,
                   self.r1, self.r2, self.r3, self.method, racc,
                   mb, idrf]
-        return fields
+        return list_fields
 
 
 class RLOAD1(TabularLoad):
@@ -592,15 +592,15 @@ class RLOAD1(TabularLoad):
         return self.td.tid
 
     def rawFields(self):
-        fields = ['RLOAD1', self.sid, self.exciteID, self.delay, self.dphase,
+        list_fields = ['RLOAD1', self.sid, self.exciteID, self.delay, self.dphase,
                   self.Tc(), self.Td(), self.Type]
-        return fields
+        return list_fields
 
     def reprFields(self):
         Type = set_blank_if_default(self.Type, 'LOAD')
-        fields = ['RLOAD1', self.sid, self.exciteID, self.delay, self.dphase,
+        list_fields = ['RLOAD1', self.sid, self.exciteID, self.delay, self.dphase,
                   self.Tc(), self.Td(), Type]
-        return fields
+        return list_fields
 
 
 class RLOAD2(TabularLoad):
@@ -670,15 +670,15 @@ class RLOAD2(TabularLoad):
         return self.tp.tid
 
     def rawFields(self):
-        fields = ['RLOAD2', self.sid, self.exciteID, self.delay, self.dphase,
+        list_fields = ['RLOAD2', self.sid, self.exciteID, self.delay, self.dphase,
                   self.Tb(), self.Tp(), self.Type]
-        return fields
+        return list_fields
 
     def reprFields(self):
         Type = set_blank_if_default(self.Type, 0.0)
-        fields = ['RLOAD2', self.sid, self.exciteID, self.delay, self.dphase,
+        list_fields = ['RLOAD2', self.sid, self.exciteID, self.delay, self.dphase,
                   self.Tb(), self.Tp(), Type]
-        return fields
+        return list_fields
 
 
 class RandomLoad(BaseCard):
@@ -733,9 +733,9 @@ class RANDPS(RandomLoad):
         return self.tid.tid
 
     def rawFields(self):
-        fields = ['RANDPS', self.sid, self.j, self.k, self.x, self.y,
+        list_fields = ['RANDPS', self.sid, self.j, self.k, self.x, self.y,
                   self.Tid()]
-        return fields
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()

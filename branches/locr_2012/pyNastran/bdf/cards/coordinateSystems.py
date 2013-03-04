@@ -735,9 +735,9 @@ class CORD3G(Coord):  # not done
 
     def rawFields(self):
         method = self.methodES + str(self.methodInt)
-        fields = (['CORD3G', self.cid, method, self.form] + self.thetas +
+        list_fields = (['CORD3G', self.cid, method, self.form] + self.thetas +
                   [self.CidRef()])
-        return fields
+        return list_fields
 
 
 class CORD1R(Cord1x, RectangularCoord):
@@ -759,8 +759,8 @@ class CORD1R(Cord1x, RectangularCoord):
             self._comment = comment
 
     def rawFields(self):
-        fields = ['CORD1R', self.cid] + self.NodeIDs()
-        return fields
+        list_fields = ['CORD1R', self.cid] + self.NodeIDs()
+        return list_fields
 
 
 class CORD1C(Cord1x, CylindricalCoord):
@@ -783,8 +783,8 @@ class CORD1C(Cord1x, CylindricalCoord):
             self._comment = comment
 
     def rawFields(self):
-        fields = ['CORD1C', self.cid] + self.NodeIDs()
-        return fields
+        list_fields = ['CORD1C', self.cid] + self.NodeIDs()
+        return list_fields
 
 
 class CORD1S(Cord1x, SphericalCoord):
@@ -807,8 +807,8 @@ class CORD1S(Cord1x, SphericalCoord):
             self._comment = comment
 
     def rawFields(self):
-        fields = ['CORD1S', self.cid] + self.NodeIDs()
-        return fields
+        list_fields = ['CORD1S', self.cid] + self.NodeIDs()
+        return list_fields
 
 
 class CORD2R(Cord2x, RectangularCoord):
@@ -831,9 +831,9 @@ class CORD2R(Cord2x, RectangularCoord):
 
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
-        fields = ['CORD2R', self.cid, rid] + list(self.e1) + list(
+        list_fields = ['CORD2R', self.cid, rid] + list(self.e1) + list(
             self.e2) + list(self.e3)
-        return fields
+        return list_fields
 
 
 class CORD2S(Cord2x, SphericalCoord):
@@ -852,9 +852,9 @@ class CORD2S(Cord2x, SphericalCoord):
 
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
-        fields = (['CORD2S', self.cid, rid] + list(self.e1) + list(self.e2) +
+        list_fields = (['CORD2S', self.cid, rid] + list(self.e1) + list(self.e2) +
                   list(self.e3))
-        return fields
+        return list_fields
 
 
 class CORD2C(Cord2x, CylindricalCoord):
@@ -873,6 +873,6 @@ class CORD2C(Cord2x, CylindricalCoord):
 
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
-        fields = (['CORD2C', self.cid, rid] + list(self.e1) + list(self.e2) +
+        list_fields = (['CORD2C', self.cid, rid] + list(self.e1) + list(self.e2) +
                   list(self.e3))
-        return fields
+        return list_fields

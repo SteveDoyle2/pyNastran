@@ -55,14 +55,14 @@ class QBDY1(ThermalLoad):
         return len(self.qFlux)
 
     def rawFields(self):
-        fields = (['QBDY1', self.sid, self.qFlux] + list(self.eids) +
+        list_fields = (['QBDY1', self.sid, self.qFlux] + list(self.eids) +
                   [self.qFlux])
-        return fields
+        return list_fields
 
     def reprFields(self):
         eids = collapse_thru_by(self.eids)
-        fields = ['QBDY1', self.sid, self.qFlux] + list(eids) + [self.qFlux]
-        return fields
+        list_fields = ['QBDY1', self.sid, self.qFlux] + list(eids) + [self.qFlux]
+        return list_fields
 
 
 class QBDY2(ThermalLoad):  # not tested
@@ -105,8 +105,8 @@ class QBDY2(ThermalLoad):  # not tested
         return len(self.qFlux)
 
     def rawFields(self):
-        fields = ['QBDY2', self.sid, self.Eid(), self.qFlux]
-        return fields
+        list_fields = ['QBDY2', self.sid, self.Eid(), self.qFlux]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -158,16 +158,16 @@ class QBDY3(ThermalLoad):
     def rawFields(self):
         eids = self.Eids()
         eids.sort()
-        fields = (['QBDY3', self.sid, self.Q0, self.cntrlnd] +
+        list_fields = (['QBDY3', self.sid, self.Q0, self.cntrlnd] +
                   collapse_thru_by(eids))
-        return fields
+        return list_fields
 
     def reprFields(self):
         cntrlnd = set_blank_if_default(self.cntrlnd, 0)
         eids = self.Eids()
         eids.sort()
-        fields = ['QBDY3', self.sid, self.Q0, cntrlnd] + collapse_thru_by(eids)
-        return fields
+        list_fields = ['QBDY3', self.sid, self.Q0, cntrlnd] + collapse_thru_by(eids)
+        return list_fields
 
     def getLoads(self):  ## TODO: return loads
         return []
@@ -216,8 +216,8 @@ class QHBDY(ThermalLoad):
     #    pass
 
     def rawFields(self):
-        fields = ['QHBDY', self.sid, self.flag, self.Q0, self.af] + self.grids
-        return fields
+        list_fields = ['QHBDY', self.sid, self.flag, self.Q0, self.af] + self.grids
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -266,14 +266,13 @@ class TEMP(ThermalLoad):
 
     def rawFields(self):
         """Writes the TEMP card"""
-        fields = ['TEMP', self.sid]
-
+        list_fields = ['TEMP', self.sid]
         nTemps = len(self.temperatures) - 1
         for i, (gid, temp) in enumerate(sorted(self.temperatures.iteritems())):
-            fields += [gid, temp]
+            list_fields += [gid, temp]
             if i % 3 == 2 and nTemps > i:  # start a new TEMP card
-                fields += [None, 'TEMP', self.lid]
-        return fields
+                list_fields += [None, 'TEMP', self.lid]
+        return list_fields
 
     def reprFields(self):
         """Writes the TEMP card"""
@@ -322,13 +321,11 @@ class TEMPD(ThermalLoadDefault):
 
     def reprFields(self):
         """Writes the TEMPD card"""
-        fields = ['TEMPD']
+        list_fields = ['TEMPD']
 
         nTemps = len(self.temperatures) - 1
-        #print "self.temperatures = ",self.temperatures
-        #print "nTemps = ",nTemps
         for i, (gid, temp) in enumerate(sorted(self.temperatures.iteritems())):
-            fields += [gid, temp]
+            list_fields += [gid, temp]
             if i % 4 == 3 and nTemps > i:  # start a new TEMP card
-                fields += ['TEMPD']
-        return fields
+                list_fields += ['TEMPD']
+        return list_fields

@@ -56,26 +56,26 @@ class RBAR(RigidElement):
             self.cmb = data[6]
             self.alpha = data[7]
 
-    def convertToMPC(self, mpcID):
-        """
-        -Ai*ui + Aj*uj = 0
-        where ui are the base DOFs (max=6)
-        mpc sid   g1 c1 a1  g2 c2 a2
-        rbe2 eid  gn cm g1  g2 g3 g4
-        """
-        raise NotImplementedError()
-        #i = 0
-        nCM = len(self.cm)
-        Ai = nCM * len(self.Gmi) / len(self.gn)  # where nGN=1
-
-        card = ['MPC', mpcID]
-        for cm in self.cm:  # the minus sign is applied to the base node
-            card += [self.gn, cm, -Ai]
-
-        for gm in self.Gmi:
-            for cm in self.cm:
-                card += [gm, cm, Ai]
-        return card
+    # def convertToMPC(self, mpcID):
+    #     """
+    #     -Ai*ui + Aj*uj = 0
+    #     where ui are the base DOFs (max=6)
+    #     mpc sid   g1 c1 a1  g2 c2 a2
+    #     rbe2 eid  gn cm g1  g2 g3 g4
+    #     """
+    #     raise NotImplementedError()
+    #     #i = 0
+    #     nCM = len(self.cm)
+    #     Ai = nCM * len(self.Gmi) / len(self.gn)  # where nGN=1
+    #
+    #     card = ['MPC', mpcID]
+    #     for cm in self.cm:  # the minus sign is applied to the base node
+    #         card += [self.gn, cm, -Ai]
+    #
+    #     for gm in self.Gmi:
+    #         for cm in self.cm:
+    #             card += [gm, cm, Ai]
+    #     return card
 
     #def writeCodeAster(self):
         #msg = ''
@@ -185,49 +185,49 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         #print self
 
     def rawFields(self):
-        fields = [self.type, self.eid]
+        list_fields = [self.type, self.eid]
 
         if 0:
             fields2 = [self.eid]
             for (i, gn, cn) in izip(count(), self.Gni, self.Cni):
-                fields += [gn, cn]
-            fields += self.buildTableLines(fields2, i=1, j=1)
+                list_fields += [gn, cn]
+            list_fields += self.buildTableLines(fields2, i=1, j=1)
 
         for (i, gn, cn) in izip(count(), self.Gni, self.Cni):
-            fields += [gn, cn]
+            list_fields += [gn, cn]
             if i % 6 == 0:
-                fields += [None]
+                list_fields += [None]
 
-        nSpaces = 8 - (len(fields) - 1) % 8  # puts ALPHA onto next line
+        nSpaces = 8 - (len(list_fields) - 1) % 8  # puts ALPHA onto next line
         if nSpaces < 8:
-            fields += [None] * nSpaces
+            list_fields += [None] * nSpaces
 
         if 0:
             fields2 = ['UM']
             for (i, gm, cm) in izip(count(), self.Gmi, self.Cmi):
                 #print "j=%s gmi=%s cmi=%s" %(j,gm,cm)
                 fields2 += [gm, cm]
-            fields += self.buildTableLines(fields2, i=1, j=1)
-            fields = self.wipeFields(fields)
+            list_fields += self.buildTableLines(fields2, i=1, j=1)
+            list_fields = self.wipeFields(list_fields)
 
         ## overly complicated loop to print the UM section
-        fields += ['UM']
+        list_fields += ['UM']
         j = 1
         for (i, gm, cm) in izip(count(), self.Gmi, self.Cmi):
             #print "j=%s gmi=%s cmi=%s" %(j,gm,cm)
-            fields += [gm, cm]
+            list_fields += [gm, cm]
             if i > 0 and j % 3 == 0:
-                fields += [None, None]
+                list_fields += [None, None]
                 #print "---"
                 j -= 3
             j += 1
 
-        nSpaces = 8 - (len(fields) - 1) % 8  # puts ALPHA onto next line
+        nSpaces = 8 - (len(list_fields) - 1) % 8  # puts ALPHA onto next line
         if nSpaces == 1:
-            fields += [None, None]
+            list_fields += [None, None]
         if self.alpha > 0.:  # handles default alpha value
-            fields += [self.alpha]
-        return fields
+            list_fields += [self.alpha]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -334,13 +334,13 @@ class RBE2(RigidElement):
         return msg
 
     def rawFields(self):
-        fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [self.alpha]
-        return fields
+        list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [self.alpha]
+        return list_fields
 
     def reprFields(self):
         alpha = set_blank_if_default(self.alpha, 0.)
-        fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [alpha]
-        return fields
+        list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [alpha]
+        return list_fields
 
 
 class RBE3(RigidElement):  # TODO: not done, needs testing badly
@@ -426,58 +426,58 @@ class RBE3(RigidElement):  # TODO: not done, needs testing badly
             self.alpha = 0.0
         #print self
 
-    def convertToMPC(self, mpcID):
-        """
-        -Ai*ui + Aj*uj = 0
-        where ui are the base DOFs (max=6)
-        mpc sid   g1 c1 a1  g2 c2 a2
-        rbe2 eid  gn cm g1  g2 g3 g4
-        """
-        raise NotImplementedError('this is the code for an RBE2...not RBE3')
-        #i = 0
-        nCM = len(self.cm)
-        Ai = nCM * len(self.Gmi) / len(self.gn)  # where nGN=1
-
-        card = ['MPC', mpcID]
-        for cm in self.cm:  # the minus sign is applied to the base node
-            card += [self.gn, cm, -Ai]
-
-        for gm in self.Gmi:
-            for cm in self.cm:
-                card += [gm, cm, Ai]
-        return card
+    # def convertToMPC(self, mpcID):
+    #     """
+    #     -Ai*ui + Aj*uj = 0
+    #     where ui are the base DOFs (max=6)
+    #     mpc sid   g1 c1 a1  g2 c2 a2
+    #     rbe2 eid  gn cm g1  g2 g3 g4
+    #     """
+    #     raise NotImplementedError('this is the code for an RBE2...not RBE3')
+    #     #i = 0
+    #     nCM = len(self.cm)
+    #     Ai = nCM * len(self.Gmi) / len(self.gn)  # where nGN=1
+    #
+    #     card = ['MPC', mpcID]
+    #     for cm in self.cm:  # the minus sign is applied to the base node
+    #         card += [self.gn, cm, -Ai]
+    #
+    #     for gm in self.Gmi:
+    #         for cm in self.cm:
+    #             card += [gm, cm, Ai]
+    #     return card
 
     def rawFields(self):
-        fields = ['RBE3', self.eid, None, self.refgrid, self.refc]
+        list_fields = ['RBE3', self.eid, None, self.refgrid, self.refc]
         for (wt, ci, Gij) in self.WtCG_groups:
             #print 'wt=%s ci=%s Gij=%s' %(wt,ci,Gij)
-            fields += [wt, ci] + Gij
-        nSpaces = 8 - (len(fields) - 1) % 8  # puts UM onto next line
+            list_fields += [wt, ci] + Gij
+        nSpaces = 8 - (len(list_fields) - 1) % 8  # puts UM onto next line
 
         if nSpaces < 8:
-            fields += [None] * nSpaces
+            list_fields += [None] * nSpaces
 
         if self.Gmi and 0:
             fields2 = ['UM']
             for (gmi, cmi) in izip(self.Gmi, self.Cmi):
                 fields2 += [gmi, cmi]
-            fields += self.buildTableLines(fields2, i=1, j=1)
+            list_fields += self.buildTableLines(fields2, i=1, j=1)
 
         if self.Gmi:
-            fields += ['UM']
+            list_fields += ['UM']
         if self.Gmi:
             #print "Gmi = ",self.Gmi
             #print "Cmi = ",self.Cmi
             for (gmi, cmi) in izip(self.Gmi, self.Cmi):
-                fields += [gmi, cmi]
+                list_fields += [gmi, cmi]
 
-        nSpaces = 8 - (len(fields) - 1) % 8  # puts ALPHA onto next line
+        nSpaces = 8 - (len(list_fields) - 1) % 8  # puts ALPHA onto next line
         if nSpaces < 8:
-            fields += [None] * nSpaces
+            list_fields += [None] * nSpaces
 
         if self.alpha > 0.:  # handles the default value
-            fields += ['ALPHA', self.alpha]
-        return fields
+            list_fields += ['ALPHA', self.alpha]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()

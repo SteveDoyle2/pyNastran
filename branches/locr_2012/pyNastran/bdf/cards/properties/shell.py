@@ -302,13 +302,13 @@ class PCOMP(ShellProperty):
             return rho * t + self.nsm
 
     def rawFields(self):
-        fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
+        list_fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
                   self.TRef, self.ge, self.lam, ]
         for (iply, ply) in enumerate(self.plies):
             (_mid, t, theta, sout) = ply
             mid = self.Mid(iply)
-            fields += [mid, t, theta, sout]
-        return fields
+            list_fields += [mid, t, theta, sout]
+        return list_fields
 
     def reprFields(self):
         nsm = set_blank_if_default(self.nsm, 0.0)
@@ -317,14 +317,14 @@ class PCOMP(ShellProperty):
         ge = set_blank_if_default(self.ge, 0.0)
         z0 = set_blank_if_default(self.z0, -0.5 * self.Thickness())
 
-        fields = ['PCOMP', self.pid, z0, nsm, sb, self.ft, TRef, ge, self.lam]
+        list_fields = ['PCOMP', self.pid, z0, nsm, sb, self.ft, TRef, ge, self.lam]
         for (iply, ply) in enumerate(self.plies):
             (_mid, t, theta, sout) = ply
             mid = self.Mid(iply)
             #theta = set_blank_if_default(theta,0.0)
             sout = set_blank_if_default(sout, 'NO')
-            fields += [mid, t, theta, sout]
-        return fields
+            list_fields += [mid, t, theta, sout]
+        return list_fields
 
 
 class PCOMPG(PCOMP):
@@ -388,13 +388,13 @@ class PCOMPG(PCOMP):
         return gPlyID
 
     def rawFields(self):
-        fields = ['PCOMPG', self.pid, self.z0, self.nsm, self.sb, self.ft,
+        list_fields = ['PCOMPG', self.pid, self.z0, self.nsm, self.sb, self.ft,
                   self.TRef, self.ge, self.lam, ]
         for (iply, ply) in enumerate(self.plies):
             (_mid, t, theta, sout, gPlyID) = ply
             mid = self.Mid(iply)
-            fields += [gPlyID, mid, t, theta, sout, None, None, None]
-        return fields
+            list_fields += [gPlyID, mid, t, theta, sout, None, None, None]
+        return list_fields
 
     def reprFields(self):
         nsm = set_blank_if_default(self.nsm, 0.0)
@@ -403,15 +403,14 @@ class PCOMPG(PCOMP):
         ge = set_blank_if_default(self.ge, 0.0)
         z0 = set_blank_if_default(self.z0, -0.5 * self.Thickness())
 
-        fields = ['PCOMPG', self.pid, z0, nsm, sb, self.ft, TRef, ge, self.lam]
-
+        list_fields = ['PCOMPG', self.pid, z0, nsm, sb, self.ft, TRef, ge, self.lam]
         for (iply, ply) in enumerate(self.plies):
             (_mid, t, theta, sout, gPlyID) = ply
             mid = self.Mid(iply)
             #theta = set_blank_if_default(theta,0.0)
             sout = set_blank_if_default(sout, 'NO')
-            fields += [gPlyID, mid, t, theta, sout, None, None, None]
-        return fields
+            list_fields += [gPlyID, mid, t, theta, sout, None, None, None]
+        return list_fields
 
 
 class PSHEAR(ShellProperty):
@@ -456,9 +455,9 @@ class PSHEAR(ShellProperty):
         return self.isSameFields(fields1, fields2)
 
     def rawFields(self):
-        fields = ['PSHEAR', self.pid, self.Mid(), self.t, self.nsm,
+        list_fields = ['PSHEAR', self.pid, self.Mid(), self.t, self.nsm,
                   self.f1, self.f2]
-        return fields
+        return list_fields
 
 
 class PSHELL(ShellProperty):
@@ -610,10 +609,10 @@ class PSHELL(ShellProperty):
         return msg
 
     def rawFields(self):
-        fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
+        list_fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
                   self.twelveIt3, self.Mid3(), self.tst, self.nsm, self.z1,
                   self.z2, self.Mid4()]
-        return fields
+        return list_fields
 
     def reprFields(self):
         twelveIt3 = set_blank_if_default(self.twelveIt3, 1.0)
@@ -624,6 +623,6 @@ class PSHELL(ShellProperty):
         z1 = set_blank_if_default(self.z1, -tOver2)
         z2 = set_blank_if_default(self.z2, tOver2)
 
-        fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
+        list_fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
                   twelveIt3, self.Mid3(), tst, nsm, z1, z2, self.Mid4()]
-        return fields
+        return list_fields

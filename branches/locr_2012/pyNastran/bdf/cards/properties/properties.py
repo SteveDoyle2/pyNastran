@@ -302,17 +302,17 @@ class PRAC2D(CrackProperty):
         self.mid = model.Material(self.mid)  # MAT1, MAT2, MAT8
 
     def rawFields(self):
-        fields = ['PRAC2D', self.pid, self.Mid(), self.thick,
+        list_fields = ['PRAC2D', self.pid, self.Mid(), self.thick,
                   self.iPlane, self.nsm, self.gamma, self.phi]
-        return fields
+        return list_fields
 
     def reprFields(self):
         nsm = set_blank_if_default(self.nsm, 0.)
         gamma = set_blank_if_default(self.gamma, 0.5)
         phi = set_blank_if_default(self.phi, 180.)
-        fields = ['PRAC2D', self.pid, self.Mid(), self.thick,
+        list_fields = ['PRAC2D', self.pid, self.Mid(), self.thick,
                   self.iPlane, nsm, gamma, phi]
-        return fields
+        return list_fields
 
 
 class PRAC3D(CrackProperty):
@@ -346,14 +346,14 @@ class PRAC3D(CrackProperty):
         self.mid = model.Material(self.mid)  # MAT1, MAT9
 
     def rawFields(self):
-        fields = ['PRAC3D', self.pid, self.Mid(), self.gamma, self.phi]
-        return fields
+        list_fields = ['PRAC3D', self.pid, self.Mid(), self.gamma, self.phi]
+        return list_fields
 
     def reprFields(self):
         gamma = set_blank_if_default(self.gamma, 0.5)
         phi = set_blank_if_default(self.phi, 180.)
-        fields = ['PRAC3D', self.pid, self.Mid(), gamma, phi]
-        return fields
+        list_fields = ['PRAC3D', self.pid, self.Mid(), gamma, phi]
+        return list_fields
 
 
 class PCONEAX(Property):
@@ -417,10 +417,10 @@ class PCONEAX(Property):
         return self.mid3
 
     def rawFields(self):
-        fields = ['PCONEAX', self.pid, self.Mid1(), self.t1,
+        list_fields = ['PCONEAX', self.pid, self.Mid1(), self.t1,
                   self.Mid2(), self.i, self.Mid3(), self.t2,
                   self.nsm, self.z1, self.z2] + self.phi
-        return fields
+        return list_fields
 
     def reprFields(self):
         nsm = set_blank_if_default(self.nsm, 0.0)
@@ -430,6 +430,6 @@ class PCONEAX(Property):
         i = set_blank_if_default(self.i, 0.0)
         t1 = set_blank_if_default(self.t1, 0.0)
         t2 = set_blank_if_default(self.t2, 0.0)
-        fields = ['PCONEAX', self.pid, mid1, t1, mid2, i, mid3, t2,
+        list_fields = ['PCONEAX', self.pid, mid1, t1, mid2, i, mid3, t2,
                   nsm, self.z1, self.z2] + self.phi
-        return fields
+        return list_fields

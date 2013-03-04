@@ -27,5 +27,5 @@ class PARAM(BaseCard):
         #return True
 
     def rawFields(self):
-        fields = ['PARAM', self.key, self.value]
-        return fields
+        list_fields = ['PARAM', self.key, self.value]
+        return list_fields

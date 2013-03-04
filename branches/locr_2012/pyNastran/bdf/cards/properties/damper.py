@@ -48,8 +48,8 @@ class PDAMP(DamperProperty):
             self.b = data[1]
 
     def rawFields(self):
-        fields = ['PDAMP', self.pid, self.b]
-        return fields
+        list_fields = ['PDAMP', self.pid, self.b]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -92,8 +92,8 @@ class PDAMP5(DamperProperty):
         return self.rawFields()
 
     def rawFields(self):
-        fields = ['PDAMP5', self.pid, self.Mid(), self.b]
-        return fields
+        list_fields = ['PDAMP5', self.pid, self.Mid(), self.b]
+        return list_fields
 
 
 class PDAMPT(DamperProperty):
@@ -127,8 +127,8 @@ class PDAMPT(DamperProperty):
         return self.rawFields()
 
     def rawFields(self):
-        fields = ['PDAMPT', self.pid, self.Tbid()]
-        return fields
+        list_fields = ['PDAMPT', self.pid, self.Tbid()]
+        return list_fields
 
 
 class PVISC(DamperProperty):
@@ -151,10 +151,10 @@ class PVISC(DamperProperty):
         pass
 
     def rawFields(self):
-        fields = ['PVISC', self.pid, self.ce, self.cr]
-        return fields
+        list_fields = ['PVISC', self.pid, self.ce, self.cr]
+        return list_fields
 
     def reprFields(self):
         cr = set_blank_if_default(self.cr, 0.)
-        fields = ['PVISC', self.pid, self.ce, cr]
-        return fields
+        list_fields = ['PVISC', self.pid, self.ce, cr]
+        return list_fields

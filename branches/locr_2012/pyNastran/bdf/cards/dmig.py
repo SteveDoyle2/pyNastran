@@ -101,13 +101,13 @@ class DEQATN(BaseCard):  # needs work...
         eq = self.name + '=' + self.eq
         eqLine = eq[0:56]
         eq = eq[56:]
-        fields = ['DEQATN  ', '%8s' % (self.eqID), eqLine]
+        list_fields = ['DEQATN  ', '%8s' % (self.eqID), eqLine]
 
         if len(eq):
             eqLine = eq[0:72]
             eq = eq[72:]
-            fields += ['        ' + eqLine]
-        return ''.join(fields)
+            list_fields += ['        ' + eqLine]
+        return ''.join(list_fields)
 
 
 class NastranMatrix(BaseCard):
@@ -336,20 +336,20 @@ class NastranMatrix(BaseCard):
         """
         msg = '\n$' + '-' * 80
         msg += '\n$ %s Matrix %s\n' % (self.type, self.name)
-        fields = [self.type, self.name, 0, self.ifo, self.tin,
+        list_fields = [self.type, self.name, 0, self.ifo, self.tin,
                   self.tout, self.polar, None, self.ncol]
-        msg += print_card(fields)
+        msg += print_card(list_fields)
 
         if self.isComplex():
             for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
-                fields = [self.type, self.name, GCj[0], GCj[1],
+                list_fields = [self.type, self.name, GCj[0], GCj[1],
                           None, GCi[0], GCi[1], reali, imagi]
-                msg += print_card(fields)
+                msg += print_card(list_fields)
         else:
             for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
-                fields = [self.type, self.name, GCj[0], GCj[1],
+                list_fields = [self.type, self.name, GCj[0], GCj[1],
                           None, GCi[0], GCi[1], reali, None]
-                msg += print_card(fields)
+                msg += print_card(list_fields)
         return msg
 
 
@@ -501,36 +501,36 @@ class DMI(BaseCard):
                         i += 1
                         isDoneReadingFloats = True
 
-    def readComplex(self, card):
-        msg = 'complex matrices not supported in the DMI reader...'
-        raise NotImplementedError(msg)
-        ## column number
-        j = integer(card, 2, 'icol')
-
-        # counter
-        i = 0
-        fields = card[3:]
-
-        # Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
-        while i < len(fields):
-            i1 = fields[i]
-            i += 1
-            isDoneReadingFloats = False
-            asdf
-            while not isDoneReadingFloats and i < len(fields):
-                #print("i=%s len(fields)=%s" %(i, len(fields)))
-                realValue = fields[i]
-                if isinstance(floatValue, int):
-                    isDoneReadingFloats = True
-                elif isinstance(realValue, float):
-                    complexValue = fields[i + 1]
-                    self.GCj.append(j)
-                    self.GCi.append(i1)
-                    self.Real.append(realValue)
-                    self.Complex.append(complexValue)
-                    i += 2
-                else:
-                    asdf
+    # def readComplex(self, card):
+    #     msg = 'complex matrices not supported in the DMI reader...'
+    #     raise NotImplementedError(msg)
+    #     ## column number
+    #     j = integer(card, 2, 'icol')
+    #
+    #     # counter
+    #     i = 0
+    #     fields = card[3:]
+    #
+    #     # Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
+    #     while i < len(fields):
+    #         i1 = fields[i]
+    #         i += 1
+    #         isDoneReadingFloats = False
+    #         asdf
+    #         while not isDoneReadingFloats and i < len(fields):
+    #             #print("i=%s len(fields)=%s" %(i, len(fields)))
+    #             realValue = fields[i]
+    #             if isinstance(floatValue, int):
+    #                 isDoneReadingFloats = True
+    #             elif isinstance(realValue, float):
+    #                 complexValue = fields[i + 1]
+    #                 self.GCj.append(j)
+    #                 self.GCi.append(i1)
+    #                 self.Real.append(realValue)
+    #                 self.Complex.append(complexValue)
+    #                 i += 2
+    #             else:
+    #                 asdf
 
     def rename(self, newName):
         self.name = newName
@@ -551,17 +551,17 @@ class DMI(BaseCard):
         """
         msg = '\n$' + '-' * 80
         msg += '\n$ %s Matrix %s\n' % (self.type, self.name)
-        fields = [self.type, self.name, 0, self.form, self.tin,
+        list_fields = [self.type, self.name, 0, self.form, self.tin,
                   self.tout, None, self.nRows, self.nCols]
-        msg += self.print_card(fields)
-        #msg += self.print_card(fields,size=16,isD=False)
+        msg += self.print_card(list_fields)
+        #msg += self.print_card(list_fields,size=16,isD=False)
 
         if self.isComplex():
             for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
-                fields = [self.type, self.name, GCj, GCi, reali, imagi]
-                msg += self.print_card(fields)
+                list_fields = [self.type, self.name, GCj, GCi, reali, imagi]
+                msg += self.print_card(list_fields)
         else:
             for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
-                fields = [self.type, self.name, GCj, GCi, reali]
-                msg += self.print_card(fields)
+                list_fields = [self.type, self.name, GCj, GCi, reali]
+                msg += self.print_card(list_fields)
         return msg

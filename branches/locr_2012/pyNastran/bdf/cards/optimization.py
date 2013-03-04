@@ -37,17 +37,17 @@ class DCONSTR(OptConstraint):
             self.highfq = data[5]
 
     def rawFields(self):
-        fields = ['DCONSTR', self.oid, self.rid, self.lid,
+        list_fields = ['DCONSTR', self.oid, self.rid, self.lid,
                   self.uid, self.lowfq, self.highfq]
-        return fields
+        return list_fields
 
     def reprFields(self):
         lid = set_blank_if_default(self.lid, -1e20)
         uid = set_blank_if_default(self.uid, 1e20)
         lowfq = set_blank_if_default(self.lowfq, 0.0)
         highfq = set_blank_if_default(self.highfq, 1e20)
-        fields = ['DCONSTR', self.oid, self.rid, lid, uid, lowfq, highfq]
-        return fields
+        list_fields = ['DCONSTR', self.oid, self.rid, lid, uid, lowfq, highfq]
+        return list_fields
 
 
 class DESVAR(OptConstraint):
@@ -64,17 +64,17 @@ class DESVAR(OptConstraint):
         self.ddval = integer_or_blank(card, 7, 'ddval')
 
     def rawFields(self):
-        fields = ['DESVAR', self.oid, self.label, self.xinit, self.xlb,
+        list_fields = ['DESVAR', self.oid, self.label, self.xinit, self.xlb,
                   self.xub, self.delx, self.ddval]
-        return fields
+        return list_fields
 
     def reprFields(self):
         xlb = set_blank_if_default(self.xlb, -1e20)
         xub = set_blank_if_default(self.xub, 1e20)
         delx = set_blank_if_default(self.delx, 1e20)
-        fields = ['DESVAR', self.oid, self.label, self.xinit, xlb,
+        list_fields = ['DESVAR', self.oid, self.label, self.xinit, xlb,
                   xub, delx, self.ddval]
-        return fields
+        return list_fields
 
 
 class DDVAL(OptConstraint):
@@ -91,8 +91,8 @@ class DDVAL(OptConstraint):
     def rawFields(self):
         self.ddvals.sort()
         ddvals = collapse_thru_by_float(self.ddvals)
-        fields = ['DDVAL', self.oid] + ddvals
-        return fields
+        list_fields = ['DDVAL', self.oid] + ddvals
+        return list_fields
 
 
 class DOPTPRM(OptConstraint):
@@ -180,10 +180,10 @@ class DOPTPRM(OptConstraint):
             self.params[param] = val
 
     def rawFields(self):
-        fields = ['DOPTPRM']
+        list_fields = ['DOPTPRM']
         for param, val in sorted(self.params.iteritems()):
-            fields += [param, val]
-        return fields
+            list_fields += [param, val]
+        return list_fields
 
 
 class DLINK(OptConstraint):
@@ -219,18 +219,18 @@ class DLINK(OptConstraint):
             self.Ci.append(Ci)
 
     def rawFields(self):
-        fields = ['DLINK', self.oid, self.ddvid, self.c0, self.cmult]
+        list_fields = ['DLINK', self.oid, self.ddvid, self.c0, self.cmult]
         for (idv, ci) in izip(self.IDv, self.Ci):
-            fields += [idv, ci]
-        return fields
+            list_fields += [idv, ci]
+        return list_fields
 
     def reprFields(self):
         c0 = set_blank_if_default(self.c0, 0.)
         cmult = set_blank_if_default(self.cmult, 1.)
-        fields = ['DLINK', self.oid, self.ddvid, c0, cmult]
+        list_fields = ['DLINK', self.oid, self.ddvid, c0, cmult]
         for (idv, ci) in izip(self.IDv, self.Ci):
-            fields += [idv, ci]
-        return fields
+            list_fields += [idv, ci]
+        return list_fields
 
 
 class DRESP1(OptConstraint):
@@ -265,9 +265,9 @@ class DRESP1(OptConstraint):
         #assert len(self.others)==0
 
     def rawFields(self):
-        fields = ['DRESP1', self.oid, self.label, self.rtype, self.ptype,
+        list_fields = ['DRESP1', self.oid, self.label, self.rtype, self.ptype,
                   self.region, self.atta, self.attb, self.atti] + self.others
-        return fields
+        return list_fields
 
 
 class DRESP2(OptConstraint):
@@ -333,7 +333,7 @@ class DRESP2(OptConstraint):
              'DESVAR':  [1, 0],
              'DESVAR':  [1, 0],
         }
-        fields = []
+        list_fields = []
         for (key, valueList) in sorted(self.params.iteritems()):
             fields2 = [key] + valueList
             try:
@@ -342,24 +342,24 @@ class DRESP2(OptConstraint):
                 msg = 'INVALID DRESP2 key=|%s| fields=%s ID=%s' % (
                     key, valueList, self.oid)
                 raise KeyError(msg)
-            fields += self.buildTableLines(fields2, nStart=i, nEnd=j)
-        return fields
+            list_fields += self.buildTableLines(fields2, nStart=i, nEnd=j)
+        return list_fields
 
     def rawFields(self):
-        fields = ['DRESP2', self.oid, self.label, self.eqidFunc,
+        list_fields = ['DRESP2', self.oid, self.label, self.eqidFunc,
                   self.region, self.method, self.c1, self.c2, self.c3]
-        fields += self.packParams()
-        return fields
+        list_fields += self.packParams()
+        return list_fields
 
     def reprFields(self):
         method = set_blank_if_default(self.method, 'MIN')
         c1 = set_blank_if_default(self.c1, 100.)
         c2 = set_blank_if_default(self.c2, 0.005)
 
-        fields = ['DRESP2', self.oid, self.label, self.eqidFunc,
+        list_fields = ['DRESP2', self.oid, self.label, self.eqidFunc,
                   self.region, method, c1, c2, self.c3]
-        fields += self.packParams()
-        return fields
+        list_fields += self.packParams()
+        return list_fields
 
 
 class DSCREEN(OptConstraint):
@@ -377,14 +377,14 @@ class DSCREEN(OptConstraint):
         self.nstr = integer(card, 3, 'nstr', 20)
 
     def rawFields(self):
-        fields = ['DSCREEN', self.rType, self.trs, self.nstr]
-        return fields
+        list_fields = ['DSCREEN', self.rType, self.trs, self.nstr]
+        return list_fields
 
     def reprFields(self):
         trs = set_blank_if_default(self.trs, -0.5)
         nstr = set_blank_if_default(self.nstr, 20)
-        fields = ['DSCREEN', self.rType, trs, nstr]
-        return fields
+        list_fields = ['DSCREEN', self.rType, trs, nstr]
+        return list_fields
 
 
 class DVMREL1(OptConstraint):  # similar to DVPREL1
@@ -442,22 +442,22 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         return self.mid.mid
 
     def rawFields(self):
-        fields = ['DVMREL1', self.oid, self.Type, self.Mid(),
+        list_fields = ['DVMREL1', self.oid, self.Type, self.Mid(),
                   self.mpName, self.mpMin, self.mpMax, self.c0, None]
         for (dvid, coeff) in izip(self.dvids, self.coeffs):
-            fields.append(dvid)
-            fields.append(coeff)
-        return fields
+            list_fields.append(dvid)
+            list_fields.append(coeff)
+        return list_fields
 
     def reprFields(self):
         mpMax = set_blank_if_default(self.mpMax, 1e20)
         c0 = set_blank_if_default(self.c0, 0.)
-        fields = ['DVMREL1', self.oid, self.Type, self.Mid(),
+        list_fields = ['DVMREL1', self.oid, self.Type, self.Mid(),
                   self.mpName, self.mpMin, mpMax, c0, None]
         for (dvid, coeff) in izip(self.dvids, self.coeffs):
-            fields.append(dvid)
-            fields.append(coeff)
-        return fields
+            list_fields.append(dvid)
+            list_fields.append(coeff)
+        return list_fields
 
 
 class DVPREL1(OptConstraint):  # similar to DVMREL1
@@ -508,23 +508,22 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         return self.pid.pid
 
     def rawFields(self):
-        fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
+        list_fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
                   self.pNameFid, self.pMin, self.pMax, self.c0, None]
         for (dvid, coeff) in izip(self.dvids, self.coeffs):
-            fields.append(dvid)
-            fields.append(coeff)
-        return fields
+            list_fields.append(dvid)
+            list_fields.append(coeff)
+        return list_fields
 
     def reprFields(self):
         pMax = set_blank_if_default(self.pMax, 1e20)
         c0 = set_blank_if_default(self.c0, 0.)
-        fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
+        list_fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
                   self.pNameFid, self.pMin, pMax, c0, None]
-
         for (dvid, coeff) in izip(self.dvids, self.coeffs):
-            fields.append(dvid)
-            fields.append(coeff)
-        return fields
+            list_fields.append(dvid)
+            list_fields.append(coeff)
+        return list_fields
 
 
 class DVPREL2(OptConstraint):
@@ -614,17 +613,15 @@ class DVPREL2(OptConstraint):
         self.pid.OptValue(self.pNameFid)
 
     def rawFields(self):
-        fields = ['DVPREL2', self.oid, self.Type, self.Pid(),
+        list_fields = ['DVPREL2', self.oid, self.Type, self.Pid(),
                   self.pNameFid, self.pMin, self.pMax, self.eqID, None]
-
         if self.dvids:
             fields2 = ['DESVAR'] + self.dvids
-            fields += self.buildTableLines(fields2, nStart=1, nEnd=0)
-
+            list_fields += self.buildTableLines(fields2, nStart=1, nEnd=0)
         if self.dtables:
             fields2 = ['DTABLE'] + self.dtables
-            fields += self.buildTableLines(fields2, nStart=1, nEnd=0)
-        return fields
+            list_fields += self.buildTableLines(fields2, nStart=1, nEnd=0)
+        return list_fields
 
     def reprFields(self):
         """@todo finish reprFields for DVPREL2"""

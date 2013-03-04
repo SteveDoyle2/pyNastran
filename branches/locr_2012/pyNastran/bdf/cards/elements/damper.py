@@ -158,8 +158,8 @@ class CDAMP3(LineDamper):
 
     def rawFields(self):
         nodes = self.nodeIDs(allowEmptyNodes=True)
-        fields = ['CDAMP3', self.eid, self.pid, nodes[0], nodes[1]]
-        return fields
+        list_fields = ['CDAMP3', self.eid, self.pid, nodes[0], nodes[1]]
+        return list_fields
 
 
 class CDAMP4(LineDamper):
@@ -191,8 +191,8 @@ class CDAMP4(LineDamper):
 
     def rawFields(self):
         nodes = self.nodeIDs(allowEmptyNodes=True)
-        fields = ['CDAMP4', self.eid, self.b, nodes[0], nodes[1]]
-        return fields
+        list_fields = ['CDAMP4', self.eid, self.b, nodes[0], nodes[1]]
+        return list_fields
 
 
 class CDAMP5(LineDamper):
@@ -222,8 +222,8 @@ class CDAMP5(LineDamper):
 
     def rawFields(self):
         nodes = self.nodeIDs(allowEmptyNodes=True)
-        fields = ['CDAMP5', self.eid, self.Pid(), nodes[0], nodes[1]]
-        return fields
+        list_fields = ['CDAMP5', self.eid, self.Pid(), nodes[0], nodes[1]]
+        return list_fields
 
 
 class CVISC(LineDamper):
@@ -249,8 +249,8 @@ class CVISC(LineDamper):
         return self.pid.ce
 
     def rawFields(self):
-        fields = ['CVISC', self.eid, self.Pid()] + self.nodeIDs()
-        return fields
+        list_fields = ['CVISC', self.eid, self.Pid()] + self.nodeIDs()
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()

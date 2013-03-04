@@ -57,8 +57,8 @@ class NSM(PointProperty):
 
     def rawFields(self):
         #nodes = self.nodeIDs()
-        fields = ['NSM', self.sid, self.Type, self.id, self.value]
-        return fields
+        list_fields = ['NSM', self.sid, self.Type, self.id, self.value]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -82,8 +82,8 @@ class PMASS(PointProperty):
         return self.mass
 
     def rawFields(self):
-        fields = ['PMASS', self.pid, self.mass]
-        return fields
+        list_fields = ['PMASS', self.pid, self.mass]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()

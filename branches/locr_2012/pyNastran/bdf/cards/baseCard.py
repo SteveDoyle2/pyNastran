@@ -104,15 +104,15 @@ class BaseCard(object):
 
     def printRawFields(self, size=8):
         """A card's raw fields include all defaults for all fields"""
-        fields = self.rawFields()
-        return print_card(fields, size=size)
+        list_fields = self.rawFields()
+        return print_card(list_fields, size=size)
 
     def reprFields(self):
         return self.rawFields()
 
     def print_card(self, size=8):
-        fields = self.reprFields()
-        return self.comment() + print_card(fields, size=size)
+        list_fields = self.reprFields()
+        return self.comment() + print_card(list_fields, size=size)
 
     def __repr__(self):
         """
@@ -124,7 +124,7 @@ class BaseCard(object):
             return self.print_card()
         except:
             fields = self.reprFields()
-            print('problem printing %s card' % (self.type))
+            print('problem printing %s card' % self.type)
             print("fields = ", fields)
             raise
 

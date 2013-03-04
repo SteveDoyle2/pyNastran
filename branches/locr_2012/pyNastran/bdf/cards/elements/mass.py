@@ -381,20 +381,19 @@ class CONM1(PointMass):
         cid = set_blank_if_default(self.Cid(), 0)
         nid = self.Nid()
         m = self.massMatrix
-        fields = ['CONM1', self.eid, nid, cid, m[0, 0], m[1, 0], m[1, 1],
+        list_fields = ['CONM1', self.eid, nid, cid, m[0, 0], m[1, 0], m[1, 1],
                   m[2, 0], m[2, 1], m[2, 2], m[3, 0], m[3, 1], m[3, 2],
                   m[3, 3], m[4, 0], m[4, 1], m[4, 2], m[4, 3], m[4, 4],
                   m[5, 0], m[5, 1], m[5, 2], m[5, 3], m[5, 4], m[5, 5]]
-        return fields
+        return list_fields
 
     def reprFields(self):
-        fields = self.rawFields()
-        fields2 = fields[0:4]
-        for field in fields[4:]:
+        list_fields = self.rawFields()
+        list_fields2 = list_fields[0:4]
+        for field in list_fields[4:]:
             val = set_blank_if_default(field, 0.)
-            #print "field=%s value=%s" %(field,val)
-            fields2.append(val)
-        return fields2
+            list_fields2.append(val)
+        return list_fields2
 
 
 class CONM2(PointMassElement):
@@ -499,9 +498,9 @@ class CONM2(PointMassElement):
         return msg
 
     def rawFields(self):
-        fields = (['CONM2', self.eid, self.Nid(), self.Cid(), self.mass] +
+        list_fields = (['CONM2', self.eid, self.Nid(), self.Cid(), self.mass] +
                   list(self.X) + [None] + list(self.I))
-        return fields
+        return list_fields
 
     def reprFields(self):
         I = []
@@ -518,6 +517,6 @@ class CONM2(PointMassElement):
                 X.append(x)
 
         cid = set_blank_if_default(self.Cid(), 0)
-        fields = (['CONM2', self.eid, self.Nid(), cid, self.mass] + X +
+        list_fields = (['CONM2', self.eid, self.Nid(), cid, self.mass] + X +
                   [None] + I)
-        return fields
+        return list_fields

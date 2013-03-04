@@ -84,20 +84,20 @@ class constraintObject(object):
                 #constraints2[conID]
         constraints3 = self.remapSPCs(constraints2)
 
-    def remapSPCs(self, constraints):
-        """not really done yet"""
-        ## takes the MPCADDs that reference MPCADDs and makes them
-        ## reference MPCs
-        constraints2 = {}
-        key = constraints.keys()
-        nkeys = len(key) - 1
-        for i in xrange(nkeys):
-            key = keys[i]
-            constraints2[key]
-            for j in xrange(nkeys):
-                if i > j:
-                    constraints2[key].append(constraints[key])
-        return constraints2
+    # def remapSPCs(self, constraints):
+    #     """not really done yet"""
+    #     ## takes the MPCADDs that reference MPCADDs and makes them
+    #     ## reference MPCs
+    #     constraints2 = {}
+    #     key = constraints.keys()
+    #     nkeys = len(key) - 1
+    #     for i in xrange(nkeys):
+    #         key = keys[i]
+    #         constraints2[key]
+    #         for j in xrange(nkeys):
+    #             if i > j:
+    #                 constraints2[key].append(constraints[key])
+    #     return constraints2
 
     def ConstraintID(self):
         if isinstance(self.conid, int):
