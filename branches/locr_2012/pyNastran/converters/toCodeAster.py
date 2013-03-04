@@ -39,7 +39,10 @@ class CodeAsterConverter(BDF):
         BDF.__init__(self)
 
     def getElementsByPid(self):
-        """builds a dictionary where the key is the property ID and the value is a list of element IDs"""
+        """
+        builds a dictionary where the key is the property ID and the value is
+        a list of element IDs
+        """
         props = {}
         for pid in self.properties:
             props[pid] = []
@@ -49,7 +52,10 @@ class CodeAsterConverter(BDF):
         return mats
 
     def getElementsByMid(self):
-        """builds a dictionary where the key is the material ID and the value is a list of element IDs"""
+        """
+        builds a dictionary where the key is the material ID and the value is
+        a list of element IDs
+        """
         mats = {0: []}
 
         for mid in self.materials:
@@ -63,7 +69,10 @@ class CodeAsterConverter(BDF):
         return mats
 
     def getElementsByType(self):
-        """builds a dictionary where the key is the element type and the value is a list of element IDs"""
+        """
+        builds a dictionary where the key is the element type and the value is
+        a list of element IDs
+        """
         elems = {}
         #for eid,elements in self.elements:
             #elems[eid] = []

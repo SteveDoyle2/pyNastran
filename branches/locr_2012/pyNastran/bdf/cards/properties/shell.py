@@ -15,9 +15,8 @@ from itertools import izip
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property, Material
-from pyNastran.bdf.format import (integer, integer_or_blank,
-                                  double, double_or_blank,
-                                  string_or_blank)
+from pyNastran.bdf.format import (integer, integer_or_blank, double,
+                                  double_or_blank, string_or_blank)
 
     
 class ShellProperty(Property):
@@ -353,7 +352,7 @@ class PCOMPG(PCOMP):
             self.plies = []
 
             i = 0
-            n = 0
+            #n = 0
             while i < len(fields):
                 gPlyID = integer(card, 9 + i, 'gPlyID')
                 mid = integer_or_blank(card, 9 + i + 1, 'mid', midLast)

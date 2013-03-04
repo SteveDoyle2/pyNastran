@@ -5,10 +5,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
                                           collapse_thru_by)
-from pyNastran.bdf.format import (fields, fields_or_blank, integer,
-                                  integer_or_blank, double, 
-                                  double_or_blank, integer_or_string, string,
-                                  blank)
+from pyNastran.bdf.format import (fields, integer, integer_or_blank, 
+                                  double, double_or_blank,
+                                  integer_or_string, string, blank)
 
 class ThermalCard(BaseCard):
     def __init__(self, card, data):
@@ -124,15 +123,17 @@ class CHBDYE(ThermalElement):
         return side
 
     def rawFields(self):
-        fields = ['CHBDYE', self.eid, self.eid2, self.side, self.iViewFront,
-                  self.iViewBack, self.radMidFront, self.radMidBack]
-        return fields
+        list_fields = ['CHBDYE', self.eid, self.eid2, self.side,
+                  self.iViewFront, self.iViewBack, self.radMidFront,
+                  self.radMidBack]
+        return list_fields
 
     def reprFields(self):
         #eids = collapse_thru_by(self.eids)  # TODO is this done
-        fields = ['CHBDYE', self.eid, self.eid2, self.side, self.iViewFront,
-                  self.iViewBack, self.radMidFront, self.radMidBack]
-        return fields
+        list_fields = ['CHBDYE', self.eid, self.eid2, self.side,
+                  self.iViewFront, self.iViewBack, self.radMidFront,
+                  self.radMidBack]
+        return list_fields
 
 
 class CHBDYG(ThermalElement):
@@ -458,13 +459,13 @@ class PHBDY(ThermalProperty):
     #def cross_reference(self,model):
     #    pass
     def rawFields(self):
-        fields = ['PHBDY', self.pid, self.af, self.d1, self.d2]
-        return fields
+        list_fields = ['PHBDY', self.pid, self.af, self.d1, self.d2]
+        return list_fields
 
     def reprFields(self):
         d2 = set_blank_if_default(self.d2, self.d1)
-        fields = ['PHBDY', self.pid, self.af, self.d1, d2]
-        return fields
+        list_fields = ['PHBDY', self.pid, self.af, self.d1, d2]
+        return list_fields
 
 
 # Properties
@@ -521,9 +522,9 @@ class CONV(ThermalBC):
         return self.ta[i]
 
     def rawFields(self):
-        fields = ['CONV', self.eid, self.pconID, self.flmnd,
+        list_fields = ['CONV', self.eid, self.pconID, self.flmnd,
                   self.cntrlnd] + self.ta
-        return fields
+        return list_fields
 
     def reprFields(self):
         flmnd = set_blank_if_default(self.flmnd, 0)
@@ -534,8 +535,8 @@ class CONV(ThermalBC):
         for tai in self.ta[1:]:
             ta.append(set_blank_if_default(tai, ta0))
 
-        fields = ['CONV', self.eid, self.pconID, flmnd, cntrlnd] + ta
-        return fields
+        list_fields = ['CONV', self.eid, self.pconID, flmnd, cntrlnd] + ta
+        return list_fields
 
 
 class CONVM(ThermalBC):
@@ -573,17 +574,17 @@ class CONVM(ThermalBC):
         return self.filmNode.nid
 
     def rawFields(self):
-        fields = ['CONVM', self.eid, self.pconvmID, self.filmNode,
+        list_fields = ['CONVM', self.eid, self.pconvmID, self.filmNode,
                   self.cntmdot, self.ta1, self.ta2, self.mdot]
-        return fields
+        return list_fields
 
     def reprFields(self):
         filmNode = set_blank_if_default(self.filmNode, 0)
         ta2 = set_blank_if_default(self.ta2, self.ta1)
         mdot = set_blank_if_default(self.mdot, 1.0)
-        fields = ['CONVM', self.eid, self.pconvmID, filmNode, self.cntmdot,
-                  self.ta1, ta2, mdot]
-        return fields
+        list_fields = ['CONVM', self.eid, self.pconvmID, filmNode,
+                  self.cntmdot, self.ta1, ta2, mdot]
+        return list_fields
 
 
 class RADM(ThermalBC):
@@ -614,8 +615,8 @@ class RADM(ThermalBC):
     #    pass
 
     def reprFields(self):
-        fields = ['RADM', self.radmid, self.absorb] + self.emissivity
-        return fields
+        list_fields = ['RADM', self.radmid, self.absorb] + self.emissivity
+        return list_fields
 
 
 class RADBC(ThermalBC):
@@ -631,7 +632,7 @@ class RADBC(ThermalBC):
             self._comment = comment
         ## NODAMB Ambient point for radiation exchange. (Integer > 0)
         self.nodamb = integer(card, 1, 'nodamb')
-        assert self.nodeamb > 0
+        assert self.nodamb > 0
 
         ## Radiation view factor between the face and the ambient point.
         ## (Real > 0.0)
@@ -639,7 +640,7 @@ class RADBC(ThermalBC):
         assert self.famb > 0.0
 
         ## Control point for thermal flux load. (Integer > 0; Default = 0)
-        self.cntrlnd = integer_or_blank(3, 0)
+        self.cntrlnd = integer_or_blank(card, 3, 'cntrlnd', 0)
         assert self.cntrlnd >= 0
 
         nfields = card.nFields()
@@ -663,14 +664,15 @@ class RADBC(ThermalBC):
         return eid.eid
 
     def rawFields(self):
-        fields = ['RADBC', self.nodamb, self.famb, self.cntrlnd] + self.Eids()
-        return fields
+        list_fields = (['RADBC', self.nodamb, self.famb, self.cntrlnd] +
+                       self.Eids())
+        return list_fields
 
     def reprFields(self):
         cntrlnd = set_blank_if_default(self.cntrlnd, 0)
         eids = collapse_thru_by(self.Eids())
-        fields = ['RADBC', self.nodamb, self.famb, cntrlnd] + eids
-        return fields
+        list_fields = ['RADBC', self.nodamb, self.famb, cntrlnd] + eids
+        return list_fields
 
 # Boundary Conditions
 #-------------------------------------------------------

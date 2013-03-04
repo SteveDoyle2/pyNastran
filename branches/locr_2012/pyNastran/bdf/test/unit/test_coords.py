@@ -13,9 +13,9 @@ class TestCoords(unittest.TestCase):
             [0, 1., 1., 1.],
             [0, 1., 1., 0.],
         ]
-        gridsExpected = grids
+        grids_expected = grids
         coords = []
-        self.getNodes(grids, gridsExpected, coords)
+        self.getNodes(grids, grids_expected, coords)
 
     def test_shift(self):  # passes
         grids = [
@@ -25,7 +25,7 @@ class TestCoords(unittest.TestCase):
             [1, 1., 1., 1.],
             [1, 1., 1., 0.],
         ]
-        gridsExpected = [
+        grids_expected = [
             [1, 1., 1., 2.],
             [1, 1., 2., 1.],
             [1, 2., 1., 1.],
@@ -36,7 +36,7 @@ class TestCoords(unittest.TestCase):
         coords = [  # rid origin,      zaxis,     xaxis
             [0, [1., 1., 1.], [1., 1., 2.], [2., 1., 1.]],
                  ]
-        self.getNodes(grids, gridsExpected, coords)
+        self.getNodes(grids, grids_expected, coords)
 
     def test_rotate(self):  # passes
         grids = [
@@ -46,7 +46,7 @@ class TestCoords(unittest.TestCase):
                      [1, 1., 1., 1.],
                      [1, 1., 1., 0.],
                  ]
-        gridsExpected = [
+        grids_expected = [
                      #     y    z   x
                      [1., 1., 0, 0.],
                      [1., 0., -1, 0.],
@@ -58,7 +58,7 @@ class TestCoords(unittest.TestCase):
         coords = [  # rid origin,      zaxis,     xaxis
                    [0, [0., 0., 0.], [1., 0., 0.], [0., 0., 1.]],
                  ]
-        self.getNodes(grids, gridsExpected, coords)
+        self.getNodes(grids, grids_expected, coords)
 
     def test_rotate2(self):   # passes
         grids = [
@@ -68,7 +68,7 @@ class TestCoords(unittest.TestCase):
                      [1, 1., 1., 1.],
                      [1, 1., 1., 0.],
                  ]
-        gridsExpected = [
+        grids_expected = [
                      [1, 0., 0., -1.],
                      [1, 0., -1., 0.],
                      [1, 1., 0., 0.],
@@ -79,7 +79,7 @@ class TestCoords(unittest.TestCase):
         coords = [  # rid origin,     zaxis        xaxis
                    [0, [0., 0., 0.], [0., 0., -1.], [1., 0., 0.]],
                  ]
-        self.getNodes(grids, gridsExpected, coords)
+        self.getNodes(grids, grids_expected, coords)
 
     def test_rotate3(self):  # passes
         #print('test_rotate3')
@@ -90,7 +90,7 @@ class TestCoords(unittest.TestCase):
                      [1, 1., 1., 1.],
                      [1, 1., 1., 0.],
                  ]
-        gridsExpected = [
+        grids_expected = [
                      [1, 0., 0., -1.],
                      [1, 0., 1., 0.],
                      [1, -1., 0., 0.],
@@ -101,7 +101,7 @@ class TestCoords(unittest.TestCase):
         coords = [  # rid origin,     zaxis        xaxis
                    [0, [0., 0., 0.], [0., 0., -1.], [-1., 0., 0.]],
                  ]
-        self.getNodes(grids, gridsExpected, coords)
+        self.getNodes(grids, grids_expected, coords)
 
     def off_test_rid_1(self):  # did i mess up the transform???
         #print('test_rid_1')
@@ -109,7 +109,7 @@ class TestCoords(unittest.TestCase):
                      [2, 10., 5., 3.],  # cid, x,y,z
                     #[3,    10., 5.,  3.],
                  ]
-        gridsExpected = [
+        grids_expected = [
                      ['x', 11., 6., 4.],  # ??? x,y,z
                     #['x',  11., 6.,  4.],
                  ]
@@ -122,7 +122,7 @@ class TestCoords(unittest.TestCase):
                    [0, [1., 1., 1.], [1., 1., 2.], [2., 1., 1.]],  # cid=3
                   #[  0,  [0.,0.,0.], [0.,0., 1.], [1.,0.,0.]  ],  # cid=3,equiv
                  ]
-        self.getNodes(grids, gridsExpected, coords)
+        self.getNodes(grids, grids_expected, coords)
 
     def test_cord2r_1(self):
         grid = ['GRID       20143       7 -9.31-4  .11841 .028296']
@@ -142,10 +142,10 @@ class TestCoords(unittest.TestCase):
 
         assert allclose(diff, 0.)
 
-    def makeNodes(self, grids, coords):
-        grids2 = []
+    #def makeNodes(self, grids, coords):
+        #grids2 = []
 
-    def getNodes(self, grids, gridsExpected, coords, debug=False):
+    def getNodes(self, grids, grids_expected, coords, debug=False):
         mesh = BDF(debug=False)
 
         for (nid, grid) in enumerate(grids):
@@ -158,15 +158,14 @@ class TestCoords(unittest.TestCase):
         for (cid, coord) in enumerate(coords):
             #print coord
             (rid, x, y, z) = coord
-            obj = mesh.add_card(
-                ['CORD2R', cid + 1, rid] + x + y + z, 'CORD2R')
+            mesh.add_card(['CORD2R', cid + 1, rid] + x + y + z, 'CORD2R')
             coordObj = mesh.Coord(cid + 1)
             if debug:
                 print(coordObj)
 
         mesh.cross_reference()
 
-        for (i, grid) in enumerate(gridsExpected):
+        for (i, grid) in enumerate(grids_expected):
             (cid, x, y, z) = grid
             node = mesh.Node(i + 1)
             pos = node.Position()

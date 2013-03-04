@@ -146,9 +146,9 @@ def list_print(listA, tol=1e-8):
                                 '' if abs(a.imag) < 1e-8 else '%+.4gj' % (a.imag))
         try:
             print("list_print: type(a) is not supported... %s" % (type(a)))
-            return ' %g' % (a)
+            return ' %g' % a
         except TypeError:
-            print("a = |%s|" % (a))
+            print("a = |%s|" % a)
             raise
 
     return '[ '+ ', '.join([_print(a) for a in listA])+ ']'

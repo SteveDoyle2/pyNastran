@@ -23,7 +23,8 @@ from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
 from pyNastran.bdf.cards.baseCard import Property
 from pyNastran.bdf.format import (fields, integer, integer_or_blank,
                                   double, double_or_blank,
-                                  string, string_or_blank)
+                                  string, string_or_blank,
+                                  integer_or_double)
 
 def IyyBeam(b, h):
     return 1 / 12. * b * h ** 3
@@ -546,16 +547,16 @@ class PROD(LineProperty):
         return (msg, iCut, iFace, iStart)
 
     def rawFields(self):
-        fields = ['PROD', self.pid, self.Mid(), self.A, self.j, self.c,
+        list_fields = ['PROD', self.pid, self.Mid(), self.A, self.j, self.c,
                   self.nsm]
-        return fields
+        return list_fields
 
     def reprFields(self):
         j = set_blank_if_default(self.j, 0.0)
         c = set_blank_if_default(self.c, 0.0)
         nsm = set_blank_if_default(self.nsm, 0.0)
-        fields = ['PROD', self.pid, self.Mid(), self.A, j, c, nsm]
-        return fields
+        list_fields = ['PROD', self.pid, self.Mid(), self.A, j, c, nsm]
+        return list_fields
 
 
 class PTUBE(LineProperty):
@@ -624,16 +625,16 @@ class PTUBE(LineProperty):
         return m
 
     def rawFields(self):
-        fields = ['PTUBE', self.pid, self.Mid(), self.OD1, self.t, self.nsm,
-                  self.OD2]
-        return fields
+        list_fields = ['PTUBE', self.pid, self.Mid(), self.OD1, self.t,
+                       self.nsm, self.OD2]
+        return list_fields
 
     def reprFields(self):
         t = set_blank_if_default(self.t, self.OD1 / 2.)
         nsm = set_blank_if_default(self.nsm, 0.0)
         OD2 = set_blank_if_default(self.OD2, self.OD1)
-        fields = ['PTUBE', self.pid, self.Mid(), self.OD1, t, nsm, OD2]
-        return fields
+        list_fields = ['PTUBE', self.pid, self.Mid(), self.OD1, t, nsm, OD2]
+        return list_fields
 
 
 class PBAR(LineProperty):
@@ -751,11 +752,11 @@ class PBAR(LineProperty):
         return (msg)
 
     def rawFields(self):
-        fields = ['PBAR', self.pid, self.Mid(), self.A, self.i1, self.i2,
+        list_fields = ['PBAR', self.pid, self.Mid(), self.A, self.i1, self.i2,
                   self.j, self.nsm, None, self.C1, self.C2, self.D1, self.D2,
                   self.E1, self.E2, self.F1, self.F2, self.K1, self.K2,
                   self.i12]
-        return fields
+        return list_fields
 
     def reprFields(self):
         #A  = set_blank_if_default(self.A,0.0)
@@ -782,11 +783,9 @@ class PBAR(LineProperty):
 
         #print "line3 = ",line3
 
-        fields = ['PBAR', self.pid, self.Mid(), self.A, i1, i2, j, nsm, None,
-                  C1, C2, D1, D2, E1, E2, F1, F2,
-                  K1, K2, i12]
-
-        return fields
+        list_fields = ['PBAR', self.pid, self.Mid(), self.A, i1, i2, j, nsm,
+                       None, C1, C2, D1, D2, E1, E2, F1, F2, K1, K2, i12]
+        return list_fields
 
 
 class PBARL(LineProperty):
@@ -916,15 +915,15 @@ class PBARL(LineProperty):
         return (msg + msg2, iCut, iFace, iStart)
 
     def rawFields(self):
-        fields = ['PBARL', self.pid, self.Mid(), self.group, self.Type, None,
-                  None, None, None, ] + self.dim + [self.nsm]
-        return fields
+        list_fields = ['PBARL', self.pid, self.Mid(), self.group, self.Type,
+                       None, None, None, None] + self.dim + [self.nsm]
+        return list_fields
 
     def reprFields(self):
         group = set_blank_if_default(self.group, 'MSCBMLO')
-        fields = ['PBARL', self.pid, self.Mid(), group, self.Type, None, None,
-                  None, None, ] + self.dim + [self.nsm]
-        return fields
+        list_fields = ['PBARL', self.pid, self.Mid(), group, self.Type, None,
+                       None, None, None] + self.dim + [self.nsm]
+        return list_fields
 
 
 class PBCOMP(LineProperty):
@@ -980,12 +979,12 @@ class PBCOMP(LineProperty):
         self.mid = model.Material(self.mid)
 
     def rawFields(self):
-        fields = ['PBCOMP', self.pid, self.Mid(), self.A, self.i1, self.i2,
-                  self.i12, self.j, self.nsm, self.k1, self.k2, self.m1,
-                  self.m2, self.n1, self.n2, self.symopt, None]
+        list_fields = ['PBCOMP', self.pid, self.Mid(), self.A, self.i1,
+                       self.i2, self.i12, self.j, self.nsm, self.k1, self.k2,
+                       self.m1, self.m2, self.n1, self.n2, self.symopt, None]
         for (yi, zi, ci, mid) in zip(self.y, self.z, self.c, self.mids):
-            fields += [yi, zi, ci, mid, None, None, None, None]
-        return fields
+            list_fields += [yi, zi, ci, mid, None, None, None, None]
+        return list_fields
 
     def reprFields(self):
         area = set_blank_if_default(self.A, 0.0)
@@ -1006,13 +1005,13 @@ class PBCOMP(LineProperty):
 
         symopt = set_blank_if_default(self.symopt, 0)
 
-        fields = ['PBCOMP', self.pid, self.Mid(), area, i1, i2, i12, j, nsm,
-                  k1, k2, m1, m2, n1, n2, symopt, None]
+        list_fields = ['PBCOMP', self.pid, self.Mid(), area, i1, i2, i12, j,
+                  nsm, k1, k2, m1, m2, n1, n2, symopt, None]
 
         for (yi, zi, ci, mid) in zip(self.y, self.z, self.c, self.mids):
             ci = set_blank_if_default(ci, 0.0)
-            fields += [yi, zi, ci, mid, None, None, None, None]
-        return fields
+            list_fields += [yi, zi, ci, mid, None, None, None, None]
+        return list_fields
 
 
 class PBEAM(IntegratedLineProperty):
@@ -1199,7 +1198,7 @@ class PBEAM(IntegratedLineProperty):
         return fields
 
     def reprFields(self):
-        fields = ['PBEAM', self.pid, self.Mid()]
+        list_fields = ['PBEAM', self.pid, self.Mid()]
 
         i = 0
         for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2, f1,
@@ -1224,10 +1223,10 @@ class PBEAM(IntegratedLineProperty):
             f2 = set_blank_if_default(f2, 0.0)
 
             if i == 0:  # the 1st 2 fields aren't written
-                fields += [A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
+                list_fields += [A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
                            e1, e2, f1, f2]
             else:
-                fields += [so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
+                list_fields += [so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
                            e1, e2, f1, f2]
             i += 1
         k1 = set_blank_if_default(self.k1, 1.0)
@@ -1262,9 +1261,9 @@ class PBEAM(IntegratedLineProperty):
         #if footer == [self.k1,None,None,None,None,None,None,None,
         #              None,None,None,None,None,None,None,None]:
         #    footer = []
-        fields += footer
-        #print fields
-        return fields
+        list_fields += footer
+        #print list_fields
+        return list_fields
 
 
 class PBEAML(IntegratedLineProperty):
@@ -1450,25 +1449,25 @@ class PBEAML(IntegratedLineProperty):
         return (msg + msg2, iCut, iFace, iStart)
 
     def rawFields(self):
-        fields = ['PBEAML', self.pid, self.Mid(), self.group, self.Type, None,
-                  None, None, None]
+        list_fields = ['PBEAML', self.pid, self.Mid(), self.group, self.Type,
+                       None, None, None, None]
         #print("self.nsm = ",self.nsm)
         #print("xxb=%s so=%s dim=%s nsm=%s" %(self.xxb,self.so,
         #                                     self.dim,self.nsm))
         for (i, xxb, so, dim, nsm) in izip(count(), self.xxb, self.so,
                                            self.dim, self.nsm):
             if i == 0:
-                fields += dim + [nsm]
+                list_fields += dim + [nsm]
             else:
-                fields += [xxb, so] + dim + [nsm]
+                list_fields += [xxb, so] + dim + [nsm]
         #raise NotImplementedError('verify PBEAML...')
-        return fields
+        return list_fields
 
     def reprFields(self):
         group = set_blank_if_default(self.group, 'MSCBMLO')
-        fields = self.rawFields()
-        fields[3] = group
-        return fields
+        list_fields = self.rawFields()
+        list_fields[3] = group
+        return list_fields
 
 
 class PBEAM3(LineProperty):  # not done, cleanup
@@ -1510,8 +1509,8 @@ class PBEAM3(LineProperty):  # not done, cleanup
 
     def reprFields(self):
         raise NotImplementedError('not done...')
-        fields = ['PBEAM3', self.pid, self.Mid(), ]  # other
-        return fields
+        list_fields = ['PBEAM3', self.pid, self.Mid(), ]  # other
+        return list_fields
 
 
 class PBEND(LineProperty):
@@ -1610,15 +1609,15 @@ class PBEND(LineProperty):
         self.mid = model.Material(self.mid)
 
     def reprFields(self):
-        fields = ['PBEND', self.pid, self.Mid(), ]  # other
+        list_fields = ['PBEND', self.pid, self.Mid(), ]  # other
         if self.beamType == 1:
-            fields += [self.A, self.i1, self.i2, self.j, self.rb, self.thetab,
-                       self.c1, self.c2, self.d1, self.d2, self.e1, self.e2,
-                       self.f1, self.f2, self.k1, self.k2, self.nsm, self.rc,
-                       self.zc, self.deltaN]
+            list_fields += [self.A, self.i1, self.i2, self.j, self.rb,
+                       self.thetab, self.c1, self.c2, self.d1, self.d2,
+                       self.e1, self.e2, self.f1, self.f2, self.k1, self.k2,
+                       self.nsm, self.rc, self.zc, self.deltaN]
         elif self.beamType == 2:
-            fields += [self.fsi, self.rm, self.t, self.p, self.rb, self.thetab,
-                       None, None, self.nsm, self.rc, self.zc]
+            list_fields += [self.fsi, self.rm, self.t, self.p, self.rb,
+                       self.thetab, None, None, self.nsm, self.rc, self.zc]
         else:
             raise ValueError('only beamType=1 and 2 supported')
-        return fields
+        return list_fields

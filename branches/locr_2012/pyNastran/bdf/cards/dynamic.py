@@ -70,8 +70,8 @@ class FREQ(BaseCard):
         self.addFrequencies(freq.freqs)
 
     def rawFields(self):
-        fields = ['FREQ', self.sid] + self.freqs
-        return fields
+        list_fields = ['FREQ', self.sid] + self.freqs
+        return list_fields
 
 
 class FREQ1(FREQ):
@@ -154,8 +154,9 @@ class FREQ4(FREQ):
         self.nfm = integer_or_blank(card, 5, 'nfm', 3)
 
     def rawFields(self):
-        fields = ['FREQ4', self.sid, self.f1, self.f2, self.fspd, self.nfm]
-        return fields
+        list_fields = ['FREQ4', self.sid, self.f1, self.f2, self.fspd,
+                       self.nfm]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -197,10 +198,10 @@ class TSTEP(BaseCard):
             self.NO.append(no)
 
     def rawFields(self):
-        fields = ['TSTEP', self.sid]
+        list_fields = ['TSTEP', self.sid]
         for (N, dt, no) in izip(self.N, self.DT, self.NO):
-            fields += [N, dt, no, None, None, None, None, None]
-        return fields
+            list_fields += [N, dt, no, None, None, None, None, None]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -256,7 +257,9 @@ class TSTEPNL(BaseCard):
             self.maxR = double_or_blank(card, 21, 'maxR', 32.)
             self.uTol = double_or_blank(card, 22, 'uTol', 0.1)
             self.rTolB = double_or_blank(card, 23, 'rTolB', 20.)
-            self.minIter = integer_or_blank(card, 24, 'minIter')  # not listed in all QRGs
+            
+            # not listed in all QRGs
+            self.minIter = integer_or_blank(card, 24, 'minIter')
         else:
             (sid, ndt, dt, no, method, kStep, maxIter, conv, epsU, epsP, epsW,
              maxDiv, maxQn, maxLs, fStress, maxBisect,
@@ -290,12 +293,12 @@ class TSTEPNL(BaseCard):
             self.minIter = None  # not listed in DMAP 2005
 
     def rawFields(self):
-        fields = ['TSTEPNL', self.sid, self.ndt, self.dt, self.no, self.method,
-                  self.kStep, self.maxIter, self.conv, self.epsU, self.epsP,
-                  self.epsW, self.maxDiv, self.maxQn, self.MaxLs, self.fStress,
-                  None, self.maxBisect, self.adjust, self.mStep, self.rb,
-                  self.maxR, self.uTol, self.rTolB, self.minIter]
-        return fields
+        list_fields = ['TSTEPNL', self.sid, self.ndt, self.dt, self.no,
+                  self.method, self.kStep, self.maxIter, self.conv, self.epsU,
+                  self.epsP, self.epsW, self.maxDiv, self.maxQn, self.MaxLs,
+                  self.fStress, None, self.maxBisect, self.adjust, self.mStep,
+                  self.rb, self.maxR, self.uTol, self.rTolB, self.minIter]
+        return list_fields
 
     def reprFields(self):
         #no      = set_blank_if_default(self.no,1)
@@ -329,11 +332,11 @@ class TSTEPNL(BaseCard):
         uTol = set_blank_if_default(self.uTol, 0.1)
         rTolB = set_blank_if_default(self.rTolB, 20.)
 
-        fields = ['TSTEPNL', self.sid, self.ndt, self.dt, no, method, kStep,
-                  self.maxIter, conv, epsU, epsP, epsW, maxDiv, maxQn, MaxLs,
-                  fStress, None, maxBisect, adjust, self.mStep, rb, maxR, uTol,
-                  rTolB, self.minIter]
-        return fields
+        list_fields = ['TSTEPNL', self.sid, self.ndt, self.dt, no, method,
+                  kStep, self.maxIter, conv, epsU, epsP, epsW, maxDiv, maxQn,
+                  MaxLs, fStress, None, maxBisect, adjust, self.mStep, rb,
+                  maxR, uTol, rTolB, self.minIter]
+        return list_fields
 
 
 class NLPARM(BaseCard):
@@ -402,12 +405,12 @@ class NLPARM(BaseCard):
             self.rTolB = rTolB
 
     def rawFields(self):
-        fields = ['NLPARM', self.nid, self.ninc, self.dt, self.kMethod,
+        list_fields = ['NLPARM', self.nid, self.ninc, self.dt, self.kMethod,
                   self.kStep, self.maxIter, self.conv, self.intOut, self.epsU,
                   self.epsP, self.epsW, self.maxDiv, self.maxQn, self.maxLs,
                   self.fStress, self.lsTol, self.maxBisect, None, None, None,
                   self.maxR, None, self.rTolB]
-        return fields
+        return list_fields
 
     def reprFields(self):
         ninc = set_blank_if_default(self.ninc, 10)
@@ -429,7 +432,8 @@ class NLPARM(BaseCard):
         maxR = set_blank_if_default(self.maxR, 20.)
         rTolB = set_blank_if_default(self.rTolB, 20.)
 
-        fields = ['NLPARM', self.nid, ninc, dt, kMethod, kStep, maxIter, conv,
-                  intOut, epsU, epsP, epsW, maxDiv, maxQn, maxLs, fStress,
-                  lsTol, maxBisect, None, None, None, maxR, None, rTolB]
-        return fields
+        list_fields = ['NLPARM', self.nid, ninc, dt, kMethod, kStep, maxIter,
+                  conv, intOut, epsU, epsP, epsW, maxDiv, maxQn, maxLs,
+                  fStress, lsTol, maxBisect, None, None, None, maxR, None,
+                  rTolB]
+        return list_fields

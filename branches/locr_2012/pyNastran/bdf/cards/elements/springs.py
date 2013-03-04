@@ -16,7 +16,8 @@ from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
-from pyNastran.bdf.format import integer, integer_or_blank, double, double_or_blank
+from pyNastran.bdf.format import (integer, integer_or_blank,
+                                  double, double_or_blank)
 
 
 class SpringElement(Element):
@@ -226,23 +227,23 @@ class CELAS2(SpringElement):
         msg += 'DISCRET=_F( # CELAS2\n'
         if nodes[0]:
             msg += "     CARA='K_T_D_N'\n"
-            msg += "     NOEUD=N%i,\n" % (nodes[0])
+            msg += "     NOEUD=N%i,\n" % nodes[0]
 
         if nodes[1]:
             msg += "     CARA='K_T_D_L'\n"
-            msg += "     NOEUD=N%i,\n" % (nodes[1])
-            msg += "     AMOR_HYST=%g # ge - damping\n" % (self.ge)
+            msg += "     NOEUD=N%i,\n" % nodes[1]
+            msg += "     AMOR_HYST=%g # ge - damping\n" % self.ge
         msg += "     )\n"
         msg += "\n"
 
         if self.c1 == 1:
-            msg += "VALE=(%g,0.,0.)\n" % (self.k)
+            msg += "VALE=(%g,0.,0.)\n" % self.k
         elif self.c1 == 2:
-            msg += "VALE=(0.,%g,0.)\n" % (self.k)
+            msg += "VALE=(0.,%g,0.)\n" % self.k
         elif self.c1 == 2:
-            msg += "VALE=(0.,0.,%g)\n" % (self.k)
+            msg += "VALE=(0.,0.,%g)\n" % self.k
         else:
-            raise ValueError('unsupported value of c1=%s' % (self.c1))
+            raise ValueError('unsupported value of c1=%s' % self.c1)
         return msg
 
     def rawFields(self):

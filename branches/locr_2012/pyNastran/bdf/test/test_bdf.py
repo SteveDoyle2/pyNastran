@@ -222,7 +222,7 @@ def compute_ints(cards1, cards2, fem1):
             factorMsg = 'diff=%s factor1=%g factor2=%g' % (diff, factor1,
                                                           factor2)
         msg += '  %skey=%-7s value1=%-7s value2=%-7s' % (star, key, value1,
-                                                       value2) + factorMsg  # +'\n'
+                                                       value2) + factorMsg
         msg = msg.rstrip()
         print(msg)
     return listKeys1 + listKeys2

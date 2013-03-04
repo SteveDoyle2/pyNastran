@@ -511,7 +511,7 @@ class RealElementsStressStrain(object):
         CPENTANL_91 - 7 nodes
         CHEXANL_93 - 9 nodes
         """
-        n = 0
+        #n = 0
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '4s'
@@ -557,7 +557,7 @@ class RealElementsStressStrain(object):
         VUPENTA 146 - 6 nodes
         VUHEXA 145 - 8 nodes
         """
-        n = 0
+        #n = 0
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += 'i'
@@ -575,6 +575,7 @@ class RealElementsStressStrain(object):
             nNodes = 8
         else:
             raise NotImplementedError(self.element_type)
+
         num_wide = 2 + 12 * nNodes
         nTotal = 8 + 48 * nNodes
         assert self.num_wide == num_wide
@@ -598,7 +599,7 @@ class RealElementsStressStrain(object):
                 #print("grid =",grid)
 
     def OES_CBEAM_94(self):
-        nNodes = 10  # 11-1
+        #nNodes = 10  # 11-1
 
         #nTotal       = self.obj.getLengthTotal()
         #(n1,format1) = self.obj.getLength1()
@@ -858,7 +859,7 @@ class RealElementsStressStrain(object):
             self.obj.add_new_eid(element_name, dt, eid, force, stress)
 
     def OESRT_CQUAD4_95(self):
-        dt = self.nonlinear_factor
+        #dt = self.nonlinear_factor
         #element_name = self.data_code['element_name']
         (format1, extract) = self.getOUG_FormatStart()
 
