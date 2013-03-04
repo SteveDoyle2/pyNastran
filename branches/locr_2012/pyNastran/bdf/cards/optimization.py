@@ -9,7 +9,8 @@ from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
 from pyNastran.bdf.format import (integer, integer_or_blank, integer_or_string,
                                   double, double_or_blank, string,
                                   string_or_blank, integer_double_or_blank,
-                                  integer_or_double)
+                                  integer_or_double,
+                                  integer_double_string_or_blank)
 
 class OptConstraint(BaseCard):
     def __init__(self):
@@ -255,9 +256,9 @@ class DRESP1(OptConstraint):
                               'PBEAML', 'PSHEAR', 'PTUBE', 
                               None], 'DRESP1 ptype=%s' % self.ptype
         self.region = integer_or_blank(card, 5, 'region')
-        self.atta = integer_double_or_blank(card, 6, 'atta')
-        self.attb = integer_double_or_blank(card, 7, 'attb')
-        self.atti = integer_double_or_blank(card, 8, 'atti')
+        self.atta = integer_double_string_or_blank(card, 6, 'atta')
+        self.attb = integer_double_string_or_blank(card, 7, 'attb')
+        self.atti = integer_double_string_or_blank(card, 8, 'atti')
         self.others = card[9:]
         #if self.others:
         #    print("self.others = %s" %(self.others))

@@ -11,7 +11,6 @@ from pyNastran.bdf.format import (integer, integer_or_blank, components,
 
 class Set(BaseCard):
     """Generic Class all SETx cards inherit from"""
-    type = 'Set'
 
     def __init__(self, card, data):
         ## Unique identification number. (Integer > 0)

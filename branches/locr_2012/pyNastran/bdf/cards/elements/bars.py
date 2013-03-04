@@ -300,88 +300,88 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         L = norm(self.nodes[1].Position() - self.nodes[0].Position())
         return L
 
-    def k_Axial(self):
-        r"""
-        Returns the axial stiffness matrix.
+    # def k_Axial(self):
+    #     r"""
+    #     Returns the axial stiffness matrix.
+    #
+    #     \f[ \large   k_{Axial} = \frac{AE}{2L}
+    #       \left[
+    #       \begin{array}{cc}
+    #           1 & -1 \\
+    #          -1 &  1
+    #       \end{array} \right]
+    #     \f]
+    #     """
+    #     raise NotImplementedError()
+    #     L = self.Length()
+    #     E = self.E()
+    #     A = self.Area()
+    #     kMag = A * E / (2 * L)
+    #     K = ones(1, 1)
+    #     K[0, 1] = K[1, 0] = -1
+    #     return kMag * K
 
-        \f[ \large   k_{Axial} = \frac{AE}{2L}
-          \left[
-          \begin{array}{cc}
-              1 & -1 \\
-             -1 &  1
-          \end{array} \right]
-        \f]
-        """
-        raise NotImplementedError()
-        L = self.Length()
-        E = self.E()
-        A = self.Area()
-        kMag = A * E / (2 * L)
-        K = ones(1, 1)
-        K[0, 1] = K[1, 0] = -1
-        return kMag * K
+    # def k_Torsion(self):  # not done
+    #     r"""
+    #     Returns the torsional stiffness matrix.
+    #
+    #     \f[ \large   k_{Axial} = \frac{L}{GJ}
+    #       \left[
+    #       \begin{array}{cc}
+    #           1 & -1 \\
+    #          -1 &  1
+    #       \end{array} \right]
+    #     \f]
+    #     @warning formula not verified
+    #     """
+    #     raise NotImplementedError()
+    #     L = self.Length()
+    #     G = self.G()
+    #     J = self.J()
+    #     #A = self.Area()
+    #     #kMag = A*E/(2*L)
+    #     kMag = L / (G * J)
+    #     K = ones(1, 1)
+    #     K[0, 1] = K[1, 0] = -1
+    #     return kMag * K
 
-    def k_Torsion(self):  # not done
-        r"""
-        Returns the torsional stiffness matrix.
-
-        \f[ \large   k_{Axial} = \frac{L}{GJ}
-          \left[
-          \begin{array}{cc}
-              1 & -1 \\
-             -1 &  1
-          \end{array} \right]
-        \f]
-        @warning formula not verified
-        """
-        raise NotImplementedError()
-        L = self.Length()
-        G = self.G()
-        J = self.J()
-        #A = self.Area()
-        #kMag = A*E/(2*L)
-        kMag = L / (G * J)
-        K = ones(1, 1)
-        K[0, 1] = K[1, 0] = -1
-        return kMag * K
-
-    def k_Bending(self):
-        r"""
-        Returns the bending stiffness matrix.
-
-        \f[ \large  k_{Bending} = \frac{EI}{L^3}
-          \left[
-          \begin{array}{cccc}
-             12 &  6L   & -12 &  6L    \\
-             6L &  4L^2 & -6L &  2L^2  \\
-            -12 & -6L   &  12 & -6L    \\
-             6L &  2L^2 & -6L &  4L^2
-          \end{array} \right]
-        \f]
-        """
-        raise NotImplementedError()
-        L = self.Length()
-        E = self.E()
-        I = self.I()
-        LL = L * L
-        LLL = L * LL
-        sL = 6 * L
-        tLL = 2 * LL
-        fLL = 4 * LL
-        kMag = E * I / LLL
-
-        #K = Matrix(zeros(4,4))
-        K = matrix([[12., sL, -12, sL],
-                    [sL, fLL, -sL, tLL],
-                    [-12, -sL, 12., -sL],
-                    [sL, tLL, -sL, fLL]])
-        #M[1,0] = sL
-        #M[2,0] = -12.
-        #M[3,0] = sL
-
-        #M[2,4] =  -sL
-        #M[1,1] = M[3,3] = fLL
-        return kMag * K
+    # def k_Bending(self):
+    #     r"""
+    #     Returns the bending stiffness matrix.
+    #
+    #     \f[ \large  k_{Bending} = \frac{EI}{L^3}
+    #       \left[
+    #       \begin{array}{cccc}
+    #          12 &  6L   & -12 &  6L    \\
+    #          6L &  4L^2 & -6L &  2L^2  \\
+    #         -12 & -6L   &  12 & -6L    \\
+    #          6L &  2L^2 & -6L &  4L^2
+    #       \end{array} \right]
+    #     \f]
+    #     """
+    #     raise NotImplementedError()
+    #     L = self.Length()
+    #     E = self.E()
+    #     I = self.I()
+    #     LL = L * L
+    #     LLL = L * LL
+    #     sL = 6 * L
+    #     tLL = 2 * LL
+    #     fLL = 4 * LL
+    #     kMag = E * I / LLL
+    #
+    #     #K = Matrix(zeros(4,4))
+    #     K = matrix([[12., sL, -12, sL],
+    #                 [sL, fLL, -sL, tLL],
+    #                 [-12, -sL, 12., -sL],
+    #                 [sL, tLL, -sL, fLL]])
+    #     #M[1,0] = sL
+    #     #M[2,0] = -12.
+    #     #M[3,0] = sL
+    #
+    #     #M[2,4] =  -sL
+    #     #M[1,1] = M[3,3] = fLL
+    #     return kMag * K
 
 
 class CROD(RodElement):
@@ -639,8 +639,8 @@ class CBAR(LineElement):
         msg = 'invalid offt parameter of %s...offt=%s' % (self.type, self.offt)
         # B,G,O
         assert self.offt[0] in ['G', 'B'], msg
-        assert self.offt[1] in ['G', 'O'], msg
-        assert self.offt[2] in ['G', 'O'], msg
+        assert self.offt[1] in ['G', 'O', 'E'], msg
+        assert self.offt[2] in ['G', 'O', 'E'], msg
 
     def Mid(self):
         return self.pid.Mid()
@@ -1096,9 +1096,9 @@ class CBEAM(CBAR):
             self.offt = field8
             #print("self.offt = ", self.offt)
             msg = 'invalid offt parameter of CBEAM...offt=%s' % self.offt
-            assert self.offt[0] in ['G', 'B', 'O'], msg
-            assert self.offt[1] in ['G', 'B', 'O'], msg
-            assert self.offt[2] in ['G', 'B', 'O'], msg
+            assert self.offt[0] in ['G', 'B', 'O', 'E'], msg
+            assert self.offt[1] in ['G', 'B', 'O', 'E'], msg
+            assert self.offt[2] in ['G', 'B', 'O', 'E'], msg
         else:
             msg = ('field8 on %s card is not a string(offt) or bit '
                    '(float)...field8=%s\n' % (self.type, field8))

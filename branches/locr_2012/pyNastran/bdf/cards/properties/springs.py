@@ -18,8 +18,6 @@ from pyNastran.bdf.format import (integer, integer_or_blank,
                                   double, double_or_blank)
 
 class SpringProperty(Property):
-    type = 'SpringProperty'
-
     def __init__(self, card, data):
         Property.__init__(self, card, data)
 

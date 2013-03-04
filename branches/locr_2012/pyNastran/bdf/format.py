@@ -313,7 +313,7 @@ def getType(value):
         Type = 'an integer'
     elif isinstance(value, float):
         Type = 'a double'
-    elif isinstance(value, str):
+    elif isinstance(value, str) or isinstance(value, unicode):
         Type = 'a string'
     else:
         Type = str(type(value))

@@ -34,15 +34,15 @@ class PointMassElement(PointElement):
         return self.mass
 
 
-class PointMass(BaseCard):
-    def __init__(self, card, data):
-        self.mass = None
+# class PointMass(BaseCard):
+#     def __init__(self, card, data):
+#         self.mass = None
+#
+#     def Mass(self):
+#         return self.mass
 
-    def Mass(self):
-        return self.mass
 
-
-class CMASS1(PointMass):
+class CMASS1(PointMassElement):
     """
     Defines a scalar mass element.
     CMASS2 EID M   G1 C1 G2 C2
@@ -51,7 +51,7 @@ class CMASS1(PointMass):
     type = 'CMASS1'
 
     def __init__(self, card=None, data=None, comment=''):
-        PointMass.__init__(self, card, data)
+        PointMassElement.__init__(self, card, data)
         if comment:
             self._comment = comment
         if card:
@@ -186,7 +186,7 @@ class CMASS3(PointMassElement):
     type = 'CMASS3'
 
     def __init__(self, card=None, data=None, comment=''):
-        PointMass.__init__(self, card, data)
+        PointMassElement.__init__(self, card, data)
         if comment:
             self._comment = comment
         if card:
@@ -236,14 +236,15 @@ class CMASS4(PointMassElement):
     type = 'CMASS4'
 
     def __init__(self, card=None, data=None, comment=''):
-        PointMass.__init__(self, card, data)
+        print("***")
+        PointMassElement.__init__(self, card, data)
         if comment:
             self._comment = comment
         if card:
             self.eid = integer(card, 1, 'eid')
             self.mass = double_or_blank(card, 2, 'mass', 0.)
             self.s1 = integer(card, 3, 's1')
-            self.s2 = integer(card, 4, 's2')
+            self.s2 = integer_or_blank(card, 4, 's2', 0)
         else:
             self.eid = data[0]
             self.mass = data[1]
@@ -275,7 +276,7 @@ class CMASS4(PointMassElement):
         return fields
 
 
-class CONM1(PointMass):
+class CONM1(PointMassElement):
     type = 'CONM1'
 
     def __init__(self, card=None, data=None, comment=''):
@@ -294,7 +295,7 @@ class CONM1(PointMass):
               [    Sym         M55 M65]
               [                    M66]
         """
-        PointMass.__init__(self, card, data)
+        PointMassElement.__init__(self, card, data)
         if comment:
             self._comment = comment
         m = zeros((6, 6))

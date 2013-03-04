@@ -14,10 +14,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import Property
+from pyNastran.bdf.cards.baseCard import Property, Material
 from pyNastran.bdf.format import (integer, integer_or_blank,
                                   double, double_or_blank,
-                                  string_or_blank, integer_string_or_blank)
+                                  string_or_blank, integer_string_or_blank,
+                                  fields, blank)
 
 class PFAST(Property):
     type = 'PFAST'
@@ -150,8 +151,6 @@ class PGAP(Property):
 
 
 class SolidProperty(Property):
-    type = 'SolidProperty'
-
     def __init__(self, card, data):
         Property.__init__(self, card, data)
 
@@ -392,6 +391,7 @@ class PCONEAX(Property):
             raise NotImplementedError('not supported')
 
     def cross_reference(self, model):
+        msg = ' which is required by %s=%s' %(self.type, self.pid)
         if self.mid1 > 0:
             self.mid1 = model.Material(self.mid1, msg=msg)
         if self.mid2 > 0:

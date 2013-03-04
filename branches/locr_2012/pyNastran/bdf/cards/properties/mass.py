@@ -16,8 +16,6 @@ from pyNastran.bdf.format import (integer,
 
 
 class PointProperty(Property):
-    type = 'PointProperty'
-
     def __init__(self, card, data):
         Property.__init__(self, card, data)
 

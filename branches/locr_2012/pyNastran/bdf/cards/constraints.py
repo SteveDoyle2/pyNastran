@@ -285,12 +285,14 @@ class SPC(Constraint):
         if comment:
             self._comment = comment
         if card:
-            self.conid = integer(card, 1, 'conid')
-            self.gids = [integer(card, 2, 'gid1'), integer_or_blank(card, 5, 'gid2')]
+            self.conid = integer(card, 1, 'sid')
+            self.gids = [integer(card, 2, 'G1'), integer_or_blank(card, 5, 'G2')]
             ## 0 if scalar point 1-6 if grid
             
-            self.constraints = [components(card, 3, 'constraint1'), components_or_blank(card, 6, 'constraint2')]
-            self.enforced = [double(card, 3, 'enforced1'), double_or_blank(card, 7, 'enforced2')]
+            self.constraints = [components_or_blank(card, 3, 'C1', 0),
+                                components_or_blank(card, 6, 'C2', 0)]
+            self.enforced = [double_or_blank(card, 3, 'D1', 0.0),
+                             double_or_blank(card, 7, 'D2', 0.0)]
 
             # reduce the size if there are duplicate Nones
             nConstraints = max(len(self.gids),

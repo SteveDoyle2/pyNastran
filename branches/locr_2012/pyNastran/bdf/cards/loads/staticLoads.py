@@ -974,7 +974,7 @@ class PLOAD4(Load):
         if card:
             self.sid = integer(card, 1, 'sid')
             self.eid = integer(card, 2, 'eid')
-            p1 = double(card, 3, 'p1')
+            p1 = double_or_blank(card, 3, 'p1', 0.0)
             p = [p1,
                  double_or_blank(card, 4, 'p2', p1),
                  double_or_blank(card, 5, 'p3', p1),

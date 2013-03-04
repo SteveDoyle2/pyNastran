@@ -92,8 +92,6 @@ def getInertiaRectangular(sections):
 
 
 class LineProperty(Property):
-    type = 'LineProperty'
-
     def __init__(self, card, data):
         self.Type = None
         self.dim = None
@@ -464,8 +462,6 @@ class LineProperty(Property):
 
 
 class IntegratedLineProperty(LineProperty):
-    type = 'IntegratedLineProperty'
-
     def __init__(self, card, data):
         self.xxb = None
         self.A = None
@@ -1072,21 +1068,29 @@ class PBEAM(IntegratedLineProperty):
                 nMajor += 1
                 x += 16
 
-            #print "  nMajor = ",nMajor
+            #print("  nMajor = ",nMajor)
+            A = self.A[0]
             for nRepeated in xrange(1, nMajor):
                 #print "  adding a major"
                 ## field 17 is the first possible so
                 nStart = nRepeated * 16 + 1
-                propFields = card[nStart:nStart + 16]
-                #print "propFields = ",propFields
+
+                #propFields = card[nStart:nStart + 16]
+                propFields = fields(double_or_blank, card, 'propFields',
+                                    nStart, nStart + 16)
+                #print("propFields = ",propFields)
 
                 #print "  so = ",propFields[0]
                 if propFields[0] not in [None, 'YES', 'YESA', 'NO']:
                     msg = "SO=%s for PBEAM pid=%s" % (propFields[0], self.pid)
                     raise RuntimeError(msg)
-                self.so.append(propFields[0])
+                so = propFields[0]
+                if isinstance(so, float) or so is None:
+                    break
+                self.so.append(so)
                 self.xxb.append(propFields[1])
-                self.A.append(propFields[2])
+                A = set_default_if_blank(propFields[3], A)
+                self.A.append(A)
 
                 self.i1.append(set_default_if_blank(propFields[3], 0.0))
                 self.i2.append(set_default_if_blank(propFields[4], 0.0))

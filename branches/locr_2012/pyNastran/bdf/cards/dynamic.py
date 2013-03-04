@@ -221,7 +221,7 @@ class TSTEPNL(BaseCard):
         if card:
             self.sid = integer(card, 1, 'sid')
             self.ndt = integer(card, 2, 'ndt')
-            assert self.ndt >= 4
+            assert self.ndt >= 3
             self.dt = double(card, 3, 'dt')
             assert self.dt > 0.
             self.no = integer_or_blank(card, 4, 'no', 1)

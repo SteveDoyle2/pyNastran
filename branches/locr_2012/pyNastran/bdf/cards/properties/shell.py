@@ -20,8 +20,6 @@ from pyNastran.bdf.format import (integer, integer_or_blank, double,
 
     
 class ShellProperty(Property):
-    type = 'ShellProperty'
-
     def __init__(self, card, data):
         Property.__init__(self, card, data)
 

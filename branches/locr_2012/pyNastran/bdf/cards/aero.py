@@ -12,7 +12,8 @@ from pyNastran.bdf.format import (fields,
                                   integer, integer_or_blank,
                                   double, double_or_blank, 
                                   string, string_or_blank,
-                                  integer_or_string, double_string_or_blank)
+                                  integer_or_string, double_string_or_blank,
+                                  blank)
 
 class AEFACT(BaseCard):
     """
@@ -647,23 +648,29 @@ class CAERO2(BaseCard):
             self.cp = integer_or_blank(card, 3, 'cp', 0)
 
             ## Number of slender body elements. If NSB > 0, then NSB equal
-            ## divisions are assumed; if zero or blank, specify a list of divisions
-            ## in LSB. (Integer >= 0)
-            self.nsb = integer_or_blank(card, 4, 'nsb')
+            ## divisions are assumed; if zero or blank, specify a list of
+            ## divisions in LSB. (Integer >= 0)
+            self.nsb = integer_or_blank(card, 4, 'nsb', 0)
 
             ## Number of interference elements. If NINT > 0, then NINT equal
             ## divisions are assumed; if zero or blank, specify a list of
             ## divisions in LINT. (Integer >= 0)
             self.nint = integer_or_blank(card, 5, 'nint')
 
-            ## ID of an AEFACT Bulk Data entry for slender body division points;
-            ## used only if NSB is zero or blank. (Integer >= 0)
-            self.lsb = integer(card, 6, 'lsb')  # ID of AEFACT
+            if self.nsb == 0:
+                ## ID of an AEFACT Bulk Data entry for slender body division
+                ## points; used only if NSB is zero or blank. (Integer >= 0)
+                self.lsb = integer(card, 6, 'nsb=%s lsb' % self.nsb)
+            else:
+                self.lsb = blank(card, 6, 'nsb=%s lsb' % self.nsb)
 
-            ## ID of an AEFACT data entry containing a list of division points
-            ## for interference elements; used only if NINT is zero or blank.
-            ## (Integer > 0)
-            self.lint = integer(card, 7, 'lint')
+            if self.nint == 0:
+                ## ID of an AEFACT data entry containing a list of division
+                ## points for interference elements; used only if NINT is zero
+                # or blank. (Integer > 0)
+                self.lint = integer(card, 7, 'nint=%s lint' % self.nint )
+            else:
+                self.lint = blank(card, 7, 'nint=%s lint' % self.nint )
 
             ## Interference group identification. Aerodynamic elements with
             ## different IGIDs are uncoupled. (Integer >= 0)
@@ -1116,8 +1123,8 @@ class PAERO2(BaseCard):
         if card:
             ## Property identification number. (Integer > 0)
             self.pid = integer(card, 1, 'pid')
-            ## Orientation flag. Type of motion allowed for bodies. Refers to the
-            ## aerodynamic coordinate system of ACSID. See AERO entry.
+            ## Orientation flag. Type of motion allowed for bodies. Refers to
+            ## the aerodynamic coordinate system of ACSID. See AERO entry.
             ## (Character = 'Z', 'Y', or 'ZY')
             self.orient = string(card, 2, 'orient')
             ## Reference half-width of body and the width of the constant width

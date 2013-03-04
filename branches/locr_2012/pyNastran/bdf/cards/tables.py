@@ -10,7 +10,6 @@ from pyNastran.bdf.format import (fields, integer,
                                   double, components, string, string_or_blank)
 
 class Table(BaseCard):
-    type = 'TABLE??'
     def __init__(self, card, data):
         pass
 
