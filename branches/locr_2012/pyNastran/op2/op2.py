@@ -725,7 +725,7 @@ class OP2(BDF,
                   'BDF/DAT/NAS\n'
                   '      2.  Run the problem on a different Operating System\n'
                   '      3.  Are you running an OP2? :)  \n'
-                  'fname=%s' % (self.op2FileName))
+                  'fname=%s' % self.op2FileName)
             raise RuntimeError("Tape Code Error: %s" % msg)
 
         isAnotherTable = True

@@ -107,7 +107,7 @@ def runOP2(op2FileName, makeGeom=False, writeBDF=False, write_f06=True,
 
         if writeMatlab:
             (model,ext) = os.path.splitext(op2FileName)
-            op2.writeMatlab(model+'.m', isMagPhase=isMagPhase)
+            op2.write_matlab(model+'.m', isMagPhase=isMagPhase)
 
         #print op2.print_results()
         if print_results:

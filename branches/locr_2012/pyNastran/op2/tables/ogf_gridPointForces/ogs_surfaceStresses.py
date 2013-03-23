@@ -127,7 +127,7 @@ class GridPointStressesObject(scalarObject):
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
 
         msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
                         '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
@@ -165,7 +165,7 @@ class GridPointStressesObject(scalarObject):
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         return 'GridPointStressesObject write_f06 is not implemented...', pageNum
         #raise NotImplementedError()
         msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
@@ -333,7 +333,7 @@ class GridPointStressesVolumeObject(scalarObject):
         return 'GridPointStressesVolumeObject write_f06 is not implemented...', pageNum
         #raise NotImplementedError()
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
 
         msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
                         '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
@@ -369,8 +369,8 @@ class GridPointStressesVolumeObject(scalarObject):
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        return 'GridPointStressesVolumeObject writeF06Transient is not implemented...', pageNum
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        return 'GridPointStressesVolumeObject _write_f06_transient is not implemented...', pageNum
         #raise NotImplementedError()
         msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
                         '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',

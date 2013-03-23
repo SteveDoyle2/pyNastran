@@ -84,11 +84,11 @@ class ComplexCelasStressObject(complexStressObject):
         @todo doesnt write...
         """
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
         return 'ComplexCelasStressObject write_f06 not implemented...\n'
         #raise NotImplementedError()
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         """
         @todo improve formatting
         """

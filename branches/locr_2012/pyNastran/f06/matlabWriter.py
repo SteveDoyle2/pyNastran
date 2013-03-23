@@ -126,7 +126,7 @@ class MatlabWriter(object):
         """If this class is inherited, the PAGE stamp may be overwritten"""
         return make_stamp(Title)
 
-    def writeMatlab(self, mFileOutName, isMagPhase=False, deleteObjects=True):
+    def write_matlab(self, mFileOutName, isMagPhase=False, deleteObjects=True):
         """
         Writes an F06 file based on the data we have stored in the object
         @param self
@@ -180,8 +180,8 @@ class MatlabWriter(object):
             header[1] = '0                                                                                                            SUBCASE %i\n \n' % (isubcase)
             print(result.__class__.__name__)
             nSubcase = nSubcases[isubcase]
-            result.writeMatlab(nSubcase, f=f, isMagPhase=isMagPhase)
-           #result.writeMatlab(f=f)
+            result.write_matlab(nSubcase, f=f, isMagPhase=isMagPhase)
+           #result.write_matlab(f=f)
 
         for isubcase, result in sorted(self.eigenvectors.iteritems()):  # has a special header
             (subtitle, label) = self.iSubcaseNameMap[isubcase]
@@ -190,8 +190,8 @@ class MatlabWriter(object):
             header[1] = '0                                                                                                            SUBCASE %i\n' % (isubcase)
             print(result.__class__.__name__)
             nSubcase = nSubcases[isubcase]
-            result.writeMatlab(nSubcase, f=f, isMagPhase=isMagPhase)
-           #result.writeMatlab(f=f)
+            result.write_matlab(nSubcase, f=f, isMagPhase=isMagPhase)
+           #result.write_matlab(f=f)
 
         # subcase name, subcase ID, transient word & value
         headerOld = ['     DEFAULT                                                                                                                        \n',
@@ -240,7 +240,7 @@ class MatlabWriter(object):
                         try:
                             print(result.__class__.__name__)
                             nSubcase = nSubcases[isubcase]
-                            result.writeMatlab(nSubcase, f=f, isMagPhase=False)
+                            result.write_matlab(nSubcase, f=f, isMagPhase=False)
                         except:
                             #print "result name = %s" %(result.name())
                             raise
@@ -251,7 +251,7 @@ class MatlabWriter(object):
         if 0:
             for res in resTypes:
                 for isubcase, result in sorted(res.iteritems()):
-                    (msg, pageNum) = result.writeMatlab(
+                    (msg, pageNum) = result.write_matlab(
                         isubcase, f=f, isMagPhase=False)
                     f.write(msg)
                     pageNum += 1
@@ -266,4 +266,4 @@ if __name__ == '__main__':
     model = sys.argv[1]
     f06 = MatlabWriter(model)
     f06.loadOp2(isTesting=True)
-    f06.writeMatlab()
+    f06.write_matlab()

@@ -184,7 +184,7 @@ class BarStressObject(StressObject):
 
     def add_new_eid_sort1(self, eType, dt, eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                                              s1b, s2b, s3b, s4b, smaxb, sminb, MSc):
-        msg = "dt=%s eid=%s s1a=%s" % (dt, eid, s1a)
+        #msg = "dt=%s eid=%s s1a=%s" % (dt, eid, s1a)
         #print msg
         if dt not in self.s1:
             self.add_new_transient(dt)
@@ -204,7 +204,7 @@ class BarStressObject(StressObject):
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
 
         msg = header + [
                 '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -213,7 +213,7 @@ class BarStressObject(StressObject):
               ]
 
         for eid, S1s in sorted(self.s1.iteritems()):
-            eType = self.eType[eid]
+            #eType = self.eType[eid]
             axial = self.axial[eid]
             #MSt = self.MSt[eid]
             #MSc = self.MSc[eid]
@@ -237,7 +237,7 @@ class BarStressObject(StressObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         words = [
                 '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
@@ -248,7 +248,7 @@ class BarStressObject(StressObject):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for eid, S1 in sorted(S1s.iteritems()):
-                eType = self.eType[eid]
+                #eType = self.eType[eid]
                 axial = self.axial[dt][eid]
                 #MSt = self.MSt[eid]
                 #MSc = self.MSc[eid]
@@ -308,7 +308,7 @@ class BarStressObject(StressObject):
             msg += '%s ' % (' ' * 13)
             vals = [s1[1], s2[1], s3[1], s4[1], '', smax[1], smin[1]]
             for val in vals:
-                if isinstance(val, str):
+                if isinstance(val, unicode):
                     msg += '%8s ' % (val)
                 elif abs(val) < 1e-6:
                     msg += '%8s ' % ('0')
@@ -355,7 +355,7 @@ class BarStressObject(StressObject):
                 msg += '%s ' % (' ' * 13)
                 vals = [s1[1], s2[1], s3[1], s4[1], '', smax[1], smin[1]]
                 for val in vals:
-                    if isinstance(val, str):
+                    if isinstance(val, unicode):
                         msg += '%8s ' % (val)
                     elif abs(val) < 1e-6:
                         msg += '%8s ' % ('0')
@@ -539,7 +539,7 @@ class BarStrainObject(StrainObject):
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.isTransient:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
 
         msg = header + [
                 '                                  S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -547,7 +547,7 @@ class BarStrainObject(StrainObject):
                 '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
               ]
         for eid, E1s in sorted(self.e1.iteritems()):
-            eType = self.eType[eid]
+            #eType = self.eType[eid]
             axial = self.axial[eid]
             #MSt = self.MSt[eid]
             #MSc = self.MSc[eid]
@@ -572,7 +572,7 @@ class BarStrainObject(StrainObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         words = [
                 '                                  S T R A I N S    I N   B A R   E L E M E N T S           ( C B A R )\n',
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
@@ -583,7 +583,7 @@ class BarStrainObject(StrainObject):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for eid, e1s in sorted(E1s.iteritems()):
-                eType = self.eType[eid]
+                #eType = self.eType[eid]
                 axial = self.axial[eid]
                 #MSt = self.MSt[eid]
                 #MSc = self.MSc[eid]
@@ -643,7 +643,7 @@ class BarStrainObject(StrainObject):
             msg += '%s ' % (' ' * 17)
             vals = [e1[1], e2[1], e3[1], e4[1], '', emax[1], emin[1]]
             for val in vals:
-                if isinstance(val, str):
+                if isinstance(val, unicode):
                     msg += '%10s ' % (val)
                 elif abs(val) < 1e-6:
                     msg += '%10s ' % ('0')
@@ -661,7 +661,7 @@ class BarStrainObject(StrainObject):
         msg += '%-8s %6s ' % ('EID', 'eType')
         headers = ['e1', 'e2', 'e3', 'e4', 'Axial', 'eMax', 'eMin']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for dt, E1s in sorted(self.e1.iteritems()):
@@ -690,7 +690,7 @@ class BarStrainObject(StrainObject):
                 msg += '%s ' % (' ' * 17)
                 vals = [e1[1], e2[1], e3[1], e4[1], '', emax[1], emin[1]]
                 for val in vals:
-                    if isinstance(val, str):
+                    if isinstance(val, unicode):
                         msg += '%10s ' % (val)
                     elif abs(val) < 1e-6:
                         msg += '%10s ' % ('0')

@@ -17,9 +17,9 @@ class baseScalarObject(Op2Codes):
             self.__class__.__name__)]
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp,
+    def _write_f06_transient(self, header, pageStamp,
                           pageNum=1, f=None, isMagPhase=False):
-        msg = 'writeF06Transient is not implemented in %s\n' % (
+        msg = '_write_f06_transient is not implemented in %s\n' % (
             self.__class__.__name__)
         return (''.join(msg), pageNum)
 
@@ -124,11 +124,11 @@ class scalarObject(baseScalarObject):
     def isImaginary(self):
         return bool(self.sort_bits[1])
 
-    def writeMatlabArgs(self, name, isubcase, f):
+    def _write_matlab_args(self, name, isubcase, f):
         for key, value, in sorted(self.data_code.iteritems()):
             if key is not 'log':
                 if isinstance(value, str):
-                    value = "'%s'" % (value)
+                    value = "'%s'" % value
                     msg = 'fem.%s(%i).%s = %s;\n' % (
                         name, isubcase, key, value)
                 elif isinstance(value, list) and isinstance(value[0], str):
@@ -137,7 +137,7 @@ class scalarObject(baseScalarObject):
                         name, isubcase, key, msgTemp)
 
                 elif value is None:
-                    value = "'%s'" % (value)
+                    value = "'%s'" % value
                 else:
                     msg = 'fem.%s(%i).%s = %s;\n' % (
                         name, isubcase, key, value)
@@ -244,7 +244,7 @@ class scalarObject(baseScalarObject):
         nModes = len(keyVals[0])
         for i in xrange(nModes):
             for vals in keyVals:
-                msg += '%-10g ' % (vals[i])
+                msg += '%-10g ' % vals[i]
             msg += '\n'
         return msg + '\n'
 

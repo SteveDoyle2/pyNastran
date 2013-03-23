@@ -85,15 +85,15 @@ class RBAR(RigidElement):
         #return msg
 
     def rawFields(self):
-        fields = ['RBAR', self.eid, self.ga, self.gb, self.cna,
+        list_fields = ['RBAR', self.eid, self.ga, self.gb, self.cna,
                   self.cnb, self.cma, self.cmb, self.alpha]
-        return fields
+        return list_fields
 
     def reprFields(self):
         alpha = set_blank_if_default(self.alpha, 0.0)
-        fields = ['RBAR', self.eid, self.ga, self.gb, self.cna, self.cnb,
+        list_fields = ['RBAR', self.eid, self.ga, self.gb, self.cna, self.cnb,
                   self.cma, self.cmb, alpha]
-        return fields
+        return list_fields
 
 
 class RBAR1(RigidElement):
@@ -121,13 +121,13 @@ class RBAR1(RigidElement):
             self.alpha = data[4]
 
     def rawFields(self):
-        fields = ['RBAR1', self.eid, self.ga, self.gb, self.cb, self.alpha]
-        return fields
+        list_fields = ['RBAR1', self.eid, self.ga, self.gb, self.cb, self.alpha]
+        return list_fields
 
     def reprFields(self):
         alpha = set_blank_if_default(self.alpha, 0.0)
-        fields = ['RBAR1', self.eid, self.ga, self.gb, self.cb, alpha]
-        return fields
+        list_fields = ['RBAR1', self.eid, self.ga, self.gb, self.cb, alpha]
+        return list_fields
 
 
 class RBE1(RigidElement):  # maybe not done, needs testing

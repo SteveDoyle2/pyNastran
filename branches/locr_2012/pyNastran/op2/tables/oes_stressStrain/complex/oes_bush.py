@@ -100,7 +100,7 @@ class ComplexBushStressObject(StressObject):
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         raise NotImplementedError('CBUSH')
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
 
         msg = header + [
             '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -136,7 +136,7 @@ class ComplexBushStressObject(StressObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         raise NotImplementedError('CBUSH')
         words = [
             '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -351,7 +351,7 @@ class ComplexBushStrainObject(StrainObject):
         raise NotImplementedError('CBUSH')
         return 'ComplexBarStress write_f06 not implemented...', pageNum
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
 
         msg = header + [
             '                                  S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -377,7 +377,7 @@ class ComplexBushStrainObject(StrainObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         raise NotImplementedError('CBUSH')
         words = [
             '                                  S T R A I N S    I N   B A R   E L E M E N T S           ( C B A R )\n',

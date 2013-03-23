@@ -357,7 +357,7 @@ class ComplexSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
         msg = header + ['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
                         '                                                          (REAL/IMAGINARY)\n',
                         ' \n',
@@ -383,7 +383,7 @@ class ComplexSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         words = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
@@ -791,7 +791,7 @@ class ComplexPLATE2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
         return 'ComplexPlate write_f06 not implemented...\n'
         #raise NotImplementedError()
         #words = ['                                             A C C E L E R A T I O N   V E C T O R\n',
@@ -800,8 +800,8 @@ class ComplexPLATE2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         #words += self.getTableMarker()
         #return self._writeF06Block(words,header,pageStamp,pageNum,f)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        return 'ComplexPlate writeF06Transient not implemented...\n'
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        return 'ComplexPlate _write_f06_transient not implemented...\n'
         #raise NotImplementedError()
 
     def __repr__(self):
@@ -883,7 +883,7 @@ class ComplexCBARForce(scalarObject):  # 34-CBAR
         self.axial[dt][eid] = af
         self.torque[dt][eid] = trq
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
 
         words = ['                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
                  '                                                          (REAL/IMAGINARY)\n',
@@ -914,7 +914,7 @@ class ComplexCBARForce(scalarObject):  # 34-CBAR
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
         msg = header + ['                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
                         '                                                          (REAL/IMAGINARY)\n',
                         '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',

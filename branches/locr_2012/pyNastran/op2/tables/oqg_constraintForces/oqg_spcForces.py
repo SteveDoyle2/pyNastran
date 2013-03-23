@@ -5,16 +5,16 @@ class SPCForcesObject(TableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, isMagPhase=False):
         name = 'spcForces'
         if self.nonlinear_factor is None:
-            return self._writeMatlab(name, isubcase, f)
+            return self._write_matlab(name, isubcase, f)
         else:
-            return self._writeMatlabTransient(name, isubcase, f)
+            return self._write_matlab_transient(name, isubcase, f)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
         msg = header + ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
                         ' \n',
                         '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -36,11 +36,11 @@ class SPCForcesObject(TableObject):
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         words = ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        return self._writeF06TransientBlock(words, header, pageStamp, pageNum, f)
+        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f)
 
     def __reprTransient__(self):
         msg = '---SPC FORCES---\n'
@@ -106,16 +106,16 @@ class ComplexSPCForcesObject(ComplexTableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, isMagPhase=False):
         name = 'spcForces'
         if self.nonlinear_factor is None:
-            return self._writeMatlab(name, isubcase, f)
+            return self._write_matlab(name, isubcase, f)
         else:
-            return self._writeMatlabTransient(name, isubcase, f)
+            return self._write_matlab_transient(name, isubcase, f)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
         msg = header + ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
                         ' \n',
                         '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -144,9 +144,9 @@ class ComplexSPCForcesObject(ComplexTableObject):
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         words = ['                         C O M P L E X   F O R C E S   O F   S I N G L E   P O I N T   C O N S T R A I N T\n']
-        return self._writeF06TransientBlock(words, header, pageStamp, pageNum, f, isMagPhase)
+        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f, isMagPhase)
 
     def __reprTransient__(self):
         msg = '---COMPLEX SPC FORCES---\n'

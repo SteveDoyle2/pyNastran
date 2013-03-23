@@ -136,7 +136,7 @@ class Bush1DStressObject(StressObject):
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
 
         raise NotImplementedError('CBUSH1D')
         msg = header + [
@@ -176,7 +176,7 @@ class Bush1DStressObject(StressObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         #raise NotImplementedError('CBUSH1D')
         words = [
 #      ELEMENT-ID =    7001

@@ -43,7 +43,7 @@ class RealEigenvalues(baseScalarObject):
         for line in data:
             self.addF06Line(line)
 
-    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, isMagPhase=False):
         iModesMsg = 'fem.eigenvalues(%i).iModes    = [' % (isubcase)
         modesMsg = 'fem.eigenvalues(%i).modes     = [' % (isubcase)
         orderMsg = 'fem.eigenvalues(%i).order     = [' % (isubcase)

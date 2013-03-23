@@ -461,6 +461,8 @@ class OES(object):
                 if 'PAGE' in line:
                     return data
                 sline = self.parseLine(line, [int, str, float, float, float, float, float, float, float, float])  # line 1
+                if sline is None:
+                    break
                 sline = ['CQUAD4'] + sline
                 #data.append(sline)
                 line = self.infile.readline()[1:].strip().split()

@@ -335,9 +335,9 @@ class PlateStressObject(StressObject):
                         msg += '\n'
         return msg
 
-    def writeMatlab(self, name, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, name, isubcase, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeMatlabTransient(name, isubcase, f, isMagPhase)
+            return self._write_matlab_transient(name, isubcase, f, isMagPhase)
 
         #if self.isVonMises():
         #    vonMises = 'vonMises'
@@ -410,35 +410,34 @@ class PlateStressObject(StressObject):
                 if eType in ['CQUAD4']:
                     if isBilinear:
                         for eid in eids:
-                            out = self.writeMatlab_Quad4_Bilinear(eid, 4)
+                            out = self._write_matlab_quad4_bilinear(eid, 4)
                             msg.append(out)
                     else:
                         for eid in eids:
-                            out = self.writeMatlab_Tri3(eid)
+                            out = self._write_matlab_tri3(eid)
                             msg.append(out)
 
                 elif eType in ['CTRIA3']:
                     a = 'fem.plateStress(%i).tri3.elementIDs = %s\n' % (
                         isubcase, eids)
-                    b = 'fem.plateStress(%i).tri3.oxx = [' % (isubcase)
+                    b = 'fem.plateStress(%i).tri3.oxx = [' % isubcase
                     for eid in eids:
-                        out = self.writeMatlab_Tri3(eid)
+                        out = self._write_matlab_tri3(eid)
                         msg.append(out)
                 elif eType in ['CQUAD8']:
                     for eid in eids:
-                        out = self.writeMatlab_Quad4_Bilinear(eid, 5)
+                        out = self._write_matlab_quad4_bilinear(eid, 5)
                         msg.append(out)
                 elif eType in ['CTRIAR', 'CTRIA6']:
                     for eid in eids:
-                        out = self.writeMatlab_Quad4_Bilinear(eid, 3)
+                        out = self._write_matlab_quad4_bilinear(eid, 3)
                         msg.append(out)
                 else:
-                    raise NotImplementedError('eType = |%r|' %
-                                              (eType))  # CQUAD8, CTRIA6
+                    raise NotImplementedError('eType = |%r|' % eType)  # CQUAD8, CTRIA6
                 f.write(''.join(msg))
                 msg = []
 
-    def writeMatlab_Tri3(self, eid):
+    def _write_matlab_tri3(self, eid):
         msg = ''
         oxxNodes = self.oxx[eid].keys()
         for nid in sorted(oxxNodes):
@@ -462,7 +461,7 @@ class PlateStressObject(StressObject):
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
 
         if self.isVonMises():
             vonMises = 'VON MISES'
@@ -572,7 +571,7 @@ class PlateStressObject(StressObject):
                 pageNum += 1
         return (''.join(msg), pageNum - 1)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:
@@ -690,16 +689,15 @@ class PlateStressObject(StressObject):
                             msg.append(out)
                 elif eType in ['CQUAD8']:
                     for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (
-                            self.data_code['name'], dt)
+                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'],
+                                                        dt)
                         msg += header + msgPack
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(
                                 dt, eid, 5)
                             msg.append(out)
                 else:
-                    raise NotImplementedError('eType = |%r|' %
-                                              (eType))  # CQUAD8, CTRIA6
+                    raise NotImplementedError('eType = |%r|' % eType)  # CQUAD8, CTRIA6
 
                 msg.append(pageStamp + str(pageNum) + '\n')
                 if f is not None:
@@ -842,12 +840,12 @@ class PlateStressObject(StressObject):
                     vals = [oxx, oyy, txy, major, minor, ovm]
                     for val in vals:
                         if abs(val) < 1e-6:
-                            msg += '%10s ' % ('0')
+                            msg += '%10s ' % '0'
                         else:
                             try:
-                                msg += '%10i ' % (val)
+                                msg += '%10i ' % val
                             except:
-                                print("bad val = %s" % (val))
+                                print("bad val = %s" % val)
                                 raise
                     msg += '\n'
         return msg
@@ -1137,7 +1135,7 @@ class PlateStrainObject(StrainObject):
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
 
         if self.isVonMises():
             vonMises = 'VON MISES'
@@ -1249,7 +1247,7 @@ class PlateStrainObject(StrainObject):
                 pageNum += 1
         return (''.join(msg), pageNum - 1)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:
@@ -1322,8 +1320,8 @@ class PlateStrainObject(StrainObject):
                 if eType in ['CQUAD4']:
                     if isBilinear:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (self.data_code[
-                                'name'], dt)
+                            header[1] = ' %s = %10.4E\n' % (
+                                self.data_code['name'], dt)
                             for eid in eids:
                                 out = self.writeF06_Quad4_BilinearTransient(dt,
                                                                             eid, 4)
@@ -1332,8 +1330,8 @@ class PlateStrainObject(StrainObject):
                             pageNum += 1
                     else:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (self.data_code[
-                                'name'], dt)
+                            header[1] = ' %s = %10.4E\n' % (
+                                self.data_code['name'], dt)
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid)
                                 msg.append(out)
@@ -1341,8 +1339,8 @@ class PlateStrainObject(StrainObject):
                             pageNum += 1
                 elif eType in ['CTRIA3']:
                     for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (
-                            self.data_code['name'], dt)
+                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'],
+                                                        dt)
                         for eid in eids:
                             out = self.writeF06_Tri3Transient(dt, eid)
                             msg.append(out)
@@ -1350,8 +1348,8 @@ class PlateStrainObject(StrainObject):
                         pageNum += 1
                 elif eType in ['CQUAD8']:
                     for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (
-                            self.data_code['name'], dt)
+                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'],
+                                                        dt)
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(
                                 dt, eid, 5)
@@ -1360,8 +1358,8 @@ class PlateStrainObject(StrainObject):
                         pageNum += 1
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (
-                            self.data_code['name'], dt)
+                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'],
+                                                        dt)
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(
                                 dt, eid, 3)

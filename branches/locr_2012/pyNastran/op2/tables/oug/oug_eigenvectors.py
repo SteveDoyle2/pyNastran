@@ -60,9 +60,9 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
     def eigenvalues(self):
         return self.eigrs
 
-    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, isMagPhase=False):
         name = 'eigenvectors'
-        return self._writeMatlabTransient(name, isubcase, f, isMagPhase)
+        return self._write_matlab_transient(name, isubcase, f, isMagPhase)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         """
@@ -215,9 +215,9 @@ class realEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
     def eigenvalues(self):
         return self.eigrs
 
-    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, isMagPhase=False):
         name = 'eigenvectors'
-        return self._writeMatlabTransient(name, isubcase, f, isMagPhase)
+        return self._write_matlab_transient(name, isubcase, f, isMagPhase)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         """

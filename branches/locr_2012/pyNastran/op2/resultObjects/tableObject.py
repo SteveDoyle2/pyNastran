@@ -219,12 +219,12 @@ class TableObject(scalarObject):  # displacement style table
             #    rotations2[nodeID]    = rotation
         return (translations2, rotations2)
 
-    def _writeMatlab(self, name, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, name, isubcase, f=None, isMagPhase=False):
         """
         name = displacements
         """
         if self.nonlinear_factor is not None:
-            self.writeMatlabTransient(name, isubcase, f, isMagPhase)
+            self._write_matlab_transient(name, isubcase, f, isMagPhase)
         #print "static!!!!"
         #msg = []
         #magPhase = 0
@@ -236,7 +236,7 @@ class TableObject(scalarObject):  # displacement style table
 
         nodes.sort()
         #nNodes = len(nodes)
-        self.writeMatlabArgs(name, isubcase, f)
+        self._write_matlab_args(name, isubcase, f)
         f.write('fem.%s(%i).nodes = %s;\n' % (name, isubcase, nodes))
 
         msgG = "fem.%s(%i).gridTypes    = ['" % (name, isubcase)
@@ -269,7 +269,7 @@ class TableObject(scalarObject):  # displacement style table
         f.write(msgT)
         f.write(msgR)
 
-    def _writeMatlabTransient(self, name, isubcase, f=None, isMagPhase=False):
+    def _write_matlab_transient(self, name, isubcase, f=None, isMagPhase=False):
         """
         name = displacements
         """
@@ -278,15 +278,15 @@ class TableObject(scalarObject):  # displacement style table
         times.sort()
         nodes.sort()
         #nNodes = len(nodes)
-        self.writeMatlabArgs(name, isubcase, f)
+        self._write_matlab_args(name, isubcase, f)
         dtName = '%s' % (self.data_code['name'])
         f.write('fem.%s(%i).nodes = %s;\n' % (name, isubcase, nodes))
         f.write('fem.%s(%i).%s = %s;\n' % (name, isubcase, dtName, times))
 
         msgG = "fem.%s(%i).gridTypes = ['" % (name, isubcase)
 
-        for nodeID, gridType in sorted(self.gridTypes.items()):
-            msgG += '%s' % (gridType)
+        for nodeID, gridType in sorted(self.gridTypes.iteritems()):
+            msgG += '%s' % gridType
         msgG += "'];\n"
         f.write(msgG)
         del msgG
@@ -352,7 +352,7 @@ class TableObject(scalarObject):  # displacement style table
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def _writeF06TransientBlock(self, words, header, pageStamp, pageNum=1, f=None):
+    def _write_f06_transient_block(self, words, header, pageStamp, pageNum=1, f=None):
         msg = []
         #assert f is not None # remove
         for dt, translations in sorted(self.translations.iteritems()):
@@ -641,7 +641,7 @@ class ComplexTableObject(scalarObject):
         self.translations[dt][nodeID] = [v1, v2, v3]  # dx,dy,dz
         self.rotations[dt][nodeID] = [v4, v5, v6]  # rx,ry,rz
 
-    def _writeMatlabTransient(self, name, isubcase, f=None, isMagPhase=False):
+    def _write_matlab_transient(self, name, isubcase, f=None, isMagPhase=False):
         """
         name = displacements
         """
@@ -651,14 +651,14 @@ class ComplexTableObject(scalarObject):
         times.sort()
         nodes.sort()
         #nNodes = len(nodes)
-        self.writeMatlabArgs(name, isubcase, f)
+        self._write_matlab_args(name, isubcase, f)
         dtName = '%s' % (self.data_code['name'])
         f.write('fem.%s(%i).nodes = %s;\n' % (name, isubcase, nodes))
         f.write('fem.%s(%i).%s = %s;\n' % (name, isubcase, dtName, times))
 
         msgG = "fem.%s(%i).gridTypes = ['" % (name, isubcase)
-        for nodeID, gridType in sorted(self.gridTypes.items()):
-            msgG += '%s' % (gridType)
+        for nodeID, gridType in sorted(self.gridTypes.iteritems()):
+            msgG += '%s' % gridType
         msgG += "'];\n"
         f.write(msgG)
         del msgG
@@ -724,7 +724,7 @@ class ComplexTableObject(scalarObject):
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def _writeF06TransientBlock(self, words, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient_block(self, words, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if isMagPhase:
             words += ['                                                         (MAGNITUDE/PHASE)\n', ]
         else:

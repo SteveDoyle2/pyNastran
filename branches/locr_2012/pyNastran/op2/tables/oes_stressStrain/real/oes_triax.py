@@ -158,7 +158,7 @@ class TriaxStressObject(StressObject):
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
 
         msg = header + ['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
                         '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
@@ -190,7 +190,7 @@ class TriaxStressObject(StressObject):
             msg = ['']
         return(''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp,
+    def _write_f06_transient(self, header, pageStamp,
                           pageNum=1, f=None, isMagPhase=False):
         words = ['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
                  '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
@@ -355,7 +355,7 @@ class TriaxStrainObject(StrainObject):
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
 
         msg = header + ['                                      S T R A I N S   I N   T R I A X 6   E L E M E N T S\n',
                         '   ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
@@ -387,7 +387,7 @@ class TriaxStrainObject(StrainObject):
             msg = ['']
         return(''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp,
+    def _write_f06_transient(self, header, pageStamp,
                           pageNum=1, f=None, isMagPhase=False):
         words = ['                                      S T R A I N S   I N   T R I A X 6   E L E M E N T S\n',
                  '   ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',

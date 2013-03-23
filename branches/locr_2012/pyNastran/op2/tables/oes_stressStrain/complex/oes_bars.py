@@ -165,7 +165,7 @@ class ComplexBarStressObject(StressObject):
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
 
         msg = header + [
             '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -201,7 +201,7 @@ class ComplexBarStressObject(StressObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         words = [
             '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
             '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
@@ -447,7 +447,7 @@ class ComplexBarStrainObject(StrainObject):
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         return 'ComplexBarStress write_f06 not implemented...', pageNum
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
 
         msg = header + [
             '                                  S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -473,7 +473,7 @@ class ComplexBarStrainObject(StrainObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         words = [
             '                                  S T R A I N S    I N   B A R   E L E M E N T S           ( C B A R )\n',
             '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',

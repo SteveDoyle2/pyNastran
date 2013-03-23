@@ -632,7 +632,7 @@ class CBAR(LineElement):
             self.w2b = main[10]
             self.w3b = main[11]
         #print("offt = %s" %(self.offt))
-        if not isinstance(self.offt, unicode):
+        if not isinstance(self.offt, unicode) or isinstance(self.offt, str):
             raise SyntaxError('invalid offt expected a string of length 3 '
                               'offt=|%s|' % self.offt)
 

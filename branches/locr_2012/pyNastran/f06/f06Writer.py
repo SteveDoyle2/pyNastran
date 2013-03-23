@@ -123,6 +123,11 @@ class F06Writer(object):
         """If this class is inherited, the PAGE stamp may be overwritten"""
         return make_stamp(Title)
 
+    def writeF06(self, f06OutName, isMagPhase=False, makeFile=True,
+                 deleteObjects=True):
+        """@see write_f06"""
+        self.write_f06(f06OutName, isMagPhase, makeFile, deleteObjects)
+
     def write_f06(self, f06OutName, isMagPhase=False, makeFile=True,
                  deleteObjects=True):
         """

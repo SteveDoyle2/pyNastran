@@ -95,7 +95,7 @@ class gridPointForcesObject(scalarObject):
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
 
         msg = header + ['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
                         ' \n',
@@ -125,7 +125,7 @@ class gridPointForcesObject(scalarObject):
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None):
         msg = header + ['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
                         ' \n',
                         '   POINT-ID    ELEMENT-ID     SOURCE             T1             T2             T3             R1             R2             R3\n', ]

@@ -168,6 +168,8 @@ class F06(OES, OUG, OQG, F06Writer):
         self.iSubcaseNameMap = {}
         self.loadVectors = {}
         self.gridPointForces = {}
+        
+        self.bush1dStressStrain = {}
 
         OES.__init__(self)
         OQG.__init__(self)
@@ -175,9 +177,9 @@ class F06(OES, OUG, OQG, F06Writer):
 
         ## the TITLE in the Case Control Deck
         self.Title = ''
-        self.startLog(log, debug)
+        self.start_log(log, debug)
 
-    def startLog(self, log=None, debug=False):
+    def start_log(self, log=None, debug=False):
         """
         Sets up a dummy logger if one is not provided
         @param self the object pointer
@@ -516,14 +518,17 @@ class F06(OES, OUG, OQG, F06Writer):
         """
         @param self the object pointer
         @param sline list of strings (split line)
-        @param Format list of types [int,str,float,float,float] that maps to sline
+        @param Format list of types [int,str,float,float,float] that maps to
+          sline
         """
         out = []
         for entry, iFormat in izip(sline, Format):
             try:
                 entry2 = iFormat(entry)
             except:
-                #print "sline=|%s|\n entry=|%s| format=%s" %(sline,entry,iFormat)
+                #print "sline=|%s|\n entry=|%s| format=%s" %(sline, entry,
+                #                                            iFormat)
+                #raise
                 return None
             out.append(entry2)
         return out
@@ -541,6 +546,10 @@ class F06(OES, OUG, OQG, F06Writer):
         return out
 
     def readF06(self):
+        """@see read_f06"""
+        self.read_f06()
+
+    def read_f06(self):
         """
         Reads the F06 file
         @param self the object pointer

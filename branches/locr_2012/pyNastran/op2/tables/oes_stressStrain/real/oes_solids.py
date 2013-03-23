@@ -365,7 +365,7 @@ class SolidStressObject(StressObject):
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
         msg = []
 
         (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
@@ -388,7 +388,7 @@ class SolidStressObject(StressObject):
 
         return (''.join(msg), pageNum - 1)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         msg = []
         (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
             pentaEids) = self.getF06_Header()
@@ -952,7 +952,7 @@ class SolidStrainObject(StrainObject):
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
         msg = []
 
         (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
@@ -975,7 +975,7 @@ class SolidStrainObject(StrainObject):
 
         return (''.join(msg), pageNum - 1)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         msg = []
         (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
             pentaEids) = self.getF06_Header()

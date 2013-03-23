@@ -23,8 +23,7 @@ from pyNastran.bdf.cards.baseCard import BaseCard, Material
 from pyNastran.bdf.cards.tables import Table
 from pyNastran.bdf.format import (integer, integer_or_blank,
                                  double, double_or_blank,
-                                 string, string_or_blank,
-                                 blank, fields)
+                                 string, string_or_blank, blank)
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""

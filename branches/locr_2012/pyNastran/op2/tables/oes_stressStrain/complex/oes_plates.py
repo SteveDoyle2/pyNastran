@@ -288,7 +288,7 @@ class ComplexPlateStressObject(StressObject):
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         assert f is not None
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
 
         #if self.isVonMises():
         #    vonMises = 'VON MISES'
@@ -374,7 +374,7 @@ class ComplexPlateStressObject(StressObject):
 
         return (''.join(msg), pageNum - 1)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if isMagPhase:
             magReal = ['                                                         (MAGNITUDE/PHASE)\n \n']
         else:
@@ -906,7 +906,7 @@ class ComplexPlateStrainObject(StrainObject):
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         assert f is not None
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
 
         if self.isVonMises():
             vonMises = 'VON MISES'
@@ -1008,8 +1008,7 @@ class ComplexPlateStrainObject(StrainObject):
                     for eid in eids:
                         out = self.writeF06_Quad4_Bilinear(eid, 3)
                 else:
-                    raise NotImplementedError('eType = |%r|' %
-                                              (eType))  # CQUAD8, CTRIA6
+                    raise NotImplementedError('eType = |%r|' % eType)  # CQUAD8, CTRIA6
 
                 msg.append(out)
                 msg.append(pageStamp + str(pageNum) + '\n')
@@ -1020,7 +1019,7 @@ class ComplexPlateStrainObject(StrainObject):
 
         return (''.join(msg), pageNum - 1)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:
@@ -1274,9 +1273,9 @@ class ComplexPlateStrainObject(StrainObject):
                     vals = [exx, eyy, exy]
                     for val in vals:
                         if abs(val) < 1e-6:
-                            msg += '%10s ' % ('0.')
+                            msg += '%10s ' % '0.'
                         else:
-                            msg += '%10.3g ' % (val)
+                            msg += '%10.3g ' % val
                     msg += '\n'
 
                     #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy)
@@ -1303,8 +1302,10 @@ class ComplexPlateStrainObject(StrainObject):
                         msg += '%-6i %6s %8s %7s %10g ' % (eid, eType,
                                                            nid, iLayer + 1, fd)
                         for val in [exx, eyy, exy]:
-                            msg += ('%10s ' % ('0.') if abs(val) < 1e-6 else
-                                '%10.3g ' % (val))
+                            if abs(val) < 1e-6:
+                                msg += '%10s ' % '0.'
+                            else:
+                                msg += '%10.3g ' % val.real
                         msg += '\n'
 
                         #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy)

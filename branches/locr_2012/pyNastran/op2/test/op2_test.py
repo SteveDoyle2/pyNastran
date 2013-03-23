@@ -43,7 +43,7 @@ def get_all_files(foldersFile,fileType):
         if moveDir and moveDir[0] != '#':
             print("moveDir = %s" % moveDir)
             assert os.path.exists(moveDir), '%s doesnt exist' % (moveDir)
-            files2 += get_files_of_type(moveDir, fileType, maxSize=100.)
+            files2 += get_files_of_type(moveDir, fileType, maxSize=4.2)
     return files2
 
 if __name__=='__main__':

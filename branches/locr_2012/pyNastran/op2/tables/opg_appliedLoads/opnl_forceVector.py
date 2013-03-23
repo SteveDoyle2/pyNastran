@@ -5,16 +5,16 @@ class ForceVectorObject(TableObject):  # table_code=12, sort_code=0, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, isMagPhase=False):
         name = 'forceVector'
         if self.nonlinear_factor is None:
-            return self._writeMatlab(name, isubcase, f)
+            return self._write_matlab(name, isubcase, f)
         else:
-            return self._writeMatlabTransient(name, isubcase, f)
+            return self._write_matlab_transient(name, isubcase, f)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
 
         msg = header + ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n'
                         ' \n',
@@ -37,7 +37,7 @@ class ForceVectorObject(TableObject):  # table_code=12, sort_code=0, thermal=0
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         msg = []
         words = ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n'
                  ' \n',
@@ -114,23 +114,23 @@ class ForceVectorObject(TableObject):  # table_code=12, sort_code=0, thermal=0
         return msg
 
     def __reprTransient__(self):
-        return self.writeF06Transient(['', ''], 'PAGE ', 1)[0]
+        return self._write_f06_transient(['', ''], 'PAGE ', 1)[0]
 
 
 class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_code=???
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, isMagPhase=False):
         name = 'forceVector'
         if self.nonlinear_factor is None:
-            return self._writeMatlab(name, isubcase, f, isMagPhase)
+            return self._write_matlab(name, isubcase, f, isMagPhase)
         else:
-            return self._writeMatlabTransient(name, isubcase, f, isMagPhase)
+            return self._write_matlab_transient(name, isubcase, f, isMagPhase)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.nonlinear_factor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase=False)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase=False)
         msg = header + ['                                       C O M P L E X   FORCE   V E C T O R\n',
                         '                                                          (REAL/IMAGINARY)\n',
                         ' \n',
@@ -168,7 +168,7 @@ class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_c
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         words = ['                                       C O M P L E X   F O R C E   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
