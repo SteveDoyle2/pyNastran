@@ -82,13 +82,22 @@ def makeEnd():
 class F06Writer(object):
     def __init__(self, model='tria3'):
         self.Title = ''
-        self.setF06Name(model)
+        self.set_f06_name(model)
 
-    def setF06Name(self, model):
+    def writeF06(self, f06OutName, isMagPhase=False, makeFile=True,
+                 deleteObjects=True):
+        """@see write_f06"""
+        self.write_f06(f06OutName, isMagPhase, makeFile, deleteObjects)
+
+    def loadOp2(self, isTesting=False):
+        """@see write_f06"""
+        self.load_op2(isTesting)
+
+    def set_f06_name(self, model):
         self.model = model
         self.f06OutName = '%s.f06.out' % (self.model)
 
-    def loadOp2(self, isTesting=False):
+    def load_op2(self, isTesting=False):
         print("self.class = ",self.__class__.__name__)
         if isTesting == False:  # TODO implement in way that doesnt require a variable (e.g. check parent class)
             raise RuntimeError("Don't call this method unless you're testing the F06Writer.  It breaks the F06 and OP2 classes.")
@@ -122,11 +131,6 @@ class F06Writer(object):
     def make_stamp(self, Title):
         """If this class is inherited, the PAGE stamp may be overwritten"""
         return make_stamp(Title)
-
-    def writeF06(self, f06OutName, isMagPhase=False, makeFile=True,
-                 deleteObjects=True):
-        """@see write_f06"""
-        self.write_f06(f06OutName, isMagPhase, makeFile, deleteObjects)
 
     def write_f06(self, f06OutName, isMagPhase=False, makeFile=True,
                  deleteObjects=True):

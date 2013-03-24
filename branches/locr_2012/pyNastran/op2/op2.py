@@ -52,7 +52,7 @@ class OP2(BDF,
             self.isAllSubcases = False
             ## the set of valid subcases -> set([1,2,3])
             self.valid_subcases = set(subcases)
-        self.log.debug("set_subcases - subcases = %s" % (self.valid_subcases))
+        self.log.debug("set_subcases - subcases = %s" % self.valid_subcases)
 
     def setTransientTimes(self, times):  # TODO this name sucks...
         """
@@ -691,8 +691,8 @@ class OP2(BDF,
         #print('n = %s' %(n))
         self.n += 16
 
-        if n > 70000:
-            asf
+        #if n > 70000:
+            #asf
         data = self.op2.read(n * 4)
         self.n += n * 4 + 4
         #print("self.n = ",self.n)
@@ -717,15 +717,17 @@ class OP2(BDF,
             #self.readTapeCodePost2()
             self.read_tape_code()
         except:
-            raise
+            #raise
             msg = ('When this happens, the analysis failed or '
                   'the code bombed...check the F06.\n'
-                  '  If the F06 is OK:\n'
-                  '      1.  Make sure you used PARAM,POST,-1 in your '
+                  'If the F06 is OK:\n'
+                  '  1.  Make sure you used PARAM,POST,-1 in your '
                   'BDF/DAT/NAS\n'
-                  '      2.  Run the problem on a different Operating System\n'
-                  '      3.  Are you running an OP2? :)  \n'
-                  'fname=%s' % self.op2FileName)
+                  '  2.  Make sure the following line is not included in the BDF\n'
+                  "      ASSIGN OUTPUT2 = '%s', UNIT = 12, FORM = FORMATTED\n"
+                  '  3.  Run the problem on a different Operating System\n'
+                  '  4.  Are you running an OP2? :)  \n'
+                  'fname=%s' % (self.op2FileName, self.op2FileName))
             raise RuntimeError("Tape Code Error: %s" % msg)
 
         isAnotherTable = True
@@ -919,43 +921,43 @@ class OP2(BDF,
     def read_monitor(self):
         table_name = self.read_table_name(rewind=False)  # LAMA
         self.table_init(table_name)
-        print("tablename1 = |%r|" % table_name)
-        print("tablename2 = |%r|" % self.table_name)
+        #print("tablename1 = |%r|" % table_name)
+        #print("tablename2 = |%r|" % self.table_name)
 
         self.read_markers([-1, 7], 'MONITOR')
         ints = self.read_int_block()
-        print("*ints = ", ints)
+        #print("*ints = ", ints)
 
         self.read_markers([-2, 1, 0], 'MONITOR')
         buffer_words = self.get_marker()
-        print("buffer_words = ", buffer_words)
+        #print("buffer_words = ", buffer_words)
 
         word = self.read_string_block()  # MONITOR
-        print("word = |%s|" % word)
+        #print("word = |%s|" % word)
 
         self.read_markers([-3, 1, 0], 'MONITOR')
         buffer_words = self.get_marker()
-        print("buffer_words = ", buffer_words, buffer_words * 4)
+        #print("buffer_words = ", buffer_words, buffer_words * 4)
 
         data = self.op2.read(4)
         data = self.op2.read(buffer_words * 4)
         Format = str(buffer_words*4) + 's'
         Format = bytes(Format)
         word, = unpack(Format, data)
-        print("word = ", word)
+        #print("word = ", word)
         data = self.op2.read(4)
         self.n += buffer_words * 4 + 8
 
 
         self.read_markers([-4, 1, 0], 'MONITOR')
         buffer_words = self.get_marker()
-        print("buffer_words = ", buffer_words, buffer_words * 4)
+        #print("buffer_words = ", buffer_words, buffer_words * 4)
         data = self.op2.read(4)
         data = self.op2.read(buffer_words * 4)
         Format = str(buffer_words * 4) + 's'
         Format = bytes(Format)
         word, = unpack(Format, data)
-        print("word = ", word)
+        #print("word = ", word)
         data = self.op2.read(4)
         self.n += buffer_words * 4 + 8
 
