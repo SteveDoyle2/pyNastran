@@ -48,7 +48,18 @@ class TestF06(unittest.TestCase):
         (bdf, f06, op2) = self.run_model(bdfname, f06name, op2name)
         
         dynamic_vars = {'t' : 42.}
-        (bdf2) = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
+        bdf2 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
+        self.assertEquals(bdf.properties[1].t,  0.3, 't=%s' % bdf.properties[1].t)
+        self.assertEquals(bdf2.properties[1].t, 42., 't=%s' % bdf2.properties[1].t)
+        
+        dynamic_vars = {'t' : 42}
+        with self.assertRaises(SyntaxError):
+            bdf3 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
+
+        dynamic_vars = {'t' : 'asdddddddf'}
+        with self.assertRaises(SyntaxError):
+            bdf3 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
+
         self.assertEquals(len(bdf.nodes), 36, bdf.nodes)
         self.assertEquals(len(bdf.elements), 25, bdf.elements)
         self.assertEquals(len(bdf.properties), 1, bdf.properties)
@@ -58,7 +69,7 @@ class TestF06(unittest.TestCase):
         self.assertEquals(bdf.sol, 101, bdf.sol)
         
         for (loadcase, stress) in f06.plateStress.iteritems():
-            #print "%3s %3s %6s %8s" % ('EID', 'NID', 'iLayer', 'VM_Stress')
+            #print("%3s %3s %6s %8s" % ('EID', 'NID', 'iLayer', 'VM_Stress'))
 
             # stress is a PlateStressObject
             if stress.isVonMises():
@@ -71,7 +82,7 @@ class TestF06(unittest.TestCase):
                     for nid in ovmkeys:
                         ovmi = ovm[nid]
                         for ilayer, ovmii in enumerate(ovmi):
-                            #print "%8s %8s %6s %8s" % (eid, nid, ilayer, ovmii)
+                            #print("%8s %8s %6s %8s" % (eid, nid, ilayer, ovmii))
                             pass
             else:
                 #vonMises = 'MAX SHEAR'
@@ -86,8 +97,9 @@ class TestF06(unittest.TestCase):
                             o1 = stress.oxx[eid][nid][ilayer]
                             o2 = stress.oyy[eid][nid][ilayer]
                             t12 = stress.txy[eid][nid][ilayer]
-                            ovmii = sqrt(o1**2 - o1*o2 + o2**2 + 3*t12**2)
-                            #print "%3s %3s %6s %8s" % (eid, nid, ilayer, ovmii)
+                            ovmii2 = sqrt(o1**2 - o1*o2 + o2**2 + 3*t12**2)
+                            self.assertAlmostEquals(ovmii, ovmii2)
+                            #print("%3s %3s %6s %8s" % (eid, nid, ilayer, ovmii2))
         self.assertEquals(op2.plateStress[1].ovmShear[25]['C'][0], 276.8023376464844)
         self.assertEquals(f06.plateStress[1].ovmShear[25]['C'][0], 276.8023)
         #f06.print_stats()

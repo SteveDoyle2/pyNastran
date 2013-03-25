@@ -19,7 +19,7 @@ class WriteMesh(object):
                       'write_bdf', DeprecationWarning, stacklevel=2)
         self.write_bdf(outFileName, size, debug)
 
-    def writeAsPatran(self, outFileName='fem.out.bdf', size=8, debug=False):
+    def writeBDFAsPatran(self, outFileName='fem.out.bdf', size=8, debug=False):
         """
         @see write_bdf_as_patran
         @warning will be removed after v0.7 in favor of write_bdf_as_patran

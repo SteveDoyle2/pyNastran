@@ -85,7 +85,7 @@ from .bdfInterface.addCard import AddMethods
 from .bdfInterface.BDF_Card import BDFCard, wipe_empty_fields
 #from .bdfInterface.bdf_Reader import BDFReader
 from .bdfInterface.bdf_writeMesh import WriteMesh
-from .bdfInterface.bdf_cardMethods import interpretValue # CardMethods
+from .bdfInterface.bdf_cardMethods import interpret_value
 from .bdfInterface.crossReference import XrefMesh
 
 class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
@@ -1099,11 +1099,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.log.debug("*read_bulk_data_deck")
         while len(self.active_filenames) > 0 or self.stored_lines[self.active_filename]:
             (raw_card, comment, card_name) = self.get_card()
-            #print("raw_card",raw_card)
+            #print("raw_card", raw_card)
             if card_name == 'INCLUDE':
                 filename = self._get_include_filename(raw_card)
                 self.open_file(filename)
-                reject = '$ INCLUDE processed:  %s\n' % (filename)
+                reject = '$ INCLUDE processed:  %s\n' % filename
                 self.rejects.append([reject])
                 continue
             elif card_name is None:
@@ -1167,7 +1167,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 fields = [self._parse_dynamic_syntax(field) if '%' in
                           field[0:1] else field for field in fields]
 
-            card = wipe_empty_fields([interpretValue(field, fields)
+            card = wipe_empty_fields([interpret_value(field, fields)
                                       for field in fields])
             card_obj = BDFCard(card)
 
@@ -1197,7 +1197,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 except Exception as e:
                     if not e.args: 
                         e.args = ('',)
-                    e.args = (e.args[0] + "\ncard = %s" % card,)+e.args[1:]
+                    e.args = (e.args[0] + "\ncard = %s" % card,) + e.args[1:]
                     raise
                 return card_obj
 
@@ -1449,7 +1449,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         for attribute_name in ignored_types.union(ignored_types2):
             try:
                 all_params.remove(attribute_name)
-                #print('removing attribute_name=%s' % (attribute_name))
+                #print('removing attribute_name=%s' % attribute_name)
             except ValueError:
                 pass
 
@@ -1494,7 +1494,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 except KeyError:
                     assert card_name == 'CORD2R'
             if group_msg:
-                msg.append('bdf.%s' % (card_group_name))
+                msg.append('bdf.%s' % card_group_name)
                 msg.append('\n'.join(group_msg))
                 msg.append('')
 

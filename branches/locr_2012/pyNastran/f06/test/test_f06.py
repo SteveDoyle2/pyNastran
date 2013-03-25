@@ -8,8 +8,8 @@ from pyNastran.f06.f06 import F06
 #from pyNastran.op2.test.test_op2 import parseTableNamesFromF06, getFailedFiles
 
 
-def runLotsOfFiles(files, debug=True, saveCases=True, skipFiles=[],
-                   stopOnFailure=False, nStart=0, nStop=1000000000):
+def run_lots_of_files(files, debug=True, saveCases=True, skipFiles=[],
+                      stopOnFailure=False, nStart=0, nStop=1000000000):
     n = ''
     iSubcases = []
     failedCases = []
@@ -26,8 +26,8 @@ def runLotsOfFiles(files, debug=True, saveCases=True, skipFiles=[],
             n = '%s ' % (i)
             sys.stderr.write('%sfile=%s\n' % (n, f06file))
             nTotal += 1
-            isPassed = runF06(f06file, iSubcases=iSubcases, debug=debug,
-                              stopOnFailure=stopOnFailure)  # True/False
+            isPassed = run_f06(f06file, iSubcases=iSubcases, debug=debug,
+                               stopOnFailure=stopOnFailure)  # True/False
             if not isPassed:
                 sys.stderr.write('**file=%s\n' % (f06file))
                 failedCases.append(f06file)
@@ -49,8 +49,8 @@ def runLotsOfFiles(files, debug=True, saveCases=True, skipFiles=[],
     sys.exit('-----done with all models %s/%s=%.2f%%  nFailed=%s-----' % (nPassed, nTotal, 100. * nPassed / float(nTotal), nTotal - nPassed))
 
 
-def runF06(f06file, iSubcases=[], write_f06=True, printF06=False, debug=False,
-           stopOnFailure=True):
+def run_f06(f06file, iSubcases=[], write_f06=True, printF06=False, debug=False,
+            stopOnFailure=True):
     isPassed = False
     stopOnFailure = False
     #debug = True
