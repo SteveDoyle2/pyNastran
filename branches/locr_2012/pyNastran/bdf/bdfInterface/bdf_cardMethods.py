@@ -1,13 +1,4 @@
 # pylint: disable=E1101,C0103,R0902,R0904,R0914
-"""
-All damper properties are defined in this file.  This includes:
- *   PDAMP
- *   PDAMP5 (not implemented)
- *   PDAMPT
- *   PVISC
-
-All bush properties are BushingProperty and Property objects.
-"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
@@ -18,31 +9,13 @@ class CardMethods(object):
         self.nCardLinesMax = nCardLinesMax
         pass
 
-    def parse_dynamic_syntax(self, key):
-        """
-        Applies the dynamic syntax for %varName
-        @param self the object pointer
-        @param key the uppercased key
-        @retval value the dynamic value defined by dictOfVars
-        @note
-          %varName is actually %VARNAME b/c of auto-uppercasing the string,
-          so the setDynamicSyntax method uppercases the key prior to this step.
-        @see setDynamicSyntax
-        """
-        #print "*** valueRaw.lstrip() = |%r|" %(valueRaw.lstrip())
-        #key = key.lstrip('%%')
-        key = key[1:]
-        self.log.info("dynamic key = |%r|" % (key))
-        #self.dictOfVars = {'P5':0.5,'ONEK':1000.}
-        return self.dictOfVars[key]
-
     def get_value(self, valueRaw, card, debug=False):
         """Converts a value from nastran format into python format."""
         if debug:
-            print("v1 = |%s|" % (valueRaw))
+            print("v1 = |%s|" % valueRaw)
         lvalue = valueRaw.lstrip()
         if self._is_dynamic_syntax and '%' in lvalue[0:1]:
-            return self.parse_dynamic_syntax(valueRaw)
+            return self._parse_dynamic_syntax(valueRaw)
         valueIn = valueRaw.lstrip().rstrip(' *').upper()
 
         if debug:
@@ -184,7 +157,7 @@ def make_single_streamed_card(log, card, debug=False):
     cardOut = []
     n = 0
     if debug:
-        log.debug("card = %s" % (card))
+        log.debug("card = %s" % card)
     for (i, field) in enumerate(card):
         if n - 9 == 0:
             pass
@@ -222,7 +195,7 @@ def nastran_split(log, line, is_large_field, debug=False):
                   line[32:40], line[40:48], line[48:56], line[56:64],
                   line[64:72]]
     #if debug:
-    #    print("  fields = ",collapse(fields))
+    #    print("  fields = ", collapse(fields))
 
     fields2 = []
     for (i, rawField) in enumerate(fields):
@@ -242,9 +215,14 @@ def interpretValue(valueRaw, card='', debug=False):
     """converts a value from nastran format into python format."""
     #debug = True
     if debug:
-        print("v1 = |%s|" % (valueRaw))
+        print("v1 = |%s|" % valueRaw)
     #lvalue = valueRaw.lstrip()
-    valueIn = valueRaw.lstrip().rstrip(' *').upper()
+    try:
+        valueIn = valueRaw.lstrip().rstrip(' *').upper()
+    except AttributeError:  # it's already an int/float
+        msg = 'valueRaw=%s type=%s' % (valueRaw, type(valueRaw))
+        assert isinstance(valueRaw, int) or isinstance(valueRaw, float), msg
+        return valueRaw
 
     if debug:
         pass
@@ -257,7 +235,7 @@ def interpretValue(valueRaw, card='', debug=False):
     if valueIn[0].isalpha():
         if debug:
             print("STRING!")
-            print("valueStr = %s" % (valueIn))
+            print("valueStr = %s" % valueIn)
         return valueIn
 
     if '=' in valueIn or '(' in valueIn or '*' in valueRaw:
@@ -268,7 +246,7 @@ def interpretValue(valueRaw, card='', debug=False):
     # int, float, string, exponent
     valuePositive = valueIn.strip('+-')
     if debug:
-        print("isDigit = %s" % (valuePositive.isdigit()))
+        print("isDigit = %s" % valuePositive.isdigit())
     if valuePositive.isdigit():
         if debug:
             print("INT!")
@@ -301,7 +279,7 @@ def interpretValue(valueRaw, card='', debug=False):
         v0 = '+'  # inplied positive value
         valueLeft = valueIn
 
-    #print "valueIn = |%s|" %(valueIn)
+    #print "valueIn = |%s|" % valueIn
     #print "v0 = |%s|" %v0
     if v0 == '-':
         vFactor = -1.
@@ -363,11 +341,11 @@ def stringParser(stringIn):
         elif s.isalpha() or s in "()*/=]['\"":
             return 'string'  # string character
         else:
-            msg = "s=|%r|" % (s)
+            msg = "s=|%r|" % s
             raise SyntaxError(msg)
 
-        #print "s=%s stringIn[i-1]=%s" % (state,typeCheck[i-1])
-        #print "i=%s s=%s typeCheck=%s" % (i,s,typeCheck)
+        #print "s=%s stringIn[i-1]=%s" % (state, typeCheck[i-1])
+        #print "i=%s s=%s typeCheck=%s" % (i, s, typeCheck)
         if i == 0:
             typeCheck += state
             n += 1
@@ -398,17 +376,17 @@ def stringParser(stringIn):
         i = stringReversed.index('+')
         lString = list(stringIn)
         lString.insert(-i - 1, 'e')
-        #print "lString = ",lString
+        #print "lString = ", lString
         out = ''.join(lString)
-        print("out = %s" % (out))
+        print("out = %s" % out)
         return float(out)
     else:
-        #print "string = ",stringIn
-        #print "typeCheck = ",typeCheck
+        #print "string = ", stringIn
+        #print "typeCheck = ", typeCheck
         #return 'string'
         return stringIn
 
-    print("typeCheck = |%s|" % (typeCheck))
+    print("typeCheck = |%s|" % typeCheck)
     raise RuntimeError('error parsing a card...this should never happen...')
 
 if __name__ == '__main__':
@@ -418,7 +396,7 @@ if __name__ == '__main__':
     print(stringParser('+.234'))
     print(stringParser('-.234'))
     print(stringParser('1+5'))
-    print("abc = |%s|" % (stringParser('abc')))
-    print("eeg = |%s|" % (stringParser('eeg')))
-    #print("e1 = |%s|" %(stringParser('\T')))
+    print("abc = |%s|" % stringParser('abc'))
+    print("eeg = |%s|" % stringParser('eeg'))
+    #print("e1 = |%s|" % stringParser('\T'))
     print(stringParser('.e1'))

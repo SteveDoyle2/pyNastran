@@ -107,9 +107,12 @@ def double(card, n, fieldname):
     try:
         svalue = card.field(n)
     except IndexError:
-        raise SyntaxError('%s (field #%s) on card must be an\ float.\ncard=%s' % (fieldname, n, card) )
+        raise SyntaxError('%s (field #%s) on card must be a float.\ncard=%s' % (fieldname, n, card) )
     if isinstance(svalue, float):
         return svalue
+    elif isinstance(svalue, int):
+        Type = getType(svalue)
+        raise SyntaxError('%s = %s (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
 
     #svalue = svalue.strip()
     try:  # 1.0, 1.0E+3, 1.0E-3

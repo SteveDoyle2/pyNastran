@@ -93,6 +93,52 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
     modelType = 'nastran'
     isStructured = False
 
+    def readBDF(self, bdf_filename, include_dir=None, xref=True, punch=False):
+        """
+        @see read_bdf
+        @warning will be removed after v0.7 in favor of read_bdf
+        """
+        warnings.warn('readBDF has been deprecated; use '
+                      'read_bdf', DeprecationWarning, stacklevel=2)
+        self.read_bdf(bdf_filename, include_dir, xref, punch)
+
+    def updateSolution(self, sol, method=None):
+        """
+        @see update_solution
+        @warning will be removed after v0.7 in favor of update_solution
+        """
+        warnings.warn('updateSolution has been deprecated; use '
+                      'update_solution', DeprecationWarning, stacklevel=2)
+        self.update_solution(sol, method)
+
+    def setDynamicSyntax(self, dictOfVars):
+        """
+        @see set_dynamic_syntax
+        @warning will be removed after v0.7 in favor of set_dynamic_syntax
+        """
+        warnings.warn('setDynamicSyntax has been deprecated; use '
+                      'set_dynamic_syntax', DeprecationWarning, stacklevel=2)
+        self.set_dynamic_syntax(dictOfVars)
+
+    def addCard(self, card, cardName, iCard=0, oldCardObj=None):
+        """
+        @see add_card
+        @warning will be removed after v0.7 in favor of add_card
+        """
+        warnings.warn('addCard has been deprecated; use add_card',
+                      DeprecationWarning, stacklevel=2)
+        return self.add_card(card, cardName, icard=iCard,
+                             old_card_obj=oldCardObj)
+
+    def disableCards(self, cards):
+        """
+        @see disable_cards
+        @warning will be removed after v0.7 in favor of disable_cards
+        """
+        warnings.warn('disableCards has been deprecated; use '
+                      'disable_cards', DeprecationWarning, stacklevel=2)
+        self.disable_cards(cards)
+
     def __init__(self, debug=True, log=None, nCardLinesMax=1000):
         """
         Initializes the BDF object
@@ -554,23 +600,19 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ## stores convection properties - PCONV, PCONVM ???
         self.convectionProperties = {}
 
-    def readBDF(self, infilename, includeDir=None, xref=True, punch=False):
+    def read_bdf(self, infilename, includeDir=None, xref=True, punch=False):
         """
         Read method for the bdf files
-        @param infilename
-          the input bdf
-        @param includeDir
-          the relative path to any include files (default=None
+        @param infilename the input bdf
+        @param includeDir the relative path to any include files (default=None
           if no include files)
-        @param xref
-          should the bdf be cross referenced (default=True)
-        @param punch
-          indicates whether the file is a punch file (default=False)
+        @param xref should the bdf be cross referenced (default=True)
+        @param punch indicates whether the file is a punch file (default=False)
         """
         self._set_infile(infilename, includeDir)
 
         fname = self.print_filename(self.bdf_filename)
-        self.log.debug('---starting BDF.readBDF of %s---' % fname)
+        self.log.debug('---starting BDF.read_bdf of %s---' % fname)
         #self.log.info('xref=%s' %(xref))
 
         if not punch:
@@ -580,7 +622,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self._read_bulk_data_deck()
         self.cross_reference(xref=xref)
 
-        self.log.debug('---finished BDF.readBDF of %s---' % fname)
+        self.log.debug('---finished BDF.read_bdf of %s---' % fname)
 
     def _is_executive_control_deck(self, line):
         """@todo code this..."""
@@ -651,15 +693,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
         #print("sol = ", sol)
 
-    def updateSolution(self, sol, method=None):
-        """
-        @see update_solution
-        @warning will be removed after v0.7 in favor of update_solution
-        """
-        warnings.warn('updateSolution has been deprecated; use '
-                      'update_solution', DeprecationWarning, stacklevel=2)
-        self.update_solution(sol, method)
-
     def update_solution(self, sol, method=None):
         """
         updates the overall solution type (e.g. 101,200,600)
@@ -685,20 +718,12 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
         #print "sol=%s method=%s" %(self.sol,self.solMethod)
 
-    def setDynamicSyntax(self, dictOfVars):
-        """
-        @see set_dynamic_syntax
-        @warning will be removed after v0.7 in favor of set_dynamic_syntax
-        """
-        warnings.warn('setDynamicSyntax has been deprecated; use '
-                      'set_dynamic_syntax', DeprecationWarning, stacklevel=2)
-        self.set_dynamic_syntax(dictOfVars)
-
     def set_dynamic_syntax(self, dict_of_vars):
         """
         uses the OpenMDAO syntax of %varName in an embedded BDF to
         update the values for an optimization study.
         Variables should be 7 characters to fit in an 8-character field.
+        Case sensitivity is ignored.
         %varName
         dict_of_vars = {'varName': 10}
         """
@@ -706,9 +731,37 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         for (key, value) in sorted(dict_of_vars.iteritems()):
             assert len(key) <= 7, ('max length for key is 7; '
                                    'len(%s)=%s' % (key, len(key)))
-            self.dict_of_vars[key.upper()] = value
+            assert len(key) <= 1, ('max length for key is 1; '
+                                   'len(%s)=%s' % (key, len(key)))
+            assert isinstance(key, str), 'key=%s must be a string' % key
 
+            key2 = key.upper()
+            if key2 in self.dict_of_vars:
+                raise RuntimeError('key=|%s| is defined twice.' % key2)
+            self.dict_of_vars[key2] = value
         self._is_dynamic_syntax = True
+
+    def _parse_dynamic_syntax(self, key):
+        """
+        Applies the dynamic syntax for %varName
+        @param self the object pointer
+        @param key the uppercased key
+        @retval value the dynamic value defined by dictOfVars
+        @note
+          %varName is actually %VARNAME b/c of auto-uppercasing the string,
+          so the setDynamicSyntax method uppercases the key prior to this step.
+        @see setDynamicSyntax
+        """
+        #print "*** valueRaw.lstrip() = |%r|" % valueRaw.lstrip()
+        #key = key.lstrip('%%')
+        key = key[1:].strip()
+        self.log.info("dynamic key = |%r|" % key)
+        #self.dict_of_vars = {'P5':0.5,'ONEK':1000.}
+        if key not in self.dict_of_vars:
+            msg = "key=|%r| not found in keys=%s" % (key,
+                                                     self.dict_of_vars.keys())
+            raise KeyError(msg)
+        return self.dict_of_vars[key]
 
     def _is_case_control_deck(self, line):
         """
@@ -972,16 +1025,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 #print print_card(reject)
                 #print ''.join(reject)
             self.log.debug("***read_bulk_data_deck")
-
-    def addCard(self, card, cardName, iCard=0, oldCardObj=None):
-        """
-        @see add_card
-        @warning will be removed after v0.7 in favor of add_card
-        """
-        warnings.warn('addCard has been deprecated; use add_card',
-                      DeprecationWarning, stacklevel=2)
-        return self.add_card(card, cardName, icard=iCard,
-                             old_card_obj=oldCardObj)
 
     def add_card(self, card, card_name, icard=0, old_card_obj=None):
         """

@@ -473,7 +473,7 @@ class PSHELL(ShellProperty):
         if card:
             self.pid = integer(card, 1, 'pid')
             self.mid1 = integer_or_blank(card, 2, 'mid1')
-            self.t = double_or_blank(card, 3, 't')
+            self.t = double(card, 3, 't')
             
             ## Material identification number for bending
             self.mid2 = integer_or_blank(card, 4, 'mid2')

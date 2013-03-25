@@ -94,6 +94,52 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     """
     modelType = 'nastran'
 
+    def readBDF(self, bdf_filename, include_dir=None, xref=True, punch=False):
+        """
+        @see read_bdf
+        @warning will be removed after v0.7 in favor of read_bdf
+        """
+        warnings.warn('readBDF has been deprecated; use '
+                      'read_bdf', DeprecationWarning, stacklevel=2)
+        self.read_bdf(bdf_filename, include_dir, xref, punch)
+
+    def updateSolution(self, sol, method=None):
+        """
+        @see update_solution
+        @warning will be removed after v0.7 in favor of update_solution
+        """
+        warnings.warn('updateSolution has been deprecated; use '
+                      'update_solution', DeprecationWarning, stacklevel=2)
+        self.update_solution(sol, method)
+
+    def setDynamicSyntax(self, dictOfVars):
+        """
+        @see set_dynamic_syntax
+        @warning will be removed after v0.7 in favor of set_dynamic_syntax
+        """
+        warnings.warn('setDynamicSyntax has been deprecated; use '
+                      'set_dynamic_syntax', DeprecationWarning, stacklevel=2)
+        self.set_dynamic_syntax(dictOfVars)
+
+    def addCard(self, card, cardName, iCard=0, oldCardObj=None):
+        """
+        @see add_card
+        @warning will be removed after v0.7 in favor of add_card
+        """
+        warnings.warn('addCard has been deprecated; use add_card',
+                      DeprecationWarning, stacklevel=2)
+        return self.add_card(card, cardName, icard=iCard,
+                             old_card_obj=oldCardObj)
+
+    def disableCards(self, cards):
+        """
+        @see disable_cards
+        @warning will be removed after v0.7 in favor of disable_cards
+        """
+        warnings.warn('disableCards has been deprecated; use '
+                      'disable_cards', DeprecationWarning, stacklevel=2)
+        self.disable_cards(cards)
+
     def __init__(self, debug=True, log=None):
         """
         Initializes the BDF object
@@ -289,8 +335,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         @param filename a filename string
         @retval filenameString a shortened representation of the filename
         """
-        driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
-        if driveLetter == os.path.splitdrive(os.curdir)[0] and self.relpath:
+        drive_letter = os.path.splitdrive(os.path.abspath(filename))[0]
+        if drive_letter == os.path.splitdrive(os.curdir)[0] and self.relpath:
             return os.path.relpath(filename)
         return filename
 
@@ -305,9 +351,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _init_solution(self):
         """
-        creates storage objects for the BDF object
-        this would be in the init but doing it this way allows for
-        better inheritance
+        Creates storage objects for the BDF object.
+        This would be in the init but doing it this way allows for better
+        inheritance
 
         References:
           1.  http://www.mscsoftware.com/support/library/conf/wuc87/p02387.pdf
@@ -391,16 +437,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self._init_thermal_defaults()
 
     def _is_special_card(self, cardName):
-        """these cards are listed in the case control and the bulk data deck"""
+        """These cards are listed in the case control and the bulk data deck"""
         if cardName in self.specialCards:
             return True
         return False
 
     def _init_structural_defaults(self):
         """
-        Creates storage objects for the BDF object
-        this would be in the init but doing it this way allows for
-        better inheritance
+        Creates storage objects for the BDF object.
+        This would be in the init but doing it this way allows for better
+        inheritance
         """
         ## the analysis type
         self.sol = None
@@ -521,8 +567,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     def _init_aero_defaults(self):
         """
         Creates storage objects for the BDF object
-        this would be in the init but doing it this way allows for
-        better inheritance
+        This would be in the init but doing it this way allows for better
+        inheritance
         """
         # aero cards
         ## stores CAEROx
@@ -573,7 +619,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         ## stores convection properties - PCONV, PCONVM ???
         self.convectionProperties = {}
 
-    def readBDF(self, bdf_filename, include_dir=None, xref=True, punch=False):
+    def read_bdf(self, bdf_filename, include_dir=None, xref=True, punch=False):
         """
         Read method for the bdf files
         @param self the BDF object
@@ -593,7 +639,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         self.open_file(self.bdf_filename)
 
-        self.log.debug('---starting BDF.readBDF of %s---' % self.bdf_filename)
+        self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
         #self.log.info('xref=%s' % xref)
 
         if not punch:
@@ -603,7 +649,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self._read_bulk_data_deck()
         self.cross_reference(xref=xref)
 
-        self.log.debug('---finished BDF.readBDF of %s---' % self.bdf_filename)
+        self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
 
     def _read_executive_control_deck(self):
         """Reads the executive control deck"""
@@ -652,18 +698,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     raise RuntimeError(msg)
         #print("sol = ", sol)
 
-    def updateSolution(self, sol, method=None):
-        """
-        @see update_solution
-        @warning will be removed after v0.7 in favor of update_solution
-        """
-        warnings.warn('updateSolution has been deprecated; use '
-                      'update_solution', DeprecationWarning, stacklevel=2)
-        self.update_solution(sol, method)
-
     def update_solution(self, sol, method=None):
         """
-        updates the overall solution type (e.g. 101,200,600)
+        Updates the overall solution type (e.g. 101,200,600)
         @param self   the object pointer
         @param sol    the solution type (101,103, etc)
         @param method the solution method (only for SOL=600), default=None
@@ -681,31 +718,49 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         else:  # very common
             self.solMethod = None
 
-    def setDynamicSyntax(self, dictOfVars):
-        """
-        @see set_dynamic_syntax
-        @warning will be removed after v0.7 in favor of set_dynamic_syntax
-        """
-        warnings.warn('setDynamicSyntax has been deprecated; use '
-                      'set_dynamic_syntax', DeprecationWarning, stacklevel=2)
-        self.set_dynamic_syntax(dictOfVars)
-
     def set_dynamic_syntax(self, dict_of_vars):
         """
         Uses the OpenMDAO syntax of %varName in an embedded BDF to
         update the values for an optimization study.
         Variables should be 7 characters to fit in an 8-character field.
+        Case sensitivity is supported.
         %varName
         dict_of_vars = {'varName': 10}
         @param self the BDF object
         @param dict_of_vars dictionary of 7 character variable names to map.
         """
         self.dict_of_vars = {}
+        assert len(dict_of_vars) > 0, 'nvars = %s' % len(dict_of_vars)
         for (key, value) in sorted(dict_of_vars.iteritems()):
             assert len(key) <= 7, ('max length for key is 7; '
                                    'len(%s)=%s' % (key, len(key)))
-            self.dict_of_vars[key.upper()] = value
+            assert len(key) <= 1, ('max length for key is 1; '
+                                   'len(%s)=%s' % (key, len(key)))
+            assert isinstance(key, str), 'key=%s must be a string' % key
+            self.dict_of_vars[key] = value
         self._is_dynamic_syntax = True
+
+    def _parse_dynamic_syntax(self, key):
+        """
+        Applies the dynamic syntax for %varName
+        @param self the object pointer
+        @param key the uppercased key
+        @retval value the dynamic value defined by dictOfVars
+        @note
+          %varName is actually %VARNAME b/c of auto-uppercasing the string,
+          so the setDynamicSyntax method uppercases the key prior to this step.
+        @see setDynamicSyntax
+        """
+        #print "*** valueRaw.lstrip() = |%r|" % valueRaw.lstrip()
+        #key = key.lstrip('%%')
+        key = key[1:].strip()
+        self.log.info("dynamic key = |%r|" % key)
+        #self.dict_of_vars = {'P5':0.5,'ONEK':1000.}
+        if key not in self.dict_of_vars:
+            msg = "key=|%r| not found in keys=%s" % (key,
+                                                     self.dict_of_vars.keys())
+            raise KeyError(msg)
+        return self.dict_of_vars[key]
 
     def _is_case_control_deck(self, line):
         """
@@ -724,7 +779,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _read_case_control_deck(self):
         """
-        reads the case control deck
+        Reads the case control deck
         @note called with recursion if an INCLUDE file is found
         """
         if not self.has_case_control_deck:
@@ -751,7 +806,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     next_line, comment = self.get_next_line(False)
                     next_line = next_line.strip().split('$')[0].strip()
 
-                filename = self._get_include_file_name(include_lines)
+                filename = self._get_include_filename(include_lines)
 
                 self.open_file(filename)
                 #line = next_line
@@ -771,8 +826,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.caseControlDeck.solmap_toValue = self._solmap_to_value
         self.caseControlDeck.rsolmap_toStr = self.rsolmap_toStr
 
-    def _get_include_file_name(self, cardLines):
-        """Parses an INCLUDE file split into multiple lines (as a list).
+    def _get_include_filename(self, cardLines):
+        """
+        Parses an INCLUDE file split into multiple lines (as a list).
         @param self the BDF object
         @param cardLines the list of lines in the include card (all the lines!)
         @retval filename the INCLUDE filename
@@ -1045,7 +1101,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             (raw_card, comment, card_name) = self.get_card()
             #print("raw_card",raw_card)
             if card_name == 'INCLUDE':
-                filename = self._get_include_file_name(raw_card)
+                filename = self._get_include_filename(raw_card)
                 self.open_file(filename)
                 reject = '$ INCLUDE processed:  %s\n' % (filename)
                 self.rejects.append([reject])
@@ -1082,7 +1138,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def add_card(self, card_lines, card_name, comment=''):
         """
-        adds a card object to the BDF object.
+        Adds a card object to the BDF object.
         @param self the BDF object
         @param card_lines the list of the card fields -> ['GRID',1,2,]
         @param card_name the card_name -> 'GRID'
@@ -1106,9 +1162,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             fields = to_fields(card_lines, card_name)
 
             # apply OPENMDAO syntax
+            #print("_is_dynamic_syntax =", self._is_dynamic_syntax)
             if self._is_dynamic_syntax:
-                fields = [self.parse_dynamic_syntax(field) if '%' in field[0:1]
-                          else field for field in fields]
+                fields = [self._parse_dynamic_syntax(field) if '%' in
+                          field[0:1] else field for field in fields]
 
             card = wipe_empty_fields([interpretValue(field, fields)
                                       for field in fields])
@@ -1530,7 +1587,7 @@ def to_fields(card_lines, card_name):
             assert len(new_fields) == 8, 'nFields=%s new_fields=%s' % (len(new_fields), new_fields)
 
         fields += new_fields
-        #print("new_fieldsB =",new_fields)
+        #print("new_fieldsB =", new_fields)
 
     return fields
 
@@ -1538,5 +1595,5 @@ def to_fields(card_lines, card_name):
 if __name__ == '__main__':
     bdf = BDF()
     infilename = 'f.bdf'
-    bdf.readBDF(infilename, include_dir=None, xref=True, punch=False)
+    bdf.read_bdf(infilename, include_dir=None, xref=True, punch=False)
     print(bdf)
