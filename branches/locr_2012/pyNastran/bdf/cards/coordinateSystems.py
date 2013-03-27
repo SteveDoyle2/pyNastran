@@ -294,15 +294,6 @@ class SphericalCoord(object):
       consistent with nastran's documentation
     @see refman.pdf
     """
-    def coordToXYZ(self, p):
-        R = p[0]
-        theta = radians(p[1])
-        phi = radians(p[2])
-        x = R * cos(theta) * sin(phi)
-        y = R * sin(theta) * sin(phi)
-        z = R * cos(phi)
-        return array([x, y, z]) + self.e1
-
     def XYZtoCoord(self, p):
         (x, y, z) = p
         R = sqrt(x * x + y * y + z * z)
@@ -312,6 +303,16 @@ class SphericalCoord(object):
         else:
             phi = 0.
         return array([R, theta, phi])
+
+    def coordToXYZ(self, p):
+        R = p[0]
+        theta = radians(p[1])
+        phi = radians(p[2])
+        x = R * cos(theta) * sin(phi)
+        y = R * sin(theta) * sin(phi)
+        z = R * cos(phi)
+        return array([x, y, z]) + self.e1
+
 
 
 class Cord2x(Coord):
