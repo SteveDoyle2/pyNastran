@@ -15,19 +15,6 @@ class BDFReader(object):
             #                   %(str(sys.version_info)))
         self.log = get_logger(log, 'debug' if debug else 'info')
 
-    def print_filename(self, filename):
-        """
-        Takes a path such as C:/work/fem.bdf and locates the file using
-        relative paths.  If it's on another drive, the path is not modified.
-        @param self the object pointer
-        @param filename a filename string
-        @retval filenameString a shortened representation of the filename
-        """
-        driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
-        if driveLetter == os.path.splitdrive(os.curdir)[0] and self.relpath:
-            return os.path.relpath(filename)
-        return filename
-
     def open_file(self, infileName):
         """
         Takes a filename and opens the file.
@@ -97,8 +84,8 @@ class BDFReader(object):
         ## opportunity
         self.doneReading = False
         if debug:
-            fnameA = self.print_filename(active_filename)
-            fnameB = self.print_filename(self.bdf_filename)
+            fnameA = print_filename(active_filename)
+            fnameB = print_filename(self.bdf_filename)
 
             self.log.debug("active_filename=|%s| infilename=%s len(pack)=%s\n"
                            % (fnameA, fnameB, nlines))
@@ -145,3 +132,16 @@ class BDFReader(object):
         self.card_count = {}
         ## stores the card_count of cards that have been rejected
         self.rejectCount = {}
+
+def print_filename(filename):
+    """
+    Takes a path such as C:/work/fem.bdf and locates the file using
+    relative paths.  If it's on another drive, the path is not modified.
+    @param self the object pointer
+    @param filename a filename string
+    @retval filenameString a shortened representation of the filename
+    """
+    driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
+    if driveLetter == os.path.splitdrive(os.curdir)[0] and self.relpath:
+        return os.path.relpath(filename)
+    return filename

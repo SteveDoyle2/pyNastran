@@ -79,7 +79,7 @@ from pyNastran.bdf.bdf_Methods import BDFMethods
 from .bdfInterface.getCard import GetMethods
 from .bdfInterface.addCard import AddMethods
 from .bdfInterface.BDF_Card import BDFCard
-from .bdfInterface.bdf_Reader import BDFReader
+from .bdfInterface.bdf_Reader import BDFReader, print_filename
 from .bdfInterface.bdf_writeMesh import WriteMesh
 from .bdfInterface.bdf_cardMethods import parse_csv, nastran_split, isLargeField
 from .bdfInterface.crossReference import XrefMesh
@@ -608,7 +608,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         self._set_infile(infilename, includeDir)
 
-        fname = self.print_filename(self.bdf_filename)
+        fname = print_filename(self.bdf_filename)
         self.log.debug('---starting BDF.read_bdf of %s---' % fname)
         #self.log.info('xref=%s' % xref)
 
@@ -853,7 +853,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 #print("^&*2", nextLine)
 
             #print("include lines = |%s|" % includeLines)
-            filename = self._get_include_file_name(includeLines)
+            filename = get_include_file_name(includeLines, include_dir=self.include_dir)
 
             self._add_include_file(filename)
             #self.open_file(filename)
@@ -897,30 +897,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 self.rejectCount[cardName] = 0
             self.rejectCount[cardName] += 1
         return True
-
-    def _get_include_file_name(self, cardLines):
-        """
-        Parses an INCLUDE file split into multiple lines (as a list).
-        @param self the BDF object
-        @param cardLines the list of lines in the include card (all the lines!)
-        @param cardName INCLUDE or include (needed to strip it off without
-          converting the case)
-        @retval filename the INCLUDE filename
-        """
-        cardLines2 = []
-        for line in cardLines:
-            line = line.strip('\t\r\n ')
-            cardLines2.append(line)
-
-        cardLines2[0] = cardLines2[0][7:].strip()  # truncate the cardname
-        filename = ''.join(cardLines2)
-        filename = filename.strip('"').strip("'")
-        if ':' in filename:
-            ifilepaths = filename.split(':')
-            filename = os.path.join(*ifilepaths)
-        #print('filename = |%s|' % filename)
-        filename = os.path.join(self.includeDir, filename)
-        return filename
 
     def _add_include_file(self, infileName):
         """
@@ -1244,7 +1220,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 #raise SyntaxError('lines are ambiguous when there are tabs...'
                 #                  'fix them...line=|%r|' %(line))
                 if ',' in line:
-                    #expandTabCommas(line2)
+                    #expand_tab_commas(line2)
                     raise SyntaxError('tabs and commas in the same line are '
                                       'not supported...line=|%r|' % line)
                 line = line.expandtabs()
@@ -1468,34 +1444,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #self.log.debug("  sline2 = %s" % collapse(card))
         #return make_single_streamed_card(self.log, card)
         return card
-
-    def expandTabCommas(self, line):
-        """
-        The only valid tab/commas format in nastran is having the first field
-        be a tab and the rest of the fields be separated by commas.
-        @param self the object pointer
-        @param line a BDF line
-        """
-        fields = []
-        isWord = True
-        field = ''
-        i = 0
-        for (i, letter) in enumerate(line):
-            if letter not in ['\t', ',', ' ']:  # tab or comma
-                if isWord:
-                    field += letter
-                else:
-                    isWord = True
-                    fields.append(field)
-                    field = ''
-                    field += letter
-            elif letter == ' ' or letter == ',':
-                isWord = False
-                break
-        #fields.append(field)
-        sline = [field] + line[i:72].split(',')
-        print("expandTabCommas = |%r|" % sline)
-        return fields
 
     def card_stats(self):
         """
@@ -1751,3 +1699,55 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         if debug:
             print("SCIENTIFIC!")
         return value
+
+def get_include_file_name(self, cardLines, include_dir=''):
+    """
+    Parses an INCLUDE file split into multiple lines (as a list).
+    @param self the BDF object
+    @param cardLines the list of lines in the include card (all the lines!)
+    @param cardName INCLUDE or include (needed to strip it off without
+      converting the case)
+    @retval filename the INCLUDE filename
+    """
+    cardLines2 = []
+    for line in cardLines:
+        line = line.strip('\t\r\n ')
+        cardLines2.append(line)
+
+    cardLines2[0] = cardLines2[0][7:].strip()  # truncate the cardname
+    filename = ''.join(cardLines2)
+    filename = filename.strip('"').strip("'")
+    if ':' in filename:
+        ifilepaths = filename.split(':')
+        filename = os.path.join(*ifilepaths)
+    #print('filename = |%s|' % filename)
+    filename = os.path.join(include_dir, filename)
+    return filename
+
+
+def expand_tab_commas(line):
+    """
+    The only valid tab/commas format in nastran is having the first field
+    be a tab and the rest of the fields be separated by commas.
+    @param line a BDF line
+    """
+    fields = []
+    isWord = True
+    field = ''
+    i = 0
+    for (i, letter) in enumerate(line):
+        if letter not in ['\t', ',', ' ']:  # tab or comma
+            if isWord:
+                field += letter
+            else:
+                isWord = True
+                fields.append(field)
+                field = ''
+                field += letter
+        elif letter == ' ' or letter == ',':
+            isWord = False
+            break
+    #fields.append(field)
+    sline = [field] + line[i:72].split(',')
+    print("expand_tab_commas = |%r|" % sline)
+    return fields

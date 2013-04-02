@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 import warnings
 from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.bdfInterface.bdf_Reader import print_filename
 
 
 class WriteMesh(object):
@@ -128,7 +129,7 @@ class WriteMesh(object):
         """
         assert size in [8, 16]
         #size = 16
-        fname = self.print_filename(outFileName)
+        fname = print_filename(outFileName)
         self.log.debug("***writing %s" % fname)
 
         outfile = open(outFileName, 'wb')
@@ -159,7 +160,7 @@ class WriteMesh(object):
         """
         assert size in [8, 16]
         #size = 16
-        fname = self.print_filename(out_filename)
+        fname = print_filename(out_filename)
         self.log.debug("***writing %s" % fname)
 
         outfile = open(out_filename, 'wb')
@@ -188,7 +189,7 @@ class WriteMesh(object):
         @param debug developer debug (unused)
         @warning not tested in a long time
         """
-        fname = self.print_filename(outFileName)
+        fname = print_filename(outFileName)
         self.log.debug("***writing %s" % fname)
 
         outfile = open(outFileName, 'wb')
