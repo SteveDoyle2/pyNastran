@@ -120,9 +120,9 @@ def run_fem1(fem1, bdfModel, meshForm, xref, cid):
     assert os.path.exists(bdfModel), print_bad_path(bdfModel)
     try:
         if '.pch' in bdfModel:
-            fem1.readBDF_Punch(bdfModel, xref=False, punch=True)
+            fem1.read_bdf(bdfModel, xref=False, punch=True)
         else:
-            fem1.readBDF(bdfModel, xref=xref)
+            fem1.read_bdf(bdfModel, xref=xref)
     except:
         print("failed reading |%s|" % (bdfModel))
         raise
@@ -132,9 +132,9 @@ def run_fem1(fem1, bdfModel, meshForm, xref, cid):
     if cid is not None and xref:
         fem1.resolveGrids(cid=cid)
     if meshForm == 'combined':
-        fem1.writeBDFAsPatran(outModel)
+        fem1.write_bdf_as_patran(outModel)
     elif meshForm == 'separate':
-        fem1.writeBDF(outModel)
+        fem1.write_bdf(outModel)
     else:
         msg = "meshForm=|%r| allowedForms=['combined','separate']" % (meshForm)
         raise NotImplementedError(msg)
@@ -175,8 +175,8 @@ def divide(value1, value2):
 
 
 def compare_card_count(fem1, fem2, print_stats=False):
-    cards1 = fem1.cardCount
-    cards2 = fem2.cardCount
+    cards1 = fem1.card_count
+    cards2 = fem2.card_count
     if print_stats:
         print(fem1.card_stats())
     else:

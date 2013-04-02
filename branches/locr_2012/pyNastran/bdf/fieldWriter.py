@@ -46,7 +46,7 @@ def print_scientific_8(value):
     This is a sub-method and shouldnt typically be called
     @see print_float_8 for a better method
     """
-    python_value = '%8.11e' % (value)
+    python_value = '%8.11e' % value
     (svalue, sExponent) = python_value.strip().split('e')
     exponent = int(sExponent)  # removes 0s
 
@@ -63,7 +63,7 @@ def print_scientific_8(value):
     else:
         Format = "%%1.%sf" % (leftover - 2)
 
-    svalue3 = Format % (value2)
+    svalue3 = Format % value2
     svalue4 = svalue3.strip('0')
     field = "%8s" % (svalue4 + sign + sExp2)
     return field

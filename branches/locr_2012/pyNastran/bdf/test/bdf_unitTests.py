@@ -7,7 +7,7 @@ from pyNastran.bdf.cards.baseCard import collapse_thru_by
 from pyNastran.bdf.caseControlDeck import CaseControlDeck
 
 testPath = pyNastran.__path__[0]
-#print("testPath = %s" %(testPath))
+#print("testPath = %s" % testPath)
 from pyNastran.bdf.test.test_bdf import runBDF, run_all_files_in_folder
 
 
@@ -20,7 +20,7 @@ class Tester(unittest.TestCase):
         runBDF(folder, bdfFilename, xref=xref, cid=cid, isFolder=True,
                meshForm=meshForm, debug=debug)
 
-    def runAllFilesInFolder(self, folder, xref=False, cid=None, debug=False):
+    def run_all_files_in_folder(self, folder, xref=False, cid=None, debug=False):
         run_all_files_in_folder(folder, xref=xref, cid=cid, debug=debug)
 
 

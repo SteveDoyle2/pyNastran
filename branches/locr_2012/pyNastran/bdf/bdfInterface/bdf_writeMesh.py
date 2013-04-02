@@ -24,7 +24,7 @@ class WriteMesh(object):
         @see write_bdf_as_patran
         @warning will be removed after v0.7 in favor of write_bdf_as_patran
         """
-        warnings.warn('writeAsPatran has been deprecated; use '
+        warnings.warn('writeBDFAsPatran has been deprecated; use '
                       'write_bdf_as_patran', DeprecationWarning, stacklevel=2)
         self.write_bdf_as_patran(outFileName, size, debug)
 

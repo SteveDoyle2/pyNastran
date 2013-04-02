@@ -106,7 +106,7 @@ class BDFReader(object):
 
     def _set_infile(self, bdf_filename, includeDir=None):
         """
-        Sets up the basic file/lines/cardCounting operations
+        Sets up the basic file/lines/card counting operations
         @param self
           the BDF object
         @param bdf_filename
@@ -142,6 +142,6 @@ class BDFReader(object):
         self.isOpened = {self.bdf_filename: False}
         ## list of all read in cards - useful in determining if
         ## entire BDF was read & really useful in debugging
-        self.cardCount = {}
-        ## stores the cardCount of cards that have been rejected
+        self.card_count = {}
+        ## stores the card_count of cards that have been rejected
         self.rejectCount = {}

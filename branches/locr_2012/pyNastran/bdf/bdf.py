@@ -1321,10 +1321,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         if cardName == '':  # stupid null case
             return
 
-        if cardName in self.cardCount:
-            self.cardCount[cardName] += 1
+        if cardName in self.card_count:
+            self.card_count[cardName] += 1
         else:
-            self.cardCount[cardName] = 1
+            self.card_count[cardName] = 1
 
     def _get_multi_line_card(self, i, tempcard, isCSV=False, debug=False):
         iline = self.linesPack[-1][i].rstrip()
@@ -1563,7 +1563,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             # not cards
             'debug',  'executive_control_lines',
-            'case_control_lines', 'cardsToRead', 'cardCount',
+            'case_control_lines', 'cardsToRead', 'card_count',
             'isStructured', 'uniqueBulkDataCards',
             'nCardLinesMax', 'modelType', 'includeDir',
             'cardsToWrite', 'solMethod', 'log', 'doneReading',
@@ -1617,7 +1617,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             group_msg = []
             for card_name in sorted(groups):
                 try:
-                    ncards = self.cardCount[card_name]
+                    ncards = self.card_count[card_name]
                     group_msg.append('  %-8s %s' % (card_name + ':', ncards))
                 except KeyError:
                     assert card_name == 'CORD2R'
@@ -1629,7 +1629,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         # rejects
         if self.rejects:
             msg.append('Rejected Cards')
-            for name, counter in sorted(self.cardCount.iteritems()):
+            for name, counter in sorted(self.card_count.iteritems()):
                 if name not in self.cardsToRead:
                     msg.append('  %-8s %s' % (name + ':', counter))
         return '\n'.join(msg)
