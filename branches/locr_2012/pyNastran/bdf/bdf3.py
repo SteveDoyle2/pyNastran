@@ -1,19 +1,21 @@
+# pylint: disable=C0103,C0302,R0901,R0902,R0904,R0912,R0914,R0915,W0201,W0611
+"""
+Main BDF class
+"""
 #from __future__ import (nested_scopes, generators, division, absolute_import,
 #                        print_function, unicode_literals)
 
 #from __future__ import (nested_scopes, generators, division, absolute_import)
                         #print_function, unicode_literals)
 
-import os
-import sys
-#from pyNastran.bdf.bdf2 import (to_fields, wipe_empty_fields, interpret_value,
-#                                get_include_filename, parse_executive_control_deck)
-from pyNastran.bdf.bdf2 import *
-
 #import io
 import os
 import sys
 import warnings
+#from pyNastran.bdf.bdf2 import (to_fields, wipe_empty_fields, interpret_value,
+#                                get_include_filename, parse_executive_control_deck)
+from pyNastran.bdf.bdf2 import *
+
 
 from pyNastran.utils import list_print
 from pyNastran.utils import object_attributes
@@ -148,11 +150,17 @@ class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.disable_cards(cards)
 
     def __init__(self, debug=True, log=None):
+        """
+        Initializes the BDF object
+        @param self the BDF object
+        @param debug used to set the logger if no logger is passed in
+        @param log a python logging module object
+        """
         # file management parameters
         self.include_dir = ''
         self.active_filename = None
         self.active_filenames = []
-        self.all_filenames = []
+        self.used_filenames = []
         self._line_generators = []
 
         self.stored_Is = []
@@ -332,6 +340,15 @@ class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         ## / is the delete from restart card
         self.specialCards = ['DEQATN', '/']
+
+    def disable_cards(self, cards):
+        """
+        Method for removing broken cards from the reader
+        @param self the BDF object
+        @param cards a list/set of cards that should not be read
+        """
+        disableSet = set(cards)
+        self.cardsToRead.difference(disableSet)
 
     #def _is_special_card(self, cardName):
         #"""These cards are listed in the case control and the bulk data deck"""
@@ -590,25 +607,38 @@ class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.convectionProperties = {}
 
     def read_bdf(self, bdf_filename, include_dir=None, xref=True, punch=False):
+        """
+        Read method for the bdf files
+        @param self the BDF object
+        @param bdf_filename the input bdf
+        @param include_dir the relative path to any include files (default=None
+          if no include files)
+        @param xref should the bdf be cross referenced (default=True)
+        @param punch indicates whether the file is a punch file (default=False)
+        """
+        ## the active filename (string)
+        self.bdf_filename = bdf_filename
+
         if include_dir is None:
             include_dir = os.path.dirname(bdf_filename)
         ## the directory of the 1st BDF (include BDFs are relative to this one)
         self.include_dir = include_dir
 
-        #self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
-        self.open_file(bdf_filename)
+        self.open_file(self.bdf_filename)
+        self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
 
-        #self.get_line_gen = self.stream_file()
+        #self.get_line_gen = self.get_next_line()
         self.gen2 = self.get_card()
         #print "gen2 = ", self.gen2
 
         if not punch:
             self._read_executive_control_deck()
             self._read_case_control_deck()
-        self.read_bulk_data_deck()
-        #self.cross_reference(xref=xref)
 
-        #self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
+        self._read_bulk_data_deck()
+        self.cross_reference(xref=xref)
+
+        self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
     
     def _read_executive_control_deck(self):
         """Reads the executive control deck"""
@@ -628,26 +658,93 @@ class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             (i, line, comment) = self.get_line_gen.next()   # BEGIN BULK
             #print('execline2 = ',line)
 
-        #self._parse_executive_control_deck()
-        #sol, method, iSolLine = parse_executive_control_deck(self.executive_control_lines)
-        #self.sol = sol
-        #self.iSolLine = iSolLine
-        #try:
-            #self.update_solution(sol, method)
-        #except:
-            #msg = ('update_solution failed...line=%s' % uline)
-            #raise RuntimeError(msg)
+        sol, method, iSolLine = parse_executive_control_deck(self.executive_control_lines)
+        self.sol = sol
+        self.iSolLine = iSolLine
+        try:
+            self.update_solution(sol, method)
+        except:
+            msg = ('update_solution failed...line=%s' % uline)
+            raise RuntimeError(msg)
 
-    #def read_executive_deck(self):
-        #self.executive_lines = []
-        #(i, line, comment) = self.get_line_gen.next()
-        #while 'CEND' not in line:
-            #self.executive_lines.append(line)
-            #(i, line, comment) = self.get_line_gen.next()
-            #print "line =", line
-        #self.executive_lines.append(line)
-        #print "end of executive control",line
+    def update_solution(self, sol, method=None):
+        """
+        Updates the overall solution type (e.g. 101,200,600)
+        @param self   the object pointer
+        @param sol    the solution type (101,103, etc)
+        @param method the solution method (only for SOL=600), default=None
+        """
+        ## the integer of the solution type (e.g. SOL 101)
+        try:
+            self.sol = int(sol)
+        except ValueError:
+            self.sol = self._solmap_to_value[sol]
 
+        if self.sol == 600:
+            ## solution 600 method modifier
+            self.solMethod = method.strip()
+            self.log.debug("sol=%s method=%s" % (self.sol, self.solMethod))
+        else:  # very common
+            self.solMethod = None
+
+    def set_dynamic_syntax(self, dict_of_vars):
+        """
+        Uses the OpenMDAO syntax of %varName in an embedded BDF to
+        update the values for an optimization study.
+        Variables should be 7 characters to fit in an 8-character field.
+        Case sensitivity is supported.
+        %varName
+        dict_of_vars = {'varName': 10}
+        @param self the BDF object
+        @param dict_of_vars dictionary of 7 character variable names to map.
+        """
+        self.dict_of_vars = {}
+        assert len(dict_of_vars) > 0, 'nvars = %s' % len(dict_of_vars)
+        for (key, value) in sorted(dict_of_vars.iteritems()):
+            assert len(key) <= 7, ('max length for key is 7; '
+                                   'len(%s)=%s' % (key, len(key)))
+            assert len(key) <= 1, ('max length for key is 1; '
+                                   'len(%s)=%s' % (key, len(key)))
+            assert isinstance(key, str), 'key=%s must be a string' % key
+            self.dict_of_vars[key] = value
+        self._is_dynamic_syntax = True
+
+    def _parse_dynamic_syntax(self, key):
+        """
+        Applies the dynamic syntax for %varName
+        @param self the object pointer
+        @param key the uppercased key
+        @retval value the dynamic value defined by dictOfVars
+        @note
+          %varName is actually %VARNAME b/c of auto-uppercasing the string,
+          so the setDynamicSyntax method uppercases the key prior to this step.
+        @see setDynamicSyntax
+        """
+        #print "*** valueRaw.lstrip() = |%r|" % valueRaw.lstrip()
+        #key = key.lstrip('%%')
+        key = key[1:].strip()
+        self.log.info("dynamic key = |%r|" % key)
+        #self.dict_of_vars = {'P5':0.5,'ONEK':1000.}
+        if key not in self.dict_of_vars:
+            msg = "key=|%r| not found in keys=%s" % (key,
+                                                     self.dict_of_vars.keys())
+            raise KeyError(msg)
+        return self.dict_of_vars[key]
+
+    def _is_case_control_deck(self, line):
+        """
+        @todo not done...
+        """
+        lineUpper = line.upper().strip()
+        if 'CEND' in line.upper():
+            raise SyntaxError('invalid Case Control Deck card...CEND...')
+        if '=' in lineUpper or ' ' in lineUpper:
+            return True
+        for card in self.uniqueBulkDataCards:
+            lenCard = len(card)
+            if card in lineUpper[:lenCard]:
+                return False
+        return True
 
     def _read_case_control_deck(self):
         """
@@ -656,7 +753,7 @@ class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         if not self.has_case_control_deck:
             return
-        #self.log.info("reading Case Control Deck...")
+        self.log.info("reading Case Control Deck...")
         line = ''
         while len(self.active_filenames) > 0:  # keep going until finished
             (i, lineIn, comment) = self.get_line_gen.next()
@@ -688,7 +785,7 @@ class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 self.case_control_lines.append(lineUpper)
 
             if 'BEGIN' in lineUpper and 'BULK' in lineUpper:
-                #self.log.debug('found the end of the case control deck!')
+                self.log.debug('found the end of the case control deck!')
                 break
         #self.log.info("finished with Case Control Deck..")
 
@@ -699,82 +796,138 @@ class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.caseControlDeck.solmap_toValue = self._solmap_to_value
         self.caseControlDeck.rsolmap_toStr = self.rsolmap_toStr
 
-    #def _read_case_control_deck(self):
-        #self.case_control_lines = []
-        #(i, line, comment) = self.get_line_gen.next()
-        #while 'BEGIN BULK' not in line:
-            #self.case_control_lines.append(line)
-            #(i, line, comment) = self.get_line_gen.next()
-            #print "line =", line
-        #self.case_control_lines.append(line)
-        #print "end of case control", line
-
-    def read_bulk_data_deck(self):
-        n = 1
-        isDone = False
-        for (lines, comments) in self.gen2:
-            #print "*asdf*lines =", lines
-            if not lines:
-                self.close_file()
-                if self.active_filename:
-                    continue
-                break
-            
-            card_name = self.get_card_name(lines)
-            #print "card_name =", card_name
-            if card_name == 'INCLUDE':
-                new_bdf_filename = get_include_filename(lines, include_dir=self.include_dir)
-                #print "newfname =", newfname
-                self.open_file(new_bdf_filename)
-                #asfd
-            #print "*asdf*comments =", comments
-            #print "*asdf*card_name =", card_name
-            #fields = to_fields(lines, card_name)
-            #card = wipe_empty_fields([interpret_value(field, fields)
-            #                          for field in fields])
-
-            self._increase_card_count(card_name)
-            if not self.is_reject(card_name):
-                self.add_card(lines, card_name)
-            else:
-                self.rejects.append(lines)
-                continue
-
-            if 'ENDDATA' in card_name:
-                break  # exits while loop
-            
-            
-            #print "bulk card =", card
-            #if n >3:
-                #sys.exit('check')
-            
-            isDone = False
-
-            c = ''
-            if comments:  c=' comments=%s' % comments
-            #print "ncard=%s lines=%s%s" % (n, lines, c)
-            n += 1
-
-            #print "**********************"
-        #bbb
-        print "done..."
-
-    def get_card_name(self, lines):
+    def is_reject(self, card_name):
         """
-        Returns the name of the card defined by the provided lines
+        Can the card be read
         @param self the BDF object
-        @param lines the lines of the card
-        @retval cardname the name of the card
+        @param card_name the card_name -> 'GRID'
         """
-        #print "card_name lines=%s" % lines
-        card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('*\t ')
-        #print card_name
-        if len(card_name) == 0:
-            return None
-        assert ' ' not in card_name and len(card_name) > 0, 'card_name=|%r|\nline=|%s| in filename=%s is invalid' % (card_name, lines[0], self.active_filename)
-        return card_name.upper()
+        if card_name.startswith('='):
+            return False
+        elif card_name in self.cardsToRead:
+            return False
+        if card_name:
+            if card_name not in self.reject_count:
+                self.log.info("RejectCardName = |%s|" % card_name)
+                self.reject_count[card_name] = 0
+            self.reject_count[card_name] += 1
+        return True
+
+    def open_file(self, bdf_filename):
+        """
+        Opens the primary bdf/dat file and all subsequent INCLUDE files.
+        @param fname:  the name of the bdf/dat file to open
+        @return: None
+        @note Doesn't allow reuse of the same bdf/dat file twice.
+        """
+        #print "opening self.active_filename=%s" % bdf_filename
+        if bdf_filename in self.used_filenames:
+            msg = 'bdf_filename=%s has already been opened once.\nused_filenames=%s' % self.used_filenames
+            raise RuntimeError(msg)
+        self.log.info("opening %s" % bdf_filename)
+        self.active_filename = bdf_filename
+        self.used_filenames.append(bdf_filename)
+        
+        #if len(self.used_filenames) > 1:
+        self.active_filenames.append(bdf_filename)
+        #print "active_filenames =", self.active_filenames
+        self.get_line_gen = self.get_next_line()
+        self._line_generators.append(self.get_line_gen)
+
+    def _close_file(self):
+        """
+        Closes the primary bdf/dat file and all subsequent INCLUDE files.
+        @return: None
+        """
+        self.log.info("closing %s" % self.active_filename)
+        #print ""
+        #print "closing self.active_filename=%s" % self.active_filename
+        #print "*active_filenames =", self.active_filenames
+        if self.active_filenames:
+            # pop the closing file
+            self.active_filename = self.active_filenames.pop()
+            #print "the new active file is self.active_filename=%s" % self.active_filename
+            self.get_line_gen = self._line_generators.pop()
+        else:
+            self.active_filename = None
+            self.get_line_gen = None
+        
+    def get_next_line(self):
+        """
+        Gets the next Executive or Case Control Deck line.
+        builds a generator to read the BDF in a much cleaner way
+        @return: line, comment
+        """
+        with open(self.active_filename) as file:
+            for n,line in enumerate(file):
+                #print "%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+                line = line.rstrip('\t\r\n ')
+                if '$' in line:
+                    i = line.index('$')
+                    comment = line[i:] + '\n'
+                    line = line[:i].rstrip('\t ')
+                    #print "  **n=%s line=%s comment=%s" % (n, line.strip(), comment)
+                else:
+                    #print "  **n=%s line=%s" % (n, line.strip())
+                    pass
+                
+                comment = ''
+                #print "  stored lines =", self.stored_lines
+                #print "  yieldingB new line=|%s|" % line
+                #print "############################"
+                yield n, line, comment
+
+                #print "  stored lines2 =", self.stored_lines
+                while self.stored_lines:
+                    comment = ''
+                    #print "  trying to store lines...line=%s" % line
+                    i2 = self.stored_Is.pop(0)
+                    line2 = self.stored_lines.pop(0)
+                    if self.stored_comments:
+                        comment = ''.join(self.stored_comments)
+                        self.stored_comments = []
+
+                    #self.stored_Is.append(n)
+                    #self.stored_lines.append(line)
+                    #print "  yieldingA line=|%s|" % line2
+                    #print "############################"
+                    yield i2, line2, comment
+                
+        file.close()
+        #while self.stored_lines:
+            #yield -1, self.stored_lines.pop(0), ''
+        ###
+
+    def get_next_bulk_line(self, access_stored_lines):
+        """
+        @param self the BDF object
+        @param access_stored_lines Should all the stored lines be returned?
+          This happens on the first line of a new card.  This keeps all the
+          comments for it together.
+
+        @todo has a problem with comment lines that are embedded in a single line
+        TABLED1,1000,,,,,,,,+TAB1 $ THE ONE PER CENT DAMPING LINE
+        +TAB1   0.0     0.0     5.12    200.    100.    200.    200.    0.      +TAB2
+        $       F0      A0      F1      A1      F2      A2      F3      A3
+        +TAB2   1000.   0.      ENDT
+        $       F4      A4
+
+        but this should also be supported...
+        PBEAM,
+        +
+        1.0
+        where the + line represents a line (a + is not required, hence the difficulty)
+        """
+        comment = ''
 
     def get_card(self):
+        """
+        Returns the next Bulk Data Card in the BDF
+        @param self the BDF object
+        @retval lines the lines of the card
+        @retval comment the comment for the card
+        @retval cardname the name of the card
+        """
         #print '--------------------------'
         for (i, line, comment) in self.get_line_gen:
             #print "new card...line =|%s|" % line
@@ -867,92 +1020,72 @@ class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         #return line, comment
 
-    def is_reject(self, card_name):
+    def get_card_name(self, lines):
         """
-        Can the card be read
+        Returns the name of the card defined by the provided lines
         @param self the BDF object
-        @param card_name the card_name -> 'GRID'
+        @param lines the lines of the card
+        @retval cardname the name of the card
         """
-        if card_name.startswith('='):
-            return False
-        elif card_name in self.cardsToRead:
-            return False
-        if card_name:
-            if card_name not in self.reject_count:
-                self.log.info("RejectCardName = |%s|" % card_name)
-                self.reject_count[card_name] = 0
-            self.reject_count[card_name] += 1
-        return True
+        card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('*\t ')
+        if len(card_name) == 0:
+            return None
+        assert ' ' not in card_name and len(card_name) > 0, 'card_name=|%r|\nline=|%s| in filename=%s is invalid' % (card_name, lines[0], self.active_filename)
+        return card_name.upper()
 
-    def open_file(self, bdf_filename):
-        #print "opening self.active_filename=%s" % bdf_filename
-        if bdf_filename in self.all_filenames:
-            msg = 'bdf_filename=%s already found in all_filenames=%s' % self.all_filenames
-            raise RuntimeError(msg)
-        self.active_filename = bdf_filename
-        self.all_filenames.append(bdf_filename)
-        
-        #if len(self.all_filenames) > 1:
-        self.active_filenames.append(bdf_filename)
-        #print "active_filenames =", self.active_filenames
-        self.get_line_gen = self.stream_file()
-        self._line_generators.append(self.get_line_gen)
-
-    def close_file(self):
-        #print ""
-        #print "closing self.active_filename=%s" % self.active_filename
-        #print "*active_filenames =", self.active_filenames
-        if self.active_filenames:
-            self.active_filename = self.active_filenames.pop()
-            #print "the new active file is self.active_filename=%s" % self.active_filename
-            self.get_line_gen = self._line_generators.pop()
-        else:
-            self.active_filename = None
-            self.get_line_gen = None
-        
-    def stream_file(self):
+    def _read_bulk_data_deck(self):
         """
-        builds a generator to read the BDF in a much cleaner way
+        Parses the Bulk Data Deck
+        @param self the BDF object
         """
-        with open(self.active_filename) as file:
-            for n,line in enumerate(file):
-                #print "%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-                line = line.rstrip('\t\r\n ')
-                if '$' in line:
-                    i = line.index('$')
-                    comment = line[i:] + '\n'
-                    line = line[:i].rstrip('\t ')
-                    #print "  **n=%s line=%s comment=%s" % (n, line.strip(), comment)
-                else:
-                    #print "  **n=%s line=%s" % (n, line.strip())
-                    pass
-                
-                comment = ''
-                #print "  stored lines =", self.stored_lines
-                #print "  yieldingB new line=|%s|" % line
-                #print "############################"
-                yield n, line, comment
+        self.log.debug("*read_bulk_data_deck")
+        n = 1
+        isDone = False
+        for (lines, comments) in self.gen2:
+            #print "*asdf*lines =", lines
+            if not lines:
+                self._close_file()
+                if self.active_filename:
+                    continue
+                break
+            
+            card_name = self.get_card_name(lines)
+            #print "card_name =", card_name
+            if card_name == 'INCLUDE':
+                bdf_filename = get_include_filename(lines, include_dir=self.include_dir)
+                #print "newfname =", newfname
+                self.open_file(bdf_filename)
+                reject = '$ INCLUDE processed:  %s\n' % bdf_filename
+                self.rejects.append([reject])
+                continue
+            #print "*asdf*comments =", comments
+            #print "*asdf*card_name =", card_name
+            #fields = to_fields(lines, card_name)
+            #card = wipe_empty_fields([interpret_value(field, fields)
+            #                          for field in fields])
 
-                #print "  stored lines2 =", self.stored_lines
-                while self.stored_lines:
-                    comment = ''
-                    #print "  trying to store lines...line=%s" % line
-                    i2 = self.stored_Is.pop(0)
-                    line2 = self.stored_lines.pop(0)
-                    if self.stored_comments:
-                        comment = ''.join(self.stored_comments)
-                        self.stored_comments = []
+            self._increase_card_count(card_name)
+            if not self.is_reject(card_name):
+                self.add_card(lines, card_name)
+            else:
+                self.rejects.append(lines)
+                continue
 
-                    #self.stored_Is.append(n)
-                    #self.stored_lines.append(line)
-                    #print "  yieldingA line=|%s|" % line2
-                    #print "############################"
-                    yield i2, line2, comment
-                
-        file.close()
-        #while self.stored_lines:
-            #yield -1, self.stored_lines.pop(0), ''
-        ###
+            if 'ENDDATA' in card_name:
+                break  # exits while loop
+            
+            
+            #print "bulk card =", card
+            
+            isDone = False
+
+            c = ''
+            if comments:  c=' comments=%s' % comments
+            #print "ncard=%s lines=%s%s" % (n, lines, c)
+            n += 1
+
+            #print "**********************"
+        ### end of all the files
 
     def _increase_card_count(self, card_name):
         """
@@ -1341,340 +1474,166 @@ class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         msg.append('')
         return '\n'.join(msg)
 
-#lines_required = 100
-#gen = get_line()
-#chunk = [i for i, j in zip(gen, range(lines_required))]        
-                
-                
+def _clean_comment(comment):
+    """
+    Removes specific pyNastran comment lines so duplicate lines aren't
+    created.
+    @param comment the comment to possibly remove
+    """
+    if comment[:-1] in ['$NODES', '$SPOINTS', '$ELEMENTS',
+                   '$PARAMS', '$PROPERTIES', '$ELEMENTS_WITH_PROPERTIES',
+                   '$ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
+                   '$UNASSOCIATED_PROPERTIES',
+                   '$MATERIALS', '$THERMAL MATERIALS',
+                   '$CONSTRAINTS', '$SPCs', '$MPCs', '$RIGID ELEMENTS',
+                   '$LOADS', '$AERO', '$AERO CONTROL SURFACES',
+                   '$FLUTTER', '$DYNAMIC', '$OPTIMIZATION',
+                   '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
+                   '$SETS', '$REJECTS', '$REJECT_LINES']:
+        comment = ''
+    return comment
+
+
+def to_fields(card_lines, card_name):
+    """
+    Converts a series of lines in a card into string versions of the field.
+    Handles large, small, and CSV formatted cards.
+    @param lines the lines of the BDF card object
+    @param card_name the card_name -> 'GRID'
+    @retval fields the string formatted fields of the card
+    """
+    fields = []
+    #print('---------------')
+    # first line
+    line = card_lines.pop(0)
+    if '=' in line:
+            raise SyntaxError('card_name=%s\nequal signs are not supported...'
+                              'line=|%r|' % (card_name, line))
+        
+    if '\t' in line:
+        line = line.expandtabs()
+        if ',' in line:
+            raise SyntaxError('tabs and commas in the same line are '
+                              'not supported...line=|%r|' % line)
+
+    if '*' in line:  # large field
+        if ',' in line:  # csv
+            new_fields = line[:72].split(',')[:5]
+            for i in range(5-len(new_fields)):
+                new_fields.append('')
+        else:  # standard
+            new_fields = [line[0:8], line[8:24], line[24:40], line[40:56],
+                          line[56:72]]
+        fields += new_fields
+        assert len(fields) == 5
+    else:  # small field
+        if ',' in line:  # csv
+            new_fields = line[:72].split(',')[:9]
+            for i in range(9-len(new_fields)):
+                new_fields.append('')
+        else:  # standard
+            new_fields = [line[0:8], line[8:16], line[16:24], line[24:32],
+                          line[32:40], line[40:48], line[48:56], line[56:64],
+                          line[64:72]]
+        fields += new_fields
+        assert len(fields) == 9
+
+    #print("new_fieldsA =",new_fields)
+
+    for j, line in enumerate(card_lines): # ccntinuation lines
+        #for i, field in enumerate(fields):
+        #    if field.strip() == '+':
+        #        raise RuntimeError('j=%s field[%s] is a +' % (j,i))
+
+        if '=' in line and card_name != 'EIGRL':
+            raise SyntaxError('card_name=%s\nequal signs are not supported...'
+                              'line=|%r|' % (card_name, line))
+        if '\t' in line:
+            line = line.expandtabs()
+            if ',' in line:
+                raise SyntaxError('tabs and commas in the same line are '
+                                  'not supported...line=|%r|' % line)
+        
+        if '*' in line:  # large field
+            if ',' in line:  # csv
+                new_fields = line[:72].split(',')[1:5]
+                for i in range(4-len(new_fields)):
+                    new_fields.append('')
+            else:  # standard
+                new_fields = [line[8:24], line[24:40], line[40:56], line[56:72]]
+            assert len(new_fields) == 4
+        else:  # small field
+            if ',' in line:  # csv
+                new_fields = line[:72].split(',')[1:9]
+                for i in range(8-len(new_fields)):
+                    new_fields.append('')
+            else:  # standard
+                new_fields = [line[8:16], line[16:24], line[24:32], line[32:40],
+                              line[40:48], line[48:56], line[56:64], line[64:72]]
+            assert len(new_fields) == 8, 'nFields=%s new_fields=%s' % (len(new_fields), new_fields)
+
+        fields += new_fields
+        #print("new_fieldsB =", new_fields)
+
+    return fields
+
+def get_include_filename(cardLines, include_dir=''):
+    """
+    Parses an INCLUDE file split into multiple lines (as a list).
+    @param cardLines the list of lines in the include card (all the lines!)
+    @param include_dir the include directory (default='')
+    @retval filename the INCLUDE filename
+    """
+    cardLines2 = []
+    for line in cardLines:
+        line = line.strip('\t\r\n ')
+        cardLines2.append(line)
+
+    cardLines2[0] = cardLines2[0][7:].strip()  # truncate the cardname
+    filename = ''.join(cardLines2)
+    filename = filename.strip('"').strip("'")
+    if ':' in filename:
+        ifilepaths = filename.split(':')
+        filename = os.path.join(*ifilepaths)
+    filename = os.path.join(include_dir, filename)
+    return filename
+
+
+def parse_executive_control_deck(executive_control_lines):
+    """
+    Extracts the solution from the executive control deck
+    """
+    sol = None
+    for (i, eline) in enumerate(executive_control_lines):
+        uline = eline.strip().upper()  # uppercase line
+        uline = uline.split('$')[0]
+        print(uline)
+        if 'SOL ' in uline[:4]:
+            if ',' in uline:
+                sline = uline.split(',')  # SOL 600,method
+                solValue = sline[0]
+                method = sline[1]
+            else:
+                solValue = uline
+                method = None
+
+            #print("sol =", sol)
+            if sol is None:
+                sol = solValue[3:].strip()
+            else:
+                raise ValueError('cannot overwrite solution existing='
+                                 '|SOL %s| new =|%s|' % (sol, uline))
+            iSolLine = i
+    #print("sol = ", sol)
+    return sol, method, iSolLine
+
 
 if __name__ == '__main__':
-    #print "***********************************"
     bdf = BDF3()
     import pyNastran
     pkg_path = pyNastran.__path__[0]
     bdfname = os.path.join(pkg_path, '..', 'models', 'solidBending.bdf')
     #print "bdfname =", bdfname
     bdf.read_bdf(bdfname)
-    sys.exit('exit...')
+    bdf.write_bdf('fem.out.bdf')
 
-    cards_exact = [
-        ['PARAM','POST'],
-        ['PARAM','PRTMAXIM'],
-        ['GRID',1],
-        ['GRID',2],
-        ['GRID',3],
-        ['GRID',4],
-        ['GRID',5],
-        ['GRID',6],
-        ['GRID',7],
-        ['GRID',8],
-        ['GRID',9],
-        ['GRID',10],
-        ['GRID',11],
-        ['GRID',12],
-        ['GRID',13],
-        ['GRID',14],
-        ['GRID',15],
-        ['GRID',16],
-        ['GRID',17],
-        ['GRID',18],
-        ['GRID',19],
-        ['GRID',20],
-        ['GRID',21],
-        ['GRID',22],
-        ['GRID',23],
-        ['GRID',24],
-        ['GRID',25],
-        ['GRID',26],
-        ['GRID',27],
-        ['GRID',28],
-        ['GRID',29],
-        ['GRID',30],
-        ['GRID',31],
-        ['GRID',32],
-        ['GRID',33],
-        ['GRID',34],
-        ['GRID',35],
-        ['GRID',36],
-        ['GRID',37],
-        ['GRID',38],
-        ['GRID',39],
-        ['GRID',40],
-        ['GRID',41],
-        ['GRID',42],
-        ['GRID',43],
-        ['GRID',44],
-        ['GRID',45],
-        ['GRID',46],
-        ['GRID',47],
-        ['GRID',48],
-        ['GRID',49],
-        ['GRID',50],
-        ['GRID',51],
-        ['GRID',52],
-        ['GRID',53],
-        ['GRID',54],
-        ['GRID',55],
-        ['GRID',56],
-        ['GRID',57],
-        ['GRID',58],
-        ['GRID',59],
-        ['GRID',60],
-        ['GRID',61],
-        ['GRID',62],
-        ['GRID',63],
-        ['GRID',64],
-        ['GRID',65],
-        ['GRID',66],
-        ['GRID',67],
-        ['GRID',68],
-        ['GRID',69],
-        ['GRID',70],
-        ['GRID',71],
-        ['GRID',72],
-        ['PSOLID',1],
-        ['CTETRA',1],
-        ['CTETRA',2],
-        ['CTETRA',3],
-        ['CTETRA',4],
-        ['CTETRA',5],
-        ['CTETRA',6],
-        ['CTETRA',7],
-        ['CTETRA',8],
-        ['CTETRA',9],
-        ['CTETRA',10],
-        ['CTETRA',11],
-        ['CTETRA',12],
-        ['CTETRA',13],
-        ['CTETRA',14],
-        ['CTETRA',15],
-        ['CTETRA',16],
-        ['CTETRA',17],
-        ['CTETRA',18],
-        ['CTETRA',19],
-        ['CTETRA',20],
-        ['CTETRA',21],
-        ['CTETRA',22],
-        ['CTETRA',23],
-        ['CTETRA',24],
-        ['CTETRA',25],
-        ['CTETRA',26],
-        ['CTETRA',27],
-        ['CTETRA',28],
-        ['CTETRA',29],
-        ['CTETRA',30],
-        ['CTETRA',31],
-        ['CTETRA',32],
-        ['CTETRA',33],
-        ['CTETRA',34],
-        ['CTETRA',35],
-        ['CTETRA',36],
-        ['CTETRA',37],
-        ['CTETRA',38],
-        ['CTETRA',39],
-        ['CTETRA',40],
-        ['CTETRA',41],
-        ['CTETRA',42],
-        ['CTETRA',43],
-        ['CTETRA',44],
-        ['CTETRA',45],
-        ['CTETRA',46],
-        ['CTETRA',47],
-        ['CTETRA',48],
-        ['CTETRA',49],
-        ['CTETRA',50],
-        ['CTETRA',51],
-        ['CTETRA',52],
-        ['CTETRA',53],
-        ['CTETRA',54],
-        ['CTETRA',55],
-        ['CTETRA',56],
-        ['CTETRA',57],
-        ['CTETRA',58],
-        ['CTETRA',59],
-        ['CTETRA',60],
-        ['CTETRA',61],
-        ['CTETRA',62],
-        ['CTETRA',63],
-        ['CTETRA',64],
-        ['CTETRA',65],
-        ['CTETRA',66],
-        ['CTETRA',67],
-        ['CTETRA',68],
-        ['CTETRA',69],
-        ['CTETRA',70],
-        ['CTETRA',71],
-        ['CTETRA',72],
-        ['CTETRA',73],
-        ['CTETRA',74],
-        ['CTETRA',75],
-        ['CTETRA',76],
-        ['CTETRA',77],
-        ['CTETRA',78],
-        ['CTETRA',79],
-        ['CTETRA',80],
-        ['CTETRA',81],
-        ['CTETRA',82],
-        ['CTETRA',83],
-        ['CTETRA',84],
-        ['CTETRA',85],
-        ['CTETRA',86],
-        ['CTETRA',87],
-        ['CTETRA',88],
-        ['CTETRA',89],
-        ['CTETRA',90],
-        ['CTETRA',91],
-        ['CTETRA',92],
-        ['CTETRA',93],
-        ['CTETRA',94],
-        ['CTETRA',95],
-        ['CTETRA',96],
-        ['CTETRA',97],
-        ['CTETRA',98],
-        ['CTETRA',99],
-        ['CTETRA',100],
-        ['CTETRA',101],
-        ['CTETRA',102],
-        ['CTETRA',103],
-        ['CTETRA',104],
-        ['CTETRA',105],
-        ['CTETRA',106],
-        ['CTETRA',107],
-        ['CTETRA',108],
-        ['CTETRA',109],
-        ['CTETRA',110],
-        ['CTETRA',111],
-        ['CTETRA',112],
-        ['CTETRA',113],
-        ['CTETRA',114],
-        ['CTETRA',115],
-        ['CTETRA',116],
-        ['CTETRA',117],
-        ['CTETRA',118],
-        ['CTETRA',119],
-        ['CTETRA',120],
-        ['CTETRA',121],
-        ['CTETRA',122],
-        ['CTETRA',123],
-        ['CTETRA',124],
-        ['CTETRA',125],
-        ['CTETRA',126],
-        ['CTETRA',127],
-        ['CTETRA',128],
-        ['CTETRA',129],
-        ['CTETRA',130],
-        ['CTETRA',131],
-        ['CTETRA',132],
-        ['CTETRA',133],
-        ['CTETRA',134],
-        ['CTETRA',135],
-        ['CTETRA',136],
-        ['CTETRA',137],
-        ['CTETRA',138],
-        ['CTETRA',139],
-        ['CTETRA',140],
-        ['CTETRA',141],
-        ['CTETRA',142],
-        ['CTETRA',143],
-        ['CTETRA',144],
-        ['CTETRA',145],
-        ['CTETRA',146],
-        ['CTETRA',147],
-        ['CTETRA',148],
-        ['CTETRA',149],
-        ['CTETRA',150],
-        ['CTETRA',151],
-        ['CTETRA',152],
-        ['CTETRA',153],
-        ['CTETRA',154],
-        ['CTETRA',155],
-        ['CTETRA',156],
-        ['CTETRA',157],
-        ['CTETRA',158],
-        ['CTETRA',159],
-        ['CTETRA',160],
-        ['CTETRA',161],
-        ['CTETRA',162],
-        ['CTETRA',163],
-        ['CTETRA',164],
-        ['CTETRA',165],
-        ['CTETRA',166],
-        ['CTETRA',167],
-        ['CTETRA',168],
-        ['CTETRA',169],
-        ['CTETRA',170],
-        ['CTETRA',171],
-        ['CTETRA',172],
-        ['CTETRA',173],
-        ['CTETRA',174],
-        ['CTETRA',175],
-        ['CTETRA',176],
-        ['CTETRA',177],
-        ['CTETRA',178],
-        ['CTETRA',179],
-        ['CTETRA',180],
-        ['CTETRA',181],
-        ['CTETRA',182],
-        ['CTETRA',183],
-        ['CTETRA',184],
-        ['CTETRA',185],
-        ['CTETRA',186],
-        ['MAT1',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['FORCE',1],
-        ['LOAD',2],
-        ['SPC1',1],
-        ['SPCADD',2],
-        ['SPC1',3],
-        ['ENDDATA','6A7D6A3B']
-    ]
-
-    bdf = BDF3()
-    bdf.open_file(bdfname)
-    bdf.get_line_gen = bdf.stream_file()
-    bdf.gen2 = bdf.get_card()
-
-    bdf._read_executive_control_deck()
-    bdf.read_case_control_deck()
-    
-    for icard, card_exact in enumerate(cards_exact):
-        lines, comments = bdf.gen2.next()
-        card_name = self.get_card_name(lines)
-
-        #print 'bulk lines =', lines
-        fields = to_fields(lines, card_name)
-        #interp = [interpret_value(field, fields)
-        #                          for field in fields]
-        
-        card = wipe_empty_fields([interpret_value(field, fields)
-                                  for field in fields])
-        #print "interp = ", card
-        #print "*bulk card =", card[0:2]
-        
-        #print "*icard=%s card_exact=%s" % (icard, card_exact[0:2])
-        #msg = 'card=%s card_exact=%s' % (card, card_exact)
-        assert card[0:2] == card_exact[0:2], msg
-        #print "------------------------------------------------------"
-        #asf
-    

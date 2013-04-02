@@ -6,7 +6,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 
-#import io
 import os
 import sys
 import warnings
@@ -147,7 +146,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         @param debug used to set the logger if no logger is passed in
         @param log a python logging module object
         """
-        debug = False
         self.active_file = None
         self.active_files = []
         self.active_filenames = []
@@ -610,7 +608,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.include_dir = include_dir
 
         self.open_file(self.bdf_filename)
-
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
         #self.log.info('xref=%s' % xref)
 
@@ -640,6 +637,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             self.has_case_control_deck = False
             line, comment = self.get_next_line(False)   # BEGIN BULK
             #print('execline2 = ',line)
+
         sol, method, iSolLine = parse_executive_control_deck(self.executive_control_lines)
         self.sol = sol
         self.iSolLine = iSolLine
@@ -884,26 +882,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             raise
         return False
 
-    def _clean_comment(self, comment):
-        """
-        Removes specific pyNastran comment lines so duplicate lines aren't
-        created.
-        @param self the BDF object
-        @param comment the comment to possibly remove
-        """
-        if comment[:-1] in ['$NODES', '$SPOINTS', '$ELEMENTS',
-                       '$PARAMS', '$PROPERTIES', '$ELEMENTS_WITH_PROPERTIES',
-                       '$ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
-                       '$UNASSOCIATED_PROPERTIES',
-                       '$MATERIALS', '$THERMAL MATERIALS',
-                       '$CONSTRAINTS', '$SPCs', '$MPCs', '$RIGID ELEMENTS',
-                       '$LOADS', '$AERO', '$AERO CONTROL SURFACES',
-                       '$FLUTTER', '$DYNAMIC', '$OPTIMIZATION',
-                       '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
-                       '$SETS', '$REJECTS', '$REJECT_LINES']:
-            comment = ''
-        return comment
-
     def get_next_bulk_line(self, access_stored_lines):
         """
         @param self the BDF object
@@ -940,7 +918,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             line = self.active_file.readline().rstrip('\n\r\t ')
             if '$' in line:
                 i = line.index('$')
-                comment = self._clean_comment(line[i:] + '\n')
+                comment = _clean_comment(line[i:] + '\n')
                 line = line[:i].rstrip('\t ')
         except AttributeError:
             line = None
@@ -1439,6 +1417,26 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     msg.append('  %-8s %s' % (name + ':', counter))
         msg.append('')
         return '\n'.join(msg)
+
+
+def _clean_comment(comment):
+    """
+    Removes specific pyNastran comment lines so duplicate lines aren't
+    created.
+    @param comment the comment to possibly remove
+    """
+    if comment[:-1] in ['$NODES', '$SPOINTS', '$ELEMENTS',
+                   '$PARAMS', '$PROPERTIES', '$ELEMENTS_WITH_PROPERTIES',
+                   '$ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
+                   '$UNASSOCIATED_PROPERTIES',
+                   '$MATERIALS', '$THERMAL MATERIALS',
+                   '$CONSTRAINTS', '$SPCs', '$MPCs', '$RIGID ELEMENTS',
+                   '$LOADS', '$AERO', '$AERO CONTROL SURFACES',
+                   '$FLUTTER', '$DYNAMIC', '$OPTIMIZATION',
+                   '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
+                   '$SETS', '$REJECTS', '$REJECT_LINES']:
+        comment = ''
+    return comment
 
 
 def to_fields(card_lines, card_name):
