@@ -147,7 +147,7 @@ class OP2(BDF,
             'LAMA', 'BLAMA',                 # eigenvalues
 
             'BGPDT', 'BGPDTS',               # boundary grids???
-            'EQEXIN', 'EQEXINS', 'PVT0', 'CASECC', 'EDOM',
+            'EQEXIN', 'EQEXINS', 'PVT0', 'CASECC', 'EDOM', 'CASEXX',
             'DESTAB',                        # design variables
             'OQG1', 'OQGV1',                 # spc forces
             'OQMG1',                         # mpc forces
@@ -200,6 +200,8 @@ class OP2(BDF,
             'AFRF', 'AGRF',
             'PMRF', 'PERF', 'PFRF',
             'FOL',
+            
+            'DBCOPT',
         ]
 
         ## a dictionary that maps an integer of the subcaseName to the
@@ -896,7 +898,7 @@ class OP2(BDF,
                 elif table_name in ['OPGRMS2', 'OPGNO2', 'OPGCRM2', 'OQGPSD2']:
                     self.readTable_DUMMY_GEOM(table_name)
                 elif table_name in ['OQGPSD2', 'OQGATO2', 'OQGRMS2', 'OQGNO2',
-                                   'OQGCRM2', 'PVT0', 'CASECC', 'EDOM', ]:
+                                   'OQGCRM2', 'PVT0', 'CASECC', 'CASEXX', 'EDOM', 'DBCOPT',]:
                     self.readTable_DUMMY_GEOM(table_name)
                 elif table_name in ['BGPDT', 'BGPDTS', 'EDTS', ]:
                     self.readTable_DUMMY_GEOM(table_name)
