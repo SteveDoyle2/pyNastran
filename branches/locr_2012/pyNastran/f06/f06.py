@@ -536,9 +536,14 @@ class F06(OES, OUG, OQG, F06Writer):
     def parseLineBlanks(self, sline, Format):
         """allows blanks"""
         out = []
+        
         for entry, iFormat in izip(sline, Format):
             if entry.strip():
-                entry2 = iFormat(entry)
+                try:
+                    entry2 = iFormat(entry)
+                except:
+                    print "sline=|%s|\n entry=|%s| format=%s" %(sline,entry,Format)
+                    raise
             else:
                 entry2 = None
                 #print "sline=|%s|\n entry=|%s| format=%s" %(sline,entry,iFormat)
@@ -580,7 +585,7 @@ class F06(OES, OUG, OQG, F06Writer):
                 if blank == 20:
                     break
             elif self.isMarker(marker):  # marker with space in it (e.g. Model Summary)
-                print("***marker = |%s|" % (marker))
+                print("***marker = |%s|" % marker)
 
             else:
                 blank = 0

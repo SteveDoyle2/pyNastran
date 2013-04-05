@@ -172,7 +172,7 @@ def main():
     (f06FileName, write_f06, printF06, debug) = run_arg_parse()
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
-    runF06(f06FileName, write_f06=write_f06, printF06=printF06, debug=debug)
+    run_f06(f06FileName, write_f06=write_f06, printF06=printF06, debug=debug)
 
 if __name__ == '__main__':  # f06
     main()
