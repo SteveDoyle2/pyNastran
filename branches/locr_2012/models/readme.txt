@@ -1,10 +1,10 @@
-solidBending
+solid_bending
  - written by MSC.Nastran
  - BDF reader - SOL 101
  - OP2 reader - displacement, stress
  - tested in Windows GUI
 
-plate_py
+plate
  - written by FEMAP
  - BDF reader - SOL 103
  - OP2 reader - modes on a plate
