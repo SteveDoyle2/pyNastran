@@ -1,4 +1,4 @@
-from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpretValue
+from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpret_value
 #from pyNastran.bdf.caseControlDeck import CaseControlDeck
 
 
@@ -20,8 +20,8 @@ def parseSetSline(listA):
                     by = 1
                 #print "BY = %s" %(by)
                 vals = set([])
-                startValue = interpretValue(sline[0])
-                endValue = interpretValue(sline[2]) + 1
+                startValue = interpret_value(sline[0])
+                endValue = interpret_value(sline[2]) + 1
                 for i in xrange(startValue, endValue, by):
                     vals.add(i)
                 #print "vals = ",vals
@@ -40,7 +40,7 @@ def parseSetSline(listA):
             if '/' in spot:
                 listB.append(spot)
             else:
-                listB.append(interpretValue(spot))
+                listB.append(interpret_value(spot))
     return listB
 
 
@@ -155,7 +155,7 @@ def _parseEntry(lines):
                 print "sline = ", sline
                 value = parseSetSline(sline)
             else:
-                value = interpretValue(value)
+                value = interpret_value(value)
     ### = in line
     elif lineUpper.startswith('BEGIN'):  # begin bulk
         try:

@@ -26,19 +26,19 @@ class Tester(unittest.TestCase):
 
 class BDF_Test(Tester):
     def test_bdf_01(self):
-        bdfFilename = 'solidBending.bdf'
+        bdfFilename = os.path.join('solid_bending', 'solid_bending.bdf')
         folder = os.path.abspath(os.path.join(testPath, '..', 'models'))
         self.runBDF(folder, bdfFilename)
         self.runBDF(folder, bdfFilename, xref=True)
 
     def test_bdf_02(self):
-        bdfFilename = 'plate_py.dat'
+        bdfFilename = os.path.join('plate_py', 'plate_py.dat')
         folder = os.path.abspath(os.path.join(testPath, '..', 'models'))
         self.runBDF(folder, bdfFilename)
         self.runBDF(folder, bdfFilename, xref=True)
 
     def test_bdf_03(self):
-        bdfFilename = 'beam_modes.dat'
+        bdfFilename = os.path.join('beam_modes', 'beam_modes.dat')
         folder = os.path.abspath(os.path.join(testPath, '..', 'models'))
         self.runBDF(folder, bdfFilename)
         #self.runBDF(folder, bdfFilename, xref=True) ## PBEAML is not supported

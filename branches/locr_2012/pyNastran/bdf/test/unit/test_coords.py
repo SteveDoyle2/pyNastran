@@ -103,7 +103,8 @@ class TestCoords(unittest.TestCase):
                  ]
         self.getNodes(grids, grids_expected, coords)
 
-    def off_test_rid_1(self):  # did i mess up the transform???
+    @unittest.skip('skipping test_rid_1')
+    def test_rid_1(self):  # did i mess up the transform???
         #print('test_rid_1')
         grids = [
                      [2, 10., 5., 3.],  # cid, x,y,z

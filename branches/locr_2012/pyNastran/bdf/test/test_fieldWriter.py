@@ -10,7 +10,7 @@ from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_field_16
 
 
-from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpretValue
+from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpret_value
 
 
 class TestFieldWriter(unittest.TestCase):
@@ -36,12 +36,14 @@ class TestFieldWriter(unittest.TestCase):
         self.assertEquals(print_field(-0.0748662),  '-.074866',
                           print_field(-0.0748662))
 
-    def a_test_2(self):
-        for i in xrange(1000):
+
+    #@unittest.skip('skipping test_2')
+    def test_2(self):
+        for i in xrange(100):
             a = random.uniform(-20, 20)
             a2 = 10 ** a
-            self.compare(a2)
-            self.compare(-a2)
+            compare(a2)
+            compare(-a2)
 
     def test_strings_8(self):
         self.assertEquals(print_field(None), '        ',
@@ -243,12 +245,12 @@ class TestFieldWriter(unittest.TestCase):
                                       None,None,None,None,None,None,None,None,
                                       1, None]))
 
-def compare(self, valueIn):
-    #print "a = |%s|" %(valueIn)
+def compare(valueIn):
+    #print "a = |%s|" % valueIn
     field = print_field(valueIn)
-    print("a = |%s|" % (field))
+    #print("a = |%s|" % field)
 
-    val = interpretValue(field)
+    val = interpret_value(field)
     if val != 0:
         p = (val - valueIn) / val
         if p > 0.01:

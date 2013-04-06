@@ -219,7 +219,7 @@ class TableObject(scalarObject):  # displacement style table
             #    rotations2[nodeID]    = rotation
         return (translations2, rotations2)
 
-    def write_matlab(self, name, isubcase, f=None, isMagPhase=False):
+    def _write_matlab(self, name, isubcase, f=None, isMagPhase=False):
         """
         name = displacements
         """

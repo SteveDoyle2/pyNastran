@@ -16,7 +16,7 @@ from pyNastran.bdf.bdf2 import BDF
 from pyNastran.bdf.bdf import (ShellElement, SolidElement, LineElement,
                                RigidElement, SpringElement, PointElement,
                                DamperElement, RodElement, NastranMatrix)
-from pyNastran.bdf.test.compareCardContent import compare_card_content
+from pyNastran.bdf.test.compare_card_content import compare_card_content
 
 import pyNastran.bdf.test
 test_path = pyNastran.bdf.test.__path__[0]
@@ -149,7 +149,7 @@ def run_fem2(bdfModel, outModel, xref, debug=False, log=None):
     fem2.log.info('starting fem2')
     sys.stdout.flush()
     try:
-        fem2.readBDF(outModel, xref=xref)
+        fem2.read_bdf(outModel, xref=xref)
     except:
         print("failed reading |%s|" % (outModel))
         raise

@@ -49,7 +49,7 @@ class TestMass(unittest.TestCase):
     def test_mass1(self):  # passes
         mesh = BDF(debug=True, log=None)
         bdfname = os.path.join(testpath, 'test_mass.dat')
-        mesh.readBDF(bdfname, include_dir=None, xref=True)
+        mesh.read_bdf(bdfname, include_dir=None, xref=True)
         
         # quad - pcomp
         quad = mesh.elements[1]

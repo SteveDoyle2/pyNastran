@@ -73,15 +73,15 @@ def run_lots_of_files(files ,makeGeom=True, writeBDF=False, write_f06=True,
     print("dt = %s seconds = %s minutes" %(seconds,minutes))
     
     #op2 = OP2('test_tet10_subcase_1.op2')
-    #op2.readOP2()
+    #op2.read_op2()
     
     msg = '-----done with all models %s/%s=%.2f%%  nFailed=%s-----' %(nPassed,nTotal,100.*nPassed/float(nTotal),nTotal-nPassed)
     print(msg)
     sys.exit(msg)
 
-def runOP2(op2FileName, makeGeom=False, writeBDF=False, write_f06=True,
-           writeMatlab=True, isMagPhase=False, deleteF06=False,
-           print_results=True, iSubcases=[], debug=False, stopOnFailure=True):
+def run_op2(op2FileName, makeGeom=False, writeBDF=False, write_f06=True,
+            writeMatlab=True, isMagPhase=False, deleteF06=False,
+            print_results=True, iSubcases=[], debug=False, stopOnFailure=True):
     assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' %(op2FileName)
     isPassed = False
     stopOnFailure = False
@@ -90,13 +90,13 @@ def runOP2(op2FileName, makeGeom=False, writeBDF=False, write_f06=True,
         op2 = OP2(op2FileName, makeGeom=makeGeom, debug=debug)
         op2.set_subcases(iSubcases)
 
-        #op2.readBDF(op2.bdfFileName,includeDir=None,xref=False)
-        #op2.writeBDFAsPatran()
-        op2.readOP2()
+        #op2.read_bdf(op2.bdfFileName,includeDir=None,xref=False)
+        #op2.write_bdf_as_patran()
+        op2.read_op2()
         print("---stats for %s---" % op2FileName)
         print(op2.get_op2_stats())
         if writeBDF:
-            op2.writeBDFAsPatran()
+            op2.write_bdf_as_patran()
         #tableNamesF06 = parse_table_names_from_F06(op2.f06FileName)
         #tableNamesOP2 = op2.getTableNamesFromOP2()
         if write_f06:
@@ -226,7 +226,7 @@ def main():
 
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
-    runOP2(op2FileName,makeGeom=makeGeom,writeBDF=writeBDF,write_f06=write_f06,writeMatlab=writeMatlab,isMagPhase=isMagPhase,print_results=print_results,debug=debug)
+    run_op2(op2FileName,makeGeom=makeGeom,writeBDF=writeBDF,write_f06=write_f06,writeMatlab=writeMatlab,isMagPhase=isMagPhase,print_results=print_results,debug=debug)
 
 if __name__=='__main__':  # op2
     main()

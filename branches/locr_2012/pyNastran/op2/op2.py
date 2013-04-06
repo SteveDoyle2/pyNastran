@@ -26,14 +26,11 @@ class OP2(BDF,
           FortranFile, Op2Codes, GeometryTables, ResultTable, F06Writer,
           MatlabWriter):
 
-    def setSubcases(self, iSubcases):
+    def readOP2(self):
         """
-        @see set_subcases
-        @warning will be removed after v0.7 in favor of set_subcases
+        reads the op2 file
         """
-        warnings.warn('setSubcases has been deprecated; use '
-                      'set_subcases', DeprecationWarning, stacklevel=2)
-        self.set_subcases(iSubcases)
+        self.read_op2()
 
     def set_subcases(self, subcases=None):
         """
@@ -54,15 +51,6 @@ class OP2(BDF,
             self.valid_subcases = set(subcases)
         self.log.debug("set_subcases - subcases = %s" % self.valid_subcases)
 
-    def setTransientTimes(self, times):  # TODO this name sucks...
-        """
-        @see set_transient_times
-        @warning will be removed after v0.7 in favor of set_transient_times
-        """
-        warnings.warn('setTransientTimes has been deprecated; use '
-                      'set_transient_times', DeprecationWarning, stacklevel=2)
-        self.set_transient_times(times)
-
     def set_transient_times(self, times):  # TODO this name sucks...
         """
         Takes a dictionary of list of times in a transient case and
@@ -78,6 +66,24 @@ class OP2(BDF,
             eTimes.sort()
             expected_times[isubcase] = array(eTimes)
         self.expected_times = expected_times
+
+    def setSubcases(self, iSubcases):
+        """
+        @see set_subcases
+        @warning will be removed after v0.7 in favor of set_subcases
+        """
+        warnings.warn('setSubcases has been deprecated; use '
+                      'set_subcases', DeprecationWarning, stacklevel=2)
+        self.set_subcases(iSubcases)
+
+    def setTransientTimes(self, times):  # TODO this name sucks...
+        """
+        @see set_transient_times
+        @warning will be removed after v0.7 in favor of set_transient_times
+        """
+        warnings.warn('setTransientTimes has been deprecated; use '
+                      'set_transient_times', DeprecationWarning, stacklevel=2)
+        self.set_transient_times(times)
 
     def is_valid_subcase(self):
         """
@@ -702,10 +708,7 @@ class OP2(BDF,
 
         return data
 
-    def readOP2(self):
-        """
-        reads the op2 file
-        """
+    def read_op2(self):
         ## the OP2 file object
         self.op2 = open(self.op2FileName, 'rb')
 
