@@ -4,7 +4,7 @@ solid_bending
  - OP2 reader - displacement, stress
  - tested in Windows GUI
 
-plate
+plate_py
  - written by FEMAP
  - BDF reader - SOL 103
  - OP2 reader - modes on a plate
