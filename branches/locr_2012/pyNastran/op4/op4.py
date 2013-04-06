@@ -15,12 +15,18 @@ class OP4(FortranFile):
     @todo add endian checking
     @todo test on big matrices
     """
-    def __init__(self):
+    def __init__(self, log=None):
         FortranFile.__init__(self)
         self.n = 0
         self.endian = ''
 
     def readOP4(self, op4Name, matrixNames=None, precision='default'):
+        self.read_op4()
+
+    def readOP4Ascii(self, op4Name, matrixNames=None, precision='default'):
+        self.read_op4_ascii(op4Name, matrixNames, precision)
+
+    def read_op4(self, op4Name, matrixNames=None, precision='default'):
         """
         Reads a NASTRAN OUTPUT4 file, regular or sparse, and stores the
         matrices as the output arguments of the function.  The number of matrices
@@ -32,18 +38,18 @@ class OP4(FortranFile):
         from pyNastran.op4.op4 import OP4
         op4 = OP4()
         #alternative way to get all the matrices
-        matrices = op4.readOP4(op4Name)
+        matrices = op4.read_op4(op4Name)
         (formA,A) = matrices['A']
         (formB,B) = matrices['B']
         (formC,C) = matrices['C']
 
         # or to reduce memory usage
-        matrices = op4.readOP4(op4Name,matrixNames=['A','B'])
+        matrices = op4.read_op4(op4Name,matrixNames=['A','B'])
         (formA,A) = matrices['A']
         (formB,B) = matrices['B']
 
         # or because you only want A
-        matrices = op4.readOP4(op4Name,matrixNames='A')
+        matrices = op4.read_op4(op4Name,matrixNames='A')
         (formA,A) = matrices['A']
         @endcode
 
@@ -73,7 +79,7 @@ class OP4(FortranFile):
             return self.readOP4Ascii(op4Name, matrixNames, precision)
 
 #--------------------------------------------------------------------------
-    def readOP4Ascii(self, op4Name, matrixNames=None, precision='default'):
+    def read_op4_ascii(self, op4Name, matrixNames=None, precision='default'):
         """matrixNames must be a list or None, but basically the same"""
         with open(op4Name, 'r') as f:
             matrices = {}
@@ -106,7 +112,7 @@ class OP4(FortranFile):
         ncols = int(ncols)
         form = int(form)
         Type = int(Type)
-        dType = self.getDType(Type, precision)
+        dType = self.get_dtype(Type, precision)
 
         name = line[32:40].strip()
         size = line[40:].strip()
@@ -188,7 +194,7 @@ class OP4(FortranFile):
                 while nWords:
                     n = 0
                     line = f.readline().rstrip()
-                    nWordsInLine = self.letterCount(line, 'E')
+                    nWordsInLine = letter_count(line, 'E')
                     if nWordsInLine == 0:
                         wasBroken = True
                         break
@@ -219,7 +225,7 @@ class OP4(FortranFile):
 
     def read_complex_ascii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
         """
-        Method readComplexAscii:
+        Method read_complex_ascii:
         @todo possibly split this into readDenseComplex and readSparseComplex
          to get rid of all the extra isSparse checks.  This would cleanup the
          runLoop condition as well.
@@ -260,7 +266,7 @@ class OP4(FortranFile):
                 while nWords:
                     n = 0
                     line = f.readline().rstrip()
-                    nWordsInLine = self.letterCount(line, 'E')
+                    nWordsInLine = letter_count(line, 'E')
                     if nWordsInLine == 0:
                         wasBroken = True
                         break
@@ -313,14 +319,6 @@ class OP4(FortranFile):
                 irow = IS - 65536 * (L + 1)
 
         return irow
-
-    def letterCount(self, word, letter):
-        """Counts the number of occurrences of a letter in a word/line."""
-        n = 0
-        for L in word:
-            if L == letter:
-                n += 1
-        return n
 
 #--------------------------------------------------------------------------
     def readOP4Binary(self, op4Name, matrixNames=None, floatType='default'):
@@ -383,7 +381,7 @@ class OP4(FortranFile):
             i += 1
         return matrices
 
-    def getDType(self, Type, precision='default'):
+    def get_dtype(self, Type, precision='default'):
         """reset the type if 'default' not selected"""
         if precision == 'single':
             if Type in [1, 2]:
@@ -559,9 +557,9 @@ class OP4(FortranFile):
             NBW = 16
             d = 'dd'
         else:
-            raise RuntimeError("Type=%s" % (Type))
-        dType = self.getDType(Type)
-        return (NWV, NBW, d, dType)
+            raise RuntimeError("Type=%s" % Type)
+        dtype = self.get_dtype(Type)
+        return (NWV, NBW, d, dtype)
 
     def readRealBinary(self, f, nrows, ncols, Type, isSparse, isBigMat):
         (NWV, NBW, d, dType) = self.getMatrixInfo(Type)
@@ -1180,6 +1178,15 @@ class OP4(FortranFile):
         return msg
 
 
+def letter_count(word, letter):
+    """Counts the number of occurrences of a letter in a word/line."""
+    n = 0
+    for L in word:
+        if L == letter:
+            n += 1
+    return n
+
+
 def matrices():
     strings = array([[ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
                      [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
@@ -1273,8 +1280,8 @@ if __name__ == '__main__':
         #else:
             #f = open('binary.op4','wb')
 
-        matrices = op4.readOP4(
-            fname, matrixNames=matrixNames, precision='default')
+        matrices = op4.read_op4(fname,
+            matrixNames=matrixNames, precision='default')
         print("keys = %s" % (matrices.keys()))
         print("fname=%s" % fname)
         for name, (form, matrix) in sorted(matrices.items()):

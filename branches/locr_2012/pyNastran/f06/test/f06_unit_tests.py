@@ -6,15 +6,17 @@ import pyNastran
 from pyNastran.bdf.bdf2 import BDF
 from pyNastran.f06.f06 import F06
 from pyNastran.op2.op2 import OP2
-testpath = os.path.join(pyNastran.__path__[0], 'f06', 'test', 'tests')
-print "testpath =", testpath
+from pyNastran.op4.op4 import OP4
+
+testpath = os.path.join(pyNastran.__path__[0], '..', 'models')
+#print "testpath =", testpath
 
 class TestF06(unittest.TestCase):
     def run_model(self, bdf_name=None, f06_name=None, op2_name=None,
-                  dynamic_vars=None):
+                  op4_name=None, dynamic_vars=None):
         outputs = []
         if bdf_name:
-            bdf = BDF(debug=True, log=None)
+            bdf = BDF(debug=False, log=None)
             if dynamic_vars is not None:
                 print('dynamic')
                 bdf.set_dynamic_syntax(dynamic_vars)
@@ -25,25 +27,29 @@ class TestF06(unittest.TestCase):
 
         if f06_name:
             f06 = F06(f06_name, debug=False, log=None)
-            f06.readF06()
-            f06.writeF06(f06_name+'.out')
+            f06.read_f06()
+            f06.write_f06(f06_name+'.out')
             outputs.append(f06)
 
         if op2_name:
-            op2 = OP2(op2_name)
-            op2.readOP2()
-            op2.writeF06(op2_name+'.out')
+            op2 = OP2(op2_name, debug=False)
+            op2.read_op2()
+            op2.write_f06(op2_name+'.out')
             outputs.append(op2)
+        
+        if op4_name:
+            op4 = OP4(op4_name)
+            op4.read_op4(op4Name, matrixNames=None, precision='default')
 
         assert len(outputs) > 0
         if len(outputs) == 1: return outputs[0]
         return outputs
     
     def test_plate_vonmises(self):
-        bdfname = os.path.join(testpath, 'plate.bdf')
-        bdfname2 = os.path.join(testpath, 'plate_openmdao.bdf')
-        f06name = os.path.join(testpath, 'plate.f06')
-        op2name = os.path.join(testpath, 'plate.op2')
+        bdfname = os.path.join(testpath, 'plate', 'plate.bdf')
+        bdfname2 = os.path.join(testpath, 'plate', 'plate_openmdao.bdf')
+        f06name = os.path.join(testpath, 'plate', 'plate.f06')
+        op2name = os.path.join(testpath, 'plate', 'plate.op2')
 
         (bdf, f06, op2) = self.run_model(bdfname, f06name, op2name)
         
