@@ -12,7 +12,7 @@ import traceback
 
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf import CTRIAX, CTRIAX6, BDF
-from pyNastran.bdf.bdf2 import BDF
+from pyNastran.bdf.bdf3 import BDF
 from pyNastran.bdf.bdf import (ShellElement, SolidElement, LineElement,
                                RigidElement, SpringElement, PointElement,
                                DamperElement, RodElement, NastranMatrix)
@@ -157,7 +157,7 @@ def run_fem2(bdfModel, outModel, xref, debug=False, log=None):
     #fem2.sumForces()
     #fem2.sumMoments()
     outModel2 = bdfModel + '_out2'
-    fem2.writeBDFAsPatran(outModel2)
+    fem2.write_bdf_as_patran(outModel2)
     #fem2.writeAsCTRIA3(outModel2)
     os.remove(outModel2)
     return (fem2)

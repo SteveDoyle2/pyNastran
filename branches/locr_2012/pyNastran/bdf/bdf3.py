@@ -2,8 +2,8 @@
 """
 Main BDF class
 """
-#from __future__ import (nested_scopes, generators, division, absolute_import,
-#                        print_function, unicode_literals)
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        unicode_literals)
 
 #from __future__ import (nested_scopes, generators, division, absolute_import)
                         #print_function, unicode_literals)
@@ -97,12 +97,7 @@ if 0:
     from .bdfInterface.crossReference import XrefMesh
 
 
-class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
-    """
-    NASTRAN BDF Reader/Writer/Editor class.
-    """
-    modelType = 'nastran'
-
+class BDFDeprecated(object):
     def readBDF(self, bdf_filename, include_dir=None, xref=True, punch=False):
         """
         @see read_bdf
@@ -148,6 +143,12 @@ class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         warnings.warn('disableCards has been deprecated; use '
                       'disable_cards', DeprecationWarning, stacklevel=2)
         self.disable_cards(cards)
+   
+class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated):
+    """
+    NASTRAN BDF Reader/Writer/Editor class.
+    """
+    modelType = 'nastran'
 
     def __init__(self, debug=True, log=None):
         """
@@ -624,7 +625,7 @@ class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         ## the directory of the 1st BDF (include BDFs are relative to this one)
         self.include_dir = include_dir
 
-        self.open_file(self.bdf_filename)
+        self._open_file(self.bdf_filename)
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
 
         #self.get_line_gen = self.get_next_line()
@@ -778,7 +779,7 @@ class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 filename = get_include_filename(include_lines,
                                                  include_dir=self.include_dir)
 
-                self.open_file(filename)
+                self._open_file(filename)
                 #line = next_line
                 self.case_control_lines.append(next_line)
             else:
@@ -813,7 +814,7 @@ class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             self.reject_count[card_name] += 1
         return True
 
-    def open_file(self, bdf_filename):
+    def _open_file(self, bdf_filename):
         """
         Opens the primary bdf/dat file and all subsequent INCLUDE files.
         @param fname:  the name of the bdf/dat file to open
@@ -973,7 +974,7 @@ class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #print ""
             
             in_loop = False
-            while len(line)==0 or line[0] in [' ', '*', '+']:
+            while len(line)==0 or line[0] in [' ', '*', '+', ',']:
                 in_loop = True
                 #print "into the loop!"
                 Is.append(i)
@@ -994,7 +995,7 @@ class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 #print "lines = ", lines
 
             #sys.exit('out of the the loop')
-            if line[0] not in [' ', '*', '+']:
+            if line[0] not in [' ', '*', '+', ',']:
             #if in_loop:
                 #print "stored_lines =", self.stored_lines
                 #print "storing line..."
@@ -1054,7 +1055,7 @@ class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             if card_name == 'INCLUDE':
                 bdf_filename = get_include_filename(lines, include_dir=self.include_dir)
                 #print "newfname =", newfname
-                self.open_file(bdf_filename)
+                self._open_file(bdf_filename)
                 reject = '$ INCLUDE processed:  %s\n' % bdf_filename
                 self.rejects.append([reject])
                 continue
@@ -1136,6 +1137,7 @@ class BDF3(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             card = wipe_empty_fields([interpret_value(field, fields)
                                       for field in fields])
+            print "card =", card
             card_obj = BDFCard(card)
 
         # function that gets by name the initialized object (from global scope)
@@ -1506,6 +1508,7 @@ def to_fields(card_lines, card_name):
     #print('---------------')
     # first line
     line = card_lines.pop(0)
+    print "first line=|%s|" % line.rstrip()
     if '=' in line:
             raise SyntaxError('card_name=%s\nequal signs are not supported...'
                               'line=|%r|' % (card_name, line))
@@ -1527,6 +1530,7 @@ def to_fields(card_lines, card_name):
         fields += new_fields
         assert len(fields) == 5
     else:  # small field
+        print "small line=|%s|" % line.rstrip()
         if ',' in line:  # csv
             new_fields = line[:72].split(',')[:9]
             for i in range(9-len(new_fields)):
@@ -1540,7 +1544,7 @@ def to_fields(card_lines, card_name):
 
     #print("new_fieldsA =",new_fields)
 
-    for j, line in enumerate(card_lines): # ccntinuation lines
+    for j, line in enumerate(card_lines): # continuation lines
         #for i, field in enumerate(fields):
         #    if field.strip() == '+':
         #        raise RuntimeError('j=%s field[%s] is a +' % (j,i))
@@ -1563,6 +1567,7 @@ def to_fields(card_lines, card_name):
                 new_fields = [line[8:24], line[24:40], line[40:56], line[56:72]]
             assert len(new_fields) == 4
         else:  # small field
+            print "small lin2=|%s|" % line.rstrip()
             if ',' in line:  # csv
                 new_fields = line[:72].split(',')[1:9]
                 for i in range(8-len(new_fields)):
@@ -1629,7 +1634,7 @@ def parse_executive_control_deck(executive_control_lines):
 
 
 if __name__ == '__main__':
-    bdf = BDF3()
+    bdf = BDF()
     import pyNastran
     pkg_path = pyNastran.__path__[0]
     bdfname = os.path.join(pkg_path, '..', 'models', 'solidBending.bdf')

@@ -56,7 +56,7 @@ def failed_test2():
     print(c)
 
 
-class OP4_Test(unittest.TestCase):
+class TestOP4(unittest.TestCase):
     def test_op4_binary(self):
         for fname in ['mat_b_dn.op4',
                       'mat_b_s1.op4',
@@ -64,9 +64,9 @@ class OP4_Test(unittest.TestCase):
                       ]:
             op4 = OP4()
 
-            matrices = op4.readOP4(os.path.join(op4Path, fname))
+            matrices = op4.read_op4(os.path.join(op4Path, fname))
             for name, (form, matrix) in sorted(matrices.items()):
-                print("name = %s" % (name))
+                #print("name = %s" % (name))
                 if isinstance(matrix, ndarray):
                     print(matrix)
                 else:
@@ -79,9 +79,9 @@ class OP4_Test(unittest.TestCase):
                       'mat_t_s2.op4',
                       ]:
             op4 = OP4()
-            matrices = op4.readOP4(os.path.join(op4Path, fname))
+            matrices = op4.read_op4(os.path.join(op4Path, fname))
             for name, (form, matrix) in sorted(matrices.items()):
-                print("name = %s" % (name))
+                #print("name = %s" % name)
                 if isinstance(matrix, ndarray):
                     print(matrix)
                 else:

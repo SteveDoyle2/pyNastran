@@ -24,7 +24,7 @@ class Tester(unittest.TestCase):
         run_all_files_in_folder(folder, xref=xref, cid=cid, debug=debug)
 
 
-class BDF_Test(Tester):
+class TestBDF(Tester):
     def test_bdf_01(self):
         bdfFilename = os.path.join('solid_bending', 'solid_bending.bdf')
         folder = os.path.abspath(os.path.join(testPath, '..', 'models'))
