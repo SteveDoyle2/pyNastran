@@ -5,9 +5,9 @@ from itertools import izip
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
 from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.format import (integer, integer_or_blank, components,
-                                  components_or_blank, fields,
-                                  integer_or_string, string, string_or_blank)
+from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+    components, components_or_blank, fields,
+    integer_or_string, string, string_or_blank)
 
 class Set(BaseCard):
     """Generic Class all SETx cards inherit from"""

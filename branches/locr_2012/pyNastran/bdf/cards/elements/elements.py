@@ -13,9 +13,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 
 from pyNastran.bdf.cards.baseCard import Element
-from pyNastran.bdf.format import (integer, integer_or_blank,
-                                  integer_double_or_blank, double,
-                                  double_or_blank, string)
+from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+    integer_double_or_blank, double, double_or_blank, string)
  
 class CFAST(Element):
     type = 'CFAST'

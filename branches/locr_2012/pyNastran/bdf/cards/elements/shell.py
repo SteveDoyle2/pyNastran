@@ -26,8 +26,8 @@ from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.utils.mathematics import Area, norm, centroid_triangle
-from pyNastran.bdf.format import (integer, integer_or_blank,
-                                  double_or_blank, integer_double_or_blank)
+from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+    double_or_blank, integer_double_or_blank)
 
 
 def _triangle_area_centroid_normal(nodes):
@@ -875,6 +875,9 @@ class CQUAD4(QuadShell):
             self.zOffset = double_or_blank(card, 8, 'zOffset', 0.0)
 
             self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
+            print("card.field(10) = ", card.field(10))
+            if card.field(10)==2.:
+                assert self.TFlag == 2., 'TFlag=%s' % self.TFlag
             self.T1 = double_or_blank(card, 11, 'T1', 1.0)
             self.T2 = double_or_blank(card, 12, 'T2', 1.0)
             self.T3 = double_or_blank(card, 13, 'T3', 1.0)

@@ -5,9 +5,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from .thermal import ThermalCard
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from ..baseCard import expand_thru, expand_thru_by, collapse_thru_by
-from pyNastran.bdf.format import (fields, integer, integer_or_blank,
-                                  double, double_or_blank,
-                                  integer_or_string, string)
+from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+    double, double_or_blank,
+    integer_or_string, string, fields)
 
 class ThermalLoadDefault(ThermalCard):
     def __init__(self, card, data):

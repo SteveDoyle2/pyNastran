@@ -10,11 +10,11 @@ class Test(unittest.TestCase):
         """
         value = double_or_blank(card, n, fieldname, default=None)
         """
-        card    = [1.0, '1.0', '1.', 'C',        None, None,          '']
-        exact   = [1.0,  1.0,   1.0, SyntaxError,None, 2.0,  SyntaxError]
-        default = [None, None, None, None,       None, 2.0,         None]
+        card    = [1.0, '1.0', '1.', 'C',        None, None,          '', None, 'cat']
+        exact   = [1.0,  1.0,   1.0, SyntaxError,None, 2.0,  SyntaxError, 1.0, SyntaxError]
+        default = [None, None, None, None,       None, 2.0,         None, 1.0, 1.0]
         card = BDFCard(card)
-    
+        
         assert len(card) == len(exact), 'len(card)=%s len(exact)=%s' % (len(card), len(exact))
         assert len(card) == len(default), 'len(card)=%s len(default)=%s' % (len(card), len(default))
         i = 0

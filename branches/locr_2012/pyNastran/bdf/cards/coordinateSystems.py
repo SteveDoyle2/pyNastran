@@ -11,8 +11,8 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.utils import list_print
-from pyNastran.bdf.format import (integer, integer_or_blank,
-                                  double_or_blank, string_or_blank)
+from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+    double_or_blank, string_or_blank)
 
 
 class Coord(BaseCard):

@@ -8,12 +8,12 @@ from numpy import array, pi, linspace
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru,
                                           wipe_empty_fields)
-from pyNastran.bdf.format import (fields,
-                                  integer, integer_or_blank,
-                                  double, double_or_blank, 
-                                  string, string_or_blank,
-                                  integer_or_string, double_string_or_blank,
-                                  blank)
+from pyNastran.bdf.assign_type import (fields,
+    integer, integer_or_blank,
+    double, double_or_blank, 
+    string, string_or_blank,
+    integer_or_string, double_string_or_blank,
+    blank)
 
 class AEFACT(BaseCard):
     """

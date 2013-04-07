@@ -17,7 +17,7 @@ from numpy.linalg import solve, norm
 
 from pyNastran.bdf.cards.elements.elements import Element
 from pyNastran.utils.mathematics import Area, gauss
-from pyNastran.bdf.format import (integer, integer_or_blank, fields)
+from pyNastran.bdf.assign_type import (integer, integer_or_blank, fields)
 
 def volume4(n1, n2, n3, n4):
     r"""

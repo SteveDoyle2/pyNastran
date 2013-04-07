@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.bdf.cards.baseCard import BaseCard
-from pyNastran.bdf.format import string, integer_double_or_string
+from pyNastran.bdf.assign_type import string, integer_double_or_string
 
 class PARAM(BaseCard):
     type = 'PARAM'

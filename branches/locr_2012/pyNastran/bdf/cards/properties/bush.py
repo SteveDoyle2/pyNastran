@@ -12,9 +12,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.bdf.cards.baseCard import Property
-from pyNastran.bdf.format import (integer, integer_or_blank,
-                                  double, double_or_blank,
-                                  string, string_or_blank, blank, fields)
+from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+    double, double_or_blank,
+    string, string_or_blank, blank, fields)
 
 
 class BushingProperty(Property):

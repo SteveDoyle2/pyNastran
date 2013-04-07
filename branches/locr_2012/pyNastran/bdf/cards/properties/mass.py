@@ -10,9 +10,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.bdf.cards.baseCard import Property
-from pyNastran.bdf.format import (integer,
-                                  double, double_or_blank,
-                                  string)
+from pyNastran.bdf.assign_type import (integer,
+    double, double_or_blank, string)
 
 
 class PointProperty(Property):

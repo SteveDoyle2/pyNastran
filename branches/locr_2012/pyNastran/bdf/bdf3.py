@@ -1137,7 +1137,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
             card = wipe_empty_fields([interpret_value(field, fields)
                                       for field in fields])
-            print "card =", card
+            #print "card =", card
             card_obj = BDFCard(card)
 
         # function that gets by name the initialized object (from global scope)
@@ -1508,7 +1508,7 @@ def to_fields(card_lines, card_name):
     #print('---------------')
     # first line
     line = card_lines.pop(0)
-    print "first line=|%s|" % line.rstrip()
+    #print "first line=|%s|" % line.rstrip()
     if '=' in line:
             raise SyntaxError('card_name=%s\nequal signs are not supported...'
                               'line=|%r|' % (card_name, line))
@@ -1530,7 +1530,7 @@ def to_fields(card_lines, card_name):
         fields += new_fields
         assert len(fields) == 5
     else:  # small field
-        print "small line=|%s|" % line.rstrip()
+        #print "small line=|%s|" % line.rstrip()
         if ',' in line:  # csv
             new_fields = line[:72].split(',')[:9]
             for i in range(9-len(new_fields)):
@@ -1567,7 +1567,7 @@ def to_fields(card_lines, card_name):
                 new_fields = [line[8:24], line[24:40], line[40:56], line[56:72]]
             assert len(new_fields) == 4
         else:  # small field
-            print "small lin2=|%s|" % line.rstrip()
+            #print "small lin2=|%s|" % line.rstrip()
             if ',' in line:  # csv
                 new_fields = line[:72].split(',')[1:9]
                 for i in range(8-len(new_fields)):
@@ -1612,7 +1612,7 @@ def parse_executive_control_deck(executive_control_lines):
     for (i, eline) in enumerate(executive_control_lines):
         uline = eline.strip().upper()  # uppercase line
         uline = uline.split('$')[0]
-        print(uline)
+        #print(uline)
         if 'SOL ' in uline[:4]:
             if ',' in uline:
                 sline = uline.split(',')  # SOL 600,method

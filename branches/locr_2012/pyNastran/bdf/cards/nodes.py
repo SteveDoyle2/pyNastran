@@ -6,8 +6,8 @@ from numpy import array
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
-from pyNastran.bdf.format import (integer, integer_or_blank,
-                                  double, double_or_blank)
+from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+    double, double_or_blank)
 
 
 class Ring(BaseCard):

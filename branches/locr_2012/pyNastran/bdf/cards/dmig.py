@@ -10,8 +10,8 @@ from numpy import zeros  # average
 from scipy.sparse import coo_matrix
 
 from pyNastran.bdf.cards.baseCard import BaseCard, print_card
-from pyNastran.bdf.format import (integer, integer_or_blank,
-                                  double, string, blank, components)
+from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+    double, string, blank, components)
 
 def ssq(*listA):
     """

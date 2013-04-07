@@ -15,8 +15,8 @@ from itertools import izip
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property, Material
-from pyNastran.bdf.format import (integer, integer_or_blank, double,
-                                  double_or_blank, string_or_blank)
+from pyNastran.bdf.assign_type import (integer, integer_or_blank, double,
+    double_or_blank, string_or_blank)
 
     
 class ShellProperty(Property):

@@ -14,7 +14,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.bdf.cards.baseCard import Element
-from pyNastran.bdf.format import integer, integer_or_blank, double
+from pyNastran.bdf.assign_type import integer, integer_or_blank, double
+
 
 class DamperElement(Element):
     def __init__(self, card, data):
