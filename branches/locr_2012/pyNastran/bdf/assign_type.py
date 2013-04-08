@@ -30,6 +30,11 @@ def blank(card, n, fieldname, default=None):
     svalue = card.field(n)
     if svalue is None:
         return default
+        
+    if isinstance(svalue, str):
+        svalue = svalue.strip()
+        if len(svalue) == 0:
+           return default
     Type = getType(svalue)
     raise SyntaxError('%s = %r (field #%s) on card must be blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     

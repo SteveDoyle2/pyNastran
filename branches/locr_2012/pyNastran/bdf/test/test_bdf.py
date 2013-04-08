@@ -51,8 +51,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         isPassed = False
         try:
             (fem1, fem2, diffCards2) = runBDF(folder, filename, debug=debug,
-                                              xref=xref, check=check, cid=cid,
-                                              isFolder=True)
+                                              xref=xref, check=check, punch=punch,
+                                              cid=cid, isFolder=True)
             diffCards += diffCards
             isPassed = True
         except KeyboardInterrupt:
@@ -77,8 +77,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     return failedFiles
 
 
-def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, cid=None,
-           meshForm='combined', isFolder=False):
+def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, punch=False,
+           cid=None, meshForm='combined', isFolder=False):
     bdfModel = str(bdfFilename)
     print("bdfModel = %s" % (bdfModel))
     if isFolder:
@@ -93,9 +93,9 @@ def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, cid=None,
     diffCards = []
     try:
         #print("xref = ", xref)
-        (outModel) = run_fem1(fem1, bdfModel, meshForm, xref, cid)
+        (outModel) = run_fem1(fem1, bdfModel, meshForm, xref, punch, cid)
 
-        (fem2) = run_fem2(bdfModel, outModel, xref, debug=debug, log=None)
+        (fem2) = run_fem2(bdfModel, outModel, xref, punch, debug=debug, log=None)
         (diffCards) = compare(fem1, fem2, xref=xref, check=check)
 
     except KeyboardInterrupt:
@@ -116,13 +116,14 @@ def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, cid=None,
     return (fem1, fem2, diffCards)
 
 
-def run_fem1(fem1, bdfModel, meshForm, xref, cid):
+def run_fem1(fem1, bdfModel, meshForm, xref, punch, cid):
+    assert punch==True
     assert os.path.exists(bdfModel), print_bad_path(bdfModel)
     try:
         if '.pch' in bdfModel:
             fem1.read_bdf(bdfModel, xref=False, punch=True)
         else:
-            fem1.read_bdf(bdfModel, xref=xref)
+            fem1.read_bdf(bdfModel, xref=xref, punch=punch)
     except:
         print("failed reading |%s|" % (bdfModel))
         raise
@@ -142,14 +143,14 @@ def run_fem1(fem1, bdfModel, meshForm, xref, cid):
     return (outModel)
 
 
-def run_fem2(bdfModel, outModel, xref, debug=False, log=None):
+def run_fem2(bdfModel, outModel, xref, punch, debug=False, log=None):
     assert os.path.exists(bdfModel), bdfModel
     assert os.path.exists(outModel), outModel
     fem2 = BDF(debug=debug, log=log)
     fem2.log.info('starting fem2')
     sys.stdout.flush()
     try:
-        fem2.read_bdf(outModel, xref=xref)
+        fem2.read_bdf(outModel, xref=xref, punch=punch)
     except:
         print("failed reading |%s|" % (outModel))
         raise
@@ -401,6 +402,8 @@ def main():
                        help='Prints   debug messages (default=False)')
     parser.add_argument('-x', '--xref', dest='xref', action='store_false',
                        help='Disables cross-referencing and checks of the BDF')
+    parser.add_argument('-p', '--punch', dest='punch', action='store_true',
+                       help='Disables reading the executive and case control decks in the BDF')
     parser.add_argument('-c', '--checks', dest='check', action='store_false',
                        help='Disables BDF checks.  Checks run the methods on '
                        'every element/property to test them.  May fails if a '
@@ -413,17 +416,20 @@ def main():
         sys.exit()
     args = parser.parse_args()
 
-    print("bdfFile     = %s" % (args.bdfFileName[0]))
-    print("xref        = %s" % (args.xref))
-    print("check       = %s" % (args.check))
-    print("debug       = %s" % (not(args.quiet)))
+    print("bdfFile     = %s" % args.bdfFileName[0])
+    print("punch       = %s" % args.punch)
+    print("xref        = %s" % args.xref)
+    print("check       = %s" % args.check)
+    print("debug       = %s" % not(args.quiet))
 
     xref = args.xref
+    punch = args.punch
     check = args.check
+    
     debug = not(args.quiet)
     bdf_filename = args.bdfFileName[0]
 
-    runBDF('.', bdf_filename, debug=debug, xref=xref, check=check)
+    runBDF('.', bdf_filename, debug=debug, xref=xref, check=check, punch=punch)
 
 if __name__ == '__main__':
     main()

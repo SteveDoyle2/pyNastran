@@ -78,6 +78,7 @@ class EIGB(Method):
             else:
                 self.G = integer_or_blank(card, 10, 'G')
                 self.C = components_or_blank(card, 11, 'C')
+            assert len(card) <= 11, 'len(EIGB card) = %i' % len(card)
         else:
             raise NotImplementedError('EIGB')
 
@@ -301,6 +302,7 @@ class EIGP(Method):
             ## Multiplicity of complex root at pole defined by point at ALPHAi
             ## and OMEGAi
             self.m2 = integer(card, 7, 'm2')
+            assert len(card) <= 7, 'len(EIGP card) = %i' % len(card)
         else:
             raise NotImplementedError('EIGP')
 
@@ -368,6 +370,7 @@ class EIGR(Method):
             else:
                 self.G = blank(card, 10, 'G')
                 self.C = blank(card, 11, 'C')
+            assert len(card) <= 11, 'len(EIGR card) = %i' % len(card)
         else:
             raise NotImplementedError('EIGR')
 
@@ -438,6 +441,8 @@ class EIGRL(Method):
                 self.norm = string_or_blank(card, 8, 'norm', 'MAX')
             else:
                 self.norm = string_or_blank(card, 8, 'norm')
+
+            assert len(card) <= 8, 'len(EIGRL card) = %i' % len(card)
 
             #msg = 'norm=%s sol=%s' % (self.norm, sol)
             #assert self.norm in ['MASS', 'MAX'],msg

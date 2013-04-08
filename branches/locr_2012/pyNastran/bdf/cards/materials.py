@@ -73,6 +73,7 @@ class CREEP(Material):
             self.e = double_or_blank(card, 14, 'e')
             self.f = double_or_blank(card, 15, 'f')
             self.g = double_or_blank(card, 16, 'g')
+            assert len(card) <= 16, 'len(CREEP card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.T0 = data[1]
@@ -137,6 +138,7 @@ class MAT1(Material):
             self.Sc = double_or_blank(card, 10, 'Sc', 0.0)
             self.Ss = double_or_blank(card, 11, 'Ss', 0.0)
             self.Mcsid = integer_or_blank(card, 12, 'Mcsid', 0)
+            assert len(card) <= 12, 'len(MAT1 card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.e = data[1]
@@ -306,6 +308,7 @@ class MAT2(AnisotropicMaterial):
             self.Sc = double_or_blank(card, 15, 'Sc') # or blank?
             self.Ss = double_or_blank(card, 16, 'Ss') # or blank?
             self.Mcsid = integer_or_blank(card, 17, 'Mcsid')
+            assert len(card) <= 17, 'len(MAT2 card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.G11 = data[1]
@@ -460,6 +463,7 @@ class MAT3(AnisotropicMaterial):
             self.az = double_or_blank(card, 14, 'az', 0.0)
             self.TRef = double_or_blank(card, 15, 'TRef', 0.0)
             self.ge = double_or_blank(card, 16, 'ge', 0.0)
+            assert len(card) <= 16, 'len(MAT3 card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.ex = data[1]
@@ -524,6 +528,7 @@ class MAT4(ThermalMaterial):
             self.tch = double_or_blank(card, 9, 'tch')
             self.tdelta = double_or_blank(card, 10, 'tdelta')
             self.qlat = double_or_blank(card, 11, 'qlat')
+            assert len(card) <= 12, 'len(MAT4 card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.k = data[1]
@@ -578,6 +583,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
             self.cp = double_or_blank(card, 8, 'cp', 0.0)
             self.rho = double_or_blank(card, 9, 'rho', 1.0)
             self.hgen = double_or_blank(card, 10, 'hgen', 1.0)
+            assert len(card) <= 10, 'len(MAT5 card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.kxx = data[1]
@@ -653,6 +659,7 @@ class MAT8(AnisotropicMaterial):
             self.ge = double_or_blank(card, 17, 'ge', 0.0)
             self.F12 = double_or_blank(card, 18, 'F12', 0.0)
             self.strn = double_or_blank(card, 19, 'strn', 0.0)
+            assert len(card) <= 19, 'len(MAT8 card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.e11 = data[1]
@@ -788,6 +795,7 @@ class MAT9(AnisotropicMaterial):
                       double_or_blank(card, 29, 'A6', 0.0)]
             self.TRef = double_or_blank(card, 30, 'TRef', 0.0)
             self.ge = double_or_blank(card, 31, 'ge', 0.0)
+            assert len(card) <= 31, 'len(MAT9 card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.G11 = data[1][0]
@@ -869,6 +877,7 @@ class MAT10(Material):
             self.mid = integer(card, 1, 'mid')
             self.getBulkRhoC(card)
             self.ge = double_or_blank(card, 5, 'ge', 0.0)
+            assert len(card) <= 5, 'len(MAT10 card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.bulk = data[1]
@@ -950,6 +959,7 @@ class MAT11(Material):
             
             self.TRef = double_or_blank(card, 15, 'TRef', 0.0)
             self.ge = double_or_blank(card, 16, 'ge', 0.0)
+            assert len(card) <= 16, 'len(MAT11 card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.e1 = data[1]
@@ -1050,6 +1060,7 @@ class MATHP(HyperelasticMaterial):
             self.tab3 = integer_or_blank(card, 51, 'tab3')
             self.tab4 = integer_or_blank(card, 52, 'tab4')
             self.tabd = integer_or_blank(card, 56, 'tabd')
+            assert len(card) <= 56, 'len(MATHP card) = %i' % len(card)
         else:
             main = data[0]
             (mid, a10, a01, d1, rho, av, alpha, tref, ge, sf, na, nd, kp,
@@ -1235,6 +1246,7 @@ class MATS1(MaterialDependence):
                     self.limit2 = double(card, 8, 'limit2')
                 else:
                     self.limit2 = blank(card, 8, 'limit2')
+            assert len(card) <= 8, 'len(MATS1 card) = %i' % len(card)
         else:
             (mid, tid, Type, h, yf, hr, limit1, limit2) = data
             self.mid = mid

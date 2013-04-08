@@ -91,6 +91,7 @@ class FREQ1(FREQ):
         f1 = double_or_blank(card, 2, 'f1', 0.0)
         df = double(card, 3, 'df')
         ndf = integer_or_blank(card, 4, 'ndf', 1)
+        assert len(card) <= 4, 'len(FREQ card) = %i' % len(card)
 
         self.freqs = []
         for i in xrange(ndf):
@@ -115,6 +116,7 @@ class FREQ2(FREQ):
         f1 = double(card, 2, 'f1')  # default=0.0 ?
         f2 = double(card, 3, 'f2')
         nf = integer_or_blank(card, 4, 'nf', 1)
+        assert len(card) <= 4, 'len(FREQ2 card) = %i' % len(card)
 
         d = 1. / nf * log(f2 / f1)
         self.freqs = []
@@ -152,6 +154,7 @@ class FREQ4(FREQ):
         self.f2 = double_or_blank(card, 3, 'f2', 1.e20)
         self.fspd = double_or_blank(card, 4, 'fspd', 0.1)
         self.nfm = integer_or_blank(card, 5, 'nfm', 3)
+        assert len(card) <= 5, 'len(FREQ card) = %i' % len(card)
 
     def rawFields(self):
         list_fields = ['FREQ4', self.sid, self.f1, self.f2, self.fspd,
@@ -260,6 +263,7 @@ class TSTEPNL(BaseCard):
             
             # not listed in all QRGs
             self.minIter = integer_or_blank(card, 24, 'minIter')
+            assert len(card) <= 24, 'len(TSTEPNL card) = %i' % len(card)
         else:
             (sid, ndt, dt, no, method, kStep, maxIter, conv, epsU, epsP, epsW,
              maxDiv, maxQn, maxLs, fStress, maxBisect,
@@ -376,6 +380,7 @@ class NLPARM(BaseCard):
             self.maxBisect = integer_or_blank(card, 17, '', 5)
             self.maxR = double_or_blank(card, 21, 'maxR', 20.)
             self.rTolB = double_or_blank(card, 23, 'rTolB', 20.)
+            assert len(card) <= 23, 'len(NLPARM card) = %i' % len(card)
         else:
             (sid, ninc, dt, kMethod, kStep, maxIter, conv, intOut, epsU, epsP,
              epsW, maxDiv, maxQn, maxLs, fStress, lsTol, maxBisect, maxR,

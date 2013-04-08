@@ -51,6 +51,32 @@ class Test(ExtendedTestCase):
                 self.assertEqual(value, exacti)
             i += 1
 
+    def test_blank(self):
+        """
+        value = integer(card, n, fieldname)
+        """
+        # integer
+        with self.assertRaises(SyntaxError):
+            blank(BDFCard([1]  ), 0, 'field')
+        with self.assertRaises(SyntaxError):
+            blank(BDFCard(['1']), 0, 'field')
+
+        # float
+        with self.assertRaises(SyntaxError):
+            blank(BDFCard([1.]  ), 0, 'field')
+        with self.assertRaises(SyntaxError):
+            blank(BDFCard(['1.']), 0, 'field')
+
+        # string
+        with self.assertRaises(SyntaxError):
+            blank(BDFCard(['a'] ), 0, 'field')
+        with self.assertRaises(SyntaxError):
+            blank(BDFCard(['1b']), 0, 'field')
+
+        # blank
+        blank(BDFCard(['']   ), 0, 'field')
+        blank(BDFCard([None] ), 0, 'field')
+
     def test_double(self):
         """
         value = double(card, n, fieldname)

@@ -530,6 +530,7 @@ class Cord1x(Coord):
             self.g2 = integer(card, 3 + nCoord, 'g2')
             ## a Node on the xz-plane
             self.g3 = integer(card, 4 + nCoord, 'g3')
+            assert len(card) <= 4 + nCoord, 'len(CORD1x card) = %i' % len(card)
         else:
             self.cid = data[0]
             self.g1 = data[1]
@@ -679,6 +680,7 @@ class CORD3G(Coord):  # not done
                        integer(card, 6, 'theta3')]
         assert len(self.thetas) == 3, 'thetas=%s' % (self.thetas)
         self.cidRef = integer_or_blank(card, 7, 'cidRef')
+        assert len(card) <= 7, 'len(CORD3g card) = %i' % len(card)
 
         # EQN for DEQATN, TABLE for TABLE3D
         assert self.form in ['EQN', 'TABLE']

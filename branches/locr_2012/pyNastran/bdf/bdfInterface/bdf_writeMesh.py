@@ -7,10 +7,7 @@ from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.bdf_Reader import print_filename
 
 
-class WriteMesh(object):
-    def __init__(self):
-        pass
-
+class WriteMeshDeprecated(object):
     def writeBDF(self, outFileName='fem.out.bdf', size=8, debug=False):
         """
         @see write_bdf
@@ -37,6 +34,11 @@ class WriteMesh(object):
         warnings.warn('echoBDF has been deprecated; use '
                       'echo_bdf', DeprecationWarning, stacklevel=2)
         self.echo_bdf(infileName)
+
+
+class WriteMesh(WriteMeshDeprecated):
+    def __init__(self):
+        pass
 
     def echo_bdf(self, infileName):
         """
@@ -133,11 +135,11 @@ class WriteMesh(object):
         self.log.debug("***writing %s" % fname)
 
         outfile = open(outFileName, 'wb')
-
+        
         msg = self._write_header()
         msg += self._write_params(size)
         outfile.write(msg)
-
+        
         msg = self._write_nodes(size)
         outfile.write(msg)
 
@@ -224,17 +226,19 @@ class WriteMesh(object):
         Writes the executive control deck.
         @param self the BDF object
         """
-        msg = '$EXECUTIVE CONTROL DECK\n'
-        if self.sol == 600:
-            newSol = 'SOL 600,%s' % (self.solMethod)
-        else:
-            newSol = 'SOL %s' % (self.sol)
+        msg = ''
+        if self.executive_control_lines:
+            msg = '$EXECUTIVE CONTROL DECK\n'
+            if self.sol == 600:
+                newSol = 'SOL 600,%s' % (self.solMethod)
+            else:
+                newSol = 'SOL %s' % (self.sol)
 
-        if self.iSolLine is not None:
-            self.executive_control_lines[self.iSolLine] = newSol
+            if self.iSolLine is not None:
+                self.executive_control_lines[self.iSolLine] = newSol
 
-        for line in self.executive_control_lines:
-            msg += line + '\n'
+            for line in self.executive_control_lines:
+                msg += line + '\n'
         return msg
 
     def _write_case_control_deck(self):
@@ -246,7 +250,7 @@ class WriteMesh(object):
         if self.caseControlDeck:
             msg += '$CASE CONTROL DECK\n'
             msg += str(self.caseControlDeck)
-        assert 'BEGIN BULK' in msg, msg
+            assert 'BEGIN BULK' in msg, msg
         return msg
 
     def _write_params(self, size):
@@ -385,6 +389,7 @@ class WriteMesh(object):
                 missingProperties.append(str(prop))
 
         eidsMissing = set(self.elements.keys()).difference(set(eidsWritten))
+
         if eidsMissing:
             msg.append('$ELEMENTS_WITH_NO_PROPERTIES '
                        '(PID=0 and unanalyzed properties)\n')

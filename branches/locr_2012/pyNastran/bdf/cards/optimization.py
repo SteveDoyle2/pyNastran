@@ -29,6 +29,7 @@ class DCONSTR(OptConstraint):
             self.uid = double_or_blank(card, 4, 'uid',  1e20)
             self.lowfq = double_or_blank(card, 5, 'lowfq', 0.0)
             self.highfq = double_or_blank(card, 6, 'highfq', 1e20)
+            assert len(card) <= 6, 'len(DCONSTR card) = %i' % len(card)
         else:
             self.oid = data[0]
             self.rid = data[1]
@@ -56,13 +57,17 @@ class DESVAR(OptConstraint):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.oid = integer(card, 1, 'oid')
-        self.label = string(card, 2, 'label')
-        self.xinit = double(card, 3, 'xinit')
-        self.xlb = double_or_blank(card, 4, 'xlb', -1e20)
-        self.xub = double_or_blank(card, 5, 'xub', 1e20)
-        self.delx = double_or_blank(card, 6, 'delx', 1e20)
-        self.ddval = integer_or_blank(card, 7, 'ddval')
+        if card:
+            self.oid = integer(card, 1, 'oid')
+            self.label = string(card, 2, 'label')
+            self.xinit = double(card, 3, 'xinit')
+            self.xlb = double_or_blank(card, 4, 'xlb', -1e20)
+            self.xub = double_or_blank(card, 5, 'xub', 1e20)
+            self.delx = double_or_blank(card, 6, 'delx', 1e20)
+            self.ddval = integer_or_blank(card, 7, 'ddval')
+            assert len(card) <= 4, 'len(DESVAR card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
 
     def rawFields(self):
         list_fields = ['DESVAR', self.oid, self.label, self.xinit, self.xlb,
@@ -84,10 +89,13 @@ class DDVAL(OptConstraint):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.oid = integer(card, 1, 'oid')
-        ddvals = [ddval for ddval in card[2:] if ddval is not None]
-        self.ddvals = expand_thru_by(ddvals)
-        self.ddvals.sort()
+        if card:
+            self.oid = integer(card, 1, 'oid')
+            ddvals = [ddval for ddval in card[2:] if ddval is not None]
+            self.ddvals = expand_thru_by(ddvals)
+            self.ddvals.sort()
+        else:
+            raise NotImplementedError(data)
 
     def rawFields(self):
         self.ddvals.sort()
@@ -376,6 +384,7 @@ class DSCREEN(OptConstraint):
         ## Maximum number of constraints to be retained per region per load
         ## case. (Integer > 0; Default = 20)
         self.nstr = integer(card, 3, 'nstr', 20)
+        assert len(card) <= 3, 'len(DSCREEN card) = %i' % len(card)
 
     def rawFields(self):
         list_fields = ['DSCREEN', self.rType, self.trs, self.nstr]

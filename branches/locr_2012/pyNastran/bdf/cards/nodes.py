@@ -7,7 +7,7 @@ from numpy import array
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
 from pyNastran.bdf.assign_type import (integer, integer_or_blank,
-    double, double_or_blank)
+    double, double_or_blank, blank)
 
 
 class Ring(BaseCard):
@@ -60,9 +60,13 @@ class RINGAX(Ring):
         if comment:
             self._comment = comment
         self.nid = integer(card, 1, 'nid')
+        blank(card, 2, 'blank')
         self.R = double(card, 3, 'R')
         self.z = double(card, 4, 'z')
+        blank(card, 5, 'blank')
+        blank(card, 6, 'blank')
         self.ps = integer_or_blank(card, 7, 'ps')
+        assert len(card) <= 7, 'len(RINGAX card) = %i' % len(card)
 
     def Position(self):
         return array([0., 0., 0.])
@@ -170,7 +174,11 @@ class GRDSET(Node):
         if comment:
             self._comment = comment
         ## Grid point coordinate system
+        blank(card, 1, 'blank')
         self.cp = integer_or_blank(card, 2, 'cp', 0)
+        blank(card, 3, 'blank')
+        blank(card, 4, 'blank')
+        blank(card, 5, 'blank')
 
         ## Analysis coordinate system
         self.cd = integer_or_blank(card, 6, 'cd', 0)
@@ -180,6 +188,7 @@ class GRDSET(Node):
 
         ## Superelement ID
         self.seid = integer_or_blank(card, 8, 'seid', 0)
+        assert len(card) <= 8, 'len(GRDSET card) = %i' % len(card)
 
     def cross_reference(self, model):
         self.cp = model.Coord(self.cp)
@@ -222,11 +231,11 @@ class GRIDB(Node):
             self.ps = data[3]
             self.idf = data[4]
 
-        assert self.nid > 0, 'nid=%s' % (self.nid)
-        assert self.phi >= 0, 'phi=%s' % (self.phi)
-        assert self.cd >= 0, 'cd=%s' % (self.cd)
-        assert self.ps >= 0, 'ps=%s' % (self.ps)
-        assert self.idf >= 0, 'idf=%s' % (self.idf)
+        assert self.nid > 0, 'nid=%s' % self.nid
+        assert self.phi >= 0, 'phi=%s' % self.phi
+        assert self.cd >= 0, 'cd=%s' % self.cd
+        assert self.ps >= 0, 'ps=%s' % self.ps
+        assert self.idf >= 0, 'idf=%s' % self.idf
 
     def rawFields(self):
         list_fields = ['GRIDB', self.nid, None, None, self.phi, None,
@@ -265,7 +274,6 @@ class GRID(Node):
             x = double_or_blank(card, 3, 'x1', 0.)
             y = double_or_blank(card, 4, 'x2', 0.)
             z = double_or_blank(card, 5, 'x3', 0.)
-            #xyz = card.fields(3, 6, [0., 0., 0.])
             ## node location in local frame
             self.xyz = array([x, y, z])
 
@@ -277,6 +285,7 @@ class GRID(Node):
 
             ## Superelement ID
             self.seid = integer_or_blank(card, 8, 'seid', 0)
+            assert len(card) <= 8, 'len(GRID card) = %i' % len(card)
         else:
             self.nid = data[0]
             self.cp = data[1]
@@ -400,6 +409,7 @@ class POINT(Node):
 
             ## Superelement ID
             self.seid = integer_or_blank(card, 8, 'seid', 0)
+            assert len(card) <= 8, 'len(POINT card) = %i' % len(card)
         else:
             #print data
             self.nid = data[0]
