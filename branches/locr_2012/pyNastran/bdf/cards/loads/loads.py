@@ -149,7 +149,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             self.exciteID = integer(card, 2, 'exciteID')
             self.lid = integer(card, 3, 'lid')
             self.tid = integer_or_blank(card, 4, 'tid')
-            assert len(card) <= 4, 'len(LSEQ card) = %i' % len(card)
+            assert len(card) <= 5, 'len(LSEQ card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.exciteID = data[1]
@@ -368,7 +368,7 @@ class TLOAD1(TabularLoad):
             else:
                 msg = 'invalid TLOAD1 type  Type=|%s|' % self.Type
                 raise RuntimeError(msg)
-            assert len(card) <= 7, 'len(TLOAD1 card) = %i' % len(card)
+            assert len(card) <= 8, 'len(TLOAD1 card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 
@@ -462,7 +462,7 @@ class TLOAD2(TabularLoad):
             else:
                 msg = 'invalid TLOAD2 type  Type=|%s|' % self.Type
                 raise RuntimeError(msg)
-            assert len(card) <= 12, 'len(TLOAD2 card) = %i' % len(card)
+            assert len(card) <= 13, 'len(TLOAD2 card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 
@@ -511,7 +511,7 @@ class RFORCE(Load):
             self.racc = double_or_blank(card, 9, 'racc', 0.)
             self.mb = integer_or_blank(card, 10, 'mb', 0)
             self.idrf = integer_or_blank(card, 11, 'idrf', 0)
-            assert len(card) <= 11, 'len(RFORCE2 card) = %i' % len(card)
+            assert len(card) <= 12, 'len(RFORCE2 card) = %i' % len(card)
         else:
             self.sid = data[0]
             print("RFORCE = %s" % data)
@@ -577,7 +577,7 @@ class RLOAD1(TabularLoad):
             else:
                 msg = 'invalid RLOAD1 type  Type=|%s|' % self.Type
                 raise RuntimeError(msg)
-            assert len(card) <= 7, 'len(RLOAD1 card) = %i' % len(card)
+            assert len(card) <= 8, 'len(RLOAD1 card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 
@@ -656,7 +656,7 @@ class RLOAD2(TabularLoad):
             else:
                 msg = 'invalid RLOAD2 type  Type=|%s|' % self.Type
                 raise RuntimeError(msg)
-            assert len(card) <= 7, 'len(RLOAD2 card) = %i' % len(card)
+            assert len(card) <= 8, 'len(RLOAD2 card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 
@@ -737,7 +737,7 @@ class RANDPS(RandomLoad):
             self.y = double_or_blank(card, 5, 'y', 0.0)
             ## Identification number of a TABRNDi entry that defines G(F).
             self.tid = integer_or_blank(card, 6, 'tid', 0)
-            assert len(card) <= 6, 'len(RANDPS card) = %i' % len(card)
+            assert len(card) <= 7, 'len(RANDPS card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 

@@ -29,7 +29,7 @@ class DCONSTR(OptConstraint):
             self.uid = double_or_blank(card, 4, 'uid',  1e20)
             self.lowfq = double_or_blank(card, 5, 'lowfq', 0.0)
             self.highfq = double_or_blank(card, 6, 'highfq', 1e20)
-            assert len(card) <= 6, 'len(DCONSTR card) = %i' % len(card)
+            assert len(card) <= 7, 'len(DCONSTR card) = %i' % len(card)
         else:
             self.oid = data[0]
             self.rid = data[1]
@@ -65,7 +65,7 @@ class DESVAR(OptConstraint):
             self.xub = double_or_blank(card, 5, 'xub', 1e20)
             self.delx = double_or_blank(card, 6, 'delx', 1e20)
             self.ddval = integer_or_blank(card, 7, 'ddval')
-            assert len(card) <= 4, 'len(DESVAR card) = %i' % len(card)
+            assert len(card) <= 8, 'len(DESVAR card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 
@@ -384,7 +384,7 @@ class DSCREEN(OptConstraint):
         ## Maximum number of constraints to be retained per region per load
         ## case. (Integer > 0; Default = 20)
         self.nstr = integer(card, 3, 'nstr', 20)
-        assert len(card) <= 3, 'len(DSCREEN card) = %i' % len(card)
+        assert len(card) == 4, 'len(DSCREEN card) = %i' % len(card)
 
     def rawFields(self):
         list_fields = ['DSCREEN', self.rType, self.trs, self.nstr]

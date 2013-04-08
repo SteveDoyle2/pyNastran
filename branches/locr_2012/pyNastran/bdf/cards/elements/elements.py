@@ -35,7 +35,7 @@ class CFAST(Element):
             self.xs = double_or_blank(card, 9, 'xs')
             self.ys = double_or_blank(card, 10, 'ys')
             self.zs = double_or_blank(card, 11, 'zs')
-            assert len(card) <= 11, 'len(CFAST card) = %i' % len(card)
+            assert len(card) <= 12, 'len(CFAST card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
         #if self.Type=='PROP': # PSHELL/PCOMP  ida & idb
@@ -85,7 +85,7 @@ class CGAP(Element):
                 self.g0 = None
                 self.x = [None, None, None]
                 self.cid = None
-            assert len(card) <= 8, 'len(CGAP card) = %i' % len(card)
+            assert len(card) <= 9, 'len(CGAP card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -169,7 +169,7 @@ class CRAC2D(CrackElement):
                     integer_or_blank(card, 18, 'n16'),
                     integer_or_blank(card, 19, 'n17'),
                     integer_or_blank(card, 20, 'n18')]
-            assert len(card) <= 20, 'len(CRAC2D card) = %i' % len(card)
+            assert len(card) <= 21, 'len(CRAC2D card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]

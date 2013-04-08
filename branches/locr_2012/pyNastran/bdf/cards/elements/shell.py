@@ -219,7 +219,7 @@ class CTRIA3(TriShell):
             self.T1 = double_or_blank(card, 11, 'T1', 1.0)
             self.T2 = double_or_blank(card, 12, 'T2', 1.0)
             self.T3 = double_or_blank(card, 13, 'T3', 1.0)
-            assert len(card) <= 13, 'len(CTRIA3 card) = %i' % len(card)
+            assert len(card) <= 14, 'len(CTRIA3 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -337,7 +337,7 @@ class CTRIA6(TriShell):
             self.T2 = double_or_blank(card, 12, 'T2', 1.0)
             self.T3 = double_or_blank(card, 13, 'T3', 1.0)
             self.TFlag = integer_or_blank(card, 14, 'TFlag', 0)
-            assert len(card) <= 14, 'len(CTRIA6 card) = %i' % len(card)
+            assert len(card) <= 15, 'len(CTRIA6 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -469,7 +469,7 @@ class CTRIAR(TriShell):
         self.T1 = double_or_blank(card, 11, 'T1', 1.0)
         self.T2 = double_or_blank(card, 12, 'T2', 1.0)
         self.T3 = double_or_blank(card, 13, 'T3', 1.0)
-        assert len(card) <= 13, 'len(CTRIAR card) = %i' % len(card)
+        assert len(card) <= 14, 'len(CTRIAR card) = %i' % len(card)
 
     def Thickness(self):
         """
@@ -518,17 +518,20 @@ class CTRIAX(TriShell):
         TriShell.__init__(self, card, data)
         if comment:
             self._comment = comment
-        ## element ID number
-        self.eid = integer(card, 1, 'eid')
-        blank(card, 2, 'blank')
+        if card:
+            ## element ID number
+            self.eid = integer(card, 1, 'eid')
+            blank(card, 2, 'blank')
 
-        nids = [integer_or_blank(card, 3, 'n1'),
-                integer_or_blank(card, 4, 'n2'),
-                integer_or_blank(card, 5, 'n3'),
-                integer_or_blank(card, 6, 'n4'),
-                integer_or_blank(card, 7, 'n5'),
-                integer_or_blank(card, 8, 'n6')]
-        assert len(card) <= 8, 'len(CTRIAX card) = %i' % len(card)
+            nids = [integer_or_blank(card, 3, 'n1'),
+                    integer_or_blank(card, 4, 'n2'),
+                    integer_or_blank(card, 5, 'n3'),
+                    integer_or_blank(card, 6, 'n4'),
+                    integer_or_blank(card, 7, 'n5'),
+                    integer_or_blank(card, 8, 'n6')]
+            assert len(card) <= 9, 'len(CTRIAX card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(nids) == 6, 'error on CTRIAX'
 
@@ -557,17 +560,20 @@ class CTRIAX6(TriShell):
         TriShell.__init__(self, card, data)
         if comment:
             self._comment = comment
-        ## element ID number
-        self.eid = integer(card, 1, 'eid')
-        self.mid = integer(card, 2, 'mid')
+        if card:
+            ## element ID number
+            self.eid = integer(card, 1, 'eid')
+            self.mid = integer(card, 2, 'mid')
 
-        nids = [integer_or_blank(card, 3, 'n1'),
-                integer_or_blank(card, 4, 'n2'),
-                integer_or_blank(card, 5, 'n3'),
-                integer_or_blank(card, 6, 'n4'),
-                integer_or_blank(card, 7, 'n5'),
-                integer_or_blank(card, 8, 'n6')]
-        assert len(card) <= 8, 'len(CTRIAX6 card) = %i' % len(card)
+            nids = [integer_or_blank(card, 3, 'n1'),
+                    integer_or_blank(card, 4, 'n2'),
+                    integer_or_blank(card, 5, 'n3'),
+                    integer_or_blank(card, 6, 'n4'),
+                    integer_or_blank(card, 7, 'n5'),
+                    integer_or_blank(card, 8, 'n6')]
+            assert len(card) <= 9, 'len(CTRIAX6 card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(nids) == 6, 'error on CTRIAX6'
 
@@ -781,7 +787,7 @@ class CSHEAR(QuadShell):
                     integer_or_blank(card, 4, 'n2'),
                     integer_or_blank(card, 5, 'n3'),
                     integer_or_blank(card, 6, 'n4')]
-            assert len(card) <= 6, 'len(CSHEAR card) = %i' % len(card)
+            assert len(card) <= 7, 'len(CSHEAR card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -891,7 +897,7 @@ class CQUAD4(QuadShell):
             self.T2 = double_or_blank(card, 12, 'T2', 1.0)
             self.T3 = double_or_blank(card, 13, 'T3', 1.0)
             self.T4 = double_or_blank(card, 14, 'T4', 1.0)
-            assert len(card) <= 14, 'len(CQUAD4 card) = %i' % len(card)
+            assert len(card) <= 15, 'len(CQUAD4 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -982,7 +988,7 @@ class CQUADR(QuadShell):
             self.T2 = double_or_blank(card, 12, 'T2', 1.0)
             self.T3 = double_or_blank(card, 13, 'T3', 1.0)
             self.T4 = double_or_blank(card, 14, 'T4', 1.0)
-            assert len(card) <= 14, 'len(CQUADR card) = %i' % len(card)
+            assert len(card) <= 15, 'len(CQUADR card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -1056,7 +1062,7 @@ class CQUAD(QuadShell):
                 integer_or_blank(card, 9, 'n7'),
                 integer_or_blank(card, 10, 'n8'),
                 integer_or_blank(card, 11, 'n9')]
-        assert len(card) <= 11, 'len(CQUAD card) = %i' % len(card)
+        assert len(card) <= 12, 'len(CQUAD card) = %i' % len(card)
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 9
 
@@ -1117,7 +1123,7 @@ class CQUAD8(QuadShell):
             self.thetaMcid = integer_double_or_blank(card, 15, 'thetaMcid', 0.0)
             self.zOffset = double_or_blank(card, 16, 'zOffset', 0.0)
             self.TFlag = integer_or_blank(card, 17, 'TFlag', 0)
-            assert len(card) <= 17, 'len(CQUAD4 card) = %i' % len(card)
+            assert len(card) <= 18, 'len(CQUAD4 card) = %i' % len(card)
         else:
             #print "CQUAD8 = ",data
             #(6401,
@@ -1242,7 +1248,7 @@ class CQUADX(QuadShell):
                     integer_or_blank(card, 9, 'n7'),
                     integer_or_blank(card, 10, 'n8'),
                     integer_or_blank(card, 11, 'n9')]
-            assert len(card) <= 11, 'len(CQUADX card) = %i' % len(card)
+            assert len(card) <= 12, 'len(CQUADX card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)

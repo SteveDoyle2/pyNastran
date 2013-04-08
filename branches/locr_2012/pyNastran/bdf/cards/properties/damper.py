@@ -108,7 +108,7 @@ class PDAMPT(DamperProperty):
             ## Identification number of a TABLEDi entry that defines the
             ## damping force per-unit velocity versus frequency relationship
             self.tbid = integer_or_blank(card, 2, 'tbid', 0)
-            assert len(card) <= 2, 'len(PDAMPT card) = %i' % len(card)
+            assert len(card) <= 3, 'len(PDAMPT card) = %i' % len(card)
         else:
             self.pid = data[0]
             self.tbid = data[1]

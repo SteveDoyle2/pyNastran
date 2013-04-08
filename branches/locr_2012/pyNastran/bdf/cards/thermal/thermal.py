@@ -108,7 +108,7 @@ class CHBDYE(ThermalElement):
             ## RADM identification number for back face of surface element
             ## (Integer > 0)
             self.radMidBack = integer_or_blank(card, 7, 'radMidBack', 0)
-            assert len(card) <= 7, 'len(CHBDYE card) = %i' % len(card)
+            assert len(card) <= 8, 'len(CHBDYE card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
         self.grids = []
@@ -271,7 +271,7 @@ class CHBDYP(ThermalElement):
             self.e1 = double_or_blank(card, 13, 'e3')
             self.e2 = double_or_blank(card, 14, 'e3')
             self.e3 = double_or_blank(card, 15, 'e3')
-            assert len(card) <= 15, 'len(CHBDYP card) = %i' % len(card)
+            assert len(card) <= 16, 'len(CHBDYP card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 
@@ -355,7 +355,7 @@ class PCONV(ThermalProperty):
             self.e1 = double_or_blank(card, 12, 'e1')
             self.e2 = double_or_blank(card, 13, 'e2')
             self.e3 = double_or_blank(card, 14, 'e3')
-            assert len(card) <= 14, 'len(PCONV card) = %i' % len(card)
+            assert len(card) <= 15, 'len(PCONV card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
     #def cross_reference(self,model):
@@ -418,7 +418,7 @@ class PCONVM(ThermalProperty):
             ## Prandtl number convection exponent for heat transfer into the
             ## working fluid. (Real > 0.0; Default = 0.0)
             self.exppo = double_or_blank(card, 8, 'exppo', 0.0)
-            assert len(card) <= 8, 'len(PCONVM card) = %i' % len(card)
+            assert len(card) <= 9, 'len(PCONVM card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
     #def cross_reference(self,model):
@@ -466,7 +466,7 @@ class PHBDY(ThermalProperty):
             ## TYPE='ELCYL','TUBE','FTUBE'
             self.d1 = double_or_blank(card, 3, 'd1')
             self.d2 = double_or_blank(card, 4, 'd2', self.d1)
-            assert len(card) <= 4, 'len(PHBDY card) = %i' % len(card)
+            assert len(card) <= 5, 'len(PHBDY card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 
@@ -527,7 +527,7 @@ class CONV(ThermalBC):
             TA7 = integer_or_blank(card, 11, 'ta7', TA1)
             TA8 = integer_or_blank(card, 12, 'ta8', TA1)
             self.ta = [TA1, TA2, TA3, TA4, TA5, TA6, TA7, TA8]
-            assert len(card) <= 12, 'len(CONV card) = %i' % len(card)
+            assert len(card) <= 13, 'len(CONV card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 
@@ -582,7 +582,7 @@ class CONVM(ThermalBC):
             self.ta2 = integer_or_blank(card, 6, 'ta2', self.ta1)
 
             self.mdot = double_or_blank(card, 7, 'mdot', 1.0)
-            assert len(card) <= 7, 'len(CONVM card) = %i' % len(card)
+            assert len(card) <= 8, 'len(CONVM card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 

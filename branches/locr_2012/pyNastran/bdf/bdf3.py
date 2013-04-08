@@ -935,7 +935,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         #print '--------------------------'
         for (i, line, comment) in self.gen_get_line:
-            print "new card...line =|%s|" % line
+            #print "new card...line =|%s|" % line
             Is = []
             lines = []
             comments = []
@@ -949,11 +949,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             # If the first line is valid, continue.
             # Otherwise, keep getting lines until one isn't blank.
             if line:
-                print "adding line..."
+                #print "adding line..."
                 Is.append(i)
                 lines.append(line)
             else:
-                print "while block..."
+                #print "while block..."
                 while len(line)==0:
                     #print "lines while len(line)==0; ",lines
                     #print "you cant have an empty first line..."
@@ -971,20 +971,20 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 if comment:
                     comments.append(comment)
             assert len(lines) == 1, lines
-            print "===end of block 1 (get first line)===; lines=%r" % lines
+            #print "===end of block 1 (get first line)===; lines=%r" % lines
 
             #print "lines =",lines
 
             # get another line
-            print "*lineC %s line=|%s|%s" % (i, line.strip(), c)
+            #print "*lineC %s line=|%s|%s" % (i, line.strip(), c)
             if 0:
                 (i, line, comment) = self.gen_get_line.next()
             if 1:
                 try:
                     (i, line, comment) = self.gen_get_line.next()
                 except StopIteration:
-                    print "*yielding lines=%r comments=%s" %(lines, comments)
-                    print "stored_lines = ", self.stored_lines
+                    #print "*yielding lines=%r comments=%s" %(lines, comments)
+                    #print "stored_lines = ", self.stored_lines
                     assert self.stored_lines == []
                     assert self.stored_comments == []
                     #lines += self.stored_lines
@@ -995,7 +995,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                     yield lines, comment
 
             if comment:  c=' comment=|%s|' % comment.strip()
-            print "lineC %s line=|%s|%s" % (i, line.strip(), c)
+            #print "lineC %s line=|%s|%s" % (i, line.strip(), c)
             #print "lines =",lines
             #print ""
             
@@ -1027,7 +1027,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             if comment:  c=' comment=|%s|' % comment.strip()
             #print "lineD2 %s line=|%s|%s" % (i, line.strip(), c)
             #print '===end of block 2 (done with continuation lines)=== lines=%r comments=%s' % (lines, comments)
-            print '===end of block 2 (done with continuation lines)=== lines=%r' % (lines)
+            #print '===end of block 2 (done with continuation lines)=== lines=%r' % (lines)
 
             #if not in_loop:
                 #self.stored_Is.append(i)
@@ -1081,7 +1081,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         for (lines, comment) in self.gen_get_card:
             assert isinstance(comment, str) or isinstance(comment, unicode), type(comment)
             #comment = ''.join(comments)
-            print "*asdf*lines = %r" % lines
+            #print "*asdf*lines = %r" % lines
             #print "*asdf*comment = |%r|" % comment
             if not lines:
                 self._close_file()
@@ -1125,7 +1125,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             n += 1
 
             #print "**********************"
-            print "*"*60
+            #print "*"*60
         ### end of all the files
 
     def _increase_card_count(self, card_name):
@@ -1177,7 +1177,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
             card = wipe_empty_fields([interpret_value(field, fields)
                                       for field in fields])
-            print "add_card =", card
+            #print "add_card =", card
             card_obj = BDFCard(card)
 
         # function that gets by name the initialized object (from global scope)

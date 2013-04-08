@@ -369,7 +369,7 @@ class DMIG(NastranMatrix):
         if comment:
             self._comment = comment
         if card:
-            assert len(card) <= 8, 'len(DMIG card) = %i' % len(card)
+            assert len(card) <= 9, 'len(DMIG card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 
@@ -393,7 +393,7 @@ class DMIJ(NastranMatrix):
         if comment:
             self._comment = comment
         if card:
-            assert len(card) <= 8, 'len(DMIJ card) = %i' % len(card)
+            assert len(card) <= 9, 'len(DMIJ card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 
@@ -416,7 +416,7 @@ class DMIJI(NastranMatrix):
         if comment:
             self._comment = comment
         if card:
-            assert len(card) <= 8, 'len(DMIJI card) = %i' % len(card)
+            assert len(card) <= 9, 'len(DMIJI card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 
@@ -437,7 +437,7 @@ class DMIK(NastranMatrix):
         if comment:
             self._comment = comment
         if card:
-            assert len(card) <= 8, 'len(DMIK card) = %i' % len(card)
+            assert len(card) <= 9, 'len(DMIK card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 
@@ -466,7 +466,7 @@ class DMI(BaseCard):
 
             self.nRows = integer(card, 7, 'nrows')
             self.nCols = integer(card, 8, 'ncols')
-            assert len(card) == 8, 'len(DMI card) = %i' % len(card)
+            assert len(card) == 9, 'len(DMI card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 

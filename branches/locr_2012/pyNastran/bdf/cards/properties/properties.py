@@ -50,7 +50,7 @@ class PFAST(Property):
             self.mass = double_or_blank(card, 11, 'mass', 0.0)
             ## Structural damping
             self.ge = double_or_blank(card, 12, 'ge', 0.0)
-            assert len(card) <= 12, 'len(PFAST card) = %i' % len(card)
+            assert len(card) <= 13, 'len(PFAST card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 
@@ -115,7 +115,7 @@ class PGAP(Property):
             self.tmax = double_or_blank(card, 9, 'tmax', 0.)
             self.mar = double_or_blank(card, 10, 'mar', 100.)
             self.trmin = double_or_blank(card, 11, 'trmin', 0.001)
-            assert len(card) <= 11, 'len(PGAP card) = %i' % len(card)
+            assert len(card) <= 12, 'len(PGAP card) = %i' % len(card)
         else:
             #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
             self.pid = data[0]
@@ -183,7 +183,7 @@ class PLSOLID(SolidProperty):
             self.mid = integer(card, 2, 'mid')
             self.ge = double_or_blank(card, 3, 'ge', 0.0)
             self.str = string_or_blank(card, 4, 'str', 'GRID')
-            assert len(card) <= 4, 'len(PLSOLID card) = %i' % len(card)
+            assert len(card) <= 5, 'len(PLSOLID card) = %i' % len(card)
         else:
             self.pid = data[0]
             self.mid = data[1]
@@ -226,7 +226,7 @@ class PSOLID(SolidProperty):
             self.stress = integer_string_or_blank(card, 5, 'stress')
             self.isop = integer_string_or_blank(card, 6, 'isop')
             self.fctn = string_or_blank(card, 7, 'fctn', 'SMECH')
-            assert len(card) <= 7, 'len(PSOLID card) = %i' % len(card)
+            assert len(card) <= 8, 'len(PSOLID card) = %i' % len(card)
         else:
             self.pid = data[0]
             self.mid = data[1]
@@ -300,7 +300,7 @@ class PRAC2D(CrackProperty):
             ## stress intensity factors are to be calculated. See Remark 4.
             ## (Real; Default = 180.0)
             self.phi = double_or_blank(card, 7, 'phi', 180.)
-            assert len(card) <= 7, 'len(PRAC2D card) = %i' % len(card)
+            assert len(card) <= 8, 'len(PRAC2D card) = %i' % len(card)
 
         else:
             raise NotImplementedError(data)
@@ -345,7 +345,7 @@ class PRAC3D(CrackProperty):
             ## stress intensity factors are to be calculated. See Remark 4.
             ## (Real; Default = 180.0)
             self.phi = double_or_blank(card, 4, 'gamma', 180.)
-            assert len(card) <= 4, 'len(PRAC3D card) = %i' % len(card)
+            assert len(card) <= 5, 'len(PRAC3D card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 

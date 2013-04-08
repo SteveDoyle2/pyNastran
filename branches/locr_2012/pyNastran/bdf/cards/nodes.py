@@ -66,7 +66,7 @@ class RINGAX(Ring):
         blank(card, 5, 'blank')
         blank(card, 6, 'blank')
         self.ps = integer_or_blank(card, 7, 'ps')
-        assert len(card) <= 7, 'len(RINGAX card) = %i' % len(card)
+        assert len(card) <= 8, 'len(RINGAX card) = %i' % len(card)
 
     def Position(self):
         return array([0., 0., 0.])
@@ -188,7 +188,7 @@ class GRDSET(Node):
 
         ## Superelement ID
         self.seid = integer_or_blank(card, 8, 'seid', 0)
-        assert len(card) <= 8, 'len(GRDSET card) = %i' % len(card)
+        assert len(card) <= 9, 'len(GRDSET card) = %i' % len(card)
 
     def cross_reference(self, model):
         self.cp = model.Coord(self.cp)
@@ -285,7 +285,7 @@ class GRID(Node):
 
             ## Superelement ID
             self.seid = integer_or_blank(card, 8, 'seid', 0)
-            assert len(card) <= 8, 'len(GRID card) = %i' % len(card)
+            assert len(card) <= 9, 'len(GRID card) = %i' % len(card)
         else:
             self.nid = data[0]
             self.cp = data[1]
@@ -409,7 +409,7 @@ class POINT(Node):
 
             ## Superelement ID
             self.seid = integer_or_blank(card, 8, 'seid', 0)
-            assert len(card) <= 8, 'len(POINT card) = %i' % len(card)
+            assert len(card) <= 9, 'len(POINT card) = %i' % len(card)
         else:
             #print data
             self.nid = data[0]

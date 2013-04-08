@@ -61,7 +61,7 @@ class CMASS1(PointMassElement):
             self.c1 = integer_or_blank(card, 4, 'c1')
             self.g2 = integer_or_blank(card, 5, 'g2')
             self.c2 = integer_or_blank(card, 6, 'c2')
-            assert len(card) <= 6, 'len(CMASS1 card) = %i' % len(card)
+            assert len(card) <= 7, 'len(CMASS1 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -108,7 +108,7 @@ class CMASS2(PointMassElement):
             self.c1 = integer_or_blank(card, 4, 'c1')
             self.g2 = integer_or_blank(card, 5, 'g2')
             self.c2 = integer_or_blank(card, 6, 'c2')
-            assert len(card) <= 6, 'len(CMASS2 card) = %i' % len(card)
+            assert len(card) <= 7, 'len(CMASS2 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.mass = data[1]
@@ -196,7 +196,7 @@ class CMASS3(PointMassElement):
             self.pid = integer_or_blank(card, 2, 'pid', self.eid)
             self.s1 = integer_or_blank(card, 3, 's1')
             self.s2 = integer_or_blank(card, 4, 's2')
-            assert len(card) <= 4, 'len(CMASS3 card) = %i' % len(card)
+            assert len(card) <= 5, 'len(CMASS3 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -248,7 +248,7 @@ class CMASS4(PointMassElement):
             self.mass = double_or_blank(card, 2, 'mass', 0.)
             self.s1 = integer(card, 3, 's1')
             self.s2 = integer_or_blank(card, 4, 's2', 0)
-            assert len(card) <= 4, 'len(CMASS4 card) = %i' % len(card)
+            assert len(card) <= 5, 'len(CMASS4 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.mass = data[1]
@@ -332,7 +332,7 @@ class CONM1(PointMassElement):
             m[5, 3] = double_or_blank(card, 22, 'M64', 0.)
             m[5, 4] = double_or_blank(card, 23, 'M65', 0.)
             m[5, 5] = double_or_blank(card, 24, 'M66', 0.)
-            assert len(card) <= 24, 'len(CONM1 card) = %i' % len(card)
+            assert len(card) <= 25, 'len(CONM1 card) = %i' % len(card)
         else:
             (eid, nid, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
              m5a, m5b, m5c, m5d, m5e, m6a, m6b, m6c, m6d, m6e, m6f) = data
@@ -435,7 +435,7 @@ class CONM2(PointMassElement):
                             double_or_blank(card, 12, 'I31', 0.0),
                             double_or_blank(card, 13, 'I32', 0.0),
                             double_or_blank(card, 14, 'I33', 0.0)])
-            assert len(card) <= 14, 'len(CONM2 card) = %i' % len(card)
+            assert len(card) <= 15, 'len(CONM2 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.nid = data[1]

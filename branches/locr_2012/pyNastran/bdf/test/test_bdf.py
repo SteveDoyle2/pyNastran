@@ -117,7 +117,6 @@ def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, punch=False,
 
 
 def run_fem1(fem1, bdfModel, meshForm, xref, punch, cid):
-    assert punch==True
     assert os.path.exists(bdfModel), print_bad_path(bdfModel)
     try:
         if '.pch' in bdfModel:

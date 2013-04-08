@@ -154,7 +154,7 @@ class AEPARM(BaseCard):
             self.id = integer(card, 1, 'id')
             self.label = string(card, 2, 'lable')
             self.units = string(card, 3, 'units')
-            assert len(card) <= 3, 'len(AEPARM card) = %i' % len(card)
+            assert len(card) <= 4, 'len(AEPARM card) = %i' % len(card)
         else:
             self.id = data[0]
             self.label = data[1]
@@ -184,7 +184,7 @@ class AESTAT(BaseCard):
         if card:
             self.id = integer(card, 1, 'ID')
             self.label = string(card, 2, 'label')
-            assert len(card) <= 2, 'len(AESTAT card) = %i' % len(card)
+            assert len(card) <= 3, 'len(AESTAT card) = %i' % len(card)
         else:
             self.id = data[0]
             self.label = data[1]
@@ -256,7 +256,7 @@ class AESURF(BaseCard):
             ## function of the dynamic pressure. (Integer>0, Default = no limit)
             self.tqllim = integer_or_blank(card, 15, 'tqllim')
             self.tqulim = integer_or_blank(card, 16, 'tqulim')
-            assert len(card) <= 16, 'len(AESURF card) = %i' % len(card)
+            assert len(card) <= 17, 'len(AESURF card) = %i' % len(card)
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
@@ -308,7 +308,7 @@ class AESURFS(BaseCard):  # not integrated
             self.label = string(card, 2, 'label')
             self.list1 = integer(card, 4, 'list1')
             self.list2 = integer(card, 6, 'list2')
-            assert len(card) <= 6, 'len(AESURFS card) = %i' % len(card)
+            assert len(card) <= 7, 'len(AESURFS card) = %i' % len(card)
         else:
             self.id = data[0]
             self.label = data[1]
@@ -376,7 +376,7 @@ class AERO(Aero):
             self.rhoRef = double(card, 4, 'rhoRef')
             self.symXZ = integer_or_blank(card, 5, 'symXZ', 0)
             self.symXY = integer_or_blank(card, 6, 'symXY', 0)
-            assert len(card) <= 6, 'len(AERO card) = %i' % len(card)
+            assert len(card) <= 7, 'len(AERO card) = %i' % len(card)
         else:
             self.acsid = data[0]
             self.velocity = data[1]
@@ -425,7 +425,7 @@ class AEROS(Aero):
             self.Sref = double(card, 5, 'Sref')
             self.symXZ = integer_or_blank(card, 6, 'symXZ', 0)
             self.symXY = integer_or_blank(card, 7, 'symXY', 0)
-            assert len(card) <= 7, 'len(AEROS card) = %i' % len(card)
+            assert len(card) <= 8, 'len(AEROS card) = %i' % len(card)
         else:
             self.acsid = data[0]
             self.rcsid = data[1]
@@ -470,7 +470,7 @@ class CSSCHD(BaseCard):
             self.lAlpha = integer_or_blank(card, 3, 'lAlpha')  # AEFACT
             self.lMach = integer_or_blank(card, 4, 'lMach')  # AEFACT
             self.lSchd = integer(card, 5, 'lSchd')  # AEFACT
-            assert len(card) <= 5, 'len(CSSCHD card) = %i' % len(card)
+            assert len(card) <= 6, 'len(CSSCHD card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.aesid = data[1]  # AESURF
@@ -571,7 +571,7 @@ class CAERO1(BaseCard):
                              double_or_blank(card, 14, 'y4', 0.0),
                              double_or_blank(card, 15, 'z4', 0.0)])
             self.x43 = double_or_blank(card, 16, 'x43', 0.)
-            assert len(card) <= 16, 'len(CAERO1 card) = %i' % len(card)
+            assert len(card) <= 17, 'len(CAERO1 card) = %i' % len(card)
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
@@ -692,7 +692,7 @@ class CAERO2(BaseCard):
             ## Length of body in the x-direction of the aerodynamic coordinate
             ## system.  (Real > 0)
             self.x12 = double_or_blank(card, 12, 'x12', 0.)
-            assert len(card) <= 12, 'len(CAERO2 card) = %i' % len(card)
+            assert len(card) <= 13, 'len(CAERO2 card) = %i' % len(card)
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
@@ -768,7 +768,7 @@ class CAERO3(BaseCard):
                              double_or_blank(card, 14, 'y4', 0.0),
                              double_or_blank(card, 15, 'z4', 0.0)])
             self.x43 = double_or_blank(card, 16, 'x43', 0.0)
-            assert len(card) <= 16, 'len(CAERO3 card) = %i' % len(card)
+            assert len(card) <= 17, 'len(CAERO3 card) = %i' % len(card)
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
@@ -887,7 +887,7 @@ class FLUTTER(BaseCard):
                 self.imethod = None
 
             self.epsilon = double_or_blank(card, 8, 'epsilon')  # not defined in QRG
-            assert len(card) <= 8, 'len(FLUTTER card) = %i' % len(card)
+            assert len(card) <= 9, 'len(FLUTTER card) = %i' % len(card)
 
         else:
             assert len(data) == 8, 'FLUTTER = %s' % data
@@ -960,7 +960,7 @@ class GUST(BaseCard):
             self.wg = double(card, 3, 'wg')
             self.x0 = double(card, 4, 'x0')
             self.V = double_or_blank(card, 4, 'V')
-            assert len(card) <= 4, 'len(GUST card) = %i' % len(card)
+            assert len(card) <= 5, 'len(GUST card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.dload = data[1]
@@ -1221,7 +1221,7 @@ class SPLINE1(Spline):
             self.melements = integer_or_blank(card, 10, 'melements', 10)
             assert self.nelements > 0, 'nelements = %s' % self.nelements
             assert self.melements > 0, 'melements = %s' % self.melements
-            assert len(card) <= 10, 'len(SPLINE1 card) = %i' % len(card)
+            assert len(card) <= 11, 'len(SPLINE1 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.caero = data[1]
@@ -1306,7 +1306,7 @@ class SPLINE2(Spline):
             assert self.id2 >= self.id1, 'id2=%s id1=%s' % (self.id2, self.id1)
 
             self.usage = string_or_blank(card, 12, 'usage', 'BOTH')
-            assert len(card) <= 12, 'len(SPLINE2 card) = %i' % len(card)
+            assert len(card) <= 13, 'len(SPLINE2 card) = %i' % len(card)
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
@@ -1376,7 +1376,7 @@ class SPLINE4(Spline):
             self.usage = string_or_blank(card, 8, 'usage', 'BOTH')
             self.nelements = integer_or_blank(card, 9, 'nelements', 10)
             self.melements = integer_or_blank(card, 10, 'melements', 10)
-            assert len(card) <= 10, 'len(SPLINE4 card) = %i' % len(card)
+            assert len(card) <= 11, 'len(SPLINE4 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.caero = data[1]
@@ -1463,7 +1463,7 @@ class SPLINE5(Spline):
             self.thy = double(card, 10, 'thy')
 
             self.usage = string_or_blank(card, 12, 'usage', 'BOTH')
-            assert len(card) <= 10, 'len(SPLINE5 card) = %i' % len(card)
+            assert len(card) <= 13, 'len(SPLINE5 card) = %i' % len(card)
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)

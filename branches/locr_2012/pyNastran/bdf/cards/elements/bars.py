@@ -394,7 +394,7 @@ class CROD(RodElement):
             self.pid = integer_or_blank(card, 2, 'pid', self.eid)
             nids = [integer(card, 3, 'n1'),
                     integer(card, 4, 'n2')]
-            assert len(card) <= 4, 'len(CROD card) = %i' % len(card)
+            assert len(card) == 5, 'len(CROD card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -438,7 +438,7 @@ class CTUBE(RodElement):
             self.pid = integer_or_blank(card, 2, 'pid', self.eid)
             nids = [integer(card, 3, 'n1'),
                     integer(card, 4, 'n2')]
-            assert len(card) <= 4, 'len(CTUBE card) = %i' % len(card)
+            assert len(card) == 5, 'len(CTUBE card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -599,7 +599,7 @@ class CBAR(LineElement):
             self.w1b = double_or_blank(card, 14, 'w1b', 0.0)
             self.w2b = double_or_blank(card, 15, 'w2b', 0.0)
             self.w3b = double_or_blank(card, 16, 'w3b', 0.0)
-            assert len(card) <= 16, 'len(CBAR card) = %i' % len(card)
+            assert len(card) <= 17, 'len(CBAR card) = %i' % len(card)
         else:  ## @todo verify
             #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
             #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
@@ -951,7 +951,7 @@ class CBEAM3(CBAR):
             self.sa = integer_or_blank(card, 21, 'sa')
             self.sb = integer_or_blank(card, 22, 'sb')
             self.sc = integer_or_blank(card, 23, 'sc')
-            assert len(card) <= 23, 'len(CBEAM3 card) = %i' % len(card)
+            assert len(card) <= 24, 'len(CBEAM3 card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 
@@ -1040,7 +1040,7 @@ class CBEAM(CBAR):
 
             self.sa = integer_or_blank(card, 17, 'sa')
             self.sb = integer_or_blank(card, 18, 'sb')
-            assert len(card) <= 18, 'len(CBEAM card) = %i' % len(card)
+            assert len(card) <= 19, 'len(CBEAM card) = %i' % len(card)
         else:  ## @todo verify
             #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
             #        [f,g0]]
@@ -1244,7 +1244,7 @@ class CBEND(LineElement):
             else:
                 raise ValueError('invalid x1Go=|%s| on CBEND' % x1Go)
             self.geom = integer(card, 8, 'geom')
-            assert len(card) <= 8, 'len(CBEND card) = %i' % len(card)
+            assert len(card) == 9, 'len(CBEND card) = %i' % len(card)
             assert self.geom in [1, 2, 3, 4], 'geom is invalid geom=|%s|' % self.geom
         else:
             raise NotImplementedError(data)

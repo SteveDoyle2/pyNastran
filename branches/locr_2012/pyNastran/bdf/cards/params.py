@@ -14,7 +14,7 @@ class PARAM(BaseCard):
         if card:
             self.key = string(card, 1, 'key')
             self.value = integer_double_or_string(card, 2, 'value')
-            assert len(card) <= 2, 'len(PARAM card) = %i' % len(card)
+            assert len(card) == 3, 'len(PARAM card) = %i' % len(card)
         else:
             self.key = data[0]
             self.value = data[1]

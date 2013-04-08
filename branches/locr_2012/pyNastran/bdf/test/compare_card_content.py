@@ -44,7 +44,7 @@ def compare_card_content(fem1, fem2):
     assert len(fem1.elements) == len(fem2.elements)
     assert len(fem1.rigidElements) == len(fem2.rigidElements)
     assert len(fem1.properties) == len(fem2.properties)
-    assert len(fem1.materials) == len(fem2.materials)
+    assert len(fem1.materials) == len(fem2.materials), 'len(fem1.materials)=%i len(fem2.materials)=%i' % (len(fem1.materials), len(fem2.materials))
     assert len(fem1.creepMaterials) == len(fem2.creepMaterials)
     assert len(fem1.loads) == len(fem2.loads)
     assert len(fem1.coords) == len(fem2.coords)

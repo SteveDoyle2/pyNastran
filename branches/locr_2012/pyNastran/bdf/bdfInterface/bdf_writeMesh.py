@@ -40,23 +40,23 @@ class WriteMesh(WriteMeshDeprecated):
     def __init__(self):
         pass
 
-    def echo_bdf(self, infileName):
+    def echo_bdf(self, infile_name):
         """
         This method removes all comment lines from the bdf
         A write method is stil required.
         @todo maybe add the write method
         """
         self.cardsToRead = set([])
-        return self.read_bdf(infileName)
+        return self.read_bdf(infile_name)
 
-    def auto_reject_bdf(self, infileName):
+    def auto_reject_bdf(self, infile_name):
         """
         This method parses supported cards, but does not group them into
         nodes, elements, properties, etc.
         @todo maybe add the write method
         """
         self._auto_reject = True
-        return self.read_bdf(infileName)
+        return self.read_bdf(infile_name)
 
     def _write_elements_as_CTRIA3(self, size):
         """
@@ -119,22 +119,22 @@ class WriteMesh(WriteMeshDeprecated):
         msg += self._write_coords(size)
         return msg
 
-    def write_bdf_as_patran(self, outFileName='fem.out.bdf', size=8,
+    def write_bdf_as_patran(self, out_filename='fem.out.bdf', size=8,
                             debug=False):
         """
         Writes a bdf with properties & elements interspersed like how
         Patran writes the bdf.  This takes longer than the write method
         but makes it easier to compare to a Patran-formatted bdf.
         @param self the BDF object
-        @param outFileName the name to call the output bdf
+        @param out_filename the name to call the output bdf
         @param debug developer debug (unused)
         """
         assert size in [8, 16]
         #size = 16
-        fname = print_filename(outFileName)
+        fname = print_filename(out_filename)
         self.log.debug("***writing %s" % fname)
 
-        outfile = open(outFileName, 'wb')
+        outfile = open(out_filename, 'wb')
         
         msg = self._write_header()
         msg += self._write_params(size)
@@ -146,18 +146,19 @@ class WriteMesh(WriteMeshDeprecated):
         msg = self._write_elements_properties(size)
         outfile.write(msg)
 
-        msg += self._write_materials(size)
+        msg = self._write_materials(size)
         msg += self._write_common(size)
         msg += 'ENDDATA\n'
+        outfile.write(msg)
         outfile.close()
 
     def write_bdf(self, out_filename='fem.out.bdf', size=8, debug=False):
         """
         Writes the bdf.  It groups the various sections together to make it
         easy to find cards.  This method is slightly more stable than
-        writeAsPatran due to the properties sometimes being a little funny.
+        write_bdf_as_patran due to the properties sometimes being a little funny.
         @param self the BDF object
-        @param outFileName the name to call the output bdf
+        @param out_filename the name to call the output bdf
         @param debug developer debug (unused)
         """
         assert size in [8, 16]
@@ -183,18 +184,18 @@ class WriteMesh(WriteMeshDeprecated):
         outfile.write(msg)
         outfile.close()
 
-    def write_as_CTRIA3(self, outFileName='fem.out.bdf', size=8, debug=False):
+    def write_as_CTRIA3(self, out_filename='fem.out.bdf', size=8, debug=False):
         """
         Writes a series of CQUAD4s as CTRIA3s.  All other cards are echoed.
         @param self the BDF object
-        @param outFileName the name to call the output bdf
+        @param out_filename the name to call the output bdf
         @param debug developer debug (unused)
         @warning not tested in a long time
         """
-        fname = print_filename(outFileName)
+        fname = print_filename(out_filename)
         self.log.debug("***writing %s" % fname)
 
-        outfile = open(outFileName, 'wb')
+        outfile = open(out_filename, 'wb')
 
         msg = self._write_header()
         msg += self._write_params(size)
@@ -294,28 +295,28 @@ class WriteMesh(WriteMeshDeprecated):
         """
         msg = []
 
-        associatedNodes = set([])
+        associated_nodes = set([])
         for (eid, element) in self.elements.iteritems():
-            print(element)
-            associatedNodes = associatedNodes.union(set(element.nodeIDs()))
+            #print(element)
+            associated_nodes = associated_nodes.union(set(element.nodeIDs()))
 
-        allNodes = set(self.nodes.keys())
-        unassociatedNodes = list(allNodes.difference(associatedNodes))
-        #missingNodes = allNodes.difference(
-        associatedNodes = list(associatedNodes)
+        all_nodes = set(self.nodes.keys())
+        unassociated_nodes = list(all_nodes.difference(associated_nodes))
+        #missing_nodes = all_nodes.difference(
+        associated_nodes = list(associated_nodes)
 
-        if associatedNodes:
+        if associated_nodes:
             msg += ['$ASSOCIATED NODES\n']
             if self.gridSet:
                 msg.append(str(self.gridSet))
-            for key, node in sorted(associatedNodes.iteritems()):
+            for key, node in sorted(associated_nodes.iteritems()):
                 msg.append(node.print_card(size))
 
-        if unassociatedNodes:
+        if unassociated_nodes:
             msg.append('$UNASSOCIATED NODES\n')
-            if self.gridSet and not associatedNodes:
+            if self.gridSet and not associated_nodes:
                 msg.append(str(self.gridSet))
-            for key, node in sorted(unassociatedNodes.iteritems()):
+            for key, node in sorted(unassociated_nodes.iteritems()):
                 if key in self.nodes:
                     msg.append(node.print_card(size))
                 else:
@@ -365,11 +366,11 @@ class WriteMesh(WriteMeshDeprecated):
     def _write_elements_properties(self, size):
         """writes the elements and properties in and interspersed order"""
         msg = []
-        missingProperties = []
+        missing_properties = []
         if self.properties:
             msg.append('$ELEMENTS_WITH_PROPERTIES\n')
 
-        eidsWritten = []
+        eids_written = []
         for (pid, prop) in sorted(self.properties.iteritems()):
             eids = self.getElementIDsWithPID(pid)
 
@@ -384,16 +385,16 @@ class WriteMesh(WriteMeshDeprecated):
                         print('failed printing element...'
                               'type=%s eid=%s' % (element.type, eid))
                         raise
-                eidsWritten += eids
+                eids_written += eids
             else:
-                missingProperties.append(str(prop))
+                missing_properties.append(str(prop))
 
-        eidsMissing = set(self.elements.keys()).difference(set(eidsWritten))
+        eids_missing = set(self.elements.keys()).difference(set(eids_written))
 
-        if eidsMissing:
+        if eids_missing:
             msg.append('$ELEMENTS_WITH_NO_PROPERTIES '
                        '(PID=0 and unanalyzed properties)\n')
-            for eid in sorted(eidsMissing):
+            for eid in sorted(eids_missing):
                 element = self.Element(eid)
                 try:
                     msg.append(str(element))
@@ -402,7 +403,7 @@ class WriteMesh(WriteMeshDeprecated):
                           'type=%s eid=%s' % (element.type, eid))
                     raise
 
-        if missingProperties or self.pdampt or self.pbusht or self.pelast:
+        if missing_properties or self.pdampt or self.pbusht or self.pelast:
             msg.append('$UNASSOCIATED_PROPERTIES\n')
             for pbusht in sorted(self.pbusht.itervalues()):
                 msg.append(str(pbusht))
@@ -410,10 +411,10 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(str(pdampt))
             for pelast in sorted(self.pelast.itervalues()):
                 msg.append(str(pelast))
-            for missingProperty in missingProperties:
-                #print("missingProperty = ",missingProperty)
-                #msg.append(missingProperty.print_card(size))
-                msg.append(missingProperty)
+            for missing_property in missing_properties:
+                #print("missing_property = ",missing_property)
+                #msg.append(missing_property.print_card(size))
+                msg.append(missing_property)
         return ''.join(msg)
 
     def _write_materials(self, size):

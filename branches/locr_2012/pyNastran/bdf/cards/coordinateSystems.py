@@ -679,7 +679,7 @@ class CORD3G(Coord):  # not done
                        integer(card, 6, 'theta3')]
         assert len(self.thetas) == 3, 'thetas=%s' % (self.thetas)
         self.cidRef = integer_or_blank(card, 7, 'cidRef')
-        assert len(card) <= 7, 'len(CORD3g card) = %i' % len(card)
+        assert len(card) <= 8, 'len(CORD3G card) = %i' % len(card)
 
         # EQN for DEQATN, TABLE for TABLE3D
         assert self.form in ['EQN', 'TABLE']

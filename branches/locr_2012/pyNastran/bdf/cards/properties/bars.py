@@ -512,7 +512,7 @@ class PROD(LineProperty):
             self.j = double_or_blank(card, 4, 'J', 0.0)
             self.c = double_or_blank(card, 5, 0.0)
             self.nsm = double_or_blank(card, 6, 'nsm', 0.0)
-            assert len(card) <= 6, 'len(PROD card) = %i' % len(card)
+            assert len(card) <= 7, 'len(PROD card) = %i' % len(card)
         else:
             self.pid = data[0]
             self.mid = data[1]
@@ -569,7 +569,7 @@ class PTUBE(LineProperty):
             self.t = double_or_blank(card, 4, 't', self.OD1 / 2.)
             self.nsm = double_or_blank(card, 5, 'nsm', 0.0)
             self.OD2 = double_or_blank(card, 6, 'OD2', self.OD1)
-            assert len(card) <= 6, 'len(PTUBE card) = %i' % len(card)
+            assert len(card) <= 7, 'len(PTUBE card) = %i' % len(card)
         else:
             self.pid = data[0]
             self.mid = data[1]
@@ -681,7 +681,7 @@ class PBAR(LineProperty):
             if self.A == 0.0:
                 assert self.K1 is None
                 assert self.K2 is None
-            assert len(card) <= 19, 'len(PBAR card) = %i' % len(card)
+            assert len(card) <= 20, 'len(PBAR card) = %i' % len(card)
         else:
             self.pid = data[0]
             self.mid = data[1]
@@ -1601,7 +1601,7 @@ class PBEND(LineProperty):
 
             ## Arc angle of element  (optional)
             self.thetab = double_or_blank(card, 8, 'thetab')
-            assert len(card) <= 22, 'len(PBEND card) = %i' % len(card)
+            assert len(card) <= 23, 'len(PBEND card) = %i' % len(card)
 
         else:
             raise NotImplementedError('PBEND')

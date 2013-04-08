@@ -130,7 +130,7 @@ class PELAST(SpringProperty):
             ## Identification number of a TABELDi entry that defines the nonlinear
             ## force vs. displacement relationship. (Integer > 0; Default = 0)
             self.tknid = integer_or_blank(card, 4, 'tknid', 0)
-            assert len(card) <= 4, 'len(PELAST card) = %i' % len(card)
+            assert len(card) <= 5, 'len(PELAST card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 

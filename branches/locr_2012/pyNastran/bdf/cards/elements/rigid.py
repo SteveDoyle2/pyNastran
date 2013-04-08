@@ -45,7 +45,7 @@ class RBAR(RigidElement):
             self.cma = components_or_blank(card, 6, 'cma')
             self.cmb = components_or_blank(card, 7, 'cmb')
             self.alpha = double_or_blank(card, 8, 'alpha', 0.0)
-            assert len(card) <= 8, 'len(RBAR card) = %i' % len(card)
+            assert len(card) <= 9, 'len(RBAR card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.ga = data[1]
@@ -113,7 +113,7 @@ class RBAR1(RigidElement):
             self.gb = integer(card, 3, 'gb')
             self.cb = components_or_blank(card, 4, 'cb')
             self.alpha = double_or_blank(card, 5, 'alpha', 0.0)
-            assert len(card) <= 5, 'len(RBAR1 card) = %i' % len(card)
+            assert len(card) <= 6, 'len(RBAR1 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.ga = data[1]
