@@ -2,7 +2,7 @@ from numpy import array
 
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
-from pyNastran.f06.f06_formatting import writeFloats13E
+from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 
 class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
@@ -345,7 +345,7 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
                 (rx, ry, rz) = rotation
 
                 vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, isAllZeros) = self.writeImagFloats13E(vals, isMagPhase)
+                (vals2, isAllZeros) = writeImagFloats13E(vals, isMagPhase)
                 [dxr, dyr, dzr, rxr, ryr, rzr, dxi, dyi,
                     dzi, rxi, ryi, rzi] = vals2
 

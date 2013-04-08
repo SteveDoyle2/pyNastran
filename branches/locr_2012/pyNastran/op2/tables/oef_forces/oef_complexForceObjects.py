@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
-from pyNastran.f06.f06_formatting import writeFloats13E
+from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 
 class ComplexRodForce(scalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
@@ -900,7 +900,7 @@ class ComplexCBARForce(scalarObject):  # 34-CBAR
                 ts1, ts2 = self.shear[dt][eid]
                 af = self.axial[dt][eid]
                 trq = self.torque[dt][eid]
-                (vals2, isAllZeros) = self.writeImagFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq], isMagPhase)
+                (vals2, isAllZeros) = writeImagFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq], isMagPhase)
                 [bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
                  bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi] = vals2
                 msg.append('     %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' % (eid, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr))
@@ -926,8 +926,7 @@ class ComplexCBARForce(scalarObject):  # 34-CBAR
             ts1, ts2 = self.shear[eid]
             af = self.axial[eid]
             trq = self.torque[eid]
-            (vals2, isAllZeros) = self.writeImagFloats13E([bm1a,
-                                                           bm2a, bm1b, bm2b, ts1, ts2, af, trq], isMagPhase)
+            (vals2, isAllZeros) = writeImagFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq], isMagPhase)
             [bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
              bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi] = vals2
             msg.append('     %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' % (eid, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr))

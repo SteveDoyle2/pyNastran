@@ -2,6 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from ..real.oes_objects import StressObject, StrainObject
+from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class ComplexBushStressObject(StressObject):
