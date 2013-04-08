@@ -1,7 +1,8 @@
 from numpy import array
 
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject, writeFloats13E
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
+from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0

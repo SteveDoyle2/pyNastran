@@ -1,6 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject, writeFloats13E
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class ComplexRodForce(scalarObject):  # 1-ROD, 3-TUBE, 10-CONROD

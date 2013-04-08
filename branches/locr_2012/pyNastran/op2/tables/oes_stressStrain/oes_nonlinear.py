@@ -2,7 +2,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import isnan
 
-from .real.oes_objects import StressObject, StrainObject, writeFloats13E
+from .real.oes_objects import StressObject, StrainObject
+from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class NonlinearQuadObject(StressObject):

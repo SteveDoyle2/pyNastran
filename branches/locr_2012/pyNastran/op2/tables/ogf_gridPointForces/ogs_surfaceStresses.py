@@ -1,4 +1,5 @@
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject, writeFloats13E
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class GridPointStressesObject(scalarObject):

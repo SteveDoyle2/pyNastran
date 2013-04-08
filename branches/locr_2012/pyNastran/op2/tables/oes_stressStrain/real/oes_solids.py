@@ -3,7 +3,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from numpy import array, sqrt
 from numpy.linalg import eigh
 
-from .oes_objects import StressObject, StrainObject, writeFloats13E
+from .oes_objects import StressObject, StrainObject
+from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class SolidStressObject(StressObject):

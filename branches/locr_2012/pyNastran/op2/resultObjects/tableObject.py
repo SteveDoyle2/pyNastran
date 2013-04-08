@@ -1,7 +1,8 @@
 #from struct import pack
 from numpy import array, sqrt, abs, angle  # dot,
 
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject, writeFloats13E
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.f06.f06_formatting import writeFloats13E
 
 try:
     from pylab import xlabel, ylabel, show, grid, legend, plot, title
