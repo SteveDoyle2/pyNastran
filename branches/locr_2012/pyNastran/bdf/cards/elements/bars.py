@@ -394,6 +394,7 @@ class CROD(RodElement):
             self.pid = integer_or_blank(card, 2, 'pid', self.eid)
             nids = [integer(card, 3, 'n1'),
                     integer(card, 4, 'n2')]
+            assert len(card) <= 4, 'len(CROD card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -437,6 +438,7 @@ class CTUBE(RodElement):
             self.pid = integer_or_blank(card, 2, 'pid', self.eid)
             nids = [integer(card, 3, 'n1'),
                     integer(card, 4, 'n2')]
+            assert len(card) <= 4, 'len(CTUBE card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -597,6 +599,7 @@ class CBAR(LineElement):
             self.w1b = double_or_blank(card, 14, 'w1b', 0.0)
             self.w2b = double_or_blank(card, 15, 'w2b', 0.0)
             self.w3b = double_or_blank(card, 16, 'w3b', 0.0)
+            assert len(card) <= 16, 'len(CBAR card) = %i' % len(card)
         else:  ## @todo verify
             #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
             #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
@@ -948,6 +951,7 @@ class CBEAM3(CBAR):
             self.sa = integer_or_blank(card, 21, 'sa')
             self.sb = integer_or_blank(card, 22, 'sb')
             self.sc = integer_or_blank(card, 23, 'sc')
+            assert len(card) <= 23, 'len(CBEAM3 card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
 
@@ -1036,7 +1040,7 @@ class CBEAM(CBAR):
 
             self.sa = integer_or_blank(card, 17, 'sa')
             self.sb = integer_or_blank(card, 18, 'sb')
-
+            assert len(card) <= 18, 'len(CBEAM card) = %i' % len(card)
         else:  ## @todo verify
             #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
             #        [f,g0]]
@@ -1221,26 +1225,29 @@ class CBEND(LineElement):
         LineElement.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
-        self.pid = integer_or_blank(card, 2, 'pid', self.eid)
-        self.ga = integer(card, 3, 'ga')
-        self.gb = integer(card, 4, 'gb')
-        x1Go = integer_double_or_blank(card, 5, 'x1_g0')
-        if isinstance(x1Go, int):
-            self.g0 = x1Go
-            self.x1 = None
-            self.x2 = None
-            self.x3 = None
-        elif isinstance(x1Go, float):
-            self.g0 = None
-            self.x1 = x1Go
-            self.x2 = double(card, 6, 'x2')
-            self.x3 = double(card, 7, 'x3')
+        if card:
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+            self.ga = integer(card, 3, 'ga')
+            self.gb = integer(card, 4, 'gb')
+            x1Go = integer_double_or_blank(card, 5, 'x1_g0')
+            if isinstance(x1Go, int):
+                self.g0 = x1Go
+                self.x1 = None
+                self.x2 = None
+                self.x3 = None
+            elif isinstance(x1Go, float):
+                self.g0 = None
+                self.x1 = x1Go
+                self.x2 = double(card, 6, 'x2')
+                self.x3 = double(card, 7, 'x3')
+            else:
+                raise ValueError('invalid x1Go=|%s| on CBEND' % x1Go)
+            self.geom = integer(card, 8, 'geom')
+            assert len(card) <= 8, 'len(CBEND card) = %i' % len(card)
+            assert self.geom in [1, 2, 3, 4], 'geom is invalid geom=|%s|' % self.geom
         else:
-            raise ValueError('invalid x1Go=|%s| on CBEND' % x1Go)
-        self.geom = integer(card, 8, 'geom')
-        assert self.geom in [1, 2, 3,
-                             4], 'geom is invalid geom=|%s|' % self.geom
+            raise NotImplementedError(data)
 
     def Area(self):
         return self.pid.Area()

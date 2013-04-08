@@ -23,18 +23,21 @@ class CFAST(Element):
         Element.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
-        self.pid = integer_or_blank(card, 2, 'pid', self.eid)
-        self.Type = string(card, 3, 'Type')
-        self.ida = integer(card, 4, 'ida')
-        self.idb = integer(card, 5, 'idb')
-        self.gs = integer_or_blank(card, 6, 'gs')
-        self.ga = integer_or_blank(card, 7, 'ga')
-        self.gb = integer_or_blank(card, 8, 'gb')
-        self.xs = double_or_blank(card, 9, 'xs')
-        self.ys = double_or_blank(card, 10, 'ys')
-        self.zs = double_or_blank(card, 11, 'zs')
-
+        if card:
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+            self.Type = string(card, 3, 'Type')
+            self.ida = integer(card, 4, 'ida')
+            self.idb = integer(card, 5, 'idb')
+            self.gs = integer_or_blank(card, 6, 'gs')
+            self.ga = integer_or_blank(card, 7, 'ga')
+            self.gb = integer_or_blank(card, 8, 'gb')
+            self.xs = double_or_blank(card, 9, 'xs')
+            self.ys = double_or_blank(card, 10, 'ys')
+            self.zs = double_or_blank(card, 11, 'zs')
+            assert len(card) <= 11, 'len(CFAST card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
         #if self.Type=='PROP': # PSHELL/PCOMP  ida & idb
 
     def cross_reference(self, model):
@@ -82,6 +85,7 @@ class CGAP(Element):
                 self.g0 = None
                 self.x = [None, None, None]
                 self.cid = None
+            assert len(card) <= 8, 'len(CGAP card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -165,6 +169,7 @@ class CRAC2D(CrackElement):
                     integer_or_blank(card, 18, 'n16'),
                     integer_or_blank(card, 19, 'n17'),
                     integer_or_blank(card, 20, 'n18')]
+            assert len(card) <= 20, 'len(CRAC2D card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -191,6 +196,7 @@ class CRAC3D(CrackElement):
             # optional 11-18, 29-36, 37-64
             # all/none 37-46 
             nids = card.fields(3, 67)  # cap at +3 = 67
+            assert len(card) <= 67, 'len(CRAC3D card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]

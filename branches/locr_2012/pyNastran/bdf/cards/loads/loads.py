@@ -149,6 +149,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             self.exciteID = integer(card, 2, 'exciteID')
             self.lid = integer(card, 3, 'lid')
             self.tid = integer_or_blank(card, 4, 'tid')
+            assert len(card) <= 4, 'len(LSEQ card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.exciteID = data[1]
@@ -328,44 +329,48 @@ class TLOAD1(TabularLoad):
         TabularLoad.__init__(self, card, data)
         if comment:
             self._comment = comment
-        ## load ID
-        self.sid = integer(card, 1, 'sid')
+        if card:
+            ## load ID
+            self.sid = integer(card, 1, 'sid')
 
-        ## Identification number of DAREA or SPCD entry set or a thermal load
-        ## set (in heat transfer analysis) that defines {A}. (Integer > 0)
-        self.exciteID = integer(card, 2, 'exciteID')
+            ## Identification number of DAREA or SPCD entry set or a thermal load
+            ## set (in heat transfer analysis) that defines {A}. (Integer > 0)
+            self.exciteID = integer(card, 2, 'exciteID')
 
-        ## If it is a non-zero integer, it represents the
-        ## identification number of DELAY Bulk Data entry that defines . If it
-        ## is real, then it directly defines the value of that will be used for
-        ## all degrees-of-freedom that are excited by this dynamic load entry.
-        ## See also Remark 9. (Integer >= 0, real or blank)
-        self.delay = integer_double_or_blank(card, 3, 'delay')
+            ## If it is a non-zero integer, it represents the
+            ## identification number of DELAY Bulk Data entry that defines . If it
+            ## is real, then it directly defines the value of that will be used for
+            ## all degrees-of-freedom that are excited by this dynamic load entry.
+            ## See also Remark 9. (Integer >= 0, real or blank)
+            self.delay = integer_double_or_blank(card, 3, 'delay')
 
-        ## Defines the type of the dynamic excitation. (LOAD,DISP, VELO, ACCE)
-        self.Type = integer_string_or_blank(card, 4, 'Type', 'LOAD')
+            ## Defines the type of the dynamic excitation. (LOAD,DISP, VELO, ACCE)
+            self.Type = integer_string_or_blank(card, 4, 'Type', 'LOAD')
 
-        ## Identification number of TABLEDi entry that gives F(t). (Integer > 0)
-        self.tid = integer(card, 5, 'tid')
+            ## Identification number of TABLEDi entry that gives F(t). (Integer > 0)
+            self.tid = integer(card, 5, 'tid')
 
-        ## Factor for initial displacements of the enforced degrees-of-freedom.
-        ## (Real; Default = 0.0)
-        self.us0 = double_or_blank(card, 6, 'us0', 0.0)
+            ## Factor for initial displacements of the enforced degrees-of-freedom.
+            ## (Real; Default = 0.0)
+            self.us0 = double_or_blank(card, 6, 'us0', 0.0)
 
-        ## Factor for initial velocities of the enforced degrees-of-freedom.
-        ## (Real; Default = 0.0)
-        self.vs0 = double_or_blank(card, 7, 'vs0', 0.0)
-        if   self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
-            self.Type = 'LOAD'
-        elif self.Type in [1, 'D', 'DI', 'DIS', 'DISP']:
-            self.Type = 'DISP'
-        elif self.Type in [2, 'V', 'VE', 'VEL', 'VELO']:
-            self.Type = 'VELO'
-        elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
-            self.Type = 'ACCE'
+            ## Factor for initial velocities of the enforced degrees-of-freedom.
+            ## (Real; Default = 0.0)
+            self.vs0 = double_or_blank(card, 7, 'vs0', 0.0)
+            if   self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+                self.Type = 'LOAD'
+            elif self.Type in [1, 'D', 'DI', 'DIS', 'DISP']:
+                self.Type = 'DISP'
+            elif self.Type in [2, 'V', 'VE', 'VEL', 'VELO']:
+                self.Type = 'VELO'
+            elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+                self.Type = 'ACCE'
+            else:
+                msg = 'invalid TLOAD1 type  Type=|%s|' % self.Type
+                raise RuntimeError(msg)
+            assert len(card) <= 7, 'len(TLOAD1 card) = %i' % len(card)
         else:
-            msg = 'invalid TLOAD1 type  Type=|%s|' % self.Type
-            raise RuntimeError(msg)
+            raise NotImplementedError(data)
 
     def getLoads(self):
         return [self]
@@ -408,54 +413,58 @@ class TLOAD2(TabularLoad):
         TabularLoad.__init__(self, card, data)
         if comment:
             self._comment = comment
-        ## load ID
-        ## SID must be unique for all TLOAD1, TLOAD2, RLOAD1, RLOAD2, and ACSRCE entries.
-        self.sid = integer(card, 1, 'sid')
+        if card:
+            ## load ID
+            ## SID must be unique for all TLOAD1, TLOAD2, RLOAD1, RLOAD2, and ACSRCE entries.
+            self.sid = integer(card, 1, 'sid')
 
-        self.exciteID = integer(card, 2, 'exciteID')
-        self.delay = integer_or_blank(card, 3, 'delay', 0)
+            self.exciteID = integer(card, 2, 'exciteID')
+            self.delay = integer_or_blank(card, 3, 'delay', 0)
 
-        ## Defines the type of the dynamic excitation. (Integer; character
-        ## or blank; Default = 0)
-        self.Type = integer_string_or_blank(card, 4, 'Type', 'LOAD')
+            ## Defines the type of the dynamic excitation. (Integer; character
+            ## or blank; Default = 0)
+            self.Type = integer_string_or_blank(card, 4, 'Type', 'LOAD')
 
-        ## Time constant. (Real >= 0.0)
-        self.T1 = double_or_blank(card, 5, 'T1', 0.0)
-        #if self.delay == 0:
-        #self.T1 = double_or_blank(card, 5, 'T1', 0.)
-        #else:
-        #self.T1 = blank(card, 5, 'T1')
+            ## Time constant. (Real >= 0.0)
+            self.T1 = double_or_blank(card, 5, 'T1', 0.0)
+            #if self.delay == 0:
+            #self.T1 = double_or_blank(card, 5, 'T1', 0.)
+            #else:
+            #self.T1 = blank(card, 5, 'T1')
 
-        ## Time constant. (Real; T2 > T1)
-        self.T2 = double_or_blank(card, 6, 'T2', self.T1)
-        ## Frequency in cycles per unit time. (Real >= 0.0; Default = 0.0)
-        self.frequency = double_or_blank(card, 7, 'frequency', 0.)
-        ## Phase angle in degrees. (Real; Default = 0.0)
-        self.phase = double_or_blank(card, 8, 'phase', 0.)
-        ## Exponential coefficient. (Real; Default = 0.0)
-        self.c = double_or_blank(card, 9, 'c', 0.)
-        ## Growth coefficient. (Real; Default = 0.0)
-        self.b = double_or_blank(card, 10, 'b', 0.)
-        ## Factor for initial displacements of the enforced degrees-of-freedom.
-        ## (Real; Default = 0.0)
-        self.us0 = double_or_blank(card, 11, 'us0', 0.)
-        ## Factor for initial velocities of the enforced degrees-of-freedom
-        ## (Real; Default = 0.0)
-        self.vs0 = double_or_blank(card, 12, 'vs0', 0.)
+            ## Time constant. (Real; T2 > T1)
+            self.T2 = double_or_blank(card, 6, 'T2', self.T1)
+            ## Frequency in cycles per unit time. (Real >= 0.0; Default = 0.0)
+            self.frequency = double_or_blank(card, 7, 'frequency', 0.)
+            ## Phase angle in degrees. (Real; Default = 0.0)
+            self.phase = double_or_blank(card, 8, 'phase', 0.)
+            ## Exponential coefficient. (Real; Default = 0.0)
+            self.c = double_or_blank(card, 9, 'c', 0.)
+            ## Growth coefficient. (Real; Default = 0.0)
+            self.b = double_or_blank(card, 10, 'b', 0.)
+            ## Factor for initial displacements of the enforced degrees-of-freedom.
+            ## (Real; Default = 0.0)
+            self.us0 = double_or_blank(card, 11, 'us0', 0.)
+            ## Factor for initial velocities of the enforced degrees-of-freedom
+            ## (Real; Default = 0.0)
+            self.vs0 = double_or_blank(card, 12, 'vs0', 0.)
 
-        if self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
-            self.Type = 'LOAD'
-        elif self.Type in [1, 'D', 'DI', 'DIS', 'DISP']:
-            self.Type = 'DISP'
-        elif self.Type in [2, 'V', 'VE', 'VEL', 'VELO']:
-            self.Type = 'VELO'
-        elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
-            self.Type = 'ACCE'
-        elif self.Type in [5, 6, 7, 12, 13]:
-            pass
+            if self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+                self.Type = 'LOAD'
+            elif self.Type in [1, 'D', 'DI', 'DIS', 'DISP']:
+                self.Type = 'DISP'
+            elif self.Type in [2, 'V', 'VE', 'VEL', 'VELO']:
+                self.Type = 'VELO'
+            elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+                self.Type = 'ACCE'
+            elif self.Type in [5, 6, 7, 12, 13]:
+                pass
+            else:
+                msg = 'invalid TLOAD2 type  Type=|%s|' % self.Type
+                raise RuntimeError(msg)
+            assert len(card) <= 12, 'len(TLOAD2 card) = %i' % len(card)
         else:
-            msg = 'invalid TLOAD1 type  Type=|%s|' % self.Type
-            raise RuntimeError(msg)
+            raise NotImplementedError(data)
 
     def getLoads(self):
         return [self]
@@ -502,10 +511,11 @@ class RFORCE(Load):
             self.racc = double_or_blank(card, 9, 'racc', 0.)
             self.mb = integer_or_blank(card, 10, 'mb', 0)
             self.idrf = integer_or_blank(card, 11, 'idrf', 0)
+            assert len(card) <= 11, 'len(RFORCE2 card) = %i' % len(card)
         else:
             self.sid = data[0]
-            print("PLOADX1 = %s" % data)
-            raise NotImplementedError('PLOADX1')
+            print("RFORCE = %s" % data)
+            raise NotImplementedError(data)
 
     def cross_reference(self, model):
         #self.nid = model.Element(self.nid)
@@ -547,25 +557,29 @@ class RLOAD1(TabularLoad):
         TabularLoad.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.sid = integer(card, 1, 'sid')
-        self.exciteID = integer(card, 2, 'exciteID')
-        self.delay = integer_or_blank(card, 3, 'delay')
-        self.dphase = integer_or_blank(card, 4, 'dphase')
-        self.tc = integer_or_blank(card, 5, 'tc', 0)
-        self.td = integer_or_blank(card, 6, 'td', 0)
-        self.Type = string_or_blank(card, 7, 'Type', 'LOAD')
+        if card:
+            self.sid = integer(card, 1, 'sid')
+            self.exciteID = integer(card, 2, 'exciteID')
+            self.delay = integer_or_blank(card, 3, 'delay')
+            self.dphase = integer_or_blank(card, 4, 'dphase')
+            self.tc = integer_or_blank(card, 5, 'tc', 0)
+            self.td = integer_or_blank(card, 6, 'td', 0)
+            self.Type = string_or_blank(card, 7, 'Type', 'LOAD')
 
-        if   self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
-            self.Type = 'LOAD'
-        elif self.Type in [1, 'D', 'DI', 'DIS', 'DISP']:
-            self.Type = 'DISP'
-        elif self.Type in [2, 'V', 'VE', 'VEL', 'VELO']:
-            self.Type = 'VELO'
-        elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
-            self.Type = 'ACCE'
+            if   self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+                self.Type = 'LOAD'
+            elif self.Type in [1, 'D', 'DI', 'DIS', 'DISP']:
+                self.Type = 'DISP'
+            elif self.Type in [2, 'V', 'VE', 'VEL', 'VELO']:
+                self.Type = 'VELO'
+            elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+                self.Type = 'ACCE'
+            else:
+                msg = 'invalid RLOAD1 type  Type=|%s|' % self.Type
+                raise RuntimeError(msg)
+            assert len(card) <= 7, 'len(RLOAD1 card) = %i' % len(card)
         else:
-            msg = 'invalid RLOAD1 type  Type=|%s|' % self.Type
-            raise RuntimeError(msg)
+            raise NotImplementedError(data)
 
     def cross_reference(self, model):
         msg = ' which is required by %s=%s' % (self.type, self.sid)
@@ -622,25 +636,29 @@ class RLOAD2(TabularLoad):
         TabularLoad.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.sid = integer(card, 1, 'sid')
-        self.exciteID = integer(card, 2, 'exciteID')
-        self.delay = integer_or_blank(card, 3, 'delay')
-        self.dphase = integer_or_blank(card, 4, 'dphase')
-        self.tb = integer_or_blank(card, 5, 'tb', 0)
-        self.tp = integer_or_blank(card, 6, 'tp', 0)
-        self.Type = string_or_blank(card, 7, 'Type', 'LOAD')
+        if card:
+            self.sid = integer(card, 1, 'sid')
+            self.exciteID = integer(card, 2, 'exciteID')
+            self.delay = integer_or_blank(card, 3, 'delay')
+            self.dphase = integer_or_blank(card, 4, 'dphase')
+            self.tb = integer_or_blank(card, 5, 'tb', 0)
+            self.tp = integer_or_blank(card, 6, 'tp', 0)
+            self.Type = string_or_blank(card, 7, 'Type', 'LOAD')
 
-        if self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
-            self.Type = 'LOAD'
-        elif self.Type in [1, 'D', 'DI', 'DIS', 'DISP']:
-            self.Type = 'DISP'
-        elif self.Type in [2, 'V', 'VE', 'VEL', 'VELO']:
-            self.Type = 'VELO'
-        elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
-            self.Type = 'ACCE'
+            if self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+                self.Type = 'LOAD'
+            elif self.Type in [1, 'D', 'DI', 'DIS', 'DISP']:
+                self.Type = 'DISP'
+            elif self.Type in [2, 'V', 'VE', 'VEL', 'VELO']:
+                self.Type = 'VELO'
+            elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+                self.Type = 'ACCE'
+            else:
+                msg = 'invalid RLOAD2 type  Type=|%s|' % self.Type
+                raise RuntimeError(msg)
+            assert len(card) <= 7, 'len(RLOAD2 card) = %i' % len(card)
         else:
-            msg = 'invalid RLOAD2 type  Type=|%s|' % self.Type
-            raise RuntimeError(msg)
+            raise NotImplementedError(data)
 
     def cross_reference(self, model):
         msg = ' which is required by %s=%s' % (self.type, self.sid)
@@ -719,6 +737,9 @@ class RANDPS(RandomLoad):
             self.y = double_or_blank(card, 5, 'y', 0.0)
             ## Identification number of a TABRNDi entry that defines G(F).
             self.tid = integer_or_blank(card, 6, 'tid', 0)
+            assert len(card) <= 6, 'len(RANDPS card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
 
     def cross_reference(self, model):
         if self.tid:

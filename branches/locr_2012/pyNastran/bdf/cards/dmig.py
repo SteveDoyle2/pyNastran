@@ -117,21 +117,24 @@ class NastranMatrix(BaseCard):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.name = string(card, 1, 'name')
-        #zero
+        if card:
+            self.name = string(card, 1, 'name')
+            #zero
 
-        ## 4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
-        self.ifo = integer(card, 3, 'ifo')
-        ## 1-Real, Single Precision; 2=Real,Double Precision; 3=Complex, Single; 4=Complex, Double
-        self.tin = integer(card, 4, 'tin')
-        ## 0-Set by cell precision
-        self.tout = integer_or_blank(card, 5, 'tout', 0)
+            ## 4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
+            self.ifo = integer(card, 3, 'ifo')
+            ## 1-Real, Single Precision; 2=Real,Double Precision; 3=Complex, Single; 4=Complex, Double
+            self.tin = integer(card, 4, 'tin')
+            ## 0-Set by cell precision
+            self.tout = integer_or_blank(card, 5, 'tout', 0)
 
-        self.polar = integer_or_blank(card, 6, 'polar')
-        if self.ifo == 9:
-            self.ncol = integer(card, 8, 'ncol')
+            self.polar = integer_or_blank(card, 6, 'polar')
+            if self.ifo == 9:
+                self.ncol = integer(card, 8, 'ncol')
+            else:
+                self.ncol = blank(card, 8, 'ncol')
         else:
-            self.ncol = blank(card, 8, 'ncol')
+            raise NotImplementedError(data)
 
         self.GCj = []
         self.GCi = []
@@ -365,6 +368,10 @@ class DMIG(NastranMatrix):
         NastranMatrix.__init__(self, card, data)
         if comment:
             self._comment = comment
+        if card:
+            assert len(card) <= 8, 'len(DMIG card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
 
 
 class DMIJ(NastranMatrix):
@@ -385,6 +392,10 @@ class DMIJ(NastranMatrix):
         NastranMatrix.__init__(self, card, data)
         if comment:
             self._comment = comment
+        if card:
+            assert len(card) <= 8, 'len(DMIJ card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
 
 
 class DMIJI(NastranMatrix):
@@ -404,6 +415,10 @@ class DMIJI(NastranMatrix):
         NastranMatrix.__init__(self, card, data)
         if comment:
             self._comment = comment
+        if card:
+            assert len(card) <= 8, 'len(DMIJI card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
 
 
 class DMIK(NastranMatrix):
@@ -421,6 +436,10 @@ class DMIK(NastranMatrix):
         NastranMatrix.__init__(self, card, data)
         if comment:
             self._comment = comment
+        if card:
+            assert len(card) <= 8, 'len(DMIK card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
 
 
 class DMI(BaseCard):
@@ -429,23 +448,27 @@ class DMI(BaseCard):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.name = string(card, 1, 'name')
-        #zero
+        if card:
+            self.name = string(card, 1, 'name')
+            #zero
 
-        ## Form of the matrix:  1=Square (not symmetric); 2=Rectangular;
-        ## 3=Diagonal (m=nRows,n=1);  4=Lower Triangular; 5=Upper Triangular;
-        ## 6=Symmetric; 8=Identity (m=nRows, n=m)
-        self.form = integer(card, 3, 'form')
+            ## Form of the matrix:  1=Square (not symmetric); 2=Rectangular;
+            ## 3=Diagonal (m=nRows,n=1);  4=Lower Triangular; 5=Upper Triangular;
+            ## 6=Symmetric; 8=Identity (m=nRows, n=m)
+            self.form = integer(card, 3, 'form')
 
-        ## 1-Real, Single Precision; 2=Real,Double Precision;
-        ## 3=Complex, Single; 4=Complex, Double
-        self.tin = integer(card, 4, 'tin')
+            ## 1-Real, Single Precision; 2=Real,Double Precision;
+            ## 3=Complex, Single; 4=Complex, Double
+            self.tin = integer(card, 4, 'tin')
 
-        ## 0-Set by cell precision
-        self.tout = integer_or_blank(card, 5, 'tout', 0)
+            ## 0-Set by cell precision
+            self.tout = integer_or_blank(card, 5, 'tout', 0)
 
-        self.nRows = integer(card, 7, 'nrows')
-        self.nCols = integer(card, 8, 'ncols')
+            self.nRows = integer(card, 7, 'nrows')
+            self.nCols = integer(card, 8, 'ncols')
+            assert len(card) == 8, 'len(DMI card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
 
         self.GCj = []
         self.GCi = []
@@ -455,7 +478,6 @@ class DMI(BaseCard):
             self.Complex = []
 
     def addColumn(self, card=None, data=None):
-
         if not self.isComplex():  # real
             self.readReal(card)
 

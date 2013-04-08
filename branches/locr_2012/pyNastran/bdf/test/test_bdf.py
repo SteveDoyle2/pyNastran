@@ -420,7 +420,7 @@ def main():
     print("punch       = %s" % args.punch)
     print("xref        = %s" % args.xref)
     print("check       = %s" % args.check)
-    print("debug       = %s" % not(args.quiet))
+    print("debug       = %s" % (not(args.quiet)))
 
     xref = args.xref
     punch = args.punch

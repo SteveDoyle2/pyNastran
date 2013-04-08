@@ -116,19 +116,23 @@ class PELAST(SpringProperty):
         SpringProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
-        ## Property identification number. (Integer > 0)
-        self.pid = integer(card, 1, 'pid')
-        ## Identification number of a TABLEDi entry that defines the
-        ## force per unit displacement vs. frequency relationship.
-        ## (Integer > 0; Default = 0)
-        self.tkid = integer_or_blank(card, 2, 'tkid', 0)
-        ## Identification number of a TABLEDi entry that defines the
-        ## nondimensional structural damping coefficient vs. frequency
-        ## relationship. (Integer > 0; Default = 0)
-        self.tgeid = integer_or_blank(card, 3, 'tgeid', 0)
-        ## Identification number of a TABELDi entry that defines the nonlinear
-        ## force vs. displacement relationship. (Integer > 0; Default = 0)
-        self.tknid = integer_or_blank(card, 4, 'tknid', 0)
+        if card:
+            ## Property identification number. (Integer > 0)
+            self.pid = integer(card, 1, 'pid')
+            ## Identification number of a TABLEDi entry that defines the
+            ## force per unit displacement vs. frequency relationship.
+            ## (Integer > 0; Default = 0)
+            self.tkid = integer_or_blank(card, 2, 'tkid', 0)
+            ## Identification number of a TABLEDi entry that defines the
+            ## nondimensional structural damping coefficient vs. frequency
+            ## relationship. (Integer > 0; Default = 0)
+            self.tgeid = integer_or_blank(card, 3, 'tgeid', 0)
+            ## Identification number of a TABELDi entry that defines the nonlinear
+            ## force vs. displacement relationship. (Integer > 0; Default = 0)
+            self.tknid = integer_or_blank(card, 4, 'tknid', 0)
+            assert len(card) <= 4, 'len(PELAST card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
 
     def cross_reference(self, model):
         self.pid = model.Property(self.pid)

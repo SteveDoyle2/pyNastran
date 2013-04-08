@@ -126,7 +126,7 @@ class CELAS1(SpringElement):
             ## component number
             self.c1 = integer_or_blank(card, 4, 'c1', 0)
             self.c2 = integer_or_blank(card, 6, 'c2', 0)
-
+            assert len(card) <= 6, 'len(CELAS1 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -190,6 +190,7 @@ class CELAS2(SpringElement):
 
             ## stress coefficient
             self.s = double_or_blank(card, 8, 's', 0.)
+            assert len(card) <= 8, 'len(CELAS2 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.k = data[1]
@@ -280,6 +281,7 @@ class CELAS3(SpringElement):
             ## Scalar point identification numbers
             self.s1 = integer_or_blank(card, 3, 's1', 0)
             self.s2 = integer_or_blank(card, 4, 's2', 0)
+            assert len(card) <= 4, 'len(CELAS3 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -332,6 +334,7 @@ class CELAS4(SpringElement):
             ## Scalar point identification numbers
             self.s1 = integer_or_blank(card, 3, 's1', 0)
             self.s2 = integer_or_blank(card, 4, 's2', 0)
+            assert len(card) <= 4, 'len(CELAS4 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.k = data[1]

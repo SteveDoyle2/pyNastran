@@ -349,7 +349,10 @@ class PBUSH2D(BushingProperty):
         BushingProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
-        raise NotImplementedError()
+        if card:
+            raise NotImplementedError()
+        else:
+            raise NotImplementedError()
 
 
 class PBUSHT(BushingProperty):
@@ -359,4 +362,7 @@ class PBUSHT(BushingProperty):
         BushingProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
-        raise NotImplementedError()
+        if card:
+            raise NotImplementedError()
+        else:
+            raise NotImplementedError()

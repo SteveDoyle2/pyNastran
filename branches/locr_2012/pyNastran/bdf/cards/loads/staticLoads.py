@@ -294,6 +294,7 @@ class GRAV(BaseCard):
             ## the assembly basic coordinate system. See Remark 10.
             ## (Integer; Default = 0)
             self.mb = integer_or_blank(card, 7, 'mb', 0)
+            assert len(card) <= 7, 'len(GRAV card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.cid = data[1]
@@ -370,24 +371,27 @@ class ACCEL1(BaseCard):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
+        if card:
+            ## Load set identification number (Integer>0)
+            self.sid = integer(card, 1, 'sid')
 
-        ## Load set identification number (Integer>0)
-        self.sid = integer(card, 1, 'sid')
+            ## Coordinate system identification number. (Integer>0: Default=0)
+            self.cid = integer_or_blank(card, 2, 'cid', 0)
 
-        ## Coordinate system identification number. (Integer>0: Default=0)
-        self.cid = integer_or_blank(card, 2, 'cid', 0)
+            ## Acceleration vector scale factor. (Real)
+            self.scale = double(card, 3, 'scale')
 
-        ## Acceleration vector scale factor. (Real)
-        self.scale = double(card, 3, 'scale')
+            ## Components of the acceleration vector measured in coordinate system
+            ## CID. (Real; at least one Ni != 0)
+            self.N = array([double_or_blank(card, 4, 'N1', 0.0),
+                            double_or_blank(card, 5, 'N2', 0.0),
+                            double_or_blank(card, 6, 'N3', 0.0)])
+            assert max(abs(self.N)) > 0.
 
-        ## Components of the acceleration vector measured in coordinate system
-        ## CID. (Real; at least one Ni != 0)
-        self.N = array([double_or_blank(card, 4, 'N1', 0.0),
-                        double_or_blank(card, 5, 'N2', 0.0),
-                        double_or_blank(card, 6, 'N3', 0.0)])
-        assert max(abs(self.N)) > 0.
+            nodes = fields(integer_or_string, card, 'node', i=9, j=len(card))
+        else:
+            raise NotImplementedError(data)
 
-        nodes = fields(integer_or_string, card, 'node', i=9, j=len(card))
         ## nodes to apply the acceleration to
         self.nodes = expand_thru_by(nodes)
 
@@ -530,6 +534,7 @@ class FORCE(Force):
             xyz = array([double_or_blank(card, 5, 'X1', 0.0),
                          double_or_blank(card, 6, 'X2', 0.0),
                          double_or_blank(card, 7, 'X3', 0.0)])
+            assert len(card) <= 7, 'len(FORCE card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.node = data[1]
@@ -584,6 +589,7 @@ class FORCE1(Force):
             self.mag = double(card, 3, 'mag')
             self.g1 = integer(card, 4, 'g1')
             self.g2 = integer(card, 5, 'g2')
+            assert len(card) == 5, 'len(FORCE1 card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.node = data[1]
@@ -645,6 +651,7 @@ class FORCE2(Force):
             self.g2 = integer(card, 5, 'g2')
             self.g3 = integer(card, 6, 'g3')
             self.g4 = integer(card, 7, 'g4')
+            assert len(card) == 7, 'len(FORCE2 card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.node = data[1]
@@ -694,14 +701,18 @@ class MOMENT(Moment):
         Moment.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.sid = integer(card, 1, 'sid')
-        self.node = integer(card, 2, 'node')
-        self.cid = integer_or_blank(card, 3, 'cid', 0)
-        self.mag = double(card, 4, 'mag')
+        if card:
+            self.sid = integer(card, 1, 'sid')
+            self.node = integer(card, 2, 'node')
+            self.cid = integer_or_blank(card, 3, 'cid', 0)
+            self.mag = double(card, 4, 'mag')
 
-        xyz = array([double_or_blank(card, 5, 'X1', 0.0),
-                     double_or_blank(card, 6, 'X2', 0.0),
-                     double_or_blank(card, 7, 'X3', 0.0)])
+            xyz = array([double_or_blank(card, 5, 'X1', 0.0),
+                         double_or_blank(card, 6, 'X2', 0.0),
+                         double_or_blank(card, 7, 'X3', 0.0)])
+            assert len(card) <= 7, 'len(MOMENT card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
         assert len(xyz) == 3, 'xyz=%s' % xyz
         self.xyz = xyz
 
@@ -747,6 +758,7 @@ class MOMENT1(Moment):
             self.mag = double(card, 3, 'mag')
             self.g1 = integer(card, 4, 'g1')
             self.g2 = integer(card, 5, 'g2')
+            assert len(card) == 5, 'len(MOMENT1 card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.node = data[1]
@@ -802,6 +814,7 @@ class MOMENT2(Moment):
             xyz = array([double_or_blank(card, 5, 'X1', 0.0),
                          double_or_blank(card, 6, 'X2', 0.0),
                          double_or_blank(card, 7, 'X3', 0.0)])
+            assert len(card) <= 7, 'len(MOMENT2 card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.node = data[1]
@@ -851,6 +864,7 @@ class PLOAD(Load):
                 nodes.append(n4)
             #self.nodes = self._wipeEmptyFields(nodes)
             self.nodes = nodes
+            assert len(card) <= 6, 'len(PLOAD card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.p = data[1]
@@ -893,6 +907,7 @@ class PLOAD1(Load):
             self.x2 = double_or_blank(card, 7, 'x2', self.x1)
             self.p2 = double_or_blank(card, 8, 'p2', self.p1)
             assert 0 <= self.x1 <= self.x2
+            assert len(card) <= 8, 'len(PLOAD1 card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.eid = data[1]
@@ -937,6 +952,7 @@ class PLOAD2(Load):
                 e1 = integer(card, 3, 'Element1')
                 e2 = integer(card, 5, 'Element1')
                 eids = [i for i in xrange(e1, e2 + 1)]
+                assert len(card) == 5, 'len(PLOAD2 card) = %i' % len(card)
             else:
                 eids = fields(integer, card, 'eid', i=3, j=len(card))
             self.eids = eids
@@ -1007,6 +1023,7 @@ class PLOAD4(Load):
                                   double_or_blank(card, 12, 'N3', 0.0)])
             self.sorl = string_or_blank(card, 13, 'sorl', 'SURF')
             self.ldir = string_or_blank(card, 14, 'ldir', 'NORM')
+            assert len(card) <= 14, 'len(PLOAD4 card) = %i' % len(card)
         else:
             #print "PLOAD4 = ",data
             self.sid = data[0]
@@ -1144,10 +1161,11 @@ class PLOADX1(Load):
             self.ga = integer(card, 5, 'ga')
             self.gb = integer(card, 6, 'gb')
             self.theta = double_or_blank(card, 7, 'theta', 0.)
+            assert len(card) <= 7, 'len(PLOADX1 card) = %i' % len(card)
         else:
             self.sid = data[0]
             print("PLOADX1 = %s" % data)
-            raise NotImplementedError('PLOADX1')
+            raise NotImplementedError(data)
 
     def cross_reference(self, model):
         #self.eid = model.Element(self.eid)

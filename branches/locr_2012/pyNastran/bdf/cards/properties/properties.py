@@ -27,28 +27,32 @@ class PFAST(Property):
         Property.__init__(self, card, data)
         if comment:
             self._comment = comment
-        ## Property ID
-        self.pid = integer(card, 1, 'pid')
-        ## diameter of the fastener
-        self.d = double(card, 2, 'd')
-        assert self.d > 0
-        ## Specifies the element stiffness coordinate system
-        self.mcid = integer_or_blank(card, 3, 'mcid', -1)
-        assert self.mcid >= -1
-        self.mflag = integer_or_blank(card, 4, 'mflag', 0)  # 0-absolute 1-relative
-        assert self.mflag in [0, 1]
-        ## stiffness values in directions 1-3
-        self.kt1 = double(card, 5, 'kt1')
-        self.kt2 = double(card, 6, 'kt2')
-        self.kt3 = double(card, 7, 'kt3')
-        ## Rotational stiffness values in directions 1-3
-        self.kr1 = double_or_blank(card, 8, 'kr1', 0.0)
-        self.kr2 = double_or_blank(card, 9, 'kr2', 0.0)
-        self.kr3 = double_or_blank(card, 10, 'kr3', 0.0)
-        ## Lumped mass of fastener
-        self.mass = double_or_blank(card, 11, 'mass', 0.0)
-        ## Structural damping
-        self.ge = double_or_blank(card, 12, 'ge', 0.0)
+        if card:
+            ## Property ID
+            self.pid = integer(card, 1, 'pid')
+            ## diameter of the fastener
+            self.d = double(card, 2, 'd')
+            assert self.d > 0
+            ## Specifies the element stiffness coordinate system
+            self.mcid = integer_or_blank(card, 3, 'mcid', -1)
+            assert self.mcid >= -1
+            self.mflag = integer_or_blank(card, 4, 'mflag', 0)  # 0-absolute 1-relative
+            assert self.mflag in [0, 1]
+            ## stiffness values in directions 1-3
+            self.kt1 = double(card, 5, 'kt1')
+            self.kt2 = double(card, 6, 'kt2')
+            self.kt3 = double(card, 7, 'kt3')
+            ## Rotational stiffness values in directions 1-3
+            self.kr1 = double_or_blank(card, 8, 'kr1', 0.0)
+            self.kr2 = double_or_blank(card, 9, 'kr2', 0.0)
+            self.kr3 = double_or_blank(card, 10, 'kr3', 0.0)
+            ## Lumped mass of fastener
+            self.mass = double_or_blank(card, 11, 'mass', 0.0)
+            ## Structural damping
+            self.ge = double_or_blank(card, 12, 'ge', 0.0)
+            assert len(card) <= 12, 'len(PFAST card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
 
     def cross_reference(self, model):
         self.mcid = model.Coord(self.mcid)
@@ -111,6 +115,7 @@ class PGAP(Property):
             self.tmax = double_or_blank(card, 9, 'tmax', 0.)
             self.mar = double_or_blank(card, 10, 'mar', 100.)
             self.trmin = double_or_blank(card, 11, 'trmin', 0.001)
+            assert len(card) <= 11, 'len(PGAP card) = %i' % len(card)
         else:
             #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
             self.pid = data[0]
@@ -178,6 +183,7 @@ class PLSOLID(SolidProperty):
             self.mid = integer(card, 2, 'mid')
             self.ge = double_or_blank(card, 3, 'ge', 0.0)
             self.str = string_or_blank(card, 4, 'str', 'GRID')
+            assert len(card) <= 4, 'len(PLSOLID card) = %i' % len(card)
         else:
             self.pid = data[0]
             self.mid = data[1]
@@ -220,6 +226,7 @@ class PSOLID(SolidProperty):
             self.stress = integer_string_or_blank(card, 5, 'stress')
             self.isop = integer_string_or_blank(card, 6, 'isop')
             self.fctn = string_or_blank(card, 7, 'fctn', 'SMECH')
+            assert len(card) <= 7, 'len(PSOLID card) = %i' % len(card)
         else:
             self.pid = data[0]
             self.mid = data[1]
@@ -293,9 +300,10 @@ class PRAC2D(CrackProperty):
             ## stress intensity factors are to be calculated. See Remark 4.
             ## (Real; Default = 180.0)
             self.phi = double_or_blank(card, 7, 'phi', 180.)
+            assert len(card) <= 7, 'len(PRAC2D card) = %i' % len(card)
 
         else:
-            raise NotImplementedError('not supported')
+            raise NotImplementedError(data)
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)  # MAT1, MAT2, MAT8
@@ -337,9 +345,9 @@ class PRAC3D(CrackProperty):
             ## stress intensity factors are to be calculated. See Remark 4.
             ## (Real; Default = 180.0)
             self.phi = double_or_blank(card, 4, 'gamma', 180.)
-
+            assert len(card) <= 4, 'len(PRAC3D card) = %i' % len(card)
         else:
-            raise NotImplementedError('not supported')
+            raise NotImplementedError(data)
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)  # MAT1, MAT9
@@ -388,7 +396,7 @@ class PCONEAX(Property):
             self.z2 = double(card, 10, 'z2')
             self.phi = fields(double, card, 'phi', i=11, j=len(card))
         else:
-            raise NotImplementedError('not supported')
+            raise NotImplementedError(data)
 
     def cross_reference(self, model):
         msg = ' which is required by %s=%s' %(self.type, self.pid)

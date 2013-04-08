@@ -32,7 +32,6 @@ def IyyBeam(b, h):
 
 def IBeam(b, h):
     f = 1 / 12. * b * h
-
     Iyy = f * h * h  # 1/12.*b*h**3
     Izz = f * b * b  # 1/12.*h*b**3
     Iyz = 0.
@@ -513,6 +512,7 @@ class PROD(LineProperty):
             self.j = double_or_blank(card, 4, 'J', 0.0)
             self.c = double_or_blank(card, 5, 0.0)
             self.nsm = double_or_blank(card, 6, 'nsm', 0.0)
+            assert len(card) <= 6, 'len(PROD card) = %i' % len(card)
         else:
             self.pid = data[0]
             self.mid = data[1]
@@ -569,6 +569,7 @@ class PTUBE(LineProperty):
             self.t = double_or_blank(card, 4, 't', self.OD1 / 2.)
             self.nsm = double_or_blank(card, 5, 'nsm', 0.0)
             self.OD2 = double_or_blank(card, 6, 'OD2', self.OD1)
+            assert len(card) <= 6, 'len(PTUBE card) = %i' % len(card)
         else:
             self.pid = data[0]
             self.mid = data[1]
@@ -680,6 +681,7 @@ class PBAR(LineProperty):
             if self.A == 0.0:
                 assert self.K1 is None
                 assert self.K2 is None
+            assert len(card) <= 19, 'len(PBAR card) = %i' % len(card)
         else:
             self.pid = data[0]
             self.mid = data[1]
@@ -834,7 +836,7 @@ class PBARL(LineProperty):
             else:
                 self.nsm = 0.0
 
-            assert isinstance(self.nsm, float)
+            assert isinstance(self.nsm, float), 'nsm=%r' % self.nsm
         else:
             self.pid = data[0]
             self.mid = data[1]
@@ -1599,6 +1601,7 @@ class PBEND(LineProperty):
 
             ## Arc angle of element  (optional)
             self.thetab = double_or_blank(card, 8, 'thetab')
+            assert len(card) <= 22, 'len(PBEND card) = %i' % len(card)
 
         else:
             raise NotImplementedError('PBEND')

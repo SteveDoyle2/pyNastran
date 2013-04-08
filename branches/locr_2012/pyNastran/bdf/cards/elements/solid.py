@@ -121,6 +121,7 @@ class CHEXA8(SolidElement):
             self.eid = integer(card, 1, 'eid')
             self.pid = integer(card, 2, 'pid')
             nids = fields(integer, card, 'nid', i=3, j=11)
+            assert len(card) == 11, 'len(CHEXA8 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -183,6 +184,7 @@ class CHEXA20(CHEXA8):
                     integer_or_blank(card, 20, 'nid18'),
                     integer_or_blank(card, 21, 'nid19'),
                     integer_or_blank(card, 22, 'nid20')]
+            assert len(card) <= 22, 'len(CHEXA20 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -243,6 +245,7 @@ class CPENTA6(SolidElement):
             self.eid = integer(card, 1, 'eid')
             self.pid = integer(card, 2, 'pid')
             nids = fields(integer, card, 'nid', i=3, j=9)
+            assert len(card) == 8, 'len(CPENTA6 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -344,6 +347,7 @@ class CPENTA15(CPENTA6):
             self.eid = integer(card, 1, 'eid')
             self.pid = integer(card, 2, 'pid')
             nids = fields(integer, card, 'nid', i=3, j=18)
+            assert len(card) <= 17, 'len(CPENTA15 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -398,6 +402,7 @@ class CTETRA4(SolidElement):
             self.eid = integer(card, 1, 'eid')
             self.pid = integer(card, 2, 'pid')
             nids = fields(integer, card, 'nid', i=3, j=7)
+            assert len(card) == 6, 'len(CTETRA4 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -518,6 +523,7 @@ class CTETRA10(CTETRA4):
             self.eid = integer(card, 1, 'eid')
             self.pid = integer(card, 2, 'pid')
             nids = fields(integer, card, 'nid', i=3, j=13)
+            assert len(card) <= 12, 'len(CTETRA10 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]

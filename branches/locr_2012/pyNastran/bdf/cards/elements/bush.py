@@ -89,6 +89,7 @@ class CBUSH(BushElement):
             self.si = [double_or_blank(card, 11, 's1'),
                        double_or_blank(card, 12, 's2'),
                        double_or_blank(card, 13, 's3')]
+            assert len(card) <= 13, 'len(CBUSH card) = %i' % len(card)
         else:
             self.eid = data[0]
             raise NotImplementedError('CBUSH data...')
@@ -160,6 +161,7 @@ class CBUSH1D(BushElement):
             self.ga = integer(card, 3, 'ga')
             self.gb = integer_or_blank(card, 4, 'gb')
             self.cid = integer_or_blank(card, 5, 'cid')
+            assert len(card) <= 5, 'len(CBUSH1D card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -221,6 +223,7 @@ class CBUSH2D(BushElement):
                 msg = ("plane not in required list, plane=|%s|\n"
                        "expected planes = ['XY','YZ','ZX']" % self.plane)
                 raise RuntimeError(msg)
+            assert len(card) <= 6, 'len(CBUSH2D card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]

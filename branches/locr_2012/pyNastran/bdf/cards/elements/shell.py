@@ -874,7 +874,6 @@ class CQUAD4(QuadShell):
         QuadShell.__init__(self, card, data)
         if comment:
             self._comment = comment
-            #print("*comment = |%r|" % comment)
         if card:
             ## element ID number
             self.eid = integer(card, 1, 'eid')
@@ -983,6 +982,7 @@ class CQUADR(QuadShell):
             self.T2 = double_or_blank(card, 12, 'T2', 1.0)
             self.T3 = double_or_blank(card, 13, 'T3', 1.0)
             self.T4 = double_or_blank(card, 14, 'T4', 1.0)
+            assert len(card) <= 14, 'len(CQUADR card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -1229,19 +1229,22 @@ class CQUADX(QuadShell):
         QuadShell.__init__(self, card, data)
         if comment:
             self._comment = comment
-        ## element ID number
-        self.eid = integer(card, 1, 'eid')
-        self.pid = integer(card, 2, 'pid')
-        nids = [integer_or_blank(card, 3, 'n1'),
-                integer_or_blank(card, 4, 'n2'),
-                integer_or_blank(card, 5, 'n3'),
-                integer_or_blank(card, 6, 'n4'),
-                integer_or_blank(card, 7, 'n5'),
-                integer_or_blank(card, 8, 'n6'),
-                integer_or_blank(card, 9, 'n7'),
-                integer_or_blank(card, 10, 'n8'),
-                integer_or_blank(card, 11, 'n9')]
-        assert len(card) <= 11, 'len(CQUADX card) = %i' % len(card)
+        if card:
+            ## element ID number
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = [integer_or_blank(card, 3, 'n1'),
+                    integer_or_blank(card, 4, 'n2'),
+                    integer_or_blank(card, 5, 'n3'),
+                    integer_or_blank(card, 6, 'n4'),
+                    integer_or_blank(card, 7, 'n5'),
+                    integer_or_blank(card, 8, 'n6'),
+                    integer_or_blank(card, 9, 'n7'),
+                    integer_or_blank(card, 10, 'n8'),
+                    integer_or_blank(card, 11, 'n9')]
+            assert len(card) <= 11, 'len(CQUADX card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 9
 

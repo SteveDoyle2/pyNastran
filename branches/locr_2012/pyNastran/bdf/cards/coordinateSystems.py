@@ -530,7 +530,6 @@ class Cord1x(Coord):
             self.g2 = integer(card, 3 + nCoord, 'g2')
             ## a Node on the xz-plane
             self.g3 = integer(card, 4 + nCoord, 'g3')
-            assert len(card) <= 4 + nCoord, 'len(CORD1x card) = %i' % len(card)
         else:
             self.cid = data[0]
             self.g1 = data[1]

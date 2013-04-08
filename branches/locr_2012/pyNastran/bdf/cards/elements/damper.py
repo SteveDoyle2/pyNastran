@@ -48,6 +48,7 @@ class CDAMP1(LineDamper):
             ## component number
             self.c1 = integer_or_blank(card, 4, 'c1', 0)
             self.c2 = integer_or_blank(card, 6, 'c2', 0)
+            assert len(card) <= 6, 'len(CDAMP1 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -103,6 +104,7 @@ class CDAMP2(LineDamper):
             ## component number
             self.c1 = integer_or_blank(card, 4, 'c1', 0)
             self.c2 = integer_or_blank(card, 6, 'c2', 0)
+            assert len(card) <= 6, 'len(CDAMP2 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.b = data[1]
@@ -142,6 +144,7 @@ class CDAMP3(LineDamper):
             self.pid = integer(card, 2, 'pid')
             nids = [integer_or_blank(card, 3, 'n1', 0),
                     integer_or_blank(card, 5, 'n2', 0)]
+            assert len(card) <= 6, 'len(CDAMP3 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -176,6 +179,7 @@ class CDAMP4(LineDamper):
             self.b = double(card, 2, 'b')
             nids = [integer_or_blank(card, 3, 'n1', 0),
                     integer_or_blank(card, 4, 'n2', 0)]
+            assert len(card) <= 4, 'len(CDAMP4 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.b = data[1]
@@ -209,6 +213,7 @@ class CDAMP5(LineDamper):
             self.pid = integer(card, 2, 'pid')
             nids = [integer_or_blank(card, 3, 'n1', 0),
                     integer_or_blank(card, 4, 'n2', 0)]
+            assert len(card) <= 4, 'len(CDAMP5 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -239,6 +244,7 @@ class CVISC(LineDamper):
             self.pid = integer_or_blank(card, 2, 'pid', self.eid)
             nids = [integer_or_blank(card, 3, 'n1', 0),
                     integer_or_blank(card, 4, 'n2', 0)]
+            assert len(card) <= 4, 'len(CVISC card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]

@@ -73,6 +73,7 @@ class PDAMP5(DamperProperty):
             ## B is the mass that multiplies the heat capacity CP on the MAT4
             ## or MAT5 entry.
             self.b = double(card, 3, 'b')
+            assert len(card) == 4, 'len(PDAMP5 card) = %i' % len(card)
         else:
             self.pid = data[0]
             self.mid = data[1]
@@ -107,6 +108,7 @@ class PDAMPT(DamperProperty):
             ## Identification number of a TABLEDi entry that defines the
             ## damping force per-unit velocity versus frequency relationship
             self.tbid = integer_or_blank(card, 2, 'tbid', 0)
+            assert len(card) <= 2, 'len(PDAMPT card) = %i' % len(card)
         else:
             self.pid = data[0]
             self.tbid = data[1]

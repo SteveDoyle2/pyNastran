@@ -435,6 +435,7 @@ class PSHEAR(ShellProperty):
             assert self.t > 0.0
             #assert self.f1 >= 0.0
             #assert self.f2 >= 0.0
+            assert len(card) <= 6, 'len(PSHEAR card) = %i' % len(card)
         else:
             #(pid,mid,t,nsm,f1,f2) = out
             self.pid = data[0]
@@ -497,6 +498,7 @@ class PSHELL(ShellProperty):
 
             #if self.mid is not None and self.mid2 is not None:
             #    assert self.mid4==None
+            assert len(card) <= 11, 'len(PSHELL card) = %i' % len(card)
         else:
             self.pid = data[0]
             self.mid1 = data[1]
