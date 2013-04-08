@@ -180,6 +180,7 @@ class F06Writer(object):
             subtitle = subtitle.strip()
             header[0] = '     %s\n' % (subtitle)
             header[1] = '0                                                                                                            SUBCASE %i\n' % (isubcase)
+            print "*isubcase =", isubcase
             print(result.__class__.__name__)
             (msg, pageNum) = result.write_f06(header, pageStamp,
                                              pageNum=pageNum, f=f, isMagPhase=isMagPhase)
@@ -195,7 +196,7 @@ class F06Writer(object):
         resTypes = [
                     self.displacements, self.displacementsPSD, self.displacementsATO, self.displacementsRMS,
                     self.scaledDisplacements,  # ???
-                    self.velocities, self.accelerations, self.eigenvectors,
+                    self.velocities, self.accelerations, #self.eigenvectors,
                     self.temperatures,
                     self.loadVectors, self.thermalLoadVectors,
                     self.forceVectors,

@@ -350,13 +350,12 @@ class F06(OES, OUG, OQG, F06Writer):
         num_wide      = 8 (???)
         @endcode
         """
-        cycle, iMode = marker.strip(
-        ).split('R E A L   E I G E N V E C T O R   N O .')
+        cycle, iMode = marker.strip().split('R E A L   E I G E N V E C T O R   N O .')
         iMode = int(iMode)
 
         cycles = cycle.strip().split('=')
         #print smarker
-        assert 'CYCLES' == cycles[0].strip(), 'marker=%s' % (marker)
+        assert 'CYCLES' == cycles[0].strip(), 'marker=%s' % marker
         cycle = float(cycles[1])
 
         #print "marker = |%s|" %(marker)
@@ -367,12 +366,13 @@ class F06(OES, OUG, OQG, F06Writer):
         #print "subcaseName=%s isubcase=%s" %(subcaseName,isubcase)
         (subcaseName, isubcase, transient, dt, analysis_code,
             is_sort1) = self.readSubcaseNameID()
+        eigenvalue_real = transient[1]
         headers = self.skip(2)
 
         data_code = {'log': self.log, 'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 7, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 'format_code': 1,
-                    'mode': iMode, 'eigr': transient[1], 'mode_cycle': cycle,
+                    'mode': iMode, 'eigr': eigenvalue_real, 'mode_cycle': cycle,
                     'dataNames': ['mode', 'eigr', 'mode_cycle'],
                     'name': 'mode', 'table_name': 'OUGV1',
                     'nonlinear_factor': iMode,
@@ -383,13 +383,15 @@ class F06(OES, OUG, OQG, F06Writer):
         dataTypes = [int, str, float, float, float, float, float, float]
         data = self.readTable(dataTypes)
 
+        print "cycle=%-8s eigen=%s" % (cycle, eigenvalue_real)
+        #print "isubcase = %s" % isubcase
         if isubcase in self.eigenvectors:
-            self.eigenvectors[isubcase].readF06Data(data_code, data)
+            self.eigenvectors[isubcase].read_f06_data(data_code, data)
         else:
             is_sort1 = True
             self.eigenvectors[isubcase] = EigenVectorObject(data_code, is_sort1,
                                                             isubcase, iMode)
-            self.eigenvectors[isubcase].readF06Data(data_code, data)
+            self.eigenvectors[isubcase].read_f06_data(data_code, data)
 
     def getElementStrainEnergies(self):
         """

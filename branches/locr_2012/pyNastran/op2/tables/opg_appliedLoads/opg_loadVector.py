@@ -1,4 +1,4 @@
-from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject, writeFloats13E
 
 
 class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
@@ -26,7 +26,7 @@ class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
             vals = [dx, dy, dz, rx, ry, rz]
-            (vals2, isAllZeros) = self.writeFloats13E(vals)
+            (vals2, isAllZeros) = writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
@@ -54,7 +54,7 @@ class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
                 (rx, ry, rz) = rotation
 
                 vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, isAllZeros) = self.writeFloats13E(vals)
+                (vals2, isAllZeros) = writeFloats13E(vals)
                 if not isAllZeros:
                     [dx, dy, dz, rx, ry, rz] = vals2
                     msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
@@ -172,7 +172,7 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
                 rzi = rz.imag
 
             vals = [dxr, dyr, dzr, rxr, ryr, rzr, dxi, dyi, dzi, rxi, ryi, rzi]
-            (vals2, isAllZeros) = self.writeFloats13E(vals)
+            (vals2, isAllZeros) = writeFloats13E(vals)
             [dxr, dyr, dzr, rxr, ryr, rzr,
              dxi, dyi, dzi, rxi, ryi, rzi] = vals2
             msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
@@ -232,7 +232,7 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
 
                 vals = [dxr, dyr, dzr, rxr, ryr, rzr,
                         dxi, dyi, dzi, rxi, ryi, rzi]
-                (vals2, isAllZeros) = self.writeFloats13E(vals)
+                (vals2, isAllZeros) = writeFloats13E(vals)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 if not isAllZeros:
@@ -293,7 +293,7 @@ class ThermalVector(TableObject):
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
             vals = [dx, dy, dz, rx, ry, rz]
-            (vals2, isAllZeros) = self.writeFloats13E(vals)
+            (vals2, isAllZeros) = writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
@@ -321,7 +321,7 @@ class ThermalVector(TableObject):
                 (rx, ry, rz) = rotation
 
                 vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, isAllZeros) = self.writeFloats13E(vals)
+                (vals2, isAllZeros) = writeFloats13E(vals)
                 if not isAllZeros:
                     [dx, dy, dz, rx, ry, rz] = vals2
                     msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))

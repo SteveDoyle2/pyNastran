@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from ..real.oes_objects import StressObject
+from ..real.oes_objects import StressObject, writeFloats13E
 
 
 class Bush1DStressObject(StressObject):
@@ -199,7 +199,7 @@ class Bush1DStressObject(StressObject):
                 plastic_strain = self.plastic_strain[dt][eid]
                 is_failed = self.is_failed[dt][eid]
                 vals = [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed]
-                (vals2, isAllZeros) = self.writeFloats13E(vals)
+                (vals2, isAllZeros) = writeFloats13E(vals)
                 [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed] = vals2
 
                 msg.append(' %13s   %13s  %13s  %13s  %13s  %13s  %13s  %-s\n' % (eid,

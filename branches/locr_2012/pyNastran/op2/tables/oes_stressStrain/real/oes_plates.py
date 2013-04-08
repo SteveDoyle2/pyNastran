@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from .oes_objects import StressObject, StrainObject
+from .oes_objects import StressObject, StrainObject, writeFloats13E, writeFloats8p4F
 
 
 class PlateStressObject(StressObject):
@@ -450,8 +450,8 @@ class PlateStressObject(StressObject):
                 major = self.majorP[eid][nid][iLayer]
                 minor = self.minorP[eid][nid][iLayer]
                 ovm = self.ovmShear[eid][nid][iLayer]
-                ([fd, oxx, oyy, txy, major, minor, ovm], isAllZeros) = self.writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
-                ([angle], isAllZeros) = self.writeFloats8p4F([angle])
+                ([fd, oxx, oyy, txy, major, minor, ovm], isAllZeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
+                ([angle], isAllZeros) = writeFloats8p4F([angle])
 
                 if iLayer == 0:
                     msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip())
@@ -722,8 +722,8 @@ class PlateStressObject(StressObject):
                 major = self.majorP[eid][nid][iLayer]
                 minor = self.minorP[eid][nid][iLayer]
                 ovm = self.ovmShear[eid][nid][iLayer]
-                ([fd, oxx, oyy, txy, major, minor, ovm], isAllZeros) = self.writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
-                ([angle], isAllZeros) = self.writeFloats8p4F([angle])
+                ([fd, oxx, oyy, txy, major, minor, ovm], isAllZeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
+                ([angle], isAllZeros) = writeFloats8p4F([angle])
 
                 if nid == 'C' and iLayer == 0:
                     msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, 'CEN/' + str(n), fd, oxx, oyy, txy, angle, major, minor, ovm)
@@ -751,8 +751,8 @@ class PlateStressObject(StressObject):
                 major = self.majorP[dt][eid][nid][iLayer]
                 minor = self.minorP[dt][eid][nid][iLayer]
                 ovm = self.ovmShear[dt][eid][nid][iLayer]
-                ([fd, oxx, oyy, txy, major, minor, ovm], isAllZeros) = self.writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
-                ([angle], isAllZeros) = self.writeFloats8p4F([angle])
+                ([fd, oxx, oyy, txy, major, minor, ovm], isAllZeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
+                ([angle], isAllZeros) = writeFloats8p4F([angle])
 
                 if nid == 'C' and iLayer == 0:
                     msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, 'CEN/' + str(n), fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip())
@@ -778,8 +778,8 @@ class PlateStressObject(StressObject):
                 major = self.majorP[eid][nid][iLayer]
                 minor = self.minorP[eid][nid][iLayer]
                 ovm = self.ovmShear[eid][nid][iLayer]
-                ([fd, oxx, oyy, txy, major, minor, ovm], isAllZeros) = self.writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
-                ([angle], isAllZeros) = self.writeFloats8p4F([angle])
+                ([fd, oxx, oyy, txy, major, minor, ovm], isAllZeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
+                ([angle], isAllZeros) = writeFloats8p4F([angle])
 
                 if iLayer == 0:
                     msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip())
@@ -800,8 +800,8 @@ class PlateStressObject(StressObject):
                 major = self.majorP[dt][eid][nid][iLayer]
                 minor = self.minorP[dt][eid][nid][iLayer]
                 ovm = self.ovmShear[dt][eid][nid][iLayer]
-                ([fd, oxx, oyy, txy, major, minor, ovm], isAllZeros) = self.writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
-                ([angle], isAllZeros) = self.writeFloats8p4F([angle])
+                ([fd, oxx, oyy, txy, major, minor, ovm], isAllZeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
+                ([angle], isAllZeros) = writeFloats8p4F([angle])
 
                 if iLayer == 0:
                     msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm)
@@ -1386,8 +1386,8 @@ class PlateStrainObject(StrainObject):
                 major = self.majorP[eid][nid][iLayer]
                 minor = self.minorP[eid][nid][iLayer]
                 evm = self.evmShear[eid][nid][iLayer]
-                ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = self.writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
-                ([angle], isAllZeros) = self.writeFloats8p4F([angle])
+                ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
+                ([angle], isAllZeros) = writeFloats8p4F([angle])
 
                 if nid == 'C' and iLayer == 0:
                     msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, 'CEN/' + str(n), fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
@@ -1415,8 +1415,8 @@ class PlateStrainObject(StrainObject):
                 minor = self.minorP[dt][eid][nid][iLayer]
                 evm = self.evmShear[dt][eid][nid][iLayer]
 
-                ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = self.writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
-                ([angle], isAllZeros) = self.writeFloats8p4F([angle])
+                ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
+                ([angle], isAllZeros) = writeFloats8p4F([angle])
 
                 if nid == 'C' and iLayer == 0:
                     msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, 'CEN/' + str(n), fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
@@ -1442,8 +1442,8 @@ class PlateStrainObject(StrainObject):
                 minor = self.minorP[eid][nid][iLayer]
                 evm = self.evmShear[eid][nid][iLayer]
 
-                ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = self.writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
-                ([angle], isAllZeros) = self.writeFloats8p4F([angle])
+                ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
+                ([angle], isAllZeros) = writeFloats8p4F([angle])
                 if iLayer == 0:
                     msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
                 else:
@@ -1465,8 +1465,8 @@ class PlateStrainObject(StrainObject):
                 minor = self.minorP[dt][eid][nid][iLayer]
                 evm = self.evmShear[dt][eid][nid][iLayer]
 
-                ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = self.writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
-                ([angle], isAllZeros) = self.writeFloats8p4F([angle])
+                ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
+                ([angle], isAllZeros) = writeFloats8p4F([angle])
                 if iLayer == 0:
                     msg += ('0  %6i   %13s     %13s  %13s  %13s   %8s   '
                             '%13s   %13s  %-s\n' % (eid, fd, exx, eyy, exy,

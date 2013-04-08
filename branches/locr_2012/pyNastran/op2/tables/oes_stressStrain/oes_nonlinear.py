@@ -2,7 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import isnan
 
-from .real.oes_objects import StressObject, StrainObject  # ,array
+from .real.oes_objects import StressObject, StrainObject, writeFloats13E
 
 
 class NonlinearQuadObject(StressObject):
@@ -166,7 +166,7 @@ class NonlinearQuadObject(StressObject):
                     es = self.es[dt][eid][i]
                     eps = self.eps[dt][eid][i]
                     ecs = self.ecs[dt][eid][i]
-                    ([oxx, oyy, ozz, txy, exx, eyy, es, eps, ecs, exx, eyy, ezz, exy], isAllZeros) = self.writeFloats13E([oxx, oyy, ozz, txy, exx, eyy, es, eps, ecs, exx, eyy, ezz, exy])
+                    ([oxx, oyy, ozz, txy, exx, eyy, es, eps, ecs, exx, eyy, ezz, exy], isAllZeros) = writeFloats13E([oxx, oyy, ozz, txy, exx, eyy, es, eps, ecs, exx, eyy, ezz, exy])
                     if i == 0:
                         msgT[eid].append('0 %9.3E %13s  %13s  %13s  %13s  %13s  %13s  %13s  %-s\n' % (dt, fd, oxx, oyy, ozz, txy, es, eps, ecs))
                     else:

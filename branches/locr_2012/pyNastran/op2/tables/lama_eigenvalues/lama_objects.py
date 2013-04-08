@@ -1,5 +1,5 @@
 from numpy import array
-from pyNastran.op2.resultObjects.op2_Objects import baseScalarObject
+from pyNastran.op2.resultObjects.op2_Objects import baseScalarObject, writeFloats13E
 #from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
 
 
@@ -44,22 +44,22 @@ class RealEigenvalues(baseScalarObject):
             self.addF06Line(line)
 
     def write_matlab(self, isubcase, f=None, isMagPhase=False):
-        iModesMsg = 'fem.eigenvalues(%i).iModes    = [' % (isubcase)
-        modesMsg = 'fem.eigenvalues(%i).modes     = [' % (isubcase)
-        orderMsg = 'fem.eigenvalues(%i).order     = [' % (isubcase)
-        omegaMsg = 'fem.eigenvalues(%i).radians   = [' % (isubcase)
-        cyclesMsg = 'fem.eigenvalues(%i).cycles    = [' % (isubcase)
-        massMsg = 'fem.eigenvalues(%i).mass      = [' % (isubcase)
-        stiffMsg = 'fem.eigenvalues(%i).stiffness = [' % (isubcase)
+        iModesMsg = 'fem.eigenvalues(%i).iModes    = [' % isubcase
+        modesMsg = 'fem.eigenvalues(%i).modes     = [' % isubcase
+        orderMsg = 'fem.eigenvalues(%i).order     = [' % isubcase
+        omegaMsg = 'fem.eigenvalues(%i).radians   = [' % isubcase
+        cyclesMsg = 'fem.eigenvalues(%i).cycles    = [' % isubcase
+        massMsg = 'fem.eigenvalues(%i).mass      = [' % isubcase
+        stiffMsg = 'fem.eigenvalues(%i).stiffness = [' % isubcase
 
         for (iMode, order) in sorted(self.extractionOrder.iteritems()):
-            iModesMsg += '%s,' % (iMode)
-            orderMsg += '%s,' % (order)
-            modesMsg += '%s,' % (self.eigenvalues[iMode])
-            omegaMsg += '%s,' % (self.radians[iMode])
-            cyclesMsg += '%s,' % (self.cycles[iMode])
-            massMsg += '%s,' % (self.generalizedMass[iMode])
-            stiffMsg += '%s,' % (self.generalizedStiffness[iMode])
+            iModesMsg += '%s,' % iMode
+            orderMsg += '%s,' % order
+            modesMsg += '%s,' % self.eigenvalues[iMode]
+            omegaMsg += '%s,' % self.radians[iMode]
+            cyclesMsg += '%s,' % self.cycles[iMode]
+            massMsg += '%s,' % self.generalizedMass[iMode]
+            stiffMsg += '%s,' % self.generalizedStiffness[iMode]
         f.write(iModesMsg + '];\n')
         f.write(orderMsg + '];\n')
         f.write(modesMsg + '];\n')
@@ -78,7 +78,7 @@ class RealEigenvalues(baseScalarObject):
             freq = self.cycles[iMode]
             mass = self.generalizedMass[iMode]
             stiff = self.generalizedStiffness[iMode]
-            ([eigen, omega, freq, mass, stiff], isAllZeros) = self.writeFloats13E([eigen, omega, freq, mass, stiff])
+            ([eigen, omega, freq, mass, stiff], isAllZeros) = writeFloats13E([eigen, omega, freq, mass, stiff])
             msg.append(' %8s  %8s       %13s       %13s       %13s       %13s       %13s\n' % (iMode, order, eigen, omega, freq, mass, stiff))
 
         msg.append(pageStamp + str(pageNum) + '\n')
@@ -141,8 +141,7 @@ class ComplexEigenvalues(baseScalarObject):
             eigen = self.eigenvalues[iMode]
             freq = self.cycles[iMode]
             damping = self.damping[iMode]
-            ([eigen, freq, damping], isAllZeros) = self.writeFloats13E(
-                [eigen, freq, damping])
+            ([eigen, freq, damping], isAllZeros) = writeFloats13E([eigen, freq, damping])
             msg.append(' %8s  %8s       %13s       %13s       %13s       %13s       %13s\n' % (iMode, order, eigen, freq, damping))
 
         msg.append(pageStamp + str(pageNum) + '\n')

@@ -192,8 +192,7 @@ class RealCBeamForce(scalarObject):  # 2-CBEAM
                     af = self.axial[dt][eid][sd]
                     ttrq = self.totalTorque[dt][eid][sd]
                     wtrq = self.warpingTorque[dt][eid][sd]
-                    (vals2, isAllZeros) = self.writeFloats13E([bm1,
-                                                               bm2, ts1, ts2, af, ttrq, wtrq])
+                    (vals2, isAllZeros) = writeFloats13E([bm1, bm2, ts1, ts2, af, ttrq, wtrq])
                     [bm1, bm2, ts1, ts2, af, ttrq, wtrq] = vals2
 
                     if sd == 0.:
@@ -221,8 +220,7 @@ class RealCBeamForce(scalarObject):  # 2-CBEAM
                 af = self.axial[eid][sd]
                 ttrq = self.totalTorque[eid][sd]
                 wtrq = self.warpingTorque[eid][sd]
-                (vals2, isAllZeros) = self.writeFloats13E(
-                    [bm1, bm2, ts1, ts2, af, ttrq, wtrq])
+                (vals2, isAllZeros) = writeFloats13E([bm1, bm2, ts1, ts2, af, ttrq, wtrq])
                 [bm1, bm2, ts1, ts2, af, ttrq, wtrq] = vals2
                 msg.append('0  %8i\n' % (eid))
                 msg.append('           %8i   %.3f   %13s %13s  %13s %13s  %13s  %13s  %-s\n' % (eid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq))
@@ -1003,8 +1001,7 @@ class RealCBARForce(scalarObject):  # 34-CBAR
                 ts1, ts2 = self.shear[dt][eid]
                 af = self.axial[dt][eid]
                 trq = self.torque[dt][eid]
-                (vals2, isAllZeros) = self.writeFloats13E([bm1a,
-                                                           bm2a, bm1b, bm2b, ts1, ts2, af, trq])
+                (vals2, isAllZeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
                 [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = vals2
                 msg.append('      %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
 #            1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
@@ -1448,7 +1445,7 @@ class RealPentaPressureForce(scalarObject):  # 77-PENTA_PR,78-TETRA_PR
                 vx, vy, vz = self.velocity[dt][eid]
                 pressure = self.pressure[dt][eid]
                 vals = [ax, ay, az, pressure]
-                (vals2, isAllZeros) = self.writeFloats13E(vals)
+                (vals2, isAllZeros) = writeFloats13E(vals)
                 [ax, ay, az, pressure] = vals2
                 eType = 'PENPR'
                 msg.append('0%13s    %5s               %13s             %13s             %13s             %-s\n' % (eid, eType, ax, ay, az, pressure))

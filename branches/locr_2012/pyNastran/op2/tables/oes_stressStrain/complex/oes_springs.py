@@ -123,8 +123,7 @@ class ComplexCelasStressObject(complexStressObject):
                     stressr = stress.real
                     stressi = stress.imag
 
-                (vals2, isAllZeros) = self.writeImagFloats13E(
-                    [stress], isMagPhase)
+                (vals2, isAllZeros) = writeImagFloats13E([stress], isMagPhase)
                 if i == 0:
                     elementID1 = elementID
                     [stress1Real, stress1Imag] = vals2

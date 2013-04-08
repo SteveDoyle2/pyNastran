@@ -1,4 +1,4 @@
-from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject, writeFloats13E
 
 
 class SPCForcesObject(TableObject):
@@ -25,7 +25,7 @@ class SPCForcesObject(TableObject):
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
             vals = [dx, dy, dz, rx, ry, rz]
-            (vals2, isAllZeros) = self.writeFloats13E(vals)
+            (vals2, isAllZeros) = writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
@@ -72,7 +72,6 @@ class SPCForcesObject(TableObject):
 
     def __repr__(self):
         return self.write_f06(['', ''], 'PAGE ', 1)[0]
-
         if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
@@ -134,7 +133,7 @@ class ComplexSPCForcesObject(ComplexTableObject):
 
             #vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
             vals = list(translation) + list(rotation)
-            (vals2, isAllZeros) = self.writeFloats13E(vals)
+            (vals2, isAllZeros) = writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))

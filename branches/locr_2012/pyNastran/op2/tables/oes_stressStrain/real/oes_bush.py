@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from .oes_objects import StressObject, StrainObject
+from .oes_objects import StressObject, StrainObject, writeFloats13E
 
 
 class BushStressObject(StressObject):
@@ -102,7 +102,7 @@ class BushStressObject(StressObject):
             (rx, ry, rz) = self.rotations[eid]
 
             vals = [tx, ty, tz, rx, ry, rz]
-            (vals2, isAllZeros) = self.writeFloats13E(vals)
+            (vals2, isAllZeros) = writeFloats13E(vals)
             [tx, ty, tz, rx, ry, rz] = vals2
             msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %-s\n' %
                        (eid, tx, ty, tz, rx, ry, rz.rstrip()))
@@ -124,7 +124,7 @@ class BushStressObject(StressObject):
                 (rx, ry, rz) = self.rotations[dt][eid]
 
                 vals = [tx, ty, tz, rx, ry, rz]
-                (vals2, isAllZeros) = self.writeFloats13E(vals)
+                (vals2, isAllZeros) = writeFloats13E(vals)
                 [tx, ty, tz, rx, ry, rz] = vals2
                 msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %-s\n' %
                            (eid, tx, ty, tz, rx, ry, rz.rstrip()))
@@ -321,7 +321,7 @@ class BushStrainObject(StrainObject):
             e4 = self.e4[eid]
             vals = [e1[0], e2[0], e3[0], e4[0], axial,
                     e1[1], e2[1], e3[1], e4[1]]
-            (vals2, isAllZeros) = self.writeFloats13E(vals)
+            (vals2, isAllZeros) = writeFloats13E(vals)
             [e10, e20, e30, e40, axial,
              e11, e21, e31, e41] = vals2
 
@@ -351,7 +351,7 @@ class BushStrainObject(StrainObject):
                 e4 = self.e4[eid]
                 vals = [e1[0], e2[0], e3[0], e4[0], axial,
                         e1[1], e2[1], e3[1], e4[1]]
-                (vals2, isAllZeros) = self.writeFloats13E(vals)
+                (vals2, isAllZeros) = writeFloats13E(vals)
                 [e10, e20, e30, e40,
                  e11, e21, e31, e41] = vals2
 

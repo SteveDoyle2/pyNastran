@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject, writeFloats13E
 
 
 class ComplexRodForce(scalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
@@ -402,8 +402,7 @@ class ComplexSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
                 forces.append(force)
                 #pack.append(eid)
                 #pack.append(f)
-                ([forceReal, forceImag], isAllZeros) = self.writeFloats13E(
-                    [force.real, force.imag])
+                ([forceReal, forceImag], isAllZeros) = writeFloats13E([force.real, force.imag])
 
                 line += '          %13s      %13s / %13s' % (
                     eid, forceReal, forceImag)

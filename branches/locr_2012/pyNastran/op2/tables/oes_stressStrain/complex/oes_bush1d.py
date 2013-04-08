@@ -140,7 +140,7 @@ class ComplexBush1DStressObject(StressObject):
 
             vals = [s1[0], s2[0], s3[0], s4[0], axial,
                     s1[1], s2[1], s3[1], s4[1], ]
-            (vals2, isAllZeros) = self.writeImagFloats13E(vals, isMagPhase)
+            (vals2, isAllZeros) = writeImagFloats13E(vals, isMagPhase)
             [s1ar, s2ar, s3ar, s4ar, axialr,
              s1br, s2br, s3br, s4br,
              s1ai, s2ai, s3ai, s4ai, axiali,
@@ -178,7 +178,7 @@ class ComplexBush1DStressObject(StressObject):
                 s4 = self.s4[dt][eid]
                 vals = [s1[0], s2[0], s3[0], s4[0], axial,
                         s1[1], s2[1], s3[1], s4[1], ]
-                (vals2, isAllZeros) = self.writeImagFloats13E(vals, isMagPhase)
+                (vals2, isAllZeros) = writeImagFloats13E(vals, isMagPhase)
                 [s1ar, s2ar, s3ar, s4ar, axialr,
                  s1br, s2br, s3br, s4br,
                  s1ai, s2ai, s3ai, s4ai, axiali,

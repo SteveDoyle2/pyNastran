@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from .oes_objects import StressObject, StrainObject
+from .oes_objects import StressObject, StrainObject, writeFloats13E
 
 
 class BeamStressObject(StressObject):
@@ -13,7 +13,7 @@ class BeamStressObject(StressObject):
      ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C
             1       1   0.000   -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04
                     2   1.000   -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04
-	@endcode
+    @endcode
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StressObject.__init__(self, data_code, isubcase)
@@ -191,8 +191,7 @@ class BeamStressObject(StressObject):
                 sMin = self.smin[eid][i]
                 SMt = self.MS_tension[eid][i]
                 SMc = self.MS_compression[eid][i]
-                (vals2, isAllZeros) = self.writeFloats13E([
-                    sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc])
+                (vals2, isAllZeros) = writeFloats13E([sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc])
                 (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
@@ -223,8 +222,8 @@ class BeamStressObject(StressObject):
                     sMin = self.smin[dt][eid][i]
                     SMt = self.MS_tension[dt][eid][i]
                     SMc = self.MS_compression[dt][eid][i]
-                    (vals2, isAllZeros) = self.writeFloats13E([sxc, sxd,
-                                                               sxe, sxf, sMax, sMin, SMt, SMc])
+                    (vals2, isAllZeros) = writeFloats13E([sxc, sxd,
+                                                          sxe, sxf, sMax, sMin, SMt, SMc])
                     (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                     msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
@@ -477,7 +476,7 @@ class BeamStrainObject(StrainObject):
                 sMin = self.smin[eid][i]
                 SMt = self.MS_tension[eid][i]
                 SMc = self.MS_compression[eid][i]
-                (vals2, isAllZeros) = self.writeFloats13E([
+                (vals2, isAllZeros) = writeFloats13E([
                     sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc])
                 (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
@@ -508,8 +507,8 @@ class BeamStrainObject(StrainObject):
                     sMin = self.smin[dt][eid][i]
                     SMt = self.MS_tension[dt][eid][i]
                     SMc = self.MS_compression[dt][eid][i]
-                    (vals2, isAllZeros) = self.writeFloats13E([sxc, sxd,
-                                                               sxe, sxf, sMax, sMin, SMt, SMc])
+                    (vals2, isAllZeros) = writeFloats13E([sxc, sxd,
+                                                          sxe, sxf, sMax, sMin, SMt, SMc])
                     (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                     msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 

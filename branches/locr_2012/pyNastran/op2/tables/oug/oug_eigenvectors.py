@@ -1,6 +1,6 @@
 from numpy import array
 
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject, writeFloats13E
 from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
 
 
@@ -16,31 +16,32 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
         2003      G      0.0            0.0            0.0            0.0            0.0            0.0
     @endcode
     """
-    def __init__(self, data_code, is_sort1, isubcase, iMode):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, iMode)
+    def __init__(self, data_code, is_sort1, isubcase, imode):
+        TableObject.__init__(self, data_code, is_sort1, isubcase, imode)
         #self.caseVal = mode
-        self.update_dt = self.updateMode
+        self.update_dt = self.update_mode
         #print "mode = %s" %(mode)
         #print "data_code = ",self.data_code
         self.set_data_members()
 
         #assert mode>=0.
         self.gridTypes = {}
-        #self.translations = {iMode: {}}
-        #self.rotations    = {iMode: {}}
+        self.translations = {imode: {}}
+        self.rotations    = {imode: {}}
 
-    def readF06Data(self, data_code, data):
-        iMode = data_code['mode']
-        if iMode not in self.translations:
-            self.updateMode(data_code, iMode)
+    def read_f06_data(self, data_code, data):
+        imode = data_code['mode']
+        if imode not in self.translations:
+            self.update_mode(data_code, imode)
 
         for line in data:
             (nid, gridType, t1, t2, t3, r1, r2, r3) = line
             self.gridTypes[nid] = gridType
-            self.translations[iMode][nid] = array([t1, t2, t3])
-            self.rotations[iMode][nid] = array([r1, r2, r3])
+            self.translations[imode][nid] = array([t1, t2, t3])
+            self.rotations[imode][nid] = array([r1, r2, r3])
+        assert self.eigrs[-1] == data_code['eigr']
 
-    def updateMode(self, data_code, iMode):
+    def update_mode(self, data_code, imode):
         """
         this method is called if the object
         already exits and a new time step is found
@@ -48,14 +49,14 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
         #assert mode>=0.
         self.data_code = data_code
         self.apply_data_code()
-        #self.caseVal = iMode
+        #self.caseVal = imode
         #print "mode = %s" %(str(mode))
-        self.addNewMode(iMode)
+        self.add_new_mode(imode)
         self.set_data_members()
 
-    def addNewMode(self, iMode):
-        self.translations[iMode] = {}
-        self.rotations[iMode] = {}
+    def add_new_mode(self, imode):
+        self.translations[imode] = {}
+        self.rotations[imode] = {}
 
     def eigenvalues(self):
         return self.eigrs
@@ -78,7 +79,9 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
         """
         msg = []
         hasCycle = hasattr(self, 'mode_cycle')
-
+        
+        #print "self.eigrs =", self.eigrs
+        #print "dir",dir(self)
         for i, (iMode, eigVals) in enumerate(sorted(self.translations.iteritems())):
             msg += header
             freq = self.eigrs[i]
@@ -97,7 +100,7 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
                 (rx, ry, rz) = rotation
 
                 vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, isAllZeros) = self.writeFloats13E(vals)
+                (vals2, isAllZeros) = writeFloats13E(vals)
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
             msg.append(pageStamp + str(pageNum) + '\n')
@@ -246,7 +249,7 @@ class realEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
                 (rx, ry, rz) = rotation
 
                 vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, isAllZeros) = self.writeFloats13E(vals)
+                (vals2, isAllZeros) = writeFloats13E(vals)
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
             msg.append(pageStamp + str(pageNum) + '\n')

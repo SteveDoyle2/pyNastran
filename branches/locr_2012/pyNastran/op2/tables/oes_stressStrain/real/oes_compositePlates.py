@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from .oes_objects import StressObject, StrainObject
+from .oes_objects import StressObject, StrainObject, writeFloats12E
 
 
 class CompositePlateStressObject(StressObject):
@@ -275,7 +275,7 @@ class CompositePlateStressObject(StressObject):
                 major = self.majorP[eid][iLayer]
                 minor = self.minorP[eid][iLayer]
                 ovm = self.ovmShear[eid][iLayer]
-                (vals2, isAllZeros) = self.writeFloats12E([o11, o22, t12, t1z, t2z, major, minor, ovm])
+                (vals2, isAllZeros) = writeFloats12E([o11, o22, t12, t1z, t2z, major, minor, ovm])
                 [o11, o22, t12, t1z, t2z, major, minor, ovm] = vals2
                 out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' % (eid, iLayer + 1, o11, o22, t12, t1z, t2z, angle, major, minor, ovm)
 
@@ -347,9 +347,9 @@ class CompositePlateStressObject(StressObject):
                     major = self.majorP[dt][eid][iLayer]
                     minor = self.minorP[dt][eid][iLayer]
                     ovm = self.ovmShear[dt][eid][iLayer]
-                    (vals2, isAllZeros) = self.writeFloats12E([o11, o22,
-                                                               t12, t1z, t2z,
-                                                               major, minor, ovm])
+                    (vals2, isAllZeros) = writeFloats12E([o11, o22,
+                                                          t12, t1z, t2z,
+                                                          major, minor, ovm])
                     [o11, o22, t12, t1z, t2z, major, minor, ovm] = vals2
                     out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' % (eid, iLayer + 1, o11, o22, t12, t1z, t2z, angle, major, minor, ovm)
 
@@ -652,8 +652,8 @@ class CompositePlateStrainObject(StrainObject):
                 minor = self.minorP[eid][iLayer]
                 evm = self.evmShear[eid][iLayer]
 
-                (vals2, isAllZeros) = self.writeFloats12E([e11,
-                                                           e22, e12, e1z, e2z, major, minor, evm])
+                (vals2, isAllZeros) = writeFloats12E([e11,
+                                                      e22, e12, e1z, e2z, major, minor, evm])
                 [e11, e22, e12, e1z, e2z, major, minor, evm] = vals2
                 out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' % (eid, iLayer + 1, e11, e22, e12, e1z, e2z, angle, major, minor, evm)
 
@@ -724,8 +724,8 @@ class CompositePlateStrainObject(StrainObject):
                     major = self.majorP[dt][eid][iLayer]
                     minor = self.minorP[dt][eid][iLayer]
                     evm = self.evmShear[dt][eid][iLayer]
-                    (vals2, isAllZeros) = self.writeFloats12E([e11, e22,
-                                                               e12, e1z, e2z, major, minor, evm])
+                    (vals2, isAllZeros) = writeFloats12E([e11, e22,
+                                                          e12, e1z, e2z, major, minor, evm])
                     [e11, e22, e12, e1z, e2z, major, minor, evm] = vals2
                     out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' % (eid, iLayer + 1, e11, e22, e12, e1z, e2z, angle, major, minor, evm)
 

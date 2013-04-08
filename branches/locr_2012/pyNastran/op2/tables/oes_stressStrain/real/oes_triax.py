@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from .oes_objects import StressObject, StrainObject
+from .oes_objects import StressObject, StrainObject, writeFloats13E
 
 
 class TriaxStressObject(StressObject):
@@ -180,7 +180,7 @@ class TriaxStressObject(StressObject):
                     Eid = eid
                 else:
                     Eid = ''
-                ([rad, azimuth, axial, shear, omax, oms, ovm], isAllZeros) = self.writeFloats13E([rad, azimuth, axial, shear, omax, oms, ovm])
+                ([rad, azimuth, axial, shear, omax, oms, ovm], isAllZeros) = writeFloats13E([rad, azimuth, axial, shear, omax, oms, ovm])
                 msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' % (Eid, nid, radial, azimuth, axial, shear, omax, oms, ovm.rstrip()))
             msg.append('\n')
 
@@ -215,7 +215,7 @@ class TriaxStressObject(StressObject):
                         Eid = eid
                     else:
                         Eid = ''
-                    ([rad, azimuth, axial, shear, omax, oms, ovm], isAllZeros) = self.writeFloats13E([rad, azimuth, axial, shear, omax, oms, ovm])
+                    ([rad, azimuth, axial, shear, omax, oms, ovm], isAllZeros) = writeFloats13E([rad, azimuth, axial, shear, omax, oms, ovm])
                     msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' % (Eid, nid, rad, azimuth, axial, shear, omax, oms, ovm.rstrip()))
                 msg.append('\n')
 
@@ -377,7 +377,7 @@ class TriaxStrainObject(StrainObject):
                     Eid = eid
                 else:
                     Eid = ''
-                ([rad, azimuth, axial, shear, emax, ems, evm], isAllZeros) = self.writeFloats13E([rad, azimuth, axial, shear, emax, ems, evm])
+                ([rad, azimuth, axial, shear, emax, ems, evm], isAllZeros) = writeFloats13E([rad, azimuth, axial, shear, emax, ems, evm])
                 msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' % (Eid, nid, radial, azimuth, axial, shear, emax, ems, evm.rstrip()))
             msg.append('\n')
 
@@ -412,7 +412,7 @@ class TriaxStrainObject(StrainObject):
                         Eid = eid
                     else:
                         Eid = ''
-                    ([rad, azimuth, axial, shear, emax, ems, evm], isAllZeros) = self.writeFloats13E([rad, azimuth, axial, shear, emax, ems, evm])
+                    ([rad, azimuth, axial, shear, emax, ems, evm], isAllZeros) = writeFloats13E([rad, azimuth, axial, shear, emax, ems, evm])
                     msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n'
                                % (Eid, nid, rad, azimuth, axial, shear, emax,
                                   ems, evm.rstrip()))

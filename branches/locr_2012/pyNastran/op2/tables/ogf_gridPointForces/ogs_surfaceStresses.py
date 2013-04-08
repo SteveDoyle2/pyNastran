@@ -1,4 +1,4 @@
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject, writeFloats13E
 
 
 class GridPointStressesObject(scalarObject):
@@ -185,7 +185,7 @@ class GridPointStressesObject(scalarObject):
                     eid = self.eids[eKey][iLoad]
 
                     vals = [f1, f2, f3, m1, m2, m3]
-                    (vals2, isAllZeros) = self.writeFloats13E(vals)
+                    (vals2, isAllZeros) = writeFloats13E(vals)
                     [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
                         eid = ''
@@ -389,7 +389,7 @@ class GridPointStressesVolumeObject(scalarObject):
                     eid = self.eids[eKey][iLoad]
 
                     vals = [f1, f2, f3, m1, m2, m3]
-                    (vals2, isAllZeros) = self.writeFloats13E(vals)
+                    (vals2, isAllZeros) = writeFloats13E(vals)
                     [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
                         eid = ''

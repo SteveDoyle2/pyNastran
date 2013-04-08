@@ -1,7 +1,7 @@
 #from struct import pack
 from numpy import array, sqrt, abs, angle  # dot,
 
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject, writeFloats13E
 
 try:
     from pylab import xlabel, ylabel, show, grid, legend, plot, title
@@ -253,7 +253,7 @@ class TableObject(scalarObject):  # displacement style table
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
             vals = [dx, dy, dz, rx, ry, rz]
-            (vals2, isAllZeros) = self.writeFloats13E(vals)
+            (vals2, isAllZeros) = writeFloats13E(vals)
             msgT += '[%s,%s,%s];' % (dx, dy, dz)
             msgR += '[%s,%s,%s];' % (rx, ry, rz)
             i += 1
@@ -340,7 +340,7 @@ class TableObject(scalarObject):  # displacement style table
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
             vals = [dx, dy, dz, rx, ry, rz]
-            (vals2, isAllZeros) = self.writeFloats13E(vals)
+            (vals2, isAllZeros) = writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n'
@@ -370,7 +370,7 @@ class TableObject(scalarObject):  # displacement style table
                 (dx, dy, dz) = translation
                 (rx, ry, rz) = rotation
                 vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, isAllZeros) = self.writeFloats13E(vals)
+                (vals2, isAllZeros) = writeFloats13E(vals)
                 if not isAllZeros:
                     [dx, dy, dz, rx, ry, rz] = vals2
                     msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
