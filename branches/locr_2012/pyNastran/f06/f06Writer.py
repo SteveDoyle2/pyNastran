@@ -71,7 +71,7 @@ def make_f06_header():
     return ''.join(lines1 + lines2)
 
 
-def makeEnd():
+def make_end():
     lines = [' \n'
              '1                                        * * * END OF JOB * * *\n'
              ' \n'
@@ -178,9 +178,8 @@ class F06Writer(object):
         for isubcase, result in sorted(self.eigenvectors.iteritems()):
             (subtitle, label) = self.iSubcaseNameMap[isubcase]
             subtitle = subtitle.strip()
-            header[0] = '     %s\n' % (subtitle)
+            header[0] = '     %s\n' % subtitle
             header[1] = '0                                                                                                            SUBCASE %i\n' % (isubcase)
-            print "*isubcase =", isubcase
             print(result.__class__.__name__)
             (msg, pageNum) = result.write_f06(header, pageStamp,
                                              pageNum=pageNum, f=f, isMagPhase=isMagPhase)
@@ -223,7 +222,6 @@ class F06Writer(object):
             iSubcases = self.iSubcaseNameMap.keys()
             #print("self.iSubcaseNameMap = %s" %(self.iSubcaseNameMap))
             for isubcase in sorted(iSubcases):
-                #print("***subcase = %s" %(isubcase))
                 (subtitle, label) = self.iSubcaseNameMap[isubcase]
                 subtitle = subtitle.strip()
                 label = label.strip()
@@ -254,7 +252,7 @@ class F06Writer(object):
                         del result
                     f.write(msg)
                     pageNum += 1
-        f.write(makeEnd())
+        f.write(make_end())
         if not makeFile:
             print(f.getvalue())
         f.close()
