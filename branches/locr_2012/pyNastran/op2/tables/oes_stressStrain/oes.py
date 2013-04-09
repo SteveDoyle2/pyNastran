@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 from struct import unpack
 
+from pyNastran import isRelease
 from .real.elementsStressStrain import RealElementsStressStrain
 from .real.oes_bars import BarStressObject, BarStrainObject
 from .real.oes_beams import BeamStressObject, BeamStrainObject
@@ -148,7 +149,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
         #if self.analysis_code==2: # sort2
         #    self.lsdvmn = self.get_values(data,'i',5)
 
-        if not self.is_sort1():
+        if not self.is_sort1() and not isRelease:
             raise NotImplementedError('sort2...')
 
         self.read_title()
@@ -250,7 +251,11 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             return
         
         if not self.is_sort1():
-            raise NotImplementedError('SORT2')
+            if isRelease:
+                self.not_implemented_or_skip('skipping OES SORT2')
+            else:
+                raise NotImplementedError('SORT2')
+            
 
         if self.table_name in ['OES1', 'OES1X', 'OES1X1', 'OES1C',
                               'OESNLXR', 'OESNLXD', 'OESNL1X', 'OESCP', 'OESTRCP',
@@ -269,10 +274,13 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             else:
                 self.not_implemented_or_skip('bad OES-thermal table')
         elif self.table_name in ['OESRT']:
-            if self.table_code == 25:  # failure indices for layered composite elements
-                self.readOESRT_Data()
-            else:
+            if isRelease:
                 self.not_implemented_or_skip('bad OESRT table')
+            else:
+                if self.table_code == 25:  # failure indices for layered composite elements
+                    self.readOESRT_Data()
+                else:
+                    self.not_implemented_or_skip('bad OESRT table')
         else:
             self.not_implemented_or_skip('bad OES table')
 
@@ -815,15 +823,19 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                 self.not_implemented_or_skip()
 
         elif self.element_type in [85, 91, 93]: # CTETRANL 85 / CPENTANL 91 / CHEXANL 93
-            print('not done...')
+            #print('not done...')
             resultName = self.makeOES_Object(self.solidStress, SolidStressObject, 'solidStress',
                                              self.solidStrain, SolidStrainObject, 'solidStrain')
             self.handle_results_buffer(self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, resultName)
         elif self.element_type in [145, 146, 147]: # VUHEXA 145 / VUPENTA 146 / VUTETRA 147
-            print('only the first type read, not parsed...')
-            resultName = self.makeOES_Object(self.solidStress, SolidStressObject, 'solidStress',
-                                             self.solidStrain, SolidStrainObject, 'solidStrain')
-            self.handle_results_buffer(self.OES_VUHEXA_145_VUPENTA_146_VUTETRA_147, resultName)
+            if isRelease:
+                self.not_implemented_or_skip()
+                return
+            else:
+                #print('only the first type read, not parsed...')
+                resultName = self.makeOES_Object(self.solidStress, SolidStressObject, 'solidStress',
+                                                 self.solidStrain, SolidStrainObject, 'solidStrain')
+                self.handle_results_buffer(self.OES_VUHEXA_145_VUPENTA_146_VUTETRA_147, resultName)
 
         elif self.element_type in [95, 96, 97, 98]:  # CQUAD4, CQUAD8, CTRIA3, CTRIA6 (composite)
             self.eid2 = None  # stores the previous elementID

@@ -2,7 +2,7 @@
 from numpy import array, sqrt, abs, angle  # dot,
 
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
-from pyNastran.f06.f06_formatting import writeFloats13E
+from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 try:
     from pylab import xlabel, ylabel, show, grid, legend, plot, title
@@ -91,7 +91,7 @@ class TableObject(scalarObject):  # displacement style table
         self.translations[dt] = {}
         self.rotations[dt] = {}
 
-    #def addBinary(self,device_code,data):
+    #def add_binary(self,device_code,data):
         #(nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
         #msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
         #assert -1<nodeID<1000000000,msg
@@ -129,7 +129,7 @@ class TableObject(scalarObject):  # displacement style table
         self.translations[dt][nodeID] = array([v1, v2, v3])  # dx,dy,dz
         self.rotations[dt][nodeID] = array([v4, v5, v6])  # rx,ry,rz
 
-    def addSort2(self, nodeID, out):
+    def add_sort2(self, nodeID, out):
         (dt, gridType, v1, v2, v3, v4, v5, v6) = out
         if dt not in self.translations:
             self.add_new_transient(dt)
@@ -146,7 +146,7 @@ class TableObject(scalarObject):  # displacement style table
         self.translations[dt][nodeID] = array([v1, v2, v3])  # dx,dy,dz
         self.rotations[dt][nodeID] = array([v4, v5, v6])  # rx,ry,rz
 
-    #def writeOp2(self,block3,device_code=1):
+    #def write_op2(self,block3,device_code=1):
         #"""
         #creates the binary data for writing the table
         #@warning hasnt been tested...
@@ -160,7 +160,7 @@ class TableObject(scalarObject):  # displacement style table
             #msg += pack('iffffff',grid,dx,dy,dz,rx,ry,rz)
         #return msg
 
-    #def writeOp2Transient(self,block3,device_code=1):
+    #def write_op2_transient(self,block3,device_code=1):
     #    """
     #    creates the binary data for writing the table
     #    @warning hasnt been tested...
@@ -181,7 +181,7 @@ class TableObject(scalarObject):  # displacement style table
     #            msg += pack('iffffff',grid,dx,dy,dz,rx,ry,rz)
     #    return msg
 
-    def writeHeader(self):
+    def write_header(self):
         #(mainHeaders,headers) = self.getHeaders()
         mainHeaders = ('nodeID', 'gridType')
         headers = ('T1', 'T2', 'T3', 'R1', 'R2', 'R3')
@@ -191,10 +191,10 @@ class TableObject(scalarObject):  # displacement style table
         msg += '\n'
         return msg
 
-    def getAsSort1(self):
+    def get_as_sort1(self):
         return (self.translations, self.rotations)
 
-    def getAsSort2(self):
+    def get_as_sort2(self):
         """returns translations and rotations in sort2 format"""
         translations2 = {}
         rotations2 = {}
@@ -331,7 +331,7 @@ class TableObject(scalarObject):  # displacement style table
             msgT = ''
             msgR = ''
 
-    def _writeF06Block(self, words, header, pageStamp, pageNum=1, f=None):
+    def _write_f06_block(self, words, header, pageStamp, pageNum=1, f=None):
         msg = words
         #assert f is not None # remove
         for nodeID, translation in sorted(self.translations.iteritems()):
@@ -383,7 +383,7 @@ class TableObject(scalarObject):  # displacement style table
             pageNum += 1
         return (''.join(msg), pageNum - 1)
 
-    def getTableMarker(self):
+    def get_table_marker(self):
         if self.isATO():
             words = self.ATO_words()
         elif self.isCRM():
@@ -625,7 +625,7 @@ class ComplexTableObject(scalarObject):
         self.translations[dt][nodeID] = [v1, v2, v3]  # dx,dy,dz
         self.rotations[dt][nodeID] = [v4, v5, v6]  # rx,ry,rz
 
-    def addSort2(self, nodeID, data):
+    def add_sort2(self, nodeID, data):
         [dt, gridType, v1, v2, v3, v4, v5, v6] = data
 
         if dt not in self.translations:
@@ -694,7 +694,7 @@ class ComplexTableObject(scalarObject):
             f.write(msgT)
             f.write(msgR)
 
-    def _writeF06Block(self, words, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_block(self, words, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         #words += self.getTableMarker()
         if isMagPhase:
             words += ['                                                         (MAGNITUDE/PHASE)\n', ]
@@ -712,7 +712,7 @@ class ComplexTableObject(scalarObject):
             (rx, ry, rz) = rotation
 
             vals = [dx, dy, dz, rx, ry, rz]
-            (vals2, isAllZeros) = self.writeImagFloats13E(vals)
+            (vals2, isAllZeros) = writeImagFloats13E(vals)
             [dxr, dyr, dzr, rxr, ryr, rzr, dxi, dyi, dzi, rxi,
                 ryi, rzi] = vals2
             msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
@@ -749,7 +749,7 @@ class ComplexTableObject(scalarObject):
                 (rx, ry, rz) = rotation
 
                 vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, isAllZeros) = self.writeImagFloats13E(vals, isMagPhase)
+                (vals2, isAllZeros) = writeImagFloats13E(vals, isMagPhase)
                 [dxr, dyr, dzr, rxr, ryr, rzr, dxi, dyi,
                     dzi, rxi, ryi, rzi] = vals2
                 if not isAllZeros:

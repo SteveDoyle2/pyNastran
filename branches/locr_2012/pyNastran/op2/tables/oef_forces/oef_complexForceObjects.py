@@ -642,7 +642,7 @@ class ComplexPlateForce(scalarObject):  # 33-CQUAD4, 74-CTRIA3
         return str(self.mx)
 
 
-class ComplexPLATE2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
+class ComplexPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         scalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
@@ -808,7 +808,7 @@ class ComplexPLATE2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         return str(self.mx)
 
 
-class ComplexCBARForce(scalarObject):  # 34-CBAR
+class ComplexCBarForce(scalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         scalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
@@ -838,7 +838,7 @@ class ComplexCBARForce(scalarObject):  # 34-CBAR
             nelements = len(self.torque)
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
-        msg.append('  bendingMomentA, bendingMomentB, shear, axial, torque\n')
+        msg.append('  bendingMomentA, bendingMomentB, shes, axial, torque\n')
         return msg
 
     def add_new_transient(self, dt):
@@ -1101,7 +1101,7 @@ class ComplexPentaPressureForce(scalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TET
         return str(self.acceleration)
 
 
-class ComplexCBUSHForce(scalarObject):  # 102-CBUSH
+class ComplexCBushForce(scalarObject):  # 102-CBUSH
     def __init__(self, data_code, is_sort1, isubcase, dt):
         scalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}

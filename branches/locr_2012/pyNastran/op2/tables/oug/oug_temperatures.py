@@ -98,7 +98,7 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
         self.gridTypes[nodeID] = gridType
         self.temperatures[dt][nodeID] = v1
 
-   # def writeOp2(self,block3,device_code=1):
+   # def write_op2(self,block3,device_code=1):
    #     """
    #     creates the binary data for writing the table
    #     @warning hasnt been tested...
@@ -109,7 +109,7 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
    #         msg += pack('iffffff',grid,T,0,0,0,0,0)
    #     return msg
    #
-   # def writeOp2Transient(self,block3,device_code=1):
+   # def write_op2_transient(self,block3,device_code=1):
    #     """
    #     creates the binary data for writing the table
    #     @warning hasnt been tested...
@@ -126,7 +126,7 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
    #             msg += pack('iffffff',grid,T,0,0,0,0,0)
    #     return msg
 
-    def writeHeader(self):
+    def write_header(self):
         mainHeaders = ('nodeID', 'GridType')
         headers = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6']
 
@@ -138,7 +138,7 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
 
     def __reprTransient__(self):
         msg = '---TRANSIENT TEMPERATURE---\n'
-        msg += self.writeHeader()
+        msg += self.write_header()
 
         for dt, temperatures in sorted(self.temperatures.iteritems()):
             msg += '%s = %g\n' % (self.data_code['name'], dt)
@@ -162,7 +162,7 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
                 dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
                 header[2] = dtLine
                 msg += header + words
-                msg += self.printTempLines(temperatures)
+                msg += self.print_temp_lines(temperatures)
                 msg.append(pageStamp + str(pageNum) + '\n')
                 if f is not None:
                     f.write(''.join(msg))
@@ -170,14 +170,14 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
                 pageNum += 1
             return(''.join(msg), pageNum - 1)  # transient
 
-        msg += self.printTempLines(self.temperatures)
+        msg += self.print_temp_lines(self.temperatures)
         msg.append(pageStamp + str(pageNum) + '\n')
         if f is not None:
             f.write(''.join(msg))
             msg = ['']
         return(''.join(msg), pageNum)  # static
 
-    def printTempLines(self, temperatures):
+    def print_temp_lines(self, temperatures):
         msg = []
         ipack = []
         oldNodeID = -1
@@ -190,15 +190,15 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
                 ipack.append(T)
             else:
                 if oldNodeID > 0:
-                    msg += self.printPack(ipack)
+                    msg += self.print_pack(ipack)
                 oldGridType = gridType
                 oldNodeID = nodeID
                 ipack = [nodeID, gridType, T]
         if ipack:
-            msg += self.printPack(ipack)
+            msg += self.print_pack(ipack)
         return msg
 
-    def printPack(self, ipack):
+    def print_pack(self, ipack):
         msg = []
         nID = ipack[0]
         gType = ipack[1]
@@ -219,7 +219,7 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
             return self.__reprTransient__()
 
         msg = '---TEMPERATURE---\n'
-        msg += self.writeHeader()
+        msg += self.write_header()
         #print "self.data_code=",self.data_code
         for nodeID, T in sorted(self.temperatures.iteritems()):
             gridType = self.gridTypes[nodeID]

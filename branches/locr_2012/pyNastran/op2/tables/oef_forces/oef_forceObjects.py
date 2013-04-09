@@ -1,6 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class RealRodForce(scalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
@@ -757,7 +758,7 @@ class RealPlateForce(scalarObject):  # 33-CQUAD4, 74-CTRIA3
         return str(self.mx)
 
 
-class RealPLATE2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
+class RealPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         scalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
@@ -786,12 +787,11 @@ class RealPLATE2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.mx)
-            try:
+            if ntimes == 0:
+                nelements = 0
+            else:
                 time0 = self.mx.keys()[0]
-            except:
-                print("self.mx.keys = ",self.mx.keys())
-                raise
-            nelements = len(self.mx[time0])
+                nelements = len(self.mx[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
@@ -912,7 +912,7 @@ class RealPLATE2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         return str(self.mx)
 
 
-class RealCBARForce(scalarObject):  # 34-CBAR
+class RealCBarForce(scalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         scalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
@@ -1017,7 +1017,7 @@ class RealCBARForce(scalarObject):  # 34-CBAR
         return str(self.axial)
 
 
-class RealCBAR100Force(scalarObject):  # 100-CBAR
+class RealCBar100Force(scalarObject):  # 100-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         scalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
@@ -1175,7 +1175,7 @@ class RealConeAxForce(scalarObject):  # 35-CCONEAX
         return str(self.hopa)
 
 
-class RealCGAPForce(scalarObject):  # 38-CGAP
+class RealCGapForce(scalarObject):  # 38-CGAP
     def __init__(self, data_code, is_sort1, isubcase, dt):
         scalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
@@ -1460,7 +1460,7 @@ class RealPentaPressureForce(scalarObject):  # 77-PENTA_PR,78-TETRA_PR
         return str(self.acceleration)
 
 
-class RealCBUSHForce(scalarObject):  # 102-CBUSH
+class RealCBushForce(scalarObject):  # 102-CBUSH
     def __init__(self, data_code, is_sort1, isubcase, dt):
         scalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}

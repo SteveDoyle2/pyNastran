@@ -5,7 +5,7 @@ from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 #class staticFluxObj(scalarObject): # approach_code=1, table_code=3 - whatever the static version of this is...
 
 
-class fluxObject(scalarObject):  # approach_code=1, table_code=3, thermal=1
+class FluxObject(scalarObject):  # approach_code=1, table_code=3, thermal=1
     def __init__(self, data_code, isubcase, dt=None):
         scalarObject.__init__(self, data_code, isubcase)
 
@@ -29,7 +29,7 @@ class fluxObject(scalarObject):  # approach_code=1, table_code=3, thermal=1
         assert nodeID not in self.fluxes
         self.fluxes[nodeID] = array([v1, v2, v3])
 
-    def writeOp2(self, block3, device_code=1):
+    def write_op2(self, block3, device_code=1):
         """
         creates the binary data for writing the table
         @warning hasnt been tested...
@@ -47,12 +47,12 @@ class fluxObject(scalarObject):  # approach_code=1, table_code=3, thermal=1
         msg = '---HEAT FLUX---\n'
         msg += '%-10s %-8s %-8s %-8s\n' % ('NodeID', 'xFlux', 'yFlux', 'zFlux')
         for nodeID, flux in sorted(self.fluxes.iteritems()):
-            msg += '%10i ' % (nodeID)
+            msg += '%10i ' % nodeID
 
             for val in flux:
                 if abs(val) < 1e-6:
-                    msg += '%10s' % (0)
+                    msg += '%10s' % 0
                 else:
-                    msg += '%10.3e ' % (val)
+                    msg += '%10.3e ' % val
             msg += '\n'
         return msg

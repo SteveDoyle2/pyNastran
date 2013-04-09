@@ -146,7 +146,7 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
         return msg
 
 
-class realEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, thermal=0
+class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, thermal=0
     """
     @code
                                          R E A L   E I G E N V E C T O R   N O .          1
@@ -167,7 +167,7 @@ class realEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
         self.translations = {iMode: {}}
         self.rotations = {iMode: {}}
 
-    def addNewMode(self, iMode):
+    def add_new_mode(self, iMode):
         self.translations[iMode] = {}
         self.rotations[iMode] = {}
 
@@ -294,7 +294,7 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
     def __init__(self, data_code, is_sort1, isubcase, iMode):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, iMode)
         self.caseVal = iMode
-        self.update_dt = self.updateMode
+        self.update_dt = self.update_mode
         self.set_data_members()
 
         #print "mode = %s" %(mode)
@@ -304,7 +304,7 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
         #self.translations = {iMode: {}}
         #self.rotations    = {iMode: {}}
 
-    def updateMode(self, data_code, iMode):
+    def update_mode(self, data_code, iMode):
         """
         this method is called if the object
         already exits and a new time step is found
@@ -315,9 +315,9 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
         self.apply_data_code()
         self.set_data_members()
         #print "mode = %s" %(str(mode))
-        self.addNewMode(iMode)
+        self.add_new_mode(iMode)
 
-    def addNewMode(self, iMode):
+    def add_new_mode(self, iMode):
         self.translations[iMode] = {}
         self.rotations[iMode] = {}
 

@@ -19,15 +19,15 @@ class DisplacementObject(TableObject):  # approach_code=1, thermal=0
         words = ['                                             D I S P L A C E M E N T   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        words += self.getTableMarker()
-        return self._writeF06Block(words, header, pageStamp, pageNum, f)
+        words += self.get_table_marker()
+        return self._write_f06_block(words, header, pageStamp, pageNum, f)
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         words = ['                                             D I S P L A C E M E N T   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        words += self.getTableMarker()
-        return self.__write_f06_transientBlock(words, header, pageStamp, pageNum, f)
+        words += self.get_table_marker()
+        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f)
 
     def __repr__(self):
         if self.nonlinear_factor is not None:
@@ -94,11 +94,11 @@ class ComplexDisplacementObject(ComplexTableObject):  # approach_code=1, sort_co
             return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
 
         words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n']
-        return self._writeF06Block(words, header, pageStamp, pageNum, f, isMagPhase)
+        return self._write_f06_block(words, header, pageStamp, pageNum, f, isMagPhase)
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n']
-        return self.__write_f06_transientBlock(words, header, pageStamp, pageNum, f, isMagPhase)
+        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f, isMagPhase)
 
     def __repr__(self):
         return self.write_f06(['', '', ''], 'PAGE ', 1)[0]

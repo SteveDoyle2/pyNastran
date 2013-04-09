@@ -18,14 +18,14 @@ class VelocityObject(TableObject):  # approach_code=10, thermal=0
         words = ['                                                   V E L O C I T Y   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        words += self.getTableMarker()
-        return self._writeF06Block(words, header, pageStamp, pageNum, f)
+        words += self.get_table_marker()
+        return self._write_f06_block(words, header, pageStamp, pageNum, f)
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         words = ['                                                   V E L O C I T Y   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        words += self.getTableMarker()
+        words += self.get_table_marker()
         return self._write_f06_transient_block(words, header, pageStamp, pageNum, f)
 
     def __repr__(self):
@@ -91,7 +91,7 @@ class ComplexVelocityObject(ComplexTableObject):  # table_code=10, approach_code
             return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
 
         words = ['                                       C O M P L E X   V E L O C I T Y   V E C T O R\n']
-        return self._writeF06Block(words, header, pageStamp, pageNum, f, isMagPhase)
+        return self._write_f06_block(words, header, pageStamp, pageNum, f, isMagPhase)
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         words = ['                                       C O M P L E X   V E L O C I T Y   V E C T O R\n']

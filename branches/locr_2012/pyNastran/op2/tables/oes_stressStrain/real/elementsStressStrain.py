@@ -2,6 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from struct import unpack
+from pyNastran import isRelease
 
 #91  -> PENTANL
 #2   -> BEAM
@@ -12,13 +13,15 @@ from struct import unpack
 class RealElementsStressStrain(object):
 
     def skipOES_Element(self):
+        if not isRelease:
+           raise NotImplementedError(self.code_information())
+
         self.log.debug('skipping approach_code=%s, table_code=%s, format_code-%s '
                        'sort_code=%s on %s table' % (self.analysis_code,
                        self.table_code, self.format_code, self.sort_code,
                        self.table_name))
-        print(self.code_information())
-        print("**************skipping**************")
-        #asdf
+        #print(self.code_information())
+        #print("**************skipping**************")
         self.handle_results_buffer(self.dummyPass, None, debug=True)
 
     def dummyPass(self):
@@ -549,7 +552,7 @@ class RealElementsStressStrain(object):
                 #print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" % (eid,cType,sx,sy,sz,sxy,syz,sxz,se)
                 #print "gid=%3s ecs=%.3g   ex=%.3g ey=%.3g ez=%.3g exy=%.3g eyz=%.3g ezx=%.3g"  % (grid,ecs,ex,ey,ez,exy,eyz,exz)
                 #assert cType == 'GRID',cType
-                print("cType =", cType)
+                #print("cType =", cType)
 
     def OES_VUHEXA_145_VUPENTA_146_VUTETRA_147(self):  # VUHEXA 145 / 
         """
@@ -562,7 +565,6 @@ class RealElementsStressStrain(object):
         (format1, extract) = self.getOUG_FormatStart()
         format1 += 'i'
         format1 = bytes(format1)
-        
         
         if self.element_type == 147:
             eType = 'VUTETRA'

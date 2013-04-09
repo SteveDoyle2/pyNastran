@@ -3,25 +3,25 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 from struct import unpack
 
-
+from pyNastran import isRelease
 from .realForces import RealForces
 from .complexForces import ComplexForces
 
 
 from .oef_forceObjects import (RealRodForce, RealCBeamForce, RealCShearForce,
                                RealSpringForce, RealDamperForce, RealViscForce,
-                               RealPlateForce, RealConeAxForce, RealPLATE2Force,
-                               RealCBAR100Force, RealCGAPForce, RealBendForce,
-                               RealPentaPressureForce, RealCBUSHForce,
-                               RealForce_VU_2D, RealCBARForce, RealForce_VU)
+                               RealPlateForce, RealConeAxForce, RealPlate2Force,
+                               RealCBar100Force, RealCGapForce, RealBendForce,
+                               RealPentaPressureForce, RealCBushForce,
+                               RealForce_VU_2D, RealCBarForce, RealForce_VU)
 from .oef_complexForceObjects import (ComplexRodForce, ComplexCBeamForce,
                                       ComplexCShearForce, ComplexSpringForce,
                                       ComplexDamperForce, ComplexViscForce,
-                                      ComplexPlateForce, ComplexPLATE2Force,
+                                      ComplexPlateForce, ComplexPlate2Force,
                                       ComplexBendForce,
                                       ComplexPentaPressureForce,
-                                      ComplexCBUSHForce, ComplexForce_VU_2D,
-                                      ComplexCBARForce, ComplexForce_VU)
+                                      ComplexCBushForce, ComplexForce_VU_2D,
+                                      ComplexCBarForce, ComplexForce_VU)
 from .thermal_elements import ThermalElements
 
 
@@ -135,7 +135,10 @@ class OEF(ThermalElements, RealForces, ComplexForces):
         #    self.loadID = self.get_values(data,'i',5) ## load set ID number
 
         if not self.is_sort1():
-            raise NotImplementedError('sort2...')
+            if isRelease:
+                self.not_implemented_or_skip('skipping OES SORT2')
+            else:
+                raise NotImplementedError('SORT2')
 
         #print "*isubcase=%s"%(self.isubcase)
         #print "analysis_code=%s table_code=%s thermal=%s" %(self.analysis_code,self.table_code,self.thermal)
@@ -386,28 +389,28 @@ class OEF(ThermalElements, RealForces, ComplexForces):
         elif self.element_type in [64, 70, 75, 82, 144]:  # CQUAD8,CTRIAR,CTRIA6,CQUADR,CQUAD4-bilinear
             resultName = 'plateForces2'
             if self.num_wide == numWideReal:
-                self.create_transient_object(self.plateForces2, RealPLATE2Force)
+                self.create_transient_object(self.plateForces2, RealPlate2Force)
                 self.handle_results_buffer(self.OEF_Plate2, resultName)
             elif self.num_wide == numWideImag:
                 self.create_transient_object(
-                    self.plateForces2, ComplexPLATE2Force)
+                    self.plateForces2, ComplexPlate2Force)
                 self.handle_results_buffer(self.OEF_Plate2_alt, resultName)
             else:
                 self.not_implemented_or_skip()
         elif self.element_type in [34]:  # CBAR
             resultName = 'barForces'
             if self.num_wide == numWideReal:
-                self.create_transient_object(self.barForces, RealCBARForce)
+                self.create_transient_object(self.barForces, RealCBarForce)
                 self.handle_results_buffer(self.OEF_CBar, resultName)
             elif self.num_wide == numWideImag:
-                self.create_transient_object(self.barForces, ComplexCBARForce)
+                self.create_transient_object(self.barForces, ComplexCBarForce)
                 self.handle_results_buffer(self.OEF_CBar_alt, resultName)
             else:
                 self.not_implemented_or_skip()
         elif self.element_type in [100]:  # CBAR
             resultName = 'barForces'
             if self.num_wide == numWideReal:
-                self.create_transient_object(self.bar100Forces, RealCBAR100Force)
+                self.create_transient_object(self.bar100Forces, RealCBar100Force)
                 self.handle_results_buffer(self.OEF_CBar100, resultName)
             elif self.num_wide == numWideImag:
                 self.handle_results_buffer(self.OEF_CBar100_alt, resultName)
@@ -416,7 +419,7 @@ class OEF(ThermalElements, RealForces, ComplexForces):
         elif self.element_type in [38]:  # CGAP
             resultName = 'gapForces'
             if self.num_wide == numWideReal:
-                self.create_transient_object(self.gapForces, RealCGAPForce)
+                self.create_transient_object(self.gapForces, RealCGapForce)
                 self.handle_results_buffer(self.OEF_CGap, resultName)
             elif self.num_wide == numWideImag:
                 self.handle_results_buffer(self.OEF_CGap_alt, resultName)
@@ -456,10 +459,10 @@ class OEF(ThermalElements, RealForces, ComplexForces):
         elif self.element_type in [102]:  # CBUSH
             resultName = 'bushForces'
             if self.num_wide == numWideReal:
-                self.create_transient_object(self.bushForces, RealCBUSHForce)
+                self.create_transient_object(self.bushForces, RealCBushForce)
                 self.handle_results_buffer(self.OEF_CBush, resultName)
             elif self.num_wide == numWideImag:
-                self.create_transient_object(self.bushForces, ComplexCBUSHForce)
+                self.create_transient_object(self.bushForces, ComplexCBushForce)
                 self.handle_results_buffer(self.OEF_CBush_alt, resultName)
             else:
                 self.not_implemented_or_skip()

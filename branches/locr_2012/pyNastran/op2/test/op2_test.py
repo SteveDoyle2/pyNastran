@@ -57,10 +57,10 @@ if __name__=='__main__':
     makeGeom  = False
     writeBDF  = False
     write_f06  = True
-    writeMatlab = False
+    write_matlab = False
     print_results = False
 
-    deleteF06 = True
+    delete_f06 = True
     saveCases = True
     regenerate = False
     stopOnFailure = False
@@ -85,7 +85,7 @@ if __name__=='__main__':
         pass
 
     print("nFiles = %s" %(len(files)))
-    run_lots_of_files(files,makeGeom,writeBDF,write_f06,writeMatlab,deleteF06,
+    run_lots_of_files(files,makeGeom,writeBDF,write_f06,write_matlab,delete_f06,
                    print_results,debug,saveCases,skipFiles,stopOnFailure,
                    nStart,nStop)
     sys.exit('final stop...')
