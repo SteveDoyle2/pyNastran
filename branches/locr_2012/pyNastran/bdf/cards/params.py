@@ -30,3 +30,6 @@ class PARAM(BaseCard):
     def rawFields(self):
         list_fields = ['PARAM', self.key, self.value]
         return list_fields
+
+    def reprFields(self):
+        return self.rawFields()

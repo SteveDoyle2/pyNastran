@@ -653,6 +653,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             line = line.rstrip('\n\r\t ')
             if len(line) > 0:
                 self.executive_control_lines.append(line)
+
+            comment = _clean_comment(comment.rstrip(), end=None)
+            if comment:
+                self.executive_control_lines.append(comment[:-1])
             lineUpper = line.upper()
 
         if 'CEND' in lineUpper[:4]:
@@ -940,9 +944,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             lines = []
             comments = []
 
-            c = ''
+            #c = ''
+            comment = _clean_comment(comment)
             if comment:
-                c=' comment=|%s|' % comment.strip()
+                #c=' comment=|%s|' % comment.strip()
                 comments.append(comment)
             #print "lineA1 %s line=|%s|%s" % (i, line.strip(), c)
             
@@ -961,9 +966,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                     if line:
                         break
 
-                    c = ''
+                    #c = ''
+                    comment = _clean_comment(comment)
                     if comment:
-                        c=' comment=|%s|' % comment.strip()
+                        #c=' comment=|%s|' % comment.strip()
                         comments.append(comment)
                     #print "lineA2 %s line=|%s|%s" % (i, line.strip(), c)
                 Is.append(i)
@@ -971,7 +977,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 if comment:
                     comments.append(comment)
             assert len(lines) == 1, lines
+            #if 'PBARL' in lines[0]:
             #print "===end of block 1 (get first line)===; lines=%r" % lines
+            #pass
 
             #print "lines =",lines
 
@@ -983,7 +991,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 try:
                     (i, line, comment) = self.gen_get_line.next()
                 except StopIteration:
-                    #print "*yielding lines=%r comments=%s" %(lines, comments)
                     #print "stored_lines = ", self.stored_lines
                     assert self.stored_lines == []
                     assert self.stored_comments == []
@@ -992,6 +999,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                     #self.stored_lines = []
                     #self.stored_comments = []
                     comment = ''.join(comments)
+                    #if 'PBARL' in lines[0]:
+                    #print "*yielding lines=%r comments=%s" %(lines, comments)
                     yield lines, comment
 
             if comment:  c=' comment=|%s|' % comment.strip()
@@ -1009,25 +1018,53 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             # If the line is a continuation line, keep going.
             in_loop = False
             #print "checkline = %r" % line
+            
+            Is2 = []
+            lines2 = []
+            comments2 = []
             while len(line)==0 or line[0] in [' ', '*', '+', ',']:
                 in_loop = True
                 #print "into the loop!"
-                Is.append(i)
-                lines.append(line)
-                #sys.exit('into the loop')
-                if comment:
-                    comments.append(comment)
-                
+                if len(line):
+                    if Is2:
+                        Is += Is2
+                        lines += lines2
+                        comments += comments2
+                    Is.append(i)
+                    lines.append(line)
+                    
+                    Is2 = []
+                    lines2 = []
+                    comments2 = []
+                    comment = _clean_comment(comment)
+                    if comment:
+                        comments.append(comment)
+                else:
+                    Is2.append(i)
+                    lines2.append(line)
+                    comment = _clean_comment(comment)
+                    if comment:
+                        comments2.append(comment)
+
                 if comment:  c=' comment=|%s|' % comment.strip()
                 #print "lineD %s line=|%s|%s" % (i, line.strip(), c)
                 (i, line, comment) = self.gen_get_line.next()
                 #print "len(line)=%s line[0]=%r" % (len(line), line[0])
 
+            if Is2:
+                self.stored_Is = Is2
+                self.stored_lines = lines2
+                self.stored_comments = comments2
+            #Is2 = []
+            #lines2 = []
+            #comments2 = []
+
             c = ''
             if comment:  c=' comment=|%s|' % comment.strip()
             #print "lineD2 %s line=|%s|%s" % (i, line.strip(), c)
+            #if 'PBARL' in lines[0]:
             #print '===end of block 2 (done with continuation lines)=== lines=%r comments=%s' % (lines, comments)
-            #print '===end of block 2 (done with continuation lines)=== lines=%r' % (lines)
+            #pass
 
             #if not in_loop:
                 #self.stored_Is.append(i)
@@ -1043,6 +1080,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 #print "storing line..."
                 self.stored_Is.append(i)
                 self.stored_lines.append(line)
+                comment = _clean_comment(comment)
                 if comment:
                     self.stored_comments.append(comment)
             #if comment:
@@ -1053,6 +1091,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             
             lines2 = clean_empty_lines(lines)
             comment = ''.join(comments)
+            #if 'PBARL' in lines[0]:
+                #print "*yielding lines2=%r comments=%s" %(lines2, comments)
             yield lines2, comment
             #print '--------------------------'
 
@@ -1079,6 +1119,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         n = 1
         isDone = False
         for (lines, comment) in self.gen_get_card:
+            card_name = self.get_card_name(lines)
+            #if card_name == 'EIGRL':
+                #assert comment == '', comment
+                #aaaa
+            #if n>8:
+                #bbbb
             assert isinstance(comment, str) or isinstance(comment, unicode), type(comment)
             #comment = ''.join(comments)
             #print "*asdf*lines = %r" % lines
@@ -1516,13 +1562,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         msg.append('')
         return '\n'.join(msg)
 
-def _clean_comment(comment):
+
+def _clean_comment(comment, end=-1):
     """
     Removes specific pyNastran comment lines so duplicate lines aren't
     created.
     @param comment the comment to possibly remove
     """
-    if comment[:-1] in ['$NODES', '$SPOINTS', '$ELEMENTS',
+    if comment[:end] in ['$EXECUTIVE CONTROL DECK',
+                   '$CASE CONTROL DECK',
+                   '$NODES', '$SPOINTS', '$ELEMENTS',
                    '$PARAMS', '$PROPERTIES', '$ELEMENTS_WITH_PROPERTIES',
                    '$ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
                    '$UNASSOCIATED_PROPERTIES',

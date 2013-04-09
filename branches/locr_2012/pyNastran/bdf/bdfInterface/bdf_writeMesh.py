@@ -72,7 +72,7 @@ class WriteMesh(WriteMeshDeprecated):
                 msg += element.writeAsCTRIA3(nextEID)
                 nextEID += 1
             else:
-                msg += str(element)
+                msg += element.print_card(size)
         return msg
 
     def _write_dmigs(self, size):
@@ -275,7 +275,7 @@ class WriteMesh(WriteMeshDeprecated):
         if self.nodes:
             msg = ['$NODES\n']
             if self.gridSet:
-                msg.append(str(self.gridSet))
+                msg.append(self.gridSet.print_card(size))
             for (nid, node) in sorted(self.nodes.iteritems()):
                 msg.append(node.print_card(size))
 
@@ -333,7 +333,7 @@ class WriteMesh(WriteMeshDeprecated):
             msg = ['$ELEMENTS\n']
             for (eid, element) in sorted(self.elements.iteritems()):
                 try:
-                    msg.append(str(element))
+                    msg.append(element.print_card(size))
                 except:
                     print('failed printing element...'
                           'type=%s eid=%s' % (element.type, eid))
@@ -347,7 +347,7 @@ class WriteMesh(WriteMeshDeprecated):
             msg = ['$RIGID ELEMENTS\n']
             for (eid, element) in sorted(self.rigidElements.iteritems()):
                 try:
-                    msg.append(str(element))
+                    msg.append(element.print_card(size))
                 except:
                     print('failed printing element...'
                           'type=%s eid=%s' % (element.type, eid))
@@ -380,7 +380,7 @@ class WriteMesh(WriteMeshDeprecated):
                 for eid in eids:
                     element = self.Element(eid)
                     try:
-                        msg.append(str(element))
+                        msg.append(element.print_card(size))
                     except:
                         print('failed printing element...'
                               'type=%s eid=%s' % (element.type, eid))
@@ -397,7 +397,7 @@ class WriteMesh(WriteMeshDeprecated):
             for eid in sorted(eids_missing):
                 element = self.Element(eid)
                 try:
-                    msg.append(str(element))
+                    msg.append(element.print_card(size))
                 except:
                     print('failed printing element...'
                           'type=%s eid=%s' % (element.type, eid))
