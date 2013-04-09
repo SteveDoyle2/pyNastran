@@ -305,16 +305,17 @@ def get_element_stats(fem1, fem2):
                 A = e.Area()
                 mL = e.MassPerLength()
                 m = e.Mass()
+                c = e.Centroid()
+                mid = e.Mid()
+                pid = e.Pid()
                 I22 = e.I22()
                 I11 = e.I11()
                 I12 = e.I12()
                 J = e.J()
-                c = e.Centroid()
-                mid = e.Mid()
-                pid = e.Pid()
-                if J is None:
+                msg = 'mass=%r I11=%r I22=%r I12=%r J=%r' % (m, I11, I22, I12, J)
+                if None in [m, I11, I22, I12, J]:
                     print("Moment of Inertia not available - e.type=%s "
-                          "e.eid=%i" % (e.type, e.eid))
+                          "e.eid=%i\n" % (e.type, e.eid) + msg)
             elif isinstance(e, RodElement):  # CROD, CONROD, CTUBE
                 L = e.Length()
                 nsm = e.Nsm()

@@ -652,6 +652,11 @@ class CBAR(LineElement):
         assert isinstance(A, float)
         return A
 
+    def J(self):
+        j = self.pid.J()
+        assert isinstance(j, float), 'J=%r for CBAR eid=%s pid=%s pidType=%s' % (j, self.eid, self.pid.pid, self.pid.type)
+        return j
+
     def Length(self):
         L = norm(self.gb.Position() - self.ga.Position())
         assert isinstance(L, float)

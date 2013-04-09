@@ -226,12 +226,15 @@ class LineProperty(Property):
         return (A, Iyy, Izz, Iyz)
 
     def I1(self):
-        return self.I1_I2()[0]
+        return self.I1_I2_I12()[0]
 
     def I2(self):
-        return self.I1_I2()[1]
+        return self.I1_I2_I12()[1]
 
-    def I1_I2(self):
+    def I12(self):
+        return self.I1_I2_I12()[2]
+
+    def I1_I2_I12(self):
         """
         @code
         BAR
@@ -250,10 +253,19 @@ class LineProperty(Property):
         @endcode
         """
         dim = self.dim
-        if self.Type == 'BAR':
+        if self.Type == 'ROD':
+            R = dim[0]
+            A = pi * R ** 2
+            I1 = A * R ** 2 / 4.
+            I2 = I1
+            I12 = 0.
+        elif self.Type == 'BAR':
             I1 = 1 / 12. * dim[0] * dim[1] ** 3
             I2 = 1 / 12. * dim[1] * dim[0] ** 3
-        return(I1, I2)
+            I12 = 0.
+        else:
+            raise NotImplementedError(self.Type)
+        return(I1, I2, I12)
 
     def areaL(self, dim):
         """
@@ -263,7 +275,7 @@ class LineProperty(Property):
         @retval Area of the given cross section
         """
         try:
-            if   self.Type == 'ROD':
+            if self.Type == 'ROD':
                 A = pi * dim[0] ** 2
             elif self.Type == 'TUBE':
                 A = pi * (dim[0] ** 2 - dim[1] ** 2)
@@ -885,16 +897,46 @@ class PBARL(LineProperty):
         return area * rho + nsm
 
     def I11(self):
-        return None
+        return self.I1()
+        if self.Type in ['ROD']:
+            assert len(self.dim) == 1, 'dim=%r' % self.dim
+            r = self.dim[0]
+            #Ix = pi*r**4/4.
+            #J = pi*r**4/2.
+            (Ix, Iy, Ixy) = self.I1_I2_I12()
+            
+        elif self.Type in ['BAR']:
+            assert len(self.dim) == 2, 'dim=%r' % self.dim
+            b, h = self.dim
+            #Ix = self.I11()
+            #Iy = self.I22()
+            (Ix, Iy, Ixy) = self.I1_I2_I12()
+            #print
+            
+            #J = Ix + Iy
+        return Ix
+        raise RuntimeError('who is calling this...')
 
-    def I12(self):
-        return None
+    #def I12(self):
+        #return self.I12()
 
     def J(self):
-        return None
+        if self.Type in ['ROD']:
+            assert len(self.dim) == 1, 'dim=%r' % self.dim
+            r = self.dim[0]
+            J = pi*r**4/2.
+        elif self.Type in ['BAR']:
+            assert len(self.dim) == 2, 'dim=%r' % self.dim
+            b, h = self.dim
+            (Ix, Iy, Ixy) = self.I1_I2_I12()
+            J = Ix + Iy
+        else:
+            msg = 'J for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
+            raise NotImplementedError(msg)
+        return J
 
     def I22(self):
-        return None
+        return self.I2()
 
     def writeCodeAster(self, iCut=0, iFace=0, iStart=0):  # PBARL
         msg = '# BAR Type=%s pid=%s\n' % (self.type, self.pid)
