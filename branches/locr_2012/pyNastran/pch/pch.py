@@ -3,12 +3,18 @@ import sys
 
 
 class PCH(object):
-    def __init__(self):
+    def __init__(self, pch_filename, makeGeom=False, debug=False):
+        self.pch_filename = pch_filename
+        self.eigenvalues = {}
+        self.displacements = {}
+        self.velocities = {}
+        self.accelerations = {}
+
+    def set_subcases(self, isubcases):
         pass
 
-    def readPCH(self, pchName):
-        self.pchName = pchName
-        with open(self.pchName, 'r') as pch:
+    def read_pch(self):
+        with open(self.pch_filename, 'r') as pch:
     
             for line in pch.readline()[:72]:
                 headerLines = []
@@ -36,32 +42,37 @@ class PCH(object):
                         print "key=|%s| value=|%s|" % (key, value)
     
                 if 'REAL OUTPUT' in headers:  # MAGNITUDE-PHASE OUTPUT
-                    print "real",
+                    print "***real",
                     if 'DISPLACEMENTS' in headers:
                         print "displacements"
                         print pch.readline().strip(), '***'
-                        line = readRealTable(pch, line)
+                        line = read_real_table(pch, line)
                     elif 'VELOCITY' in headers:
                         print "velocity"
-                        line = readRealTable(pch, line)
+                        line = read_real_table(pch, line)
                     elif 'ACCELERATION' in headers:
                         print "acceleration"
-                        line = readRealTable(pch, line)
+                        line = read_real_table(pch, line)
+                    elif 'EIGENVALUE' in headers:
+                        print "eigenvalue"
+                        line = read_real_table(pch, line)
                     #elif 'OLOADS' in headers:
                         #print "oloads"
                     else:
-                        raise NotImplementedError(headers.keys())
+                        msg = 'headerkeys RealOutput = %r' % headers.keys()
+                        raise NotImplementedError(msg)
                 elif 'REAL-IMAGINARY OUTPUT':
                     print "real-imaginary"
                 else:
-                    raise NotImplementedError(headers.keys())
+                    msg = 'headerkeys = %r' % headers.keys()
+                    raise NotImplementedError(msg)
                 sys.exit('done')
     
                 if line == '':  # end of file
                     break
 
 
-def readRealTable(pch, line):
+def read_real_table(pch, line):
     """
     reads displacemnt, velocity, acceleration, spc/mpc forces,
     temperature, load vector
@@ -73,16 +84,15 @@ def readRealTable(pch, line):
     lines = []
     while '$' not in line:
         line = pch.readline()
-        print "?|%s|" % (line)
+        print "?|%s|" % line
         lines.append(line)
-
     print '\n'.join(lines)
     return line
 
 if __name__ == '__main__':
     pch = PCH()
     pchname = 'nltnln02.pch'
-    pch.readPCH(pchname)
+    pch.read_pch(pchname)
 
 #$TITLE   = QUADR -- THICK CYLINDER ( NU = 0.4999 )                             1
 #$SUBTITLE= QAJOB-Q404K003                                                      2
