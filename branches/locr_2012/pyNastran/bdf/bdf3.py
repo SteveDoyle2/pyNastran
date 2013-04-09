@@ -97,53 +97,6 @@ if 0:
     from .bdfInterface.crossReference import XrefMesh
 
 
-class BDFDeprecated(object):
-    def readBDF(self, bdf_filename, include_dir=None, xref=True, punch=False):
-        """
-        @see read_bdf
-        @warning will be removed after v0.7 in favor of read_bdf
-        """
-        warnings.warn('readBDF has been deprecated; use '
-                      'read_bdf', DeprecationWarning, stacklevel=2)
-        self.read_bdf(bdf_filename, include_dir, xref, punch)
-
-    def updateSolution(self, sol, method=None):
-        """
-        @see update_solution
-        @warning will be removed after v0.7 in favor of update_solution
-        """
-        warnings.warn('updateSolution has been deprecated; use '
-                      'update_solution', DeprecationWarning, stacklevel=2)
-        self.update_solution(sol, method)
-
-    def setDynamicSyntax(self, dictOfVars):
-        """
-        @see set_dynamic_syntax
-        @warning will be removed after v0.7 in favor of set_dynamic_syntax
-        """
-        warnings.warn('setDynamicSyntax has been deprecated; use '
-                      'set_dynamic_syntax', DeprecationWarning, stacklevel=2)
-        self.set_dynamic_syntax(dictOfVars)
-
-    def addCard(self, card, cardName, iCard=0, oldCardObj=None):
-        """
-        @see add_card
-        @warning will be removed after v0.7 in favor of add_card
-        """
-        warnings.warn('addCard has been deprecated; use add_card',
-                      DeprecationWarning, stacklevel=2)
-        return self.add_card(card, cardName, icard=iCard,
-                             old_card_obj=oldCardObj)
-
-    def disableCards(self, cards):
-        """
-        @see disable_cards
-        @warning will be removed after v0.7 in favor of disable_cards
-        """
-        warnings.warn('disableCards has been deprecated; use '
-                      'disable_cards', DeprecationWarning, stacklevel=2)
-        self.disable_cards(cards)
-   
 class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated):
     """
     NASTRAN BDF Reader/Writer/Editor class.
@@ -763,13 +716,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             return
         self.log.info("reading Case Control Deck...")
         line = ''
-        while len(self.active_filenames) > 0:  # keep going until finished
-            (i, lineIn, comment) = self.gen_get_line.next()
+        while self.active_filename:  # keep going until finished
+            #print "top of loop"
+            try:
+                (i, lineIn, comment) = self.gen_get_line.next()
+            except StopIteration:
+                self._close_file()
+                if self.active_filename:
+                    continue
             if lineIn is None:
                 return  # file was closed
             line = lineIn.strip().split('$')[0].strip()
             lineUpper = line.upper()
-            #print("lineUpper = |%s|" % lineUpper)
+           #print("lineUpper = %r" % str(lineUpper))
             if lineUpper.startswith('INCLUDE'):
                 #print("INCLUDE!!!")
                 (i, next_line, comment) = self.gen_get_line.next()
@@ -939,6 +898,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         #print '--------------------------'
         for (i, line, comment) in self.gen_get_line:
+            #-----------------------------------------------------------------
+            # get the first line of the card
             #print "new card...line =|%s|" % line
             Is = []
             lines = []
@@ -983,6 +944,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
             #print "lines =",lines
 
+            #-----------------------------------------------------------------
             # get another line
             #print "*lineC %s line=|%s|%s" % (i, line.strip(), c)
             if 0:
@@ -1002,17 +964,20 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                     #if 'PBARL' in lines[0]:
                     #print "*yielding lines=%r comments=%s" %(lines, comments)
                     yield lines, comment
+                    continue
 
             if comment:  c=' comment=|%s|' % comment.strip()
             #print "lineC %s line=|%s|%s" % (i, line.strip(), c)
             #print "lines =",lines
             #print ""
             
+            #-----------------------------------------------------------------
             # We define a continuation by either a regular,
-            # large field, small field, or csv formatted line.
+            # large field, small field, tab, or CSV formatted line.
             # Large field - a * is in the first character
             # Small field - a + or ' ' is in the first character
             #               or the line is blank
+            # Tab - tab separated value; large or small formatted line
             # CSV - comma separated value; large or small formatted line
 
             # If the line is a continuation line, keep going.
@@ -1022,7 +987,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             Is2 = []
             lines2 = []
             comments2 = []
-            while len(line)==0 or line[0] in [' ', '*', '+', ',']:
+            while len(line)==0 or line[0] in [' ', '*', '+', ',', '\t']:
                 in_loop = True
                 #print "into the loop!"
                 if len(line):
@@ -1050,7 +1015,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 #print "lineD %s line=|%s|%s" % (i, line.strip(), c)
                 (i, line, comment) = self.gen_get_line.next()
                 #print "len(line)=%s line[0]=%r" % (len(line), line[0])
+            #if not in_loop:
+                #print "len(line)=%i line=%r" % (len(line), line)
 
+            # the extra lines we grabbed in the while loop should go on the
+            # next card
             if Is2:
                 self.stored_Is = Is2
                 self.stored_lines = lines2
@@ -1063,6 +1032,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             if comment:  c=' comment=|%s|' % comment.strip()
             #print "lineD2 %s line=|%s|%s" % (i, line.strip(), c)
             #if 'PBARL' in lines[0]:
+            #print '===end of block 2 (done with continuation lines)=== lines=%r' % lines
             #print '===end of block 2 (done with continuation lines)=== lines=%r comments=%s' % (lines, comments)
             #pass
 
@@ -1073,8 +1043,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 #print "non-continuation line = ", line
                 #print "lines = ", lines
 
+            #-----------------------------------------------------------------
             # We maybe got one too many lines
-            if line[0] not in [' ', '*', '+', ',']:
+            if line[0] not in [' ', '*', '+', ',', '\t']:
             #if in_loop:
                 #print "stored_lines =", self.stored_lines
                 #print "storing line..."
@@ -1092,7 +1063,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             lines2 = clean_empty_lines(lines)
             comment = ''.join(comments)
             #if 'PBARL' in lines[0]:
-                #print "*yielding lines2=%r comments=%s" %(lines2, comments)
+            #print "*yielding lines2=%r" % lines2
+            #print "*yielding lines2=%r comments=%s" %(lines2, comments)
             yield lines2, comment
             #print '--------------------------'
 
@@ -1237,7 +1209,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
         if self._auto_reject:
             self.reject_cards.append(card)
-            print('rejecting processed %s' % (card))
+            print('rejecting processed %s' % card)
             return card_obj
         try:
             # cards that have their own method add_CARDNAME to add them

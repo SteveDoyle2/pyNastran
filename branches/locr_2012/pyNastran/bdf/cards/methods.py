@@ -442,7 +442,8 @@ class EIGRL(Method):
             else:
                 self.norm = string_or_blank(card, 8, 'norm')
 
-            assert len(card) <= 9, 'len(EIGRL card) = %i' % len(card)
+            #assert len(card) <= 9, 'len(EIGRL card) = %i' % len(card)
+            assert len(card) <= 10, 'len(EIGRL card) = %i' % len(card)
 
             #msg = 'norm=%s sol=%s' % (self.norm, sol)
             #assert self.norm in ['MASS', 'MAX'],msg

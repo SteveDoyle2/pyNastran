@@ -593,19 +593,28 @@ class DVPREL2(OptConstraint):
             iDesStop = iEnd
 
         self.dvids = []
-        self.dtables = []
         if iDesvar:
+            n = 1
             for i in xrange(10, iDesStop):
-                dvid = integer(card, i, 'dvid')
+                dvid_name = 'DVID' + str(n)
+                dvid = integer_or_blank(card, i, dvid_name)
+                #print("%s = %s" % (dvid_name, dvid))
                 if dvid:
+                    assert dvid is not None
+                    assert dvid is not 'DESVAR'
                     self.dvids.append(dvid)
+                    n += 1
 
+        self.labels = []
         if iDTable:
+            n = 1
             for i in xrange(iDTable + 1, iEnd):
-                dtable = integer(card, i, 'dtable')
-                if dtable:
-                    assert dtable is not 'DTABLE'
-                    self.dtables.append(dtable)
+                label_name = 'Label' + str(n)
+                label = string(card, i, label_name)
+                #print("%s = %s" % (label_name, label))
+                if label:
+                    assert label is not 'DTABLE'
+                    self.labels.append(label)
 
     def Pid(self):
         if isinstance(self.pid, int):
@@ -628,8 +637,8 @@ class DVPREL2(OptConstraint):
         if self.dvids:
             fields2 = ['DESVAR'] + self.dvids
             list_fields += self.buildTableLines(fields2, nStart=1, nEnd=0)
-        if self.dtables:
-            fields2 = ['DTABLE'] + self.dtables
+        if self.labels:
+            fields2 = ['DTABLE'] + self.labels
             list_fields += self.buildTableLines(fields2, nStart=1, nEnd=0)
         return list_fields
 

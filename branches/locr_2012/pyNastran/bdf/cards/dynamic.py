@@ -360,7 +360,7 @@ class NLPARM(BaseCard):
             self.nid = integer(card, 1, 'nid')
             self.ninc = integer_or_blank(card, 2, 'ninc', 10)
             self.dt = double_or_blank(card, 3, 'dt', 0.0)
-            self.kMethod = double_or_blank(card, 4, 'kMethod', 'AUTO')
+            self.kMethod = string_or_blank(card, 4, 'kMethod', 'AUTO')
             self.kStep = integer_or_blank(card, 5, 'kStep', 5)
             self.maxIter = integer_or_blank(card, 6, 'maxIter', 25)
             self.conv = string_or_blank(card, 7, 'conv', 'PW')

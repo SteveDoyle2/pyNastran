@@ -16,8 +16,8 @@ from itertools import izip, count
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
-from pyNastran.bdf.assign_type import (integer, #integer_or_blank,
-    double, double_or_blank, components, components_or_blank, fields)
+from pyNastran.bdf.assign_type import (integer, integer_or_double, integer_double_or_blank, integer_or_blank,
+    double, double_or_blank, components, components_or_blank, blank, fields)
 
 
 class RigidElement(Element):
@@ -361,6 +361,7 @@ class RBE3(RigidElement):  ## @todo: not done, needs testing badly
         if comment:
             self._comment = comment
         self.eid = integer(card, 1, 'eid')
+        blank(card, 2, 'blank')
         self.refgrid = integer(card, 3, 'refgrid')
         self.refc = components_or_blank(card, 4, 'refc')
         #iUM = fields.index('UM')
@@ -389,20 +390,33 @@ class RBE3(RigidElement):  ## @todo: not done, needs testing badly
         self.WtCG_groups = []
 
         i = iOffset
+        n = 1
         while i < iWtMax:
             Gij = []
-            wt = double(card, i, 'wt')
+            wtname = 'wt' + str(n)
+            wt = double_or_blank(card, i, wtname)
             if wt is not None:
-                ci = components_or_blank(card, i + 1, 'ci')
-                #print "wt=%s ci=%s" %(wt,ci)
+                cname = 'c'+str(n)
+                ci = components_or_blank(card, i + 1, cname)
+                
+                #print("%s=%s %s=%s" % (wtname, wt, cname, ci))
                 i += 2
                 gij = 0
+                
+                j = 0
                 while isinstance(gij, int) and i < iWtMax:
-                    gij = integer(card, i, 'gij')
+                    j += 1
+                    gij_name = 'g%s,%s' % (n, j)
+                    gij = integer_double_or_blank(card, i, gij_name)
+                    if isinstance(gij, float):
+                        break
+                    #print("%s = %s" % (gij_name, gij))
                     if gij is not None:
                         Gij.append(gij)
                     i += 1
-                self.WtCG_groups.append([wt, ci, Gij])
+                wtCG_group = [wt, ci, Gij]
+                self.WtCG_groups.append(wtCG_group)
+                #print('----finished a group=%r----' % wtCG_group)
             else:
                 i += 1
 
@@ -410,12 +424,17 @@ class RBE3(RigidElement):  ## @todo: not done, needs testing badly
         self.Cmi = []
         #print ""
         if iUm:
+            #print('UM =', card.field(iUm))  # UM
             i = iUm + 1
-            #print "i=%s iUmStop=%s" %(i,iUmStop)
+            n = 1
+            #print("i=%s iUmStop=%s" % (i,iUmStop))
             for j in xrange(i, iUmStop, 2):
-                gmi = integer(card, j, 'gmi')
+                
+                gm_name = 'gm' + str(n)
+                cm_name = 'cm' + str(n)
+                gmi = integer_or_blank(card, j, gm_name)
                 if gmi is not None:
-                    cmi = components(card, j + 1, 'cmi')
+                    cmi = components(card, j + 1, cm_name)
                     #print "gmi=%s cmi=%s" %(gmi,cmi)
                     self.Gmi.append(gmi)
                     self.Cmi.append(cmi)

@@ -87,12 +87,8 @@ from .bdfInterface.bdf_writeMesh import WriteMesh
 from .bdfInterface.bdf_cardMethods import interpret_value
 from .bdfInterface.crossReference import XrefMesh
 
-class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
-    """
-    NASTRAN BDF Reader/Writer/Editor class.
-    """
-    modelType = 'nastran'
 
+class BDFDeprecated(object):
     def readBDF(self, bdf_filename, include_dir=None, xref=True, punch=False):
         """
         @see read_bdf
@@ -138,6 +134,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         warnings.warn('disableCards has been deprecated; use '
                       'disable_cards', DeprecationWarning, stacklevel=2)
         self.disable_cards(cards)
+   
+
+class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated):
+    """
+    NASTRAN BDF Reader/Writer/Editor class.
+    """
+    modelType = 'nastran'
+
 
     def __init__(self, debug=True, log=None):
         """
@@ -146,6 +150,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         @param debug used to set the logger if no logger is passed in
         @param log a python logging module object
         """
+        asdf
         self.active_file = None
         self.active_files = []
         self.active_filenames = []
