@@ -129,19 +129,27 @@ class BaseCard(object):
             raise
 
 
-def Mid(self):
-    if isinstance(self.mid, int):
-        return self.mid
-    else:
-        return self.mid.mid
-
+#def Mid(self):
+    #if isinstance(self.mid, int):
+        #return self.mid
+    #elif self.mid is None:
+        #print ("No material defined for property ", self.pid)
+        #return None
+    #else:
+        #return self.mid.mid
 
 class Property(BaseCard):
     def __init__(self, card, data):
         assert card is None or data is None
 
     def Mid(self):
-        return Mid(self)
+        if isinstance(self.mid, int):
+            return self.mid
+        elif self.mid is None:
+            print ("No material defined for property ", self.pid)
+            return None
+        else:
+            return self.mid.mid
 
     def isSameCard(self, prop, debug=False):
         if self.type != prop.type:
@@ -200,6 +208,9 @@ class Element(BaseCard):
         """returns the property ID of an element"""
         if isinstance(self.pid, int):
             return self.pid
+        elif self.pid is None:
+            print ("No property defined for element ", self.eid)
+            return None
         else:
             return self.pid.pid
 

@@ -158,8 +158,8 @@ class MPT(object):
         """
         #print "reading MAT10"
         while len(data) >= 20:  # 5*4
-            data = data[20:]
             out = unpack(b'iffff', data[:20])
+            data = data[20:]
             (mid, bulk, rho, c, ge) = out
             self.addOp2Material(MAT10(None, out))
 

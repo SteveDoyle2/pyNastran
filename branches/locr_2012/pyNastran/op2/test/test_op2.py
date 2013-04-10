@@ -94,8 +94,8 @@ def run_op2(op2FileName, makeGeom=False, writeBDF=False, write_f06=True,
         #op2.write_bdf_as_patran()
         op2.read_op2()
         print("---stats for %s---" % op2FileName)
-        op2.get_op2_stats()
-        #print(op2.get_op2_stats())
+        #op2.get_op2_stats()
+        print(op2.get_op2_stats())
         if writeBDF:
             op2.write_bdf_as_patran()
         #tableNamesF06 = parse_table_names_from_F06(op2.f06FileName)

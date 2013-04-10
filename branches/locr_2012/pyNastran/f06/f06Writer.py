@@ -205,14 +205,48 @@ class F06Writer(object):
                     self.barForces, self.beamForces, self.springForces, self.damperForces,
                     self.solidPressureForces,
 
-                    self.rodStrain, self.nonlinearRodStress, self.barStrain, self.plateStrain, self.nonlinearPlateStrain, self.compositePlateStrain, self.solidStrain,
-                    self.beamStrain, self.ctriaxStrain, self.hyperelasticPlateStress,
+                    #------------------------------------------
+                    # OES - strain
 
-                    self.rodStress, self.nonlinearRodStrain, self.barStress, self.plateStress, self.nonlinearPlateStress, self.compositePlateStress, self.solidStress,
-                    self.bush1dStressStrain, self.beamStress, self.ctriaxStress, self.hyperelasticPlateStrain,
+                    # rods
+                    self.rodStrain, self.nonlinearRodStress, 
+                    
+                    
+                    # bars/beams
+                    self.barStrain, self.beamStrain, 
+                    
+                    # bush
+                    self.bushStrain,
+                    
+                    # plates
+                    self.plateStrain, self.compositePlateStrain,
+                    self.nonlinearPlateStrain,
+                    self.ctriaxStrain, self.hyperelasticPlateStress,
+                    
+                    # solids
+                    self.solidStrain,
 
-                    # beam, shear...not done
-                    #self.shearStrain,self.shearStress,
+                    #------------------------------------------
+                    # OES - stress
+                    
+                    # rods
+                    self.rodStress, self.nonlinearRodStrain, 
+                    
+                    # bars/beams
+                    self.barStress, self.beamStress,
+                    
+                    # bush
+                    self.bushStress, self.bush1dStressStrain,
+                    
+                    # plates
+                    self.plateStress, self.compositePlateStress, 
+                    self.nonlinearPlateStress,
+                    self.ctriaxStress, self.hyperelasticPlateStrain,
+                    #self.shearStrain, self.shearStress,
+
+                    # solids
+                    self.solidStress,
+                    #------------------------------------------
 
                     self.gridPointStresses, self.gridPointVolumeStresses,
             #self.gridPointForces,

@@ -34,7 +34,7 @@ class DisplacementObject(TableObject):  # approach_code=1, thermal=0
             return self.__reprTransient__()
 
         msg = ['---DISPLACEMENTS---\n']
-        msg.append(self.writeHeader())
+        msg.append(self.write_header())
 
         for nodeID, translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
@@ -56,7 +56,7 @@ class DisplacementObject(TableObject):  # approach_code=1, thermal=0
 
     def __reprTransient__(self):
         msg = ['---TRANSIENT DISPLACEMENTS---\n']
-        msg.append(self.writeHeader())
+        msg.append(self.write_header())
 
         for dt, translations in sorted(self.translations.iteritems()):
             msg2 = '%s = %g\n' % (self.data_code['name'], dt)

@@ -34,7 +34,7 @@ class AccelerationObject(TableObject):  # approach_code=11, thermal=0
             return self.__reprTransient__()
 
         msg = '---ACCELERATIONS---\n'
-        msg += self.writeHeader()
+        msg += self.write_header()
 
         for nodeID, translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
@@ -55,7 +55,7 @@ class AccelerationObject(TableObject):  # approach_code=11, thermal=0
 
     def __reprTransient__(self):
         msg = '---TRANSIENT ACCELERATIONS---\n'
-        msg += self.writeHeader()
+        msg += self.write_header()
 
         for dt, translations in sorted(self.translations.iteritems()):
             msg += '%s = %g\n' % (self.data_code['name'], dt)

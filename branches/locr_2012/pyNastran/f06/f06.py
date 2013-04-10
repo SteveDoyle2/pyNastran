@@ -131,32 +131,60 @@ class F06(OES, OUG, OQG, F06Writer):
         self.damperForces = {}
         self.solidPressureForces = {}
 
+        #-----------------------------------
+        # OES - stress
+        
+        # rods
         self.rodStrain = {}
         self.nonlinearRodStress = {}
+        
+        # bush
+        self.bushStrain = {}
+
+        # bars/beams
         self.barStrain = {}
+        self.beamStrain = {}
+        
+        # plates
         self.plateStrain = {}
         self.nonlinearPlateStrain = {}
         self.compositePlateStrain = {}
-        self.solidStrain = {}
-        self.beamStrain = {}
         self.ctriaxStrain = {}
         self.hyperelasticPlateStress = {}
 
+        # solids
+        self.solidStrain = {}
+        
+        #-----------------------------------
+        # OES - stress
+        
+        # rods
         self.rodStress = {}
         self.nonlinearRodStrain = {}
+        
+        # bush
+        self.bushStress = {}
+        
+        # bars/beams
         self.barStress = {}
+        self.beamStress = {}
+        
+        # plates
         self.plateStress = {}
         self.nonlinearPlateStress = {}
         self.compositePlateStress = {}
+
+        # solids
         self.solidStress = {}
-        self.beamStress = {}
         self.ctriaxStress = {}
         self.hyperelasticPlateStrain = {}
 
-        # beam, shear...not done
+        # shear...not done
         self.shearStrain = {}
         self.shearStress = {}
 
+        #-----------------------------------
+        # GPSTRESS, GPFORCE
         self.gridPointStresses = {}
         self.gridPointVolumeStresses = {}
         self.gridPointForces = {}

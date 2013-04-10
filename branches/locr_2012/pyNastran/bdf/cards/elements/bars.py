@@ -7,7 +7,7 @@ from numpy import matrix, zeros, ones, array, transpose, dot
 from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import Element, Mid
+from pyNastran.bdf.cards.baseCard import Element #, Mid
 from pyNastran.bdf.assign_type import (integer, integer_or_blank,
     integer_double_or_blank, double, double_or_blank,
     string_or_blank, integer_double_string_or_blank)
@@ -495,7 +495,13 @@ class CONROD(RodElement):
         return (self.nodes[0].Position() + self.nodes[1].Position()) / 2.
 
     def Mid(self):
-        return Mid(self)
+        if isinstance(self.mid, int):
+            return self.mid
+        elif self.mid is None:
+            print ("No material defined for element ", self.eid)
+            return None
+        else:
+            return self.mid.mid
 
     def Pid(self):
         return None

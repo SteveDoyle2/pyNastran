@@ -70,7 +70,7 @@ class ForceVectorObject(TableObject):  # table_code=12, sort_code=0, thermal=0
     def __reprTransient__(self):
         msg = '---TRANSIENT FORCE VECTOR---\n'
         #msg += '%s = %g\n' %(self.data_code['name'],self.dt)
-        msg += self.writeHeader()
+        msg += self.write_header()
 
         for dt, translations in sorted(self.translations.iteritems()):
             msg += '%s = %g\n' % (self.data_code['name'], dt)
@@ -95,7 +95,7 @@ class ForceVectorObject(TableObject):  # table_code=12, sort_code=0, thermal=0
             return self.__reprTransient__()
 
         msg = '---FORCE VECTOR---\n'
-        msg += self.writeHeader()
+        msg += self.write_header()
 
         for nodeID, translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
