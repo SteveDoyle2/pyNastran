@@ -1,0 +1,706 @@
+1
+ 
+ 
+ 
+ 
+                     THIS PROGRAM IS CONFIDENTIAL AND A TRADE SECRET OF MSC.SOFTWARE CORPORATION.  THE RECEIPT OR    
+                  POSSESSION OF THIS PROGRAM DOES NOT CONVEY ANY RIGHTS TO REPRODUCE OR DISCLOSE ITS CONTENTS, OR TO 
+                 MANUFACTURE, USE, OR SELL ANYTHING HEREIN, IN WHOLE OR IN PART, WITHOUT THE SPECIFIC WRITTEN CONSENT
+                                                    OF MSC.SOFTWARE CORPORATION.                                     
+ 
+ 
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * *                                 * *
+                                              * *           MSC.SOFTWARE          * *
+                                              * *               CORP              * *
+                                              * *                                 * *
+                                              * *      M S C . N a s t r a n      * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *        Version 2005.1.0         * *
+                                              * *             2005R2              * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *          JUN 17, 2005           * *
+                                              * *                                 * *
+                                              * *              Intel              * *
+                                              * *MODEL PentiumIII/5857 (sdoyle-de * *
+                                              * *   Windows XP 6.1 (Build 7601)   * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+1News file - (6/03/05):
+  
+ Thank you for choosing MSC.Nastran, the industry standard in FEA, and Welcome
+ to MSC.Nastran 2005 r2.
+  
+ You can find version-specific online documentation, and online technical support
+ at:
+  
+    http://www.mscsoftware.com/support/prod_support/nastran/
+  
+ Also at the technical support location is a searchable list of technical
+ application notes and the current error/avoidance list. Please don't hesitate
+ to contact your nearest technical support representative if you require
+ assistance.
+  
+    http://www.mscsoftware.com/about/locate/
+  
+ The arbitrary beam cross section, explicit nonlinear (SOL 700), and the new
+ nonlinear (SOL 400) solution sequences, are regarded as pre-release capabilities
+ and are still undergoing testing and verification.  These capabilities should
+ not be employed in any analysis except for the purpose of testing and verifying
+ the functionality and working of the capabilities themselves.
+  
+ MSC.Nastran 2005 r2 is mainly focused on improving quality, accuracy and
+ ease-of-use, but also introduces new capabilities, some of which were made
+ available as pre-release functionality in MSC.Nastran 2005 r1. In addition,
+ significant advancements have been made regarding performance and scalability of
+ the program.  Some of the new features and enhancements are listed below.
+  
+ Nonlinear
+ - MSC.Nastran Implicit Nonlinear (SOL 600) - We have addressed many known
+   issues, improved memory usage, improved output options, added beam, bar, and
+   shell offsets, and thermal contact
+ - MSC.Nastran Explicit Nonlinear (SOL 700) pre-release - you can now
+   execute LS-Dyna from inside MSC.Nastran to perform crash and impact
+   analyses
+  
+ Numeric Enhancements
+ - Multi-level DMP - an enhanced Lanczos modal extraction methodology that
+   improves scalability and efficiently handles large normal modes analyses with
+   very frequency ranges
+ - MDACMS enhanced robustness, improved handling of large masses, and improved
+   performance
+ - Distributed memory parallel MPYAD
+  
+ Elements
+ - CFAST - a new fastener element based on user defined stiffness values.
+ - Arbitrary beam cross section pre-release capability - you can specify cross
+   section shapes using POINT entries, and optimize them in SOL 200
+ - Enhanced nonstructural mass element summary printout - ELSUM
+1- spatially dependent heat transfer coefficient
+ - Heat transfer coefficient as a function of two variables
+ - Thermal analysis flux output
+  
+ Optimization
+ - MSC.Nastran Topology Optimization - this addition to the existing SOL 200
+   optimization solution sequence allows optimization analyses to be performed
+   that require many design variables
+  
+ Further Enhancements
+ - Larger XDB database support
+ - MATMOD option 16 - we have removed many previous limitations with this
+   matrix output capability
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     1
+                                                                                                                                    
+0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O                                           
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     NASTRAN OP2NEW=0 $ MSC.NASTRAN .LCL FILE                                        
+     NASTRAN BUFFSIZE=8193 $(C:/MSC.SOFTWARE/MSC.NASTRAN/CONF/NAST20051.RCF[2])      
+     NASTRAN REAL=2141978624 $(PROGRAM DEFAULT)                                      
+     $ NASTRAN INPUT FILE CREATED BY THE PATRAN 2010 (MD ENABLED) INPUT FILE         
+     $ TRANSLATOR ON MAY       22, 2012 AT 15:40:00.                                 
+     $ DIRECT TEXT INPUT FOR NASTRAN SYSTEM CELL SECTION                             
+     $ COMPLEX EIGENVALUE ANALYSIS, DIRECT FORMULATION, DATABASE                     
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     2
+                                                                                                                                    
+0        N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O                                                             
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     SOL 107                                                                                 
+     CEND                                                                                    
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     3
+                                                                                                                                    
+0                                                                                                                                   
+0                                        C A S E    C O N T R O L    E C H O                                                        
+                 COMMAND                                                                                                            
+                 COUNT                                                                                                              
+                  1      ECHO = NONE                                                                             
+                  2      SUBCASE 1                                                                               
+                  3      $ SUBCASE NAME : DEFAULT                                                                
+                  4         SUBTITLE=DEFAULT                                                                     
+                  5         CMETHOD = 1                                                                          
+                  6         SPC = 2                                                                              
+                  7         VECTOR(SORT1,REAL)=ALL                                                               
+                  8      BEGIN BULK                                                                              
+0                             INPUT BULK DATA ENTRY COUNT =      88
+0                       TOTAL COUNT=        70
+ *** USER INFORMATION MESSAGE 302 (IFS3P)
+     ONE OR MORE GRID ENTRIES HAVE DISPLACEMENT COORDINATE SYSTEM ID OF -1
+
+
+                                        M O D E L   S U M M A R Y
+
+                                   NUMBER OF GRID     POINTS   =       36
+ 
+                                   NUMBER OF CHEXA    ELEMENTS =        8
+                                   NUMBER OF CQUAD4   ELEMENTS =        4
+ 
+ *** USER INFORMATION MESSAGE 4109 (OUTPX2)
+     THE LABEL IS XXXXXXXX FOR FORTRAN UNIT 12
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        7 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =          8 RECORDS.)
+     (TOTAL DATA WRITTEN FOR TAPE LABEL = WORDS.)
+0                   *******************************************************
+                    *                                                     *
+                    *                MATCHING GRID TABLE                  *
+                    *                                                     *
+                    *******************************************************
+                    *                   USER GRID IDS.                    *
+                    *      ACOUSTIC GRIDS     *      STRUCTURAL GRIDS     *
+                    *                         *                           *
+                    *******************************************************
+                    *                         *                           *
+                    *              209        *                 1         *
+                    *                         *                           *
+                    *              210        *                 4         *
+                    *                         *                           *
+                    *              211        *                 7         *
+                    *                         *                           *
+                    *              212        *                 2         *
+                    *                         *                           *
+                    *              213        *                 5         *
+                    *                         *                           *
+                    *              214        *                 8         *
+                    *                         *                           *
+                    *              215        *                 3         *
+                    *                         *                           *
+                    *              216        *                 6         *
+                    *                         *                           *
+                    *              217        *                 9         *
+                    *******************************************************
+ ^^^ USER INFORMATION MESSAGE 9055 (PHASE0)  
+ ^^^ THE FL./STR. INTERFACE CHECK IS FORCES AND MOMENTS  RESULTING FROM A UNIT INCREASE IN PRESSURE, OR CHANGES                    
+     IN THE FLUID PRESSURE RESULTING FROM RIGID BODY MOTIONS OF THE STRUCTURE. THESE VALUES ARE DIRECTLY PROPORTIONAL              
+     TO THE OPEN SURFACE OF THE FLUID.   
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     4
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 7310 (VECPRN)
+     ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM WILL BE USED AS REFERENCE LOCATION.
+     RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
+0                                                  FL./STR. INTERFACE CHECK 
+  SUBCASE/
+  DAREA ID        T1             T2             T3             R1             R2             R3
+0        1   0.0000000E+00  0.0000000E+00 -4.0000000E+02 -4.0000000E+03  4.0000000E+03  0.0000000E+00
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM1X   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 0                 0                 8                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM1.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         291 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         322 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM2X   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102                 0                 0                 0              8192                64                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM2.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         179 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          25 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         273 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM4X   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    104                 0                 0                 0                96                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM4.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          19 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          25 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          62 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK EPTX     WRITTEN ON FORTRAN UNIT 12, TRL =
+                    105                 0               768                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS EPT.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          14 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          25 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          59 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK MPTS     WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101             32768                16                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS MPTS.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          25 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     5
+                                                                                                                                    
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK DYNAMICS WRITTEN ON FORTRAN UNIT 12, TRL =
+                    103             16384                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS DYNAMICS.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          13 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          44 WORDS.)
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     6
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 7310 (VECPRN)
+     ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM WILL BE USED AS REFERENCE LOCATION.
+     RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
+0                                                  OLOAD    RESULTANT       
+  SUBCASE/    LOAD
+  DAREA ID    TYPE       T1            T2            T3            R1            R2            R3
+0        1     FX    0.000000E+00     ----          ----          ----       0.000000E+00  0.000000E+00                             
+               FY       ----       0.000000E+00     ----       0.000000E+00     ----       0.000000E+00                             
+               FZ       ----          ----       0.000000E+00  0.000000E+00  0.000000E+00     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     7
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     8
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5444 (CLASD*)
+     REQUIRED NUMBER OF ROOTS HAVE BEEN FOUND.
+ *** USER INFORMATION MESSAGE 7382 (CLASD*)
+     LARGEST NORMALIZED RESIDUAL FOR COMPLEX EIGENSOLUTION IS .172E-15
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     9
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    10
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+ 
+                                        C O M P L E X   E I G E N V A L U E   S U M M A R Y
+0                ROOT     EXTRACTION                  EIGENVALUE                     FREQUENCY              DAMPING
+                  NO.        ORDER             (REAL)           (IMAG)                (CYCLES)            COEFFICIENT
+                      1          47          0.0              0.0                   0.0                   0.0
+                      2          16          0.0              2.457860E+02          3.911805E+01          0.0
+                      3          17          0.0              3.617555E+02          5.757518E+01          0.0
+                      4          22          0.0              3.805272E+02          6.056278E+01          0.0
+                      5          21          0.0              3.805272E+02          6.056278E+01          0.0
+                      6          18          0.0              4.633584E+02          7.374578E+01          0.0
+                      7          19          0.0              6.175912E+02          9.829269E+01          0.0
+                      8          20          0.0              9.063315E+02          1.442471E+02          0.0
+                      9          26          0.0              2.251965E+03          3.584114E+02          0.0
+                     10          25          0.0              2.251965E+03          3.584114E+02          0.0
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    11
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OUGV1    WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 0              5040                 0                 0                 0                 1
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OUGV1.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         504 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =         110 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        6605 WORDS.)
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    12
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+      COMPLEX EIGENVALUE =  0.000000E+00,  0.000000E+00
+                                       C O M P L E X   E I G E N V E C T O R   NO.          1
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0            1      G      0.0            0.0            0.0            4.325581E-02  -4.325581E-02   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            2      G      0.0            0.0            2.754819E-01   9.244185E-03  -8.594752E-16   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            3      G      0.0            0.0            0.0            4.325581E-02   4.325581E-02   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            4      G      0.0            0.0            2.754819E-01  -3.456478E-13  -9.244185E-03   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            5      G      0.0            0.0            3.764060E-01   2.181262E-12   5.257412E-15   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            6      G      0.0            0.0            2.754819E-01  -3.456311E-13   9.244185E-03   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            7      G      0.0            0.0            0.0           -4.325581E-02  -4.325581E-02   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            8      G      0.0            0.0            2.754819E-01  -9.244185E-03  -7.858709E-16   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            9      G      0.0            0.0            0.0           -4.325581E-02   4.325581E-02   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          209      S      1.000000E+00   1.000000E+00   1.000000E+00   1.000000E+00   1.000000E+00   1.000000E+00
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          215      S      1.000000E+00   1.000000E+00   1.000000E+00   1.000000E+00   1.000000E+00   1.000000E+00
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          221      S      1.000000E+00   1.000000E+00   1.000000E+00   1.000000E+00   1.000000E+00   1.000000E+00
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          227      S      1.000000E+00   1.000000E+00   1.000000E+00   1.000000E+00   1.000000E+00   1.000000E+00
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          233      S      1.000000E+00   1.000000E+00   1.000000E+00            
+                           0.0            0.0            0.0                     
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    13
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+      COMPLEX EIGENVALUE =  0.000000E+00,  2.457860E+02
+                                       C O M P L E X   E I G E N V E C T O R   NO.          2
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0            1      G      0.0            0.0            0.0            1.068331E-01  -1.068331E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            2      G      0.0            0.0            6.903805E-01   3.264394E-02  -4.443088E-17   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            3      G      0.0            0.0            0.0            1.068331E-01   1.068331E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            4      G      0.0            0.0            6.903805E-01  -1.413800E-16  -3.264394E-02   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            5      G      0.0            0.0            1.000000E+00   1.075529E-16  -7.858837E-17   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            6      G      0.0            0.0            6.903805E-01  -9.280771E-17   3.264394E-02   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            7      G      0.0            0.0            0.0           -1.068331E-01  -1.068331E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            8      G      0.0            0.0            6.903805E-01  -3.264394E-02   1.338896E-16   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            9      G      0.0            0.0            0.0           -1.068331E-01   1.068331E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          209      S      6.028645E-02   6.278257E-02   6.028645E-02   6.278257E-02   6.447428E-02   6.278257E-02
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          215      S      6.028645E-02   6.278257E-02   6.028645E-02  -1.504580E-01  -1.511464E-01  -1.504580E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          221      S     -1.511464E-01  -1.516093E-01  -1.511464E-01  -1.504580E-01  -1.511464E-01  -1.504580E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          227      S     -2.475502E-01  -2.472155E-01  -2.475502E-01  -2.472155E-01  -2.469918E-01  -2.472155E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          233      S     -2.475502E-01  -2.472155E-01  -2.475502E-01            
+                           0.0            0.0            0.0                     
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    14
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+      COMPLEX EIGENVALUE =  0.000000E+00,  3.617555E+02
+                                       C O M P L E X   E I G E N V E C T O R   NO.          3
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0            1      G      0.0            0.0            0.0           -1.621201E-01  -1.621201E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            2      G      0.0            0.0            1.000000E+00  -1.621201E-01  -1.583264E-17   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            3      G      0.0            0.0            0.0           -1.621201E-01   1.621201E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            4      G      0.0            0.0           -1.000000E+00  -1.457168E-16  -1.621201E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            5      G      0.0            0.0            4.440681E-15  -1.068590E-15   4.290102E-17   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            6      G      0.0            0.0           -1.000000E+00   6.505213E-17   1.621201E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            7      G      0.0            0.0            0.0            1.621201E-01  -1.621201E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            8      G      0.0            0.0            1.000000E+00   1.621201E-01   4.272663E-17   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            9      G      0.0            0.0            0.0            1.621201E-01   1.621201E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          209      S      1.272407E-15  -9.103118E-03   9.025278E-16   9.103118E-03   1.193832E-15   9.103118E-03
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          215      S      1.253486E-15  -9.103118E-03   9.339186E-16  -1.289838E-16   2.502089E-03  -9.852565E-17
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          221      S     -2.502089E-03  -1.482241E-16  -2.502089E-03  -1.760075E-16   2.502089E-03  -9.198668E-17
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          227      S     -1.112273E-15  -1.213646E-03  -1.156162E-15   1.213646E-03  -1.090015E-15   1.213646E-03
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          233      S     -1.092889E-15  -1.213646E-03  -1.135600E-15            
+                           0.0            0.0            0.0                     
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    15
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+      COMPLEX EIGENVALUE =  0.000000E+00,  3.805272E+02
+                                       C O M P L E X   E I G E N V E C T O R   NO.          4
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0            1      G      0.0            0.0            0.0            1.996223E-01   1.231672E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            2      G      0.0            0.0           -5.651029E-01   6.410107E-02  -1.343255E-02   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            3      G      0.0            0.0            0.0           -1.824199E-01  -9.272597E-02   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            4      G      0.0            0.0            1.000000E+00  -7.590776E-03   1.134326E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            5      G      0.0            0.0            6.706645E-13   4.790908E-02   8.477939E-02   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            6      G      0.0            0.0           -1.000000E+00  -7.590776E-03   1.134326E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            7      G      0.0            0.0            0.0           -1.824199E-01  -9.272597E-02   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            8      G      0.0            0.0            5.651029E-01   6.410107E-02  -1.343255E-02   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            9      G      0.0            0.0            0.0            1.996223E-01   1.231672E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          209      S      6.683254E-03   2.345282E-02   2.405162E-02  -1.325325E-02   4.681058E-13   1.325325E-02
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          215      S     -2.405162E-02  -2.345282E-02  -6.683254E-03  -1.572988E-03  -5.856573E-03  -5.660852E-03
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          221      S      3.309567E-03  -1.083177E-13  -3.309567E-03   5.660852E-03   5.856573E-03   1.572988E-03
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          227      S      6.701229E-04   2.633889E-03   2.411631E-03  -1.488418E-03  -5.089229E-13   1.488418E-03
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          233      S     -2.411631E-03  -2.633889E-03  -6.701229E-04            
+                           0.0            0.0            0.0                     
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    16
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+      COMPLEX EIGENVALUE =  0.000000E+00,  3.805272E+02
+                                       C O M P L E X   E I G E N V E C T O R   NO.          5
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0            1      G      0.0            0.0            0.0           -3.041936E-02  -1.922321E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            2      G      0.0            0.0            1.000000E+00  -1.134326E-01   1.068772E-03   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            3      G      0.0            0.0            0.0           -2.186516E-05   1.898101E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            4      G      0.0            0.0           -7.956581E-02   1.343255E-02  -9.025352E-03   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            5      G      0.0            0.0           -5.676086E-14  -8.477939E-02  -6.745540E-03   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            6      G      0.0            0.0            7.956581E-02   1.343255E-02  -9.025352E-03   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            7      G      0.0            0.0            0.0           -2.186516E-05   1.898101E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            8      G      0.0            0.0           -1.000000E+00  -1.134326E-01   1.068772E-03   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            9      G      0.0            0.0            0.0           -3.041936E-02  -1.922321E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          209      S      1.414472E-02  -1.866042E-03  -1.659016E-02   2.345282E-02  -3.857413E-14  -2.345282E-02
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          215      S      1.659016E-02   1.866042E-03  -1.414472E-02  -3.329137E-03   4.659829E-04   3.904703E-03
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          221      S     -5.856573E-03   8.782221E-15   5.856573E-03  -3.904703E-03  -4.659829E-04   3.329137E-03
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          227      S      1.418276E-03  -2.095675E-04  -1.663478E-03   2.633889E-03   4.171373E-14  -2.633889E-03
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          233      S      1.663478E-03   2.095675E-04  -1.418276E-03            
+                           0.0            0.0            0.0                     
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    17
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+      COMPLEX EIGENVALUE =  0.000000E+00,  4.633584E+02
+                                       C O M P L E X   E I G E N V E C T O R   NO.          6
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0            1      G      0.0            0.0            0.0            1.231065E-02  -1.231065E-02   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            2      G      0.0            0.0            8.912302E-02   1.315499E-02   1.984477E-16   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            3      G      0.0            0.0            0.0            1.231065E-02   1.231065E-02   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            4      G      0.0            0.0            8.912302E-02  -3.376206E-16  -1.315499E-02   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            5      G      0.0            0.0            1.825794E-01   1.975850E-15  -1.245041E-15   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            6      G      0.0            0.0            8.912302E-02  -3.251522E-16   1.315499E-02   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            7      G      0.0            0.0            0.0           -1.231065E-02  -1.231065E-02   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            8      G      0.0            0.0            8.912302E-02  -1.315499E-02   2.153027E-16   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            9      G      0.0            0.0            0.0           -1.231065E-02   1.231065E-02   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          209      S     -9.982330E-01  -9.968804E-01  -9.982330E-01  -9.968804E-01  -9.954950E-01  -9.968804E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          215      S     -9.982330E-01  -9.968804E-01  -9.982330E-01  -3.799080E-02  -3.836243E-02  -3.799080E-02
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          221      S     -3.836243E-02  -3.874322E-02  -3.836243E-02  -3.799080E-02  -3.836243E-02  -3.799080E-02
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          227      S      9.996351E-01   9.998153E-01   9.996351E-01   9.998153E-01   1.000000E+00   9.998153E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          233      S      9.996351E-01   9.998153E-01   9.996351E-01            
+                           0.0            0.0            0.0                     
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    18
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+      COMPLEX EIGENVALUE =  0.000000E+00,  6.175912E+02
+                                       C O M P L E X   E I G E N V E C T O R   NO.          7
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0            1      G      0.0            0.0            0.0           -1.714628E-01   1.714628E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            2      G      0.0            0.0           -7.379167E-01   3.109398E-01   3.738342E-16   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            3      G      0.0            0.0            0.0           -1.714628E-01  -1.714628E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            4      G      0.0            0.0           -7.379167E-01  -9.367507E-17  -3.109398E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            5      G      0.0            0.0            1.000000E+00  -6.314393E-16   1.426274E-16   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            6      G      0.0            0.0           -7.379167E-01   9.454243E-17   3.109398E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            7      G      0.0            0.0            0.0            1.714628E-01   1.714628E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            8      G      0.0            0.0           -7.379167E-01  -3.109398E-01  -5.674182E-17   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            9      G      0.0            0.0            0.0            1.714628E-01  -1.714628E-01   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          209      S      1.102868E-01   1.070733E-01   1.102868E-01   1.070733E-01   1.371454E-01   1.070733E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          215      S      1.102868E-01   1.070733E-01   1.102868E-01   9.044883E-02   9.142296E-02   9.044883E-02
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          221      S      9.142296E-02   8.307005E-02   9.142296E-02   9.044883E-02   9.142296E-02   9.044883E-02
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          227      S     -1.969145E-01  -1.974223E-01  -1.969145E-01  -1.974223E-01  -1.933368E-01  -1.974223E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          233      S     -1.969145E-01  -1.974223E-01  -1.969145E-01            
+                           0.0            0.0            0.0                     
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    19
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+      COMPLEX EIGENVALUE =  0.000000E+00,  9.063315E+02
+                                       C O M P L E X   E I G E N V E C T O R   NO.          8
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0            1      G      0.0            0.0            0.0           -5.025313E-03   5.025313E-03   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            2      G      0.0            0.0           -2.888411E-02   1.989282E-03   7.161237E-18   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            3      G      0.0            0.0            0.0           -5.025313E-03  -5.025313E-03   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            4      G      0.0            0.0           -2.888411E-02  -5.139118E-17  -1.989282E-03   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            5      G      0.0            0.0           -2.176724E-02   3.369700E-16  -9.659677E-18   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            6      G      0.0            0.0           -2.888411E-02  -5.109303E-17   1.989282E-03   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            7      G      0.0            0.0            0.0            5.025313E-03   5.025313E-03   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            8      G      0.0            0.0           -2.888411E-02  -1.989282E-03  -2.612803E-18   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            9      G      0.0            0.0            0.0            5.025313E-03  -5.025313E-03   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          209      S      1.000000E+00   9.988296E-01   1.000000E+00   9.988296E-01   9.987130E-01   9.988296E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          215      S      1.000000E+00   9.988296E-01   1.000000E+00  -9.750144E-01  -9.746903E-01  -9.750144E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          221      S     -9.746903E-01  -9.746612E-01  -9.746903E-01  -9.750144E-01  -9.746903E-01  -9.750144E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          227      S      9.668211E-01   9.666629E-01   9.668211E-01   9.666629E-01   9.666499E-01   9.666629E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          233      S      9.668211E-01   9.666629E-01   9.668211E-01            
+                           0.0            0.0            0.0                     
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    20
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+      COMPLEX EIGENVALUE =  0.000000E+00,  2.251965E+03
+                                       C O M P L E X   E I G E N V E C T O R   NO.          9
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0            1      G      0.0            0.0            0.0           -4.199748E-04  -1.076228E-04   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            2      G      0.0            0.0            3.907052E-04  -4.431869E-05   2.911434E-05   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            3      G      0.0            0.0            0.0            4.080813E-04   4.164308E-05   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            4      G      0.0            0.0           -2.167447E-03   5.248170E-06  -2.458590E-04   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            5      G      0.0            0.0           -1.993966E-12  -3.312375E-05  -1.837548E-04   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            6      G      0.0            0.0            2.167447E-03   5.248170E-06  -2.458590E-04   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            7      G      0.0            0.0            0.0            4.080813E-04   4.164308E-05   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            8      G      0.0            0.0           -3.907052E-04  -4.431869E-05   2.911434E-05   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            9      G      0.0            0.0            0.0           -4.199748E-04  -1.076228E-04   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          209      S      6.673720E-01   8.133672E-01   9.608821E-01  -1.466181E-01  -3.417783E-13   1.466181E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          215      S     -9.608821E-01  -8.133672E-01  -6.673720E-01   6.875199E-01   8.389144E-01   9.898911E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          221      S     -1.512232E-01   7.529682E-14   1.512232E-01  -9.898911E-01  -8.389144E-01  -6.875199E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          227      S      6.945410E-01   8.471692E-01   1.000000E+00  -1.527112E-01  -2.759127E-14   1.527112E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          233      S     -1.000000E+00  -8.471692E-01  -6.945410E-01            
+                           0.0            0.0            0.0                     
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    21
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+      COMPLEX EIGENVALUE =  0.000000E+00,  2.251965E+03
+                                       C O M P L E X   E I G E N V E C T O R   NO.         10
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0            1      G      0.0            0.0            0.0           -3.497580E-05  -4.847001E-04   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            2      G      0.0            0.0            2.538947E-03  -2.879993E-04  -2.579702E-07   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            3      G      0.0            0.0            0.0           -4.231286E-05   4.852848E-04   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            4      G      0.0            0.0            1.920485E-05   3.410455E-05   2.178455E-06   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            5      G      0.0            0.0           -1.643202E-15  -2.152504E-04   1.628175E-06   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            6      G      0.0            0.0           -1.920485E-05   3.410455E-05   2.178455E-06   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            7      G      0.0            0.0            0.0           -4.231286E-05   4.852848E-04   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            8      G      0.0            0.0           -2.538947E-03  -2.879993E-04  -2.579702E-07   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0            9      G      0.0            0.0            0.0           -3.497580E-05  -4.847001E-04   0.0
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          209      S     -9.608821E-01  -7.206911E-03   9.464548E-01  -9.527785E-01   2.932891E-14   9.527785E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          215      S     -9.464548E-01   7.206911E-03   9.608821E-01  -9.898911E-01  -7.433273E-03   9.750282E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          221      S     -9.827043E-01  -9.256529E-15   9.827043E-01  -9.750282E-01   7.433273E-03   9.898911E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          227      S     -1.000000E+00  -7.506416E-03   9.849854E-01  -9.923739E-01   4.776778E-15   9.923739E-01
+                           0.0            0.0            0.0            0.0            0.0            0.0
+0          233      S     -9.849854E-01   7.506416E-03   1.000000E+00            
+                           0.0            0.0            0.0                     
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    22
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 4110 (OUTPX2)
+                                 END-OF-DATA SIMULATION ON FORTRAN UNIT 12
+                                 (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      1 WORDS.)
+                                       (NUMBER OF FORTRAN RECORDS WRITTEN =      1 RECORDS.)
+                                       (TOTAL DATA WRITTEN FOR EOF MARKER =      1 WORDS.)
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    23
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+ * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     30
+
+
+
+0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *
+0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY
+ --------------------------------------------------------------------------------------------------------------------------
+     0     0    1    1 '        '    T    T    T    T    T     T      F      T      0     F     -1            0           F
+0SEID = SUPERELEMENT ID.
+ PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.
+ PROJ = PROJECT ID NUMBER.
+ VERS = VERSION ID.
+ APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.
+ SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.
+ SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).
+ SEKR = STIFFNESS MATRIX REDUCTION STEP.
+ SELG = LOAD MATRIX GENERATION STEP.
+ SELR = LOAD MATRIX REDUCTION STEP. 
+ MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.
+ DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.
+ SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.
+ PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS
+ LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.
+ SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.
+ DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).
+ SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.
+ 
+ No PARAM values were set in the Control File.
+ 
+1                                        * * * END OF JOB * * *
+ 
+ 
