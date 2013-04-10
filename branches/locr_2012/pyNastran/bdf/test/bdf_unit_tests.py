@@ -17,8 +17,8 @@ class Tester(unittest.TestCase):
                meshForm='combined', debug=False):
         cid = 0
         #xref = False
-        runBDF(folder, bdfFilename, xref=xref, cid=cid, isFolder=True,
-               meshForm=meshForm, debug=debug)
+        return runBDF(folder, bdfFilename, xref=xref, cid=cid, isFolder=True,
+                      meshForm=meshForm, debug=debug)
 
     def run_all_files_in_folder(self, folder, xref=False, cid=None, debug=False):
         run_all_files_in_folder(folder, xref=xref, cid=cid, debug=debug)
@@ -29,18 +29,43 @@ class TestBDF(Tester):
         bdfFilename = os.path.join('solid_bending', 'solid_bending.bdf')
         folder = os.path.abspath(os.path.join(testPath, '..', 'models'))
         self.runBDF(folder, bdfFilename)
-        self.runBDF(folder, bdfFilename, xref=True)
+        (fem1, fem2, diffCards2) = self.runBDF(folder, bdfFilename, xref=True)
+
+        assert len(fem1.params) == 2, 'len(params) = %i' % len(fem1.params)
+        assert len(fem1.coords) == 1, 'len(coords) = %i' % len(fem1.coords)
+        assert len(fem1.nodes) == 72, 'len(nodes) = %i' % len(fem1.nodes)
+        assert len(fem1.materials) == 1, 'len(materials) = %i' % len(fem1.materials)
+        assert len(fem1.elements) == 186, 'len(elements) = %i' % len(fem1.elements)
+        assert len(fem1.methods) == 0, 'len(methods) = %i' % len(fem1.methods)
+        assert len(fem1.properties) == 1, 'len(properties) = %i' % len(fem1.properties)
 
     def test_bdf_02(self):
         bdfFilename = os.path.join('plate_py', 'plate_py.dat')
         folder = os.path.abspath(os.path.join(testPath, '..', 'models'))
         self.runBDF(folder, bdfFilename)
-        self.runBDF(folder, bdfFilename, xref=True)
+        (fem1, fem2, diffCards2) = self.runBDF(folder, bdfFilename, xref=True)
+
+        assert len(fem1.coords) == 3, 'len(coords) = %i' % len(fem1.coords)
+        assert len(fem1.params) == 6, 'len(params) = %i' % len(fem1.params)
+        assert len(fem1.nodes) == 231, 'len(nodes) = %i' % len(fem1.nodes)
+        assert len(fem1.materials) == 1, 'len(materials) = %i' % len(fem1.materials)
+        assert len(fem1.elements) == 200, 'len(elements) = %i' % len(fem1.elements)
+        assert len(fem1.methods) == 1, 'len(methods) = %i' % len(fem1.methods)
+        assert len(fem1.properties) == 1, 'len(properties) = %i' % len(fem1.properties)
 
     def test_bdf_03(self):
         bdfFilename = os.path.join('beam_modes', 'beam_modes.dat')
         folder = os.path.abspath(os.path.join(testPath, '..', 'models'))
-        self.runBDF(folder, bdfFilename)
+        (fem1, fem2, diffCards2) = self.runBDF(folder, bdfFilename)
+
+        assert len(fem1.params) == 6, 'len(params) = %i' % len(fem1.params)
+        assert len(fem1.coords) == 1, 'len(coords) = %i' % len(fem1.coords)
+        assert len(fem1.nodes) == 12, 'len(nodes) = %i' % len(fem1.nodes)
+        assert len(fem1.materials) == 1, 'len(materials) = %i' % len(fem1.materials)
+        assert len(fem1.elements) == 11, 'len(elements) = %i' % len(fem1.elements)
+        assert len(fem1.methods) == 1, 'len(methods) = %i' % len(fem1.methods)
+        
+        #assert len(fem1.properties) == 3, 'len(properties) = %i' % len(fem1.properties)  ## PBEAML issue
         #self.runBDF(folder, bdfFilename, xref=True) ## PBEAML is not supported
 
     def test_bdf_04(self):
