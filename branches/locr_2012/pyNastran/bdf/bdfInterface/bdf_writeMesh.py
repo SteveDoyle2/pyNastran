@@ -135,7 +135,6 @@ class WriteMesh(WriteMeshDeprecated):
         self.log.debug("***writing %s" % fname)
 
         outfile = open(out_filename, 'wb')
-        
         msg = self._write_header()
         msg += self._write_params(size)
         outfile.write(msg)
@@ -192,17 +191,19 @@ class WriteMesh(WriteMeshDeprecated):
         @param debug developer debug (unused)
         @warning not tested in a long time
         """
+        assert size in [8, 16]
+        #size = 16
         fname = print_filename(out_filename)
         self.log.debug("***writing %s" % fname)
 
         outfile = open(out_filename, 'wb')
-
         msg = self._write_header()
         msg += self._write_params(size)
         outfile.write(msg)
 
         msg = self._write_nodes(size)
         outfile.write(msg)
+
         msg = self._write_elements_as_CTRIA3(size)
         outfile.write(msg)
 

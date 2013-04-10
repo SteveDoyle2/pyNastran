@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
+#import resource
 #import time
 
 from pyNastran.bdf.test.test_bdf import run_lots_of_files
@@ -16,6 +17,23 @@ def remove_marc_files(files):
         if 'marc' not in f:
             files2.append(f)
     return files2
+
+def get_open_fds():
+    fds = []
+    soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    for fd in range(0, soft):
+        try:
+            flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+        except IOError:
+            continue
+        fds.append(fd)
+    return fds
+
+def get_file_names_from_file_number(fds):
+    names = []
+    for fd in fds:
+        names.append(os.readlink('/proc/self/fd/%d' % fd))
+    return names
 
 if __name__ == '__main__':
     # works
@@ -57,8 +75,13 @@ if __name__ == '__main__':
     debug = False
     failed_files = run_lots_of_files(files, debug=debug, xref=xref,
                                      check=check, cid=cid)
-    f = open('failedCases.in', 'wb')
+    try:
+        f = open('failedCases.in', 'wb')
+    except IOError:
+        #fds = get_open_fds()
+        #print(get_file_names_from_file_number(fds))
+        raise
     for fname in failed_files:
-        f.write('%s\n' % (fname))
+        f.write('%s\n' % fname)
     f.close()
     sys.exit('finished...')

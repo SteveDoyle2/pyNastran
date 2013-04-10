@@ -181,9 +181,9 @@ class PLSOLID(SolidProperty):
             self.pid = integer(card, 1, 'pid')
             ## Material ID
             self.mid = integer(card, 2, 'mid')
-            self.ge = double_or_blank(card, 3, 'ge', 0.0)
-            self.str = string_or_blank(card, 4, 'str', 'GRID')
-            assert len(card) <= 5, 'len(PLSOLID card) = %i' % len(card)
+            #self.ge = double_or_blank(card, 3, 'ge', 0.0)
+            self.str = string_or_blank(card, 3, 'str', 'GRID')
+            assert len(card) <= 4, 'len(PLSOLID card) = %i' % len(card)
         else:
             self.pid = data[0]
             self.mid = data[1]

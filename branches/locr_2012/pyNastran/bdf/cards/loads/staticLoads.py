@@ -855,7 +855,7 @@ class PLOAD(Load):
             self._comment = comment
         if card:
             self.sid = integer(card, 1, 'sid')
-            self.p = integer(card, 2, 'p')
+            self.p = double(card, 2, 'p')
             nodes = [integer(card, 3, 'n1'),
                      integer(card, 4, 'n2'),
                      integer(card, 5, 'n3')]

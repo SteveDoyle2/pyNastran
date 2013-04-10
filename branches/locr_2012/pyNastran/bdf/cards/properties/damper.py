@@ -140,7 +140,7 @@ class PVISC(DamperProperty):
             self._comment = comment
         if card:
             self.pid = integer(card, 1 + 4 * nPVISC, 'pid')
-            self.ce = integer(card, 2 + 4 * nPVISC, 'ce')
+            self.ce = double(card, 2 + 4 * nPVISC, 'ce')
             self.cr = double_or_blank(card, 3 + 4 * nPVISC, 'cr', 0.)
         else:
             self.pid = data[0]

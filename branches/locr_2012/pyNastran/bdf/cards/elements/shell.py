@@ -521,7 +521,7 @@ class CTRIAX(TriShell):
         if card:
             ## element ID number
             self.eid = integer(card, 1, 'eid')
-            blank(card, 2, 'blank')
+            self.pid = integer(card, 2, 'pid')
 
             nids = [integer_or_blank(card, 3, 'n1'),
                     integer_or_blank(card, 4, 'n2'),
@@ -529,18 +529,20 @@ class CTRIAX(TriShell):
                     integer_or_blank(card, 6, 'n4'),
                     integer_or_blank(card, 7, 'n5'),
                     integer_or_blank(card, 8, 'n6')]
-            assert len(card) <= 9, 'len(CTRIAX card) = %i' % len(card)
+            self.thetaMcid = integer_double_or_blank(card, 9, 'theta_mcsid', 0.0)
+            assert len(card) <= 10, 'len(CTRIAX card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(nids) == 6, 'error on CTRIAX'
 
     def rawFields(self):
-        list_fields = ['CTRIAX', self.eid, self.Pid()] + self.nodeIDs()
+        list_fields = ['CTRIAX', self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid]
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
+        list_fields = ['CTRIAX', self.eid, self.Pid()] + self.nodeIDs() + [thetaMcid]
 
 
 class CTRIAX6(TriShell):

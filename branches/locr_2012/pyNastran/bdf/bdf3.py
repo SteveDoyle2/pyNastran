@@ -8,7 +8,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #from __future__ import (nested_scopes, generators, division, absolute_import)
                         #print_function, unicode_literals)
 
-#import io
+import io
 import os
 import sys
 import warnings
@@ -730,26 +730,27 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 return  # file was closed
             line = lineIn.strip().split('$')[0].strip()
             lineUpper = line.upper()
-           #print("lineUpper = %r" % str(lineUpper))
+            #print("lineUpper = %r" % str(lineUpper))
             if lineUpper.startswith('INCLUDE'):
                 #print("INCLUDE!!!")
-                (i, next_line, comment) = self.gen_get_line.next()
-                if next_line:
-                    next_line = next_line.strip().split('$')[0].strip()
-                else:
-                    next_line = ''
-                include_lines = [line]
-                while '\\' in next_line or '/' in next_line:  # more includes
-                    include_lines.append(next_line)
-                    (i, line_next, comment) = self.gen_get_line.next()
-                    next_line = next_line.strip().split('$')[0].strip()
-
+                try:
+                    (i, next_line, comment) = self.gen_get_line.next()
+                    if next_line:
+                        next_line = next_line.strip().split('$')[0].strip()
+                    else:
+                        next_line = ''
+                    include_lines = [line]
+                    while '\\' in next_line or '/' in next_line:  # more includes
+                        include_lines.append(next_line)
+                        (i, line_next, comment) = self.gen_get_line.next()
+                        next_line = next_line.strip().split('$')[0].strip()
+                    self.case_control_lines.append(next_line)
+                except StopIteration:
+                    include_lines = [line]
                 filename = get_include_filename(include_lines,
                                                  include_dir=self.include_dir)
-
                 self._open_file(filename)
                 #line = next_line
-                self.case_control_lines.append(next_line)
             else:
                 self.case_control_lines.append(lineUpper)
 
@@ -827,7 +828,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         #else:
             #self.active_filename = None
             #self.gen_get_line = None
-        
+
     def get_next_line(self):
         """
         Gets the next Executive or Case Control Deck line.
@@ -836,7 +837,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         #return self.get_line(self.active_filename)
 
-        with open(self.active_filename) as file:
+        with io.open(self.active_filename) as file:
             for n,line in enumerate(file):
                 #print "%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
                 line = line.rstrip('\t\r\n ')
@@ -1131,7 +1132,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 break
             #print '*'*60
             #print "self.active_filename =", self.active_filename
-
+        self._close_file()
+        del self.gen_get_line
+        del self._line_generators
         #end_of_all_files
 
     def _process_bulk_card(self, lines, comment):

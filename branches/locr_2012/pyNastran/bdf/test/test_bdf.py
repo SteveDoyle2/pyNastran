@@ -24,14 +24,15 @@ test_path = pyNastran.bdf.test.__path__[0]
 
 
 def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
-                            cid=None):
+                            punch=False, cid=None):
     print("folder = %s" % (folder))
     filenames = os.listdir(folder)
-    run_lots_of_files(filenames, debug=debug, xref=xref, check=check, cid=cid)
+    run_lots_of_files(filenames, debug=debug, xref=xref, check=check,
+                      punch=punch, cid=cid)
 
 
 def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
-                      cid=None):
+                      punch=False, cid=None):
     filenames = list(set(filenames))
     filenames.sort()
 
@@ -53,6 +54,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             (fem1, fem2, diffCards2) = run_bdf(folder, filename, debug=debug,
                                                xref=xref, check=check, punch=punch,
                                                cid=cid, isFolder=True)
+            del fem1
+            del fem2
             diffCards += diffCards
             isPassed = True
         except KeyboardInterrupt:

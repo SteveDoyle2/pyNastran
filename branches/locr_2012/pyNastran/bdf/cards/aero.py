@@ -663,7 +663,7 @@ class CAERO2(BaseCard):
             ## Number of interference elements. If NINT > 0, then NINT equal
             ## divisions are assumed; if zero or blank, specify a list of
             ## divisions in LINT. (Integer >= 0)
-            self.nint = integer_or_blank(card, 5, 'nint')
+            self.nint = integer_or_blank(card, 5, 'nint', 0)
 
             if self.nsb == 0:
                 ## ID of an AEFACT Bulk Data entry for slender body division
