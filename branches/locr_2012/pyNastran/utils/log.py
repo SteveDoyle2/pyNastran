@@ -20,29 +20,37 @@ def make_log(display=False):
     if display:
         print(msg)
     
-    with open('pyNastran.log', 'w') as fil:
+    with open('pyNastran.log', 'wb') as fil:
         fil.write(msg)
 
 
 def stderr_logging(typ, msg):
-    '''
+    """
     Default logging function. Takes a text and outputs to stderr.
     @param typ messeage type
     @param msg message to be displayed
     
     Message will have format 'typ: msg'
-    '''
-    sys.stdout.write((typ + ': ' + msg) if typ else msg)
+    """
+    name = '%-8s' % (typ + ':')  # max length of 'INFO', 'DEBUG', 'WARNING',.etc.
+    sys.stdout.write((name + msg) if typ else msg)
     sys.stdout.flush()
 
-class simpleLogger(object):
+class SimpleLogger(object):
     """
     Simple logger object. In future might be changed to use Python logging module.
     Two levels are supported: 'debug' and 'info'. Info level discards debug
     messages, 'debug' level displays all messages.
-    """
     
-    def __init__(self, level='debug', log_func = stderr_logging):
+    @note Logging module is currently not supported because I don't
+      know how to repoint the log file if the program is called a second
+      time.  Poor logging can result in:\n
+        1) double logging to a single file\n
+        2) all longging going to one file\n
+      This is really only an issue when calling logging multiple times,
+      such as in an optimization loop or testing.
+    """
+    def __init__(self, level='debug', log_func=stderr_logging):
         """
         @param
           level level of logging: 'info' or 'debug'
@@ -86,28 +94,35 @@ class simpleLogger(object):
         @param msg message to be looged without any alteration.
         """
         self.log_func(typ, msg)
-        
+
     def info(self, msg):
         """
         Log INFO message
         @param msg message to be logged
         """
         self.msg_typ("INFO", msg)
-    
+
     def warning(self, msg):
         """
         Log WARNING message
         @param msg message to be logged
         """
         self.msg_typ("WARNING", msg)
-    
+
     def error(self, msg):
         """
         Log ERROR message
         @param msg message to be logged
         """
         self.msg_typ("ERROR", msg)
-    
+
+    def exception(self, msg):
+        """
+        Log EXCEPTION message
+        @param msg message to be logged
+        """
+        self.msg_typ("ERROR", msg)
+
     def critical(self, msg):
         """
         Log CRITICAL message
@@ -116,20 +131,21 @@ class simpleLogger(object):
         self.msg_typ("CRITICAL", msg)
 
 
-def get_logger(log = None, level = 'debug'):
+def get_logger(log=None, level='debug'):
     """
     This function is useful as it will instantiate a simpleLogger object if log=None.
     @param log a logger object or None
     @param level level of logging: 'info' or 'debug'
     """
-    return simpleLogger(level) if log is None else log
+    return SimpleLogger(level) if log is None else log
 
 if __name__ == '__main__':
     # how to use a simple logger
-    for nam in ["debug", "info"]:      
-        print('--- %s logger ---' % (nam))
-        test_log = simpleLogger(nam)
-        test_log.debug('test message')
-        test_log.warning('asf')
-        test_log.error('errorss')
-    
+    for nam in ["debug", "info"]:
+        print('--- %s logger ---' % nam)
+        test_log = SimpleLogger(nam)
+        test_log.debug('debug message')
+        test_log.warning('warning')
+        test_log.error('errors')
+        test_log.exception('exception')
+   

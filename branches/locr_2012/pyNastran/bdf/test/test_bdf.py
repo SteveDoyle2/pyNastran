@@ -50,9 +50,9 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             print("filename = %s" % (absFilename))
         isPassed = False
         try:
-            (fem1, fem2, diffCards2) = runBDF(folder, filename, debug=debug,
-                                              xref=xref, check=check, punch=punch,
-                                              cid=cid, isFolder=True)
+            (fem1, fem2, diffCards2) = run_bdf(folder, filename, debug=debug,
+                                               xref=xref, check=check, punch=punch,
+                                               cid=cid, isFolder=True)
             diffCards += diffCards
             isPassed = True
         except KeyboardInterrupt:
@@ -77,8 +77,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     return failedFiles
 
 
-def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, punch=False,
-           cid=None, meshForm='combined', isFolder=False):
+def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False,
+            cid=None, meshForm='combined', isFolder=False):
     bdfModel = str(bdfFilename)
     print("bdfModel = %s" % (bdfModel))
     if isFolder:
@@ -429,7 +429,7 @@ def main():
     debug = not(args.quiet)
     bdf_filename = args.bdfFileName[0]
 
-    runBDF('.', bdf_filename, debug=debug, xref=xref, check=check, punch=punch)
+    run_bdf('.', bdf_filename, debug=debug, xref=xref, check=check, punch=punch)
 
 if __name__ == '__main__':
     main()
