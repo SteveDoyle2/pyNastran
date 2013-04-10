@@ -45,17 +45,10 @@ class TestF06(unittest.TestCase):
         if len(outputs) == 1: return outputs[0]
         return outputs
     
-    def test_plate_vonmises(self):
-        bdfname = os.path.join(testpath, 'plate', 'plate.bdf')
+    def test_plate_openmdao(self):
         bdfname2 = os.path.join(testpath, 'plate', 'plate_openmdao.bdf')
-        f06name = os.path.join(testpath, 'plate', 'plate.f06')
-        op2name = os.path.join(testpath, 'plate', 'plate.op2')
-
-        (bdf, f06, op2) = self.run_model(bdfname, f06name, op2name)
-        
         dynamic_vars = {'t' : 42.}
         bdf2 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
-        self.assertEquals(bdf.properties[1].t,  0.3, 't=%s' % bdf.properties[1].t)
         self.assertEquals(bdf2.properties[1].t, 42., 't=%s' % bdf2.properties[1].t)
         
         dynamic_vars = {'t' : 42}
@@ -65,6 +58,14 @@ class TestF06(unittest.TestCase):
         dynamic_vars = {'t' : 'asdddddddf'}
         with self.assertRaises(SyntaxError):
             bdf3 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
+
+    def test_plate_vonmises(self):
+        bdfname = os.path.join(testpath, 'plate', 'plate.bdf')
+        f06name = os.path.join(testpath, 'plate', 'plate.f06')
+        op2name = os.path.join(testpath, 'plate', 'plate.op2')
+
+        (bdf, f06, op2) = self.run_model(bdfname, f06name, op2name)
+        self.assertEquals(bdf.properties[1].t,  0.3, 't=%s' % bdf.properties[1].t)
 
         self.assertEquals(len(bdf.nodes), 36, bdf.nodes)
         self.assertEquals(len(bdf.elements), 25, bdf.elements)
