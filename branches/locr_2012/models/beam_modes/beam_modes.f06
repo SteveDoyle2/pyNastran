@@ -1,0 +1,721 @@
+1
+ 
+ 
+ 
+ 
+                     THIS PROGRAM IS CONFIDENTIAL AND A TRADE SECRET OF MSC.SOFTWARE CORPORATION.  THE RECEIPT OR    
+                  POSSESSION OF THIS PROGRAM DOES NOT CONVEY ANY RIGHTS TO REPRODUCE OR DISCLOSE ITS CONTENTS, OR TO 
+                 MANUFACTURE, USE, OR SELL ANYTHING HEREIN, IN WHOLE OR IN PART, WITHOUT THE SPECIFIC WRITTEN CONSENT
+                                                    OF MSC.SOFTWARE CORPORATION.                                     
+ 
+ 
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * *                                 * *
+                                              * *           MSC.SOFTWARE          * *
+                                              * *               CORP              * *
+                                              * *                                 * *
+                                              * *      M S C . N a s t r a n      * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *        Version 2005.1.0         * *
+                                              * *             2005R2              * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *          JUN 17, 2005           * *
+                                              * *                                 * *
+                                              * *              Intel              * *
+                                              * *MODEL PentiumIII/5114 (sdoyle-de * *
+                                              * *   Windows XP 6.1 (Build 7601)   * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+1News file - (6/03/05):
+  
+ Thank you for choosing MSC.Nastran, the industry standard in FEA, and Welcome
+ to MSC.Nastran 2005 r2.
+  
+ You can find version-specific online documentation, and online technical support
+ at:
+  
+    http://www.mscsoftware.com/support/prod_support/nastran/
+  
+ Also at the technical support location is a searchable list of technical
+ application notes and the current error/avoidance list. Please don't hesitate
+ to contact your nearest technical support representative if you require
+ assistance.
+  
+    http://www.mscsoftware.com/about/locate/
+  
+ The arbitrary beam cross section, explicit nonlinear (SOL 700), and the new
+ nonlinear (SOL 400) solution sequences, are regarded as pre-release capabilities
+ and are still undergoing testing and verification.  These capabilities should
+ not be employed in any analysis except for the purpose of testing and verifying
+ the functionality and working of the capabilities themselves.
+  
+ MSC.Nastran 2005 r2 is mainly focused on improving quality, accuracy and
+ ease-of-use, but also introduces new capabilities, some of which were made
+ available as pre-release functionality in MSC.Nastran 2005 r1. In addition,
+ significant advancements have been made regarding performance and scalability of
+ the program.  Some of the new features and enhancements are listed below.
+  
+ Nonlinear
+ - MSC.Nastran Implicit Nonlinear (SOL 600) - We have addressed many known
+   issues, improved memory usage, improved output options, added beam, bar, and
+   shell offsets, and thermal contact
+ - MSC.Nastran Explicit Nonlinear (SOL 700) pre-release - you can now
+   execute LS-Dyna from inside MSC.Nastran to perform crash and impact
+   analyses
+  
+ Numeric Enhancements
+ - Multi-level DMP - an enhanced Lanczos modal extraction methodology that
+   improves scalability and efficiently handles large normal modes analyses with
+   very frequency ranges
+ - MDACMS enhanced robustness, improved handling of large masses, and improved
+   performance
+ - Distributed memory parallel MPYAD
+  
+ Elements
+ - CFAST - a new fastener element based on user defined stiffness values.
+ - Arbitrary beam cross section pre-release capability - you can specify cross
+   section shapes using POINT entries, and optimize them in SOL 200
+ - Enhanced nonstructural mass element summary printout - ELSUM
+1- spatially dependent heat transfer coefficient
+ - Heat transfer coefficient as a function of two variables
+ - Thermal analysis flux output
+  
+ Optimization
+ - MSC.Nastran Topology Optimization - this addition to the existing SOL 200
+   optimization solution sequence allows optimization analyses to be performed
+   that require many design variables
+  
+ Further Enhancements
+ - Larger XDB database support
+ - MATMOD option 16 - we have removed many previous limitations with this
+   matrix output capability
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     1
+                                                                                                                                    
+0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O                                           
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     NASTRAN OP2NEW=0 $ MSC.NASTRAN .LCL FILE                                        
+     NASTRAN BUFFSIZE=8193 $(C:/MSC.SOFTWARE/MSC.NASTRAN/CONF/NAST20051.RCF[2])      
+     NASTRAN REAL=2141978624 $(PROGRAM DEFAULT)                                      
+     $ASSIGN MASTER='S:\BEAM_RA.MASTER', DELETE                                      
+     $ASSIGN DBALL='S:\BEAM_RA.DBALL', DELETE                                        
+     $*                                                                              
+1                                                                             APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     2
+                                                                                                                                    
+0        N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O                                                             
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     SOL SEMODES                                                                             
+     $                                                                                       
+     $INCLUDE 'PCHDISPA.ALT'                                                                 
+     $*                                                                                      
+     CEND                                                                                    
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     3
+      MODES                                                                                                                         
+0                                                                                                                                   
+0                                        C A S E    C O N T R O L    E C H O                                                        
+                 COMMAND                                                                                                            
+                 COUNT                                                                                                              
+                  1      $*                                                                                      
+                  2      $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                                                
+                  3      $*                                                                                      
+                  4      $*  CASE CONTROL                                                                        
+                  5      $*                                                                                      
+                  6      $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                                                
+                  7      $*                                                                                      
+                  8      TITLE    = SIMPLE BEAM EXAMPLE                                                          
+                  9      SUBTITLE = MODES                                                                        
+                 10      ECHO     = SORT                                                                         
+                 11      $*                                                                                      
+                 12      $* GLOBAL CASE                                                                          
+                 13      $*                                                                                      
+                 14      SPC = 1                                                                                 
+                 15      ELFOR(PUNCH)=ALL                                                                        
+                 16      STRESS(PUNCH)=ALL                                                                       
+                 17      METHOD = 1                                                                              
+                 18      DISP = ALL                                                                              
+                 19      OUTPUT(XYPLOT)                                                                          
+                 20      XYPRINT DISP / 1(T2), 2(T2), 3(T2), 4(T2)                                               
+                 21      $*                                                                                      
+                 22      $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                                                
+                 23      $*                                                                                      
+                 24      $*  BULK DATA                                                                           
+                 25      $*                                                                                      
+                 26      $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                                                
+                 27      $*                                                                                      
+                 28      BEGIN BULK                                                                              
+ *** USER WARNING MESSAGE 324 (XSORSO)
+     BLANK ENTRIES ENCOUNTERED WILL BE IGNORED.
+0                             INPUT BULK DATA ENTRY COUNT =      79
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     4
+      MODES                                                                                                                         
+0                                                                                                                                   
+0                                                 S O R T E D   B U L K   D A T A   E C H O                                         
+                 ENTRY                                                                                                              
+                 COUNT        .   1  ..   2  ..   3  ..   4  ..   5  ..   6  ..   7  ..   8  ..   9  ..  10  .                      
+                    1-        CBAR    1       1       1       2       0.0     1.0000000.0                     
+                    2-        CBAR    2       1       2       3       0.0     1.0000000.0                     
+                    3-        CBAR    3       1       3       4       0.0     1.0000000.0                     
+                    4-        CBAR    4       1       4       5       0.0     1.0000000.0                     
+                    5-        CBAR    5       1       5       6       0.0     1.0000000.0                     
+                    6-        CBAR    6       1       6       7       0.0     1.0000000.0                     
+                    7-        CBAR    7       1       7       8       0.0     1.0000000.0                     
+                    8-        CBAR    8       1       8       9       0.0     1.0000000.0                     
+                    9-        CBAR    9       1       9       10      0.0     1.0000000.0                     
+                   10-        CBEAM   10      3       10      11      0.0     1.0000000.0                     
+                   11-        CONM2   21      11      0       2.5900-30.0     0.0     0.0             ++000001
+                   12-        ++0000012.5900-30.0     2.5900-30.0     0.0     2.5900-3                 +000002
+                   13-        EIGRL   1                       10                              MAX             
+                   14-        GRID    1       0       0.0     0.0     0.0     0                               
+                   15-        GRID    2       0       1.00000 0.0     0.0     0                               
+                   16-        GRID    3       0       2.00000 0.0     0.0     0                               
+                   17-        GRID    4       0       3.00000 0.0     0.0     0                               
+                   18-        GRID    5       0       4.00000 0.0     0.0     0                               
+                   19-        GRID    6       0       5.00000 0.0     0.0     0                               
+                   20-        GRID    7       0       6.00000 0.0     0.0     0                               
+                   21-        GRID    8       0       7.00000 0.0     0.0     0                               
+                   22-        GRID    9       0       8.00000 0.0     0.0     0                               
+                   23-        GRID    10      0       9.00000 0.0     0.0     0                               
+                   24-        GRID    11      0       10.0000 0.0     0.0     0                               
+                   25-        GRID    12      0       5.49607 0.0     0.0     0                               
+                   26-        MAT1    2       3.0000+71.1628+7.29000007.4851-40.0             0.0             
+                   27-        PARAM   AUTOSPC YES                                                             
+                   28-        PARAM   GRDPNT  0                                                               
+                   29-        PARAM   K6ROT   100.0000                                                        
+                   30-        PARAM   OUGCORD GLOBAL                                                          
+                   31-        PARAM   POST    -1                                                              
+                   32-        PARAM   POSTEXT YES                                                             
+                   33-        PBARL   1       2       MSCBML0 ROD                                     ++000003
+                   34-        ++0000031.0000000.0                                                      +000004
+                   35-        PBEAML  3       2       MSCBML0 ROD                                     ++000005
+                   36-        ++0000051.0000000.0                                                      +000006
+                   37-        PROD    2       2       1.0                                                     
+                   38-        SPC     1       1       123456  0.0                                             
+                   39-        USET    U2      1       123                                                     
+                              ENDDATA 
+0                       TOTAL COUNT=        40
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     5
+      MODES                                                                                                                         
+0                                                                                                                                   
+0
+0
+0
+ 
+
+
+                                        M O D E L   S U M M A R Y
+
+                                   NUMBER OF GRID     POINTS   =       12
+ 
+                                   NUMBER OF CBAR     ELEMENTS =        9
+                                   NUMBER OF CBEAM    ELEMENTS =        1
+                                   NUMBER OF CONM2    ELEMENTS =        1
+ 
+ *** USER INFORMATION MESSAGE 4379 (IFP9A)
+     THE USER SUPPLIED PBARL BULK DATA ENTRIES ARE REPLACED BY THE FOLLOWING PBAR ENTRIES.
+  PBAR               1           2  3.1416E+00  7.8540E-01  7.8540E-01  1.5708E+00  0.0000E+00
+            1.0000E+00  0.0000E+00  0.0000E+00  1.0000E+00 -1.0000E+00  0.0000E+00  0.0000E+00 -1.0000E+00
+            9.0000E-01  9.0000E-01  0.0000E+00
+ *** USER INFORMATION MESSAGE 4379 (IFP9A)
+     THE USER SUPPLIED PBEAML BULK DATA ENTRIES ARE REPLACED BY THE FOLLOWING PBEAM ENTRIES.
+  PBEAM              3           2  3.1416E+00  7.8540E-01  7.8540E-01  0.0000E+00  1.5708E+00  0.0000E+00
+            1.0000E+00  0.0000E+00  0.0000E+00  1.0000E+00 -1.0000E+00  0.0000E+00  0.0000E+00 -1.0000E+00
+            9.0000E-01  9.0000E-01  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+            0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+ *** USER INFORMATION MESSAGE 4109 (OUTPX2)
+     THE LABEL IS XXXXXXXX FOR FORTRAN UNIT 12
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        7 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =          8 RECORDS.)
+     (TOTAL DATA WRITTEN FOR TAPE LABEL = WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK PVT0     WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                27                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS PVT0.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          27 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          51 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK CASECC   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 1                 0               600                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS CASECC.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         600 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         624 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM1X   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 0                 0                 8                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM1.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          99 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         130 WORDS.)
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     6
+      MODES                                                                                                                         
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM2X   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102                 2               256                 0              1024                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM2.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         147 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          30 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         223 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM4X   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    104                 0              4096                 0               512                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM4.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =           7 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          25 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          48 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK EPTX     WRITTEN ON FORTRAN UNIT 12, TRL =
+                    105               128              4096                 0              1024                 0                48
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS EPT.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         200 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          40 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         344 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK MPTS     WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101             32768                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS MPTS.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          46 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK DYNAMICS WRITTEN ON FORTRAN UNIT 12, TRL =
+                    103               256                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS DYNAMICS.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          30 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          61 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK BGPDTX   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                12                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS BGPDT.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          48 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          72 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK EQEXINS  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                12                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS EQEXINS.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          24 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          76 WORDS.)
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     7
+      MODES                                                                                                                         
+0                                                                                                                                   
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     8
+      MODES                                                                                                                         
+0                                                                                                                                   
+                           O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R
+0                                                     REFERENCE POINT =        0
+                                                                M O
+                      *  2.610514E-02  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00 *
+                      *  0.000000E+00  2.610514E-02  0.000000E+00  0.000000E+00  0.000000E+00  1.434757E-01 *
+                      *  0.000000E+00  0.000000E+00  2.610514E-02  0.000000E+00 -1.434757E-01  0.000000E+00 *
+                      *  0.000000E+00  0.000000E+00  0.000000E+00  3.765757E-03  0.000000E+00  0.000000E+00 *
+                      *  0.000000E+00  0.000000E+00 -1.434757E-01  0.000000E+00  1.049347E+00  0.000000E+00 *
+                      *  0.000000E+00  1.434757E-01  0.000000E+00  0.000000E+00  0.000000E+00  1.049347E+00 *
+                                                                 S
+                                           *  1.000000E+00  0.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  1.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  1.000000E+00 *
+                               DIRECTION
+                          MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.
+                                  X            2.610514E-02      0.000000E+00  0.000000E+00  0.000000E+00
+                                  Y            2.610514E-02      5.496071E+00  0.000000E+00  0.000000E+00
+                                  Z            2.610514E-02      5.496071E+00  0.000000E+00  0.000000E+00
+                                                                I(S)
+                                           *  3.765757E-03  0.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  2.607946E-01  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  2.607946E-01 *
+                                                                I(Q)
+                                           *  3.765757E-03                             *
+                                           *                2.607946E-01               *
+                                           *                              2.607946E-01 *
+                                                                 Q
+                                           *  1.000000E+00  0.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  1.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  1.000000E+00 *
+
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE     9
+      MODES                                                                                                                         
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OGPWG    WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 0                 0                 0                 0                 0                 1
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OGPWG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         146 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         252 WORDS.)
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    10
+      MODES                                                                                                                         
+0                                                                                                                                   
+0 RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
+
+0                                                  OLOAD    RESULTANT       
+  SUBCASE/    LOAD
+  DAREA ID    TYPE       T1            T2            T3            R1            R2            R3
+0        1     FX    0.000000E+00     ----          ----          ----       0.000000E+00  0.000000E+00                             
+               FY       ----       0.000000E+00     ----       0.000000E+00     ----       0.000000E+00                             
+               FZ       ----          ----       0.000000E+00  0.000000E+00  0.000000E+00     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    11
+      MODES                                                                                                                         
+0                                                                                                                                   
+0                                         G R I D   P O I N T   S I N G U L A R I T Y   T A B L E
+0                             POINT    TYPE   FAILED      STIFFNESS       OLD USET           NEW USET
+                               ID            DIRECTION      RATIO     EXCLUSIVE  UNION   EXCLUSIVE  UNION
+                               12        G      1         0.00E+00          B        F         SB       S    *
+                               12        G      2         0.00E+00          B        F         SB       S    *
+                               12        G      3         0.00E+00          B        F         SB       S    *
+                               12        G      4         0.00E+00          B        F         SB       S    *
+                               12        G      5         0.00E+00          B        F         SB       S    *
+                               12        G      6         0.00E+00          B        F         SB       S    *
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+ *** USER INFORMATION MESSAGE 5010 (LNCILD)
+     STURM SEQUENCE DATA FOR EIGENVALUE EXTRACTION.
+     TRIAL EIGENVALUE =  8.698882D+07, CYCLES =  1.484403D+03 NUMBER OF EIGENVALUES BELOW THIS VALUE =     2
+ *** USER INFORMATION MESSAGE 5010 (LNCILD)
+     STURM SEQUENCE DATA FOR EIGENVALUE EXTRACTION.
+     TRIAL EIGENVALUE =  6.031004D+09, CYCLES =  1.235990D+04 NUMBER OF EIGENVALUES BELOW THIS VALUE =    10
+
+ TABLE OF SHIFTS:  (LNNRIGL)
+ SHIFT #        SHIFT VALUE         FREQUENCY, CYCLES     # EIGENVALUES BELOW    # NEW EIGENVALUES FOUND
+     1.        8.6988816E+07          1.4844031E+03                 2                       34
+     2.        6.0310036E+09          1.2359898E+04                10                        0
+
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    12
+      MODES                                                                                                                         
+0                                                                                                                                   
+0
+
+
+                          E I G E N V A L U E  A N A L Y S I S   S U M M A R Y   (READ MODULE) 
+
+
+
+                                     BLOCK SIZE USED ......................    7
+
+                                     NUMBER OF DECOMPOSITIONS .............    2
+
+                                     NUMBER OF ROOTS FOUND ................   10
+
+                                     NUMBER OF SOLVES REQUIRED ............    7
+
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    13
+      MODES                                                                                                                         
+0                                                                                                                                   
+ 
+                                              R E A L   E I G E N V A L U E S
+   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
+    NO.       ORDER                                                                       MASS              STIFFNESS
+        1         1        8.232776E+06        2.869281E+03        4.566603E+02        8.719168E-03        7.178296E+04
+        2         2        8.232776E+06        2.869281E+03        4.566603E+02        8.719168E-03        7.178296E+04
+        3         3        2.824056E+08        1.680493E+04        2.674587E+03        1.714052E-02        4.840580E+06
+        4         4        2.824056E+08        1.680493E+04        2.674587E+03        1.714052E-02        4.840580E+06
+        5         5        4.989076E+08        2.233624E+04        3.554923E+03        3.668128E-03        1.830057E+06
+        6         6        8.021004E+08        2.832138E+04        4.507487E+03        1.334596E-02        1.070480E+07
+        7         7        1.733310E+09        4.163304E+04        6.626104E+03        1.242784E-02        2.154129E+07
+        8         8        1.733310E+09        4.163304E+04        6.626104E+03        1.242784E-02        2.154129E+07
+        9         9        4.874295E+09        6.981615E+04        1.111158E+04        2.216693E-02        1.080481E+08
+       10        10        4.874295E+09        6.981615E+04        1.111158E+04        2.216693E-02        1.080481E+08
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    14
+      MODES                                                                                                                         
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK LAMA2    WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                10                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS LAMA.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         146 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         244 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OUGV1    WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 0               960                 0                 0                 0                 1
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OUGV1.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         146 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =         110 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        2525 WORDS.)
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    15
+      MODES                                                                                                                         
+0                                                                                                                                   
+      EIGENVALUE =  8.232776E+06
+          CYCLES =  4.566603E+02         R E A L   E I G E N V E C T O R   N O .          1
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G      0.0            0.0            0.0            0.0            0.0            0.0
+             2      G      1.266788E-17   2.771224E-03   1.857573E-02   5.445647E-17  -3.055872E-02   4.558909E-03
+             3      G      2.507179E-17   9.792748E-03   6.564154E-02   1.089129E-16  -5.700459E-02   8.504241E-03
+             4      G      3.699157E-17   2.044896E-02   1.370709E-01   1.633694E-16  -7.937218E-02   1.184116E-02
+             5      G      4.824671E-17   3.413064E-02   2.287803E-01   2.178259E-16  -9.774480E-02   1.458208E-02
+             6      G      5.843778E-17   5.024403E-02   3.367897E-01   2.722824E-16  -1.122727E-01   1.674943E-02
+             7      G      6.744972E-17   6.822230E-02   4.572994E-01   3.267388E-16  -1.231883E-01   1.837788E-02
+             8      G      7.489256E-17   8.753905E-02   5.867810E-01   3.811953E-16  -1.308178E-01   1.951608E-02
+             9      G      8.076085E-17   1.077233E-01   7.220778E-01   4.356518E-16  -1.355901E-01   2.022804E-02
+            10      G      8.513459E-17   1.283758E-01   8.605126E-01   4.901082E-16  -1.380430E-01   2.059397E-02
+            11      G      8.793735E-17   1.491852E-01   1.000000E+00   5.369797E-16  -1.388265E-01   2.071086E-02
+            12      G      0.0            0.0            0.0            0.0            0.0            0.0
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    16
+      MODES                                                                                                                         
+0                                                                                                                                   
+      EIGENVALUE =  8.232776E+06
+          CYCLES =  4.566603E+02         R E A L   E I G E N V E C T O R   N O .          2
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G      0.0            0.0            0.0            0.0            0.0            0.0
+             2      G      4.382678E-19   1.857573E-02  -2.771224E-03   1.949025E-18   4.558909E-03   3.055872E-02
+             3      G      8.665529E-19   6.564154E-02  -9.792748E-03   3.898051E-18   8.504241E-03   5.700459E-02
+             4      G      1.274626E-18   1.370709E-01  -2.044896E-02   5.847077E-18   1.184116E-02   7.937218E-02
+             5      G      1.664941E-18   2.287803E-01  -3.413064E-02   7.796102E-18   1.458208E-02   9.774480E-02
+             6      G      2.009047E-18   3.367897E-01  -5.024403E-02   9.745128E-18   1.674943E-02   1.122727E-01
+             7      G      2.323308E-18   4.572994E-01  -6.822230E-02   1.169415E-17   1.837788E-02   1.231883E-01
+             8      G      2.558331E-18   5.867810E-01  -8.753905E-02   1.364318E-17   1.951608E-02   1.308178E-01
+             9      G      2.729238E-18   7.220778E-01  -1.077233E-01   1.559220E-17   2.022804E-02   1.355901E-01
+            10      G      2.844452E-18   8.605126E-01  -1.283758E-01   1.754123E-17   2.059397E-02   1.380430E-01
+            11      G      2.930030E-18   1.000000E+00  -1.491852E-01   1.921276E-17   2.071086E-02   1.388265E-01
+            12      G      0.0            0.0            0.0            0.0            0.0            0.0
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    17
+      MODES                                                                                                                         
+0                                                                                                                                   
+      EIGENVALUE =  2.824056E+08
+          CYCLES =  2.674587E+03         R E A L   E I G E N V E C T O R   N O .          3
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G      0.0            0.0            0.0            0.0            0.0            0.0
+             2      G     -2.038550E-16   1.574319E-01  -9.363092E-02  -1.261908E-15   9.571635E-02   1.609384E-01
+             3      G     -4.044054E-16   4.252597E-01  -2.529186E-01  -2.523816E-15   1.355358E-01   2.278912E-01
+             4      G     -5.968127E-16   7.075648E-01  -4.208165E-01  -3.785724E-15   1.243421E-01   2.090699E-01
+             5      G     -7.774180E-16   9.201899E-01  -5.472730E-01  -5.047631E-15   7.162958E-02   1.204386E-01
+             6      G     -9.423818E-16   1.000000E+00  -5.947392E-01  -6.309539E-15  -8.959184E-03  -1.506406E-02
+             7      G     -1.088176E-15   9.118543E-01  -5.423155E-01  -7.571447E-15  -1.013307E-01  -1.703784E-01
+             8      G     -1.211567E-15   6.513996E-01  -3.874129E-01  -8.833354E-15  -1.894613E-01  -3.185620E-01
+             9      G     -1.309481E-15   2.426542E-01  -1.443160E-01  -1.009526E-14  -2.602491E-01  -4.375852E-01
+            10      G     -1.381904E-15  -2.697059E-01   1.604047E-01  -1.135717E-14  -3.062008E-01  -5.148488E-01
+            11      G     -1.427275E-15  -8.325591E-01   4.951556E-01  -1.243750E-14  -3.275431E-01  -5.507340E-01
+            12      G      0.0            0.0            0.0            0.0            0.0            0.0
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    18
+      MODES                                                                                                                         
+0                                                                                                                                   
+      EIGENVALUE =  2.824056E+08
+          CYCLES =  2.674587E+03         R E A L   E I G E N V E C T O R   N O .          4
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G      0.0            0.0            0.0            0.0            0.0            0.0
+             2      G     -5.656511E-17   9.363092E-02   1.574319E-01  -1.122711E-16  -1.609384E-01   9.571635E-02
+             3      G     -1.108212E-16   2.529186E-01   4.252597E-01  -2.245422E-16  -2.278912E-01   1.355358E-01
+             4      G     -1.635835E-16   4.208165E-01   7.075648E-01  -3.368134E-16  -2.090699E-01   1.243421E-01
+             5      G     -2.156843E-16   5.472730E-01   9.201899E-01  -4.490845E-16  -1.204386E-01   7.162958E-02
+             6      G     -2.645402E-16   5.947392E-01   1.000000E+00  -5.613556E-16   1.506406E-02  -8.959184E-03
+             7      G     -3.087464E-16   5.423155E-01   9.118543E-01  -6.736267E-16   1.703784E-01  -1.013307E-01
+             8      G     -3.463791E-16   3.874129E-01   6.513996E-01  -7.858978E-16   3.185620E-01  -1.894613E-01
+             9      G     -3.769371E-16   1.443160E-01   2.426542E-01  -8.981690E-16   4.375852E-01  -2.602491E-01
+            10      G     -3.976959E-16  -1.604047E-01  -2.697059E-01  -1.010440E-15   5.148488E-01  -3.062008E-01
+            11      G     -4.125025E-16  -4.951556E-01  -8.325591E-01  -1.110470E-15   5.507340E-01  -3.275431E-01
+            12      G      0.0            0.0            0.0            0.0            0.0            0.0
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    19
+      MODES                                                                                                                         
+0                                                                                                                                   
+      EIGENVALUE =  4.989076E+08
+          CYCLES =  3.554923E+03         R E A L   E I G E N V E C T O R   N O .          5
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G      0.0            0.0            0.0            0.0            0.0            0.0
+             2      G      2.480387E-16   2.161966E-15  -5.864677E-16   1.014664E-01   8.207555E-16   2.107457E-15
+             3      G      4.933720E-16   5.685450E-15  -1.905574E-15   2.029328E-01   1.401452E-15   2.878049E-15
+             4      G      7.294947E-16   9.202239E-15  -3.720072E-15   3.043992E-01   1.681507E-15   2.481198E-15
+             5      G      9.515240E-16   1.160450E-14  -5.690652E-15   4.058655E-01   1.577864E-15   1.214649E-15
+             6      G      1.154049E-15   1.217705E-14  -7.356298E-15   5.073319E-01   1.037402E-15  -5.478293E-16
+             7      G      1.336932E-15   1.064700E-14  -8.188857E-15   6.087983E-01   1.120236E-16  -2.435908E-15
+             8      G      1.492628E-15   7.112615E-15  -7.790743E-15   7.102647E-01  -1.004627E-15  -4.148871E-15
+             9      G      1.617848E-15   1.931010E-15  -6.094790E-15   8.117310E-01  -2.044176E-15  -5.481603E-15
+            10      G      1.711068E-15  -4.379070E-15  -3.379124E-15   9.131975E-01  -2.789840E-15  -6.333894E-15
+            11      G      1.766745E-15  -1.123777E-14  -1.141178E-16   1.000000E+00  -3.170964E-15  -6.730734E-15
+            12      G      0.0            0.0            0.0            0.0            0.0            0.0
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    20
+      MODES                                                                                                                         
+0                                                                                                                                   
+      EIGENVALUE =  8.021004E+08
+          CYCLES =  4.507487E+03         R E A L   E I G E N V E C T O R   N O .          6
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G      0.0            0.0            0.0            0.0            0.0            0.0
+             2      G      1.428230E-01   4.560671E-15   5.250244E-16  -2.097340E-15   1.504056E-16   3.891816E-15
+             3      G      2.827877E-01   1.116866E-14   4.384878E-16  -4.194681E-15   9.729081E-16   4.706305E-15
+             4      G      4.170931E-01   1.663099E-14  -1.030613E-15  -6.292022E-15   2.150122E-15   3.104669E-15
+             5      G      5.430514E-01   1.882570E-14  -4.131713E-15  -8.389362E-15   3.081919E-15   1.869199E-16
+             6      G      6.581417E-01   1.709543E-14  -8.148132E-15  -1.048670E-14   3.146723E-15  -2.813196E-15
+             7      G      7.600609E-01   1.229151E-14  -1.165068E-14  -1.258404E-14   2.097408E-15  -4.988028E-15
+             8      G      8.467692E-01   5.931159E-15  -1.325071E-14  -1.468138E-14   2.228430E-16  -6.082652E-15
+             9      G      9.165314E-01  -7.943112E-16  -1.231866E-14  -1.677872E-14  -1.853814E-15  -6.340435E-15
+            10      G      9.679514E-01  -7.220613E-15  -9.095138E-15  -1.887606E-14  -3.523242E-15  -6.170122E-15
+            11      G      1.000000E+00  -1.321639E-14  -4.501637E-15  -2.067089E-14  -4.492169E-15  -5.925413E-15
+            12      G      0.0            0.0            0.0            0.0            0.0            0.0
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    21
+      MODES                                                                                                                         
+0                                                                                                                                   
+      EIGENVALUE =  1.733310E+09
+          CYCLES =  6.626104E+03         R E A L   E I G E N V E C T O R   N O .          7
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G      0.0            0.0            0.0            0.0            0.0            0.0
+             2      G     -3.909883E-15   9.971073E-02   3.873997E-01  -6.465516E-15  -2.483995E-01   6.393421E-02
+             3      G     -7.694515E-15   2.115289E-01   8.218400E-01  -1.293103E-14  -2.013042E-01   5.181260E-02
+             4      G     -1.118427E-14   2.573846E-01   1.000000E+00  -1.939655E-14   3.669478E-02  -9.444670E-03
+             5      G     -1.425354E-14   2.020751E-01   7.851094E-01  -2.586206E-14   3.080204E-01  -7.927971E-02
+             6      G     -1.694719E-14   6.454686E-02   2.507798E-01  -3.232758E-14   4.582727E-01  -1.179523E-01
+             7      G     -1.923903E-14  -9.347478E-02  -3.631716E-01  -3.879310E-14   3.978541E-01  -1.024015E-01
+             8      G     -2.119399E-14  -1.971491E-01  -7.659709E-01  -4.525861E-14   1.364858E-01  -3.512935E-02
+             9      G     -2.274447E-14  -1.929760E-01  -7.497572E-01  -5.172413E-14  -2.281689E-01   5.872716E-02
+            10      G     -2.385348E-14  -7.182010E-02  -2.790381E-01  -5.818965E-14  -5.650097E-01   1.454248E-01
+            11      G     -2.454213E-14   1.309415E-01   5.087386E-01  -6.358623E-14  -7.850527E-01   2.020605E-01
+            12      G      0.0            0.0            0.0            0.0            0.0            0.0
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    22
+      MODES                                                                                                                         
+0                                                                                                                                   
+      EIGENVALUE =  1.733310E+09
+          CYCLES =  6.626104E+03         R E A L   E I G E N V E C T O R   N O .          8
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G      0.0            0.0            0.0            0.0            0.0            0.0
+             2      G     -2.796657E-15   3.873997E-01  -9.971073E-02  -1.255997E-15   6.393421E-02   2.483995E-01
+             3      G     -5.492663E-15   8.218400E-01  -2.115289E-01  -2.511994E-15   5.181260E-02   2.013042E-01
+             4      G     -7.986298E-15   1.000000E+00  -2.573846E-01  -3.767991E-15  -9.444670E-03  -3.669478E-02
+             5      G     -1.023121E-14   7.851094E-01  -2.020751E-01  -5.023988E-15  -7.927971E-02  -3.080204E-01
+             6      G     -1.219811E-14   2.507798E-01  -6.454686E-02  -6.279986E-15  -1.179523E-01  -4.582727E-01
+             7      G     -1.386330E-14  -3.631716E-01   9.347478E-02  -7.535983E-15  -1.024015E-01  -3.978541E-01
+             8      G     -1.523371E-14  -7.659709E-01   1.971491E-01  -8.791980E-15  -3.512935E-02  -1.364858E-01
+             9      G     -1.630885E-14  -7.497572E-01   1.929760E-01  -1.004798E-14   5.872716E-02   2.281689E-01
+            10      G     -1.707525E-14  -2.790381E-01   7.182010E-02  -1.130397E-14   1.454248E-01   5.650097E-01
+            11      G     -1.755420E-14   5.087386E-01  -1.309415E-01  -1.234345E-14   2.020605E-01   7.850527E-01
+            12      G      0.0            0.0            0.0            0.0            0.0            0.0
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    23
+      MODES                                                                                                                         
+0                                                                                                                                   
+      EIGENVALUE =  4.874295E+09
+          CYCLES =  1.111158E+04         R E A L   E I G E N V E C T O R   N O .          9
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G      0.0            0.0            0.0            0.0            0.0            0.0
+             2      G      2.968037E-16  -5.901058E-01   6.166302E-01  -2.130808E-16  -2.160546E-01  -2.067609E-01
+             3      G      1.200256E-15  -9.248837E-01   9.664560E-01  -4.261616E-16   5.366579E-02   5.135735E-02
+             4      G      5.489929E-16  -5.934162E-01   6.200895E-01  -6.392425E-16   4.241062E-01   4.058631E-01
+             5      G      6.878477E-16   1.870398E-01  -1.954470E-01  -8.523233E-16   5.093701E-01   4.874595E-01
+             6      G      1.062588E-15   7.904264E-01  -8.259550E-01  -1.065404E-15   2.061718E-01   1.973033E-01
+             7      G      1.961027E-15   7.290481E-01  -7.618178E-01  -1.278485E-15  -2.370527E-01  -2.268559E-01
+             8      G      4.275993E-15   7.757969E-02  -8.106679E-02  -1.491566E-15  -4.341086E-01  -4.154353E-01
+             9      G      5.425734E-15  -5.767715E-01   6.026966E-01  -1.704647E-15  -1.799805E-01  -1.722386E-01
+            10      G      6.491713E-15  -6.082873E-01   6.356289E-01  -1.917727E-15   3.984552E-01   3.813156E-01
+            11      G      5.863890E-15   1.615335E-01  -1.687942E-01   4.676445E-15   1.000000E+00   9.569848E-01
+            12      G      0.0            0.0            0.0            0.0            0.0            0.0
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    24
+      MODES                                                                                                                         
+0                                                                                                                                   
+      EIGENVALUE =  4.874295E+09
+          CYCLES =  1.111158E+04         R E A L   E I G E N V E C T O R   N O .         10
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G      0.0            0.0            0.0            0.0            0.0            0.0
+             2      G      5.965444E-16  -6.166302E-01  -5.901058E-01   5.335696E-15   2.067609E-01  -2.160546E-01
+             3      G      1.666005E-15  -9.664560E-01  -9.248837E-01   1.067139E-14  -5.135735E-02   5.366579E-02
+             4      G      2.680629E-15  -6.200895E-01  -5.934162E-01   1.600709E-14  -4.058631E-01   4.241062E-01
+             5      G      3.455163E-15   1.954470E-01   1.870398E-01   2.134279E-14  -4.874595E-01   5.093701E-01
+             6      G      5.046175E-15   8.259550E-01   7.904264E-01   2.667848E-14  -1.973033E-01   2.061718E-01
+             7      G      7.160643E-15   7.618178E-01   7.290481E-01   3.201418E-14   2.268559E-01  -2.370527E-01
+             8      G      1.044713E-14   8.106679E-02   7.757969E-02   3.734988E-14   4.154353E-01  -4.341086E-01
+             9      G      1.383887E-14  -6.026966E-01  -5.767715E-01   4.268557E-14   1.722386E-01  -1.799805E-01
+            10      G      1.657930E-14  -6.356289E-01  -6.082873E-01   4.802127E-14  -3.813156E-01   3.984552E-01
+            11      G      1.871633E-14   1.687942E-01   1.615335E-01   5.107776E-14  -9.569848E-01   1.000000E+00
+            12      G      0.0            0.0            0.0            0.0            0.0            0.0
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    25
+      MODES                                                                                                                         
+0                                                                                                                                   
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    26
+      MODES                                                                                                                         
+0                                                                                                                                   
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    27
+      MODES                                                                                                                         
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OEF1X    WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                63                 4                10                13                 0                 4
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OEF1X.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         146 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =         210 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        4915 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OES1X1   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                63                 4                10                13                 0                 4
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OES1X1.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         146 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =         210 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        5655 WORDS.)
+ *** USER INFORMATION MESSAGE 4110 (OUTPX2)
+                                 END-OF-DATA SIMULATION ON FORTRAN UNIT 12
+                                 (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      1 WORDS.)
+                                       (NUMBER OF FORTRAN RECORDS WRITTEN =      1 RECORDS.)
+                                       (TOTAL DATA WRITTEN FOR EOF MARKER =      1 WORDS.)
+1    SIMPLE BEAM EXAMPLE                                                      APRIL  10, 2013  MSC.NASTRAN  6/17/05   PAGE    28
+      MODES                                                                                                                         
+0                                                                                                                                   
+ * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     30
+
+
+
+0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *
+0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY
+ --------------------------------------------------------------------------------------------------------------------------
+     0     0    1    1 '        '    T    T    T    T    T     T      F      T      0     F     -1            0           F
+0SEID = SUPERELEMENT ID.
+ PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.
+ PROJ = PROJECT ID NUMBER.
+ VERS = VERSION ID.
+ APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.
+ SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.
+ SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).
+ SEKR = STIFFNESS MATRIX REDUCTION STEP.
+ SELG = LOAD MATRIX GENERATION STEP.
+ SELR = LOAD MATRIX REDUCTION STEP. 
+ MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.
+ DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.
+ SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.
+ PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS
+ LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.
+ SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.
+ DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).
+ SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.
+ 
+ No PARAM values were set in the Control File.
+ 
+1                                        * * * END OF JOB * * *
+ 
+ 
