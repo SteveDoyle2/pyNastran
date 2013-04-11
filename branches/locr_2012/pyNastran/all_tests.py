@@ -1,9 +1,7 @@
 import unittest
 
 #bdf
-from pyNastran.bdf.test.test_field_writer import TestFieldWriter
-from pyNastran.bdf.test.bdf_unit_tests import TestBDF
-from pyNastran.bdf.test.unit.test_coords import TestCoords
+from pyNastran.bdf.test.all_tests import *
 
 #op2
 from pyNastran.op2.test.op2_unit_tests import TestOP2
