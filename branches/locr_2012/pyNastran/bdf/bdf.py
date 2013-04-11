@@ -606,6 +606,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         @param xref should the bdf be cross referenced (default=True)
         @param punch indicates whether the file is a punch file (default=False)
         """
+        self.include_dir = includeDir
         self._set_infile(infilename, includeDir)
 
         fname = self.print_filename(self.bdf_filename)
@@ -923,7 +924,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             if cardName == 'INCLUDE':
                 #print("rawCard = ",rawCard)
                 #print("card    = ",card)
-                filename = self._get_include_file_name(rawCard)
+                filename = get_include_file_name(rawCard)
                 #print('filename = ', os.path.relpath(filename))
                 self._add_include_file(filename)
                 self.open_file(filename)
@@ -1700,7 +1701,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             print("SCIENTIFIC!")
         return value
 
-def get_include_file_name(self, cardLines, include_dir=''):
+def get_include_file_name(cardLines, include_dir=''):
     """
     Parses an INCLUDE file split into multiple lines (as a list).
     @param self the BDF object
@@ -1709,6 +1710,8 @@ def get_include_file_name(self, cardLines, include_dir=''):
       converting the case)
     @retval filename the INCLUDE filename
     """
+    if include_dir is None:
+        include_dir = ''
     cardLines2 = []
     for line in cardLines:
         line = line.strip('\t\r\n ')

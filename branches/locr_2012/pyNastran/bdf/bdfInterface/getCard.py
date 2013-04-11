@@ -254,7 +254,9 @@ class GetMethods(object):
         except KeyError:
             raise KeyError('cid=%s not found%s.  Allowed Cids=%s'
                            % (cid, msg, self.coordIDs()))
-        
+    
+    def coordIDs(self):
+        return sorted(self.coords.keys())
     #--------------------
     # AERO CARDS
 
