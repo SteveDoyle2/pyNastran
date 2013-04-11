@@ -8,11 +8,9 @@ from pyNastran.utils.log import get_logger
 
 class BDFReader(object):
     def __init__(self, debug, log):
-        self.relpath = True
+        self._relpath = True
         if sys.version_info < (2, 6):
-            self.relpath = False
-            #raise RuntimeError("must use python 2.6 or greater...version=%s"
-            #                   %(str(sys.version_info)))
+            self._relpath = False
         self.log = get_logger(log, 'debug' if debug else 'info')
 
     def open_file(self, infileName):
@@ -133,15 +131,15 @@ class BDFReader(object):
         ## stores the card_count of cards that have been rejected
         self.rejectCount = {}
 
-def print_filename(filename):
-    """
-    Takes a path such as C:/work/fem.bdf and locates the file using
-    relative paths.  If it's on another drive, the path is not modified.
-    @param self the object pointer
-    @param filename a filename string
-    @retval filenameString a shortened representation of the filename
-    """
-    driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
-    if driveLetter == os.path.splitdrive(os.curdir)[0] and self.relpath:
-        return os.path.relpath(filename)
-    return filename
+    def print_filename(self, filename):
+        """
+        Takes a path such as C:/work/fem.bdf and locates the file using
+        relative paths.  If it's on another drive, the path is not modified.
+        @param self the object pointer
+        @param filename a filename string
+        @retval filenameString a shortened representation of the filename
+        """
+        driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
+        if driveLetter == os.path.splitdrive(os.curdir)[0] and self._relpath:
+            return os.path.relpath(filename)
+        return filename

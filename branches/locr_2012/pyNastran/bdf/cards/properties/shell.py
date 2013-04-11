@@ -516,6 +516,46 @@ class PSHELL(ShellProperty):
         assert self.t > 0.0, ('the thickness must be defined on the PSHELL'
                               ' card (Ti field not supported)')
 
+    def _verify(self, isxref=False):
+        pid = self.Pid()
+        mid = self.Mid()
+        mid1 = self.Mid1()
+        mid2 = self.Mid2()
+        mid3 = self.Mid3()
+        mid4 = self.Mid4()
+        
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert mid1 is None or isinstance(mid1, int), 'mid1=%r' % mid1
+        assert mid2 is None or isinstance(mid2, int), 'mid2=%r' % mid2
+        assert mid3 is None or isinstance(mid3, int), 'mid3=%r' % mid3
+        assert mid4 is None or isinstance(mid4, int), 'mid4=%r' % mid4
+
+        if isxref:
+            E = self.E()
+            G = self.G()
+            nu = self.Nu()
+            t = self.Thickness()
+            rho = self.Rho()
+            nsm = self.Nsm()
+            mpa = self.MassPerArea()
+            assert isinstance(E, float), 'E=%r' % E
+            assert isinstance(G, float), 'G=%r' % G
+            assert isinstance(nu, float), 'nu=%r' % nu
+            assert isinstance(t, float), 't=%r' % t
+            assert isinstance(rho, float), 'rho=%r' % rho
+            assert isinstance(nsm, float), 'nsm=%r' % nsm
+            assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+
+    def E(self):
+        return self.mid().E()
+
+    def G(self):
+        return self.mid().G()
+
+    def Nu(self):
+        return self.mid().Nu()
+
     def mid(self):
         if isinstance(self.mid1, Material):
             return self.mid1

@@ -585,6 +585,10 @@ class Cord1x(Coord):
                                                                   type1))
         model.coords[self.cid] = coord
 
+    def _verify(self, isxref=False):
+        cid = self.Cid()
+        assert isinstance(cid, int), 'cid=%r' % cid
+
     def cross_reference(self, model):
         """
         Links self.rid to a coordinate system.
@@ -831,6 +835,12 @@ class CORD2R(Cord2x, RectangularCoord):
         if comment:
             self._comment = comment
 
+    def _verify(self, isxref=False):
+        cid = self.Cid()
+        rid = self.Rid()
+        assert isinstance(cid, int), 'cid=%r' % cid
+        assert isinstance(rid, int), 'rid=%r' % rid
+
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
         list_fields = ['CORD2R', self.cid, rid] + list(self.e1) + list(
@@ -852,6 +862,12 @@ class CORD2S(Cord2x, SphericalCoord):
         if comment:
             self._comment = comment
 
+    def _verify(self, isxref=False):
+        cid = self.Cid()
+        rid = self.Rid()
+        assert isinstance(cid, int), 'cid=%r' % cid
+        assert isinstance(rid, int), 'rid=%r' % rid
+
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
         list_fields = (['CORD2S', self.cid, rid] + list(self.e1) + list(self.e2) +
@@ -872,6 +888,12 @@ class CORD2C(Cord2x, CylindricalCoord):
         Cord2x.__init__(self, card, data)
         if comment:
             self._comment = comment
+
+    def _verify(self, isxref=False):
+        cid = self.Cid()
+        rid = self.Rid()
+        assert isinstance(cid, int), 'cid=%r' % cid
+        assert isinstance(rid, int), 'rid=%r' % rid
 
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)

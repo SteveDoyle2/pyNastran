@@ -130,11 +130,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         ## was an ENDDATA card found
         self.foundEndData = False
 
-        self.relpath = True
+        self._relpath = True
         if sys.version_info < (2, 6):
-            self.relpath = False
-            #raise RuntimeError("must use python 2.6 or greater...version=%s"
-            #                   %(str(sys.version_info)))
+            self._relpath = False
         self.log = get_logger(log, 'debug' if debug else 'info')
 
         ## allows the BDF variables to be scoped properly (i think...)
@@ -561,6 +559,21 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         ## stores convection properties - PCONV, PCONVM ???
         self.convectionProperties = {}
 
+    def _verify_bdf(self):
+        isxref = self._xref
+        #for key, card in sorted(self.params.iteritems()):
+            #card._verify(isxref)
+        for key, card in sorted(self.nodes.iteritems()):
+            card._verify(isxref)
+        for key, card in sorted(self.coords.iteritems()):
+            card._verify(isxref)
+        for key, card in sorted(self.elements.iteritems()):
+            card._verify(isxref)
+        for key, card in sorted(self.properties.iteritems()):
+            card._verify(isxref)
+        for key, card in sorted(self.materials.iteritems()):
+            card._verify(isxref)
+        
     def read_bdf(self, bdf_filename, include_dir=None, xref=True, punch=False):
         """
         Read method for the bdf files
@@ -595,6 +608,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         
         self._read_bulk_data_deck()
         self.cross_reference(xref=xref)
+        self._xref = xref
 
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
     
@@ -1453,6 +1467,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
         return card_obj
 
+    def print_filename(self, filename):
+        """
+        Takes a path such as C:/work/fem.bdf and locates the file using
+        relative paths.  If it's on another drive, the path is not modified.
+        @param self the object pointer
+        @param filename a filename string
+        @retval filenameString a shortened representation of the filename
+        """
+        driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
+        if driveLetter == os.path.splitdrive(os.curdir)[0] and self._relpath:
+            return os.path.relpath(filename)
+        return filename
+
     def card_stats(self):
         """
         Print statistics for the BDF
@@ -1525,7 +1552,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             'nCardLinesMax', 'modelType', 'includeDir',
             'cardsToWrite', 'solMethod', 'log', 'doneReading',
             'linesPack', 'lineNumbers', 'iSolLine',
-            'reject_count', 'relpath', 'isOpened',
+            'reject_count', '_relpath', 'isOpened',
             'foundEndData', 'specialCards',
             'infilesPack'])
 

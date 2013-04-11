@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 import warnings
 from pyNastran.bdf.fieldWriter import print_card
-from pyNastran.bdf.bdfInterface.bdf_Reader import print_filename
+#from pyNastran.bdf.bdfInterface.bdf_Reader import print_filename
 
 
 class WriteMeshDeprecated(object):
@@ -131,7 +131,7 @@ class WriteMesh(WriteMeshDeprecated):
         """
         assert size in [8, 16]
         #size = 16
-        fname = print_filename(out_filename)
+        fname = self.print_filename(out_filename)
         self.log.debug("***writing %s" % fname)
 
         outfile = open(out_filename, 'wb')
@@ -162,7 +162,7 @@ class WriteMesh(WriteMeshDeprecated):
         """
         assert size in [8, 16]
         #size = 16
-        fname = print_filename(out_filename)
+        fname = self.print_filename(out_filename)
         self.log.debug("***writing %s" % fname)
 
         outfile = open(out_filename, 'wb')
@@ -193,7 +193,7 @@ class WriteMesh(WriteMeshDeprecated):
         """
         assert size in [8, 16]
         #size = 16
-        fname = print_filename(out_filename)
+        fname = self.print_filename(out_filename)
         self.log.debug("***writing %s" % fname)
 
         outfile = open(out_filename, 'wb')

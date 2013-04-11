@@ -165,11 +165,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         ## was an ENDDATA card found
         self.foundEndData = False
 
-        self.relpath = True
+        self._relpath = True
         if sys.version_info < (2, 6):
-            self.relpath = False
-            #raise RuntimeError("must use python 2.6 or greater...version=%s"
-            #                   %(str(sys.version_info)))
+            self._relpath = False
         self.log = get_logger(log, 'debug' if debug else 'info')
 
         ## allows the BDF variables to be scoped properly (i think...)
@@ -1356,7 +1354,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             'nCardLinesMax', 'modelType', 'includeDir',
             'cardsToWrite', 'solMethod', 'log', 'doneReading',
             'linesPack', 'lineNumbers', 'iSolLine',
-            'reject_count', 'relpath', 'isOpened',
+            'reject_count', '_relpath', 'isOpened',
             'foundEndData', 'specialCards',
             'infilesPack'])
 

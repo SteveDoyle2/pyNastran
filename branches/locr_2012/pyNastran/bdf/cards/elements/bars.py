@@ -497,9 +497,9 @@ class CONROD(RodElement):
     def Mid(self):
         if isinstance(self.mid, int):
             return self.mid
-        elif self.mid is None:
-            print ("No material defined for element ", self.eid)
-            return None
+        #elif self.mid is None:
+            #print ("No material defined for element ", self.eid)
+            #return None
         else:
             return self.mid.mid
 

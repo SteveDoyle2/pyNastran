@@ -32,6 +32,14 @@ class BaseCard(object):
         #that the PBEAML has a proper material type
         #"""
         #pass
+    
+    def _verify(self, isxref=False):
+        """
+        This method checks that all the card is various methods of the card
+        work properly.  It's only used in testing.
+        """
+        print('# skipping _verify (type=%s) because _verify is '
+              'not implemented\n' % self.type)
 
     def isSameFields(self, fields1, fields2):
         for (field1, field2) in izip(fields1, fields2):
@@ -142,12 +150,15 @@ class Property(BaseCard):
     def __init__(self, card, data):
         assert card is None or data is None
 
+    def Pid(self):
+        return self.pid
+
     def Mid(self):
         if isinstance(self.mid, int):
             return self.mid
-        elif self.mid is None:
-            print ("No material defined for property ", self.pid)
-            return None
+        #elif self.mid is None:
+            #print ("No material defined for property ", self.pid)
+            #return None
         else:
             return self.mid.mid
 
@@ -208,9 +219,9 @@ class Element(BaseCard):
         """returns the property ID of an element"""
         if isinstance(self.pid, int):
             return self.pid
-        elif self.pid is None:
-            print ("No property defined for element ", self.eid)
-            return None
+        #elif self.pid is None:
+            #print ("No property defined for element ", self.eid)
+            #return None
         else:
             return self.pid.pid
 

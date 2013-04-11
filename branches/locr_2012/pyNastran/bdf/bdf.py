@@ -79,7 +79,7 @@ from pyNastran.bdf.bdf_Methods import BDFMethods
 from .bdfInterface.getCard import GetMethods
 from .bdfInterface.addCard import AddMethods
 from .bdfInterface.BDF_Card import BDFCard
-from .bdfInterface.bdf_Reader import BDFReader, print_filename
+from .bdfInterface.bdf_Reader import BDFReader #, print_filename
 from .bdfInterface.bdf_writeMesh import WriteMesh
 from .bdfInterface.bdf_cardMethods import parse_csv, nastran_split, isLargeField
 from .bdfInterface.crossReference import XrefMesh
@@ -608,7 +608,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         self._set_infile(infilename, includeDir)
 
-        fname = print_filename(self.bdf_filename)
+        fname = self.print_filename(self.bdf_filename)
         self.log.debug('---starting BDF.read_bdf of %s---' % fname)
         #self.log.info('xref=%s' % xref)
 
@@ -1516,7 +1516,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'nCardLinesMax', 'modelType', 'includeDir',
             'cardsToWrite', 'solMethod', 'log', 'doneReading',
             'linesPack', 'lineNumbers', 'iSolLine',
-            'rejectCount', 'relpath', 'isOpened',
+            'rejectCount', '_relpath', 'isOpened',
             'foundEndData', 'specialCards',
             'infilesPack'])
 

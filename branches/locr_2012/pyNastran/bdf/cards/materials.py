@@ -153,6 +153,16 @@ class MAT1(Material):
             self.Ss = data[10]
             self.Mcsid = data[11]
 
+    def _verify(self, isxref=False):
+        mid = self.Mid()
+        E = self.E()
+        G = self.G()
+        nu = self.Nu()
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(E, float), 'E=%r' % E
+        assert isinstance(G, float), 'G=%r' % G
+        assert isinstance(nu, float), 'nu=%r' % nu
+
     def D(self):
         E11 = self.E()
         E22 = E11
@@ -885,6 +895,19 @@ class MAT10(Material):
             self.c = data[3]
             self.ge = data[4]
 
+    def _verify(self, isxref=False):
+        mid = self.Mid()
+        bulk = self.bulk
+        rho = self.rho
+        c = self.c
+        ge = self.ge
+
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(bulk, float), 'bulk=%r' % bulk
+        assert isinstance(rho, float), 'rho=%r' % rho
+        assert isinstance(c, float), 'c=%r' % c
+        assert isinstance(ge, float), 'ge=%r' % ge
+        
     def getBulkRhoC(self, card):
         r"""
         \f[ \large bulk = c^2 \rho \f]

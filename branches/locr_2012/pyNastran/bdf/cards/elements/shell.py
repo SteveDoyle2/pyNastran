@@ -73,6 +73,9 @@ class ShellElement(Element):
     def __init__(self, card, data):
         Element.__init__(self, card, data)
 
+    def Eid(self):
+        return self.eid
+
     def Area(self):
         raise NotImplementedError('Area undefined for %s' % self.type)
 
@@ -241,6 +244,30 @@ class CTRIA3(TriShell):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 3
 
+    def _verify(self, isxref=True):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+
+        if isxref:
+            assert self.pid.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            t = self.Thickness()
+            a,c,n = self.AreaCentroidNormal()
+            assert isinstance(t, float), 'thickness=%r' % t
+            assert isinstance(a, float), 'Area=%r' % a
+            for i in range(3):
+                assert isinstance(c[i], float)
+                assert isinstance(n[i], float)
+            mass = self.Mass()
+            assert isinstance(mass, float), 'mass=%r' % mass
+
+        
+
     def flipNormal(self):
         """
         @code
@@ -361,6 +388,28 @@ class CTRIA6(TriShell):
         msg = ' which is required by CTRIA6 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+
+    def _verify(self):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        #for i,nid in enumerate(nids):
+            #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+
+        if isxref:
+            assert self.pid.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            t = self.Thickness()
+            a,c,n = self.AreaCentroidNormal()
+            assert isinstance(t, float), 'thickness=%r' % t
+            assert isinstance(a, float), 'Area=%r' % a
+            for i in range(3):
+                assert isinstance(c[i], float)
+                assert isinstance(n[i], float)
+            mass = self.Mass()
+            assert isinstance(mass, float), 'mass=%r' % mass
 
     def Thickness(self):
         """
@@ -923,6 +972,27 @@ class CQUAD4(QuadShell):
 
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4, 'CQUAD4'
+    
+    def _verify(self, isxref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+
+        if isxref:
+            assert self.pid.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            t = self.Thickness()
+            a,c,n = self.AreaCentroidNormal()
+            assert isinstance(t, float), 'thickness=%r' % t
+            assert isinstance(a, float), 'Area=%r' % a
+            for i in range(3):
+                assert isinstance(c[i], float)
+                assert isinstance(n[i], float)
+            mass = self.Mass()
+            assert isinstance(mass, float), 'mass=%r' % mass
 
     def flipNormal(self):
         """

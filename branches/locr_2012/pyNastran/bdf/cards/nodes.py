@@ -302,6 +302,27 @@ class GRID(Node):
         assert self.cd >= -1, 'cd=%s' % (self.cd)
         assert self.seid >= 0, 'seid=%s' % (self.seid)
 
+    def Nid(self):
+        return self.nid
+
+    def Ps(self):
+        return self.ps
+
+    def SEid(self):
+        return self.seid
+
+    def _verify(self, isxref=False):
+        nid = self.Nid()
+        cp = self.Cp()
+        cd = self.Cd()
+        xyz = self.xyz
+        pos_xyz = self.Position()
+        ps = self.Ps()
+        seid = self.SEid()
+        assert isinstance(nid, int), 'nid=%r' % nid
+        assert isinstance(cp, int), 'cp=%r' % cp
+        assert isinstance(cd, int), 'cd=%r' % cd
+        
     def nDOF(self):
         return 6
 

@@ -76,6 +76,10 @@ class PBUSH(BushingProperty):
             raise NotImplementedError('PBUSH data...')
         #print self
 
+    def _verify(self, isxref=False):
+        pid = self.Pid()
+        assert isinstance(pid, int), 'pid=%r' % pid
+
     def getK(self, card, iStart):
         ## Flag indicating that the next 1 to 6 fields are stiffness values in
         ## the element coordinate system.

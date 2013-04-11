@@ -94,6 +94,19 @@ class CBUSH(BushElement):
             self.eid = data[0]
             raise NotImplementedError('CBUSH data...')
 
+    def _verify(self, isxref=False):
+        ga = self.Ga()
+        gb = self.Gb()
+        cid = self.Cid()
+        ocid = self.OCid()
+        pid = self.Pid()
+        #si = self.si
+        assert isinstance(ga, int), 'ga=%r' % ga
+        assert isinstance(gb, int), 'gb=%r' % gb
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(cid, int), 'cid=%r' % cid
+        assert isinstance(ocid, int), 'ocid=%r' % ocid
+
     def Ga(self):
         if isinstance(self.ga, int):
             return self.ga
@@ -177,6 +190,16 @@ class CBUSH1D(BushElement):
         if self.cid is not None:
             self.cid = model.Coord(self.cid)
 
+    def _verify(self, isxref=False):
+        ga = self.Ga()
+        gb = self.Gb()
+        cid = self.Cid()
+        pid = self.Pid()
+        assert isinstance(ga, int), 'ga=%r' % ga
+        assert isinstance(gb, int), 'gb=%r' % gb
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(cid, int), 'cid=%r' % cid
+
     def Ga(self):
         if isinstance(self.ga, int):
             return self.ga
@@ -229,6 +252,18 @@ class CBUSH2D(BushElement):
             self.pid = data[1]
             self.ga = data[2]
             self.gb = data[3]
+
+    def _verify(self, isxref=False):
+        ga = self.Ga()
+        gb = self.Gb()
+        cid = self.Cid()
+        pid = self.Pid()
+        plane = self.plane
+        assert isinstance(ga, int), 'ga=%r' % ga
+        assert isinstance(gb, int), 'gb=%r' % gb
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(cid, int), 'cid=%r' % cid
+        assert self.plane in ['XY', 'YZ', 'ZX'], 'plane=%r' % plane
 
     def Ga(self):
         if isinstance(self.ga, int):

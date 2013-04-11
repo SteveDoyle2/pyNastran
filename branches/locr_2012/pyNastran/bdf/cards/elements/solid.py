@@ -57,7 +57,10 @@ class SolidElement(Element):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
-    
+
+    def Eid(self):
+        return self.eid
+
     def Volume(self):
         """
         Base volume method that should be overwritten
@@ -129,6 +132,21 @@ class CHEXA8(SolidElement):
             assert len(data) == 10, 'len(data)=%s data=%s' % (len(data), data)
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 8
+
+    def _verify(self, isxref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+        if isxref:
+            c = self.Centroid()
+            v = self.Volume()
+            assert isinstance(v, float)
+            for i in range(3):
+                assert isinstance(c[i], float)
 
     def Centroid(self):
         """
@@ -410,6 +428,21 @@ class CTETRA4(SolidElement):
             assert len(data) == 6, 'len(data)=%s data=%s' % (len(data), data)
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4
+
+    def _verify(self, isxref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+        if isxref:
+            c = self.Centroid()
+            v = self.Volume()
+            assert isinstance(v, float)
+            for i in range(3):
+                assert isinstance(c[i], float)
 
     def Volume(self):
         (n1, n2, n3, n4) = self.nodePositions()
