@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import izip, count
 
 from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
-from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpretValue
+from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpret_value
 from pyNastran.bdf.fieldWriter import print_field, print_card
 
 
@@ -26,8 +26,8 @@ def assert_fields(card1, card2):
         value1a = print_field(field1)
         value2a = print_field(field2)
         if value1a != value2a:
-            value1 = print_field(interpretValue(value1a))
-            value2 = print_field(interpretValue(value2a))
+            value1 = print_field(interpret_value(value1a))
+            value2 = print_field(interpret_value(value2a))
 
             if value1 != value2:
                 msg = 'value1 != value2\n'
@@ -39,30 +39,30 @@ def assert_fields(card1, card2):
 
 
 def compare_card_content(fem1, fem2):
-    assert len(fem1.params) == len(fem2.params)
-    assert len(fem1.nodes) == len(fem2.nodes)
-    assert len(fem1.elements) == len(fem2.elements)
-    assert len(fem1.rigidElements) == len(fem2.rigidElements)
-    assert len(fem1.properties) == len(fem2.properties)
+    assert len(fem1.params) == len(fem2.params), 'len(fem1.params)=%i len(fem2.params)=%i' % (len(fem1.params), len(fem2.params))
+    assert len(fem1.nodes) == len(fem2.nodes), 'len(fem1.nodes)=%i len(fem2.nodes)=%i' % (len(fem1.nodes), len(fem2.nodes))
+    assert len(fem1.elements) == len(fem2.elements), 'len(fem1.elements)=%i len(fem2.elements)=%i' % (len(fem1.elements), len(fem2.elements))
+    assert len(fem1.rigidElements) == len(fem2.rigidElements), 'len(fem1.rigidElements)=%i len(fem2.rigidElements)=%i' % (len(fem1.rigidElements), len(fem2.rigidElements))
+    assert len(fem1.properties) == len(fem2.properties), 'len(fem1.properties)=%i len(fem2.properties)=%i' % (len(fem1.properties), len(fem2.properties))
     assert len(fem1.materials) == len(fem2.materials), 'len(fem1.materials)=%i len(fem2.materials)=%i' % (len(fem1.materials), len(fem2.materials))
-    assert len(fem1.creepMaterials) == len(fem2.creepMaterials)
-    assert len(fem1.loads) == len(fem2.loads)
-    assert len(fem1.coords) == len(fem2.coords)
-    assert len(fem1.spcs) == len(fem2.spcs)
-    assert len(fem1.spcadds) == len(fem2.spcadds)
-    assert len(fem1.mpcs) == len(fem2.mpcs)
-    assert len(fem1.mpcadds) == len(fem2.mpcadds)
-    assert len(fem1.dareas) == len(fem2.dareas)
-    assert len(fem1.nlparms) == len(fem2.nlparms)
-    assert len(fem1.tsteps) == len(fem2.tsteps)
-    assert len(fem1.tstepnls) == len(fem2.tstepnls)
-    assert len(fem1.dmigs) == len(fem2.dmigs)
-    assert len(fem1.dequations) == len(fem2.dequations)
-    assert len(fem1.frequencies) == len(fem2.frequencies)
-    assert len(fem1.sets) == len(fem2.sets)
-    assert len(fem1.setsSuper) == len(fem2.setsSuper)
-    assert len(fem1.tables) == len(fem2.tables)
-    assert len(fem1.randomTables) == len(fem2.randomTables)
+    assert len(fem1.creepMaterials) == len(fem2.creepMaterials), 'len(fem1.creepMaterials)=%i len(fem2.creepMaterials)=%i' % (len(fem1.creepMaterials), len(fem2.creepMaterials))
+    assert len(fem1.loads) == len(fem2.loads), 'len(fem1.loads)=%i len(fem2.loads)=%i' % (len(fem1.loads), len(fem2.loads))
+    assert len(fem1.coords) == len(fem2.coords), 'len(fem1.coords)=%i len(fem2.coords)=%i' % (len(fem1.coords), len(fem2.coords))
+    assert len(fem1.spcs) == len(fem2.spcs), 'len(fem1.spcs)=%i len(fem2.spcs)=%i' % (len(fem1.spcs), len(fem2.spcs))
+    assert len(fem1.spcadds) == len(fem2.spcadds), 'len(fem1.spcadds)=%i len(fem2.spcadds)=%i' % (len(fem1.spcadds), len(fem2.spcadds))
+    assert len(fem1.mpcs) == len(fem2.mpcs), 'len(fem1.mpcs)=%i len(fem2.mpcs)=%i' % (len(fem1.mpcs), len(fem2.mpcs))
+    assert len(fem1.mpcadds) == len(fem2.mpcadds), 'len(fem1.mpcadds)=%i len(fem2.mpcadds)=%i' % (len(fem1.mpcadds), len(fem2.mpcadds))
+    assert len(fem1.dareas) == len(fem2.dareas), 'len(fem1.dareas)=%i len(fem2.dareas)=%i' % (len(fem1.dareas), len(fem2.dareas))
+    assert len(fem1.nlparms) == len(fem2.nlparms), 'len(fem1.nlparms)=%i len(fem2.nlparms)=%i' % (len(fem1.nlparms), len(fem2.nlparms))
+    assert len(fem1.tsteps) == len(fem2.tsteps), 'len(fem1.tsteps)=%i len(fem2.tsteps)=%i' % (len(fem1.tsteps), len(fem2.tsteps))
+    assert len(fem1.tstepnls) == len(fem2.tstepnls), 'len(fem1.tstepnls)=%i len(fem2.tstepnls)=%i' % (len(fem1.tstepnls), len(fem2.tstepnls))
+    assert len(fem1.dmigs) == len(fem2.dmigs), 'len(fem1.dmigs)=%i len(fem2.dmigs)=%i' % (len(fem1.dmigs), len(fem2.dmigs))
+    assert len(fem1.dequations) == len(fem2.dequations), 'len(fem1.dequations)=%i len(fem2.dequations)=%i' % (len(fem1.dequations), len(fem2.dequations))
+    assert len(fem1.frequencies) == len(fem2.frequencies), 'len(fem1.frequencies)=%i len(fem2.frequencies)=%i' % (len(fem1.frequencies), len(fem2.frequencies))
+    assert len(fem1.sets) == len(fem2.sets), 'len(fem1.sets)=%i len(fem2.sets)=%i' % (len(fem1.sets), len(fem2.sets))
+    assert len(fem1.setsSuper) == len(fem2.setsSuper), 'len(fem1.setsSuper)=%i len(fem2.setsSuper)=%i' % (len(fem1.setsSuper), len(fem2.setsSuper))
+    assert len(fem1.tables) == len(fem2.tables), 'len(fem1.tables)=%i len(fem2.tables)=%i' % (len(fem1.tables), len(fem2.tables))
+    assert len(fem1.randomTables) == len(fem2.randomTables), 'len(fem1.randomTables)=%s len(fem2.randomTables)=%s' % (len(fem1.randomTables), len(fem2.randomTables))
     assert len(fem1.methods) == len(fem2.methods), 'len(fem1.methods)=%s len(fem2.methods)=%s' % (len(fem1.methods), len(fem2.methods))
     assert len(fem1.cMethods) == len(fem2.cMethods), 'len(fem1.cMethods)=%s len(fem2.cMethods)=%s' % (len(fem1.cMethods), len(fem2.cMethods))
 

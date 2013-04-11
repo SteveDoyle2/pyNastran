@@ -194,6 +194,33 @@ class PCOMP(ShellProperty):
             mid = self.plies[iply][0]
             self.plies[iply][0] = model.Material(mid)  # mid
 
+    def _verify(self, isxref=False):
+        pid = self.Pid()
+        isSym = self.isSymmetrical()
+        nplies = self.nPlies()
+        nsm = self.Nsm()
+        mids = self.Mids()
+
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(isSym, bool), 'isSym=%r' % isSym
+        assert isinstance(nplies, float), 'nplies=%r' % nplies
+        assert isinstance(nsm, float), 'nsm=%r' % nsm
+        assert isinstance(mids, list), 'mids=%r' % mids
+
+        t = self.Thickness(iply)
+        mpa = self.MassPerArea()
+        assert isinstance(t, float), 'thickness=%r' % t
+        assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+        for iply in range(nPlies):
+            mid2 = self.Mid(iply)
+            assert mids[iply] == mid2
+            t = self.Thickness(iply)
+            rho = self.Rho(iply)
+            mpa = self.MassPerArea(iply)
+            assert isinstance(t, float), 'thickness=%r' % t
+            assert isinstance(rho, float), 'rho=%r' % rho
+            assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+            
     def Nsm(self):
         return self.nsm
 
@@ -217,6 +244,8 @@ class PCOMP(ShellProperty):
         mids = []
         for iply in xrange(len(self.plies)):
             mids.append(self.Mid(iply))
+            theta = self.Theta(iply)
+            sout = self.sout(iply)
         return mids
 
     def Rho(self, iply):

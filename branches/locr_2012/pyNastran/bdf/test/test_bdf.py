@@ -12,7 +12,7 @@ import traceback
 
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf import CTRIAX, CTRIAX6, BDF
-from pyNastran.bdf.bdf3 import BDF
+from pyNastran.bdf.bdf4 import BDF
 from pyNastran.bdf.bdf import (ShellElement, SolidElement, LineElement,
                                RigidElement, SpringElement, PointElement,
                                DamperElement, RodElement, NastranMatrix)
