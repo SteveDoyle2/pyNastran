@@ -444,6 +444,23 @@ class CONM2(PointMassElement):
             self.X = data[4:7]
             self.I = data[7:]
 
+    def _verify(self, isxref=False):
+        eid = self.Eid()
+        nid = self.Nid()
+        cid = self.Cid()
+        mass = self.Mass()
+        c = self.Centroid()
+        
+        assert isinstance(eid, int), 'eid=%r' % eid
+        assert isinstance(nid, int), 'nid=%r' % nid
+        assert isinstance(cid, int), 'cid=%r' % cid
+        assert isinstance(mass, float), 'mass=%r' % mass
+        for i in range(3):
+            assert isinstance(c[i], float), 'centroid[%i]=%r' %(i, c[i])
+
+    def Eid(self):
+        return self.eid
+
     def Mass(self):
         return self.mass
 

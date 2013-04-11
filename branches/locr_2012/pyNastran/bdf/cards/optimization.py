@@ -262,6 +262,7 @@ class DRESP1(OptConstraint):
         assert self.ptype in ['ELEM', 'PSHELL', 'PBAR', 'PROD', 'PCOMP',
                               'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
                               'PBEAML', 'PSHEAR', 'PTUBE', 
+                              'PKNL',   ## TODO: is this correct?
                               None], 'DRESP1 ptype=%s' % self.ptype
         self.region = integer_or_blank(card, 5, 'region')
         self.atta = integer_double_string_or_blank(card, 6, 'atta')

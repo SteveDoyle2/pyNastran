@@ -226,13 +226,20 @@ class LineProperty(Property):
         return (A, Iyy, Izz, Iyz)
 
     def I1(self):
-        return self.I1_I2_I12()[0]
+        I = self.I1_I2_I12()
+        return I[0]
 
     def I2(self):
-        return self.I1_I2_I12()[1]
+        I = self.I1_I2_I12()
+        return I[1]
 
     def I12(self):
-        return self.I1_I2_I12()[2]
+        try:
+            I = self.I1_I2_I12()
+        except:
+            print(str(self))
+            raise
+        return I[2]
 
     def I1_I2_I12(self):
         """
@@ -533,6 +540,20 @@ class PROD(LineProperty):
             self.c = data[4]
             self.nsm = data[5]
 
+    def _verify(self, isxref=False):
+        pid = self.Pid()
+        mid = self.Mid()
+        A = self.Area()
+        J = self.J()
+        c = self.c
+        nsm = self.Nsm()
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(A, float), 'pid=%r' % A
+        assert isinstance(J, float), 'cid=%r' % J
+        assert isinstance(c, float), 'c=%r' % c
+        assert isinstance(nsm, float), 'nsm=%r' % nsm
+
     #def Radius(self):
         #"""assumes circular cross section - probably will remove this"""
         #return sqrt(self.A/pi)
@@ -716,6 +737,22 @@ class PBAR(LineProperty):
             self.K2 = data[17]
             self.i12 = data[18]
 
+    def _verify(self, isxref=False):
+        pid = self.Pid()
+        mid = self.Mid()
+        A = self.Area()
+        J = self.J()
+        #c = self.c
+        nsm = self.Nsm()
+        mpa = self.MassPerLength()
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(A, float), 'pid=%r' % A
+        assert isinstance(J, float), 'cid=%r' % J
+        #assert isinstance(c, float), 'c=%r' % c
+        assert isinstance(nsm, float), 'nsm=%r' % nsm
+        assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
+
     def MassPerLength(self):
         r"""
         \f[ \frac{m}{L} = \rho A+nsm \f]
@@ -745,6 +782,15 @@ class PBAR(LineProperty):
 
     #def Iyz(self):
     #    return self.i12
+
+    def I11(self):
+        return self.i1
+
+    def I22(self):
+        return self.i2
+
+    def I12(self):
+        return self.i12
 
     def writeCodeAster(self):  # PBAR
         a = self.Area()

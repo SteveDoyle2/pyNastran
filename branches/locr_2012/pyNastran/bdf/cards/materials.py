@@ -650,8 +650,8 @@ class MAT8(AnisotropicMaterial):
             self._comment = comment
         if card:
             self.mid = integer(card, 1, 'mid')
-            self.e11 = double(card, 2, 'E11')  ## @todo is this the correct default
-            self.e22 = double(card, 3, 'E22')  ## @todo is this the correct default
+            self.e11 = double(card, 2, 'E11')    ## @todo is this the correct default
+            self.e22 = double(card, 3, 'E22')    ## @todo is this the correct default
             self.nu12 = double(card, 4, 'nu12')  ## @todo is this the correct default
 
             self.g12 = double_or_blank(card, 5, 'g12', 0.0)
@@ -692,6 +692,18 @@ class MAT8(AnisotropicMaterial):
             self.F12 = data[17]
             self.strn = data[18]
 
+    def _verify(self, isxref=False):
+        mid = self.Mid()
+        E11 = self.E11()
+        E22 = self.E22()
+        nu12 = self.Nu12()
+        G12 = self.G12()
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(E11, float), 'E11=%r' % E11
+        assert isinstance(E22, float), 'E11=%r' % E11
+        assert isinstance(G12, float), 'G12=%r' % G12
+        assert isinstance(nu12, float), 'nu12=%r' % nu12
+
     def E11(self):
         return self.e11
 
@@ -713,14 +725,13 @@ class MAT8(AnisotropicMaterial):
         nu12 = self.Nu12()
         G12 = self.G12()
 
-        D = zeros((3, 3))
+        D = zeros((3, 3), dtype='float32')
         mu = 1. - nu12 * nu12 * E11 / E22    # not necessary b/c they're equal
         D[0, 0] = E11 / mu
         D[1, 1] = E22 / mu
         D[0, 1] = nu12 * D[0, 0]
         D[1, 0] = D[0, 1]
         D[2, 2] = G12
-
         return D
 
     def rawFields(self):
@@ -835,6 +846,18 @@ class MAT9(AnisotropicMaterial):
             self.ge = data[5]
 
         assert len(self.A) == 6
+
+    def _verify(self, isxref=False):
+        mid = self.Mid()
+        #E11 = self.E11()
+        #E22 = self.E22()
+        #nu12 = self.Nu12()
+        #G12 = self.G12()
+        assert isinstance(mid, int), 'mid=%r' % mid
+        #assert isinstance(E11, float), 'E11=%r' % E11
+        #assert isinstance(E22, float), 'E11=%r' % E11
+        #assert isinstance(G12, float), 'G12=%r' % G12
+        #assert isinstance(nu12, float), 'nu12=%r' % nu12
 
     def D(self):
         D = array(

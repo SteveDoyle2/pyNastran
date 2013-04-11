@@ -402,6 +402,26 @@ class CROD(RodElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 2
 
+    def _verify(self, isxref=False):
+        pid = self.Pid()
+        mid = self.Mid()
+        L = self.Length()
+        A = self.Area()
+        nsm = self.Nsm()
+        mpa = self.MassPerLength()
+        mass = self.Mass()
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(L, float), 'L=%r' % L
+        assert isinstance(A, float), 'A=%r' % A
+        assert isinstance(nsm, float), 'nsm=%r' % nsm
+        assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
+        assert isinstance(mass, float), 'mass=%r' % mass
+        
+        c = self.Centroid()
+        for i in range(3):
+            assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
+
     def Centroid(self):
         return (self.nodes[0].Position() + self.nodes[1].Position()) / 2.
 
@@ -445,6 +465,26 @@ class CTUBE(RodElement):
             nids = data[2:4]
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 2
+
+    def _verify(self, isxref=False):
+        pid = self.Pid()
+        mid = self.Mid()
+        L = self.Length()
+        A = self.Area()
+        nsm = self.Nsm()
+        mpa = self.MassPerLength()
+        mass = self.Mass()
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(L, float), 'L=%r' % L
+        assert isinstance(A, float), 'A=%r' % A
+        assert isinstance(nsm, float), 'nsm=%r' % nsm
+        assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
+        assert isinstance(mass, float), 'mass=%r' % mass
+        
+        c = self.Centroid()
+        for i in range(3):
+            assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
 
     def Area(self):
         return self.pid.Area()
@@ -490,6 +530,26 @@ class CONROD(RodElement):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.mid = model.Material(self.mid, msg=msg)
+
+    def _verify(self, isxref=False):
+        pid = self.Pid()
+        mid = self.Mid()
+        L = self.Length()
+        A = self.Area()
+        nsm = self.Nsm()
+        mpa = self.MassPerLength()
+        mass = self.Mass()
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(L, float), 'L=%r' % L
+        assert isinstance(A, float), 'A=%r' % A
+        assert isinstance(nsm, float), 'nsm=%r' % nsm
+        assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
+        assert isinstance(mass, float), 'mass=%r' % mass
+        
+        c = self.Centroid()
+        for i in range(3):
+            assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
 
     def Centroid(self):
         return (self.nodes[0].Position() + self.nodes[1].Position()) / 2.
@@ -649,6 +709,22 @@ class CBAR(LineElement):
         assert self.offt[0] in ['G', 'B'], msg
         assert self.offt[1] in ['G', 'O', 'E'], msg
         assert self.offt[2] in ['G', 'O', 'E'], msg
+
+    def _verify(self, isxref=False):
+        pid = self.Pid()
+        mid = self.Mid()
+        A = self.Area()
+        nsm = self.Nsm()
+        mpa = self.MassPerLength()
+        mass = self.Mass()
+        L = self.Length()
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(A, float), 'A=%r' % A
+        assert isinstance(L, float), 'L=%r' % L
+        assert isinstance(nsm, float), 'nsm=%r' % nsm
+        assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
+        assert isinstance(mass, float), 'nass=%r' % mass
 
     def Mid(self):
         return self.pid.Mid()

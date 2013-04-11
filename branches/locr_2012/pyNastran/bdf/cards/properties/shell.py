@@ -203,15 +203,15 @@ class PCOMP(ShellProperty):
 
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(isSym, bool), 'isSym=%r' % isSym
-        assert isinstance(nplies, float), 'nplies=%r' % nplies
+        assert isinstance(nplies, int), 'nplies=%r' % nplies
         assert isinstance(nsm, float), 'nsm=%r' % nsm
         assert isinstance(mids, list), 'mids=%r' % mids
 
-        t = self.Thickness(iply)
+        t = self.Thickness()
         mpa = self.MassPerArea()
         assert isinstance(t, float), 'thickness=%r' % t
         assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
-        for iply in range(nPlies):
+        for iply in range(nplies):
             mid2 = self.Mid(iply)
             assert mids[iply] == mid2
             t = self.Thickness(iply)
@@ -410,6 +410,35 @@ class PCOMPG(PCOMP):
         else:
             raise NotImplementedError('PCOMPG data')
 
+    def _verify(self, isxref=False):
+        pid = self.Pid()
+        isSym = self.isSymmetrical()
+        nplies = self.nPlies()
+        nsm = self.Nsm()
+        mids = self.Mids()
+
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(isSym, bool), 'isSym=%r' % isSym
+        assert isinstance(nplies, int), 'nplies=%r' % nplies
+        assert isinstance(nsm, float), 'nsm=%r' % nsm
+        assert isinstance(mids, list), 'mids=%r' % mids
+
+        t = self.Thickness()
+        mpa = self.MassPerArea()
+        assert isinstance(t, float), 'thickness=%r' % t
+        assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+        for iply in range(nplies):
+            glply = self.GlobalPlyID(iply)
+            mid2 = self.Mid(iply)
+            assert mids[iply] == mid2
+            t = self.Thickness(iply)
+            rho = self.Rho(iply)
+            mpa = self.MassPerArea(iply)
+            assert isinstance(glply, int), 'global_ply_id=%r' % glply
+            assert isinstance(t, float), 'thickness=%r' % t
+            assert isinstance(rho, float), 'rho=%r' % rho
+            assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+
     def GlobalPlyID(self, iply):
         gPlyID = self.plies[iply][4]
         return gPlyID
@@ -560,30 +589,32 @@ class PSHELL(ShellProperty):
         assert mid3 is None or isinstance(mid3, int), 'mid3=%r' % mid3
         assert mid4 is None or isinstance(mid4, int), 'mid4=%r' % mid4
 
+        mids = [mid for mid in [self.mid1, self.mid2, self.mid3, self.mid4] if mid is not None]
+        assert len(mids) > 0
         if isxref:
-            E = self.E()
-            G = self.G()
-            nu = self.Nu()
+            assert isinstance(self.mid(), Material), 'mid=%r' % self.mid()
+            
+            for mid in mids:
+                if mid.type == 'MAT1':
+                    E = mid.E()
+                    G = mid.G()
+                    nu = mid.Nu()
+                    rho = mid.Rho()
+                    assert isinstance(E, float), 'E=%r' % E
+                    assert isinstance(G, float), 'G=%r' % G
+                    assert isinstance(nu, float), 'nu=%r' % nu
+                    assert isinstance(rho, float), 'rho=%r' % rho
+                elif mid.type == 'MAT8':
+                    pass
+                else:
+                    raise NotImplementedError('pid.type=%s' % self.pid.type)
+
             t = self.Thickness()
-            rho = self.Rho()
             nsm = self.Nsm()
             mpa = self.MassPerArea()
-            assert isinstance(E, float), 'E=%r' % E
-            assert isinstance(G, float), 'G=%r' % G
-            assert isinstance(nu, float), 'nu=%r' % nu
             assert isinstance(t, float), 't=%r' % t
-            assert isinstance(rho, float), 'rho=%r' % rho
             assert isinstance(nsm, float), 'nsm=%r' % nsm
             assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
-
-    def E(self):
-        return self.mid().E()
-
-    def G(self):
-        return self.mid().G()
-
-    def Nu(self):
-        return self.mid().Nu()
 
     def mid(self):
         if isinstance(self.mid1, Material):

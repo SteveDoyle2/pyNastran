@@ -326,6 +326,21 @@ class CPENTA6(SolidElement):
             A = Area(a, b)
         return [faceNodeIDs, A]
 
+    def _verify(self, isxref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+        if isxref:
+            c = self.Centroid()
+            v = self.Volume()
+            assert isinstance(v, float)
+            for i in range(3):
+                assert isinstance(c[i], float)
+
     def Centroid(self):
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         c1 = (n1 + n2 + n3) / 3.

@@ -255,7 +255,7 @@ class CTRIA3(TriShell):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if isxref:
-            assert self.pid.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             t = self.Thickness()
             a,c,n = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t
@@ -265,8 +265,6 @@ class CTRIA3(TriShell):
                 assert isinstance(n[i], float)
             mass = self.Mass()
             assert isinstance(mass, float), 'mass=%r' % mass
-
-        
 
     def flipNormal(self):
         """
@@ -400,7 +398,7 @@ class CTRIA6(TriShell):
             #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if isxref:
-            assert self.pid.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             t = self.Thickness()
             a,c,n = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t
@@ -616,21 +614,54 @@ class CTRIAX6(TriShell):
             self.eid = integer(card, 1, 'eid')
             self.mid = integer(card, 2, 'mid')
 
-            nids = [integer_or_blank(card, 3, 'n1'),
+            nids = [integer(card, 3, 'n1'),
                     integer_or_blank(card, 4, 'n2'),
-                    integer_or_blank(card, 5, 'n3'),
+                    integer(card, 5, 'n3'),
                     integer_or_blank(card, 6, 'n4'),
-                    integer_or_blank(card, 7, 'n5'),
+                    integer(card, 7, 'n5'),
                     integer_or_blank(card, 8, 'n6')]
-            assert len(card) <= 9, 'len(CTRIAX6 card) = %i' % len(card)
+
+            ## theta
+            self.theta = double_or_blank(card, 9, 'theta', 0.0)
+            assert len(card) <= 10, 'len(CTRIAX6 card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(nids) == 6, 'error on CTRIAX6'
 
-        ## theta
-        self.theta = double_or_blank(card, 10, 'theta', 0.0)
+    def _verify(self, isxref=True):
+        eid = self.Eid()
+        #pid = self.Pid()
+        nids = self.nodeIDs()
 
+        assert isinstance(eid, int)
+        #assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert nid is None or isinstance(nid, int), 'nid%i is not an integer or blank; nid=%s' %(i, nid)
+
+        if isxref:
+            #assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            #t = self.Thickness()
+            a,c,n = self.AreaCentroidNormal()
+            #assert isinstance(t, float), 'thickness=%r' % t
+            assert isinstance(a, float), 'Area=%r' % a
+            for i in range(3):
+                assert isinstance(c[i], float)
+                assert isinstance(n[i], float)
+            #mass = self.Mass()
+            #assert isinstance(mass, float), 'mass=%r' % mass
+
+    def Pid(self):
+        raise AttributeError("CTRIAX6 doesn't have a Property")
+
+    def AreaCentroidNormal(self):
+        """
+        Returns area,centroid, normal as it's more efficient to do them
+        together
+        """
+        (n0, n1, n2, n3, n4, n5) = self.nodePositions()
+        return _triangle_area_centroid_normal([n0, n2, n4])
+    
     def Area(self):
         r"""
         returns the normal vector
@@ -650,6 +681,12 @@ class CTRIAX6(TriShell):
 
     def Nsm(self):
         raise AttributeError('CTRIAX6 does not have a non-structural mass')
+
+    def MassPerArea(self):
+        raise AttributeError('CTRIAX6 does not have a MassPerArea')
+
+    def Mass(self):
+        raise NotImplementedError('CTRIAX6 does not have a Mass method yet')
 
     def cross_reference(self, model):
         msg = ' which is required by CTRIAX6 eid=%s' % self.eid
@@ -983,7 +1020,7 @@ class CQUAD4(QuadShell):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if isxref:
-            assert self.pid.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             t = self.Thickness()
             a,c,n = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t
