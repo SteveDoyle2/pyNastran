@@ -280,6 +280,8 @@ def get_element_stats(fem1, fem2):
                       "load.sid=%s" % (load.type, load.sid))
                 raise
 
+    fem1._verify_bdf()
+
     for (key, e) in sorted(fem1.elements.iteritems()):
         try:
             if isinstance(e, ShellElement):
@@ -339,13 +341,8 @@ def get_element_stats(fem1, fem2):
             elif isinstance(e, PointElement):
                 m = e.Mass()
                 c = e.Centroid()
-            else:
-                print("statistics not available - e.type=%s e.eid=%s"
-                    % (e.type, e.eid))
-                #try:
-                #    print("e.type = ",e.type)
-                #except:
-                #    print(str(e))
+            elif e.type in ['CBUSH', 'CBUSH1D', 'CBUSH2D']:
+                e._verify()
         except:
             print("*stats - e.type=%s eid=%s  element=\n%s"
                 % (e.type, e.eid, str(e)))

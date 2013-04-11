@@ -55,6 +55,21 @@ class TestBDF(Tester):
             assert len(fem.methods) == 1, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)
 
+    def test_bdf_04(self):
+        bdfFilename = os.path.join('cbush', 'cbush.dat')
+        folder = os.path.abspath(os.path.join(testPath, '..', 'models'))
+        (fem1, fem2, diffCards2) = self.run_bdf(folder, bdfFilename)
+
+        for fem in [fem1, fem2]:
+            assert len(fem.params) == 6, 'len(params) = %i' % len(fem.params)
+            assert len(fem.coords) == 1, 'len(coords) = %i' % len(fem.coords)
+            assert len(fem.nodes) == 2, 'len(nodes) = %i' % len(fem.nodes)
+            assert len(fem.materials) == 0, 'len(materials) = %i' % len(fem.materials)
+            assert len(fem.elements) == 1, 'len(elements) = %i' % len(fem.elements)
+            assert len(fem.methods) == 0, 'len(methods) = %i' % len(fem.methods)
+            assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)  ## PBEAML issue
+        self.run_bdf(folder, bdfFilename, xref=True)
+
     def test_bdf_03(self):
         bdfFilename = os.path.join('beam_modes', 'beam_modes.dat')
         folder = os.path.abspath(os.path.join(testPath, '..', 'models'))
@@ -70,7 +85,7 @@ class TestBDF(Tester):
             assert len(fem.properties) == 3, 'len(properties) = %i' % len(fem.properties)  ## PBEAML issue
         #self.run_bdf(folder, bdfFilename, xref=True) ## PBEAML is not supported
 
-    def test_bdf_04(self):
+    def test_bdf_05(self):
         bdfFilename = 'testA.bdf'
         folder = os.path.abspath(os.path.join(testPath, 'bdf', 'test', 'unit'))
         self.run_bdf(folder, bdfFilename)
