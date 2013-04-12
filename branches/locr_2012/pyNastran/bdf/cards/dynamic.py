@@ -174,6 +174,30 @@ class FREQ5(FREQ):
         raise NotImplementedError()
 
 
+class NLPCI(BaseCard):
+    type = 'NLPCI'
+
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
+        self.nlparm_id = integer(card, 1, 'nlparm_id')
+        self.Type = string_or_blank(card, 2, 'Type', 'CRIS')
+        self.minalr = double_or_blank(card, 3, 'minalr', 0.25)
+        self.maxlar = double_or_blank(card, 4, 'maxlar', 4.0)
+        self.scale = double_or_blank(card, 5, 'scale', 0.0)
+        blank(card, 6, 'blank')
+        self.desiter = double_or_blank(card, 7, 'minalr', 12)
+        self.mxinc = integer_or_blank(card, 7, 'minalr', 20)
+
+    def rawFields(self):
+        list_fields = ['NLPCI', self.nlparm_id, self.Type, self.minalr,
+                       self.maxalr, self.scale, None, self.desiter, self.mxinc]
+        return list_fields
+
+    def reprFields(self):
+        return self.rawFields()
+
+
 class TSTEP(BaseCard):
     """
     Transient Time Step

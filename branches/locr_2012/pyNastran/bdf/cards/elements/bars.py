@@ -539,7 +539,7 @@ class CONROD(RodElement):
         nsm = self.Nsm()
         mpa = self.MassPerLength()
         mass = self.Mass()
-        assert isinstance(pid, int), 'pid=%r' % pid
+        assert pid is None, 'pid=%r' % pid
         assert isinstance(mid, int), 'mid=%r' % mid
         assert isinstance(L, float), 'L=%r' % L
         assert isinstance(A, float), 'A=%r' % A

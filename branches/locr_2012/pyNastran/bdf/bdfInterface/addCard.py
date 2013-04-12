@@ -505,6 +505,13 @@ class AddMethods(object):
         assert key > 0
         self.nlparms[key] = nlparm
 
+    def add_NLPCI(self, nlpci):
+        key = nlpci.nlparm_id
+        print(nlpci)
+        assert key not in self.nlpcis
+        assert key > 0
+        self.nlpcis[key] = nlpci
+
     def add_TSTEP(self, tstep, allowOverwrites=False):
         key = tstep.sid
         if key in self.tsteps and not allowOverwrites:

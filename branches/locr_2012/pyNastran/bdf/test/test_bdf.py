@@ -281,26 +281,30 @@ def get_element_stats(fem1, fem2):
 
     fem1._verify_bdf()
 
-    for (key, e) in sorted(fem1.elements.iteritems()):
-        try:
-            e._verify()
-            #if isinstance(e, RigidElement):
-                #pass
-            #elif isinstance(e, DamperElement):
-                #b = e.B()
-            #elif isinstance(e, SpringElement):
-                #L = e.Length()
-                #K = e.K()
-                #pid = e.Pid()
-            #elif isinstance(e, PointElement):
-                #m = e.Mass()
-                #c = e.Centroid()
-        except Exception as exp:
-            #print("e=\n",str(e))
-            print("*stats - e.type=%s eid=%s  element=\n%s"
-                % (e.type, e.eid, str(exp.args)))
-                
-            #raise
+   # for (key, e) in sorted(fem1.elements.iteritems()):
+   #     try:
+   #         e._verify()
+   #         #if isinstance(e, RigidElement):
+   #             #pass
+   #         #elif isinstance(e, DamperElement):
+   #             #b = e.B()
+   #         #elif isinstance(e, SpringElement):
+   #             #L = e.Length()
+   #             #K = e.K()
+   #             #pid = e.Pid()
+   #         #elif isinstance(e, PointElement):
+   #             #m = e.Mass()
+   #             #c = e.Centroid()
+   #     except Exception as exp:
+   #         #print("e=\n",str(e))
+   #         print("*stats - e.type=%s eid=%s  element=\n%s"
+   #             % (e.type, e.eid, str(exp.args)))
+   #     except AssertionError as exp:
+   #         print("e=\n",str(e))
+   #         #print("*stats - e.type=%s eid=%s  element=\n%s"
+   #             #% (e.type, e.eid, str(exp.args)))
+   #             
+   #         #raise
 
 
 def get_matrix_stats(fem1, fem2):
