@@ -924,6 +924,20 @@ class PBARL(LineProperty):
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
+    def _verify(self, isxref=False):
+        pid = self.Pid()
+        mid = self.Mid()
+        A = self.Area()
+        J = self.J()
+        nsm = self.Nsm()
+        mpl = self.MassPerLength()
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(A, float), 'pid=%r' % A
+        assert isinstance(J, float), 'cid=%r' % J
+        assert isinstance(nsm, float), 'nsm=%r' % nsm
+        assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
+
     def Area(self):
         return self.areaL(self.dim)
 
@@ -958,13 +972,50 @@ class PBARL(LineProperty):
             #Iy = self.I22()
             (Ix, Iy, Ixy) = self.I1_I2_I12()
             #print
-            
             #J = Ix + Iy
+        else:
+            msg = 'I11 for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
+            raise NotImplementedError(msg)
         return Ix
         raise RuntimeError('who is calling this...')
 
     #def I12(self):
         #return self.I12()
+    
+    def _points(self):
+        if self.Type in ['BAR']:
+            (d1, d2) = self.dim
+            Area = d1*d2
+            y1 = d2/2.
+            x1 = d1/2.
+            points = [  # start at upper right, go clockwise
+                [x1, y1],   # p1
+                [x1, y2],   # p2
+                [-x1, y2],  # p3
+                [-x1, y3],  # p4
+            ]
+        if self.Type in ['T2']:
+            (d1, d2, d3, d4) = self.dim
+            y1 = d2-d3/2
+            y2 = d3/2.
+            y3 = -y2
+            x1 = d4/2
+            x2 = d1/2
+            points = [  # start at upper right, go clockwise
+                [x1, y1],   # p1
+                [x1, y2],   # p2
+                [x2, y2],   # p3
+                [x2, y3],   # p4
+                [-x2, y3],  # p5
+                [-x2, y2],  # p6
+                [-x1, y2],  # p7
+                [-x1, y1]   # p8
+            ]
+            Area = d1*d3 + (d2-d3)*d4
+        else:
+            msg = '_points for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
+            raise NotImplementedError(msg)
+        return points, Area
 
     def J(self):
         if self.Type in ['ROD']:
@@ -976,6 +1027,16 @@ class PBARL(LineProperty):
             b, h = self.dim
             (Ix, Iy, Ixy) = self.I1_I2_I12()
             J = Ix + Iy
+        elif self.Type in ['BAR', 'T2']:
+            ## @see http://en.wikipedia.org/wiki/Area_moment_of_inertia
+            points, Area = self._points()
+            Ixx = 0.
+            for i in range(len(points)-1):
+                yi = points[i][1]
+                yip1 = points[i+1][1]
+                Ixx += yi+yi*yip1+yip1**2  # intA (y^2*dA)  = y[i]+y[i]*y[i+1]+y[i+1]**2
+            Ixx *= Area / 12.
+            J = Ixx
         else:
             msg = 'J for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
             raise NotImplementedError(msg)

@@ -343,9 +343,11 @@ def get_element_stats(fem1, fem2):
                 c = e.Centroid()
             elif e.type in ['CBUSH', 'CBUSH1D', 'CBUSH2D']:
                 e._verify()
-        except Exception as e:
+        except Exception as exp:
+            #print("e=\n",str(e))
             print("*stats - e.type=%s eid=%s  element=\n%s"
-                % (e.type, e.eid, str(e.args)))
+                % (e.type, e.eid, str(exp.args)))
+                
             #raise
 
 
