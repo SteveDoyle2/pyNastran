@@ -11,8 +11,8 @@ numpy.seterr(all='raise')
 import traceback
 
 from pyNastran.utils import print_bad_path
-from pyNastran.bdf.bdf import CTRIAX, CTRIAX6, BDF
 from pyNastran.bdf.bdf4 import BDF
+#from pyNastran.bdf.bdf4 import BDF
 from pyNastran.bdf.bdf import (ShellElement, SolidElement, LineElement,
                                RigidElement, SpringElement, PointElement,
                                DamperElement, RodElement, NastranMatrix)
@@ -97,7 +97,6 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
     try:
         #print("xref = ", xref)
         (outModel) = run_fem1(fem1, bdfModel, meshForm, xref, punch, cid)
-
         (fem2) = run_fem2(bdfModel, outModel, xref, punch, debug=debug, log=None)
         (diffCards) = compare(fem1, fem2, xref=xref, check=check)
 
@@ -284,65 +283,18 @@ def get_element_stats(fem1, fem2):
 
     for (key, e) in sorted(fem1.elements.iteritems()):
         try:
-            if isinstance(e, ShellElement):
-                a = e.Area()
-                if (isinstance(e, CTRIAX) or isinstance(e, CTRIAX6)):
-                    pass
-                else:
-                    t = e.Thickness()
-                    nsm = e.Nsm()
-                    mA = e.MassPerArea()
-                    m = e.Mass()
-                    c = e.Centroid()
-                    #mid = e.Mid()
-                    pid = e.Pid()
-                    n = e.Normal()
-                    a, c, n = e.AreaCentroidNormal()
-            elif isinstance(e, SolidElement):
-                v = e.Volume()
-                m = e.Mass()
-                c = e.Centroid()
-                mid = e.Mid()
-                pid = e.Pid()
-            elif isinstance(e, LineElement):  # ROD/BAR/BEAM
-                L = e.Length()
-                nsm = e.Nsm()
-                A = e.Area()
-                mL = e.MassPerLength()
-                m = e.Mass()
-                c = e.Centroid()
-                mid = e.Mid()
-                pid = e.Pid()
-                I22 = e.I22()
-                I11 = e.I11()
-                I12 = e.I12()
-                J = e.J()
-                msg = 'mass=%r I11=%r I22=%r I12=%r J=%r' % (m, I11, I22, I12, J)
-                if None in [m, I11, I22, I12, J]:
-                    print("Moment of Inertia not available - e.type=%s "
-                          "e.eid=%i\n" % (e.type, e.eid) + msg)
-            elif isinstance(e, RodElement):  # CROD, CONROD, CTUBE
-                L = e.Length()
-                nsm = e.Nsm()
-                A = e.Area()
-                mL = e.MassPerLength()
-                m = e.Mass()
-                c = e.Centroid()
-                mid = e.Mid()
-                pid = e.Pid()
-            elif isinstance(e, RigidElement):
-                pass
-            elif isinstance(e, DamperElement):
-                b = e.B()
-            elif isinstance(e, SpringElement):
+            e._verify()
+            #if isinstance(e, RigidElement):
+                #pass
+            #elif isinstance(e, DamperElement):
+                #b = e.B()
+            #elif isinstance(e, SpringElement):
                 #L = e.Length()
-                K = e.K()
-                pid = e.Pid()
-            elif isinstance(e, PointElement):
-                m = e.Mass()
-                c = e.Centroid()
-            elif e.type in ['CBUSH', 'CBUSH1D', 'CBUSH2D']:
-                e._verify()
+                #K = e.K()
+                #pid = e.Pid()
+            #elif isinstance(e, PointElement):
+                #m = e.Mass()
+                #c = e.Centroid()
         except Exception as exp:
             #print("e=\n",str(e))
             print("*stats - e.type=%s eid=%s  element=\n%s"
@@ -409,7 +361,7 @@ def main():
     parser.add_argument('-c', '--checks', dest='check', action='store_false',
                        help='Disables BDF checks.  Checks run the methods on '
                        'every element/property to test them.  May fails if a '
-                       'card is not supported.')
+                       'card is fully not supported.')
     parser.add_argument('-v', '--version', action='version', version=ver,
                        help="Shows pyNastran's version number and exits")
 

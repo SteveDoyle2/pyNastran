@@ -7,7 +7,8 @@ from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.assign_type import (integer, integer_or_blank,
     components, components_or_blank, fields,
-    integer_or_string, string, string_or_blank)
+    integer_or_string, string, string_or_blank,
+    integer_string_or_blank)
 
 class Set(BaseCard):
     """Generic Class all SETx cards inherit from"""
@@ -153,8 +154,15 @@ class ABQSet1(Set):
         self.components = components_or_blank(card, 1, 'components', 0)
 
         nfields = len(card)
+        IDs = []
+        i = 1
+        for ifield in range(2, nfields):
+            ID = integer_string_or_blank(card, ifield, 'ID%i' % i)
+            if ID:
+                i += 1
+                IDs.append(ID)
+        #IDs = fields(integer_or_string, card, 'ID', i=2, j=nfields)
         ## Identifiers of grids points. (Integer > 0)
-        IDs = fields(integer_or_string, card, 'ID', i=2, j=nfields)
         self.IDs = expand_thru(IDs)
 
     def rawFields(self):
@@ -252,17 +260,26 @@ class SET1(Set):
         ## Unique identification number. (Integer > 0)
         self.sid = integer(card, 1, 'sid')
 
-        ## List of structural grid point or element identification numbers.
-        ## (Integer > 0 or 'THRU'; for the 'THRU' option, ID1 < ID2 or 'SKIN';
-        ## in field 3)
         self.IDs = []
 
-        IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))
+        IDs = []
+        i = 1
+        for ifield in range(2, len(card)):
+            ID = integer_string_or_blank(card, ifield, 'ID%i' % i)
+            if ID:
+                i += 1
+                IDs.append(ID)
+        #IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))
+
         self.isSkin = False
         i = 0
         if isinstance(IDs[0], str) and IDs[0] == 'SKIN':
             self.isSkin = True
             i += 1
+
+        ## List of structural grid point or element identification numbers.
+        ## (Integer > 0 or 'THRU'; for the 'THRU' option, ID1 < ID2 or 'SKIN';
+        ## in field 3)
         self.IDs = expand_thru(IDs[i:])
         self.cleanIDs()
 

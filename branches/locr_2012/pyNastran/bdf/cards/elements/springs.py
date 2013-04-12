@@ -144,7 +144,7 @@ class CELAS1(SpringElement):
         if self.type != elem.type:
             return False
         fields1 = [self.eid] + self.nodes + [self.pid, self.c1, self.c2]
-        fields2 = [elem.eid] + self.nodes + [elem.pid, elem.c1, elem.c2]
+        fields2 = [elem.eid] + elem.nodes + [elem.pid, elem.c1, elem.c2]
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self.isSameFields(fields1, fields2)
@@ -206,21 +206,43 @@ class CELAS2(SpringElement):
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
 
+    def cross_reference(self, model):
+        msg = ' which is required by CELAS2 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+
+    def _verify(self, isxref=False):
+        eid = self.Eid()
+        k = self.K()
+        nodeIDs = self.nodeIDs(allowEmptyNodes=True)
+        c1 = self.c2
+        c2 = self.c1
+        ge = self.ge
+        s = self.s
+        
+        assert isinstance(c1, int), 'c1=%r' % c1
+        assert isinstance(c2, int), 'c2=%r' % c2
+        assert isinstance(ge, float), 'ge=%r' % ge
+        assert isinstance(s, float), 'ge=%r' % s
+        if isxref:
+            assert len(nodeIDs) == len(self.nodes)
+            #for nodeID, node in zip(nodeIDs, self.nodes):
+                #assert node.node.nid
+        
+    
+    def Eid(self):
+        return self.eid
+
     def isSameCard(self, elem, debug=False):
         if self.type != elem.type:
             return False
         fields1 = [self.eid] + self.nodes + [self.k, self.c1, self.c2]
-        fields2 = [elem.eid] + self.nodes + [elem.k, elem.c1, elem.c2]
+        fields2 = [elem.eid] + elem.nodes + [elem.k, elem.c1, elem.c2]
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
     def K(self):
         return self.k
-
-    def cross_reference(self, model):
-        msg = ' which is required by CELAS2 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
 
     def writeCodeAster(self):
         nodes = self.nodeIDs()

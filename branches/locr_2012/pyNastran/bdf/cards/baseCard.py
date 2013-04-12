@@ -163,6 +163,7 @@ class Property(BaseCard):
             return self.mid.mid
 
     def isSameCard(self, prop, debug=False):
+        asdfdd
         if self.type != prop.type:
             return False
         fields1 = self.rawFields()
@@ -238,6 +239,36 @@ class Element(BaseCard):
                 positions.append(None)
         return positions
 
+    #def _nodeIDs_allowed(self, nodes=None, msg=''):
+        #if not nodes:
+            #nodes = self.nodes
+
+        #nodes2 = []
+        #for i, node in enumerate(nodes):
+            #if node == 0 or node is None:
+                #nodes2.append(None)
+            #elif isinstance(node, int):
+                #nodes2.append(node)
+            #else:
+                #nodes2.append(node.nid)
+        #return nodes2
+
+    #def _nodeIDs_restricted(self, nodes=None, msg=''):
+        #if not nodes:
+            #nodes = self.nodes
+
+        #try:
+            #if isinstance(nodes[0], int):
+                #nodeIDs = [node for node in nodes]
+            #else:
+                #nodeIDs = [node.nid for node in nodes]
+        #except:
+            #print("type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s" % (
+                  #self.type, nodes, allowEmptyNodes, msg))
+            #raise
+        #assert 0 not in nodeIDs, 'nodeIDs = %s' % nodeIDs
+        #return nodeIDs
+
     def nodeIDs(self, nodes=None, allowEmptyNodes=False, msg=''):
         """returns nodeIDs for repr functions"""
         try:
@@ -264,7 +295,7 @@ class Element(BaseCard):
                     print("type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s" % (
                           self.type, nodes, allowEmptyNodes, msg))
                     raise
-                assert 0 not in nodeIDs, 'nodeIDs = %s' % (nodeIDs)
+                assert 0 not in nodeIDs, 'nodeIDs = %s' % nodeIDs
                 return nodeIDs
         except:
             print("type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s" % (

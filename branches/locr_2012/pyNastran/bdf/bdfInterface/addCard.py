@@ -90,14 +90,16 @@ class AddMethods(object):
 
     def add_element(self, elem, allowOverwrites=False):
         key = elem.eid
-        if key in self.elements and not allowOverwrites:
-            if not elem.isSameCard(self.elements[key]):
-                elem.isSameCard(self.elements[key], debug=True)
-                #print 'eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.elements[key],elem)
+        assert key > 0, 'eid=%s elem=%s' % (key, elem)
+        if key not in self.elements:
+            pass
+        elif key in self.elements and not allowOverwrites:
+            if not elem.isSameCard(self.elements[key], debug=True):
+                #elem.isSameCard(self.elements[key], debug=True)
+                #print('eid=%s\noldElement=\n%snewElement=\n%s' % (key,self.elements[key],elem))
                 assert elem.eid not in self.elements, 'eid=%s\noldElement=\n%snewElement=\n%s' % (elem.eid, self.elements[elem.eid], elem)
-        else:
-            assert key > 0, 'eid=%s elem=%s' % (key, elem)
-            self.elements[key] = elem
+
+        self.elements[key] = elem
 
     def add_mass_element(self, elem, allowOverwrites=False):
         key = elem.eid

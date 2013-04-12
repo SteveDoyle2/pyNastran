@@ -805,7 +805,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         if bdf_filename in self.used_filenames:
             msg = 'bdf_filename=%s has already been opened once.\nused_filenames=%s' % self.used_filenames
             raise RuntimeError(msg)
-        self.log.info("opening %s" % bdf_filename)
+        self.log.info('opening %r' % bdf_filename)
         
         self.ifile += 1
         self.active_filename = bdf_filename
@@ -828,6 +828,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     
 
     def close_file(self, ):
+        self.log.info('closing %r' % self.active_filename)
         if self.ifile == 0:
             self.ifile = -1
             self.active_filename = None
@@ -914,7 +915,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             try:
                 (i, line, comment) = self.get_line()
             except TypeError:
-                yield lines, ''.join(comments)
+                #print 'type yield...'
+                #raise
+                lines2 = clean_empty_lines(lines)
+                yield lines2, ''.join(comments)
             if comment:  c=' comment=|%s|' % comment.strip()
             #print "lineC %s line=|%s|%s" % (i, line.strip(), c)
             #print "lines =",lines
@@ -965,6 +969,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 try:
                     (i, line, comment) = self.get_line()
                 except TypeError:
+                    #raise
                     lines2 = clean_empty_lines(lines)
                     comment = ''.join(comments+comments2)
                     yield lines2, comment
@@ -1074,11 +1079,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 #print "newfname =", newfname
                 self.open_file(bdf_filename)
                 reject = '$ INCLUDE processed:  %s\n' % bdf_filename
+                #print reject
                 self.rejects.append([reject])
                 #print "reject return False"
                 continue
             elif 'ENDDATA' in card_name:
                 isEndData = True  # exits while loop
+                #print("found ENDDATA in %r" % self.active_filename)
             #if isEndData:
                 break
 
@@ -1090,7 +1097,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 #print('card_count =', self.card_count.keys())
                 self.rejects.append(lines)
                 #print "reject return False"
-                return False
 
             #print '*'*60
             #print "self.active_filename =", self.active_filename
@@ -1204,6 +1210,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             if not e.args: 
                 e.args=('',)
             e.args = (e.args[0] + "\ncard = %s" % card,)+e.args[1:]
+            raise
         _cls = lambda name: globals()[name]
 
         if self._auto_reject:
@@ -1293,7 +1300,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                     except Exception as e:
                         if not e.args: 
                             e.args=('',)
-                        e.args = (e.args[0] + "\ncard = %s" % card,)+e.args[1:]
+                        e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
                         raise
                     return card_obj
 
@@ -1314,7 +1321,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 except Exception as e:
                     if not e.args: 
                         e.args=('',)
-                    e.args = (e.args[0] + "\ncard = %s" % card,)+e.args[1:]
+                    e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
                     raise
                 for i in _dct[card_name]:
                     if card_obj.field(i):

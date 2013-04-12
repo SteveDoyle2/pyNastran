@@ -15,7 +15,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 from itertools import izip, count
-from numpy import zeros, pi
+from numpy import zeros, pi, array
 
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
@@ -271,7 +271,9 @@ class LineProperty(Property):
             I2 = 1 / 12. * dim[1] * dim[0] ** 3
             I12 = 0.
         else:
-            raise NotImplementedError(self.Type)
+            msg = 'I1_I2_I12; Type=%s is not supported for %s class...' % (self.Type,
+                                                                self.type)
+            raise NotImplementedError(msg)
         return(I1, I2, I12)
 
     def areaL(self, dim):
@@ -467,7 +469,7 @@ class LineProperty(Property):
                 A = (h1 * w1 + h2 * w2 + h3 * w3 + h4 * w4 +
                      h5 * w5 + h6 * w6 + h7 * w7)
             else:
-                msg = 'Type=%s is not supported for %s class...' % (self.Type,
+                msg = 'areaL; Type=%s is not supported for %s class...' % (self.Type,
                                                                     self.type)
                 raise NotImplementedError(msg)
         except IndexError as e:
@@ -635,14 +637,12 @@ class PTUBE(LineProperty):
         return A
 
     def area1(self):
-        """@todo remove after verifying formula..."""
         Dout = self.OD1
         Din = Dout - 2 * self.t
         A1 = pi / 4. * (Dout * Dout - Din * Din)
         return A1
 
     def area2(self):
-        """@todo remove after verifying formula..."""
         Dout = self.OD2
         Din = Dout - 2 * self.t
         A2 = pi / 4. * (Dout * Dout - Din * Din)
@@ -1015,31 +1015,60 @@ class PBARL(LineProperty):
         else:
             msg = '_points for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
             raise NotImplementedError(msg)
-        return points, Area
+        return array(points), Area
 
     def J(self):
         if self.Type in ['ROD']:
-            assert len(self.dim) == 1, 'dim=%r' % self.dim
             r = self.dim[0]
-            J = pi*r**4/2.
-        elif self.Type in ['BAR']:
-            assert len(self.dim) == 2, 'dim=%r' % self.dim
-            b, h = self.dim
-            (Ix, Iy, Ixy) = self.I1_I2_I12()
-            J = Ix + Iy
+            Ixx = pi*r**4/4
+            Iyy = Ixx
+            Ixy = 0.
+        elif self.Type in ['TUBE']:
+            rout, rin = self.dim
+            #rin = rout - 2*t
+            Ixx = pi*(rout**4 - rin**4)/4
+            Iyy = Ixx
+            Ixy = 0.
+        elif self.Type in ['TUBE2']:
+            rout, t = self.dim
+            rin = rout - 2*t
+            Ixx = pi*(rout**4 - rin**4)/4
+            Iyy = Ixx
+            Ixy = 0.
+        #elif self.Type in ['BOX']:
+            #(d1, d2, d3, d4) = self.dim
+            #hout = d2
+            #wout = d1
+            #win = d1 - 2 * d4
+            #hin = d2 - 2 * d3
+
+        #elif self.Type in ['BAR']:
+            #assert len(self.dim) == 2, 'dim=%r' % self.dim
+            #b, h = self.dim
+            #(Ix, Iy, Ixy) = self.I1_I2_I12()
+            #J = Ix + Iy
         elif self.Type in ['BAR', 'T2']:
-            ## @see http://en.wikipedia.org/wiki/Area_moment_of_inertia
             points, Area = self._points()
             Ixx = 0.
-            for i in range(len(points)-1):
-                yi = points[i][1]
-                yip1 = points[i+1][1]
-                Ixx += yi+yi*yip1+yip1**2  # intA (y^2*dA)  = y[i]+y[i]*y[i+1]+y[i+1]**2
-            Ixx *= Area / 12.
-            J = Ixx
+            
+            yi = points[0,:-1]
+            yip1 = points[0,1:]
+
+            xi = points[1,:-1]
+            xip1 = points[1,1:]
+            
+            ## @see http://en.wikipedia.org/wiki/Area_moment_of_inertia
+            ai = xi*yip1 - xip1*yi
+            Ixx = 1/12*sum((yi**2 + yi*yip1+yip1**2)*ai)
+            Iyy = 1/12*sum((xi**2 + xi*xip1+xip1**2)*ai)
+            #Ixy = 1/24*sum((xi*yip1 + 2*xi*yi + 2*xip1*yip1 + xip1*yi)*ai)
+
         else:
             msg = 'J for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
             raise NotImplementedError(msg)
+
+        ## @see http://en.wikipedia.org/wiki/Perpendicular_axis_theorem
+        J = Ixx + Iyy
         return J
 
     def I22(self):
@@ -1284,7 +1313,7 @@ class PBEAM(IntegratedLineProperty):
             self.n1b = double_or_blank(card, x + 14, 'n1a', 0.0)
             self.n2b = double_or_blank(card, x + 15, 'n2b', self.n1b)
         else:
-            raise NotImplementedError('not supported')
+            raise NotImplementedError(data)
 
     #def Area(self):
     #    """@warning area field not supported fully on PBEAM card"""
@@ -1653,7 +1682,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
             self.fz = double(card, 16, 'fz')
             # more...
         else:
-            raise NotImplementedError('not implemented...')
+            raise NotImplementedError(data)
 
     def Nsm(self):
         """@warning nsm field not supported fully on PBEAM3 card"""
@@ -1753,7 +1782,7 @@ class PBEND(LineProperty):
             assert len(card) <= 23, 'len(PBEND card) = %i' % len(card)
 
         else:
-            raise NotImplementedError('PBEND')
+            raise NotImplementedError(data)
 
     #def Nsm(self):
         #"""@warning nsm field not supported fully on PBEND card"""

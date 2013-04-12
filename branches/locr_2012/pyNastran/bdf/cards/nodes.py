@@ -7,7 +7,7 @@ from numpy import array
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
 from pyNastran.bdf.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, blank)
+    double, double_or_blank, blank, integer_or_string)
 
 
 class Ring(BaseCard):
@@ -94,7 +94,7 @@ class SPOINT(Node):
 
     def rawFields(self):
         if isinstance(self.nid, int):
-            list_fields = ['SPOINT'] + self.nid
+            list_fields = ['SPOINT', self.nid]
         else:
             list_fields = ['SPOINT'] + collapse_thru(self.nid)
         return list_fields
@@ -119,21 +119,15 @@ class SPOINTs(Node):
         if comment:
             self._comment = comment
         Node.__init__(self, card, data)
-        #nFields = card.nFields()
 
         if card:
-            fields = integer(card, 1, 'ID')
+            fields = []
+            for i in range(1, len(card)):
+                field = integer_or_string(card, i, 'ID%i' % i)
+                fields.append(field)
         else:
             fields = data
         self.spoints = set(expand_thru(fields))
-        #i = 0
-        #while i<nFields: # =1 ???
-        #    if fields[i]=='THRU':
-        #        self.spoints += [fields[i-1],fields[i]+1]
-        #        i+=1
-        #    else:
-        #        self.spoints.append(fields[i])
-        #    i+=1
 
     def nDOF(self):
         return len(self.spoints)
