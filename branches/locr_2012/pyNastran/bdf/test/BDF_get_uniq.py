@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import sys
-import pyNastran.bdf.bdf
+from pyNastran.bdf.bdf4 import BDF, to_fields, BDFCard, interpret_value, wipe_empty_fields
 import logging
 
 logger = logging.getLogger("bdfuniq")
@@ -20,11 +20,12 @@ logger.addHandler(log_handler_file)
 includeDir = None
 
 
-class BDFuniqCard(pyNastran.bdf.bdf.BDF):
+class BDFuniqCard(BDF):
     def __init__(self, log, fingset):
         self.card_set = fingset
+        self.f = open('cards.out.bdf', 'wb')
         #self.newBDF = newBDF
-        pyNastran.bdf.bdf.BDF.__init__(self, log=log)
+        BDF.__init__(self, log=log)
 
     #def _parse_executive_control_deck(self):
     #   pass
@@ -32,7 +33,11 @@ class BDFuniqCard(pyNastran.bdf.bdf.BDF):
     def cross_reference(self, xref):
         pass
 
-    def add_card(self, card, cardName, iCard=0, old_card_obj=None):
+    def add_card(self, card_lines, card_name, comment=''):
+        card = to_fields(card_lines, card_name)
+        card = [interpret_value(val) for val in card]
+        card = BDFCard(card)
+        
         #if cardName == "LOAD":
         rec = []
         for item in card:
@@ -49,35 +54,44 @@ class BDFuniqCard(pyNastran.bdf.bdf.BDF):
         rec_str = str(rec)
         if not rec_str in self.card_set:
             #self.newBDF.add_card(card, cardName, iCard, old_card_obj)
-            print card
+            #print(card)
             self.card_set.add(rec_str)
 
-    def _is_reject(self, cardName):
+    def is_reject(self, cardName):
         """Can the card be read"""
         #cardName = self._get_card_name(card)
         if cardName.startswith('='):
             return False
         elif not cardName in self.cardsToRead:
             if cardName:
-                if cardName not in self.rejectCount:
-                    self.log.info("RejectCardName = |%s|" % (cardName))
-                    self.rejectCount[cardName] = 0
-                self.rejectCount[cardName] += 1
+                if cardName not in self.reject_count:
+                    self.log.info("RejectCardName = |%s|" % cardName)
+                    self.reject_count[cardName] = 0
+                self.reject_count[cardName] += 1
         return False
 
+    def write_bdf(self):
+        for card in self.card_set:
+            self.f.write(str(card) + '\n')
+        self.f.close()
+        
 
-#newBDF = pyNastran.bdf.bdf.BDF()
-
-card_fingerprint_set = set()
-
-for infilename in sys.stdin.readlines():
-    try:
-        infilename = infilename.strip()
-        BDFuniqCard(log=logger,
-                    fingset=card_fingerprint_set).readBDF(infilename)
-    except BaseException as e:
-        logger.error(e)
-
-#newBDF.writeBDF()
-
-print "done..."
+if __name__ == '__main__':
+    print "enter list of filenames at the command line..."
+    #newBDF = BDF()
+    card_fingerprint_set = set()
+    infilenames = sys.argv[1:]
+    assert len(infilenames) > 0, infilenames
+    for infilename in infilenames:
+        print "running infilename=%r" % infilename
+        try:
+            infilename = infilename.strip()
+            sys.stdout.flush()
+            model = BDFuniqCard(log=logger,
+                        fingset=card_fingerprint_set)
+            model.read_bdf(infilename)
+        except BaseException as e:
+            logger.error(e)
+    print "please see cards.out.bdf"
+    model.write_bdf()
+    print "done..."

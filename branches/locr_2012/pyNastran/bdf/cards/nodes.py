@@ -218,7 +218,6 @@ class GRIDB(Node):
         if card:
             raise NotImplementedError('GRIDB data')
         else:
-            print(data)
             self.nid = data[0]
             self.phi = data[1]
             self.cd = data[2]

@@ -183,7 +183,7 @@ class NLPCI(BaseCard):
         self.nlparm_id = integer(card, 1, 'nlparm_id')
         self.Type = string_or_blank(card, 2, 'Type', 'CRIS')
         self.minalr = double_or_blank(card, 3, 'minalr', 0.25)
-        self.maxlar = double_or_blank(card, 4, 'maxlar', 4.0)
+        self.maxalr = double_or_blank(card, 4, 'maxalr', 4.0)
         self.scale = double_or_blank(card, 5, 'scale', 0.0)
         blank(card, 6, 'blank')
         self.desiter = double_or_blank(card, 7, 'minalr', 12)
@@ -195,6 +195,7 @@ class NLPCI(BaseCard):
         return list_fields
 
     def reprFields(self):
+        #minalr = set_blank_if_default(self.minalr, 0.25)
         return self.rawFields()
 
 

@@ -94,7 +94,7 @@ class AddMethods(object):
         if key not in self.elements:
             pass
         elif key in self.elements and not allowOverwrites:
-            if not elem.isSameCard(self.elements[key], debug=True):
+            if not elem.isSameCard(self.elements[key], debug=False):
                 #elem.isSameCard(self.elements[key], debug=True)
                 #print('eid=%s\noldElement=\n%snewElement=\n%s' % (key,self.elements[key],elem))
                 assert elem.eid not in self.elements, 'eid=%s\noldElement=\n%snewElement=\n%s' % (elem.eid, self.elements[elem.eid], elem)
@@ -103,7 +103,6 @@ class AddMethods(object):
 
     def add_mass_element(self, elem, allowOverwrites=False):
         key = elem.eid
-
         if key in self.massElements and not allowOverwrites:
             if not elem.isSameCard(self.massElements[key]):
                 elem.isSameCard(self.elements[key], debug=True)
@@ -507,7 +506,6 @@ class AddMethods(object):
 
     def add_NLPCI(self, nlpci):
         key = nlpci.nlparm_id
-        print(nlpci)
         assert key not in self.nlpcis
         assert key > 0
         self.nlpcis[key] = nlpci

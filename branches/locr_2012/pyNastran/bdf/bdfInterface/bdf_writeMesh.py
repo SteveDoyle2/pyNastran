@@ -562,6 +562,8 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(darea.print_card(size))
             for (ID, nlparm) in sorted(self.nlparms.iteritems()):
                 msg.append(nlparm.print_card(size))
+            for (ID, nlpci) in sorted(self.nlpcis.iteritems()):
+                msg.append(nlpci.print_card(size))
             for (ID, tstep) in sorted(self.tsteps.iteritems()):
                 msg.append(tstep.print_card(size))
             for (ID, tstepnl) in sorted(self.tstepnls.iteritems()):
