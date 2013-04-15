@@ -468,19 +468,23 @@ class CTUBE(RodElement):
 
     def _verify(self, isxref=False):
         pid = self.Pid()
-        mid = self.Mid()
-        L = self.Length()
         A = self.Area()
-        nsm = self.Nsm()
-        mpa = self.MassPerLength()
-        mass = self.Mass()
         assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(mid, int), 'mid=%r' % mid
-        assert isinstance(L, float), 'L=%r' % L
         assert isinstance(A, float), 'A=%r' % A
-        assert isinstance(nsm, float), 'nsm=%r' % nsm
-        assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
-        assert isinstance(mass, float), 'mass=%r' % mass
+        if isxref:
+            L = self.Length()
+            #nsm = self.Nsm()
+            assert isinstance(L, float), 'L=%r' % L
+            #assert isinstance(nsm, float), 'nsm=%r' % nsm
+            if self.pid.mid.type == 'MAT1':
+                mpa = self.pid.mid.MassPerLength()
+                mass = self.Mass()
+                assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
+                assert isinstance(mass, float), 'mass=%r' % mass
+            elif self.pid.mid.type == 'MAT4':
+                pass
+            else:
+                raise NotImplementedError('_verify does not support self.pid.mid.type=%s' % self.pid.mid.type)
         
         c = self.Centroid()
         for i in range(3):

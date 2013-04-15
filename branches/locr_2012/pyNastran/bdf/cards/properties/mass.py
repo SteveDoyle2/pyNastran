@@ -26,6 +26,7 @@ class NSM(PointProperty):
     """
     Defines a set of non structural mass.
     """
+    type = 'NSM'
     ## Set points to either Property entries or Element entries.
     ## Properties are:
     validProperties = [
@@ -62,6 +63,7 @@ class NSM(PointProperty):
 
 
 class PMASS(PointProperty):
+    type = 'PMASS'
     def __init__(self, card=None, nOffset=0, data=None, comment=''):
         PointProperty.__init__(self, card, data)
         if comment:
@@ -74,6 +76,12 @@ class PMASS(PointProperty):
         else:
             self.pid = data[0]
             self.mass = data[1]
+
+    def _verify(self, isxref=False):
+        pid = self.Pid()
+        mass = self.Mass()
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(mass, float), 'mass=%r' % mass
 
     def Mass(self):
         return self.mass

@@ -124,11 +124,6 @@ class ShellElement(Element):
     def flipNormal(self):
         raise NotImplementedError('flipNormal undefined for %s' % (self.type))
 
-    def cross_reference(self, mesh):
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = mesh.Nodes(self.nodes, msg=msg)
-        self.pid = mesh.Property(self.pid, msg=msg)
-
 
 class TriShell(ShellElement):
     def __init__(self, card, data):
@@ -243,6 +238,11 @@ class CTRIA3(TriShell):
 
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 3
+
+    def cross_reference(self, model):
+        msg = ' which is required by CTRIA3 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def _verify(self, isxref=True):
         eid = self.Eid()
@@ -518,6 +518,11 @@ class CTRIAR(TriShell):
         self.T3 = double_or_blank(card, 13, 'T3', 1.0)
         assert len(card) <= 14, 'len(CTRIAR card) = %i' % len(card)
 
+    def cross_reference(self, model):
+        msg = ' which is required by CTRIAR eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
     def Thickness(self):
         """
         Returns the thickness
@@ -583,13 +588,21 @@ class CTRIAX(TriShell):
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(nids) == 6, 'error on CTRIAX'
 
+    def cross_reference(self, model):
+        msg = ' which is required by CTRIAX eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
     def rawFields(self):
-        list_fields = ['CTRIAX', self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid]
+        nodeIDs = self.nodeIDs(allowEmptyNodes=True)
+        list_fields = ['CTRIAX', self.eid, self.Pid()] + nodeIDs + [self.thetaMcid]
         return list_fields
 
     def reprFields(self):
         thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
-        list_fields = ['CTRIAX', self.eid, self.Pid()] + self.nodeIDs() + [thetaMcid]
+        nodeIDs = self.nodeIDs(allowEmptyNodes=True)
+        list_fields = ['CTRIAX', self.eid, self.Pid()] + nodeIDs + [thetaMcid]
+        return list_fields
 
 
 class CTRIAX6(TriShell):
@@ -628,6 +641,11 @@ class CTRIAX6(TriShell):
             raise NotImplementedError(data)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(nids) == 6, 'error on CTRIAX6'
+
+    def cross_reference(self, model):
+        msg = ' which is required by CTRIAX6 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.mid = model.Material(self.mid)
 
     def _verify(self, isxref=True):
         eid = self.Eid()
@@ -687,11 +705,6 @@ class CTRIAX6(TriShell):
 
     def Mass(self):
         raise NotImplementedError('CTRIAX6 does not have a Mass method yet')
-
-    def cross_reference(self, model):
-        msg = ' which is required by CTRIAX6 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
-        self.mid = model.Material(self.mid)
 
     def Mid(self):
         if isinstance(self.mid, int):
@@ -883,6 +896,11 @@ class CSHEAR(QuadShell):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4
 
+    def cross_reference(self, model):
+        msg = ' which is required by CSHEAR eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
     def Normal(self):
         (n1, n2, n3, n4) = self.nodePositions()
         return _normal(n1 - n3, n2 - n4)
@@ -976,7 +994,6 @@ class CQUAD4(QuadShell):
                     integer_or_blank(card, 4, 'n2'),
                     integer_or_blank(card, 5, 'n3'),
                     integer_or_blank(card, 6, 'n4')]
-
             self.thetaMcid = integer_double_or_blank(card, 7, 'thetaMcid', 0.0)
             self.zOffset = double_or_blank(card, 8, 'zOffset', 0.0)
             blank(card, 9, 'blank')
@@ -1010,6 +1027,11 @@ class CQUAD4(QuadShell):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4, 'CQUAD4'
     
+    def cross_reference(self, model):
+        msg = ' which is required by CQUAD4 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
     def _verify(self, isxref=False):
         eid = self.Eid()
         pid = self.Pid()
@@ -1121,6 +1143,11 @@ class CQUADR(QuadShell):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4, 'CQUADR'
 
+    def cross_reference(self, model):
+        msg = ' which is required by CQUADR eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
     def Thickness(self):
         """
         Returns the thickness
@@ -1174,6 +1201,11 @@ class CQUAD(QuadShell):
         assert len(card) <= 12, 'len(CQUAD card) = %i' % len(card)
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 9
+
+    def cross_reference(self, model):
+        msg = ' which is required by CQUAD eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def Thickness(self):
         """
@@ -1254,10 +1286,10 @@ class CQUAD8(QuadShell):
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 8
 
-    def cross_reference(self, mesh):
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = mesh.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
-        self.pid = mesh.Property(self.pid, msg=msg)
+    def cross_reference(self, model):
+        msg = ' which is required by CQUAD8 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def Thickness(self):
         """
@@ -1362,6 +1394,11 @@ class CQUADX(QuadShell):
             raise NotImplementedError(data)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 9
+
+    def cross_reference(self, model):
+        msg = ' which is required by CQUADX eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def Thickness(self):
         """

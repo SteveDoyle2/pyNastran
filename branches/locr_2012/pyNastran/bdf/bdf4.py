@@ -25,7 +25,7 @@ from pyNastran.utils.log import get_logger
 #if 0:
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
-                                          PRAC2D, PRAC3D, PCONEAX)
+                                          PRAC2D, PRAC3D, PCONEAX, PLPLANE)
 
 from .cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,
                                      SpringElement)
@@ -196,7 +196,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
             # properties
             'PMASS',
-            'PELAS', 'PGAP', 'PFAST',
+            'PELAS', 'PGAP', 'PFAST', 'PLPLANE',
             'PBUSH', 'PBUSH1D',
             'PDAMP', 'PDAMP5', 'PDAMPT',
             'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBCOMP',
@@ -606,27 +606,47 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         @param xref should the bdf be cross referenced (default=True)
         @param punch indicates whether the file is a punch file (default=False)
         """
-        ## the active filename (string)
-        self.bdf_filename = bdf_filename
+        try:
+            ## the active filename (string)
+            self.bdf_filename = bdf_filename
 
-        if include_dir is None:
-            include_dir = os.path.dirname(bdf_filename)
-        ## the directory of the 1st BDF (include BDFs are relative to this one)
-        self.include_dir = include_dir
+            if include_dir is None:
+                include_dir = os.path.dirname(bdf_filename)
+            ## the directory of the 1st BDF (include BDFs are relative to this one)
+            self.include_dir = include_dir
 
-        self.open_file(self.bdf_filename)
-        self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
-        if not punch:
-            self.log.debug('---reading executive and case control decks---')
-            self._read_executive_control_deck()
-            self._read_case_control_deck()
-        else:
-            self.log.debug('---skipping executive and case control decks---')
-        
-        self._read_bulk_data_deck()
-        self.cross_reference(xref=xref)
-        self._xref = xref
+            self.open_file(self.bdf_filename)
+            self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
+            if not punch:
+                self.log.debug('---reading executive and case control decks---')
+                self._read_executive_control_deck()
+                self._read_case_control_deck()
+            else:
+                self.log.debug('---skipping executive and case control decks---')
+
+            self._read_bulk_data_deck()
+            self.cross_reference(xref=xref)
+            self._xref = xref
+            self._cleanup_file_streams()
+        except:
+            self._cleanup_file_streams()
+            raise
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
+
+    def _cleanup_file_streams(self):
+        """
+        This function is required to prevent too many files being opened.
+        The while loop closes them.
+        """
+        self._break_comment = False  # speeds up self.get_line()
+        while self.get_line():
+            pass
+        del self.stored_Is
+        del self.stored_lines
+        del self.stored_comments
+        del self.line_streams
+        del self.card_streams
+        del self._break_comment
 
     def _read_executive_control_deck(self):
         """Reads the executive control deck"""
@@ -653,11 +673,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         sol, method, iSolLine = parse_executive_control_deck(self.executive_control_lines)
         self.sol = sol
         self.iSolLine = iSolLine
-        try:
-            self.update_solution(sol, method)
-        except:
-            msg = ('update_solution failed...line=%s' % uline)
-            raise RuntimeError(msg)
+        self.update_solution(sol, method)
 
     def update_solution(self, sol, method=None):
         """
@@ -748,6 +764,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             return
         #print("reading Case Control Deck...")
         line = ''
+        
         while self.active_filename:  # keep going until finished
             #print "top of loop"
             lines = []
@@ -759,8 +776,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             #print("lineUpper = %r" % str(lineUpper))
             if lineUpper.startswith('INCLUDE'):
                 #print("INCLUDE!!!")
-                #try:
-                (i, next_line, comment) = self.get_line()
+                try:
+                    (i, next_line, comment) = self.get_line()
+                except:
+                    next_line = None
+
                 if next_line:
                     next_line = next_line.strip().split('$')[0].strip()
                 else:
@@ -817,6 +837,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         @note Doesn't allow reuse of the same bdf/dat file twice.
         """
         bdf_filename = os.path.join(self.include_dir, str(bdf_filename))
+        if not os.path.exists(bdf_filename):
+            raise IOError('No such bdf_filename: %r' % self.bdf_filename)
+
         #print "opening self.active_filename=%s" % bdf_filename
         if bdf_filename in self.used_filenames:
             msg = 'bdf_filename=%s has already been opened once.\nused_filenames=%s' % self.used_filenames
@@ -1225,7 +1248,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         except Exception as e:
             if not e.args: 
                 e.args=('',)
-            e.args = ('%r' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
+            e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
             raise
         _cls = lambda name: globals()[name]
 
@@ -1246,7 +1269,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 except Exception as e:
                     if not e.args: 
                         e.args = ('',)
-                    e.args = ('%r' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
+                    e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
                     raise
                 return card_obj
 
@@ -1269,7 +1292,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
              'add_property': ['PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PSOLID',
                               'PBAR', 'PBARL', 'PBEAM', 'PBCOMP', #'PBEAML',
                               'PROD', 'PTUBE', 'PLSOLID', 'PBUSH1D', 'PBUSH',
-                              'PFAST', 'PDAMP5', 'PGAP', 'PRAC2D', 'PRAC3D'],
+                              'PFAST', 'PDAMP5', 'PGAP', 'PRAC2D', 'PRAC3D',
+                              'PLPLANE',],
 
              # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
              'add_creep_material': ['CREEP'],
@@ -1316,7 +1340,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                     except Exception as e:
                         if not e.args: 
                             e.args=('',)
-                        e.args = ('%r' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
+                        e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
                         raise
                     return card_obj
 
@@ -1337,7 +1361,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 except Exception as e:
                     if not e.args: 
                         e.args=('',)
-                    e.args = ('%r' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
+                    e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
                     raise
                 for i in _dct[card_name]:
                     if card_obj.field(i):
@@ -1714,15 +1738,17 @@ def parse_executive_control_deck(executive_control_lines):
     Extracts the solution from the executive control deck
     """
     sol = None
+    #method = None
+    #iSolLine = None
     for (i, eline) in enumerate(executive_control_lines):
         uline = eline.strip().upper()  # uppercase line
-        uline = uline.split('$')[0]
-        #print(uline)
-        if 'SOL ' in uline[:4]:
+        uline = uline.split('$')[0].expandtabs()
+        #print("uline = %r" % uline)
+        if uline[:4] in ['SOL ']:
             if ',' in uline:
                 sline = uline.split(',')  # SOL 600,method
-                solValue = sline[0]
-                method = sline[1]
+                solValue = sline[0].strip()
+                method = sline[1].strip()
             else:
                 solValue = uline
                 method = None

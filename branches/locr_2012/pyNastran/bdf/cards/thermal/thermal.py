@@ -186,9 +186,12 @@ class CHBDYG(ThermalElement):
             self.radMidBack = data[5]
             self.grids = data[6:14]
 
-    def cross_reference(self, mesh):
+    def _verify(self, isxref=False):
         pass
-        #self.pid = mesh.Phbdy(self.pid)
+
+    def cross_reference(self, model):
+        pass
+        #self.pid = model.Phbdy(self.pid)
 
     def rawFields(self):
         list_fields = ['CHBDYG', self.eid, None, self.Type, self.iViewFront,

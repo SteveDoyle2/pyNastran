@@ -12,22 +12,34 @@ from pyNastran.bdf.subcase import Subcase
 from pyNastran.utils.log import get_logger
 
 
+CaseControlDeckDeprecated(object):
+    def hasParameter(self, isubcase, param_name):
+        self.has_parameter(isubcase, param_name)
+
+    #def get_subcase_parameter(self, isubcase, param_name):
+    #def has_subcase(self, isubcase):
+    #def create_new_subcase(self, isubcase):
+    #def delete_subcase(self, isubcase):
+    #def copy_subcase(self, i_from_subcase, i_to_subcase, overwrite_subcase=True):
+    #def get_subcase_list(self):
+    #def get_local_subcase_list(self):
+    #def update_solution(self, isubcase, sol):
+    #def add_parameter_to_global_subcase(self, param):
+    #def add_parameter_to_local_subcase(self, isubcase, param):
+    #def finish_subcases(self):
+    #def convert_to_sol_200(self, model):
+
 class CaseControlDeck(object):
     """
     CaseControlDeck parsing and extraction class
     """
-    nlines_max = 10000
     def __init__(self, lines, log=None):
         """
-        @param self
-          the case control deck object
-        @param lines
-          list of lines that represent the case control deck ending with
-          BEGIN BULK
-        @param log
-          a logger object
+        @param self the case control deck object
+        @param lines list of lines that represent the case control deck
+          ending with BEGIN BULK
+        @param log a logger object
         """
-
         self.log = get_logger(log, "debug")
         self.debug = False
         #self.debug = True
@@ -189,10 +201,6 @@ class CaseControlDeck(object):
                 #print "lines[%s] = %s" %(i,lines[i])
                 i += 1
                 lines2.append(lines[i])
-                if i > self.nlines_max:
-                    msg = 'There are too many lines in case control deck.\n'
-                    msg += 'Assuming an infinite loop was found.'
-                    raise RuntimeError(msg)
             (j, key, value, options, paramType) = self._parse_entry(lines2)
             i += 1
             #print("")
@@ -201,10 +209,6 @@ class CaseControlDeck(object):
             #                                                          paramType))
             isubcase = self._add_parameter_to_subcase(key, value, options,
                                                       paramType, isubcase)
-            if i == self.nlines_max:
-                msg = 'too many lines in Case Control Deck < %i...' %(
-                    self.nlines_max)
-                raise RuntimeError(msg)
 
         #print str(self)
         self.finish_subcases()

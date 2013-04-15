@@ -20,6 +20,56 @@ from pyNastran.bdf.assign_type import (integer, integer_or_blank,
     string_or_blank, integer_string_or_blank,
     fields, blank)
 
+
+class PLPLANE(Property):
+    type = 'PLPLANE'
+
+    def __init__(self, card=None, data=None, comment=''):
+        Property.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+        if card:
+            ## Property ID
+            self.pid = integer(card, 1, 'pid')
+            self.mid = integer(card, 2, 'mid')  # MATHE, MATHP
+            self.cid = integer_or_blank(card, 3, 'cid', 0)
+            self.str = string_or_blank(card, 4, 'str', 'GRID')
+        else:
+            raise NotImplementedError(data)
+
+    def cross_reference(self, model):
+        msg = ' which is required by PLPLANE pid=%s' % self.pid
+        self.mid = model.Material(self.mid, msg=msg)
+        self.cid = model.Coord(self.cid, msg=msg)
+
+    def _verify(self, isxref=False):
+        pid = self.Pid()
+        mid = self.Mid()
+        cid = self.Cid()
+        str = self.str
+        
+    #def Pid(self):
+        #return self.pid
+
+    def Mid(self):
+        if isinstance(self.mid, int):
+            return self.mid
+        return self.mid.mid
+
+    def Cid(self):
+        if isinstance(self.cid, int):
+            return self.cid
+        return self.cid.cid
+
+    def rawFields(self):
+        list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(), self.str]
+        return list_fields
+
+    def reprFields(self):
+        list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(), self.str]
+        return list_fields
+
+
 class PFAST(Property):
     type = 'PFAST'
 
@@ -181,7 +231,7 @@ class PLSOLID(SolidProperty):
             self.pid = integer(card, 1, 'pid')
             ## Material ID
             self.mid = integer(card, 2, 'mid')
-            #self.ge = double_or_blank(card, 3, 'ge', 0.0)
+            ## Location of stress and strain output
             self.str = string_or_blank(card, 3, 'str', 'GRID')
             assert len(card) <= 4, 'len(PLSOLID card) = %i' % len(card)
         else:

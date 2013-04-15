@@ -614,6 +614,19 @@ class PTUBE(LineProperty):
             self.OD2 = self.OD1
             #self.OD2 = data[5]  ## @note quirk to this one...
 
+    def _verify(self, isxref=False):
+        pid = self.Pid()
+        mid = self.Mid()
+        A = self.Area()
+        nsm = self.Nsm()
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(A, float), 'A=%r' % A
+        assert isinstance(nsm, float), 'nsm=%r' % nsm
+
+    def Nsm(self):
+        return self.nsm
+
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
@@ -989,12 +1002,12 @@ class PBARL(LineProperty):
             y1 = d2/2.
             x1 = d1/2.
             points = [  # start at upper right, go clockwise
-                [x1, y1],   # p1
-                [x1, y2],   # p2
-                [-x1, y2],  # p3
-                [-x1, y3],  # p4
+                [x1, y1],    # p1
+                [x1, y1],    # p2
+                [-x1, -y1],  # p3
+                [-x1, -y1],  # p4
             ]
-        if self.Type in ['T2']:
+        elif self.Type in ['T2']:
             (d1, d2, d3, d4) = self.dim
             y1 = d2-d3/2
             y2 = d3/2.

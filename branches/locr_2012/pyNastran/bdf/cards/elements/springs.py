@@ -25,6 +25,9 @@ class SpringElement(Element):
         Element.__init__(self, card, data)
         self.nodes = [None, None]
 
+    def Eid(self):
+        return self.eid
+
     def Length_noXref(self, n1=None, n2=None):
         r"""
         Returns the length of a bar/rod/beam element
@@ -36,7 +39,6 @@ class SpringElement(Element):
             if n1 AND n2 are both none (the default), then the model must
             be cross-referenced already
         """
-        #print self.type
         L = norm(n1.Position() - n2.Position())
         return L
 
@@ -140,6 +142,24 @@ class CELAS1(SpringElement):
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
 
+    def _verify(self, isxref=False):
+        eid = self.Eid()
+        k = self.K()
+        nodeIDs = self.nodeIDs(allowEmptyNodes=True)
+        c1 = self.c2
+        c2 = self.c1
+        #ge = self.ge
+        #s = self.s
+        
+        assert isinstance(c1, int), 'c1=%r' % c1
+        assert isinstance(c2, int), 'c2=%r' % c2
+        #assert isinstance(ge, float), 'ge=%r' % ge
+        #assert isinstance(s, float), 'ge=%r' % s
+        if isxref:
+            assert len(nodeIDs) == len(self.nodes)
+            #for nodeID, node in zip(nodeIDs, self.nodes):
+                #assert node.node.nid
+
     def isSameCard(self, elem, debug=False):
         if self.type != elem.type:
             return False
@@ -190,7 +210,7 @@ class CELAS2(SpringElement):
 
             ## stress coefficient
             self.s = double_or_blank(card, 8, 's', 0.)
-            assert len(card) <= 8, 'len(CELAS2 card) = %i' % len(card)
+            assert len(card) <= 9, 'len(CELAS2 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.k = data[1]
@@ -227,11 +247,7 @@ class CELAS2(SpringElement):
             assert len(nodeIDs) == len(self.nodes)
             #for nodeID, node in zip(nodeIDs, self.nodes):
                 #assert node.node.nid
-        
     
-    def Eid(self):
-        return self.eid
-
     def isSameCard(self, elem, debug=False):
         if self.type != elem.type:
             return False

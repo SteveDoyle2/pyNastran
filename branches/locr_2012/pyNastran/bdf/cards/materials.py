@@ -1290,8 +1290,9 @@ class MATS1(MaterialDependence):
                     ## Internal friction angle, measured in degrees, for the
                     ## Mohr-Coulomb and Drucker-Prager yield criteria
                     self.limit2 = double(card, 8, 'limit2')
-                else:
-                    self.limit2 = blank(card, 8, 'limit2')
+                #else:
+                    #self.limit2 = blank(card, 8, 'limit2')
+                    self.limit2 = None
             assert len(card) <= 9, 'len(MATS1 card) = %i' % len(card)
         else:
             (mid, tid, Type, h, yf, hr, limit1, limit2) = data

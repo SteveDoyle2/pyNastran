@@ -603,7 +603,7 @@ class FORCE1(Force):
         self.g1 = model.Node(self.g1)
         self.g2 = model.Node(self.g2)
         self.xyz = self.g2.Position() - self.g1.Position()
-        self.Normalize()
+        self.normalize()
 
     def G1(self):
         if isinstance(self.g1, int) or isinstance(self.g1, float):
@@ -621,7 +621,7 @@ class FORCE1(Force):
         return self.node.nid
 
     def rawFields(self):
-        (node, g1, g2) = self.nodeIDs([self.node, self.G1(), self.G2()])
+        (node, g1, g2) = self.nodeIDs([self.node, self.g1, self.g2])
         list_fields = ['FORCE1', self.sid, node, self.mag, g1, g2]
         return list_fields
 
@@ -670,7 +670,7 @@ class FORCE2(Force):
         v12 /= norm(v12)
         v34 /= norm(v34)
         self.xyz = cross(v12, v34)
-        self.Normalize()
+        self.normalize()
 
     def NodeID(self):
         if isinstance(self.node, int):
@@ -779,7 +779,7 @@ class MOMENT1(Moment):
         self.node = model.Node(self.node)
         self.xyz = model.Node(
             self.g2).Position() - model.Node(self.g1).Position()
-        self.Normalize()
+        self.normalize()
 
     def rawFields(self):
         (node, g1, g2) = self.nodeIDs([self.node, self.g1, self.g2])

@@ -68,7 +68,7 @@ if __name__ == '__main__':
     except:
         pass
 
-    print("nFiles = %s" % (len(files)))
+    print("nFiles = %s" % len(files))
     cid = None
     check = True
     xref = False

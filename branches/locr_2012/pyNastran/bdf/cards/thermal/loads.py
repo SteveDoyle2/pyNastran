@@ -2,6 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
+from ...bdfInterface.BDF_Card import wipe_empty_fields
 from .thermal import ThermalCard
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from ..baseCard import expand_thru, expand_thru_by, collapse_thru_by
@@ -35,13 +36,20 @@ class QBDY1(ThermalLoad):
 
             ## Heat flux into element (FLOAT)
             self.qFlux = double(card, 2, 'qFlux')
-            eids = fields(integer, card, i=3, j=len(card))
+            eids  = []
+            j = 1
+            for i in range(4, len(card)):
+                eid = integer(card, i, 'eid%i' % j)
+                j += 1
             ## CHBDYj element identification numbers (Integer)
             self.eids = expand_thru(eids)  ## @todo use expand_thru_by ???
         else:
             self.sid = data[0]
             self.qFlux = data[1]
             self.eids = data[2:]
+
+    def getLoads(self):
+        return [self]
 
     def cross_reference(self, model):
         self.eids = model.Elements(self.eids)
@@ -82,12 +90,15 @@ class QBDY2(ThermalLoad):  # not tested
             ## Identification number of an CHBDYj element. (Integer > 0)
             self.eid = integer(card, 2, 'eid')
 
-            nfields = card.nFields()
-            qFlux = fields(double_or_blank, card, 'qFlux', i=3, j=nfields)
+            qFlux  = []
+            j = 1
+            for i in range(3, len(card)):
+                q = double_or_blank(card, i, 'qFlux%i' % j)
+                j += 1
 
             ## Heat flux at the i-th grid point on the referenced CHBDYj
             ## element. (Real or blank)
-            self.qFlux = self.removeTrailingNones(qFlux)
+            self.qFlux = wipe_empty_fields(qFlux)
         else:
             self.sid = data[0]
             self.eid = data[1]

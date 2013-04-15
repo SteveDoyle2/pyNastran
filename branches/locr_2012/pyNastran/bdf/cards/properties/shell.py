@@ -24,7 +24,6 @@ class ShellProperty(Property):
         Property.__init__(self, card, data)
 
 
-
 class PCOMP(ShellProperty):
     """
     @code
@@ -604,10 +603,14 @@ class PSHELL(ShellProperty):
                     assert isinstance(G, float), 'G=%r' % G
                     assert isinstance(nu, float), 'nu=%r' % nu
                     assert isinstance(rho, float), 'rho=%r' % rho
+                elif mid.type == 'MAT4':
+                    pass
+                elif mid.type == 'MAT5':
+                    pass
                 elif mid.type == 'MAT8':
                     pass
                 else:
-                    raise NotImplementedError('pid.type=%s' % self.pid.type)
+                    raise NotImplementedError('pid.type=%s mid.type=%s' % (self.type, mid.type))
 
             t = self.Thickness()
             nsm = self.Nsm()

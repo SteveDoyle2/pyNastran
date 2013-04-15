@@ -7,7 +7,7 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
     collapse_thru_by_float)
 from pyNastran.bdf.assign_type import (integer, integer_or_blank, integer_or_string,
-    double, double_or_blank, string,
+    integer_string_or_blank, double, double_or_blank, string,
     string_or_blank, integer_double_or_blank,
     integer_or_double,
     integer_double_string_or_blank)
@@ -258,12 +258,13 @@ class DRESP1(OptConstraint):
         self.rtype = string(card, 3, 'rtype')
 
         # elem, pbar, pshell, etc. (ELEM flag or Prop Name)
-        self.ptype = string_or_blank(card, 4, 'ptype')
-        assert self.ptype in ['ELEM', 'PSHELL', 'PBAR', 'PROD', 'PCOMP',
-                              'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
-                              'PBEAML', 'PSHEAR', 'PTUBE', 
-                              'PKNL',   ## TODO: is this correct?
-                              None], 'DRESP1 ptype=%s' % self.ptype
+        self.ptype = integer_string_or_blank(card, 4, 'ptype')
+        if 0:
+            assert self.ptype in ['ELEM', 'PSHELL', 'PBAR', 'PROD', 'PCOMP',
+                                  'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
+                                  'PBEAML', 'PSHEAR', 'PTUBE', 
+                                  'PKNL',   ## TODO: is this correct?
+                                  None], 'DRESP1 ptype=%s' % self.ptype
         self.region = integer_or_blank(card, 5, 'region')
         self.atta = integer_double_string_or_blank(card, 6, 'atta')
         self.attb = integer_double_string_or_blank(card, 7, 'attb')

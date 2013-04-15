@@ -59,6 +59,17 @@ class PELAS(SpringProperty):
         #if self.sol in [108,129]:
             #self.pid = self.pelasts[self.pid]
         pass
+    
+    def K(self):
+        return self.k
+
+    def _verify(self, isxref=False):
+        eid = self.Pid()
+        k = self.K()
+        ge = self.ge
+        s = self.s
+        assert isinstance(ge, float), 'ge=%r' % ge
+        assert isinstance(s, float), 'ge=%r' % s
 
     def writeCodeAster(self):
         """

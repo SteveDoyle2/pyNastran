@@ -960,7 +960,7 @@ class GUST(BaseCard):
             self.wg = double(card, 3, 'wg')
             self.x0 = double(card, 4, 'x0')
             self.V = double_or_blank(card, 4, 'V')
-            assert len(card) <= 5, 'len(GUST card) = %i' % len(card)
+            assert len(card) <= 6, 'len(GUST card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.dload = data[1]
@@ -1532,21 +1532,27 @@ class TRIM(BaseCard):
             ## Flag to request a rigid trim analysis (Real > 0.0 and < 1.0;
             ## Default =1.0. A value of 0.0 provides a rigid trim analysis,
             ## not supported
-            self.aeqr = 1.0
 
-            i = 4
-            nfields = len(card) - 1
-            while i < nfields:
-                label = string(card, i, 'label')
-                ux = double(card, i + 1, 'ux')
-                msg = ('TRIM card doesnt support AEQR field...iField=%s '
-                       'label=%s fields=%s' % (i, label, card))
-                assert isinstance(label, unicode), msg
+            label = string_or_blank(card, 4, 'label1')
+            if label:
+                ux = double(card, 5, 'ux1')
+                self.uxs.append(ux)
+                self.labels.append(label)
+
+            label = string_or_blank(card, 6, 'label2')
+            if label:
+                ux = double(card, 7, 'ux1')
+                self.uxs.append(ux)
+                self.labels.append(label)
+            self.aeqr = double_or_blank(card, 8, 'aeqr')
+
+            i = 9
+            n = 3
+            while i < len(card):
+                label = string(card, i, 'label%i' % n)
+                ux = double(card, i + 1, 'ux%i' % n)
                 self.labels.append(label)
                 self.uxs.append(ux)
-                if i == 6:
-                    self.aeqr = double_or_blank(card, 8, 'aeqr', 1.0)
-                    i += 1
                 i += 2
         else:
             msg = '%s has not implemented data parsing' % self.type

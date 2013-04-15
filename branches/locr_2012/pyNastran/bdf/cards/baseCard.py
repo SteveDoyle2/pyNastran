@@ -163,7 +163,6 @@ class Property(BaseCard):
             return self.mid.mid
 
     def isSameCard(self, prop, debug=False):
-        asdfdd
         if self.type != prop.type:
             return False
         fields1 = self.rawFields()
@@ -287,10 +286,17 @@ class Element(BaseCard):
                 return nodes2
             else:
                 try:
-                    if isinstance(nodes[0], int):
-                        nodeIDs = [node for node in nodes]
-                    else:
-                        nodeIDs = [node.nid for node in nodes]
+                    nodeIDs = []
+                    for i, node in enumerate(nodes):
+                        if isinstance(node, int):
+                            nodeIDs.append(node)
+                        else:
+                            nodeIDs.append(node.nid)
+                    
+                    #if isinstance(nodes[0], int):
+                        #nodeIDs = [node for node in nodes]
+                    #else:
+                        #nodeIDs = [node.nid for node in nodes]
                 except:
                     print("type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s" % (
                           self.type, nodes, allowEmptyNodes, msg))
@@ -439,6 +445,8 @@ def condense(valueList):
     and delta values for condensing a SET card.
     @see build_thru
     """
+    if len(valueList) == 0:
+        return []
     if len(valueList) == 1:
         return [[valueList[0], valueList[0], 1]]
     valueList.sort()

@@ -70,8 +70,25 @@ class CMASS1(PointMassElement):
             self.c1 = data[4]
             self.c2 = data[5]
 
+    def Eid(self):
+        return self.eid
+
     def Mass(self):
         return self.pid.mass
+
+    def _verify(self, isxref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        mass = self.Mass()
+        c1 = self.c1
+        c2 = self.c2
+        #self.nodes
+
+        assert isinstance(eid, int), 'eid=%r' % eid
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(mass, float), 'mass=%r' % mass
+        assert c2 is None or isinstance(c1, int), 'c1=%r' % c1
+        assert c2 is None or isinstance(c2, int), 'c2=%r' % c2
 
     def cross_reference(self, model):
         msg = ' which is required by CMASS1 eid=%s' % self.eid

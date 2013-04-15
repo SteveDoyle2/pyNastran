@@ -345,7 +345,7 @@ def integer_or_string(card, n, fieldname):
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     else:  # string
-        return svalue
+        return str(svalue)
     return value
 
 def integer_string_or_blank(card, n, fieldname, default=None):
@@ -391,7 +391,7 @@ def integer_double_or_string(card, n, fieldname):
     if isinstance(svalue, int) or isinstance(svalue, float):
         return svalue
     
-    svalue = svalue.strip()
+    svalue = str(svalue.strip())
     if svalue:  # integer/float/string
         if '.' in svalue:  # float
             value = double(card, n, fieldname)
@@ -421,7 +421,7 @@ def string(card, n, fieldname):
         raise SyntaxError('%s = %r (field #%s) on card must be an string with a character (not %s).\ncard=%s' % (fieldname, value, n, Type, card) )
 
     if svalue:  # string
-        return svalue
+        return str(svalue)
     Type = getType(svalue)
     msg = '%s = %r (field #%s) on card must be an string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card)
     raise SyntaxError(msg)
@@ -443,7 +443,7 @@ def string_or_blank(card, n, fieldname, default=None):
         raise SyntaxError('%s = %r (field #%s) on card must be an string or blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
         
     if svalue:  # string
-        return svalue
+        return str(svalue)
     return default
 
 # int                    - done

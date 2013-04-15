@@ -564,7 +564,7 @@ class RLOAD1(TabularLoad):
             self.dphase = integer_or_blank(card, 4, 'dphase')
             self.tc = integer_or_blank(card, 5, 'tc', 0)
             self.td = integer_or_blank(card, 6, 'td', 0)
-            self.Type = string_or_blank(card, 7, 'Type', 'LOAD')
+            self.Type = integer_string_or_blank(card, 7, 'Type', 'LOAD')
 
             if   self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
                 self.Type = 'LOAD'
