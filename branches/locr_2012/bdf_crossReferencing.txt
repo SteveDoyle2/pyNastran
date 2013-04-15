@@ -90,7 +90,7 @@ CBUSH2D (no PBUSH2D)
 
 PBUSH   (NA)
 PBUSH1D (NA)
-PBUSH2D (not added)
+PBUSH2D (???)
 PBUSHT  (not added, references PBUSH)
 
 ----Dampers (Elements/Properties)----:
@@ -142,6 +142,8 @@ PGAP    (NA)
 
 PBCOMP  (not added)
 
+PLPLANE (???)
+
 ----Rigid Elements----:
 RROD
 RTRPLT
@@ -191,10 +193,10 @@ SUPORT1 (???)
 LOAD    (done)
 LSEQ    (done)
 
-RFORCE  (no)
 FORCE   (done)
 FORCE1  (done)
 FORCE2  (done)
+RFORCE  (no)
 
 ACCEL1  (done)
 GRAV    (done)
@@ -287,6 +289,7 @@ TRIM    (???)
 ----Dynamic----:
 DAREA   (???)
 NLPARM  (???)
+NLPCI   (???)
 TSTEP   (???)
 TSTEPNL (???)
 

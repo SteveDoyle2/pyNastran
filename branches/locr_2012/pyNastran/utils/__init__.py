@@ -345,6 +345,7 @@ def write_tuple(obj, nspaces, nbase, isClass):
 
 
 def write_array(a, nspaces=0):
+    return ' '*nspaces + '[???]'
     shape = a.shape
     dtype = a.dtype
     if len(shape) == 1:
