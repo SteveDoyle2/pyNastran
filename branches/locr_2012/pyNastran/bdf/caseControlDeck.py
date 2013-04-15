@@ -12,7 +12,7 @@ from pyNastran.bdf.subcase import Subcase
 from pyNastran.utils.log import get_logger
 
 
-CaseControlDeckDeprecated(object):
+class CaseControlDeckDeprecated(object):
     def hasParameter(self, isubcase, param_name):
         self.has_parameter(isubcase, param_name)
 
