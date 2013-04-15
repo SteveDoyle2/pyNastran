@@ -278,8 +278,8 @@ class CHBDYP(ThermalElement):
         else:
             raise NotImplementedError(data)
 
-    def cross_reference(self, mesh):
-        self.pid = mesh.Phbdy(self.pid)
+    def cross_reference(self, model):
+        self.pid = model.Phbdy(self.pid)
 
     def rawFields(self):
         list_fields = ['CHBDYP', self.eid, self.Pid(), self.Type, self.iViewFront,

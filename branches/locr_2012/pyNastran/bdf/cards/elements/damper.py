@@ -26,10 +26,10 @@ class LineDamper(DamperElement):
     def __init__(self, card, data):
         DamperElement.__init__(self, card, data)
 
-    def cross_reference(self, mesh):
+    def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = mesh.Nodes(self.nodes, msg=msg)
-        self.pid = mesh.Property(self.pid, msg=msg)
+        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
 
 class CDAMP1(LineDamper):

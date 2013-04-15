@@ -786,7 +786,7 @@ class CBAR(LineElement):
             #print "g0=%s x1=%s x2=%s x3=%s" %(self.g0, self.x1, self.x2,
             #                                  self.x3)
 
-    def cross_reference(self, mesh):
+    def cross_reference(self, model):
         """
         set g0-ga to x1,x2,x3
         """
@@ -796,9 +796,9 @@ class CBAR(LineElement):
         #    self.x2 = v[1]
         #    self.x3 = v[2]
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.ga = mesh.Node(self.ga, msg=msg)
-        self.gb = mesh.Node(self.gb, msg=msg)
-        self.pid = mesh.Property(self.pid, msg=msg)
+        self.ga = model.Node(self.ga, msg=msg)
+        self.gb = model.Node(self.gb, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     #def updateNodes(self,nodes):
     #    """@todo maybe improve"""

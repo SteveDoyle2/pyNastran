@@ -164,12 +164,12 @@ class CMASS2(PointMassElement):
         c = (p1 + p2) / f
         return c
 
-    def cross_reference(self, mesh):
+    def cross_reference(self, model):
         msg = ' which is required by CMASS2 eid=%s' % self.eid
         if isinstance(self.g1, int):
-            self.g1 = mesh.Node(self.g1, msg=msg)
+            self.g1 = model.Node(self.g1, msg=msg)
         if isinstance(self.g2, int):
-            self.g2 = mesh.Node(self.g2, msg=msg)
+            self.g2 = model.Node(self.g2, msg=msg)
 
     def G1(self):
         if isinstance(self.g1, int):
@@ -233,14 +233,14 @@ class CMASS3(PointMassElement):
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
-    def cross_reference(self, mesh):
+    def cross_reference(self, model):
         """
         Links up the propertiy ID
         """
         msg = ' which is required by CMASS3 eid=%s' % self.eid
-        #self.s1 = mesh.Node(self.s1, msg=msg)
-        #self.s2 = mesh.Node(self.s2, msg=msg)
-        self.pid = mesh.Property(self.pid, msg=msg)
+        #self.s1 = model.Node(self.s1, msg=msg)
+        #self.s2 = model.Node(self.s2, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def rawFields(self):
         fields = ['CMASS3', self.eid, self.Pid(), self.s1, self.s2]
@@ -285,11 +285,11 @@ class CMASS4(PointMassElement):
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
-    def cross_reference(self, mesh):
+    def cross_reference(self, model):
         """
         """
-        #self.s1 = mesh.Node(self.s1)
-        #self.s2 = mesh.Node(self.s2)
+        #self.s1 = model.Node(self.s1)
+        #self.s2 = model.Node(self.s2)
         pass
 
     def rawFields(self):
