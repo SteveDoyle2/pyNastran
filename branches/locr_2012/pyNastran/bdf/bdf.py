@@ -2,11 +2,11 @@
 """
 Main BDF class
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        unicode_literals)
+#from __future__ import (nested_scopes, generators, division, absolute_import,
+#                        unicode_literals)
 
-#from __future__ import (nested_scopes, generators, division, absolute_import)
-                        #print_function, unicode_literals)
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 
 import io
 import os
@@ -1182,7 +1182,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             self._increase_card_count(card_name)
             #print('card_count =', self.card_count.keys())
             if not self.is_reject(card_name):
-                self.add_card(lines, card_name, comment)
+                self.add_card(lines, card_name, comment, is_list=False)
             else:
                 #print('card_count =', self.card_count.keys())
                 self.rejects.append(lines)
@@ -1255,13 +1255,28 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                     yield i2, line2, comment
         #file.close()
 
-    def add_card(self, card_lines, card_name, comment=''):
+    def process_card(self, card_lines, debug=False):
+        card_name = self.get_card_name(card_lines)
+        fields = to_fields(card_lines, card_name)
+        if self._is_dynamic_syntax:
+            fields = [self._parse_dynamic_syntax(field) if '%' in
+                      field[0:1] else field for field in fields]
+
+        card = wipe_empty_fields(fields)
+        card[0] = card_name
+        return card
+
+    def add_card(self, card_lines, card_name, comment='', is_list=True):
         """
         Adds a card object to the BDF object.
         @param self the BDF object
-        @param card_lines the list of the card fields -> ['GRID',1,2,]
+        @param card_lines the list of the card fields
+           ['GRID,1,2',]  (is_list = False)
+           ['GRID',1,2,]  (is_list = True; default)
         @param card_name the card_name -> 'GRID'
         @param comment an optional the comment for the card
+        @param is_list changes card_lines from a list of lines to
+          a list of fields
         @retval card_object the card object representation of card
         @note
           this is a very useful method for interfacing with the code
@@ -1274,12 +1289,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
           cardObject is not returned
         """
         #comment = ''.join(comment)
-        #print("add_card; card_name=%r" % card_name)
+        #self.log.debug("card_name = |%r|" % (card_name))
+        #print("add_card; card_name=%r is_list=%s" % (card_name, is_list))
         if card_name in ['DEQATN']:
             card_obj = card_lines
             card = card_lines
         else:
-            fields = to_fields(card_lines, card_name)
+            if is_list:
+                fields = card_lines
+            else:
+                fields = to_fields(card_lines, card_name)
 
             # apply OPENMDAO syntax
             #print("_is_dynamic_syntax =", self._is_dynamic_syntax)
@@ -1304,7 +1323,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
         if self._auto_reject:
             self.reject_cards.append(card)
-            print('rejecting processed %s' % card)
+            print('rejecting processed auto=rejected %s' % card)
             return card_obj
         try:
             # cards that have their own method add_CARDNAME to add them
@@ -1479,7 +1498,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                     prop = PBEAML(card_obj, comment=comment)
                 except Exception as e:
                     self.log.exception(traceback.format_exc())
-                    self.log.exception('rejecting processed %s' % card)
+                    self.log.exception('rejecting processed PBEAML %s' % card)
                     return card_obj
                 self.add_property(prop)
                 
@@ -1489,7 +1508,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 ## @warning cards with = signs in them
                 ## are not announced when they are rejected
                 if '=' not in card[0]:
-                    self.log.info('rejecting processed %s' % card)
+                    self.log.info('rejecting processed equal signed card %s' % card)
                 self.reject_cards.append(card)
         except Exception as e:
             print(str(e))

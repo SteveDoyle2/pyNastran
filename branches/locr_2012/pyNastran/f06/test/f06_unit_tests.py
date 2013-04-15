@@ -3,7 +3,7 @@ import unittest
 from math import sqrt
 
 import pyNastran
-from pyNastran.bdf.bdf4 import BDF
+from pyNastran.bdf.bdf import BDF
 from pyNastran.f06.f06 import F06
 from pyNastran.op2.op2 import OP2
 from pyNastran.op4.op4 import OP4

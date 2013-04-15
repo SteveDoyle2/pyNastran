@@ -3,7 +3,7 @@ import unittest
 import os
 from numpy import array
 import pyNastran
-from pyNastran.bdf.bdf2 import BDF
+from pyNastran.bdf.bdf import BDF
 from pyNastran.utils import object_methods
 
 rootpath = pyNastran.__path__[0]
