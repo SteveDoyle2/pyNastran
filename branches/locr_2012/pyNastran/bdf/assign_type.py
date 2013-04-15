@@ -331,6 +331,9 @@ def integer_or_string(card, n, fieldname):
         #raise SyntaxError('%s (field #%s) on card must be an integer or string.\ncard=%s' % (fieldname, n, card) )
     if isinstance(svalue, int):
         return svalue
+    elif isinstance(svalue, float):
+        Type = getType(svalue)
+        raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     elif svalue is None:
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )

@@ -501,7 +501,7 @@ class RFORCE(Load):
             self._comment = comment
         if card:
             self.sid = integer(card, 1, 'sid')
-            self.nid = integer(card, 2, 'nid')
+            self.nid = integer_or_blank(card, 2, 'nid', 0)
             self.cid = integer_or_blank(card, 3, 'cid', 0)
             self.scale = double_or_blank(card, 4, 'scale', 1.)
             self.r1 = double_or_blank(card, 5, 'r1', 0.)
@@ -518,15 +518,26 @@ class RFORCE(Load):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
-        #self.nid = model.Element(self.nid)
-        #self.cid = model.Coord(self.cid)
+        if self.nid > 0:
+            self.nid = model.Element(self.nid)
+        self.cid = model.Coord(self.cid)
         pass
+
+    def Nid(self):
+        if isinstance(self.nid, int):
+            return self.nid
+        return self.nid.nid
+
+    def Cid(self):
+        if isinstance(self.cid, int):
+            return self.cid
+        return self.cid.cid
 
     def getLoads(self):
         return [self]
 
     def rawFields(self):
-        list_fields = ['RFORCE', self.sid, self.nid, self.cid, self.scale,
+        list_fields = ['RFORCE', self.sid, self.Nid(), self.Cid(), self.scale,
                   self.r1, self.r2, self.r3, self.method, self.racc,
                   self.mb, self.idrf]
         return list_fields
@@ -536,7 +547,7 @@ class RFORCE(Load):
         racc = set_blank_if_default(self.racc, 0.)
         mb = set_blank_if_default(self.mb, 0)
         idrf = set_blank_if_default(self.idrf, 0)
-        list_fields = ['RFORCE', self.sid, self.nid, self.cid, self.scale,
+        list_fields = ['RFORCE', self.sid, self.Nid(), self.Cid(), self.scale,
                   self.r1, self.r2, self.r3, self.method, racc,
                   mb, idrf]
         return list_fields

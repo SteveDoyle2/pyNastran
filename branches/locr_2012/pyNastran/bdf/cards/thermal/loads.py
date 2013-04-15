@@ -5,7 +5,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from ...bdfInterface.BDF_Card import wipe_empty_fields
 from .thermal import ThermalCard
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from ..baseCard import expand_thru, expand_thru_by, collapse_thru_by
+from ..baseCard import (expand_thru, expand_thru_by,
+    collapse_thru, collapse_thru_by)
 from pyNastran.bdf.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     integer_or_string, string, fields)
@@ -38,10 +39,12 @@ class QBDY1(ThermalLoad):
             self.qFlux = double(card, 2, 'qFlux')
             eids  = []
             j = 1
-            for i in range(4, len(card)):
-                eid = integer(card, i, 'eid%i' % j)
+            for i in range(3, len(card)):
+                eid = integer_or_string(card, i, 'eid%i' % j)
+                eids.append(eid)
                 j += 1
             ## CHBDYj element identification numbers (Integer)
+            assert len(eids) > 0
             self.eids = expand_thru(eids)  ## @todo use expand_thru_by ???
         else:
             self.sid = data[0]
@@ -54,22 +57,27 @@ class QBDY1(ThermalLoad):
     def cross_reference(self, model):
         self.eids = model.Elements(self.eids)
 
-    def Eid(self):
-        if isinstance(self.eid, int):
-            return self.eid
-        return self.eid.eid
+    def Eid(self, eid):
+        if isinstance(eid, int):
+            return eid
+        return eid.eid
 
     def nQFluxTerms(self):
         return len(self.qFlux)
 
+    def Eids(self):
+        eids = []
+        for eid in self.eids:
+            eids.append(self.Eid(eid))
+        return eids
+
     def rawFields(self):
-        list_fields = (['QBDY1', self.sid, self.qFlux] + list(self.eids) +
-                  [self.qFlux])
+        list_fields = ['QBDY1', self.sid, self.qFlux] + self.Eids()
         return list_fields
 
     def reprFields(self):
-        eids = collapse_thru_by(self.eids)
-        list_fields = ['QBDY1', self.sid, self.qFlux] + list(eids) + [self.qFlux]
+        eids = collapse_thru_by(self.Eids())
+        list_fields = ['QBDY1', self.sid, self.qFlux] + eids
         return list_fields
 
 
@@ -94,8 +102,10 @@ class QBDY2(ThermalLoad):  # not tested
             j = 1
             for i in range(3, len(card)):
                 q = double_or_blank(card, i, 'qFlux%i' % j)
+                qFlux.append(q)
                 j += 1
 
+            assert len(qFlux) > 0
             ## Heat flux at the i-th grid point on the referenced CHBDYj
             ## element. (Real or blank)
             self.qFlux = wipe_empty_fields(qFlux)
@@ -103,6 +113,9 @@ class QBDY2(ThermalLoad):  # not tested
             self.sid = data[0]
             self.eid = data[1]
             self.qFlux = data[2]
+
+    def getLoads(self):
+        return [self]
 
     def cross_reference(self, model):
         self.eid = model.Element(self.eid)
@@ -116,7 +129,7 @@ class QBDY2(ThermalLoad):  # not tested
         return len(self.qFlux)
 
     def rawFields(self):
-        list_fields = ['QBDY2', self.sid, self.Eid(), self.qFlux]
+        list_fields = ['QBDY2', self.sid, self.Eid()] + self.qFlux
         return list_fields
 
     def reprFields(self):

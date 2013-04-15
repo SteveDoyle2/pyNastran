@@ -296,7 +296,7 @@ class PSOLID(SolidProperty):
         assert isinstance(mid, int), 'mid=%r' % mid
         
         if isxref:
-            assert self.mid.type in ['MAT1', 'MAT10'], 'mid=%i self.mid.type=%s' % (mid, self.mid.type)
+            assert self.mid.type in ['MAT1', 'MAT4', 'MAT10'], 'mid=%i self.mid.type=%s' % (mid, self.mid.type)
 
     def writeCalculix(self, elementSet=999):
         msg = '*SOLID SECTION,MATERIAL=M%s,ELSET=E_Mat%s\n' % (

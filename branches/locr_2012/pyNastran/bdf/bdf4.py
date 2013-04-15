@@ -116,7 +116,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         self.include_dir = ''
         self.active_filename = None
         self.active_filenames = []
-        self.used_filenames = []
+        #self.used_filenames = []
         if self.isDict:
             self.stored_Is = {}
             self.stored_lines = {}
@@ -662,7 +662,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             #comment = _clean_comment(comment.rstrip(), end=None)
             #if comment:
                 #self.executive_control_lines.append(comment[:-1])
-            lineUpper = line.upper()
+            lineUpper = line.upper().split('$')[0]
 
         if 'CEND' in lineUpper[:4]:
             self.has_case_control_deck = True
@@ -760,11 +760,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         @note called with recursion if an INCLUDE file is found
         """
         self._break_comment = False
+        #print("reading Case Control Deck...")
         if not self.has_case_control_deck:
             return
-        #print("reading Case Control Deck...")
         line = ''
-        
         while self.active_filename:  # keep going until finished
             #print "top of loop"
             lines = []
@@ -773,7 +772,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 return  # file was closed
             line = lineIn.strip().split('$')[0].strip()
             lineUpper = line.upper()
-            #print("lineUpper = %r" % str(lineUpper))
+            print("lineUpper = %r" % str(lineUpper))
             if lineUpper.startswith('INCLUDE'):
                 #print("INCLUDE!!!")
                 try:
@@ -800,7 +799,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             else:
                 self.case_control_lines.append(lineUpper)
 
-            if 'BEGIN' in lineUpper and 'BULK' in lineUpper:
+            if 'BEGIN' in lineUpper and (('BULK' in lineUpper) or ('SUPER' in lineUpper)):
                 self.log.debug('found the end of the Case Control Deck!')
                 break
         self.log.info("finished with Case Control Deck..")
@@ -841,14 +840,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             raise IOError('No such bdf_filename: %r' % self.bdf_filename)
 
         #print "opening self.active_filename=%s" % bdf_filename
-        if bdf_filename in self.used_filenames:
-            msg = 'bdf_filename=%s has already been opened once.\nused_filenames=%s' % self.used_filenames
+        if bdf_filename in self.active_filenames:
+            msg = 'bdf_filename=%s is already active.\nused_filenames=%s' % self.active_filenames
             raise RuntimeError(msg)
         self.log.info('opening %r' % bdf_filename)
         
         self.ifile += 1
         self.active_filename = bdf_filename
-        self.used_filenames.append(bdf_filename)
+        #self.used_filenames.append(bdf_filename)
         
         self.active_filenames.append(bdf_filename)
         

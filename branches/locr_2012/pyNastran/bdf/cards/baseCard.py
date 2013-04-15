@@ -122,6 +122,10 @@ class BaseCard(object):
         list_fields = self.reprFields()
         return self.comment() + print_card(list_fields, size=size)
 
+    def repr_card(self, size=8):
+        list_fields = self.reprFields()
+        return print_card(list_fields, size=size)
+
     def __repr__(self):
         """
         Prints a card in the simplest way possible

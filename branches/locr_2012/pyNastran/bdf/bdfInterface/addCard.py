@@ -97,8 +97,10 @@ class AddMethods(object):
             if not elem.isSameCard(self.elements[key], debug=False):
                 #elem.isSameCard(self.elements[key], debug=True)
                 #print('eid=%s\noldElement=\n%snewElement=\n%s' % (key,self.elements[key],elem))
-                assert elem.eid not in self.elements, 'eid=%s\noldElement=\n%snewElement=\n%s' % (elem.eid, self.elements[elem.eid], elem)
-
+                msg = 'eid=%s\noldElement=\n%snewElement=\n%s' % (elem.eid,
+                                                                  self.elements[elem.eid].repr_card(),
+                                                                  elem.repr_card())
+                assert elem.eid not in self.elements, msg
         self.elements[key] = elem
 
     def add_mass_element(self, elem, allowOverwrites=False):

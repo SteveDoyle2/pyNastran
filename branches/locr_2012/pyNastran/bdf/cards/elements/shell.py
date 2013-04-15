@@ -990,10 +990,10 @@ class CQUAD4(QuadShell):
             ## element ID number
             self.eid = integer(card, 1, 'eid')
             self.pid = integer(card, 2, 'pid')
-            nids = [integer_or_blank(card, 3, 'n1'),
-                    integer_or_blank(card, 4, 'n2'),
-                    integer_or_blank(card, 5, 'n3'),
-                    integer_or_blank(card, 6, 'n4')]
+            nids = [integer(card, 3, 'n1'),
+                    integer(card, 4, 'n2'),
+                    integer(card, 5, 'n3'),
+                    integer(card, 6, 'n4')]
             self.thetaMcid = integer_double_or_blank(card, 7, 'thetaMcid', 0.0)
             self.zOffset = double_or_blank(card, 8, 'zOffset', 0.0)
             blank(card, 9, 'blank')
