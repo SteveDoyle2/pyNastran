@@ -13,16 +13,13 @@ import os
 import sys
 import warnings
 import traceback
-#from pyNastran.bdf.bdf2 import (to_fields, wipe_empty_fields, interpret_value,
-#                                get_include_filename, parse_executive_control_deck)
-from pyNastran.bdf.bdf2 import *
 
 
 from pyNastran.utils import list_print
 from pyNastran.utils import object_attributes
 from pyNastran.utils.log import get_logger
 
-#if 0:
+
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
                                           PRAC2D, PRAC3D, PCONEAX, PLPLANE)
@@ -97,6 +94,54 @@ from .bdfInterface.bdf_writeMesh import WriteMesh
 from .bdfInterface.bdf_cardMethods import interpret_value
 from .bdfInterface.crossReference import XrefMesh
 
+
+class BDFDeprecated(object):
+    def readBDF(self, bdf_filename, include_dir=None, xref=True, punch=False):
+        """
+        @see read_bdf
+        @warning will be removed after v0.7 in favor of read_bdf
+        """
+        warnings.warn('readBDF has been deprecated; use '
+                      'read_bdf', DeprecationWarning, stacklevel=2)
+        self.read_bdf(bdf_filename, include_dir, xref, punch)
+
+    def updateSolution(self, sol, method=None):
+        """
+        @see update_solution
+        @warning will be removed after v0.7 in favor of update_solution
+        """
+        warnings.warn('updateSolution has been deprecated; use '
+                      'update_solution', DeprecationWarning, stacklevel=2)
+        self.update_solution(sol, method)
+
+    def setDynamicSyntax(self, dictOfVars):
+        """
+        @see set_dynamic_syntax
+        @warning will be removed after v0.7 in favor of set_dynamic_syntax
+        """
+        warnings.warn('setDynamicSyntax has been deprecated; use '
+                      'set_dynamic_syntax', DeprecationWarning, stacklevel=2)
+        self.set_dynamic_syntax(dictOfVars)
+
+    def addCard(self, card, cardName, iCard=0, oldCardObj=None):
+        """
+        @see add_card
+        @warning will be removed after v0.7 in favor of add_card
+        """
+        warnings.warn('addCard has been deprecated; use add_card',
+                      DeprecationWarning, stacklevel=2)
+        return self.add_card(card, cardName, icard=iCard,
+                             old_card_obj=oldCardObj)
+
+    def disableCards(self, cards):
+        """
+        @see disable_cards
+        @warning will be removed after v0.7 in favor of disable_cards
+        """
+        warnings.warn('disableCards has been deprecated; use '
+                      'disable_cards', DeprecationWarning, stacklevel=2)
+        self.disable_cards(cards)
+   
 
 class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated):
     """
@@ -671,18 +716,24 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             (i, line, comment) = self.get_line()   # BEGIN BULK
 
         sol, method, iSolLine = parse_executive_control_deck(self.executive_control_lines)
-        self.sol = sol
-        self.iSolLine = iSolLine
-        self.update_solution(sol, method)
+        #self.sol = sol
+        self.update_solution(sol, method, iSolLine)
 
-    def update_solution(self, sol, method=None):
+    def update_solution(self, sol, method, iSolLine):
         """
         Updates the overall solution type (e.g. 101,200,600)
         @param self   the object pointer
         @param sol    the solution type (101,103, etc)
-        @param method the solution method (only for SOL=600), default=None
+        @param method the solution method (only for SOL=600)
+        @param iSolLine the line to put the SOL/method on
         """
+        self.iSolLine = iSolLine
         ## the integer of the solution type (e.g. SOL 101)
+        if sol is None:
+            self.sol = None
+            self.solMethod = None
+            return
+        
         try:
             self.sol = int(sol)
         except ValueError:
@@ -1737,8 +1788,8 @@ def parse_executive_control_deck(executive_control_lines):
     Extracts the solution from the executive control deck
     """
     sol = None
-    #method = None
-    #iSolLine = None
+    method = None
+    iSolLine = None
     for (i, eline) in enumerate(executive_control_lines):
         uline = eline.strip().upper()  # uppercase line
         uline = uline.split('$')[0].expandtabs()

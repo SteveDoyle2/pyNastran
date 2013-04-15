@@ -12,10 +12,6 @@ import traceback
 
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf4 import BDF
-#from pyNastran.bdf.bdf4 import BDF
-from pyNastran.bdf.bdf import (ShellElement, SolidElement, LineElement,
-                               RigidElement, SpringElement, PointElement,
-                               DamperElement, RodElement, NastranMatrix)
 from pyNastran.bdf.test.compare_card_content import compare_card_content
 
 import pyNastran.bdf.test
