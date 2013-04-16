@@ -1,6 +1,5 @@
 from __future__ import print_function
 import os
-import os.path
 import re
 
 def get_folders_files(dirname, skip_file_sufix = ('.pyc', '.pyx', '.bdf'),
