@@ -16,20 +16,13 @@ This code was written entirely in Python and should install easily.
 *** Not done....
 
 --------------------------------Future--------------------------------
+Overall Notes
+
 Added BDF
    - *** SET2,PEALST,TIC,DMI,CONM1
 
 Overall OP2
    - ***added support for SORT2
-
-Solver
-   - not released
-   - rewriting pyNastran solver (SOL 101)
-      - improved support for 3D
-      - uses case control deck to identify loads/BCs
-      - still uses dense matricies, but layout will be easier to add sparse matricies later
-      - still need to build Kgg/Fg/SPC/MPC matrices, partition matrices, solve, calculate responses
-   - added D matricies for PSHELL, PCOMP, PSOLID
 
 BDF Bug Fixes
 BDF API Additions
@@ -50,6 +43,14 @@ Overall GUI
 Added GUI
 GUI Bug Fixes
 
+Solver
+   - not released
+   - rewriting pyNastran solver (SOL 101)
+      - improved support for 3D
+      - uses case control deck to identify loads/BCs
+      - still uses dense matricies, but layout will be easier to add sparse matricies later
+      - still need to build Kgg/Fg/SPC/MPC matrices, partition matrices, solve, calculate responses
+   - added D matricies for PSHELL, PCOMP, PSOLID
 
 -----------------------v0.6 released 2013/04/??-----------------------
 
@@ -116,7 +117,7 @@ Added BDF
    - ASET, ASET1, BSET, BSET1, CSET, CSET1, QSET, QSET1
    - DMIG, DMIJ, DMIJI, DMIK
    - TABRNDG
-   - TLOAD1, ACCEL1,,RFORCE, PLOADX1
+   - TLOAD1, ACCEL1,RFORCE, PLOADX1
    - SPLINE4, SPLINE5
    - CBUSH1D, PBUSH1D
    - PRAC2D, PRAC3D
