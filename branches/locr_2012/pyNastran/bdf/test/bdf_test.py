@@ -36,10 +36,8 @@ def get_file_names_from_file_number(fds):
     return names
 
 if __name__ == '__main__':
-    # works
     files = get_files_of_type('tests', '.bdf')
     files += get_files_of_type('tests', '.dat')
-
     foldersFile = 'tests/foldersRead.txt'
 
     iSubcases = []
@@ -56,8 +54,8 @@ if __name__ == '__main__':
         files2 += files
     else:
         files2 = get_failed_files('failedCases.in')
-    files = files2
-    files = remove_marc_files(files)
+
+    files = remove_marc_files(files2)
 
     skipFiles = []  # giant
 
