@@ -157,13 +157,18 @@ class SUPORT1(Constraint):
 
             self.IDs = []
             self.Cs = []
-            nFields = len(card)
-            nceil = int(ceil((nFields - 1.) / 2.))
-            for i in xrange(2, nceil):
-                ID = integer(card, 2 * i, 'ID%s' + str(i))
-                C = components(card, i + 1, 'component%s' + str(i))
+            nfields = len(card)
+            nterms = (nfields - 2) // 2
+            #print("nterms = ", nterms)
+            
+            n = 1
+            for i in xrange(nterms):
+                nstart = 2 + 2 * i
+                ID = integer(card, nstart, 'ID%s' % n)
+                C = components(card, nstart + 1, 'component%s' % n)
                 self.IDs.append(ID)
                 self.Cs.append(C)
+                n += 1
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
