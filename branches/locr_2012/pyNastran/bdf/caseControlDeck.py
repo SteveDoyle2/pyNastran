@@ -40,9 +40,16 @@ class CaseControlDeck(object):
           ending with BEGIN BULK
         @param log a logger object
         """
+        # pulls the logger from the BDF object
         self.log = get_logger(log, "debug")
         self.debug = False
         #self.debug = True
+        
+        ## stores a single copy of 'BEGIN BULK' or 'BEGIN SUPER'
+        self.begin_bulk = ['BEGIN', 'BULK']
+        
+        # allows BEGIN BULK to be turned off
+        self.write_begin_bulk = True
 
         
         self.lines = lines
@@ -94,9 +101,10 @@ class CaseControlDeck(object):
          be careful you dont add data to the global subcase after running
          this...is this True???
         """
+        #print("creating subcase=%s" % isubcase)
         if self.has_subcase(isubcase):
             sys.stderr.write('subcase=%s already exists...skipping\n' %
-                             (isubcase))
+                             isubcase)
         self.copy_subcase(i_from_subcase=0, i_to_subcase=isubcase,
                           overwrite_subcase=True)
         #self.subcases[isubcase] = Subcase(id=isubcase)
@@ -104,7 +112,7 @@ class CaseControlDeck(object):
     def delete_subcase(self, isubcase):
         if not self.has_subcase(isubcase):
             sys.stderr.write('subcase %s doesnt exist...skipping\n' %
-                             (isubcase))
+                             isubcase)
         del self.subcases[isubcase]
 
     def copy_subcase(self, i_from_subcase, i_to_subcase, overwrite_subcase=True):
@@ -119,20 +127,27 @@ class CaseControlDeck(object):
         @param overwrite_subcase
           NULLs i_to_subcase before copying i_from_subcase
         """
+        #print("copying subcase from=%s to=%s overwrite=%s" % (i_from_subcase, i_to_subcase, overwrite_subcase))
         if not self.has_subcase(i_from_subcase):
-            msg = 'iFromSubcase=|%s| does not exist' % (i_from_subcase)
+            msg = 'iFromSubcase=|%s| does not exist' % i_from_subcase
             raise RuntimeError(msg)
-        subcase_to = self.subcases[i_from_subcase]
         if overwrite_subcase:
-            subcase_to = copy.deepcopy(subcase_to)
+            subcase_from = self.subcases[i_from_subcase]
+            subcase_to = copy.deepcopy(subcase_from)
             subcase_to.id = i_to_subcase
+            #for key, param in sorted(subcase_from.params.iteritems()):
+                #print("going to copy key=%s param=%s" % (key, param))
             self.subcases[i_to_subcase] = subcase_to
         else:
             if not self.has_subcase(i_to_subcase):
-                msg = 'i_to_subcase=|%s| does not exist' % (i_to_subcase)
+                msg = 'i_to_subcase=|%s| does not exist' % i_to_subcase
                 raise RuntimeError(msg)
             subcase_to = self.subcases[i_to_subcase]
-            for key, param in subcase_to.iteritems():
+
+            for key, param in sorted(subcase_to.iteritems()):
+                #print('copying key=%s param=%s' % (key, param))
+                if key == 'BEGIN':
+                    pass
                 subcase_to[key] = copy.deepcopy(param)
 
     def get_subcase_list(self):
@@ -203,6 +218,10 @@ class CaseControlDeck(object):
                 lines2.append(lines[i])
             (j, key, value, options, paramType) = self._parse_entry(lines2)
             i += 1
+            if key == 'BEGIN':
+                self.begin_bulk = [key, value]
+                continue
+            
             #print("")
             #print("key=|%s| value=|%s| options=|%s| paramType=%s" %(key, value,
             #                                                        options,
@@ -454,9 +473,12 @@ class CaseControlDeck(object):
         msg = ''
         subcase0 = self.subcases[0]
         for subcase in self.subcases.itervalues():
+            #print('writing subcase...')
             msg += subcase.write_subcase(subcase0)
-        if len(self.subcases) == 1:
-            msg += 'BEGIN BULK\n'
+        #if len(self.subcases) == 1:
+            #msg += 'BEGIN BULK\n'
+        if self.write_begin_bulk:
+            msg += ' '.join(self.begin_bulk) + '\n'
         return msg
 
     #def parseParam(self,param):
@@ -489,13 +511,13 @@ if __name__ == '__main__':
         'BEGIN BULK',
         ]
     deck = CaseControlDeck(lines)
-    deck.create_new_subcase(2)
-    deck.add_parameter_to_local_subcase(1, 'SET 2 = 11,12,13,14,15,16,17,18,'
-       '19,20,21,22,23,24,25,26,'
-       '1000000000000000000000000000000000000000000000000000000,33')
-    print(deck + '\n\n')
+    #deck.create_new_subcase(2)
+    #deck.add_parameter_to_local_subcase(0, 'SET 2 = 11,12,13,14,15,16,17,18,'
+    #   '19,20,21,22,23,24,25,26,'
+    #   '1000000000000000000000000000000000000000000000000000000,33')
+    print('%s\n\n' % deck)
 
-    deck2 = CaseControlDeck(['ACCELERATION(PLOT,PRINT,PHASE) = ALL',
-                             'DISPLACEMENT(PLOT,PRINT,PHASE) = ALL',
-                             'BEGIN BULK'])
-    print('\n\n' + deck2)
+    #deck2 = CaseControlDeck(['ACCELERATION(PLOT,PRINT,PHASE) = ALL',
+    #                         'DISPLACEMENT(PLOT,PRINT,PHASE) = ALL',
+    #                         'BEGIN BULK'])
+    #print('\n\n%s' % deck2)

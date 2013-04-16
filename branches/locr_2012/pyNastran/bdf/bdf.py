@@ -96,14 +96,14 @@ from .bdfInterface.crossReference import XrefMesh
 
 
 class BDFDeprecated(object):
-    def readBDF(self, bdf_filename, include_dir=None, xref=True, punch=False):
+    def readBDF(self, bdf_filename, includeDir=None, xref=True, punch=False):
         """
         @see read_bdf
         @warning will be removed after v0.7 in favor of read_bdf
         """
         warnings.warn('readBDF has been deprecated; use '
                       'read_bdf', DeprecationWarning, stacklevel=2)
-        self.read_bdf(bdf_filename, include_dir, xref, punch)
+        self.read_bdf(bdf_filename, includeDir, xref, punch)
 
     def updateSolution(self, sol, method=None):
         """
@@ -701,13 +701,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             lines = []
             (i, line, comment) = self.get_line()
             line = line.rstrip('\n\r\t ')
+            #print("line exec = %r" % line)
+
+            lineUpper = line.upper()
+            if lineUpper == '$EXECUTIVE CONTROL DECK':
+                continue  # skip this comment
+
             if len(line) > 0:
                 self.executive_control_lines.append(line)
-
-            #comment = _clean_comment(comment.rstrip(), end=None)
-            #if comment:
-                #self.executive_control_lines.append(comment[:-1])
-            lineUpper = line.upper().split('$')[0]
+            lineUpper = lineUpper.split('$')[0]
 
         if 'CEND' in lineUpper[:4]:
             self.has_case_control_deck = True
@@ -823,7 +825,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 return  # file was closed
             line = lineIn.strip().split('$')[0].strip()
             lineUpper = line.upper()
-            print("lineUpper = %r" % str(lineUpper))
+            #print("lineUpper = %r" % str(lineUpper))
             if lineUpper.startswith('INCLUDE'):
                 #print("INCLUDE!!!")
                 try:
@@ -1497,8 +1499,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 try:
                     prop = PBEAML(card_obj, comment=comment)
                 except Exception as e:
-                    self.log.exception(traceback.format_exc())
+                    #self.log.exception(traceback.format_exc())
                     self.log.exception('rejecting processed PBEAML %s' % card)
+                    self.reject_cards.append(card)
                     return card_obj
                 self.add_property(prop)
                 
@@ -1690,6 +1693,7 @@ def _clean_comment(comment, end=-1):
                    '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
                    '$SETS', '$REJECTS', '$REJECT_LINES']:
         comment = ''
+    #print('comment = %r' % comment)
     return comment
 
 

@@ -516,7 +516,7 @@ class Subcase(object):
             #msg = ("  *key=|%s| value=|%s| options=%s paramType=|%s|"
             #    % (key, value, options, paramType)
             #print(msg)
-            #msg += self.printParam(key, param, printBeginBulk=False)
+            #msg += self.printParam(key, param)
             if paramType == 'SUBCASE-type':
                 op2Params['isubcase'].append(value)
             elif key in ['BEGIN', 'ECHO', 'ANALYSIS'] or 'SET' in key:
@@ -567,7 +567,7 @@ class Subcase(object):
             if value is not None:
                 print("   key=|%s| value=|%s|" % (key, value))
 
-    def print_param(self, key, param, printBeginBulk=True):
+    def print_param(self, key, param):
         """
         Prints a single entry of the a subcase from the global or local
         subcase list.
@@ -603,15 +603,6 @@ class Subcase(object):
             else:
                 msg += '%s = %s\n' % (key, value)
             msg = spaces + msg
-
-        elif param_type == 'BEGIN_BULK-type':
-            msg += '%s %s\n' % (key, value)
-            if 'BEGIN BULK' not in msg:
-                msg = spaces + msg
-            elif printBeginBulk:
-                pass
-            else:
-                msg = ''
 
         elif param_type == 'SET-type':
             ## @todo collapse data...not written yet
@@ -703,25 +694,19 @@ class Subcase(object):
             msg = str(self)
         else:
             msg = 'SUBCASE %s\n' % (self.id)
+            nparams = 0
             for (key, param) in self.subcase_sorted(self.params.items()):
                 if key in subcase0.params and subcase0.params[key] == param:
                     pass  # dont write global subcase parameters
                 else:
-                    if 'key' == 'BEGIN':
-                        continue
-                    else:
-                        #print "key=%s param=%s" %(key, param)
-                        (value, options, paramType) = param
-                        #print("  *key=|%s| value=|%s| options=%s "
-                        #      "paramType=|%s|" % (key, value, options,
-                        msg += self.print_param(key, param,
-                                                printBeginBulk=False)
-                        #print ""
-
-        ## self.id>0 and 'BEGIN' in self.params used to prevent printing of
-        ## BEGIN BULK multiple times
-        if self.id > 0 and 'BEGIN' in self.params:
-            msg += self.print_param('BEGIN', self.params['BEGIN'])
+                    #print("key=%s param=%s" %(key, param))
+                    (value, options, paramType) = param
+                    #print("  *key=|%s| value=|%s| options=%s "
+                          #"paramType=|%s|" % (key, value, options, paramType))
+                    msg += self.print_param(key, param)
+                    nparams += 1
+                    #print ""
+            assert nparams > 0, 'No subcase paramters are defined for isubcase=%s...' % self.id
         return msg
 
     def subcase_sorted(self, lst):
@@ -773,25 +758,25 @@ class Subcase(object):
 
     def __repr__(self):
         """
-        Prints out every entry in the subcase.  Skips parameters already in
+        Prints out EVERY entry in the subcase.  Skips parameters already in
         the global subcase.
+        
+        @note this function is only used for debugging.
         """
         #msg = "-------SUBCASE %s-------\n" %(self.id)
         msg = ''
         if self.id > 0:
             msg += 'SUBCASE %s\n' % (self.id)
 
+        nparams = 0
         for (key, param) in self.subcase_sorted(self.params.items()):
-            if 'key' == 'BEGIN':
-                continue
-            else:
-                #print "key=%s param=%s" %(key,param)
-                (value, options, paramType) = param
-                #print("  ?*key=|%s| value=|%s| options=%s paramType=|%s|"
-                #      %(key,value,options,paramType))
-                msg += self.print_param(key, param, printBeginBulk=False)
-                #print ""
-
-        if self.id > 0 and 'BEGIN' in self.params:  # prevents 2 BEGIN BULKs
-            msg += self.print_param('BEGIN', self.params['BEGIN'])
+            #print("key=%s param=%s" %(key,param))
+            (value, options, paramType) = param
+            #print("  ?*key=|%s| value=|%s| options=%s paramType=|%s|"
+            #      %(key,value,options,paramType))
+            msg += self.print_param(key, param)
+            #print ""
+            nparams += 1
+        if self.id > 0:
+            assert nparams > 0, 'No subcase paramters are defined for isubcase=%s...' % self.id
         return msg

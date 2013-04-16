@@ -56,6 +56,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             isPassed = True
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
+        except IOError:
+            pass
         #except SyntaxError:
         #    pass
         except SystemExit:
@@ -98,8 +100,8 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
-    #except IOError:
-        #pass
+    except IOError:
+        pass
     except SystemExit:
         sys.exit('sys.exit...')
     except:

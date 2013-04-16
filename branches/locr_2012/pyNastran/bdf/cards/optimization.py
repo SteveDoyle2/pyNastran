@@ -2,15 +2,16 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import izip
+from math import ceil
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
-    collapse_thru_by_float)
+    collapse_thru_by_float, condense, build_thru_float)
 from pyNastran.bdf.assign_type import (integer, integer_or_blank, integer_or_string,
     integer_string_or_blank, double, double_or_blank, string,
     string_or_blank, integer_double_or_blank,
-    integer_or_double,
-    integer_double_string_or_blank)
+    integer_or_double, integer_double_string_or_blank,
+    double_string_or_blank)
 
 class OptConstraint(BaseCard):
     def __init__(self):
@@ -91,7 +92,12 @@ class DDVAL(OptConstraint):
             self._comment = comment
         if card:
             self.oid = integer(card, 1, 'oid')
-            ddvals = [ddval for ddval in card[2:] if ddval is not None]
+            n = 1
+            ddvals = []
+            for i in range(2, len(card)):
+                ddval = double_string_or_blank(card, i, 'DDVAL%s' % n)
+                if ddval:
+                    ddvals.append(ddval)
             self.ddvals = expand_thru_by(ddvals)
             self.ddvals.sort()
         else:
@@ -99,8 +105,7 @@ class DDVAL(OptConstraint):
 
     def rawFields(self):
         self.ddvals.sort()
-        ddvals = collapse_thru_by_float(self.ddvals)
-        list_fields = ['DDVAL', self.oid] + ddvals
+        list_fields = ['DDVAL', self.oid] + self.ddvals
         return list_fields
 
 
@@ -271,8 +276,8 @@ class DRESP1(OptConstraint):
         self.atti = integer_double_string_or_blank(card, 8, 'atti')
         self.others = card[9:]
         #if self.others:
-        #    print("self.others = %s" %(self.others))
-        #    print(str(self))
+            #print("self.others = %s" %(self.others))
+            #print(str(self))
         #assert len(self.others)==0
 
     def rawFields(self):
@@ -321,7 +326,7 @@ class DRESP2(OptConstraint):
 
         #print "--Params--"
         #for (key, valueList) in sorted(self.params.iteritems()):
-        #    print("  key=%s params=%s" %(key, valueList))
+            #print("  key=%s params=%s" %(key, valueList))
 
         #print self
 
