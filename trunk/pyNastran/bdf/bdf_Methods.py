@@ -10,10 +10,15 @@ from pyNastran.bdf.cards.elements.shell import ShellElement
 class BDFMethods(object):
     def __init__(self):
         pass
-    #--------------------
-    # METHODS
 
     def MassProperties(self):
+        """
+        @see mass_properties
+        @warning will be removed after v0.7 in favor of mass_properties
+        """
+        return self.mass_properties()
+
+    def mass_properties(self):
         """
         Caclulates mass properties in the global system about <0,0,0>
         I   = mass*centroid*centroid
@@ -44,101 +49,113 @@ class BDFMethods(object):
             except:
                 self.log().warning("could not get inertia for element"
                                    "...\n%s" % (element))
-            ###
-        ###
         cg = cg / mass
         return (mass, cg, I)
 
     def Mass(self):
-        """Caclulates mass in the global coordinate system"""
+        """
+        @see mass
+        @warning will be removed after v0.7 in favor of mass
+        """
+        return self.mass_properties()
+
+    def mass(self):
+        """Calculates mass in the global coordinate system"""
         mass = 0.
         for element in self.elements.itervalues():
             m = element.Mass()
             mass += m
         return (mass)
 
-    def flipNormals(self, starterEid, eids=None, flipStarter=False):
-        """
-        Takes the normals of SHELL elements and flips it to a common direction
-        This method follows the contour of the body, so assuming
-        no internal elements, all the normals on the outside will point
-        outwards (or inwards).
-
-        @param starterEid
-          the element to copy the normal of
-        @param eids
-          the element IDs to flip to the common direction (default=None -> all)
-        @param flipStarter
-          should the staring element be flipped (default=False)
-
-        @todo
-          finish method...think i need to build a edge list...
-          that'd be a lot easier to loop through stuff...
-        """
-        raise NotImplementedError()
-        normals = {}
-        validNids = set([])
-        isCorrectNormal = set([])
-
-        allEids = eids
-        if allEids is None:
-            allEids = self.elements.keys()
-        setAllEids = set(allEids)
-
-        if flipStarter:
-            elem = self.Element(starterEid)
-            elem.flipNormal()
-        normals[starterEid] = elem.Normal()
-
-        for eid in allEids:
-            element = self.elements[eid]
-            if isinstance(element, ShellElement):
-                elem = self.Element(starterEid)
-                normals[starterEid] = elem.Normal()
-                validNids = validNids.union(set(elem.nodeIDs()))
-
-        ## clean up the elements that will be considered
-        elemsToCheck = set([])
-        nidToEidMap = self.getNodeIDToElementIDsMap()
-        for (nid, eidsMap) in sorted(nidToEidMap.iteritems()):
-            if nid not in validNids:  # clean up extra nodes
-                del nidToEidMap[nid]
-            else:
-                eids = list(set(eids))  # do i need this?
-                for eid in eids:  # clean up ROD/SOLID elements
-                    eids2 = []
-                    if eid in setAllEids:
-                        eids2.append(eid)
-                    elemsToCheck = elemsToCheck.union(set(eids2))
-                nidToEidMap[nid] = eids2
-
-        ## starts with the starter element, loops thru adjacent elements
-        ## and checks to see if the normal is 'close' to the elements
-        ## normal from before
-        goEid = starterEid
-
-        # no recursion to avoid recursion limit
-        while 1:
-            elem = self.Element(goEid)
-            nids = elem.getNodeIDs()
-            normals = self._getAdjacentNormals(nids, nidToEidMap)
-            normal = normals[goEid]
-
-    def _getAdjacentElements(self, nids, nidToEidMap):
-        """
-        @todo doesnt work...
-        """
-        raise NotImplementedError()
-        normals = {}
-        #for nid in
+    # def flip_normals(self, starterEid, eids=None, flipStarter=False):
+    #     """
+    #     Takes the normals of SHELL elements and flips it to a common direction
+    #     This method follows the contour of the body, so assuming
+    #     no internal elements, all the normals on the outside will point
+    #     outwards (or inwards).
+    #
+    #     @param starterEid
+    #       the element to copy the normal of
+    #     @param eids
+    #       the element IDs to flip to the common direction (default=None -> all)
+    #     @param flipStarter
+    #       should the staring element be flipped (default=False)
+    #
+    #     @todo
+    #       finish method...think i need to build a edge list...
+    #       that'd be a lot easier to loop through stuff...
+    #     """
+    #     raise NotImplementedError()
+    #     normals = {}
+    #     validNids = set([])
+    #     isCorrectNormal = set([])
+    #
+    #     allEids = eids
+    #     if allEids is None:
+    #         allEids = self.elements.keys()
+    #     setAllEids = set(allEids)
+    #
+    #     if flipStarter:
+    #         elem = self.Element(starterEid)
+    #         elem.flipNormal()
+    #     normals[starterEid] = elem.Normal()
+    #
+    #     for eid in allEids:
+    #         element = self.elements[eid]
+    #         if isinstance(element, ShellElement):
+    #             elem = self.Element(starterEid)
+    #             normals[starterEid] = elem.Normal()
+    #             validNids = validNids.union(set(elem.nodeIDs()))
+    #
+    #     ## clean up the elements that will be considered
+    #     elemsToCheck = set([])
+    #     nidToEidMap = self.getNodeIDToElementIDsMap()
+    #     for (nid, eidsMap) in sorted(nidToEidMap.iteritems()):
+    #         if nid not in validNids:  # clean up extra nodes
+    #             del nidToEidMap[nid]
+    #         else:
+    #             eids = list(set(eids))  # do i need this?
+    #             for eid in eids:  # clean up ROD/SOLID elements
+    #                 eids2 = []
+    #                 if eid in setAllEids:
+    #                     eids2.append(eid)
+    #                 elemsToCheck = elemsToCheck.union(set(eids2))
+    #             nidToEidMap[nid] = eids2
+    #
+    #     ## starts with the starter element, loops thru adjacent elements
+    #     ## and checks to see if the normal is 'close' to the elements
+    #     ## normal from before
+    #     goEid = starterEid
+    #
+    #     # no recursion to avoid recursion limit
+    #     while 1:
+    #         elem = self.Element(goEid)
+    #         nids = elem.getNodeIDs()
+    #         normals = self._get_adjacent_normals(nids, nidToEidMap)
+    #         normal = normals[goEid]
+    #
+    # def _get_adjacent_elements(self, nids, nidToEidMap):
+    #     """
+    #     @todo doesnt work...
+    #     """
+    #     raise NotImplementedError()
+    #     normals = {}
+    #     #for nid in
 
     def resolveGrids(self, cid=0):
+        """
+        @see sum_forces
+        @warning will be removed after v0.7 in favor of resolve_grids
+        """
+        return self.resolve_grids(cid)
+
+    def resolve_grids(self, cid=0):
         """
         Puts all nodes in a common coordinate system (mainly for cid testing)
         @param self the object pointer
         @param cid the cid to resolve the nodes to
         @note loses association with previous coordinate systems so to go back
-        requires another fem
+         requires another fem
         """
         assert cid in self.coords, ('cannot resolve nodes to '
                                     'cid=|%s| b/c it doesnt exist' % (cid))
@@ -148,22 +165,36 @@ class BDFMethods(object):
 
     def unresolveGrids(self, femOld):
         """
+        @see sum_forces
+        @warning will be removed after v0.7 in favor of unresolve_grids
+        """
+        return self.unresolve_grids(femOld)
+
+    def unresolve_grids(self, fem_old):
+        """
         Puts all nodes back to original coordinate system.
         @param self
           the object pointer
-        @param femOld
+        @param fem_old
           the old model that hasnt lost it's connection to the node cids
         @warning
           hasnt been tested well...
         """
         debug = False
-        for (nid, nodeOld) in femOld.nodes.iteritems():
-            coord = femOld.node.cp
+        for (nid, node_old) in fem_old.nodes.iteritems():
+            coord = node_old.cp
             (p, matrix) = coord.transformToGlobal(self.xyz, debug=debug)
             p2 = coord.transformToLocal(p, matrix, debug=debug)
             self.nodes[nid].UpdatePosition(self, p2, coord.cid)
 
     def sumForces(self):
+        """
+        @see sum_forces
+        @warning will be removed after v0.7 in favor of sum_forces
+        """
+        return self.sum_forces()
+
+    def sum_forces(self):
         """
         Sums applied forces for all load cases.
         Considers FORCE, FORCE1, FORCE2.
@@ -183,6 +214,13 @@ class BDFMethods(object):
         return F
 
     def sumMoments(self, p0):
+        """
+        @see sum_moments
+        @warning will be removed after v0.7 in favor of sum_moments
+        """
+        return self.sum_moments(p0)
+
+    def sum_moments(self, p0):
         """
         Sums applied forces & moments about a reference point p0
         for all load cases.

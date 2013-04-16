@@ -2,7 +2,7 @@ from __future__ import print_function
 #from numpy import array
 from numpy import angle
 from pyNastran.op2.op2Codes import Op2Codes
-from pyNastran.general.general import ListPrint
+from pyNastran.utils import list_print
 
 
 class baseScalarObject(Op2Codes):
@@ -12,140 +12,54 @@ class baseScalarObject(Op2Codes):
     def name(self):
         return self.__class__.__name__
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        msg = ['writeF06 is not implemented in %s\n' % (
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        msg = ['write_f06 is not implemented in %s\n' % (
             self.__class__.__name__)]
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp,
+    def _write_f06_transient(self, header, pageStamp,
                           pageNum=1, f=None, isMagPhase=False):
-        msg = 'writeF06Transient is not implemented in %s\n' % (
+        msg = '_write_f06_transient is not implemented in %s\n' % (
             self.__class__.__name__)
         return (''.join(msg), pageNum)
 
-    def writeFloats10E(self, vals):
-        vals2 = []
-        isAllZeros = True
-        for v in vals:
-            v2 = '%10.3E' % (v)
-            if v2 == ' 0.000E+00' or v2 == '-0.000E+00':
-                v2 = ' 0.0      '
-            else:
-                isAllZeros = False
-            vals2.append(v2)
-        return (vals2, isAllZeros)
-
-    def writeFloats12E(self, vals):
-        vals2 = []
-        isAllZeros = True
-        for v in vals:
-            v2 = '%12.5E' % (v)
-            if v2 == ' 0.00000E+00' or v2 == '-0.00000E+00':
-                v2 = ' 0.0        '
-            else:
-                isAllZeros = False
-            vals2.append(v2)
-        return (vals2, isAllZeros)
-
-    def writeFloats13E(self, vals):
-        vals2 = []
-        isAllZeros = True
-        for v in vals:
-            v2 = '%13.6E' % (v)
-            if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
-                v2 = ' 0.0         '
-            else:
-                isAllZeros = False
-            vals2.append(v2)
-        return (vals2, isAllZeros)
-
-    def writeImagFloats13E(self, vals, isMagPhase):
-        vals2 = []
-        isAllZeros = True
-
-        if isMagPhase:
-            for v in vals:
-                v2 = '%13.6E' % (abs(v))
-                if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
-                    v2 = ' 0.0         '
-                else:
-                    isAllZeros = False
-                vals2.append(v2)
-
-            for v in vals:
-                v3 = '%13.6E' % (angle(v, deg=True))
-                if v3 == ' 0.000000E+00' or v3 == '-0.000000E+00':
-                    v3 = ' 0.0         '
-                else:
-                    isAllZeros = False
-                vals2.append(v3)
-        else:
-            for v in vals:
-                v2 = '%13.6E' % (v.real)
-                if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
-                    v2 = ' 0.0         '
-                else:
-                    isAllZeros = False
-                vals2.append(v2)
-
-            for v in vals:
-                v3 = '%13.6E' % (v.imag)
-                if v3 == ' 0.000000E+00' or v3 == '-0.000000E+00':
-                    v3 = ' 0.0         '
-                else:
-                    isAllZeros = False
-                vals2.append(v3)
-        return (vals2, isAllZeros)
-
-    def writeFloats8p4F(self, vals):
-        vals2 = []
-        isAllZeros = True
-        for v in vals:
-            v2 = '%8.4f' % (v)
-            if v2 == '  0.0000' or v2 == ' -0.0000':
-                v2 = '  0.0   '
-            else:
-                isAllZeros = False
-            vals2.append(v2)
-        return (vals2, isAllZeros)
-
 
 class scalarObject(baseScalarObject):
-    def __init__(self, dataCode, iSubcase):
-        assert 'nonlinearFactor' in dataCode, dataCode
+    def __init__(self, data_code, isubcase):
+        assert 'nonlinear_factor' in data_code, data_code
         baseScalarObject.__init__(self)
-        self.iSubcase = iSubcase
+        self.isubcase = isubcase
         self.isTransient = False
         self.dt = None
-        self.dataCode = dataCode
-        self.applyDataCode()
-        #self.log.debug(self.codeInformation())
+        self.data_code = data_code
+        self.apply_data_code()
+        #self.log.debug(self.code_information())
 
     def isImaginary(self):
-        return bool(self.sortBits[1])
+        return bool(self.sort_bits[1])
 
-    def writeMatlabArgs(self, name, iSubcase, f):
-        for key, value, in sorted(self.dataCode.iteritems()):
+    def _write_matlab_args(self, name, isubcase, f):
+        for key, value, in sorted(self.data_code.iteritems()):
             if key is not 'log':
                 if isinstance(value, str):
-                    value = "'%s'" % (value)
+                    value = "'%s'" % value
                     msg = 'fem.%s(%i).%s = %s;\n' % (
-                        name, iSubcase, key, value)
+                        name, isubcase, key, value)
                 elif isinstance(value, list) and isinstance(value[0], str):
                     msgTemp = "','".join(value)
                     msg = "fem.%s(%i).%s = {'%s'};\n" % (
-                        name, iSubcase, key, msgTemp)
+                        name, isubcase, key, msgTemp)
 
                 elif value is None:
-                    value = "'%s'" % (value)
+                    value = "'%s'" % value
                 else:
                     msg = 'fem.%s(%i).%s = %s;\n' % (
-                        name, iSubcase, key, value)
+                        name, isubcase, key, value)
                 f.write(msg)
 
-    def applyDataCode(self):
-        self.log = self.dataCode['log']
-        for key, value in sorted(self.dataCode.iteritems()):
+    def apply_data_code(self):
+        self.log = self.data_code['log']
+        for key, value in sorted(self.data_code.iteritems()):
             if key is not 'log':
                 self.__setattr__(key, value)
                 #self.log.debug("  key=%s value=%s" %(key,value))
@@ -154,42 +68,42 @@ class scalarObject(baseScalarObject):
 
     def get_data_code(self):
         msg = []
-        for name in self.dataCode['dataNames']:
+        for name in self.data_code['dataNames']:
             try:
                 if hasattr(self, name + 's'):
                     vals = getattr(self, name + 's')
                     name = name + 's'
                 else:
                     vals = getattr(self, name)
-                msg.append('  %s = %s\n' % (name, ListPrint(vals)))
+                msg.append('  %s = %s\n' % (name, list_print(vals)))
             except AttributeError:  # weird case...
                 pass
         return msg
 
     def getUnsteadyValue(self):
-        name = self.dataCode['name']
+        name = self.data_code['name']
         return self.getVar(name)
 
     def getVar(self, name):
         return getattr(self, name)
 
-    def setVar(self, name, value):
+    def set_var(self, name, value):
         return self.__setattr__(name, value)
 
-    def startDataMember(self, varName, valueName):
+    def start_data_member(self, varName, valueName):
         if hasattr(self, varName):
             return True
         elif hasattr(self, valueName):
-            self.setVar(varName, [])
+            self.set_var(varName, [])
             return True
         return False
 
-    def appendDataMember(self, varName, valueName):
+    def append_data_member(self, varName, valueName):
         """
         this appends a data member to a variable that may or may not exist
         """
         #print "append..."
-        hasList = self.startDataMember(varName, valueName)
+        hasList = self.start_data_member(varName, valueName)
         if hasList:
             listA = self.getVar(varName)
             if listA is not None:
@@ -203,24 +117,24 @@ class scalarObject(baseScalarObject):
                 listA.append(value)
                 assert len(listA) == n + 1
 
-    def setDataMembers(self):
-        if 'dataNames' not in self.dataCode:
-            msg = 'No "transient" variable was set for %s\n' % (self.tableName)
-            raise NotImplementedError(msg + self.codeInformation())
+    def set_data_members(self):
+        if 'dataNames' not in self.data_code:
+            msg = 'No "transient" variable was set for %s\n' % (self.table_name)
+            raise NotImplementedError(msg + self.code_information())
 
-        for name in self.dataCode['dataNames']:
+        for name in self.data_code['dataNames']:
             #print "name = ",name
-            self.appendDataMember(name + 's', name)
+            self.append_data_member(name + 's', name)
 
-    def updateDataCode(self, dataCode):
-        self.dataCode = dataCode
-        self.applyDataCode()
-        self.setDataMembers()
+    def update_data_code(self, data_code):
+        self.data_code = data_code
+        self.apply_data_code()
+        self.set_data_members()
 
-    def printDataMembers(self):
+    def print_data_members(self):
         """
         Prints out the "unique" vals of the case.
-        Uses a provided list of dataCode['dataNames'] to set the values for
+        Uses a provided list of data_code['dataNames'] to set the values for
         each subcase.  Then populates a list of self.name+'s' (by using
         setattr) with the current value.  For example, if the variable name is
         'mode', we make self.modes.  Then to extract the values, we build a
@@ -231,20 +145,20 @@ class scalarObject(baseScalarObject):
         another result type having ['mode','eigr','eigi'].
         """
         keyVals = []
-        for name in self.dataCode['dataNames']:
+        for name in self.data_code['dataNames']:
             vals = getattr(self, name + 's')
             keyVals.append(vals)
             #print "%ss = %s" %(name,vals)
 
         msg = ''
-        for name in self.dataCode['dataNames']:
+        for name in self.data_code['dataNames']:
             msg += '%-10s ' % (name)
         msg += '\n'
 
         nModes = len(keyVals[0])
         for i in xrange(nModes):
             for vals in keyVals:
-                msg += '%-10g ' % (vals[i])
+                msg += '%-10g ' % vals[i]
             msg += '\n'
         return msg + '\n'
 
@@ -262,17 +176,17 @@ class scalarObject(baseScalarObject):
             raise RuntimeError('gridType=%s' % (gridType))
         return Type
 
-    def updateDt(self, dataCode, dt):
+    def update_dt(self, data_code, dt):
         """
         this method is called if the object
         already exits and a new time step is found
         """
-        self.dataCode = dataCode
-        self.applyDataCode()
-        raise RuntimeError('updateDt not implemented in the %s class'
+        self.data_code = data_code
+        self.apply_data_code()
+        raise RuntimeError('update_dt not implemented in the %s class'
                            % (self.__class__.__name__))
         #assert dt>=0.
         #print "updating dt...dt=%s" %(dt)
         if dt is not None:
             self.dt = dt
-            self.addNewTransient()
+            self.add_new_transient()

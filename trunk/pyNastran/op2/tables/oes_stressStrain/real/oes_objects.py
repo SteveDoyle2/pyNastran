@@ -6,36 +6,36 @@ from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 
 class OES_Object(scalarObject):
-    def __init__(self, dataCode, iSubcase):
-        scalarObject.__init__(self, dataCode, iSubcase)
-        self.log.debug("starting OES...elementName=%s iSubcase=%s" %
-                       (self.elementName, self.iSubcase))
-        #print self.dataCode
+    def __init__(self, data_code, isubcase):
+        scalarObject.__init__(self, data_code, isubcase)
+        self.log.debug("starting OES...element_name=%s isubcase=%s" %
+                       (self.element_name, self.isubcase))
+        #print self.data_code
 
     def isCurvatureOld(self):
-        if self.stressBits[2] == 0:
+        if self.stress_bits[2] == 0:
             return True
         return False
 
     def isCurvature(self):
-        if self.sCode in [0, 1, 14, 15, 16, 17, 27, 30, 31]:  # fiber distance
+        if self.s_code in [0, 1, 14, 15, 16, 17, 27, 30, 31]:  # fiber distance
             return False
-        elif self.sCode in [10, 11, 26, ]:  # fiber curvature
+        elif self.s_code in [10, 11, 26, ]:  # fiber curvature
             return True
-        raise NotImplementedError('add sCode=%s' % (self.sCode))
+        raise NotImplementedError('add s_code=%s' % (self.s_code))
 
     def isFiberDistance(self):
         return not(self.isCurvature())
 
     def isVonMises(self):
-        #print self.stressBits
+        #print self.stress_bits
         #iMs = not(self.isMaxShear())
         #print 'isVonMises = ',iMs
         return not(self.isMaxShear())
 
     def isMaxShear(self):
-        #print self.stressBits
-        if self.stressBits[4] == 0:
+        #print self.stress_bits
+        if self.stress_bits[4] == 0:
             #print 'isMaxShear = True'
             return True
         #print 'isMaxShear = False'
@@ -82,21 +82,21 @@ class OES_Object(scalarObject):
         return (TypesOut, orderedETypes)
 
 
-class stressObject(OES_Object):
-    def __init__(self, dataCode, iSubcase):
-        OES_Object.__init__(self, dataCode, iSubcase)
+class StressObject(OES_Object):
+    def __init__(self, data_code, isubcase):
+        OES_Object.__init__(self, data_code, isubcase)
 
-    def updateDt(self, dataCode, dt):
-        self.dataCode = dataCode
-        self.applyDataCode()
+    def update_dt(self, data_code, dt):
+        self.data_code = data_code
+        self.apply_data_code()
         #assert dt>=0.
-        #print "dataCode=",self.dataCode
-        self.elementName = self.dataCode['elementName']
+        #print "data_code=",self.data_code
+        self.element_name = self.data_code['element_name']
         if dt is not None:
-            self.log.debug("updating stress...%s=%s elementName=%s" %
-                           (self.dataCode['name'], dt, self.elementName))
+            self.log.debug("updating stress...%s=%s element_name=%s" %
+                           (self.data_code['name'], dt, self.element_name))
             self.dt = dt
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
 
     def isStrain(self):
         return True
@@ -105,21 +105,21 @@ class stressObject(OES_Object):
         return False
 
 
-class strainObject(OES_Object):
-    def __init__(self, dataCode, iSubcase):
-        OES_Object.__init__(self, dataCode, iSubcase)
+class StrainObject(OES_Object):
+    def __init__(self, data_code, isubcase):
+        OES_Object.__init__(self, data_code, isubcase)
 
-    def updateDt(self, dataCode, dt):
-        self.dataCode = dataCode
-        self.applyDataCode()
-        #print "dataCode=",self.dataCode
-        self.elementName = self.dataCode['elementName']
+    def update_dt(self, data_code, dt):
+        self.data_code = data_code
+        self.apply_data_code()
+        #print "data_code=",self.data_code
+        self.element_name = self.data_code['element_name']
         #assert dt>=0.
         if dt is not None:
-            self.log.debug("updating strain...%s=%s elementName=%s" %
-                           (self.dataCode['name'], dt, self.elementName))
+            self.log.debug("updating strain...%s=%s element_name=%s" %
+                           (self.data_code['name'], dt, self.element_name))
             self.dt = dt
-            self.addNewTransient()
+            self.add_new_transient()
 
     def isStress(self):
         return False

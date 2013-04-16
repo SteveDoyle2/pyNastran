@@ -1,0 +1,102 @@
+$ NASTRAN input file created by the Patran 2010 (MD Enabled) input file
+$ translator on May       22, 2012 at 15:40:00.
+$ Direct Text Input for Nastran System Cell Section
+$ Complex Eigenvalue Analysis, Direct Formulation, Database
+SOL 107
+CEND
+ECHO = NONE
+SUBCASE 1
+$ Subcase name : Default
+   SUBTITLE=Default
+   CMETHOD = 1
+   SPC = 2
+   VECTOR(SORT1,REAL)=ALL
+BEGIN BULK
+PARAM    POST    -1
+PARAM   PRTMAXIM YES
+$EIGC     1       CLAN    MAX
+$         0.      0.                                      10
+$1......2.......3.......4.......5.......6.......7.......8.......9.......10......
+eigc,    1,      hess,         ,       ,       ,       , 10
+acmodl,ident
+$ Elements and Element Properties for region : pshell.1
+PSHELL   1       1      .2       1               1
+$ Pset: "pshell.1" will be imported as: "pshell.1"
+CQUAD4   1       1       1       2       5       4       0.      0.
+CQUAD4   2       1       2       3       6       5       0.      0.
+CQUAD4   3       1       4       5       8       7       0.      0.
+CQUAD4   4       1       5       6       9       8       0.      0.
+$ Elements and Element Properties for region : psolid.2
+PSOLID   2       2       0                       FULL    PFLUID
+$ Pset: "psolid.2" will be imported as: "psolid.2"
+CHEXA    204     2       209     210     213     212     218     219
+         222     221
+CHEXA    205     2       210     211     214     213     219     220
+         223     222
+CHEXA    206     2       212     213     216     215     221     222
+         225     224
+CHEXA    207     2       213     214     217     216     222     223
+         226     225
+CHEXA    208     2       218     219     222     221     227     228
+         231     230
+CHEXA    209     2       219     220     223     222     228     229
+         232     231
+CHEXA    210     2       221     222     225     224     230     231
+         234     233
+CHEXA    211     2       222     223     226     225     231     232
+         235     234
+$ Referenced Material Records
+$ Material Record : Steel
+$ Description of Material :
+MAT1*    1              1.+7            3.84615+6       .3
+*       2.54-4
+$ Material Record : air
+$ Description of Material :
+MAT10    2              1.21-7  13000.
+$ Nodes of the Entire Model
+GRID     1               0.      0.      0.
+GRID     2              10.      0.      0.
+GRID     3              20.      0.      0.
+GRID     4               0.     10.      0.
+GRID     5              10.     10.      0.
+GRID     6              20.     10.      0.
+GRID     7               0.     20.      0.
+GRID     8              10.     20.      0.
+GRID     9              20.     20.      0.
+GRID     209             0.      0.      0.      -1
+GRID     210             0.     10.      0.      -1
+GRID     211             0.     20.      0.      -1
+GRID     212            10.      0.      0.      -1
+GRID     213            10.     10.      0.      -1
+GRID     214            10.     20.      0.      -1
+GRID     215            20.      0.      0.      -1
+GRID     216            20.     10.      0.      -1
+GRID     217            20.     20.      0.      -1
+GRID     218             0.      0.     -50.     -1
+GRID     219             0.     10.     -50.     -1
+GRID     220             0.     20.     -50.     -1
+GRID     221            10.      0.     -50.     -1
+GRID     222            10.     10.     -50.     -1
+GRID     223            10.     20.     -50.     -1
+GRID     224            20.      0.     -50.     -1
+GRID     225            20.     10.     -50.     -1
+GRID     226            20.     20.     -50.     -1
+GRID     227             0.      0.     -100.    -1
+GRID     228             0.     10.     -100.    -1
+GRID     229             0.     20.     -100.    -1
+GRID     230            10.      0.     -100.    -1
+GRID     231            10.     10.     -100.    -1
+GRID     232            10.     20.     -100.    -1
+GRID     233            20.      0.     -100.    -1
+GRID     234            20.     10.     -100.    -1
+GRID     235            20.     20.     -100.    -1
+$ Loads for Load Case : Default
+SPCADD   2       1       3       4
+$ Displacement Constraints of Load Set : spc1.1
+SPC1     1       123     1
+$ Displacement Constraints of Load Set : spc1.3
+SPC1     3       23      3
+$ Displacement Constraints of Load Set : spc1.4
+SPC1     4       3       7       9
+$ Referenced Coordinate Frames
+ENDDATA 16a6f137

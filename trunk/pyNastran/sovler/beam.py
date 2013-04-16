@@ -1,4 +1,4 @@
-from numpy import matrix, cos, sin, dot, cross
+from numpy import matrix, cos, sin
 from numpy.linalg import solve
 
 
@@ -32,9 +32,6 @@ def buildGlobalStiffness(elements):
         for (i, iNode) in enumerate(nodes):  # row
             for (j, jNode) in enumerate(nodes):  # column
                 Kg[iNode, jNode] = K[i, j]
-            ###
-        ###
-    ###
     return Kg
 
 # B - strain displacement matrix
@@ -130,6 +127,7 @@ def Stiffness(self, r, A, E):
 
 def truss():
     """
+    @code
        ^y
        |
        1
@@ -140,6 +138,7 @@ def truss():
 
     L1 = 4 ft
     L2 = 3 ft
+    @endcode
     """
     p1 = array([4., 0., 0.]) * 12.
     p2 = array([0., 0., 0.]) * 12.
@@ -214,5 +213,4 @@ def beamStiffness(r, A, E, I):
         Ke[5, 5] = Ke[2, 2]  # 4*EI/L
 
         Ke = Ke / L
-    ###
     return Ke

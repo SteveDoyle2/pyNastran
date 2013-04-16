@@ -1,14 +1,15 @@
 #!/usr/bin/env python
+__all__ = ['OP4']
+
 import os
-import sys
 from struct import pack, unpack
 from numpy import (array, zeros, float32, float64, complex64, complex128, 
                   allclose)
 from scipy.sparse import coo_matrix
-from pyNastran.general.general import is_binary
-from pyNastran.general.generalMath import printMatrix, printAnnotatedMatrix
+from pyNastran.utils import is_binary
+from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 from pyNastran.op2.fortranFile import FortranFile
-
+import io
 
 class OP4(FortranFile):
 #class OP4(object):
@@ -16,39 +17,54 @@ class OP4(FortranFile):
     @todo add endian checking
     @todo test on big matrices
     """
-    def __init__(self):
+    def __init__(self, log=None):
         FortranFile.__init__(self)
         self.n = 0
         self.endian = ''
 
     def readOP4(self, op4Name, matrixNames=None, precision='default'):
+        """@see read_op4"""
+        return self.read_op4(op4Name, matrixNames, precision)
+
+    def readOP4Ascii(self, op4Name, matrixNames=None, precision='default'):
+        """@see read_op4_ascii"""
+        return self.read_op4_ascii(op4Name, matrixNames, precision)
+
+    def readOP4Binary(self, op4Name, matrixNames=None, precision='default'):
+        """@see read_op4_binary"""
+        return self.read_op4_binary(op4Name, matrixNames, precision)
+
+#--------------------------------------------------------------------------
+    def read_op4(self, op4_filename, matrix_names=None, precision='default'):
         """
         Reads a NASTRAN OUTPUT4 file, regular or sparse, and stores the
         matrices as the output arguments of the function.  The number of matrices
-        read is defined by the list matrixNames.  By default, all matrices will
+        read is defined by the list matrix_names.  By default, all matrices will
         be read.  The resulting output is a dictionary of matrices that are
         accessed by their name.
 
+        @code
         from pyNastran.op4.op4 import OP4
         op4 = OP4()
         #alternative way to get all the matrices
-        matrices = op4.readOP4(op4Name)
+        matrices = op4.read_op4(op4_name)
         (formA,A) = matrices['A']
         (formB,B) = matrices['B']
         (formC,C) = matrices['C']
 
         # or to reduce memory usage
-        matrices = op4.readOP4(op4Name,matrixNames=['A','B'])
+        matrices = op4.read_op4(op4_filename, matrix_names=['A','B'])
         (formA,A) = matrices['A']
         (formB,B) = matrices['B']
 
         # or because you only want A
-        matrices = op4.readOP4(op4Name,matrixNames='A')
+        matrices = op4.read_op4(op4_filename, matrix_names='A')
         (formA,A) = matrices['A']
+        @endcode
 
-        @param op4Name an OP4 filename.  Type=STRING.
-        @param matrixNames list of matrix names (or None); Type=LIST OF STRINGS / NONE.
-        @param floatType specifies if the matrices are in single or double precsion
+        @param op4_filename an OP4 filename.  Type=STRING.
+        @param matrix_names list of matrix names (or None); Type=LIST OF STRINGS / NONE.
+        @param precision specifies if the matrices are in single or double precsion
                (values='default','single','double') which means the format will be whatever the file is in
 
         @retval dictionary of matrices where the key is the name and the value is a matrix:
@@ -57,37 +73,36 @@ class OP4(FortranFile):
 
         @note based off the MATLAB code SAVEOP4 developed by ATA-E and later UCSD.
         @note it's strongly recommended that you convert sparse matrices to another
-        format before doing math on them.  This is standard with sparse matrices.
+         format before doing math on them.  This is standard with sparse matrices.
         @warning sparse binary is buggy right now        """
         assert precision in ['default', 'single', 'double'], "precison=|%s| valid=['default','single','double']"
-        if isinstance(matrixNames, str):
-            matrixNames = [matrixNames]
+        if isinstance(matrix_names, str):
+            matrix_names = [matrix_names]
+        #assert isinstance(matrix_names, list), 'type(matrix_names)=%s' % type(matrix_names)
 
-        if not os.path.exists(op4Name):
-            raise IOError('cannot find op4FileName=|%s|' % (op4Name))
-        if is_binary(op4Name):
-            return self.readOP4Binary(op4Name, matrixNames, precision)
+        if not os.path.exists(op4_filename):
+            raise IOError('cannot find op4_filename=|%s|' % op4_filename)
+        
+        if is_binary(op4_filename):
+            return self.read_op4_binary(op4_filename, matrix_names, precision)
         else:
-            return self.readOP4Ascii(op4Name, matrixNames, precision)
+            return self.read_op4_ascii(op4_filename, matrix_names, precision)
 
 #--------------------------------------------------------------------------
-    def readOP4Ascii(self, op4Name, matrixNames=None, precision='default'):
-        """matrixNames must be a list or None, but basically the same"""
-        f = open(op4Name, 'r')
-        matrices = {}
-        name = 'dummyName'
-
-        i = 0
-        while name is not None:
-            (name, form, matrix) = self.readMatrixAscii(
-                f, matrixNames, precision)
-            if name is not None:
-                if matrixNames is None or name in matrixNames:  # save the matrix
-                    matrices[name] = (form, matrix)
-            i += 1
+    def read_op4_ascii(self, op4_filename, matrix_names=None, precision='default'):
+        """matrix_names must be a list or None, but basically the same"""
+        with open(op4_filename, 'r') as f:
+            matrices = {}
+            name = 'dummyName'
+            while name is not None:
+                (name, form, matrix) = self._read_matrix_ascii(f,
+                    matrix_names, precision)
+                if name is not None:
+                    if matrix_names is None or name in matrix_names:  # save the matrix
+                        matrices[name] = (form, matrix)
         return matrices
 
-    def readMatrixAscii(self, f, matrixNames=None, precision='default'):
+    def _read_matrix_ascii(self, f, matrix_names=None, precision='default'):
         """reads a matrix"""
         line = f.readline().rstrip()
         if line == '':
@@ -107,7 +122,7 @@ class OP4(FortranFile):
         ncols = int(ncols)
         form = int(form)
         Type = int(Type)
-        dType = self.getDType(Type, precision)
+        dType = self.get_dtype(Type, precision)
 
         name = line[32:40].strip()
         size = line[40:].strip()
@@ -124,24 +139,25 @@ class OP4(FortranFile):
             isSparse = True
 
         if Type in [1, 2]:  # real
-            (A) = self.readRealAscii(f, nrows, ncols, lineSize,
+            (A) = self.read_real_ascii(f, nrows, ncols, lineSize,
                                      line, dType, isSparse, isBigMat)
         elif Type in [3, 4]:  # complex
-            (A) = self.readComplexAscii(f, nrows, ncols,
+            (A) = self.read_complex_ascii(f, nrows, ncols,
                                         lineSize, line, dType, isSparse, isBigMat)
         else:
             raise RuntimeError('invalid matrix type.  Type=%s' % (Type))
 
-        if not(matrixNames is None or name in matrixNames):  # kill the matrix
+        if not(matrix_names is None or name in matrix_names):  # kill the matrix
             A = None
         #print "form=%s name=%s A=\n%s" %(form,name,str(A))
         return (name, form, A)
 
-    def readRealAscii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
+    def read_real_ascii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
         """
+        Method read_real_ascii:
         @todo possibly split this into readDenseReal and readSparseReal
-        to get rid of all the extra isSparse checks.  This would cleanup the
-        runLoop condition as well.
+         to get rid of all the extra isSparse checks.  This would cleanup the
+         runLoop condition as well.
         """
         if isSparse:
             rows = []
@@ -178,8 +194,8 @@ class OP4(FortranFile):
             runLoop = True
             sline = line.strip().split()
             while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or runLoop:  # next sparse entry
-                irow = self.getIRowAscii(f, line, sline,
-                                         nWords, irow, isSparse, isBigMat)
+                irow = self._get_irow_ascii(f, line, sline, nWords, irow,
+                                            isSparse, isBigMat)
 
                 runLoop = False
                 i = 0
@@ -188,7 +204,7 @@ class OP4(FortranFile):
                 while nWords:
                     n = 0
                     line = f.readline().rstrip()
-                    nWordsInLine = self.letterCount(line, 'E')
+                    nWordsInLine = letter_count(line, 'E')
                     if nWordsInLine == 0:
                         wasBroken = True
                         break
@@ -217,11 +233,12 @@ class OP4(FortranFile):
             #A = A.todense()
         return A
 
-    def readComplexAscii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
+    def read_complex_ascii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
         """
+        Method read_complex_ascii:
         @todo possibly split this into readDenseComplex and readSparseComplex
-        to get rid of all the extra isSparse checks.  This would cleanup the
-        runLoop condition as well.
+         to get rid of all the extra isSparse checks.  This would cleanup the
+         runLoop condition as well.
         """
         if isSparse:
             rows = []
@@ -249,8 +266,8 @@ class OP4(FortranFile):
             runLoop = True
             sline = line.strip().split()
             while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or runLoop:  # next sparse entry
-                irow = self.getIRowAscii(f, line, sline,
-                                         nWords, irow, isSparse, isBigMat)
+                irow = self._get_irow_ascii(f, line, sline, nWords, irow,
+                                            isSparse, isBigMat)
                 runLoop = False
 
                 i = 0
@@ -259,7 +276,7 @@ class OP4(FortranFile):
                 while nWords:
                     n = 0
                     line = f.readline().rstrip()
-                    nWordsInLine = self.letterCount(line, 'E')
+                    nWordsInLine = letter_count(line, 'E')
                     if nWordsInLine == 0:
                         wasBroken = True
                         break
@@ -290,9 +307,10 @@ class OP4(FortranFile):
         f.readline()
         return A
 
-    def getIRowAscii(self, f, line, sline, nWords, irow, isSparse, isBigMat):
+    def _get_irow_ascii(self, f, line, sline, nWords, irow,
+                        isSparse, isBigMat):
         if isSparse:
-            #nWords = (nWords-1)//2  ## @todo this cant be right...
+            #nWords = (nWords-1)//2  # TODO this cant be right...
             sline = line.strip().split()
             if isBigMat:
                 if len(sline) == 2:
@@ -313,20 +331,14 @@ class OP4(FortranFile):
 
         return irow
 
-    def letterCount(self, word, letter):
-        """Counts the number of occurrences of a letter in a word/line."""
-        n = 0
-        for L in word:
-            if L == letter:
-                n += 1
-        return n
-
 #--------------------------------------------------------------------------
-    def readOP4Binary(self, op4Name, matrixNames=None, floatType='default'):
-        """matrixNames must be a list or None, but basically the same"""
-        self.op4 = open(op4Name, 'rb')
+    def read_op4_binary(self, op4_filename, matrix_names=None, precision='default'):
+        """matrix_names must be a list or None, but basically the same"""
+        self.op4 = io.open(op4_filename, mode = 'rb')
+        
+        # these variables are set so FortranFile will work
         self.op2 = self.op4
-        self.makeOp2Debug = False
+        self.make_op2_debug = False
 
         # get the endian
         data = self.op4.read(4)
@@ -338,7 +350,7 @@ class OP4(FortranFile):
         elif recordLengthLittle == 24:
             self.endian = '<'
         else:
-            msg = 'a 4 could not be found as the first word...endian error\n'
+            msg = 'a 24 could not be found as the first word...endian error\n'
             msg += "RL_Big=%s RL_Little=%s" % (
                 recordLengthBig, recordLengthLittle)
             raise RuntimeError(msg)
@@ -355,34 +367,34 @@ class OP4(FortranFile):
             if len(data1) == 0:
                 break
 
-            (name, form, matrix) = self.readMatrixBinary(
-                self.op4, floatType, matrixNames)
-            #print printMatrix(matrix)
+            (name, form, matrix) = self._read_matrix_binary(self.op4,
+                precision, matrix_names)
+            #print print_matrix(matrix)
             if name is not None:
-                if matrixNames is None or name in matrixNames:  # save the matrix
+                if matrix_names is None or name in matrix_names:  # save the matrix
                     matrices[name] = (form, matrix)
 
-           #print "not f.closed = ",not self.op4.closed,form,name
-           # if not self.op4.closed or form is not None:
-           #     data = self.op4.read(4); self.n+=4
-           #     if len(data)==0:
-           #         break
-           #     (recordLength,) = unpack(self.endian+'i',data)
-           #     print("RL = %s" %(recordLength))
-           #     if recordLength==24:
-           #         self.n-=4; self.op4.seek(self.n)
-           #     else:
-           #         data = self.op4.read(4)
-           #         if len(data)==0:
-           #             break
-           #         (recordLength2,) = unpack(self.endian+'i',data)
-           #         assert recordLength2==24
-           #         self.op4.seek(self.n)
-           #
+            #print "not f.closed = ",not self.op4.closed,form,name
+            # if not self.op4.closed or form is not None:
+            #     data = self.op4.read(4); self.n+=4
+            #     if len(data)==0:
+            #         break
+            #     (recordLength,) = unpack(self.endian+'i',data)
+            #     print("RL = %s" %(recordLength))
+            #     if recordLength==24:
+            #         self.n-=4; self.op4.seek(self.n)
+            #     else:
+            #         data = self.op4.read(4)
+            #         if len(data)==0:
+            #             break
+            #         (recordLength2,) = unpack(self.endian+'i',data)
+            #         assert recordLength2==24
+            #         self.op4.seek(self.n)
+            #
             i += 1
         return matrices
 
-    def getDType(self, Type, precision='default'):
+    def get_dtype(self, Type, precision='default'):
         """reset the type if 'default' not selected"""
         if precision == 'single':
             if Type in [1, 2]:
@@ -405,9 +417,9 @@ class OP4(FortranFile):
                 dType = 'complex128'
         return dType
 
-    def readStartMarker(self, f):
+    def read_start_marker(self, f):
         #print '--------------------------------------'
-        #print self.printSection(60)
+        #print self.print_section(60)
         data = f.read(4)
         self.n += 4
         (recordLength,) = unpack(self.endian + 'i', data)
@@ -421,10 +433,10 @@ class OP4(FortranFile):
             (a, icol, irow, nWords) = unpack(self.endian + '4i', data)
             #print "a=%s icol=%s irow=%s nWords=%s" %(a,icol,irow,nWords)
         else:
-            raise NotImplementedError('recordLength=%s' % (recordLength))
+            raise NotImplementedError('recordLength=%s' % recordLength)
         return (a, icol, irow, nWords)
 
-    def getIRowSmall(self, f, data):
+    def _get_irow_small(self, f, data):
         if len(data) == 0:
             data = f.read(4)
             self.n += 4
@@ -438,7 +450,7 @@ class OP4(FortranFile):
         #assert L>0
         return irow, L
 
-    def getIRowBig(self, f, data):
+    def _get_irow_big(self, f, data):
         if len(data) == 0:
             data = f.read(8)
             self.n += 8
@@ -447,9 +459,9 @@ class OP4(FortranFile):
         #assert irow<100
         return (irow, idummy - 1)
 
-    def readMatrixBinary(self, f, floatType, matrixNames=None):
+    def _read_matrix_binary(self, f, precision, matrix_names):
         """reads a matrix"""
-        #print self.printSection(60)
+        #print self.print_section(60)
         #print "*************************"
         data = f.read(4)
         self.n += 4
@@ -457,7 +469,7 @@ class OP4(FortranFile):
         assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
         #print "RL = %s" %(recordLength)
 
-        #print self.printSection(60)
+        #print self.print_section(60)
         if recordLength == 24:
             data = f.read(recordLength)
             self.n += recordLength
@@ -466,8 +478,8 @@ class OP4(FortranFile):
                 self.endian + '4i8s', data)
             #print "nrows=%s ncols=%s form=%s Type=%s name=%s" %(nrows,ncols,form,Type,name)
         else:
-            msg = recordLength + self.printBlock(data)
-            raise NotImplementedError('recordLength=%s\n%s' % (msg))
+            msg = recordLength + self.print_block(data)
+            raise NotImplementedError('recordLength=%s\n%s' % msg)
 
         name = name.strip()
         if 0:
@@ -490,7 +502,7 @@ class OP4(FortranFile):
 
         # jump forward to get if isSparse, then jump back
         nSave = self.n
-        (_a, _icol, _irow, _nWords) = self.readStartMarker(f)
+        (_a, _icol, _irow, _nWords) = self.read_start_marker(f)
         f.seek(nSave)
         self.n = nSave
 
@@ -514,10 +526,10 @@ class OP4(FortranFile):
             A = self.readComplexBinary(
                 f, nrows, ncols, Type, isSparse, isBigMat)
         else:
-            raise RuntimeError("Type=%s" % (Type))
+            raise TypeError("Type=%s" % Type)
 
         try:
-            printMatrix(A.todense())
+            print_matrix(A.todense())
         except:
             pass
 
@@ -530,13 +542,13 @@ class OP4(FortranFile):
         else:
             raise NotImplementedError(d)
         #f.read(recordLength); self.n+=recordLength
-        #self.printSection(10)
+        #self.print_section(10)
         #f.read(4); self.n+=4
 
         #if isSparse:  # Initialize a real matrix
         #    A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType)
         #print '------end1--------'
-        #print self.printSection(60)
+        #print self.print_section(60)
         #print '------end2--------'
         return (name, form, A)
 
@@ -558,9 +570,9 @@ class OP4(FortranFile):
             NBW = 16
             d = 'dd'
         else:
-            raise RuntimeError("Type=%s" % (Type))
-        dType = self.getDType(Type)
-        return (NWV, NBW, d, dType)
+            raise RuntimeError("Type=%s" % Type)
+        dtype = self.get_dtype(Type)
+        return (NWV, NBW, d, dtype)
 
     def readRealBinary(self, f, nrows, ncols, Type, isSparse, isBigMat):
         (NWV, NBW, d, dType) = self.getMatrixInfo(Type)
@@ -577,7 +589,7 @@ class OP4(FortranFile):
         while icol < ncols + 1:  # if isDense
             #if recordLength==0:
             assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-            (icol, irow, nWords) = self.getMarkers(f, isSparse, isBigMat)
+            (icol, irow, nWords) = self.get_markers(f, isSparse, isBigMat)
             L = nWords
             if 0:
                 print("N=%s icol=%s irow=%s nWords=%s" % (
@@ -590,10 +602,10 @@ class OP4(FortranFile):
 
             if isSparse:
                 if isBigMat:
-                    (irow, L) = self.getIRowBig(f, data[:8])
+                    (irow, L) = self._get_irow_big(f, data[:8])
                     data = data[8:]
                 else:
-                    (irow, L) = self.getIRowSmall(f, data[:4])
+                    (irow, L) = self._get_irow_small(f, data[:4])
                     data = data[4:]
 
             if L == -1:
@@ -626,10 +638,10 @@ class OP4(FortranFile):
 
             if 0:
                 print("inner while real...")
-                print("nWords   = %s" % (nWords))
-                print("nValues  = %s" % (nValues))
-                print("nValues2 = %s" % (nValues2))
-                print("NWV      = %s" % (NWV))
+                print("nWords   = %s" % nWords)
+                print("nValues  = %s" % nValues)
+                print("nValues2 = %s" % nValues2)
+                print("NWV      = %s" % NWV)
                 assert nValues == nValues2
 
             #if nValues==0:
@@ -638,9 +650,9 @@ class OP4(FortranFile):
 
             strValues = nValues * d
             if 0:
-                print("strValues = %s" % (strValues))
-                print("nValues*NBW=%s len(data)=%s" % (
-                    nValues * NBW, len(data)))
+                print("strValues = %s" % strValues)
+                print("nValues*NBW=%s len(data)=%s" % (nValues * NBW,
+                                                       len(data)))
 
             i = 0
             while len(data) > 0:
@@ -649,10 +661,10 @@ class OP4(FortranFile):
                 else:
                     if isSparse:
                         if isBigMat:
-                            (irow, L) = self.getIRowBig(f, data[0:8])
+                            (irow, L) = self._get_irow_big(f, data[0:8])
                             data = data[8:]
                         else:
-                            (irow, L) = self.getIRowSmall(f, data[0:4])
+                            (irow, L) = self._get_irow_small(f, data[0:4])
                             data = data[4:]
                     assert irow > 0
                     nValues2 = L // NWV
@@ -660,9 +672,9 @@ class OP4(FortranFile):
 
                 valueList = unpack(strValues, data[0:nValues * NBW])
                 assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-                #print self.printSection(4)
+                #print self.print_section(4)
                 if 0:
-                    print("valueList = %s" % (valueList))
+                    print("valueList = %s" % valueList)
 
                 #irow-=1
                 #icol-=1
@@ -691,7 +703,7 @@ class OP4(FortranFile):
                           (recordLength, NBW, len(data)))
                     #print(A)
                     print("********")  # ,data
-                    print(self.printBlock(data))
+                    print(self.print_block(data))
                 i += 1
             #print "-------------------------------"
 
@@ -731,7 +743,7 @@ class OP4(FortranFile):
         while icol < ncols + 1:  # if isDense
             #if recordLength==0:
             assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-            (icol, irow, nWords) = self.getMarkers(f, isSparse, isBigMat)
+            (icol, irow, nWords) = self.get_markers(f, isSparse, isBigMat)
             if 0:
                 print("N=%s icol=%s irow=%s nWords=%s" % (
                     self.n, icol, irow, nWords))
@@ -744,10 +756,10 @@ class OP4(FortranFile):
 
             if isSparse:
                 if isBigMat:
-                    (irow, L) = self.getIRowBig(f, data[:8])
+                    (irow, L) = self._get_irow_big(f, data[:8])
                     data = data[8:]
                 else:
-                    (irow, L) = self.getIRowSmall(f, data[:4])
+                    (irow, L) = self._get_irow_small(f, data[:4])
                     data = data[4:]
 
             if L == -1:
@@ -774,22 +786,22 @@ class OP4(FortranFile):
             while recordLength >= NBW:
                 if 0:
                     print("inner while...")
-                    print("nWords  = %s" % (nWords))
-                    print("nValues = %s" % (nValues))
-                    print("NWV     = %s" % (NWV))
+                    print("nWords  = %s" % nWords)
+                    print("nValues = %s" % nValues)
+                    print("NWV     = %s" % NWV)
 
                 #if nValues==0:
                     #assert icol==ncols+1
                     #break
                 strValues = nValues * d
                 if 0:
-                    print("strValues = %s" % (strValues))
+                    print("strValues = %s" % strValues)
                     print("nValues*NBW=%s len(data)=%s" %
                           (nValues * NBW, len(data)))
                 valueList = unpack(strValues, data[0:nValues * NBW])
                 assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-                #print self.printSection(4)
-                #print self.printBlock(data)
+                #print self.print_section(4)
+                #print self.print_block(data)
                 if 0:
                     print("valueList = %s" % (valueList))
 
@@ -823,7 +835,7 @@ class OP4(FortranFile):
                 recordLength -= nValues * NBW
                 data = data[nValues * NBW:]
                 #print "recordLength=%s NBW=%s" %(recordLength,NBW)
-                #print printMatrix(A)
+                #print print_matrix(A)
                 #print "********",data
 
         if isSparse:  # Initialize a complex matrix
@@ -844,26 +856,26 @@ class OP4(FortranFile):
             self.n += 4
         return A
 
-    def getMarkers(self, f, isSparse, isBigMat):
+    def get_markers(self, f, isSparse, isBigMat):
         if isSparse:
             if isBigMat:
-                (a, icol, irow, nWords) = self.readStartMarker(f)
-                #(irow) = self.getIRowBig(f)
+                (a, icol, irow, nWords) = self.read_start_marker(f)
+                #(irow) = self._get_irow_big(f)
                 nWords -= 2
                 #if nWords>1:
                 #    nWords -= 2
                 #else:
-                #    print("nWords0 = %s" %(nWords))
+                #    print("nWords0 = %s" % nWords)
                 #    nWords = 0
             else:
-                (a, icol, irow, nWords) = self.readStartMarker(f)
+                (a, icol, irow, nWords) = self.read_start_marker(f)
                 if irow != 0:
-                    assert nWords == 1, 'nWords=%s' % (nWords)
+                    assert nWords == 1, 'nWords=%s' % nWords
 
-                #(irow) = self.getIRowSmall(f)
+                #(irow) = self._get_irow_small(f)
                 nWords -= 1
         else:
-            (a, icol, irow, nWords) = self.readStartMarker(f)
+            (a, icol, irow, nWords) = self.read_start_marker(f)
             #print "N=%s a=%s icol=%s irow=%s nWords=%s"%(self.n,a,icol,irow,nWords)
         return (icol, irow, nWords)
 
@@ -903,7 +915,7 @@ class OP4(FortranFile):
             else:
                 Type = 3
         else:
-            raise RuntimeError('invalid Type, only float32, float64, complex64, complex128')
+            raise TypeError('invalid Type, only float32, float64, complex64, complex128')
         return (Type, NWV)
 
     def writeMatrixAscii(self, name, matrix, form=2, precision='default'):
@@ -913,20 +925,30 @@ class OP4(FortranFile):
         @param name the name of the matrix
         @param matrix a two-dimensional NUMPY.NDARRAY
         @param form Form is defined as one of the following:
-            1 Square
-            2 Rectangular
-            3 Diagonal
-            6 Symmetric
-            8 Identity
-            9 Pseudoidentity
+        
+        ==== ===============
+        Form Definition
+        ==== ===============
+        1.   Square
+        2.   Rectangular
+        3.   Diagonal
+        6.   Symmetric
+        8.   Id entity
+        9.   Pseudoidentity
+        ==== ===============
 
         Not Supported by all OP4s:
-            4 Lower triangular factor
-            5 Upper triangular factor
-            10 Cholesky factor
-            11 Trapezoidal factor
-            13 Sparse lower triangular factor
-            15 Sparse upper triangular factor
+        
+        ==== ===============================
+        Form Definition
+        ==== ===============================
+        4.   Lower triangular factor
+        5.   Upper triangular factor
+        10.  Cholesky factor
+        11.  Trapezoidal factor
+        13.  Sparse lower triangular factor
+        15.  Sparse upper triangular factor
+        ==== ===============================
 
         @note form defaults to 2, but 1 can be easily determined.  Any others must be specified.
         @todo call the actual function for now...not hooked up
@@ -936,7 +958,7 @@ class OP4(FortranFile):
 
     def writeSparseMatrixAscii(self, f, name, matrix, form=2, isBigMat=False, precision='default', tol=1e-8):
         msg = ''
-        assert isinstance(name, str), 'name=%s' % (name)
+        assert isinstance(name, str), 'name=%s' % name
         #A = matrix.tolil() # list-of-lists sparse matrix
         A = matrix
         #print dir(matrix)
@@ -1169,6 +1191,15 @@ class OP4(FortranFile):
         return msg
 
 
+def letter_count(word, letter):
+    """Counts the number of occurrences of a letter in a word/line."""
+    n = 0
+    for L in word:
+        if L == letter:
+            n += 1
+    return n
+
+
 def matrices():
     strings = array([[ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
                      [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
@@ -1242,15 +1273,15 @@ if __name__ == '__main__':
         #'binary.op4',
     ]
 
-    #matrixNames = 'EYE10' # identity
-    #matrixNames = 'LOW'
-    #matrixNames = 'RND1RS' # real,single
-    #matrixNames = 'RND1RD' # real,double
-    #matrixNames = 'RND1CS' # complex,single
-    #matrixNames = 'RND1CD' # complex,double
-    #matrixNames = 'STRINGS'
-    #matrixNames = 'EYE5CD' # complex identity
-    matrixNames = None
+    #matrix_names = 'EYE10' # identity
+    #matrix_names = 'LOW'
+    #matrix_names = 'RND1RS' # real,single
+    #matrix_names = 'RND1RD' # real,double
+    #matrix_names = 'RND1CS' # complex,single
+    #matrix_names = 'RND1CD' # complex,double
+    #matrix_names = 'STRINGS'
+    #matrix_names = 'EYE5CD' # complex identity
+    matrix_names = None
     strings = matrices()
 
     isBigMat = True
@@ -1262,21 +1293,20 @@ if __name__ == '__main__':
         #else:
             #f = open('binary.op4','wb')
 
-        matrices = op4.readOP4(
-            fname, matrixNames=matrixNames, precision='default')
+        matrices = op4.read_op4(fname, matrix_names=matrix_names,
+            precision='default')
         print("keys = %s" % (matrices.keys()))
-        #print "#####################################################"
-        print("fname=%s" % (fname))
+        print("fname=%s" % fname)
         for name, (form, matrix) in sorted(matrices.items()):
             print("-----------------------------------")
-            print("name = |%s|" % (name))
+            print("name = |%s|" % name)
             if isinstance(matrix, coo_matrix):
                 print("SPARSE")
                 #matrix = matrix.todense()
-                #print printAnnotatedMatrix(matrix)
+                #print print_annotated_matrix(matrix)
             else:
                 print("DENSE")
-                print(printMatrix(matrix))
+                print(print_matrix(matrix))
 
             #if 't' in fname:
             #f.write(op4.writeDenseMatrixAscii(name,matrix,form=form,precision='default'))
@@ -1286,7 +1316,8 @@ if __name__ == '__main__':
             else:
                 f.write(op4.writeDenseMatrixAscii(name, matrix, 1, 'single'))
                 #f.write(op4.writeDenseMatrixBinary(name,matrix,1,'single'))
-        #print printAnnotatedMatrix(matrices['STRINGS'][1]-strings)
+        #print print_annotated_matrix(matrices['STRINGS'][1]-strings)
+    f.close()
     print("-----------------------------")
     print("done")
     print("-----------------------------")

@@ -1,5 +1,4 @@
 # pylint: disable=E1101,C0103,R0902,R0904,R0914
-import sys
 from struct import unpack
 
 from pyNastran.bdf.cards.elements.elements import CGAP
@@ -91,7 +90,7 @@ class Geometry2(object):
         pass
 
     def addOp2Element(self, elem):
-        self.addElement(elem, allowOverwrites=True)
+        self.add_element(elem, allowOverwrites=True)
 
 # 1-AEROQ4 (???)
 # AEROT3   (???)
@@ -915,7 +914,7 @@ class Geometry2(object):
             data = data[4:]
             (nid) = unpack(b'i', eData)
             spoint = SPOINTs(None, [nid])
-            self.addSPoint(spoint)
+            self.add_SPOINT(spoint)
 
 # VUBEAM
 # VUHEXA

@@ -1,4 +1,7 @@
 # pylint: disable=R0904,R0902,C0103
+"""
+CaseControlDeck parsing and extraction class
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
@@ -6,30 +9,49 @@ import copy
 
 from pyNastran.bdf import subcase
 from pyNastran.bdf.subcase import Subcase
+from pyNastran.utils.log import get_logger
 
+
+class CaseControlDeckDeprecated(object):
+    def hasParameter(self, isubcase, param_name):
+        self.has_parameter(isubcase, param_name)
+
+    #def get_subcase_parameter(self, isubcase, param_name):
+    #def has_subcase(self, isubcase):
+    #def create_new_subcase(self, isubcase):
+    #def delete_subcase(self, isubcase):
+    #def copy_subcase(self, i_from_subcase, i_to_subcase, overwrite_subcase=True):
+    #def get_subcase_list(self):
+    #def get_local_subcase_list(self):
+    #def update_solution(self, isubcase, sol):
+    #def add_parameter_to_global_subcase(self, param):
+    #def add_parameter_to_local_subcase(self, isubcase, param):
+    #def finish_subcases(self):
+    #def convert_to_sol_200(self, model):
 
 class CaseControlDeck(object):
-    nlines_max = 10000
+    """
+    CaseControlDeck parsing and extraction class
+    """
     def __init__(self, lines, log=None):
         """
-        @param self
-          the case control deck object
-        @param lines
-          list of lines that represent the case control deck ending with
-          BEGIN BULK
-        @param log
-          a logger object
+        @param self the case control deck object
+        @param lines list of lines that represent the case control deck
+          ending with BEGIN BULK
+        @param log a logger object
         """
-        if log is None:
-        #if 1:
-            from pyNastran.general.logger import dummyLogger
-            word = 'debug'
-            loggerObj = dummyLogger()
-            log = loggerObj.startLog(word)  # or info
+        # pulls the logger from the BDF object
+        self.log = get_logger(log, "debug")
         self.debug = False
         #self.debug = True
+        
+        ## stores a single copy of 'BEGIN BULK' or 'BEGIN SUPER'
+        self.begin_bulk = ['BEGIN', 'BULK']
+        
+        # allows BEGIN BULK to be turned off
+        self.write_begin_bulk = True
 
-        self.log = log
+        
         self.lines = lines
         self.subcases = {0: Subcase(id=0)}
         self._read(self.lines)
@@ -49,6 +71,14 @@ class CaseControlDeck(object):
             return self.subcases[isubcase].has_parameter(param_name.upper())
 
     def get_subcase_parameter(self, isubcase, param_name):
+        """
+        Get the [value, options] of a subcase's parameter.  For example, for
+        STRESS(PLOT,POST)=ALL, param_name=STRESS, value=ALL, options=['PLOT',
+        'POST']
+        @param self the CaseControl object
+        @param isubcase the subcase ID to check
+        @param param_name the parameter name to get the [value, options] for
+        """
         if self.has_subcase(isubcase):
             return self.subcases[isubcase].get_parameter(param_name.upper())
         raise RuntimeError('isubcase=%s does not exist...' % isubcase)
@@ -66,21 +96,23 @@ class CaseControlDeck(object):
 
     def create_new_subcase(self, isubcase):
         """
+        Method create_new_subcase:
         @warning
-          be careful you dont add data to the global subcase after running
-          this...is this True???
+         be careful you dont add data to the global subcase after running
+         this...is this True???
         """
+        #print("creating subcase=%s" % isubcase)
         if self.has_subcase(isubcase):
             sys.stderr.write('subcase=%s already exists...skipping\n' %
-                             (isubcase))
+                             isubcase)
         self.copy_subcase(i_from_subcase=0, i_to_subcase=isubcase,
                           overwrite_subcase=True)
-        #self.subcases[iSubcase] = Subcase(id=iSubcase)
+        #self.subcases[isubcase] = Subcase(id=isubcase)
 
     def delete_subcase(self, isubcase):
         if not self.has_subcase(isubcase):
             sys.stderr.write('subcase %s doesnt exist...skipping\n' %
-                             (isubcase))
+                             isubcase)
         del self.subcases[isubcase]
 
     def copy_subcase(self, i_from_subcase, i_to_subcase, overwrite_subcase=True):
@@ -95,20 +127,27 @@ class CaseControlDeck(object):
         @param overwrite_subcase
           NULLs i_to_subcase before copying i_from_subcase
         """
+        #print("copying subcase from=%s to=%s overwrite=%s" % (i_from_subcase, i_to_subcase, overwrite_subcase))
         if not self.has_subcase(i_from_subcase):
-            msg = 'iFromSubcase=|%s| does not exist' % (i_from_subcase)
+            msg = 'iFromSubcase=|%s| does not exist' % i_from_subcase
             raise RuntimeError(msg)
-        subcase_to = self.subcases[i_from_subcase]
         if overwrite_subcase:
-            subcase_to = copy.deepcopy(subcase_to)
+            subcase_from = self.subcases[i_from_subcase]
+            subcase_to = copy.deepcopy(subcase_from)
             subcase_to.id = i_to_subcase
+            #for key, param in sorted(subcase_from.params.iteritems()):
+                #print("going to copy key=%s param=%s" % (key, param))
             self.subcases[i_to_subcase] = subcase_to
         else:
             if not self.has_subcase(i_to_subcase):
-                msg = 'i_to_subcase=|%s| does not exist' % (i_to_subcase)
+                msg = 'i_to_subcase=|%s| does not exist' % i_to_subcase
                 raise RuntimeError(msg)
             subcase_to = self.subcases[i_to_subcase]
-            for key, param in subcase_to.iteritems():
+
+            for key, param in sorted(subcase_to.iteritems()):
+                #print('copying key=%s param=%s' % (key, param))
+                if key == 'BEGIN':
+                    pass
                 subcase_to[key] = copy.deepcopy(param)
 
     def get_subcase_list(self):
@@ -166,40 +205,32 @@ class CaseControlDeck(object):
             doesnt check for 72 character width lines, but will follow that
             when it's written out
         """
-        iSubcase = 0
+        isubcase = 0
         lines = self._clean_lines(lines)
         i = 0
         while i < len(lines):
             line = lines[i]
-            #print "rawLine = |%s|" %(line)
-            #self.log.debug("rawLine = |%r|" %(line))
 
             lines2 = [line]
             while ',' in lines[i][-1]:
                 #print "lines[%s] = %s" %(i,lines[i])
                 i += 1
                 lines2.append(lines[i])
-                if i > self.nlines_max:
-                    msg = 'There are too many lines in case control deck.\n'
-                    msg += 'Assuming an infinite loop was found.'
-                    raise RuntimeError(msg)
             (j, key, value, options, paramType) = self._parse_entry(lines2)
             i += 1
-            #print ""
-            #print "key=|%s| value=|%s| options=|%s| paramType=%s" %(key,value, options,paramType)
-            iSubcase = self._add_parameter_to_subcase(key, value, options,
-                                                      paramType, iSubcase)
-            #print "--------------"
-            if i == self.nlines_max:
-                msg = 'too many lines in Case Control Deck < %i...' %(
-                    self.nlines_max)
-                raise RuntimeError(msg)
-        ###
-        #print "done with while loop...\n"
+            if key == 'BEGIN':
+                self.begin_bulk = [key, value]
+                continue
+            
+            #print("")
+            #print("key=|%s| value=|%s| options=|%s| paramType=%s" %(key, value,
+            #                                                        options,
+            #                                                          paramType))
+            isubcase = self._add_parameter_to_subcase(key, value, options,
+                                                      paramType, isubcase)
 
         #print str(self)
         self.finish_subcases()
-    ###
 
     def _parse_entry(self, lines):
         """
@@ -264,9 +295,9 @@ class CaseControlDeck(object):
                 msg = "trying to parse |%s|..." % (line)
                 raise RuntimeError(msg)
             (key, param_type) = sline
-            #print "key=|%s| iSubcase=|%s|" %(key,iSubcase)
+            #print "key=|%s| isubcase=|%s|" %(key,isubcase)
             value = int(param_type)
-            #self.iSubcase = int(iSubcase)
+            #self.isubcase = int(isubcase)
             param_type = 'SUBCASE-type'
         elif (line_upper.startswith('LABEL') or
               line_upper.startswith('SUBTITLE') or
@@ -330,8 +361,6 @@ class CaseControlDeck(object):
                             i += 1
                             break
                         i += 1
-                    ###
-                ###
                 #print "len(fivalues) = ",len(fivalues)
                 value = fivalues
 
@@ -344,8 +373,7 @@ class CaseControlDeck(object):
             else:  # STRESS-type; TITLE = stuff
                 #print 'B ??? line = ',line
                 pass
-            ###
-        ### = in line
+
         elif line_upper.startswith('BEGIN'):  # begin bulk
             try:
                 (key, value) = line_upper.split(' ')
@@ -370,9 +398,7 @@ class CaseControlDeck(object):
             value = line
             options = None
             param_type = 'KEY-type'
-        ###
         i += 1
-        #print "done with ",key
         return (i, key, value, options, param_type)
 
     def finish_subcases(self):
@@ -429,7 +455,7 @@ class CaseControlDeck(object):
         return isubcase
 
     def cross_reference(self, model):
-        for (iSubcase, subcase) in sorted(self.subcases.iteritems()):
+        for (isubcase, subcase) in sorted(self.subcases.iteritems()):
             subcase.cross_reference(model)
 
     def get_op2_data(self):
@@ -437,9 +463,9 @@ class CaseControlDeck(object):
         returns the relevant op2 parameters required for a given subcase
         """
         cases = {}
-        for (iSubcase, subcase) in sorted(self.subcases.iteritems()):
-            if iSubcase:
-                cases[iSubcase] = subcase.getOp2Data(self.sol,
+        for (isubcase, subcase) in sorted(self.subcases.iteritems()):
+            if isubcase:
+                cases[isubcase] = subcase.getOp2Data(self.sol,
                                                      subcase.solmap_toValue)
         return cases
 
@@ -447,9 +473,12 @@ class CaseControlDeck(object):
         msg = ''
         subcase0 = self.subcases[0]
         for subcase in self.subcases.itervalues():
+            #print('writing subcase...')
             msg += subcase.write_subcase(subcase0)
-        if len(self.subcases) == 1:
-            msg += 'BEGIN BULK\n'
+        #if len(self.subcases) == 1:
+            #msg += 'BEGIN BULK\n'
+        if self.write_begin_bulk:
+            msg += ' '.join(self.begin_bulk) + '\n'
         return msg
 
     #def parseParam(self,param):
@@ -463,14 +492,14 @@ class CaseControlDeck(object):
 
 
 if __name__ == '__main__':
-    test1()
     lines = [
         'SUBCASE 1',
         '    ACCELERATION(PLOT,PRINT,PHASE) = ALL',
         '    DISPLACEMENT(PLOT,PRINT,PHASE) = ALL',
         '    DLOAD = 32',
         '    M2GG = 111',
-        '    SET 88  = 5, 6, 7, 8, 9, 10 THRU 55 EXCEPT 15, 16, 77, 78, 79, 100 THRU 300',
+        '    SET 88  = 5, 6, 7, 8, 9, 10 THRU 55 EXCEPT 15, 16, 77, 78, 79, '
+        '100 THRU 300',
         '    SET 99  = 1 THRU 10',
         '    SET 105 = 1.009, 10.2, 13.4, 14.0, 15.0',
         '    SET 111 = MAAX1,MAAX2',
@@ -482,13 +511,13 @@ if __name__ == '__main__':
         'BEGIN BULK',
         ]
     deck = CaseControlDeck(lines)
-    deck.create_new_subcase(2)
-    deck.add_parameter_to_local_subcase(1, 'SET 2 = 11,12,13,14,15,16,17,18,'
-       '19,20,21,22,23,24,25,26,'
-       '1000000000000000000000000000000000000000000000000000000,33')
-    print(deck + '\n\n')
+    #deck.create_new_subcase(2)
+    #deck.add_parameter_to_local_subcase(0, 'SET 2 = 11,12,13,14,15,16,17,18,'
+    #   '19,20,21,22,23,24,25,26,'
+    #   '1000000000000000000000000000000000000000000000000000000,33')
+    print('%s\n\n' % deck)
 
-    deck2 = CaseControlDeck(['ACCELERATION(PLOT,PRINT,PHASE) = ALL',
-                             'DISPLACEMENT(PLOT,PRINT,PHASE) = ALL',
-                             'BEGIN BULK'])
-    print('\n\n' + deck2)
+    #deck2 = CaseControlDeck(['ACCELERATION(PLOT,PRINT,PHASE) = ALL',
+    #                         'DISPLACEMENT(PLOT,PRINT,PHASE) = ALL',
+    #                         'BEGIN BULK'])
+    #print('\n\n%s' % deck2)

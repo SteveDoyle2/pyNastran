@@ -15,28 +15,9 @@ This code was written entirely in Python and should install easily.
 
 *** Not done....
 
------------------------v0.6 released 2012/06/??-----------------------
-
-Overall Notes
-   - more PEP-8
-
-Overall BDF
-   - SET-type cards now simplify their output, so [1,2,3,4,5] is written as [1,THRU,5]
-     this includes SET1, SET2, SET3, QBDY3, etc.
-   - fixed bug when parsing THRU cards
-
-
-BDF API Additions
-
-BDF Bug Fixes:
-   - DDVAL card did not write out
-
+--------------------------------Future--------------------------------
 Added BDF
    - *** SET2,PEALST,TIC,DMI,CONM1
-
-Removed BDF
-
-
 
 Overall OP2
    - ***added support for SORT2
@@ -50,6 +31,17 @@ Solver
       - still need to build Kgg/Fg/SPC/MPC matrices, partition matrices, solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
+BDF Bug Fixes
+BDF API Additions
+
+Removed BDF
+
+Overall OP2
+   - added plotting support for "standard" results (***complex)
+      - ***complex results may plot in real/imag or mag/phase or PSD (power spectral density)
+      - ***no temperature, stress, element forces, energy
+
+
 Overall F06 Reader/Writer
 Added F06 Reader
 Added F06 Writer
@@ -59,7 +51,32 @@ Added GUI
 GUI Bug Fixes
 
 
------------------------v0.5 released 2012/08/??-----------------------
+-----------------------v0.6 released 2013/04/??-----------------------
+
+Overall Notes
+   - significant improvement in BDF reader
+   - BDF reader now supports comments.  It's stored on the card._comment
+     variable, but not all cards have one, so use the card.comment() method.
+   - BDF reader verifies types on the card fields (e.g. float is not allowed
+     on integer/blank field)
+   - integrated readBDF_Punch into readBDF method with a punch=True flag
+   - minor bug fixes to OP2 reader
+   - minor bug fixes to F06 reader
+   - more PEP-8
+
+Overall BDF
+   - significant improvement in BDF reader
+   - BDF reader now supports comments.  It's stored on the card._comment
+     variable, but not all cards have one, so use the card.comment() method.
+   - BDF reader verifies types on the card fields (e.g. float is not allowed
+     on integer/blank field)
+   - integrated readBDF_Punch into readBDF method with a punch=True flag
+
+Added BDF
+   - NLPCI, PRAC2D, PRAC3D, PLPLANE
+   - added _verify methods to many cards
+
+-----------------------v0.5 released 2012/08/13-----------------------
 Overall Notes
    - lots of new BDF cards
    - OP2 now supports element real/imaginary forces
@@ -79,7 +96,7 @@ BDF API Changes
    - LOAD objects now have a getReducedLoads() method that determines
      a list of scaleFactors and FORCE/MOMENT/GRAV/etc. cards
 
-BDF Bug Fixes:
+BDF Bug Fixes
    - SPOINTs were lost when cross referenced
    - EIGC, EIGP now stored in self.cMethods instead of self.methods
    - TABRNDG is now in randomTables
@@ -115,12 +132,10 @@ Overall OP2
    - added majority of element forces
    - added majority of element heat fluxes
    - significantly more support for complex results
-   - added plotting support for "standard" results (real/***complex)
+   - added plotting support for "standard" results (real)
       - displacement, velocity, acceleration,
         eigenvectors, spcForces, mpcForces,
         gridPointForces, appliedLoads, loadVectors, forceVectors
-      - ***complex results may plot in real/imag or mag/phase or PSD (power spectral density)
-      - ***no temperature, stress, element forces, energy
 
 OP2 API Changes
    - renamed many of the objects to follow pep-8, shouldn't really affect
@@ -146,10 +161,10 @@ GUI Bug Fixes
 
 
 -----------------------v0.4.1 released Py2.x 2012/06/05-----------------------
-Overall:
+Overall
    - Python 3.x works!
 
-BDF Bug Fixes:
+BDF Bug Fixes
    - coordinte system transpose bug (messed up most coordinate systems)
      affected CORD1R, CORD2R, CORD1C, CORD2C, CORD1S, CORD2S
    - Fluid Structure Interaction coordinate system of -1 is now allowed
@@ -157,11 +172,11 @@ BDF Bug Fixes:
    - better rounding of floats when writing BDF
    - SET3 printing
 
-Added BDF:
+Added BDF
    - coordinate systems in CONM2 are fully supported
    - GRAV card prints out nicer
 
-Added OP2:
+Added OP2
    - GEOM1S, GEOM2S, GEOM3S, GEOM4S tables (for Radioss)
 
 -----------------------v0.4 released 2012/04/23-----------------------

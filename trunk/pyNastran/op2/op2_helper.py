@@ -6,7 +6,7 @@ from numpy import radians, abs, angle  # ,sin, cos
 from cmath import rect  # polar
 
 
-def polarToRealImag(mag, phase):
+def polar_to_real_imag(mag, phase):
     """
     Converts magnitude-phase to real-imaginary
     so all complex results are consistent

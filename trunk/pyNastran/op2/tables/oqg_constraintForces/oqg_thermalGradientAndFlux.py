@@ -1,20 +1,21 @@
 from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
+from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class TemperatureGradientAndFluxObject(TableObject):
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        TableObject.__init__(self, dataCode, isSort1, iSubcase, dt)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, iSubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, isMagPhase=False):
         name = 'spcForces'
-        if self.nonlinearFactor is None:
-            return self._writeMatlab(name, iSubcase, f)
+        if self.nonlinear_factor is None:
+            return self._write_matlab(name, isubcase, f)
         else:
-            return self._writeMatlabTransient(name, iSubcase, f)
+            return self._write_matlab_transient(name, isubcase, f)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
         msg = header + ['                   F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S\n',
                         ' \n',
                         '   ELEMENT-ID   EL-TYPE        X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX\n']
@@ -25,7 +26,7 @@ class TemperatureGradientAndFluxObject(TableObject):
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
             vals = [dx, dy, dz, rx, ry, rz]
-            (vals2, isAllZeros) = self.writeFloats13E(vals)
+            (vals2, isAllZeros) = writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
@@ -36,15 +37,15 @@ class TemperatureGradientAndFluxObject(TableObject):
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         words = ['                   F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S\n',
                  ' \n',
                  '   ELEMENT-ID   EL-TYPE        X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX\n']
-        return self._writeF06TransientBlock(words, header, pageStamp, pageNum, f)
+        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f)
 
     def __reprTransient__(self):
         msg = '---SPC FORCES---\n'
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             msg += 'dt = %g\n' % (self.dt)
 
         headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
@@ -67,15 +68,12 @@ class TemperatureGradientAndFluxObject(TableObject):
                         msg += '%10s ' % (0)
                     else:
                         msg += '%10.2f ' % (val)
-                    ###
                 msg += '\n'
-            ###
         return msg
 
     def __repr__(self):
-        return self.writeF06(['', ''], 'PAGE ', 1)[0]
-
-        if self.nonlinearFactor is not None:
+        return self.write_f06(['', ''], 'PAGE ', 1)[0]
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---SPC FORCES---\n'
@@ -105,20 +103,20 @@ class TemperatureGradientAndFluxObject(TableObject):
 
 
 class ComplexTemperatureGradientAndFluxObject(ComplexTableObject):
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
         asdf
-        ComplexTableObject.__init__(self, dataCode, isSort1, iSubcase, dt)
+        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def writeMatlab(self, iSubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, isMagPhase=False):
         name = 'spcForces'
-        if self.nonlinearFactor is None:
-            return self._writeMatlab(name, iSubcase, f)
+        if self.nonlinear_factor is None:
+            return self._write_matlab(name, isubcase, f)
         else:
-            return self._writeMatlabTransient(name, iSubcase, f)
+            return self._write_matlab_transient(name, isubcase, f)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f, isMagPhase)
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
         msg = header + ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
                         ' \n',
                         '   ELEMENT-ID   EL-TYPE        X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX\n']
@@ -137,7 +135,7 @@ class ComplexTemperatureGradientAndFluxObject(ComplexTableObject):
 
             #vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
             vals = list(translation) + list(rotation)
-            (vals2, isAllZeros) = self.writeFloats13E(vals)
+            (vals2, isAllZeros) = writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
@@ -147,13 +145,13 @@ class ComplexTemperatureGradientAndFluxObject(ComplexTableObject):
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         words = ['                         C O M P L E X   F O R C E S   O F   S I N G L E   P O I N T   C O N S T R A I N T\n']
-        return self._writeF06TransientBlock(words, header, pageStamp, pageNum, f, isMagPhase)
+        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f, isMagPhase)
 
     def __reprTransient__(self):
         msg = '---COMPLEX SPC FORCES---\n'
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             msg += 'dt = %g\n' % (self.dt)
 
         raise RuntimeError('is this valid...')
@@ -178,12 +176,12 @@ class ComplexTemperatureGradientAndFluxObject(ComplexTableObject):
         return msg
 
     def __repr__(self):
-        return self.writeF06(['', ''], 'PAGE ', 1)[0]
-        if self.nonlinearFactor is not None:
+        return self.write_f06(['', ''], 'PAGE ', 1)[0]
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---COMPLEX SPC FORCES---\n'
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             msg += 'dt = %g\n' % (self.dt)
 
         raise RuntimeError('is this valid...')

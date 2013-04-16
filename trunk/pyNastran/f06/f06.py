@@ -2,7 +2,8 @@ import os
 import sys
 from itertools import izip
 
-from pyNastran.general.general import printBadPath
+from pyNastran.utils import print_bad_path
+from pyNastran.utils.log import get_logger
 
 #ComplexEigenvalues,strainEnergyDensity,TemperatureGradientObject
 from pyNastran.op2.tables.oug.oug_eigenvectors import EigenVectorObject  # ,ComplexEigenVectorObject
@@ -14,9 +15,6 @@ from pyNastran.f06.tables.oqg import OQG  # OUG
 from pyNastran.f06.f06_classes import MaxDisplacement  # classes not in op2
 from pyNastran.f06.f06Writer import F06Writer
 
-
-class EndOfFileError(Exception):
-    pass
 
 
 class F06(OES, OUG, OQG, F06Writer):
@@ -35,7 +33,7 @@ class F06(OES, OUG, OQG, F06Writer):
         self.f06FileName = f06FileName
         if not os.path.exists(self.f06FileName):
             msg = 'cant find F06FileName=|%s|\n%s' % (
-                self.f06FileName, printBadPath(self.f06FileName))
+                self.f06FileName, print_bad_path(self.f06FileName))
             raise RuntimeError(msg)
         self.infile = open(self.f06FileName, 'r')
         self.__initAlt__(debug, log)
@@ -133,32 +131,60 @@ class F06(OES, OUG, OQG, F06Writer):
         self.damperForces = {}
         self.solidPressureForces = {}
 
+        #-----------------------------------
+        # OES - stress
+        
+        # rods
         self.rodStrain = {}
         self.nonlinearRodStress = {}
+        
+        # bush
+        self.bushStrain = {}
+
+        # bars/beams
         self.barStrain = {}
+        self.beamStrain = {}
+        
+        # plates
         self.plateStrain = {}
         self.nonlinearPlateStrain = {}
         self.compositePlateStrain = {}
-        self.solidStrain = {}
-        self.beamStrain = {}
         self.ctriaxStrain = {}
         self.hyperelasticPlateStress = {}
 
+        # solids
+        self.solidStrain = {}
+        
+        #-----------------------------------
+        # OES - stress
+        
+        # rods
         self.rodStress = {}
         self.nonlinearRodStrain = {}
+        
+        # bush
+        self.bushStress = {}
+        
+        # bars/beams
         self.barStress = {}
+        self.beamStress = {}
+        
+        # plates
         self.plateStress = {}
         self.nonlinearPlateStress = {}
         self.compositePlateStress = {}
+
+        # solids
         self.solidStress = {}
-        self.beamStress = {}
         self.ctriaxStress = {}
         self.hyperelasticPlateStrain = {}
 
-        # beam, shear...not done
+        # shear...not done
         self.shearStrain = {}
         self.shearStress = {}
 
+        #-----------------------------------
+        # GPSTRESS, GPFORCE
         self.gridPointStresses = {}
         self.gridPointVolumeStresses = {}
         self.gridPointForces = {}
@@ -170,6 +196,8 @@ class F06(OES, OUG, OQG, F06Writer):
         self.iSubcaseNameMap = {}
         self.loadVectors = {}
         self.gridPointForces = {}
+        
+        self.bush1dStressStrain = {}
 
         OES.__init__(self)
         OQG.__init__(self)
@@ -177,32 +205,27 @@ class F06(OES, OUG, OQG, F06Writer):
 
         ## the TITLE in the Case Control Deck
         self.Title = ''
-        self.startLog(log, debug)
+        self.start_log(log, debug)
 
-    def startLog(self, log=None, debug=False):
+    def start_log(self, log=None, debug=False):
         """
         Sets up a dummy logger if one is not provided
         @param self the object pointer
         @param log a python logging object
         @param debug adds debug messages (True/False)
         """
-        if log is None:
-            from pyNastran.general.logger import dummyLogger
-            if debug:
-                word = 'debug'
-            else:
-                word = 'info'
-            loggerObj = dummyLogger()
-            log = loggerObj.startLog(word)  # or info
-        self.log = log
+
+        self.log = get_logger(log, 'debug' if debug else 'info')
 
     def getGridPointSingularities(self):  # @todo not done
         """
+        @code
                     G R I D   P O I N T   S I N G U L A R I T Y   T A B L E
         POINT    TYPE   FAILED      STIFFNESS       OLD USET           NEW USET
          ID            DIRECTION      RATIO     EXCLUSIVE  UNION   EXCLUSIVE  UNION
           1        G      4         0.00E+00          B        F         SB       S    *
           1        G      5         0.00E+00          B        F         SB       S    *
+        @endcode
         """
         pass
 
@@ -211,8 +234,8 @@ class F06(OES, OUG, OQG, F06Writer):
         #print "headers = %s" %(headers)
         data = self.readTable([int, float, float, float, float, float, float])
         #print "max SPC Forces   ",data
-        #self.disp[iSubcase] = DisplacementObject(iSubcase,data)
-        #print self.disp[iSubcase]
+        #self.disp[isubcase] = DisplacementObject(isubcase,data)
+        #print self.disp[isubcase]
 
     def getMaxDisplacements(self):  # @todo not done
         headers = self.skip(2)
@@ -220,17 +243,17 @@ class F06(OES, OUG, OQG, F06Writer):
         data = self.readTable([int, float, float, float, float, float, float])
         #print "max Displacements",data
         disp = MaxDisplacement(data)
-        #print disp.writeF06()
-        #self.disp[iSubcase] = DisplacementObject(iSubcase,data)
-        #print self.disp[iSubcase]
+        #print disp.write_f06()
+        #self.disp[isubcase] = DisplacementObject(isubcase,data)
+        #print self.disp[isubcase]
 
     def getMaxAppliedLoads(self):  # @todo not done
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int, float, float, float, float, float, float])
         #print "max Applied Loads",data
-        #self.disp[iSubcase] = DisplacementObject(iSubcase,data)
-        #print self.disp[iSubcase]
+        #self.disp[isubcase] = DisplacementObject(isubcase,data)
+        #print self.disp[isubcase]
 
     def getGridWeight(self):  # @todo not done
         line = ''
@@ -246,20 +269,20 @@ class F06(OES, OUG, OQG, F06Writer):
 
         #print "subcaseLine = |%r|" %(subcaseName)
         if subcaseName == '':
-            iSubcase = 1
+            isubcase = 1
         else:
-            iSubcase = self.storedLines[-2].strip()[1:]
-            if iSubcase == '':  # no subcase specified
-                iSubcase = 1
+            isubcase = self.storedLines[-2].strip()[1:]
+            if isubcase == '':  # no subcase specified
+                isubcase = 1
             else:
-                iSubcase = int(iSubcase.strip('SUBCASE '))
+                isubcase = int(isubcase.strip('SUBCASE '))
 
-            #assert isinstance(iSubcase,int),'iSubcase=|%r|' %(iSubcase)
-            #print "subcaseName=%s iSubcase=%s" %(subcaseName,iSubcase)
-        self.iSubcaseNameMap[iSubcase] = [subcaseName,
-                                          'SUBCASE %s' % (iSubcase)]
+            #assert isinstance(isubcase,int),'isubcase=|%r|' % (isubcase)
+            #print "subcaseName=%s isubcase=%s" % (subcaseName, isubcase)
+        self.iSubcaseNameMap[isubcase] = [subcaseName,
+                                          'SUBCASE %s' % (isubcase)]
         transient = self.storedLines[-1].strip()
-        isSort1 = False
+        is_sort1 = False
         if transient:
             transWord, transValue = transient.split('=')
             transWord = transWord.strip()
@@ -267,71 +290,76 @@ class F06(OES, OUG, OQG, F06Writer):
             transient = [transWord, transValue]
 
             if transWord == 'LOAD STEP':  # nonlinear statics
-                analysisCode = 10
-            elif transWord == 'TIME STEP':  ## @todo check name
-                analysisCode = 6
+                analysis_code = 10
+            elif transWord == 'TIME STEP':  # TODO check name
+                analysis_code = 6
             elif transWord == 'EIGENVALUE':  # normal modes
-                analysisCode = 2
-            elif transWord == 'FREQ':  ## @todo check name
-                analysisCode = 5
+                analysis_code = 2
+            elif transWord == 'FREQ':  # TODO check name
+                analysis_code = 5
             elif transWord == 'POINT-ID':
-                isSort1 = True
-                analysisCode = None
+                is_sort1 = True
+                analysis_code = None
             else:
                 raise NotImplementedError('transientWord=|%r| is not supported...' % (transWord))
         else:
             transient = None
-            analysisCode = 1
+            analysis_code = 1
 
         dt = None
         if transient is not None:
             dt = transient[1]
-        return (subcaseName, iSubcase, transient, dt, analysisCode, isSort1)
+        return (subcaseName, isubcase, transient, dt, analysis_code, is_sort1)
 
     def getRealEigenvalues(self):
         """
+        @code
                                                    R E A L   E I G E N V A L U E S
          MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
           NO.       ORDER                                                                       MASS              STIFFNESS
               1         1        6.158494E+07        7.847607E+03        1.248985E+03        1.000000E+00        6.158494E+07
+        @endcode
         """
-        (subcaseName, iSubcase, transient, dt, analysisCode,
-            isSort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code,
+            is_sort1) = self.readSubcaseNameID()
 
         headers = self.skip(2)
         data = self.readTable([int, int, float, float, float, float, float])
 
-        if iSubcase in self.eigenvalues:
-            self.eigenvalues[iSubcase].addF06Data(data)
+        if isubcase in self.eigenvalues:
+            self.eigenvalues[isubcase].add_f06_data(data)
         else:
-            self.eigenvalues[iSubcase] = RealEigenvalues(iSubcase)
-            self.eigenvalues[iSubcase].addF06Data(data)
-        self.iSubcases.append(iSubcase)
+            self.eigenvalues[isubcase] = RealEigenvalues(isubcase)
+            self.eigenvalues[isubcase].add_f06_data(data)
+        self.iSubcases.append(isubcase)
 
     def getComplexEigenvalues(self):
         """
+        @code
                                C O M P L E X   E I G E N V A L U E   S U M M A R Y
         ROOT     EXTRACTION                  EIGENVALUE                     FREQUENCY              DAMPING
          NO.        ORDER             (REAL)           (IMAG)                (CYCLES)            COEFFICIENT
              1           6          0.0              6.324555E+01          1.006584E+01          0.0
              2           5          0.0              6.324555E+01          1.006584E+01          0.0
+        @endcode
         """
-        #(subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
-        iSubcase = 1  # @todo fix this...
+        #(subcaseName,isubcase,transient,dt,analysis_code,is_sort1) = self.readSubcaseNameID()
+        isubcase = 1  # @todo fix this...
 
         headers = self.skip(2)
         data = self.readTable([int, int, float, float, float, float])
 
-        if iSubcase in self.eigenvalues:
-            self.eigenvalues[iSubcase].addF06Data(data)
+        if isubcase in self.eigenvalues:
+            self.eigenvalues[isubcase].add_f06_data(data)
         else:
-            isSort1 = True
-            self.eigenvalues[iSubcase] = ComplexEigenvalues(iSubcase)
-            self.eigenvalues[iSubcase].addF06Data(data)
-        self.iSubcases.append(iSubcase)
+            is_sort1 = True
+            self.eigenvalues[isubcase] = ComplexEigenvalues(isubcase)
+            self.eigenvalues[isubcase].add_f06_data(data)
+        self.iSubcases.append(isubcase)
 
     def getRealEigenvectors(self, marker):
         """
+        @code
                                                                                                                SUBCASE 1
         EIGENVALUE =  6.158494E+07
             CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
@@ -340,58 +368,62 @@ class F06(OES, OUG, OQG, F06Writer):
                1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
             2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
 
-        analysisCode = 2 (Normal modes)
-        tableCode    = 7 (Eigenvector)
+        analysis_code = 2 (Normal modes)
+        table_code    = 7 (Eigenvector)
 
-        deviceCode   = 1 (Print)
-        sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
-        formatCode   = 1 (Real)
-        #sCode        = 0 (Stress)
-        numWide      = 8 (???)
+        device_code   = 1 (Print)
+        sort_code     = 0 (Sort2,Real,Sorted Results) => sort_bits = [0,0,0]
+        format_code   = 1 (Real)
+        #s_code        = 0 (Stress)
+        num_wide      = 8 (???)
+        @endcode
         """
-        cycle, iMode = marker.strip(
-        ).split('R E A L   E I G E N V E C T O R   N O .')
+        cycle, iMode = marker.strip().split('R E A L   E I G E N V E C T O R   N O .')
         iMode = int(iMode)
 
         cycles = cycle.strip().split('=')
         #print smarker
-        assert 'CYCLES' == cycles[0].strip(), 'marker=%s' % (marker)
+        assert 'CYCLES' == cycles[0].strip(), 'marker=%s' % marker
         cycle = float(cycles[1])
 
         #print "marker = |%s|" %(marker)
         #subcaseName = '???'
         #print self.storedLines
-        #iSubcase = self.storedLines[-2].strip()[1:]
-        #iSubcase = int(iSubcase.strip('SUBCASE '))
-        #print "subcaseName=%s iSubcase=%s" %(subcaseName,iSubcase)
-        (subcaseName, iSubcase, transient, dt, analysisCode,
-            isSort1) = self.readSubcaseNameID()
+        #isubcase = self.storedLines[-2].strip()[1:]
+        #isubcase = int(isubcase.strip('SUBCASE '))
+        #print "subcaseName=%s isubcase=%s" %(subcaseName,isubcase)
+        (subcaseName, isubcase, transient, dt, analysis_code,
+            is_sort1) = self.readSubcaseNameID()
+        eigenvalue_real = transient[1]
         headers = self.skip(2)
 
-        dataCode = {'log': self.log, 'analysisCode': analysisCode,
-                    'deviceCode': 1, 'tableCode': 7, 'sortCode': 0,
-                    'sortBits': [0, 0, 0], 'numWide': 8, 'formatCode': 1,
-                    'mode': iMode, 'eigr': transient[1], 'modeCycle': cycle,
-                    'dataNames': ['mode', 'eigr', 'modeCycle'],
-                    'name': 'mode', 'tableName': 'OUGV1',
-                    'nonlinearFactor': iMode,
-                    #'sCode':0,
-                    #'elementName':'CBAR','elementType':34,'stressBits':stressBits,
+        data_code = {'log': self.log, 'analysis_code': analysis_code,
+                    'device_code': 1, 'table_code': 7, 'sort_code': 0,
+                    'sort_bits': [0, 0, 0], 'num_wide': 8, 'format_code': 1,
+                    'mode': iMode, 'eigr': eigenvalue_real, 'mode_cycle': cycle,
+                    'dataNames': ['mode', 'eigr', 'mode_cycle'],
+                    'name': 'mode', 'table_name': 'OUGV1',
+                    'nonlinear_factor': iMode,
+                    #'s_code':0,
+                    #'element_name':'CBAR','element_type':34,'stress_bits':stress_bits,
                     }
 
         dataTypes = [int, str, float, float, float, float, float, float]
         data = self.readTable(dataTypes)
 
-        if iSubcase in self.eigenvectors:
-            self.eigenvectors[iSubcase].readF06Data(dataCode, data)
+        print "cycle=%-8s eigen=%s" % (cycle, eigenvalue_real)
+        #print "isubcase = %s" % isubcase
+        if isubcase in self.eigenvectors:
+            self.eigenvectors[isubcase].read_f06_data(data_code, data)
         else:
-            isSort1 = True
-            self.eigenvectors[iSubcase] = EigenVectorObject(dataCode, isSort1,
-                                                            iSubcase, iMode)
-            self.eigenvectors[iSubcase].readF06Data(dataCode, data)
+            is_sort1 = True
+            self.eigenvectors[isubcase] = EigenVectorObject(data_code, is_sort1,
+                                                            isubcase, iMode)
+            self.eigenvectors[isubcase].read_f06_data(data_code, data)
 
     def getElementStrainEnergies(self):
         """
+        @code
         EIGENVALUE = -3.741384E-04
         CYCLES =  3.078479E-03
                                            E L E M E N T   S T R A I N   E N E R G I E S
@@ -402,8 +434,9 @@ class F06(OES, OUG, OQG, F06Writer):
                                     ELEMENT-ID          STRAIN-ENERGY           PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY
                                              1         -5.410134E-08                -0.0929             -4.328107E-05
                                              2         -3.301516E-09                -0.0057             -2.641213E-06
+        @endcode
         """
-        iSubcase = 1 ## @todo not correct
+        isubcase = 1 # TODO not correct
         cycles = self.storedLines[-1][1:].strip()
         cycles = float(cycles.split('=')[1])
 
@@ -445,28 +478,28 @@ class F06(OES, OUG, OQG, F06Writer):
             #print line
 
         return
-        if iSubcase in self.iSubcases:
-            self.strainEnergyDensity[iSubcase].readF06Data(data, transient)
+        if isubcase in self.iSubcases:
+            self.strainEnergyDensity[isubcase].readF06Data(data, transient)
         else:
             sed = strainEnergyDensity(data, transient)
             sed.readF06Data(data, transient)
-            self.strainEnergyDensity[iSubcase] = sed
+            self.strainEnergyDensity[isubcase] = sed
 
     def getTempGradientsFluxes(self):
-        (subcaseName, iSubcase, transient, dt, analysisCode,
-            isSort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code,
+            is_sort1) = self.readSubcaseNameID()
         #print transient
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readGradientFluxesTable()
         #print data
         return
-        if iSubcase in self.temperatureGrad:
-            self.temperatureGrad[iSubcase].addData(data)
+        if isubcase in self.temperatureGrad:
+            self.temperatureGrad[isubcase].addData(data)
         else:
-            self.temperatureGrad[iSubcase] = TemperatureGradientObject(
-                iSubcase, data)
-        self.iSubcases.append(iSubcase)
+            self.temperatureGrad[isubcase] = TemperatureGradientObject(
+                isubcase, data)
+        self.iSubcases.append(isubcase)
 
     def readGradientFluxesTable(self):
         data = []
@@ -515,14 +548,17 @@ class F06(OES, OUG, OQG, F06Writer):
         """
         @param self the object pointer
         @param sline list of strings (split line)
-        @param Format list of types [int,str,float,float,float] that maps to sline
+        @param Format list of types [int,str,float,float,float] that maps to
+          sline
         """
         out = []
         for entry, iFormat in izip(sline, Format):
             try:
                 entry2 = iFormat(entry)
             except:
-                #print "sline=|%s|\n entry=|%s| format=%s" %(sline,entry,iFormat)
+                #print "sline=|%s|\n entry=|%s| format=%s" %(sline, entry,
+                #                                            iFormat)
+                #raise
                 return None
             out.append(entry2)
         return out
@@ -530,9 +566,14 @@ class F06(OES, OUG, OQG, F06Writer):
     def parseLineBlanks(self, sline, Format):
         """allows blanks"""
         out = []
+        
         for entry, iFormat in izip(sline, Format):
             if entry.strip():
-                entry2 = iFormat(entry)
+                try:
+                    entry2 = iFormat(entry)
+                except:
+                    print "sline=|%s|\n entry=|%s| format=%s" %(sline,entry,Format)
+                    raise
             else:
                 entry2 = None
                 #print "sline=|%s|\n entry=|%s| format=%s" %(sline,entry,iFormat)
@@ -540,6 +581,10 @@ class F06(OES, OUG, OQG, F06Writer):
         return out
 
     def readF06(self):
+        """@see read_f06"""
+        self.read_f06()
+
+    def read_f06(self):
         """
         Reads the F06 file
         @param self the object pointer
@@ -570,7 +615,7 @@ class F06(OES, OUG, OQG, F06Writer):
                 if blank == 20:
                     break
             elif self.isMarker(marker):  # marker with space in it (e.g. Model Summary)
-                print("***marker = |%s|" % (marker))
+                print("***marker = |%s|" % marker)
 
             else:
                 blank = 0
@@ -608,7 +653,7 @@ class F06(OES, OUG, OQG, F06Writer):
         self.i += iskip
         return self.infile.readline()
 
-    def printResults(self):
+    def print_results(self):
         msg = ''
         data = [self.displacements, self.spcForces, self.mpcForces, self.temperatures,
                 self.eigenvalues, self.eigenvectors,
@@ -619,10 +664,10 @@ class F06(OES, OUG, OQG, F06Writer):
                 ]
 
         self.iSubcases = list(set(self.iSubcases))
-        for iSubcase in self.iSubcases:
+        for isubcase in self.iSubcases:
             for result in data:
-                if iSubcase in result:
-                    msg += str(result[iSubcase])
+                if isubcase in result:
+                    msg += str(result[isubcase])
         return msg
 
 if __name__ == '__main__':
@@ -631,6 +676,6 @@ if __name__ == '__main__':
     f06 = F06(f06Name)
     f06.readF06()
 
-    f06.writeF06(model + 'f06.out')
-    f06.printResults()
+    f06.write_f06(model + 'f06.out')
+    f06.print_results()
     print("done...")

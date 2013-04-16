@@ -6,49 +6,56 @@ class CodeAsterConverter(BDF):
     """
     Converts a BDF to Code Aster (comm/mail/py files).
     How:
-      * Nodes/Coordinate Systems/Elements/Properties/Materials are
-        directly extracted from the BDF.  All objects must reference
-        each other properly.
-      * Just like Nastran, extra materials/properties are allowed.
-        No idea how Code_Aster handles SPOINTs or unassociated GRIDs.
-      * Loads must be referenced by a single LOAD card in the Case Control deck.
-        This is consistent with standard Nastran.
+     * Nodes/Coordinate Systems/Elements/Properties/Materials are
+       directly extracted from the BDF.  All objects must reference
+       each other properly.
+     * Just like Nastran, extra materials/properties are allowed.
+       No idea how Code_Aster handles SPOINTs or unassociated GRIDs.
+     * Loads must be referenced by a single LOAD card in the Case Control deck.
+       This is consistent with standard Nastran.
 
     Limitations:
-      * All Case Control inputs must come from SUBCASE 1.
-      * LOAD cards must bound FORCEx/MOMENTx/PLOAD4 cards in order for loads to be written
-      * Only SOL 101 (Static)
+    
+     * All Case Control inputs must come from SUBCASE 1.
+     * LOAD cards must bound FORCEx/MOMENTx/PLOAD4 cards in order for loads to be written
+     * Only SOL 101 (Static)
 
     Supported Cards:
-      * GRID, COORDx
-      * LOAD, FORCEx, MOMENTx, PLOAD4
-      * CBAR, CBEAM, CROD, CTUBE, CTETRA, CPENTA, CHEXA,CTRIA3/6, CQUAD4/8
-      * PBAR, PBEAM, PROD, PTUBE, PSOLID, PSHELL
-      * MAT1
-      * GRAV (incorrect writing, but really easy to make it correct given proper format)
+    
+     * GRID, COORDx
+     * LOAD, FORCEx, MOMENTx, PLOAD4
+     * CBAR, CBEAM, CROD, CTUBE, CTETRA, CPENTA, CHEXA,CTRIA3/6, CQUAD4/8
+     * PBAR, PBEAM, PROD, PTUBE, PSOLID, PSHELL
+     * MAT1
+     * GRAV (incorrect writing, but really easy to make it correct given proper format)
 
-    TODO:
-      * PCOMP
-      * SPC, SPC1, MPC
-      * RBE2, RBE3
+    @todo
+      PCOMP,
+      SPC, SPC1, MPC,
+      RBE2, RBE3
     """
     def __init__(self, language='english'):
         self.language = 'english'
         BDF.__init__(self)
 
     def getElementsByPid(self):
-        """builds a dictionary where the key is the property ID and the value is a list of element IDs"""
+        """
+        builds a dictionary where the key is the property ID and the value is
+        a list of element IDs
+        """
         props = {}
         for pid in self.properties:
             props[pid] = []
         for eid, element in self.elements.iteritems():
             pid = element.Pid()
             props[pid].append(eid)
-        ###
         return mats
 
     def getElementsByMid(self):
-        """builds a dictionary where the key is the material ID and the value is a list of element IDs"""
+        """
+        builds a dictionary where the key is the material ID and the value is
+        a list of element IDs
+        """
         mats = {0: []}
 
         for mid in self.materials:
@@ -59,11 +66,13 @@ class CodeAsterConverter(BDF):
                 mats[mid].append(eid)
             except:
                 mats[0].append(eid)
-        ###
         return mats
 
     def getElementsByType(self):
-        """builds a dictionary where the key is the element type and the value is a list of element IDs"""
+        """
+        builds a dictionary where the key is the element type and the value is
+        a list of element IDs
+        """
         elems = {}
         #for eid,elements in self.elements:
             #elems[eid] = []
@@ -75,7 +84,6 @@ class CodeAsterConverter(BDF):
             elems[Type].append(eid)
             #mid = element.Mid()
             #mats[mid].append(eid)
-        ###
         return elems
 
     def getPropertiesByMid(self):
@@ -90,7 +98,6 @@ class CodeAsterConverter(BDF):
                 mats[mid].append(pid)
             except:
                 mats[0].append(pid)
-        ###
         return mats
 
     def CA_Executive(self):
@@ -137,7 +144,6 @@ class CodeAsterConverter(BDF):
         for nid, node in sorted(self.nodes.iteritems()):
             p = node.Position()
             mail += form % (gridWord, nid, p[0], p[1], p[2])
-        ###
         mail += 'FINSF\n\n'
         mail += self.breaker()
         return mail
@@ -199,7 +205,7 @@ class CodeAsterConverter(BDF):
                 isSkipped = False
                 if 'skipped' in prop:
                     isSkipped = True
-            ###
+
         if not isSkipped:
             comm = comm[:-2]
         comm += ');\n'
@@ -238,12 +244,14 @@ class CodeAsterConverter(BDF):
 
     def CA_MaterialField(self):
         """
+        @code
         MtrlFld=AFFE_MATERIAU(MAILLAGE=MESH,
                               AFFE=(_F(GROUP_MA=('P32','P33','P42','P43','P46','P47','P48','P49','P61','P62','P63','P64','P65','P74',
                                                  'P75',),
                                        MATER=M3,),
                                     _F(GROUP_MA=('P11','P13','P14','P15','P55','P56','P59',),
                                        MATER=M6,),
+        @endcode
         """
         comm = ''
         comm += '# CA_MaterialField\n'
@@ -259,9 +267,8 @@ class CodeAsterConverter(BDF):
                 comm += "'P%s'," % (pid)
             comm = comm[:-1] + '),\n'
             comm += "                      MATER=M%s),\n" % (mid)
-        ###
-        comm = comm[:-1] + '));\n'
 
+        comm = comm[:-1] + '));\n'
         comm += self.breaker()
         return comm
 
@@ -273,7 +280,7 @@ class CodeAsterConverter(BDF):
         #else:
             #comm += ''
 
-        iSubcase = 1
+        isubcase = 1
         paramName = 'LOAD'
 
         #skippedLids = {}
@@ -282,7 +289,7 @@ class CodeAsterConverter(BDF):
             #loadKeys = self.loads.keys()
 
             key = self.caseControlDeck.getSubcaseParameter(
-                iSubcase, paramName)[0]
+                isubcase, paramName)[0]
             loadcase = self.loads[key]
             #print loadcase
             for i, load in enumerate(loadcase):
@@ -301,12 +308,9 @@ class CodeAsterConverter(BDF):
                 #except:
                     #print 'failed printing load...type=%s key=%s' %(load.type,key)
                     #raise
-                ###
             #loadcase.
             #for ID,grav in sorted(self.gravs.iteritems()):
             #    comm += grav.writeCodeAster(mag)
-            ###
-        ###
 
         #for lid_loadType,commi in sorted(skippedLids.iteritems()):
             #comm += commi
@@ -378,7 +382,6 @@ class CodeAsterConverter(BDF):
             print "writing fname=%s" % (fname + '.py')
             f.write(pyCA)
             f.close()
-        ###
 
 
 def main():

@@ -1,9 +1,14 @@
 # pylint: disable=C0103,R0201
-import sys
-import warnings
+"""
+Subcase creation/extraction class
+"""
+#import sys
 
 
 class Subcase(object):
+    """
+    Subcase creation/extraction class
+    """
     solCodeMap = {
         1: 101,
         21: 101,
@@ -27,15 +32,16 @@ class Subcase(object):
 
     def get_stress_code(self, key, options, value):
         """
-        @note
-          the individual element must take the stress_code and reduce it to
-          what the element can return.  For example, for an isotropic CQUAD4
-          the fiber field doesnt mean anything.
+        Method get_stress_code:
+        @note the individual element must take the stress_code and reduce it to
+         what the element can return.  For example, for an isotropic CQUAD4
+         the fiber field doesnt mean anything.
 
-        BAR       - no von mises/fiber
+        BAR - no von mises/fiber
         ISOTROPIC - no fiber
 
-        @todo how does the MATERIAL bit get turned on?  I'm assuming it's element dependent...
+        @todo how does the MATERIAL bit get turned on?  I'm assuming it's
+         element dependent...
         """
         stress_code = 0
         if 'VONMISES' in options:
@@ -50,42 +56,57 @@ class Subcase(object):
 
     def get_format_code(self, options, value):
         """
-        returns the format code that will be used by the op2 based on
+        Gets the format code that will be used by the op2 based on
         the options
-        @todo not done...only supports REAL, IMAG, PHASE
+        @param self the Subcase object
+        @param options the options for a parameter
+        @param value the value of the parameter
+        @todo not done...only supports REAL, IMAG, PHASE, not RANDOM
         """
-        formatCode = 0
+        format_code = 0
         if 'REAL' in options:
-            formatCode += 1
+            format_code += 1
         if 'IMAG' in options:
-            formatCode += 2
+            format_code += 2
         if 'PHASE' in options:
-            formatCode += 4
-        formatCode = max(formatCode, 1)
-        return formatCode
+            format_code += 4
+        format_code = max(format_code, 1)
+        return format_code
 
     def get_sort_code(self, options, value):
-        sortCode = 0
+        """
+        Gets the sort code of a given set of options and value
+        @param self the Subcase object
+        @param options the options for a parameter
+        @param value the value of the parameter
+        """
+        sort_code = 0
         if 'COMPLEX' in options:
-            sortCode += 1
+            sort_code += 1
         if 'SORT2' in options:
-            sortCode += 2
+            sort_code += 2
         if 'RANDOM' in options:
-            sortCode += 4
-        return sortCode
+            sort_code += 4
+        return sort_code
 
     def get_device_code(self, options, value):
-        deviceCode = 0
+        """
+        Gets the device code of a given set of options and value
+        @param self the Subcase object
+        @param options the options for a parameter
+        @param value the value of the parameter
+        """
+        device_code = 0
         if 'PRINT' in options:
-            deviceCode += 1
+            device_code += 1
         if 'PLOT' in options:
-            deviceCode += 2
+            device_code += 2
         if 'PUNCH' in options:
-            deviceCode += 4
-        deviceCode = max(deviceCode, 1)
-        #if deviceCode==0:
-        #    deviceCode=1  # PRINT
-        return deviceCode
+            device_code += 4
+        device_code = max(device_code, 1)
+        #if device_code==0:
+        #    device_code=1  # PRINT
+        return device_code
 
     def get_analysis_code(self, sol):
         """
@@ -118,27 +139,36 @@ class Subcase(object):
             159: 6,  # transient thermal
         }
         #print "sol=%s" %(sol)
-        approachCode = codes[sol]
-        #print 'approachCode = ',approachCode
-        return approachCode
+        approach_code = codes[sol]
+        #print 'approach_code = ',approach_code
+        return approach_code
 
-    def get_table_code(self, sol, tableName, options):
-        if tableName in ['VECTOR', 'PRESSURE']:
-            tableName = 'DISPLACEMENT'  # equivalent tables...
+    def get_table_code(self, sol, table_name, options):
+        """
+        Gets the table code of a given parameter.  For example, the
+        DISPLACMENT(PLOT,POST)=ALL makes an OUGV1 table and stores the
+        displacement.  This has an OP2 table code of 1, unless you're running a
+        modal solution, in which case it makes an OUGV1 table of eigenvectors
+        and has a table code of 7.
 
-        key = (sol, tableName)
-        tables = {  # SOL, tableName      tableCode
+        @param self the Subcase object
+        @param options the options for a parameter
+        @param value the value of the parameter
+        """
+        if table_name in ['VECTOR', 'PRESSURE']:
+            table_name = 'DISPLACEMENT'  # equivalent tables...
 
-            (101, 'ACCELERATION'): 11,
+        key = (sol, table_name)
+        tables = {  # SOL, table_name      table_code
+                  (101, 'ACCELERATION'): 11,
                   (103, 'ACCELERATION'): 11,
                   (106, 'ACCELERATION'): 11,
                   (107, 'ACCELERATION'): 11,
                   (108, 'ACCELERATION'): 11,
                   (129, 'ACCELERATION'): 11,
-                 #(144,'ACCELERATION'): 11,
+                 #(144, 'ACCELERATION'): 11,
                   (145, 'ACCELERATION'): 11,
                   (146, 'ACCELERATION'): 11,
-
 
                   (101, 'DISPLACEMENT'): 1,
                   (103, 'DISPLACEMENT'): 7,  # VECTOR
@@ -150,7 +180,7 @@ class Subcase(object):
                   (111, 'DISPLACEMENT'): 7,
                   (112, 'DISPLACEMENT'): 1,
                   (129, 'DISPLACEMENT'): 7,
-                 #(144,'DISPLACEMENT'): 1,
+                 #(144, 'DISPLACEMENT'): 1,
                   (145, 'DISPLACEMENT'): 1,
                   (146, 'DISPLACEMENT'): 1,
 
@@ -218,7 +248,7 @@ class Subcase(object):
                   (108, 'MPCFORCES'): 3,
                   (112, 'MPCFORCES'): 3,
                   (129, 'MPCFORCES'): 3,
-                 #(144,'MPCFORCES'):    3,
+                 #(144, 'MPCFORCES'): 3,
                   (145, 'MPCFORCES'): 3,
                   (146, 'MPCFORCES'): 3,
 
@@ -231,7 +261,7 @@ class Subcase(object):
                   (111, 'OLOAD'): 2,
                   (112, 'OLOAD'): 2,
                   (129, 'OLOAD'): 2,
-                 #(144,'OLOAD'):        2,
+                 #(144, 'OLOAD'): 2,
                   (145, 'OLOAD'): 2,
                   (146, 'OLOAD'): 2,
 
@@ -245,7 +275,7 @@ class Subcase(object):
                   (111, 'SPCFORCES'): 3,
                   (112, 'SPCFORCES'): 3,
                   (129, 'SPCFORCES'): 3,
-                 #(144,'SPCFORCES'):    3,
+                 #(144, 'SPCFORCES'): 3,
                   (145, 'SPCFORCES'): 3,
                   (146, 'SPCFORCES'): 3,
 
@@ -294,7 +324,7 @@ class Subcase(object):
                   (111, 'VELOCITY'): 10,
                   (112, 'VELOCITY'): 10,
                   (129, 'VELOCITY'): 10,
-                 #(144,'VELOCITY'):    10,
+                 #(144, 'VELOCITY'): 10,
                   (145, 'VELOCITY'): 10,
                   (146, 'VELOCITY'): 10,
 
@@ -304,59 +334,90 @@ class Subcase(object):
         print("key=%s" % (str(key)))
         if key not in tables:
             raise KeyError(key)
-        tableCode = tables[key]
-        return tableCode
+        table_code = tables[key]
+        return table_code
 
     def has_parameter(self, paramName):
+        """
+        Checks to see if a parameter name is in the subcase.
+        @param self the Subcase object
+        """
         if paramName in self.params:
             return True
         return False
 
     def get_parameter(self, paramName):
+        """
+        Gets the [value, options] for a subcase.
+        @param self the Subcase object
+        """
         paramName = self.update_param_name(paramName)
         if paramName not in self.params:
-            raise KeyError('%s doesnt exist in subcase=%s in the case control deck.' % (paramName, self.id))
+            raise KeyError('%s doesnt exist in subcase=%s in the case '
+                           'control deck.' % (paramName, self.id))
         return self.params[paramName][0:2]
 
     def update_param_name(self, param_name):
         """
-        takes an abbreviated name and expands it so the user can type DISP or
+        Takes an abbreviated name and expands it so the user can type DISP or
         DISPLACEMENT and get the same answer
         @param self
-          the subcase object
+          the Subcase object
         @param param_name
           the parameter name to be standardized (e.g. DISP vs. DIPLACEMENT)
         @todo not a complete list
         """
-        if   param_name.startswith('ACCE'):  param_name = 'ACCELERATION'
-        elif param_name.startswith('DESO'):  param_name = 'DESOBJ'
-        elif param_name.startswith('DESS'):  param_name = 'DESSUB'
-        elif param_name.startswith('DISP'):  param_name = 'DISPLACEMENT'
-        elif param_name.startswith('EXPO'):  param_name = 'EXPORTLID'
-        elif param_name.startswith('ELFO'):  param_name = 'FORCE'
-        elif param_name.startswith('FORC'):  param_name = 'FORCE'
-        elif param_name.startswith('FREQ'):  param_name = 'FREQUENCY'
-        elif param_name.startswith('GPFO'):  param_name = 'GPFORCE'
-        elif param_name == 'GPST':           raise SyntaxError('invalid GPST stress/strain')
-        elif param_name.startswith('METH'):  param_name = 'METHOD'
-        elif param_name.startswith('MPCF'):  param_name = 'MPCFORCES'
-        elif param_name.startswith('OLOA'):  param_name = 'OLOAD'
-        elif param_name.startswith('PRES'):  param_name = 'PRESSURE'
-
-        elif param_name.startswith('SPCF'):  param_name = 'SPCFORCES'
-
-        elif param_name.startswith('STRA'):  param_name = 'STRAIN'
-        elif param_name.startswith('STRE'):  param_name = 'STRESS'
-        elif param_name.startswith('SUPO'):  param_name = 'SUPORT1'
-        elif param_name.startswith('SVEC'):  param_name = 'SVECTOR'
-        elif param_name.startswith('THER'):  param_name = 'THERMAL'
-        elif param_name.startswith('VECT'):  param_name = 'VECTOR'
-        elif param_name.startswith('VELO'):  param_name = 'VELOCITY'
+        if   param_name.startswith('ACCE'):
+            param_name = 'ACCELERATION'
+        elif param_name.startswith('DESO'):
+            param_name = 'DESOBJ'
+        elif param_name.startswith('DESS'):
+            param_name = 'DESSUB'
+        elif param_name.startswith('DISP'):
+            param_name = 'DISPLACEMENT'
+        elif param_name.startswith('EXPO'):
+            param_name = 'EXPORTLID'
+        elif param_name.startswith('ELFO'):
+            param_name = 'FORCE'
+        elif param_name.startswith('FORC'):
+            param_name = 'FORCE'
+        elif param_name.startswith('FREQ'):
+            param_name = 'FREQUENCY'
+        elif param_name.startswith('GPFO'):
+            param_name = 'GPFORCE'
+        elif param_name == 'GPST':
+            raise SyntaxError('invalid GPST stress/strain')
+        elif param_name.startswith('METH'):
+            param_name = 'METHOD'
+        elif param_name.startswith('MPCF'):
+            param_name = 'MPCFORCES'
+        elif param_name.startswith('OLOA'):
+            param_name = 'OLOAD'
+        elif param_name.startswith('PRES'):
+            param_name = 'PRESSURE'
+        elif param_name.startswith('SPCF'):
+            param_name = 'SPCFORCES'
+        elif param_name.startswith('STRA'):
+            param_name = 'STRAIN'
+        elif param_name.startswith('STRE'):
+            param_name = 'STRESS'
+        elif param_name.startswith('SUPO'):
+            param_name = 'SUPORT1'
+        elif param_name.startswith('SVEC'):
+            param_name = 'SVECTOR'
+        elif param_name.startswith('THER'):
+            param_name = 'THERMAL'
+        elif param_name.startswith('VECT'):
+            param_name = 'VECTOR'
+        elif param_name.startswith('VELO'):
+            param_name = 'VELOCITY'
 
         #elif param_name.startswith('DFRE'):  param_name = 'D'
-        #elif param_name.startswith('TEMP'):  param_name = 'TEMPERATURE'  # handled in caseControlDeck.py
+
+        # handled in caseControlDeck.py
+        #elif param_name.startswith('TEMP'):  param_name = 'TEMPERATURE'
         #print '*param_name = ',param_name
-        return  param_name
+        return param_name
 
     def _add_data(self, key, value, options, param_type):
         key = self.update_param_name(key)
@@ -371,7 +432,7 @@ class Subcase(object):
 
     def _simplify_data(self, key, value, options, param_type):
         if param_type == 'SET-type':
-            #print("adding iSubcase=%s key=|%s| value=|%s| options=|%s| "
+            #print("adding isubcase=%s key=|%s| value=|%s| options=|%s| "
             #      "param_type=%s" %(self.id, key, value, options, param_type))
             values2 = []
             for (i, ivalue) in enumerate(value):
@@ -394,17 +455,16 @@ class Subcase(object):
             return (key, values2, options)
 
         elif param_type == 'CSV-type':
-            #print("adding iSubcase=%s key=|%s| value=|%s| options=|%s| "
+            #print("adding isubcase=%s key=|%s| value=|%s| options=|%s| "
             #      "param_type=%s" %(self.id, key, value, options, param_type))
             if value.isdigit():  # PARAM,DBFIXED,-1
                 value = value
-            ###
         else:
-            #a = 'key=|%s|'       %(key)
-            #b = 'value=|%s|'     %(value)
-            #c = 'options=|%s|'   %(options)
-            #d = 'param_type=|%s|' %(param_type)
-            #print("_adding iSubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a,
+            #a = 'key=|%s|'       % key
+            #b = 'value=|%s|'     % value
+            #c = 'options=|%s|'   % options
+            #d = 'param_type=|%s|' % param_type
+            #print("_adding isubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a,
             #                                                      b, c, d))
             if isinstance(value, int) or value is None:
                 pass
@@ -416,8 +476,8 @@ class Subcase(object):
     def get_op2_data(self, sol, solmap_toValue):
         self.sol = sol
         label = 'SUBCASE %s' % (self.id)
-        op2Params = {'iSubcase': None, 'tables': [], 'analysisCodes': [],
-                     'deviceCodes': [], 'sortCodes': [], 'tableCodes': [],
+        op2Params = {'isubcase': None, 'tables': [], 'analysisCodes': [],
+                     'device_codes': [], 'sortCodes': [], 'tableCodes': [],
                      'label': label, 'subtitle': None, 'title': None,
                      'formatCodes': [], 'stressCodes': [], 'thermal': None}
 
@@ -456,16 +516,16 @@ class Subcase(object):
             #msg = ("  *key=|%s| value=|%s| options=%s paramType=|%s|"
             #    % (key, value, options, paramType)
             #print(msg)
-            #msg += self.printParam(key, param, printBeginBulk=False)
+            #msg += self.printParam(key, param)
             if paramType == 'SUBCASE-type':
-                op2Params['iSubcase'].append(value)
+                op2Params['isubcase'].append(value)
             elif key in ['BEGIN', 'ECHO', 'ANALYSIS'] or 'SET' in key:
                 pass
             elif key == 'TEMPERATURE':
                 thermal = 1
             elif key in results:
-                sortCode = self.get_sort_code(options, value)
-                deviceCode = self.get_device_code(options, value)
+                sort_code = self.get_sort_code(options, value)
+                device_code = self.get_device_code(options, value)
 
                 if key in ['STRESS', 'STRAIN']:
                     stressCode = self.get_stress_code(key, options, value)
@@ -473,20 +533,21 @@ class Subcase(object):
                 else:
                     op2Params['stressCodes'].append(0)
 
-                formatCode = self.get_format_code(options, value)
-                tableCode = self.get_table_code(sol, key, options)
-                analysisCode = self.get_analysis_code(sol)
+                format_code = self.get_format_code(options, value)
+                table_code = self.get_table_code(sol, key, options)
+                analysis_code = self.get_analysis_code(sol)
 
-                approachCode = analysisCode * 10 + deviceCode
-                tCode = tableCode * 1000 + sortCode
+                approach_code = analysis_code * 10 + device_code
+                tCode = table_code * 1000 + sort_code
                 op2Params['tables'].append(key)
 
-                op2Params['analysisCodes'].append(analysisCode)
-                #op2Params['approachCodes'].append(approachCode)
-                op2Params['deviceCodes'].append(deviceCode)
-                op2Params['formatCodes'].append(formatCode)
-                op2Params['sortCodes'].append(sortCode)
-                op2Params['tableCodes'].append(tableCode)
+                op2Params['analysisCodes'].append(analysis_code)
+                op2Params['approachCodes'].append(approach_code)
+                op2Params['device_codes'].append(device_code)
+                op2Params['formatCodes'].append(format_code)
+                op2Params['sortCodes'].append(sort_code)
+                op2Params['tableCodes'].append(table_code)
+                op2Params['tCodes'].append(tCode)
                 #analysisMethod = value
 
             #elif key in ['ADACT', 'ADAPT', 'AERCONFIG', 'TITLE', 'SUBTITLE',
@@ -495,11 +556,10 @@ class Subcase(object):
             #            'DESOBJ', 'DESSUB', 'FMETHOD', 'SEALL']:
             else:
                 op2Params[key.lower()] = value
-            ###
+
             #else:
             #    raise NotImplementedErrror('unsupported entry...\n%s' %(msg))
-            ###
-        ###
+
         op2Params['thermal'] = thermal
 
         print("\nThe estimated results...")
@@ -507,7 +567,7 @@ class Subcase(object):
             if value is not None:
                 print("   key=|%s| value=|%s|" % (key, value))
 
-    def print_param(self, key, param, printBeginBulk=True):
+    def print_param(self, key, param):
         """
         Prints a single entry of the a subcase from the global or local
         subcase list.
@@ -523,7 +583,6 @@ class Subcase(object):
         if param_type == 'SUBCASE-type':
             if self.id > 0:
                 msg += 'SUBCASE %s\n' % (self.id)
-            ###
             #else:  global subcase ID=0 and is not printed
             #    pass
         elif param_type == 'KEY-type':
@@ -545,15 +604,6 @@ class Subcase(object):
                 msg += '%s = %s\n' % (key, value)
             msg = spaces + msg
 
-        elif param_type == 'BEGIN_BULK-type':
-            msg += '%s %s\n' % (key, value)
-            if 'BEGIN BULK' not in msg:
-                msg = spaces + msg
-            elif printBeginBulk:
-                pass
-            else:
-                msg = ''
-
         elif param_type == 'SET-type':
             ## @todo collapse data...not written yet
             starter = 'SET %s = ' % (options)
@@ -570,7 +620,6 @@ class Subcase(object):
                     msg2 = ' ' * nChars + newString
                 else:
                     msg2 += newString
-                ###
                 i += 1
 
             msg += msg2.rstrip(' \n,') + '\n'
@@ -581,8 +630,9 @@ class Subcase(object):
         #print "msg = |%r|" %(msg)
         return msg
 
-    def crossReference(self, mesh):
+    def cross_reference(self, model):
         """
+        Method crossReference:
         @note
           this is not integrated and probably never will be as it's not
           really that necessary.  it's only really useful when running an
@@ -591,37 +641,37 @@ class Subcase(object):
         print("keys = %s" % (sorted(self.params.keys())))
         if 'LOAD' in self.params:
             loadID = self.params['LOAD'][0]
-            loadObj = mesh.loads[loadID]
-            loadObj.cross_reference(mesh)
+            loadObj = model.loads[loadID]
+            loadObj.cross_reference(model)
         if 'SUPORT' in self.params:
             pass
         if 'MPC' in self.params:
             #mpcID = self.params['MPC'][0]
-            #mpcObj = mesh.mpcs[mpcID]
-            #mpcObj.cross_reference(mesh)
+            #mpcObj = model.mpcs[mpcID]
+            #mpcObj.cross_reference(model)
             pass
         if 'SPC' in self.params:
             #spcID = self.params['SPC'][0]
             #print "SPC ID = ",spcID
-            #spcObj = mesh.spcObject
-            #spcObj.cross_reference(spcID,mesh)
+            #spcObj = model.spcObject
+            #spcObj.cross_reference(spcID, model)
             pass
         if 'TSTEPNL' in self.params:
             tstepnlID = self.params['TSTEPNL'][0]
-            tstepnlObj = mesh.tstepnl[tstepnlID]
-            tstepnlObj.cross_reference(mesh)
+            tstepnlObj = model.tstepnl[tstepnlID]
+            tstepnlObj.cross_reference(model)
         if 'NLPARM' in self.params:
             nlparmID = self.params['NLPARM'][0]
-            nlparmObj = mesh.nlparms[nlparmID]
-            nlparmObj.cross_reference(mesh)
+            nlparmObj = model.nlparms[nlparmID]
+            nlparmObj.cross_reference(model)
         if 'TRIM' in self.params:
             trimID = self.params['TRIM'][0]
-            trimObj = mesh.trims[trimID]
-            trimObj.cross_reference(mesh)
+            trimObj = model.trims[trimID]
+            trimObj.cross_reference(model)
         if 'GUST' in self.params:
             gustID = self.params['GUST'][0]
-            gustObj = mesh.gusts[gustID]
-            gustObj.cross_reference(mesh)
+            gustObj = model.gusts[gustID]
+            gustObj.cross_reference(model)
         if 'DLOAD' in self.params:  # ???
             pass
 
@@ -644,50 +694,39 @@ class Subcase(object):
             msg = str(self)
         else:
             msg = 'SUBCASE %s\n' % (self.id)
+            nparams = 0
             for (key, param) in self.subcase_sorted(self.params.items()):
                 if key in subcase0.params and subcase0.params[key] == param:
                     pass  # dont write global subcase parameters
                 else:
-                    if 'key' == 'BEGIN':
-                        continue
-                    else:
-                        #print "key=%s param=%s" %(key, param)
-                        (value, options, paramType) = param
-                        #print("  *key=|%s| value=|%s| options=%s "
-                        #      "paramType=|%s|" % (key, value, options,
-                        msg += self.print_param(key, param,
-                                                printBeginBulk=False)
-                        #print ""
-                    ###
-                ###
-
-        ## self.id>0 and 'BEGIN' in self.params used to prevent printing of
-        ## BEGIN BULK multiple times
-        if self.id > 0 and 'BEGIN' in self.params:
-            msg += self.print_param('BEGIN', self.params['BEGIN'])
+                    #print("key=%s param=%s" %(key, param))
+                    (value, options, paramType) = param
+                    #print("  *key=|%s| value=|%s| options=%s "
+                          #"paramType=|%s|" % (key, value, options, paramType))
+                    msg += self.print_param(key, param)
+                    nparams += 1
+                    #print ""
+            assert nparams > 0, 'No subcase paramters are defined for isubcase=%s...' % self.id
         return msg
 
-    def subcase_sorted(self, listA):
+    def subcase_sorted(self, lst):
         """
         Does a "smart" sort on the keys such that SET cards increment in
         numerical order.  Also puts the sets first.
-        @param self
-          the subcase object
-        @param listA
-          the list of subcase list objects
-        @retval listB
-          the sorted version of listA
+        @param self the Subcase object
+        @param lst the list of subcase list objects
+        @retval listB the sorted version of listA
         """
         # presort the list to put all the SET cards next to each other
-        listA.sort()
+        # instead of listA.sort() as it allows lst to be any iterable
+        lst = sorted(lst) 
 
-        i = 0  # needed in case the loop doesnt execute
+        i = 0  # needed in case the loop doesn't execute
         iSet = None  # index of first SET card in the deck
         setDict = {}
         listBefore = []
-        listAfter = []
         setKeys = []
-        for (i, entry) in enumerate(listA):
+        for (i, entry) in enumerate(lst):
             key = entry[0]
             if 'SET' in key[0:3]:
                 if key == 'SET':  # handles "SET = ALL"
@@ -706,7 +745,7 @@ class Subcase(object):
                     break
 
         # grab the other entries
-        listAfter = listA[i + 1:]
+        listAfter = lst[i + 1:]
 
         # write the SET cards in a sorted order
         setList = []
@@ -714,29 +753,30 @@ class Subcase(object):
             setList.append(setDict[key])
 
         # combine all the cards
-        listB =  setList + listBefore + listAfter
+        listB = setList + listBefore + listAfter
         return listB
 
     def __repr__(self):
         """
-        Prints out every entry in the subcase.  Skips parameters already in
+        Prints out EVERY entry in the subcase.  Skips parameters already in
         the global subcase.
+        
+        @note this function is only used for debugging.
         """
         #msg = "-------SUBCASE %s-------\n" %(self.id)
         msg = ''
         if self.id > 0:
             msg += 'SUBCASE %s\n' % (self.id)
 
+        nparams = 0
         for (key, param) in self.subcase_sorted(self.params.items()):
-            if 'key' == 'BEGIN':
-                continue
-            else:
-                #print "key=%s param=%s" %(key,param)
-                (value, options, paramType) = param
-                #print "  ?*key=|%s| value=|%s| options=%s paramType=|%s|" %(key,value,options,paramType)
-                msg += self.print_param(key, param, printBeginBulk=False)
-                #print ""
-
-        if self.id > 0 and 'BEGIN' in self.params:  # prevents 2 BEGIN BULKs
-            msg += self.print_param('BEGIN', self.params['BEGIN'])
+            #print("key=%s param=%s" %(key,param))
+            (value, options, paramType) = param
+            #print("  ?*key=|%s| value=|%s| options=%s paramType=|%s|"
+            #      %(key,value,options,paramType))
+            msg += self.print_param(key, param)
+            #print ""
+            nparams += 1
+        if self.id > 0:
+            assert nparams > 0, 'No subcase paramters are defined for isubcase=%s...' % self.id
         return msg

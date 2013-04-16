@@ -108,8 +108,7 @@ def makeM(pdV, NT, factorI=1, levels=1):
             M6 = M5p1 - M5m1
             M2 = M6
             print "M6 = ", M6
-        ###
-    ###
+
     print "pdV = ", pdV
     MM = pdV * M2
     MM.simplify()

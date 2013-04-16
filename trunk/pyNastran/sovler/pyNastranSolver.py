@@ -5,7 +5,7 @@ from itertools import izip
 from numpy import array, zeros, ones
 from numpy.linalg import solve
 
-from pyNastran.general.generalMath import printMatrix, printAnnotatedMatrix
+from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 from pyNastran.bdf.bdf import BDF, SPC, SPC1
 from pyNastran.f06.f06 import F06
 from pyNastran.op2.op2 import OP2
@@ -77,7 +77,7 @@ def partition_sparse_vector(F, dofs):
 
 def departition_dense_vector(n, IsVs):
     V = zeros(n)
-    for IV in IVs:
+    for IV in IsVs:
         (Is, Vs) = IV
         for (i, v) in izip(Is, Vs):
             V[i] = v
@@ -127,7 +127,7 @@ class Solver(F06, OP2):
         self.nUs = 0
         self.nUm = 0
 
-        # displacments
+        # displacements
         self.U = []
         self.Us = []
         self.Um = []
@@ -137,7 +137,7 @@ class Solver(F06, OP2):
         self.iUm = []
 
     def solve(self, K, F):  # can be overwritten
-        """solves \f$ [K]{x} = {F}\f$ for \f${x}\f$"""
+        r"""solves \f$ [K]{x} = {F}\f$ for \f${x}\f$"""
         print("--------------")
         print("Kaa_norm = \n" + str(K / 250000.))
         print("--------------")
@@ -178,7 +178,7 @@ class Solver(F06, OP2):
     def runCase(self, model, case):
         sols = {101: self.runSOL101}
 
-        iSubcase = case.id
+        isubcase = case.id
         if model.sol in sols:
             if case.hasParameter('TITLE'):
                 (self.Title, options) = case.get_parameter('TITLE')
@@ -188,7 +188,7 @@ class Solver(F06, OP2):
                 (self.Subtitle, options) = case.get_parameter('SUBTITLE')
             else:
                 self.Subtitle = 'DEFAULT'
-            self.iSubcaseNameMap[iSubcase] = [self.Title, self.Subtitle]
+            self.iSubcaseNameMap[isubcase] = [self.Title, self.Subtitle]
 
             sols[model.sol](model, case)
         else:
@@ -267,7 +267,7 @@ class Solver(F06, OP2):
         print("U = ", U)
         print("iUs   = ", self.iUs)
 
-        ## @todo handle MPCs
+        # TODO handle MPCs
         for (i, iu) in enumerate(self.iUs):
             U[iu] = self.Us[i]
         for (i, iu) in enumerate(dofsA):
@@ -287,19 +287,19 @@ class Solver(F06, OP2):
         """
         self.iSubcases = []
         #self.log = None
-        analysisCode = 1
+        analysis_code = 1
         transient = False
-        iSubcase = case.id
-        isSort1 = False
+        isubcase = case.id
+        is_sort1 = False
         dt = None
 
-        dataCode = {'log': self.log, 'analysisCode': analysisCode,
-                    'deviceCode': 1, 'tableCode': 1, 'sortCode': 0,
-                    'sortBits': [0, 0, 0], 'numWide': 8, 'tableName': 'OUG',
-                    'nonlinearFactor': None}
+        data_code = {'log': self.log, 'analysis_code': analysis_code,
+                    'device_code': 1, 'table_code': 1, 'sort_code': 0,
+                    'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OUG',
+                    'nonlinear_factor': None}
         #print "headers = %s" %(headers)
 
-        disp = DisplacementObject(dataCode, isSort1, iSubcase, dt=False)
+        disp = DisplacementObject(data_code, is_sort1, isubcase, dt=False)
 
         data = []
 
@@ -319,12 +319,12 @@ class Solver(F06, OP2):
                 i += 3
             #print("line = ",line)
             data.append(line)
-        disp.addF06Data(data, dt)
-        self.displacements[iSubcase] = disp
-        self.iSubcases.append(iSubcase)
+        disp.add_f06_data(data, dt)
+        self.displacements[isubcase] = disp
+        self.iSubcases.append(isubcase)
 
     def writeDisplacements(self, case):
-        self.writeF06('2dTruss.f06')
+        self.write_f06('2dTruss.f06')
 
     def setupSOL101(self, model, case):
         # the (GridID,componentID) -> internalID
@@ -334,7 +334,7 @@ class Solver(F06, OP2):
 
         (self.IDtoNidComponents) = reverseDict(self.nidComponentToID)
         print("IDtoNidComponents = ", self.IDtoNidComponents)
-        print("Kgg =\n" + printAnnotatedMatrix(Kgg, self.IDtoNidComponents))
+        print("Kgg =\n" + print_annotated_matrix(Kgg, self.IDtoNidComponents))
         #print("Kgg = \n", Kgg)
         #print("iSize = ", i)
 
@@ -342,12 +342,12 @@ class Solver(F06, OP2):
         #sys.exit('verify Kgg')
 
         Kaa = partition_dense_symmetric(Kgg, self.iUs)
-        print("Kaa = \n%s" % (printMatrix(Kaa)))
+        print("Kaa = \n%s" % (print_matrix(Kaa)))
         #print("Kaa.shape = ",Kaa.shape)
 
         #sys.exit('verify Kaa')
         Fa = partition_dense_vector(Fg, self.iUs)
-        #print("Kaa = \n%s" %(printMatrix(Kaa)))
+        #print("Kaa = \n%s" %(print_matrix(Kaa)))
 
         print("Fg = ", Fg)
         print("Fa = ", Fa)
@@ -535,11 +535,11 @@ class Solver(F06, OP2):
         LoadSet = model.Load(loadID)
 
         self.gravLoad = array([0., 0., 0.])
-        for loadSet in LoadSet:
-            print(loadSet)
+        for load_set in LoadSet:
+            print(load_set)
             (typesFound, forceLoads, momentLoads,
-                         forceConstraints, momentConstraints,
-                         gravityLoad) = loadSet.organizeLoads(model)
+             forceConstraints, momentConstraints,
+             gravityLoad) = load_set.organizeLoads(model)
 
             nids = []
             for nid in forceLoads:
@@ -593,11 +593,11 @@ class Solver(F06, OP2):
                 UgSeparate = [[Ua, iUa], [Us, iUs], [Um, iUm]]
                 Ug = departition_dense_vector(UgSeparate)
 
-                result = DisplacementObject(dataCode, transient)
-                result.addF06Data()
+                result = DisplacementObject(data_code, transient)
+                result.add_f06_data()
 
                 if 'PRINT' in options:
-                    f06.write(result.writeF06(header, pageStamp, pageNum))
+                    f06.write(result.write_f06(header, pageStamp, pageNum))
                 if 'PLOT' in options:
                     op2.write(result.writeOP2(self.Title, self.Subtitle))
 
@@ -608,10 +608,10 @@ class Solver(F06, OP2):
                 if isMPC:
                     SPCForces += Ksm * Um
 
-                result = SPCForcesObject(dataCode, transient)
-                result.addF06Data()
+                result = SPCForcesObject(data_code, transient)
+                result.add_f06_data()
                 if 'PRINT' in options:
-                    f06.write(result.writeF06(header, pageStamp, pageNum))
+                    f06.write(result.write_f06(header, pageStamp, pageNum))
                 if 'PLOT' in options:
                     op2.write(result.writeOP2(Title, Subtitle))
 
@@ -622,10 +622,10 @@ class Solver(F06, OP2):
                 if isSPC:
                     MPCForces += Kms * Us
 
-                result = MPCForcesObject(dataCode, transient)
-                result.addF06Data()
+                result = MPCForcesObject(data_code, transient)
+                result.add_f06_data()
                 if 'PRINT' in options:
-                    f06.write(result.writeF06(header, pageStamp, pageNum))
+                    f06.write(result.write_f06(header, pageStamp, pageNum))
                 if 'PLOT' in options:
                     f06.write(result.writeOP2(Title, Subtitle))
 
@@ -638,10 +638,10 @@ class Solver(F06, OP2):
                 if isMPC:
                     AppliedLoads += Kam * Um
 
-                result = AppliedLoadsObject(dataCode, transient)
-                result.addF06Data()
+                result = AppliedLoadsObject(data_code, transient)
+                result.add_f06_data()
                 if 'PRINT' in options:
-                    f06.write(result.writeF06(header, pageStamp, pageNum))
+                    f06.write(result.write_f06(header, pageStamp, pageNum))
                 if 'PLOT' in options:
                     op2.write(result.writeOP2(Title, Subtitle))
 
@@ -652,10 +652,10 @@ class Solver(F06, OP2):
                 for (eid, elem) in sorted(model.elements()):
                     pass
 
-                result = xxxObject(dataCode, transient)
-                result.addF06Data()
+                result = xxxObject(data_code, transient)
+                result.add_f06_data()
                 if 'PRINT' in options:
-                    f06.write(result.writeF06(header, pageStamp, pageNum))
+                    f06.write(result.write_f06(header, pageStamp, pageNum))
                 if 'PLOT' in options:
                     op2.write(result.writeOP2(Title, Subtitle))
 
@@ -680,7 +680,8 @@ def get_cards():
 
                       # properties
                       'PELAS',
-                      'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PTUBE', 'PBEND',
+                      'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PTUBE',
+                      'PBEND',
                       'PSHELL', 'PCOMP', 'PSHEAR',  # 'PCOMPG',
                       'PSOLID',
 

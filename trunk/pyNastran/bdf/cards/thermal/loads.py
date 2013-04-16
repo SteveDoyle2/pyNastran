@@ -1,11 +1,15 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
+from ...bdfInterface.BDF_Card import wipe_empty_fields
 from .thermal import ThermalCard
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from ..baseCard import expand_thru, expand_thru_by, collapse_thru_by
-
+from ..baseCard import (expand_thru, expand_thru_by,
+    collapse_thru, collapse_thru_by)
+from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+    double, double_or_blank,
+    integer_or_string, string, fields)
 
 class ThermalLoadDefault(ThermalCard):
     def __init__(self, card, data):
@@ -23,43 +27,58 @@ class QBDY1(ThermalLoad):
     """
     type = 'QBDY1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalLoad.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
             ## Load set identification number. (Integer > 0)
-            self.sid = card.field(1)
+            self.sid = integer(card, 1, 'sid')
 
             ## Heat flux into element (FLOAT)
-            self.qFlux = card.field(2)
-            eids = card.fields(3)
+            self.qFlux = double(card, 2, 'qFlux')
+            eids  = []
+            j = 1
+            for i in range(3, len(card)):
+                eid = integer_or_string(card, i, 'eid%i' % j)
+                eids.append(eid)
+                j += 1
             ## CHBDYj element identification numbers (Integer)
-            self.eids = expand_thru(eids)  ## @warning should this use expand_thru_by ???
+            assert len(eids) > 0
+            self.eids = expand_thru(eids)  ## @todo use expand_thru_by ???
         else:
             self.sid = data[0]
             self.qFlux = data[1]
             self.eids = data[2:]
 
+    def getLoads(self):
+        return [self]
+
     def cross_reference(self, model):
         self.eids = model.Elements(self.eids)
 
-    def Eid(self):
-        if isinstance(self.eid, int):
-            return self.eid
-        return self.eid.eid
+    def Eid(self, eid):
+        if isinstance(eid, int):
+            return eid
+        return eid.eid
 
     def nQFluxTerms(self):
         return len(self.qFlux)
 
+    def Eids(self):
+        eids = []
+        for eid in self.eids:
+            eids.append(self.Eid(eid))
+        return eids
+
     def rawFields(self):
-        fields = ['QBDY1', self.sid, self.qFlux] + list(
-            self.eids) + [self.qFlux]
-        return fields
+        list_fields = ['QBDY1', self.sid, self.qFlux] + self.Eids()
+        return list_fields
 
     def reprFields(self):
-        eids = collapse_thru_by(self.eids)
-        fields = ['QBDY1', self.sid, self.qFlux] + list(eids) + [self.qFlux]
-        return fields
+        eids = collapse_thru_by(self.Eids())
+        list_fields = ['QBDY1', self.sid, self.qFlux] + eids
+        return list_fields
 
 
 class QBDY2(ThermalLoad):  # not tested
@@ -68,20 +87,35 @@ class QBDY2(ThermalLoad):  # not tested
     """
     type = 'QBDY2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalLoad.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
             ## Load set identification number. (Integer > 0)
-            self.sid = card.field(1)
+            self.sid = integer(card, 1, 'sid')
+
             ## Identification number of an CHBDYj element. (Integer > 0)
-            self.eid = card.field(2)
-            ## Heat flux at the i-th grid point on the referenced CHBDYj element. (Real or blank)
-            self.qFlux = self.removeTrailingNones(card.fields(3))
+            self.eid = integer(card, 2, 'eid')
+
+            qFlux  = []
+            j = 1
+            for i in range(3, len(card)):
+                q = double_or_blank(card, i, 'qFlux%i' % j)
+                qFlux.append(q)
+                j += 1
+
+            assert len(qFlux) > 0
+            ## Heat flux at the i-th grid point on the referenced CHBDYj
+            ## element. (Real or blank)
+            self.qFlux = wipe_empty_fields(qFlux)
         else:
             self.sid = data[0]
             self.eid = data[1]
             self.qFlux = data[2]
+
+    def getLoads(self):
+        return [self]
 
     def cross_reference(self, model):
         self.eid = model.Element(self.eid)
@@ -95,8 +129,8 @@ class QBDY2(ThermalLoad):  # not tested
         return len(self.qFlux)
 
     def rawFields(self):
-        fields = ['QBDY2', self.sid, self.Eid(), self.qFlux]
-        return fields
+        list_fields = ['QBDY2', self.sid, self.Eid()] + self.qFlux
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -108,18 +142,22 @@ class QBDY3(ThermalLoad):
     """
     type = 'QBDY3'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalLoad.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
             ## Load set identification number. (Integer > 0)
-            self.sid = card.field(1)
+            self.sid = integer(card, 1, 'sid')
             ## Heat flux into element
-            self.Q0 = card.field(2)
+            self.Q0 = double(card, 2, 'Q0')
             ## Control point for thermal flux load. (Integer > 0; Default = 0)
-            self.cntrlnd = card.field(3, 0)
+            self.cntrlnd = integer_or_blank(card, 3, 'cntrlnd', 0)
+            
+            nfields = card.nFields()
+            eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
             ## CHBDYj element identification numbers
-            self.eids = expand_thru_by(card.fields(4))
+            self.eids = expand_thru_by(eids)
         else:
             self.sid = data[0]
             self.Q0 = data[1]
@@ -144,16 +182,19 @@ class QBDY3(ThermalLoad):
     def rawFields(self):
         eids = self.Eids()
         eids.sort()
-        fields = ['QBDY3', self.sid, self.Q0, self.cntrlnd
-                 ] + collapse_thru_by(eids)
-        return fields
+        list_fields = (['QBDY3', self.sid, self.Q0, self.cntrlnd] +
+                  collapse_thru_by(eids))
+        return list_fields
 
     def reprFields(self):
         cntrlnd = set_blank_if_default(self.cntrlnd, 0)
         eids = self.Eids()
         eids.sort()
-        fields = ['QBDY3', self.sid, self.Q0, cntrlnd] + collapse_thru_by(eids)
-        return fields
+        list_fields = ['QBDY3', self.sid, self.Q0, cntrlnd] + collapse_thru_by(eids)
+        return list_fields
+
+    def getLoads(self):  ## @todo: return loads
+        return []
 
 
 class QHBDY(ThermalLoad):
@@ -162,25 +203,31 @@ class QHBDY(ThermalLoad):
     """
     type = 'QHBDY'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalLoad.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
             ## Load set identification number. (Integer > 0)
-            self.sid = card.field(1)
+            self.sid = integer(card, 1, 'eid')
 
-            self.flag = card.field(2)
-            assert self.flag in ['POINT', 'LINE', 'REV',
-                                 'AREA3', 'AREA4', 'AREA6', 'AREA8']
+            self.flag = string(card, 2, 'flag')
+            assert self.flag in ['POINT', 'LINE', 'REV', 'AREA3', 'AREA4',
+                                 'AREA6', 'AREA8']
 
-            ## Magnitude of thermal flux into face. Q0 is positive for heat into the surface. (Real)
-            self.Q0 = card.field(3)
+            ## Magnitude of thermal flux into face. Q0 is positive for heat
+            ## into the surface. (Real)
+            self.Q0 = double(card, 3, 'Q0')
 
             ## Area factor depends on type. (Real > 0.0 or blank)
-            self.af = card.field(4)
-            self.grids = card.fields(5)
+            self.af = double_or_blank(card, 4, 'af')
+            nfields = card.nFields()
 
-            ## Grid point identification of connected grid points. (Integer > 0 or blank)
+            ## grids
+            self.grids = fields(integer, card, 'grid', i=5, j=nfields)
+
+            ## Grid point identification of connected grid points.
+            ## (Integer > 0 or blank)
             self.grids = expand_thru_by(self.grids)
         else:
             self.sid = data[0]
@@ -193,8 +240,8 @@ class QHBDY(ThermalLoad):
     #    pass
 
     def rawFields(self):
-        fields = ['QHBDY', self.sid, self.flag, self.Q0, self.af] + self.grids
-        return fields
+        list_fields = ['QHBDY', self.sid, self.flag, self.Q0, self.af] + self.grids
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -204,24 +251,30 @@ class TEMP(ThermalLoad):
     """
     Defines temperature at grid points for determination of thermal loading,
     temperature-dependent material properties, or stress recovery.
+    TEMP SID G1 T1 G2 T2 G3 T3
+    TEMP 3 94 316.2 49 219.8
     """
     type = 'TEMP'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalLoad.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
             ## Load set identification number. (Integer > 0)
-            self.sid = card.field(1)
+            self.sid = integer(card, 1, 'sid')
 
-            fields = card.fields(2)
-            nFields = len(fields)
-            assert nFields % 2 == 0
+            nfields = len(card) - 2
+            assert nfields % 2 == 0
 
-            ## dictionary of temperatures where the key is the grid ID (Gi) and the value is the temperature (Ti)
+            ## dictionary of temperatures where the key is the grid ID (Gi)
+            ## and the value is the temperature (Ti)
             self.temperatures = {}
-            for i in xrange(0, nFields, 2):
-                self.temperatures[fields[i]] = fields[i + 1]
+            for i in xrange(nfields // 2):
+                n = i * 2 + 2
+                gi = integer(card, n, 'g' + str(i))
+                Ti = double(card, n + 1, 'T' + str(i))
+                self.temperatures[gi] = Ti
         else:
             #print "TEMP data = ",data
             self.sid = data[0]
@@ -237,18 +290,20 @@ class TEMP(ThermalLoad):
 
     def rawFields(self):
         """Writes the TEMP card"""
-        fields = ['TEMP', self.sid]
-
+        list_fields = ['TEMP', self.sid]
         nTemps = len(self.temperatures) - 1
         for i, (gid, temp) in enumerate(sorted(self.temperatures.iteritems())):
-            fields += [gid, temp]
+            list_fields += [gid, temp]
             if i % 3 == 2 and nTemps > i:  # start a new TEMP card
-                fields += [None, 'TEMP', self.lid]
-        return fields
+                list_fields += [None, 'TEMP', self.lid]
+        return list_fields
 
     def reprFields(self):
         """Writes the TEMP card"""
         return self.rawFields()
+
+    def getLoads(self):  ## @todo: return loads
+        return []
 
 # Loads
 #-------------------------------------------------------
@@ -257,27 +312,32 @@ class TEMP(ThermalLoad):
 
 class TEMPD(ThermalLoadDefault):
     """
-    Defines a temperature value for all grid points of the structural model that have not
-    been given a temperature on a TEMP entry
+    Defines a temperature value for all grid points of the structural model
+    that have not been given a temperature on a TEMP entry
     """
     type = 'TEMPD'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalLoadDefault.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            fields = card.fields(1)
-            nFields = len(fields)
-            assert nFields % 2 == 0
+            nfields = len(card) - 1
+            assert nfields % 2 == 0
 
-            ## dictionary of temperatures where the key is the set ID (SIDi) and the value is the temperature (Ti)
+            ## dictionary of temperatures where the key is the set ID (SIDi)
+            ## and the value is the temperature (Ti)
             self.temperatures = {}
-            for i in xrange(0, nFields, 2):
-                self.temperatures[fields[i]] = fields[i + 1]
+            for i in xrange(0, nfields, 2):
+                n = i // 2
+                sid = integer(card, i + 1, 'sid' + str(n))
+                temp = double(card, i + 2, 'temp' + str(n))
+                self.temperatures[sid] = temp
         else:
             self.temperatures = {data[0]: data[1]}
 
-    def add(self, tempdObj):
-        for (lid, tempd) in self.tempdObj.temperatures.iteritems():
+    def add(self, tempd_obj):
+        for (lid, tempd) in tempd_obj.temperatures.iteritems():
             self.temperatures[lid] = tempd
 
     def cross_reference(self, model):
@@ -285,13 +345,11 @@ class TEMPD(ThermalLoadDefault):
 
     def reprFields(self):
         """Writes the TEMPD card"""
-        fields = ['TEMPD']
+        list_fields = ['TEMPD']
 
         nTemps = len(self.temperatures) - 1
-        #print "self.temperatures = ",self.temperatures
-        #print "nTemps = ",nTemps
         for i, (gid, temp) in enumerate(sorted(self.temperatures.iteritems())):
-            fields += [gid, temp]
+            list_fields += [gid, temp]
             if i % 4 == 3 and nTemps > i:  # start a new TEMP card
-                fields += ['TEMPD']
-        return fields
+                list_fields += ['TEMPD']
+        return list_fields

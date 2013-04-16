@@ -1,6 +1,5 @@
-from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpretValue
-from pyNastran.bdf.errors import InvalidSubcaseParseError, ParamParseError
-from pyNastran.bdf.caseControlDeck import CaseControlDeck
+from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpret_value
+#from pyNastran.bdf.caseControlDeck import CaseControlDeck
 
 
 def parseSetSline(listA):
@@ -21,8 +20,8 @@ def parseSetSline(listA):
                     by = 1
                 #print "BY = %s" %(by)
                 vals = set([])
-                startValue = interpretValue(sline[0])
-                endValue = interpretValue(sline[2]) + 1
+                startValue = interpret_value(sline[0])
+                endValue = interpret_value(sline[2]) + 1
                 for i in xrange(startValue, endValue, by):
                     vals.add(i)
                 #print "vals = ",vals
@@ -36,13 +35,12 @@ def parseSetSline(listA):
                 print "vals = ", vals
             else:
                 print "sline = ", sline
-                asdf
         else:
             #print "spot = %s" %(spot)
             if '/' in spot:
                 listB.append(spot)
             else:
-                listB.append(interpretValue(spot))
+                listB.append(interpret_value(spot))
     return listB
 
 
@@ -70,8 +68,7 @@ def parseSetType(i, line, lines, key, value):
                 i += 1
                 break
             i += 1
-        ###
-    ###
+
     #print "len(fivalues) = ",len(fivalues)
     value = fivalues
 
@@ -103,11 +100,11 @@ def _parseEntry(lines):
         sline = line2.split()
         if len(sline) != 2:
             msg = "trying to parse |%s|..." % (line)
-            raise InvalidSubcaseParseError(msg)
-        (key, iSubcase) = sline
-        #print "key=|%s| iSubcase=|%s|" %(key,iSubcase)
-        value = int(iSubcase)
-        #self.iSubcase = int(iSubcase)
+            raise SyntaxError("Invalid Subcase: %s", (msg))
+        (key, isubcase) = sline
+        #print "key=|%s| isubcase=|%s|" %(key,isubcase)
+        value = int(isubcase)
+        #self. subcase = int(isubcase)
         paramType = 'SUBCASE-type'
     elif (lineUpper.startswith('LABEL') or lineUpper.startswith('SUBTITLE')
           or lineUpper.startswith('TITLE')):
@@ -158,8 +155,7 @@ def _parseEntry(lines):
                 print "sline = ", sline
                 value = parseSetSline(sline)
             else:
-                value = interpretValue(value)
-        ###
+                value = interpret_value(value)
     ### = in line
     elif lineUpper.startswith('BEGIN'):  # begin bulk
         try:
@@ -171,9 +167,8 @@ def _parseEntry(lines):
     elif 'PARAM' in lineUpper:  # param
         sline = line.split(',')
         if len(sline) != 3:
-            raise ParamParseError("trying to parse |%s|..." % (line))
+            raise SyntaxError("Param Parse: trying to parse |%s|..." % (line))
         (key, value, options) = sline
-        ###
         paramType = 'CSV-type'
     elif ' ' not in line:
         key = line.strip()
@@ -188,7 +183,6 @@ def _parseEntry(lines):
         value = line
         options = None
         paramType = 'KEY-type'
-    ###
     i += 1
     #print "done with ",key
     return (i, key, value, options, paramType)

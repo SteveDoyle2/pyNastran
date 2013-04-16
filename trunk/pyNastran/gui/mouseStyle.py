@@ -12,7 +12,7 @@ class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
         self.pipeline.widget.Modified()
         self.cam.Modified()
         self.cam.UpdateViewport(self.pipeline.rend)
-        self.pipeline.renWin.Render()
+        self.pipeline.ren_win.Render()
 
     def getActiveCamera(self):
         ren = self.pipeline.rend

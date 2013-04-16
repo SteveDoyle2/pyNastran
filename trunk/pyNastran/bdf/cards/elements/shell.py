@@ -1,16 +1,70 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,C0302
+"""
+All shell elements are defined in this file.  This includes:
+ * CTRIA3
+ * CTRIA6
+ * CTRIAX
+ * CTRIAX6
+ * CSHEAR
+ * CQUAD
+ * CQUAD4
+ * CQUAD8
+ * CQUADR
+ * CQUADX
+
+All tris are TriShell, ShellElement, and Element objects.
+All quads are QuadShell, ShellElement, and Element objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
+#import sys
 
-from numpy import array, eye, cross  # zeros,dot
+from numpy import array, eye, cross, allclose  # zeros,dot
 from numpy.linalg import det  # inv
 
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
 from pyNastran.bdf.cards.baseCard import Element
-from pyNastran.general.generalMath import (Area, Triangle_AreaCentroidNormal,
-                                           Normal)
+from pyNastran.utils.mathematics import Area, norm, centroid_triangle
+from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+    double_or_blank, integer_double_or_blank, blank)
+
+
+def _triangle_area_centroid_normal(nodes):
+    """
+    Returns area,centroid,unitNormal
+
+    @param nodes:
+      list of three triangle vertices
+
+    @code
+    n = Normal = a x b
+    Area   = 1/2 * |a x b|
+    V = <v1,v2,v3>
+    |V| = sqrt(v1^0.5+v2^0.5+v3^0.5) = norm(V)
+
+    Area = 0.5 * |n|
+    unitNormal = n/|n|
+    @endcode
+    """
+    (n0, n1, n2) = nodes
+    vector = cross(n0 - n1, n0 - n2)
+    length = norm(vector)
+    normal = vector / length
+    if not allclose(norm(normal), 1.):
+        msg = ('function _triangle_area_centroid_normal, check...\n'
+               'a = {0}\nb = {1}\nnormal = {2}\nlength = {3}\n'.format(
+               n0 - n1, n0 - n2, normal, length))
+        raise RuntimeError(msg)
+    return (0.5 * length, (n0 + n1 + n2) / 3., normal)
+
+
+def _normal(a, b):
+    """Finds the unit normal vector of 2 vectors"""
+    vector = cross(a, b)
+    normal = vector / norm(vector)
+    assert allclose(norm(normal), 1.)
+    return normal
 
 
 class ShellElement(Element):
@@ -19,29 +73,50 @@ class ShellElement(Element):
     def __init__(self, card, data):
         Element.__init__(self, card, data)
 
+    def Eid(self):
+        return self.eid
+
     def Area(self):
-        raise NotImplementedError('Area undefined for %s' % (self.type))
+        raise NotImplementedError('Area undefined for %s' % self.type)
 
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def mid(self):
+        """
+        Returns the material
+        """
         return self.pid.mid()
 
     def Mid(self):
+        """
+        Returns the material ID
+        """
         return self.pid.Mid()
 
     def Rho(self):
+        """
+        Returns the density
+        """
         return self.pid.mid().rho
 
     def Nsm(self):
+        """
+        Returns the non-structural mass
+        """
         return self.pid.Nsm()
 
     def MassPerArea(self):
+        """
+        Returns the mass per area
+        """
         return self.pid.MassPerArea()
 
     def Mass(self):
-        """
+        r"""
         \f[ \large  mass = \frac{mass}{area} area  \f]
         """
         return self.pid.MassPerArea() * self.Area()
@@ -49,29 +124,29 @@ class ShellElement(Element):
     def flipNormal(self):
         raise NotImplementedError('flipNormal undefined for %s' % (self.type))
 
-    def cross_reference(self, mesh):
-        self.nodes = mesh.Nodes(self.nodes)
-        self.pid = mesh.Property(self.pid)
-
 
 class TriShell(ShellElement):
     def __init__(self, card, data):
         ShellElement.__init__(self, card, data)
 
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def AreaCentroidNormal(self):
         """
-        returns area,centroid, normal as it's more efficient to do them together
+        Returns area,centroid, normal as it's more efficient to do them
+        together
         """
         (n0, n1, n2) = self.nodePositions()
-        return Triangle_AreaCentroidNormal([n0, n1, n2])
+        return _triangle_area_centroid_normal([n0, n1, n2])
 
     def Area(self):
-        """
-        returns the normal vector
-        \f[ \large A = \frac{1}{2} (n_0-n_1) \cross (n_0-n_2)  \f]
+        r"""
+        Returns the normal vector
+        \f[ \large A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)  \f]
         """
         (n0, n1, n2) = self.nodePositions()
         a = n0 - n1
@@ -80,23 +155,21 @@ class TriShell(ShellElement):
         return area
 
     def Normal(self):
-        """
+        r"""
         returns the normal vector
-        \f[ \large a = (n_0-n_1) \cross (n_0-n_2)  \f]
+        \f[ \large a = (n_0-n_1) \times (n_0-n_2)  \f]
         \f[ \large n = \frac{n}{norm(N)}           \f]
         """
         (n0, n1, n2) = self.nodePositions()
-        a = n0 - n1
-        b = n0 - n2
-        return Normal(a, b)
+        return _normal(n0 - n1, n0 - n2)
 
-    def Centroid(self, debug=False):
-        """
-        returns the centroid
+    def Centroid(self):
+        r"""
+        Returns the centroid
         \f[ \large CG = \frac{1}{3} (n_0+n_1+n_2)  \f]
         """
         (n0, n1, n2) = self.nodePositions()
-        centroid = self.CentroidTriangle(n0, n1, n2, debug)
+        centroid = centroid_triangle(n0, n1, n2)
         return centroid
 
     def MassMatrix(self, isLumped=True):
@@ -122,22 +195,29 @@ class CTRIA3(TriShell):
     asterType = 'TRIA3'
     calculixType = 'S3'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         TriShell.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## element ID number
-            self.eid = int(card.field(1))
-            self.pid = card.field(2)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
 
-            nids = card.fields(3, 6)
+            nids = [integer(card, 3, 'n1'),
+                    integer(card, 4, 'n2'),
+                    integer(card, 5, 'n3')]
 
-            self.thetaMcid = card.field(6, 0.0)
-            self.zOffset = card.field(7, 0.0)
+            self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
+            self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
+            blank(card, 8, 'blank')
+            blank(card, 9, 'blank')
 
-            self.TFlag = card.field(10, 0)
-            self.T1 = card.field(11, 1.0)
-            self.T2 = card.field(12, 1.0)
-            self.T3 = card.field(13, 1.0)
+            self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
+            self.T1 = double_or_blank(card, 11, 'T1', 1.0)
+            self.T2 = double_or_blank(card, 12, 'T2', 1.0)
+            self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+            assert len(card) <= 14, 'len(CTRIA3 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -155,16 +235,45 @@ class CTRIA3(TriShell):
                 self.T2 = 1.0
             if self.T3 == -1.0:
                 self.T3 = 1.0
-        ###
+
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 3
 
+    def cross_reference(self, model):
+        msg = ' which is required by CTRIA3 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
+    def _verify(self, isxref=True):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+
+        if isxref:
+            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            t = self.Thickness()
+            a,c,n = self.AreaCentroidNormal()
+            assert isinstance(t, float), 'thickness=%r' % t
+            assert isinstance(a, float), 'Area=%r' % a
+            for i in range(3):
+                assert isinstance(c[i], float)
+                assert isinstance(n[i], float)
+            mass = self.Mass()
+            assert isinstance(mass, float), 'mass=%r' % mass
+
     def flipNormal(self):
         """
+        @code
              1           1
             * *   -->   * *
            *   *       *   *
           2-----3     3-----2
+        @endcode
         """
         (n1, n2, n3) = self.nodes
         self.nodes = [n1, n3, n2]
@@ -199,7 +308,7 @@ class CTRIA3(TriShell):
         J = array([[nx0, nx1 - nx0, nx2 - nx0],
                    [ny0, ny1 - ny0, ny2 - ny0],
                    [nz0, nz1 - nz0, nz2 - nz0], ])
-        detJ = J.det()
+        #detJ = J.det()
         return J
 
     def getReprDefaults(self):
@@ -213,15 +322,16 @@ class CTRIA3(TriShell):
         return (thetaMcid, zOffset, TFlag, T1, T2, T3)
 
     def rawFields(self):
-        fields = ['CTRIA3', self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid, self.zOffset, None] + [
-            None, self.TFlag, self.T1, self.T2, self.T3]
-        return fields
+        list_fields = (['CTRIA3', self.eid, self.Pid()] + self.nodeIDs() +
+                  [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
+                   self.T1, self.T2, self.T3])
+        return list_fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
-        fields = [self.type, self.eid, self.Pid()] + self.nodeIDs() + [thetaMcid, zOffset, None] + [
-            None, TFlag, T1, T2, T3]
-        return fields
+        list_fields = ([self.type, self.eid, self.Pid()] + self.nodeIDs() +
+                  [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
+        return list_fields
 
 
 class CTRIA6(TriShell):
@@ -229,21 +339,30 @@ class CTRIA6(TriShell):
     asterType = 'TRIA6'
     calculixType = 'S6'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         TriShell.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## element ID number
-            self.eid = int(card.field(1))
-            self.pid = card.field(2)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
 
-            nids = card.fields(3, 9)
-            self.thetaMcid = card.field(9, 0.0)
-            self.zOffset = card.field(10, 0.0)
+            nids = [integer(card, 3, 'n1'),
+                    integer(card, 4, 'n2'),
+                    integer(card, 5, 'n3'),
+                    integer_or_blank(card, 6, 'n4', 0),
+                    integer_or_blank(card, 7, 'n5', 0),
+                    integer_or_blank(card, 8, 'n6', 0)]
 
-            self.T1 = card.field(11, 1.0)
-            self.T2 = card.field(12, 1.0)
-            self.T3 = card.field(13, 1.0)
-            self.TFlag = card.field(14, 0)
+            self.thetaMcid = integer_double_or_blank(card, 9, 'thetaMcid', 0.0)
+            self.zOffset = double_or_blank(card, 10, 'zOffset', 0.0)
+
+            self.T1 = double_or_blank(card, 11, 'T1', 1.0)
+            self.T2 = double_or_blank(card, 12, 'T2', 1.0)
+            self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+            self.TFlag = integer_or_blank(card, 14, 'TFlag', 0)
+            assert len(card) <= 15, 'len(CTRIA6 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -263,20 +382,51 @@ class CTRIA6(TriShell):
         #print "self.xi = ",self.xi
         #raise
 
+    def cross_reference(self, model):
+        msg = ' which is required by CTRIA6 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
+    def _verify(self):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        #for i,nid in enumerate(nids):
+            #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+
+        if isxref:
+            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            t = self.Thickness()
+            a,c,n = self.AreaCentroidNormal()
+            assert isinstance(t, float), 'thickness=%r' % t
+            assert isinstance(a, float), 'Area=%r' % a
+            for i in range(3):
+                assert isinstance(c[i], float)
+                assert isinstance(n[i], float)
+            mass = self.Mass()
+            assert isinstance(mass, float), 'mass=%r' % mass
+
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def AreaCentroidNormal(self):
         """
-        returns area,centroid, normal as it's more efficient to do them together
+        Returns area,centroid, normal as it's more efficient to do them
+        together
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
-        return Triangle_AreaCentroidNormal([n1, n2, n3])
+        return _triangle_area_centroid_normal([n1, n2, n3])
 
     def Area(self):
-        """
-        returns the normal vector
-        \f[ \large A = \frac{1}{2} (n_0-n_1) \cross (n_0-n_2)  \f]
+        r"""
+        Returns the normal vector
+        \f[ \large A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)  \f]
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         a = n1 - n2
@@ -285,33 +435,33 @@ class CTRIA6(TriShell):
         return area
 
     def Normal(self):
-        """
-        returns the normal vector
-        \f[ \large a = (n_0-n_1) \cross (n_0-n_2)  \f]
+        r"""
+        Returns the normal vector
+        \f[ \large a = (n_0-n_1) \times (n_0-n_2)  \f]
         \f[ \large n = \frac{n}{norm(N)}           \f]
         """
-        (n1, n2, n3, n4, n5, n6) = self.nodePositions()
-        a = n1 - n2
-        b = n1 - n3
-        return Normal(a, b)
+        (n0, n1, n2) = self.nodePositions()[:3]
+        return _normal(n0 - n1, n0 - n2)
 
-    def Centroid(self, debug=False):
-        """
-        returns the centroid
+    def Centroid(self):
+        r"""
+        Returns the centroid
         \f[ \large CG = \frac{1}{3} (n_1+n_2+n_3)  \f]
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
-        centroid = self.CentroidTriangle(n1, n2, n3, debug)
+        centroid = centroid_triangle(n1, n2, n3)
         return centroid
 
     def flipNormal(self):
         """
+        @code
              1                1
              **               **
             *  *             *  *
            4    6   -->     6    4
           *      *         *      *
          2----5---3       3----5---2
+        @endcode
         """
         (n1, n2, n3, n4, n5, n6) = self.nodes
         self.nodes = [n1, n3, n2, n6, n5, n4]
@@ -327,47 +477,66 @@ class CTRIA6(TriShell):
         return (thetaMcid, zOffset, TFlag, T1, T2, T3)
 
     def rawFields(self):
-        fields = ['CTRIA6', self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid, self.zOffset, None] + [
-            None, self.TFlag, self.T1, self.T2, self.T3]
-        return fields
+        list_fields = (['CTRIA6', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) +
+                  [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
+                  self.T1, self.T2, self.T3])
+        return list_fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
-        fields = ['CTRIA6', self.eid, self.Pid()] + self.nodeIDs() + [thetaMcid, zOffset, None] + [
-            None, TFlag, T1, T2, T3]
-        return fields
+        list_fields = (['CTRIA6', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) +
+                  [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
+        return list_fields
 
 
 class CTRIAR(TriShell):
     type = 'CTRIAR'
-
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         TriShell.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         ## element ID number
-        self.eid = int(card.field(1))
-        self.pid = card.field(2)
+        self.eid = integer(card, 1, 'eid')
+        self.pid = integer(card, 2, 'pid')
 
-        nids = card.fields(3, 6)
+        nids = [integer(card, 3, 'n1'),
+                integer(card, 4, 'n2'),
+                integer(card, 5, 'n3')]
+
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 3
 
-        self.thetaMcid = card.field(6, 0.0)
-        self.zOffset = card.field(7, 0.0)
+        self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
+        self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
+        blank(card, 8, 'blank')
+        blank(card, 9, 'blank')
+        blank(card, 10, 'blank')
 
-        self.TFlag = card.field(10, 0)
-        self.T1 = card.field(11, 1.0)
-        self.T2 = card.field(12, 1.0)
-        self.T3 = card.field(13, 1.0)
+        self.TFlag = integer_or_blank(card, 11, 'TFlag', 0)
+        self.T1 = double_or_blank(card, 11, 'T1', 1.0)
+        self.T2 = double_or_blank(card, 12, 'T2', 1.0)
+        self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+        assert len(card) <= 14, 'len(CTRIAR card) = %i' % len(card)
+
+    def cross_reference(self, model):
+        msg = ' which is required by CTRIAR eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def flipNormal(self):
         """
+        @code
              1           1
             * *   -->   * *
            *   *       *   *
           2-----3     3-----2
+        @endcode
         """
         (n1, n2, n3) = self.nodes
         self.nodes = [n1, n3, n2]
@@ -383,67 +552,138 @@ class CTRIAR(TriShell):
         return (thetaMcid, zOffset, TFlag, T1, T2, T3)
 
     def rawFields(self):
-        fields = [self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid,
+        list_fields = [self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid,
                   self.zOffset, self.TFlag, self.T1, self.T2, self.T3]
-        return fields
+        return list_fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
-        fields = ['CTRIAR', self.eid, self.Pid()] + self.nodeIDs() + [thetaMcid, zOffset, None,
-                                                                      None, TFlag, T1, T2, T3]
-        return fields
+        list_fields = (['CTRIAR', self.eid, self.Pid()] + self.nodeIDs() +
+                  [thetaMcid, zOffset, None, None, TFlag, T1, T2, T3])
+        return list_fields
 
 
 class CTRIAX(TriShell):
     type = 'CTRIAX'
     calculixType = 'CAX6'
-
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         TriShell.__init__(self, card, data)
-        ## element ID number
-        self.eid = int(card.field(1))
+        if comment:
+            self._comment = comment
+        if card:
+            ## element ID number
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
 
-        nids = card.fields(3, 9)
+            nids = [integer_or_blank(card, 3, 'n1'),
+                    integer_or_blank(card, 4, 'n2'),
+                    integer_or_blank(card, 5, 'n3'),
+                    integer_or_blank(card, 6, 'n4'),
+                    integer_or_blank(card, 7, 'n5'),
+                    integer_or_blank(card, 8, 'n6')]
+            self.thetaMcid = integer_double_or_blank(card, 9, 'theta_mcsid', 0.0)
+            assert len(card) <= 10, 'len(CTRIAX card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(nids) == 6, 'error on CTRIAX'
 
+    def cross_reference(self, model):
+        msg = ' which is required by CTRIAX eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
     def rawFields(self):
-        fields = ['CTRIAX', self.eid, self.Pid()] + self.nodeIDs()
-        return fields
+        nodeIDs = self.nodeIDs(allowEmptyNodes=True)
+        list_fields = ['CTRIAX', self.eid, self.Pid()] + nodeIDs + [self.thetaMcid]
+        return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
+        nodeIDs = self.nodeIDs(allowEmptyNodes=True)
+        list_fields = ['CTRIAX', self.eid, self.Pid()] + nodeIDs + [thetaMcid]
+        return list_fields
 
 
 class CTRIAX6(TriShell):
     """
     Nodes defined in a non-standard way
+    @code
          5
         / \
        6   4
      /       \
     1----2----3
+    @endcode
     """
     type = 'CTRIAX6'
     #calculixType = 'CAX6'
-
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         TriShell.__init__(self, card, data)
-        ## element ID number
-        self.eid = int(card.field(1))
-        self.mid = int(card.field(2))
+        if comment:
+            self._comment = comment
+        if card:
+            ## element ID number
+            self.eid = integer(card, 1, 'eid')
+            self.mid = integer(card, 2, 'mid')
 
-        nids = card.fields(3, 9)
+            nids = [integer(card, 3, 'n1'),
+                    integer_or_blank(card, 4, 'n2'),
+                    integer(card, 5, 'n3'),
+                    integer_or_blank(card, 6, 'n4'),
+                    integer(card, 7, 'n5'),
+                    integer_or_blank(card, 8, 'n6')]
+
+            ## theta
+            self.theta = double_or_blank(card, 9, 'theta', 0.0)
+            assert len(card) <= 10, 'len(CTRIAX6 card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(nids) == 6, 'error on CTRIAX6'
 
-        ## theta
-        self.th = card.field(10, 0.0)
+    def cross_reference(self, model):
+        msg = ' which is required by CTRIAX6 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.mid = model.Material(self.mid)
 
-    def Area(self):
+    def _verify(self, isxref=True):
+        eid = self.Eid()
+        #pid = self.Pid()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        #assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert nid is None or isinstance(nid, int), 'nid%i is not an integer or blank; nid=%s' %(i, nid)
+
+        if isxref:
+            #assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            #t = self.Thickness()
+            a,c,n = self.AreaCentroidNormal()
+            #assert isinstance(t, float), 'thickness=%r' % t
+            assert isinstance(a, float), 'Area=%r' % a
+            for i in range(3):
+                assert isinstance(c[i], float)
+                assert isinstance(n[i], float)
+            #mass = self.Mass()
+            #assert isinstance(mass, float), 'mass=%r' % mass
+
+    def Pid(self):
+        raise AttributeError("CTRIAX6 doesn't have a Property")
+
+    def AreaCentroidNormal(self):
         """
+        Returns area,centroid, normal as it's more efficient to do them
+        together
+        """
+        (n0, n1, n2, n3, n4, n5) = self.nodePositions()
+        return _triangle_area_centroid_normal([n0, n2, n4])
+    
+    def Area(self):
+        r"""
         returns the normal vector
-        \f[ \large A = \frac{1}{2} (n_0-n_1) \cross (n_0-n_2)  \f]
+        \f[ \large A = \frac{1}{2} (n_0-n_1) times (n_0-n_2)  \f]
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         a = n1 - n3
@@ -452,14 +692,19 @@ class CTRIAX6(TriShell):
         return area
 
     def Thickness(self):
+        """
+        CTRIAX doesn't have a thickness because ???
+        """
         raise AttributeError('CTRIAX6 does not have a thickness')
 
     def Nsm(self):
         raise AttributeError('CTRIAX6 does not have a non-structural mass')
 
-    def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes)
-        self.mid = model.Material(self.mid)
+    def MassPerArea(self):
+        raise AttributeError('CTRIAX6 does not have a MassPerArea')
+
+    def Mass(self):
+        raise NotImplementedError('CTRIAX6 does not have a Mass method yet')
 
     def Mid(self):
         if isinstance(self.mid, int):
@@ -468,46 +713,50 @@ class CTRIAX6(TriShell):
 
     def flipNormal(self):
         """
+        @code
              5               5
             / \             / \
            6   4   -->     6   4
          /       \       /       \
         1----2----3     1----2----3
+        @endcode
         """
         (n1, n2, n3, n4, n5, n6) = self.nodes
         self.nodes = [n1, n6, n5, n4, n3, n2]
 
     def rawFields(self):
-        fields = ['CTRIAX6', self.eid, self.Mid(), self.Pid()] + self.nodeIDs() + [
-            self.th]
-        return fields
+        list_fields = (['CTRIAX6', self.eid, self.Mid(), self.Pid()] +
+                  self.nodeIDs() +  [self.theta])
+        return list_fields
 
     def reprFields(self):
-        th = set_default_if_blank(self.th, 0.0)
-        fields = ['CTRIAX6', self.eid, self.Mid()] + self.nodeIDs() + [th]
-        return fields
+        theta = set_default_if_blank(self.theta, 0.0)
+        list_fields = ['CTRIAX6', self.eid, self.Mid()] + self.nodeIDs() + [theta]
+        return list_fields
 
 
 class QuadShell(ShellElement):
-    def __init__(self, card=None, data=None):
+    def __init__(self, card, data):
         ShellElement.__init__(self, card, data)
 
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def Normal(self):
         (n1, n2, n3, n4) = self.nodePositions()
-        a = n1 - n3
-        b = n2 - n4
-        return Normal(a, b)
+        return _normal(n1 - n3, n2 - n4)
 
     def AreaCentroidNormal(self):
         (area, centroid) = self.AreaCentroid()
         normal = self.Normal()
         return (area, centroid, normal)
 
-    def AreaCentroid(self, debug=False):
+    def AreaCentroid(self):
         """
+        @code
         1-----2
         |    /|
         | A1/ |
@@ -520,36 +769,30 @@ class QuadShell(ShellElement):
            where:
              c=centroid
              A=area
+        @endcode
         """
-        #if debug:
-        #    print("nodes = %s" %(self.nodes))
         (n1, n2, n3, n4) = self.nodePositions()
         a = n1 - n2
         b = n2 - n4
         area1 = Area(a, b)
-        c1 = self.CentroidTriangle(n1, n2, n4)
+        c1 = centroid_triangle(n1, n2, n4)
 
         a = n2 - n4
         b = n2 - n3
         area2 = Area(a, b)
-        c2 = self.CentroidTriangle(n2, n3, n4)
+        c2 = centroid_triangle(n2, n3, n4)
 
         area = area1 + area2
         centroid = (c1 * area1 + c2 * area2) / area
-        if debug:
-            print("c1=%s \n c2=%s \n a1=%s a2=%s" % (c1, c2, area1, area2))
-            print("type(centroid=%s centroid=%s \n" %
-                 (type(centroid), centroid))
         return(area, centroid)
-    ###
 
-    def Centroid(self, debug=False):
+    def Centroid(self):
         #nodes = self.nodePositions()
-        (area, centroid) = self.AreaCentroid(debug)
+        (area, centroid) = self.AreaCentroid()
         return centroid
 
     def Area(self):
-        """
+        r"""
         \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
         where a and b are the quad's cross node point vectors
         """
@@ -558,7 +801,6 @@ class QuadShell(ShellElement):
         b = n2 - n4
         area = Area(a, b)
         return area
-    ###
 
     def MassMatrix(self, isLumped=True, gauss=1):
         """
@@ -593,15 +835,17 @@ class QuadShell(ShellElement):
 
     def flipNormal(self):
         """
+        @code
         1---2        1---4
         |   |  -->   |   |
         |   |        |   |
         4---3        2---3
+        @endcode
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
 
-    def getReprDefaults(self, debug=False):
+    def getReprDefaults(self):
         zOffset = set_blank_if_default(self.zOffset, 0.0)
         TFlag = set_blank_if_default(self.TFlag, 0)
         thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
@@ -610,57 +854,65 @@ class QuadShell(ShellElement):
         T2 = set_blank_if_default(self.T2, 1.0)
         T3 = set_blank_if_default(self.T3, 1.0)
         T4 = set_blank_if_default(self.T4, 1.0)
-        if debug:
-        #if 1:
-            print("eid       = %s" % (self.eid))
-            print("nodes     = %s" % (self.nodes))
 
-            print("self.zOffset   = %s" % (self.zOffset))
-            print("self.TFlag     = %s" % (self.TFlag))
-            print("self.thetaMcid = %s" % (self.thetaMcid))
+        if 0:
+            print("eid       = %s" % self.eid)
+            print("nodes     = %s" % self.nodes)
 
-            print("zOffset   = %s" % (zOffset))
-            print("TFlag     = %s" % (TFlag))
-            print("thetaMcid = %s" % (thetaMcid))
+            print("self.zOffset   = %s" % self.zOffset)
+            print("self.TFlag     = %s" % self.TFlag)
+            print("self.thetaMcid = %s" % self.thetaMcid)
 
-            print("T1 = %s" % (T1))
-            print("T2 = %s" % (T2))
-            print("T3 = %s" % (T3))
-            print("T4 = %s\n" % (T4))
+            print("zOffset   = %s" % zOffset)
+            print("TFlag     = %s" % TFlag)
+            print("thetaMcid = %s" % thetaMcid)
+
+            print("T1 = %s" % T1)
+            print("T2 = %s" % T2)
+            print("T3 = %s" % T3)
+            print("T4 = %s\n" % T4)
         return (thetaMcid, zOffset, TFlag, T1, T2, T3, T4)
 
 
 class CSHEAR(QuadShell):
     type = 'CSHEAR'
     calculixType = 'S4'
-
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         QuadShell.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            nids = card.fields(3, 7)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = [integer_or_blank(card, 3, 'n1'),
+                    integer_or_blank(card, 4, 'n2'),
+                    integer_or_blank(card, 5, 'n3'),
+                    integer_or_blank(card, 6, 'n4')]
+            assert len(card) <= 7, 'len(CSHEAR card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
             nids = data[2:]
-        ###
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4
 
+    def cross_reference(self, model):
+        msg = ' which is required by CSHEAR eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
     def Normal(self):
         (n1, n2, n3, n4) = self.nodePositions()
-        a = n1 - n3
-        b = n2 - n4
-        return Normal(a, b)
+        return _normal(n1 - n3, n2 - n4)
 
     def AreaCentroidNormal(self):
         (area, centroid) = self.AreaCentroid()
         normal = self.Normal()
         return (area, centroid, normal)
 
-    def AreaCentroid(self, debug=False):
+    def AreaCentroid(self):
         """
+        @code
         1-----2
         |    /|
         | A1/ |
@@ -673,35 +925,29 @@ class CSHEAR(QuadShell):
            where:
              c=centroid
              A=area
+        @endcode
         """
-        #if debug:
-        #    print("nodes = %s" %(self.nodes))
         (n1, n2, n3, n4) = self.nodePositions()
         a = n1 - n2
         b = n2 - n4
         area1 = Area(a, b)
-        c1 = self.CentroidTriangle(n1, n2, n4)
+        c1 = centroid_triangle(n1, n2, n4)
 
         a = n2 - n4
         b = n2 - n3
         area2 = Area(a, b)
-        c2 = self.CentroidTriangle(n2, n3, n4)
+        c2 = centroid_triangle(n2, n3, n4)
 
         area = area1 + area2
         centroid = (c1 * area1 + c2 * area2) / area
-        if debug:
-            print("c1=%s \n c2=%s \n a1=%s a2=%s" % (c1, c2, area1, area2))
-            print("type(centroid=%s centroid=%s \n" %
-                 (type(centroid), centroid))
         return(area, centroid)
-    ###
 
-    def Centroid(self, debug=False):
-        (area, centroid) = self.AreaCentroid(debug)
+    def Centroid(self):
+        (area, centroid) = self.AreaCentroid()
         return centroid
 
     def Area(self):
-        """
+        r"""
         \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
         where a and b are the quad's cross node point vectors
         """
@@ -710,21 +956,22 @@ class CSHEAR(QuadShell):
         b = n2 - n4
         area = Area(a, b)
         return area
-    ###
 
     def flipNormal(self):
         """
+        @code
         1---2        1---4
         |   |  -->   |   |
         |   |        |   |
         4---3        2---3
+        @endcode
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
 
     def rawFields(self):
-        fields = ['CSHEAR', self.eid, self.Pid()] + self.nodeIDs()
-        return fields
+        list_fields = ['CSHEAR', self.eid, self.Pid()] + self.nodeIDs()
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -735,23 +982,27 @@ class CQUAD4(QuadShell):
     asterType = 'QUAD4 # CQUAD4'
     calculixType = 'S4'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         QuadShell.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## element ID number
-            self.eid = int(card.field(1))
-            self.pid = card.field(2)
-
-            nids = card.fields(3, 7)
-
-            self.thetaMcid = card.field(7, 0.0)
-            self.zOffset = card.field(8, 0.0)
-
-            self.TFlag = card.field(10, 0)
-            self.T1 = card.field(11, 1.0)
-            self.T2 = card.field(12, 1.0)
-            self.T3 = card.field(13, 1.0)
-            self.T4 = card.field(14, 1.0)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = [integer(card, 3, 'n1'),
+                    integer(card, 4, 'n2'),
+                    integer(card, 5, 'n3'),
+                    integer(card, 6, 'n4')]
+            self.thetaMcid = integer_double_or_blank(card, 7, 'thetaMcid', 0.0)
+            self.zOffset = double_or_blank(card, 8, 'zOffset', 0.0)
+            blank(card, 9, 'blank')
+            self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
+            self.T1 = double_or_blank(card, 11, 'T1', 1.0)
+            self.T2 = double_or_blank(card, 12, 'T2', 1.0)
+            self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+            self.T4 = double_or_blank(card, 14, 'T4', 1.0)
+            assert len(card) <= 15, 'len(CQUAD4 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -772,27 +1023,44 @@ class CQUAD4(QuadShell):
                 self.T3 = 1.0
             if self.T4 == -1.0:
                 self.T4 = 1.0
-        ###
+
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4, 'CQUAD4'
+    
+    def cross_reference(self, model):
+        msg = ' which is required by CQUAD4 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
-        #print "self.xi = ",self.xi
-        #print "nodes = ",self.nodes
-        #for nid in nids:
-        #    self.nodes.append(int(nid))
+    def _verify(self, isxref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
-        #print 'self.T1 = ',self.T1
-        #if self.id==20020:
-            #print "thetaMcid = ",card.field(7)
-            #print "actual = ",self.thetaMcid
-            #print str(self)
+        if isxref:
+            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            t = self.Thickness()
+            a,c,n = self.AreaCentroidNormal()
+            assert isinstance(t, float), 'thickness=%r' % t
+            assert isinstance(a, float), 'Area=%r' % a
+            for i in range(3):
+                assert isinstance(c[i], float)
+                assert isinstance(n[i], float)
+            mass = self.Mass()
+            assert isinstance(mass, float), 'mass=%r' % mass
 
     def flipNormal(self):
         """
+        @code
         1---2        1---4
         |   |  -->   |   |
         |   |        |   |
         4---3        2---3
+        @endcode
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -809,43 +1077,49 @@ class CQUAD4(QuadShell):
             self.thetaMcid, zOffset]
         fields2 = ['CTRIA3', newID, self.Pid()] + nodes2 + [
             self.thetaMcid, zOffset]
-        return self.printCard(fields1) + self.printCard(fields2)
+        return self.print_card(fields1) + self.print_card(fields2)
 
     def rawFields(self):
-        fields = [self.type, self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid, self.zOffset, self.TFlag, self.T1, self.T2, self.T3, self.T4]
-        return fields
+        list_fields = ([self.type, self.eid, self.Pid()] + self.nodeIDs() +
+                  [self.thetaMcid, self.zOffset, self.TFlag, self.T1, self.T2,
+                   self.T3, self.T4])
+        return list_fields
 
     def reprFields(self):
-        debug = False
         (thetaMcid, zOffset, TFlag, T1, T2, T3,
-            T4) = self.getReprDefaults(debug=debug)
+            T4) = self.getReprDefaults()
 
-        fields = ['CQUAD4', self.eid, self.Pid()] + self.nodeIDs() + [thetaMcid, zOffset,
-                                                                      None, TFlag, T1, T2, T3, T4]
-        return fields
+        list_fields = (['CQUAD4', self.eid, self.Pid()] + self.nodeIDs() +
+                  [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
+        return list_fields
 
 
 class CQUADR(QuadShell):
     type = 'CQUADR'
     #calculixType = 'CAX8'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         QuadShell.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## element ID number
-            self.eid = int(card.field(1))
-            self.pid = card.field(2)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = [integer_or_blank(card, 3, 'n1'),
+                    integer_or_blank(card, 4, 'n2'),
+                    integer_or_blank(card, 5, 'n3'),
+                    integer_or_blank(card, 6, 'n4')]
 
-            nids = card.fields(3, 7)
+            self.thetaMcid = integer_double_or_blank(card, 7, 'thetaMcid', 0.0)
+            self.zOffset = double_or_blank(card, 8, 'zOffset', 0.0)
 
-            self.thetaMcid = card.field(7, 0.0)
-            self.zOffset = card.field(8, 0.0)
-
-            self.TFlag = card.field(10, 0)
-            self.T1 = card.field(11, 1.0)
-            self.T2 = card.field(12, 1.0)
-            self.T3 = card.field(13, 1.0)
-            self.T4 = card.field(14, 1.0)
+            self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
+            self.T1 = double_or_blank(card, 11, 'T1', 1.0)
+            self.T2 = double_or_blank(card, 12, 'T2', 1.0)
+            self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+            self.T4 = double_or_blank(card, 14, 'T4', 1.0)
+            assert len(card) <= 15, 'len(CQUADR card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -866,99 +1140,131 @@ class CQUADR(QuadShell):
                 self.T3 = 1.0
             if self.T4 == -1.0:
                 self.T4 = 1.0
-        ###
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4, 'CQUADR'
 
+    def cross_reference(self, model):
+        msg = ' which is required by CQUADR eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def flipNormal(self):
         """
+        @code
         1---2        1---4
         |   |  -->   |   |
         |   |        |   |
         4---3        2---3
+        @endcode
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
 
     def rawFields(self):
-        fields = ['CQUADR', self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid, self.zOffset,
-                                                                      None, self.TFlag, self.T1, self.T2, self.T3, self.T4, ]
-        return fields
+        list_fields = (['CQUADR', self.eid, self.Pid()] + self.nodeIDs() +
+                  [self.thetaMcid, self.zOffset, None, self.TFlag, self.T1,
+                   self.T2, self.T3, self.T4])
+        return list_fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self.getReprDefaults()
-        fields = ['CQUADR', self.eid, self.Pid()] + self.nodeIDs() + [thetaMcid, zOffset,
-                                                                      None, TFlag, T1, T2, T3, T4]
-        return fields
+        list_fields = (['CQUADR', self.eid, self.Pid()] + self.nodeIDs() +
+                  [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
+        return list_fields
 
 
 class CQUAD(QuadShell):
     type = 'CQUAD'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         QuadShell.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         ## element ID number
-        self.eid = int(card.field(1))
-        self.pid = card.field(2)
-
-        nids = card.fields(3, 12)
+        self.eid = integer(card, 1, 'eid')
+        self.pid = integer(card, 2, 'pid')
+        nids = [integer_or_blank(card, 3, 'n1'),
+                integer_or_blank(card, 4, 'n2'),
+                integer_or_blank(card, 5, 'n3'),
+                integer_or_blank(card, 6, 'n4'),
+                integer_or_blank(card, 7, 'n5'),
+                integer_or_blank(card, 8, 'n6'),
+                integer_or_blank(card, 9, 'n7'),
+                integer_or_blank(card, 10, 'n8'),
+                integer_or_blank(card, 11, 'n9')]
+        assert len(card) <= 12, 'len(CQUAD card) = %i' % len(card)
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 9
 
-        self.thetaMcid = card.field(7, 0.0)
-        self.zOffset = card.field(8, 0.0)
-
-        self.TFlag = card.field(10, 0)
-        self.T1 = card.field(11, 1.0)
-        self.T2 = card.field(12, 1.0)
-        self.T3 = card.field(13, 1.0)
-        self.T4 = card.field(14, 1.0)
+    def cross_reference(self, model):
+        msg = ' which is required by CQUAD eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def flipNormal(self):
         """
+        @code
         1--5--2        1--8--4
         |     |  -->   |     |
         8  9  6        5  9  7
         |     |        |     |
         4--7--3        2--6--3
+        @endcode
         """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]
+        assert len(self.nodes) == 9
 
     def rawFields(self):
-        fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
-        return fields
+        list_fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
+        return list_fields
 
     def reprFields(self):
-        (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self.getReprDefaults()
-        fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
-        return fields
-
+        list_fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
+        return list_fields
+        
 
 class CQUAD8(QuadShell):
     type = 'CQUAD8'
     asterType = 'QUAD8'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         QuadShell.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## element ID number
-            self.eid = int(card.field(1))
-            self.pid = card.field(2)
-            nids = card.fields(3, 11)
-            self.T1 = card.field(11, 1.0)
-            self.T2 = card.field(12, 1.0)
-            self.T3 = card.field(13, 1.0)
-            self.T4 = card.field(14, 1.0)
-            self.thetaMcid = card.field(15, 0.0)
-            self.zOffset = card.field(16, 0.0)
-            self.TFlag = card.field(17, 0)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = [integer(card, 3, 'n1'),
+                    integer(card, 4, 'n2'),
+                    integer(card, 5, 'n3'),
+                    integer(card, 6, 'n4'),
+                    integer_or_blank(card, 7, 'n5', 0),
+                    integer_or_blank(card, 8, 'n6', 0),
+                    integer_or_blank(card, 9, 'n7', 0),
+                    integer_or_blank(card, 10, 'n8', 0)]
+
+            self.T1 = double_or_blank(card, 11, 'T1', 1.0)
+            self.T2 = double_or_blank(card, 12, 'T2', 1.0)
+            self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+            self.T4 = double_or_blank(card, 14, 'T4', 1.0)
+            self.thetaMcid = integer_double_or_blank(card, 15, 'thetaMcid', 0.0)
+            self.zOffset = double_or_blank(card, 16, 'zOffset', 0.0)
+            self.TFlag = integer_or_blank(card, 17, 'TFlag', 0)
+            assert len(card) <= 18, 'len(CQUAD4 card) = %i' % len(card)
         else:
             #print "CQUAD8 = ",data
             #(6401,
@@ -976,11 +1282,19 @@ class CQUAD8(QuadShell):
             self.thetaMcid = data[14]
             self.zOffset = data[14]
             self.TFlag = data[15]
-        ###
+
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 8
 
+    def cross_reference(self, model):
+        msg = ' which is required by CQUAD8 eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def flipNormal(self):
@@ -995,13 +1309,12 @@ class CQUAD8(QuadShell):
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5]
 
     def Normal(self):
-        (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()
-        a = n1 - n3
-        b = n2 - n4
-        return Normal(a, b)
+        (n1, n2, n3, n4) = self.nodePositions()[:4]
+        return _normal(n1 - n3, n2 - n4)
 
-    def AreaCentroid(self, debug=False):
+    def AreaCentroid(self):
         """
+        @code
         1-----2
         |    /|
         | A1/ |
@@ -1014,31 +1327,25 @@ class CQUAD8(QuadShell):
            where:
              c=centroid
              A=area
+        @endcode
         """
-        #if debug:
-        #    print("nodes = %s" %(self.nodes))
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()
         a = n1 - n2
         b = n2 - n4
         area1 = Area(a, b)
-        c1 = self.CentroidTriangle(n1, n2, n4)
+        c1 = centroid_triangle(n1, n2, n4)
 
         a = n2 - n4
         b = n2 - n3
         area2 = Area(a, b)
-        c2 = self.CentroidTriangle(n2, n3, n4)
+        c2 = centroid_triangle(n2, n3, n4)
 
         area = area1 + area2
         centroid = (c1 * area1 + c2 * area2) / area
-        if debug:
-            print("c1=%s \n c2=%s \n a1=%s a2=%s" % (c1, c2, area1, area2))
-            print("type(centroid=%s centroid=%s \n" %
-                 (type(centroid), centroid))
         return(area, centroid)
-    ###
 
     def Area(self):
-        """
+        r"""
         \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
         where a and b are the quad's cross node point vectors
         """
@@ -1047,53 +1354,74 @@ class CQUAD8(QuadShell):
         b = n2 - n4
         area = Area(a, b)
         return area
-    ###
 
     def rawFields(self):
-        fields = ['CQUAD8', self.eid, self.Pid()] + self.nodeIDs() + [
+        list_fields = ['CQUAD8', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) + [
             self.T1, self.T2, self.T3, self.T4, self.thetaMcid, self.zOffset,
             self.TFlag]
-        return fields
+        return list_fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self.getReprDefaults()
-        fields = ['CQUAD8', self.eid, self.Pid()] + self.nodeIDs() + [
-            T1, T2, T3, T4, thetaMcid, zOffset,
-            TFlag]
-        return fields
+        list_fields = (['CQUAD8', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) + [
+            T1, T2, T3, T4, thetaMcid, zOffset, TFlag])
+        return list_fields
 
 
 class CQUADX(QuadShell):
     type = 'CQUADX'
     calculixType = 'CAX8'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         QuadShell.__init__(self, card, data)
-        ## element ID number
-        self.eid = int(card.field(1))
-        self.pid = card.field(2)
-
-        nids = card.fields(3, 12)
+        if comment:
+            self._comment = comment
+        if card:
+            ## element ID number
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = [integer_or_blank(card, 3, 'n1'),
+                    integer_or_blank(card, 4, 'n2'),
+                    integer_or_blank(card, 5, 'n3'),
+                    integer_or_blank(card, 6, 'n4'),
+                    integer_or_blank(card, 7, 'n5'),
+                    integer_or_blank(card, 8, 'n6'),
+                    integer_or_blank(card, 9, 'n7'),
+                    integer_or_blank(card, 10, 'n8'),
+                    integer_or_blank(card, 11, 'n9')]
+            assert len(card) <= 12, 'len(CQUADX card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 9
 
+    def cross_reference(self, model):
+        msg = ' which is required by CQUADX eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
     def Thickness(self):
+        """
+        Returns the thickness
+        """
         return self.pid.Thickness()
 
     def flipNormal(self):
         """
+        @code
         1--5--2        1--8--4
         |     |  -->   |     |
         8  9  6        5  9  7
         |     |        |     |
         4--7--3        2--6--3
+        @endcode
         """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]
 
     def rawFields(self):
-        fields = ['CQUADX', self.eid, self.Pid()] + self.nodeIDs()
-        return fields
+        list_fields = ['CQUADX', self.eid, self.Pid()] + self.nodeIDs()
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()

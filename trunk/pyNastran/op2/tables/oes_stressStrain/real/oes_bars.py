@@ -1,22 +1,22 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from .oes_objects import stressObject, strainObject
-from pyNastran.op2.op2Errors import InvalidCodeError
+from .oes_objects import StressObject, StrainObject
+from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 
-class BarStressObject(stressObject):
+class BarStressObject(StressObject):
     """
-    # sCode=0
+    # s_code=0
                                S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )
     ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
       ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        stressObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.s1 = {}
         self.s2 = {}
@@ -28,20 +28,20 @@ class BarStressObject(stressObject):
         self.MS_tension = {}
         self.MS_compression = {}
 
-        #if self.elementType==100:
+        #if self.element_type==100:
             #self.getLength = self.getLength100_format1_sort0
-            #self.addNewEid = self.addNewEid100
+            #self.add_new_eid = self.addNewEid100
 
         self.dt = dt
         #print "BAR dt=%s" %(dt)
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                #self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                #self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             #self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -58,7 +58,7 @@ class BarStressObject(stressObject):
                    'MS_tension, MS_compression\n')
         return msg
 
-    def addF06Data(self, data, transient):
+    def add_f06_data(self, data, transient):
         if transient is None:
             for line in data:
                 (eType, eid, s1A, s2A, s3A, s4A, axialA, smaxA, sminA, MSt,
@@ -77,11 +77,11 @@ class BarStressObject(stressObject):
             return
 
         (dtName, dt) = transient
-        self.dataCode['name'] = dtName
+        self.data_code['name'] = dtName
         #print "dt = ",dt
         #print "dtName = ",dtName
         if dt not in self.s1:
-            self.updateDt(self.dataCode, dt)
+            self.update_dt(self.data_code, dt)
             self.isTransient = True
 
         for line in data:
@@ -102,7 +102,7 @@ class BarStressObject(stressObject):
     def getLength(self):
         return (68, 'iffffffffffffffff')
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.s1[dt]
         del self.s2[dt]
         del self.s3[dt]
@@ -111,12 +111,12 @@ class BarStressObject(stressObject):
         del self.smax[dt]
         del self.smin[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.s1.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         """
@@ -164,7 +164,7 @@ class BarStressObject(stressObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def addNewEid(self, eType, dt, eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
+    def add_new_eid(self, eType, dt, eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
         s1b, s2b, s3b, s4b, smaxb, sminb, MSc):
         #print "Bar Stress add..."
         self.eType[eid] = eType
@@ -183,12 +183,12 @@ class BarStressObject(stressObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def addNewEidSort1(self, eType, dt, eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
+    def add_new_eid_sort1(self, eType, dt, eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                                              s1b, s2b, s3b, s4b, smaxb, sminb, MSc):
-        msg = "dt=%s eid=%s s1a=%s" % (dt, eid, s1a)
+        #msg = "dt=%s eid=%s s1a=%s" % (dt, eid, s1a)
         #print msg
         if dt not in self.s1:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.eType[eid] = eType
         #print self.s1
         self.s1[dt][eid] = [s1a, s1b]
@@ -203,9 +203,9 @@ class BarStressObject(stressObject):
 
         #if nodeID==0: raise Exception(msg)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
 
         msg = header + [
                 '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -214,7 +214,7 @@ class BarStressObject(stressObject):
               ]
 
         for eid, S1s in sorted(self.s1.iteritems()):
-            eType = self.eType[eid]
+            #eType = self.eType[eid]
             axial = self.axial[eid]
             #MSt = self.MSt[eid]
             #MSc = self.MSc[eid]
@@ -229,7 +229,7 @@ class BarStressObject(stressObject):
             smin = self.smin[eid]
             vals = [s1[0], s2[0], s3[0], s4[0], axial, smax[0], smin[0],
                     s1[1], s2[1], s3[1], s4[1], smax[1], smin[1]]
-            (vals2, isAllZeros) = self.writeFloats13E(vals)
+            (vals2, isAllZeros) = writeFloats13E(vals)
             [s1a, s2a, s3a, s4a, axial, smaxa, smina,
              s1b, s2b, s3b, s4b, smaxb, sminb] = vals2
             msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt.rstrip()))
@@ -238,7 +238,7 @@ class BarStressObject(stressObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         words = [
                 '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
@@ -246,10 +246,10 @@ class BarStressObject(stressObject):
               ]
         msg = []
         for dt, S1s in sorted(self.s1.iteritems()):
-            header[1] = ' %s = %10.4E\n' % (self.dataCode['name'], dt)
+            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for eid, S1 in sorted(S1s.iteritems()):
-                eType = self.eType[eid]
+                #eType = self.eType[eid]
                 axial = self.axial[dt][eid]
                 #MSt = self.MSt[eid]
                 #MSc = self.MSc[eid]
@@ -264,7 +264,7 @@ class BarStressObject(stressObject):
                 smin = self.smin[dt][eid]
                 vals = [s1[0], s2[0], s3[0], s4[0], axial, smax[0], smin[0],
                         s1[1], s2[1], s3[1], s4[1], smax[1], smin[1]]
-                (vals2, isAllZeros) = self.writeFloats13E(vals)
+                (vals2, isAllZeros) = writeFloats13E(vals)
                 [s1a, s2a, s3a, s4a, axial, smaxa, smina,
                  s1b, s2b, s3b, s4b, smaxb, sminb] = vals2
                 msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt.rstrip()))
@@ -275,7 +275,7 @@ class BarStressObject(stressObject):
         return (''.join(msg), pageNum - 1)
 
     def __repr__(self):
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---BAR STRESS---\n'
@@ -309,7 +309,7 @@ class BarStressObject(stressObject):
             msg += '%s ' % (' ' * 13)
             vals = [s1[1], s2[1], s3[1], s4[1], '', smax[1], smin[1]]
             for val in vals:
-                if isinstance(val, str):
+                if isinstance(val, unicode):
                     msg += '%8s ' % (val)
                 elif abs(val) < 1e-6:
                     msg += '%8s ' % ('0')
@@ -331,7 +331,7 @@ class BarStressObject(stressObject):
         msg += '\n'
 
         for dt, S1ss in sorted(self.s1.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for eid, S1s in sorted(S1ss.iteritems()):
                 eType = self.eType[eid]
                 axial = self.axial[dt][eid]
@@ -356,7 +356,7 @@ class BarStressObject(stressObject):
                 msg += '%s ' % (' ' * 13)
                 vals = [s1[1], s2[1], s3[1], s4[1], '', smax[1], smin[1]]
                 for val in vals:
-                    if isinstance(val, str):
+                    if isinstance(val, unicode):
                         msg += '%8s ' % (val)
                     elif abs(val) < 1e-6:
                         msg += '%8s ' % ('0')
@@ -369,21 +369,20 @@ class BarStressObject(stressObject):
         return msg
 
 
-class BarStrainObject(strainObject):
+class BarStrainObject(StrainObject):
     """
-    # sCode=10
+    # s_code=10
                                      S T R A I N S   I N   B A R   E L E M E N T S          ( C B A R )
     ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
       ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C
 
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        strainObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
         if self.code in [[1, 0, 0], [1, 0, 1]]:
-            #raise InvalidCodeError('barStrain - get the format/sort/stressCode=%s' %(self.code))
             self.e1 = {}
             self.e2 = {}
             self.e3 = {}
@@ -404,16 +403,16 @@ class BarStrainObject(strainObject):
             self.MS_tension = {}
             self.MS_compression = {}
         else:
-            raise InvalidCodeError('barStrain - get the format/sort/stressCode=%s' % (self.code))
+            raise RuntimeError("Invalid Code: barStrain - get the format/sort/stressCode=%s" % (self.code))
 
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
-                self.addNewEid = self.NewEidSort1
+                self.add = self.add_sort1
+                self.add_new_eid = self.NewEidSort1
         else:
             assert dt is not None
             self.add = self.addSort2
-            self.addNewEid = self.NewEidSort2
+            self.add_new_eid = self.NewEidSort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -430,7 +429,7 @@ class BarStrainObject(strainObject):
                    'MS_tension, MS_compression\n')
         return msg
 
-    def addF06Data(self, data, transient):
+    def add_f06_data(self, data, transient):
         if transient is None:
             for line in data:
                 (eType, eid, e1A, e2A, e3A, e4A, axialA, emaxA, eminA, MSt,
@@ -449,9 +448,9 @@ class BarStrainObject(strainObject):
             return
 
         (dtName, dt) = transient
-        self.dataCode['name'] = dtName
+        self.data_code['name'] = dtName
         if dt not in self.s1:
-            self.updateDt(self.dataCode, dt)
+            self.update_dt(self.data_code, dt)
             self.isTransient = True
 
         for line in data:
@@ -469,7 +468,7 @@ class BarStrainObject(strainObject):
             #self.MS_tension[dt][eid]     = MSt
             #self.MS_compression[dt][eid] = MSc
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.e1[dt]
         del self.e2[dt]
         del self.e3[dt]
@@ -478,12 +477,12 @@ class BarStrainObject(strainObject):
         del self.emax[dt]
         del self.emin[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.e1.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         """
@@ -497,7 +496,7 @@ class BarStrainObject(strainObject):
         #self.MS_tension[dt]     = {}
         #self.MS_compression[dt] = {}
 
-    def addNewEid(
+    def add_new_eid(
         self, eType, dt, eid, e1a, e2a, e3a, e4a, axial, emaxa, emina, MSt,
                                     e1b, e2b, e3b, e4b, emaxb, eminb, MSc):
         #print "Bar Stress add..."
@@ -516,14 +515,14 @@ class BarStrainObject(strainObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def addNewEidSort1(
+    def add_new_eid_sort1(
         self, eType, dt, eid, e1a, e2a, e3a, e4a, axial, emaxa, emina, MSt,
                                          e1b, e2b, e3b, e4b, emaxb, eminb, MSc):
         #print "Bar Stress add..."
 
         self.eType[eid] = eType
         if dt not in self.e1:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
 
         self.e1[dt][eid] = [e1a, e1b]
         self.e2[dt][eid] = [e2a, e2b]
@@ -539,9 +538,9 @@ class BarStrainObject(strainObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         if self.isTransient:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
 
         msg = header + [
                 '                                  S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -549,7 +548,7 @@ class BarStrainObject(strainObject):
                 '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
               ]
         for eid, E1s in sorted(self.e1.iteritems()):
-            eType = self.eType[eid]
+            #eType = self.eType[eid]
             axial = self.axial[eid]
             #MSt = self.MSt[eid]
             #MSc = self.MSc[eid]
@@ -564,7 +563,7 @@ class BarStrainObject(strainObject):
             emin = self.emin[eid]
             vals = [e1[0], e2[0], e3[0], e4[0], axial, emax[0], emin[0],
                     e1[1], e2[1], e3[1], e4[1], emax[1], emin[1]]
-            (vals2, isAllZeros) = self.writeFloats13E(vals)
+            (vals2, isAllZeros) = writeFloats13E(vals)
             [e10, e20, e30, e40, axial, emax0, emin0,
              e11, e21, e31, e41, emax1, emin1] = vals2
 
@@ -574,7 +573,7 @@ class BarStrainObject(strainObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         words = [
                 '                                  S T R A I N S    I N   B A R   E L E M E N T S           ( C B A R )\n',
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
@@ -582,10 +581,10 @@ class BarStrainObject(strainObject):
               ]
         msg = []
         for dt, E1s in sorted(self.e1.iteritems()):
-            header[1] = ' %s = %10.4E\n' % (self.dataCode['name'], dt)
+            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for eid, e1s in sorted(E1s.iteritems()):
-                eType = self.eType[eid]
+                #eType = self.eType[eid]
                 axial = self.axial[eid]
                 #MSt = self.MSt[eid]
                 #MSc = self.MSc[eid]
@@ -600,7 +599,7 @@ class BarStrainObject(strainObject):
                 emin = self.emin[eid]
                 vals = [e1[0], e2[0], e3[0], e4[0], axial, emax[0], emin[0],
                         e1[1], e2[1], e3[1], e4[1], emax[1], emin[1]]
-                (vals2, isAllZeros) = self.writeFloats13E(vals)
+                (vals2, isAllZeros) = writeFloats13E(vals)
                 [e10, e20, e30, e40, axial, emax0, emin0,
                  e11, e21, e31, e41, emax1, emin1] = vals2
 
@@ -645,7 +644,7 @@ class BarStrainObject(strainObject):
             msg += '%s ' % (' ' * 17)
             vals = [e1[1], e2[1], e3[1], e4[1], '', emax[1], emin[1]]
             for val in vals:
-                if isinstance(val, str):
+                if isinstance(val, unicode):
                     msg += '%10s ' % (val)
                 elif abs(val) < 1e-6:
                     msg += '%10s ' % ('0')
@@ -663,11 +662,11 @@ class BarStrainObject(strainObject):
         msg += '%-8s %6s ' % ('EID', 'eType')
         headers = ['e1', 'e2', 'e3', 'e4', 'Axial', 'eMax', 'eMin']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for dt, E1s in sorted(self.e1.iteritems()):
-            msg += "%s = %g\n" % (self.dataCode['name'], dt)
+            msg += "%s = %g\n" % (self.data_code['name'], dt)
             for eid, e1s in sorted(Els.iteritems()):
                 eType = self.eType[eid]
                 axial = self.axial[dt][eid]
@@ -692,7 +691,7 @@ class BarStrainObject(strainObject):
                 msg += '%s ' % (' ' * 17)
                 vals = [e1[1], e2[1], e3[1], e4[1], '', emax[1], emin[1]]
                 for val in vals:
-                    if isinstance(val, str):
+                    if isinstance(val, unicode):
                         msg += '%10s ' % (val)
                     elif abs(val) < 1e-6:
                         msg += '%10s ' % ('0')

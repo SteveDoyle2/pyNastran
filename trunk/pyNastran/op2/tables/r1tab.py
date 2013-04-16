@@ -11,33 +11,33 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 class R1TAB(object):
 
     def readTable_R1TAB(self):
-        tableName = self.readTableName(rewind=False)  # R1TAB
-        self.tableInit(tableName)
-        #print "tableName = |%r|" %(tableName)
+        table_name = self.read_table_name(rewind=False)  # R1TAB
+        self.table_init(table_name)
+        #print "table_name = |%r|" %(table_name)
 
-        self.readMarkers([-1, 7], 'R1TAB')
-        ints = self.readIntBlock()
+        self.read_markers([-1, 7], 'R1TAB')
+        ints = self.read_int_block()
         #print "*ints = ",ints
 
-        self.readMarkers([-2, 1, 0], 'R1TAB')
-        bufferWords = self.getMarker()
-        #print "bufferWords = ",bufferWords
-        word = self.readStringBlock()  # DESTAB
+        self.read_markers([-2, 1, 0], 'R1TAB')
+        buffer_words = self.get_marker()
+        #print "buffer_words = ",buffer_words
+        word = self.read_string_block()  # DESTAB
 
         iTable = -3
-        while bufferWords:  # read until bufferWords=0
+        while buffer_words:  # read until buffer_words=0
             #print "iTable = ",iTable
-            self.readMarkers([iTable, 1, 0], 'R1TAB')
+            self.read_markers([iTable, 1, 0], 'R1TAB')
             nOld = self.n
-            bufferWords = self.getMarker()
-            #print "bufferWords = ",bufferWords
-            if bufferWords == 0:  # maybe read new buffer...
+            buffer_words = self.get_marker()
+            #print "buffer_words = ",buffer_words
+            if buffer_words == 0:  # maybe read new buffer...
                 self.goto(nOld)
                 break
-            data = self.readBlock()
+            data = self.read_block()
             #print "len(data) = ",len(data)
             self.readDesvar(data)
             iTable -= 1
 
-        #print self.printSection(200)
+        #print self.print_section(200)
 
