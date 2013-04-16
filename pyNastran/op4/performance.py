@@ -11,18 +11,21 @@ import time
 import numpy as np
 import os.path
 import sys
-from   matplotlib import pyplot
+from matplotlib import pyplot
 
-import cop4                # Cython
-from   op4  import OP4     # pure Python
+import cop4          # Cython
+from op4 import OP4  # pure Python
 
-dimension   = range(1000, 15000, 1000) # 14 matrices sized 1000 x 1000 to
-                                       # 14000 x 14000.  The largest will
-                                       # be 1.5 GB.
-File        = []
-cop4_save   = []
-cop4_load   = []
-pop4_load   = []
+dimension = range(1000, 15000, 1000) # 14 matrices sized 1000 x 1000 to
+                                     # 14000 x 14000.  The largest will
+                                     # be 1.5 GB.
+#dimension = range(1000, 10000, 1000)
+#print dimension
+
+File      = []
+cop4_save = []
+cop4_load = []
+pop4_load = []
 for i,n in enumerate(dimension): File.append( 'A_%dx%d.op4' % (n, n) )
 
 for i,n in enumerate(dimension):
@@ -31,14 +34,14 @@ for i,n in enumerate(dimension):
         A = np.random.rand(n,n).astype(np.float32)
         start_elapsed = time.time()
         cop4.Save(File[i], A=A)
-        end_elapsed   = time.time()
+        end_elapsed = time.time()
         print('wrote %-20s in %8.3f s' % (File[i], end_elapsed-start_elapsed))
 
 # Method 1: cop4
 for i in range(len(dimension)):
     start_elapsed = time.time()
     B = cop4.Load(File[i])
-    end_elapsed   = time.time()
+    end_elapsed = time.time()
     cop4_load.append(end_elapsed - start_elapsed)
     print('cop4 read %-20s in %8.3f s' % (File[i], cop4_load[i]))
 
@@ -46,8 +49,8 @@ for i in range(len(dimension)):
 for i in range(len(dimension)):
     start_elapsed = time.time()
     op4 = OP4()
-    B   = op4.readOP4(File[i])
-    end_elapsed   = time.time()
+    B = op4.readOP4(File[i])
+    end_elapsed = time.time()
     pop4_load.append(end_elapsed - start_elapsed)
     print('pop4 read %-20s in %8.3f s' % (File[i], pop4_load[i]))
 

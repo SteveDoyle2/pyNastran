@@ -8,17 +8,17 @@ from numpy import (array, zeros, float32, float64, complex64, complex128,
 from scipy.sparse import coo_matrix
 from pyNastran.utils import is_binary
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
-from pyNastran.op2.fortranFile import FortranFile
+#from pyNastran.op2.fortranFile import FortranFile
 import io
 
-class OP4(FortranFile):
-#class OP4(object):
+#class OP4(FortranFile):
+class OP4(object):
     """
     @todo add endian checking
     @todo test on big matrices
     """
     def __init__(self, log=None):
-        FortranFile.__init__(self)
+        #FortranFile.__init__(self)
         self.n = 0
         self.endian = ''
 
