@@ -1,32 +1,45 @@
-# pylint: disable=R0904,R0902
+# pylint: disable=R0904,R0902,C0111,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
 from itertools import izip
 
-from pyNastran.bdf.fieldWriter import (print_card, print_card_8, set_default_if_blank,
-                                       is_same)
-from pyNastran.bdf.fieldWriter16 import print_card_16
-from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
+from pyNastran.bdf.fieldWriter import print_card, is_same
+                               #print_card_8, set_default_if_blank, print_card
+#from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
 
 
-class BaseCard(BDFCard):
-    #def __init__(self,card):
-    #    pass
+class BaseCard(object):
+    def __init__(self):
+        pass
+
+    def comment(self):
+        if hasattr(self, '_comment'):
+            return '%s' % self._comment
+        return ''
 
     def writeCodeAster(self):
         return ('# skipping %s  because writeCodeAster is not implemented\n'
                 % self.type)
 
     def writeCodeAsterLoad(self, model, gridWord='node'):
-        return '# skipping %s (lid=%s) because writeCodeAsterLoad is not implemented\n' % (self.type, self.lid)
+        return ('# skipping %s (lid=%s) because writeCodeAsterLoad is '
+                'not implemented\n' % (self.type, self.lid))
 
-    #def verify(self, model, iSubcase):
+    #def verify(self, model, isubcase):
         #"""
         #this method checks performs checks on the cards such as
         #that the PBEAML has a proper material type
         #"""
         #pass
+    
+    def _verify(self, isxref=False):
+        """
+        This method checks that all the card is various methods of the card
+        work properly.  It's only used in testing.
+        """
+        print('# skipping _verify (type=%s) because _verify is '
+              'not implemented\n' % self.type)
 
     def isSameFields(self, fields1, fields2):
         for (field1, field2) in izip(fields1, fields2):
@@ -42,26 +55,29 @@ class BaseCard(BDFCard):
 
     #def removeTrailingNones(self, fields):
         #"""removes blank fields at the end of a card object"""
-        #self._wipeEmptyFields(fields)
-
-    def cross_reference(self, model):
-        #self.mid = model.Material(self.mid)
-        msg = "%s needs to implement the 'cross_reference' method" % (self.type)
-        raise NotImplementedError(msg)
+        #wipe_empty_fields(fields)
 
     def buildTableLines(self, fields, nStart=1, nEnd=0):
         """
         builds a table of the form:
+        @code
         'DESVAR' DVID1 DVID2 DVID3 DVID4 DVID5 DVID6 DVID7
                  DVID8 -etc.-
         'UM'     VAL1  VAL2  -etc.-
-        and then pads the rest of the fields with None's
-        @param fields the fields to enter, including DESVAR
-        @param nStart the number of blank fields at the start of the line (default=1)
-        @param nEnd the number of blank fields at the end of the line (default=0)
+        @endcode
 
-        @note will be used for DVPREL2, RBE1, RBE3
-        @warning only works for small field format???
+        and then pads the rest of the fields with None's
+        @param fields
+            the fields to enter, including DESVAR
+        @param nStart
+            the number of blank fields at the start of the line (default=1)
+        @param nEnd
+            the number of blank fields at the end of the line (default=0)
+
+        @note
+            will be used for DVPREL2, RBE1, RBE3
+        @warning
+            only works for small field format???
         """
         fieldsOut = []
         n = 8 - nStart - nEnd
@@ -76,7 +92,7 @@ class BaseCard(BDFCard):
                 fieldsOut += [None] * (nStart + nEnd)
 
         # make sure they're aren't any trailing None's (from a new line)
-        fieldsOut = self._wipeEmptyFields(fieldsOut)
+        fieldsOut = wipe_empty_fields(fieldsOut)
         #print "fieldsOut = ",fieldsOut,len(fieldsOut)
 
         # push the next key (aka next fields[0]) onto the next line
@@ -96,18 +112,19 @@ class BaseCard(BDFCard):
 
     def printRawFields(self, size=8):
         """A card's raw fields include all defaults for all fields"""
-        fields = self.rawFields()
-        return print_card(fields, size=size)
+        list_fields = self.rawFields()
+        return print_card(list_fields, size=size)
 
     def reprFields(self):
         return self.rawFields()
-    
-    def printCard(self, fields, size=8):
-        return print_card(fields, size=size)
-    
+
     def print_card(self, size=8):
-        fields = self.reprFields()
-        return print_card(fields, size=size)
+        list_fields = self.reprFields()
+        return self.comment() + print_card(list_fields, size=size)
+
+    def repr_card(self, size=8):
+        list_fields = self.reprFields()
+        return print_card(list_fields, size=size)
 
     def __repr__(self):
         """
@@ -119,25 +136,35 @@ class BaseCard(BDFCard):
             return self.print_card()
         except:
             fields = self.reprFields()
-            print('problem printing %s card' % (self.type))
+            print('problem printing %s card' % self.type)
             print("fields = ", fields)
             raise
 
 
-def Mid(self):
-    if isinstance(self.mid, int):
-        return self.mid
-    else:
-        return self.mid.mid
-
+#def Mid(self):
+    #if isinstance(self.mid, int):
+        #return self.mid
+    #elif self.mid is None:
+        #print ("No material defined for property ", self.pid)
+        #return None
+    #else:
+        #return self.mid.mid
 
 class Property(BaseCard):
     def __init__(self, card, data):
         assert card is None or data is None
-        pass
+
+    def Pid(self):
+        return self.pid
 
     def Mid(self):
-        return Mid(self)
+        if isinstance(self.mid, int):
+            return self.mid
+        #elif self.mid is None:
+            #print ("No material defined for property ", self.pid)
+            #return None
+        else:
+            return self.mid.mid
 
     def isSameCard(self, prop, debug=False):
         if self.type != prop.type:
@@ -155,8 +182,7 @@ class Property(BaseCard):
 class Material(BaseCard):
     """Base Material Class"""
     def __init__(self, card, data):
-        pass
-        #self.type = card[0]
+        BaseCard.__init__(self)
 
     def isSameCard(self, mat, debug=False):
         if self.type != mat.type:
@@ -178,11 +204,11 @@ class Element(BaseCard):
     pid = 0  # CONM2, rigid
 
     def __init__(self, card, data):
+        BaseCard.__init__(self)
         assert card is None or data is None
         ## the list of node IDs for an element (default=None)
         self.nodes = None
         #self.nids = []
-        pass
 
     def isSameCard(self, element, debug=False):
         if self.type != element.type:
@@ -197,6 +223,9 @@ class Element(BaseCard):
         """returns the property ID of an element"""
         if isinstance(self.pid, int):
             return self.pid
+        #elif self.pid is None:
+            #print ("No property defined for element ", self.eid)
+            #return None
         else:
             return self.pid.pid
 
@@ -204,7 +233,44 @@ class Element(BaseCard):
         """returns the positions of multiple node objects"""
         if not nodes:
             nodes = self.nodes
-        return [node.Position() for node in nodes]
+        
+        positions = []
+        for node in nodes:
+            if node is not None:
+                positions.append(node.Position())
+            else:
+                positions.append(None)
+        return positions
+
+    #def _nodeIDs_allowed(self, nodes=None, msg=''):
+        #if not nodes:
+            #nodes = self.nodes
+
+        #nodes2 = []
+        #for i, node in enumerate(nodes):
+            #if node == 0 or node is None:
+                #nodes2.append(None)
+            #elif isinstance(node, int):
+                #nodes2.append(node)
+            #else:
+                #nodes2.append(node.nid)
+        #return nodes2
+
+    #def _nodeIDs_restricted(self, nodes=None, msg=''):
+        #if not nodes:
+            #nodes = self.nodes
+
+        #try:
+            #if isinstance(nodes[0], int):
+                #nodeIDs = [node for node in nodes]
+            #else:
+                #nodeIDs = [node.nid for node in nodes]
+        #except:
+            #print("type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s" % (
+                  #self.type, nodes, allowEmptyNodes, msg))
+            #raise
+        #assert 0 not in nodeIDs, 'nodeIDs = %s' % nodeIDs
+        #return nodeIDs
 
     def nodeIDs(self, nodes=None, allowEmptyNodes=False, msg=''):
         """returns nodeIDs for repr functions"""
@@ -223,16 +289,27 @@ class Element(BaseCard):
                         nodes2.append(node.nid)
                 return nodes2
             else:
-                if isinstance(nodes[0], int):
-                    nodeIDs = [node for node in nodes]
-                else:
-                    nodeIDs = [node.nid for node in nodes]
-
-                assert 0 not in nodeIDs, 'nodeIDs = %s' % (nodeIDs)
+                try:
+                    nodeIDs = []
+                    for i, node in enumerate(nodes):
+                        if isinstance(node, int):
+                            nodeIDs.append(node)
+                        else:
+                            nodeIDs.append(node.nid)
+                    
+                    #if isinstance(nodes[0], int):
+                        #nodeIDs = [node for node in nodes]
+                    #else:
+                        #nodeIDs = [node.nid for node in nodes]
+                except:
+                    print("type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s" % (
+                          self.type, nodes, allowEmptyNodes, msg))
+                    raise
+                assert 0 not in nodeIDs, 'nodeIDs = %s' % nodeIDs
                 return nodeIDs
         except:
-            print("nodes=%s allowEmptyNodes=%s\nmsg=%s" % (
-                nodes, allowEmptyNodes, msg))
+            print("type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s" % (
+                  self.type, nodes, allowEmptyNodes, msg))
             raise
 
     def prepareNodeIDs(self, nids, allowEmptyNodes=False):
@@ -240,72 +317,14 @@ class Element(BaseCard):
         self.nodes = []
         for nid in nids:
             if isinstance(nid, int):
-                self.nodes.append(int(nid))
-            elif nid is None and allowEmptyNodes:
                 self.nodes.append(nid)
+            elif nid is None and allowEmptyNodes:
+                self.nodes.append(None)
             else:  # string???
-                self.nodes.append(int(nid))
-                #raise RuntimeError('this element may not have missing nodes...nids=%s allowEmptyNodes=False' %(nids))
-
-    #def Normal(self,a,b):
-    #    """finds the unit normal vector of 2 vectors"""
-    #    return Normal(a,b)
-
-    def CentroidTriangle(self, n1, n2, n3, debug=False):
-        if debug:
-            print("n1=%s \nn2=%s \nn3=%s" % (n1, n2, n3))
-        centroid = (n1 + n2 + n3) / 3.
-        return centroid
-
-    def Centroid(self):
-        msg = 'Centroid not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def Length(self):
-        msg = 'Length not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def Area(self):
-        msg = 'Area not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def Volume(self):
-        msg = 'Volume not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def Mass(self):
-        msg = 'Mass not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def B(self):
-        msg = 'B matrix not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def D(self):
-        msg = 'D matrix not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def Jacobian(self):
-        msg = 'Jacobian not implemented for %s' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def stiffnessMatrix(self):
-        msg = 'stiffnessMatrix not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
-
-    def massMatrix(self):
-        msg = 'massMatrix not implemented in the %s class' % (
-            self.__class__.__name__)
-        raise NotImplementedError(msg)
+                #self.nodes.append(int(nid))
+                raise RuntimeError('this element may not have missing '
+                                   'nodes...nids=%s allowEmptyNodes=False'
+                                   % nids)
 
 
 def expand_thru(fields):
@@ -313,6 +332,8 @@ def expand_thru(fields):
     expands a list of values of the form [1,5,THRU,9,13]
     to be [1,5,6,7,8,9,13]
     """
+    if isinstance(fields, int):
+        return [fields]
     if len(fields) == 1:
         return fields
     out = []
@@ -353,7 +374,7 @@ def expand_thru_by(fields):
                 byCase = True
             minValue = fields[i - 1]
             maxValue = fields[i + 1]
-            maxR = int((maxValue - minValue) // by + 1) # max range value
+            maxR = int((maxValue - minValue) // by + 1)  # max range value
 
             for j in xrange(0, maxR):  # +1 is to include final point
                 value = minValue + by * j
@@ -403,6 +424,7 @@ def collapse_thru_by(fields):
     #assert fields == expand_thru_by(fields2)  # why doesn't this work?
     return fields2
 
+
 def collapse_thru_by_float(fields):
     assert 'THRU' not in fields, fields
     fields.sort()
@@ -427,34 +449,36 @@ def condense(valueList):
     and delta values for condensing a SET card.
     @see build_thru
     """
+    if len(valueList) == 0:
+        return []
     if len(valueList) == 1:
         return [[valueList[0], valueList[0], 1]]
     valueList.sort()
     packs = []
-    
+
     dvOld = None
     firstVal = valueList[0]
     lastVal = firstVal
 
     for val in valueList[1:]:
         dv = val - lastVal
-        
+
         # sets up the first item of the pack
         if dvOld is None:
             dvOld = dv
-        
+
         # fill up the pack
         if dvOld == dv:
             lastVal = val
         else:
-            packs.append([firstVal,lastVal,dvOld])
+            packs.append([firstVal, lastVal, dvOld])
             lastVal = val
             dvOld = None
             firstVal = val
 
     # fills the last pack
     if dvOld == dv:
-        packs.append([firstVal,val,dv])
+        packs.append([firstVal, val, dv])
     else:
         packs.append([firstVal, val, dvOld])
     return packs
@@ -491,7 +515,7 @@ def build_thru(packs, maxDV=None):
                 fields.append(lastVal)
         else:
             if maxDV is None:
-                if lastVal - firstVal > 4*dv:
+                if lastVal - firstVal > 4 * dv:
                     fields.append(firstVal)
                     fields.append('THRU')
                     fields.append(lastVal)
@@ -504,6 +528,7 @@ def build_thru(packs, maxDV=None):
                 for v in xrange(firstVal, lastVal + dv, dv):
                     fields.append(v)
     return fields
+
 
 def build_thru_float(packs, maxDV=None):
     """
@@ -520,15 +545,15 @@ def build_thru_float(packs, maxDV=None):
     """
     fields = []
     for (firstVal, lastVal, dv) in packs:
-        if lastVal - firstVal > 4*dv:
+        if lastVal - firstVal > 4 * dv:
             fields.append(firstVal)
             fields.append('THRU')
             fields.append(lastVal)
             fields.append('BY')
             fields.append(dv)
         else:
-            nv = int(round((lastVal-firstVal)/dv))+1
+            nv = int(round((lastVal - firstVal) / dv)) + 1
             for i in xrange(nv):
-                v = firstVal + i*dv
+                v = firstVal + i * dv
                 fields.append(v)
     return fields

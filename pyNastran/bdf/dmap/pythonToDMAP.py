@@ -1,6 +1,3 @@
-import re
-
-
 def get_comment(line):
     sline = line.rstrip().split('#')
     cmd = sline[0].strip()
@@ -14,7 +11,7 @@ def get_comment(line):
     nspaces = len(sline[0]) - len(cmd)
     return (nspaces, cmd, comment)
 
-from builtins import INT, FLOAT, DOUBLE, STRING, ZEROS, ONES, ARRAY
+from builtins import INT, FLOAT, DOUBLE, STRING, ZEROS
 
 
 class PythonToDMAP(object):
@@ -158,16 +155,15 @@ class PythonToDMAP(object):
 
         expr = expr.strip()
         if '(' in expr:  # order of operations or a function
-            ### @todo not done
+            ## @todo not done
 
             i = expr.index('(')
             (pre, aft) = (expr[:i], expr[i:])
-            if pre.isalpha():  # @todo function, not done
+            if pre.isalpha():  ## @todo function, not done
                 pass
             else:  # order of operations
                 self.parse_assign(self.varCounter, pre)
                 self.varCounter += 1
-            ###
             # stuff goes here...
             if 'array(' in expr or 'zeros(' in expr or 'ones(' in expr:
                 expr_val = eval(expr.upper())
@@ -179,7 +175,6 @@ class PythonToDMAP(object):
                 Type = expr_val
             else:
                 raise NotImplementedError('function...%s' % (expr))
-            ###
             #print "expr_val = ", expr_val
         else:
             if '+' in expr:
@@ -240,9 +235,7 @@ class PythonToDMAP(object):
             else:
                 print "***eval_expr = ", eval_expr
                 asdf
-            ###
             expr_value = self.globals[variable]
-        ###
         return (expr_value, expr_value)
 
     def parse_operation(self, variable, operator, expr):

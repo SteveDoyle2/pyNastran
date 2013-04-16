@@ -1,6 +1,5 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
 from struct import unpack
 
 from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
@@ -14,7 +13,7 @@ from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
 class EPT(object):
 
     def readTable_EPT(self):
-        self.tableName = 'EPT'
+        self.table_name = 'EPT'
         self.bigProperties = {}
         self.iTableMap = {
             #(3201,32,55):    self.readNSM,     # record 2  - needs an object holder (e.g. self.elements/self.properties)
@@ -47,7 +46,7 @@ class EPT(object):
         self.readRecordTable('EPT')
 
     def addOp2Property(self, prop):
-        self.addProperty(prop, allowOverwrites=True)
+        self.add_property(prop, allowOverwrites=True)
 
 # HGSUPPR
 
@@ -120,7 +119,7 @@ class EPT(object):
         }  # for GROUP="MSCBML0"
 
         #print "reading PBARL"
-        while len(data) >= 28:  # 7*4 - ROD - shortest entry...could be buggy... ## @todo fix this
+        while len(data) >= 28:  # 7*4 - ROD - shortest entry...could be buggy... # TODO fix this
             eData = data[:28]
             data = data[28:]
             out = unpack(b'2i8s8sf', eData)
@@ -134,13 +133,13 @@ class EPT(object):
             dataIn += list(unpack(iFormat, data[:expectedLength * 4]))
 
             data = data[expectedLength * 4 + 4:]
-                ## @todo why do i need the +4???
+                # TODO why do i need the +4???
 
             #print "len(out) = ",len(out)
             #print "PBARL = ",dataIn
             prop = PBARL(None, dataIn)
             self.addOp2Property(prop)
-            #print self.printSection(20)
+            #print self.print_section(20)
 
 # PBCOMP
 
@@ -200,7 +199,7 @@ class EPT(object):
         #print "reading PCOMP"
         while len(data) >= 32:  # 8*4 - dynamic
             #print "len(data) = ",len(data)
-            #print self.printBlock(data[0:200])
+            #print self.print_block(data[0:200])
             isSymmetrical = 'NO'
             eData = data[:32]
             data = data[32:]

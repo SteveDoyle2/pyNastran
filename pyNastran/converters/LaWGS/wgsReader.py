@@ -126,7 +126,7 @@ class LaWGS_Panel(object):
                 Points2[i][j] = scale * (dot(rot, points[i][j]) + translate)
         self.Points = Points2
 
-    def getPoints(self):
+    def get_points(self):
         Points = []
         for i in xrange(self.nRows):
             #points2 = []
@@ -134,7 +134,7 @@ class LaWGS_Panel(object):
                 Points.append(self.Points[i][j])
         return Points, len(Points)
 
-    def getElements(self, pointI):
+    def get_elements(self, pointI):
         n = (self.nRows - 1) * (self.nCols - 1)
         #print "name=%s n=%s nout=%s" %(self.name,n)
         elements = []
@@ -152,7 +152,7 @@ class LaWGS_Panel(object):
         p4 = (j + 1) * self.nCols + (i) + pointI
         return [p1, p2, p3, p4]
 
-    def writeAsPlot3D(self, f):
+    def write_as_plot3d(self, f):
         X = []
         Y = []
         Z = []
@@ -231,8 +231,8 @@ class LaWGS(object):
         elements = []
         pointI = 0
         for (name, panel) in sorted(self.panels.iteritems()):
-            (pointsI, pointi) = panel.getPoints()
-            (elementsI, n) = panel.getElements(pointI)
+            (pointsI, pointi) = panel.get_points()
+            (elementsI, n) = panel.get_elements(pointI)
             #print "elementsI = ",elementsI
             points += pointsI
             elements += elementsI
@@ -243,7 +243,7 @@ class LaWGS(object):
             #print point
         return points, elements
 
-    def writeAsPlot3D(self, p3dname):
+    def write_as_plot3d(self, p3dname):
         f = open(p3dname, 'wb')
 
         f.write('%s\n' % (len(self.panels)))
@@ -251,7 +251,7 @@ class LaWGS(object):
             f.write('%s %s 1\n' % (panel.nRows, panel.nCols))
 
         for (name, panel) in sorted(self.panels.iteritems()):
-            panel.writeAsPlot3D(f)
+            panel.write_as_plot3d(f)
 
 if __name__ == '__main__':
     lawgs = LaWGS('tmx1242.wgs')

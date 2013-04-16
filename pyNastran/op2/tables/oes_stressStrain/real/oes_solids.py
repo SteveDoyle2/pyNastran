@@ -1,22 +1,23 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
 from numpy import array, sqrt
 from numpy.linalg import eigh
 
-from .oes_objects import stressObject, strainObject
+from .oes_objects import StressObject, StrainObject
+from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class SolidStressObject(stressObject):
+class SolidStressObject(StressObject):
     """
-    # sCode=0
+    @code
+    # s_code=0
             N O N L I N E A R   S T R E S S E S   I N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )
     ELEMENT GRID/   POINT                         STRESSES/ TOTAL STRAINS                          EQUIVALENT EFF. STRAIN  EFF. CREEP
        ID   GAUSS     ID       X           Y           Z           XY          YZ          ZX        STRESS   PLAS/NLELAS   STRAIN
         3    GRID   CENTER  6.6667E+02  2.6667E+03  2.6667E+03 -1.3333E+03  2.6667E+03 -1.3333E+03  6.0000E+03  1.5000E-04   0.0
                             1.6667E-05  6.6667E-05  6.6667E-05 -6.6667E-05  1.3333E-04 -6.6667E-05
 
-    # sCode=1
+    # s_code=1
                           S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )
                    CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN
     ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       VON MISES
@@ -24,12 +25,13 @@ class SolidStressObject(stressObject):
                    CENTER  X   4.499200E+02  XY  -5.544791E+02   A   1.000000E+04  LX 0.00 0.69-0.72  -3.619779E+03    9.618462E+03
                            Y   4.094179E+02  YZ   5.456968E-12   B  -1.251798E+02  LY 0.00 0.72 0.69
                            Z   1.000000E+04  ZX  -4.547474E-13   C   9.845177E+02  LZ 1.00 0.00 0.00
+    @endcode
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        stressObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StressObject.__init__(self, data_code, isubcase)
 
         self.eType = {}
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.cid = {}  # gridGauss
         self.oxx = {}
@@ -44,20 +46,20 @@ class SolidStressObject(stressObject):
         self.ovmShear = {}
 
         self.dt = dt
-        if isSort1:
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
 
         msg = self.get_data_code()
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.oxx)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -70,7 +72,7 @@ class SolidStressObject(stressObject):
         msg.append('\n')
         return msg
 
-    def addF06Data(self, data, transient):
+    def add_f06_data(self, data, transient):
         if transient is None:
             if not hasattr(self, 'data'):
                 self.data = []
@@ -95,7 +97,7 @@ class SolidStressObject(stressObject):
         """
         eMap = {'CTETRA': 5, 'CPENTA': 7, 'CHEXA': 9, 'HEXA': 9,
                 'PENTA': 7, 'TETRA': 5, }   # +1 for the centroid
-        if self.nonlinearFactor is None:
+        if self.nonlinear_factor is None:
             ipack = []
             i = 0
             n = 0
@@ -145,9 +147,9 @@ class SolidStressObject(stressObject):
         raise NotImplementedError()
 
         (dtName, dt) = transient
-        self.dataCode['name'] = dtName
+        self.data_code['name'] = dtName
         if dt not in self.gridTypes:
-            self.addNewTransient()
+            self.add_new_transient()
 
         for line in data:
             (nodeID, gridType, t1, t2, t3, r1, r2, r3) = line
@@ -156,7 +158,7 @@ class SolidStressObject(stressObject):
             self.rotations[dt][nodeID] = array([r1, r2, r3])
         del self.data
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.oxx[dt]
         del self.oyy[dt]
         del self.ozz[dt]
@@ -167,12 +169,12 @@ class SolidStressObject(stressObject):
         del self.o2[dt]
         del self.o3[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.oxx.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         """
@@ -192,7 +194,7 @@ class SolidStressObject(stressObject):
         #self.pressure[dt] = {}
         self.ovmShear[dt] = {}
 
-    def addNewEid(self, eType, cid, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
+    def add_new_eid(self, eType, cid, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
         #print "Solid Stress add..."
         #assert eid not in self.oxx
         assert cid >= 0
@@ -218,14 +220,14 @@ class SolidStressObject(stressObject):
         if nodeID == 0:
             raise ValueError(msg)
 
-    def addNewEidSort1(self, eType, cid, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
+    def add_new_eid_sort1(self, eType, cid, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
         #print "Solid Stress add transient..."
         assert cid >= 0
         assert eid >= 0
 
         #print "dt=%s eid=%s eType=%s" %(dt,eid,eType)
         if dt not in self.oxx:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         assert eid not in self.oxx[dt], self.oxx[dt]
 
         self.eType[eid] = eType
@@ -277,7 +279,7 @@ class SolidStressObject(stressObject):
         if nodeID == 0:
             raise ValueError(msg)
 
-    def addSort1(self, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
+    def add_sort1(self, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
         #print "***add"
         msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
         #print msg
@@ -362,9 +364,9 @@ class SolidStressObject(stressObject):
                 raise NotImplementedError('eType=|%r|' % (eType))
         return (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
         msg = []
 
         (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
@@ -387,7 +389,7 @@ class SolidStressObject(stressObject):
 
         return (''.join(msg), pageNum - 1)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         msg = []
         (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
             pentaEids) = self.getF06_Header()
@@ -441,7 +443,7 @@ class SolidStressObject(stressObject):
                      [txz, tyz, ozz]]
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
-                ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], isAllZeros) = self.writeFloats13E([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm])
+                ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], isAllZeros) = writeFloats13E([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm])
                 msg.append('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' % (nid, oxx, txy, o1, v[0, 1], v[0, 2], v[0, 0], p, ovm.strip()))
                 msg.append('               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n' % ('', oyy, tyz, o2, v[1, 1], v[1, 2], v[1, 0]))
                 msg.append('               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n' % ('', ozz, txz, o3, v[2, 1], v[2, 2], v[2, 0]))
@@ -451,7 +453,7 @@ class SolidStressObject(stressObject):
         return ''.join(msg)
 
     def writeElementTransient(self, eType, nNodes, eids, dt, header, tetraMsg, f=None):
-        dtLine = '%14s = %12.5E\n' % (self.dataCode['name'], dt)
+        dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
         header[1] = dtLine
         msg = header + tetraMsg
         for eid in eids:
@@ -483,7 +485,7 @@ class SolidStressObject(stressObject):
                      [txz, tyz, ozz]]
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
-                ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], isAllZeros) = self.writeFloats13E([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm])
+                ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], isAllZeros) = writeFloats13E([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm])
                 msg.append('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' % (nid, oxx, txy, o1, v[0, 1], v[0, 2], v[0, 0], p, ovm.strip()))
                 msg.append('               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n' % ('', oyy, tyz, o2, v[1, 1], v[1, 2], v[1, 0]))
                 msg.append('               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n' % ('', ozz, txz, o3, v[2, 1], v[2, 2], v[2, 0]))
@@ -495,8 +497,8 @@ class SolidStressObject(stressObject):
 
     def __repr__(self):
         #print "self.dt = ",self.dt
-        #print "self.nf = ",self.nonlinearFactor
-        if self.nonlinearFactor is not None:
+        #print "self.nf = ",self.nonlinear_factor
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---SOLID STRESS---\n'
@@ -540,7 +542,7 @@ class SolidStressObject(stressObject):
         msg += '\n'
 
         for dt, oxxs in sorted(self.oxx.iteritems()):
-            msg += '%s = %g\n' % (self.dataCode['name'], dt)
+            msg += '%s = %g\n' % (self.data_code['name'], dt)
             for eid, oxxNodes in sorted(oxxs.iteritems()):
                 eType = self.eType[eid]
                 for nid in sorted(oxxNodes):
@@ -569,8 +571,9 @@ class SolidStressObject(stressObject):
         return msg
 
 
-class SolidStrainObject(strainObject):
+class SolidStrainObject(StrainObject):
     """
+    @code
     # code=[1,0,11]
                           S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )
                    CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN
@@ -588,12 +591,13 @@ class SolidStrainObject(strainObject):
                    CENTER  X  -2.288232E-04  XY   1.240506E-04   A   9.631978E-04  LX-0.10-0.71-0.70  -1.601805E-04    5.692614E-04
                            Y  -2.289814E-04  YZ  -2.369997E-04   B  -2.909276E-04  LY-0.10 0.71-0.70
                            Z   9.383460E-04  ZX  -2.369997E-04   C  -1.917288E-04  LZ 0.99 0.00-0.15
+    @endcode
     """
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        strainObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
-        self.code = [self.formatCode, self.sortCode, self.sCode]
+        self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.cid = {}
         self.exx = {}
@@ -611,21 +615,21 @@ class SolidStrainObject(strainObject):
         #self.pressure = {}
         self.evmShear = {}
 
-        self.nonlinearFactor = dt
-        if isSort1:
+        self.nonlinear_factor = dt
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
-                self.addNewEid = self.addNewEidSort1
+                self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
-            self.addNewEid = self.addNewEidSort2
+            self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
 
         msg = self.get_data_code()
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.exx)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -636,7 +640,7 @@ class SolidStrainObject(strainObject):
                    'e1, e2, e3, evmShear\n')
         return msg
 
-    def addF06Data(self, data, transient):
+    def add_f06_data(self, data, transient):
         if transient is None:
             if not hasattr(self, 'data'):
                 self.data = []
@@ -651,6 +655,7 @@ class SolidStrainObject(strainObject):
 
     def processF06Data(self):
         """
+        @code
                           S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )
                        CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN
         ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       VON MISES
@@ -658,10 +663,11 @@ class SolidStrainObject(strainObject):
                        CENTER  X  -1.829319E+03  XY   7.883865E+01   A   1.033182E+04  LX-0.12 0.71 0.70  -2.115135E+03    1.232595E+04
                                Y  -1.825509E+03  YZ  -1.415218E+03   B  -2.080181E+03  LY-0.12 0.69-0.71
                                Z   1.000023E+04  ZX  -1.415218E+03   C  -1.906232E+03  LZ 0.99 0.16 0.00
+        @endcode
         """
         eMap = {'CTETRA': 5, 'CPENTA': 7, 'CHEXA': 9, 'HEXA': 9,
                 'PENTA': 7, 'TETRA': 5, }   # +1 for the centroid
-        if self.nonlinearFactor is None:
+        if self.nonlinear_factor is None:
             pack = []
             i = 0
             n = 0
@@ -712,9 +718,9 @@ class SolidStrainObject(strainObject):
             return
         raise NotImplementedError()
         (dtName, dt) = transient
-        self.dataCode['name'] = dtName
+        self.data_code['name'] = dtName
         if dt not in self.gridTypes:
-            self.addNewTransient()
+            self.add_new_transient()
 
         for line in data:
             (nodeID, gridType, t1, t2, t3, r1, r2, r3) = line
@@ -723,7 +729,7 @@ class SolidStrainObject(strainObject):
             self.rotations[dt][nodeID] = array([r1, r2, r3])
         del self.data
 
-    def deleteTransient(self, dt):
+    def delete_transient(self, dt):
         del self.exx[dt]
         del self.eyy[dt]
         del self.ezz[dt]
@@ -734,16 +740,16 @@ class SolidStrainObject(strainObject):
         del self.e2[dt]
         del self.e3[dt]
 
-    def getTransients(self):
+    def get_transients(self):
         k = self.exx.keys()
         k.sort()
         return k
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         """
         initializes the transient variables
         """
-        self.nonlinearFactor = dt
+        self.nonlinear_factor = dt
         self.exx[dt] = {}
         self.eyy[dt] = {}
         self.ezz[dt] = {}
@@ -760,7 +766,7 @@ class SolidStrainObject(strainObject):
         #self.pressure[dt] = {}
         self.evmShear[dt] = {}
 
-    def addNewEid(self, eType, cid, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
+    def add_new_eid(self, eType, cid, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
         #print "Solid Strain add..."
         assert eid not in self.exx
         assert cid >= 0
@@ -786,13 +792,13 @@ class SolidStrainObject(strainObject):
         if nodeID == 0:
             raise Exception(msg)
 
-    def addNewEidSort1(self, eType, cid, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
+    def add_new_eid_sort1(self, eType, cid, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
         #print "Solid Strain add..."
         assert cid >= 0
         assert eid >= 0
 
         if dt not in self.exx:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
 
         assert eid not in self.exx[dt], self.exx[dt]
         self.eType[eid] = eType
@@ -842,7 +848,7 @@ class SolidStrainObject(strainObject):
         if nodeID == 0:
             raise Exception(msg)
 
-    def addSort1(self, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
+    def add_sort1(self, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
         #print "***add"
         msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, evm)
         #print msg
@@ -945,9 +951,9 @@ class SolidStrainObject(strainObject):
 
         return (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids)
 
-    def writeF06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header, pageStamp, pageNum, f)
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
         msg = []
 
         (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
@@ -970,7 +976,7 @@ class SolidStrainObject(strainObject):
 
         return (''.join(msg), pageNum - 1)
 
-    def writeF06Transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         msg = []
         (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
             pentaEids) = self.getF06_Header()
@@ -1025,7 +1031,7 @@ class SolidStrainObject(strainObject):
                      [exz, eyz, ezz]]
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
-                ([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm], isAllZeros) = self.writeFloats13E([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm])
+                ([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm], isAllZeros) = writeFloats13E([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm])
                 msg.append('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' % (nid, exx, exy, e1, v[0, 1], v[0, 2], v[0, 0], p, evm.strip()))
                 msg.append('               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n' % ('', eyy, eyz, e2, v[1, 1], v[1, 2], v[1, 0]))
                 msg.append('               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n' % ('', ezz, exz, e3, v[2, 1], v[2, 2], v[2, 0]))
@@ -1036,7 +1042,7 @@ class SolidStrainObject(strainObject):
         return ''.join(msg)
 
     def writeElementTransient(self, eType, nNodes, eids, dt, header, tetraMsg, pageStamp=1, f=None):
-        dtLine = '%14s = %12.5E\n' % (self.dataCode['name'], dt)
+        dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
         header[1] = dtLine
         msg = header + tetraMsg
         for eid in eids:
@@ -1068,7 +1074,7 @@ class SolidStrainObject(strainObject):
                      [exz, eyz, ezz]]
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
-                ([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm], isAllZeros) = self.writeFloats13E([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm])
+                ([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm], isAllZeros) = writeFloats13E([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm])
                 msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' % (nid, exx, exy, e1, v[0, 1], v[0, 2], v[0, 0], p, evm.strip())
                 msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n' % ('', eyy, eyz, e2, v[1, 1], v[1, 2], v[1, 0])
                 msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n' % ('', ezz, exz, e3, v[2, 1], v[2, 2], v[2, 0])
@@ -1079,7 +1085,7 @@ class SolidStrainObject(strainObject):
         return ''.join(msg)
 
     def __repr__(self):
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---SOLID STRESS---\n'
@@ -1115,7 +1121,7 @@ class SolidStrainObject(strainObject):
         return msg
 
     def __repr__(self):
-        if self.nonlinearFactor is not None:
+        if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
         msg = '---SOLID STRAIN---\n'
@@ -1156,7 +1162,7 @@ class SolidStrainObject(strainObject):
         msg2 += '\n'
         msg.append(msg2)
         for dt, exxs in sorted(self.exx.iteritems()):
-            msg.append('%s = %g\n' % (self.dataCode['name'], dt))
+            msg.append('%s = %g\n' % (self.data_code['name'], dt))
             for eid, exxNodes in sorted(exxs.iteritems()):
                 eType = self.eType[eid]
                 msg2 = ''

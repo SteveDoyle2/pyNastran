@@ -2,11 +2,11 @@ import os
 import sys
 #import time
 from pyNastran.op2.test.test_op2 import get_failed_files
-from pyNastran.f06.test.test_f06 import runLotsOfFiles
-from pyNastran.general.general import get_files_of_type
+from pyNastran.f06.test.test_f06 import run_lots_of_files
+from pyNastran.utils import get_files_of_type
 
 
-def parseSkippedCards(fname):
+def parse_skipped_cards(fname):
     f = open(fname, 'r')
     lines = f.readlines()
     f.close()
@@ -17,7 +17,7 @@ def parseSkippedCards(fname):
             #print line
             (fore, aft) = line.strip().split('->')
             (oes, form, elementTypeNum) = fore.strip().split(' ')
-            (elementType, eType) = elementTypeNum.strip().split('=')
+            (element_type, eType) = elementTypeNum.strip().split('=')
             (msg, fpath) = aft.strip().split('-')
             #print "fpath=|%s|" %(fpath)
             fpath = fpath.lstrip()[6:]
@@ -58,7 +58,7 @@ def main():
     getSkipCards = False
 
     if getSkipCards:
-        files2 = parseSkippedCards('skippedCards.out')
+        files2 = parse_skipped_cards('skippedCards.out')
     elif regenerate:
         files2 = get_files_of_type(moveDir, '.f06')
         files2 = []
@@ -85,10 +85,10 @@ def main():
     except:
         pass
 
-    print("nFiles = %s" % (len(files)))
-    runLotsOfFiles(files, debug, saveCases, skipFiles,
+    print("nFiles = %s" % len(files))
+    run_lots_of_files(files, debug, saveCases, skipFiles,
                    stopOnFailure, nStart, nStop)
-    #runLotsOfFiles(files,debug,saveCases,stopOnFailure,nStart,nStop)
+    #run_lots_of_files(files,debug,saveCases,stopOnFailure,nStart,nStop)
     sys.exit('final stop...')
 
 if __name__ == '__main__':

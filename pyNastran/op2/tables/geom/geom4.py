@@ -1,4 +1,3 @@
-import sys
 from struct import unpack
 
 #from pyNastran.bdf.cards.constraints import SPC,SPCADD
@@ -123,7 +122,7 @@ class Geometry4(object):
             Gm = list(unpack(iFormat, eData))
             alpha, = unpack(b'f', data[-4:])
         elem = RBE2(None, [eid, gn, cm, Gm, alpha])
-        self.addRigidElement(elem)
+        self.add_rigid_element(elem)
         data = data[-1:]
 
     def readRBE3(self, data):
@@ -172,7 +171,7 @@ class Geometry4(object):
             (sid, ID, c, xxx, dx) = unpack(b'iiiif', eData)
 
             constraint = SPC(None, [sid, ID, c, dx])
-            self.addConstraint_SPC(constraint)
+            self.add_constraint_SPC(constraint)
             n += 20
         data = data[n:]
 
@@ -187,7 +186,7 @@ class Geometry4(object):
             (sid, c, thruFlag) = unpack(b'iifii', eData)
 
             constraint = SPC1(None, [sid, g, f, n1, n2])
-            self.addConstraint_SPC(constraint)
+            self.add_constraint_SPC(constraint)
             n += 20
         data = data[n:]
 
@@ -205,7 +204,7 @@ class Geometry4(object):
             (sid, ID, c, xxx, dx) = unpack(b'iiiif', eData)
 
             constraint = SPCD(None, [sid, ID, c, dx])
-            self.addConstraint_SPC(constraint)
+            self.add_constraint_SPC(constraint)
             n += 20
         data = data[n:]
 
@@ -243,11 +242,7 @@ class Geometry4(object):
         n = 0
         nEntries = len(data) // 8  # 2*4
         for i in xrange(nEntries):
-            eData = data[n:n + 8]
-            (sid, c) = unpack(b'ii', eData)
-
-            suport = SUPORT(None, [sid, c])
-            self.addSuport(suport)
+            self.add_suport(SUPORT(None, list(unpack(b'ii', data[n:n + 8])))) # extracts [sid, c]
             n += 8
         data = data[n:]
 

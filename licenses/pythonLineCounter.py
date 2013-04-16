@@ -56,7 +56,7 @@ def countLines(fnames=[]):
                                                      -> blank
     print f(5)                                       -> code
     if fnames==[]:             # 1st line            -> code + comment line   -> code
-        fnames = sys.argv[1:]  ## @todo finish code  -> code + doxygen marker -> code
+        fnames = sys.argv[1:]  # TODO finish code  -> code + doxygen marker -> code
     ###                                              -> formatting line
                                                      -> blank
     ## standard doxygen                              -> doxygen line
@@ -68,8 +68,8 @@ def countLines(fnames=[]):
     #if fnames==[]:
     #    fnames = sys.argv[1:]
     import os
-    from applyLicense import getFoldersFiles
-    folders,fnames = getFoldersFiles(os.path.join('..','pyNastran'))
+    from applyLicense import get_folders_files
+    fnames = get_folders_files(os.path.join('..','pyNastran'))[1]
 
     total_lines = 0
     comment_lines = 0

@@ -10,7 +10,7 @@ class PanairIO(object):
 #    lawgs = LaWGS('tmx1242.wgs')
 #    lawgs.run()
 
-    def loadPanairGeometry(self, panairFileName, dirname, isNodal, isCentroidal):
+    def load_panair_geometry(self, panairFileName, dirname, isNodal, isCentroidal):
         self.isNodal = isNodal
         self.isCentroidal = isCentroidal
         #key = self.caseKeys[self.iCase]
@@ -69,7 +69,7 @@ class PanairIO(object):
             elem.GetPointIds().SetId(2, p3)
             elem.GetPointIds().SetId(3, p4)
             self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-        ###
+
         print "eid = ", eid
         self.grid.SetPoints(points)
         #self.grid2.SetPoints(points2)
@@ -114,5 +114,5 @@ if __name__ == '__main__':
     test = PanairIO()
     test.removeOldGeometry = removeOldGeometry
 
-    #test.loadPanairGeometry('SWB.INP','',True,True)
-    test.loadPanairGeometry('models/NAC6.INP', '', True, True)
+    #test.load_panair_geometry('SWB.INP','',True,True)
+    test.load_panair_geometry('models/NAC6.INP', '', True, True)

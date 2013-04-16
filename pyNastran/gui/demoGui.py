@@ -11,7 +11,6 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra, vtkQuadraticWedge, vtkQuadraticHexahedron)
 
 
-import sys
 import pyNastran
 from pyNastran.bdf.bdf import (BDF, CAERO1, CQUAD4, CQUAD8, CTRIA3, CTRIA6,
                                CTETRA4, CTETRA10, CPENTA6, CPENTA15,
@@ -28,7 +27,7 @@ def getScreenCorner(x, y):
     return(xCorner, yCorner)
 
 version = pyNastran.__version__
-bdfFileName = sys.argv[1]
+bdfFileName = '/home/marcin/solidBending.bdf'#sys.argv[1]
 
 
 class FrameVTK(object):
@@ -48,7 +47,7 @@ class FrameVTK(object):
         #Filter.SetNumberOfCopies(1)
         #Filter.SetInput(aQuadGrid)
         #Filter.Update()
-    def getEdges(self):
+    def get_edges(self):
         edges = vtk.vtkExtractEdges()
         edges.SetInput(self.grid)
         self.edgeMapper = vtk.vtkPolyDataMapper()
@@ -101,13 +100,13 @@ class FrameVTK(object):
 
         # Create the usual rendering stuff.
         if self.isEdges:
-            self.getEdges()
+            self.get_edges()
         self.rend.GetActiveCamera().ParallelProjectionOn()
         self.rend.SetBackground(.1, .2, .4)
         self.rend.ResetCamera()
 
-        self.renWin = vtk.vtkRenderWindow()
-        self.renWin.AddRenderer(self.rend)
+        self.ren_win = vtk.vtkRenderWindow()
+        self.ren_win.AddRenderer(self.rend)
 
         cam = self.rend.GetActiveCamera()
         mouseArgs = {'pipeline': self, 'camera': cam}
@@ -116,13 +115,13 @@ class FrameVTK(object):
         ySize = 400
         k = wx.App(False)  # required to get screen resolution; will be True in final gui
         (x, y) = getScreenCorner(xSize, ySize)
-        self.renWin.SetSize(xSize, ySize)
-        self.renWin.SetPosition(x, y)
+        self.ren_win.SetSize(xSize, ySize)
+        self.ren_win.SetPosition(x, y)
 
         iren = vtk.vtkRenderWindowInteractor()
         mouseStyle = MouseStyle(mouseArgs, iren)
         iren.SetInteractorStyle(mouseStyle)
-        iren.SetRenderWindow(self.renWin)
+        iren.SetRenderWindow(self.ren_win)
 
         iren.AddObserver("KeyPressEvent", mouseStyle.OnKeyPress)
 
@@ -131,8 +130,8 @@ class FrameVTK(object):
 
         # Render the scene and start interaction.
         iren.Initialize()
-        self.renWin.Render()
-        self.renWin.SetWindowName(
+        self.ren_win.Render()
+        self.ren_win.SetWindowName(
             "pyNastran v%s - %s" % (version, bdfFileName))
         iren.Start()
 
@@ -401,16 +400,16 @@ class FrameVTK(object):
         w2i = vtk.vtkWindowToImageFilter()
         #writer = vtk.vtkTIFFWriter()
         writer = vtk.vtkPNGWriter()
-        w2i.SetInput(self.renWin)
+        w2i.SetInput(self.ren_win)
         w2i.Update()
         writer.SetInputConnection(w2i.GetOutputPort())
-        self.renWin.Render()
+        self.ren_win.Render()
         writer.SetFileName(imageName)
         writer.Write()
 
 
 def main():
-    isEdges = False
+    isEdges = True
     p = FrameVTK(isEdges)
 
 if __name__ == '__main__':

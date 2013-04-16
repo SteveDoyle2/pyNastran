@@ -1,0 +1,8 @@
+SOL SESTATIC
+CEND
+  TITLE = STATIC
+BEGIN BULK
+PARAM,AUTOSPC,YES
+PARAM,NOFISR,0
+GRID           1       0      0.      0.      0.       0
+ENDDATA

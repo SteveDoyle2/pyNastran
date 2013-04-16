@@ -4,9 +4,7 @@ import time
 from traceback import print_exc
 
 import pyNastran
-from pyNastran.op2.op2    import OP2
-from pyNastran.bdf.errors import (ScientificCardParseError, ParamParseError)
-from pyNastran.op2.op2Errors import TapeCodeError
+from pyNastran.op2.op2 import OP2
 
 def parse_table_names_from_F06(f06Name):
     """gets the op2 names from the f06"""
@@ -31,8 +29,8 @@ def get_failed_files(filename):
         files.append(line.strip())
     return files
 
-def runLotsOfFiles(files ,makeGeom=True, writeBDF=False, writeF06=True,
-                   writeMatlab=True, deleteF06=True, printResults=True,
+def run_lots_of_files(files ,makeGeom=True, writeBDF=False, write_f06=True,
+                   write_matlab=True, delete_f06=True, print_results=True,
                    debug=True, saveCases=True, skipFiles=[],
                    stopOnFailure=False, nStart=0, nStop=1000000000):
     n = ''
@@ -47,15 +45,15 @@ def runLotsOfFiles(files ,makeGeom=True, writeBDF=False, writeF06=True,
         #if baseName not in skipFiles and not baseName.startswith('acms') and i not in nSkip:
         if baseName not in skipFiles and '#' not in op2file:
             print("%"*80)
-            print('file=%s\n' %(op2file))
+            print('file=%s\n' % op2file)
             n = '%s ' %(i)
             sys.stderr.write('%sfile=%s\n' %(n, op2file))
             nTotal += 1
-            isPassed = runOP2(op2file, makeGeom=makeGeom, writeBDF=writeBDF,
-                              writeF06=writeF06, writeMatlab=writeMatlab,
-                              deleteF06=deleteF06, printResults=printResults,
-                              iSubcases=iSubcases, debug=debug,
-                              stopOnFailure=stopOnFailure) # True/False
+            isPassed = run_op2(op2file, makeGeom=makeGeom, writeBDF=writeBDF,
+                               write_f06=write_f06, write_matlab=write_matlab,
+                               delete_f06=delete_f06, print_results=print_results,
+                               iSubcases=iSubcases, debug=debug,
+                               stopOnFailure=stopOnFailure) # True/False
             if not isPassed:
                 sys.stderr.write('**file=%s\n' %(op2file))
                 failedCases.append(op2file)
@@ -67,7 +65,7 @@ def runLotsOfFiles(files ,makeGeom=True, writeBDF=False, writeF06=True,
     if saveCases:
         f = open('failedCases.in','wb')
         for op2file in failedCases:
-            f.write('%s\n' %(op2file))
+            f.write('%s\n' % op2file)
         f.close()
     
     seconds = time.time()-t0
@@ -75,61 +73,62 @@ def runLotsOfFiles(files ,makeGeom=True, writeBDF=False, writeF06=True,
     print("dt = %s seconds = %s minutes" %(seconds,minutes))
     
     #op2 = OP2('test_tet10_subcase_1.op2')
-    #op2.readOP2()
+    #op2.read_op2()
     
     msg = '-----done with all models %s/%s=%.2f%%  nFailed=%s-----' %(nPassed,nTotal,100.*nPassed/float(nTotal),nTotal-nPassed)
     print(msg)
     sys.exit(msg)
 
-def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
-           writeMatlab=True, isMagPhase=False, deleteF06=False,
-           printResults=True, iSubcases=[], debug=False, stopOnFailure=True):
+def run_op2(op2FileName, makeGeom=False, writeBDF=False, write_f06=True,
+            write_matlab=True, isMagPhase=False, delete_f06=False,
+            print_results=True, iSubcases=[], debug=False, stopOnFailure=True):
     assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' %(op2FileName)
     isPassed = False
     stopOnFailure = False
     #debug = True
     try:
         op2 = OP2(op2FileName, makeGeom=makeGeom, debug=debug)
-        op2.setSubcases(iSubcases)
+        op2.set_subcases(iSubcases)
 
-        #op2.readBDF(op2.bdfFileName,includeDir=None,xref=False)
-        #op2.writeBDFAsPatran()
-        op2.readOP2()
+        #op2.read_bdf(op2.bdfFileName,includeDir=None,xref=False)
+        #op2.write_bdf_as_patran()
+        op2.read_op2()
         print("---stats for %s---" % op2FileName)
+        #op2.get_op2_stats()
         print(op2.get_op2_stats())
         if writeBDF:
-            op2.writeBDFAsPatran()
+            op2.write_bdf_as_patran()
         #tableNamesF06 = parse_table_names_from_F06(op2.f06FileName)
         #tableNamesOP2 = op2.getTableNamesFromOP2()
-        if writeF06:
-            (model,ext) = os.path.splitext(op2FileName)
-            op2.writeF06(model+'.f06.out', isMagPhase=isMagPhase)
-            if deleteF06:
+        if write_f06:
+            (model, ext) = os.path.splitext(op2FileName)
+            op2.write_f06(model+'.f06.out', isMagPhase=isMagPhase)
+            if delete_f06:
                 os.remove(model+'.f06.out')
 
-        if writeMatlab:
-            (model,ext) = os.path.splitext(op2FileName)
-            op2.writeMatlab(model+'.m', isMagPhase=isMagPhase)
+        if write_matlab:
+            (model, ext) = os.path.splitext(op2FileName)
+            op2.write_matlab(model+'.m', isMagPhase=isMagPhase)
 
-        #print op2.printResults()
-        if printResults:
-            op2.printResults()
+        #print op2.print_results()
+        if print_results:
+            op2.print_results()
         #print "subcases = ",op2.subcases
 
         #assert tableNamesF06==tableNamesOP2,'tableNamesF06=%s tableNamesOP2=%s' %(tableNamesF06,tableNamesOP2)
         #op2.caseControlDeck.sol = op2.sol
         #print op2.caseControlDeck.get_op2_data()
-        #print op2.printResults()
+        #print op2.print_results()
         #print op2.caseControlDeck.get_op2_data()
         isPassed = True
     except KeyboardInterrupt:
         sys.stdout.flush()
         print_exc(file=sys.stdout)
-        sys.stderr.write('**file=%s\n' %(op2FileName))
+        sys.stderr.write('**file=%s\n' % op2FileName)
         sys.exit('keyboard stop...')
     #except AddNewElementError:
     #    raise
-    #except TapeCodeError: # the op2 is bad, not my fault
+    #except RuntimeError: # the op2 is bad, not my fault
     #    isPassed = True
     #    if stopOnFailure:
     #        raise
@@ -143,12 +142,12 @@ def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
 
     #except InvalidFormatCodeError:
     #    isPassed = True
-    #except InvalidAnalysisCodeError:
+    #except RuntimeError: #invalid analysis code
     #    isPassed = True
-    #except InvalidMarkerError:
+    #except SyntaxError: # Invalid Marker
         #isPassed = True
 
-    #except EndOfFileError:
+    #except EOFError:
     #    isPassed = True
     except SystemExit:
         #print_exc(file=sys.stdout)
@@ -173,9 +172,7 @@ def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
     except IOError: # missing file
         isPassed = False
         raise
-    except ScientificCardParseError:  # bad value parsing
-        isPassed = True
-    except ParamParseError:
+    except SyntaxError: #Param Parse
         isPassed = True
     except:
         #print e
@@ -187,7 +184,7 @@ def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
 
     return isPassed
 
-def runArgParse():
+def run_arg_parse():
     import argparse
 
     ver = str(pyNastran.__version__)
@@ -201,10 +198,10 @@ def runArgParse():
     #group2 = parser.add_mutually_exclusive_group()  # should this be exclusive???
     parser.add_argument('-g','--geometry', dest='geometry',    action='store_true', help='Reads the OP2 for geometry, which can be written out')
     parser.add_argument('-w','--writeBDF', dest='writeBDF',    action='store_true', help='Writes the bdf to fem.bdf.out')
-    parser.add_argument('-f','--writeF06', dest='writeF06',    action='store_true', help='Writes the f06 to fem.f06.out')
+    parser.add_argument('-f','--write_f06', dest='write_f06',    action='store_true', help='Writes the f06 to fem.f06.out')
     parser.add_argument('-z','--magPhase', dest='isMagPhase',  action='store_true', help='F06/Matlab Writer writes Magnitude/Phase instead of Real/Imaginary (still stores Real/Imag)')
-    parser.add_argument('-m','--matlab',   dest='writeMatlab', action='store_true', help='Matlab Writer is enabled (fails for transient; limited support)')
-    parser.add_argument('-p','--printResults',dest='printResults',  action='store_true', help='Prints objects to screen which can require lots of memory')
+    parser.add_argument('-m','--matlab',   dest='write_matlab', action='store_true', help='Matlab Writer is enabled (fails for transient; limited support)')
+    parser.add_argument('-p','--print_results',dest='print_results',  action='store_true', help='Prints objects to screen which can require lots of memory')
     parser.add_argument('-v','--version',action='version',version=ver)
     
     if len(sys.argv)==1:
@@ -214,23 +211,23 @@ def runArgParse():
     print("op2FileName = %s" %(args.op2FileName[0]))
     print("debug       = %s" %(not(args.quiet)))
 
-    debug        = not(args.quiet)
-    makeGeom     = args.geometry
-    writeBDF     = args.writeBDF
-    writeF06     = args.writeF06
-    isMagPhase   = args.isMagPhase
-    writeMatlab  = args.writeMatlab
-    printResults = args.printResults
-    op2FileName  = args.op2FileName[0]
+    debug         = not(args.quiet)
+    makeGeom      = args.geometry
+    writeBDF      = args.writeBDF
+    write_f06     = args.write_f06
+    isMagPhase    = args.isMagPhase
+    write_matlab  = args.write_matlab
+    print_results = args.print_results
+    op2FileName   = args.op2FileName[0]
 
-    return (op2FileName,makeGeom,writeBDF,writeF06,writeMatlab,isMagPhase,printResults,debug)
+    return (op2FileName,makeGeom,writeBDF,write_f06,write_matlab,isMagPhase,print_results,debug)
 
 def main():
-    (op2FileName,makeGeom,writeBDF,writeF06,writeMatlab,isMagPhase,printResults,debug) = runArgParse()
+    (op2FileName,makeGeom,writeBDF,write_f06,write_matlab,isMagPhase,print_results,debug) = run_arg_parse()
 
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
-    runOP2(op2FileName,makeGeom=makeGeom,writeBDF=writeBDF,writeF06=writeF06,writeMatlab=writeMatlab,isMagPhase=isMagPhase,printResults=printResults,debug=debug)
+    run_op2(op2FileName,makeGeom=makeGeom,writeBDF=writeBDF,write_f06=write_f06,write_matlab=write_matlab,isMagPhase=isMagPhase,print_results=print_results,debug=debug)
 
 if __name__=='__main__':  # op2
     main()

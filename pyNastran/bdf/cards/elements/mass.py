@@ -1,19 +1,32 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,C0111
+"""
+All mass elements are defined in this file.  This includes:
+ * CMASS1
+ * CMASS2
+ * CMASS3
+ * CMASS4
+ * CONM1
+ * CONM2
+
+All mass elements are PointMassElement and Element objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import zeros, array
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element, BaseCard
+from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+                                       double_or_blank)
 
 
 class PointElement(Element):
-    def __init__(self, card=None, data=None):
+    def __init__(self, card, data):
         Element.__init__(self, card, data)
 
 
 class PointMassElement(PointElement):
-    def __init__(self, card=None, data=None):
+    def __init__(self, card, data):
         self.mass = None
         PointElement.__init__(self, card, data)
 
@@ -21,15 +34,15 @@ class PointMassElement(PointElement):
         return self.mass
 
 
-class PointMass(BaseCard):
-    def __init__(self, card=None, data=None):
-        self.mass = None
+# class PointMass(BaseCard):
+#     def __init__(self, card, data):
+#         self.mass = None
+#
+#     def Mass(self):
+#         return self.mass
 
-    def Mass(self):
-        return self.mass
 
-
-class CMASS1(PointMass):
+class CMASS1(PointMassElement):
     """
     Defines a scalar mass element.
     CMASS2 EID M   G1 C1 G2 C2
@@ -37,15 +50,18 @@ class CMASS1(PointMass):
     """
     type = 'CMASS1'
 
-    def __init__(self, card=None, data=None):
-        PointMass.__init__(self, card, data)
+    def __init__(self, card=None, data=None, comment=''):
+        PointMassElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2, self.eid)
-            self.g1 = card.field(3)
-            self.c1 = card.field(4)
-            self.g2 = card.field(5)
-            self.c2 = card.field(6)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+            self.g1 = integer_or_blank(card, 3, 'g1')
+            self.c1 = integer_or_blank(card, 4, 'c1')
+            self.g2 = integer_or_blank(card, 5, 'g2')
+            self.c2 = integer_or_blank(card, 6, 'c2')
+            assert len(card) <= 7, 'len(CMASS1 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -53,15 +69,32 @@ class CMASS1(PointMass):
             self.g2 = data[3]
             self.c1 = data[4]
             self.c2 = data[5]
-        ###
+
+    def Eid(self):
+        return self.eid
 
     def Mass(self):
         return self.pid.mass
 
+    def _verify(self, isxref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        mass = self.Mass()
+        c1 = self.c1
+        c2 = self.c2
+        #self.nodes
+
+        assert isinstance(eid, int), 'eid=%r' % eid
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(mass, float), 'mass=%r' % mass
+        assert c2 is None or isinstance(c1, int), 'c1=%r' % c1
+        assert c2 is None or isinstance(c2, int), 'c2=%r' % c2
+
     def cross_reference(self, model):
-        #self.g1 = model.Node(self.g1)
-        #self.g2 = model.Node(self.g2)
-        self.pid = model.Property(self.pid)
+        msg = ' which is required by CMASS1 eid=%s' % self.eid
+        #self.g1 = model.Node(self.g1, msg=msg)
+        #self.g2 = model.Node(self.g2, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def Pid(self):
         if isinstance(self.pid, int):
@@ -81,15 +114,18 @@ class CMASS2(PointMassElement):
     """
     type = 'CMASS2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         PointMassElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.mass = card.field(2, 0.)
-            self.g1 = card.field(3)
-            self.c1 = card.field(4)
-            self.g2 = card.field(5)
-            self.c2 = card.field(6)
+            self.eid = integer(card, 1, 'eid')
+            self.mass = double_or_blank(card, 2, 'mass', 0.)
+            self.g1 = integer_or_blank(card, 3, 'g1')
+            self.c1 = integer_or_blank(card, 4, 'c1')
+            self.g2 = integer_or_blank(card, 5, 'g2')
+            self.c2 = integer_or_blank(card, 6, 'c2')
+            assert len(card) <= 7, 'len(CMASS2 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.mass = data[1]
@@ -97,7 +133,6 @@ class CMASS2(PointMassElement):
             self.g2 = data[3]
             self.c1 = data[4]
             self.c2 = data[5]
-        ###
 
     def nodeIDs(self):
         g1 = self.G1()
@@ -126,16 +161,15 @@ class CMASS2(PointMassElement):
         if self.g2 is not None:
             p2 = self.g2.Position()
             f += 1.
-
         c = (p1 + p2) / f
         return c
 
-    def cross_reference(self, mesh):
+    def cross_reference(self, model):
+        msg = ' which is required by CMASS2 eid=%s' % self.eid
         if isinstance(self.g1, int):
-            self.g1 = mesh.Node(self.g1)
+            self.g1 = model.Node(self.g1, msg=msg)
         if isinstance(self.g2, int):
-            self.g2 = mesh.Node(self.g2)
-        ###
+            self.g2 = model.Node(self.g2, msg=msg)
 
     def G1(self):
         if isinstance(self.g1, int):
@@ -160,7 +194,6 @@ class CMASS2(PointMassElement):
         mass = set_blank_if_default(self.mass, 0.)
         fields = ['CMASS2', self.eid, mass, self.G1(), self.c1,
                   self.G2(), self.c2]
-        #print "cmass2 fields = ",fields
         return fields
 
 
@@ -171,19 +204,22 @@ class CMASS3(PointMassElement):
     """
     type = 'CMASS3'
 
-    def __init__(self, card=None, data=None):
-        PointMass.__init__(self, card, data)
-
+    def __init__(self, card=None, data=None, comment=''):
+        PointMassElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2, self.eid)
-            self.s1 = card.field(3)
-            self.s2 = card.field(4)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+            self.s1 = integer_or_blank(card, 3, 's1')
+            self.s2 = integer_or_blank(card, 4, 's2')
+            assert len(card) <= 5, 'len(CMASS3 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
             self.s1 = data[2]
             self.s2 = data[3]
+        assert self.s1 != self.s2
 
     def Mass(self):
         return self.pid.mass
@@ -197,13 +233,14 @@ class CMASS3(PointMassElement):
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
-    def cross_reference(self, mesh):
+    def cross_reference(self, model):
         """
-        links up the propertiy ID
+        Links up the propertiy ID
         """
-        #self.s1 = mesh.Node(self.s1)
-        #self.s2 = mesh.Node(self.s2)
-        self.pid = mesh.Property(self.pid)
+        msg = ' which is required by CMASS3 eid=%s' % self.eid
+        #self.s1 = model.Node(self.s1, msg=msg)
+        #self.s2 = model.Node(self.s2, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def rawFields(self):
         fields = ['CMASS3', self.eid, self.Pid(), self.s1, self.s2]
@@ -212,24 +249,29 @@ class CMASS3(PointMassElement):
 
 class CMASS4(PointMassElement):
     """
-    Defines a scalar mass element that is connected only to scalar points, without reference to a property entry
+    Defines a scalar mass element that is connected only to scalar points,
+    without reference to a property entry
     CMASS4 EID M S1 S2
     """
     type = 'CMASS4'
 
-    def __init__(self, card=None, data=None):
-        PointMass.__init__(self, card, data)
-
+    def __init__(self, card=None, data=None, comment=''):
+        print("***")
+        PointMassElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.mass = card.field(2, 0.)
-            self.s1 = card.field(3)
-            self.s2 = card.field(4)
+            self.eid = integer(card, 1, 'eid')
+            self.mass = double_or_blank(card, 2, 'mass', 0.)
+            self.s1 = integer(card, 3, 's1')
+            self.s2 = integer_or_blank(card, 4, 's2', 0)
+            assert len(card) <= 5, 'len(CMASS4 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.mass = data[1]
             self.s1 = data[2]
             self.s2 = data[3]
+        assert self.s1 != self.s2
 
     def Mass(self):
         return self.mass
@@ -243,11 +285,11 @@ class CMASS4(PointMassElement):
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
-    def cross_reference(self, mesh):
+    def cross_reference(self, model):
         """
         """
-        #self.s1 = mesh.Node(self.s1)
-        #self.s2 = mesh.Node(self.s2)
+        #self.s1 = model.Node(self.s1)
+        #self.s2 = model.Node(self.s2)
         pass
 
     def rawFields(self):
@@ -255,10 +297,10 @@ class CMASS4(PointMassElement):
         return fields
 
 
-class CONM1(PointMass):
+class CONM1(PointMassElement):
     type = 'CONM1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Concentrated Mass Element Connection, General Form
         Defines a 6 x 6 symmetric mass matrix at a geometric grid point
@@ -274,37 +316,40 @@ class CONM1(PointMass):
               [    Sym         M55 M65]
               [                    M66]
         """
-        PointMass.__init__(self, card, data)
+        PointMassElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         m = zeros((6, 6))
         if card:
             #self.nids  = [ card[1] ]
             #del self.nids
             #self.pid = None
-            self.eid = card.field(1)
-            self.nid = card.field(2)
-            self.cid = card.field(3, 0)
+            self.eid = integer(card, 1, 'eid')
+            self.nid = integer(card, 2, 'nid')
+            self.cid = integer_or_blank(card, 3, 'cid', 0)
 
-            m[0, 0] = card.field(4, 0.)   # M11
-            m[1, 0] = card.field(5, 0.)   # M21
-            m[1, 1] = card.field(6, 0.)   # M22
-            m[2, 0] = card.field(7, 0.)   # M31
-            m[2, 1] = card.field(8, 0.)   # M32
-            m[2, 2] = card.field(9, 0.)   # M33
-            m[3, 0] = card.field(10, 0.)  # M41
-            m[3, 1] = card.field(11, 0.)  # M42
-            m[3, 2] = card.field(12, 0.)  # M43
-            m[3, 3] = card.field(13, 0.)  # M44
-            m[4, 0] = card.field(14, 0.)  # M51
-            m[4, 1] = card.field(15, 0.)  # M52
-            m[4, 2] = card.field(16, 0.)  # M53
-            m[4, 3] = card.field(17, 0.)  # M54
-            m[4, 4] = card.field(18, 0.)  # M55
-            m[5, 0] = card.field(19, 0.)  # M61
-            m[5, 1] = card.field(20, 0.)  # M62
-            m[5, 2] = card.field(21, 0.)  # M63
-            m[5, 3] = card.field(22, 0.)  # M64
-            m[5, 4] = card.field(23, 0.)  # M65
-            m[5, 5] = card.field(24, 0.)  # M66
+            m[0, 0] = double_or_blank(card, 4, 'M11', 0.)
+            m[1, 0] = double_or_blank(card, 5, 'M21', 0.)
+            m[1, 1] = double_or_blank(card, 6, 'M22', 0.)
+            m[2, 0] = double_or_blank(card, 7, 'M31', 0.)
+            m[2, 1] = double_or_blank(card, 8, 'M32', 0.)
+            m[2, 2] = double_or_blank(card, 9, 'M33', 0.)
+            m[3, 0] = double_or_blank(card, 10, 'M41', 0.)
+            m[3, 1] = double_or_blank(card, 11, 'M42', 0.)
+            m[3, 2] = double_or_blank(card, 12, 'M43', 0.)
+            m[3, 3] = double_or_blank(card, 13, 'M44', 0.)
+            m[4, 0] = double_or_blank(card, 14, 'M51', 0.)
+            m[4, 1] = double_or_blank(card, 15, 'M52', 0.)
+            m[4, 2] = double_or_blank(card, 16, 'M53', 0.)
+            m[4, 3] = double_or_blank(card, 17, 'M54', 0.)
+            m[4, 4] = double_or_blank(card, 18, 'M55', 0.)
+            m[5, 0] = double_or_blank(card, 19, 'M61', 0.)
+            m[5, 1] = double_or_blank(card, 20, 'M62', 0.)
+            m[5, 2] = double_or_blank(card, 21, 'M63', 0.)
+            m[5, 3] = double_or_blank(card, 22, 'M64', 0.)
+            m[5, 4] = double_or_blank(card, 23, 'M65', 0.)
+            m[5, 5] = double_or_blank(card, 24, 'M66', 0.)
+            assert len(card) <= 25, 'len(CONM1 card) = %i' % len(card)
         else:
             (eid, nid, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
              m5a, m5b, m5c, m5d, m5e, m6a, m6b, m6c, m6d, m6e, m6f) = data
@@ -348,8 +393,9 @@ class CONM1(PointMass):
         return self.cid.cid
 
     def cross_reference(self, model):
-        self.nid = model.Node(self.nid)
-        self.cid = model.Coord(self.cid)
+        msg = ' which is required by CONM1 eid=%s' % self.eid
+        self.nid = model.Node(self.nid, msg=msg)
+        self.cid = model.Coord(self.cid, msg=msg)
 
     def MassMatrix(self):
         return self.massMatrix
@@ -358,24 +404,22 @@ class CONM1(PointMass):
         cid = set_blank_if_default(self.Cid(), 0)
         nid = self.Nid()
         m = self.massMatrix
-        fields = ['CONM1', self.eid, nid, cid, m[0, 0], m[1, 0], m[1, 1], m[2, 0], m[2, 1],
-                  m[2, 2], m[3, 0], m[3, 1], m[3, 2], m[3, 3], m[4, 0], m[4, 1], m[4, 2],
-                  m[4, 3], m[4, 4], m[5, 0], m[5, 1], m[5, 2], m[5, 3], m[5, 4], m[5, 5]]
-        return fields
+        list_fields = ['CONM1', self.eid, nid, cid, m[0, 0], m[1, 0], m[1, 1],
+                  m[2, 0], m[2, 1], m[2, 2], m[3, 0], m[3, 1], m[3, 2],
+                  m[3, 3], m[4, 0], m[4, 1], m[4, 2], m[4, 3], m[4, 4],
+                  m[5, 0], m[5, 1], m[5, 2], m[5, 3], m[5, 4], m[5, 5]]
+        return list_fields
 
     def reprFields(self):
-        fields = self.rawFields()
-        fields2 = fields[0:4]
-        for field in fields[4:]:
+        list_fields = self.rawFields()
+        list_fields2 = list_fields[0:4]
+        for field in list_fields[4:]:
             val = set_blank_if_default(field, 0.)
-            #print "field=%s value=%s" %(field,val)
-            fields2.append(val)
-        #print "fields  = ",fields
-        #print "fields2 = ",fields2
-        return fields2
+            list_fields2.append(val)
+        return list_fields2
 
 
-class CONM2(PointMassElement):  ## @todo not done
+class CONM2(PointMassElement):
     """
     @param self the CONM2 object
     @param eid element ID
@@ -383,21 +427,32 @@ class CONM2(PointMassElement):  ## @todo not done
     @param cid coordinate frame of the offset (-1=absolute coordinates)
     @param X offset vector
     @param I mass moment of inertia matrix about the CG
+    @code
+    CONM2    501274  11064          132.274
+    @endcode
     """
     type = 'CONM2'
-    # 'CONM2    501274  11064          132.274'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         PointMassElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            #self.nids  = [ card[1] ]
-            #del self.nids
-            self.eid = card.field(1)
-            self.nid = card.field(2)
-            self.cid = card.field(3, 0)
-            self.mass = card.field(4, 0.)
-            self.X = array(card.fields(5, 8, [0., 0., 0.]))
-            self.I = card.fields(9, 15, [0.] * 6)
+            self.eid = integer(card, 1, 'eid')
+            self.nid = integer(card, 2, 'nid')
+            self.cid = integer_or_blank(card, 3, 'cid', 0)
+            self.mass = double_or_blank(card, 4, 'mass', 0.)
+            self.X = array([double_or_blank(card, 5, 'x1', 0.0),
+                            double_or_blank(card, 6, 'x2', 0.0),
+                            double_or_blank(card, 7, 'x3', 0.0)])
+
+            self.I = array([double_or_blank(card, 9, 'I11', 0.0),
+                            double_or_blank(card, 10, 'I21', 0.0),
+                            double_or_blank(card, 11, 'I22', 0.0),
+                            double_or_blank(card, 12, 'I31', 0.0),
+                            double_or_blank(card, 13, 'I32', 0.0),
+                            double_or_blank(card, 14, 'I33', 0.0)])
+            assert len(card) <= 15, 'len(CONM2 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.nid = data[1]
@@ -405,6 +460,23 @@ class CONM2(PointMassElement):  ## @todo not done
             self.mass = data[3]
             self.X = data[4:7]
             self.I = data[7:]
+
+    def _verify(self, isxref=False):
+        eid = self.Eid()
+        nid = self.Nid()
+        cid = self.Cid()
+        mass = self.Mass()
+        c = self.Centroid()
+        
+        assert isinstance(eid, int), 'eid=%r' % eid
+        assert isinstance(nid, int), 'nid=%r' % nid
+        assert isinstance(cid, int), 'cid=%r' % cid
+        assert isinstance(mass, float), 'mass=%r' % mass
+        for i in range(3):
+            assert isinstance(c[i], float), 'centroid[%i]=%r' %(i, c[i])
+
+    def Eid(self):
+        return self.eid
 
     def Mass(self):
         return self.mass
@@ -423,7 +495,7 @@ class CONM2(PointMassElement):  ## @todo not done
         else:
             # transform to global
             (dx, matrix) = self.cid.transformToGlobal(self.X)
-            raise NotImplementedError()
+            raise NotImplementedError('CONM2 intertia method is not implemented.')
             A2 = A * matrix
             return A2  # correct for offset using dx???
 
@@ -440,9 +512,10 @@ class CONM2(PointMassElement):  ## @todo not done
         return X2
 
     def cross_reference(self, model):
+        msg = ' which is required by CONM2 eid=%s' % self.eid
         if self.Cid() != -1:
-            self.cid = model.Coord(self.cid)
-        self.nid = model.Node(self.nid)
+            self.cid = model.Coord(self.cid, msg=msg)
+        self.nid = model.Node(self.nid, msg=msg)
 
     def nodeIDs(self):
         return [self.Nid()]
@@ -466,9 +539,9 @@ class CONM2(PointMassElement):  ## @todo not done
         return msg
 
     def rawFields(self):
-        fields = ['CONM2', self.eid, self.Nid(), self.Cid(),
-                  self.mass] + list(self.X) + [None] + list(self.I)
-        return fields
+        list_fields = (['CONM2', self.eid, self.Nid(), self.Cid(), self.mass] +
+                  list(self.X) + [None] + list(self.I))
+        return list_fields
 
     def reprFields(self):
         I = []
@@ -485,5 +558,6 @@ class CONM2(PointMassElement):  ## @todo not done
                 X.append(x)
 
         cid = set_blank_if_default(self.Cid(), 0)
-        fields = ['CONM2', self.eid, self.Nid(), cid, self.mass] + X + [None] + I
-        return fields
+        list_fields = (['CONM2', self.eid, self.Nid(), cid, self.mass] + X +
+                  [None] + I)
+        return list_fields

@@ -2,9 +2,9 @@ from numpy import array
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 
-class AppliedLoadsObject(scalarObject):  # approachCode=1, sortCode=0
-    def __init__(self, dataCode, isSort1, iSubcase, dt=None):
-        scalarObject.__init__(self, dataCode, iSubcase)
+class AppliedLoadsObject(scalarObject):  # approach_code=1, sort_code=0
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        scalarObject.__init__(self, data_code, isubcase)
         self.dt = dt
 
         self.eids = {}
@@ -21,7 +21,7 @@ class AppliedLoadsObject(scalarObject):  # approachCode=1, sortCode=0
             self.moments = {dt: []}
             self.add = self.addTransient
 
-    def addNode(self, nodeID, eid, source, v1, v2, v3, v4, v5, v6):
+    def add_node(self, nodeID, eid, source, v1, v2, v3, v4, v5, v6):
         msg = "nodeID=%s eid=%s source=|%s| v1=%i v2=%i v3=%i v4=%i v5=%i v6=%i" % (nodeID, eid, source, v1, v2, v3, v4, v5, v6)
         assert 0 < nodeID < 1000000000, msg
         assert nodeID not in self.forces, msg
@@ -35,7 +35,7 @@ class AppliedLoadsObject(scalarObject):  # approachCode=1, sortCode=0
         msg = "nodeID=%s eid=%s source=|%s| v1=%i v2=%i v3=%i v4=%i v5=%i v6=%i" % (nodeID, eid, source, v1, v2, v3, v4, v5, v6)
         assert 0 < nodeID < 1000000000, msg
         if nodeID not in self.forces:
-            self.addNode(nodeID, eid, source, v1, v2, v3, v4, v5, v6)
+            self.add_node(nodeID, eid, source, v1, v2, v3, v4, v5, v6)
             return None
         #assert nodeID not in self.forces,msg
 

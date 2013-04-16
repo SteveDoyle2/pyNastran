@@ -528,7 +528,7 @@ class EventsHandler(object):
             "All files (*.*)|*.*"
 
         Title = 'Choose a Panair Input File to Load'
-        loadFunction = self.parent.frmPanel.loadPanairGeometry
+        loadFunction = self.parent.frmPanel.load_panair_geometry
         #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
         #dirname = ''
         #loadFunction(fname,dirname)
@@ -658,7 +658,7 @@ class EventsHandler(object):
 #------------------------------------------------------------------------------
 
 
-def runArgParse():
+def run_arg_parse():
     import argparse
 
     ver = str(pyNastran.__version__)
@@ -708,7 +708,7 @@ def main():
         print("requires Python 2.6+ to use command line arguments...")
     else:
         if len(sys.argv) > 1:
-            (isEdges, isNodal, debug) = runArgParse()
+            (isEdges, isNodal, debug) = run_arg_parse()
     isCentroidal = not(isNodal)
 
     isNodal = True

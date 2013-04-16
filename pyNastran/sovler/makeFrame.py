@@ -1,36 +1,38 @@
-import sys
 from itertools import izip
 from numpy import array, zeros, matrix
 from numpy.linalg import solve
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.general.general import ListPrint
-from pyNastran.general.generalMath import reduceMatrix
+from pyNastran.utils import list_print
+from pyNastran.utils.mathematics import reduce_matrix
 
 
 def makeTruss2():
-    """          ^
-                 |1000  lb
-                 |
-    12           |
+    """
+    @code
+                  ^
+                  |1000  lb
+                  |
+     12           |
     *
-   *1-----A------2  34
-    | D        B |
-    |   \    /   C
-    F    /  \    |   20"
-    |  /       \ |
-   *3-----E------4  78
+    *1-----A------2  34
+     | D        B |
+     |   \    /   C
+     F    /  \    |   20"
+     |  /       \ |
+    *3-----E------4  78
     *56
           40"
-
+    @endcode
+    
     where:
-      * indicates a constraint
-      1234 are nodes
-      ABCDEF are rods
-      the truss is 20" by 40"
-      E = 1e7 psi
-      B and D do not touch, but cross at the diagonal
-      12,34,56,78 are the degrees of freedom
+      * \* indicates a constraint
+      * 1234 are nodes
+      * ABCDEF are rods
+      * the truss is 20" by 40"
+      * E = 1e7 psi
+      * B and D do not touch, but cross at the diagonal
+      * 12,34,56,78 are the degrees of freedom
     """
     model = BDF('')
     #model.executiveControlLines = ['SOL 101']
@@ -220,8 +222,8 @@ def buildGlobalStiffness(model):
                 #Kg[dof2,dof2] += Ke[k,k]
                 #Kg[dof ,dof ] += Ke[j,j]
 
-        print "K_global =\n", ListPrint(Kg)
-    print "K_global =\n", ListPrint(Kg)
+        print "K_global =\n", list_print(Kg)
+    print "K_global =\n", list_print(Kg)
     #print "K_global = \n",Kg
     return Kg, Dofs
 
@@ -248,10 +250,10 @@ def applyBoundaryConditions(model, Kg):
     notNids = [nid - 1 for nid in allNodes if nid not in nids]
     #print "notNids =\n",notNids
     print "nids = ", nids
-    print "Kg2 =\n", ListPrint(Kg)
-    Kr = reduceMatrix(Kg, nids)
-    #Kr = reduceMatrix(Kg,notNids)
-    print "Kreduced =\n", ListPrint(Kr)
+    print "Kg2 =\n", list_print(Kg)
+    Kr = reduce_matrix(Kg, nids)
+    #Kr = reduce_matrix(Kg,notNids)
+    print "Kreduced =\n", list_print(Kr)
     return Kr
 
 
@@ -274,8 +276,8 @@ def setCol(Kg, nid, value):
 def getForces(model, Dofs):
     Fvector = zeros(model.nNodes() * 3, 'd')
     print model.loads
-    for loadSet, loads in model.loads.iteritems():
-        ## @todo if loadset in required loadsets...
+    for load_set, loads in model.loads.iteritems():
+        # TODO if loadset in required loadsets...
         #print loads
         for load in loads:
             if load.type == 'FORCE':
@@ -394,9 +396,9 @@ def solveKF(model, Kg, F, Dofs):
 
 
 def fKx(K, x):
-    """
-    {F} = [K]{x}
-    {x} = [K]^-1 {F}
+    r"""
+    \f[ {F} = [K]{x} \f]
+    \f[ {x} = [K]^-1 {F} \f]
     """
     f = solve(K, x)
     return f

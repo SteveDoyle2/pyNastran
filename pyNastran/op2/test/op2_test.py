@@ -1,9 +1,9 @@
 import os
 import sys
-from pyNastran.op2.test.test_op2 import get_failed_files,runLotsOfFiles
-from pyNastran.general.general import get_files_of_type
+from pyNastran.op2.test.test_op2 import get_failed_files,run_lots_of_files
+from pyNastran.utils import get_files_of_type
 
-def parseSkippedCards(fname):
+def parse_skipped_cards(fname):
     f = open(fname,'r')
     lines = f.readlines()
     f.close()
@@ -13,7 +13,7 @@ def parseSkippedCards(fname):
         if 'OES' in line[0:3]:
             (fore,aft) = line.strip().split('->')
             (oes,form,elementTypeNum) = fore.strip().split(' ')
-            (elementType,eType) = elementTypeNum.strip().split('=')
+            (element_type,eType) = elementTypeNum.strip().split('=')
             (msg,fpath) = aft.strip().split('-')
             #print "fpath=|%s|" %(fpath)
             fpath = fpath.lstrip()[6:]
@@ -41,9 +41,9 @@ def get_all_files(foldersFile,fileType):
         moveDir = os.path.join('r"'+line.strip()+'"')
         moveDir = line.strip()
         if moveDir and moveDir[0] != '#':
-            print("moveDir = %s" %(moveDir))
-            assert os.path.exists(moveDir),'%s doesnt exist' %(moveDir)
-            files2 += get_files_of_type(moveDir,fileType,maxSize=100.)
+            print("moveDir = %s" % moveDir)
+            assert os.path.exists(moveDir), '%s doesnt exist' % (moveDir)
+            files2 += get_files_of_type(moveDir, fileType, maxSize=4.2)
     return files2
 
 if __name__=='__main__':
@@ -56,18 +56,18 @@ if __name__=='__main__':
     debug     = False
     makeGeom  = False
     writeBDF  = False
-    writeF06  = True
-    writeMatlab = False
-    printResults = False
+    write_f06  = True
+    write_matlab = False
+    print_results = False
 
-    deleteF06 = True
+    delete_f06 = True
     saveCases = True
     regenerate = False
     stopOnFailure = False
     getSkipCards = False
 
     if getSkipCards:
-        files2 = parseSkippedCards('skippedCards.out')
+        files2 = parse_skipped_cards('skippedCards.out')
     elif regenerate:
         files2 = get_all_files(foldersFile,'.op2')
         files2 += files
@@ -85,8 +85,8 @@ if __name__=='__main__':
         pass
 
     print("nFiles = %s" %(len(files)))
-    runLotsOfFiles(files,makeGeom,writeBDF,writeF06,writeMatlab,deleteF06,
-                   printResults,debug,saveCases,skipFiles,stopOnFailure,
+    run_lots_of_files(files,makeGeom,writeBDF,write_f06,write_matlab,delete_f06,
+                   print_results,debug,saveCases,skipFiles,stopOnFailure,
                    nStart,nStop)
     sys.exit('final stop...')
     

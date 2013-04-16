@@ -1,8 +1,7 @@
-# pylint: disable=E1101,C0103
+# pylint: disable=E1101,C0103,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
-#import copy
+#import sys
 
 from pyNastran.bdf.cards.nodes import SPOINT
 
@@ -36,28 +35,27 @@ class GetMethods(object):
             self.log.debug("element.pid = %s" % (element.pid))
             nids = set(element.nids)
             nids2 = nids2.union(nids)
-        ###
         return nids2
 
-    def Node(self, nid, allowEmptyNodes=False):
-        if nid == 0 and allowEmptyNodes:
+    def Node(self, nid, allowEmptyNodes=False, msg=''):
+        if (nid == 0 or nid is None) and allowEmptyNodes:
             return None
         elif nid in self.nodes:
             return self.nodes[nid]
         elif self.spoints and nid in self.spoints.spoints:
             return SPOINT(nid)
         else:
-            raise RuntimeError('nid=%s is not a GRID or SPOINT' % (nid))
-        ###
+            raise RuntimeError('nid=%s is not a GRID or SPOINT%s' % (nid, msg))
 
-    def Nodes(self, nids, allowEmptyNodes=False):
+    def Nodes(self, nids, allowEmptyNodes=False, msg=''):
         """
         Returns a series of node objects given a list of node IDs
         """
-        #print "nids",nids
+        #print("nids",nids)
         nodes = []
         for nid in nids:
-            nodes.append(self.Node(nid, allowEmptyNodes))
+            #print("nid = %s" %(nid))
+            nodes.append(self.Node(nid, allowEmptyNodes, msg))
         return nodes
 
     #--------------------
@@ -80,8 +78,6 @@ class GetMethods(object):
             element = self.Element(eid)
             if element.Pid() in pids:
                 eids2.append(eid)
-            ###
-        ###
         return (eids2)
 
     def getNodeIDToElementIDsMap(self):
@@ -99,8 +95,7 @@ class GetMethods(object):
         if self.spoints:  # SPOINTs
             for nid in sorted(self.spoints.spoints):  # SPOINTs
                 nidToElementsMap[nid] = []
-            ###
-        ###
+
         for (eid, element) in self.elements.iteritems():  # load the mapper
             try:
                 # not supported for 0-D and 1-D elements
@@ -109,8 +104,6 @@ class GetMethods(object):
                     nidToElementsMap[nid].append(eid)
             except:
                 pass
-            ###
-        ###
         return nidToElementsMap
 
     def getPropertyIDToElementIDsMap(self):
@@ -130,8 +123,6 @@ class GetMethods(object):
                 if pid == 0:  # CONM2
                     continue
                 pidToEidsMap[pid].append(eid)
-            ###
-        ###
         return (pidToEidsMap)
 
     def getMaterialIDToPropertyIDsMap(self):
@@ -177,12 +168,12 @@ class GetMethods(object):
     def propertyIDs(self):
         return self.properties.keys()
 
-    def Property(self, pid):
+    def Property(self, pid, msg):
         try:
             return self.properties[pid]
         except KeyError:
-            raise KeyError('pid=%s not found.  Allowed Pids=%s'
-                           % (pid, self.propertyIDs()))
+            raise KeyError('pid=%s not found%s.  Allowed Pids=%s'
+                           % (pid, msg, self.propertyIDs()))
 
     def Properties(self, pids):
         properties = []
@@ -206,13 +197,14 @@ class GetMethods(object):
     def thermalMaterialIDs(self):
         return self.thermalMaterials.keys()
 
-    def Material(self, mid):
+    def Material(self, mid, msg=''):
         if mid in self.materials:
             return self.materials[mid]
         elif mid in self.thermalMaterials:
             return self.thermalMaterials[mid]
         else:
-            raise KeyError('Invalid Material ID:  mid=%s' % (mid))
+            msg = '\n' + msg
+            raise KeyError('Invalid Material ID:  mid=%s%s' % (mid, msg))
 
     def StructuralMaterial(self, mid):
         return self.materials[mid]
@@ -229,13 +221,13 @@ class GetMethods(object):
     #--------------------
     # LOADS
 
-    def Load(self, sid):
+    def Load(self, sid, msg):
         #print 'sid=%s self.loads=%s' %(sid,(self.loads.keys()))
-        assert isinstance(sid, int), 'sid=%s is not an integer\n' % (sid)
+        assert isinstance(sid, int), 'sid=%s is not an integer\n' % sid
         if sid in self.loads:
             load = self.loads[sid]
         else:
-            raise KeyError('cannot find LoadID=|%s|.' % (sid))
+            raise KeyError('cannot find LoadID=|%s|%s.' % (sid, msg))
         return load
 
     def Grav(self, sid):
@@ -256,9 +248,15 @@ class GetMethods(object):
 
     #--------------------
     # COORDINATES CARDS
-    def Coord(self, cid):
-        return self.coords[cid]
-
+    def Coord(self, cid, msg=''):
+        try:
+            return self.coords[cid]
+        except KeyError:
+            raise KeyError('cid=%s not found%s.  Allowed Cids=%s'
+                           % (cid, msg, self.coordIDs()))
+    
+    def coordIDs(self):
+        return sorted(self.coords.keys())
     #--------------------
     # AERO CARDS
 
@@ -334,10 +332,10 @@ class GetMethods(object):
 
     #--------------------
     # TABLE CARDS
-    def Table(self, tid):
+    def Table(self, tid, msg=''):
         return self.tables[tid]
 
-    def RandomTable(self, tid):
+    def RandomTable(self, tid, msg=''):
         return self.randomTables[tid]
 
     #--------------------
@@ -350,4 +348,3 @@ class GetMethods(object):
     # MATRIX ENTRY CARDS
     def DMIG(self, dname):
         return self.dmig[dname]
-    #--------------------

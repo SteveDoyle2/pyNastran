@@ -1,48 +1,81 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+"""
+All spring properties are defined in this file.  This includes:
+ * PELAS
+ * PELAST
+
+All spring properties are SpringProperty and Property objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-import sys
+#simport sys
 #from numpy import zeros,pi
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property
-
+from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+                                       double, double_or_blank)
 
 class SpringProperty(Property):
-    type = 'SpringProperty'
-
     def __init__(self, card, data):
         Property.__init__(self, card, data)
-        pass
 
 
 class PELAS(SpringProperty):
+    """
+    Specifies the stiffness, damping coefficient, and stress coefficient of a
+    scalar elastic (spring) element (CELAS1 or CELAS3 entry).
+    """
     type = 'PELAS'
 
-    def __init__(self, card=None, nPELAS=0, data=None):
+    def __init__(self, card=None, nPELAS=0, data=None, comment=''):
         SpringProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         nOffset = nPELAS * 5
         if card:
-            self.pid = card.field(1 + nOffset)  # 2 PELAS properties can be defined on 1 PELAS card
-            self.k   = card.field(2+nOffset) # these are split into 2 separate cards
-            self.ge = card.field(3 + nOffset, 0.)
-            self.s = card.field(4 + nOffset, 0.)
+            # 2 PELAS properties can be defined on 1 PELAS card
+            # these are split into 2 separate cards
+
+            ## Property identification number. (Integer > 0)
+            self.pid = integer(card, 1 + nOffset, 'pid')
+            ## Ki Elastic property value. (Real)
+            self.k = double(card, 2 + nOffset, 'k')
+
+            ## Damping coefficient, . See Remarks 5. and 6. (Real)
+            ## To obtain the damping coefficient GE, multiply the
+            ## critical damping ratio c/c0 by 2.0.
+            self.ge = double_or_blank(card, 3 + nOffset, 'ge', 0.)
+            ## Stress coefficient. (Real)
+            self.s = double_or_blank(card, 4 + nOffset, 's', 0.)
         else:
             self.pid = data[0]
             self.k = data[1]
             self.ge = data[2]
             self.s = data[3]
-        ###
 
     def cross_reference(self, model):
         #if self.sol in [108,129]:
             #self.pid = self.pelasts[self.pid]
         pass
+    
+    def K(self):
+        return self.k
+
+    def _verify(self, isxref=False):
+        eid = self.Pid()
+        k = self.K()
+        ge = self.ge
+        s = self.s
+        assert isinstance(ge, float), 'ge=%r' % ge
+        assert isinstance(s, float), 'ge=%r' % s
 
     def writeCodeAster(self):
         """
-        @todo check if there are 1 (DISCRET=>K_T_D_N) or 2 (DISCRET_2D=>K_T_D_L) nodes
+        @todo
+          check if there are 1 (DISCRET    => K_T_D_N) or
+                             2 (DISCRET_2D => K_T_D_L) nodes
         """
         nodes = self.nodeIDs()
         msg = ''
@@ -67,18 +100,17 @@ class PELAS(SpringProperty):
             msg += "VALE=(0.,0.,%g)\n" % (self.k)
         else:
             raise ValueError('unsupported value of c1=%s' % (self.c1))
-        ###
         return msg
 
     def rawFields(self):
-        fields = ['PELAS', self.pid, self.k, self.ge, self.s]
-        return fields
+        list_fields = ['PELAS', self.pid, self.k, self.ge, self.s]
+        return list_fields
 
     def reprFields(self):
         ge = set_blank_if_default(self.ge, 0.)
         s = set_blank_if_default(self.s, 0.)
-        fields = ['PELAS', self.pid, self.k, ge, s]
-        return fields
+        list_fields = ['PELAS', self.pid, self.k, ge, s]
+        return list_fields
 
 
 class PELAST(SpringProperty):
@@ -91,19 +123,27 @@ class PELAST(SpringProperty):
     """
     type = 'PELAST'
 
-    def __init__(self, card=None, nPELAS=0, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SpringProperty.__init__(self, card, data)
-        self.pid = card.field(1)
-        ## Identification number of a TABLEDi entry that defines the force per unit
-        ## displacement vs. frequency relationship. (Integer > 0; Default = 0)
-        self.tkid = card.field(2, 0)
-        ## Identification number of a TABLEDi entry that defines the
-        ## nondimensional structural damping coefficient vs. frequency
-        ## relationship. (Integer > 0; Default = 0)
-        self.tgeid = card.field(3, 0)
-        ## Identification number of a TABELDi entry that defines the nonlinear
-        ## force vs. displacement relationship. (Integer > 0; Default = 0)
-        self.tknid = card.field(4, 0)
+        if comment:
+            self._comment = comment
+        if card:
+            ## Property identification number. (Integer > 0)
+            self.pid = integer(card, 1, 'pid')
+            ## Identification number of a TABLEDi entry that defines the
+            ## force per unit displacement vs. frequency relationship.
+            ## (Integer > 0; Default = 0)
+            self.tkid = integer_or_blank(card, 2, 'tkid', 0)
+            ## Identification number of a TABLEDi entry that defines the
+            ## nondimensional structural damping coefficient vs. frequency
+            ## relationship. (Integer > 0; Default = 0)
+            self.tgeid = integer_or_blank(card, 3, 'tgeid', 0)
+            ## Identification number of a TABELDi entry that defines the nonlinear
+            ## force vs. displacement relationship. (Integer > 0; Default = 0)
+            self.tknid = integer_or_blank(card, 4, 'tknid', 0)
+            assert len(card) <= 5, 'len(PELAST card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
 
     def cross_reference(self, model):
         self.pid = model.Property(self.pid)
@@ -120,16 +160,27 @@ class PELAST(SpringProperty):
         return self.pid.pid
 
     def Tkid(self):
+        """
+        Returns the table ID for force per unit displacement vs frequency
+        (k=F/d vs freq)
+        """
         if isinstance(self.tkid, int):
             return self.tkid
         return self.tkid.tid
 
     def Tknid(self):
+        """
+        Returns the table ID for nondimensional force vs. displacement
+        """
         if isinstance(self.tknid, int):
             return self.tknid
         return self.tknid.tid
 
     def Tgeid(self):
+        """
+        Returns the table ID for nondimensional structural damping
+        coefficient vs. frequency (c/c0 vs freq)
+        """
         if isinstance(self.tgeid, int):
             return self.tgeid
         return self.tgeid.tid

@@ -1,44 +1,94 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,W0612
+"""
+All solid elements are defined in this file.  This includes:
+ * CHEXA8
+ * CHEXA20
+ * CPENTA6
+ * CPENTA15
+ * CTETRA4
+ * CTETRA10
+
+All solid elements are SolidElement and Element objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import dot, cross, array, matrix, zeros
-from numpy.linalg import solve
+from numpy.linalg import solve, norm
 
 from pyNastran.bdf.cards.elements.elements import Element
-from pyNastran.general.generalMath import Area
+from pyNastran.utils.mathematics import Area, gauss
+from pyNastran.bdf.assign_type import (integer, integer_or_blank, fields)
 
-
-def Volume4(n1, n2, n3, n4):
-    """
+def volume4(n1, n2, n3, n4):
+    r"""
     V = (a-d) * ((b-d) x (c-d))/6   where x is cross and * is dot
-    \f[ \large V = {(a-d) \dot \left( (b-d) \times (c-d) \right) }{6} \f]
+    \f[ \large V = \frac{(a-d) \cdot \left( (b-d) \times (c-d) \right) }{6} \f]
     """
-    V = dot((n1 - n4), cross(n2 - n4, n3 - n4)) / 6.
+    V = -dot((n1 - n4), cross(n2 - n4, n3 - n4)) / 6.
     return V
 
+def area_centroid(n1, n2, n3, n4):
+    """
+    returns the area and centroid of a quad
+    1------2
+    |   /  |
+    | /    |
+    4------3
+    """
+    a = n1 - n2
+    b = n2 - n4
+    area1 = Area(a, b)
+    c1 = (n1 + n2 + n4) / 3.
+
+    a = n2 - n4
+    b = n2 - n3
+    area2 = Area(a, b)
+    c2 = (n2 + n3 + n4) / 3.
+
+    area = area1 + area2
+    centroid = (c1 * area1 + c2 * area2) / area
+    return(area, centroid)
 
 class SolidElement(Element):
     def __init__(self, card, data):
         Element.__init__(self, card, data)
 
     def cross_reference(self, model):
-        self.nodes = model.Nodes(self.nodes)
-        self.pid = model.Property(self.pid)
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
+    def Eid(self):
+        return self.eid
+
+    def Volume(self):
+        """
+        Base volume method that should be overwritten
+        """
+        pass
 
     def Mass(self):
+        """
+        Calculates the mass of the solid element
+        Mass = Rho * Volume
+        """
         return self.Rho() * self.Volume()
 
     def Mid(self):
+        """
+        Returns the material ID as an integer
+        """
         return self.pid.Mid()
 
     def Rho(self):
+        """
+        Returns the density
+        """
         try:
             return self.pid.mid.rho
         except AttributeError:
             print("self.pid = %s" % (self.pid))
             print("self.pid.mid = %s" % (str(self.pid.mid)))
-            #print("self.pid = %s" %(self.pid))
-            #print("self.pid = %s" %(self.pid))
             raise
 
     def isSameCard(self, elem, debug=False):
@@ -51,82 +101,108 @@ class SolidElement(Element):
         return self.isSameFields(fields1, fields2)
 
     def rawFields(self):
-        fields = [self.type, self.eid, self.Pid()] + self.nodeIDs()
-        return fields
+        list_fields = [self.type, self.eid, self.Pid()] + self.nodeIDs()
+        return list_fields
 
 
 class CHEXA8(SolidElement):
     """
+    @code
     CHEXA EID PID G1 G2 G3 G4 G5 G6
     G7 G8
+    @endcode
     """
     type = 'CHEXA'
     asterType = 'HEXA8'
     calculixType = 'C3D8'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            #print "hexa = ",card
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            nids = card.fields(3, 11)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = fields(integer, card, 'nid', i=3, j=11)
+            assert len(card) == 11, 'len(CHEXA8 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
             nids = data[2:]
             assert len(data) == 10, 'len(data)=%s data=%s' % (len(data), data)
-        #print "nids = ",nids
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 8
 
-    def areaCentroid(self, n1, n2, n3, n4):
-        a = n1 - n2
-        b = n2 - n4
-        area1 = Area(a, b)
-        c1 = (n1 + n2 + n4) / 3.
-
-        a = n2 - n4
-        b = n2 - n3
-        area2 = Area(a, b)
-        c2 = (n2 + n3 + n4) / 3.
-
-        area = area1 + area2
-        centroid = (c1 * area1 + c2 * area2) / area
-        return(area, centroid)
+    def _verify(self, isxref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+        if isxref:
+            c = self.Centroid()
+            v = self.Volume()
+            assert isinstance(v, float)
+            for i in range(3):
+                assert isinstance(c[i], float)
 
     def Centroid(self):
+        """
+        Averages the centroids at the two faces
+        """
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()
-        A1, c1 = self.areaCentroid(n1, n2, n3, n4)
-        A2, c2 = self.areaCentroid(n5, n6, n7, n8)
+        A1, c1 = area_centroid(n1, n2, n3, n4)
+        A2, c2 = area_centroid(n5, n6, n7, n8)
         c = (c1 + c2) / 2.
         return c
 
     def Volume(self):
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()
-        (A1, c1) = self.areaCentroid(n1, n2, n3, n4)
-        (A2, c2) = self.areaCentroid(n5, n6, n7, n8)
-        V = (A1 + A2) / 2. * (c1 - c2)
+        (A1, c1) = area_centroid(n1, n2, n3, n4)
+        (A2, c2) = area_centroid(n5, n6, n7, n8)
+        V = (A1 + A2) / 2. * norm(c1 - c2)
         return abs(V)
 
 
 class CHEXA20(CHEXA8):
     """
+    @code
     CHEXA EID PID G1 G2 G3 G4 G5 G6
     G7 G8 G9 G10 G11 G12 G13 G14
     G15 G16 G17 G18 G19 G20
+    @endcode
     """
     type = 'CHEXA'
     asterType = 'HEXA20'
     calculixType = 'C3D20'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
 
+        if comment:
+            self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            nids = card.fields(3, 23)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = [integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
+                    integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
+                    integer(card, 7, 'nid5'), integer(card, 8, 'nid6'),
+                    integer(card, 9, 'nid7'), integer(card, 10, 'nid8'),
+                    integer_or_blank(card, 11, 'nid9'),
+                    integer_or_blank(card, 12, 'nid10'),
+                    integer_or_blank(card, 13, 'nid11'),
+                    integer_or_blank(card, 14, 'nid12'),
+                    integer_or_blank(card, 15, 'nid13'),
+                    integer_or_blank(card, 16, 'nid14'),
+                    integer_or_blank(card, 17, 'nid15'),
+                    integer_or_blank(card, 18, 'nid16'),
+                    integer_or_blank(card, 19, 'nid17'),
+                    integer_or_blank(card, 20, 'nid18'),
+                    integer_or_blank(card, 21, 'nid19'),
+                    integer_or_blank(card, 22, 'nid20')]
+            assert len(card) <= 23, 'len(CHEXA20 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -136,47 +212,58 @@ class CHEXA20(CHEXA8):
         assert len(self.nodes) <= 20, msg
 
     def Centroid(self):
+        """
+        @see CHEXA8.Centroid
+        """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13, n14, n15,
          n16, n17, n18, n19, n20) = self.nodePositions()
-        (A1, c1) = self.areaCentroid(n1, n2, n3, n4)
-        (A2, c2) = self.areaCentroid(n5, n6, n7, n8)
+        (A1, c1) = area_centroid(n1, n2, n3, n4)
+        (A2, c2) = area_centroid(n5, n6, n7, n8)
         c = (c1 + c2) / 2.
         return c
 
     def Volume(self):
+        """
+        @see CHEXA8.Volume
+        """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13, n14, n15,
          n16, n17, n18, n19, n20) = self.nodePositions()
-        (A1, c1) = self.areaCentroid(n1, n2, n3, n4)
-        (A2, c2) = self.areaCentroid(n5, n6, n7, n8)
-        V = (A1 + A2) / 2. * (c1 - c2)
+        (A1, c1) = area_centroid(n1, n2, n3, n4)
+        (A2, c2) = area_centroid(n5, n6, n7, n8)
+        V = (A1 + A2) / 2. * norm(c1 - c2)
         return abs(V)
 
 
 class CPENTA6(SolidElement):
     """
+    @code
     CPENTA EID PID G1 G2 G3 G4 G5 G6
       *----------*
      / \        / \
     / A \      / c \
     *---*-----*-----*
-    V = (A1+A2)/2  * (c1-c2)
+    V = (A1+A2)/2  * norm(c1-c2)
     C = (c1-c2)/2
+    @endcode
     """
     type = 'CPENTA'
     asterType = 'PENTA6'
     calculixType = 'C3D6'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
 
+        if comment:
+            self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            nids = card.fields(3, 9)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = fields(integer, card, 'nid', i=3, j=9)
+            assert len(card) == 9, 'len(CPENTA6 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -208,8 +295,8 @@ class CPENTA6(SolidElement):
                     [3, 4]: [1, 3, 6, 4],
 
                     [2, 6]: [2, 5, 6, 3],  # right
-                    [3, 5]: [2, 3, 6, 5],
-        }
+                    [3, 5]: [2, 3, 6, 5], }
+
         pack2 = mapper[pack]
         if len(pack2) == 3:
             (n1, n2, n3) = pack2
@@ -239,6 +326,21 @@ class CPENTA6(SolidElement):
             A = Area(a, b)
         return [faceNodeIDs, A]
 
+    def _verify(self, isxref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+        if isxref:
+            c = self.Centroid()
+            v = self.Volume()
+            assert isinstance(v, float)
+            for i in range(3):
+                assert isinstance(c[i], float)
+
     def Centroid(self):
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         c1 = (n1 + n2 + n3) / 3.
@@ -253,27 +355,32 @@ class CPENTA6(SolidElement):
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
 
-        V = (A1 + A2) / 2. * (c1 - c2)
+        V = (A1 + A2) / 2. * norm(c1 - c2)
         return abs(V)
 
 
 class CPENTA15(CPENTA6):
     """
+    @code
     CPENTA EID PID G1 G2 G3 G4 G5 G6
     G7 G8 G9 G10 G11 G12 G13 G14
     G15
+    @endcode
     """
     type = 'CPENTA'
     asterType = 'PENTA15'
     calculixType = 'C3D15'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
 
+        if comment:
+            self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            nids = card.fields(3, 18)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = fields(integer, card, 'nid', i=3, j=18)
+            assert len(card) <= 18, 'len(CPENTA15 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -283,6 +390,9 @@ class CPENTA15(CPENTA6):
         assert len(self.nodes) <= 15
 
     def Centroid(self):
+        """
+        @see CPENTA6.Centroid
+        """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13, n14, n15) = self.nodePositions()
@@ -292,6 +402,9 @@ class CPENTA15(CPENTA6):
         return c
 
     def Volume(self):
+        """
+        @see CPENTA6.Volume
+        """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13, n14, n15) = self.nodePositions()
@@ -300,24 +413,29 @@ class CPENTA15(CPENTA6):
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
 
-        V = (A1 + A2) / 2. * (c1 - c2)
+        V = (A1 + A2) / 2. * norm(c1 - c2)
         return abs(V)
 
 
 class CTETRA4(SolidElement):
     """
+    @code
     CTETRA EID PID G1 G2 G3 G4
+    @endcode
     """
     type = 'CTETRA'
     asterType = 'TETRA4'
     calculixType = 'C3D4'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            nids = card.fields(3, 7)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = fields(integer, card, 'nid', i=3, j=7)
+            assert len(card) == 7, 'len(CTETRA4 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -326,9 +444,24 @@ class CTETRA4(SolidElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4
 
+    def _verify(self, isxref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+        if isxref:
+            c = self.Centroid()
+            v = self.Volume()
+            assert isinstance(v, float)
+            for i in range(3):
+                assert isinstance(c[i], float)
+
     def Volume(self):
         (n1, n2, n3, n4) = self.nodePositions()
-        return Volume4(n1, n2, n3, n4)
+        return volume4(n1, n2, n3, n4)
 
     def Centroid(self):
         (n1, n2, n3, n4) = self.nodePositions()
@@ -356,15 +489,12 @@ class CTETRA4(SolidElement):
                     #B = self.B()
                     K += w * J * self.BtEB(pz)
                     #K += w*J*B.T*E*B
-                ###
-            ###
-        ###
         return K
 
     def BtEB(self, pz):
         #E = self.Dsolid()
 
-        #o = E*e
+        #o = E * e
         #e = [exx,eyy,ezz,2exy,2eyz,2ezx]
         #C = array([[Bxi*E11+Byi*E14+Bzi*E16, Byi*E12+Bxi*E14+Bzi*E15, Bzi*E13+Byi*E15+Bxi*E16]
         #           [Bxi*E12+Byi*E24+Bzi*E26, Byi*E22+Bxi*E24+Bzi*E25, Bzi*E23+Byi*E25+Bxi*E26]
@@ -386,7 +516,7 @@ class CTETRA4(SolidElement):
         return zeta
 
     def Jacobian(self):
-        """
+        r"""
         \f[ \large   [J] =
           \left[
           \begin{array}{ccc}
@@ -422,21 +552,26 @@ class CTETRA4(SolidElement):
 
 class CTETRA10(CTETRA4):
     """
+    @code
     CTETRA EID PID G1 G2 G3 G4 G5 G6
     G7 G8 G9 G10
     CTETRA   1       1       239     229     516     99      335     103
              265     334     101     102
+    @endcode
     """
     type = 'CTETRA'
     asterType = 'TETRA10'
     calculixType = 'C3D10'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            nids = card.fields(3, 13)
+            self.eid = integer(card, 1, 'eid')
+            self.pid = integer(card, 2, 'pid')
+            nids = fields(integer, card, 'nid', i=3, j=13)
+            assert len(card) <= 13, 'len(CTETRA10 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -459,10 +594,16 @@ class CTETRA10(CTETRA4):
         return (N1, N2, N3, N4, N5, N6, N7, N8, N9, N10)
 
     def Volume(self):
+        """
+        @see CTETRA4.Volume
+        """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.nodePositions()
-        return Volume4(n1, n2, n3, n4)
+        return volume4(n1, n2, n3, n4)
 
     def Centroid(self):
+        """
+        @see CTETRA4.Centroid
+        """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.nodePositions()
         return (n1 + n2 + n3 + n4) / 4.
 

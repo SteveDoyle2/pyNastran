@@ -1,4 +1,19 @@
-# pylint: disable=C0103,R0902,R0904,R0914,E1101,W0612,E0602
+# pylint: disable=C0103,C0111,C0302,R0902,R0904,R0914,E1101,W0612,E0602
+"""
+All dynamic control cards are defined in this file.  This includes:
+ * CREEP
+ * MAT1 (isotropic solid/shell)
+ * MAT2 (anisotropic)
+ * MAT3 (linear orthotropic)
+ * MAT4 (thermal)
+ * MAT5 (thermal)
+ * MAT8 (orthotropic shell)
+ * MAT9 (anisotropic solid)
+ * MAT10 (fluid element)
+ * MATHP (hyperelastic)
+
+All cards are Material objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import zeros, array
@@ -6,7 +21,9 @@ from numpy import zeros, array
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, Material
 from pyNastran.bdf.cards.tables import Table
-
+from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+    double, double_or_blank,
+    string, string_or_blank, blank)
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""
@@ -35,25 +52,28 @@ class HyperelasticMaterial(Material):
 class CREEP(Material):
     type = 'CREEP'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Material.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.mid = card.field(1)
-            self.T0 = card.field(2, 0.0)
-            self.exp = card.field(3, 1e-9)
-            self.form = card.field(4)
-            self.tidkp = card.field(5)
-            self.tidcp = card.field(6)
-            self.tidcs = card.field(7)
-            self.thresh = card.field(8, 1e-5)
-            self.Type = card.field(9)
-            self.a = card.field(10)
-            self.b = card.field(11)
-            self.c = card.field(12)
-            self.d = card.field(13)
-            self.e = card.field(14)
-            self.f = card.field(15)
-            self.g = card.field(16)
+            self.mid = integer(card, 1, 'mid')
+            self.T0 = double_or_blank(card, 2, 'T0', 0.0)
+            self.exp = double_or_blank(card, 3, 'exp', 1e-9)
+            self.form = string_or_blank(card, 4, 'form') # blank?
+            self.tidkp = integer_or_blank(card, 5, 'tidkp') # blank?
+            self.tidcp = integer_or_blank(card, 6, 'tidcp') # blank?
+            self.tidcs = integer_or_blank(card, 7, 'tidcs') # blank?
+            self.thresh = double_or_blank(card, 8, 'thresh', 1e-5)
+            self.Type = integer_or_blank(card, 9, 'Type') # 111, 112, 121, 122, 211, 212, 221, 222, 300 (or blank?)
+            self.a = double_or_blank(card, 10, 'a')
+            self.b = double_or_blank(card, 11, 'b')
+            self.c = double_or_blank(card, 12, 'c')
+            self.d = double_or_blank(card, 13, 'd')
+            self.e = double_or_blank(card, 14, 'e')
+            self.f = double_or_blank(card, 15, 'f')
+            self.g = double_or_blank(card, 16, 'g')
+            assert len(card) <= 17, 'len(CREEP card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.T0 = data[1]
@@ -81,17 +101,19 @@ class CREEP(Material):
         return self.mid.mid
 
     def rawFields(self):
-        fields = ['CREEP', self.Mid(), self.T0, self.exp, self.form, self.tidkp, self.tidcp, self.tidcs, self.thresh,
-                  self.Type, self.a, self.b, self.c, self.d, self.e, self.f, self.g]
-        return fields
+        list_fields = ['CREEP', self.Mid(), self.T0, self.exp, self.form,
+                  self.tidkp, self.tidcp, self.tidcs, self.thresh, self.Type,
+                  self.a, self.b, self.c, self.d, self.e, self.f, self.g]
+        return list_fields
 
     def reprFields(self):
         thresh = set_blank_if_default(self.thresh, 1e-5)
         exp = set_blank_if_default(self.exp, 4.1e-9)
         T0 = set_blank_if_default(self.T0, 0.0)
-        fields = ['CREEP', self.Mid(), T0, exp, self.form, self.tidkp, self.tidcp, self.tidcs, thresh,
-                  self.Type, self.a, self.b, self.c, self.d, self.e, self.f, self.g]
-        return fields
+        list_fields = ['CREEP', self.Mid(), T0, exp, self.form, self.tidkp,
+                  self.tidcp, self.tidcs, thresh, self.Type,
+                  self.a, self.b, self.c, self.d, self.e, self.f, self.g]
+        return list_fields
 
 
 class MAT1(Material):
@@ -101,20 +123,22 @@ class MAT1(Material):
     """
     type = 'MAT1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Material.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
-            self.mid = card.field(1)
+            self.mid = integer(card, 1, 'mid')
             self.set_E_G_nu(card)
-            self.rho = card.field(5, 0.)
-            self.a = card.field(6, 0.0)
-            self.TRef = card.field(7, 0.0)
-            self.ge = card.field(8, 0.0)
-            self.St = card.field(9, 0.0)
-            self.Sc = card.field(10, 0.0)
-            self.Ss = card.field(11, 0.0)
-            self.Mcsid = card.field(12, 0)
+            self.rho = double_or_blank(card, 5, 'rho', 0.)
+            self.a = double_or_blank(card, 6, 'a', 0.0)
+            self.TRef = double_or_blank(card, 7, 'TRef', 0.0)
+            self.ge = double_or_blank(card, 8, 'ge', 0.0)
+            self.St = double_or_blank(card, 9, 'St', 0.0)
+            self.Sc = double_or_blank(card, 10, 'Sc', 0.0)
+            self.Ss = double_or_blank(card, 11, 'Ss', 0.0)
+            self.Mcsid = integer_or_blank(card, 12, 'Mcsid', 0)
+            assert len(card) <= 13, 'len(MAT1 card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.e = data[1]
@@ -128,6 +152,16 @@ class MAT1(Material):
             self.Sc = data[9]
             self.Ss = data[10]
             self.Mcsid = data[11]
+
+    def _verify(self, isxref=False):
+        mid = self.Mid()
+        E = self.E()
+        G = self.G()
+        nu = self.Nu()
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(E, float), 'E=%r' % E
+        assert isinstance(G, float), 'G=%r' % G
+        assert isinstance(nu, float), 'nu=%r' % nu
 
     def D(self):
         E11 = self.E()
@@ -158,12 +192,12 @@ class MAT1(Material):
         return self.rho
 
     def set_E_G_nu(self, card):
-        """
+        r"""
         \f[ \large G = \frac{E}{2 (1+\nu)} \f]
         """
-        E = card.field(2)
-        G = card.field(3)
-        nu = card.field(4)
+        E = double_or_blank(card, 2, 'E')
+        G = double_or_blank(card, 3, 'G')
+        nu = double_or_blank(card, 4, 'nu')
 
         if G is None and E is None:  # no E,G
             raise RuntimeError('G=%s E=%s cannot both be None' % (G, E))
@@ -189,7 +223,8 @@ class MAT1(Material):
         self.nu = nu
 
     def writeCalculix(self, elementSet='ELSetDummyMat'):
-        temperature = self.TRef  # default value - same properties for all values
+        # default value - same properties for all values
+        temperature = self.TRef
         msg = '*ELASTIC,TYPE=ISO,ELSET=%s\n' % (elementSet)
         msg += '** E,NU,TEMPERATURE\n'
         msg += '%s,%s,%s\n' % (self.e, self.nu, temperature)
@@ -217,9 +252,9 @@ class MAT1(Material):
         #pass
 
     def rawFields(self):
-        fields = ['MAT1', self.mid, self.e, self.g, self.nu, self.rho, self.a, self.TRef, self.ge,
-                  self.St, self.Sc, self.Ss, self.Mcsid]
-        return fields
+        list_fields = ['MAT1', self.mid, self.e, self.g, self.nu, self.rho, self.a,
+                  self.TRef, self.ge, self.St, self.Sc, self.Ss, self.Mcsid]
+        return list_fields
 
     def getG_default(self):
         if self.g == 0.0 or self.nu == 0.0:
@@ -227,7 +262,8 @@ class MAT1(Material):
         else:
             #G_default = self.e/2./(1+self.nu)
             G = self.e / 2. / (1 + self.nu)
-        #print "MAT1 - self.e=%s self.nu=%s self.g=%s Gdef=%s G=%s" %(self.e, self.nu,self.g, G_default, G)
+        #print("MAT1 - self.e=%s self.nu=%s self.g=%s Gdef=%s G=%s"
+        #      % (self.e, self.nu,self.g, G_default, G))
         return G
 
     def reprFields(self):
@@ -236,16 +272,16 @@ class MAT1(Material):
 
         rho = set_blank_if_default(self.rho, 0.)
         a = set_blank_if_default(self.a, 0.)
-        TRef = set_blank_if_default(self.TRef, 0.0)
+        TRef = set_blank_if_default(self.TRef, 0.)
         ge = set_blank_if_default(self.ge, 0.)
         St = set_blank_if_default(self.St, 0.)
         Sc = set_blank_if_default(self.Sc, 0.)
         Ss = set_blank_if_default(self.Ss, 0.)
         Mcsid = set_blank_if_default(self.Mcsid, 0)
 
-        fields = ['MAT1', self.mid, self.e, G, self.nu, rho, a, TRef, ge,
+        list_fields = ['MAT1', self.mid, self.e, G, self.nu, rho, a, TRef, ge,
                   St, Sc, Ss, Mcsid]
-        return fields
+        return list_fields
 
 
 class MAT2(AnisotropicMaterial):
@@ -259,28 +295,30 @@ class MAT2(AnisotropicMaterial):
     """
     type = 'MAT2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         AnisotropicMaterial.__init__(self, card, data)
-
+        if comment:
+            self._comment = comment
         if card:
-            self.mid = card.field(1)
-            self.G11 = card.field(2, 0.0)
-            self.G12 = card.field(3, 0.0)
-            self.G13 = card.field(4, 0.0)
-            self.G22 = card.field(5, 0.0)
-            self.G23 = card.field(6, 0.0)
-            self.G33 = card.field(7, 0.0)
+            self.mid = integer(card, 1, 'mid')
+            self.G11 = double_or_blank(card, 2, 'G11', 0.0)
+            self.G12 = double_or_blank(card, 3, 'G12', 0.0)
+            self.G13 = double_or_blank(card, 4, 'G13', 0.0)
+            self.G22 = double_or_blank(card, 5, 'G22', 0.0)
+            self.G23 = double_or_blank(card, 6, 'G23', 0.0)
+            self.G33 = double_or_blank(card, 7, 'G33', 0.0)
 
-            self.rho = card.field(8, 0.)
-            self.a1 = card.field(9)
-            self.a2 = card.field(10)
-            self.a3 = card.field(11)
-            self.TRef = card.field(12, 0.0)
-            self.ge = card.field(13, 0.0)
-            self.St = card.field(14)
-            self.Sc = card.field(15)
-            self.Ss = card.field(16)
-            self.Mcsid = card.field(17)
+            self.rho = double_or_blank(card, 8, 'rho', 0.0)
+            self.a1 = double_or_blank(card, 9, 'a1') # blank?
+            self.a2 = double_or_blank(card, 10, 'a2') # blank?
+            self.a3 = double_or_blank(card, 11, 'a3') # blank?
+            self.TRef = double_or_blank(card, 12, 'TRef', 0.0)
+            self.ge = double_or_blank(card, 13, 'ge', 0.0)
+            self.St = double_or_blank(card, 14, 'St') # or blank?
+            self.Sc = double_or_blank(card, 15, 'Sc') # or blank?
+            self.Ss = double_or_blank(card, 16, 'Ss') # or blank?
+            self.Mcsid = integer_or_blank(card, 17, 'Mcsid')
+            assert len(card) <= 18, 'len(MAT2 card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.G11 = data[1]
@@ -333,7 +371,7 @@ class MAT2(AnisotropicMaterial):
         E = self.E()
         nu12 = self.Nu()
         nu = nu12
-        G12 = self.G()
+        #G12 = self.G()
 
         D = zeros((3, 3))
         mu = 1. - nu12 * nu12  # *E11/E22    # not necessary b/c they're equal
@@ -365,7 +403,7 @@ class MAT2(AnisotropicMaterial):
         msg += '%s,%s,%s,%s,%s,%s,%s,%s\n\n' % (
             D1111, D1122, D2222, D1133, D2233, D3333, D1212, D1313)
 
-        G23
+        #G23
         temperature = self.TRef
         msg = '*ELASTIC,TYPE=ENGINEERING CONSTANTS  ** MAT2,mid=%s\n' % (
             self.mid)
@@ -384,10 +422,11 @@ class MAT2(AnisotropicMaterial):
         return msg
 
     def rawFields(self):
-        fields = ['MAT2', self.mid, self.G11, self.G12, self.G13, self.G22, self.G23, self.G33, self.rho,
-                  self.a1, self.a2, self.a3, self.TRef, self.ge, self.St, self.Sc, self.Ss,
+        list_fields = ['MAT2', self.mid, self.G11, self.G12, self.G13, self.G22,
+                  self.G23, self.G33, self.rho, self.a1, self.a2, self.a3,
+                  self.TRef, self.ge, self.St, self.Sc, self.Ss,
                   self.Mcsid]
-        return fields
+        return list_fields
 
     def reprFields(self):
         G11 = set_blank_if_default(self.G11, 0.0)
@@ -399,39 +438,42 @@ class MAT2(AnisotropicMaterial):
         rho = set_blank_if_default(self.rho, 0.0)
         TRef = set_blank_if_default(self.TRef, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
-        fields = ['MAT2', self.mid, G11, G12, G13, G22, G23, G33, rho,
-                  self.a1, self.a2, self.a3, TRef, ge, self.St, self.Sc, self.Ss,
-                  self.Mcsid]
-        return fields
+        list_fields = ['MAT2', self.mid, G11, G12, G13, G22, G23, G33, rho,
+                  self.a1, self.a2, self.a3, TRef, ge,
+                  self.St, self.Sc, self.Ss, self.Mcsid]
+        return list_fields
 
 
 class MAT3(AnisotropicMaterial):
     """
-    Defines the material properties for linear orthotropic materials used by the
-    CTRIAX6 element entry.
+    Defines the material properties for linear orthotropic materials used by
+    the CTRIAX6 element entry.
     MAT3 MID EX  ETH EZ  NUXTH NUTHZ NUZX RHO
     -    -   GZX AX  ATH AZ TREF GE
     """
     type = 'MAT3'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         AnisotropicMaterial.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.mid = card.field(1)
-            self.ex = card.field(2)
-            self.eth = card.field(3)
-            self.ez = card.field(4)
-            self.nuxth = card.field(5)
-            self.nuthz = card.field(6)
-            self.nuzx = card.field(7)
-            self.rho = card.field(8, 0.)
+            self.mid = integer(card, 1, 'mid')
+            self.ex = double(card, 2, 'ex')
+            self.eth = double(card, 3, 'eth')
+            self.ez = double(card, 4, 'ez')
+            self.nuxth = double(card, 5, 'nuxth')
+            self.nuthz = double(card, 6, 'nuthz')
+            self.nuzx = double(card, 7, 'nuzx')
+            self.rho = double_or_blank(card, 8, 'rho', 0.0)
 
-            self.gzx = card.field(11)
-            self.ax = card.field(12)
-            self.ath = card.field(13)
-            self.az = card.field(14)
-            self.TRef = card.field(15, 0.0)
-            self.ge = card.field(16, 0.0)
+            self.gzx = double_or_blank(card, 11, 'gzx')
+            self.ax = double_or_blank(card, 12, 'ax', 0.0)
+            self.ath = double_or_blank(card, 13, 'ath', 0.0)
+            self.az = double_or_blank(card, 14, 'az', 0.0)
+            self.TRef = double_or_blank(card, 15, 'TRef', 0.0)
+            self.ge = double_or_blank(card, 16, 'ge', 0.0)
+            assert len(card) <= 17, 'len(MAT3 card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.ex = data[1]
@@ -450,17 +492,22 @@ class MAT3(AnisotropicMaterial):
             self.ge = data[13]
 
     def rawFields(self):
-        fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth, self.nuthz, self.nuzx, self.rho,
-                  None, None, self.gzx, self.ax, self.ath, self.az, self.TRef, self.ge]
-        return fields
+        list_fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth,
+                  self.nuthz, self.nuzx, self.rho, None, None, self.gzx,
+                  self.ax, self.ath, self.az, self.TRef, self.ge]
+        return list_fields
 
     def reprFields(self):
+        ax = set_blank_if_default(self.ax, 0.0)
+        ath = set_blank_if_default(self.ath, 0.0)
+        az = set_blank_if_default(self.az, 0.0)
         rho = set_blank_if_default(self.rho, 0.0)
         TRef = set_blank_if_default(self.TRef, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
-        fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth, self.nuthz, self.nuzx, rho,
-                  None, None, self.gzx, self.ax, self.ath, self.az, TRef, ge]
-        return fields
+        list_fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth,
+                  self.nuthz, self.nuzx, rho, None, None, self.gzx,
+                  ax, ath, az, TRef, ge]
+        return list_fields
 
 
 class MAT4(ThermalMaterial):
@@ -475,20 +522,23 @@ class MAT4(ThermalMaterial):
     """
     type = 'MAT4'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalMaterial.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.mid = card.field(1)
-            self.k = card.field(2)
-            self.cp = card.field(3, 0.0)
-            self.rho = card.field(4, 1.0)
-            self.H = card.field(5)
-            self.mu = card.field(6)
-            self.hgen = card.field(7, 1.0)
-            self.refEnthalpy = card.field(8)
-            self.tch = card.field(9)
-            self.tdelta = card.field(10)
-            self.qlat = card.field(11)
+            self.mid = integer(card, 1, 'mid')
+            self.k = double_or_blank(card, 2, 'k')
+            self.cp = double_or_blank(card, 3, 'cp', 0.0)
+            self.rho = double_or_blank(card, 4, 'rho', 1.0)
+            self.H = double_or_blank(card, 5, 'H')
+            self.mu = double_or_blank(card, 6, 'mu')
+            self.hgen = double_or_blank(card, 7, 'hgen', 1.0)
+            self.refEnthalpy = double_or_blank(card, 8, 'refEnthalpy')
+            self.tch = double_or_blank(card, 9, 'tch')
+            self.tdelta = double_or_blank(card, 10, 'tdelta')
+            self.qlat = double_or_blank(card, 11, 'qlat')
+            assert len(card) <= 12, 'len(MAT4 card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.k = data[1]
@@ -503,17 +553,18 @@ class MAT4(ThermalMaterial):
             self.qlat = data[10]
 
     def rawFields(self):
-        fields = ['MAT4', self.mid, self.k, self.cp, self.rho, self.H, self.mu, self.hgen, self.refEnthalpy,
-                          self.tch, self.tdelta, self.qlat]
-        return fields
+        list_fields = ['MAT4', self.mid, self.k, self.cp, self.rho, self.H, self.mu,
+                  self.hgen, self.refEnthalpy, self.tch, self.tdelta,
+                  self.qlat]
+        return list_fields
 
     def reprFields(self):
         rho = set_blank_if_default(self.rho, 1.0)
         hgen = set_blank_if_default(self.hgen, 1.0)
         cp = set_blank_if_default(self.cp, 0.0)
-        fields = ['MAT4', self.mid, self.k, cp, rho, self.H, self.mu, hgen, self.refEnthalpy,
-                          self.tch, self.tdelta, self.qlat]
-        return fields
+        list_fields = ['MAT4', self.mid, self.k, cp, rho, self.H, self.mu, hgen,
+                  self.refEnthalpy, self.tch, self.tdelta, self.qlat]
+        return list_fields
 
 
 class MAT5(ThermalMaterial):  # also AnisotropicMaterial
@@ -525,21 +576,24 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
     """
     type = 'MAT5'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         ThermalMaterial.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.mid = card.field(1)
+            self.mid = integer(card, 1, 'mid')
             ## Thermal conductivity (assumed default=0.0)
-            self.kxx = card.field(2, 0.)
-            self.kxy = card.field(3, 0.)
-            self.kxz = card.field(4, 0.)
-            self.kyy = card.field(5, 0.)
-            self.kyz = card.field(6, 0.)
-            self.kzz = card.field(7, 0.)
+            self.kxx = double_or_blank(card, 2, 'kxx', 0.0)
+            self.kxy = double_or_blank(card, 3, 'kxy', 0.0)
+            self.kxz = double_or_blank(card, 4, 'kxz', 0.0)
+            self.kyy = double_or_blank(card, 5, 'kyy', 0.0)
+            self.kyz = double_or_blank(card, 6, 'kyz', 0.0)
+            self.kzz = double_or_blank(card, 7, 'kzz', 0.0)
 
-            self.cp = card.field(8, 0.0)
-            self.rho = card.field(9, 1.0)
-            self.hgen = card.field(10, 1.0)
+            self.cp = double_or_blank(card, 8, 'cp', 0.0)
+            self.rho = double_or_blank(card, 9, 'rho', 1.0)
+            self.hgen = double_or_blank(card, 10, 'hgen', 1.0)
+            assert len(card) <= 11, 'len(MAT5 card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.kxx = data[1]
@@ -562,9 +616,9 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         return k
 
     def rawFields(self):
-        fields = ['MAT5', self.mid, self.kxx, self.kxy, self.kxz, self.kyy, self.kyz, self.kzz, self.cp,
-                          self.rho, self.hgen]
-        return fields
+        list_fields = ['MAT5', self.mid, self.kxx, self.kxy, self.kxz, self.kyy,
+                  self.kyz, self.kzz, self.cp, self.rho, self.hgen]
+        return list_fields
 
     def reprFields(self):
         kxx = set_blank_if_default(self.kxx, 0.0)
@@ -577,9 +631,9 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         rho = set_blank_if_default(self.rho, 1.0)
         hgen = set_blank_if_default(self.hgen, 1.0)
         cp = set_blank_if_default(self.cp, 0.0)
-        fields = ['MAT5', self.mid, kxx, kxy, kxz, kyy, kyz, kzz, cp,
-                  rho, hgen]
-        return fields
+        list_fields = ['MAT5', self.mid, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho,
+                  hgen]
+        return list_fields
 
 
 class MAT8(AnisotropicMaterial):
@@ -590,29 +644,32 @@ class MAT8(AnisotropicMaterial):
     """
     type = 'MAT8'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         AnisotropicMaterial.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.mid = card.field(1)
-            self.e11 = card.field(2)  ## @todo is this the correct default
-            self.e22 = card.field(3)  ## @todo is this the correct default
-            self.nu12 = card.field(4)  ## @todo is this the correct default
+            self.mid = integer(card, 1, 'mid')
+            self.e11 = double(card, 2, 'E11')    ## @todo is this the correct default
+            self.e22 = double(card, 3, 'E22')    ## @todo is this the correct default
+            self.nu12 = double(card, 4, 'nu12')  ## @todo is this the correct default
 
-            self.g12 = card.field(5, 0.0)
-            self.g1z = card.field(6, 1e8)
-            self.g2z = card.field(7, 1e8)
-            self.rho = card.field(8, 0.0)
-            self.a1 = card.field(9, 0.0)
-            self.a2 = card.field(10, 0.0)
-            self.TRef = card.field(11, 0.0)
-            self.Xt = card.field(12, 0.0)
-            self.Xc = card.field(13, self.Xt)
-            self.Yt = card.field(14, 0.0)
-            self.Yc = card.field(15, self.Yt)
-            self.S = card.field(16, 0.0)
-            self.ge = card.field(17, 0.0)
-            self.F12 = card.field(18, 0.0)
-            self.strn = card.field(19, 0.0)
+            self.g12 = double_or_blank(card, 5, 'g12', 0.0)
+            self.g1z = double_or_blank(card, 6, 'g1z', 1e8)
+            self.g2z = double_or_blank(card, 7, 'g2z', 1e8)
+            self.rho = double_or_blank(card, 8, 'rho', 0.0)
+            self.a1 = double_or_blank(card, 9, 'a1', 0.0)
+            self.a2 = double_or_blank(card, 10, 'a2', 0.0)
+            self.TRef = double_or_blank(card, 11, 'TRef', 0.0)
+            self.Xt = double_or_blank(card, 12, 'Xt', 0.0)
+            self.Xc = double_or_blank(card, 13, 'Xc', self.Xt)
+            self.Yt = double_or_blank(card, 14, 'Yt', 0.0)
+            self.Yc = double_or_blank(card, 15, 'Yc', self.Yt)
+            self.S = double_or_blank(card, 16, 'S', 0.0)
+            self.ge = double_or_blank(card, 17, 'ge', 0.0)
+            self.F12 = double_or_blank(card, 18, 'F12', 0.0)
+            self.strn = double_or_blank(card, 19, 'strn', 0.0)
+            assert len(card) <= 20, 'len(MAT8 card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.e11 = data[1]
@@ -635,6 +692,18 @@ class MAT8(AnisotropicMaterial):
             self.F12 = data[17]
             self.strn = data[18]
 
+    def _verify(self, isxref=False):
+        mid = self.Mid()
+        E11 = self.E11()
+        E22 = self.E22()
+        nu12 = self.Nu12()
+        G12 = self.G12()
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(E11, float), 'E11=%r' % E11
+        assert isinstance(E22, float), 'E11=%r' % E11
+        assert isinstance(G12, float), 'G12=%r' % G12
+        assert isinstance(nu12, float), 'nu12=%r' % nu12
+
     def E11(self):
         return self.e11
 
@@ -656,21 +725,21 @@ class MAT8(AnisotropicMaterial):
         nu12 = self.Nu12()
         G12 = self.G12()
 
-        D = zeros((3, 3))
+        D = zeros((3, 3), dtype='float32')
         mu = 1. - nu12 * nu12 * E11 / E22    # not necessary b/c they're equal
         D[0, 0] = E11 / mu
         D[1, 1] = E22 / mu
         D[0, 1] = nu12 * D[0, 0]
         D[1, 0] = D[0, 1]
         D[2, 2] = G12
-
         return D
 
     def rawFields(self):
-        fields = ['MAT8', self.mid, self.e11, self.e22, self.nu12, self.g12, self.g1z, self.g2z, self.rho,
-                  self.a1, self.a2, self.TRef, self.Xt, self.Xc, self.Yt, self.Yc, self.S,
-                  self.ge, self.F12, self.strn]
-        return fields
+        list_fields = ['MAT8', self.mid, self.e11, self.e22, self.nu12, self.g12,
+                  self.g1z, self.g2z, self.rho, self.a1, self.a2, self.TRef,
+                  self.Xt, self.Xc, self.Yt, self.Yc, self.S, self.ge,
+                  self.F12, self.strn]
+        return list_fields
 
     def reprFields(self):
         G12 = set_blank_if_default(self.g12, 0.)
@@ -693,10 +762,9 @@ class MAT8(AnisotropicMaterial):
         F12 = set_blank_if_default(self.F12, 0.0)
         strn = set_blank_if_default(self.strn, 0.0)
 
-        fields = ['MAT8', self.mid, self.e11, self.e22, self.nu12, G12, G1z, G2z, rho,
-                  a1, a2, TRef, Xt, Xc, Yt, Yc, S,
-                  ge, F12, strn]
-        return fields
+        list_fields = ['MAT8', self.mid, self.e11, self.e22, self.nu12, G12, G1z,
+                  G2z, rho, a1, a2, TRef, Xt, Xc, Yt, Yc, S, ge, F12, strn]
+        return list_fields
 
 
 class MAT9(AnisotropicMaterial):
@@ -712,35 +780,43 @@ class MAT9(AnisotropicMaterial):
     """
     type = 'MAT9'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         AnisotropicMaterial.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.mid = card.field(1)
-            self.G11 = card.field(2, 0.0)
-            self.G12 = card.field(3, 0.0)
-            self.G13 = card.field(4, 0.0)
-            self.G14 = card.field(5, 0.0)
-            self.G15 = card.field(6, 0.0)
-            self.G16 = card.field(7, 0.0)
-            self.G22 = card.field(8, 0.0)
-            self.G23 = card.field(9, 0.0)
-            self.G24 = card.field(10, 0.0)
-            self.G25 = card.field(11, 0.0)
-            self.G26 = card.field(12, 0.0)
-            self.G33 = card.field(13, 0.0)
-            self.G34 = card.field(14, 0.0)
-            self.G35 = card.field(15, 0.0)
-            self.G36 = card.field(16, 0.0)
-            self.G44 = card.field(17, 0.0)
-            self.G45 = card.field(18, 0.0)
-            self.G46 = card.field(19, 0.0)
-            self.G55 = card.field(20, 0.0)
-            self.G56 = card.field(21, 0.0)
-            self.G66 = card.field(22, 0.0)
-            self.rho = card.field(23, 0.0)
-            self.A = card.fields(24, 30, [0.] * 6)
-            self.TRef = card.field(30, 0.0)
-            self.ge = card.field(31, 0.0)
+            self.mid = integer(card, 1, 'mid')
+            self.G11 = double_or_blank(card, 2, 'G11', 0.0)
+            self.G12 = double_or_blank(card, 3, 'G12', 0.0)
+            self.G13 = double_or_blank(card, 4, 'G13', 0.0)
+            self.G14 = double_or_blank(card, 5, 'G14', 0.0)
+            self.G15 = double_or_blank(card, 6, 'G15', 0.0)
+            self.G16 = double_or_blank(card, 7, 'G16', 0.0)
+            self.G22 = double_or_blank(card, 8, 'G22', 0.0)
+            self.G23 = double_or_blank(card, 9, 'G23', 0.0)
+            self.G24 = double_or_blank(card, 10, 'G24', 0.0)
+            self.G25 = double_or_blank(card, 11, 'G25', 0.0)
+            self.G26 = double_or_blank(card, 12, 'G26', 0.0)
+            self.G33 = double_or_blank(card, 13, 'G33', 0.0)
+            self.G34 = double_or_blank(card, 14, 'G34', 0.0)
+            self.G35 = double_or_blank(card, 15, 'G35', 0.0)
+            self.G36 = double_or_blank(card, 16, 'G36', 0.0)
+            self.G44 = double_or_blank(card, 17, 'G44', 0.0)
+            self.G45 = double_or_blank(card, 18, 'G45', 0.0)
+            self.G46 = double_or_blank(card, 19, 'G46', 0.0)
+            self.G55 = double_or_blank(card, 20, 'G55', 0.0)
+            self.G56 = double_or_blank(card, 21, 'G56', 0.0)
+            self.G66 = double_or_blank(card, 22, 'G66', 0.0)
+            self.rho = double_or_blank(card, 23, 'rho', 0.0)
+            self.A = [double_or_blank(card, 24, 'A1', 0.0),
+                      double_or_blank(card, 25, 'A2', 0.0),
+                      double_or_blank(card, 26, 'A3', 0.0),
+                      double_or_blank(card, 27, 'A4', 0.0),
+                      double_or_blank(card, 28, 'A5', 0.0),
+                      double_or_blank(card, 29, 'A6', 0.0)]
+            self.TRef = double_or_blank(card, 30, 'TRef', 0.0)
+            self.ge = double_or_blank(card, 31, 'ge', 0.0)
+            assert len(card) <= 32, 'len(MAT9 card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.G11 = data[1][0]
@@ -771,6 +847,18 @@ class MAT9(AnisotropicMaterial):
 
         assert len(self.A) == 6
 
+    def _verify(self, isxref=False):
+        mid = self.Mid()
+        #E11 = self.E11()
+        #E22 = self.E22()
+        #nu12 = self.Nu12()
+        #G12 = self.G12()
+        assert isinstance(mid, int), 'mid=%r' % mid
+        #assert isinstance(E11, float), 'E11=%r' % E11
+        #assert isinstance(E22, float), 'E11=%r' % E11
+        #assert isinstance(G12, float), 'G12=%r' % G12
+        #assert isinstance(nu12, float), 'nu12=%r' % nu12
+
     def D(self):
         D = array(
             [[self.G11, self.G12, self.G13, self.G14, self.G15, self.G16],
@@ -782,10 +870,12 @@ class MAT9(AnisotropicMaterial):
         return D
 
     def rawFields(self):
-        fields = ['MAT9', self.mid, self.G11, self.G12, self.G13, self.G14, self.G15, self.G16, self.G22,
-                          self.G23, self.G24, self.G25, self.G26, self.G33, self.G34, self.G35, self.G36,
-                          self.G44, self.G45, self.G46, self.G55, self.G56, self.G66, self.rho] + self.A + [self.TRef, self.ge]
-        return fields
+        list_fields = (['MAT9', self.mid, self.G11, self.G12, self.G13, self.G14,
+                   self.G15, self.G16, self.G22, self.G23, self.G24, self.G25,
+                   self.G26, self.G33, self.G34, self.G35, self.G36, self.G44,
+                   self.G45, self.G46, self.G55, self.G56, self.G66, self.rho]
+                  + self.A + [self.TRef, self.ge])
+        return list_fields
 
     def reprFields(self):
         A = []
@@ -796,10 +886,12 @@ class MAT9(AnisotropicMaterial):
         rho = set_blank_if_default(self.rho, 0.0)
         TRef = set_blank_if_default(self.TRef, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
-        fields = ['MAT9', self.mid, self.G11, self.G12, self.G13, self.G14, self.G15, self.G16, self.G22,
-                          self.G23, self.G24, self.G25, self.G26, self.G33, self.G34, self.G35, self.G36,
-                          self.G44, self.G45, self.G46, self.G55, self.G56, self.G66, rho] + A + [TRef, ge]
-        return fields
+        list_fields = (['MAT9', self.mid, self.G11, self.G12, self.G13, self.G14,
+                   self.G15, self.G16, self.G22, self.G23, self.G24, self.G25,
+                   self.G26, self.G33, self.G34, self.G35, self.G36, self.G44,
+                   self.G45, self.G46, self.G55, self.G56, self.G66, rho]
+                  + A + [TRef, ge])
+        return list_fields
 
 
 class MAT10(Material):
@@ -810,12 +902,15 @@ class MAT10(Material):
     """
     type = 'MAT10'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Material.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.mid = card.field(1)
+            self.mid = integer(card, 1, 'mid')
             self.getBulkRhoC(card)
-            self.ge = card.field(5, 0.0)
+            self.ge = double_or_blank(card, 5, 'ge', 0.0)
+            assert len(card) <= 6, 'len(MAT10 card) = %i' % len(card)
         else:
             self.mid = data[0]
             self.bulk = data[1]
@@ -823,13 +918,26 @@ class MAT10(Material):
             self.c = data[3]
             self.ge = data[4]
 
+    def _verify(self, isxref=False):
+        mid = self.Mid()
+        bulk = self.bulk
+        rho = self.rho
+        c = self.c
+        ge = self.ge
+
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(bulk, float), 'bulk=%r' % bulk
+        assert isinstance(rho, float), 'rho=%r' % rho
+        assert isinstance(c, float), 'c=%r' % c
+        assert isinstance(ge, float), 'ge=%r' % ge
+        
     def getBulkRhoC(self, card):
-        """
+        r"""
         \f[ \large bulk = c^2 \rho \f]
         """
-        bulk = card.field(2)
-        rho = card.field(3)
-        c = card.field(4)
+        bulk = double_or_blank(card, 2, 'bulk')
+        rho = double_or_blank(card, 3, 'rho')
+        c = double_or_blank(card, 4, 'c')
 
         if c is not None:
             if rho is not None:
@@ -854,64 +962,151 @@ class MAT10(Material):
         self.c = c
 
     def rawFields(self):
-        fields = ['MAT10', self.mid, self.bulk, self.rho, self.c, self.ge]
-        return fields
+        list_fields = ['MAT10', self.mid, self.bulk, self.rho, self.c, self.ge]
+        return list_fields
 
     def reprFields(self):
         ge = set_blank_if_default(self.ge, 0.0)
-        fields = ['MAT10', self.mid, self.bulk, self.rho, self.c, ge]
-        return fields
+        list_fields = ['MAT10', self.mid, self.bulk, self.rho, self.c, ge]
+        return list_fields
+
+
+class MAT11(Material):
+    """
+    Defines the material properties for a 3D orthotropic material for
+    isoparametric solid elements.
+    MAT10 MID E1 E2 E3 NU12 Nu13 NU23 G12
+    - G13 G23 RHO A1 A2 A3 TREF GE
+    """
+    type = 'MAT11'
+
+    def __init__(self, card=None, data=None, comment=''):
+        Material.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+        if card:
+            self.mid = integer(card, 1, 'mid')
+            self.e1 = double(card, 2, 'E1')
+            self.e2 = double(card, 3, 'E2')
+            self.e3 = double(card, 4, 'E3')
+            
+            self.nu12 = double(card, 5, 'nu12')
+            self.nu13 = double(card, 6, 'nu13')
+            self.nu23 = double(card, 7, 'nu23')
+            
+            self.g12 = double(card, 8, 'g12')
+            self.g13 = double(card, 9, 'g13')
+            self.g23 = double(card, 10, 'g23')
+            
+            self.rho = double_or_blank(card, 11, 'rho', 0.0)
+            self.a1 = double_or_blank(card, 12, 'a1', 0.0)
+            self.a2 = double_or_blank(card, 13, 'a2', 0.0)
+            self.a3 = double_or_blank(card, 14, 'a3', 0.0)
+            
+            self.TRef = double_or_blank(card, 15, 'TRef', 0.0)
+            self.ge = double_or_blank(card, 16, 'ge', 0.0)
+            assert len(card) <= 17, 'len(MAT11 card) = %i' % len(card)
+        else:
+            self.mid = data[0]
+            self.e1 = data[1]
+            self.e2 = data[2]
+            self.e3 = data[3]
+            self.nu12 = data[4]
+            self.nu13 = data[5]
+            self.nu23 = data[6]
+            self.g12 = data[7]
+            self.g13 = data[8]
+            self.g23 = data[9]
+            self.rho = data[10]
+            self.a1 = data[11]
+            self.a2 = data[12]
+            self.a3 = data[13]
+            self.TRef = data[14]
+            self.ge = data[15]
+        msg = 'MAT11 mid=%s does not have ' % self.mid
+        assert self.e1 is not None, msg + 'E1 defined'
+        assert self.e2 is not None, msg + 'E2 defined'
+        assert self.e3 is not None, msg + 'E3 defined'
+        assert self.g12 is not None, msg + 'G12 defined'
+        assert self.g13 is not None, msg + 'G13 defined'
+        assert self.g23 is not None, msg + 'G23 defined'
+        assert self.nu12 is not None, msg + 'NU12 defined'
+        assert self.nu13 is not None, msg + 'NU13 defined'
+        assert self.nu23 is not None, msg + 'NU23 defined'
+
+    def rawFields(self):
+        list_fields = ['MAT11', self.mid, self.e1, self.e2, self.e3, self.nu12,
+                  self.nu13, self.g12, self.g13, self.g23, self.rho, self.a1,
+                  self.a2, self.a3, self.TRef, self.ge]
+        return list_fields
+
+    def reprFields(self):
+        a1 = set_blank_if_default(self.a1, 0.0)
+        a2 = set_blank_if_default(self.a2, 0.0)
+        a3 = set_blank_if_default(self.a3, 0.0)
+
+        TRef = set_blank_if_default(self.TRef, 0.0)
+        rho = set_blank_if_default(self.rho, 0.0)
+        ge = set_blank_if_default(self.ge, 0.0)
+
+        list_fields = ['MAT11', self.mid, self.e1, self.e2, self.e3, self.nu12,
+                  self.nu13, self.g12, self.g13, self.g23, rho, a1,
+                  a2, a3, TRef, ge]
+        return list_fields
 
 
 class MATHP(HyperelasticMaterial):
     type = 'MATHP'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         HyperelasticMaterial.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.mid = card.field(1)
-            self.a10 = card.field(2, 0.)
-            self.a01 = card.field(3, 0.)
-            self.d1 = card.field(4, (self.a10 + self.a01) * 1000)
-            self.rho = card.field(5, 0.)
-            self.av = card.field(6, 0.)
-            self.TRef = card.field(7, 0.)
-            self.ge = card.field(8, 0.)
+            self.mid = integer(card, 1, 'mid')
+            self.a10 = double_or_blank(card, 2, 'a10', 0.)
+            self.a01 = double_or_blank(card, 3, 'a01', 0.)
+            self.d1 = double_or_blank(card, 4, 'd1', (self.a10 + self.a01) * 1000)
+            self.rho = double_or_blank(card, 5, 'rho', 0.)
+            self.av = double_or_blank(card, 6, 'av', 0.)
+            self.TRef = double_or_blank(card, 7, 'TRef', 0.)
+            self.ge = double_or_blank(card, 8, 'ge', 0.)
 
-            self.na = card.field(10, 1)
-            self.nd = card.field(11, 1)
+            self.na = double_or_blank(card, 10, 'na', 1)
+            self.nd = integer_or_blank(card, 11, 'nd', 1)
 
-            self.a20 = card.field(17, 0.)
-            self.a11 = card.field(18, 0.)
-            self.a02 = card.field(19, 0.)
-            self.d2 = card.field(20, 0.)
+            self.a20 = double_or_blank(card, 17, 'a20', 0.)
+            self.a11 = double_or_blank(card, 18, 'a11', 0.)
+            self.a02 = double_or_blank(card, 19, 'a02', 0.)
+            self.d2 = double_or_blank(card, 20, 'd2', 0.)
 
-            self.a30 = card.field(25, 0.)
-            self.a21 = card.field(26, 0.)
-            self.a12 = card.field(27, 0.)
-            self.a03 = card.field(28, 0.)
-            self.d3 = card.field(29, 0.)
+            self.a30 = double_or_blank(card, 25, 'a30', 0.)
+            self.a21 = double_or_blank(card, 26, 'a21', 0.)
+            self.a12 = double_or_blank(card, 27, 'a12', 0.)
+            self.a03 = double_or_blank(card, 28, 'a03', 0.)
+            self.d3 = double_or_blank(card, 29, 'd3', 0.)
 
-            self.a40 = card.field(33, 0.)
-            self.a31 = card.field(34, 0.)
-            self.a22 = card.field(35, 0.)
-            self.a13 = card.field(36, 0.)
-            self.a04 = card.field(37, 0.)
-            self.d4 = card.field(38, 0.)
+            self.a40 = double_or_blank(card, 33, 'a40', 0.)
+            self.a31 = double_or_blank(card, 34, 'a31', 0.)
+            self.a22 = double_or_blank(card, 35, 'a22', 0.)
+            self.a13 = double_or_blank(card, 36, 'a13', 0.)
+            self.a04 = double_or_blank(card, 37, 'a04', 0.)
+            self.d4 = double_or_blank(card, 38, 'd4', 0.)
 
-            self.a50 = card.field(41, 0.)
-            self.a41 = card.field(42)
-            self.a32 = card.field(43)
-            self.a23 = card.field(44)
-            self.a14 = card.field(45)
-            self.a05 = card.field(46)
-            self.d5 = card.field(47, 0.)
+            self.a50 = double_or_blank(card, 41, 'a50', 0.)
+            self.a41 = double_or_blank(card, 42, 'a41', 0.)
+            self.a32 = double_or_blank(card, 43, 'a32', 0.)
+            self.a23 = double_or_blank(card, 44, 'a23', 0.)
+            self.a14 = double_or_blank(card, 45, 'a14', 0.)
+            self.a05 = double_or_blank(card, 46, 'a05', 0.)
+            self.d5 = double_or_blank(card, 47, 'd5', 0.)
 
-            self.tab1 = card.field(49)
-            self.tab2 = card.field(50)
-            self.tab3 = card.field(51)
-            self.tab4 = card.field(52)
-            self.tabd = card.field(56)
+            self.tab1 = integer_or_blank(card, 49, 'tab1')
+            self.tab2 = integer_or_blank(card, 50, 'tab2')
+            self.tab3 = integer_or_blank(card, 51, 'tab3')
+            self.tab4 = integer_or_blank(card, 52, 'tab4')
+            self.tabd = integer_or_blank(card, 56, 'tabd')
+            assert len(card) <= 57, 'len(MATHP card) = %i' % len(card)
         else:
             main = data[0]
             (mid, a10, a01, d1, rho, av, alpha, tref, ge, sf, na, nd, kp,
@@ -975,14 +1170,19 @@ class MATHP(HyperelasticMaterial):
             self.tabd = tab5
 
     def rawFields(self):
-        fields = ['MATHP', self.mid, self.a10, self.a01, self.d1, self.rho, self.av, self.TRef, self.ge,
+        list_fields = ['MATHP', self.mid, self.a10, self.a01, self.d1, self.rho,
+                  self.av, self.TRef, self.ge,
                   None, self.na, self.nd, None, None, None, None, None,
-                  self.a20, self.a11, self.a02, self.d2, None, None, None, None,
-                  self.a30, self.a21, self.a12, self.a03, self.d3, None, None, None,
-                  self.a40, self.a31, self.a22, self.a13, self.a04, self.d4, None, None,
-                  self.a50, self.a41, self.a32, self.a23, self.a14, self.a05, self.d5, None,
+                  self.a20, self.a11, self.a02, self.d2, None, None, None,
+                  None,
+                  self.a30, self.a21, self.a12, self.a03, self.d3, None,
+                  None, None,
+                  self.a40, self.a31, self.a22, self.a13, self.a04, self.d4,
+                  None, None,
+                  self.a50, self.a41, self.a32, self.a23, self.a14, self.a05,
+                  self.d5, None,
                   self.tab1, self.tab2, self.tab4, None, None, None, self.tabd]
-        return fields
+        return list_fields
 
     def reprFields(self):
         av = set_blank_if_default(self.av, 0.0)
@@ -1021,14 +1221,15 @@ class MATHP(HyperelasticMaterial):
 
         TRef = set_blank_if_default(self.TRef, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
-        fields = ['MATHP', self.mid, a10, a01, d1, self.rho, av, TRef, ge,
-                          None, na, nd, None, None, None, None, None,
-                          a20, a11, a02, d2, None, None, None, None,
-                          a30, a21, a12, a03, d3, None, None, None,
-                          a40, a31, a22, a13, a04, d4, None, None,
-                          a50, a41, a32, a23, a14, a05, d5, None,
-                          self.tab1, self.tab2, self.tab3, self.tab4, None, None, None, self.tabd]
-        return fields
+        list_fields = ['MATHP', self.mid, a10, a01, d1, self.rho, av, TRef, ge,
+                  None, na, nd, None, None, None, None, None,
+                  a20, a11, a02, d2, None, None, None, None,
+                  a30, a21, a12, a03, d3, None, None, None,
+                  a40, a31, a22, a13, a04, d4, None, None,
+                  a50, a41, a32, a23, a14, a05, d5, None,
+                  self.tab1, self.tab2, self.tab3, self.tab4,
+                  None, None, None, self.tabd]
+        return list_fields
 
 
 class MaterialDependence(BaseCard):
@@ -1045,35 +1246,54 @@ class MATS1(MaterialDependence):
     """
     type = 'MATS1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         MaterialDependence.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
             ## Identification number of a MAT1, MAT2, or MAT9 entry.
-            self.mid = card.field(1)
+            self.mid = integer(card, 1, 'mid')
             ## Identification number of a TABLES1 or TABLEST entry. If H is
             ## given, then this field must be blank.
-            self.tid = card.field(2)
+            self.tid = integer_or_blank(card, 2, 'tid')
             ## Type of material nonlinearity. ('NLELAST' for nonlinear elastic
             ## or 'PLASTIC' for elastoplastic.)
-            self.Type = card.field(3)
-            ## Work hardening slope (slope of stress versus plastic strain) in
-            ## units of stress. For elastic-perfectly plastic cases, H=0.0.
-            ## For more than a single slope in the plastic range, the
-            ## stress-strain data must be supplied on a TABLES1 entry referenced
-            ## by TID, and this field must be blank
-            self.h = card.field(4)
-            ## Yield function criterion, selected by one of the following values
-            ## (1) Von Mises (2) Tresca (3) Mohr-Coulomb (4) Drucker-Prager
-            self.yf = card.field(5, 1)
-            ## Hardening Rule, selected by one of the following values
-            ## (Integer): (1) Isotropic (Default) (2) Kinematic
-            ## (3) Combined isotropic and kinematic hardening
-            self.hr = card.field(6, 1)
-            ## Initial yield point
-            self.limit1 = card.field(7)
-            ## Internal friction angle, measured in degrees, for the
-            ## Mohr-Coulomb and Drucker-Prager yield criteria
-            self.limit2 = card.field(8)
+            self.Type = string(card, 3, 'Type')
+
+            if self.Type == 'NLELAST':
+                self.h = blank(card, 4, 'h')
+                self.hr = blank(card, 6, 'hr')
+                self.yf = blank(card, 5, 'yf')
+                self.limit1 = blank(card, 7, 'yf')
+                self.limit2 = blank(card, 8, 'yf')
+            else:
+                ## Work hardening slope (slope of stress versus plastic strain) in
+                ## units of stress. For elastic-perfectly plastic cases, H=0.0.
+                ## For more than a single slope in the plastic range, the
+                ## stress-strain data must be supplied on a TABLES1 entry
+                ## referenced by TID, and this field must be blank
+                self.h = double_or_blank(card, 4, 'H')
+
+                ## Yield function criterion, selected by one of the following
+                ## values (1) Von Mises (2) Tresca (3) Mohr-Coulomb
+                ## (4) Drucker-Prager
+                self.yf = integer_or_blank(card, 5, 'yf', 1)
+
+                ## Hardening Rule, selected by one of the following values
+                ## (Integer): (1) Isotropic (Default) (2) Kinematic
+                ## (3) Combined isotropic and kinematic hardening
+                self.hr = integer_or_blank(card, 6, 'hr', 1)
+                ## Initial yield point
+                self.limit1 = double(card, 7, 'limit1')
+
+                if self.yf == 3 or self.yf == 4:
+                    ## Internal friction angle, measured in degrees, for the
+                    ## Mohr-Coulomb and Drucker-Prager yield criteria
+                    self.limit2 = double(card, 8, 'limit2')
+                else:
+                    #self.limit2 = blank(card, 8, 'limit2')
+                    self.limit2 = None
+            assert len(card) <= 9, 'len(MATS1 card) = %i' % len(card)
         else:
             (mid, tid, Type, h, yf, hr, limit1, limit2) = data
             self.mid = mid
@@ -1083,7 +1303,8 @@ class MATS1(MaterialDependence):
             elif Type == 2:
                 self.Type = 'PLASTIC'
             else:
-                raise RuntimeError('invalid Type:  Type=%s; must be 1=NLELAST or 2=PLASTIC' % (Type))
+                raise RuntimeError('Invalid Type:  Type=%s; must be 1=NLELAST '
+                                   'or 2=PLASTIC' % (Type))
             self.h = h
             self.yf = yf
             self.hr = hr
@@ -1127,9 +1348,9 @@ class MATS1(MaterialDependence):
         return self.tid
 
     def rawFields(self):
-        fields = ['MATS1', self.Mid(), self.Tid(), self.Type,
+        list_fields = ['MATS1', self.Mid(), self.Tid(), self.Type,
                   self.h, self.yf, self.hr, self.limit1, self.limit2]
-        return fields
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()

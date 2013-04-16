@@ -5,18 +5,18 @@ from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 
 class HeatFlux_VU_3D(scalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
-    def __init__(self, dataCode, isSort1, iSubcase, dt):
-        scalarObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        scalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.parent = {}
 
         self.grad = {}
         self.flux = {}
 
-        ## @todo if dt=None, handle SORT1 case
-        if isSort1:
+        # TODO if dt=None, handle SORT1 case
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
+                self.add = self.add_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
@@ -24,7 +24,7 @@ class HeatFlux_VU_3D(scalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
     def get_stats(self):
         msg = self.get_data_code()
         nelements = len(self. parent)
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.grad)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -34,7 +34,7 @@ class HeatFlux_VU_3D(scalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
         msg.append('  parent, grad, flux\n')
         return msg
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         self.grad[dt] = {}
         self.flux[dt] = {}
 
@@ -50,10 +50,10 @@ class HeatFlux_VU_3D(scalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
             self.grad[eid][nid] = [xGrad, yGrad, zGrad]
             self.flux[eid][nid] = [xFlux, yFlux, zFlux]
 
-    def addSort1(self, nNodes, dt, data):
+    def add_sort1(self, nNodes, dt, data):
         [eid, parent, gradFluxes] = data
         if dt not in self.grad:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.parent[eid] = parent
         #self.eType[eid]    = eType
 
@@ -67,7 +67,7 @@ class HeatFlux_VU_3D(scalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
     def addSort2(self, nNodes, eid, data):
         [dt, parent, gradFluxes] = data
         if dt not in self.fApplied:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
@@ -86,8 +86,8 @@ class HeatFlux_VU_3D(scalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
 
 
 class HeatFlux_VU(scalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
-    def __init__(self, dataCode, isSort1, iSubcase, dt):
-        scalarObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        scalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.parent = {}
         self.coord = {}
@@ -97,10 +97,10 @@ class HeatFlux_VU(scalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         self.grad = {}
         self.flux = {}
 
-        ## @todo if dt=None, handle SORT1 case
-        if isSort1:
+        # TODO if dt=None, handle SORT1 case
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
+                self.add = self.add_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
@@ -108,7 +108,7 @@ class HeatFlux_VU(scalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
     def get_stats(self):
         msg = self.get_data_code()
         nelements = len(self. parent)
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.grad)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -118,7 +118,7 @@ class HeatFlux_VU(scalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         msg.append('  parent, coord, icord, theta, grad, flux\n')
         return msg
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         self.grad[dt] = {}
         self.flux[dt] = {}
 
@@ -137,10 +137,10 @@ class HeatFlux_VU(scalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             self.grad[eid][nid] = [xGrad, yGrad, zGrad]
             self.flux[eid][nid] = [xFlux, yFlux, zFlux]
 
-    def addSort1(self, nNodes, dt, data):
+    def add_sort1(self, nNodes, dt, data):
         [eid, parent, coord, icord, theta, gradFluxes] = data
         if dt not in self.grad:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
@@ -157,7 +157,7 @@ class HeatFlux_VU(scalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
     def addSort2(self, nNodes, eid, data):
         [dt, parent, coord, icord, theta, gradFluxes] = data
         if dt not in self.fApplied:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
@@ -176,8 +176,8 @@ class HeatFlux_VU(scalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
 
 
 class HeatFlux_VUBEAM(scalarObject):  # 191-VUBEAM
-    def __init__(self, dataCode, isSort1, iSubcase, dt):
-        scalarObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        scalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.parent = {}
         self.coord = {}
@@ -186,10 +186,10 @@ class HeatFlux_VUBEAM(scalarObject):  # 191-VUBEAM
         self.grad = {}
         self.flux = {}
 
-        ## @todo if dt=None, handle SORT1 case
-        if isSort1:
+        # TODO if dt=None, handle SORT1 case
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
+                self.add = self.add_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
@@ -197,7 +197,7 @@ class HeatFlux_VUBEAM(scalarObject):  # 191-VUBEAM
     def get_stats(self):
         msg = self.get_data_code()
         nelements = len(self. parent)
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.grad)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -207,7 +207,7 @@ class HeatFlux_VUBEAM(scalarObject):  # 191-VUBEAM
         msg.append('  parent, coord, icord, theta, grad, flux\n')
         return msg
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         self.grad[dt] = {}
         self.flux[dt] = {}
 
@@ -225,10 +225,10 @@ class HeatFlux_VUBEAM(scalarObject):  # 191-VUBEAM
             self.grad[eid][nid] = [xGrad, yGrad, zGrad]
             self.flux[eid][nid] = [xFlux, yFlux, zFlux]
 
-    def addSort1(self, nNodes, dt, data):
+    def add_sort1(self, nNodes, dt, data):
         [eid, parent, coord, icord, gradFluxes] = data
         if dt not in self.grad:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
@@ -244,7 +244,7 @@ class HeatFlux_VUBEAM(scalarObject):  # 191-VUBEAM
     def addSort2(self, nNodes, eid, data):
         [dt, parent, coord, icord, gradFluxes] = data
         if dt not in self.fApplied:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
@@ -262,16 +262,16 @@ class HeatFlux_VUBEAM(scalarObject):  # 191-VUBEAM
 
 
 class HeatFlux_1D(scalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
-    def __init__(self, dataCode, isSort1, iSubcase, dt):
-        scalarObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        scalarObject.__init__(self, data_code, isubcase)
         self.eType = {}
         self.grad = {}
         self.flux = {}
 
-        ## @todo if dt=None, handle SORT1 case
-        if isSort1:
+        # TODO if dt=None, handle SORT1 case
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
+                self.add = self.add_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
@@ -279,7 +279,7 @@ class HeatFlux_1D(scalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69
     def get_stats(self):
         msg = self.get_data_code()
         nelements = len(self.eType)
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.grad)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -289,7 +289,7 @@ class HeatFlux_1D(scalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69
         msg.append('  eType, grad, flux\n')
         return msg
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         self.grad[dt] = {}
         self.flux[dt] = {}
 
@@ -299,10 +299,10 @@ class HeatFlux_1D(scalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69
         self.grad[eid] = [xGrad, yGrad, zGrad]
         self.flux[eid] = [xFlux, yFlux, zFlux]
 
-    def addSort1(self, dt, data):
+    def add_sort1(self, dt, data):
         [eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux] = data
         if dt not in self.grad:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.eType[eid] = eType
         self.grad[dt][eid] = [xGrad, yGrad, zGrad]
         self.flux[dt][eid] = [xFlux, yFlux, zFlux]
@@ -310,7 +310,7 @@ class HeatFlux_1D(scalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69
     def addSort2(self, eid, data):
         [dt, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux] = data
         if dt not in self.fApplied:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.eType[eid] = eType
         self.grad[dt][eid] = [xGrad, yGrad, zGrad]
         self.flux[dt][eid] = [xFlux, yFlux, zFlux]
@@ -320,22 +320,22 @@ class HeatFlux_1D(scalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69
 
 
 class HeatFlux_2D_3D(scalarObject):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 67-HEXA, 68-PENTA, 74-TRIA3, 75-TRIA6
-    def __init__(self, dataCode, isSort1, iSubcase, dt):
-        scalarObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        scalarObject.__init__(self, data_code, isubcase)
         self.eType = {}
         self.grad = {}
         self.flux = {}
 
-        ## @todo if dt=None, handle SORT1 case
-        if isSort1:
-            self.add = self.addSort1
+        # TODO if dt=None, handle SORT1 case
+        if is_sort1:
+            self.add = self.add_sort1
         else:
             self.add = self.addSort2
 
     def get_stats(self):
         msg = self.get_data_code()
         nelements = len(self.eType)
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.grad)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -345,14 +345,14 @@ class HeatFlux_2D_3D(scalarObject):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 6
         msg.append('  eType, grad, flux\n')
         return msg
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         self.grad[dt] = {}
         self.flux[dt] = {}
 
-    def addSort1(self, dt, data):
+    def add_sort1(self, dt, data):
         [eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux] = data
         if dt not in self.grad:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.eType[eid] = eType
         self.grad[dt][eid] = [xGrad, yGrad, zGrad]
         self.flux[dt][eid] = [xFlux, yFlux, zFlux]
@@ -360,7 +360,7 @@ class HeatFlux_2D_3D(scalarObject):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 6
     def addSort2(self, eid, data):
         [dt, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux] = data
         if dt not in self.fApplied:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.eType[eid] = eType
         self.grad[dt][eid] = [xGrad, yGrad, zGrad]
         self.flux[dt][eid] = [xFlux, yFlux, zFlux]
@@ -370,23 +370,23 @@ class HeatFlux_2D_3D(scalarObject):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 6
 
 
 class HeatFlux_CONV(scalarObject):  # 110-CONV
-    def __init__(self, dataCode, isSort1, iSubcase, dt):
-        scalarObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        scalarObject.__init__(self, data_code, isubcase)
         self.cntlNode = {}
         self.freeConv = {}
         self.freeConvK = {}
 
-        ## @todo if dt=None, handle SORT1 case
-        if isSort1:
+        # TODO if dt=None, handle SORT1 case
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
+                self.add = self.add_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
 
     def get_stats(self):
         msg = self.get_data_code()
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.cntlNode)
             times0 = self.cntlNode.keys()[0]
             nelements = len(self.cntlNode[times0])
@@ -399,7 +399,7 @@ class HeatFlux_CONV(scalarObject):  # 110-CONV
         msg.append('  cntlNode, freeConv, freeConvK\n')
         return msg
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         self.cntlNode[dt] = {}
         self.freeConv[dt] = {}
         self.freeConvK[dt] = {}
@@ -411,10 +411,10 @@ class HeatFlux_CONV(scalarObject):  # 110-CONV
         self.freeConv[eid] = freeConv
         self.freeConvK[eid] = freeConvK
 
-    def addSort1(self, dt, data):
+    def add_sort1(self, dt, data):
         [eid, cntlNode, freeConv, freeConvK] = data
         if dt not in self.freeConv:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         #self.eType[eid]     = eType
         self.cntlNode[dt][eid] = cntlNode
         self.freeConv[dt][eid] = freeConv
@@ -423,7 +423,7 @@ class HeatFlux_CONV(scalarObject):  # 110-CONV
     def addSort2(self, eid, data):
         [dt, eType, fApplied, freeConv, forceConv, fRad, fTotal] = data
         if dt not in self.freeConv:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         #self.eType[eid]     = eType
         self.fApplied[dt][eid] = fApplied
         self.freeConv[dt][eid] = freeConv
@@ -436,8 +436,8 @@ class HeatFlux_CONV(scalarObject):  # 110-CONV
 
 
 class HeatFlux_CHBDYx(scalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
-    def __init__(self, dataCode, isSort1, iSubcase, dt):
-        scalarObject.__init__(self, dataCode, iSubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        scalarObject.__init__(self, data_code, isubcase)
         self.eType = {}
         self.fApplied = {}
         self.freeConv = {}
@@ -445,10 +445,10 @@ class HeatFlux_CHBDYx(scalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.fRad = {}
         self.fTotal = {}
 
-        ## @todo if dt=None, handle SORT1 case
-        if isSort1:
+        # TODO if dt=None, handle SORT1 case
+        if is_sort1:
             if dt is not None:
-                self.add = self.addSort1
+                self.add = self.add_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
@@ -456,7 +456,7 @@ class HeatFlux_CHBDYx(scalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
     def get_stats(self):
         msg = self.get_data_code()
         nelements = len(self.eType)
-        if self.nonlinearFactor is not None:  # transient
+        if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.fApplied)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -466,7 +466,7 @@ class HeatFlux_CHBDYx(scalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         msg.append('  eType, fApplied, freeConv, forceConv, fRad, fTotal\n')
         return msg
 
-    def addNewTransient(self, dt):
+    def add_new_transient(self, dt):
         self.fApplied[dt] = {}
         self.freeConv[dt] = {}
         self.forceConv[dt] = {}
@@ -483,10 +483,10 @@ class HeatFlux_CHBDYx(scalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.fRad[eid] = fRad
         self.fTotal[eid] = fTotal
 
-    def addSort1(self, dt, data):
+    def add_sort1(self, dt, data):
         [eid, eType, fApplied, freeConv, forceConv, fRad, fTotal] = data
         if dt not in self.fApplied:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.eType[eid] = eType
         self.fApplied[dt][eid] = fApplied
         self.freeConv[dt][eid] = freeConv
@@ -497,7 +497,7 @@ class HeatFlux_CHBDYx(scalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
     def addSort2(self, eid, data):
         [dt, eType, fApplied, freeConv, forceConv, fRad, fTotal] = data
         if dt not in self.fApplied:
-            self.addNewTransient(dt)
+            self.add_new_transient(dt)
         self.eType[eid] = eType
         self.fApplied[dt][eid] = fApplied
         self.freeConv[dt][eid] = freeConv

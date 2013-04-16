@@ -1,16 +1,28 @@
-# pylint: disable=C0103,C0302,R0902,R0904,R0914,W0201,W0611
+# pylint: disable=C0103,C0302,R0901,R0902,R0904,R0912,R0914,R0915,W0201,W0611
+"""
+Main BDF class
+"""
+#from __future__ import (nested_scopes, generators, division, absolute_import,
+#                        unicode_literals)
+
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+
+import io
 import os
 import sys
 import warnings
+import traceback
 
-from pyNastran.general.general import ListPrint
-from pyNastran.general.object_introspection import list_attributes
+
+from pyNastran.utils import list_print
+from pyNastran.utils import object_attributes
+from pyNastran.utils.log import get_logger
+
 
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
-                                          PRAC2D, PRAC3D, PCONEAX)
+                                          PRAC2D, PRAC3D, PCONEAX, PLPLANE)
 
 from .cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,
                                      SpringElement)
@@ -43,11 +55,11 @@ from .cards.aero import (AEFACT, AELINK, AELIST, AEPARM, AESTAT, AESURF,
                          SPLINE5, TRIM)
 from .cards.constraints import (SPC, SPCADD, SPCD, SPCAX, SPC1,
                                 MPC, MPCADD, SUPORT1, SUPORT,
-                                constraintObject2)
+                                constraintObject)
 from .cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                       CORD2R, CORD2C, CORD2S, CORD3G)
 from .cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
-from .cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM)
+from .cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM, NLPCI)
 from .cards.loads.loads import (LSEQ, SLOAD, DLOAD, DAREA, TLOAD1, TLOAD2,
                                 RLOAD1, RLOAD2, RANDPS, RFORCE)
 from .cards.loads.staticLoads import (LOAD, GRAV, ACCEL1, FORCE,
@@ -71,54 +83,124 @@ from .cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
 from .cards.tables import (TABLED1, TABLED2, TABLED3,
                            TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                            TABLES1, TABLEST, TABRND1, TABRNDG, TIC)
-from pyNastran.bdf.caseControlDeck import CaseControlDeck
-from pyNastran.bdf.bdf_Methods import BDFMethods
+
+from .caseControlDeck import CaseControlDeck
+from .bdf_Methods import BDFMethods
 from .bdfInterface.getCard import GetMethods
 from .bdfInterface.addCard import AddMethods
-from .bdfInterface.BDF_Card import BDFCard
-from .bdfInterface.bdf_Reader import BDFReader
+from .bdfInterface.BDF_Card import BDFCard, wipe_empty_fields
+#from .bdfInterface.bdf_Reader import #print_filename # BDFReader
 from .bdfInterface.bdf_writeMesh import WriteMesh
-from .bdfInterface.bdf_cardMethods import CardMethods
+from .bdfInterface.bdf_cardMethods import interpret_value
 from .bdfInterface.crossReference import XrefMesh
 
 
-class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
-          CardMethods, XrefMesh):
+class BDFDeprecated(object):
+    def readBDF(self, bdf_filename, includeDir=None, xref=True, punch=False):
+        """
+        @see read_bdf
+        @warning will be removed after v0.7 in favor of read_bdf
+        """
+        warnings.warn('readBDF has been deprecated; use '
+                      'read_bdf', DeprecationWarning, stacklevel=2)
+        self.read_bdf(bdf_filename, includeDir, xref, punch)
+
+    def updateSolution(self, sol, method=None):
+        """
+        @see update_solution
+        @warning will be removed after v0.7 in favor of update_solution
+        """
+        warnings.warn('updateSolution has been deprecated; use '
+                      'update_solution', DeprecationWarning, stacklevel=2)
+        self.update_solution(sol, method)
+
+    def setDynamicSyntax(self, dictOfVars):
+        """
+        @see set_dynamic_syntax
+        @warning will be removed after v0.7 in favor of set_dynamic_syntax
+        """
+        warnings.warn('setDynamicSyntax has been deprecated; use '
+                      'set_dynamic_syntax', DeprecationWarning, stacklevel=2)
+        self.set_dynamic_syntax(dictOfVars)
+
+    def addCard(self, card, cardName, iCard=0, oldCardObj=None):
+        """
+        @see add_card
+        @warning will be removed after v0.7 in favor of add_card
+        """
+        warnings.warn('addCard has been deprecated; use add_card',
+                      DeprecationWarning, stacklevel=2)
+        return self.add_card(card, cardName, icard=iCard,
+                             old_card_obj=oldCardObj)
+
+    def disableCards(self, cards):
+        """
+        @see disable_cards
+        @warning will be removed after v0.7 in favor of disable_cards
+        """
+        warnings.warn('disableCards has been deprecated; use '
+                      'disable_cards', DeprecationWarning, stacklevel=2)
+        self.disable_cards(cards)
+   
+
+class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated):
     """
     NASTRAN BDF Reader/Writer/Editor class.
     """
     modelType = 'nastran'
-    isStructured = False
-
-    def __init__(self, debug=True, log=None, nCardLinesMax=1000):
+    isDict = True
+    def __init__(self, debug=True, log=None):
         """
         Initializes the BDF object
-        @param self
-          the object pointer
-        @param debug
-          used to set the logger if no logger is passed in
-        @param log
-          a python logging module object
-        @param nCardLinesMax
-          the number of lines of the longest card in the deck (default=1000)
+        @param self the BDF object
+        @param debug used to set the logger if no logger is passed in
+        @param log a python logging module object
         """
+        # file management parameters
+        self.ifile = -1
+        self.include_dir = ''
+        self.active_filename = None
+        self.active_filenames = []
+        #self.used_filenames = []
+        if self.isDict:
+            self.stored_Is = {}
+            self.stored_lines = {}
+            self.stored_comments = {}
+            self.line_streams = {}
+            self.card_streams = {}
+        else:
+            self.stored_Is = []
+            self.stored_lines = []
+            self.stored_comments = []
+            self.line_streams = []
+            self.card_streams = []
+        self._break_comment = None
+
+        self._relpath = True
+        if sys.version_info < (2, 6):
+            self._relpath = False
+        self.log = get_logger(log, 'debug' if debug else 'info')
+
+        ## list of all read in cards - useful in determining if entire BDF
+        ## was read & really useful in debugging
+        self.card_count = {}
+        ## stores the card_count of cards that have been rejected
+        self.reject_count = {}
+        ## was an ENDDATA card found
+        self.foundEndData = False
+
         ## allows the BDF variables to be scoped properly (i think...)
-        BDFReader.__init__(self, debug, log)
         GetMethods.__init__(self)
         AddMethods.__init__(self)
         BDFMethods.__init__(self)
         WriteMesh.__init__(self)
-        CardMethods.__init__(self, nCardLinesMax)
         XrefMesh.__init__(self)
 
         ## useful in debugging errors in input
         self.debug = debug
-        self._init_solution()
-
         ## flag that allows for OpenMDAO-style optimization syntax to be used
         self._is_dynamic_syntax = False
-        ## lines that were rejected b/c they were for a card
-        ## that isnt supported
+        ## lines that were rejected b/c they were for a card that isnt supported
         self.rejects = []
         ## cards that were created, but not processed
         self.reject_cards = []
@@ -127,11 +209,15 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ## list of case control deck lines
         self.case_control_lines = []
 
+        self.case_control_lines = []
+        self.executive_control_lines = []
+        self.__init_attributes()
+
         ## the list of possible cards that will be parsed
         self.cardsToRead = set([
             'PARAM',
             'GRID', 'GRDSET', 'SPOINT',  # 'RINGAX',
-            'POINT',
+            #'POINT',
 
             # elements
             'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
@@ -155,11 +241,12 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
             # properties
             'PMASS',
-            'PELAS', 'PGAP', 'PFAST',
+            'PELAS', 'PGAP', 'PFAST', 'PLPLANE',
             'PBUSH', 'PBUSH1D',
             'PDAMP', 'PDAMP5', 'PDAMPT',
             'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBCOMP',
-            'PBEAML',  # 'PBEAM3',
+            'PBEAML',  # not fully supported
+            # 'PBEAM3',
 
             'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
             'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
@@ -210,7 +297,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             'RADBC', 'CONV',  # 'RADM',
 
             # dynamic cards
-            'DAREA', 'NLPARM', 'TSTEP', 'TSTEPNL',
+            'DAREA', 'NLPARM', 'NLPCI', 'TSTEP', 'TSTEPNL',
 
             # frequencies
             'FREQ', 'FREQ1', 'FREQ2',
@@ -251,7 +338,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             # other
             'INCLUDE',  # '='
             'ENDDATA',
-            ])
+        ])
 
         caseControlCards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
                                 'TEMP', 'TSTEPNL', 'INCLUDE'])
@@ -260,31 +347,27 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
         ## / is the delete from restart card
         self.specialCards = ['DEQATN', '/']
-        ## was playing around with an idea...does nothing for now...
-        self.cardsToWrite = self.cardsToRead
 
     def disable_cards(self, cards):
         """
         Method for removing broken cards from the reader
-        @param self the object pointer
+        @param self the BDF object
         @param cards a list/set of cards that should not be read
         """
         disableSet = set(cards)
         self.cardsToRead.difference(disableSet)
 
-    def is_thermal_solution(self):
-        """
-        @todo implement case control deck checker
-        @warning dont use this...returns False
-        """
-        return False
-        #self.caseControlDeck.is_thermal_solution()
+    #def _is_special_card(self, cardName):
+        #"""These cards are listed in the case control and the bulk data deck"""
+        #if cardName in self.specialCards:
+            #return True
+        #return False
 
-    def _init_solution(self):
+    def __init_attributes(self):
         """
-        creates storage objects for the BDF object
-        this would be in the init but doing it this way allows for
-        better inheritance
+        Creates storage objects for the BDF object.
+        This would be in the init but doing it this way allows for better
+        inheritance
 
         References:
           1.  http://www.mscsoftware.com/support/library/conf/wuc87/p02387.pdf
@@ -336,7 +419,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             #'DIVERGE'  : None,
             'FLUTTER': 145,
             'SAERO': 146,
-            }
+        }
 
         self.rsolmap_toStr = {
             66: 'NONLIN',
@@ -363,42 +446,32 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             190: 'DBTRANS',
             200: 'DESOPT',  # optimization
         }
-        self._init_structural_defaults()
-        self._init_aero_defaults()
-        self._init_thermal_defaults()
 
-    def _is_special_card(self, cardName):
-        """these cards are listed in the case control and the bulk data deck"""
-        if cardName in self.specialCards:
-            return True
-        return False
-
-    def _init_structural_defaults(self):
-        """
-        creates storage objects for the BDF object
-        this would be in the init but doing it this way allows for
-        better inheritance
-        """
+        # ------------------------ structural defaults -----------------------
         ## the analysis type
         self.sol = None
         ## used in solution 600, method
         self.solMethod = None
         ## the line with SOL on it, marks ???
         self.iSolLine = None
-        self.caseControlDeck = CaseControlDeck([], self.log)
+        self.caseControlDeck = None
         #self.executive_control_lines = [self.sol]
 
-        # main structural block
         ## store the PARAM cards
         self.params = {}
+
+        # ------------------------------- nodes -------------------------------
+        # main structural block
         ## stores SPOINT, GRID cards
         self.nodes = {}
         ## stores POINT cards
         self.points = {}
-        
+        #self.grids = {}
         self.spoints = None
+        #self.epoints = None
         ## stores GRIDSET card
         self.gridSet = None
+
         ## stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
         ## etc.)
         self.elements = {}
@@ -408,9 +481,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         #self.massElements = {}
         ## stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}
-        self.pdampt = {}
-        self.pelast = {}
-        self.pbusht = {}
         ## stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
         self.materials = {}
         ## stores MATS1
@@ -427,15 +497,15 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ## stores coordinate systems
         self.coords = {0: CORD2R()}
 
-        # constraints
+        # --------------------------- constraints ----------------------------
         ## stores SUPORT1s
         #self.constraints = {} # suport1, anything else???
         self.suports = []  # suport, suport1
 
         ## stores SPCADD,SPC,SPC1,SPCD,SPCAX
-        self.spcObject2 = constraintObject2()
+        self.spcObject2 = constraintObject()
         ## stores MPCADD,MPC
-        self.mpcObject2 = constraintObject2()
+        self.mpcObject2 = constraintObject()
 
         self.spcs = {}
         self.spcadds = {}
@@ -443,16 +513,18 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.mpcs = {}
         self.mpcadds = {}
 
-        # dynamic cards
+        # --------------------------- dynamic ----------------------------
         ## stores DAREA
         self.dareas = {}
-        ## stores NLPARM
-        self.nlparms = {}
-        ## stores TSTEPs
-        self.tsteps = {}
-        ## stores TSTEPNL
-        self.tstepnls = {}
 
+        self.pbusht = {}
+        self.pdampt = {}
+        self.pelast = {}
+
+        ## frequencies
+        self.frequencies = {}
+
+        # ----------------------------------------------------------------
         ## direct matrix input - DMIG
         self.dmis = {}
         self.dmigs = {}
@@ -461,9 +533,29 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.dmiks = {}
         self.dequations = {}
 
-        ## frequencies
-        self.frequencies = {}
+        # ----------------------------------------------------------------
+        ## SETx
+        self.sets = {}
+        self.asets = []
+        self.bsets = []
+        self.csets = []
+        self.qsets = []
+        ## SESETx
+        self.setsSuper = {}
 
+        # ----------------------------------------------------------------
+        ## tables
+        self.tables = {}
+        ## randomTables
+        self.randomTables = {}
+
+        # ----------------------------------------------------------------
+        ## EIGB, EIGR, EIGRL methods
+        self.methods = {}
+        # EIGC, EIGP methods
+        self.cMethods = {}
+
+        # ---------------------------- optimization --------------------------
         # optimization
         self.dconstrs = {}
         self.desvars = {}
@@ -475,31 +567,16 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.dvmrels = {}
         self.doptprm = None
 
-        ## SETx
-        self.sets = {}
-        self.asets = []
-        self.bsets = []
-        self.csets = []
-        self.qsets = []
-        ## SESETx
-        self.setsSuper = {}
-
-        ## tables
-        self.tables = {}
-        ## randomTables
-        self.randomTables = {}
-
-        ## EIGB, EIGR, EIGRL methods
-        self.methods = {}
-        # EIGC, EIGP methods
-        self.cMethods = {}
-
-    def _init_aero_defaults(self):
-        """
-        creates storage objects for the BDF object
-        this would be in the init but doing it this way allows for
-        better inheritance
-        """
+        # ------------------------- nonlinear defaults -----------------------
+        ## stores NLPCI
+        self.nlpcis = {}
+        ## stores NLPARM
+        self.nlparms = {}
+        ## stores TSTEPs
+        self.tsteps = {}
+        ## stores TSTEPNL
+        self.tstepnls = {}
+        # --------------------------- aero defaults --------------------------
         # aero cards
         ## stores CAEROx
         self.caeros = {}
@@ -526,7 +603,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ## stores GUST cards
         self.gusts = {}
         ## stores FLFACT
-        self.flfacts = {}  # can this be simplified ???
+        self.flfacts = {}  ## @todo can this be simplified ???
         ## stores FLUTTER
         self.flutters = {}
         ## mkaeros
@@ -536,179 +613,133 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ## stores TRIM
         self.trims = {}
 
-    def _init_thermal_defaults(self):
-        """initializes some bdf parameters"""
+        # ------------------------- thermal defaults -------------------------
         # BCs
         ## stores thermal boundary conditions - CONV,RADBC
         self.bcs = {}  # e.g. RADBC
-        ## defines the MAT4, MAT5, MATT4, etc. @todo verify MATT4
+        ## defines the MAT4, MAT5, MATT4, etc.  @todo verify MATT4
         self.thermalMaterials = {}
 
-        # elements
-        # see self.elements
-
-        # properties
-        ## stores other thermal properties - unused ???
-        #self.thermalProperties    = {}
         ## stores PHBDY
         self.phbdys = {}
         ## stores convection properties - PCONV, PCONVM ???
         self.convectionProperties = {}
+        # ----------------------------------------------------------------
 
-    def readBDF(self, infilename, includeDir=None, xref=True):
+    def _verify_bdf(self):
+        isxref = self._xref
+        #for key, card in sorted(self.params.iteritems()):
+            #card._verify(isxref)
+        for key, card in sorted(self.nodes.iteritems()):
+            card._verify(isxref)
+        for key, card in sorted(self.coords.iteritems()):
+            card._verify(isxref)
+        for key, card in sorted(self.elements.iteritems()):
+            card._verify(isxref)
+        for key, card in sorted(self.properties.iteritems()):
+            card._verify(isxref)
+        for key, card in sorted(self.materials.iteritems()):
+            card._verify(isxref)
+        
+    def read_bdf(self, bdf_filename, include_dir=None, xref=True, punch=False):
         """
-        main read method for the bdf
-        @param infilename
-          the input bdf
-        @param includeDir
-          the relative path to any include files (default=None
+        Read method for the bdf files
+        @param self the BDF object
+        @param bdf_filename the input bdf
+        @param include_dir the relative path to any include files (default=None
           if no include files)
-        @param xref
-          should the bdf be cross referenced (default=True)
+        @param xref should the bdf be cross referenced (default=True)
+        @param punch indicates whether the file is a punch file (default=False)
         """
-        self._set_infile(infilename, includeDir)
+        try:
+            ## the active filename (string)
+            self.bdf_filename = bdf_filename
 
-        fname = self.print_filename(self.bdf_filename)
-        self.log.debug('---starting BDF.readBDF of %s---' % fname)
-        #self.log.info('xref=%s' %(xref))
-        sys.stdout.flush()
+            if include_dir is None:
+                include_dir = os.path.dirname(bdf_filename)
+            ## the directory of the 1st BDF (include BDFs are relative to this one)
+            self.include_dir = include_dir
 
-        #self.debug = True
-        if self.debug:
-            self.log.debug("*BDF.readBDF")
-        self._read_executive_control_deck()
-        self._read_case_control_deck(self.bdf_filename)
-        self._read_bulk_data_deck()
+            self.open_file(self.bdf_filename)
+            self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
+            if not punch:
+                self.log.debug('---reading executive and case control decks---')
+                self._read_executive_control_deck()
+                self._read_case_control_deck()
+            else:
+                self.log.debug('---skipping executive and case control decks---')
 
-        self.cross_reference(xref=xref)
-        if self.debug:
-            self.log.debug("***BDF.readBDF")
+            self._read_bulk_data_deck()
+            self.cross_reference(xref=xref)
+            self._xref = xref
+            self._cleanup_file_streams()
+        except:
+            self._cleanup_file_streams()
+            raise
+        self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
 
-        self.log.debug('---finished BDF.readBDF of %s---' % fname)
-        sys.stdout.flush()
-
-    def readBDF_Punch(self, infilename, includeDir=None, xref=True):
+    def _cleanup_file_streams(self):
         """
-        BDF punch file reader
-        @param infilename
-          the input bdf
-        @param includeDir
-          the relative path to any include files (default=None
-          if no include files)
-        @param xref
-          should the bdf be cross referenced (default=True)
+        This function is required to prevent too many files being opened.
+        The while loop closes them.
         """
-        self._set_infile(infilename, includeDir)
-
-        fname = self.print_filename(self.bdf_filename)
-        self.log.debug('---starting BDF.readBDF_Punch of %s---' % fname)
-        #self.log.info('xref=%s' %(xref))
-        sys.stdout.flush()
-
-        #self.debug = True
-        if self.debug:
-            self.log.debug("*BDF.readBDF_Punch")
-        self._read_bulk_data_deck()
-        #self.close_file()
-        self.cross_reference(xref=xref)
-        if self.debug:
-            self.log.debug("***BDF.readBDF_Punch")
-
-        self.log.debug('---finished BDF.readBDF_Punch of %s---' % fname)
-        sys.stdout.flush()
-
-    def _is_executive_control_deck(self, line):
-        """@todo code this..."""
-        return True
+        self._break_comment = False  # speeds up self.get_line()
+        while self.get_line():
+            pass
+        del self.stored_Is
+        del self.stored_lines
+        del self.stored_comments
+        del self.line_streams
+        del self.card_streams
+        del self._break_comment
 
     def _read_executive_control_deck(self):
-        """reads the executive control deck"""
-        self.open_file(self.bdf_filename)
-        line = ''
-        emptyLines = 0
-        while emptyLines < 50 and 'CEND' not in line.upper()[:4]:
-            line = self.infilesPack[-1].readline()
+        """Reads the executive control deck"""
+        self._break_comment = False
+        lineUpper = ''
+        while 'CEND' not in lineUpper[:4] and 'BEGIN' not in lineUpper and 'BULK' not in lineUpper:
+            lines = []
+            (i, line, comment) = self.get_line()
             line = line.rstrip('\n\r\t ')
+            #print("line exec = %r" % line)
+
+            lineUpper = line.upper()
+            if lineUpper == '$EXECUTIVE CONTROL DECK':
+                continue  # skip this comment
+
             if len(line) > 0:
                 self.executive_control_lines.append(line)
-            else:
-                emptyLines += 1
+            lineUpper = lineUpper.split('$')[0]
 
-        if 0:  # old method; breaks DMAP alters
-            while len(self._active_filenames) > 0:  # keep going until finished
-                lineIn = self.get_next_line()
-                #print(lineIn)
-                if lineIn is None:  # file was closed and a 2nd readCaseControl
-                    return          # was called
+        if 'CEND' in lineUpper[:4]:
+            self.has_case_control_deck = True
+        else:
+            self.has_case_control_deck = False
+            (i, line, comment) = self.get_line()   # BEGIN BULK
 
-                line = lineIn.strip()
-                if self.debug:
-                    (n) = self.get_line_number()
-                    self.log.debug("executiveLine[%s] = |%s|" % (n, line))
-                self.executive_control_lines.append(lineIn)
-                if 'CEND' in line.upper():
-                    break
+        sol, method, iSolLine = parse_executive_control_deck(self.executive_control_lines)
+        #self.sol = sol
+        self.update_solution(sol, method, iSolLine)
 
-        self._parse_executive_control_deck()
-
-    def _parse_executive_control_deck(self):
-        """extracts the solution from the executive control deck"""
-        for (i, eline) in enumerate(self.executive_control_lines):
-            #print 'eLine = |%r|' %(eline)
-            uline = eline.strip().upper()  # uppercase line
-            uline = uline.split('$')[0]
-            if 'SOL ' in uline[:4]:
-                #print "line = ",uline
-                if ',' in uline:
-                    sline = uline.split(',')  # SOL 600,method
-                    solValue = sline[0]
-                    method = sline[1]
-
-                    #print "sline    = |%s|" %(sline)
-                    #print "sline2   = |%s|" %(sline2)
-                else:
-                    solValue = uline
-                    method = None
-
-                #print "solValue = |%s|" %(solValue)
-                sol = solValue[3:].strip()
-                
-                if self.sol is not None:
-                    raise ValueError('cannot overwrite solution existing='
-                                    '|SOL %s| new =|%s|' % (self.sol, uline))
-                self.iSolLine = i
-
-                try:
-                    self.update_solution(sol, method)
-                except:
-                    msg = ('update_solution failed...line=%s' % uline)
-                    raise RuntimeError(msg)
-
-        #print("sol = ", sol)
-
-    def updateSolution(self, sol, method=None):
+    def update_solution(self, sol, method, iSolLine):
         """
-        @see update_solution
-        """
-        warnings.warn('updateSolution has been deprecated; use '
-                      'update_solution', DeprecationWarning, stacklevel=2)
-        self.update_solution(sol, method)
-
-    def update_solution(self, sol, method=None):
-        """
-        updates the overall solution type (e.g. 101,200,600)
+        Updates the overall solution type (e.g. 101,200,600)
         @param self   the object pointer
         @param sol    the solution type (101,103, etc)
-        @param method the solution method (only for SOL=600), default=None
+        @param method the solution method (only for SOL=600)
+        @param iSolLine the line to put the SOL/method on
         """
+        self.iSolLine = iSolLine
         ## the integer of the solution type (e.g. SOL 101)
+        if sol is None:
+            self.sol = None
+            self.solMethod = None
+            return
+        
         try:
             self.sol = int(sol)
-            #print "sol = |%s|" %(sol)
         except ValueError:
-            #print "sol = |%r|" %(sol)
             self.sol = self._solmap_to_value[sol]
-            #print "sol = ",self.sol
 
         if self.sol == 600:
             ## solution 600 method modifier
@@ -717,1398 +748,905 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         else:  # very common
             self.solMethod = None
 
-        #print "sol=%s method=%s" %(self.sol,self.solMethod)
-
-    def setDynamicSyntax(self, dictOfVars):
-        """@see set_dynamic_syntax"""
-        warnings.warn('setDynamicSyntax has been deprecated; use '
-                      'set_dynamic_syntax', DeprecationWarning, stacklevel=2)
-        self.set_dynamic_syntax(dictOfVars)
-
-    def set_dynamic_syntax(self, dictOfVars):
+    def set_dynamic_syntax(self, dict_of_vars):
         """
-        uses the OpenMDAO syntax of %varName in an embedded BDF to
+        Uses the OpenMDAO syntax of %varName in an embedded BDF to
         update the values for an optimization study.
         Variables should be 7 characters to fit in an 8-character field.
+        Case sensitivity is supported.
         %varName
-        dictOfVars = {'varName': 10}
+        dict_of_vars = {'varName': 10}
+        @param self the BDF object
+        @param dict_of_vars dictionary of 7 character variable names to map.
         """
-        self.dictOfVars = {}
-        for (key, value) in sorted(dictOfVars.iteritems()):
+        self.dict_of_vars = {}
+        assert len(dict_of_vars) > 0, 'nvars = %s' % len(dict_of_vars)
+        for (key, value) in sorted(dict_of_vars.iteritems()):
             assert len(key) <= 7, ('max length for key is 7; '
                                    'len(%s)=%s' % (key, len(key)))
-            self.dictOfVars[key.upper()] = value
-
+            assert len(key) <= 1, ('max length for key is 1; '
+                                   'len(%s)=%s' % (key, len(key)))
+            assert isinstance(key, str), 'key=%s must be a string' % key
+            self.dict_of_vars[key] = value
         self._is_dynamic_syntax = True
 
+    def _parse_dynamic_syntax(self, key):
+        """
+        Applies the dynamic syntax for %varName
+        @param self the object pointer
+        @param key the uppercased key
+        @retval value the dynamic value defined by dictOfVars
+        @note
+          %varName is actually %VARNAME b/c of auto-uppercasing the string,
+          so the setDynamicSyntax method uppercases the key prior to this step.
+        @see setDynamicSyntax
+        """
+        #print "*** valueRaw.lstrip() = |%r|" % valueRaw.lstrip()
+        #key = key.lstrip('%%')
+        key = key[1:].strip()
+        self.log.info("dynamic key = |%r|" % key)
+        #self.dict_of_vars = {'P5':0.5,'ONEK':1000.}
+        if key not in self.dict_of_vars:
+            msg = "key=|%r| not found in keys=%s" % (key,
+                                                     self.dict_of_vars.keys())
+            raise KeyError(msg)
+        return self.dict_of_vars[key]
+
     def _is_case_control_deck(self, line):
-        """@todo not done..."""
-        #print "line = |%r|" %(line)
+        """
+        @todo not done...
+        """
         lineUpper = line.upper().strip()
-        #print "line = |%s|" %(lineUpper)
         if 'CEND' in line.upper():
             raise SyntaxError('invalid Case Control Deck card...CEND...')
         if '=' in lineUpper or ' ' in lineUpper:
-            #print "True1"
             return True
         for card in self.uniqueBulkDataCards:
             lenCard = len(card)
             if card in lineUpper[:lenCard]:
-                #print "*card = |%s|" %(card)
-                #print "False1"
                 return False
-            #print "card = |%s|" %(card)
-        #print "True2"
         return True
 
-    def _read_case_control_deck(self, infilename):
+    def _read_case_control_deck(self):
         """
-        reads the case control deck
+        Reads the case control deck
         @note called with recursion if an INCLUDE file is found
         """
-        #print "opening |%s|" %(infilename)
-        self.open_file(infilename)
-        #self.log.info("reading Case Control Deck...")
+        self._break_comment = False
+        #print("reading Case Control Deck...")
+        if not self.has_case_control_deck:
+            return
         line = ''
-        #self.caseControlControlLines = []
-
-        i = 0
-        while len(self._active_filenames) > 0:  # keep going until finished
-        #while 'BEGIN BULK' not in line:
-            lineIn = self.get_next_line()
-            #print("lineIn = |%r|" % (lineIn))
-            #print("lineIn = ", lineIn)
+        while self.active_filename:  # keep going until finished
+            #print "top of loop"
+            lines = []
+            (i, lineIn, comment) = self.get_line()
             if lineIn is None:
-                return  # file was closed and a 2nd readCaseControl was called
-            if not self._is_case_control_deck(lineIn):
-                self.linesPack = [lineIn] + self.linesPack
+                return  # file was closed
             line = lineIn.strip().split('$')[0].strip()
             lineUpper = line.upper()
+            #print("lineUpper = %r" % str(lineUpper))
+            if lineUpper.startswith('INCLUDE'):
+                #print("INCLUDE!!!")
+                try:
+                    (i, next_line, comment) = self.get_line()
+                except:
+                    next_line = None
 
-            (line, lineUpper) = self._checkForIncludeFile_CaseControlDeck(
-                lineIn, line, lineUpper)
+                if next_line:
+                    next_line = next_line.strip().split('$')[0].strip()
+                else:
+                    next_line = ''
+                include_lines = [line]
+                while '\\' in next_line or '/' in next_line:  # more includes
+                    include_lines.append(next_line)
+                    (i, line_next, comment) = self.get_line()
+                    next_line = next_line.strip().split('$')[0].strip()
+                self.case_control_lines.append(next_line)
+                #except StopIteration:
+                    #include_lines = [line]
+                filename = get_include_filename(include_lines,
+                                                 include_dir=self.include_dir)
+                self.open_file(filename)
+                #line = next_line
+            else:
+                self.case_control_lines.append(lineUpper)
 
-            #print "*line = |%s|" %(line)
-            if 'BEGIN' in lineUpper and 'BULK' in lineUpper:
-                self.log.debug('found the end of the case control deck!')
-                #print "breaking"
+            if 'BEGIN' in lineUpper and (('BULK' in lineUpper) or ('SUPER' in lineUpper)):
+                self.log.debug('found the end of the Case Control Deck!')
                 break
-            if i > 10000:
-                raise RuntimeError('there are too many lines in the '
-                                   'Case Control Deck; max=10000')
-            i += 1
-        #self.log.info("finished with Case Control Deck..")
-        #print("self.case_controlLines = ",self.case_control_lines)
+        self.log.info("finished with Case Control Deck..")
 
         #for line in self.case_control_lines:
             #print "** line=|%r|" %(line)
 
-        self.caseControlDeck = CaseControlDeck(self.case_control_lines,
-                                               self.log)
+        self.caseControlDeck = CaseControlDeck(self.case_control_lines, self.log)
         self.caseControlDeck.solmap_toValue = self._solmap_to_value
         self.caseControlDeck.rsolmap_toStr = self.rsolmap_toStr
 
-        #print "done w/ case control..."
-        #print '***********************'
-        return self.case_control_lines
-
-    def _checkForIncludeFile_CaseControlDeck(self, lineIn, line, lineUpper):
+    def is_reject(self, card_name):
         """
-        Special parsing must be done if an INCLUDE file is found.
-        @param lineIn
-          the current line without any stripping of comments (defined by $)
-        @param line
-          the current line
-        @param lineUpper
-          the current line (in all caps)
-        @retval line
-          the new current line
-        @retval lineUpper
-          the new current line (in all caps)
+        Can the card be read
+        @param self the BDF object
+        @param card_name the card_name -> 'GRID'
         """
-        if lineUpper.startswith('INCLUDE'):
-            nextLine = self.get_next_line().strip().split('$')[0].strip()
-            includeLines = [line]
-            #print "^&*1",nextLine
-            while '\\' in nextLine or '/' in nextLine:  # more includes
-                includeLines.append(nextLine)
-                nextLine = self.get_next_line().strip().split('$')[0].strip()
-                #print "^&*2",nextLine
-
-            #print "include lines = |%s|" %(includeLines)
-            filename = self._get_include_file_name(includeLines)
-
-            self._add_include_file(filename)
-            #self.open_file(filename)
-            self._read_case_control_deck(filename)
-            line = nextLine
-            #print "appending |%r|" %(nextLine)
-            self.case_control_lines.append(nextLine)
-        else:
-            #print "appending |%r|" %(lineIn)
-            self.case_control_lines.append(lineIn)
-
-        return (line, lineUpper)
-
-    def _get_card_name(self, cardLines):
-        """
-        Given a list of card lines, determines the cardName.
-        @param self      the object pointer
-        @param cardLines the list of lines that define the card
-        @retval cardName the name of the card
-        @note
-            Parses the first 8 characters of a card, splits bassed on a comma,
-            pulls off any spaces or asterisks and returns what is left.
-        """
-        #self.log.debug("getting cardName...")
-        cardName = cardLines[0][0:8].strip()
-        if ',' in cardName:
-            cardName = cardName.split(',')[0].strip()
-
-        cardName = cardName.lstrip().rstrip(' *')
-        #self.log.debug("_get_card_name cardName=|%s|" %(cardName))
-        return cardName
-
-    def _is_reject(self, cardName):
-        """Can the card be read"""
-        #cardName = self._get_card_name(card)
-        if cardName.startswith('='):
+        if card_name.startswith('='):
             return False
-        elif cardName in self.cardsToRead:
-            #print "*card = ",card
-            #print "RcardName = |%s|" %(cardName)
+        elif card_name in self.cardsToRead:
             return False
-        if cardName:
-            if cardName not in self.rejectCount:
-                self.log.info("RejectCardName = |%s|" % cardName)
-                self.rejectCount[cardName] = 0
-            self.rejectCount[cardName] += 1
+        if card_name:
+            if card_name not in self.reject_count:
+                self.log.info("reject card_name = |%s|" % card_name)
+                self.reject_count[card_name] = 0
+            self.reject_count[card_name] += 1
         return True
 
-    def _get_include_file_name(self, cardLines):
-        """Parses an INCLUDE file split into multiple lines (as a list).
-        @param self
-          the BDF object
-        @param cardLines
-          the list of lines in the include card (all the lines!)
-        @param cardName
-          INCLUDE or include (needed to strip it off without converting
-          the case)
-        @retval filename the INCLUDE filename
+    def open_file(self, bdf_filename):
         """
-        cardLines2 = []
-        for line in cardLines:
-            line = line.strip('\t\r\n ')
-            cardLines2.append(line)
+        Opens the primary bdf/dat file and all subsequent INCLUDE files.
+        @param fname:  the name of the bdf/dat file to open
+        @return: None
+        @note Doesn't allow reuse of the same bdf/dat file twice.
+        """
+        bdf_filename = os.path.join(self.include_dir, str(bdf_filename))
+        if not os.path.exists(bdf_filename):
+            raise IOError('No such bdf_filename: %r' % self.bdf_filename)
 
-        cardLines2[0] = cardLines2[0][7:].strip()  # truncate the cardname
-        filename = ''.join(cardLines2)
-        filename = filename.strip('"').strip("'")
-        if ':' in filename:
-            ifilepaths = filename.split(':')
-            filename = os.path.join(*ifilepaths)
-        #print 'filename = |%s|' % (filename)
-        filename = os.path.join(self.includeDir, filename)
-        return filename
+        #print "opening self.active_filename=%s" % bdf_filename
+        if bdf_filename in self.active_filenames:
+            msg = 'bdf_filename=%s is already active.\nused_filenames=%s' % self.active_filenames
+            raise RuntimeError(msg)
+        self.log.info('opening %r' % bdf_filename)
+        
+        self.ifile += 1
+        self.active_filename = bdf_filename
+        #self.used_filenames.append(bdf_filename)
+        
+        self.active_filenames.append(bdf_filename)
+        
+        self.stored_Is[self.ifile] = []
+        self.stored_lines[self.ifile] = []
+        self.stored_comments[self.ifile] = []
+        
+        line_gen = self.stream_line()
+        if self.isDict:
+            #print "making ifile=%s" % self.ifile
+            self.line_streams[self.ifile] = line_gen
+            self.card_streams[self.ifile] = self.stream_card(line_gen)
+        else:
+            self.line_streams.append(line_gen)
+            self.card_streams.append(self.stream_card(line_gen))
+    
 
-    def _add_include_file(self, infileName):
+    def close_file(self, ):
+        self.log.info('closing %r' % self.active_filename)
+        if self.ifile == 0:
+            self.ifile = -1
+            self.active_filename = None
+            return
+        if self.isDict:
+            #print "killing ifile=%s" % self.ifile
+            del self.stored_Is[self.ifile]
+            del self.stored_lines[self.ifile]
+            del self.stored_comments[self.ifile]
+            del self.line_streams[self.ifile]
+            del self.card_streams[self.ifile]
+        else:
+            self.stored_Is.pop()
+            self.stored_lines.pop()
+            self.stored_comments.pop()
+            self.line_streams.pop()
+            self.card_streams.pop()
+        self.ifile -= 1
+
+        self.active_filenames.pop()
+        #print "active_filenames =", self.active_filenames
+        self.active_filename = self.active_filenames[-1]
+
+    def stream_card(self, line_stream):
         """
-        This method must be called before opening an INCLUDE file.
-        Identifies the new file as being opened.
-        @param self the object pointer
-        @param infileName the new INCLUDE file
-        @note isOpened[fileName] is really initialized to False
+        Returns the next Bulk Data Card in the BDF
+        @param self the BDF object
+        @retval lines the lines of the card
+        @retval comment the comment for the card
+        @retval cardname the name of the card
         """
-        self.isOpened[infileName] = False
+        for (i, line, comment) in line_stream:
+        #while 1:
+            #-----------------------------------------------------------------
+            # get the first line of the card
+            #print "stored_lines = ", self.stored_lines
+            #print "new card...line =|%s|" % line
+            Is = []
+            lines = []
+            comments = []
+
+            #c = ''
+            comment = _clean_comment(comment)
+            if comment:
+                #c=' comment=|%s|' % comment.strip()
+                comments.append(comment)
+            #print "lineA1 %s line=|%s|%s" % (i, line.strip(), c)
+            
+            # If the first line is valid, continue.
+            # Otherwise, keep getting lines until one isn't blank.
+            if line:
+                #print "adding line..."
+                Is.append(i)
+                lines.append(line)
+            else:
+                #print "while block..."
+                while len(line)==0:
+                    #print "lines while len(line)==0; ",lines
+                    #print "you cant have an empty first line..."
+                    (i, line, comment) = self.get_line()
+                    if line:
+                        break
+
+                    #c = ''
+                    comment = _clean_comment(comment)
+                    if comment:
+                        #c=' comment=|%s|' % comment.strip()
+                        comments.append(comment)
+                    #print "lineA2 %s line=|%s|%s" % (i, line.strip(), c)
+                Is.append(i)
+                lines.append(line)
+                if comment:
+                    comments.append(comment)
+            assert len(lines) == 1, lines
+            #if 'PBARL' in lines[0]:
+            #print "===end of block 1 (get first line)===; lines=%r" % lines
+            #pass
+
+            #print "lines =",lines
+
+            #-----------------------------------------------------------------
+            # get another line
+            #print "*lineC %s line=|%s|%s" % (i, line.strip(), c)
+            try:
+                (i, line, comment) = self.get_line()
+            except TypeError:
+                #print 'type yield...'
+                #raise
+                lines2 = clean_empty_lines(lines)
+                yield lines2, ''.join(comments)
+            if comment:  c=' comment=|%s|' % comment.strip()
+            #print "lineC %s line=|%s|%s" % (i, line.strip(), c)
+            #print "lines =",lines
+            #print ""
+            
+            #-----------------------------------------------------------------
+            # We define a continuation by either a regular,
+            # large field, small field, tab, or CSV formatted line.
+            # Large field - a * is in the first character
+            # Small field - a + or ' ' is in the first character
+            #               or the line is blank
+            # Tab - tab separated value; large or small formatted line
+            # CSV - comma separated value; large or small formatted line
+
+            # If the line is a continuation line, keep going.
+            in_loop = False
+            #print "checkline = %r" % line
+            
+            Is2 = []
+            lines2 = []
+            comments2 = []
+            while len(line)==0 or line[0] in [' ', '*', '+', ',', '\t']:
+                in_loop = True
+                #print "into the loop!"
+                if len(line):
+                    if Is2:
+                        Is += Is2
+                        lines += lines2
+                        comments += comments2
+                    Is.append(i)
+                    lines.append(line)
+                    
+                    Is2 = []
+                    lines2 = []
+                    comments2 = []
+                    comment = _clean_comment(comment)
+                    if comment:
+                        comments.append(comment)
+                else:
+                    Is2.append(i)
+                    lines2.append(line)
+                    comment = _clean_comment(comment)
+                    if comment:
+                        comments2.append(comment)
+
+                if comment:  c=' comment=|%s|' % comment.strip()
+                #print "lineD %s line=|%s|%s" % (i, line.strip(), c)
+                try:
+                    (i, line, comment) = self.get_line()
+                except TypeError:
+                    #raise
+                    lines2 = clean_empty_lines(lines)
+                    comment = ''.join(comments+comments2)
+                    yield lines2, comment
+
+                #print "len(line)=%s line[0]=%r" % (len(line), line[0])
+            #if not in_loop:
+                #print "len(line)=%i line=%r" % (len(line), line)
+
+            # the extra lines we grabbed in the while loop should go on the
+            # next card
+            if Is2:
+                #print "storing lines2 %s" % lines2
+                self.stored_Is[self.ifile] = Is2
+                self.stored_lines[self.ifile] = lines2
+                self.stored_comments[self.ifile] = comments2
+            #Is2 = []
+            #lines2 = []
+            #comments2 = []
+
+            c = ''
+            if comment:  c=' comment=|%s|' % comment.strip()
+            #print "lineD2 %s line=|%s|%s" % (i, line.strip(), c)
+            #if 'PBARL' in lines[0]:
+            #print '===end of block 2 (done with continuation lines)=== lines=%r' % lines
+            #print '===end of block 2 (done with continuation lines)=== lines=%r comments=%s' % (lines, comments)
+            #pass
+
+            #if not in_loop:
+                #self.stored_Is.append(i)
+                #self.stored_lines[self.ifile].append(line)
+                #self.stored_comments[self.ifile].append(comment)
+                #print "non-continuation line = ", line
+                #print "lines = ", lines
+
+            #-----------------------------------------------------------------
+            # We maybe got one too many lines
+            if line[0] not in [' ', '*', '+', ',', '\t']:
+            #if in_loop:
+                #print "stored_lines =", self.stored_lines
+                #print "storing line..."
+                self.stored_Is[self.ifile].append(i)
+                self.stored_lines[self.ifile].append(line)
+                comment = _clean_comment(comment)
+                if comment:
+                    self.stored_comments[self.ifile].append(comment)
+            #if comment:
+            #    self.stored_comments.append(comment)
+            #print "linesE = %s" % lines
+            
+            #print "lines =",lines
+            
+            lines2 = clean_empty_lines(lines)
+            comment = ''.join(comments)
+            #if 'PBARL' in lines[0]:
+            #print "*yielding lines2=%r" % lines2
+            #print "*yielding lines2=%r comments=%s" %(lines2, comments)
+            yield lines2, comment
+            #print '--------------------------'
+        return
+        #print "end of stream card..."
+
+    def get_card_name(self, lines):
+        """
+        Returns the name of the card defined by the provided lines
+        @param lines the lines of the card
+        @retval cardname the name of the card
+        """
+        card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('*\t ')
+        if len(card_name) == 0:
+            return None
+        assert ' ' not in card_name and len(card_name) > 0, 'card_name=|%r|\nline=|%s| in filename=%s is invalid' % (card_name, lines[0], self.active_filename)
+        return card_name.upper()
 
     def _read_bulk_data_deck(self):
-        """parses the Bulk Data Deck"""
-        if self.debug:
-            self.log.debug("*read_bulk_data_deck")
-        self.open_file(self.bdf_filename)
-
-        #old_card_obj = BDFCard()
-        while len(self._active_filenames) > 0:  # keep going until finished
-            ## gets the cardLines
-            (rawCard, card, cardName) = self._get_card(debug=False)
-            #print "outcard = ",card
-
-            if cardName == 'INCLUDE':
-                #print "rawCard = ",rawCard
-                #print "card    = ",card
-                filename = self._get_include_file_name(rawCard)
-                #print 'filename = ', os.path.relpath(filename)
-                self._add_include_file(filename)
-                self.open_file(filename)
-                reject = '$ INCLUDE processed:  %s\n' % (filename)
-                self.rejects.append([reject])
-                continue
-            #elif cardName is None:
-                #self.close_file()
-                #continue
-
-            passCard = False
-            if self._is_special_card(cardName):
-                passCard = True
-                card = rawCard
-                #print(rawCard)
-            elif not self._is_reject(cardName):
-                #print ""
-                #print "not a reject"
-                card = self.processCard(card)  # parse the card into fields
-                #print "processedCard = ",card
-            elif card[0].strip() == '':
-                #print "funny strip thing..."
-                pass
-            else:
-                #print "reject!"
-                self.rejects.append(card)
-                continue
-                #print " rejecting card = ",card
-                #card = self.processCard(card)
-
-            #print "card2 = ",ListPrint(card)
-            #print "card = ",card
-            #cardName = self._get_card_name(card)
-
-            if 'ENDDATA' in cardName:
-                #print cardName
-                break  # exits while loop
-            #self.log.debug('cardName = |%s|' %(cardName))
-
-            #cardObj = BDFCard(card,oldCardObj)
-            #if cardName in self.specialCards:
-            #    cardObj = card
-            #else:
-            #    cardObj = BDFCard(card)
-            #cardObj = BDFCard(card)
-
-            nCards = 1
-            #special = False
-            if '=' in cardName:
-                nCards = cardName.strip('=()')
-                if nCards:
-                    nCards = int(nCards)
-                else:
-                    nCards = 1
-                    #special = True
-                #print "nCards = ",nCards
-                #cardName = oldCardObj.field(0)
-
-            for iCard in xrange(nCards):
-                #if special:
-                    #print "iCard = ",iCard
-                self.add_card(card, cardName, icard=0, old_card_obj=None)
-                #if self.foundEndData:
-                #    break
-
-            if self.doneReading or len(self.linesPack[-1]) == 0:
-                #print("doneReading=%s len(pack)=%s"
-                #    %(self.doneReading, len(self.linesPack[-1])))
-                self.close_file()
-
-            #oldCardObj = copy.deepcopy(cardObj) # used for =(*1) stuff
-            #print ""
-
-            #print "self.linesPack[-1] = ",len(self.linesPack[-1])
-            #print "self._active_filenames = ",self._active_filenames
-        ### end of while loop
-
-        #self.debug = True
-        if self.debug:
-            #for nid,node in self.nodes.iteritems():
-                #print node
-            #for eid,element in self.elements.iteritems():
-                #print element
-
-            #self.log.debug("\n$REJECTS")
-            #for reject in self.rejects:
-                #print printCard(reject)
-                #print ''.join(reject)
-            self.log.debug("***read_bulk_data_deck")
-
-
-    def addCard(self, card, cardName, iCard=0, oldCardObj=None):
-        """@see add_card"""
-        warnings.warn('addCard has been deprecated; use add_card',
-                      DeprecationWarning, stacklevel=2)
-        return self.add_card(card, cardName, icard=iCard,
-                             old_card_obj=oldCardObj)
-
-    def add_card(self, card, cardName, icard=0, old_card_obj=None):
         """
-        adds a card object to the BDF object.
-        @param self
-          the object pointer
-        @param card
-          the list of the card fields -> ['GRID',1,2,]
-        @param cardName
-          the cardName -> 'GRID'
-        @param icard
-          used when reading Nastran Free-Format (disabled)
-        @param old_card_obj
-          the last card object that was returned (type=BDFCard or None;
-          default=None)
-        @retval cardObject
-          the card object representation of card
+        Parses the Bulk Data Deck
+        @param self the BDF object
+        """
+        self.log.info("reading Bulk Data Deck...")
+        self._break_comment = True
+        n = 1
+        #isDone = False
+        isEndData = False
+        while self.active_filename: # or self.stored_lines:
+            #print "self.stored_lines = ", self.stored_lines
+            try:
+                (lines, comment) = self.card_streams[self.ifile].next()
+            except StopIteration:
+                self.close_file()
+                continue
+            assert len(lines) > 0
+            #if not lines:
+                #print "closing from get_card_name"
+                #self.close_file()
+                #if self.active_filename:
+                    #continue
+                #break
+            #isEndData = self._process_bulk_card(lines, comment)
+            n += 1
+
+            card_name = self.get_card_name(lines)
+            assert isinstance(comment, str) or isinstance(comment, unicode), type(comment)
+            #comment = ''.join(comments)
+            #print "*asdf*lines = %r" % lines
+
+            if card_name == 'INCLUDE':
+                bdf_filename = get_include_filename(lines, include_dir=self.include_dir)
+                #print "newfname =", newfname
+                self.open_file(bdf_filename)
+                reject = '$ INCLUDE processed:  %s\n' % bdf_filename
+                #print reject
+                self.rejects.append([reject])
+                #print "reject return False"
+                continue
+            elif 'ENDDATA' in card_name:
+                isEndData = True  # exits while loop
+                #print("found ENDDATA in %r" % self.active_filename)
+            #if isEndData:
+                break
+
+            self._increase_card_count(card_name)
+            #print('card_count =', self.card_count.keys())
+            if not self.is_reject(card_name):
+                self.add_card(lines, card_name, comment, is_list=False)
+            else:
+                #print('card_count =', self.card_count.keys())
+                self.rejects.append(lines)
+                #print "reject return False"
+
+            #print '*'*60
+            #print "self.active_filename =", self.active_filename
+        #print "normal exit from _read_bulk_data_deck"
+        #self.close_file()
+        #del self.line_streams
+
+    def _increase_card_count(self, card_name):
+        """
+        Used for testing to check that the number of cards going in is the
+        same as each time the model is read verifies proper writing of cards
+        @param self the BDF object
+        @param card_name the card_name -> 'GRID'
+        @warning this wont guarantee proper reading of cards, but will help
+        """
+        if card_name == '':  # stupid null case
+            return
+
+        if card_name in self.card_count:
+            self.card_count[card_name] += 1
+        else:
+            self.card_count[card_name] = 1
+
+    def get_line(self):
+        #print "ifile =", self.ifile
+        try:
+            return self.line_streams[self.ifile].next()
+        except StopIteration:
+            #print "ifile =", self.ifile
+            self.close_file()
+            #print "ifile =", self.ifile
+            return self.get_line()
+            #print "ifile =", self.ifile
+            #lines = self.stored_lines[self.ifile]
+            #comments = self.stored_comments[self.ifile]
+            #return lines, comments
+        except KeyError:
+            #return None, None, None
+            return
+
+    def stream_line(self):
+        with open(self.active_filename, 'r') as f:
+            for n,line in enumerate(f):
+                line = line.rstrip('\t\r\n ')
+                comment = ''
+                if self._break_comment and '$' in line:
+                    i = line.index('$')
+                    comment = line[i:] + '\n'
+                    line = line[:i].rstrip('\t ')
+                
+                #print "  stored lines =", self.stored_lines
+                #print "  yieldingB new line=|%s|" % line
+                #print "############################"
+                yield n, line, comment
+
+                while self.stored_lines[self.ifile]:
+                    comment = ''
+                    i2 = self.stored_Is[self.ifile].pop(0)
+                    line2 = self.stored_lines[self.ifile].pop(0)
+                    if self.stored_comments:
+                        comment = ''.join(self.stored_comments[self.ifile])
+                        self.stored_comments[self.ifile] = []
+
+                    #print "  yieldingA line=|%s|" % line2
+                    #print "############################"
+                    yield i2, line2, comment
+        #file.close()
+
+    def process_card(self, card_lines, debug=False):
+        card_name = self.get_card_name(card_lines)
+        fields = to_fields(card_lines, card_name)
+        if self._is_dynamic_syntax:
+            fields = [self._parse_dynamic_syntax(field) if '%' in
+                      field[0:1] else field for field in fields]
+
+        card = wipe_empty_fields(fields)
+        card[0] = card_name
+        return card
+
+    def add_card(self, card_lines, card_name, comment='', is_list=True):
+        """
+        Adds a card object to the BDF object.
+        @param self the BDF object
+        @param card_lines the list of the card fields
+           ['GRID,1,2',]  (is_list = False)
+           ['GRID',1,2,]  (is_list = True; default)
+        @param card_name the card_name -> 'GRID'
+        @param comment an optional the comment for the card
+        @param is_list changes card_lines from a list of lines to
+          a list of fields
+        @retval card_object the card object representation of card
         @note
           this is a very useful method for interfacing with the code
         @note
            the cardObject is not a card-type object...so not a GRID card
            or CQUAD4 object.  It's a BDFCard Object.  However, you know the
            type (assuming a GRID), so just call the mesh.Node(nid) to get the
-           No de object that was just created.
+           Node object that was just created.
         @warning
           cardObject is not returned
-        @todo this method is 600+ lines long...refactor time...
         """
-        #print "card = ",card
+        #comment = ''.join(comment)
+        #self.log.debug("card_name = |%r|" % (card_name))
+        #print("add_card; card_name=%r is_list=%s" % (card_name, is_list))
+        if card_name in ['DEQATN']:
+            card_obj = card_lines
+            card = card_lines
+        else:
+            if is_list:
+                fields = card_lines
+            else:
+                fields = to_fields(card_lines, card_name)
 
-        #if cardName in self.specialCards:
-        #    pass #cardObj = card
-        #else:
-        cardObj = BDFCard(card, oldCardObj=None)
+            # apply OPENMDAO syntax
+            #print("_is_dynamic_syntax =", self._is_dynamic_syntax)
+            if self._is_dynamic_syntax:
+                fields = [self._parse_dynamic_syntax(field) if '%' in
+                          field[0:1] else field for field in fields]
 
-        #cardObj = BDFCard(card, old_card_obj=None)
-        #if self.debug:
-        #    self.log.debug(card)
-        #    self.log.debug("*old_card_obj = \n%s" %(old_card_obj))
-        #    self.log.debug("*cardObj = \n%s" %(cardObj))
-        #cardObj.applyOldFields(icard)
+            card = wipe_empty_fields([interpret_value(field, fields)
+                                      for field in fields])
+            #print "add_card =", card
+            card_obj = BDFCard(card)
 
+        # function that gets by name the initialized object (from global scope)
         try:
-            if self._auto_reject:
-                print('rejecting processed %s' % (card))
-                self.reject_cards.append(card)
-            elif card == [] or cardName == '':
-                pass
-            elif cardName == 'DMIG':  # not done...
-                if cardObj.field(2) == 'UACCEL':  # special DMIG card
-                    self.reject_cards.append(card)
-                elif cardObj.field(2) == 0:
-                    dmig = DMIG(cardObj)
-                    self.addDMIG(dmig)
-                else:
-                    name = cardObj.field(1)
-                    dmig = self.dmigs[name]
-                    dmig.addColumn(cardObj)
+            _get_cls = lambda name: globals()[name](card_obj, comment=comment)
+        except Exception as e:
+            if not e.args: 
+                e.args=('',)
+            e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
+            raise
+        _cls = lambda name: globals()[name]
 
-            elif cardName == 'DMIJ':
-                if cardObj.field(2) == 0:
-                    dmij = DMIJ(cardObj)
-                    self.addDMIJ(dmij)
-                else:
-                    name = cardObj.field(1)
-                    dmij = self.dmijs[name]
-                    dmij.addColumn(cardObj)
-            elif cardName == 'DMIJI':
-                if cardObj.field(2) == 0:
-                    dmiji = DMIJI(cardObj)
-                    self.addDMIJI(dmiji)
-                else:
-                    name = cardObj.field(1)
-                    dmiji = self.dmijis[name]
-                    dmiji.addColumn(cardObj)
-            elif cardName == 'DMIK':
-                if cardObj.field(2) == 0:
-                    dmik = DMIK(cardObj)
-                    self.addDMIK(dmik)
-                else:
-                    name = cardObj.field(1)
-                    dmik = self.dmiks[name]
-                    dmik.addColumn(cardObj)
-            elif cardName == 'DMI':
-                if cardObj.field(2) == 0:
-                    dmi = DMI(cardObj)
-                    self.addDMI(dmi)
-                else:
-                    name = cardObj.field(1)
-                    dmi = self.dmis[name]
-                    dmi.addColumn(cardObj)
+        if self._auto_reject:
+            self.reject_cards.append(card)
+            print('rejecting processed auto=rejected %s' % card)
+            return card_obj
+        try:
+            # cards that have their own method add_CARDNAME to add them
+            if card_name in ['LSEQ', 'PHBDY', 'AERO', 'AEROS', 'AEFACT',
+              'AELINK', 'AELIST', 'AEPARM', 'AESTAT', 'AESURF', 'TRIM',
+              'FLUTTER', 'FLFACT', 'GUST', 'NLPARM','NLPCI',  'TSTEP', 'TSTEPNL',
+              'SESET', 'DCONSTR', 'DESVAR', 'DDVAL', 'DLINK', 'PARAM',
+              'PDAMPT', 'PELAST', 'PBUSHT']:
+                try:
+                    ## PHBDY -> add_PHBDY
+                    getattr(self, 'add_' + card_name)(_get_cls(card_name))
+                except Exception as e:
+                    if not e.args: 
+                        e.args = ('',)
+                    e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
+                    raise
+                return card_obj
 
-            elif cardName == 'DEQATN':  # buggy for commas
-                #print 'DEQATN:  cardObj.card=%s' %(cardObj.card)
-                #equation = DEQATN(cardObj)
-                #self.addDEQATN(equation)
-                self.rejects.append(card)
+            # dictionary of cards. Key is the name of the function to add the
+            # card
+            # 'PCOMPG':  # hasnt been verified
+            # 'MAT8':  # note there is no MAT6 or MAT7
+            _cards = {
+             'add_node': ['GRID'],
+             'add_element': ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CQUADX',
+                             'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
+                             'CBAR', 'CBEAM', 'CBEAM3', 'CROD', 'CONROD',
+                             'CTUBE', 'CBEND', 'CELAS1', 'CELAS2', 'CELAS3',
+                             'CELAS4', 'CONM1',  'CONM2', 'CMASS1', 'CMASS2',
+                             'CMASS3', 'CMASS4', 'CVISC', 'CSHEAR', 'CGAP',
+                             'CRAC2D', 'CRAC3D'],
+             'add_damper_element': ['CBUSH', 'CBUSH1D', 'CFAST', 'CDAMP1',
+                                    'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5'],
+             'add_rigid_element': ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3'],
+             'add_property': ['PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PSOLID',
+                              'PBAR', 'PBARL', 'PBEAM', 'PBCOMP', #'PBEAML',
+                              'PROD', 'PTUBE', 'PLSOLID', 'PBUSH1D', 'PBUSH',
+                              'PFAST', 'PDAMP5', 'PGAP', 'PRAC2D', 'PRAC3D',
+                              'PLPLANE',],
 
-            elif cardName == 'GRID':
-                node = GRID(cardObj)
-                self.addNode(node)
-            elif cardName == 'GRDSET':
-                self.gridSet = GRDSET(cardObj)
-            #elif cardName == 'POINT':
-            #    point = POINT(cardObj)
-            #    self.addPoint(point)
+             # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
+             'add_creep_material': ['CREEP'],
+             'add_material': ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10',
+                              'MATHP'],
+             'add_thermal_material': ['MAT4', 'MAT5'],
+             'add_material_dependence': ['MATS1'],
+             'add_load': ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1',
+                          'MOMENT2', 'GRAV', 'ACCEL1', 'LOAD', 'PLOAD',
+                              'PLOAD1', 'PLOAD2', 'PLOAD4', 'PLOADX1',
+                              'RFORCE', 'DLOAD', 'SLOAD', 'TLOAD1', 'TLOAD2',
+                              'RLOAD1', 'RLOAD2', 'RANDPS'],
+             'add_thermal_load': ['TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY'],
+             'add_thermal_element': ['CHBDYE', 'CHBDYG', 'CHBDYP'],
+             'add_convection_property': ['PCONV', 'PCONVM'],
+             'add_constraint_MPC': ['MPC', 'MPCADD'],
+             'add_constraint_SPC': ['SPC', 'SPC1', 'SPCAX', 'SPCD', 'SPCADD'],
+             'add_suport': ['SUPORT'],  # pseudo-constraint
+             'add_constraint': ['SUPORT1'],  # pseudo-constraint
+             'add_SPLINE': ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5'],
+             'add_CAERO': ['CAERO1', 'CAERO2'],
+             'add_PAERO': ['PAERO1', 'PAERO2'],
+             'add_MKAERO': ['MKAERO1', 'MKAERO2'],
+             'add_FREQ': ['FREQ', 'FREQ1', 'FREQ2'],
+             'add_ASET': ['ASET', 'ASET1'], 'add_BSET': ['BSET', 'BSET1'],
+             'add_CSET': ['CSET', 'CSET1'], 'add_QSET': ['QSET', 'QSET1'],
+             'add_SET': ['SET1', 'SET3'],
+             'add_DRESP': ['DRESP1', 'DRESP2'],
+             'add_DVPREL': ['DVPREL1', 'DVPREL2'],
+             'add_coord': ['CORD2R', 'CORD2C', 'CORD2S'],
+             'add_table': ['TABLED1', 'TABLED2', 'TABLED3', 'TABLEM1',
+                           'TABLEM2', 'TABLEM3', 'TABLEM4', 'TABLES1',
+                           'TABLEST'],
+             'add_random_table': ['TABRND1', 'TABRNDG'],
+             'add_method': ['EIGB', 'EIGR', 'EIGRL'],
+             'add_cmethod': ['EIGC', 'EIGP'],
+             'add_DVMREL': ['DVMREL1'],
+            }
 
-            #elif cardName == 'RINGAX':
-            #    node = RINGAX(cardObj)
-            #    self.addNode(node)
-            elif cardName == 'SPOINT':
-                spoint = SPOINTs(cardObj)
-                self.addSPoint(spoint)
+            for func, names in _cards.iteritems():
+                if card_name in names:
+                    try:
+                        getattr(self, func)(_get_cls(card_name))
+                    except Exception as e:
+                        if not e.args: 
+                            e.args=('',)
+                        e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
+                        raise
+                    return card_obj
 
-            elif cardName == 'CQUAD4':
-                elem = CQUAD4(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CQUAD8':
-                elem = CQUAD8(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CQUAD':
-                elem = CQUAD(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CQUADR':
-                elem = CQUADR(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CQUADX':
-                elem = CQUADX(cardObj)
-                self.addElement(elem)
-
-            elif cardName == 'CTRIA3':
-                elem = CTRIA3(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CTRIA6':
-                elem = CTRIA6(cardObj)
-                self.addElement(elem)
-
-            elif cardName == 'CTRIAR':
-                elem = CTRIAR(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CTRIAX':
-                elem = CTRIAX(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CTRIAX6':
-                elem = CTRIAX6(cardObj)
-                self.addElement(elem)
-
-            elif cardName == 'CTETRA':  # 4/10 nodes
-                nFields = cardObj.nFields()
-                if   nFields == 7:
-                    elem = CTETRA4(cardObj)  # 4+3
-                else:
-                    elem = CTETRA10(cardObj)  # 10+3
-                self.addElement(elem)
-            elif cardName == 'CHEXA':  # 8/20 nodes
-                nFields = cardObj.nFields()
-                if   nFields == 11:
-                    elem = CHEXA8(cardObj)   # 8+3
-                else:
-                    elem = CHEXA20(cardObj)  # 20+3
-                self.addElement(elem)
-            elif cardName == 'CPENTA':  # 6/15 nodes
-                nFields = cardObj.nFields()
-                if   nFields == 9:
-                    elem = CPENTA6(cardObj)   # 6+3
-                else:
-                    elem = CPENTA15(cardObj)  # 15+3
-                self.addElement(elem)
-
-            elif cardName == 'CBAR':
-                elem = CBAR(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CBEAM':
-                elem = CBEAM(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CBEAM3':
-                elem = CBEAM3(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CROD':
-                elem = CROD(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CONROD':
-                elem = CONROD(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CTUBE':
-                elem = CTUBE(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CBEND':
-                elem = CBEND(cardObj)
-                self.addElement(elem)
-
-            elif cardName == 'CELAS1':
-                elem = CELAS1(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CELAS2':
-                (elem) = CELAS2(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CELAS3':
-                (elem) = CELAS3(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CELAS4':
-                (elem) = CELAS4(cardObj)
-                self.addElement(elem)
-
-            elif cardName == 'CBUSH':
-                (elem) = CBUSH(cardObj)
-                self.addDamperElement(elem)
-            elif cardName == 'CBUSH1D':
-                (elem) = CBUSH1D(cardObj)
-                self.addDamperElement(elem)
-            elif cardName == 'CFAST':
-                (elem) = CFAST(cardObj)
-                self.addDamperElement(elem)
-
-            elif cardName == 'CDAMP1':
-                (elem) = CDAMP1(cardObj)
-                self.addDamperElement(elem)
-            elif cardName == 'CDAMP2':
-                (elem) = CDAMP2(cardObj)
-                self.addDamperElement(elem)
-            elif cardName == 'CDAMP3':
-                (elem) = CDAMP3(cardObj)
-                self.addDamperElement(elem)
-            elif cardName == 'CDAMP4':
-                (elem) = CDAMP4(cardObj)
-                self.addDamperElement(elem)
-            elif cardName == 'CDAMP5':
-                (elem) = CDAMP5(cardObj)
-                self.addDamperElement(elem)
-
-            elif cardName == 'CONM1':
-                elem = CONM1(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CONM2':
-                elem = CONM2(cardObj)
-                self.addElement(elem)
-
-            elif cardName == 'CMASS1':
-                elem = CMASS1(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CMASS2':
-                elem = CMASS2(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CMASS3':
-                elem = CMASS3(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CMASS4':
-                elem = CMASS4(cardObj)
-                self.addElement(elem)
-
-            elif cardName == 'CVISC':
-                elem = CVISC(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CSHEAR':
-                elem = CSHEAR(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CGAP':
-                elem = CGAP(cardObj)
-                self.addElement(elem)
-
-            elif cardName == 'CRAC2D':
-                elem = CRAC2D(cardObj)
-                self.addElement(elem)
-            elif cardName == 'CRAC3D':
-                elem = CRAC3D(cardObj)
-                self.addElement(elem)
-
-            # rigid elements
-            elif cardName == 'RBAR':
-                (elem) = RBAR(cardObj)
-                self.addRigidElement(elem)
-            elif cardName == 'RBAR1':
-                (elem) = RBAR1(cardObj)
-                self.addRigidElement(elem)
-            elif cardName == 'RBE1':
-                (elem) = RBE1(cardObj)
-                self.addRigidElement(elem)
-            elif cardName == 'RBE2':
-                (elem) = RBE2(cardObj)
-                self.addRigidElement(elem)
-            elif cardName == 'RBE3':
-                (elem) = RBE3(cardObj)
-                self.addRigidElement(elem)
-
-            elif cardName == 'PSHELL':
-                prop = PSHELL(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PCOMP':
-                prop = PCOMP(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PCOMPG':  # hasnt been verified
-                prop = PCOMPG(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PSHEAR':
-                prop = PSHEAR(cardObj)
-                self.addProperty(prop)
-
-            elif cardName == 'PSOLID':
-                prop = PSOLID(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PBAR':
-                prop = PBAR(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PBARL':
-                prop = PBARL(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PBEAM':
-                prop = PBEAM(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PBCOMP':
-                prop = PBCOMP(cardObj)
-                self.addProperty(prop)
-            #elif cardName == 'PBEAM3':
-            #    prop = PBEAM3(cardObj)
-            #    self.addProperty(prop)
-            elif cardName == 'PBEAML':   # disabled
-                prop = PBEAML(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PVISC':
-                prop = PVISC(cardObj)
-                self.addProperty(prop)
-                if cardObj.field(5):
-                    prop = PVISC(card, 1)
-                    self.addProperty(prop)
-            elif cardName == 'PROD':
-                prop = PROD(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PTUBE':
-                prop = PTUBE(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PMASS':
-                prop = PMASS(cardObj, nOffset=0)
-                self.addProperty(prop)
-
-                if cardObj.field(3) is not None:
-                    prop = PMASS(cardObj, nOffset=1)
-                    self.addProperty(prop)
-                if cardObj.field(5) is not None:
-                    prop = PMASS(cardObj, nOffset=2)
-                    self.addProperty(prop)
-                if cardObj.field(7) is not None:
-                    prop = PMASS(cardObj, nOffset=3)
-                    self.addProperty(prop)
-
-            elif cardName == 'PLSOLID':
-                prop = PLSOLID(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PFAST':
-                prop = PFAST(cardObj)
-                self.addProperty(prop)
-
-
-            elif cardName == 'PDAMP':
-                prop = PDAMP(cardObj)
-                self.addProperty(prop)
-                if cardObj.field(3):
-                    prop = PDAMP(cardObj, 1)  # makes 2nd PDAMP card
-                    self.addProperty(prop)
-                if cardObj.field(5):
-                    prop = PDAMP(cardObj, 1)  # makes 3rd PDAMP card
-                    self.addProperty(prop)
-            elif cardName == 'PDAMP5':
-                prop = PDAMP5(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PELAS':
-                prop = PELAS(cardObj)
-                self.addProperty(prop)
-                if cardObj.field(5):
-                    prop = PELAS(cardObj, 1)  # makes 2nd PELAS card
-                    self.addProperty(prop)
-            elif cardName == 'PBUSH1D':
-                prop = PBUSH1D(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PBUSH':
-                prop = PBUSH(cardObj)
-                self.addProperty(prop)
+            # card that requires more careful processing, elements
+            _dct = {'CTETRA': (7, CTETRA4, CTETRA10), 'CHEXA': (11, CHEXA8,
+                    CHEXA20), 'CPENTA': (9, CPENTA6, CPENTA15)}
+            if card_name in _dct:
+                d = _dct[card_name]
+                self.add_element((d[1] if card_obj.nFields() == d[0]
+                                       else d[2])(card_obj, comment=comment))
+                return card_obj
             
-            # frequency dependent properties that point to the card (two pointers to same card)
-            elif cardName == 'PDAMPT': # points to a CDAMP1, CDAMP3
-                prop = PDAMPT(cardObj)
-                self.addPDAMPT(prop)
-            elif cardName == 'PELAST': # points to a CELAS1, CELAS3
-                prop = PELAST(cardObj)
-                self.addPELAST(prop)
-            elif cardName == 'PBUSHT': # points to a CBUSH. CBUSH1D
-                prop = PBUSHT(cardObj)
-                self.addPBUSHT(prop)
+            # dampers
+            _dct = {'PELAS': (5,), 'PVISC': (5,), 'PDAMP': (3, 5)}
+            if card_name in _dct:
+                try:
+                    self.add_property(_get_cls(card_name))
+                except Exception as e:
+                    if not e.args: 
+                        e.args=('',)
+                    e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
+                    raise
+                for i in _dct[card_name]:
+                    if card_obj.field(i):
+                        self.add_property(_cls(card_name)(card_obj, 1,
+                                          comment=comment))
+                return card_obj
 
-            elif cardName == 'PGAP':
-                elem = PGAP(cardObj)
-                self.addProperty(elem)
-            elif cardName == 'PRAC2D':
-                prop = PRAC2D(cardObj)
-                self.addProperty(prop)
-            elif cardName == 'PRAC3D':
-                prop = PRAC3D(cardObj)
-                self.addProperty(prop)
+            if card_name in ['DEQATN']:  # buggy for commas
+                #print 'DEQATN:  card_obj.card=%s' %(card_obj.card)
+                #self.add_DEQATN(DEQATN(card_obj)) # should be later moved to
+                self.rejects.append(card)          # for loop below
+            elif card_name == 'GRDSET':
+                self.gridSet = GRDSET(card_obj, comment=comment)
+            elif card_name == 'DOPTPRM':
+                self.doptprm = DOPTPRM(card_obj, comment=comment)
 
-            elif cardName == 'CREEP':  # hasnt been verified
-                creep = CREEP(cardObj)
-                # links up to MAT1, MAT2, MAT9 w/ same MID
-                self.addCreepMaterial(creep)
-            elif cardName == 'MAT1':
-                material = MAT1(cardObj)
-                self.addMaterial(material)
-            elif cardName == 'MAT2':
-                material = MAT2(cardObj)
-                self.addMaterial(material)
-            elif cardName == 'MAT3':
-                material = MAT3(cardObj)
-                self.addMaterial(material)
-            elif cardName == 'MAT4':
-                material = MAT4(cardObj)
-                self.addThermalMaterial(material)
-            elif cardName == 'MAT5':
-                material = MAT5(cardObj)
-                self.addThermalMaterial(material)
-            elif cardName == 'MAT8':  # note there is no MAT6 or MAT7
-                material = MAT8(cardObj)
-                self.addMaterial(material)
-            elif cardName == 'MAT9':
-                material = MAT9(cardObj)
-                self.addMaterial(material)
-            elif cardName == 'MAT10':
-                material = MAT10(cardObj)
-                self.addMaterial(material)
+            elif card_name == 'DMIG':  # not done...
+                if card_obj.field(2) == 'UACCEL':  # special DMIG card
+                    self.reject_cards.append(card)
+                elif card_obj.field(2) == 0:
+                    self.add_DMIG(DMIG(card_obj, comment=comment))
+                else:
+                    self.dmigs[card_obj.field(1)].addColumn(card_obj,
+                                                            comment=comment)
 
-            elif cardName == 'MATHP':
-                material = MATHP(cardObj)
-                self.addMaterial(material)
-
-            elif cardName == 'MATS1':
-                material = MATS1(cardObj)
-                self.addMaterialDependence(material)
-            #elif cardName == 'MATT1':
-            #    material = MATT1(cardObj)
-            #    self.addTempMaterial(material)
-            #elif cardName == 'MATT2':
-            #    material = MATT2(cardObj)
-            #    self.addTempMaterial(material)
-            #elif cardName == 'MATT3':
-            #    material = MATT3(cardObj)
-            #    self.addTempMaterial(material)
-            #elif cardName == 'MATT4':
-            #    material = MATT4(cardObj)
-            #    self.addTempMaterial(material)
-            #elif cardName == 'MATT5':
-            #    material = MATT5(cardObj)
-            #    self.addTempMaterial(material)
-            #elif cardName == 'MATT8':
-            #    material = MATT8(cardObj)
-            #    self.addTempMaterial(material)
-            #elif cardName == 'MATT9':
-            #    material = MATT9(cardObj)
-            #    self.addTempMaterial(material)
-
-            # cards contained within the LOAD card
-            elif cardName == 'FORCE':
-                force = FORCE(cardObj)
-                self.addLoad(force)
-            elif cardName == 'FORCE1':
-                force = FORCE1(cardObj)
-                self.addLoad(force)
-            elif cardName == 'FORCE2':
-                force = FORCE2(cardObj)
-                self.addLoad(force)
-            elif cardName == 'MOMENT':
-                moment = MOMENT(cardObj)
-                self.addLoad(moment)
-            elif cardName == 'MOMENT1':
-                moment = MOMENT1(cardObj)
-                self.addLoad(moment)
-            elif cardName == 'MOMENT2':
-                moment = MOMENT2(cardObj)
-                self.addLoad(moment)
-            elif cardName == 'GRAV':
-                grav = GRAV(cardObj)
-                self.addLoad(grav)
-            elif cardName == 'ACCEL1':
-                grav = ACCEL1(cardObj)
-                self.addLoad(grav)
-            elif cardName == 'LOAD':
-                load = LOAD(cardObj)
-                self.addLoad(load)
-            elif cardName == 'PLOAD':
-                load = PLOAD(cardObj)
-                self.addLoad(load)
-            elif cardName == 'PLOAD1':
-                load = PLOAD1(cardObj)
-                self.addLoad(load)
-            elif cardName == 'PLOAD2':
-                load = PLOAD2(cardObj)
-                self.addLoad(load)
-            elif cardName == 'PLOAD4':
-                load = PLOAD4(cardObj)
-                self.addLoad(load)
-            elif cardName == 'PLOADX1':
-                load = PLOADX1(cardObj)
-                self.addLoad(load)
-            elif cardName == 'RFORCE':
-                load = RFORCE(cardObj)
-                self.addLoad(load)
-
-            elif cardName == 'LSEQ':
-                load = LSEQ(cardObj)
-                self.addLSeq(load)
-
-            elif cardName == 'DLOAD':
-                load = DLOAD(cardObj)
-                self.addLoad(load)
-            elif cardName == 'SLOAD':
-                load = SLOAD(cardObj)
-                self.addLoad(load)
-
-            elif cardName == 'TLOAD1':
-                load = TLOAD1(cardObj)
-                self.addLoad(load)
-            elif cardName == 'TLOAD2':
-                load = TLOAD2(cardObj)
-                self.addLoad(load)
-            elif cardName == 'RLOAD1':
-                load = RLOAD1(cardObj)
-                self.addLoad(load)
-            elif cardName == 'RLOAD2':
-                load = RLOAD2(cardObj)
-                self.addLoad(load)
-            elif cardName == 'RANDPS':
-                load = RANDPS(cardObj)
-                self.addLoad(load)
-
-            # thermal loads
-            elif cardName == 'TEMP':
-                load = TEMP(cardObj)
-                self.addThermalLoad(load)
-            #elif cardName == 'TEMPD':
-            #    load = TEMPD(cardObj)
-            #    self.addThermalLoad(load)
-            elif cardName == 'QBDY1':
-                load = QBDY1(cardObj)
-                self.addThermalLoad(load)
-            elif cardName == 'QBDY2':
-                load = QBDY2(cardObj)
-                self.addThermalLoad(load)
-            elif cardName == 'QBDY3':
-                load = QBDY3(cardObj)
-                self.addThermalLoad(load)
-            elif cardName == 'QHBDY':
-                load = QHBDY(cardObj)
-                self.addThermalLoad(load)
-
-            # thermal elements
-            elif cardName == 'CHBDYE':
-                element = CHBDYE(cardObj)
-                self.addThermalElement(element)
-            elif cardName == 'CHBDYG':
-                element = CHBDYG(cardObj)
-                self.addThermalElement(element)
-            elif cardName == 'CHBDYP':
-                element = CHBDYP(cardObj)
-                self.addThermalElement(element)
-
-            # thermal properties
-            elif cardName == 'PCONV':
-                prop = PCONV(cardObj)
-                self.addConvectionProperty(prop)
-            elif cardName == 'PCONVM':
-                prop = PCONVM(cardObj)
-                self.addConvectionProperty(prop)
-            elif cardName == 'PHBDY':
-                prop = PHBDY(cardObj)
-                self.addPHBDY(prop)
-
-            # thermal BCs
-            elif cardName == 'CONV':
-                bc = CONV(cardObj)
-                self.addThermalBC(bc, bc.eid)
-            #elif cardName == 'RADM':
-            #    bc = RADM(cardObj)
-            #    self.addThermalBC(bc, bc.nodamb)
-            elif cardName == 'RADBC':
-                bc = RADBC(cardObj)
-                self.addThermalBC(bc, bc.nodamb)
-
-            #elif cardName == 'TABLEH1':
-            #    load = TABLEH1(cardObj)
-            #    self.addTable(load)
-
-            # constraints
-            elif cardName == 'MPC':
-                constraint = MPC(cardObj)
-                self.addConstraint_MPC(constraint)
-            elif cardName == 'MPCADD':
-                constraint = MPCADD(cardObj)
-                #assert not isinstance(constraint,SPCADD)
-                self.addConstraint_MPC(constraint)
-
-            # constraints
-            elif cardName == 'SPC':
-                constraint = SPC(cardObj)
-                self.addConstraint_SPC(constraint)
-            elif cardName == 'SPC1':
-                constraint = SPC1(cardObj)
-                self.addConstraint_SPC(constraint)
-            elif cardName == 'SPCAX':
-                constraint = SPCAX(cardObj)
-                self.addConstraint_SPC(constraint)
-            elif cardName == 'SPCD':
-                constraint = SPCD(cardObj)
-                self.addConstraint_SPC(constraint)
-            elif cardName == 'SPCADD':
-                constraint = SPCADD(cardObj)
-                #assert not isinstance(constraint,MPCADD)
-                self.addConstraint_SPC(constraint)
-            elif cardName == 'SUPORT':  # pseudo-constraint
-                suport = SUPORT(cardObj)
-                self.addSuport(suport)
-            elif cardName == 'SUPORT1':  # pseudo-constraint
-                suport1 = SUPORT1(cardObj)
-                self.addConstraint(suport1)
-
-            # aero
-            elif cardName == 'SPLINE1':
-                aero = SPLINE1(cardObj)
-                self.addSpline(aero)
-            elif cardName == 'SPLINE2':
-                aero = SPLINE2(cardObj)
-                self.addSpline(aero)
-            #elif cardName == 'SPLINE3':
-                #aero = SPLINE3(cardObj)
-                #self.addSpline(aero)
-            elif cardName == 'SPLINE4':
-                aero = SPLINE4(cardObj)
-                self.addSpline(aero)
-            elif cardName == 'SPLINE5':
-                aero = SPLINE5(cardObj)
-                self.addSpline(aero)
-
-            elif cardName == 'CAERO1':
-                aero = CAERO1(cardObj)
-                self.addCAero(aero)
-            elif cardName == 'CAERO2':
-                aero = CAERO2(cardObj)
-                self.addCAero(aero)
-            #elif cardName == 'CAERO3':
-            #    aero = CAERO3(cardObj)
-            #    self.addCAero(aero)
-            elif cardName == 'PAERO1':
-                aero = PAERO1(cardObj)
-                self.addPAero(aero)
-            elif cardName == 'PAERO2':
-                aero = PAERO2(cardObj)
-                self.addPAero(aero)
-            #elif cardName == 'PAERO3':
-            #    aero = PAERO3(cardObj)
-            #    self.addPAero(aero)
-            elif cardName == 'AERO':
-                aero = AERO(cardObj)
-                self.addAero(aero)
-            elif cardName == 'AEROS':
-                aeros = AEROS(cardObj)
-                self.addAeros(aeros)
-
-            elif cardName == 'AEFACT':
-                aefact = AEFACT(cardObj)
-                self.addAEFact(aefact)
-            elif cardName == 'AELINK':
-                aelink = AELINK(cardObj)
-                self.addAELink(aelink)
-            elif cardName == 'AELIST':
-                aelist = AELIST(cardObj)
-                self.addAEList(aelist)
-            elif cardName == 'AEPARM':
-                aeparm = AEPARM(cardObj)
-                self.addAEParam(aeparm)
-            elif cardName == 'AESTAT':
-                aestat = AESTAT(cardObj)
-                self.addAEStat(aestat)
-            elif cardName == 'AESURF':
-                aesurf = AESURF(cardObj)
-                self.addAESurf(aesurf)
-
-            elif cardName == 'TRIM':
-                trim = TRIM(cardObj)
-                self.addTrim(trim)
-
-            elif cardName == 'FLUTTER':
-                flutter = FLUTTER(cardObj)
-                self.addFlutter(flutter)
-            elif cardName == 'MKAERO1':
-                mkaero = MKAERO1(cardObj)
-                self.addMKAero(mkaero)
-            elif cardName == 'MKAERO2':
-                mkaero = MKAERO2(cardObj)
-                self.addMKAero(mkaero)
-
-            elif cardName == 'FLFACT':
-                flfact = FLFACT(cardObj)
-                self.addFLFACT(flfact)
-            elif cardName == 'GUST':
-                gust = GUST(cardObj)
-                self.addGUST(gust)
-
+            elif card_name in ['DMI', 'DMIJ', 'DMIJI', 'DMIK']:
+                if card_obj.field(2) == 0:
+                    getattr(self, 'add_' + card_name)(_get_cls(card_name))
+                else:
+                    getattr(self, card_name.lower() +
+                            's')[card_obj.field(1)].addColumn(card_obj)
             # dynamic
-            elif cardName == 'DAREA':
-                darea = DAREA(cardObj)
-                self.addDArea(darea)
-                if cardObj.field(5):
-                    darea = DAREA(cardObj, 1)
-                    self.addDArea(darea)
-            elif cardName == 'NLPARM':
-                nlparmObj = NLPARM(cardObj)
-                self.addNLParm(nlparmObj)
-            elif cardName == 'TSTEP':
-                tstepObj = TSTEP(cardObj)
-                self.addTSTEP(tstepObj)
-            elif cardName == 'TSTEPNL':
-                tstepnlObj = TSTEPNL(cardObj)
-                self.addTSTEPNL(tstepnlObj)
+            elif card_name == 'DAREA':
+                self.add_DAREA(DAREA(card_obj, comment=comment))
+                if card_obj.field(5):
+                    self.add_DAREA(DAREA(card_obj, 1, comment=comment))
 
-            # frequencies
-            elif cardName == 'FREQ':
-                freq = FREQ(cardObj)
-                self.addFREQ(freq)
-            elif cardName == 'FREQ1':
-                freq = FREQ1(cardObj)
-                self.addFREQ(freq)
-            elif cardName == 'FREQ2':
-                freq = FREQ2(cardObj)
-                self.addFREQ(freq)
-            #elif cardName == 'FREQ3':
-            #    freq = FREQ3(cardObj)
-            #    self.addFREQ(freq)
-            #elif cardName == 'FREQ4':
-            #    freq = FREQ4(cardObj)
-            #    self.addFREQ(freq)
-            #elif cardName == 'FREQ5':
-            #    freq = FREQ5(cardObj)
-            #    self.addFREQ(freq)
+            elif card_name in ['CORD1R', 'CORD1C', 'CORD1S']:
+                self.add_coord(_get_cls(card_name))
+                if card_obj.field(5):
+                    self.add_coord(_cls(card_name)(card_obj, nCoord=1,
+                                                   comment=comment))
 
-            # SETx
-            elif cardName == 'ASET':
-                set_obj = ASET(cardObj)
-                self.addASet(set_obj)
-            elif cardName == 'BSET':
-                set_obj = BSET(cardObj)
-                self.addBSet(set_obj)
-            elif cardName == 'CSET':
-                set_obj = CSET(cardObj)
-                self.addCSet(set_obj)
-            elif cardName == 'QSET':
-                set_obj = QSET(cardObj)
-                self.addQSet(set_obj)
-            elif cardName == 'ASET1':
-                set_obj = ASET1(cardObj)
-                self.addASet(set_obj)
-            elif cardName == 'BSET1':
-                set_obj = BSET1(cardObj)
-                self.addBSet(set_obj)
-            elif cardName == 'CSET1':
-                set_obj = CSET1(cardObj)
-                self.addCSet(set_obj)
-            elif cardName == 'QSET1':
-                set_obj = QSET1(cardObj)
-                self.addQSet(set_obj)
+            elif card_name == 'PMASS':
+                self.add_property(PMASS(card_obj, nOffset=0, comment=comment))
+                for (i, j) in enumerate([3, 5, 7]):
+                    if card_obj.field(j) is not None:
+                        self.add_property(PMASS(card_obj, nOffset=i+1,
+                                                comment=comment))
 
-            #elif cardName == 'USET':
-            #    set_obj = USET(cardObj)
-            #    self.addSet(set_obj)
-            #elif cardName == 'USET1':
-            #    set_obj = USET1(cardObj)
-            #    self.addSet(set_obj)
-            elif cardName == 'SET1':
-                set_obj = SET1(cardObj)
-                self.addSet(set_obj)
-            #elif cardName == 'SET2':
-            #    set_obj = SET2(cardObj)
-            #    self.addSet(set_obj)
-            elif cardName == 'SET3':
-                set_obj = SET3(cardObj)
-                self.addSet(set_obj)
+            elif card_name == 'CONV':
+                bc = CONV(card_obj, comment=comment)
+                self.add_thermal_BC(bc, bc.eid)
+            #elif card_name == 'RADM':
+            #    bc = RADM(card_obj, comment=comment)
+            #    self.add_thermal_BC(bc, bc.nodamb)
+            elif card_name == 'RADBC':
+                bc = RADBC(card_obj, comment=comment)
+                self.add_thermal_BC(bc, bc.nodamb)
 
-            elif cardName == 'SESET':
-                set_obj = SESET(cardObj)
-                self.addSetSuper(set_obj)
-
-            # optimization
-            elif cardName == 'DCONSTR':
-                flutter = DCONSTR(cardObj)
-                self.addDConstr(flutter)
-            elif cardName == 'DESVAR':
-                desvar = DESVAR(cardObj)
-                self.addDesvar(desvar)
-            elif cardName == 'DDVAL':
-                ddval = DDVAL(cardObj)
-                self.addDDVal(ddval)
-            elif cardName == 'DLINK':
-                dlink = DLINK(cardObj)
-                self.addDLink(dlink)
-            elif cardName == 'DRESP1':
-                ddval = DRESP1(cardObj)
-                self.addDResp(ddval)
-            elif cardName == 'DRESP2':
-                ddval = DRESP2(cardObj)
-                self.addDResp(ddval)
-            elif cardName == 'DVPREL1':
-                dvprel = DVPREL1(cardObj)
-                self.addDvprel(dvprel)
-            elif cardName == 'DVPREL2':
-                dvprel = DVPREL2(cardObj)
-                self.addDvprel(dvprel)
-            elif cardName == 'DVMREL1':
-                dvmrel = DVMREL1(cardObj)
-                self.addDvmrel(dvmrel)
-            #elif cardName == 'DVMREL2':
-            #    dvmrel = DVMREL2(cardObj)
-            #    self.addDvmrel(dvmrel)
-            elif cardName == 'DOPTPRM':
-                doptprm = DOPTPRM(cardObj)
-                #self.addDoptprm(doptprm)
-                self.doptprm = doptprm
-
-            # coordinate systems
-            elif cardName == 'CORD2R':
-                coord = CORD2R(cardObj)
-                self.addCoord(coord)
-            elif cardName == 'CORD2C':
-                coord = CORD2C(cardObj)
-                self.addCoord(coord)
-            elif cardName == 'CORD2S':
-                coord = CORD2S(cardObj)
-                self.addCoord(coord)
-
-            elif cardName == 'CORD1R':
-                coord = CORD1R(cardObj)
-                self.addCoord(coord)
-                if cardObj.field(5):
-                    coord = CORD1R(cardObj, nCoord=1)
-                    self.addCoord(coord)
-
-            elif cardName == 'CORD1C':
-                coord = CORD1C(cardObj)
-                self.addCoord(coord)
-                if cardObj.field(5):
-                    coord = CORD1C(cardObj, nCoord=1)
-                    self.addCoord(coord)
-
-            elif cardName == 'CORD1S':
-                coord = CORD1S(cardObj)
-                self.addCoord(coord)
-                if cardObj.field(5):
-                    coord = CORD1S(cardObj, nCoord=1)
-                    self.addCoord(coord)
-
-            #elif cardName == 'CORD3G':
-            #    coord = CORD3G(cardObj)
-            #    self.addCoord(coord)
-
-            # Table
-            elif cardName == 'TABLED1':
-                table = TABLED1(cardObj)
-                self.addTable(table)
-            elif cardName == 'TABLED2':
-                table = TABLED2(cardObj)
-                self.addTable(table)
-            elif cardName == 'TABLED3':
-                table = TABLED3(cardObj)
-                self.addTable(table)
-            #elif cardName == 'TABLED4':
-            #    table = TABLED4(cardObj)
-            #    self.addTable(table)
-
-            elif cardName == 'TABLEM1':
-                table = TABLEM1(cardObj)
-                self.addTable(table)
-            elif cardName == 'TABLEM2':
-                table = TABLEM2(cardObj)
-                self.addTable(table)
-            elif cardName == 'TABLEM3':
-                table = TABLEM3(cardObj)
-                self.addTable(table)
-            elif cardName == 'TABLEM4':
-                table = TABLEM4(cardObj)
-                self.addTable(table)
-
-            elif cardName == 'TABLES1':
-                table = TABLES1(cardObj)
-                self.addTable(table)
-            elif cardName == 'TABLEST':
-                table = TABLEST(cardObj)
-                self.addTable(table)
-
-            # randomTables
-            elif cardName == 'TABRND1':
-                table = TABRND1(cardObj)
-                self.addRandomTable(table)
-            elif cardName == 'TABRNDG':
-                table = TABRNDG(cardObj)
-                self.addRandomTable(table)
-
-            # Methods
-            elif cardName == 'EIGB':
-                method = EIGB(cardObj)
-                self.addMethod(method)
-            elif cardName == 'EIGR':
-                method = EIGR(cardObj)
-                self.addMethod(method)
-            elif cardName == 'EIGRL':
-                method = EIGRL(cardObj, sol=self.sol)
-                self.addMethod(method)
-
-            # CMethods
-            elif cardName == 'EIGC':
-                method = EIGC(cardObj)
-                self.addCMethod(method)
-            elif cardName == 'EIGP':
-                method = EIGP(cardObj)
-                self.addCMethod(method)
-
-            elif cardName == 'PARAM':
-                param = PARAM(cardObj)
-                self.addParam(param)
-            elif 'ENDDATA' in cardName:
+            elif card_name == 'SPOINT':
+                self.add_SPOINT(SPOINTs(card_obj, comment=comment))
+            elif card_name == 'PBEAML':
+                try:
+                    prop = PBEAML(card_obj, comment=comment)
+                except Exception as e:
+                    #self.log.exception(traceback.format_exc())
+                    self.log.exception('rejecting processed PBEAML %s' % card)
+                    self.reject_cards.append(card)
+                    return card_obj
+                self.add_property(prop)
+                
+            elif 'ENDDATA' in card_name:
                 self.foundEndData = True
-                #break
             else:
                 ## @warning cards with = signs in them
                 ## are not announced when they are rejected
                 if '=' not in card[0]:
-                    print('rejecting processed %s' % (card))
+                    self.log.info('rejecting processed equal signed card %s' % card)
                 self.reject_cards.append(card)
-            ###
-        except:
-            print("cardName = |%r|" % (cardName))
-            print("failed! Unreduced Card=%s\n" % (ListPrint(card)))
-            print("filename = %s\n" % (self.bdf_filename))
-            sys.stdout.flush()
+        except Exception as e:
+            print(str(e))
+            self.log.debug("card_name = |%r|" % (card_name))
+            self.log.debug("failed! Unreduced Card=%s\n" % list_print(card) )
+            self.log.debug("filename = %s\n" % self.bdf_filename)
             raise
+        return card_obj
 
-        return cardObj
+    def print_filename(self, filename):
+        """
+        Takes a path such as C:/work/fem.bdf and locates the file using
+        relative paths.  If it's on another drive, the path is not modified.
+        @param self the object pointer
+        @param filename a filename string
+        @retval filenameString a shortened representation of the filename
+        """
+        driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
+        if driveLetter == os.path.splitdrive(os.curdir)[0] and self._relpath:
+            return os.path.relpath(filename)
+        return filename
 
     def card_stats(self):
         """
-        print stats for the BDF
+        Print statistics for the BDF
+        @param self the BDF object
         @note
           if a card is not supported and not added to the proper lists,
           this method will fail
         """
-        card_stats = ['params', 'nodes', 'points', 'elements',
-                      'rigidElements', 'properties', 'materials',
-                      'materialDeps', 'creepMaterials', 'coords',
-                      'mpcs', 'mpcadds',
+        card_stats = [
+            'params', 'nodes', 'points', 'elements', 'rigidElements',
+            'properties', 'materials', 'materialDeps', 'creepMaterials',
+            'coords', 'mpcs', 'mpcadds',
 
-                      # dynamic cards
-                      'dareas', 'nlparms', 'tsteps', 'tstepnls',
+            # dynamic cards
+            'dareas', 'nlparms', 'nlpcis', 'tsteps', 'tstepnls',
 
-                      # direct matrix input - DMIG - dict
-                      'dmis', 'dmigs', 'dmijs', 'dmijis', 'dmiks',
-                      'dequations',
+            # direct matrix input - DMIG - dict
+            'dmis', 'dmigs', 'dmijs', 'dmijis', 'dmiks',
+            'dequations',
 
-                      # frequencies - dict
-                      'frequencies',
+            # frequencies - dict
+            'frequencies',
 
-                      # optimization - dict
-                      'dconstrs', 'desvars', 'ddvals', 'dlinks', 'dresps',
-                      'dvprels', 'dvmrels',
+            # optimization - dict
+            'dconstrs', 'desvars', 'ddvals', 'dlinks', 'dresps',
+            'dvprels', 'dvmrels',
 
-                      # SESETx - dict
-                      'setsSuper',
+            # SESETx - dict
+            'setsSuper',
 
-                      # tables
-                      'tables', 'randomTables',
+            # tables
+            'tables', 'randomTables',
 
-                      # methods
-                      'methods', 'cMethods',
+            # methods
+            'methods', 'cMethods',
 
-                      # aero
-                      'caeros', 'paeros', 'aero', 'aeros', 'aefacts',
-                      'aelinks', 'aelists', 'aeparams', 'aesurfs', 'aestats',
-                      'gusts', 'flfacts', 'flutters', 'splines',
-                      'trims',
+            # aero
+            'caeros', 'paeros', 'aero', 'aeros', 'aefacts', 'aelinks',
+            'aelists', 'aeparams', 'aesurfs', 'aestats', 'gusts', 'flfacts',
+            'flutters', 'splines', 'trims',
 
-                      # thermal
-                      'bcs', 'thermalMaterials', 'phbdys',
-                      'convectionProperties',]
+            # thermal
+            'bcs', 'thermalMaterials', 'phbdys',
+            'convectionProperties', ]
 
         ignored_types = set([
             'spoints', 'spointi',  # singleton
             'gridSet',  # singleton
-            
-            'spcs', 'spcadds', 
 
-            # constraints - list
-            #self.constraints = {} # suport1, anything else???
+            'spcs', 'spcadds',
 
-            'suports', # suport, suport1 - list
-
-            #self.spcObject2 = constraintObject2()
-            #self.mpcObject2 = constraintObject2()
+            'suports',  # suport, suport1 - list
             'doptprm',  # singleton
 
             # SETx - list
             'sets', 'asets', 'bsets', 'csets', 'qsets',
-            ])
-
-        #all_params = list_attributes('public')
-        all_params = list_attributes(self)
+        ])
 
         ignored_types2 = set([
-                              'caseControlDeck','spcObject2', 'mpcObject2',
-                              
-                              # done
-                              'sol', 'loads', 'mkaeros', 
-                               'rejects', 'reject_cards ',
+            'caseControlDeck', 'spcObject2', 'mpcObject2',
 
-                              # not cards
-                              'debug',  'executive_control_lines ',
-                              'case_control_lines', 'cardsToRead', 'cardCount',
-                              'isStructured', 'uniqueBulkDataCards', 
-                              'nCardLinesMax', 'modelType', 'includeDir',
-                              'cardsToWrite', 'solMethod', 'log', 'doneReading',
-                              'linesPack', 'lineNumbers', 'iSolLine', 
-                              'rejectCount', 'relpath', 'isOpened',
-                              'foundEndData', 'specialCards', 
-                              'infilesPack'])
+            # done
+            'sol', 'loads', 'mkaeros',
+            'rejects', 'reject_cards',
 
+            # not cards
+            'debug',  'executive_control_lines',
+            'case_control_lines', 'cardsToRead', 'card_count',
+            'isStructured', 'uniqueBulkDataCards',
+            'nCardLinesMax', 'modelType', 'includeDir',
+            'cardsToWrite', 'solMethod', 'log', 'doneReading',
+            'linesPack', 'lineNumbers', 'iSolLine',
+            'reject_count', '_relpath', 'isOpened',
+            'foundEndData', 'specialCards',
+            'infilesPack'])
+
+        all_params = object_attributes(self)
         # removing variables that are not supported
-        leftover_types = set(all_params)
-        leftover_types = leftover_types.difference(set(card_stats))
         for attribute_name in ignored_types.union(ignored_types2):
             try:
                 all_params.remove(attribute_name)
-                #print('removing attribute_name=%s' % (attribute_name))
+                #print('removing attribute_name=%s' % attribute_name)
             except ValueError:
                 pass
 
-        #assert len(leftover_types) == 0, 'leftover_types = %s' % (
-        #    str (leftover_types))
-
-
-
         msg = ['---BDF Statistics---']
         # sol
-        msg.append('SOL %s\n' %(self.sol))
-        
+        msg.append('SOL %s\n' % self.sol)
+
         # loads
-        for lid, loads in sorted(self.loads.iteritems()):
-            msg.append('bdf.loads[%s]' %(lid))
+        for (lid, loads) in sorted(self.loads.iteritems()):
+            msg.append('bdf.loads[%s]' % lid)
             groups = {}
             for load in loads:
-                if load.type not in groups:
-                    groups[load.type] = 0
-                groups[load.type] += 1
+                groups[load.type] = groups.get(load.type, 0) + 1
             for name, n in sorted(groups.iteritems()):
-                name2 = '%s:' % (name)
-                msg.append('  %-8s %s' % (name2, n))
+                msg.append('  %-8s %s' % (name + ':', n))
             msg.append('')
 
         #mkaeros
         if self.mkaeros:
             msg.append('bdf:mkaeros')
-            name2 = 'MKAERO:' % (name)
-            msg.append('  %-8s %s' % (name2, len(self.mkaeros)))
+            msg.append('  %-8s %s' % ('MKAERO:', len(self.mkaeros)))
 
         for card_group_name in card_stats:
             card_group = getattr(self, card_group_name)
             groups = set([])
             #print("card_group_name = ", card_group_name)
-            if isinstance(card_group, list):
+            #if isinstance(card_group, list):
                 #print("card_group_name = ", card_group_name)
-                pass
 
             for card in card_group.itervalues():
                 if isinstance(card, list):
-                    #print("card = ",card)
-                    #print("card_group = ",card_group)
                     for card2 in card:
                         groups.add(card2.type)
                 else:
@@ -2117,21 +1655,220 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             group_msg = []
             for card_name in sorted(groups):
                 try:
-                    ncards = self.cardCount[card_name]
-                    name2 = '%s:' % (card_name)
-                    group_msg.append('  %-8s %s' % (name2, ncards))
+                    ncards = self.card_count[card_name]
+                    group_msg.append('  %-8s %s' % (card_name + ':', ncards))
                 except KeyError:
                     assert card_name == 'CORD2R'
             if group_msg:
-                msg.append('bdf.%s' % (card_group_name))
+                msg.append('bdf.%s' % card_group_name)
                 msg.append('\n'.join(group_msg))
                 msg.append('')
 
         # rejects
         if self.rejects:
             msg.append('Rejected Cards')
-            for name, counter in sorted(self.cardCount.iteritems()):
+            for name, counter in sorted(self.card_count.iteritems()):
                 if name not in self.cardsToRead:
-                    name2 = '%s:' % (name)
-                    msg.append('  %-8s %s' % (name2, counter))
+                    msg.append('  %-8s %s' % (name + ':', counter))
+        msg.append('')
         return '\n'.join(msg)
+
+
+def _clean_comment(comment, end=-1):
+    """
+    Removes specific pyNastran comment lines so duplicate lines aren't
+    created.
+    @param comment the comment to possibly remove
+    """
+    if comment[:end] in ['$EXECUTIVE CONTROL DECK',
+                   '$CASE CONTROL DECK',
+                   '$NODES', '$SPOINTS', '$ELEMENTS',
+                   '$PARAMS', '$PROPERTIES', '$ELEMENTS_WITH_PROPERTIES',
+                   '$ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
+                   '$UNASSOCIATED_PROPERTIES',
+                   '$MATERIALS', '$THERMAL MATERIALS',
+                   '$CONSTRAINTS', '$SPCs', '$MPCs', '$RIGID ELEMENTS',
+                   '$LOADS', '$AERO', '$AERO CONTROL SURFACES',
+                   '$FLUTTER', '$DYNAMIC', '$OPTIMIZATION',
+                   '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
+                   '$SETS', '$REJECTS', '$REJECT_LINES']:
+        comment = ''
+    #print('comment = %r' % comment)
+    return comment
+
+
+def to_fields(card_lines, card_name):
+    """
+    Converts a series of lines in a card into string versions of the field.
+    Handles large, small, and CSV formatted cards.
+    @param lines the lines of the BDF card object
+    @param card_name the card_name -> 'GRID'
+    @retval fields the string formatted fields of the card
+    """
+    fields = []
+    #print('---------------')
+    # first line
+    line = card_lines.pop(0)
+    #print "first line=|%s|" % line.rstrip()
+    if '=' in line:
+            raise SyntaxError('card_name=%s\nequal signs are not supported...'
+                              'line=|%r|' % (card_name, line))
+        
+    if '\t' in line:
+        line = line.expandtabs()
+        if ',' in line:
+            raise SyntaxError('tabs and commas in the same line are '
+                              'not supported...line=|%r|' % line)
+
+    if '*' in line:  # large field
+        if ',' in line:  # csv
+            new_fields = line[:72].split(',')[:5]
+            for i in range(5-len(new_fields)):
+                new_fields.append('')
+        else:  # standard
+            new_fields = [line[0:8], line[8:24], line[24:40], line[40:56],
+                          line[56:72]]
+        fields += new_fields
+        assert len(fields) == 5
+    else:  # small field
+        #print "small line=|%s|" % line.rstrip()
+        if ',' in line:  # csv
+            new_fields = line[:72].split(',')[:9]
+            for i in range(9-len(new_fields)):
+                new_fields.append('')
+        else:  # standard
+            new_fields = [line[0:8], line[8:16], line[16:24], line[24:32],
+                          line[32:40], line[40:48], line[48:56], line[56:64],
+                          line[64:72]]
+        fields += new_fields
+        assert len(fields) == 9
+
+    #print("new_fieldsA =",new_fields)
+
+    for j, line in enumerate(card_lines): # continuation lines
+        #for i, field in enumerate(fields):
+        #    if field.strip() == '+':
+        #        raise RuntimeError('j=%s field[%s] is a +' % (j,i))
+        
+        #print "card_name = %r" % card_name
+        if '=' in line and card_name != 'EIGRL':
+            raise SyntaxError('card_name=%s\nequal signs are not supported...'
+                              'line=|%r|' % (card_name, line))
+        if '\t' in line:
+            line = line.expandtabs()
+            if ',' in line:
+                raise SyntaxError('tabs and commas in the same line are '
+                                  'not supported...line=|%r|' % line)
+        
+        if '*' in line:  # large field
+            if ',' in line:  # csv
+                new_fields = line[:72].split(',')[1:5]
+                for i in range(4-len(new_fields)):
+                    new_fields.append('')
+            else:  # standard
+                new_fields = [line[8:24], line[24:40], line[40:56], line[56:72]]
+            assert len(new_fields) == 4
+        else:  # small field
+            #print "small lin2=|%s|" % line.rstrip()
+            if ',' in line:  # csv
+                new_fields = line[:72].split(',')[1:9]
+                for i in range(8-len(new_fields)):
+                    new_fields.append('')
+            else:  # standard
+                new_fields = [line[8:16], line[16:24], line[24:32], line[32:40],
+                              line[40:48], line[48:56], line[56:64], line[64:72]]
+            assert len(new_fields) == 8, 'nFields=%s new_fields=%s' % (len(new_fields), new_fields)
+
+        fields += new_fields
+        #print("new_fieldsB =", new_fields)
+
+    return fields
+
+def get_include_filename(cardLines, include_dir=''):
+    """
+    Parses an INCLUDE file split into multiple lines (as a list).
+    @param cardLines the list of lines in the include card (all the lines!)
+    @param include_dir the include directory (default='')
+    @retval filename the INCLUDE filename
+    """
+    cardLines2 = []
+    for line in cardLines:
+        line = line.strip('\t\r\n ')
+        cardLines2.append(line)
+
+    cardLines2[0] = cardLines2[0][7:].strip()  # truncate the cardname
+    filename = ''.join(cardLines2)
+    filename = filename.strip('"').strip("'")
+    if ':' in filename:
+        ifilepaths = filename.split(':')
+        filename = os.path.join(*ifilepaths)
+    filename = os.path.join(include_dir, filename)
+    return filename
+
+
+def parse_executive_control_deck(executive_control_lines):
+    """
+    Extracts the solution from the executive control deck
+    """
+    sol = None
+    method = None
+    iSolLine = None
+    for (i, eline) in enumerate(executive_control_lines):
+        uline = eline.strip().upper()  # uppercase line
+        uline = uline.split('$')[0].expandtabs()
+        #print("uline = %r" % uline)
+        if uline[:4] in ['SOL ']:
+            if ',' in uline:
+                sline = uline.split(',')  # SOL 600,method
+                solValue = sline[0].strip()
+                method = sline[1].strip()
+            else:
+                solValue = uline
+                method = None
+
+            #print("sol =", sol)
+            if sol is None:
+                sol = solValue[3:].strip()
+            else:
+                raise ValueError('cannot overwrite solution existing='
+                                 '|SOL %s| new =|%s|' % (sol, uline))
+            iSolLine = i
+    #print("sol = ", sol)
+    return sol, method, iSolLine
+
+
+def clean_empty_lines(lines):
+    """
+    removes leading and trailing empty lines
+    don't remove internally blank lines    
+    """
+    found_lines = False
+    #print "**lines1 = %r" % lines
+    if len(lines) < 2:
+        return lines
+    
+    for i, line in enumerate(lines):
+        if not found_lines and line:
+            found_lines = True
+            n1 = i
+            n2 = i + 1
+            #print "setting n1",n1
+            #print "setting n2",n2
+        elif found_lines and line:
+            n2 = i + 1
+            #print "setting n2",n2
+    #print "n1=%s n2=%s" % (n1, n2)
+    lines2 = lines[n1:n2]
+    #lines2 = wipe_empty_fields(lines2)
+    #print "**lines2 = %r" % lines2
+    return lines2
+
+
+if __name__ == '__main__':
+    bdf = BDF()
+    import pyNastran
+    pkg_path = pyNastran.__path__[0]
+    bdfname = os.path.join(pkg_path, '..', 'models', 'solid_bending', 'solid_bending.bdf')
+    #print "bdfname =", bdfname
+    bdf.read_bdf(bdfname)
+    bdf.write_bdf('fem.out.bdf')

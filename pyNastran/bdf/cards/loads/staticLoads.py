@@ -1,4 +1,19 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+"""
+All static loads are defined in this file.  This includes:
+ * LOAD
+ * GRAV
+ * ACCEL1
+ * FORCE1
+ * FORCE2
+ * MOMENT
+ * PLOAD
+ * PLOAD2
+ * PLOAD3
+ * PLOAD4
+ * PLOADX1
+
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import izip
@@ -9,13 +24,19 @@ from numpy.linalg import norm
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from ..baseCard import BaseCard, expand_thru, expand_thru_by
-
+from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+    double, double_or_blank,
+    string, string_or_blank,
+    integer_or_string, fields,
+    integer_string_or_blank)
 
 class LOAD(LoadCombination):
     type = 'LOAD'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         LoadCombination.__init__(self, card, data)
+        if comment:
+            self._comment = comment
 
     def getLoadIDs(self):
         """
@@ -41,8 +62,6 @@ class LOAD(LoadCombination):
                            '%s' % (load.__class__.__name__, str(load)))
                     raise NotImplementedError(msg)
 
-                ###
-        ###
         load_IDs = list(set(load_IDs))
         #print "load_IDs = ",load_IDs
         return load_IDs
@@ -64,9 +83,8 @@ class LOAD(LoadCombination):
                       isinstance(load, PLOAD4) or isinstance(load, GRAV)):
                     loadTypes += [load.type]
                 else:
-                    raise RuntimeError(load)
-                ###
-        ###
+                    raise NotImplementedError(load)
+
         loadTypes = list(set(loadTypes))
         #print "loadTypes = ",loadTypes
         return loadTypes
@@ -152,28 +170,29 @@ class LOAD(LoadCombination):
         only base objects (no LOAD cards) will be returned.
         @todo lots more object types to support
         """
-        scaleFactors = []
+        scale_factors = []
         loads = []
-        scale = self.scale
-        for (loadsPack, scaleFactorI) in izip(self.loadIDs, self.scaleFactors):
-            scale2 = scaleFactorI * scale
+        load_scale = self.scale # global
+        for (loadsPack, i_scale) in izip(self.loadIDs, self.scaleFactors):
+            scale = i_scale * load_scale # actual scale = global * local
             for load in loadsPack:
                 if (isinstance(load, Force) or isinstance(load, Moment) or
                     isinstance(load, PLOAD4) or isinstance(load, GRAV)):
                     loads.append(load)
-                    scaleFactors.append(scale2)
+                    scale_factors.append(scale) # local
                 elif isinstance(load, LOAD):
-                    (scaleFactorsi, loadsi) = load.getReducedLoads()
-                    loads += loadsi
-                    scaleFactors += [scale2 * scalei for scalei in scaleFactorsi]
+                    load_data = load.getReducedLoads()
+                    (reduced_scale_factors, reduced_loads) = load_data
+
+                    loads += reduced_loads
+                    scale_factors += [scale * j_scale for j_scale
+                                      in reduced_scale_factors]
                 else:
                     msg = ('%s isnt supported in getReducedLoads method'
-                        % (load.__class__.__name__))
+                           % load.__class__.__name__)
                     raise NotImplementedError(msg)
-                ###
-            ###
-        ###
-        return (scaleFactors, loads)
+
+        return (scale_factors, loads)
 
     def organizeLoads(self, model):
         """
@@ -201,14 +220,12 @@ class LOAD(LoadCombination):
                         forceLoads[node] = vector * scaleFactor
                     else:
                         forceLoads[node] += vector * scaleFactor
-                    ###
                 else:  # constraint
                     if node not in forceLoads:
                         forceConstraints[node] = vector * scaleFactor
                     else:
                         forceConstraints[node] += vector * scaleFactor
-                    ###
-                ###
+
             elif isinstance(load, Moment):
                 (isLoad, node, vector) = out
                 if isLoad:  # load
@@ -216,14 +233,12 @@ class LOAD(LoadCombination):
                         momentLoads[node] = vector * scaleFactor
                     else:
                         momentLoads[node] += vector * scaleFactor
-                    ###
                 else:  # constraint
                     if node not in momentLoads:
                         momentConstraints[node] = vector * scaleFactor
                     else:
                         momentConstraints[node] += vector * scaleFactor
-                    ###
-                ###
+
             elif isinstance(load, PLOAD4):
                 (isLoad, nodes, vectors) = out
                 for (nid, vector) in izip(nodes, vectors):
@@ -236,16 +251,15 @@ class LOAD(LoadCombination):
             else:
                 msg = '%s not supported' % (load.__class__.__name__)
                 raise NotImplementedError(msg)
-            ###
-        ###
+
         return (typesFound, forceLoads, momentLoads, forceConstraints,
                 momentConstraints, gravityLoads)
 
     def rawFields(self):
-        fields = ['LOAD', self.sid, self.scale]
+        list_fields = ['LOAD', self.sid, self.scale]
         for (scaleFactor, loadID) in izip(self.scaleFactors, self.loadIDs):
-            fields += [scaleFactor, self.LoadID(loadID)]
-        return fields
+            list_fields += [scaleFactor, self.LoadID(loadID)]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -259,23 +273,28 @@ class GRAV(BaseCard):
     """
     type = 'GRAV'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
             ## Set identification number
-            self.sid = card.field(1)
+            self.sid = integer(card, 1, 'sid')
             ## Coordinate system identification number.
-            self.cid = card.field(2, 0)
+            self.cid = integer_or_blank(card, 2, 'cid', 0)
             ## scale factor
-            self.scale = card.field(3)
+            self.scale = double(card, 3, 'scale')
             ## Acceleration vector components measured in coordinate system CID
-            self.N = array(card.fields(4, 7, [0., 0., 0.]))
+            self.N = array([double_or_blank(card, 4, 'N1', 0.0),
+                            double_or_blank(card, 5, 'N2', 0.0),
+                            double_or_blank(card, 6, 'N3', 0.0)])
             ## Indicates whether the CID coordinate system is defined in the
             ## main Bulk Data Section (MB = -1) or the partitioned superelement
             ## Bulk Data Section (MB = 0). Coordinate systems referenced in the
             ## main Bulk Data Section are considered stationary with respect to
             ## the assembly basic coordinate system. See Remark 10.
             ## (Integer; Default = 0)
-            self.mb = card.field(7, 0)
+            self.mb = integer_or_blank(card, 7, 'mb', 0)
+            assert len(card) <= 8, 'len(GRAV card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.cid = data[1]
@@ -328,8 +347,9 @@ class GRAV(BaseCard):
 
     def rawFields(self):
         N = list(self.N)
-        fields = ['GRAV', self.sid, self.Cid(), self.scale] + N + [self.mb]
-        return fields
+        list_fields = ['GRAV', self.sid, self.Cid(), self.scale] + N + [
+                       self.mb]
+        return list_fields
 
     def reprFields(self):
         N = []
@@ -337,8 +357,8 @@ class GRAV(BaseCard):
             N.append(set_blank_if_default(n, 0.0))
 
         mb = set_blank_if_default(self.mb, 0)
-        fields = ['GRAV', self.sid, self.Cid(), self.scale] + N + [mb]
-        return fields
+        list_fields = ['GRAV', self.sid, self.Cid(), self.scale] + N + [mb]
+        return list_fields
 
 
 class ACCEL1(BaseCard):
@@ -348,22 +368,32 @@ class ACCEL1(BaseCard):
     """
     type = 'ACCEL1'
 
-    def __init__(self, card=None, data=None):
-        ## Load set identification number (Integer>0)
-        self.sid = card.field(1)
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
+        if card:
+            ## Load set identification number (Integer>0)
+            self.sid = integer(card, 1, 'sid')
 
-        ## Coordinate system identification number. (Integer>0: Default=0)
-        self.cid = card.field(2, 0)
+            ## Coordinate system identification number. (Integer>0: Default=0)
+            self.cid = integer_or_blank(card, 2, 'cid', 0)
 
-        ## Acceleration vector scale factor. (Real)
-        self.scale = card.field(3)
+            ## Acceleration vector scale factor. (Real)
+            self.scale = double(card, 3, 'scale')
 
-        ## Components of the acceleration vector measured in coordinate system
-        ## CID. (Real; at least one Ni != 0)
-        self.N = array(card.fields(4, 7, [0., 0., 0.]))
-        assert max(abs(self.N)) > 0.
+            ## Components of the acceleration vector measured in coordinate system
+            ## CID. (Real; at least one Ni != 0)
+            self.N = array([double_or_blank(card, 4, 'N1', 0.0),
+                            double_or_blank(card, 5, 'N2', 0.0),
+                            double_or_blank(card, 6, 'N3', 0.0)])
+            assert max(abs(self.N)) > 0.
+
+            nodes = fields(integer_or_string, card, 'node', i=9, j=len(card))
+        else:
+            raise NotImplementedError(data)
+
         ## nodes to apply the acceleration to
-        self.nodes = expand_thru_by(card.fields(9))
+        self.nodes = expand_thru_by(nodes)
 
     def cross_reference(self, model):
         self.cid = model.Coord(self.cid)
@@ -382,14 +412,14 @@ class ACCEL1(BaseCard):
             nodeIDs = [node for node in nodes]
         else:
             nodeIDs = [node.nid for node in nodes]
-        ###
         assert 0 not in nodeIDs, 'nodeIDs = %s' % (nodeIDs)
         return nodeIDs
 
     def rawFields(self):
-        fields = ['ACCEL1', self.sid, self.Cid(), self.scale,
-                  self.N[0], self.N[1], self.N[2], None, None] + self.nodeIDs()
-        return fields
+        list_fields = ['ACCEL1', self.sid, self.Cid(), self.scale,
+                  self.N[0], self.N[1], self.N[2], None, None
+                  ] + self.nodeIDs()
+        return list_fields
 
 
 class OneDeeLoad(Load):  # FORCE/MOMENT
@@ -451,8 +481,8 @@ class Force(OneDeeLoad):
         momentConstraints = {}
         gravityLoads = []
         return (typesFound, forceLoads, momentLoads,
-                           forceConstraints, momentConstraints,
-                           gravityLoads)
+                forceConstraints, momentConstraints,
+                gravityLoads)
 
 
 class Moment(OneDeeLoad):
@@ -479,29 +509,32 @@ class Moment(OneDeeLoad):
         momentConstraints = {}
         gravityLoads = []
         return (typesFound, forceLoads, momentLoads,
-                            forceConstraints, momentConstraints,
-                            gravityLoads)
+                forceConstraints, momentConstraints,
+                gravityLoads)
 
     def M(self):
         return self.xyz * self.mag
-
-#------------------------------------------------------------------------------
 
 
 class FORCE(Force):
     type = 'FORCE'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         FORCE          3       1            100.      0.      0.      1.
         """
         Force.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.node = card.field(2)
-            self.cid = card.field(3, 0)
-            self.mag = card.field(4)
-            xyz = card.fields(5, 8, [0., 0., 0.])
+            self.sid = integer(card, 1, 'sid')
+            self.node = integer(card, 2, 'node')
+            self.cid = integer_or_blank(card, 3, 'cid', 0)
+            self.mag = double(card, 4, 'mag')
+            xyz = array([double_or_blank(card, 5, 'X1', 0.0),
+                         double_or_blank(card, 6, 'X2', 0.0),
+                         double_or_blank(card, 7, 'X3', 0.0)])
+            assert len(card) <= 8, 'len(FORCE card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.node = data[1]
@@ -528,14 +561,15 @@ class FORCE(Force):
         self.cid = model.Coord(self.cid)
 
     def rawFields(self):
-        fields = ['FORCE', self.sid, self.node, self.Cid(), self.mag
-                 ] + list(self.xyz)
-        return fields
+        list_fields = ['FORCE', self.sid, self.node, self.Cid(),
+                       self.mag] + list(self.xyz)
+        return list_fields
 
     def reprFields(self):
         cid = set_blank_if_default(self.Cid(), 0)
-        fields = ['FORCE', self.sid, self.node, cid, self.mag] + list(self.xyz)
-        return fields
+        list_fields = ['FORCE', self.sid, self.node, cid,
+                       self.mag] + list(self.xyz)
+        return list_fields
 
 
 class FORCE1(Force):
@@ -545,21 +579,23 @@ class FORCE1(Force):
     """
     type = 'FORCE1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         Force.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.node = card.field(2)
-            self.mag = card.field(3)
-            self.g1 = card.field(4)
-            self.g2 = card.field(5)
+            self.sid = integer(card, 1, 'sid')
+            self.node = integer(card, 2, 'node')
+            self.mag = double(card, 3, 'mag')
+            self.g1 = integer(card, 4, 'g1')
+            self.g2 = integer(card, 5, 'g2')
+            assert len(card) == 6, 'len(FORCE1 card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.node = data[1]
             self.mag = data[2]
             self.g1 = data[3]
             self.g2 = data[4]
-        ###
 
     def cross_reference(self, model):
         """@todo cross reference and fix repr function"""
@@ -567,7 +603,7 @@ class FORCE1(Force):
         self.g1 = model.Node(self.g1)
         self.g2 = model.Node(self.g2)
         self.xyz = self.g2.Position() - self.g1.Position()
-        self.Normalize()
+        self.normalize()
 
     def G1(self):
         if isinstance(self.g1, int) or isinstance(self.g1, float):
@@ -585,9 +621,9 @@ class FORCE1(Force):
         return self.node.nid
 
     def rawFields(self):
-        (node, g1, g2) = self.nodeIDs([self.node, self.G1(), self.G2()])
-        fields = ['FORCE1', self.sid, node, self.mag, g1, g2]
-        return fields
+        (node, g1, g2) = self.nodeIDs([self.node, self.g1, self.g2])
+        list_fields = ['FORCE1', self.sid, node, self.mag, g1, g2]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -600,19 +636,22 @@ class FORCE2(Force):
     """
     type = 'FORCE2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         FORCE2 SID G F G1 G2 G3 G4
         """
         Force.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.node = card.field(2)
-            self.mag = card.field(3)
-            self.g1 = card.field(4)
-            self.g2 = card.field(5)
-            self.g3 = card.field(5)
-            self.g4 = card.field(5)
+            self.sid = integer(card, 1, 'sid')
+            self.node = integer(card, 2, 'node')
+            self.mag = double(card, 3, 'mag')
+            self.g1 = integer(card, 4, 'g1')
+            self.g2 = integer(card, 5, 'g2')
+            self.g3 = integer(card, 6, 'g3')
+            self.g4 = integer(card, 7, 'g4')
+            assert len(card) == 8, 'len(FORCE2 card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.node = data[1]
@@ -621,7 +660,6 @@ class FORCE2(Force):
             self.g2 = data[4]
             self.g3 = data[5]
             self.g4 = data[6]
-        ###
 
     def cross_reference(self, model):
         """@todo cross reference and fix repr function"""
@@ -629,10 +667,10 @@ class FORCE2(Force):
 
         v12 = model.Node(self.g2).Position() - model.Node(self.g1).Position()
         v34 = model.Node(self.g4).Position() - model.Node(self.g3).Position()
-        v12 = v12 / norm(v12)
-        v34 = v34 / norm(v34)
+        v12 /= norm(v12)
+        v34 /= norm(v34)
         self.xyz = cross(v12, v34)
-        self.Normalize()
+        self.normalize()
 
     def NodeID(self):
         if isinstance(self.node, int):
@@ -642,8 +680,8 @@ class FORCE2(Force):
     def rawFields(self):
         (node, g1, g2, g3, g4) = self.nodeIDs([self.node, self.g1, self.g2,
                                                self.g3, self.g4])
-        fields = ['FORCE2', self.sid, node, self.mag, g1, g2, g3, g4]
-        return fields
+        list_fields = ['FORCE2', self.sid, node, self.mag, g1, g2, g3, g4]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -652,7 +690,7 @@ class FORCE2(Force):
 class MOMENT(Moment):
     type = 'MOMENT'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Defines a static concentrated moment at a grid point by specifying a
         scale factor and a vector that determines the direction.
@@ -661,14 +699,22 @@ class MOMENT(Moment):
         MOMENT 2   5   6 2.9 0.0 1.0 0.0
         """
         Moment.__init__(self, card, data)
-        self.sid = card.field(1)
-        self.node = card.field(2)
-        self.cid = card.field(3, 0)
-        self.mag = card.field(4)
+        if comment:
+            self._comment = comment
+        if card:
+            self.sid = integer(card, 1, 'sid')
+            self.node = integer(card, 2, 'node')
+            self.cid = integer_or_blank(card, 3, 'cid', 0)
+            self.mag = double(card, 4, 'mag')
 
-        xyz = card.fields(5, 8, [0., 0., 0.])
-        assert len(xyz) == 3, 'xyz=%s' % (xyz)
-        self.xyz = array(xyz)
+            xyz = array([double_or_blank(card, 5, 'X1', 0.0),
+                         double_or_blank(card, 6, 'X2', 0.0),
+                         double_or_blank(card, 7, 'X3', 0.0)])
+            assert len(card) <= 8, 'len(MOMENT card) = %i' % len(card)
+        else:
+            raise NotImplementedError(data)
+        assert len(xyz) == 3, 'xyz=%s' % xyz
+        self.xyz = xyz
 
     def Cid(self):
         if isinstance(self.cid, int):
@@ -676,25 +722,27 @@ class MOMENT(Moment):
         return self.cid.cid
 
     def cross_reference(self, model):
-        """@todo cross reference and fix repr function"""
+        """
+        @todo cross reference and fix repr function
+        """
         pass
 
     def rawFields(self):
-        fields = ['MOMENT', self.sid, self.node, self.Cid(), self.mag
-                 ] + list(self.xyz)
-        return fields
+        list_fields = ['MOMENT', self.sid, self.node, self.Cid(),
+                  self.mag] + list(self.xyz)
+        return list_fields
 
     def reprFields(self):
         cid = set_blank_if_default(self.Cid(), 0)
-        fields = ['MOMENT', self.sid, self.node, cid, self.mag
-                 ] + list(self.xyz)
-        return fields
+        list_fields = ['MOMENT', self.sid, self.node, cid,
+                  self.mag] + list(self.xyz)
+        return list_fields
 
 
 class MOMENT1(Moment):
     type = 'MOMENT1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Defines a static concentrated moment at a grid point by specifying a
         magnitude and two grid points that determine the direction
@@ -702,15 +750,15 @@ class MOMENT1(Moment):
         MOMENT1 SID G M G1 G2
         """
         Moment.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.node = card.field(2)
-            self.mag = card.field(3)
-            self.g1 = card.field(4)
-            self.g2 = card.field(5)
-            self.g3 = card.field(6)
-            self.g4 = card.field(7)
-            xyz = card.fields(5, 8, [0., 0., 0.])
+            self.sid = integer(card, 1, 'sid')
+            self.node = integer(card, 2, 'node')
+            self.mag = double(card, 3, 'mag')
+            self.g1 = integer(card, 4, 'g1')
+            self.g2 = integer(card, 5, 'g2')
+            assert len(card) == 6, 'len(MOMENT1 card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.node = data[1]
@@ -720,21 +768,23 @@ class MOMENT1(Moment):
             self.g3 = data[5]
             self.g4 = data[6]
             xyz = data[7:10]
+            raise NotImplementedError('MOMENT1 is probably wrong')
 
-        assert len(xyz) == 3, 'xyz=%s' % (xyz)
-        self.xyz = array(xyz)
+        #assert len(xyz) == 3, 'xyz=%s' % (xyz)
+        #self.xyz = array(xyz)
+        self.xyz = None
 
     def cross_reference(self, model):
         """@todo cross reference and fix repr function"""
         self.node = model.Node(self.node)
         self.xyz = model.Node(
             self.g2).Position() - model.Node(self.g1).Position()
-        self.Normalize()
+        self.normalize()
 
     def rawFields(self):
         (node, g1, g2) = self.nodeIDs([self.node, self.g1, self.g2])
-        fields = ['MOMENT1', self.sid, node, self.mag, g1, g2]
-        return fields
+        list_fields = ['MOMENT1', self.sid, node, self.mag, g1, g2]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -743,7 +793,7 @@ class MOMENT1(Moment):
 class MOMENT2(Moment):
     type = 'MOMENT2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Defines a static concentrated moment at a grid point by specification
         of a magnitude and four grid points that determine the direction.
@@ -751,15 +801,20 @@ class MOMENT2(Moment):
         MOMENT2 SID G M G1 G2 G3 G4
         """
         Moment.__init__(self, card, data)
+        if comment:
+            self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.node = card.field(2)
-            self.mag = card.field(3)
-            self.g1 = card.field(4)
-            self.g2 = card.field(5)
-            self.g3 = card.field(6)
-            self.g4 = card.field(7)
-            xyz = card.fields(5, 8, [0., 0., 0.])
+            self.sid = integer(card, 1, 'sid')
+            self.node = integer(card, 2, 'node')
+            self.mag = double(card, 3, 'mag')
+            self.g1 = integer(card, 4, 'g1')
+            self.g2 = integer(card, 5, 'g2')
+            self.g3 = integer(card, 6, 'g3')
+            self.g4 = integer(card, 7, 'g4')
+            xyz = array([double_or_blank(card, 5, 'X1', 0.0),
+                         double_or_blank(card, 6, 'X2', 0.0),
+                         double_or_blank(card, 7, 'X3', 0.0)])
+            assert len(card) <= 8, 'len(MOMENT2 card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.node = data[1]
@@ -769,7 +824,6 @@ class MOMENT2(Moment):
             self.g3 = data[5]
             self.g4 = data[6]
             xyz = data[7:10]
-        ###
         assert len(xyz) == 3, 'xyz=%s' % (xyz)
         self.xyz = array(xyz)
 
@@ -785,9 +839,9 @@ class MOMENT2(Moment):
 
     def rawFields(self):
         (node, g1, g2, g3, g4) = self.nodeIDs([self.node, self.g1, self.g2,
-                                                          self.g3, self.g4])
-        fields = ['MOMENT2', self.sid, node, self.mag, g1, g2, g3, g4]
-        return fields
+                                               self.g3, self.g4])
+        list_fields = ['MOMENT2', self.sid, node, self.mag, g1, g2, g3, g4]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -796,19 +850,28 @@ class MOMENT2(Moment):
 class PLOAD(Load):
     type = 'PLOAD'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.p = card.field(2)
-            nodes = card.fields(3, 7)
-            self.nodes = self._wipeEmptyFields(nodes)
+            self.sid = integer(card, 1, 'sid')
+            self.p = double(card, 2, 'p')
+            nodes = [integer(card, 3, 'n1'),
+                     integer(card, 4, 'n2'),
+                     integer(card, 5, 'n3')]
+            n4 = integer_or_blank(card, 6, 'n5', 0)
+            if n4:
+                nodes.append(n4)
+            #self.nodes = self._wipeEmptyFields(nodes)
+            self.nodes = nodes
+            assert len(card) <= 7, 'len(PLOAD card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.p = data[1]
             self.nodes = data[2:]
-            print("PLOAD = %s" % (data))
+            print("PLOAD = %s" % data)
             raise NotImplementedError('PLOAD')
-        assert len(self.nodes) in [3, 4], 'nodes=%s' % (self.nodes)
+        assert len(self.nodes) in [3, 4], 'nodes=%s' % self.nodes
 
     def cross_reference(self, model):
         """@todo cross reference and fix repr function"""
@@ -818,8 +881,8 @@ class PLOAD(Load):
         return [self]
 
     def rawFields(self):
-        fields = ['PLOAD', self.sid, self.p] + self.nodeIDs()
-        return fields
+        list_fields = ['PLOAD', self.sid, self.p] + self.nodeIDs()
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -831,16 +894,20 @@ class PLOAD1(Load):
                   'MX', 'MY', 'MZ', 'MXE', 'MYE', 'MZE']
     validScales = ['LE', 'FR', 'LEPR', 'FRPR']
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.eid = card.field(2)
-            self.Type = card.field(3)
-            self.scale = card.field(4)
-            self.x1 = card.field(5)
-            self.p1 = card.field(6)
-            self.x2 = card.field(7)
-            self.p2 = card.field(8)
+            self.sid = integer(card, 1, 'sid')
+            self.eid = integer(card, 2, 'eid')
+            self.Type = string(card, 3, 'Type')
+            self.scale = string(card, 4, 'scale')
+            self.x1 = double(card, 5, 'x1')
+            self.p1 = double(card, 6, 'p1')
+            self.x2 = double_or_blank(card, 7, 'x2', self.x1)
+            self.p2 = double_or_blank(card, 8, 'p2', self.p1)
+            assert 0 <= self.x1 <= self.x2
+            assert len(card) <= 9, 'len(PLOAD1 card) = %i' % len(card)
         else:
             self.sid = data[0]
             self.eid = data[1]
@@ -850,8 +917,9 @@ class PLOAD1(Load):
             self.p1 = data[5]
             self.x2 = data[6]
             self.p2 = data[7]
-        ###
-        assert self.Type in self.validTypes, '%s is an invalid type on the PLOAD1 card' % (self.Type)
+        if self.Type not in self.validTypes:
+            msg = '%s is an invalid type on the PLOAD1 card' % self.Type
+            raise RuntimeError(msg)
         assert self.scale in self.validScales, '%s is an invalid scale on the PLOAD1 card' % (self.scale)
 
     def cross_reference(self, model):
@@ -862,9 +930,9 @@ class PLOAD1(Load):
         return [self]
 
     def rawFields(self):
-        fields = ['PLOAD1', self.sid, self.eid, self.Type, self.scale, self.x1,
-                  self.p1, self.x2, self.p2]
-        return fields
+        list_fields = ['PLOAD1', self.sid, self.eid, self.Type, self.scale,
+                  self.x1, self.p1, self.x2, self.p2]
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -873,14 +941,20 @@ class PLOAD1(Load):
 class PLOAD2(Load):
     type = 'PLOAD2'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.p = card.field(2)
-            eids = card.fields(3, 9)
+            self.sid = integer(card, 1, 'sid')
+            self.p = double(card, 2, 'p')
 
-            if card.field(4) == 'THRU':
-                eids = [i for i in xrange(eids[0], eids[2] + 1)]
+            if integer_string_or_blank(card, 4, 'THRU') == 'THRU':
+                e1 = integer(card, 3, 'Element1')
+                e2 = integer(card, 5, 'Element1')
+                eids = [i for i in xrange(e1, e2 + 1)]
+                assert len(card) == 6, 'len(PLOAD2 card) = %i' % len(card)
+            else:
+                eids = fields(integer, card, 'eid', i=3, j=len(card))
             self.eids = eids
         else:
             self.sid = data[0]
@@ -896,12 +970,12 @@ class PLOAD2(Load):
         return [self]
 
     def rawFields(self):
-        fields = ['PLOAD2', self.sid, self.p]
+        list_fields = ['PLOAD2', self.sid, self.p]
         if len(self.eids) > 6:
-            fields += [self.eids[0], 'THRU', self.eids[-1]]
+            list_fields += [self.eids[0], 'THRU', self.eids[-1]]
         else:
-            fields += self.eids
-        return fields
+            list_fields += self.eids
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -910,17 +984,23 @@ class PLOAD2(Load):
 class PLOAD4(Load):
     type = 'PLOAD4'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.eid = card.field(2)
-            p1 = card.field(3)
-            p = card.fields(4, 7, [p1, p1, p1])  # [p1,p1,p1] are the defaults
-            self.pressures = [p1] + p
+            self.sid = integer(card, 1, 'sid')
+            self.eid = integer(card, 2, 'eid')
+            p1 = double_or_blank(card, 3, 'p1', 0.0)
+            p = [p1,
+                 double_or_blank(card, 4, 'p2', p1),
+                 double_or_blank(card, 5, 'p3', p1),
+                 double_or_blank(card, 6, 'p4', p1)]
+            self.pressures = p
 
             self.eids = [self.eid]
-            if card.field(7) == 'THRU' and card.field(8):  # plates
-                eid2 = card.field(8)
+            if (integer_string_or_blank(card, 7, 'g1/THRU') == 'THRU' and
+                integer_or_blank(card, 8, 'eid2')):  # plates
+                eid2 = integer(card, 8, 'eid2')
                 if eid2:
                     self.eids = expand_thru([self.eid, 'THRU', eid2])
 
@@ -930,17 +1010,20 @@ class PLOAD4(Load):
                 ## used for CPENTA, CHEXA
                 self.eids = [self.eid]
                 ## used for solid element only
-                self.g1 = card.field(7)
+                self.g1 = integer_or_blank(card, 7, 'g1')
                 ## g3/g4 - different depending on CHEXA/CPENTA or CTETRA
-                self.g34 = card.field(8)
+                self.g34 = integer_or_blank(card, 8, 'g34')
 
             ## Coordinate system identification number. See Remark 2.
             ## (Integer >= 0;Default=0)
-            self.cid = card.field(9, 0)
+            self.cid = integer_or_blank(card, 9, 'cid', 0)
             #print "PLOAD4 cid = ",self.cid
-            self.NVector = card.fields(10, 13, [0., 0., 0.])
-            self.sorl = card.field(13, 'SURF')
-            self.ldir = card.field(14, 'NORM')
+            self.NVector = array([double_or_blank(card, 10, 'N1', 0.0),
+                                  double_or_blank(card, 11, 'N2', 0.0),
+                                  double_or_blank(card, 12, 'N3', 0.0)])
+            self.sorl = string_or_blank(card, 13, 'sorl', 'SURF')
+            self.ldir = string_or_blank(card, 14, 'ldir', 'NORM')
+            assert len(card) <= 15, 'len(PLOAD4 card) = %i' % len(card)
         else:
             #print "PLOAD4 = ",data
             self.sid = data[0]
@@ -953,13 +1036,12 @@ class PLOAD4(Load):
             self.NVector = data[6]
 
             self.sorl = data[7]
-            #self.ldir    = data[8]
+            #self.ldir = data[8]
             #assert len(data)==8
 
             self.g1 = self.g1
             self.g34 = self.g34
             self.eids = [self.eid]
-        ###
 
     def getLoads(self):
         return [self]
@@ -1029,37 +1111,37 @@ class PLOAD4(Load):
         p2 = set_blank_if_default(self.pressures[1], p1)
         p3 = set_blank_if_default(self.pressures[2], p1)
         p4 = set_blank_if_default(self.pressures[3], p1)
-        fields = ['PLOAD4', self.sid, eid, self.pressures[0], p2, p3, p4]
+        list_fields = ['PLOAD4', self.sid, eid, self.pressures[0], p2, p3, p4]
 
         #print "g3=|%s| g4=%s eids=|%s|" %(self.g3,self.g4,self.eids)
         if self.g1 is not None:  # is it a SOLID element
             (g1, g34) = self.nodeIDs([self.g1, self.g34])
-            fields.append(g1)
-            fields.append(g34)
+            list_fields.append(g1)
+            list_fields.append(g34)
         else:
             #print "eids = %s" %(self.eids)
             if len(self.eids) > 1:
                 #print("self.eids = %s" %(self.eids))
                 try:
-                    fields.append('THRU')
+                    list_fields.append('THRU')
                     eid = self.eids[-1]
                 except:
-                    print("g1  = %s" % (self.g1))
-                    print("g34 = %s" % (self.g34))
-                    print("self.eids = %s" % (self.eids))
+                    print("g1  = %s" % self.g1)
+                    print("g34 = %s" % self.g34)
+                    print("self.eids = %s" % self.eids)
                     raise
-                fields.append(self.getElementIDs(eid))
+                list_fields.append(self.getElementIDs(eid))
             else:
-                fields += [None, None]
-        fields.append(cid)
+                list_fields += [None, None]
+        list_fields.append(cid)
 
         n1 = set_blank_if_default(self.NVector[0], 0.0)
         n2 = set_blank_if_default(self.NVector[1], 0.0)
         n3 = set_blank_if_default(self.NVector[2], 0.0)
-        fields += [n1, n2, n3]
-        fields.append(sorl)
-        fields.append(ldir)
-        return fields
+        list_fields += [n1, n2, n3]
+        list_fields.append(sorl)
+        list_fields.append(ldir)
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()
@@ -1068,19 +1150,22 @@ class PLOAD4(Load):
 class PLOADX1(Load):
     type = 'PLOADX1'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
         if card:
-            self.sid = card.field(1)
-            self.eid = card.field(2)
-            self.pa = card.field(3)  # float
-            self.pb = card.field(4, self.pa)  # float
-            self.ga = card.field(5)  # int
-            self.gb = card.field(6)  # int
-            self.theta = card.field(7, 0.)
+            self.sid = integer(card, 1, 'sid')
+            self.eid = integer(card, 2, 'eid')
+            self.pa = double(card, 3, 'pa')
+            self.pb = double_or_blank(card, 4, 'pb', self.pa)
+            self.ga = integer(card, 5, 'ga')
+            self.gb = integer(card, 6, 'gb')
+            self.theta = double_or_blank(card, 7, 'theta', 0.)
+            assert len(card) <= 8, 'len(PLOADX1 card) = %i' % len(card)
         else:
             self.sid = data[0]
-            print("PLOADX1 = %s" % (data))
-            raise NotImplementedError('PLOADX1')
+            print("PLOADX1 = %s" % data)
+            raise NotImplementedError(data)
 
     def cross_reference(self, model):
         #self.eid = model.Element(self.eid)
@@ -1092,9 +1177,9 @@ class PLOADX1(Load):
         return [self]
 
     def rawFields(self):
-        fields = ['PLOADX1', self.sid, self.eid, self.pa, self.pb,
+        list_fields = ['PLOADX1', self.sid, self.eid, self.pa, self.pb,
                   self.ga, self.gb, self.theta]
-        return fields
+        return list_fields
 
     def reprFields(self):
         return self.rawFields()

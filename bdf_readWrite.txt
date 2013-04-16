@@ -33,7 +33,7 @@ PROD    (done)
 PBAR    (done)
 PBARL   (done)
 PBEAM   (done)
-PBEAML  (disabled)
+PBEAML  (partial)
 PBEAM3
 
 PBCOMP  (done)
@@ -70,13 +70,13 @@ PELAST  (not added)
 
 ----Bushings (Elements/Properties)----:
 CBUSH   (done)
-CBUSH1D (done, no PBUSH1D so not integrated)
-CBUSH2D (done, no PBUSH2D so not integrated)
+CBUSH1D (done)
+CBUSH2D (done)
 
 PBUSH   (done)
 PBUSH1D (done)
-PBUSH2D (not added)
-PBUSHT  (not added)
+PBUSH2D (done)
+PBUSHT  (done)
 
 ----Dampers (Elements/Properties)----:
 CDAMP1  (done)  # scalar damper
@@ -125,7 +125,9 @@ PFAST   (done)
 CGAP    (done)
 PGAP    (done)
 
-PBCOMP  (not added)
+PBCOMP  (done)
+
+PLPLANE (done)
 
 ----Rigid Elements----:
 RROD
@@ -143,7 +145,7 @@ MAT2  (done)
 MAT3  (done)
 MAT8  (done)
 MAT9  (done)
-MAT10 (done, not well tested)
+MAT10 (done)
 MATHP (done)
 
 ----Thermal Materials----:
@@ -272,6 +274,7 @@ TRIM    (done)
 ----Dynamic----:
 DAREA   (done)
 NLPARM  (done)
+NLPCI   (done)
 TSTEP   (done)
 TSTEPNL (done)
 
