@@ -842,12 +842,14 @@ class FLFACT(BaseCard):
             self._comment = comment
         if card:
             self.sid = integer(card, 1, 'sid')
+            assert len(card) > 2, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
             field3 = double_string_or_blank(card, 3, 'THRU')
             if field3 == 'THRU':
                 f1 = double(card, 2, 'f1')
                 fnf = double(card, 4, 'fnf')
                 nf = double(card, 5, 'nf')
                 fmid = double(card, 6, 'fmid')
+                assert len(card) == 7, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
                 i = linspace(0, nf, nf, endpoint=False)
                 self.factors = ((f1*(fnf-fmid)*(nf-1) + fnf*(fmid-f1)*i)/
                                    ((fnf-fmid)*(nf-1) +     (fmid-f1)*i))
@@ -927,6 +929,25 @@ class FLUTTER(BaseCard):
 
         assert self.method in ['K', 'PK', 'PKNL', 'PKS', 'PKNLS', 'KE'], 'method = %s' % self.method
 
+    def cross_reference(self, model):
+        self.density = model.FLFACT(self.density)
+        self.mach = model.FLFACT(self.density)
+        self.rfreq_val = model.FLFACT(self.density)
+
+    def get_density(self):
+        if isinstance(self.density, int):
+            return self.density
+        return self.density.sid
+
+    def get_mach(self):
+        if isinstance(self.mach, int):
+            return self.mach
+        return self.mach.sid
+
+    def get_rfreq_vel(self):
+        if isinstance(self.rfreq_vel, int):
+            return self.rfreq_vel
+        return self.rfreq_vel.sid
 
     def _rawNValueOMax(self):
         if self.method in ['K', 'KE']:
@@ -949,14 +970,14 @@ class FLUTTER(BaseCard):
 
     def rawFields(self):
         (imethod, nValue) = self._rawNValueOMax()
-        list_fields = ['FLUTTER', self.sid, self.method, self.density,
-                  self.mach, self.rfreq_vel, imethod, nValue, self.epsilon]
+        list_fields = ['FLUTTER', self.sid, self.method, self.get_density(),
+                  self.get_mach(), self.get_rfreq_vel(), imethod, nValue, self.epsilon]
         return list_fields
 
     #def reprFields(self):
         #(imethod, nValue) = self._reprNValueOMax()
-        #list_fields = ['FLUTTER', self.sid, self.method, self.density, self.mach,
-        #          self.rfreqVel, imethod, nValue, self.epsilon]
+        #list_fields = ['FLUTTER', self.sid, self.method, self.get_density(), self.get_mach(),
+        #          self.get_rfreq_vel(), imethod, nValue, self.epsilon]
         #return list_fields
 
 

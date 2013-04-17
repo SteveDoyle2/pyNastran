@@ -22,7 +22,7 @@ from pyNastran.utils.log import get_logger
 
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
-                                          PRAC2D, PRAC3D, PCONEAX, PLPLANE)
+                                          PRAC2D, PRAC3D, PCONEAX)
 
 from .cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,
                                      SpringElement)
@@ -35,7 +35,7 @@ from .cards.elements.rigid import (RBAR, RBAR1, RBE1, RBE2, RBE3, RigidElement)
 from .cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
                                    CSHEAR, CTRIA3, CTRIA6, CTRIAX,
                                    CTRIAX6, CTRIAR, ShellElement)
-from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR
+from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE
 from .cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from .cards.properties.bush import PBUSH, PBUSH1D
 from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
@@ -208,8 +208,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         ## list of case control deck lines
         self.case_control_lines = []
 
-        self.case_control_lines = []
-        self.executive_control_lines = []
         self.__init_attributes()
 
         ## the list of possible cards that will be parsed
@@ -454,7 +452,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         ## the line with SOL on it, marks ???
         self.iSolLine = None
         self.caseControlDeck = None
-        #self.executive_control_lines = [self.sol]
 
         ## store the PARAM cards
         self.params = {}

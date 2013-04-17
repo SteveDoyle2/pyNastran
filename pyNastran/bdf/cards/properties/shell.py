@@ -3,6 +3,7 @@
 All shell properties are defined in this file.  This includes:
  * PCOMP
  * PCOMPG
+ * PLPLANE
  * PSHEAR
  * PSHELL
 
@@ -466,6 +467,57 @@ class PCOMPG(PCOMP):
             #theta = set_blank_if_default(theta,0.0)
             sout = set_blank_if_default(sout, 'NO')
             list_fields += [gPlyID, mid, t, theta, sout, None, None, None]
+        return list_fields
+
+
+class PLPLANE(ShellProperty):
+    type = 'PLPLANE'
+
+    def __init__(self, card=None, data=None, comment=''):
+        ShellProperty.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+        if card:
+            ## Property ID
+            self.pid = integer(card, 1, 'pid')
+            self.mid = integer(card, 2, 'mid')  # MATHE, MATHP
+            self.cid = integer_or_blank(card, 3, 'cid', 0)
+            self.str = string_or_blank(card, 4, 'str', 'GRID')
+        else:
+            raise NotImplementedError(data)
+
+    def cross_reference(self, model):
+        msg = ' which is required by PLPLANE pid=%s' % self.pid
+        self.mid = model.Material(self.mid, msg=msg)
+        self.cid = model.Coord(self.cid, msg=msg)
+
+    def _verify(self, xref=False):
+        pid = self.Pid()
+        mid = self.Mid()
+        cid = self.Cid()
+        str = self.str
+        if xref:
+            assert self.mid.type in ['MATHE', 'MATHP'], 'mid.type=%s' % self.mid.type
+        
+    #def Pid(self):
+        #return self.pid
+
+    def Mid(self):
+        if isinstance(self.mid, int):
+            return self.mid
+        return self.mid.mid
+
+    def Cid(self):
+        if isinstance(self.cid, int):
+            return self.cid
+        return self.cid.cid
+
+    def rawFields(self):
+        list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(), self.str]
+        return list_fields
+
+    def reprFields(self):
+        list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(), self.str]
         return list_fields
 
 

@@ -50,6 +50,7 @@ class CaseControlDeck(object):
         
         # allows BEGIN BULK to be turned off
         self.write_begin_bulk = True
+        self._begin_count = 0
 
         
         self.lines = lines
@@ -219,7 +220,12 @@ class CaseControlDeck(object):
             (j, key, value, options, paramType) = self._parse_entry(lines2)
             i += 1
             if key == 'BEGIN':
+                if 'BULK' not in line and 'SUPER' not in line:
+                    raise NotImplementedError('line=%r' % line)
+                if self._begin_count == 1:
+                    raise NotImplementedError('multiple BEGIN lines are defined...')
                 self.begin_bulk = [key, value]
+                self._begin_count += 1
                 continue
             
             #print("")
@@ -292,10 +298,10 @@ class CaseControlDeck(object):
             line2 = line.replace('=', '')
             sline = line2.split()
             if len(sline) != 2:
-                msg = "trying to parse |%s|..." % (line)
+                msg = "trying to parse |%s|..." % line
                 raise RuntimeError(msg)
             (key, param_type) = sline
-            #print "key=|%s| isubcase=|%s|" %(key,isubcase)
+            #print("key=|%s| isubcase=|%s|" % (key,isubcase))
             value = int(param_type)
             #self.isubcase = int(isubcase)
             param_type = 'SUBCASE-type'
@@ -373,6 +379,21 @@ class CaseControlDeck(object):
             else:  # STRESS-type; TITLE = stuff
                 #print 'B ??? line = ',line
                 pass
+            
+            if key in ['SPC', 'MPC', 'TRIM', 'FMETHOD', 'METHOD', 'LOAD',
+                       'SUPORT', 'SUPORT1', 'TEMPERATURE(INITIAL)', 'TEMPERATURE(LOAD)']:
+                value2 = int(value)
+                assert value2 > 0, 'line=%r is invalid; value=%r must be greater than 0.' % (line, value2)
+            elif key in ['STRESS', 'STRAIN', 'SPCFORCES', 'DISPLACEMENT', 'MPCFORCES', 'SVECTOR', 'SVEC',
+                         'VELOCITY', 'ACCELERATION', 'SPCFORCE', 'ELFOR','DISP', 'FORCE', 'ESE']:
+                #ALL or int
+                pass
+            elif key in ['ECHO']:
+                pass
+            elif 'SET' in key:
+                pass
+            else:
+                raise NotImplementedError('key=%r line=%r' % (key, line))
 
         elif line_upper.startswith('BEGIN'):  # begin bulk
             try:
