@@ -212,6 +212,58 @@ class CaseControlTest(unittest.TestCase):
         deck_lines = deck_string.strip().splitlines()
         self.assertEqual(lines, deck_lines)
 
+    def test_case_control_02(self):
+        bdf_filename = os.path.join(test_path, 'unit', 'case_control.dat')
+        bdf_filename2 = os.path.join(test_path, 'unit', 'case_control_out.dat')
+
+        mesh = BDF(debug=True,log=None)
+        mesh.readBDF(bdf_filename, includeDir=None, xref=True)
+        str(mesh.caseControlDeck)
+        
+        mesh.caseControlDeck.create_new_subcase(1)
+
+        #with self.assertRaises(AssertionError):
+        str(mesh.caseControlDeck)
+        subcase1 = mesh.caseControlDeck.subcases[1]
+        str(subcase1)
+        
+        mesh.caseControlDeck.add_parameter_to_local_subcase(1, 'LOAD=1')
+        str(mesh.caseControlDeck)
+        
+        mesh.caseControlDeck.create_new_subcase(2)
+        mesh.caseControlDeck.add_parameter_to_local_subcase(2, 'LOAD=2')
+        mesh.write_bdf(bdf_filename2)
+        #print("---cc 3---\n%s" % str(mesh.caseControlDeck))
+        
+        f = open(bdf_filename2, 'r')
+        lines = f.readlines()
+        f.close()
+        
+        lines_expected = [
+            '$EXECUTIVE CONTROL DECK',
+            'SOL 101',
+            'CEND',
+            '$CASE CONTROL DECK',
+            'TITLE = STATIC',
+            'SUBCASE 1',
+            '    LOAD = 1',
+            'SUBCASE 2',
+            '    LOAD = 2',
+            'BEGIN BULK',
+            '$PARAMS',
+            'PARAM    AUTOSPC     YES',
+            'PARAM     NOFISR       0',
+            '$NODES',
+            'GRID           1              0.      0.      0.',
+            'ENDDATA',
+        ]
+        for line, line_expected in zip(lines, lines_expected):
+            line = line.rstrip()
+            msg = 'The lines are not the same...\n'
+            msg += 'line     = %r\n' % line
+            msg += 'expected = %r' % line_expected
+            self.assertEqual(line, line_expected, msg)
+
     def test_case_control_03(self):
         lines = [
             'SUBCASE 1',
@@ -271,7 +323,6 @@ class CaseControlTest(unittest.TestCase):
         #print('%s' % deck)
 
     def test_case_control_04(self):
-
         lines_expected = [
             'ACCELERATION(PLOT,PRINT,PHASE) = ALL',
             'DISPLACEMENT(PLOT,PRINT,PHASE) = ALL',
@@ -288,58 +339,59 @@ class CaseControlTest(unittest.TestCase):
             self.assertEqual(line, line_expected, msg)
         #print('%s' % deck)
     
-    def test_case_control_02(self):
-        bdf_filename = os.path.join(test_path, 'unit', 'case_control.dat')
-        bdf_filename2 = os.path.join(test_path, 'unit', 'case_control_out.dat')
 
-        mesh = BDF(debug=True,log=None)
-        mesh.readBDF(bdf_filename, includeDir=None, xref=True)
-        str(mesh.caseControlDeck)
-        
-        mesh.caseControlDeck.create_new_subcase(1)
-
-        with self.assertRaises(AssertionError):
-            str(mesh.caseControlDeck)
-        subcase1 = mesh.caseControlDeck.subcases[1]
-        str(subcase1)
-        
-        mesh.caseControlDeck.add_parameter_to_local_subcase(1, 'LOAD=1')
-        str(mesh.caseControlDeck)
-        
-        mesh.caseControlDeck.create_new_subcase(2)
-        mesh.caseControlDeck.add_parameter_to_local_subcase(2, 'LOAD=2')
-        mesh.write_bdf(bdf_filename2)
-        #print("---cc 3---\n%s" % str(mesh.caseControlDeck))
-        
-        f = open(bdf_filename2, 'r')
-        lines = f.readlines()
-        f.close()
-        
-        lines_expected = [
-            '$EXECUTIVE CONTROL DECK',
-            'SOL 101',
-            'CEND',
-            '$CASE CONTROL DECK',
-            'TITLE = STATIC',
+    def test_case_control_04(self):
+        lines = [
+            'TITLE= VIBRATION OF A BEAM.',
+            'dsaprt=(end=sens)',
+            'ECHO = UNSORT',
+            'OLOAD = ALL',
+            'DISP = ALL',
+            'DESSUB = 2',
+            'METHOD = 1',
+            'ANALYSIS = MODES',
+            'DESOBJ = 1',
             'SUBCASE 1',
-            '    LOAD = 1',
+            'DESSUB = 1',
+            ' SUPER 1',
             'SUBCASE 2',
-            '    LOAD = 2',
             'BEGIN BULK',
-            '$PARAMS',
-            'PARAM    AUTOSPC     YES',
-            'PARAM     NOFISR       0',
-            '$NODES',
-            'GRID           1              0.      0.      0.',
-            'ENDDATA',
         ]
-        for line, line_expected in zip(lines, lines_expected):
+        lines_expected = [
+            'ANALYSIS = MODES',
+            'DESOBJ = 1',
+            'DESSUB = 2',
+            'DISPLACEMENT = ALL',
+            'ECHO = UNSORT',
+            'METHOD = 1',
+            'OLOAD = ALL',
+            'TITLE = VIBRATION OF A BEAM.',
+            'dsaprt=(end=sens)',
+            'SUBCASE 1',
+            '    SUPER 1',
+            '    DESSUB = 1',
+            'SUBCASE 2',
+            '    ANALYSIS = MODES',
+            '    DESOBJ = 1',
+            '    DESSUB = 2',
+            '    DISPLACEMENT = ALL',
+            '    ECHO = UNSORT',
+            '    METHOD = 1',
+            '    OLOAD = ALL',
+            '    TITLE = VIBRATION OF A BEAM.',
+            '    dsaprt=(end=sens)',
+            'BEGIN BULK',
+        ]
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        for line, line_expected in zip(deck_lines, lines_expected):
             line = line.rstrip()
             msg = 'The lines are not the same...\n'
             msg += 'line     = %r\n' % line
             msg += 'expected = %r' % line_expected
             self.assertEqual(line, line_expected, msg)
-
 
 if __name__ == '__main__':
     unittest.main()

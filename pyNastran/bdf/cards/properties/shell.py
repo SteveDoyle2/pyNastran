@@ -193,7 +193,7 @@ class PCOMP(ShellProperty):
             mid = self.plies[iply][0]
             self.plies[iply][0] = model.Material(mid)  # mid
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         pid = self.Pid()
         isSym = self.isSymmetrical()
         nplies = self.nPlies()
@@ -409,7 +409,7 @@ class PCOMPG(PCOMP):
         else:
             raise NotImplementedError('PCOMPG data')
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         pid = self.Pid()
         isSym = self.isSymmetrical()
         nplies = self.nPlies()
@@ -486,9 +486,9 @@ class PSHEAR(ShellProperty):
             ## Material ID
             self.mid = integer(card, 2, 'mid')
             self.t = double(card, 3, 't')
-            self.nsm = double_or_blank(card, 4, 0.0)
-            self.f1 = double_or_blank(card, 5, 0.0)
-            self.f2 = double_or_blank(card, 6, 0.0)
+            self.nsm = double_or_blank(card, 4, 'nsm', 0.0)
+            self.f1 = double_or_blank(card, 5, 'f1', 0.0)
+            self.f2 = double_or_blank(card, 6, 'f2', 0.0)
             assert self.t > 0.0
             #assert self.f1 >= 0.0
             #assert self.f2 >= 0.0
@@ -573,7 +573,7 @@ class PSHELL(ShellProperty):
         assert self.t > 0.0, ('the thickness must be defined on the PSHELL'
                               ' card (Ti field not supported)')
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
         mid1 = self.Mid1()
@@ -590,10 +590,12 @@ class PSHELL(ShellProperty):
 
         mids = [mid for mid in [self.mid1, self.mid2, self.mid3, self.mid4] if mid is not None]
         assert len(mids) > 0
-        if isxref:
+        if xref:
             assert isinstance(self.mid(), Material), 'mid=%r' % self.mid()
             
             for mid in mids:
+                assert isinstance(mid, Material), 'mid=%r' % mid
+                assert mid.type in ['MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8'], 'pid.type=%s mid.type=%s' % (self.type, mid.type)
                 if mid.type == 'MAT1':
                     E = mid.E()
                     G = mid.G()
@@ -603,14 +605,16 @@ class PSHELL(ShellProperty):
                     assert isinstance(G, float), 'G=%r' % G
                     assert isinstance(nu, float), 'nu=%r' % nu
                     assert isinstance(rho, float), 'rho=%r' % rho
-                elif mid.type == 'MAT4':
-                    pass
-                elif mid.type == 'MAT5':
-                    pass
-                elif mid.type == 'MAT8':
-                    pass
-                else:
-                    raise NotImplementedError('pid.type=%s mid.type=%s' % (self.type, mid.type))
+                #elif mid.type == 'MAT2':
+                    #pass
+                #elif mid.type == 'MAT4':
+                    #pass
+                #elif mid.type == 'MAT5':
+                    #pass
+                #elif mid.type == 'MAT8':
+                    #pass
+                #else:
+                    #raise NotImplementedError('pid.type=%s mid.type=%s' % (self.type, mid.type))
 
             t = self.Thickness()
             nsm = self.Nsm()

@@ -1,4 +1,9 @@
+from .BDF_Card import BDFCard
+
 def components(card, n, fieldname):
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     svalue = card.field(n)
     if isinstance(svalue, int):
         pass
@@ -30,6 +35,9 @@ def components(card, n, fieldname):
     return svalue3
 
 def components_or_blank(card, n, fieldname, default=None):
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     svalue = card.field(n)
     if svalue is None:
         return default
@@ -44,6 +52,9 @@ def components_or_blank(card, n, fieldname, default=None):
         return default
 
 def blank(card, n, fieldname, default=None):
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     svalue = card.field(n)
     if svalue is None:
         return default
@@ -56,6 +67,9 @@ def blank(card, n, fieldname, default=None):
     raise SyntaxError('%s = %r (field #%s) on card must be blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     
 def field(card, n, fieldname):
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     return integer_double_string_or_blank(card, n, fieldname, default=None)
 
 #def integer_double_string_or_blank(card, n, fieldname, default=None):
@@ -76,6 +90,9 @@ def field(card, n, fieldname):
         #return svalue
 
 def integer_double_string_or_blank(card, n, fieldname, default=None):
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     #try:
     svalue = card.field(n)
     #except IndexError:
@@ -106,6 +123,8 @@ def integer_double_string_or_blank(card, n, fieldname, default=None):
 #def assert_int_bounded_range(card, n, fieldname, lower=None, upper=None):
 
 def fields(f, card, fieldname, i, j=None):  ## @todo: improve fieldname
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     fs = []
     if j is None:
         j = len(card)
@@ -114,6 +133,8 @@ def fields(f, card, fieldname, i, j=None):  ## @todo: improve fieldname
     return fs
 
 def fields_or_blank(f, card, fieldname, i, j=None, defaults=None):
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     fs = []
     if j is None:
         j = len(card)
@@ -124,6 +145,9 @@ def fields_or_blank(f, card, fieldname, i, j=None, defaults=None):
     return fs
 
 def integer(card, n, fieldname):
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     try:
         svalue = card.field(n)
     except IndexError:
@@ -140,6 +164,9 @@ def integer(card, n, fieldname):
         raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
 
 def integer_or_blank(card, n, fieldname, default=None):
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     #try:
     svalue = card.field(n)
     #except IndexError:
@@ -163,6 +190,9 @@ def integer_or_blank(card, n, fieldname, default=None):
     #return default
     
 def double(card, n, fieldname):
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     try:
         svalue = card.field(n)
     except IndexError:
@@ -211,6 +241,9 @@ def double(card, n, fieldname):
     return value
 
 def double_or_blank(card, n, fieldname, default=None):
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     #try:
     svalue = card.field(n)
     #except IndexError:
@@ -227,6 +260,9 @@ def double_or_blank(card, n, fieldname, default=None):
     return default
     
 def double_or_string(card, n, fieldname):
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     #try:
     svalue = card.field(n)
     #except IndexError:
@@ -263,6 +299,9 @@ def double_string_or_blank(card, n, fieldname, default=None):
     @return a double, string, or default value
     @raise SyntaxError if there is an invalid type
     """
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     #try:
     svalue = card.field(n)
     #except IndexError:
@@ -299,6 +338,9 @@ def integer_or_double(card, n, fieldname):
     @return the value with the proper type
     @raise SyntaxError if there's an invalid type
     """
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     #try:
     svalue = card.field(n)
     #except IndexError:
@@ -323,6 +365,9 @@ def integer_or_double(card, n, fieldname):
     return value
 
 def integer_double_or_blank(card, n, fieldname, default=None):
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     #try:
     svalue = card.field(n)
     #except IndexError:
@@ -342,6 +387,9 @@ def integer_double_or_blank(card, n, fieldname, default=None):
     return default
     
 def integer_or_string(card, n, fieldname):
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     #try:
     svalue = card.field(n)
     #except IndexError:
@@ -369,6 +417,9 @@ def integer_or_string(card, n, fieldname):
     return value
 
 def integer_string_or_blank(card, n, fieldname, default=None):
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     #try:
     svalue = card.field(n)
     #except IndexError:
@@ -408,6 +459,9 @@ def getType(value):
 
 
 def integer_double_or_string(card, n, fieldname):
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     #try:
     svalue = card.field(n)
     #except IndexError:
@@ -432,6 +486,9 @@ def integer_double_or_string(card, n, fieldname):
 
 
 def string(card, n, fieldname):
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     svalue = card.field(n)
     if isinstance(svalue, str) or isinstance(svalue, unicode):
         svalue = svalue.strip()
@@ -452,6 +509,9 @@ def string(card, n, fieldname):
 
 
 def string_or_blank(card, n, fieldname, default=None):
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(n, int), type(n)
+    assert isinstance(fieldname, str) or isinstance(fieldname, unicode), type(fieldname)
     svalue = card.field(n)
     if svalue is None:
         return default

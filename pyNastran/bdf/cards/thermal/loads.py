@@ -236,8 +236,8 @@ class QHBDY(ThermalLoad):
             self.af = data[3]
             self.grids = data[4:]
 
-    #def cross_reference(self,model):
-    #    pass
+    def cross_reference(self, model):
+        pass
 
     def rawFields(self):
         list_fields = ['QHBDY', self.sid, self.flag, self.Q0, self.af] + self.grids

@@ -261,7 +261,7 @@ class TSTEPNL(BaseCard):
             elif self.method == 'ITER':
                 self.kStep = integer_or_blank(card, 6, 'kStep', 10)
             elif self.method in ['AUTO', 'TSTEP']:
-                self.kStep = blank(card, 'kStep', 6) ## @todo not blank
+                self.kStep = blank(card, 6, 'kStep') ## @todo not blank
             else:
                 msg = 'invalid TSTEPNL Method.  method=|%s|' % (self.method)
                 raise RuntimeError(msg)
