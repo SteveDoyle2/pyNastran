@@ -895,7 +895,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
         #print "opening self.active_filename=%s" % bdf_filename
         if bdf_filename in self.active_filenames:
-            msg = 'bdf_filename=%s is already active.\nused_filenames=%s' % self.active_filenames
+            msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' % (bdf_filename, self.active_filenames)
             raise RuntimeError(msg)
         self.log.info('opening %r' % bdf_filename)
         

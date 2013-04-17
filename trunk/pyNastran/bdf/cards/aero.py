@@ -1,4 +1,24 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0302,C0111
+"""
+All aero cards are defined in this file.  This includes:
+ * AEFACT
+ * AELINK
+ * AELIST
+ * AEPARM
+ * AESTAT
+ * AESURF / AESURFS
+ * AERO / AEROS
+ * CSSCHD
+ * CAERO1 / CAERO2 / CAERO3 / CAERO4 / CAERO5
+ * FLFACT
+ * FLUTTER
+ * GUST
+ * MKAERO1 / MKAERO2
+ * PAERO1 / PAERO2
+ * SPLINE1 / SPLINE2 / SPLINE4 / SPLINE5
+
+All cards are BaseCard objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
@@ -14,6 +34,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (fields,
     string, string_or_blank,
     integer_or_string, double_string_or_blank,
     blank)
+
 
 class AEFACT(BaseCard):
     """

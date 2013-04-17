@@ -1,4 +1,18 @@
 # pylint: disable=R0904,R0902
+"""
+All constraint cards are defined in this file.  This includes:
+ * SUPORT
+ * SUPORT1
+ * SPC
+ * SPC1
+ * SPCAX
+ * SPCD
+ * SPCADD
+ * MPC
+ * MPCADD
+
+All cards are Constraint objects.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import ceil
@@ -150,15 +164,15 @@ class SUPORT1(Constraint):
 
     def __init__(self, card=None, data=None, comment=''):
         Constraint.__init__(self, card, data)
+
+        self.IDs = []
+        self.Cs = []
         if comment:
             self._comment = comment
         if card:
             self.conid = integer(card, 1, 'conid')  # really a support id sid
 
-            self.IDs = []
-            self.Cs = []
             nfields = len(card)
-            
             assert len(card) > 2
             nterms = int((nfields - 1.) / 2.)
             n = 1
@@ -172,6 +186,8 @@ class SUPORT1(Constraint):
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
+        assert len(self.IDs) > 0
+        assert len(self.IDs) == len(self.Cs)
 
     def rawFields(self):
         fields = ['SUPORT1', self.conid]
@@ -183,7 +199,7 @@ class SUPORT1(Constraint):
 class SUPORT(Constraint):
     """
     @code
-    SUPORT      ID1 C1 ID2 C2 ID3 C3 ID4 C4
+    SUPORT  ID1 C1 ID2 C2 ID3 C3 ID4 C4
     SUPORT1 SID ID1 C1 ID2 C2 ID3 C3
     @endcode
     """
@@ -193,16 +209,30 @@ class SUPORT(Constraint):
         Constraint.__init__(self, card, data)
         if comment:
             self._comment = comment
-        if card:
-            fields = card.fields(1)
-        else:
-            fields = data
 
         self.IDs = []
         self.Cs = []
-        for i in xrange(0, len(fields), 2):
-            self.IDs.append(fields[i])
-            self.Cs.append(fields[i + 1])
+        if card:
+            fields = card.fields(1)
+
+            nfields = len(card)
+            assert len(card) > 1, card
+            nterms = int(nfields / 2.)
+            n = 1
+            for i in xrange(nterms):
+                nstart = 1 + 2 * i
+                ID = integer(card, nstart, 'ID%s' % n)
+                C = components_or_blank(card, nstart + 1, 'component%s' % n, '0')
+                self.IDs.append(ID)
+                self.Cs.append(C)
+                n += 1
+        else:
+            fields = data
+            for i in xrange(0, len(fields), 2):
+                self.IDs.append(fields[i])
+                self.Cs.append(fields[i + 1])
+        assert len(self.IDs) > 0
+        assert len(self.IDs) == len(self.Cs)
 
     def rawFields(self):
         fields = ['SUPORT']
