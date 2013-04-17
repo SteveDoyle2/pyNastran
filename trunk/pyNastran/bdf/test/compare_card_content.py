@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import izip, count
 
 from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
-from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpret_value
+from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.fieldWriter import print_field, print_card
 
 

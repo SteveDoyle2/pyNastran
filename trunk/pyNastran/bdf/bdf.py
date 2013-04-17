@@ -889,7 +889,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         bdf_filename = os.path.join(self.include_dir, str(bdf_filename))
         if not os.path.exists(bdf_filename):
-            raise IOError('No such bdf_filename: %r' % self.bdf_filename)
+            msg = 'No such bdf_filename: %r\n' % bdf_filename
+            msg += 'cwd: %r' % os.getcwd()
+            raise IOError(msg)
 
         #print "opening self.active_filename=%s" % bdf_filename
         if bdf_filename in self.active_filenames:

@@ -10,7 +10,7 @@ from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_field_16
 
 
-from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpret_value
+from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 
 
 class TestFieldWriter(unittest.TestCase):
