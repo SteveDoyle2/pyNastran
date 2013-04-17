@@ -56,8 +56,8 @@ class Coord(BaseCard):
             e13 = self.e3 - self.e1
             ## e_{12}
             e12 = self.e2 - self.e1
-            #print "e13 = %s" %(e13)
-            #print "e12 = %s" %(e12)
+            #print("e13 = %s" % e13)
+            #print("e12 = %s" % e12)
         except TypeError:
             msg = ''
             msg += "\ntype = %s\n" % (self.type)
@@ -127,22 +127,106 @@ class Coord(BaseCard):
             print("e13 = %s" % (e13))
             print("e12 = %s" % (e12))
             print('-----')
-            print("i   = %s" % (self.i))
-            print("j   = %s" % (self.j))
-            print("k   = %s\n" % (self.k))
+            print("i   = %s" % self.i)
+            print("j   = %s" % self.j)
+            print("k   = %s\n" % self.k)
             print('-----')
 
         #except TypeError:
         #    msg  = 'There is a problem handling these lines:\n'
         #    msg += '    self.k = self.normalize(self.e3-self.e1)\n'
         #    msg += '    self.ex0 = self.normalize(self.e2-self.e1)\n'
-        #    msg += 'e1=%s Type=%s\n' %(self.e1,type(self.e1))
-        #    msg += 'e2=%s Type=%s\n' %(self.e2,type(self.e2))
-        #    msg += 'e3=%s Type=%s\n' %(self.e3,type(self.e3))
+        #    msg += 'e1=%s Type=%s\n' % (self.e1,type(self.e1))
+        #    msg += 'e2=%s Type=%s\n' % (self.e2,type(self.e2))
+        #    msg += 'e3=%s Type=%s\n' % (self.e3,type(self.e3))
         #    #print msg
         #    raise CoordTypeError(msg)
-        #print "k = %s" %(self.k)
-        #print "e13 = %s" %(e13)
+        #print("k = %s" % self.k)
+        #print("e13 = %s" %e13)
+
+    def transformToGlobal(self, p, resolveAltCoord=True, debug=False):
+        r"""
+        Transforms a point from the local coordinate system to the reference
+        coordinate frames "global" coordinate system.
+
+        \f[ \large [p_{global}]_{1\times 3} =
+            [p_{local} -p_{origin}]_{1\times 3}[\beta_{ij}]_{3\times 3}  \f]
+
+        where   \f$ [\beta]_{ij} \f$ is the transformation matrix
+        \f[ \large  [\beta]_{ij} \left[
+          \begin{array}{ccc}
+              g_x \cdot i  &  g_x \cdot j  &  g_x \cdot k    \\
+              g_y \cdot i  &  g_y \cdot j  &  g_y \cdot k    \\
+              g_z \cdot i  &  g_z \cdot j  &  g_z \cdot k
+          \end{array} \right]
+        \f]
+
+        * \f$ g  \f$ is the global directional vector (e.g. \f$ g_x = [1,0,0]\f$)
+        * \f$ ijk \f$ is the ith direction in the local coordinate system
+
+        @param self the coordinate system object
+        @param p the point to be transformed.  Type=NUMPY.NDARRAY
+        @param resolveAltCoord should the CD field be resolved (default=True)
+        @param debug developer debug (default=False)
+        @warning
+          make sure you cross-reference before calling this
+        @warning
+          you probably shouldnt call this, call the Node methods Position
+          and PositionWRT
+        """
+        if debug:
+            print("p = %s" % p)
+            print("p-e1 = %s" % (p - self.e1))
+
+        if not self.isResolved:
+            self.resolveCid()
+        if self.cid == 0:
+            return p, array([[1., 0., 0.],
+                             [0., 1., 0.],
+                             [0., 0., 1.]])
+
+        # the ijk axes arent resolved as R-theta-z, only points
+        if resolveAltCoord:
+            #print("p* = %s" % p)
+            p = self.coordToXYZ(p)
+        #p2 = p-self.eo
+
+        # Bij = Bip*j
+        i = self.i
+        j = self.j
+        k = self.k
+        if isinstance(self.rid, int):  # rid=0
+            gx = array([1., 0., 0.])
+            gy = array([0., 1., 0.])
+            gz = array([0., 0., 1.])
+        else:
+            gx = self.rid.i
+            gy = self.rid.j
+            gz = self.rid.k
+
+        matrix = array([[dot(gx, i), dot(gy, i), dot(gz, i)],
+                        [dot(gx, j), dot(gy, j), dot(gz, j)],
+                        [dot(gx, k), dot(gy, k), dot(gz, k)]])
+        p2 = dot(p - self.e1, matrix)
+        p3 = p2 + self.e1
+
+        if debug:
+            print("Cp = ", self.Cid())
+            print("gx = %s" % (gx))
+            print("gy = %s" % (gy))
+            print("gz = %s" % (gz))
+            print("p = %s" % (list_print(p)))
+            print("matrix = \n", matrix)
+            print("e1 = %s" % (list_print(self.e1)))
+            print("p2 = %s" % (list_print(p2)))
+            print('------------------------')
+            print("p3 = %s\n" % (list_print(p3)))
+
+        if isinstance(self.rid, int):
+            return (p3, matrix)
+        else:
+            ## @todo do i need to multiply rid.transform(p3)[1]*matrix
+            return (self.rid.transformToGlobal(p3)[0], matrix)
 
     def transformToLocal(self, p, matrix, debug=False):
         r"""
@@ -177,10 +261,10 @@ class Coord(BaseCard):
         pCoord = dot(p - self.e1, transpose(matrix))
         pLocal = self.XYZtoCoord(pCoord)
         if debug:
-            print("p      = %s" % (p))
+            print("p      = %s" % p)
             print("p-e1   = %s" % (p - self.e1))
-            print("pLocal = %s\n" % (pLocal))
-            print("pCoord = %s" % (pCoord))
+            print("pLocal = %s\n" % pLocal)
+            print("pCoord = %s" % pCoord)
         return pLocal
 
     def normalize(self, v):
@@ -227,8 +311,8 @@ class Coord(BaseCard):
 
 class RectangularCoord(object):
     def coordToXYZ(self, p):
-        #print("p = %s" %(p))
-        #print("e1 = %s" %(self.e1))
+        #print("p = %s" % p)
+        #print("e1 = %s" % self.e1)
         return p + self.e1
 
     def XYZtoCoord(self, p):
@@ -378,14 +462,14 @@ class Cord2x(Coord):
         """
         #print str(self)
         #print self.rid
-        #print "cid=%s rid=%s"%(self.cid, self.Rid())
+        #print "cid=%s rid=%s"% (self.cid, self.Rid())
         if self.cid == 0 or isinstance(self.rid, int) or self.rid.isResolved:
             return  # rid=0 so already resolved
         elif self.rid.isResolved is False:  # rid
             #msg  = ('there is a circular reference between Coord %s and '
-            #        'Coord %s' %(self.cid,self.Rid()))
+            #        'Coord %s' % (self.cid, self.Rid()))
             #assert self.rid.isCrossReferenced==False,msg)
-            #print "  resolving cid=%s rid=%s" %(self.cid,self.Rid())
+            #print "  resolving cid=%s rid=%s" % (self.cid, self.Rid())
             self.rid.resolveCid()
 
         ## rid coordinate system is now resolved, time to resolve the cid
@@ -420,90 +504,6 @@ class Cord2x(Coord):
         self.isCrossReferenced = True
         if self.rid != 0:
             self.rid = model.Coord(self.rid)
-
-    def transformToGlobal(self, p, resolveAltCoord=True, debug=False):
-        r"""
-        Transforms a point from the local coordinate system to the reference
-        coordinate frames "global" coordinate system.
-
-        \f[ \large [p_{global}]_{1\times 3} =
-            [p_{local} -p_{origin}]_{1\times 3}[\beta_{ij}]_{3\times 3}  \f]
-
-        where   \f$ [\beta]_{ij} \f$ is the transformation matrix
-        \f[ \large  [\beta]_{ij} \left[
-          \begin{array}{ccc}
-              g_x \cdot i  &  g_x \cdot j  &  g_x \cdot k    \\
-              g_y \cdot i  &  g_y \cdot j  &  g_y \cdot k    \\
-              g_z \cdot i  &  g_z \cdot j  &  g_z \cdot k
-          \end{array} \right]
-        \f]
-
-        * \f$ g  \f$ is the global directional vector (e.g. \f$ g_x = [1,0,0]\f$)
-        * \f$ ijk \f$ is the ith direction in the local coordinate system
-
-        @param self the coordinate system object
-        @param p the point to be transformed.  Type=NUMPY.NDARRAY
-        @param resolveAltCoord should the CD field be resolved (default=True)
-        @param debug developer debug (default=False)
-        @warning
-          make sure you cross-reference before calling this
-        @warning
-          you probably shouldnt call this, call the Node methods Position
-          and PositionWRT
-        """
-        if debug:
-            print("p = %s" % (p))
-            print("p-e1 = %s" % (p - self.e1))
-
-        if not self.isResolved:
-            self.resolveCid()
-        if self.cid == 0:
-            return p, array([[1., 0., 0.],
-                             [0., 1., 0.],
-                             [0., 0., 1.]])
-
-        # the ijk axes arent resolved as R-theta-z, only points
-        if resolveAltCoord:
-            #print("p* = %s" %(p))
-            p = self.coordToXYZ(p)
-        #p2 = p-self.eo
-
-        # Bij = Bip*j
-        i = self.i
-        j = self.j
-        k = self.k
-        if isinstance(self.rid, int):  # rid=0
-            gx = array([1., 0., 0.])
-            gy = array([0., 1., 0.])
-            gz = array([0., 0., 1.])
-        else:
-            gx = self.rid.i
-            gy = self.rid.j
-            gz = self.rid.k
-
-        matrix = array([[dot(gx, i), dot(gy, i), dot(gz, i)],
-                        [dot(gx, j), dot(gy, j), dot(gz, j)],
-                        [dot(gx, k), dot(gy, k), dot(gz, k)]])
-        p2 = dot(p - self.e1, matrix)
-        p3 = p2 + self.e1
-
-        if debug:
-            print("Cp = ", self.Cid())
-            print("gx = %s" % (gx))
-            print("gy = %s" % (gy))
-            print("gz = %s" % (gz))
-            print("p = %s" % (list_print(p)))
-            print("matrix = \n", matrix)
-            print("e1 = %s" % (list_print(self.e1)))
-            print("p2 = %s" % (list_print(p2)))
-            print('------------------------')
-            print("p3 = %s\n" % (list_print(p3)))
-
-        if isinstance(self.rid, int):
-            return (p3, matrix)
-        else:
-            ## @todo do i need to multiply rid.transform(p3)[1]*matrix
-            return (self.rid.transformToGlobal(p3)[0], matrix)
 
     def Rid(self):
         """Returns the reference coordinate system self.rid"""
@@ -585,7 +585,7 @@ class Cord1x(Coord):
                                                                   type1))
         model.coords[self.cid] = coord
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         cid = self.Cid()
         assert isinstance(cid, int), 'cid=%r' % cid
 
@@ -697,7 +697,7 @@ class CORD3G(Coord):  # not done
             return self.cidRef
         return self.cidRef.cid
 
-    def transformToGlobal(self, p, debug=False):
+    def coord3g_transformToGlobal(self, p, debug=False):
         """
         @param self the coordinate system object
         @param p the point to transform.  TYPE=NUMPY.NDARRAY.
@@ -835,7 +835,7 @@ class CORD2R(Cord2x, RectangularCoord):
         if comment:
             self._comment = comment
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         cid = self.Cid()
         rid = self.Rid()
         assert isinstance(cid, int), 'cid=%r' % cid
@@ -862,7 +862,7 @@ class CORD2S(Cord2x, SphericalCoord):
         if comment:
             self._comment = comment
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         cid = self.Cid()
         rid = self.Rid()
         assert isinstance(cid, int), 'cid=%r' % cid
@@ -889,7 +889,7 @@ class CORD2C(Cord2x, CylindricalCoord):
         if comment:
             self._comment = comment
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         cid = self.Cid()
         rid = self.Rid()
         assert isinstance(cid, int), 'cid=%r' % cid

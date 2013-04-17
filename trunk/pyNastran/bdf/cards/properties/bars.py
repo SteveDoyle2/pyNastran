@@ -531,7 +531,7 @@ class PROD(LineProperty):
             self.mid = integer(card, 2, 'mid')
             self.A = double(card, 3, 'A')
             self.j = double_or_blank(card, 4, 'J', 0.0)
-            self.c = double_or_blank(card, 5, 0.0)
+            self.c = double_or_blank(card, 5, 'c', 0.0)
             self.nsm = double_or_blank(card, 6, 'nsm', 0.0)
             assert len(card) <= 7, 'len(PROD card) = %i' % len(card)
         else:
@@ -542,7 +542,7 @@ class PROD(LineProperty):
             self.c = data[4]
             self.nsm = data[5]
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
         A = self.Area()
@@ -614,7 +614,7 @@ class PTUBE(LineProperty):
             self.OD2 = self.OD1
             #self.OD2 = data[5]  ## @note quirk to this one...
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
         A = self.Area()
@@ -750,7 +750,7 @@ class PBAR(LineProperty):
             self.K2 = data[17]
             self.i12 = data[18]
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
         A = self.Area()
@@ -937,7 +937,7 @@ class PBARL(LineProperty):
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
         A = self.Area()
@@ -995,34 +995,104 @@ class PBARL(LineProperty):
     #def I12(self):
         #return self.I12()
     
-    def _points(self):
-        if self.Type in ['BAR']:
-            (d1, d2) = self.dim
-            Area = d1*d2
-            y1 = d2/2.
-            x1 = d1/2.
+    def _points(self, Type, dim):
+        if Type in ['BAR']:  # origin ar center
+            (d1, d2) = dim
+            Area = d1 * d2
+            y1 = d2 / 2.
+            x1 = d1 / 2.
             points = [  # start at upper right, go clockwise
                 [x1, y1],    # p1
                 [x1, y1],    # p2
                 [-x1, -y1],  # p3
                 [-x1, -y1],  # p4
             ]
-        elif self.Type in ['T2']:
-            (d1, d2, d3, d4) = self.dim
-            y1 = d2-d3/2
-            y2 = d3/2.
-            y3 = -y2
-            x1 = d4/2
-            x2 = d1/2
+        elif Type in ['CROSS']:
+            (d1, d2, d3, d4) = dim  # origin at center
+            x1 = d2 / 2.
+            x2 = d2 / 2. + d1
+            y1 = -d3 / 2.
+            y2 = -d4 / 2.
+            y3 = d4 / 2.
+            y4 = d3 / 2.
+            points = [  # start at top right, go clockwise, down first
+                [x1, y4],  # p1
+                [x1, y3],  # p2
+                [x2, y3],  # p3
+                [x2, y2],  # p4
+                [x1, y2],  # p5
+                [x1, y1],  # p6
+
+                [-x1, y1],  # p7
+                [-x1, y2],  # p8
+                [-x2, y2],  # p9
+                [-x2, y3],  # p10
+                [-x1, y3],  # p11
+                [-x1, y4],  # p12
+            ]
+            Area = d2*d3 + 2*d1*d4
+        elif Type in ['HEXA']:
+            (d1, d2, d3) = dim
+            x1 = d2 / 2. - d1
+            x2 = d2 / 2.
+            y1 = 0.
+            y2 = d3 / 2.
+            y3 = d3
+            points = [  # start at upper center, go clockwise, diagonal down right
+                [x1, y3],   # p1
+                [x2, y2],   # p2
+                [x1, y1],   # p3
+                [x1, y1],   # p4
+                [-x2, y2],  # p5
+                [-x1, y3],  # p6
+            ]
+            Area = d1 * (d2 + 2 * d3)
+
+        elif Type in ['I']:
+            (d1, d2, d3) = dim
+            asdf
+
+        elif Type in ['H']:
+            (d1, d2, d3, d4) = dim
+            x1 = d1 / 2.
+            x2 = (d1 + d2) / 2.
+            y3 = d4 / 2.
+            y4 = d3 / 2.
+            y1 = -y4
+            y2 = -y3
+            points = [  # start at top of H in dip, go clockwise, up first
+                [x1, y3],  # p1 # right side
+                [x1, y4],  # p2
+                [x2, y4],  # p3
+                [x2, y1],  # p4
+                [x1, y1],  # p5
+                [x1, y2],  # p6
+
+                [-x1, y2],  # p7 # left side
+                [-x1, y1],  # p8
+                [-x2, y1],  # p9
+                [-x2, y4],  # p10
+                [-x1, y4],  # p11
+                [-x1, y3],  # p12
+            ]
+            Area = d2 * d3 + d1 * d4
+
+        elif Type in ['T2']:
+            (d1, d2, d3, d4) = dim  # check origin, y3 at bottom, x1 innner
+            x1 = d4 / 2.
+            x2 = d1 / 2.
+            y1 = -d3 / 2.
+            y2 =  d3 / 2.
+            y3 = -d3 / 2.
             points = [  # start at upper right, go clockwise
-                [x1, y1],   # p1
+                [x1, y3],   # p1
                 [x1, y2],   # p2
                 [x2, y2],   # p3
-                [x2, y3],   # p4
-                [-x2, y3],  # p5
+                [x2, y1],   # p4
+                [-x2, y1],  # p5
                 [-x2, y2],  # p6
                 [-x1, y2],  # p7
-                [-x1, y1]   # p8
+                [-x1, y3]   # p8
             ]
             Area = d1*d3 + (d2-d3)*d4
         else:
@@ -1048,22 +1118,47 @@ class PBARL(LineProperty):
             Ixx = pi*(rout**4 - rin**4)/4
             Iyy = Ixx
             Ixy = 0.
-        #elif self.Type in ['BOX']:
-            #(d1, d2, d3, d4) = self.dim
-            #hout = d2
-            #wout = d1
-            #win = d1 - 2 * d4
-            #hin = d2 - 2 * d3
+        elif self.Type in ['BOX']:
+            (d1, d2, d3, d4) = self.dim
+            hout = d2
+            wout = d1
+            hin = d2 - 2. * d3
+            win = d1 - 2. * d4
+            points, Area = self._points('BAR', [hout, wout])
+            yi = points[0,:-1]
+            yip1 = points[0,1:]
+            xi = points[1,:-1]
+            xip1 = points[1,1:]
+            
+            ## @see http://en.wikipedia.org/wiki/Area_moment_of_inertia
+            ai = xi*yip1 - xip1*yi
+            Ixx1 = 1/12*sum((yi**2 + yi*yip1+yip1**2)*ai)
+            Iyy1 = 1/12*sum((xi**2 + xi*xip1+xip1**2)*ai)
+            #Ixy1 = 1/24*sum((xi*yip1 + 2*xi*yi + 2*xip1*yip1 + xip1*yi)*ai)
+
+            points, Area = self._points('BAR', [hin, win])
+            yi = points[0,:-1]
+            yip1 = points[0,1:]
+            xi = points[1,:-1]
+            xip1 = points[1,1:]
+            
+            ## @see http://en.wikipedia.org/wiki/Area_moment_of_inertia
+            ai = xi*yip1 - xip1*yi
+            Ixx2 = 1/12*sum((yi**2 + yi*yip1+yip1**2)*ai)
+            Iyy2 = 1/12*sum((xi**2 + xi*xip1+xip1**2)*ai)
+            #Ixy2 = 1/24*sum((xi*yip1 + 2*xi*yi + 2*xip1*yip1 + xip1*yi)*ai)
+            
+            Ixx = Ixx1 - Ixx2
+            Iyy = Iyy1 - Iyy2
+            #Ixy = Ixy1 - Ixy2
 
         #elif self.Type in ['BAR']:
             #assert len(self.dim) == 2, 'dim=%r' % self.dim
             #b, h = self.dim
             #(Ix, Iy, Ixy) = self.I1_I2_I12()
             #J = Ix + Iy
-        elif self.Type in ['BAR', 'T2']:
-            points, Area = self._points()
-            Ixx = 0.
-            
+        elif self.Type in ['BAR', 'CROSS', 'HEXA', 'T2', 'H']:
+            points, Area = self._points(self.Type, self.dim)
             yi = points[0,:-1]
             yip1 = points[0,1:]
 
@@ -1075,7 +1170,6 @@ class PBARL(LineProperty):
             Ixx = 1/12*sum((yi**2 + yi*yip1+yip1**2)*ai)
             Iyy = 1/12*sum((xi**2 + xi*xip1+xip1**2)*ai)
             #Ixy = 1/24*sum((xi*yip1 + 2*xi*yi + 2*xip1*yip1 + xip1*yi)*ai)
-
         else:
             msg = 'J for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
             raise NotImplementedError(msg)

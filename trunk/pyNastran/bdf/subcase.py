@@ -706,7 +706,16 @@ class Subcase(object):
                     msg += self.print_param(key, param)
                     nparams += 1
                     #print ""
-            assert nparams > 0, 'No subcase paramters are defined for isubcase=%s...' % self.id
+            if nparams == 0:
+                for (key, param) in self.subcase_sorted(self.params.items()):
+                    #print("key=%s param=%s" %(key, param))
+                    (value, options, paramType) = param
+                    #print("  *key=|%s| value=|%s| options=%s "
+                          #"paramType=|%s|" % (key, value, options, paramType))
+                    msg += self.print_param(key, param)
+                    nparams += 1
+                assert nparams > 0, 'No subcase paramters are defined for isubcase=%s...' % self.id
+
         return msg
 
     def subcase_sorted(self, lst):

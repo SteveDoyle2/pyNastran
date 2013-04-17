@@ -42,7 +42,7 @@ class PLPLANE(Property):
         self.mid = model.Material(self.mid, msg=msg)
         self.cid = model.Coord(self.cid, msg=msg)
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
         cid = self.Cid()
@@ -289,14 +289,14 @@ class PSOLID(SolidProperty):
             if self.fctn == 'SMEC':
                 self.fctn = 'SMECH'
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(mid, int), 'mid=%r' % mid
         
-        if isxref:
-            assert self.mid.type in ['MAT1', 'MAT4', 'MAT10'], 'mid=%i self.mid.type=%s' % (mid, self.mid.type)
+        if xref:
+            assert self.mid.type in ['MAT1', 'MAT4', 'MAT9', 'MAT10'], 'mid=%i self.mid.type=%s' % (mid, self.mid.type)
 
     def writeCalculix(self, elementSet=999):
         msg = '*SOLID SECTION,MATERIAL=M%s,ELSET=E_Mat%s\n' % (

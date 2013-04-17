@@ -17,28 +17,28 @@ class PARAM(BaseCard):
             self.key = string(card, 1, 'key')
             n = 1
             if self.key == 'ACOUT':
-                self.value = string_or_blank(card, 1, 'value', 'PEAK')
+                self.value = string_or_blank(card, 2, 'value', 'PEAK')
             elif self.key == 'ACOWEAK':
-                self.value = string_or_blank(card, 1, 'value', 'NO')
+                self.value = string_or_blank(card, 2, 'value', 'NO')
             elif self.key == 'ACSYM':
-                self.value = string_or_blank(card, 1, 'value', 'YES')
+                self.value = string_or_blank(card, 2, 'value', 'YES')
             elif self.key == 'ADJMETH':
-                self.value = integer_or_blank(card, 1, 'value', 0)
+                self.value = integer_or_blank(card, 2, 'value', 0)
             elif self.key == 'ADMPOST':
-                self.value = string_or_blank(card, 1, 'value', 0)
+                self.value = string_or_blank(card, 2, 'value', 0)
             elif self.key == 'ADSTAT':
-                self.value = string_or_blank(card, 1, 'value', 'YES')
+                self.value = string_or_blank(card, 2, 'value', 'YES')
             elif self.key in ['ALPHA1', 'ALPHA2']:
-                self.value1 = double_or_blank(card, 1, 'value1', 0.0)
-                self.value2 = double_or_blank(card, 1, 'value2', 0.0)
+                self.value1 = double_or_blank(card, 2, 'value1', 0.0)
+                self.value2 = double_or_blank(card, 2, 'value2', 0.0)
                 n = 2
             elif self.key in ['ALPHA1FL', 'ALPHA2FL']:
-                self.value1 = double_or_blank(card, 1, 'value1', 0.0)
-                self.value2 = double_or_blank(card, 1, 'value2', 0.0)
+                self.value1 = double_or_blank(card, 2, 'value1', 0.0)
+                self.value2 = double_or_blank(card, 3, 'value2', 0.0)
                 n = 2
             elif self.key in ['CB1', 'CB2', 'CK1', 'CK2', 'CK3', 'CM1', 'CM2', 'CP1', 'CP2']:
-                self.value1 = double_or_blank(card, 1, 'value1', 1.0)
-                self.value2 = double_or_blank(card, 1, 'value2', 0.0)
+                self.value1 = double_or_blank(card, 2, 'value1', 1.0)
+                self.value2 = double_or_blank(card, 3, 'value2', 0.0)
                 n = 2
             else:
                 self.value = integer_double_or_string(card, 2, 'value')

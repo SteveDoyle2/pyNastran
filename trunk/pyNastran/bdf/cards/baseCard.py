@@ -33,7 +33,7 @@ class BaseCard(object):
         #"""
         #pass
     
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         """
         This method checks that all the card is various methods of the card
         work properly.  It's only used in testing.

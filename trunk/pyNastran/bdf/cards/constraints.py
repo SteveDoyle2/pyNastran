@@ -23,7 +23,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     components, components_or_blank)
 
-class constraintObject(object):
+class ConstraintObject(object):
     def __init__(self):
         self.constraints = {}  # SPC, SPC1, SPCD, etc...
         self.add_constraints = {}  # SPCADD

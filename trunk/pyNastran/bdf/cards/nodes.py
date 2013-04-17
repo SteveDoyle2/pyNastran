@@ -25,24 +25,6 @@ class Node(BaseCard):
         msg = '%s hasnt implemented a cross_reference method' % self.type
         raise NotImplementedError(msg)
 
-    def Cp(self):
-        if isinstance(self.cp, int):
-            return self.cp
-        else:
-            return self.cp.cid
-
-    def Seid(self):
-        if isinstance(self.seid, int):
-            return self.seid
-        else:
-            return self.seid.seid
-
-    def Cd(self):
-        if isinstance(self.cd, int):
-            return self.cd
-        else:
-            return self.cd.cid
-
 
 class RINGAX(Ring):
     """
@@ -189,16 +171,39 @@ class GRDSET(Node):
         self.cd = model.Coord(self.cd)
         #self.seid = model.SuperElement(self.seid)
 
+    def Cd(self):
+        if isinstance(self.cd, int):
+            return self.cd
+        else:
+            return self.cd.cid
+
+    def Cp(self):
+        if isinstance(self.cp, int):
+            return self.cp
+        else:
+            return self.cp.cid
+
+    def SEid(self):
+        if isinstance(self.seid, int):
+            return self.seid
+        else:
+            return self.seid.seid
+
+    def _verify(self, xref=False):
+        cp = self.Cp()
+        seid = self.SEid()
+        cd = self.Cd()
+
     def rawFields(self):
         list_fields = ['GRDSET', None, self.Cp(), None, None, None,
-                  self.Cd(), self.ps, self.Seid()]
+                  self.Cd(), self.ps, self.SEid()]
         return list_fields
 
     def reprFields(self):
         cp = set_blank_if_default(self.Cp(), 0)
         cd = set_blank_if_default(self.Cd(), 0)
         ps = set_blank_if_default(self.ps, 0)
-        seid = set_blank_if_default(self.Seid(), 0)
+        seid = set_blank_if_default(self.SEid(), 0)
         list_fields = ['GRDSET', None, cp, None, None, None, cd, ps, seid]
         return list_fields
 
@@ -216,7 +221,11 @@ class GRIDB(Node):
         Node.__init__(self, card, data)
 
         if card:
-            raise NotImplementedError('GRIDB data')
+            self.nid = integer(card, 1, 'nid')
+            self.phi = double(card, 4, 'phi')
+            self.cd = integer(card, 6, 'cd')
+            self.ps = integer(card, 7, 'ps')
+            self.idf = integer(card, 8, 'idf')
         else:
             self.nid = data[0]
             self.phi = data[1]
@@ -229,6 +238,15 @@ class GRIDB(Node):
         assert self.cd >= 0, 'cd=%s' % self.cd
         assert self.ps >= 0, 'ps=%s' % self.ps
         assert self.idf >= 0, 'idf=%s' % self.idf
+
+    def _verify(self, xref=False):
+        pass
+
+    def Cd(self):
+        if isinstance(self.cd, int):
+            return self.cd
+        else:
+            return self.cd.cid
 
     def rawFields(self):
         list_fields = ['GRIDB', self.nid, None, None, self.phi, None,
@@ -301,10 +319,28 @@ class GRID(Node):
     def Ps(self):
         return self.ps
 
-    def SEid(self):
-        return self.seid
+    def Cd(self):
+        if isinstance(self.cd, int):
+            return self.cd
+        else:
+            return self.cd.cid
 
-    def _verify(self, isxref=False):
+    def Cp(self):
+        if isinstance(self.cp, int):
+            return self.cp
+        else:
+            return self.cp.cid
+
+    def SEid(self):
+        if isinstance(self.seid, int):
+            return self.seid
+        else:
+            return self.seid.seid
+
+    #def SEid(self):
+        #return self.seid
+
+    def _verify(self, xref=False):
         nid = self.Nid()
         cp = self.Cp()
         cd = self.Cd()
@@ -377,13 +413,13 @@ class GRID(Node):
 
     def rawFields(self):
         list_fields = (['GRID', self.nid, self.Cp()] + list(self.xyz) +
-                       [self.Cd(), self.ps, self.Seid()])
+                       [self.Cd(), self.ps, self.SEid()])
         return list_fields
 
     def reprFields(self):
         cp = set_blank_if_default(self.Cp(), 0)
         cd = set_blank_if_default(self.Cd(), 0)
-        seid = set_blank_if_default(self.Seid(), 0)
+        seid = set_blank_if_default(self.SEid(), 0)
         list_fields = ['GRID', self.nid, cp] + list(self.xyz) + [cd, self.ps,
                                                                  seid]
         return list_fields
@@ -472,6 +508,12 @@ class POINT(Node):
                                                 debug=debug)
         p2 = coordB.transformToLocal(p, matrix, debug=debug)
         return p2
+
+    def Cp(self):
+        if isinstance(self.cp, int):
+            return self.cp
+        else:
+            return self.cp.cid
 
     def cross_reference(self, model):
         self.cp = model.Coord(self.cp)

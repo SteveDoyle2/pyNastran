@@ -274,14 +274,15 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         \f[ \large  mass = \left( \rho A + nsm \right) L  \f]
         """
         L = self.Length()
-        try:
-            mass = (self.Rho() * self.Area() + self.Nsm()) * L
-        except TypeError:
-            msg = 'TypeError on eid=%s pid=%s:\n' % (self.eid, self.Pid())
-            msg += 'rho = %s\narea = %s\nnsm = %s\nL = %s' % (self.Rho(),
-                                                              self.Area(),
-                                                              self.Nsm(), L)
-            raise TypeError(msg)
+        mass = L * self.MassPerLength()
+        #try:
+            #mass = (self.Rho() * self.Area() + self.Nsm()) * L
+        #except TypeError:
+            #msg = 'TypeError on eid=%s pid=%s:\n' % (self.eid, self.Pid())
+            #msg += 'rho = %s\narea = %s\nnsm = %s\nL = %s' % (self.Rho(),
+            #                                                  self.Area(),
+            #                                                  self.Nsm(), L)
+            #raise TypeError(msg)
 
         return mass
 
@@ -402,7 +403,7 @@ class CROD(RodElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 2
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
         L = self.Length()
@@ -466,18 +467,18 @@ class CTUBE(RodElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 2
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         pid = self.Pid()
         A = self.Area()
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(A, float), 'A=%r' % A
-        if isxref:
+        if xref:
             L = self.Length()
             #nsm = self.Nsm()
             assert isinstance(L, float), 'L=%r' % L
             #assert isinstance(nsm, float), 'nsm=%r' % nsm
             if self.pid.mid.type == 'MAT1':
-                mpa = self.pid.mid.MassPerLength()
+                mpa = self.pid.MassPerLength()
                 mass = self.Mass()
                 assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
                 assert isinstance(mass, float), 'mass=%r' % mass
@@ -535,7 +536,7 @@ class CONROD(RodElement):
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.mid = model.Material(self.mid, msg=msg)
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
         L = self.Length()
@@ -714,12 +715,12 @@ class CBAR(LineElement):
         assert self.offt[1] in ['G', 'O', 'E'], msg
         assert self.offt[2] in ['G', 'O', 'E'], msg
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
         A = self.Area()
         nsm = self.Nsm()
-        mpa = self.MassPerLength()
+        mpl = self.MassPerLength()
         mass = self.Mass()
         L = self.Length()
         assert isinstance(pid, int), 'pid=%r' % pid
@@ -727,7 +728,7 @@ class CBAR(LineElement):
         assert isinstance(A, float), 'A=%r' % A
         assert isinstance(L, float), 'L=%r' % L
         assert isinstance(nsm, float), 'nsm=%r' % nsm
-        assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
+        assert isinstance(mpl, float), 'mass_per_length=%r' % mpa
         assert isinstance(mass, float), 'nass=%r' % mass
 
     def Mid(self):

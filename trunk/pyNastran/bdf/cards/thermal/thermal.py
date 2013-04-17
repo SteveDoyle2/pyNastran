@@ -14,7 +14,7 @@ class ThermalCard(BaseCard):
         pass
 
     def cross_reference(self, model):
-        raise NotImplementedError('%s has not defined the cross_reference'
+        raise NotImplementedError('%s has not defined the cross_reference '
                                   'method' % self.type)
 
     def isSameCard(self, obj, debug=False):
@@ -113,8 +113,11 @@ class CHBDYE(ThermalElement):
             raise NotImplementedError(data)
         self.grids = []
 
-    #def cross_reference(self,model):
-    #    pass
+    def cross_reference(self, model):
+        pass
+
+    def _verify(self, xref=False):
+        pass
 
     # def sideToEIDs(self, eid):
     #     sideIDs = self.sideMaps[eid.type][self.side]
@@ -186,7 +189,7 @@ class CHBDYG(ThermalElement):
             self.radMidBack = data[5]
             self.grids = data[6:14]
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         pass
 
     def cross_reference(self, model):
@@ -406,7 +409,7 @@ class PCONVM(ThermalProperty):
             assert self.form in [0, 1, 10, 11, 20, 21]
 
             ## Flag for mass flow convection. (Integer = 0 or 1; Default = 0)
-            self.flag = integer_or_blank(card, 4, 0)
+            self.flag = integer_or_blank(card, 4, 'flag', 0)
 
             ## Constant coefficient used for forced convection
             self.coef = double(card, 5, 'coef')

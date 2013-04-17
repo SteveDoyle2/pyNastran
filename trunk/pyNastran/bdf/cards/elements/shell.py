@@ -244,7 +244,7 @@ class CTRIA3(TriShell):
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
-    def _verify(self, isxref=True):
+    def _verify(self, xref=True):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.nodeIDs()
@@ -254,8 +254,8 @@ class CTRIA3(TriShell):
         for i,nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
-        if isxref:
-            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+        if xref:
+            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             t = self.Thickness()
             a,c,n = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t
@@ -387,7 +387,7 @@ class CTRIA6(TriShell):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
-    def _verify(self):
+    def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.nodeIDs()
@@ -397,7 +397,7 @@ class CTRIA6(TriShell):
         #for i,nid in enumerate(nids):
             #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
-        if isxref:
+        if xref:
             assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             t = self.Thickness()
             a,c,n = self.AreaCentroidNormal()
@@ -647,7 +647,7 @@ class CTRIAX6(TriShell):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.mid = model.Material(self.mid)
 
-    def _verify(self, isxref=True):
+    def _verify(self, xref=True):
         eid = self.Eid()
         #pid = self.Pid()
         nids = self.nodeIDs()
@@ -657,7 +657,7 @@ class CTRIAX6(TriShell):
         for i,nid in enumerate(nids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer or blank; nid=%s' %(i, nid)
 
-        if isxref:
+        if xref:
             #assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             #t = self.Thickness()
             a,c,n = self.AreaCentroidNormal()
@@ -1032,7 +1032,7 @@ class CQUAD4(QuadShell):
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.nodeIDs()
@@ -1041,7 +1041,7 @@ class CQUAD4(QuadShell):
         for i,nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
-        if isxref:
+        if xref:
             assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             t = self.Thickness()
             a,c,n = self.AreaCentroidNormal()
@@ -1147,6 +1147,28 @@ class CQUADR(QuadShell):
         msg = ' which is required by CQUADR eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+
+    def _verify(self, xref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        #for i,nid in enumerate(nids):
+            #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+
+        if xref:
+            assert self.pid.type in ['asf'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            t = self.Thickness()
+            a,c,n = self.AreaCentroidNormal()
+            assert isinstance(t, float), 'thickness=%r' % t
+            assert isinstance(a, float), 'Area=%r' % a
+            for i in range(3):
+                assert isinstance(c[i], float)
+                #assert isinstance(n[i], float)
+            mass = self.Mass()
+            assert isinstance(mass, float), 'mass=%r' % mass
 
     def Thickness(self):
         """
