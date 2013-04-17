@@ -158,14 +158,14 @@ class SUPORT1(Constraint):
             self.IDs = []
             self.Cs = []
             nfields = len(card)
-            nterms = (nfields - 2) // 2
-            #print("nterms = ", nterms)
             
+            assert len(card) > 2
+            nterms = int((nfields - 1.) / 2.)
             n = 1
             for i in xrange(nterms):
                 nstart = 2 + 2 * i
                 ID = integer(card, nstart, 'ID%s' % n)
-                C = components(card, nstart + 1, 'component%s' % n)
+                C = components_or_blank(card, nstart + 1, 'component%s' % n, '0')
                 self.IDs.append(ID)
                 self.Cs.append(C)
                 n += 1
