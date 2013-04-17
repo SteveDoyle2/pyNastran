@@ -91,7 +91,8 @@ from .bdfInterface.addCard import AddMethods
 from .bdfInterface.BDF_Card import BDFCard, wipe_empty_fields
 #from .bdfInterface.bdf_Reader import #print_filename # BDFReader
 from .bdfInterface.bdf_writeMesh import WriteMesh
-from .bdfInterface.bdf_cardMethods import interpret_value
+#from .bdfInterface.assign_type import interpret_value
+from .assign_type import interpret_value
 from .bdfInterface.crossReference import XrefMesh
 
 
