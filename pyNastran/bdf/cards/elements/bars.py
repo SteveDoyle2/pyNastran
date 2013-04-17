@@ -8,7 +8,7 @@ from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element #, Mid
-from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_double_or_blank, double, double_or_blank,
     string_or_blank, integer_double_string_or_blank)
 

@@ -16,7 +16,7 @@ from itertools import izip, count
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
-from pyNastran.bdf.assign_type import (integer, integer_or_double, integer_double_or_blank, integer_or_blank,
+from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_double, integer_double_or_blank, integer_or_blank,
     double, double_or_blank, components, components_or_blank, blank, fields)
 
 

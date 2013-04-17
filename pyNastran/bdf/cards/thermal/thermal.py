@@ -5,7 +5,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
                                           collapse_thru_by)
-from pyNastran.bdf.assign_type import (fields, integer, integer_or_blank, 
+from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank, 
     double, double_or_blank,
     integer_or_string, string, blank)
 
