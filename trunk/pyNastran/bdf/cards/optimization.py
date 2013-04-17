@@ -7,7 +7,7 @@ from math import ceil
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
     collapse_thru_by_float, condense, build_thru_float)
-from pyNastran.bdf.assign_type import (integer, integer_or_blank, integer_or_string,
+from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, integer_or_string,
     integer_string_or_blank, double, double_or_blank, string,
     string_or_blank, integer_double_or_blank,
     integer_or_double, integer_double_string_or_blank,

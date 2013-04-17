@@ -16,7 +16,7 @@ from numpy import zeros, array
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element, BaseCard
-from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                        double_or_blank)
 
 

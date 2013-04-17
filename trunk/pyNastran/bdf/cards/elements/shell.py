@@ -26,7 +26,7 @@ from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.utils.mathematics import Area, norm, centroid_triangle
-from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
 

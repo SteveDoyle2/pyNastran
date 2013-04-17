@@ -5,7 +5,7 @@ from math import ceil
 from itertools import izip, count
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
-from pyNastran.bdf.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     components, components_or_blank)
 
