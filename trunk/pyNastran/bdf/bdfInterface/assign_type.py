@@ -179,6 +179,10 @@ def integer_or_blank(card, n, fieldname, default=None):
     elif isinstance(svalue, str) or isinstance(svalue, unicode):
         if len(svalue) == 0:
             return default
+        elif '.' in svalue:
+            Type = getType(svalue)
+            raise SyntaxError('%s = %r (field #%s) on card must be an integer or blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
+
         try:
             return int(svalue)
         except:
@@ -441,6 +445,7 @@ def integer_string_or_blank(card, n, fieldname, default=None):
     return default
 
 def getType(value):
+    print('Type value=%s' % value)
     try:
         value = interpret_value(value)
     except:

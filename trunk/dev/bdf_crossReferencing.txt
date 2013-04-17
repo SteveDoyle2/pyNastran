@@ -249,11 +249,11 @@ PCONVM (???)
 PHBDY  (???)
 
 ----Aero----:
-AERO    (???)
-AEROS   (???)
-GUST    (???)
-FLUTTER (???)
-FLFACT  (???)
+AERO    (no acsid)
+AEROS   (no acsid, rcsid)
+GUST    (no dload)
+FLUTTER (done)
+FLFACT  (NA)
 
 AEFACT  (NA)
 AELINK  (???)
