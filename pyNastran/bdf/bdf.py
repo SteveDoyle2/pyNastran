@@ -1174,6 +1174,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 self.open_file(bdf_filename)
                 reject = '$ INCLUDE processed:  %s\n' % bdf_filename
                 #print reject
+                if comment:
+                    self.rejects.append([comment])
                 self.rejects.append([reject])
                 #print "reject return False"
                 continue
@@ -1189,6 +1191,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 self.add_card(lines, card_name, comment, is_list=False)
             else:
                 #print('card_count =', self.card_count.keys())
+                if comment:
+                    self.rejects.append([comment])
                 self.rejects.append(lines)
                 #print "reject return False"
 
@@ -1443,6 +1447,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 return card_obj
 
             if card_name in ['DEQATN']:  # buggy for commas
+                if comment:
+                    self.rejects.append([comment])
                 #print 'DEQATN:  card_obj.card=%s' %(card_obj.card)
                 #self.add_DEQATN(DEQATN(card_obj)) # should be later moved to
                 self.rejects.append(card)          # for loop below

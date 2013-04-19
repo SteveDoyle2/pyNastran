@@ -273,19 +273,19 @@ class WriteMesh(WriteMeshDeprecated):
         @param self the BDF object
         """
         msg = []
+        if self.spoints:
+            msg.append('$SPOINTS\n')
+            msg.append(str(self.spoints))
+
         if self.nodes:
-            msg = ['$NODES\n']
+            msg.append('$NODES\n')
             if self.gridSet:
                 msg.append(self.gridSet.print_card(size))
             for (nid, node) in sorted(self.nodes.iteritems()):
                 msg.append(node.print_card(size))
-
         if 0:
             self._write_nodes_associated(size)
 
-        if self.spoints:
-            msg.append('$SPOINTS\n')
-            msg.append(str(self.spoints))
         return ''.join(msg)
 
     def _write_nodes_associated(self, size):
@@ -295,7 +295,6 @@ class WriteMesh(WriteMeshDeprecated):
         @warning Sometimes crashes, probably on invalid BDFs.
         """
         msg = []
-
         associated_nodes = set([])
         for (eid, element) in self.elements.iteritems():
             #print(element)
