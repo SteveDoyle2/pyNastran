@@ -777,12 +777,28 @@ class MOMENT1(Moment):
     def cross_reference(self, model):
         """@todo cross reference and fix repr function"""
         self.node = model.Node(self.node)
-        self.xyz = model.Node(
-            self.g2).Position() - model.Node(self.g1).Position()
+        self.xyz = model.Node(self.g2).Position() - model.Node(self.g1).Position()
         self.normalize()
+    
+    def get_node_id(self):
+        if isinstance(self.node, int):
+            return self.node
+        return self.node.nid
+
+    def G1(self):
+        if isinstance(self.g1, int):
+            return self.g1
+        return self.g1.nid
+
+    def G2(self):
+        if isinstance(self.g2, int):
+            return self.g2
+        return self.g2.nid
 
     def rawFields(self):
-        (node, g1, g2) = self.nodeIDs([self.node, self.g1, self.g2])
+        node = self.get_node_id()
+        g1 = self.G1()
+        g2 = self.G2()
         list_fields = ['MOMENT1', self.sid, node, self.mag, g1, g2]
         return list_fields
 
@@ -829,8 +845,13 @@ class MOMENT2(Moment):
 
     def cross_reference(self, model):
         """@todo cross reference and fix repr function"""
-        (self.g1, self.g2, self.g3, self.g4) = model.Nodes(self.g1, self.g2,
-                                                           self.g3, self.g4)
+        #(self.g1, self.g2, self.g3, self.g4) = model.Nodes([self.g1, self.g2,
+        #                                                    self.g3, self.g4])
+        self.g1 = model.Node(self.g1)
+        self.g2 = model.Node(self.g2)
+        self.g3 = model.Node(self.g3)
+        self.g4 = model.Node(self.g4)
+        
         v12 = self.g2.Position() - self.g1.Position()
         v34 = self.g4.Position() - self.g3.Position()
         v12 = v12 / norm(v12)

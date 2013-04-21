@@ -396,7 +396,12 @@ class NLPARM(BaseCard):
             self.epsP = double_or_blank(card, 10, 'epsP', 0.01)
             self.epsW = double_or_blank(card, 11, 'epsW', 0.01)
             self.maxDiv = integer_or_blank(card, 12, 'maxDiv', 3)
-            self.maxQn = double_or_blank(card, 13, 'maxQn', self.maxIter)
+
+            if self.kMethod == 'PFNT':
+                self.maxQn = integer_or_blank(card, 13, 'maxQn', 0)
+            else:
+                self.maxQn = integer_or_blank(card, 13, 'maxQn', self.maxIter)
+
             self.maxLs = integer_or_blank(card, 14, 'maxLs', 4)
             self.fStress = double_or_blank(card, 15, 'fStress', 0.2)
             self.lsTol = double_or_blank(card, 16, 'lsTol', 0.5)

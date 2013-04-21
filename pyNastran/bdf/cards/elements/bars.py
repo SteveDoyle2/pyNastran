@@ -474,9 +474,9 @@ class CTUBE(RodElement):
         assert isinstance(A, float), 'A=%r' % A
         if xref:
             L = self.Length()
-            #nsm = self.Nsm()
+            nsm = self.Nsm()
             assert isinstance(L, float), 'L=%r' % L
-            #assert isinstance(nsm, float), 'nsm=%r' % nsm
+            assert isinstance(nsm, float), 'nsm=%r' % nsm
             if self.pid.mid.type == 'MAT1':
                 mpa = self.pid.MassPerLength()
                 mass = self.Mass()
@@ -490,6 +490,12 @@ class CTUBE(RodElement):
         c = self.Centroid()
         for i in range(3):
             assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
+
+    def Mass(self):
+        return self.pid.MassPerLength() * self.Length()
+
+    def Nsm(self):
+        return self.pid.Nsm()
 
     def Area(self):
         return self.pid.Area()

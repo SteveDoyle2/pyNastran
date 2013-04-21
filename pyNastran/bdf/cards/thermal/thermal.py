@@ -177,9 +177,14 @@ class CHBDYG(ThermalElement):
             self.radMidBack = integer_or_blank(card, 7, 'radMidBack', 0)
             # no field 8
 
-            nfields = card.nFields()
             ## Grid point IDs of grids bounding the surface (Integer > 0)
-            self.grids = fields(integer, card, 'grid', i=9, j=nfields)
+            self.grids = []
+            n = 1
+            for i in range(9, len(card)):
+                grid = integer_or_blank(card, i, 'grid%i' % n)
+                if grid is not None:
+                    self.grids.append(grid)
+            assert len(self.grids) > 0, 'card=%s' % card
         else:
             self.eid = data[0]
             self.Type = data[1]
@@ -195,6 +200,7 @@ class CHBDYG(ThermalElement):
     def cross_reference(self, model):
         pass
         #self.pid = model.Phbdy(self.pid)
+        #self.grids
 
     def rawFields(self):
         list_fields = ['CHBDYG', self.eid, None, self.Type, self.iViewFront,

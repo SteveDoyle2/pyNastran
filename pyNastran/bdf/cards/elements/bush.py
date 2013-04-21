@@ -66,9 +66,10 @@ class CBUSH(BushElement):
             elif isinstance(x1G0, float):
                 self.g0 = None
                 x1 = x1G0
-                x2 = double(card, 6, 'x2')
-                x3 = double(card, 7, 'x3')
+                x2 = double_or_blank(card, 6, 'x2', 0.0)
+                x3 = double_or_blank(card, 7, 'x3', 0.0)
                 self.x = [x1, x2, x3]
+                assert max(self.x) != min(self.x), 'x=%s' % self.x
             else:
                 self.g0 = None
                 self.x = [None, None, None]
@@ -104,7 +105,7 @@ class CBUSH(BushElement):
         assert isinstance(ga, int), 'ga=%r' % ga
         assert isinstance(gb, int), 'gb=%r' % gb
         assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(cid, int), 'cid=%r' % cid
+        assert isinstance(cid, int) or cid is None, 'cid=%r' % cid
         assert isinstance(ocid, int), 'ocid=%r' % ocid
 
     def Ga(self):

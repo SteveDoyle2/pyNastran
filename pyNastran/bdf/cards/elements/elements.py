@@ -142,7 +142,7 @@ class CrackElement(Element):
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self. type, self.eid)
-        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
 
@@ -178,7 +178,7 @@ class CRAC2D(CrackElement):
         assert len(self.nodes) == 18
 
     def rawFields(self):
-        list_fields = ['CRAC2D', self.eid, self.Pid()] + self.nodeIDs()
+        list_fields = ['CRAC2D', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True)
         return list_fields
 
 
@@ -205,5 +205,5 @@ class CRAC3D(CrackElement):
         assert len(self.nodes) == 64
 
     def rawFields(self):
-        list_fields = ['CRAC3D', self.eid, self.Pid()] + self.nodeIDs()
+        list_fields = ['CRAC3D', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True)
         return list_fields

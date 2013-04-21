@@ -68,7 +68,7 @@ from .cards.loads.staticLoads import (LOAD, GRAV, ACCEL1, FORCE,
 
 from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                               MAT8, MAT9, MAT10,
-                              MATHP, CREEP, MATS1)
+                              MATHP, CREEP, MATS1, EQUIV)
 from .cards.methods import (EIGB, EIGC, EIGR, EIGP, EIGRL)
 from .cards.nodes import GRID, GRDSET, SPOINTs
 from .cards.optimization import (DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
@@ -254,7 +254,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             # materials
             'MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MATHP',
             #'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
-            'MATS1',
+            'MATS1',# 'MATHE' 
+            #'EQUIV', # testing only, should never be activated...
 
             # thermal materials
             'MAT4', 'MAT5',
@@ -300,7 +301,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             'FREQ', 'FREQ1', 'FREQ2',
 
             # direct matrix input cards
-            'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
+            'DMIG', 'DMIJ', 'DMIJI', 'DMIK', #'DMI',
             'DEQATN',
 
             # optimization cards
@@ -625,11 +626,20 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     def _verify_bdf(self):
         isxref = self._xref
         #for key, card in sorted(self.params.iteritems()):
+            #try:
             #card._verify(isxref)
         for key, card in sorted(self.nodes.iteritems()):
-            card._verify(isxref)
+            try:
+                card._verify(isxref)
+            except:
+                print(str(card))
+                raise
         for key, card in sorted(self.coords.iteritems()):
-            card._verify(isxref)
+            try:
+                card._verify(isxref)
+            except:
+                print(str(card))
+                raise
         for key, card in sorted(self.elements.iteritems()):
             try:
                 card._verify(isxref)
@@ -637,9 +647,17 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 print(str(card))
                 raise
         for key, card in sorted(self.properties.iteritems()):
-            card._verify(isxref)
+            try:
+                card._verify(isxref)
+            except:
+                print(str(card))
+                raise
         for key, card in sorted(self.materials.iteritems()):
-            card._verify(isxref)
+            try:
+                card._verify(isxref)
+            except:
+                print(str(card))
+                raise
         
     def read_bdf(self, bdf_filename, include_dir=None, xref=True, punch=False):
         """
@@ -1375,7 +1393,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
              # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
              'add_creep_material': ['CREEP'],
              'add_material': ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10',
-                              'MATHP'],
+                              'MATHP', 'MATHE', 'EQUIV'],
              'add_thermal_material': ['MAT4', 'MAT5'],
              'add_material_dependence': ['MATS1'],
              'add_load': ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1',

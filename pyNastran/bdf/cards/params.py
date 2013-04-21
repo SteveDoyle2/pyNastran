@@ -43,7 +43,7 @@ class PARAM(BaseCard):
             else:
                 self.value = integer_double_or_string(card, 2, 'value')
 
-            if hasattr(self, 'values1'):
+            if hasattr(self, 'value1'):
                 self.values = [self.value1, self.value2]
             else:
                 self.values = [self.value]

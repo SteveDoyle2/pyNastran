@@ -326,7 +326,7 @@ class SPC(Constraint):
             
             self.constraints = [components_or_blank(card, 3, 'C1', 0),
                                 components_or_blank(card, 6, 'C2', 0)]
-            self.enforced = [double_or_blank(card, 3, 'D1', 0.0),
+            self.enforced = [double_or_blank(card, 4, 'D1', 0.0),
                              double_or_blank(card, 7, 'D2', 0.0)]
 
             # reduce the size if there are duplicate Nones

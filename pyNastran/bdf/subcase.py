@@ -351,76 +351,14 @@ class Subcase(object):
         Gets the [value, options] for a subcase.
         @param self the Subcase object
         """
-        paramName = self.update_param_name(paramName)
+        paramName = update_param_name(paramName)
         if paramName not in self.params:
             raise KeyError('%s doesnt exist in subcase=%s in the case '
                            'control deck.' % (paramName, self.id))
         return self.params[paramName][0:2]
 
-    def update_param_name(self, param_name):
-        """
-        Takes an abbreviated name and expands it so the user can type DISP or
-        DISPLACEMENT and get the same answer
-        @param self
-          the Subcase object
-        @param param_name
-          the parameter name to be standardized (e.g. DISP vs. DIPLACEMENT)
-        @todo not a complete list
-        """
-        if   param_name.startswith('ACCE'):
-            param_name = 'ACCELERATION'
-        elif param_name.startswith('DESO'):
-            param_name = 'DESOBJ'
-        elif param_name.startswith('DESS'):
-            param_name = 'DESSUB'
-        elif param_name.startswith('DISP'):
-            param_name = 'DISPLACEMENT'
-        elif param_name.startswith('EXPO'):
-            param_name = 'EXPORTLID'
-        elif param_name.startswith('ELFO'):
-            param_name = 'FORCE'
-        elif param_name.startswith('FORC'):
-            param_name = 'FORCE'
-        elif param_name.startswith('FREQ'):
-            param_name = 'FREQUENCY'
-        elif param_name.startswith('GPFO'):
-            param_name = 'GPFORCE'
-        elif param_name == 'GPST':
-            raise SyntaxError('invalid GPST stress/strain')
-        elif param_name.startswith('METH'):
-            param_name = 'METHOD'
-        elif param_name.startswith('MPCF'):
-            param_name = 'MPCFORCES'
-        elif param_name.startswith('OLOA'):
-            param_name = 'OLOAD'
-        elif param_name.startswith('PRES'):
-            param_name = 'PRESSURE'
-        elif param_name.startswith('SPCF'):
-            param_name = 'SPCFORCES'
-        elif param_name.startswith('STRA'):
-            param_name = 'STRAIN'
-        elif param_name.startswith('STRE'):
-            param_name = 'STRESS'
-        elif param_name.startswith('SUPO'):
-            param_name = 'SUPORT1'
-        elif param_name.startswith('SVEC'):
-            param_name = 'SVECTOR'
-        elif param_name.startswith('THER'):
-            param_name = 'THERMAL'
-        elif param_name.startswith('VECT'):
-            param_name = 'VECTOR'
-        elif param_name.startswith('VELO'):
-            param_name = 'VELOCITY'
-
-        #elif param_name.startswith('DFRE'):  param_name = 'D'
-
-        # handled in caseControlDeck.py
-        #elif param_name.startswith('TEMP'):  param_name = 'TEMPERATURE'
-        #print '*param_name = ',param_name
-        return param_name
-
     def _add_data(self, key, value, options, param_type):
-        key = self.update_param_name(key)
+        key = update_param_name(key)
         #print("adding isubcase=%s key=|%s| value=|%s| options=|%s| "
         #      "param_type=%s" %(self.id, key, value, options, param_type))
         if isinstance(value, unicode) and value.isdigit():
@@ -789,3 +727,101 @@ class Subcase(object):
         if self.id > 0:
             assert nparams > 0, 'No subcase paramters are defined for isubcase=%s...' % self.id
         return msg
+
+def update_param_name(param_name):
+    """
+    Takes an abbreviated name and expands it so the user can type DISP or
+    DISPLACEMENT and get the same answer
+    @param self
+      the Subcase object
+    @param param_name
+      the parameter name to be standardized (e.g. DISP vs. DIPLACEMENT)
+    @todo not a complete list
+    """
+    if   param_name.startswith('ACCE'):
+        param_name = 'ACCELERATION'
+    elif param_name.startswith('DESO'):
+        param_name = 'DESOBJ'
+    elif param_name.startswith('DESS'):
+        param_name = 'DESSUB'
+    elif param_name.startswith('DISP'):
+        param_name = 'DISPLACEMENT'
+    elif param_name.startswith('EXPO'):
+        param_name = 'EXPORTLID'
+    elif param_name.startswith('ELFO'):
+        param_name = 'FORCE'
+    elif param_name.startswith('ELST'):
+        param_name = 'STRESS' # or ELSTRESS
+    elif param_name.startswith('FORC'):
+        param_name = 'FORCE'
+    elif param_name.startswith('FREQ'):
+        param_name = 'FREQUENCY'
+    elif param_name.startswith('GPFO'):
+        param_name = 'GPFORCE'
+    elif param_name == 'GPST':
+        raise SyntaxError('invalid GPST stress/strain')
+    elif param_name.startswith('HARMONIC'):
+        param_name = 'HARMONICS'
+    elif param_name.startswith('METH'):
+        param_name = 'METHOD'
+    elif param_name.startswith('MPCF'):
+        param_name = 'MPCFORCES'
+    elif param_name.startswith('NLPAR'):
+        param_name = 'NLPARM'
+    elif param_name.startswith('OLOA'):
+        param_name = 'OLOAD'
+    elif param_name.startswith('PRES'):
+        param_name = 'PRESSURE'
+    elif param_name.startswith('SDAMP'):
+        param_name = 'SDAMPING'
+    elif param_name.startswith('SDISP'):
+        param_name = 'SDISPLACEMENT'
+    elif param_name.startswith('SMETH'):
+        param_name = 'SMETHOD'
+    elif param_name.startswith('SPCF'):
+        param_name = 'SPCFORCES'
+    elif param_name.startswith('STRA'):
+        param_name = 'STRAIN'
+    elif param_name.startswith('STRE'):
+        param_name = 'STRESS'
+    elif param_name.startswith('SUBT'):
+        param_name = 'SUBTITLE'
+    elif param_name.startswith('SUPO'):
+        param_name = 'SUPORT1'
+    elif param_name.startswith('SVEC'):
+        param_name = 'SVECTOR'
+    elif param_name.startswith('SVELO'):
+        param_name = 'SVELOCITY'
+    elif param_name.startswith('THER'):
+        param_name = 'THERMAL'
+    elif param_name.startswith('VECT'):
+        param_name = 'PRESSURE' # or VECTOR
+    elif param_name.startswith('VELO'):
+        param_name = 'VELOCITY'
+    elif param_name.startswith('TITL'):
+        param_name = 'TITLE'
+    elif param_name.startswith('MAXLINE'):
+        param_name = 'MAXLINES'
+    elif param_name.startswith('LINE'):
+        param_name = 'LINE'
+    elif param_name.startswith('AXISYM'):
+        param_name = 'AXISYMMETRIC'
+    elif param_name.startswith('SUBSE'):
+        param_name = 'SUBSEQ'
+    elif param_name.startswith('XTIT'):
+        param_name = 'XTITLE'
+    elif param_name.startswith('YTIT'):
+        param_name = 'YTITLE'
+    elif param_name.startswith('SACCE'):
+        param_name = 'SACCELERATION'
+    elif param_name.startswith('GPSTR'):
+        param_name = 'GPSTRAIN'
+    elif param_name in ['DEFO', 'DEFOR']:
+        param_name = 'DEFORM'
+
+    #elif param_name.startswith('DFRE'):  param_name = 'D'
+
+    # handled in caseControlDeck.py
+    #elif param_name.startswith('TEMP'):  param_name = 'TEMPERATURE'
+    #print '*param_name = ',param_name
+    return param_name

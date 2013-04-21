@@ -630,6 +630,12 @@ class PTUBE(LineProperty):
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
+    def Rho(self):
+        return self.mid.Rho()
+
+    def MassPerLength(self):
+        return self.Area() * self.Rho() + self.nsm
+
     def Area(self):
         A = (self.area1() + self.area2()) / 2.
 
@@ -661,11 +667,11 @@ class PTUBE(LineProperty):
         A2 = pi / 4. * (Dout * Dout - Din * Din)
         return A2
 
-    def massMatrix(self):
-        """@todo not done"""
-        m = zeros(6, 6)
-        m[0, 0] = 1.
-        return m
+    #def massMatrix(self):
+        #"""@todo not done"""
+        #m = zeros(6, 6)
+        #m[0, 0] = 1.
+        #return m
 
     def rawFields(self):
         list_fields = ['PTUBE', self.pid, self.Mid(), self.OD1, self.t,
@@ -1233,13 +1239,13 @@ class PBCOMP(LineProperty):
             self.n1 = double_or_blank(card, 13, 'n1', 0.0)
             self.n2 = double_or_blank(card, 14, 'n2', 0.0)
             self.symopt = integer_or_blank(card, 15, 'symopt', 0)
+            assert 0 <= self.symopt <= 5, 'symopt=%i is invalid; ' % self.symopt
             self.y = []
             self.z = []
             self.c = []
             self.mids = []
 
-            fields = card.fields(17)
-            nfields = len(fields)
+            nfields = len(card) - 17
             nrows = nfields // 8
             if nfields % 8 > 0:
                 nrows += 1
@@ -1310,18 +1316,53 @@ class PBEAM(IntegratedLineProperty):
         if card:
             self.pid = integer(card, 1, 'pid')
             self.mid = integer(card, 2, 'mid')
-            #print "pid = ",self.pid
 
-            nFields = card.nFields() - 1  # -1 for PBEAM field
-
-            self.so = ['YES']  ## @todo what are these values (so[0],xxb[0])???
+            # at least one cross section are required
+            # so[0] and xxb[0] aren't used
+            self.so = ['YES']
             self.xxb = [0.]
-            self.A = [double(card, 3, 'A')]
+            A = double(card, 3, 'A')
+            self.A = [A]
             self.i1 = [double_or_blank(card, 4, 'I1', 0.0)]
             self.i2 = [double_or_blank(card, 5, 'I2', 0.0)]
             self.i12 = [double_or_blank(card, 6, 'I12', 0.0)]
             self.j = [double_or_blank(card, 7, 'J', 0.0)]
             self.nsm = [double_or_blank(card, 8, 'nsm', 0.0)]
+            
+            isCDEF = False
+            field9 = double_string_or_blank(card, 9, 'field9')
+            field17 = double_string_or_blank(card, 17, 'field17')
+            #print("field17 =", field17)
+            try:
+                isinstance(field17, float)
+                isCDEF = True
+                isFooter = True
+            except SyntaxError:
+                pass
+            #print("f9=%s f17=%s" % (field9, field17))
+            #if field17 in ['YES', 'YESA', 'NO', None] or isCDEF:
+
+            #nlines = nfields // 8
+
+            if field9 in ['YES', 'YESA', 'NO']:
+                isCDEF = False
+                isContinue = True
+            elif field17 in ['YES', 'YESA', 'NO']:
+                isCDEF = True
+                isContinue = True
+            else:
+                isContinue = False
+                isCDEF = True
+                #if nlines == 2:
+                #    isCDEF = True
+                #elif nlines == 3:
+                #    isCDEF = Tru
+                #else:
+                    
+
+            #print("isCDEF=%s isContinue=%s" % (isCDEF, isContinue))
+            #if isCDEF:
+            #if field9 not in ['YES', 'YESA', 'NO']:
             self.c1 = [double_or_blank(card, 9, 'c1', 0.0)]
             self.c2 = [double_or_blank(card, 10, 'c2', 0.0)]
             self.d1 = [double_or_blank(card, 11, 'd1', 0.0)]
@@ -1330,91 +1371,186 @@ class PBEAM(IntegratedLineProperty):
             self.e2 = [double_or_blank(card, 14, 'e2', 0.0)]
             self.f1 = [double_or_blank(card, 15, 'f1', 0.0)]
             self.f2 = [double_or_blank(card, 16, 'f2', 0.0)]
+            #else:
+                #msg = ('On PBEAM %s, only YES format is supported.\n'
+                #       'All C, D, E, and F fields must be specified.'% self.pid)
+                #raise RuntimeError(msg)
+                #self.c1 = [None]
+                #self.c2 = [None]
+                #self.d1 = [None]
+                #self.d2 = [None]
+                #self.e1 = [None]
+                #self.e2 = [None]
+                #self.f1 = [None]
+                #self.f2 = [None]
 
-            #fields = card.fields(0)
-            #print "fieldsPBEAM = ",fields
-            #fieldsMid = fields[16:]
-            #print "fieldsMid = ",fieldsMid
+            # ----------------------------------------------------------------
+            # figure out how many YES/YESA/NO fields there are
+            # and if there is a footer
+            #print("")
+            #print("  nfields = ",nfields)
 
-            #fields = card.fields(9)
-            #print ""
-            #print "  nFields = ",nFields
-            #nFields = card.nFields()-16 # 17+16 (leading + trailing fields)
             # counting continuation cards
-            nMajor = nFields // 16
-            nLeftover = nFields % 16
-            #print "  nMajor=%s nLeftover=%s" %(nMajor,nLeftover)
-            if nLeftover == 0:
-                nMajor -= 1
+            nfields = len(card) - 1  # -1 for PBEAM field
+            if isCDEF:
+                #print('isCDEF =', isCDEF)
+                nmajor = nfields // 16
+                nleftover = nfields % 16
+                #print("  nmajor=%s nleftover=%s" % (nmajor, nleftover))
+                if nleftover == 0:
+                    nmajor -= 1
 
-            if nMajor == 0:
-                nMajor = 1
+                if nmajor == 0:
+                    nmajor = 1
 
-            x = nMajor * 16 + 1
-            if double_string_or_blank(card, x, 'so') in ['YES', 'YESA', 'NO']:  # there is no footer
-                nMajor += 1
-                x += 16
+                # jump to the last block of 16
+                x = nmajor * 16 + 1
+                #print(1, 1+8, 1+16, 1+24)
+                #print('card.field(%i) = %s' % (x, card.field(x)))
+                #print('x =', x)
 
+                # If it's an SO field, we don't read the footer
+                ## remark 6:
+                ## The fourth and fifth continuation entries, which
+                ## contain fields K1 through N2(B), are optional
+                ## and may be omitted if the default values are appropriate.
+                if card.field(x) in ['YES', 'YESA', 'NO']:  # there is no footer
+                    nmajor += 1
+                    x += 16
+                else:
+                    # read the footer
+                    pass
+            else:
+                #print('isCDEF =', isCDEF)
+                nmajor = nfields // 8
+                nleftover = nfields % 8
+                if nleftover == 0:
+                    nmajor -= 1
+                if nmajor == 0:
+                    nmajor = 1
+                x = nmajor * 8 + 1
+                #print('nmajor = ', nmajor)
+                #print('card.field(%i) = %s' % (x, card.field(x)))
+                #print('x =', x)
+                #print(1,1+8, 1+16, 1+24)
+                if card.field(x) in ['YES', 'YESA', 'NO']:  # there is no footer
+                    nMajor += 1
+                    x += 8
+                else:
+                    # read the footer
+                    pass
+                #asd
+            # ----------------------------------------------------------------
             #print("  nMajor = ",nMajor)
-            A = self.A[0]
-            for nRepeated in xrange(1, nMajor):
+            for nRepeated in xrange(1, nmajor): # start at 1 to drop the header
                 #print "  adding a major"
                 ## field 17 is the first possible so
-                nStart = nRepeated * 16 + 1
+                if isCDEF:
+                    nStart = nRepeated * 16 + 1
+                else:
+                    nStart = nRepeated * 8 + 1
+                #print('nStart =', nStart)
 
                 #propFields = card[nStart:nStart + 16]
-                propFields = fields(double_or_blank, card, 'propFields',
-                                    nStart, nStart + 16)
+                propFields = []
+                n = 1
+                #for i in range(nStart + 1, nStart + 16):
+                    #print('i =', i, card.field(i))
+                    #propField = double_or_blank(card, i, 'propField%s' % n)
+                    #n += 1
+                #propFields = fields(double_or_blank, card, 'propFields',
+                #                    )
                 #print("propFields = ",propFields)
 
                 #print "  so = ",propFields[0]
-                if propFields[0] not in [None, 'YES', 'YESA', 'NO']:
-                    msg = "SO=%s for PBEAM pid=%s" % (propFields[0], self.pid)
-                    raise RuntimeError(msg)
-                so = propFields[0]
-                if isinstance(so, float) or so is None:
-                    break
+                #if propFields[0] not in [None, 'YES', 'YESA', 'NO']:
+                    #msg = "SO=%s for PBEAM pid=%s" % (propFields[0], self.pid)
+                    #raise RuntimeError(msg)
+                #so = propFields[0]
+                #if isinstance(so, float) or so is None:
+                    #break
+                so  = string(card,  nStart, 'SO%i' % nRepeated)
+                xxb = double(card,  nStart + 1, 'x/xb%i' % nRepeated)
+                A   = double_or_blank(card,  nStart + 2, 'Area%i' % nRepeated, 0.0)
+                i1  = double_or_blank(card, nStart + 3, 'I1 %i' % nRepeated, 0.0)
+                i2  = double_or_blank(card, nStart + 4, 'I2 %i' % nRepeated, 0.0)
+                i12 = double_or_blank(card, nStart + 3, 'I12 %i' % nRepeated, 0.0)
+                j   = double_or_blank(card, nStart + 5, 'J%i' % nRepeated, 0.0)
+                nsm = double_or_blank(card, nStart + 6, 'nsm%i' % nRepeated, 0.0)
+
                 self.so.append(so)
-                self.xxb.append(propFields[1])
-                A = set_default_if_blank(propFields[3], A)
+                self.xxb.append(xxb)
                 self.A.append(A)
-
-                self.i1.append(set_default_if_blank(propFields[3], 0.0))
-                self.i2.append(set_default_if_blank(propFields[4], 0.0))
-                self.i12.append(set_default_if_blank(propFields[5], 0.0))
-                self.j.append(set_default_if_blank(propFields[6], 0.0))
-                self.nsm.append(set_default_if_blank(propFields[7], 0.0))
-
-                if propFields[0] in ['YES', 'NO']:  ## @todo: verify
-                    self.c1.append(set_default_if_blank(propFields[8], 0.0))
-                    self.c2.append(set_default_if_blank(propFields[9], 0.0))
-                    self.d1.append(set_default_if_blank(propFields[10], 0.0))
-                    self.d2.append(set_default_if_blank(propFields[11], 0.0))
-                    self.e1.append(set_default_if_blank(propFields[12], 0.0))
-                    self.e2.append(set_default_if_blank(propFields[13], 0.0))
-                    self.f1.append(set_default_if_blank(propFields[14], 0.0))
-                    self.f2.append(set_default_if_blank(propFields[15], 0.0))
-            #print("nRepeated = %s" %(nRepeated))
+                self.i1.append(i1)
+                self.i2.append(i2)
+                self.i12.append(i12)
+                self.j.append(j)
+                self.nsm.append(nsm)
+                
+                #self.i1.append(set_default_if_blank(propFields[3], 0.0))
+                #self.i2.append(set_default_if_blank(propFields[4], 0.0))
+                #self.i12.append(set_default_if_blank(propFields[5], 0.0))
+                #self.j.append(set_default_if_blank(propFields[6], 0.0))
+                #self.nsm.append(set_default_if_blank(propFields[7], 0.0))
+                
+                if isCDEF:
+                    c1 = double_or_blank(card, nStart + 7, 'c1 %i' % nRepeated, 0.0)
+                    c2 = double_or_blank(card, nStart + 8, 'c2 %i' % nRepeated, 0.0)
+                    d1 = double_or_blank(card, nStart + 9, 'd1 %i' % nRepeated, 0.0)
+                    d2 = double_or_blank(card, nStart + 10, 'd2 %i' % nRepeated, 0.0)
+                    e1 = double_or_blank(card, nStart + 11, 'e1 %i' % nRepeated, 0.0)
+                    e2 = double_or_blank(card, nStart + 12, 'e2 %i' % nRepeated, 0.0)
+                    f1 = double_or_blank(card, nStart + 13, 'f1 %i' % nRepeated, 0.0)
+                    f2 = double_or_blank(card, nStart + 14, 'f2 %i' % nRepeated, 0.0)
+                    self.c1.append(c1)
+                    self.c2.append(c2)
+                    self.d1.append(d1)
+                    self.d2.append(d2)
+                    self.e1.append(e1)
+                    self.e2.append(e2)
+                    self.f1.append(f1)
+                    self.f2.append(f2)
+                else:
+                    # YESA or NO, values MUST be omitted; remark 5
+                    self.c1.append(None)
+                    self.c2.append(None)
+                    self.d1.append(None)
+                    self.d2.append(None)
+                    self.e1.append(None)
+                    self.e2.append(None)
+                    self.f1.append(None)
+                    self.f2.append(None)
+            if len(self.xxb) > 1:
+                assert min(self.xxb) == 0.0, 'min=%s, but should be 0.0\nxxb=%s' % (min(self.xxb), self.xxb)
+                assert max(self.xxb) == 1.0, 'max=%s, but should be 1.0\nxxb=%s' % (max(self.xxb), self.xxb)
+            
 
             # footer fields
+            ## Shear stiffness factor K in K*A*G for plane 1/2.
             self.k1 = double_or_blank(card, x, 'k1', 1.0)
-
-            if self.k1 in ['YES', 'YESA', 'NO']:
-                msg = 'error reading PBEAM card pid=%s' % (self.pid)
-                raise RuntimeError(msg)
-            #print "  k1 = ",self.k1
             self.k2 = double_or_blank(card, x + 1, 'k2', 1.0)
+            
+            ## Shear relief coefficient due to taper for plane 1/2.
             self.s1 = double_or_blank(card, x + 2, 's1', 0.0)
             self.s2 = double_or_blank(card, x + 3, 's2', 0.0)
+            
+            ## non structural mass moment of inertia per unit length about
+            ## nsm center of gravity at Point A/B.
             self.nsia = double_or_blank(card, x + 4, 'nsia', 0.0)
             self.nsib = double_or_blank(card, x + 5, 'nsib', self.nsia)
+
+            ## warping coefficient for end A/B.  
             self.cwa = double_or_blank(card, x + 6, 'cwa', 0.0)
             self.cwb = double_or_blank(card, x + 7, 'cwb', self.cwa)
 
+            ## (y,z) coordinates of center of gravity of
+            ## nonstructural mass for end A/B.
             self.m1a = double_or_blank(card, x + 8, 'm1a', 0.0)
             self.m2a = double_or_blank(card, x + 9, 'm2a', self.m1a)
             self.m1b = double_or_blank(card, x + 10, 'm1b', 0.0)
             self.m2b = double_or_blank(card, x + 11, 'm2b', self.m1b)
+
+            ## (y,z) coordinates of neutral axis for end A/B.
             self.n1a = double_or_blank(card, x + 12, 'n1a', 0.0)
             self.n2a = double_or_blank(card, x + 13, 'n2a', self.n1a)
             self.n1b = double_or_blank(card, x + 14, 'n1a', 0.0)
@@ -1447,6 +1583,21 @@ class PBEAM(IntegratedLineProperty):
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
+    def _verify(self, xref=False):
+        pid = self.Pid()
+        mid = self.Mid()
+        A = self.Area()
+        J = self.J()
+        nsm = self.Nsm()
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(A, float), 'pid=%r' % A
+        assert isinstance(J, float), 'cid=%r' % J
+        assert isinstance(nsm, float), 'nsm=%r' % nsm
+        if xref:
+            assert self.mid.type in ['MAT1', 'MAT4', 'MAT5'], 'pid.type=%s; mid.type=%s' %(self.type, self.mid.type)
+            #self.MassPerLength()
+
     def writeCodeAster(self):  # PBEAM
         a = self.Area()
         iy = self.I11()
@@ -1474,13 +1625,19 @@ class PBEAM(IntegratedLineProperty):
     def rawFields(self):
         list_fields = ['PBEAM', self.pid, self.Mid()]
 
+        i = 0
         for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2,
              f1, f2) in izip(self.so, self.xxb, self.A, self.i1, self.i2,
                              self.i12, self.j, self.nsm, self.c1, self.c2,
                              self.d1, self.d2, self.e1, self.e2, self.f1,
                              self.f2):
-            list_fields += [so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2,
-                       f1, f2]
+            if i == 0:
+                list_fields += [         A, i1, i2, i12, j, nsm,
+                                c1, c2, d1, d2, e1, e2, f1, f2]
+            else:
+                list_fields += [so, xxb, A, i1, i2, i12, j, nsm,
+                                c1, c2, d1, d2, e1, e2, f1, f2]
+            i += 1                   
 
         footer = [self.k1, self.k2, self.s1, self.s2, self.nsia, self.nsib,
                   self.cwa, self.cwb, self.m1a, self.m2a, self.m1b, self.m2b,
@@ -1536,24 +1693,15 @@ class PBEAM(IntegratedLineProperty):
         m1b = set_blank_if_default(self.m1b, 0.0)
         m2b = set_blank_if_default(self.m2b, self.m1b)
 
-        #print "m1a=%s m2a=%s" %(m1a,m2a)
-        #print "m1b=%s m2b=%s" %(m1b,m2b)
-
         n1a = set_blank_if_default(self.n1a, 0.0)
         n2a = set_blank_if_default(self.n2a, self.n1a)
         n1b = set_blank_if_default(self.n1b, 0.0)
         n2b = set_blank_if_default(self.n2b, self.n1b)
-        #print "n1a=%s n2a=%s" %(n1a,n2a)
-        #print "n1b=%s n2b=%s" %(n1b,n2b)
 
         footer = [k1, k2, s1, s2, nsia, nsib, cwa, cwb,
                   m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b]
 
-        #if footer == [self.k1,None,None,None,None,None,None,None,
-        #              None,None,None,None,None,None,None,None]:
-        #    footer = []
         list_fields += footer
-        #print list_fields
         return list_fields
 
 
