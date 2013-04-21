@@ -20,6 +20,7 @@ class ExtendedTestCase(unittest.TestCase):
 class Test(ExtendedTestCase):
 
     def run_function_default(self, f, card, exact, default):
+        fieldname = 'f'
         assert len(card) == len(exact), 'len(card)=%s len(exact)=%s' % (len(card), len(exact))
         assert len(card) == len(default), 'len(card)=%s len(default)=%s' % (len(card), len(default))
         i = 0
@@ -30,24 +31,26 @@ class Test(ExtendedTestCase):
                 with self.assertRaises(exacti):
                     msg = 'field=%r exact=%r default=%r' % (card.field(i), exacti, defaulti)
                     #print msg
-                    f(card, i, i, defaulti)
+                    f(card, i, fieldname, defaulti)
             else:
-                value = f(card, i, i, defaulti)
+                value = f(card, i, fieldname, defaulti)
                 self.assertEqual(value, exacti)
             i += 1
 
     def run_function(self, f, card, exact):
         assert len(card) == len(exact), 'len(card)=%s len(exact)=%s' % (len(card), len(exact))
         i = 0
+        fieldname = 'f'
         card = BDFCard(card)
         for i, exacti in enumerate(exact):
             if exacti == SyntaxError:
                 with self.assertRaises(SyntaxError):
                     msg = 'field=%r exact=%r' % (card.field(i), exacti)
                     #print msg
-                    f(card, i, i)
+                    f(card, i, fieldname)
             else:
-                value = f(card, i, i)
+            
+                value = f(card, i, fieldname)
                 self.assertEqual(value, exacti)
             i += 1
 
@@ -202,11 +205,32 @@ class Test(ExtendedTestCase):
         """
         value = double_or_blank(card, n, fieldname, default=None)
         """
-        card    = [1.0, '2.0', '3.', 'C',        None, None,          '', None, 'cat']
-        exact   = [1.0,  2.0,   3.0, SyntaxError,None, 2.0,  SyntaxError, 1.0, SyntaxError]
-        default = [None, None, None, None,       None, 2.0,         None, 1.0, 1.0]
-        self.run_function_default(double_or_blank, card, exact, default)
+        # integer
+        card = BDFCard([1])
+        with self.assertRaises(SyntaxError):
+            val = double_or_blank(card, 0, 'field')
+        card = BDFCard(['2'] )
+        with self.assertRaises(SyntaxError):
+            val = double_or_blank(card, 0, 'field')
 
+        # float
+        val = double_or_blank(BDFCard([1.]  ), 0, 'field')
+        self.assertEquals(1., val)
+        val = double_or_blank(BDFCard(['1.']), 0, 'field')
+        self.assertEquals(1., val)
+        val = double_or_blank(BDFCard(['1-3']), 0, 'field')
+        self.assertEquals(1.e-3, val)
+
+        # string
+        with self.assertRaises(SyntaxError):
+            double_or_blank(BDFCard(['a'] ), 0, 'field')
+        with self.assertRaises(SyntaxError):
+            double_or_blank(BDFCard(['1b']), 0, 'field')
+
+        # blank
+        double_or_blank(BDFCard(['   ']), 0, 'field')
+        double_or_blank(BDFCard([None]), 0, 'field')
+        
     def test_integer_double_or_blank(self):
         """
         value = double_or_blank(card, n, fieldname, default=None)

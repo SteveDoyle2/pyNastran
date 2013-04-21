@@ -1072,7 +1072,7 @@ class MATHP(HyperelasticMaterial):
             self.TRef = double_or_blank(card, 7, 'TRef', 0.)
             self.ge = double_or_blank(card, 8, 'ge', 0.)
 
-            self.na = double_or_blank(card, 10, 'na', 1)
+            self.na = integer_or_blank(card, 10, 'na', 1)
             self.nd = integer_or_blank(card, 11, 'nd', 1)
 
             self.a20 = double_or_blank(card, 17, 'a20', 0.)
@@ -1350,6 +1350,37 @@ class MATS1(MaterialDependence):
     def rawFields(self):
         list_fields = ['MATS1', self.Mid(), self.Tid(), self.Type,
                   self.h, self.yf, self.hr, self.limit1, self.limit2]
+        return list_fields
+
+    def reprFields(self):
+        return self.rawFields()
+
+class EQUIV(Material):
+    type = 'EQUIV'
+
+    def __init__(self, card=None, data=None, comment=''):
+        Material.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+        if card:
+            ## Identification number of a MAT1, MAT2, or MAT9 entry.
+            self.mid = integer(card, 1, 'mid')
+            self.field2 = integer(card, 2, 'field2')
+            self.field3 = integer(card, 3, 'field3')
+            self.field4 = blank(card, 4, 'field4')
+
+            self.field5 = integer(card, 5, 'field5')
+            self.field6 = integer(card, 6, 'field6')
+            self.field7 = integer(card, 7, 'field7')
+            #[u'EQUIV', 1, 106, 306, None, 1, 106, 306]
+            #[u'EQUIV', 2, 100, 104, None, 1, 0, 4]
+            assert len(card) <= 8, 'len(EQUIV card)=%i card=%s' % (len(card), card)
+        else:
+            raise NotImplementedError(data)
+
+    def rawFields(self):
+        list_fields = ['EQUIV', self.Mid(), self.field2, self.field3,
+                       self.field4, self.field5, self.field6, self.field7]
         return list_fields
 
     def reprFields(self):

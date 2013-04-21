@@ -252,10 +252,16 @@ def double_or_blank(card, n, fieldname, default=None):
     svalue = card.field(n)
     #except IndexError:
         #return default
-
+    
     if isinstance(svalue, float):
         return svalue
+    elif isinstance(svalue, int):
+        Type = getType(svalue)
+        raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     elif isinstance(svalue, str) or isinstance(svalue, unicode):
+        svalue = svalue.strip()
+        if not svalue:
+            return default
         try:
             return double(card, n, fieldname)
         except:
@@ -445,7 +451,7 @@ def integer_string_or_blank(card, n, fieldname, default=None):
     return default
 
 def getType(value):
-    print('Type value=%s' % value)
+    #print('Type value=%s' % value)
     try:
         value = interpret_value(value)
     except:

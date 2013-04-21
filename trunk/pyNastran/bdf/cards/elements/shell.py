@@ -256,15 +256,16 @@ class CTRIA3(TriShell):
 
         if xref:
             assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
-            t = self.Thickness()
+            if not self.pid.type in ['PLPLANE']:
+                t = self.Thickness()
+                assert isinstance(t, float), 'thickness=%r' % t
+                mass = self.Mass()
+                assert isinstance(mass, float), 'mass=%r' % mass
             a,c,n = self.AreaCentroidNormal()
-            assert isinstance(t, float), 'thickness=%r' % t
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
                 assert isinstance(c[i], float)
                 assert isinstance(n[i], float)
-            mass = self.Mass()
-            assert isinstance(mass, float), 'mass=%r' % mass
 
     def flipNormal(self):
         """
@@ -398,16 +399,17 @@ class CTRIA6(TriShell):
             #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
-            t = self.Thickness()
+            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            if not self.pid.type in ['PLPLANE']:
+                t = self.Thickness()
+                assert isinstance(t, float), 'thickness=%r' % t
+                mass = self.Mass()
+                assert isinstance(mass, float), 'mass=%r' % mass
             a,c,n = self.AreaCentroidNormal()
-            assert isinstance(t, float), 'thickness=%r' % t
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
                 assert isinstance(c[i], float)
                 assert isinstance(n[i], float)
-            mass = self.Mass()
-            assert isinstance(mass, float), 'mass=%r' % mass
 
     def Thickness(self):
         """
@@ -658,16 +660,17 @@ class CTRIAX6(TriShell):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer or blank; nid=%s' %(i, nid)
 
         if xref:
-            #assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
-            #t = self.Thickness()
+            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            if not self.pid.type in ['PLPLANE']:
+                t = self.Thickness()
+                assert isinstance(t, float), 'thickness=%r' % t
+                #mass = self.Mass()
+                #assert isinstance(mass, float), 'mass=%r' % mass
             a,c,n = self.AreaCentroidNormal()
-            #assert isinstance(t, float), 'thickness=%r' % t
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
                 assert isinstance(c[i], float)
                 assert isinstance(n[i], float)
-            #mass = self.Mass()
-            #assert isinstance(mass, float), 'mass=%r' % mass
 
     def Pid(self):
         raise AttributeError("CTRIAX6 doesn't have a Property")
@@ -726,12 +729,12 @@ class CTRIAX6(TriShell):
 
     def rawFields(self):
         list_fields = (['CTRIAX6', self.eid, self.Mid(), self.Pid()] +
-                  self.nodeIDs() +  [self.theta])
+                  self.nodeIDs(allowEmptyNodes=True) +  [self.theta])
         return list_fields
 
     def reprFields(self):
         theta = set_default_if_blank(self.theta, 0.0)
-        list_fields = ['CTRIAX6', self.eid, self.Mid()] + self.nodeIDs() + [theta]
+        list_fields = ['CTRIAX6', self.eid, self.Mid()] + self.nodeIDs(allowEmptyNodes=True) + [theta]
         return list_fields
 
 
@@ -970,7 +973,7 @@ class CSHEAR(QuadShell):
         self.nodes = [n1, n4, n3, n2]
 
     def rawFields(self):
-        list_fields = ['CSHEAR', self.eid, self.Pid()] + self.nodeIDs()
+        list_fields = ['CSHEAR', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True)
         return list_fields
 
     def reprFields(self):
@@ -1042,16 +1045,17 @@ class CQUAD4(QuadShell):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
-            t = self.Thickness()
+            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            if not self.pid.type in ['PLPLANE']:
+                t = self.Thickness()
+                assert isinstance(t, float), 'thickness=%r' % t
+                mass = self.Mass()
+                assert isinstance(mass, float), 'mass=%r' % mass
             a,c,n = self.AreaCentroidNormal()
-            assert isinstance(t, float), 'thickness=%r' % t
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
                 assert isinstance(c[i], float)
                 assert isinstance(n[i], float)
-            mass = self.Mass()
-            assert isinstance(mass, float), 'mass=%r' % mass
 
     def flipNormal(self):
         """
@@ -1159,7 +1163,7 @@ class CQUADR(QuadShell):
             #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid.type in ['asf'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid.type in ['PSHELL'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             t = self.Thickness()
             a,c,n = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t
@@ -1189,14 +1193,14 @@ class CQUADR(QuadShell):
         self.nodes = [n1, n4, n3, n2]
 
     def rawFields(self):
-        list_fields = (['CQUADR', self.eid, self.Pid()] + self.nodeIDs() +
+        list_fields = (['CQUADR', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) +
                   [self.thetaMcid, self.zOffset, None, self.TFlag, self.T1,
                    self.T2, self.T3, self.T4])
         return list_fields
 
     def reprFields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self.getReprDefaults()
-        list_fields = (['CQUADR', self.eid, self.Pid()] + self.nodeIDs() +
+        list_fields = (['CQUADR', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True) +
                   [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
         return list_fields
 
@@ -1442,7 +1446,7 @@ class CQUADX(QuadShell):
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]
 
     def rawFields(self):
-        list_fields = ['CQUADX', self.eid, self.Pid()] + self.nodeIDs()
+        list_fields = ['CQUADX', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True)
         return list_fields
 
     def reprFields(self):

@@ -519,7 +519,7 @@ class RFORCE(Load):
 
     def cross_reference(self, model):
         if self.nid > 0:
-            self.nid = model.Element(self.nid)
+            self.nid = model.Node(self.nid)
         self.cid = model.Coord(self.cid)
         pass
 
