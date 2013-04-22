@@ -391,7 +391,7 @@ class CTRIA6(TriShell):
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
-        nids = self.nodeIDs()
+        nids = self.nodeIDs(allowEmptyNodes=True)
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
@@ -653,17 +653,18 @@ class CTRIAX6(TriShell):
         eid = self.Eid()
         #pid = self.Pid()
         nids = self.nodeIDs()
-
+        assert self.pid == 0, 'pid = %s' % self.pid
         assert isinstance(eid, int)
         #assert isinstance(pid, int)
         for i,nid in enumerate(nids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer or blank; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
-            if not self.pid.type in ['PLPLANE']:
-                t = self.Thickness()
-                assert isinstance(t, float), 'thickness=%r' % t
+            assert self.mid.type in ['MAT1'], 'mid=%s self.mid.type=%s' % (mid, self.mid.type)
+            #assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            #if not self.pid.type in ['PLPLANE']:
+                #t = self.Thickness()
+                #assert isinstance(t, float), 'thickness=%r' % t
                 #mass = self.Mass()
                 #assert isinstance(mass, float), 'mass=%r' % mass
             a,c,n = self.AreaCentroidNormal()

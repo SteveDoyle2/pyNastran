@@ -46,7 +46,12 @@ def area_centroid(n1, n2, n3, n4):
     c2 = (n2 + n3 + n4) / 3.
 
     area = area1 + area2
-    centroid = (c1 * area1 + c2 * area2) / area
+    try:
+        centroid = (c1 * area1 + c2 * area2) / area
+    except FloatingPointError:
+        msg = '\nc1=%r\narea1=%r\n' % (c1, area1)
+        msg += 'c2=%r\narea2=%r' % (c2, area2)
+        raise FloatingPointError(msg)
     return(area, centroid)
 
 class SolidElement(Element):

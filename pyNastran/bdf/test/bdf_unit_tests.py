@@ -3,8 +3,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 import unittest
 import pyNastran
-from .cards.test_beams import *
-from .cards.test_constraints import *
 from pyNastran.bdf.cards.baseCard import collapse_thru_by
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.caseControlDeck import CaseControlDeck

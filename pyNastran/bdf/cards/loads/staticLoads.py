@@ -677,10 +677,29 @@ class FORCE2(Force):
             return self.node
         return self.node.nid
 
+    def G1(self):
+        if isinstance(self.g1, int):
+            return self.g1
+        return self.g1.nid
+
+    def G2(self):
+        if isinstance(self.g2, int):
+            return self.g2
+        return self.g2.nid
+
+    def G3(self):
+        if isinstance(self.g3, int):
+            return self.g3
+        return self.g3.nid
+
+    def G4(self):
+        if isinstance(self.g4, int):
+            return self.g4
+        return self.g4.nid
+
     def rawFields(self):
-        (node, g1, g2, g3, g4) = self.nodeIDs([self.node, self.g1, self.g2,
-                                               self.g3, self.g4])
-        list_fields = ['FORCE2', self.sid, node, self.mag, g1, g2, g3, g4]
+        (g1, g2, g3, g4) = self.nodeIDs([self.g1, self.g2, self.g3, self.g4])
+        list_fields = ['FORCE2', self.sid, self.NodeID(), self.mag, g1, g2, g3, g4]
         return list_fields
 
     def reprFields(self):

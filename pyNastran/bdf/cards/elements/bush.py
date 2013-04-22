@@ -199,7 +199,7 @@ class CBUSH1D(BushElement):
         assert isinstance(ga, int), 'ga=%r' % ga
         assert isinstance(gb, int), 'gb=%r' % gb
         assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(cid, int), 'cid=%r' % cid
+        assert isinstance(cid, int) or cid is None, 'cid=%r' % cid
 
     def Ga(self):
         if isinstance(self.ga, int):

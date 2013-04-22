@@ -41,6 +41,9 @@ class BDFCard(object):
     def __setslice__(self, i, j, sequence):
         self.card.__setslice__(i, j, sequence)
 
+    def index(self, i):
+        return self.card.index(i)
+
     def __repr__(self):
         """
         Prints the card as a list
@@ -231,8 +234,10 @@ def wipe_empty_fields(card):
     """
     cardB = []
     for field in card:
-        if isinstance(field, unicode) and field.strip() == '':
-            field = None
+        if isinstance(field, str) or isinstance(field, unicode):
+            field = field.strip()
+            if field == '':
+                field = None
         cardB.append(field)
 
     i = 0
