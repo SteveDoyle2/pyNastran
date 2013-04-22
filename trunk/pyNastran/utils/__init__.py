@@ -211,7 +211,7 @@ def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=F
         equals = ':'
 
     if debug:
-        print "attr=%s equals=|%s|" % (name, equals)
+        print("attr=%s equals=|%s|" % (name, equals))
     ## name
     if isinstance(obj, dict):
         if nspaces == 0:
@@ -237,7 +237,7 @@ def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=F
         raise RuntimeError('key=%s is not a string.  Type=%s' % (name, type(name)))
 
     if debug:
-        print "name=%s type=%s" % (name, type(obj))
+        print("name=%s type=%s" % (name, type(obj)))
 
     ## write the object
     if isinstance(obj, int) or isinstance(obj, float) or obj is None:
@@ -262,7 +262,7 @@ def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=F
     if nspaces == 0:
         msg = msg[:-2]
     if debug:
-        print "|%r|" % msg
+        print("|%r|" % msg)
     return msg
 
 
@@ -471,7 +471,7 @@ if __name__ == '__main__':
     #assert sorted(dictB.items())==sorted(dictC.items())
     #print write_object_attributes('dictA', dictA, isClass=False)
     msg = write_object_attributes('dictB', dictB, nbase=0)
-    print msg
+    print(msg)
     f = open('junk.py', 'wb')
     f.write(msg)
     f.close()
