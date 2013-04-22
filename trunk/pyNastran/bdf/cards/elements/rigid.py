@@ -161,21 +161,19 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         n = 1
         i = 0
         offset = 2
-        while i < iUm:
+        while offset + i < iUm - 1:
             #print('field(%s) = %s' % (offset + i, card.field(offset + i)))
             gni = integer_or_blank(card, offset + i, 'gn%i' % n)
-            if not gni:
-                break
+            cni = components_or_blank(card, offset + i + 1, 'cn%i' % n)
 
-            cni = components(card, offset + i + 1, 'cn%i' % n)
-            self.Gni.append(gni)
-            self.Cni.append(cni)
-            #print("gni=%s cni=%s" % (gni, cni))
-            if i> 0 and i % 6 == 0:
-                #print("skipping 2")
-                i += 2
+            if gni:
+                #print("gni=%s cni=%s" % (gni ,cni))
+                self.Gni.append(gni)
+                self.Cni.append(cni)
+                n += 1
+            else:
+                assert cni is None
             i += 2
-            n += 1
         
         #print('Gni =', self.Gni)
         #print('Cni =', self.Cni)
@@ -183,27 +181,20 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.Cmi = []
 
         # loop till alpha, no field9,field10
-        i = iUm + 1
         n = 1
-        #while i < nfields:  # dont grab alpha
-        while i < len(card):
-            gmi = card.field(i)
-            cmi = card.field(i + 1)
-
-            gmi = integer(card, i, 'gm%i' % n)
-            cmi = components(card, i + 1, 'cm%i' % n)
-            #cmi = card.field(i + 1)
-            #print("gmi=%s cmi=%s" % (gmi, cmi))
+        offset = iUm + 1
+        i = 0
+        while offset + i < len(card):  # dont grab alpha
+            gmi = integer_or_blank(card, offset + i, 'gm%i' % n)
+            cmi = components_or_blank(card, offset + i + 1, 'cm%i' % n)
             if gmi:
                 #print("gmi=%s cmi=%s" % (gmi ,cmi))
                 self.Gmi.append(gmi)
                 self.Cmi.append(cmi)
-            #else:
-                #print "---"
-            #if i%8==0:
-            #    i+=2
+                n += 1
+            else:
+                assert cmi is None
             i += 2
-            n += 1
         #print('Gmi =', self.Gmi)
         #print('Cmi =', self.Cmi)
         #print(self)
