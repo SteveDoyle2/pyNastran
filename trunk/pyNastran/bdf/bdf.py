@@ -129,8 +129,7 @@ class BDFDeprecated(object):
         """
         warnings.warn('addCard has been deprecated; use add_card',
                       DeprecationWarning, stacklevel=2)
-        return self.add_card(card, cardName, icard=iCard,
-                             old_card_obj=oldCardObj)
+        return self.add_card(card, cardName)
 
     def disableCards(self, cards):
         """

@@ -4,6 +4,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import sys
 import copy
 
+from pyNastran.utils import is_string
+
 
 class BDFCard(object):
     def __init__(self, card=None, oldCardObj=None, debug=False):
@@ -234,7 +236,7 @@ def wipe_empty_fields(card):
     """
     cardB = []
     for field in card:
-        if isinstance(field, str) or isinstance(field, unicode):
+        if is_string(field):
             field = field.strip()
             if field == '':
                 field = None
