@@ -106,7 +106,7 @@ def _parseEntry(lines):
         value = int(isubcase)
         #self. subcase = int(isubcase)
         paramType = 'SUBCASE-type'
-    elif (lineUpper.startswith('LABEL') or lineUpper.startswith('SUBTITLE')
+    elif (lineUpper.startswith(('LABEL', 'SUBTITLE')):
           or lineUpper.startswith('TITLE')):
         eIndex = line.index('=')
         key = line[0:eIndex].strip()
