@@ -372,6 +372,7 @@ class CELAS4(SpringElement):
             ## Scalar point identification numbers
             self.s1 = integer_or_blank(card, 3, 's1', 0)
             self.s2 = integer_or_blank(card, 4, 's2', 0)
+            assert self.s1 > 0 or self.s2 > 0, 's1=%s s2=%s' % (self.s1, self.s2)
             assert len(card) <= 5, 'len(CELAS4 card) = %i' % len(card)
         else:
             self.eid = data[0]
@@ -393,7 +394,7 @@ class CELAS4(SpringElement):
 
     def cross_reference(self, model):
         msg = ' which is required by CELAS4 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
 
     def rawFields(self):
         list_fields = ['CELAS4', self.eid, self.k, self.s1, self.s2]

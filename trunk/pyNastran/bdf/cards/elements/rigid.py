@@ -11,13 +11,13 @@ All rigid elements are RigidElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
+import sys
 from itertools import izip, count
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_double, integer_double_or_blank, integer_or_blank,
-    double, double_or_blank, components, components_or_blank, blank, fields)
+    double, double_or_blank, components, components_or_blank, blank, fields, string)
 
 
 class RigidElement(Element):
@@ -143,39 +143,59 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.Gni = []
         self.Cni = []
 
-        fields = card[2:]
-        iUm = fields.index('UM') + 2
-        if isinstance(fields[-1], float):
-            self.alpha = fields.pop()  # the last field is not part of fields
+        #fields = card[2:]
+        iUm = card.index('UM')
+        if iUm > 0:
+            assert string(card, iUm, 'UM') == 'UM'
+
+        if isinstance(card[-1], float):
+            self.alpha = card.fields[-1].pop()  # the last field is not part of fields
             nfields = len(card) - 1
         else:
             nfields = len(card)
             self.alpha = 0.
 
         # loop till UM, no field9,field10
-        i = 2
-        #print "iUm = %s" %(iUm)
+        #print("iUm = %s" % iUm)
+        
+        n = 1
+        i = 0
+        offset = 2
         while i < iUm:
-            gni = card.field(i)
-            #if gni:
-            cni = card.field(i + 1)
+            #print('field(%s) = %s' % (offset + i, card.field(offset + i)))
+            gni = integer_or_blank(card, offset + i, 'gn%i' % n)
+            if not gni:
+                break
+
+            cni = components(card, offset + i + 1, 'cn%i' % n)
             self.Gni.append(gni)
             self.Cni.append(cni)
-            #print "gni=%s cni=%s" %(gni,cni)
-            if i % 6 == 0:
+            #print("gni=%s cni=%s" % (gni, cni))
+            if i> 0 and i % 6 == 0:
+                #print("skipping 2")
                 i += 2
             i += 2
-
+            n += 1
+        
+        #print('Gni =', self.Gni)
+        #print('Cni =', self.Cni)
         self.Gmi = []
         self.Cmi = []
-        #print ""
-        #print "i=%s iUm=%s card.field(iUm)=%s" %(i,iUm,card.field(iUm))
+
         # loop till alpha, no field9,field10
-        while i < nfields:  # dont grab alpha
+        i = iUm + 1
+        n = 1
+        #while i < nfields:  # dont grab alpha
+        while i < len(card):
             gmi = card.field(i)
             cmi = card.field(i + 1)
+
+            gmi = integer(card, i, 'gm%i' % n)
+            cmi = components(card, i + 1, 'cm%i' % n)
+            #cmi = card.field(i + 1)
+            #print("gmi=%s cmi=%s" % (gmi, cmi))
             if gmi:
-                #print "gmi=%s cmi=%s" %(gmi,cmi)
+                #print("gmi=%s cmi=%s" % (gmi ,cmi))
                 self.Gmi.append(gmi)
                 self.Cmi.append(cmi)
             #else:
@@ -183,33 +203,25 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             #if i%8==0:
             #    i+=2
             i += 2
-        #print self
+            n += 1
+        #print('Gmi =', self.Gmi)
+        #print('Cmi =', self.Cmi)
+        #print(self)
+        #sys.exit()
 
     def rawFields(self):
         list_fields = [self.type, self.eid]
 
-        if 0:
-            fields2 = [self.eid]
-            for (i, gn, cn) in izip(count(), self.Gni, self.Cni):
-                list_fields += [gn, cn]
-            list_fields += self.buildTableLines(fields2, i=1, j=1)
-
         for (i, gn, cn) in izip(count(), self.Gni, self.Cni):
+            #print('i=%r gn=%r cn=%r' % (i, gn, cn))
             list_fields += [gn, cn]
-            if i % 6 == 0:
+            if i > 0 and i % 3 == 0:
+                #print('adding blank')
                 list_fields += [None]
 
-        nSpaces = 8 - (len(list_fields) - 1) % 8  # puts ALPHA onto next line
+        nSpaces = 8 - (len(list_fields) - 1) % 8  # puts UM/ALPHA onto next line
         if nSpaces < 8:
             list_fields += [None] * nSpaces
-
-        if 0:
-            fields2 = ['UM']
-            for (i, gm, cm) in izip(count(), self.Gmi, self.Cmi):
-                #print "j=%s gmi=%s cmi=%s" %(j,gm,cm)
-                fields2 += [gm, cm]
-            list_fields += self.buildTableLines(fields2, i=1, j=1)
-            list_fields = self.wipeFields(list_fields)
 
         ## overly complicated loop to print the UM section
         list_fields += ['UM']
@@ -222,11 +234,11 @@ class RBE1(RigidElement):  # maybe not done, needs testing
                 #print "---"
                 j -= 3
             j += 1
-
-        nSpaces = 8 - (len(list_fields) - 1) % 8  # puts ALPHA onto next line
-        if nSpaces == 1:
-            list_fields += [None, None]
+        
         if self.alpha > 0.:  # handles default alpha value
+            nSpaces = 8 - (len(list_fields) - 1) % 8  # puts ALPHA onto next line
+            if nSpaces == 1:
+                list_fields += [None, None]
             list_fields += [self.alpha]
         return list_fields
 

@@ -476,7 +476,7 @@ class LineProperty(Property):
             msg = 'There was an error extracting fields'
             msg += ' from a %s dim=%s for a %s' % (self.Type, dim, self.type)
             msg += '-' * 80 + '\n'
-            msg += 'Traceback:\n%s' % (e.message)
+            msg += 'Traceback:\n%s' % str(e)
             raise IndexError(msg)
         return A
 

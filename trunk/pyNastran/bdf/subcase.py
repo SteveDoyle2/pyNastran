@@ -680,7 +680,11 @@ class Subcase(object):
                     key = 0
                 else:  # handles "SET 100 = 1,2,3"
                     sline = key.split(' ')
-                    key = int(sline[1])
+                    try:
+                        key = int(sline[1])
+                    except:
+                        msg = 'error caclulating key; sline=%s' % sline
+                        raise RuntimeError(msg)
 
                 # store the integer ID and the SET-type list
                 setDict[key] = entry

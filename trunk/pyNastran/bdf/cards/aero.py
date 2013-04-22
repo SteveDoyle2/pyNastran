@@ -801,6 +801,16 @@ class CAERO3(BaseCard):
         #self.list_c1 = model.AeFact(self.list_c1) # not added
         #self.list_c2 = model.AeFact(self.list_c2) # not added
 
+    def Cp(self):
+        if isinstance(self.cp, int):
+            return self.cp
+        return self.cp.cid
+
+    def Pid(self):
+        if isinstance(self.pid, int):
+            return self.pid
+        return self.pid.pid
+
     def rawFields(self):
         list_fields = (['CAERO3', self.eid, self.Pid(), self.Cp(), self.list_w,
                    self.list_c1, self.list_c2] + list(self.p1) + [self.x12] +
@@ -816,7 +826,61 @@ class CAERO3(BaseCard):
 
 
 class CAERO4(BaseCard):
-    pass
+    type = 'CAERO4'
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
+        if card:
+            ## Element identification number
+            self.eid = integer(card, 1, 'eid')
+            ## Property identification number of a PAERO2 entry.
+            self.pid = integer(card, 2, 'pid')
+            ## Coordinate system for locating point 1.
+            self.cp = integer_or_blank(card, 3, 'cp', 0)
+
+            self.nspan = integer_or_blank(card, 4, 'nspan', 0)
+            self.lspan = integer_or_blank(card, 5, 'lspan', 0)
+
+            self.p1 = array([double_or_blank(card, 9,  'x1', 0.0),
+                             double_or_blank(card, 10, 'y1', 0.0),
+                             double_or_blank(card, 11, 'z1', 0.0)])
+            self.x12 = double_or_blank(card, 12, 'x12', 0.)
+
+            self.p4 = array([double_or_blank(card, 13, 'x4', 0.0),
+                             double_or_blank(card, 14, 'y4', 0.0),
+                             double_or_blank(card, 15, 'z4', 0.0)])
+            self.x43 = double_or_blank(card, 16, 'x43', 0.)
+            assert len(card) <= 17, 'len(CAERO4 card) = %i' % len(card)
+        else:
+            msg = '%s has not implemented data parsing' % self.type
+            raise NotImplementedError(msg)
+
+    def cross_reference(self, model):
+        #self.pid = model.PAero(self.pid)  # links to PAERO4
+        self.cp = model.Coord(self.cp)
+
+    def Cp(self):
+        if isinstance(self.cp, int):
+            return self.cp
+        return self.cp.cid
+
+    def Pid(self):
+        if isinstance(self.pid, int):
+            return self.pid
+        return self.pid.pid
+
+    def rawFields(self):
+        list_fields = (['CAERO4', self.eid, self.Pid(), self.Cp(), self.nspan,
+                        self.lspan, None, None, None,] + list(self.p1) + [self.x12] +
+                        list(self.p4) + [self.x43])
+        return list_fields
+
+    def reprFields(self):
+        cp = set_blank_if_default(self.Cp(), 0)
+        list_fields = (['CAERO4', self.eid, self.Pid(), cp, self.nspan,
+                        self.lspan, None, None, None,] + list(self.p1) + [self.x12] +
+                        list(self.p4) + [self.x43])
+        return list_fields
 
 
 class CAERO5(BaseCard):
