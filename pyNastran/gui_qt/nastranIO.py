@@ -20,11 +20,9 @@ from pyNastran.op2.op2 import OP2
 
 class NastranIO(object):
 
-
     def load_nastran_geometry(self, bdfFileName, dirname, isNodal, isCentroidal):
         self.isNodal = isNodal
         self.isCentroidal = isCentroidal
-
         self.gridResult = vtk.vtkFloatArray()
 
         if bdfFileName is None:
@@ -63,7 +61,7 @@ class NastranIO(object):
 
         self.log_info("nElements = %i" % (self.nElements))
         
-        nCONM2 = model.cardCount['CONM2'] if 'CONM2' in model.cardCount else 0
+        nCONM2 = model.card_count['CONM2'] if 'CONM2' in model.card_count else 0
         
         self.grid.Allocate(self.nElements, 1000)
         self.gridResult.SetNumberOfComponents(self.nElements)
@@ -94,7 +92,6 @@ class NastranIO(object):
                 j += 4
             else:
                 self.log_info("skipping %s" % (element.type))
-
         self.mapElements(points, points2, self.nidMap, model, j)
 
     def mapElements(self, points, points2, nidMap, model, j): 
@@ -319,7 +316,6 @@ class NastranIO(object):
             for eid in case.ovmShear:
                 eid2 = self.eidMap[eid]
                 cases[eKey][eid2] = 1.
-
 
                 oxx[eid2] = case.oxx[eid]['C']
                 oyy[eid2] = case.oyy[eid]['C']

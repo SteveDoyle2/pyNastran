@@ -8,13 +8,16 @@ import sys
 import copy
 
 from pyNastran.bdf import subcase
-from pyNastran.bdf.subcase import Subcase
+from pyNastran.bdf.subcase import Subcase, update_param_name
 from pyNastran.utils.log import get_logger
 
 
 class CaseControlDeckDeprecated(object):
-    def hasParameter(self, isubcase, param_name):
-        self.has_parameter(isubcase, param_name)
+    def __init__(self):
+        pass
+
+    #def hasParameter(self, isubcase, param_name):
+        #self.has_parameter(isubcase, param_name)
 
     #def get_subcase_parameter(self, isubcase, param_name):
     #def has_subcase(self, isubcase):
@@ -293,6 +296,7 @@ class CaseControlDeck(object):
                 equals_count += 1
         line_upper = line.upper()
 
+        #print("line_upper = %r" % line)
         if line_upper.startswith('SUBCASE'):
             #print "line = |%r|" %(line)
             line2 = line.replace('=', '')
@@ -306,8 +310,8 @@ class CaseControlDeck(object):
             #self.isubcase = int(isubcase)
             param_type = 'SUBCASE-type'
         elif (line_upper.startswith('LABEL') or
-              line_upper.startswith('SUBTITLE') or
-              line_upper.startswith('TITLE')):
+              line_upper.startswith('SUBT') or  # SUBTITLE
+              line_upper.startswith('TITL')):   # TITLE
             try:
                 eIndex = line.index('=')
             except:
@@ -380,20 +384,8 @@ class CaseControlDeck(object):
                 #print 'B ??? line = ',line
                 pass
             
-            if key in ['SPC', 'MPC', 'TRIM', 'FMETHOD', 'METHOD', 'LOAD',
-                       'SUPORT', 'SUPORT1', 'TEMPERATURE(INITIAL)', 'TEMPERATURE(LOAD)']:
-                value2 = int(value)
-                assert value2 > 0, 'line=%r is invalid; value=%r must be greater than 0.' % (line, value2)
-            elif key in ['STRESS', 'STRAIN', 'SPCFORCES', 'DISPLACEMENT', 'MPCFORCES', 'SVECTOR', 'SVEC',
-                         'VELOCITY', 'ACCELERATION', 'SPCFORCE', 'ELFOR','DISP', 'FORCE', 'ESE']:
-                #ALL or int
-                pass
-            elif key in ['ECHO']:
-                pass
-            elif 'SET' in key:
-                pass
-            else:
-                raise NotImplementedError('key=%r line=%r' % (key, line))
+            key = update_param_name(key.strip())
+            verify_card(key, value, options, line)
 
         elif line_upper.startswith('BEGIN'):  # begin bulk
             try:
@@ -511,6 +503,129 @@ class CaseControlDeck(object):
     #    #param2 = [''.join(param)]
     #    #print 'param2 = ',param2
 
+
+def verify_card(key, value, options, line):
+    if key in ['AUXMODEL', 'BC', 'BCHANGE', 'BCMOVE', 'CAMPBELL', 'CLOAD', 
+               'CMETHOD', 'CSSCHD', 'DEACTEL', 'DEFORM', 'DESGLB', 'DESSUB',
+               'DIVERG', 'DLOAD', 'DRSPAN', 'FMETHOD', 'FREQUENCY', 'GUST',
+               'HADAPART', 'LINE', 'LOAD', 'LOADSET', 'MAXLINES', 'MCHSTAT',
+               'MFLUID', 'MODES', 'MODTRAK', 'MPC', 'NLHARM',]:
+        try:
+            value2 = int(value)
+        except:
+            print('line=%r is invalid; value=%r' % (line, value))
+            raise
+        assert value2 > 0, 'line=%r is invalid; value=%r must be greater than 0.' % (line, value2)
+
+def verify_card2(key, value, options, line):
+    """
+    Make sure there are no obvious errors
+    """
+    # this is purposely made overly strict to catch all the cases
+
+    # these may only be integers
+    #print("key =", key)
+    if key in ['BCONTACT', 'CURVELINESYMBOL']:
+        try:
+            value2 = int(value)
+        except:
+            print('line=%r is invalid; value=%r' % (line, value))
+            raise
+
+    # these may only be integers greater than 0
+    elif key in ['SPC', 'MPC', 'TRIM', 'FMETHOD', 'METHOD', 'LOAD',
+               'SUPORT', 'SUPORT1', 'TEMPERATURE(INITIAL)', 'TEMPERATURE(LOAD)',
+               'DLOAD', 'MFLUID', 'CLOAD', 'NLPARM', 'CMETHOD',
+               'FREQUENCY', 'TSTEP', 'TSTEPNL', 'SDAMPING', 'DESOBJ',
+               'TEMPERATURE(INIT)', 'RANDOM', 'DESSUB', 'ADAPT', 'MAXLINES',
+               'TFL','DESGLB', 'SMETHOD', 'DYNRED', 'GUST', 'TEMPERATURE(MATE)',
+               'OTIME', 'NONLINEAR', 'AUXM', 'IC', 'BC', 'OUTRCV', 'DIVERG',
+               'DATAREC', 'TEMPERATURE(BOTH)', 'DEFORM', 'MODES', 'CASE',
+               'SEDR', 'SELG', 'SEFINAL', 'SEKR', 'TEMPERATURE(ESTIMATE)',
+               'GPSDCON', 'AUXMODEL',
+               'MODTRAK', 'OFREQ', 'DRSPAN', 'OMODES', 'ADACT', 'SERESP', 'STATSUB',
+               'CURVESYM', 'ELSDCON', 'CSSCHD', 'NSM', 'TSTRU', 'RANDVAR', ''
+               'RGYRO', 'SELR', 'TEMPERATURE(ESTI)', 'RCROSS', 'SERE', 'SEMR',
+               '', '', '', '', '', '', '', '', '', '',
+               '']:
+        try:
+            value2 = int(value)
+        except:
+            print('line=%r is invalid; value=%r' % (line, value))
+            raise
+        assert value2 > 0, 'line=%r is invalid; value=%r must be greater than 0.' % (line, value2)
+
+    # these may have a value of all/none/integer, nothing else
+    # except commas are allowed
+    # 'DISP=ALL', 'DISP=NONE', 'DISP=1', 'DISP=1,2'
+    elif key in ['STRESS', 'STRAIN', 'SPCFORCES', 'DISPLACEMENT', 'MPCFORCES', 'SVECTOR', 
+                 'VELOCITY', 'ACCELERATION', 'FORCE', 'ESE', 'OLOAD', 'SEALL', 'GPFORCE',
+                 'GPSTRESS', 'GPSTRAIN', 'FLUX','AEROF', 'THERMAL', 'STRFIELD',
+                 'NOUTPUT', 'SEDV', 'APRES', 'HTFLOW', 'NLSTRESS', 'GPKE',
+                 'SACCELERATION', 'SDISPLACEMENT', 'SEMG', 'HARMONICS', 'PRESSURE', 'VUGRID',
+                 'ELSUM', 'SVELOCITY', 'STRFIELD REAL', 'SENSITY', 'MONITOR',
+                 'NLLOAD', 'GPSDCON', 'BOUTPUT', '', '', '']:
+        if value not in ['ALL', 'NONE']:
+            if ',' in value:
+                sline = value.split(',')
+                for spot in sline:
+                    try:
+                        value2 = int(spot)
+                    except:
+                        print('line=%r is invalid; value=%r' % (line, spot))
+                        raise
+            else:
+                try:
+                    value2 = int(value)
+                except:
+                    print('line=%r is invalid; value=%r' % (line, value))
+                    raise
+                assert value2 > 0, 'line=%r is invalid; value=%r must be greater than 0.' % (line, value2)
+    elif key in ['ECHO']:
+        #assert value in ['NONE','BOTH','UNSORT','SORT', 'NOSORT', 'PUNCH', ''], 'line=%r is invalid; value=%r.' % (line, value)
+        pass
+    elif key in ['CSCALE', 'SUBSEQ','SYMSEQ', 'DEFORMATION SCALE', '', '']:
+        # floats
+        pass
+    elif 'SET' in key:
+        pass
+
+    # weird cards
+    elif key in ['SUBTITLE', 'TITLE',
+        'A2GG',  'M2GG', 'K2GG',
+        'K2PP', 'M2PP', 
+        'K42GG',
+
+        'XMIN', 'XMAX', 'XTITLE','XPAPE', 'XPAPER', 'XAXIS', 'XGRID', 'XGRID LINES', 'XLOG',
+        'YMIN', 'YMAX', 'YTITLE','YPAPE', 'YPAPER', 'YAXIS', 'YGRID', 'YGRID LINES', 'YLOG',
+        'XTMIN','XTMAX', 'XTGRID', 'XTTITLE', 'XTAXIS', 'XTGRID LINES', 'XTLOG', 
+        'YTMIN','YTMAX', 'YTGRID', 'YTTITLE', 'YTAXIS', 'YTGRID LINES', 'YTLOG', 
+        'XBMIN', 'XBMAX', 'XBGRID', 'XBAXIS', 'XBGRID LINES', 'XBTITLE', 'XBLOG',
+        'YBMIN', 'YBMAX', 'YBGRID', 'YBAXIS', 'YBGRID LINES', 'YBTITLE', 'YBLOG',
+
+         'RIGHT TICS','UPPER TICS',
+        'TRIGHT TICS',
+        'BRIGHT TICS', 
+
+        'PLOTTER', 'XYPLOT',
+
+        'PTITLE',
+        'HOUTPUT', 'PLOTID', '', '', '', '', '', 
+        'AXISYMMETRIC', 'CURVELINESYMBOL', 'CURVELINESYMB', 'AECONFIG',
+        'B2GG', 'B2PP', 'AESYMXZ', 'TEMP', 'DSAPRT', 'MEFFMASS', 
+        'MAXMIN', 'RESVEC',  'MODESELECT', 'RIGID', 'TCURVE',
+        'SUPER',  'MAXI DEFO', 'P2G',
+        'EXTSEOUT', 'FLSTCNT PREFDB', 'AESYMXY',
+        'DSYM', '', '', '']:
+        pass
+    elif key == 'ANALYSIS':
+        assert value in ['HEAT', 'ANALYSIS', 'MFREQ', 'STATICS', 'MODES', 'DFREQ',
+            'MTRAN', 'BUCK', 'MCEIG', 'DCEIG', 'SAERO', 'NLSTATIC', 'NLSTAT',
+            'STATIC', 'MTRANS', 'MODE', 'FLUTTER', 'DIVERG', 'NLTRAN', 'FLUT', '', '', '', '', ''], 'line=%r is invalid; value=%r' % (line, value)
+    elif key == 'AUTOSPC':
+        assert value in ['YES'], 'line=%r is invalid; value=%r' % (line, value)
+    else:
+        raise NotImplementedError('key=%r line=%r' % (key, line))
 
 if __name__ == '__main__':
     lines = [

@@ -1332,7 +1332,6 @@ class PBEAM(IntegratedLineProperty):
             isCDEF = False
             field9 = double_string_or_blank(card, 9, 'field9')
             field17 = double_string_or_blank(card, 17, 'field17')
-            #print("field17 =", field17)
             try:
                 isinstance(field17, float)
                 isCDEF = True
@@ -1340,7 +1339,6 @@ class PBEAM(IntegratedLineProperty):
             except SyntaxError:
                 pass
             #print("f9=%s f17=%s" % (field9, field17))
-            #if field17 in ['YES', 'YESA', 'NO', None] or isCDEF:
 
             #nlines = nfields // 8
 
@@ -1362,7 +1360,6 @@ class PBEAM(IntegratedLineProperty):
 
             #print("isCDEF=%s isContinue=%s" % (isCDEF, isContinue))
             #if isCDEF:
-            #if field9 not in ['YES', 'YESA', 'NO']:
             self.c1 = [double_or_blank(card, 9, 'c1', 0.0)]
             self.c2 = [double_or_blank(card, 10, 'c2', 0.0)]
             self.d1 = [double_or_blank(card, 11, 'd1', 0.0)]
@@ -1387,16 +1384,12 @@ class PBEAM(IntegratedLineProperty):
             # ----------------------------------------------------------------
             # figure out how many YES/YESA/NO fields there are
             # and if there is a footer
-            #print("")
-            #print("  nfields = ",nfields)
 
             # counting continuation cards
             nfields = len(card) - 1  # -1 for PBEAM field
             if isCDEF:
-                #print('isCDEF =', isCDEF)
                 nmajor = nfields // 16
                 nleftover = nfields % 16
-                #print("  nmajor=%s nleftover=%s" % (nmajor, nleftover))
                 if nleftover == 0:
                     nmajor -= 1
 
@@ -1405,9 +1398,6 @@ class PBEAM(IntegratedLineProperty):
 
                 # jump to the last block of 16
                 x = nmajor * 16 + 1
-                #print(1, 1+8, 1+16, 1+24)
-                #print('card.field(%i) = %s' % (x, card.field(x)))
-                #print('x =', x)
 
                 # If it's an SO field, we don't read the footer
                 ## remark 6:
@@ -1421,7 +1411,6 @@ class PBEAM(IntegratedLineProperty):
                     # read the footer
                     pass
             else:
-                #print('isCDEF =', isCDEF)
                 nmajor = nfields // 8
                 nleftover = nfields % 8
                 if nleftover == 0:
@@ -1429,46 +1418,25 @@ class PBEAM(IntegratedLineProperty):
                 if nmajor == 0:
                     nmajor = 1
                 x = nmajor * 8 + 1
-                #print('nmajor = ', nmajor)
-                #print('card.field(%i) = %s' % (x, card.field(x)))
-                #print('x =', x)
-                #print(1,1+8, 1+16, 1+24)
+
                 if card.field(x) in ['YES', 'YESA', 'NO']:  # there is no footer
                     nMajor += 1
                     x += 8
                 else:
                     # read the footer
                     pass
-                #asd
+
             # ----------------------------------------------------------------
-            #print("  nMajor = ",nMajor)
             for nRepeated in xrange(1, nmajor): # start at 1 to drop the header
-                #print "  adding a major"
+                #print("  adding a major")
                 ## field 17 is the first possible so
                 if isCDEF:
                     nStart = nRepeated * 16 + 1
                 else:
                     nStart = nRepeated * 8 + 1
-                #print('nStart =', nStart)
 
-                #propFields = card[nStart:nStart + 16]
                 propFields = []
                 n = 1
-                #for i in range(nStart + 1, nStart + 16):
-                    #print('i =', i, card.field(i))
-                    #propField = double_or_blank(card, i, 'propField%s' % n)
-                    #n += 1
-                #propFields = fields(double_or_blank, card, 'propFields',
-                #                    )
-                #print("propFields = ",propFields)
-
-                #print "  so = ",propFields[0]
-                #if propFields[0] not in [None, 'YES', 'YESA', 'NO']:
-                    #msg = "SO=%s for PBEAM pid=%s" % (propFields[0], self.pid)
-                    #raise RuntimeError(msg)
-                #so = propFields[0]
-                #if isinstance(so, float) or so is None:
-                    #break
                 so  = string(card,  nStart, 'SO%i' % nRepeated)
                 xxb = double(card,  nStart + 1, 'x/xb%i' % nRepeated)
                 A   = double_or_blank(card,  nStart + 2, 'Area%i' % nRepeated, 0.0)
@@ -1486,13 +1454,7 @@ class PBEAM(IntegratedLineProperty):
                 self.i12.append(i12)
                 self.j.append(j)
                 self.nsm.append(nsm)
-                
-                #self.i1.append(set_default_if_blank(propFields[3], 0.0))
-                #self.i2.append(set_default_if_blank(propFields[4], 0.0))
-                #self.i12.append(set_default_if_blank(propFields[5], 0.0))
-                #self.j.append(set_default_if_blank(propFields[6], 0.0))
-                #self.nsm.append(set_default_if_blank(propFields[7], 0.0))
-                
+
                 if isCDEF:
                     c1 = double_or_blank(card, nStart + 7, 'c1 %i' % nRepeated, 0.0)
                     c2 = double_or_blank(card, nStart + 8, 'c2 %i' % nRepeated, 0.0)
@@ -1534,8 +1496,8 @@ class PBEAM(IntegratedLineProperty):
             self.s1 = double_or_blank(card, x + 2, 's1', 0.0)
             self.s2 = double_or_blank(card, x + 3, 's2', 0.0)
             
-            ## non structural mass moment of inertia per unit length about
-            ## nsm center of gravity at Point A/B.
+            ## non structural mass moment of inertia per unit length
+            ## about nsm center of gravity at Point A/B.
             self.nsia = double_or_blank(card, x + 4, 'nsia', 0.0)
             self.nsib = double_or_blank(card, x + 5, 'nsib', self.nsia)
 
@@ -1631,13 +1593,13 @@ class PBEAM(IntegratedLineProperty):
                              self.i12, self.j, self.nsm, self.c1, self.c2,
                              self.d1, self.d2, self.e1, self.e2, self.f1,
                              self.f2):
-            if i == 0:
+            if i == 0:  # the first 2 fields aren't written
                 list_fields += [         A, i1, i2, i12, j, nsm,
                                 c1, c2, d1, d2, e1, e2, f1, f2]
             else:
                 list_fields += [so, xxb, A, i1, i2, i12, j, nsm,
                                 c1, c2, d1, d2, e1, e2, f1, f2]
-            i += 1                   
+            i += 1
 
         footer = [self.k1, self.k2, self.s1, self.s2, self.nsia, self.nsib,
                   self.cwa, self.cwb, self.m1a, self.m2a, self.m1b, self.m2b,
@@ -1647,6 +1609,13 @@ class PBEAM(IntegratedLineProperty):
 
     def reprFields(self):
         list_fields = ['PBEAM', self.pid, self.Mid()]
+        #print("c1=%r c2=%r" % (self.c1, self.c2))
+        #print("d1=%r d2=%r" % (self.d1, self.d2))
+        #print("e1=%r e2=%r" % (self.e1, self.e2))
+        #print("f1=%r f2=%r" % (self.f1, self.f2))
+        #print('i1  = %r' % self.i1)
+        #print('i2  = %r' % self.i2)
+        3print('i12 = %r' % self.i12)
 
         i = 0
         for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2, f1,
@@ -1670,12 +1639,12 @@ class PBEAM(IntegratedLineProperty):
             e2 = set_blank_if_default(e2, 0.0)
             f2 = set_blank_if_default(f2, 0.0)
 
-            if i == 0:  # the 1st 2 fields aren't written
-                list_fields += [A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
-                           e1, e2, f1, f2]
+            if i == 0:  # the first 2 fields aren't written
+                list_fields += [A, i1, i2, i12, j, nsm,
+                                c1, c2, d1, d2, e1, e2, f1, f2]
             else:
-                list_fields += [so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
-                           e1, e2, f1, f2]
+                list_fields += [so, xxb, A, i1, i2, i12, j, nsm,
+                                c1, c2, d1, d2, e1, e2, f1, f2]
             i += 1
         k1 = set_blank_if_default(self.k1, 1.0)
         k2 = set_blank_if_default(self.k2, 1.0)

@@ -9,35 +9,39 @@ from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 
 import pyNastran
-from pyNastran.utils.log import simpleLogger
+from pyNastran.utils import print_bad_path
+from pyNastran.utils.log import SimpleLogger
 from nastranIO import NastranIO
-
+pkg_path = pyNastran.__path__[0]
+icon_path = os.path.join(pkg_path, 'gui', 'icons')
+image_path = os.path.join(pkg_path, 'gui_qt', 'images')
 
 #### tcolorpick.png and tabout.png trefresh.png icons on LGPL license, see
 #### http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/color-picker-grey.png
 #### http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/help-hint.png
 #### http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/view-refresh-8.png
 
+
 class MainWindow(QtGui.QMainWindow, NastranIO):
  
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         settings = QtCore.QSettings()
-        
+
         self.last_dir = '' # last visited directory while opening file
         # build GUI and restore saved application state
         self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
         self.background_col = settings.value("backgroundColor", (0.1, 0.2, 0.4)).toPyObject()
-        
+
         self.init_ui()
         self.restoreState(settings.value("mainWindowState").toByteArray())
-        
-        self.log =  simpleLogger('debug', lambda x, y: self.logg_msg(x, y))
+
+        self.log =  SimpleLogger('debug', lambda x, y: self.logg_msg(x, y))
         # logging needs synchronizing, so the messages from different threads
         # would not be interleave
         self.log_mutex = QtCore.QReadWriteLock() 
         self.show()
-    
+
     def logg_msg(self, typ, msg):
         """
         Add message to log widget trying to choose right color for it.
@@ -55,11 +59,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO):
         self.log_widget.textCursor().insertHtml(msg + r"<br />")
         self.log_widget.ensureCursorVisible() # new message will be visible
         self.log_mutex.unlock()
-    
+
     def log_info(self, msg):
         """ Helper funtion: log a messaage msg with a 'GUI:' prefix """
         self.log.simple_msg(msg + "\n", 'GUI')
-        
+
     def change_background_col(self):
         """ Choose a background color """
         c =  [int(255 * i) for i in self.background_col]
@@ -67,11 +71,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO):
         if col.isValid():
             self.background_col = col.getRgbF()[:3]
             self.rend.SetBackground(*self.background_col)
-        
+
     def about_dialog(self):
         """ Display about dialog """
         about = [
-            'Experimental pyNastran QT GUI',
+            'pyNastran QT GUI',
             '',
             'pyNastran v%s' % (pyNastran.__version__),
             'Copyright '+ pyNastran.__license__,
@@ -101,17 +105,17 @@ class MainWindow(QtGui.QMainWindow, NastranIO):
             'w      - view model as a wireframe',
         ]
         QtGui.QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
-        
+
     def init_ui(self):
         """ Initialize user iterface"""
         self.resize(800,600)
         self.statusBar().showMessage('Ready')
-      
+
         # windows title and aplication icon
         self.setWindowTitle('Statusbar')    
         self.setWindowIcon(QtGui.QIcon("images/logo.png"))
         self.setWindowTitle("pyNastran experimetnal QT gui")
-        
+
         ############  Logging widget ##################        
         self.log_dock = QtGui.QDockWidget("Application log", self)
         self.log_dock.setObjectName("application_log")
@@ -121,50 +125,60 @@ class MainWindow(QtGui.QMainWindow, NastranIO):
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
         ################################################
         
+        # right sidebar
+
         ## menubar
         self.menubar = self.menuBar()
         self.menu_file = self.menubar.addMenu('&File')
         self.menu_view = self.menubar.addMenu('&View')
         self.menu_window = self.menubar.addMenu('&Window')
         self.menu_help = self.menubar.addMenu('&Help')
-      
+
         ## toolbar
         self.toolbar = self.addToolBar('Show toolbar')
         self.toolbar.setObjectName('main_toolbar')
-      
+
         # prepare actions that will  be used in application
         actions = {}
+        pth = os.path.join(icon_path, 'tbdf.png')
+        print print_bad_path(pth)
         for nam, txt, icon, short, tip, func in [
           ('exit', '&Exit', 'images/texit.png', 'Ctrl+Q', 'Exit application', QtGui.qApp.quit),
-          ('open_bdf', '&Open BDF', 'images/topen.png', 'Ctrl+O', 'Loads a BDF input file', self.load_bdf),
+          ('open_bdf', '&Open BDF', os.path.join(icon_path, 'tbdf.png'), 'Ctrl+O', 'Loads a BDF input file', self.load_bdf),
+          ('open_op2', '&Open OP2', os.path.join(icon_path, 'top2.png'), None, 'Loads a OP2 results file', self.load_op2),
+          #('open_f06', '&Open F06', None, None, 'Loads a F06 results file', self.load_f06),  ## @todo no picture...
           ('wireframe', 'Wireframe kodel', 'images/twireframe.png', 'w', 'Show Model as a Wireframe Model', lambda: self._simulate_key_press('w')),
           ('surface', 'Surface Model', 'images/tsolid.png', 's', 'Show Model as a Surface Model', lambda: self._simulate_key_press('s')),
           ('back_col', 'Change background color', 'images/tcolorpick.png', None, 'Choose a background color', self.change_background_col),
           ('scshot', 'Take a Screenshot', 'images/tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.take_screenshot),
           ('about', 'About pyNastran GUI', 'images/tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
           ('creset', 'Reset camera view', 'images/trefresh.png', 'r', 'Reset the camera view to default', lambda: self._simulate_key_press('r'))]:
-            if not "/" in icon:
-                ico = QtGui.QIcon.fromTheme(icon)
+            #print "name=%s txt=%s icon=%s short=%s tip=%s func=%s" % (nam, txt, icon, short, tip, func)
+            if icon is None:
+                pass
+            #elif not "/" in icon:
+                #ico = QtGui.QIcon.fromTheme(icon)
             else:
                 ico = QtGui.QIcon()
                 ico.addPixmap(QtGui.QPixmap(icon), QtGui.QIcon.Normal, QtGui.QIcon.Off)
             actions[nam] = QtGui.QAction(ico, txt, self)
+
             if short:
                 actions[nam].setShortcut(short)
             if tip:
                 actions[nam].setStatusTip(tip)
             if func:
                 actions[nam].triggered.connect(func)
-        
+
         actions['toolbar'] = self.toolbar.toggleViewAction()
         actions['toolbar'].setStatusTip("Show/Hide application toolbar")
-        
+
         actions['logwidget'] = self.log_dock.toggleViewAction()
         actions['logwidget'].setStatusTip("Show/Hide application log")
-        
-      
+
+
         # populate menus and toolbar
-        for menu, items in [(self.menu_file, ('open_bdf', '', 'exit')),
+        for menu, items in [(self.menu_file, ('open_bdf', 'open_op2', 'open_f06', '', 'exit')),
                            (self.menu_view,  ('scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col')),
                            (self.menu_window,('toolbar', 'logwidget')),
                            (self.menu_help,  ('about',)),
@@ -174,13 +188,13 @@ class MainWindow(QtGui.QMainWindow, NastranIO):
                     menu.addSeparator()
                 else:
                     menu.addAction(actions[i] if isinstance(i, basestring) else i())
-                
+
 
         #Frame that VTK will render on 
         vtk_frame = QtGui.QFrame()
         vtk_hbox  = QtGui.QHBoxLayout()
         vtk_hbox.setContentsMargins(2, 2, 2, 2)
-    
+
         #Qt VTK RenderWindowInteractor
         self.vtk_interactor = QVTKRenderWindowInteractor(parent = vtk_frame)
         vtk_hbox.addWidget(self.vtk_interactor)
@@ -188,8 +202,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO):
         vtk_frame.setFrameStyle(QtGui.QFrame.NoFrame | QtGui.QFrame.Plain)
         # this is our main, 'central' widget
         self.setCentralWidget(vtk_frame)
-        
-        
+
         ##############################################################
         self.rend = vtk.vtkRenderer()
         self.vtk_interactor.GetRenderWindow().AddRenderer(self.rend)
@@ -202,8 +215,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO):
         self.rend.SetBackground(*self.background_col)
         self.rend.ResetCamera()
         self._simulate_key_press('t') # change mouse style to trackball
-        
-   
+
     def load_bdf(self):
         """
         Load BDF file.
@@ -216,20 +228,48 @@ class MainWindow(QtGui.QMainWindow, NastranIO):
             self.last_dir = os.path.split(fname)[0]
             self.load_nastran_geometry(fname, self.last_dir, False, False)
             self.rend.ResetCamera()
-            
+
+    def load_op2(self):
+        """
+        Load OP2 file.
+        @todo not done...
+        """
+        # getOpenFileName return QString and we want Python string
+        fname = str(QtGui.QFileDialog.getOpenFileName(self, 'Open OP2 file', self.last_dir,
+        'Nastran OP2 (*.op2)'))
+        
+        if fname:
+            self.last_dir = os.path.split(fname)[0]
+            self.load_nastran_results(fname, self.last_dir, False, False)
+            self.rend.ResetCamera()
+
+    def load_f06(self):
+        """
+        Load F06 file.
+        @todo not done...
+        """
+        # getOpenFileName return QString and we want Python string
+        fname = str(QtGui.QFileDialog.getOpenFileName(self, 'Open F06 file', self.last_dir,
+        'Nastran F06 (*.f06)'))
+        
+        if fname:
+            self.last_dir = os.path.split(fname)[0]
+            self.load_nastran_results(fname, self.last_dir, False, False)
+            self.rend.ResetCamera()
+
     def take_screenshot(self):
         """ Take a screenshot of a current view and save as a file"""
         renderLarge = vtk.vtkRenderLargeImage()
         renderLarge.SetInput(self.rend)
         renderLarge.SetMagnification(4)
-        
+
         filt = QtCore.QString() 
         fname = str(QtGui.QFileDialog.getSaveFileName(self, ('Choose a file name'
                     'and type'), '', ('PNG Image *.png (*.png);; JPEG Image '
                     '*.jpg *.jpeg (*.jpg, *.jpeg);; TIFF Image *.tif *.tiff '
                     '(*.tif, *.tiff);; BMP Image *.bmp (*.bmp);; PostScript '
                     'Document *.ps (*.ps)'), filt))
-                    
+
         if fname:
             flt = str(filt).split()[0]
             nam, ext = os.path.splitext(fname)
@@ -237,7 +277,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO):
             for nam, exts, ob in (('PostScript', ['.ps'], vtk.vtkPostScriptWriter),
                 ("BMP", ['.bmp'], vtk.vtkBMPWriter), ('JPG', ['.jpg', '.jpeg'], 
                 vtk.vtkJPEGWriter), ("TIFF", ['.tif', '.tiff'], vtk.vtkTIFFWriter)):
-                                       
+
                 if flt == nam:
                     fname = fname if ext in exts else fname + exts[0]
                     writer = ob()
@@ -245,14 +285,12 @@ class MainWindow(QtGui.QMainWindow, NastranIO):
             else:
                 fname = fname if ext == '.png' else fname + '.png'
                 writer = vtk.vtkPNGWriter()
-            
+
             writer.SetInputConnection(renderLarge.GetOutputPort())
             writer.SetFileName(fname)
             writer.Write()
             self.log_info("Saved screenshot: " + fname)
-            
 
-            
     def closeEvent(self, event):
         """
         Handling saving state before application when application is being closed.  
@@ -261,8 +299,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO):
         settings.setValue("main_WindowGeometry", self.saveGeometry())
         settings.setValue("mainWindowState", self.saveState())
         settings.setValue("backgroundColor", self.background_col)
-        
-            
+
     def _simulate_key_press(self, key):
         """
         A little hack method that simulates pressing the key for the VTK
@@ -273,10 +310,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO):
         
         @param key a key that VTK should be informed about, e.g. 't'
         """
+        print "key = ", key
         self.vtk_interactor._Iren.SetEventInformation(0, 0, 0, 0, key, 0, None)
         self.vtk_interactor._Iren.KeyPressEvent()
         self.vtk_interactor._Iren.CharEvent()
-        
+
     def addGeometry(self):
         aQuadMapper = vtk.vtkDataSetMapper()
         aQuadMapper.SetInput(self.grid)
