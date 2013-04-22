@@ -6,6 +6,11 @@ from os.path import join as pjoin
 from numpy import ndarray
 import io
 
+def is_string(value):
+    if isinstance(value, unicode) or isinstance(value, str):
+        return True
+    return False
+
 def is_binary(filename):
     """
     Return true if the given filename is binary.
@@ -243,7 +248,7 @@ def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=F
     if isinstance(obj, int) or isinstance(obj, float) or obj is None:
         xml += '<name=%s value=%s type=%s>' % (name, obj, type(obj))
         msg += '%s %s %s,\n' % (key, equals, write_value(obj, nspaces, nbase, isClass))
-    elif isinstance(obj, str) or isinstance(obj, unicode):
+    elif is_string(obj):
         msg += "%s %s %s,\n" % (key, equals, write_value(obj, nspaces, nbase, isClass))
 
     elif isinstance(obj, dict):

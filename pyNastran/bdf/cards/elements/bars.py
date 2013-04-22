@@ -6,6 +6,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from numpy import matrix, zeros, ones, array, transpose, dot
 from numpy.linalg import norm
 
+from pyNastran.utils import is_string
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element #, Mid
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -711,9 +712,10 @@ class CBAR(LineElement):
             self.w2b = main[10]
             self.w3b = main[11]
         #print("offt = %s" %(self.offt))
-        if not isinstance(self.offt, unicode) or isinstance(self.offt, str):
+
+        if not is_string(self.offt):
             raise SyntaxError('invalid offt expected a string of length 3 '
-                              'offt=|%s|' % self.offt)
+                              'offt=|%r|; Type=%s' % (self.offt, type(self.offt)))
 
         msg = 'invalid offt parameter of %s...offt=%s' % (self.type, self.offt)
         # B,G,O
@@ -1191,7 +1193,7 @@ class CBEAM(CBAR):
             self.isOfft = True
             self.offt = 'GGG'  # default
             self.bit = None
-        elif isinstance(field8, unicode):
+        elif is_string(field8):
             self.isOfft = True
             self.bit = None
             self.offt = field8

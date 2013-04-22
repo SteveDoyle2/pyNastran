@@ -8,6 +8,7 @@ import sys
 import warnings
 from numpy import allclose, isinf
 from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.utils import is_string
 
 
 def is_same(value1, value2):
@@ -15,7 +16,7 @@ def is_same(value1, value2):
     Checks to see if 2 values are the same
     @note this method is used by almost every card when printing
     """
-    if isinstance(value1, unicode) or isinstance(value1, str) or value1 is None:
+    if is_string(value1) or value1 is None:
         return True if value1 == value2 else False
     return True if (value1 == value2 or type(value1) == type(value2) and
                     not isinf(value1) and allclose(value1, value2)) else False
