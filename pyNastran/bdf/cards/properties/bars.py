@@ -1615,7 +1615,7 @@ class PBEAM(IntegratedLineProperty):
         #print("f1=%r f2=%r" % (self.f1, self.f2))
         #print('i1  = %r' % self.i1)
         #print('i2  = %r' % self.i2)
-        3print('i12 = %r' % self.i12)
+        #print('i12 = %r' % self.i12)
 
         i = 0
         for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2, f1,
