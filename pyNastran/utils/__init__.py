@@ -430,7 +430,7 @@ if __name__ == '__main__':
             'stringArray' : array(['s']),
             'stringArray2' : array(['a', 'b']),
             'nullDict' : {},
-            u'unicode' : u'',
+            u'unicodStr' : u'',
             'ListOfLists' : [[[],[[],],2,{'a':3}]],
             1 : 1,
             None : 4,
