@@ -24,8 +24,229 @@ class ShellProperty(Property):
     def __init__(self, card, data):
         Property.__init__(self, card, data)
 
+class CompositeShellProperty(ShellProperty):
+    def __init__(self, card, data):
+        ShellProperty.__init__(self, card, data)
 
-class PCOMP(ShellProperty):
+    def cross_reference(self, model):
+        """
+        links the material ID to the materials
+        @param self the object pointer
+        @param model a BDF object
+        """
+        for iply in xrange(len(self.plies)):
+            mid = self.plies[iply][0]
+            self.plies[iply][0] = model.Material(mid)  # mid
+
+    def isSymmetrical(self):
+        """is the laminate symmetrical"""
+        if self.lam == 'SYM':
+            return True
+        return False
+
+    def _adjust_ply_id(self, iply, nplies):
+        """
+        When a ply is not symmetric, this function returns the input iply.
+        When a ply is symmetrical and the iply value is greater than the number of plies
+        we return the mirrored ply.
+        @param self the PCOMP object
+        @param iply
+        @param 
+        
+        @code
+        Case 1 (nplies=6, len(plies)=3):
+            ply 2
+            ply 1
+            ply 0
+            ------- sym
+            ply 0 / 3
+            ply 1 / 4
+            ply 2 / 5
+          Ask for ply 3, return ply 0
+          Ask for ply 4, return ply 1
+          Ask for ply 5, return ply 2
+
+        Case 2 (nplies=5, len(plies)=3):
+            ply 2
+            ply 1
+            ply 0 ------- sym
+            ply 1 / 3
+            ply 2 / 4
+          Ask for ply 3, return ply 1
+          Ask for ply 4, return ply 2
+        @endcode
+        """
+        if iply == 'all':
+            return iply
+        if iply > nplies:
+            if iply <= self.nPlies():
+                if nplies % 2 == 1:  # symmetric about ply 0; ## TODO: verify
+                    iply = iply - nplies + 1
+                else:
+                    iply = iply - nplies
+            else:
+                raise RuntimeError('invalid value for iply=%r' % iply)
+        return iply
+
+    def Thickness(self, iply='all'):
+        """
+        gets the thickness of the ith ply
+        @param self the object pointer
+        @param iply the string 'all' (default) or the mass per area of the ith
+         ply
+        """
+        nplies = len(self.plies)
+        iply = self._adjust_ply_id(iply, nplies)
+
+        if iply == 'all':  # get all layers
+            t = 0.
+            for iply in xrange(nplies):
+                t += self.Thickness(iply)
+
+            if self.isSymmetrical():
+                return t * 2.
+            return t
+        else:
+            t = self.plies[iply][1]
+            return t
+
+    def hasCoreLayer(self):
+        """is there a center layer (matters most for a symmetrical ply)"""
+        return self.nPlies() % 2 == 1  # True if has a core, False otherwise
+
+    def nPlies(self):
+        """
+        returns the number of plies including the core
+        @code
+        if Lam=SYM:
+          returns nPlies*2   (even)
+          returns nPlies*2-1 (odd)
+        else:
+          returns nPlies
+        @endcode
+        """
+        nPlies = len(self.plies)
+        if self.isSymmetrical():
+            if nPlies % 2 == 0:
+                return nPlies * 2
+            return nPlies * 2 - 1
+        return nPlies
+
+    def Nsm(self):
+        return self.nsm
+
+    def Mid(self, iply):
+        """
+        gets the material ID of the ith ply
+        @param self the object pointer
+        @param iply the ply ID (starts from 0)
+        """
+        Mid = self.Material(iply)
+        if isinstance(Mid, int):
+            return Mid
+        return Mid.mid
+
+    def Mids(self):
+        """
+        gets the material IDs of all the plies
+        @param self the object pointer
+        @retval mids the material IDs
+        """
+        mids = []
+        for iply in xrange(len(self.plies)):
+            mids.append(self.Mid(iply))
+            #theta = self.Theta(iply)
+            #sout = self.sout(iply)
+        return mids
+
+    def Rho(self, iply):
+        """
+        gets the density of the ith ply
+        @param self the object pointer
+        @param iply the ply ID (starts from 0)
+        """
+        mid = self.Material(iply)
+        return mid.rho
+
+    def Material(self, iply):
+        """
+        gets the material of the ith ply (not the ID unless it's not
+        cross-referenced)
+        @param self the object pointer
+        @param iply the ply ID (starts from 0)
+        """
+        Mid = self.plies[iply][0]
+        return Mid
+
+    def Theta(self, iply):
+        """
+        Gets the ply angle of the ith ply (not the ID)
+        @param self the object pointer
+        @param iply the ply ID (starts from 0)
+        """
+        nplies = len(self.plies)
+        iply = self._adjust_ply_id(iply, nplies)
+        Theta = self.plies[iply][2]
+        return Theta
+
+    def sout(self, iply):
+        nplies = len(self.plies)
+        iply = self._adjust_ply_id(iply, nplies)
+        Sout = self.plies[iply][3]
+        return Sout
+
+    def MassPerArea(self, iply='all'):
+        r"""
+        \f[ \large  m = A ( \rho t + nsm ) \f]
+        mass = rho*A*t
+        but area comes from the element, so:
+        \f[ \large  \frac{m}{A} =\rho t + nsm \f]
+        mass/A = rho*t for the various layers
+        the final mass calculation will be done later
+        @param self
+          the PCOMP object
+        @param iply
+          the string 'all' (default) or the mass per area of the ith ply
+        """
+        nplies = len(self.plies)
+        iply = self._adjust_ply_id(iply, nplies)
+        if iply == 'all':  # get all layers
+            massPerArea = 0.
+            nplies = len(self.plies)
+            for iply in xrange(nplies):
+                rho = self.Rho(iply)
+                t = self.plies[iply][1]
+                massPerArea += rho * t
+
+            if self.isSymmetrical():
+                return 2. * massPerArea + self.nsm
+            return massPerArea + self.nsm
+        else:
+            rho = self.Rho(iply)
+            t = self.plies[iply][1]
+            return rho * t + self.nsm
+
+    def isSameCard(self, prop, debug=False):
+        if self.type != prop.type:
+            return False
+        fields2 = [prop.nsm, prop.sb, prop.ft, prop.TRef, prop.ge, prop.lam]
+        fields1 = [self.nsm, self.sb, self.ft, self.TRef, self.ge, self.lam]
+
+        for ply in self.plies:
+            fields1 += ply
+        for ply in prop.plies:
+            fields2 += ply
+
+        if debug:
+            print("fields1=%s fields2=%s" % (fields1, fields2))
+
+        for (field1, field2) in izip(fields1, fields2):
+            if not self.isSame(field1, field2):
+                return False
+        return True
+
+
+class PCOMP(CompositeShellProperty):
     """
     @code
     PCOMP     701512   0.0+0 1.549-2                   0.0+0   0.0+0     SYM
@@ -111,7 +332,6 @@ class PCOMP(ShellProperty):
             #    #print str(self)
             self.z0 = double_or_blank(card, 2, 'z0', -0.5 * self.Thickness())
         else:
-            #print "len(data) = ",len(data)
             self.pid = data[0]
             self.z0 = data[1]
             self.nsm = data[2]
@@ -136,63 +356,6 @@ class PCOMP(ShellProperty):
                     raise RuntimeError('unsupported sout...needs debugging...'
                                        '\nPCOMP = %s' % data)
                 self.plies.append([mid, t, theta, sout])
-
-    def hasCoreLayer(self):
-        """is there a center layer (matters most for a symmetrical ply)"""
-        return self.nPlies() % 2 == 1  # True if has a core, False otherwise
-
-    def nPlies(self):
-        """
-        returns the number of plies including the core
-        @code
-        if Lam=SYM:
-          returns nPlies*2   (even)
-          returns nPlies*2-1 (odd)
-        else:
-          returns nPlies
-        @endcode
-        """
-        nPlies = len(self.plies)
-        if self.isSymmetrical():
-            if nPlies % 2 == 0:
-                return nPlies * 2
-            return nPlies * 2 - 1
-        return nPlies
-
-    def isSymmetrical(self):
-        """is the laminate symmetrical"""
-        if self.lam == 'SYM':
-            return True
-        return False
-
-    def isSameCard(self, prop, debug=False):
-        if self.type != prop.type:
-            return False
-        fields2 = [prop.nsm, prop.sb, prop.ft, prop.TRef, prop.ge, prop.lam]
-        fields1 = [self.nsm, self.sb, self.ft, self.TRef, self.ge, self.lam]
-
-        for ply in self.plies:
-            fields1 += ply
-        for ply in prop.plies:
-            fields2 += ply
-
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
-
-        for (field1, field2) in izip(fields1, fields2):
-            if not self.isSame(field1, field2):
-                return False
-        return True
-
-    def cross_reference(self, model):
-        """
-        links the material ID to the materials
-        @param self the object pointer
-        @param model a BDF object
-        """
-        for iply in xrange(len(self.plies)):
-            mid = self.plies[iply][0]
-            self.plies[iply][0] = model.Material(mid)  # mid
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -221,166 +384,6 @@ class PCOMP(ShellProperty):
             assert isinstance(rho, float), 'rho=%r' % rho
             assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
             
-    def Nsm(self):
-        return self.nsm
-
-    def Mid(self, iply):
-        """
-        gets the material ID of the ith ply
-        @param self the object pointer
-        @param iply the ply ID (starts from 0)
-        """
-        Mid = self.Material(iply)
-        if isinstance(Mid, int):
-            return Mid
-        return Mid.mid
-
-    def Mids(self):
-        """
-        gets the material IDs of all the plies
-        @param self the object pointer
-        @retval mids the material IDs
-        """
-        mids = []
-        for iply in xrange(len(self.plies)):
-            mids.append(self.Mid(iply))
-            theta = self.Theta(iply)
-            sout = self.sout(iply)
-        return mids
-
-    def Rho(self, iply):
-        """
-        gets the density of the ith ply
-        @param self the object pointer
-        @param iply the ply ID (starts from 0)
-        """
-        mid = self.Material(iply)
-        return mid.rho
-
-    def Material(self, iply):
-        """
-        gets the material of the ith ply (not the ID unless it's not
-        cross-referenced)
-        @param self the object pointer
-        @param iply the ply ID (starts from 0)
-        """
-        Mid = self.plies[iply][0]
-        return Mid
-
-    def _adjust_ply_id(self, iply, nplies):
-        """
-        When a ply is not symmetric, this function returns the input iply.
-        When a ply is symmetrical and the iply value is greater than the number of plies
-        we return the mirrored ply.
-        @param self the PCOMP object
-        @param iply
-        @param 
-        
-        @code
-        Case 1 (nplies=6, len(plies)=3):
-            ply 2
-            ply 1
-            ply 0
-            ------- sym
-            ply 0 / 3
-            ply 1 / 4
-            ply 2 / 5
-          Ask for ply 3, return ply 0
-          Ask for ply 4, return ply 1
-          Ask for ply 5, return ply 2
-
-        Case 2 (nplies=5, len(plies)=3):
-            ply 2
-            ply 1
-            ply 0 ------- sym
-            ply 1 / 3
-            ply 2 / 4
-          Ask for ply 3, return ply 1
-          Ask for ply 4, return ply 2
-        @endcode
-        """
-        if iply == 'all':
-            return iply
-        if iply > nplies:
-            if iply <= self.nPlies():
-                if nplies % 2 == 1:  # symmetric about ply 0; ## TODO: verify
-                    iply = iply - nplies + 1
-                else:
-                    iply = iply - nplies
-            else:
-                raise RuntimeError('invalid value for iply=%r' % iply)
-        return iply
-
-    def Thickness(self, iply='all'):
-        """
-        gets the thickness of the ith ply
-        @param self the object pointer
-        @param iply the string 'all' (default) or the mass per area of the ith
-         ply
-        """
-        nplies = len(self.plies)
-        iply = self.adjust_ply_id(iply, nplies)
-
-        if iply == 'all':  # get all layers
-            t = 0.
-            for iply in xrange(nplies):
-                t += self.Thickness(iply)
-
-            if self.isSymmetrical():
-                return t * 2.
-            return t
-        else:
-            t = self.plies[iply][1]
-            return t
-
-    def Theta(self, iply):
-        """
-        Gets the ply angle of the ith ply (not the ID)
-        @param self the object pointer
-        @param iply the ply ID (starts from 0)
-        """
-        nplies = len(self.plies)
-        iply = self._adjust_ply_id(iply, nplies)
-        Theta = self.plies[iply][2]
-        return Theta
-
-    def sout(self, iply):
-        nplies = len(self.plies)
-        iply = self._adjust_ply_id(iply, nplies)
-        Sout = self.plies[iply][3]
-        return Sout
-
-    def MassPerArea(self, iply='all'):
-        r"""
-        \f[ \large  m = A ( \rho t + nsm ) \f]
-        mass = rho*A*t
-        but area comes from the element, so:
-        \f[ \large  \frac{m}{A} =\rho t + nsm \f]
-        mass/A = rho*t for the various layers
-        the final mass calculation will be done later
-        @param self
-          the PCOMP object
-        @param iply
-          the string 'all' (default) or the mass per area of the ith ply
-        """
-        nplies = len(self.plies)
-        iply = self._adjust_ply_id(iply, nplies)
-        if iply == 'all':  # get all layers
-            massPerArea = 0.
-            nplies = len(self.plies)
-            for iply in xrange(nplies):
-                rho = self.Rho(iply)
-                t = self.plies[iply][1]
-                massPerArea += rho * t
-
-            if self.isSymmetrical():
-                return 2. * massPerArea + self.nsm
-            return massPerArea + self.nsm
-        else:
-            rho = self.Rho(iply)
-            t = self.plies[iply][1]
-            return rho * t + self.nsm
-
     def rawFields(self):
         list_fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
                   self.TRef, self.ge, self.lam, ]
@@ -407,7 +410,7 @@ class PCOMP(ShellProperty):
         return list_fields
 
 
-class PCOMPG(PCOMP):
+class PCOMPG(CompositeShellProperty):
     type = 'PCOMPG'
 
     def __init__(self, card=None, data=None, comment=''):
