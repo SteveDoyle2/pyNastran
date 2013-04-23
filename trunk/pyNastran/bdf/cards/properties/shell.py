@@ -78,14 +78,15 @@ class CompositeShellProperty(ShellProperty):
         """
         if iply == 'all':
             return iply
-        if iply > nplies:
-            if iply <= self.nPlies():
-                if nplies % 2 == 1:  # symmetric about ply 0; ## TODO: verify
-                    iply = iply - nplies + 1
-                else:
-                    iply = iply - nplies
+        if iply >= nplies:
+            if iply < self.nPlies():
+                #if nplies % 2 == 1:  # symmetric about ply 0; ## TODO: verify
+                    #iply = iply - nplies + 1
+                #else:
+                iply = iply - nplies
             else:
                 raise RuntimeError('invalid value for iply=%r' % iply)
+            
         return iply
 
     def Thickness(self, iply='all'):
@@ -96,8 +97,6 @@ class CompositeShellProperty(ShellProperty):
          ply
         """
         nplies = len(self.plies)
-        iply = self._adjust_ply_id(iply, nplies)
-
         if iply == 'all':  # get all layers
             t = 0.
             for iply in xrange(nplies):
@@ -107,6 +106,7 @@ class CompositeShellProperty(ShellProperty):
                 return t * 2.
             return t
         else:
+            iply = self._adjust_ply_id(iply, nplies)
             t = self.plies[iply][1]
             return t
 
@@ -129,7 +129,7 @@ class CompositeShellProperty(ShellProperty):
         if self.isSymmetrical():
             if nPlies % 2 == 0:
                 return nPlies * 2
-            return nPlies * 2 - 1
+            return nPlies * 2# - 1
         return nPlies
 
     def Nsm(self):
@@ -141,6 +141,8 @@ class CompositeShellProperty(ShellProperty):
         @param self the object pointer
         @param iply the ply ID (starts from 0)
         """
+        nplies = len(self.plies)
+        iply = self._adjust_ply_id(iply, nplies)
         Mid = self.Material(iply)
         if isinstance(Mid, int):
             return Mid
@@ -153,7 +155,7 @@ class CompositeShellProperty(ShellProperty):
         @retval mids the material IDs
         """
         mids = []
-        for iply in xrange(len(self.plies)):
+        for iply in xrange(self.nPlies()):
             mids.append(self.Mid(iply))
             #theta = self.Theta(iply)
             #sout = self.sout(iply)
@@ -165,7 +167,10 @@ class CompositeShellProperty(ShellProperty):
         @param self the object pointer
         @param iply the ply ID (starts from 0)
         """
+        nplies = len(self.plies)
+        iply = self._adjust_ply_id(iply, nplies)
         mid = self.Material(iply)
+        print("rho =", mid.rho)
         return mid.rho
 
     def Material(self, iply):
@@ -175,6 +180,8 @@ class CompositeShellProperty(ShellProperty):
         @param self the object pointer
         @param iply the ply ID (starts from 0)
         """
+        nplies = len(self.plies)
+        iply = self._adjust_ply_id(iply, nplies)
         Mid = self.plies[iply][0]
         return Mid
 
@@ -276,6 +283,7 @@ class PCOMP(CompositeShellProperty):
 
             ## symmetric flag - default = No Symmetry (NO)
             self.lam = string_or_blank(card, 8, 'lam')
+            assert self.lam in [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE'], 'lam=%r is invalid' % self.lam
 
             # -8 for the first 8 fields (1st line)
             nPlyFields = card.nFields() - 9
@@ -340,6 +348,7 @@ class PCOMP(CompositeShellProperty):
             self.TRef = data[5]
             self.ge = data[6]
             self.lam = data[7]
+            assert self.lam in ['SYM', 'NO'], "lam=%r and must be 'SYM'."
             Mid = data[8]
             T = data[9]
             Theta = data[10]
@@ -353,8 +362,8 @@ class PCOMP(CompositeShellProperty):
                 elif sout == 0:
                     sout = 'NO'
                 else:
-                    raise RuntimeError('unsupported sout...needs debugging...'
-                                       '\nPCOMP = %s' % data)
+                    raise RuntimeError('unsupported sout.  sout=%r and must be 0 or 1.'
+                                       '\nPCOMP = %s' % (sout, data))
                 self.plies.append([mid, t, theta, sout])
 
     def _verify(self, xref=False):
