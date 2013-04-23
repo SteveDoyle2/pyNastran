@@ -267,6 +267,50 @@ class PCOMP(ShellProperty):
         Mid = self.plies[iply][0]
         return Mid
 
+    def _adjust_ply_id(self, iply, nplies):
+        """
+        When a ply is not symmetric, this function returns the input iply.
+        When a ply is symmetrical and the iply value is greater than the number of plies
+        we return the mirrored ply.
+        @param self the PCOMP object
+        @param iply
+        @param 
+        
+        @code
+        Case 1 (nplies=6, len(plies)=3):
+            ply 2
+            ply 1
+            ply 0
+            ------- sym
+            ply 0 / 3
+            ply 1 / 4
+            ply 2 / 5
+          Ask for ply 3, return ply 0
+          Ask for ply 4, return ply 1
+          Ask for ply 5, return ply 2
+
+        Case 2 (nplies=5, len(plies)=3):
+            ply 2
+            ply 1
+            ply 0 ------- sym
+            ply 1 / 3
+            ply 2 / 4
+          Ask for ply 3, return ply 1
+          Ask for ply 4, return ply 2
+        @endcode
+        """
+        if iply == 'all':
+            return iply
+        if iply > nplies:
+            if iply <= self.nPlies():
+                if nplies % 2 == 1:  # symmetric about ply 0; ## TODO: verify
+                    iply = iply - nplies + 1
+                else:
+                    iply = iply - nplies
+            else:
+                raise RuntimeError('invalid value for iply=%r' % iply)
+        return iply
+
     def Thickness(self, iply='all'):
         """
         gets the thickness of the ith ply
@@ -274,9 +318,12 @@ class PCOMP(ShellProperty):
         @param iply the string 'all' (default) or the mass per area of the ith
          ply
         """
+        nplies = len(self.plies)
+        iply = self.adjust_ply_id(iply, nplies)
+
         if iply == 'all':  # get all layers
             t = 0.
-            for iply in xrange(len(self.plies)):
+            for iply in xrange(nplies):
                 t += self.Thickness(iply)
 
             if self.isSymmetrical():
@@ -292,10 +339,14 @@ class PCOMP(ShellProperty):
         @param self the object pointer
         @param iply the ply ID (starts from 0)
         """
+        nplies = len(self.plies)
+        iply = self._adjust_ply_id(iply, nplies)
         Theta = self.plies[iply][2]
         return Theta
 
     def sout(self, iply):
+        nplies = len(self.plies)
+        iply = self._adjust_ply_id(iply, nplies)
         Sout = self.plies[iply][3]
         return Sout
 
@@ -312,6 +363,8 @@ class PCOMP(ShellProperty):
         @param iply
           the string 'all' (default) or the mass per area of the ith ply
         """
+        nplies = len(self.plies)
+        iply = self._adjust_ply_id(iply, nplies)
         if iply == 'all':  # get all layers
             massPerArea = 0.
             nplies = len(self.plies)
