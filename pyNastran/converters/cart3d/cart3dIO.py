@@ -38,10 +38,10 @@ class Cart3dIO(object):
                 del self.iCase
                 del self.iSubcaseNameMap
             except:
-                print "cant delete geo"
+                print("cant delete geo")
                 pass
 
-            #print dir(self)
+            #print(dir(self))
             skipReading = False
         self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
@@ -63,8 +63,8 @@ class Cart3dIO(object):
         self.nNodes = model.nPoints
         self.nElements = model.nElementsRead
 
-        #print "nNodes = ",self.nNodes
-        print "nElements = ", self.nElements
+        #print("nNodes = ",self.nNodes)
+        print("nElements = ", self.nElements)
 
         self.grid.Allocate(self.nElements, 1000)
         self.gridResult.SetNumberOfComponents(self.nElements)
@@ -110,7 +110,7 @@ class Cart3dIO(object):
         #self.grid2.Modified()
         self.grid.Update()
         #self.grid2.Update()
-        print "updated grid"
+        print("updated grid")
 
         # loadCart3dResults - regions/loads
         self.TurnTextOn()
@@ -159,7 +159,7 @@ class Cart3dIO(object):
             cases[(ID, 'Region', 1, 'centroid', '%.0f')] = Regions
             cases[(ID, 'Eids', 1, 'centroid', '%.0f')] = Eids
 
-        print "load.keys() = ", loads.keys()
+        print("load.keys() = ", loads.keys())
 
         if 'Cp' in loads and plotNodal:
             cp = loads['Cp']

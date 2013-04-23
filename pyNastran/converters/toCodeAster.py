@@ -366,20 +366,20 @@ class CodeAsterConverter(BDF):
 
         comm += 'FIN();\n'
         comm += '# ENDDATA\n'
-        print "writing fname=%s" % (fname + '.comm')
+        print("writing fname=%s" % (fname + '.comm'))
         f = open(fname + '.comm', 'wb')
         f.write(comm)
         f.close()
 
         if mail:
             f = open(fname + '.mail', 'wb')
-            print "writing fname=%s" % (fname + '.mail')
+            print("writing fname=%s" % (fname + '.mail'))
             f.write(mail)
             f.close()
 
         if pyCA:
             f = open(fname + '.py', 'wb')
-            print "writing fname=%s" % (fname + '.py')
+            print("writing fname=%s" % (fname + '.py'))
             f.write(pyCA)
             f.close()
 

@@ -354,10 +354,10 @@ class PanairGrid(PanairGridHelper, PanairWrite):
             assert nDisplacement in [0, 1], section[n]
             n += 1
 
-            print "\nsection[n] = ", section[n].strip()
+            print("\nsection[n] = ", section[n].strip())
             nXR = int(float(section[n][0:10]))
             assert nXR > 0, section[n]
-            print "nXR = %s" % (nXR)
+            print("nXR = %s" % nXR)
             netName = section[n][70:80]
             #self.log.debug("kt=%s nXR=%s nDisplacement=%s netname=%s" %
                            #(kt, nXR, nDisplacement, netName))
@@ -375,10 +375,10 @@ class PanairGrid(PanairGridHelper, PanairWrite):
             n += nXR_Lines
 
             for line in lines:
-                print line
+                print(line)
                 try:
                     (x1, r1) = float(line[0:10]), float(line[10:20])
-                    print "x1=%s r1=%s" % (x1, r1)
+                    print("x1=%s r1=%s" % (x1, r1))
                     Xin.append(x1)
                     R.append(r1)
                 except ValueError:
@@ -386,7 +386,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
 
                 try:
                     (x2, r2) = float(line[20:30]), float(line[30:40])
-                    print "x2=%s r2=%s" % (x2, r2)
+                    print("x2=%s r2=%s" % (x2, r2))
                     Xin.append(x2)
                     R.append(r2)
                 except ValueError:
@@ -394,7 +394,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
 
                 try:
                     (x3, r3) = float(line[40:50]), float(line[50:60])
-                    print "x3=%s r3=%s" % (x3, r3)
+                    print("x3=%s r3=%s" % (x3, r3))
                     Xin.append(x3)
                     R.append(r3)
                 except ValueError:
@@ -402,21 +402,21 @@ class PanairGrid(PanairGridHelper, PanairWrite):
             assert nXR == len(Xin), 'nXR=%s Xin=%s' % (nXR, len(Xin))
 
             #----------------------------------------------------
-            print "section[n] = ", section[n].strip()
+            print("section[n] = ", section[n].strip())
             nTheta = int(float(section[n][0:10]))
             assert nTheta > 0, section[n]
-            print "nTheta = %s" % (nTheta)
+            print("nTheta = %s" % nTheta)
             nFullLines = nTheta / 6
             nPartialLines = int(ceil(nTheta % 6 / 6.))
             nTheta_Lines = nFullLines + nPartialLines
-            print "Theta - nFullLines=%s nPartialLines=%s nLines=%s" % (
-                nFullLines, nPartialLines, nTheta_Lines)
+            print("Theta - nFullLines=%s nPartialLines=%s nLines=%s" % (
+                nFullLines, nPartialLines, nTheta_Lines))
             n += 1
 
             lines = section[n:n + nTheta_Lines]
             theta = []
             for line in lines:
-                print line
+                print(line)
                 try:
                     (theta1) = float(line[0:10])
                     theta.append(theta1)
@@ -447,7 +447,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
                     theta.append(theta6)
                 except ValueError:
                     pass
-            print "theta = ", theta
+            print("theta = ", theta)
             n += nTheta_Lines
 
             assert nTheta == len(theta)
@@ -464,7 +464,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
                 for (j, sinTheta, cosTheta) in izip(count(), sinThetaR, cosThetaR):
                     y = r * sinTheta
                     z = r * cosTheta + zi
-                    print "x=%s y=%s z=%s" % (x, y, z)
+                    print("x=%s y=%s z=%s" % (x, y, z))
                     X[i][j] = x
                     Y[i][j] = y
                     Z[i][j] = z
@@ -869,4 +869,4 @@ if __name__ == '__main__':
     grid.readGrid()
     grid.writeGrid(outfileName)
     (points, elements) = grid.getPointsElements()
-    print "\ninfileName=%s" % (infileName)
+    print("\ninfileName=%s" % (infileName))

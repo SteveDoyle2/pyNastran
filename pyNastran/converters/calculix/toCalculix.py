@@ -173,7 +173,7 @@ class CalculixConverter(BDF):
                 try:
                     prop = prop.writeCalculix()
                 except:
-                    print prop
+                    print(prop)
                     raise
                 isSkipped = False
                 if 'skipped' in prop:
@@ -341,14 +341,14 @@ class CalculixConverter(BDF):
         inp += 'S\n'
         inp += '*END STEP\n'
         inp += '** END OF DATA\n'
-        print "writing fname=%s" % (fname + '.inp')
+        print("writing fname=%s" % (fname + '.inp'))
         f = open(fname + '.inp', 'wb')
         f.write(inp)
         f.close()
 
         if dat:
             f = open(fname + '.dat', 'wb')
-            print "writing fname=%s" % (fname + '.dat')
+            print("writing fname=%s" % (fname + '.dat'))
             f.write(dat)
             f.close()
 

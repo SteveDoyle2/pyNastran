@@ -338,8 +338,8 @@ class Cart3DAsciiReader(object):
         assert bypass == False
         elements = {}
 
-        print "nElementsRead=%s nElementsSkip=%s" % (
-            self.nElementsRead, self.nElementsSkip)
+        print("nElementsRead=%s nElementsSkip=%s" % (
+            self.nElementsRead, self.nElementsSkip))
 
         e = 0
         data = []
@@ -434,7 +434,7 @@ class Cart3DAsciiReader(object):
                     VV = (rhoU) ** 2 + (rhoV) ** 2 + (rhoW) ** 2 / rho ** 2
                     mach = sqrt(VV)
                     if mach > 10:
-                        print "nid=%s Cp=%s mach=%s rho=%s rhoU=%s rhoV=%s rhoW=%s" % (pointNum, cp, mach, rho, rhoU, rhoV, rhoW)
+                        print("nid=%s Cp=%s mach=%s rho=%s rhoU=%s rhoV=%s rhoW=%s" % (pointNum, cp, mach, rho, rhoU, rhoV, rhoW))
 
                 Cp[pointNum + 1] = cp
                 Mach[pointNum + 1] = mach
@@ -495,7 +495,7 @@ class Cart3DAsciiReader(object):
             a = tuple(sorted([e[0], e[1]]))  # segments of e
             b = tuple(sorted([e[1], e[2]]))
             c = tuple(sorted([e[2], e[0]]))
-            print eid, a, b, c
+            print(eid, a, b, c)
 
             #a.sort()
             #b.sort()
@@ -531,15 +531,15 @@ class Cart3DAsciiReader(object):
             #a.sort()
             #b.sort()
             #c.sort()
-            print eid, e
-            print segments[a]
-            print lengths[a]
-            print len(segments[a])
+            print(eid, e)
+            print(segments[a])
+            print(lengths[a])
+            print(len(segments[a]))
 
             eidA = self.get_segment(a, eid, segments)
             eidB = self.get_segment(b, eid, segments)
             eidC = self.get_segment(c, eid, segments)
-            print "eidA=%s eidB=%s eidC=%s" % (eidA, eidB, eidC)
+            print("eidA=%s eidB=%s eidC=%s" % (eidA, eidB, eidC))
             if eidA:
                 i = 0
                 e2 = elements[eidA]
@@ -556,7 +556,7 @@ class Cart3DAsciiReader(object):
                 self.check_quad(nodes, eid, eidC, e, e2, a, b, c, i)
                 del segments[c]
 
-            print "------"
+            print("------")
             #break
         #for segment in segments:
         asdf
@@ -568,7 +568,7 @@ class Cart3DAsciiReader(object):
         | \ e|
         |e2 \|
         C----D
-		
+        
         two tests
            1.  folding angle A-B x A-C
            2a. abs(A-C) - abs(B-D)  = 0  (abs to prevent 2L)
@@ -583,17 +583,17 @@ class Cart3DAsciiReader(object):
             iplus1 -= 3
         if iplus2 > 2:
             iplus2 -= 3
-        print (i, iplus1)
-        print (iplus1, iplus2)
-        print (iplus2, i)
+        print(i, iplus1)
+        print(iplus1, iplus2)
+        print(iplus2, i)
         AD = nodes[e[i]] - nodes[e[iplus1]]
         AB = nodes[e[iplus1]] - nodes[e[iplus2]]
         BD = nodes[e[iplus2]] - nodes[e[i]]
 
-        print AD
-        print AB
-        print BD
-        print e2
+        print(AD)
+        print(AB)
+        print(BD)
+        print(e2)
         j = e2.index(e[i])
 
         jplus1 = j + 1
@@ -603,23 +603,23 @@ class Cart3DAsciiReader(object):
         if jplus2 > 2:
             jplus2 -= 3
 
-        print "DA = ", e[j], e[jplus1]
+        print("DA = ", e[j], e[jplus1])
         DA = nodes[e[j]] - nodes[e[jplus1]]
-        print DA
+        print(DA)
 
         asdf
 
     def get_segment(self, a, eid, segments):
         if a in segments:
             aElems = segments[a]
-            print aElems
+            print(aElems)
             i = aElems.index(eid)
             #print i
             aElems.pop(i)
             #print aElems
             eidA = aElems[0]
             #eidA = elements[a]
-            print "eidA = ", eidA
+            print("eidA = ", eidA)
             return eidA
         return None
 
@@ -670,11 +670,11 @@ class Cart3DBinaryReader(FortranFile, Cart3DAsciiReader):
         so4 = size // 4  # size over 4
         if so4 == 3:
             (nPoints, nElements, nResults) = unpack('>iii', data)
-            print "nPoints=%s nElements=%s nResults=%s" % (
-                nPoints, nElements, nResults)
+            print("nPoints=%s nElements=%s nResults=%s" % (
+                nPoints, nElements, nResults))
         elif so4 == 2:
             (nPoints, nElements) = unpack('>ii', data)
-            print "nPoints=%s nElements=%s" % (nPoints, nElements)
+            print("nPoints=%s nElements=%s" % (nPoints, nElements))
         else:
             raise RuntimeError('in the wrong spot...endian...')
         self.op2.read(8)  # end of first block, start of second block
@@ -850,7 +850,7 @@ class Cart3DBinaryReader(FortranFile, Cart3DAsciiReader):
 
 
 def generic_cart3d_reader(infileName, log=None, debug=False):
-    print "infileName = ", infileName
+    print("infileName = ", infileName)
     f = open(infileName, 'rb')
     data = f.read(4)
     f.close()
@@ -893,7 +893,7 @@ if 0:
     #bdfModel   = os.path.join(configpath,'aeroModel.bdf')
     #assert os.path.exists(bdfModel),'|%s| doesnt exist' %(bdfModel)
     os.chdir(workpath)
-    print "basepath", basepath
+    print("basepath", basepath)
 
     cart3dGeom = os.path.join(configpath, 'Cart3d_bwb2.i.tri')
     cart3dGeom2 = os.path.join(workpath, 'Cart3d_half.i.tri')

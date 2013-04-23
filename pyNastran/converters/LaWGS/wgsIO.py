@@ -28,8 +28,8 @@ class LaWGS_IO(object):
         self.nNodes = len(nodes)
         self.nElements = len(elements)
 
-        #print "nNodes = ",self.nNodes
-        print "nElements = ", self.nElements
+        #print("nNodes = ",self.nNodes)
+        print("nElements = ", self.nElements)
 
         self.grid.Allocate(self.nElements, 1000)
         self.gridResult.SetNumberOfComponents(self.nElements)
@@ -55,11 +55,11 @@ class LaWGS_IO(object):
 
         for nid, node in enumerate(nodes):
             points.InsertPoint(nid, *node)
-        print "nid = ", nid
+        print("nid = ", nid)
 
         for eid, element in enumerate(elements):
             (p1, p2, p3, p4) = element
-            #print "element = ",element
+            #print("element = ",element)
             elem = vtkQuad()
             elem.GetPointIds().SetId(0, p1)
             elem.GetPointIds().SetId(1, p2)
@@ -67,7 +67,7 @@ class LaWGS_IO(object):
             elem.GetPointIds().SetId(3, p4)
             self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-        print "eid = ", eid
+        print("eid = ", eid)
         self.grid.SetPoints(points)
         #self.grid2.SetPoints(points2)
         #self.grid.GetPointData().SetScalars(self.gridResult)
@@ -78,7 +78,7 @@ class LaWGS_IO(object):
         self.grid2.Modified()
         self.grid.Update()
         self.grid2.Update()
-        print "updated grid"
+        print("updated grid")
 
         return
 
@@ -103,7 +103,7 @@ class LaWGS_IO(object):
         self.cycleResults()  # start at nCase=0
 
 if __name__ == '__main__':
-    print ''
+    print('')
 
     def removeOldGeometry(self):
         pass
