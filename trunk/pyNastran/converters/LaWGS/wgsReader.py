@@ -10,13 +10,13 @@ class LaWGS_Panel(object):
     @param scale
     """
     def __init__(self, key, header, group):
-        #print "key=%s \nheader=|%s|" %(key,header)   # ,iSymG
+        #print("key=%s \nheader=|%s|" % (key, header))   # ,iSymG
         (ID, nline, npnt, isyml, rx, ry, rz, tx, ty, tz, xScale,
             yScale, zScale, iSymG) = header.strip().split()
-        print "ID=%s name=%s imax=%s jmax=%s" % (ID, key, nline, npnt)
-        print "Rotate    = <%s,%s,%s>" % (rx, ry, rz)
-        print "Translate = <%s,%s,%s>" % (tx, ty, rz)
-        print "Scale     = <%s,%s,%s>" % (xScale, yScale, zScale)
+        print("ID=%s name=%s imax=%s jmax=%s" % (ID, key, nline, npnt))
+        print("Rotate    = <%s,%s,%s>" % (rx, ry, rz))
+        print("Translate = <%s,%s,%s>" % (tx, ty, rz))
+        print("Scale     = <%s,%s,%s>" % (xScale, yScale, zScale))
 
         self.name = key
         self.rotate = array([rx, ry, rz], 'd')
@@ -119,7 +119,7 @@ class LaWGS_Panel(object):
 
         points = self.points
         Points2 = copy.deepcopy(points)
-        print "size(points) = (%s,%s)\n" % (len(points), len(points[0]))
+        print("size(points) = (%s,%s)\n" % (len(points), len(points[0])))
         for i in xrange(self.nRows):
             #points2 = []
             for j in xrange(self.nCols):

@@ -56,10 +56,14 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             isPassed = True
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
-        #except IOError:
+        except IOError:
+            pass
+        #except RuntimeError:  # only temporarily uncomment this when running lots of tests
             #pass
-        #except SyntaxError:
-        #    pass
+        #except AttributeError:  # only temporarily uncomment this when running lots of tests
+            #pass
+        #except SyntaxError:  # only temporarily uncomment this when running lots of tests
+            #pass
         except SystemExit:
             sys.exit('sys.exit...')
         except:
@@ -100,8 +104,14 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
-    #except IOError:
+    except IOError:
+        pass
+    #except AttributeError:  # only temporarily uncomment this when running lots of tests
         #pass
+    #except SyntaxError:  # only temporarily uncomment this when running lots of tests
+        #pass
+    except AssertionError:  # only temporarily uncomment this when running lots of tests
+        pass
     except SystemExit:
         sys.exit('sys.exit...')
     except:

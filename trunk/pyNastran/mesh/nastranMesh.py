@@ -303,9 +303,9 @@ class NastranMesh(BDF):
 
         #for eid in newElements:
         newNodes = list(newNodes)
-        print "newNodes = ", sorted(newNodes)
-        #print "newElements.keys = ",newElements.keys()
-        #print "originalElements.keys = ",originalElements.keys()
+        print("newNodes = ", sorted(newNodes))
+        #print("newElements.keys = ", newElements.keys())
+        #print("originalElements.keys = ", originalElements.keys())
 
         from scipy import spatial
         tree = spatial.KDTree(nodes)
@@ -324,7 +324,7 @@ class NastranMesh(BDF):
                 #print "nodeClose[%s] = %s" %(nodeIs[iLoc],nodeLocations[nodeIs[iLoc]])
             intersectionNodes = closeNodes.intersection(oldNodes)
             if intersectionNodes:
-                print "intersectionNodes[%s] = %s" % (nid, intersectionNodes)
+                print("intersectionNodes[%s] = %s" % (nid, intersectionNodes))
 
 if __name__ == '__main__':
     mesh = NastranMesh()

@@ -48,9 +48,9 @@ class PythonToDMAP(object):
             operator = '='
             (variable, expr) = cmd.split(operator)
         else:
-            print "cmd = |%s| not parsed" % (cmd)
+            print("cmd = |%s| not parsed" % cmd)
             operator = None
-        print "comment = ", comment
+        print("comment = ", comment)
         if operator is not None:
             variable = variable.strip()
             expr = expr.strip()
@@ -71,7 +71,7 @@ class PythonToDMAP(object):
         elif operator == '=':
             call = '%s = %s' % (var.upper(), expr.upper())
         else:
-            print type(operation)
+            print(type(operation))
             raise NotImplementedError(msg)
         return call
 
@@ -86,33 +86,33 @@ class PythonToDMAP(object):
         assert not isinstance(Type, tuple), Type
         if isinstance(operation, INT) or isinstance(Type, INT):
             call = 'TYPE PARM,,I,N, %s $' % (var.upper())
-            print call
+            print(call)
             self.commands.append(call)
             call = self.write_sub_operation(operation, var, operator, expr)
         elif isinstance(operation, FLOAT) or isinstance(Type, FLOAT):
             call = 'TYPE PARM,,RS,N, %s $' % (var.upper())
-            print call
+            print(call)
             self.commands.append(call)
             call = self.write_sub_operation(operation, var, operator, expr)
         elif isinstance(operation, str):  # sum of integer + float
             (operation2, Type2) = self.parse_operation(var, '=', expr)
             if isinstance(Type2, STRING):
                 expr2 = eval(eval(expr, self.globals))
-                print "expr  = |%s|" % (expr)
-                print "expr2 = |%s|" % (expr2)
+                print("expr  = |%s|" % expr)
+                print("expr2 = |%s|" % expr2)
                 call = 'TYPE PARM,,CHAR%s,N, %s $' % (len(expr2), var.upper())
-                print call
+                print(call)
                 self.commands.append(call)
             elif isinstance(Type2, DOUBLE):
                 #expr2 = eval(eval(expr,self.globals))
-                print "expr  = |%s|" % (expr)
+                print("expr  = |%s|" % expr)
                 call = expr.upper()
                 #print "expr2 = |%s|" %(expr2)
                 call = 'TYPE PARM,,RD,N, %s $' % (var.upper())
-                print call
+                print(call)
                 self.commands.append(call)
             else:
-                print type(operation)
+                print(type(operation))
                 raise NotImplementedError(msg)
 
             #print operation2,type(Type2)
@@ -122,7 +122,7 @@ class PythonToDMAP(object):
         elif isinstance(operation, STRING):
             call = 'TYPE PARM,,CHAR%s,N, %s $' % (
                 operation.length(self.globals) - 2, var.upper())
-            print call
+            print(call)
             self.commands.append(call)
             call = self.write_sub_operation(operation, var, operator, expr)
         elif isinstance(operation, ZEROS):
@@ -131,16 +131,16 @@ class PythonToDMAP(object):
             call = self.write_sub_operation(operation, var, operator, expr)
         elif isinstance(operation, DOUBLE):
             call = 'TYPE PARM,,RD,N, %s $' % (var.upper())
-            print call
+            print(call)
             self.commands.append(call)
             call = str(operation.real)
             #call = self.write_sub_operation(operation, var, operator, expr)
-            print "call2 = ", call
+            print("call2 = ", call)
         else:
-            print type(operation)
+            print(type(operation))
             raise NotImplementedError(msg)
         self.commands.append(call)
-        print call + '\n'
+        print(call + '\n')
 
     def parse_assign(self, variable, expr):
         if expr[0] in ['+', '-']:
@@ -210,8 +210,8 @@ class PythonToDMAP(object):
                 elif isinstance(Type1, ZEROS) and isinstance(Type2, ZEROS):
                     Type = expr1
                 else:
-                    print "Type1=%s Type2=%s" % (Type1.__class__.__name__,
-                                                 Type2.__class__.__name__)
+                    print("Type1=%s Type2=%s" % (Type1.__class__.__name__,
+                                                 Type2.__class__.__name__))
                     asf
                 expr_val = expr1 + expr2
             else:
@@ -233,7 +233,7 @@ class PythonToDMAP(object):
             elif isinstance(eval_expr, str):
                 self.globals[variable] = STRING(variable, expr)
             else:
-                print "***eval_expr = ", eval_expr
+                print("***eval_expr = ", eval_expr)
                 asdf
             expr_value = self.globals[variable]
         return (expr_value, expr_value)

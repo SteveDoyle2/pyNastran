@@ -411,7 +411,7 @@ class F06(OES, OUG, OQG, F06Writer):
         dataTypes = [int, str, float, float, float, float, float, float]
         data = self.readTable(dataTypes)
 
-        print "cycle=%-8s eigen=%s" % (cycle, eigenvalue_real)
+        print("cycle=%-8s eigen=%s" % (cycle, eigenvalue_real))
         #print "isubcase = %s" % isubcase
         if isubcase in self.eigenvectors:
             self.eigenvectors[isubcase].read_f06_data(data_code, data)
@@ -572,7 +572,7 @@ class F06(OES, OUG, OQG, F06Writer):
                 try:
                     entry2 = iFormat(entry)
                 except:
-                    print "sline=|%s|\n entry=|%s| format=%s" %(sline,entry,Format)
+                    print("sline=|%s|\n entry=|%s| format=%s" %(sline,entry,Format))
                     raise
             else:
                 entry2 = None

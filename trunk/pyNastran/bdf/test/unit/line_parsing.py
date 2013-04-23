@@ -3,16 +3,16 @@ from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpret_value
 
 
 def parseSetSline(listA):
-    print "listA = ", listA
+    print("listA = ", listA)
     listB = []
     for spot in listA:
         spot = spot.strip()
-        print "spot = ", spot
+        print("spot = ", spot)
         if spot == '':
             pass
         elif ' ' in spot:
             sline = spot.split(' ')
-            print "sline = ", sline
+            print("sline = ", sline)
             if sline[1] == 'THRU':
                 if 'BY' in sline:
                     by = sline[4]
@@ -32,9 +32,9 @@ def parseSetSline(listA):
                     vals.remove(excepted)
                 vals = list(vals)
                 listB += vals
-                print "vals = ", vals
+                print("vals = ", vals)
             else:
-                print "sline = ", sline
+                print("sline = ", sline)
         else:
             #print "spot = %s" %(spot)
             if '/' in spot:
@@ -152,7 +152,7 @@ def _parseEntry(lines):
             #print 'B ??? line = ',line
             if ' ' in value:
                 sline = value.split(' ')
-                print "sline = ", sline
+                print("sline = ", sline)
                 value = parseSetSline(sline)
             else:
                 value = interpret_value(value)
@@ -188,9 +188,10 @@ def _parseEntry(lines):
     return (i, key, value, options, paramType)
 
 if __name__ == '__main__':
+    pass
     #print _parseEntry(['SET =ALL'])
     #print _parseEntry(['SET 77=5'])
-    print _parseEntry(['SET 88=5, 6, 7, 8, 9, 10 THRU 55 EXCEPT 15, 16, 77, 78, 79, 100 THRU 300'])
+    #print _parseEntry(['SET 88=5, 6, 7, 8, 9, 10 THRU 55 EXCEPT 15, 16, 77, 78, 79, 100 THRU 300'])
     #print _parseEntry(['SET 99=1 THRU 110'])
     #print _parseEntry(['SET 2001=M1,M2'])
     #print _parseEntry(['SET 101=1.0, 2.0, 3.0'])

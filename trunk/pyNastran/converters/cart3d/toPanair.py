@@ -30,7 +30,7 @@ def load_panair_file(fname='panair.in'):
     localvars = locals()
     for varname, default in sorted(varnames.iteritems()):
         if varname in localvars:
-            print "type(%s)=%s type(localvars[varname])=%s" % (varname, type(default), type(localvars[varname]))
+            print("type(%s)=%s type(localvars[varname])=%s" % (varname, type(default), type(localvars[varname])))
             if type(default) != type(localvars[varname]):
                 #msg = 'type(%s) != type(%s)\n' %(default, localvars[varname])
                 msg = 'type(%s)=%s type(%s)=%s' %(default, type(default),
@@ -146,7 +146,7 @@ class Cart3dToPanair(PanairGridHelper):
 
     def run(self, cart3dGeom, oname, varmap):
             f = open(oname, 'wb')
-            print "oname", oname
+            print("oname", oname)
             self.title = varmap['title']
             self.mach = varmap['mach']
             self.ncases = 1
@@ -180,7 +180,7 @@ class Cart3dToPanair(PanairGridHelper):
 
             #for pid, point in sorted(points.iteritems()):
                 #if pid<85:
-                #    print pid,point
+                #    print(pid,point)
                 #pass
             region_old = 9
             for eid, element in sorted(elements.iteritems()):
@@ -202,7 +202,7 @@ class Cart3dToPanair(PanairGridHelper):
                 #print "element =",element
                 #print "region  =",region
                 #if eid==2:
-                #    print "points = ",points
+                #    print("points = ",points)
                 nid1, nid2, nid3 = element
                 n1, n2, n3 = points[nid1], points[nid2], points[nid3]
                 #print "n1=%s" %(n1)
@@ -239,4 +239,4 @@ if __name__ == '__main__':
     #cart3dGeom  = os.path.join('models','spike.a.tri')
     #outfilename = os.path.join('models', 'panair.inp')
     Cart3dToPanair(cart3dGeom, outfilename, varmap)
-    print "done..."
+    print("done...")

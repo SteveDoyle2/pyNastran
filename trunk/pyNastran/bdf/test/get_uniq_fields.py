@@ -77,13 +77,13 @@ class BDFuniqCard(BDF):
         
 
 if __name__ == '__main__':
-    print "enter list of filenames at the command line..."
+    print("enter list of filenames at the command line...")
     #newBDF = BDF()
     card_fingerprint_set = set()
     infilenames = sys.argv[1:]
     assert len(infilenames) > 0, infilenames
     for infilename in infilenames:
-        print "running infilename=%r" % infilename
+        print("running infilename=%r" % infilename)
         try:
             infilename = infilename.strip()
             sys.stdout.flush()
@@ -92,6 +92,6 @@ if __name__ == '__main__':
             model.read_bdf(infilename)
         except BaseException as e:
             logger.error(e)
-    print "please see cards.out.bdf"
+    print("please see cards.out.bdf")
     model.write_bdf()
-    print "done..."
+    print("done...")
