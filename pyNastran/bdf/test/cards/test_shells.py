@@ -4,6 +4,9 @@ from pyNastran.bdf.bdf import PCOMP, MAT1
 
 class TestShells(unittest.TestCase):
     def test_PCOMP_01(self):
+        """
+        asymmetrical, nsm=0.0 and nsm=1.0
+        """
         #self.pid = data[0]
         #self.z0 = data[1]
         #self.nsm = data[2]
@@ -97,23 +100,46 @@ class TestShells(unittest.TestCase):
         self.assertAlmostEquals(p.Rho(1), 1.0)
         self.assertAlmostEquals(p.Rho(2), 1.0)
         with self.assertRaises(RuntimeError):
-            self.assertAlmostEquals(p.Rho(3), 1.0)
-        #self.assertAlmostEquals(p.MassPerArea(2), 0.0)
+            p.Rho(3)
+
+        # MassPerArea
+        self.assertAlmostEquals(p.MassPerArea(), 0.6)
+        self.assertAlmostEquals(p.MassPerArea(0), 0.1)
+        self.assertAlmostEquals(p.MassPerArea(1), 0.2)
+        self.assertAlmostEquals(p.MassPerArea(2), 0.3)
+        with self.assertRaises(RuntimeError):
+            p.MassPerArea(3)
+
+        #----------------------
+        # change the nsm to 1.0
+        p.nsm = 1.0
+
+        self.assertEquals(p.Nsm(), 1.0)
+        # MassPerArea
+        self.assertAlmostEquals(p.MassPerArea(), 1.6)
+        self.assertAlmostEquals(p.MassPerArea(0), 0.1+1/3.)
+        self.assertAlmostEquals(p.MassPerArea(1), 0.2+1/3.)
+        self.assertAlmostEquals(p.MassPerArea(2), 0.3+1/3.)
+        with self.assertRaises(RuntimeError):
+            p.MassPerArea(3)
 
     def test_PCOMP_02(self):
+        """
+        symmetrical, nsm=0.0 and nsm=1.0
+        """
         pid = 1
         z0 = 0.
         nsm = 0.
         sb = 0.
         ft = 0.
-        Tref = 0.
+        TRef = 0.
         ge = 0.
         lam = 'SYM'  # isSymmetrical SYM
         Mid = [1,2,3]
         Theta = [0.,10.,20.]
         T = [.1,.2,.3]
         Sout = [1, 1, 0]  # 0-NO, 1-YES
-        data = [pid, z0, nsm, sb, ft, Tref, ge, lam, Mid, T, Theta, Sout]
+        data = [pid, z0, nsm, sb, ft, TRef, ge, lam, Mid, T, Theta, Sout]
         p = PCOMP(data=data)
         self.assertTrue(p.isSymmetrical())
         self.assertEquals(p.nPlies(), 6)
@@ -157,6 +183,61 @@ class TestShells(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             p.sout(6)
 
+
+        mid = 1
+        E = None
+        G = None
+        nu = None
+        rho = 1.0
+        a = None
+        St = None
+        Sc = None
+        Ss = None
+        Mcsid = None
+        mat1 = [mid,E,G,nu,rho,a,TRef, ge, St, Sc, Ss, Mcsid]
+        m = MAT1(data=mat1)
+        for iply in xrange(len(p.plies)):
+            mid = p.plies[iply][0]
+            p.plies[iply][0] = m # MAT1
+            #p.mids = [m, m, m]
+
+        #Rho
+        self.assertAlmostEquals(p.Rho(0), 1.0)
+        self.assertAlmostEquals(p.Rho(1), 1.0)
+        self.assertAlmostEquals(p.Rho(2), 1.0)
+        self.assertAlmostEquals(p.Rho(3), 1.0)
+        self.assertAlmostEquals(p.Rho(4), 1.0)
+        self.assertAlmostEquals(p.Rho(5), 1.0)
+        with self.assertRaises(RuntimeError):
+            p.Rho(6)
+
+        # MassPerArea
+        self.assertAlmostEquals(p.MassPerArea(), 1.2)
+        self.assertAlmostEquals(p.MassPerArea(0), 0.1)
+        self.assertAlmostEquals(p.MassPerArea(1), 0.2)
+        self.assertAlmostEquals(p.MassPerArea(2), 0.3)
+        self.assertAlmostEquals(p.MassPerArea(3), 0.1)
+        self.assertAlmostEquals(p.MassPerArea(4), 0.2)
+        self.assertAlmostEquals(p.MassPerArea(5), 0.3)
+        with self.assertRaises(RuntimeError):
+            p.MassPerArea(6)
+        
+        self.assertEquals(p.Nsm(), 0.0)
+        #----------------------
+        # change the nsm to 1.0
+        p.nsm = 1.0
+
+        self.assertEquals(p.Nsm(), 1.0)
+        # MassPerArea
+        self.assertAlmostEquals(p.MassPerArea(), 2.2)
+        self.assertAlmostEquals(p.MassPerArea(0), 0.1+1/6.)
+        self.assertAlmostEquals(p.MassPerArea(1), 0.2+1/6.)
+        self.assertAlmostEquals(p.MassPerArea(2), 0.3+1/6.)
+        self.assertAlmostEquals(p.MassPerArea(3), 0.1+1/6.)
+        self.assertAlmostEquals(p.MassPerArea(4), 0.2+1/6.)
+        self.assertAlmostEquals(p.MassPerArea(5), 0.3+1/6.)
+        with self.assertRaises(RuntimeError):
+            p.MassPerArea(6)        
 
 if __name__ == '__main__':
     unittest.main()

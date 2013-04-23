@@ -170,7 +170,7 @@ class CompositeShellProperty(ShellProperty):
         nplies = len(self.plies)
         iply = self._adjust_ply_id(iply, nplies)
         mid = self.Material(iply)
-        print("rho =", mid.rho)
+        #print("rho =", mid.rho)
         return mid.rho
 
     def Material(self, iply):
@@ -231,7 +231,11 @@ class CompositeShellProperty(ShellProperty):
         else:
             rho = self.Rho(iply)
             t = self.plies[iply][1]
-            return rho * t + self.nsm
+            
+            # we divide by nplies b/c it's nsm per area and
+            # we're working on a per ply basis
+            massPerArea = rho * t + self.nsm / self.nPlies()
+            return massPerArea
 
     def isSameCard(self, prop, debug=False):
         if self.type != prop.type:
@@ -272,7 +276,7 @@ class PCOMP(CompositeShellProperty):
         if card:
             ## Property ID
             self.pid = integer(card, 1, 'pid')
-            ## Non-Structural Mass
+            ## Non-Structural Mass per unit Area
             self.nsm = double_or_blank(card, 3, 'nsm', 0.0)
             self.sb = double_or_blank(card, 4, 'sb', 0.0)
             self.ft = string_or_blank(card, 5, 'ft')
