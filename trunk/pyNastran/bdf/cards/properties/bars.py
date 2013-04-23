@@ -947,7 +947,12 @@ class PBARL(LineProperty):
         pid = self.Pid()
         mid = self.Mid()
         A = self.Area()
-        J = self.J()
+        try:
+            J = self.J()
+        except NotImplementedError:
+            msg = "J is not implemented for pid.type=%s pid.Type=%s" % (self.type, self.Type)
+            print(msg)
+            J = 0.0
         nsm = self.Nsm()
         mpl = self.MassPerLength()
         assert isinstance(pid, int), 'pid=%r' % pid
@@ -1549,7 +1554,12 @@ class PBEAM(IntegratedLineProperty):
         pid = self.Pid()
         mid = self.Mid()
         A = self.Area()
-        J = self.J()
+        try:
+            J = self.J()
+        except NotImplementedError:
+            msg = "J is not implemented for pid.type=%s pid.Type=%s" % (self.type, self.Type)
+            print(msg)
+            J = 0.0
         nsm = self.Nsm()
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(mid, int), 'mid=%r' % mid
