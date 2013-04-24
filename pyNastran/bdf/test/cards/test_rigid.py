@@ -24,9 +24,9 @@ class TestRigid(unittest.TestCase):
         lines_actual = msg.rstrip().split('\n')
         msg = '\n%s\n\n%s\n' % ('\n'.join(lines_expected), msg)
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
-        self.assertEquals(len(lines_actual), len(lines_expected), msg)
+        self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
-            self.assertEquals(actual, expected)
+            self.assertEqual(actual, expected)
 
     def test_rbe1_02(self):
         lines = ['RBE1        1001    1000  123456',
@@ -53,9 +53,9 @@ class TestRigid(unittest.TestCase):
         lines_actual = msg.rstrip().split('\n')
         msg = '\n%s\n\n%s\n' % ('\n'.join(lines_expected), msg)
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
-        self.assertEquals(len(lines_actual), len(lines_expected), msg)
+        self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
-            self.assertEquals(actual, expected)
+            self.assertEqual(actual, expected)
 
 if __name__ == '__main__':
     unittest.main()
