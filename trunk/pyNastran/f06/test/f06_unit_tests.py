@@ -105,7 +105,7 @@ class TestF06(unittest.TestCase):
                             o2 = stress.oyy[eid][nid][ilayer]
                             t12 = stress.txy[eid][nid][ilayer]
                             ovmii2 = sqrt(o1**2 - o1*o2 + o2**2 + 3*t12**2)
-                            self.assertAlmostEquals(ovmii, ovmii2)
+                            self.assertAlmostEqual(ovmii, ovmii2)
                             #print("%3s %3s %6s %8s" % (eid, nid, ilayer, ovmii2))
         self.assertEquals(op2.plateStress[1].ovmShear[25]['C'][0], 276.8023376464844)
         self.assertEquals(f06.plateStress[1].ovmShear[25]['C'][0], 276.8023)
