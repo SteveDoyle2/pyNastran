@@ -39,7 +39,7 @@ class TestShells(unittest.TestCase):
         
         p = PCOMP(data=data)
         self.assertFalse(p.isSymmetrical())
-        self.assertEquals(p.nPlies(), 3)
+        self.assertEqual(p.nPlies(), 3)
 
         self.assertAlmostEquals(p.Thickness(), 0.6)
         self.assertAlmostEquals(p.Thickness(0), 0.1)
@@ -54,17 +54,17 @@ class TestShells(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             p.Theta(3)
         
-        self.assertEquals(p.Mid(0), 1)
-        self.assertEquals(p.Mid(1), 2)
-        self.assertEquals(p.Mid(2), 3)
+        self.assertEqual(p.Mid(0), 1)
+        self.assertEqual(p.Mid(1), 2)
+        self.assertEqual(p.Mid(2), 3)
         with self.assertRaises(RuntimeError):
             p.Mid(3)
 
-        self.assertEquals(p.Mids(), [1,2,3])
+        self.assertEqual(p.Mids(), [1,2,3])
 
-        self.assertEquals(p.sout(0), 'YES')
-        self.assertEquals(p.sout(1), 'YES')
-        self.assertEquals(p.sout(2), 'NO')
+        self.assertEqual(p.sout(0), 'YES')
+        self.assertEqual(p.sout(1), 'YES')
+        self.assertEqual(p.sout(2), 'NO')
         with self.assertRaises(RuntimeError):
             p.sout(3)
 
@@ -117,7 +117,7 @@ class TestShells(unittest.TestCase):
         # change the nsm to 1.0
         p.nsm = 1.0
 
-        self.assertEquals(p.Nsm(), 1.0)
+        self.assertEqual(p.Nsm(), 1.0)
         # MassPerArea
         self.assertAlmostEquals(p.MassPerArea(), 1.6)
         self.assertAlmostEquals(p.MassPerArea(0, method='nplies'), 0.1+1/3.)
@@ -165,7 +165,7 @@ class TestShells(unittest.TestCase):
         data = [pid, z0, nsm, sb, ft, TRef, ge, lam, Mid, T, Theta, Sout]
         p = PCOMP(data=data)
         self.assertTrue(p.isSymmetrical())
-        self.assertEquals(p.nPlies(), 6)
+        self.assertEqual(p.nPlies(), 6)
         
         self.assertAlmostEquals(p.Thickness(), 1.2)
         self.assertAlmostEquals(p.Thickness(0), 0.1)
@@ -186,23 +186,23 @@ class TestShells(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             p.Theta(6)
         
-        self.assertEquals(p.Mid(0), 1)
-        self.assertEquals(p.Mid(1), 2)
-        self.assertEquals(p.Mid(2), 3)
-        self.assertEquals(p.Mid(3), 1)
-        self.assertEquals(p.Mid(4), 2)
-        self.assertEquals(p.Mid(5), 3)
+        self.assertEqual(p.Mid(0), 1)
+        self.assertEqual(p.Mid(1), 2)
+        self.assertEqual(p.Mid(2), 3)
+        self.assertEqual(p.Mid(3), 1)
+        self.assertEqual(p.Mid(4), 2)
+        self.assertEqual(p.Mid(5), 3)
         with self.assertRaises(RuntimeError):
             p.Mid(6)
 
-        self.assertEquals(p.Mids(), [1,2,3,1,2,3])
+        self.assertEqual(p.Mids(), [1,2,3,1,2,3])
 
-        self.assertEquals(p.sout(0), 'YES')
-        self.assertEquals(p.sout(1), 'YES')
-        self.assertEquals(p.sout(2), 'NO')
-        self.assertEquals(p.sout(3), 'YES')
-        self.assertEquals(p.sout(4), 'YES')
-        self.assertEquals(p.sout(5), 'NO')
+        self.assertEqual(p.sout(0), 'YES')
+        self.assertEqual(p.sout(1), 'YES')
+        self.assertEqual(p.sout(2), 'NO')
+        self.assertEqual(p.sout(3), 'YES')
+        self.assertEqual(p.sout(4), 'YES')
+        self.assertEqual(p.sout(5), 'NO')
         with self.assertRaises(RuntimeError):
             p.sout(6)
 
@@ -244,12 +244,12 @@ class TestShells(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             p.MassPerArea(6)
         
-        self.assertEquals(p.Nsm(), 0.0)
+        self.assertEqual(p.Nsm(), 0.0)
         #----------------------
         # change the nsm to 1.0
         p.nsm = 1.0
 
-        self.assertEquals(p.Nsm(), 1.0)
+        self.assertEqual(p.Nsm(), 1.0)
         # MassPerArea
         self.assertAlmostEquals(p.MassPerArea(), 2.2)
         self.assertAlmostEquals(p.MassPerArea(0, method='nplies'), 0.1+1/6.)

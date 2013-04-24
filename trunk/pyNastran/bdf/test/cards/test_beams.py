@@ -28,9 +28,9 @@ class TestBeams(unittest.TestCase):
         lines_actual = msg.rstrip().split('\n')
         msg = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
-        self.assertEquals(len(lines_actual), len(lines_expected), msg)
+        self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
-            self.assertEquals(actual, expected)
+            self.assertEqual(actual, expected)
 
     def test_pbeam_02(self):
         lines =['PBEAM,39,6,2.9,3.5,5.97',
@@ -66,9 +66,9 @@ class TestBeams(unittest.TestCase):
         lines_actual = msg.rstrip().split('\n')
         msg = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
-        self.assertEquals(len(lines_actual), len(lines_expected), msg)
+        self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
-            self.assertEquals(actual, expected)
+            self.assertEqual(actual, expected)
 
     def test_pbeam_03(self):
         lines =['PBEAM,39,6,2.9,3.5,5.97',
@@ -96,9 +96,9 @@ class TestBeams(unittest.TestCase):
         lines_actual = msg.rstrip().split('\n')
         msg = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
-        self.assertEquals(len(lines_actual), len(lines_expected), msg)
+        self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
-            self.assertEquals(actual, expected)
+            self.assertEqual(actual, expected)
 
     def test_pbeam_04(self):
         lines =['PBEAM,39,6,2.9,3.5,5.97',
@@ -122,22 +122,22 @@ class TestBeams(unittest.TestCase):
         lines_actual = msg.rstrip().split('\n')
         msg = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
-        self.assertEquals(len(lines_actual), len(lines_expected), msg)
+        self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
-            self.assertEquals(actual, expected)
+            self.assertEqual(actual, expected)
 
     def test_pbeam_05(self):
         lines =['PBEAM,39,6,2.9,3.5,5.97',
                 '     ,  , ,2.0,-4.0',]
 
         card = bdf.process_card(lines)
-        print(print_card(card))
+        #print(print_card(card))
         card = BDFCard(card)
         #print("card =", card)
         card2 = PBEAM(card)
         fields = card2.rawFields()
         msg = print_card(fields)
-        print(msg)
+        #print(msg)
 
         lines_expected = ['PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
                           '              0.      0.      2.     -4.      0.      0.      0.      0.',
@@ -146,11 +146,11 @@ class TestBeams(unittest.TestCase):
         lines_actual = msg.rstrip().split('\n')
         msg = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
-        self.assertEquals(len(lines_actual), len(lines_expected), msg)
+        self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
             msg =  'actual   = %r\n' % actual
             msg += 'expected = %r' % expected
-            self.assertEquals(actual, expected, msg)
+            self.assertEqual(actual, expected, msg)
 
     def test_pbeam_06(self):
         lines =['PBEAM   1       1       1.      60.     1.                              PBEAM1',
@@ -160,7 +160,7 @@ class TestBeams(unittest.TestCase):
                 '+BEAM4                  -.666667',]
 
         card = bdf.process_card(lines)
-        print(print_card(card))
+        #print(print_card(card))
         card = BDFCard(card)
         #print("card =", card)
         card2 = PBEAM(card)
@@ -175,15 +175,15 @@ class TestBeams(unittest.TestCase):
                           '              1.      1.-.666667      0.      0.      0.      0.      0.',
                           '              0.      0.      0.      0.      0.      0.      0.      0.',
         ]
-        print('\n'.join(lines_expected))
+        #print('\n'.join(lines_expected))
         lines_actual = msg.rstrip().split('\n')
         msg = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
-        self.assertEquals(len(lines_actual), len(lines_expected), msg)
+        self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
             msg =  'actual   = %r\n' % actual
             msg += 'expected = %r' % expected
-            self.assertEquals(actual, expected, msg)
+            self.assertEqual(actual, expected, msg)
 
     def _test_pbeam_07(self):
 
@@ -191,7 +191,7 @@ class TestBeams(unittest.TestCase):
                  '+Z1     NO      1.0                                                     +Z4',
                  '+Z4     0.0     0.0',]
         card = bdf.process_card(lines)
-        print(print_card(card))
+        #print(print_card(card))
         card = BDFCard(card)
         #print("card =", card)
         #with self.assertRaises(RuntimeError):  # temporary RuntimeError
@@ -200,16 +200,16 @@ class TestBeams(unittest.TestCase):
         if 0:
             fields = card2.rawFields()
             msg = print_card(fields)
-            print(msg)
+            #print(msg)
 
             lines_actual = msg.rstrip().split('\n')
             msg = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
             msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
-            self.assertEquals(len(lines_actual), len(lines_expected), msg)
+            self.assertEqual(len(lines_actual), len(lines_expected), msg)
             for actual, expected in zip(lines_actual, lines_expected):
                 msg =  'actual   = %r\n' % actual
                 msg += 'expected = %r' % expected
-                self.assertEquals(actual, expected, msg)
+                self.assertEqual(actual, expected, msg)
 
 if __name__ == '__main__':
     unittest.main()

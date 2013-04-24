@@ -16,25 +16,25 @@ from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 class TestFieldWriter(unittest.TestCase):
 
     def test_field_vals_8(self):
-        self.assertEquals(print_field(1e20),     '   1.+20',
-                          print_field(1e20))
-        self.assertEquals(print_field(-.723476), '-.723476',
-                          print_field(-.723476))
-        self.assertEquals(print_field(125000.),  ' 125000.',
-                          print_field(125000.))
-        self.assertEquals(print_field(12500000.),  '  1.25+7',
-                          print_field(12500000.))
-        self.assertEquals(print_field(47.77267),  '47.77267',
-                          print_field(47.77267))
-        self.assertEquals(print_field(.001),  '    .001',
-                          print_field(.001))
-        self.assertEquals(print_field(.0000001),  '.0000001',
-                          print_field(.0000001))
-        self.assertEquals(print_field(-5.007e-3),  '-5.007-3',
-                          print_field(-5.007e-3))
+        self.assertEqual(print_field(1e20),     '   1.+20',
+                         print_field(1e20))
+        self.assertEqual(print_field(-.723476), '-.723476',
+                         print_field(-.723476))
+        self.assertEqual(print_field(125000.),  ' 125000.',
+                         print_field(125000.))
+        self.assertEqual(print_field(12500000.),  '  1.25+7',
+                         print_field(12500000.))
+        self.assertEqual(print_field(47.77267),  '47.77267',
+                         print_field(47.77267))
+        self.assertEqual(print_field(.001),  '    .001',
+                         print_field(.001))
+        self.assertEqual(print_field(.0000001),  '.0000001',
+                         print_field(.0000001))
+        self.assertEqual(print_field(-5.007e-3),  '-5.007-3',
+                         print_field(-5.007e-3))
 
-        self.assertEquals(print_field(-0.0748662),  '-.074866',
-                          print_field(-0.0748662))
+        self.assertEqual(print_field(-0.0748662),  '-.074866',
+                         print_field(-0.0748662))
 
 
     #@unittest.skip('skipping test_2')
@@ -46,21 +46,21 @@ class TestFieldWriter(unittest.TestCase):
             compare(-a2)
 
     def test_strings_8(self):
-        self.assertEquals(print_field(None), '        ',
-                          print_field(None))
-        self.assertEquals(print_field('asdf'), '    asdf',
-                          print_field('asdf'))
-        self.assertEquals(print_field('  asdf  '), '  asdf  ',
-                          print_field('  asdf  '))
+        self.assertEqual(print_field(None), '        ',
+                         print_field(None))
+        self.assertEqual(print_field('asdf'), '    asdf',
+                         print_field('asdf'))
+        self.assertEqual(print_field('  asdf  '), '  asdf  ',
+                         print_field('  asdf  '))
         self.assertRaises(RuntimeError, print_field, '  asdf   ')
 
     def test_strings_16(self):
-        self.assertEquals(print_field_16(None),         '                ',
-                          print_field_16(None))
-        self.assertEquals(print_field_16('asdf'),       '            asdf',
-                          print_field_16('asdf'))
-        self.assertEquals(print_field_16('  asdf  '),   '          asdf  ',
-                          print_field_16('  asdf  '))
+        self.assertEqual(print_field_16(None),         '                ',
+                         print_field_16(None))
+        self.assertEqual(print_field_16('asdf'),       '            asdf',
+                         print_field_16('asdf'))
+        self.assertEqual(print_field_16('  asdf  '),   '          asdf  ',
+                         print_field_16('  asdf  '))
         self.assertRaises(RuntimeError, print_field_16, '          asdf   ')
 
     def test_field_defaults(self):
@@ -95,155 +95,155 @@ class TestFieldWriter(unittest.TestCase):
         #set_default_if_blank
 
     def test_ints_8(self):
-        self.assertEquals(print_field(1), '       1', 'a')
-        self.assertEquals(print_field(12345678), '12345678', 'b')
+        self.assertEqual(print_field(1), '       1', 'a')
+        self.assertEqual(print_field(12345678), '12345678', 'b')
         self.assertRaises(RuntimeError, print_field, 123456789)
-        self.assertEquals(print_field('12345678'), '12345678', 'c')
-        self.assertEquals(print_field('1       '),'1       ',
-                          '|%s|' %(print_field('1       ')))
+        self.assertEqual(print_field('12345678'), '12345678', 'c')
+        self.assertEqual(print_field('1       '),'1       ',
+                         '|%s|' %(print_field('1       ')))
 
     def test_ints_16(self):
-        self.assertEquals(print_field_16(1), '               1', 'a')
-        self.assertEquals(print_field_16(12345678), '        12345678', 'b')
-        self.assertEquals(print_field_16(1234567890123456), '1234567890123456', 'c')
+        self.assertEqual(print_field_16(1), '               1', 'a')
+        self.assertEqual(print_field_16(12345678), '        12345678', 'b')
+        self.assertEqual(print_field_16(1234567890123456), '1234567890123456', 'c')
         self.assertRaises(RuntimeError, print_field_16, 12345678901234567)
 
         #msg = print_field_16('12345678        ')
         #msg = '|%s| len(msg)=%s' %(msg, len(msg))
-        #self.assertEquals(print_field_16('12345678'), '12345678        ',msg)
-        self.assertEquals(print_field_16('1               '),'1               ',
+        #self.assertEqual(print_field_16('12345678'), '12345678        ',msg)
+        self.assertEqual(print_field_16('1               '),'1               ',
                           '|%s|' %(print_field('1       ')))
 
     def test_floats_positive_8(self):
         tol = 1.0
-        self.assertEquals(print_float_8(1.2), '     1.2',
-                          print_float_8(1.2))
-        self.assertEquals(print_float_8(0.5), '      .5',
-                          print_float_8(0.5))
-        self.assertEquals(print_float_8(-0.5), '     -.5',
-                          print_float_8(-0.5))
+        self.assertEqual(print_float_8(1.2), '     1.2',
+                         print_float_8(1.2))
+        self.assertEqual(print_float_8(0.5), '      .5',
+                         print_float_8(0.5))
+        self.assertEqual(print_float_8(-0.5), '     -.5',
+                         print_float_8(-0.5))
 
-        self.assertEquals(print_field(1.2), '     1.2', 'a')
-        self.assertEquals(print_field(1.23456789), '1.234568', 'b')
-        self.assertEquals(print_field(12.234568), '12.23457', 'c')
-        self.assertEquals(print_field(123.23457), '123.2346', 'd')
-        self.assertEquals(print_field(1234.23468), '1234.235', 'e')
-        self.assertEquals(print_field(12345.238), '12345.24', 'f')
-        self.assertEquals(print_field(123456.28), '123456.3', 'g')
-        self.assertEquals(print_field(1234567.25), '1234567.',
-                          print_field(1234567.25))  # 1.2346+6
-        self.assertEquals(print_field(
+        self.assertEqual(print_field(1.2), '     1.2', 'a')
+        self.assertEqual(print_field(1.23456789), '1.234568', 'b')
+        self.assertEqual(print_field(12.234568), '12.23457', 'c')
+        self.assertEqual(print_field(123.23457), '123.2346', 'd')
+        self.assertEqual(print_field(1234.23468), '1234.235', 'e')
+        self.assertEqual(print_field(12345.238), '12345.24', 'f')
+        self.assertEqual(print_field(123456.28), '123456.3', 'g')
+        self.assertEqual(print_field(1234567.25), '1234567.',
+                         print_field(1234567.25))  # 1.2346+6
+        self.assertEqual(print_field(
             12345678.), '1.2346+7', '|%s|' % print_field(12345678.))
-        self.assertEquals(print_field(
+        self.assertEqual(print_field(
             123456789.), '1.2346+8', '|%s|' % print_field(12345678.))
 
-        self.assertEquals(print_field(0.1), '      .1',
-                          'A|%s|' % print_field(0.1))
-        self.assertEquals(print_field(0.0001), '   .0001',
-                          'B|%s|' % print_field(0.0001))
-        self.assertEquals(print_field(0.00001), '  .00001',
-                          'C|%s|' % print_field(0.00001))
-        self.assertEquals(print_field(0.000001), ' .000001',
-                          'D|%s|' % print_field(0.000001))
-        self.assertEquals(print_field(0.0000001), '.0000001',
-                          'E|%s|' % print_field(0.0000001))
-        self.assertEquals(print_field(0.00000012), '   1.2-7',
-                          'F|%s|' % print_field(0.00000012))
-        self.assertEquals(print_field(0.000748519), '7.4852-4',
-                          'G|%s|' % print_field(0.000748519))
-        self.assertEquals(print_field(0.12345678), '.1234568',
-                          'H|%s|' % print_field(0.12345678))
-        self.assertEquals(print_field(0.00012349), '1.2349-4',
-                          'I|%s|' % print_field(0.00012349))
-        self.assertEquals(print_field(0.000012349), '1.2349-5',
-                          'J|%s|' % print_field(0.000012349))
-        self.assertEquals(print_field(5e-08),       '    5.-8',
-                          'K|%s|' % print_field(5e-08))
+        self.assertEqual(print_field(0.1), '      .1',
+                         'A|%s|' % print_field(0.1))
+        self.assertEqual(print_field(0.0001), '   .0001',
+                         'B|%s|' % print_field(0.0001))
+        self.assertEqual(print_field(0.00001), '  .00001',
+                         'C|%s|' % print_field(0.00001))
+        self.assertEqual(print_field(0.000001), ' .000001',
+                         'D|%s|' % print_field(0.000001))
+        self.assertEqual(print_field(0.0000001), '.0000001',
+                         'E|%s|' % print_field(0.0000001))
+        self.assertEqual(print_field(0.00000012), '   1.2-7',
+                         'F|%s|' % print_field(0.00000012))
+        self.assertEqual(print_field(0.000748519), '7.4852-4',
+                         'G|%s|' % print_field(0.000748519))
+        self.assertEqual(print_field(0.12345678), '.1234568',
+                         'H|%s|' % print_field(0.12345678))
+        self.assertEqual(print_field(0.00012349), '1.2349-4',
+                         'I|%s|' % print_field(0.00012349))
+        self.assertEqual(print_field(0.000012349), '1.2349-5',
+                         'J|%s|' % print_field(0.000012349))
+        self.assertEqual(print_field(5e-08),       '    5.-8',
+                         'K|%s|' % print_field(5e-08))
 
-        self.assertEquals(print_field(1e-20), '   1.-20',
-                          'L|%s|' % print_field(1e-20))
+        self.assertEqual(print_field(1e-20), '   1.-20',
+                         'L|%s|' % print_field(1e-20))
 
-        self.assertEquals(print_field(0.0),  '      0.',
-                          print_field(0.0))
-        self.assertEquals(print_field(1.0),  '      1.',
-                          print_field(1.0))
+        self.assertEqual(print_field(0.0),  '      0.',
+                         print_field(0.0))
+        self.assertEqual(print_field(1.0),  '      1.',
+                         print_field(1.0))
 
     def test_floats_negative_8(self):
-        self.assertEquals(print_field(-1.2), '    -1.2',
-                          print_field(-1.2))
-        self.assertEquals(print_field(-1.23456789), '-1.23457',
-                          print_field(-1.23456789))
-        self.assertEquals(print_field(-12.234568),  '-12.2346',
-                          print_field(-12.234568))
-        self.assertEquals(print_field(-123.23457),  '-123.235',
-                          print_field(-123.23457))
-        self.assertEquals(print_field(-1234.23468), '-1234.23',
-                          print_field(-1234.23468))
-        self.assertEquals(print_field(-12345.238),  '-12345.2',
-                          print_field(-12345.238))
-        self.assertEquals(print_field(-123456.28),  '-123456.',
-                          print_field(-123456.28))
-        self.assertEquals(print_field(-1234567.25), '-1.235+6', # is this right?
-                          print_field(-1234567.25))
-        self.assertEquals(print_field(-12345678.),  '-1.235+7', # is this right?
-                          '|%s|' % print_field(-12345678.))
-        self.assertEquals(print_field(-123456789.), '-1.235+8', # is this right?
-                          '|%s|' % print_field(-123456789.))
+        self.assertEqual(print_field(-1.2), '    -1.2',
+                         print_field(-1.2))
+        self.assertEqual(print_field(-1.23456789), '-1.23457',
+                         print_field(-1.23456789))
+        self.assertEqual(print_field(-12.234568),  '-12.2346',
+                         print_field(-12.234568))
+        self.assertEqual(print_field(-123.23457),  '-123.235',
+                         print_field(-123.23457))
+        self.assertEqual(print_field(-1234.23468), '-1234.23',
+                         print_field(-1234.23468))
+        self.assertEqual(print_field(-12345.238),  '-12345.2',
+                         print_field(-12345.238))
+        self.assertEqual(print_field(-123456.28),  '-123456.',
+                         print_field(-123456.28))
+        self.assertEqual(print_field(-1234567.25), '-1.235+6', # is this right?
+                         print_field(-1234567.25))
+        self.assertEqual(print_field(-12345678.),  '-1.235+7', # is this right?
+                         '|%s|' % print_field(-12345678.))
+        self.assertEqual(print_field(-123456789.), '-1.235+8', # is this right?
+                         '|%s|' % print_field(-123456789.))
 
-        self.assertEquals(print_field(-0.1), '     -.1',
-                          'A|%s|' % print_field(-0.1))
-        self.assertEquals(print_field(-0.0001), '  -.0001',
-                          'B|%s|' % print_field(-0.0001))
-        self.assertEquals(print_field(-0.00001), ' -.00001',
-                          'C|%s|' % print_field(-0.00001))
-        self.assertEquals(print_field(-0.000001), '   -1.-6',
-                          'D|%s|' % print_field(-0.000001))
-        self.assertEquals(print_field(-0.0000001), '   -1.-7',
-                          'E|%s|' % print_field(-0.0000001))
-        self.assertEquals(print_field(-0.00000012), '  -1.2-7',
-                          'F|%s|' % print_field(-0.00000012))
-        self.assertEquals(print_field(-0.000748519), '-7.485-4',
-                          'G|%s|' % print_field(-0.000748519))
-        self.assertEquals(print_field(-0.12345678), '-.123457',
-                          'H|%s|' % print_field(-0.12345678))
-        self.assertEquals(print_field(-0.00012349), '-1.235-4',
-                          'I|%s|' % print_field(-0.00012349))
-        self.assertEquals(print_field(-0.000012349), '-1.235-5',
-                          'J|%s|' % print_field(-0.000012349))
-        self.assertEquals(print_field(-1e-5),  ' -.00001',
-                          'K|%s|' % print_field(-1e-5))
-        self.assertEquals(print_field(-1e-6),  '   -1.-6',
-                          'L|%s|' % print_field(-1e-6))
-        self.assertEquals(print_field(-1e-7),  '   -1.-7',
-                          'M|%s|' % print_field(-1e-7))
-        self.assertEquals(print_field(-1e-20), '  -1.-20',
-                          'N|%s|' % print_field(-1e-20))
+        self.assertEqual(print_field(-0.1), '     -.1',
+                         'A|%s|' % print_field(-0.1))
+        self.assertEqual(print_field(-0.0001), '  -.0001',
+                         'B|%s|' % print_field(-0.0001))
+        self.assertEqual(print_field(-0.00001), ' -.00001',
+                         'C|%s|' % print_field(-0.00001))
+        self.assertEqual(print_field(-0.000001), '   -1.-6',
+                         'D|%s|' % print_field(-0.000001))
+        self.assertEqual(print_field(-0.0000001), '   -1.-7',
+                         'E|%s|' % print_field(-0.0000001))
+        self.assertEqual(print_field(-0.00000012), '  -1.2-7',
+                         'F|%s|' % print_field(-0.00000012))
+        self.assertEqual(print_field(-0.000748519), '-7.485-4',
+                         'G|%s|' % print_field(-0.000748519))
+        self.assertEqual(print_field(-0.12345678), '-.123457',
+                         'H|%s|' % print_field(-0.12345678))
+        self.assertEqual(print_field(-0.00012349), '-1.235-4',
+                         'I|%s|' % print_field(-0.00012349))
+        self.assertEqual(print_field(-0.000012349), '-1.235-5',
+                         'J|%s|' % print_field(-0.000012349))
+        self.assertEqual(print_field(-1e-5),  ' -.00001',
+                         'K|%s|' % print_field(-1e-5))
+        self.assertEqual(print_field(-1e-6),  '   -1.-6',
+                         'L|%s|' % print_field(-1e-6))
+        self.assertEqual(print_field(-1e-7),  '   -1.-7',
+                         'M|%s|' % print_field(-1e-7))
+        self.assertEqual(print_field(-1e-20), '  -1.-20',
+                         'N|%s|' % print_field(-1e-20))
 
     def test_print_card_8(self):
-        self.assertEquals(print_card_8(['GRID',1]),'GRID           1\n')
-        self.assertEquals(print_card_8(['GRID', 1, None, None, None, None, None,
-                                      None, None, 1]),
-                          'GRID           1\n               1\n',
-                          print_card_8(['GRID', 1, None, None, None, None, None,
-                                      None, None, 1]))
+        self.assertEqual(print_card_8(['GRID',1]),'GRID           1\n')
+        self.assertEqual(print_card_8(['GRID', 1, None, None, None, None, None,
+                                     None, None, 1]),
+                         'GRID           1\n               1\n',
+                         print_card_8(['GRID', 1, None, None, None, None, None,
+                                     None, None, 1]))
 
-        self.assertEquals(print_card_8(['GRID', 1, None, None, None, None, None,
-                                      None, None,
-                                      1, None]),
-                          'GRID           1\n               1\n',
-                          print_card_8(['GRID', 1, None, None, None, None, None,
-                                      None, None,
-                                      1, None]))
+        self.assertEqual(print_card_8(['GRID', 1, None, None, None, None, None,
+                                     None, None,
+                                     1, None]),
+                         'GRID           1\n               1\n',
+                         print_card_8(['GRID', 1, None, None, None, None, None,
+                                     None, None,
+                                     1, None]))
 
-        self.assertEquals(print_card_8(['GRID', 1, None, None, None, None, None,
-                                      None, None,
-                                      None,None,None,None,None,None,None,None,
-                                      1, None]),
-                          'GRID           1\n+\n               1\n',
-                          print_card_8(['GRID', 1, None, None, None, None, None,
-                                      None, None,
-                                      None,None,None,None,None,None,None,None,
-                                      1, None]))
+        self.assertEqual(print_card_8(['GRID', 1, None, None, None, None, None,
+                                     None, None,
+                                     None,None,None,None,None,None,None,None,
+                                     1, None]),
+                         'GRID           1\n+\n               1\n',
+                         print_card_8(['GRID', 1, None, None, None, None, None,
+                                     None, None,
+                                     None,None,None,None,None,None,None,None,
+                                     1, None]))
 
 def compare(valueIn):
     #print "a = |%s|" % valueIn
