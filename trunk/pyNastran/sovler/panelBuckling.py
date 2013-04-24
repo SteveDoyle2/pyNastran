@@ -46,20 +46,20 @@ class PanelBuckling(object):
             key = tuple(sorted([nodeIDs[i + 1], nodeIDs[0]]))
             Edges[eid].append(key)
             Edges2[key] = []
-            #print "Edges[eid=%s] = %s" %(eid,Edges[eid])
+            #print("Edges[eid=%s] = %s" % eid, Edges[eid])
             if on:
-                #print Edges[eid]
+                #print(Edges[eid])
                 on = False
-            #print 'nodeIDs[%s] = %s' %(eid,element.nodeIDs())
+            #print('nodeIDs[%s] = %s' % (eid, element.nodeIDs()))
             #Edges[eid] = edges
         del key, edges, element
 
         for eid, edges in sorted(Edges.iteritems()):
             for edge in edges:
                 Edges2[edge].append(eid)
-                #print "Edges2[edge=%s] = %s" %(edge,Edges2[edge])
+                #print("Edges2[edge=%s] = %s" % (edge,Edges2[edge]))
 
-        #print "Edges[edge=%s] = %s" %(edge,Edges2[edge]) # edges to elements
+        #print("Edges[edge=%s] = %s" % (edge, Edges2[edge])) # edges to elements
 
         self.buildEdgeCount(Edges, Edges2, Normals)
         #self.buildPanel2(Edges,Edges2,Normals)
@@ -68,7 +68,7 @@ class PanelBuckling(object):
     def buildEdgeCount(self, Edges, Edges2, Normals):
 
         #Edges2 = {}  ## maps edges to elements
-        #print "Edges[edge=%s] = %s" %(edge,Edges2[edge]) # edges to elements
+        #print("Edges[edge=%s] = %s" % (edge, Edges2[edge])) # edges to elements
         self.edgeCount = {}
         for edge, elements in sorted(Edges2.iteritems()):
             #elements = self.removeExtraElements2(elements)
@@ -86,7 +86,7 @@ class PanelBuckling(object):
         print "eStart = ", eStart
 
         #Edges2 = {}  ## maps edges to elements
-        #print "Edges[edge=%s] = %s" %(edge,Edges2[edge]) # edges to elements
+        #print("Edges[edge=%s] = %s" % (edge,Edges2[edge])) # edges to elements
 
         patches = {}
         patch = [eStart]
@@ -178,8 +178,8 @@ class PanelBuckling(object):
             nEid = Normals[eid]
             touchingElements = []
             for edge in edges:
-                print "edge=%s" % (str(edge))
-                #print "eid=%s edge=%s" %(eid,edge)
+                print("edge=%s" % str(edge))
+                #print("eid=%s edge=%s" % (eid, edge))
                 # get only the unique entries
                 touchingElements = list(set(Edges2[edge]))
                 touchingElements = self.removeExtraElements(
@@ -259,7 +259,7 @@ class PanelBuckling(object):
         #try:
         angle = degrees(acos(d))
         #except ValueError:
-        #    print "nEid=%s nTouch=%s d=%s" %(nEid,nTouch,d)
+        #    print("nEid=%s nTouch=%s d=%s" % (nEid, nTouch, d))
         #    raise
         return angle
 
@@ -277,9 +277,9 @@ class PanelBuckling(object):
     def removeExtraElements(self, eid, touchingElements):
         return list(set(touchingElements))
 
-        #print "touchingElements1 = ",touchingElements
+        #print("touchingElements1 = ",touchingElements)
         for i, touchingElement in enumerate(touchingElements):
-            #print "eidsDone = ",self.eidsDone
+            #print("eidsDone = ",self.eidsDone)
             if touchingElement in self.eidsDone:
                 touchingElements.pop(i)
         # remove eid
@@ -287,7 +287,7 @@ class PanelBuckling(object):
             touchingElements.pop(touchingElements.index(eid))
         except:
             pass
-        #print "touchingElements2 = ",touchingElements
+        #print("touchingElements2 = ",touchingElements)
         return touchingElements
 
     def removeExtraElements2(self, elements):

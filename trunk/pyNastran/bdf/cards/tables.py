@@ -17,7 +17,7 @@ class Table(BaseCard):
         if axis == 0:
             axisType = 'LINEAR'
         else:
-            raise ValueError('axis=|%s|' % (axis))
+            raise ValueError('axis=|%s|' % axis)
         return axisType
 
     def parse_fields(self, xy, nrepeated, isData=False):
@@ -84,7 +84,7 @@ class TableObj(object):
         @param isData did this come from the OP2/BDF (True -> OP2)
         """
         xy2 = []  # remove extra ENDTs
-        
+
         if 1:  # hardcoded b/c ENDT has been removed
             return xy
 
@@ -159,7 +159,7 @@ class TABLED2(Table):
         if card:
             self.tid = integer(card, 1, 'tid')
             self.x1 = double(card, 2, 'x1')
-            
+
             nfields = len(card) - 1
             nterms = (nfields - 9) // 2
             xy = []

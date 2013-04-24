@@ -84,9 +84,9 @@ class MarginChecker(object):
     def readFiles(self):
         i = 0
         for fname, subcaseList in sorted(self.cases.iteritems()):
-            #print "case[%s] = %s" %(key,self.cases[key])
+            #print("case[%s] = %s" % (key, self.cases[key]))
             subcaseList = list(set(subcaseList))
-            print "subcaseList[%s] = %s" % (fname, subcaseList)
+            print("subcaseList[%s] = %s" % (fname, subcaseList))
 
             op2 = OP2(fname, debug=False)
             op2.set_subcases(subcaseList)
@@ -160,7 +160,7 @@ class MarginChecker(object):
                     deflect = self.displacementResults[jfact]
                     trans = deflect.translations[nid] * factor
                     deflection += trans
-                #print "deflection[%s][%s][%s] = %s" %(icase,jfact,nid,str(deflection))
+                #print("deflection[%s][%s][%s] = %s" % (icase,jfact,nid,str(deflection)))
                 deflectionDict[icase][nid] = deflection
 
         deflectionMargin = {}
@@ -259,9 +259,9 @@ class MarginChecker(object):
                         oxx = stress.oxx[eid][nid]
                         oyy = stress.oyy[eid][nid]
                         txy = stress.txy[eid][nid]
-                        #print "s[%s][%s][%s][%s]" %(icase,jfact,eid,nid)
-                        #print "vmFactor = ",vmFactor
-                        #print "s[%s][%s][%s] = %s" %(icase,eid,nid,stressP[icase][eid][nid])
+                        #print("s[%s][%s][%s][%s]" % (icase, jfact, eid, nid))
+                        #print("vmFactor = ", vmFactor)
+                        #print("s[%s][%s][%s] = %s" % (icase, eid, nid, stressP[icase][eid][nid]))
                         o = array([oxx, oyy, txy]) * factor
                         stressP[icase][eid][nid] += o  # @todo is this legal...check with oxx, oyy, ozz, txy... ???
 
@@ -328,9 +328,9 @@ class MarginChecker(object):
                         tyz = stress.tyz[eid][nid]
                         txz = stress.txz[eid][nid]
 
-                        #print "s[%s][%s][%s][%s]" %(icase,jfact,eid,nid)
-                        #print "vmFactor = ",vmFactor
-                        #print "s[%s][%s][%s] = %s" %(icase,eid,nid,stressP[icase][eid][nid])
+                        #print("s[%s][%s][%s][%s]" % (icase, jfact, eid, nid))
+                        #print("vmFactor = ", vmFactor)
+                        #print("s[%s][%s][%s] = %s" % (icase, eid, nid, stressP[icase][eid][nid]))
                         o = array([oxx, oyy, ozz, txy, tyz, txz]) * factor
                         stressP[icase][eid][nid] += o  # @todo is this legal...check with oxx, oyy, ozz, txy... ???
 
@@ -339,8 +339,8 @@ class MarginChecker(object):
 
         del o
         for icase, vmFactor in enumerate(self.vmFactors):
-            print "icase = ", icase
-            #print "vmFactor = ",vmFactor
+            print("icase = ", icase)
+            #print("vmFactor = ",vmFactor)
             for eid in eidList:
                 #print "eid = ",eid
                 eidResults = []
@@ -353,7 +353,7 @@ class MarginChecker(object):
                     (oxx, oyy, ozz, txy, tyz, txz) = stressP[icase][eid][nid]
                     #print o.keys()
                     ovm = sqrt((oxx - oyy) ** 2 + (oyy - ozz) ** 2 + (oxx - ozz) ** 2 + 6 * (txy ** 2 + tyz ** 2 + txz ** 2))  # 3d stress
-                    print "ovm = %s" % (ovm)
+                    print("ovm = %s" % ovm)
                     eidResults.append(ovm)
                 stressP[icase][eid] = min(eidResults)
 
