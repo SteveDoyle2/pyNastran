@@ -1,4 +1,7 @@
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import unittest
+from numpy import array
 
 from pyNastran.bdf.bdf import PCOMP, MAT1
 
@@ -117,11 +120,31 @@ class TestShells(unittest.TestCase):
         self.assertEquals(p.Nsm(), 1.0)
         # MassPerArea
         self.assertAlmostEquals(p.MassPerArea(), 1.6)
-        self.assertAlmostEquals(p.MassPerArea(0), 0.1+1/3.)
-        self.assertAlmostEquals(p.MassPerArea(1), 0.2+1/3.)
-        self.assertAlmostEquals(p.MassPerArea(2), 0.3+1/3.)
+        self.assertAlmostEquals(p.MassPerArea(0, method='nplies'), 0.1+1/3.)
+        self.assertAlmostEquals(p.MassPerArea(1, method='nplies'), 0.2+1/3.)
+        self.assertAlmostEquals(p.MassPerArea(2, method='nplies'), 0.3+1/3.)
+
+        self.assertAlmostEquals(p.MassPerArea(0, method='rho*t'), 0.1+1/6.)
+        self.assertAlmostEquals(p.MassPerArea(1, method='rho*t'), 0.2+2/6.)
+        self.assertAlmostEquals(p.MassPerArea(2, method='rho*t'), 0.3+3/6.)
+
+        self.assertAlmostEquals(p.MassPerArea(0, method='t'), 0.1+1/6.)
+        self.assertAlmostEquals(p.MassPerArea(1, method='t'), 0.2+2/6.)
+        self.assertAlmostEquals(p.MassPerArea(2, method='t'), 0.3+3/6.)
         with self.assertRaises(RuntimeError):
-            p.MassPerArea(3)
+            p.MassPerArea(3, method='nplies')
+        
+        z = p.get_z_locations()
+        z_expected = array([0., T[0], T[0]+T[1], T[0]+T[1]+T[2]])
+        for za, ze in zip(z, z_expected):
+            self.assertAlmostEquals(za, ze)
+        
+        #z0  = 
+        p.z0 = 1.0
+        z_expected = 1.0 + z_expected
+        z = p.get_z_locations()
+        for za, ze in zip(z, z_expected):
+            self.assertAlmostEquals(za, ze)
 
     def test_PCOMP_02(self):
         """
@@ -199,7 +222,6 @@ class TestShells(unittest.TestCase):
         for iply in xrange(len(p.plies)):
             mid = p.plies[iply][0]
             p.plies[iply][0] = m # MAT1
-            #p.mids = [m, m, m]
 
         #Rho
         self.assertAlmostEquals(p.Rho(0), 1.0)
@@ -230,12 +252,12 @@ class TestShells(unittest.TestCase):
         self.assertEquals(p.Nsm(), 1.0)
         # MassPerArea
         self.assertAlmostEquals(p.MassPerArea(), 2.2)
-        self.assertAlmostEquals(p.MassPerArea(0), 0.1+1/6.)
-        self.assertAlmostEquals(p.MassPerArea(1), 0.2+1/6.)
-        self.assertAlmostEquals(p.MassPerArea(2), 0.3+1/6.)
-        self.assertAlmostEquals(p.MassPerArea(3), 0.1+1/6.)
-        self.assertAlmostEquals(p.MassPerArea(4), 0.2+1/6.)
-        self.assertAlmostEquals(p.MassPerArea(5), 0.3+1/6.)
+        self.assertAlmostEquals(p.MassPerArea(0, method='nplies'), 0.1+1/6.)
+        self.assertAlmostEquals(p.MassPerArea(1, method='nplies'), 0.2+1/6.)
+        self.assertAlmostEquals(p.MassPerArea(2, method='nplies'), 0.3+1/6.)
+        self.assertAlmostEquals(p.MassPerArea(3, method='nplies'), 0.1+1/6.)
+        self.assertAlmostEquals(p.MassPerArea(4, method='nplies'), 0.2+1/6.)
+        self.assertAlmostEquals(p.MassPerArea(5, method='nplies'), 0.3+1/6.)
         with self.assertRaises(RuntimeError):
             p.MassPerArea(6)        
 

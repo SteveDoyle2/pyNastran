@@ -13,6 +13,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 from itertools import izip
+from numpy import array
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property, Material
@@ -44,14 +45,13 @@ class CompositeShellProperty(ShellProperty):
             return True
         return False
 
-    def _adjust_ply_id(self, iply, nplies):
+    def _adjust_ply_id(self, iply):
         """
         When a ply is not symmetric, this function returns the input iply.
         When a ply is symmetrical and the iply value is greater than the number of plies
         we return the mirrored ply.
         @param self the PCOMP object
         @param iply
-        @param 
         
         @code
         Case 1 (nplies=6, len(plies)=3):
@@ -78,6 +78,8 @@ class CompositeShellProperty(ShellProperty):
         """
         if iply == 'all':
             return iply
+
+        nplies = len(self.plies)
         if iply >= nplies:
             if iply < self.nPlies():
                 #if nplies % 2 == 1:  # symmetric about ply 0; ## TODO: verify
@@ -86,7 +88,6 @@ class CompositeShellProperty(ShellProperty):
                 iply = iply - nplies
             else:
                 raise RuntimeError('invalid value for iply=%r' % iply)
-            
         return iply
 
     def Thickness(self, iply='all'):
@@ -106,13 +107,9 @@ class CompositeShellProperty(ShellProperty):
                 return t * 2.
             return t
         else:
-            iply = self._adjust_ply_id(iply, nplies)
+            iply = self._adjust_ply_id(iply)
             t = self.plies[iply][1]
             return t
-
-    def hasCoreLayer(self):
-        """is there a center layer (matters most for a symmetrical ply)"""
-        return self.nPlies() % 2 == 1  # True if has a core, False otherwise
 
     def nPlies(self):
         """
@@ -120,17 +117,14 @@ class CompositeShellProperty(ShellProperty):
         @code
         if Lam=SYM:
           returns nPlies*2   (even)
-          returns nPlies*2-1 (odd)
         else:
           returns nPlies
         @endcode
         """
-        nPlies = len(self.plies)
+        nplies = len(self.plies)
         if self.isSymmetrical():
-            if nPlies % 2 == 0:
-                return nPlies * 2
-            return nPlies * 2# - 1
-        return nPlies
+            return nplies * 2
+        return nplies
 
     def Nsm(self):
         return self.nsm
@@ -141,8 +135,7 @@ class CompositeShellProperty(ShellProperty):
         @param self the object pointer
         @param iply the ply ID (starts from 0)
         """
-        nplies = len(self.plies)
-        iply = self._adjust_ply_id(iply, nplies)
+        iply = self._adjust_ply_id(iply)
         Mid = self.Material(iply)
         if isinstance(Mid, int):
             return Mid
@@ -167,8 +160,7 @@ class CompositeShellProperty(ShellProperty):
         @param self the object pointer
         @param iply the ply ID (starts from 0)
         """
-        nplies = len(self.plies)
-        iply = self._adjust_ply_id(iply, nplies)
+        iply = self._adjust_ply_id(iply)
         mid = self.Material(iply)
         #print("rho =", mid.rho)
         return mid.rho
@@ -180,8 +172,7 @@ class CompositeShellProperty(ShellProperty):
         @param self the object pointer
         @param iply the ply ID (starts from 0)
         """
-        nplies = len(self.plies)
-        iply = self._adjust_ply_id(iply, nplies)
+        iply = self._adjust_ply_id(iply)
         Mid = self.plies[iply][0]
         return Mid
 
@@ -191,18 +182,25 @@ class CompositeShellProperty(ShellProperty):
         @param self the object pointer
         @param iply the ply ID (starts from 0)
         """
-        nplies = len(self.plies)
-        iply = self._adjust_ply_id(iply, nplies)
+        iply = self._adjust_ply_id(iply)
         Theta = self.plies[iply][2]
         return Theta
 
     def sout(self, iply):
-        nplies = len(self.plies)
-        iply = self._adjust_ply_id(iply, nplies)
+        iply = self._adjust_ply_id(iply)
         Sout = self.plies[iply][3]
         return Sout
 
-    def MassPerArea(self, iply='all'):
+    def get_z_locations(self):
+        zi = self.z0
+        z = [zi]
+        for i in range(self.nPlies()):
+            t = self.Thickness(i)
+            zi += t
+            z.append(zi)
+        return array(z)
+        
+    def MassPerArea(self, iply='all', method='nplies'):
         r"""
         \f[ \large  m = A ( \rho t + nsm ) \f]
         mass = rho*A*t
@@ -210,13 +208,23 @@ class CompositeShellProperty(ShellProperty):
         \f[ \large  \frac{m}{A} =\rho t + nsm \f]
         mass/A = rho*t for the various layers
         the final mass calculation will be done later
-        @param self
-          the PCOMP object
-        @param iply
-          the string 'all' (default) or the mass per area of the ith ply
+        @param self the PCOMP object
+        @param iply the string 'all' (default) or the mass per area of the
+          ith ply
+        @param method the method to compute MassPerArea
+           Case 1 (iply = all)
+             method has no effect
+           Case 2 (iply != all)
+             method 'nplies' the nsm is divided by the number of plies to get (default)
+             the value for the ith ply
+           Case 3 (iply != all)
+             method 'rho*t' smear the nsm based on the rho*t distribution
+           Case 4 (iply != all)
+             method 't' smear the nsm based on the thickness distribution
         """
+        assert method in ['nplies', 'rho*t', 't'], 'method=%r is invalid' % method
         nplies = len(self.plies)
-        iply = self._adjust_ply_id(iply, nplies)
+        iply = self._adjust_ply_id(iply)
         if iply == 'all':  # get all layers
             massPerArea = 0.
             nplies = len(self.plies)
@@ -229,12 +237,37 @@ class CompositeShellProperty(ShellProperty):
                 return 2. * massPerArea + self.nsm
             return massPerArea + self.nsm
         else:
+            assert isinstance(iply, int), 'iply must be an integer; iply=%r' % iply
+            #massPerAreaTotal = m/A = sum(rho*t) + nsm
+            #massPerAreaTotal = mpa-nsm = sum(rho*t)
+            #(m/A)i = rho*t + nsmi
+            # where nsmi has two methods
             rho = self.Rho(iply)
             t = self.plies[iply][1]
             
-            # we divide by nplies b/c it's nsm per area and
-            # we're working on a per ply basis
-            massPerArea = rho * t + self.nsm / self.nPlies()
+            if method == 'nplies':
+                # we divide by nplies b/c it's nsm per area and
+                # we're working on a per ply basis
+                # nsmi = nsmi/n  # smear based on nplies
+                massPerArea = rho * t + self.nsm / self.nPlies()
+            elif method == 'rho*t':
+                # assume you smear the nsm mass based on rho*t distribution
+                #nsmi = rho*t / sum(rho*t) * nsm
+                #rho*t + nsmi = rho*t + rho*t/(sum(rho*t) + nsm - nsm) * nsm
+                #rho*t + nsmi = rho*t + rho*t/(massPerAreaTotal - nsm) * nsm
+                #             = rho*t * (1 + nsm/(massPerAreaTotal-nsm))
+                massPerAreaTotal = self.MassPerArea()
+                massPerArea = rho * t * (1.0 + self.nsm / (massPerAreaTotal-self.nsm))
+            elif method == 't':
+                # assume you smear the nsm mass based on t distribution
+                #nsmi = t / sum(t) * nsm
+                #rho*t + nsmi = rho*t + t/sum(t) * nsm
+                #rho*t + nsmi = rho*t + t/thicknessTotal * nsm
+                #             = t * (rho + nsm/thicknessTotal)
+                thicknessTotal = self.Thickness()
+                massPerArea = t * (rho + self.nsm / thicknessTotal)
+            else:
+                raise NotImplementedError('method=%r is not supported' % method)
             return massPerArea
 
     def isSameCard(self, prop, debug=False):
@@ -361,10 +394,10 @@ class PCOMP(CompositeShellProperty):
             self.plies = []
             #ply = [mid,t,theta,sout]
             for (mid, t, theta, sout) in izip(Mid, T, Theta, Sout):
-                if sout == 1:  ## @todo not sure  0=NO,1=YES (most likely)
-                    sout = 'YES'
-                elif sout == 0:
+                if sout == 0:
                     sout = 'NO'
+                elif sout == 1:  ## @todo not sure  0=NO,1=YES (most likely)
+                    sout = 'YES'
                 else:
                     raise RuntimeError('unsupported sout.  sout=%r and must be 0 or 1.'
                                        '\nPCOMP = %s' % (sout, data))
@@ -743,6 +776,10 @@ class PSHELL(ShellProperty):
             assert isinstance(t, float), 't=%r' % t
             assert isinstance(nsm, float), 'nsm=%r' % nsm
             assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+
+    def get_z_locations(self):
+        z = array([self.z1, self.z2])
+        return z
 
     def mid(self):
         if isinstance(self.mid1, Material):
