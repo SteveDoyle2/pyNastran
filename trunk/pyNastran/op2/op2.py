@@ -711,57 +711,62 @@ class OP2(BDF,
     def read_op2(self):
         ## the OP2 file object
         self.op2 = open(self.op2FileName, 'rb')
-
-        if self.make_op2_debug:
-            ## a developer debug file (largely unsupported)
-            self.op2Debug = open('debug.out', 'wb')
-        ## the byte position in the OP2
-        self.n = self.op2.tell()
-
         try:
-            #self.readTapeCodePost2()
-            self.read_tape_code()
-        except:
-            #raise
-            msg = ('When this happens, the analysis failed or '
-                  'the code bombed...check the F06.\n'
-                  'If the F06 is OK:\n'
-                  '  1.  Make sure you used PARAM,POST,-1 in your '
-                  'BDF/DAT/NAS\n'
-                  '  2.  Make sure the following line is not included in the BDF\n'
-                  "      ASSIGN OUTPUT2 = '%s', UNIT = 12, FORM = FORMATTED\n"
-                  '  3.  Run the problem on a different Operating System\n'
-                  '  4.  Are you running an OP2? :)  \n'
-                  'fname=%s' % (self.op2FileName, self.op2FileName))
-            raise RuntimeError("Tape Code Error: %s" % msg)
+            if self.make_op2_debug:
+                ## a developer debug file (largely unsupported)
+                self.op2Debug = open('debug.out', 'wb')
+            ## the byte position in the OP2
+            self.n = self.op2.tell()
 
-        isAnotherTable = True
-        while isAnotherTable:
-            self.log.debug('-' * 80)
             try:
-                table_name = self.read_table_name(rewind=True,
-                                                 stopOnFailure=False)
-                print("table_name = %s" % table_name)
-            except EOFError:  # the isAnotherTable method sucks...
-                isAnotherTable = False
-                self.log.debug("***ok exit, but it could be better...")
-                break
-            except SyntaxError:  # Invalid Markers, the isAnotherTable method sucks...
-                isAnotherTable = False
-                self.log.debug("***poor exit, but it worked...")
-                #raise
-                break
+                #self.readTapeCodePost2()
+                self.read_tape_code()
             except:
-                raise
-            self.log.debug("table_name = |%r|" % table_name)
-            #print("table_name = |%r|" % table_name)
+                #raise
+                msg = ('When this happens, the analysis failed or '
+                      'the code bombed...check the F06.\n'
+                      'If the F06 is OK:\n'
+                      '  1.  Make sure you used PARAM,POST,-1 in your '
+                      'BDF/DAT/NAS\n'
+                      '  2.  Make sure the following line is not included in the BDF\n'
+                      "      ASSIGN OUTPUT2 = '%s', UNIT = 12, FORM = FORMATTED\n"
+                      '  3.  Run the problem on a different Operating System\n'
+                      '  4.  Are you running an OP2? :)  \n'
+                      'fname=%s' % (self.op2FileName, self.op2FileName))
+                raise RuntimeError("Tape Code Error: %s" % msg)
 
-            if table_name is None:
-                break
-            else:
-                isAnotherTable = self.read_table(table_name)
+            isAnotherTable = True
+            while isAnotherTable:
+                self.log.debug('-' * 80)
+                try:
+                    table_name = self.read_table_name(rewind=True,
+                                                     stopOnFailure=False)
+                    print("table_name = %s" % table_name)
+                except EOFError:  # the isAnotherTable method sucks...
+                    isAnotherTable = False
+                    self.log.debug("***ok exit, but it could be better...")
+                    break
+                except SyntaxError:  # Invalid Markers, the isAnotherTable method sucks...
+                    isAnotherTable = False
+                    self.log.debug("***poor exit, but it worked...")
+                    #raise
+                    break
+                except:
+                    raise
+                self.log.debug("table_name = |%r|" % table_name)
+                #print("table_name = |%r|" % table_name)
 
-        self.log.debug("---end of all tables---")
+                if table_name is None:
+                    break
+                else:
+                    isAnotherTable = self.read_table(table_name)
+
+            self.log.debug("---end of all tables---")
+        except:
+            self.op2.close()
+            self.skippedCardsFile.close()
+            raise
+        self.op2.close()
         self.skippedCardsFile.close()
 
     def read_table(self, table_name):
