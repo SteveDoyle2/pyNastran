@@ -117,15 +117,15 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
         name = self.data_code['name']
 
         headers = ['Tx', 'Ty', 'Tz', 'Rx', 'Ry', 'Rz']
-        headerLine = '%-8s %8s ' % ('nodeID', 'GridType',)
+        headerLine = '%-8s %8s ' % ('nodeID', 'GridType')
         for header in headers:
-            headerLine += '%10s ' % (header)
+            headerLine += '%10s ' % header
         headerLine += '\n'
 
         for i, (iMode, eigVals) in enumerate(sorted(self.translations.iteritems())):
             freq = self.eigrs[i]
             msg += '%s = %g\n' % (name, iMode)
-            msg += 'eigenvalueReal = %g\n' % (freq)
+            msg += 'eigenvalueReal = %g\n' % freq
             msg += headerLine
             for nodeID, displacement in sorted(eigVals.iteritems()):
                 rotation = self.rotations[iMode][nodeID]
@@ -137,9 +137,9 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
                 vals = [dx, dy, dz, rx, ry, rz]
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % (0)
+                        msg += '%10s ' % 0
                     else:
-                        msg += '%10.3g ' % (val)
+                        msg += '%10.3g ' % val
                 msg += '\n'
             msg += '\n'
             #print msg
@@ -265,7 +265,7 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
         headers = ['T']
         headerLine = '%-8s %8s ' % ('nodeID', 'GridType',)
         for header in headers:
-            headerLine += '%10s ' % (header)
+            headerLine += '%10s ' % header
         headerLine += '\n'
 
         for iMode, eigVals in sorted(self.translations.iteritems()):
@@ -282,9 +282,9 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
                 msg += '%-8i %8s ' % (nodeID, Type)
                 for v in vals:
                     if abs(v) < 1e-6:
-                        msg += '%10s ' % (0)
+                        msg += '%10s ' % 0
                     else:
-                        msg += '%10.3f ' % (v)
+                        msg += '%10.3f ' % v
                 msg += '\n'
             msg += '\n'
         return msg
@@ -366,7 +366,7 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
         headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
         headerLine = '%-8s %8s ' % ('nodeID', 'GridType',)
         for header in headers:
-            headerLine += '%10s ' % (header)
+            headerLine += '%10s ' % header
         headerLine += '\n'
         name = self.data_code['name']
 
@@ -383,10 +383,10 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
                 vals = translation + rotation
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % (0)
+                        msg += '%10s ' % 0
                     else:
-                        msg += '%10s ' % (str(val))
-                        #msg += '%10.3g ' %(val)
+                        msg += '%10s ' % str(val)
+                        #msg += '%10.3g ' % val
                 msg += '\n'
             msg += '\n'
         return msg

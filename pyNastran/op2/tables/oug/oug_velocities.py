@@ -46,9 +46,9 @@ class VelocityObject(TableObject):  # approach_code=10, thermal=0
             vals = [dx, dy, dz, rx, ry, rz]
             for val in vals:
                 if abs(val) < 1e-6:
-                    msg += '%10s ' % (0)
+                    msg += '%10s ' % 0
                 else:
-                    msg += '%10.3e ' % (val)
+                    msg += '%10.3e ' % val
             msg += '\n'
         return msg
 
@@ -68,9 +68,9 @@ class VelocityObject(TableObject):  # approach_code=10, thermal=0
                 vals = [dx, dy, dz, rx, ry, rz]
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % (0)
+                        msg += '%10s ' % 0
                     else:
-                        msg += '%10.3e ' % (val)
+                        msg += '%10.3e ' % val
                 msg += '\n'
         return msg
 
@@ -106,7 +106,7 @@ class ComplexVelocityObject(ComplexTableObject):  # table_code=10, approach_code
         headers = ['DxReal', 'DxImag', 'DyReal', 'DyImag', 'DzReal', 'DyImag', 'RxReal', 'RxImag', 'RyReal', 'RyImag', 'RzReal', 'RzImag']
         msg += '%-10s ' % ('nodeID')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for freq, translations in sorted(self.translations.iteritems()):
@@ -115,12 +115,12 @@ class ComplexVelocityObject(ComplexTableObject):  # table_code=10, approach_code
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[freq][nodeID]
 
-                msg += '%-10i ' % (nodeID)
+                msg += '%-10i ' % nodeID
                 vals = translation + rotation
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % (0)
+                        msg += '%10s ' % 0
                     else:
-                        msg += '%10.3e ' % (val)
+                        msg += '%10.3e ' % val
                 msg += '\n'
         return msg

@@ -15,8 +15,7 @@ import warnings
 import traceback
 
 
-from pyNastran.utils import list_print
-from pyNastran.utils import object_attributes
+from pyNastran.utils import list_print, is_string, object_attributes
 from pyNastran.utils.log import get_logger
 
 
@@ -1181,7 +1180,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             n += 1
 
             card_name = self.get_card_name(lines)
-            assert isinstance(comment, str) or isinstance(comment, unicode), type(comment)
+            assert is_string(comment), type(comment)
             #comment = ''.join(comments)
             #print "*asdf*lines = %r" % lines
 

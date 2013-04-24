@@ -119,11 +119,11 @@ def list_print(lst):
         if val is None or isinstance(val, basestring):
             return str(val)
         if isinstance(val, float):
-            return '%-4.2f' % (val)
+            return '%-4.2f' % val
         try:
-            return '%g' % (val)
+            return '%g' % val
         except TypeError:
-            print("parameter = |%s|" % (val))
+            print("parameter = |%s|" % val)
             raise
 
     try: # TODO: remove try block and fix bug in OP2 code or add a warning message

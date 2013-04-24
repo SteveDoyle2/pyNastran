@@ -47,9 +47,9 @@ class DisplacementObject(TableObject):  # approach_code=1, thermal=0
             vals = [dx, dy, dz, rx, ry, rz]
             for val in vals:
                 if abs(val) < 1e-6:
-                    msg2 += '%10s ' % (0)
+                    msg2 += '%10s ' % 0
                 else:
-                    msg2 += '%10.3e ' % (val)
+                    msg2 += '%10.3e ' % val
             msg2 = '\n'
             msg.append(msg2)
         return ''.join(msg)
@@ -70,9 +70,9 @@ class DisplacementObject(TableObject):  # approach_code=1, thermal=0
                 vals = [dx, dy, dz, rx, ry, rz]
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg2 += '%10s ' % (0)
+                        msg2 += '%10s ' % 0
                     else:
-                        msg2 += '%10.3e ' % (val)
+                        msg2 += '%10.3e ' % val
                 msg2 += '\n'
                 msg.append(msg2)
         return ''.join(msg)
@@ -109,7 +109,7 @@ class ComplexDisplacementObject(ComplexTableObject):  # approach_code=1, sort_co
         headers = ['DxReal', 'DxImag', 'DyReal', 'DyImag', 'DzReal', 'DyImag', 'RxReal', 'RxImag', 'RyReal', 'RyImag', 'RzReal', 'RzImag']
         msg += '%-10s ' % ('nodeID')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for freq, translations in sorted(self.translations.iteritems()):
@@ -118,12 +118,12 @@ class ComplexDisplacementObject(ComplexTableObject):  # approach_code=1, sort_co
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[freq][nodeID]
 
-                msg += '%-10i ' % (nodeID)
+                msg += '%-10i ' % nodeID
                 vals = translation + rotation
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % (0)
+                        msg += '%10s ' % 0
                     else:
-                        msg += '%10.3e ' % (val)
+                        msg += '%10.3e ' % val
                 msg += '\n'
         return msg

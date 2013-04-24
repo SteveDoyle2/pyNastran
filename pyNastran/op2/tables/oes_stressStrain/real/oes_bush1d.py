@@ -219,7 +219,7 @@ class Bush1DStressObject(StressObject):
         msg += '%-6s %6s ' % ('EID', 'eType')
         headers = ['s1', 's2', 's3', 's4', 'Axial']
         for header in headers:
-            msg += '%8s ' % (header)
+            msg += '%8s ' % header
         msg += '\n'
 
         for eid, S1s in sorted(self.s1.iteritems()):
@@ -234,20 +234,20 @@ class Bush1DStressObject(StressObject):
             vals = [s1[0], s2[0], s3[0], s4[0], axial]
             for val in vals:
                 if abs(val) < 1e-6:
-                    msg += '%8s ' % ('0')
+                    msg += '%8s ' % '0'
                 else:
-                    msg += '%8i ' % (val)
+                    msg += '%8i ' % val
             msg += '\n'
 
             msg += '%s ' % (' ' * 13)
             vals = [s1[1], s2[1], s3[1], s4[1]]
             for val in vals:
                 if isinstance(val, str):
-                    msg += '%8s ' % (val)
+                    msg += '%8s ' % val
                 elif abs(val) < 1e-6:
-                    msg += '%8s ' % ('0')
+                    msg += '%8s ' % '0'
                 else:
-                    msg += '%8i ' % (val)
+                    msg += '%8i ' % val
             msg += '\n'
 
             #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial)
@@ -260,7 +260,7 @@ class Bush1DStressObject(StressObject):
         msg += '%-6s %6s ' % ('EID', 'eType')
         headers = ['s1', 's2', 's3', 's4', 'Axial', 'sMax', 'sMin']
         for header in headers:
-            msg += '%8s ' % (header)
+            msg += '%8s ' % header
         msg += '\n'
 
         for dt, S1ss in sorted(self.s1.iteritems()):
@@ -283,7 +283,7 @@ class Bush1DStressObject(StressObject):
                 vals = [s1[1], s2[1], s3[1], s4[1]]
                 for val in vals:
                     if isinstance(val, str):
-                        msg += '%8s ' % (val)
+                        msg += '%8s ' % val
                     elif abs(val) < 1e-6:
                         msg += '%8s %8s' % (val.real, val.imag)
                 msg += '\n'

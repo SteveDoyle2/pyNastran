@@ -240,7 +240,7 @@ class BeamStressObject(StressObject):
         msg += '%-6s %6s %6s %7s' % ('EID', 'eType', 'NID', 'xxb')
         headers = ['sMax', 'sMin', 'MS_tension', 'MS_compression']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for dt, smax in sorted(self.smax.iteritems()):
@@ -258,9 +258,9 @@ class BeamStressObject(StressObject):
                     vals = [sMax, sMin, SMt, SMc]
                     for val in vals:
                         if abs(val) < 1e-6:
-                            msg += '%10s ' % ('0')
+                            msg += '%10s ' % '0'
                         else:
-                            msg += '%10g ' % (val)
+                            msg += '%10g ' % val
                     msg += '\n'
         #print msg
         #sys.exit('beamT')
@@ -274,7 +274,7 @@ class BeamStressObject(StressObject):
         msg += '%-6s %6s %6s %6s' % ('EID', 'eType', 'NID', 'xxb')
         headers = ['sMax', 'sMin', 'MS_tension', 'MS_compression']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
         #print "self.code = ",self.code
         for eid in sorted(self.smax):
@@ -293,9 +293,9 @@ class BeamStressObject(StressObject):
                 vals = [sMax, sMin, SMt, SMc]
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % ('0')
+                        msg += '%10s ' % '0'
                     else:
-                        msg += '%10g ' % (val)
+                        msg += '%10g ' % val
                 msg += '\n'
         return msg
 
@@ -528,7 +528,7 @@ class BeamStrainObject(StrainObject):
         msg += '%-6s %6s %6s %6s' % ('EID', 'eType', 'NID', 'xxb')
         headers = ['sMax', 'sMin', 'MS_tension', 'MS_compression']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
         #print "self.code = ",self.code
         for eid in sorted(self.smax):
@@ -546,8 +546,8 @@ class BeamStrainObject(StrainObject):
                 vals = [sMax, sMin, SMt, SMc]
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % ('0')
+                        msg += '%10s ' % '0'
                     else:
-                        msg += '%10.3e ' % (val)
+                        msg += '%10.3e ' % val
                 msg += '\n'
         return msg

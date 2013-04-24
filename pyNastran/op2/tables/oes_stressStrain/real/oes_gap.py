@@ -117,7 +117,7 @@ class NonlinearGapStressObject(StressObject):
         msg += '%-6s %6s ' % ('EID', 'eType')
         headers = ['stress']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for dt, stress in sorted(self.stress.iteritems()):
@@ -125,9 +125,9 @@ class NonlinearGapStressObject(StressObject):
             for eid, istress in sorted(stress.iteritems()):
                 msg += '%-6g %6s ' % (eid, self.eType[eid])
                 if abs(istress) < 1e-6:
-                    msg += '%10s ' % ('0')
+                    msg += '%10s ' % '0'
                 else:
-                    msg += '%10g ' % (istress)
+                    msg += '%10g ' % istress
                 msg += '\n'
         return msg
 
@@ -141,7 +141,7 @@ class NonlinearGapStressObject(StressObject):
         msg += '%-8s %6s ' % ('EID', 'eType')
         headers = ['stress']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
         #print "self.code = ",self.code
         for eid, istress in sorted(self.stress.iteritems()):
@@ -149,9 +149,9 @@ class NonlinearGapStressObject(StressObject):
             #print "eType",self.eType
             msg += '%-8i %6s ' % (eid, self.eType[eid])
             if abs(istress) < 1e-6:
-                msg += '%10s ' % ('0')
+                msg += '%10s ' % '0'
             else:
-                msg += '%10i ' % (istress)
+                msg += '%10i ' % istress
             msg += '\n'
             #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg

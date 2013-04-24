@@ -302,7 +302,7 @@ class PlateStressObject(StressObject):
         headers = self.getHeaders()
         msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         #print self.oxx.keys()
@@ -326,12 +326,12 @@ class PlateStressObject(StressObject):
                         vals = [oxx, oyy, txy, major, minor, ovm]
                         for val in vals:
                             if abs(val) < 1e-6:
-                                msg += '%10s ' % ('0')
+                                msg += '%10s ' % '0'
                             else:
                                 try:
-                                    msg += '%10i ' % (int(val))
+                                    msg += '%10i ' % int(val)
                                 except:
-                                    print("bad val = %s" % (val))
+                                    print("bad val = %s" % val)
                                     raise
                         msg += '\n'
         return msg
@@ -819,7 +819,7 @@ class PlateStressObject(StressObject):
         headers = self.getHeaders()
         msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         #print self.oxx.keys()
@@ -1486,7 +1486,7 @@ class PlateStrainObject(StrainObject):
         headers = self.getHeaders()
         msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for eid, exxNodes in sorted(self.exx.iteritems()):
@@ -1507,9 +1507,9 @@ class PlateStrainObject(StrainObject):
                     vals = [exx, eyy, exy, major, minor, evm]
                     for val in vals:
                         if abs(val) < 1e-6:
-                            msg += '%10s ' % ('0.')
+                            msg += '%10s ' % '0.'
                         else:
-                            msg += '%10.3g ' % (val)
+                            msg += '%10.3g ' % val
                     msg += '\n'
 
                     #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy,evm)
@@ -1520,7 +1520,7 @@ class PlateStrainObject(StrainObject):
         headers = self.getHeaders()
         msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for dt, exx in sorted(self.exx.iteritems()):
@@ -1543,9 +1543,9 @@ class PlateStrainObject(StrainObject):
                         vals = [exx, eyy, exy, major, minor, evm]
                         for val in vals:
                             if abs(val) < 1e-6:
-                                msg += '%10s ' % ('0.')
+                                msg += '%10s ' % '0.'
                             else:
-                                msg += '%10.3g ' % (val)
+                                msg += '%10.3g ' % val
                         msg += '\n'
 
                         #msg += ('eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g '

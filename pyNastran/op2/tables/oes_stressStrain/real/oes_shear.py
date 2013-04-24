@@ -102,7 +102,7 @@ class ShearStressObject(StressObject):
         msg += '%-6s %6s ' % ('EID', 'eType')
         headers = ['maxShear', 'avgShear', 'Margin']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for dt, maxShears in sorted(self.maxShear.iteritems()):
@@ -115,9 +115,9 @@ class ShearStressObject(StressObject):
                 vals = [maxShear, avgShear, margin]
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % ('0')
+                        msg += '%10s ' % '0'
                     else:
-                        msg += '%10i ' % (val)
+                        msg += '%10i ' % val
                 msg += '\n'
                 msg += ('eid=%-4s eType=%s axial=%-4i '
                         'torsion=%-4i\n' %(eid, self.eType, axial, torsion))
@@ -131,7 +131,7 @@ class ShearStressObject(StressObject):
         msg += '%-6s %6s ' % ('EID', 'eType')
         headers = ['maxShear', 'avgShear', 'margin']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
         #print "self.code = ",self.code
         for eid in sorted(self.maxShear):
@@ -143,9 +143,9 @@ class ShearStressObject(StressObject):
             vals = [maxShear, avgShear, margin]
             for val in vals:
                 if abs(val) < 1e-6:
-                    msg += '%10s ' % ('0')
+                    msg += '%10s ' % '0'
                 else:
-                    msg += '%10i ' % (val)
+                    msg += '%10i ' % val
             msg += '\n'
             #msg += ('eid=%-4s eType=%s axial=%-4i '
             #        'torsion=%-4i\n' %(eid, self.eType, axial, torsion)
@@ -248,7 +248,7 @@ class ShearStrainObject(StrainObject):
         msg += '%-6s %6s ' % ('EID', 'eType')
         headers = ['maxShear', 'avgShear', 'Margin']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for dt, maxShears in sorted(self.maxShear.iteritems()):
@@ -261,9 +261,9 @@ class ShearStrainObject(StrainObject):
                 vals = [maxShear, avgShear, margin]
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % ('0')
+                        msg += '%10s ' % '0'
                     else:
-                        msg += '%10g ' % (val)
+                        msg += '%10g ' % val
                 msg += '\n'
                 #msg += ('eid=%-4s eType=%s axial=%-4i '
                 #        'torsion=%-4i\n' %(eid, self.eType, axial, torsion))
@@ -277,7 +277,7 @@ class ShearStrainObject(StrainObject):
         msg += '%-6s %6s ' % ('EID', 'eType')
         headers = ['maxShear', 'avgShear', 'margin']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         #print "self.code = ",self.code
@@ -291,8 +291,8 @@ class ShearStrainObject(StrainObject):
 
             for val in vals:
                 if abs(val) < 1e-7:
-                    msg += '%8s ' % ('0')
+                    msg += '%8s ' % '0'
                 else:
-                    msg += '%8.3g ' % (val)
+                    msg += '%8.3g ' % val
             msg += '\n'
         return msg

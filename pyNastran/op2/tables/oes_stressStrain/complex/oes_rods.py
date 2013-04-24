@@ -103,7 +103,7 @@ class ComplexRodStressObject(StressObject):
         msg += '%-6s %6s ' % ('EID', 'eType')
         headers = ['axial', 'torsion', 'MS_axial', 'MS_torsion']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for dt, axial in sorted(self.axial.iteritems()):
@@ -115,9 +115,9 @@ class ComplexRodStressObject(StressObject):
                 vals = [axial, torsion]
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % ('0')
+                        msg += '%10s ' % '0'
                     else:
-                        msg += '%10i ' % (val)
+                        msg += '%10i ' % val
                 msg += '\n'
                 #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg
@@ -200,7 +200,7 @@ class ComplexRodStressObject(StressObject):
         msg += '%-6s %6s ' % ('EID', 'eType')
         headers = ['axial', 'torsion', 'MS_axial', 'MS_torsion']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
         #print "self.code = ",self.code
         for eid in sorted(self.axial):
@@ -211,9 +211,9 @@ class ComplexRodStressObject(StressObject):
             vals = [axial, torsion]
             for val in vals:
                 if abs(val) < 1e-6:
-                    msg += '%10s ' % ('0')
+                    msg += '%10s ' % '0'
                 else:
-                    msg += '%10i ' % (val)
+                    msg += '%10i ' % val
             msg += '\n'
             #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg
@@ -307,7 +307,7 @@ class ComplexRodStrainObject(StrainObject):
         msg += '%-6s %6s ' % ('EID', 'eType')
         headers = ['axial', 'torsion']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for dt, axial in sorted(self.axial.iteritems()):
@@ -319,9 +319,9 @@ class ComplexRodStrainObject(StrainObject):
                 vals = [axial, torsion]
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % ('0')
+                        msg += '%10s ' % '0'
                     else:
-                        msg += '%10g ' % (val)
+                        msg += '%10g ' % val
                 msg += '\n'
                 #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg
@@ -400,7 +400,7 @@ class ComplexRodStrainObject(StrainObject):
         msg += '%-6s %6s ' % ('EID', 'eType')
         headers = ['axial', 'torsion']
         for header in headers:
-            msg += '%8s ' % (header)
+            msg += '%8s ' % header
         msg += '\n'
 
         for eid in sorted(self.axial):
@@ -410,8 +410,8 @@ class ComplexRodStrainObject(StrainObject):
             vals = [axial, torsion]
             for val in vals:
                 if abs(val) < 1e-7:
-                    msg += '%8s ' % ('0')
+                    msg += '%8s ' % '0'
                 else:
-                    msg += '%8.3g ' % (val)
+                    msg += '%8.3g ' % val
             msg += '\n'
         return msg

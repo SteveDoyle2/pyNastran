@@ -72,7 +72,7 @@ class MPCForcesObject(TableObject):
         headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
         msg += '%-8s ' % ('GRID')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for dt, translations in sorted(self.translations.iteritems()):
@@ -82,13 +82,13 @@ class MPCForcesObject(TableObject):
                 (Fx, Fy, Fz) = translation
                 (Mx, My, Mz) = rotation
 
-                msg += '%-8i ' % (nodeID)
+                msg += '%-8i ' % nodeID
                 vals = [Fx, Fy, Fz, Mx, My, Mx]
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % (0)
+                        msg += '%10s ' % 0
                     else:
-                        msg += '%10.2f ' % (val)
+                        msg += '%10.2f ' % val
                 msg += '\n'
         return msg
 
@@ -103,7 +103,7 @@ class MPCForcesObject(TableObject):
         headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
         msg += '%-8s ' % ('GRID')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for nodeID, translation in sorted(self.translations.iteritems()):
@@ -115,9 +115,9 @@ class MPCForcesObject(TableObject):
             vals = [Fx, Fy, Fz, Mx, My, Mx]
             for val in vals:
                 if abs(val) < 1e-6:
-                    msg += '%10s ' % (0)
+                    msg += '%10s ' % 0
                 else:
-                    msg += '%10.2f ' % (val)
+                    msg += '%10.2f ' % val
 
             msg += '\n'
         return msg
@@ -199,26 +199,26 @@ class ComplexMPCForcesObject(ComplexTableObject):
     def __reprTransient__(self):
         msg = '---COMPLEX MPC FORCES---\n'
         if self.nonlinear_factor is not None:
-            msg += 'dt = %g\n' % (self.dt)
+            msg += 'dt = %g\n' % self.dt
 
         raise RuntimeError('is this valid...')
         headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
-        msg += '%-8s ' % ('GRID')
+        msg += '%-8s ' % 'GRID'
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for dt, translations in sorted(self.translations.iteritems()):
             msg += 'dt = %s' % (dt)
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
-                msg += '%-8i ' % (nodeID)
+                msg += '%-8i ' % nodeID
                 vals = translation + rotation
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % (0)
+                        msg += '%10s ' % 0
                     else:
-                        msg += '%10.2f ' % (val)
+                        msg += '%10.2f ' % val
                 msg += '\n'
         return msg
 
@@ -228,13 +228,13 @@ class ComplexMPCForcesObject(ComplexTableObject):
 
         msg = '---COMPLEX MPC FORCES---\n'
         if self.dt is not None:
-            msg += 'dt = %g\n' % (self.dt)
+            msg += 'dt = %g\n' % self.dt
 
         raise RuntimeError('is this valid...')
         headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
         msg += '%-8s ' % ('GRID')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for nodeID, translation in sorted(self.translations.iteritems()):
@@ -246,8 +246,8 @@ class ComplexMPCForcesObject(ComplexTableObject):
             vals = [Fx, Fy, Fz, Mx, My, Mx]
             for val in vals:
                 if abs(val) < 1e-6:
-                    msg += '%10s ' % (0)
+                    msg += '%10s ' % 0
                 else:
-                    msg += '%10.2f ' % (val)
+                    msg += '%10.2f ' % val
             msg += '\n'
         return msg

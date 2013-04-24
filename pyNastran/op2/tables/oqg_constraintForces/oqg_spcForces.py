@@ -46,12 +46,12 @@ class SPCForcesObject(TableObject):
     def __reprTransient__(self):
         msg = '---SPC FORCES---\n'
         if self.nonlinear_factor is not None:
-            msg += 'dt = %g\n' % (self.dt)
+            msg += 'dt = %g\n' % self.dt
 
         headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
         msg += '%-8s ' % ('GRID')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for dt, translations in sorted(self.translations.iteritems()):
@@ -61,13 +61,13 @@ class SPCForcesObject(TableObject):
                 (Fx, Fy, Fz) = translation
                 (Mx, My, Mz) = rotation
 
-                msg += '%-8i ' % (nodeID)
+                msg += '%-8i ' % nodeID
                 vals = [Fx, Fy, Fz, Mx, My, Mx]
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % (0)
+                        msg += '%10s ' % 0
                     else:
-                        msg += '%10.2f ' % (val)
+                        msg += '%10.2f ' % val
                 msg += '\n'
         return msg
 
@@ -81,9 +81,9 @@ class SPCForcesObject(TableObject):
             msg += 'dt = %g\n' % (self.dt)
 
         headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
-        msg += '%-8s ' % ('GRID')
+        msg += '%-8s ' % 'GRID'
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for nodeID, translation in sorted(self.translations.iteritems()):
@@ -95,9 +95,9 @@ class SPCForcesObject(TableObject):
             vals = [Fx, Fy, Fz, Mx, My, Mx]
             for val in vals:
                 if abs(val) < 1e-6:
-                    msg += '%10s ' % (0)
+                    msg += '%10s ' % 0
                 else:
-                    msg += '%10.2f ' % (val)
+                    msg += '%10.2f ' % val
             msg += '\n'
         return msg
 
@@ -151,13 +151,13 @@ class ComplexSPCForcesObject(ComplexTableObject):
     def __reprTransient__(self):
         msg = '---COMPLEX SPC FORCES---\n'
         if self.nonlinear_factor is not None:
-            msg += 'dt = %g\n' % (self.dt)
+            msg += 'dt = %g\n' % self.dt
 
         raise RuntimeError('is this valid...')
         headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
         msg += '%-8s ' % ('GRID')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for dt, translations in sorted(self.translations.iteritems()):
@@ -168,9 +168,9 @@ class ComplexSPCForcesObject(ComplexTableObject):
                 vals = translation + rotation
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % (0)
+                        msg += '%10s ' % 0
                     else:
-                        msg += '%10.2f ' % (val)
+                        msg += '%10.2f ' % val
                 msg += '\n'
         return msg
 
@@ -181,13 +181,13 @@ class ComplexSPCForcesObject(ComplexTableObject):
 
         msg = '---COMPLEX SPC FORCES---\n'
         if self.nonlinear_factor is not None:
-            msg += 'dt = %g\n' % (self.dt)
+            msg += 'dt = %g\n' % self.dt
 
         raise RuntimeError('is this valid...')
         headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
         msg += '%-8s ' % ('GRID')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for nodeID, translation in sorted(self.translations.iteritems()):
@@ -195,12 +195,12 @@ class ComplexSPCForcesObject(ComplexTableObject):
             (Fx, Fy, Fz) = translation
             (Mx, My, Mz) = rotation
 
-            msg += '%-8i ' % (nodeID)
+            msg += '%-8i ' % nodeID
             vals = [Fx, Fy, Fz, Mx, My, Mx]
             for val in vals:
                 if abs(val) < 1e-6:
-                    msg += '%10s ' % (0)
+                    msg += '%10s ' % 0
                 else:
-                    msg += '%10.2f ' % (val)
+                    msg += '%10.2f ' % val
             msg += '\n'
         return msg

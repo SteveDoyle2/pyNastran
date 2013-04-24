@@ -60,8 +60,8 @@ class nonlinearFluxObject(scalarObject):  # approach_code=10, sort_code=0
 
                 for val in list(gradients) + list(flux):
                     if abs(val) < 1e-6:
-                        msg += '%-10s ' % ('0.')
+                        msg += '%-10s ' % '0.'
                     else:
-                        msg += '%-10i ' % (val)
+                        msg += '%-10i ' % val
                 msg += '\n'
         return msg

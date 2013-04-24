@@ -132,7 +132,7 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
 
         msg = '%-10s %-8s ' % (mainHeaders)
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
         return msg
 
@@ -147,9 +147,9 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
                 msg += '%10s %8s ' % (nodeID, gridType)
 
                 if abs(T) < 1e-6:
-                    msg += '%10s\n' % (0)
+                    msg += '%10s\n' % 0
                 else:
-                    msg += '%10g\n' % (T)
+                    msg += '%10g\n' % T
         return msg
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
@@ -224,9 +224,9 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
         for nodeID, T in sorted(self.temperatures.iteritems()):
             gridType = self.gridTypes[nodeID]
             msg += '%10s %8s ' % (nodeID, gridType)
-            #print "nodeID=%s T=%s" %(nodeID,T)
+            #print "nodeID=%s T=%s" % (nodeID, T)
             if abs(T) < 1e-6:
-                msg += '%10s\n' % (0)
+                msg += '%10s\n' % 0
             else:
-                msg += '%10g\n' % (T)
+                msg += '%10g\n' % T
         return msg

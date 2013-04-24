@@ -47,7 +47,7 @@ class STRING(object):
     def length(self, globalsDict):
         #print "self.word = ",self.word
         val = globalsDict[self.name]
-        #print "val = |%s|" %(val)
+        #print "val = |%s|" % val
         return len(val.__repr__())
 
     def __repr__(self):

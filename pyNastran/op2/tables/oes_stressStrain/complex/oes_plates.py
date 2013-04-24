@@ -253,7 +253,7 @@ class ComplexPlateStressObject(StressObject):
         headers = self.getHeaders()
         msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         #print self.oxx.keys()
@@ -276,12 +276,12 @@ class ComplexPlateStressObject(StressObject):
                         vals = [oxx, oyy, txy]
                         for val in vals:
                             if abs(val) < 1e-6:
-                                msg += '%10s ' % ('0')
+                                msg += '%10s ' % '0'
                             else:
                                 try:
                                     msg += '%10i %10i' % (int(val.real), int(val.imag))
                                 except:
-                                    print("bad val = %s" % (val))
+                                    print("bad val = %s" % val)
                                     raise
                         msg += '\n'
         return msg
@@ -635,7 +635,7 @@ class ComplexPlateStressObject(StressObject):
         headers = self.getHeaders()
         msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         #print self.oxx.keys()
@@ -656,12 +656,12 @@ class ComplexPlateStressObject(StressObject):
                     vals = [oxx, oyy, txy]
                     for val in vals:
                         if abs(val) < 1e-6:
-                            msg += '%10s ' % ('0')
+                            msg += '%10s ' % '0'
                         else:
                             try:
                                 msg += '%10i %10i' % (val.real, val.imag)
                             except:
-                                print("bad val = %s" % (val))
+                                print("bad val = %s" % val)
                                 raise
                     msg += '\n'
         return msg
@@ -1253,7 +1253,7 @@ class ComplexPlateStrainObject(StrainObject):
         headers = self.getHeaders()
         msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for eid, exxNodes in sorted(self.exx.iteritems()):
