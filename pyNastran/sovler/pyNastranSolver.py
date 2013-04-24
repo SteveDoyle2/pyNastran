@@ -222,7 +222,7 @@ class Solver(F06, OP2):
                 nidComponentToID[(nid, 5)] = i + \
                     2  # bending - can pick one moment
                 i += 3
-            #print('iUs[%i] = %s' %(nid,self.iUs))
+            #print('iUs[%i] = %s' % (nid, self.iUs))
 
         if model.spoints:
             for nid in sorted(model.spoints.spoints):  # SPOINTS
@@ -297,7 +297,7 @@ class Solver(F06, OP2):
                     'device_code': 1, 'table_code': 1, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OUG',
                     'nonlinear_factor': None}
-        #print "headers = %s" %(headers)
+        #print("headers = %s" % headers)
 
         disp = DisplacementObject(data_code, is_sort1, isubcase, dt=False)
 
@@ -347,7 +347,7 @@ class Solver(F06, OP2):
 
         #sys.exit('verify Kaa')
         Fa = partition_dense_vector(Fg, self.iUs)
-        #print("Kaa = \n%s" %(print_matrix(Kaa)))
+        #print("Kaa = \n%s" % (print_matrix(Kaa)))
 
         print("Fg = ", Fg)
         print("Fa = ", Fa)
@@ -481,7 +481,7 @@ class Solver(F06, OP2):
 
                 elif isinstance(spc, SPC1):
                     ps = spc.constraints
-                    #print "ps = |%s|" %(ps)
+                    #print("ps = |%s|" % ps)
                     nodes = spc.nodes
                     for nid in nodes:
                         for ips in ps:
@@ -491,7 +491,7 @@ class Solver(F06, OP2):
 
                             key = (nid, ips)
                             i = nidComponentToID[key]
-                            #print "i=%s Us=%s" %(i,0.0)
+                            #print("i=%s Us=%s" % (i, 0.0))
                             if i not in self.iUs:
                                 self.iUs.append(i)
                                 self.Us.append(0.0)

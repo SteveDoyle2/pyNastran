@@ -149,7 +149,7 @@ class OP4(object):
 
         if not(matrix_names is None or name in matrix_names):  # kill the matrix
             A = None
-        #print "form=%s name=%s A=\n%s" %(form,name,str(A))
+        #print("form=%s name=%s A=\n%s" % (form, name, str(A)))
         return (name, form, A)
 
     def read_real_ascii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
@@ -229,7 +229,7 @@ class OP4(object):
         if isSparse:  # Initialize a real matrix
             A = coo_matrix((entries, (rows, cols)), shape=(
                 nrows, ncols), dtype=dType)
-            #print "type = %s %s" %(type(A),type(A.todense()))
+            #print("type = %s %s" % (type(A),type(A.todense())))
             #A = A.todense()
         return A
 
@@ -380,7 +380,7 @@ class OP4(object):
             #     if len(data)==0:
             #         break
             #     (recordLength,) = unpack(self.endian+'i',data)
-            #     print("RL = %s" %(recordLength))
+            #     print("RL = %s" % recordLength)
             #     if recordLength==24:
             #         self.n-=4; self.op4.seek(self.n)
             #     else:
@@ -431,7 +431,7 @@ class OP4(object):
 
         if recordLength == 16:  # b,icol,irow,nWords,
             (a, icol, irow, nWords) = unpack(self.endian + '4i', data)
-            #print "a=%s icol=%s irow=%s nWords=%s" %(a,icol,irow,nWords)
+            #print("a=%s icol=%s irow=%s nWords=%s" % (a, icol, irow, nWords))
         else:
             raise NotImplementedError('recordLength=%s' % recordLength)
         return (a, icol, irow, nWords)
@@ -445,7 +445,7 @@ class OP4(object):
         IS, = unpack('i', data)
         L = IS // 65536 - 1
         irow = IS - 65536 * (L + 1)
-        #print "IS=%s L=%s irow=%s" %(IS,L,irow)
+        #print("IS=%s L=%s irow=%s" % (IS, L, irow))
         #assert IS>0
         #assert L>0
         return irow, L
@@ -455,28 +455,28 @@ class OP4(object):
             data = f.read(8)
             self.n += 8
         (idummy, irow) = unpack('2i', data)
-        #print "idummy=%s irow=%s" %(idummy,irow)
+        #print("idummy=%s irow=%s" % (idummy, irow))
         #assert irow<100
         return (irow, idummy - 1)
 
     def _read_matrix_binary(self, f, precision, matrix_names):
         """reads a matrix"""
-        #print self.print_section(60)
-        #print "*************************"
+        #print(self.print_section(60))
+        #print("*************************")
         data = f.read(4)
         self.n += 4
         (recordLength,) = unpack(self.endian + 'i', data)
         assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-        #print "RL = %s" %(recordLength)
+        #print("RL = %s" % recordLength)
 
-        #print self.print_section(60)
+        #print(self.print_section(60))
         if recordLength == 24:
             data = f.read(recordLength)
             self.n += recordLength
 
             (ncols, nrows, form, Type, name) = unpack(
                 self.endian + '4i8s', data)
-            #print "nrows=%s ncols=%s form=%s Type=%s name=%s" %(nrows,ncols,form,Type,name)
+            #print("nrows=%s ncols=%s form=%s Type=%s name=%s" % (nrows,ncols,form,Type,name))
         else:
             msg = recordLength + self.print_block(data)
             raise NotImplementedError('recordLength=%s\n%s' % msg)
@@ -623,14 +623,14 @@ class OP4(object):
             recordLength = 4 * nWords
             data = f.read(recordLength)
             self.n += recordLength
-            #print "dataFormat=%s RL=%s NNext=%s" %(d,recordLength,self.n)
+            #print("dataFormat=%s RL=%s NNext=%s" % (d, recordLength, self.n))
             #if icol==ncols+1:
                 #break
 
             nValues = nWords // NWV
             #nRead = nWords//4
 
-            #print "recordLength=%s NBW=%s" %(recordLength,NBW)
+            #print("recordLength=%s NBW=%s" % (recordLength, NBW))
 
             nValues2 = L // NWV
             nValues = nValues2
@@ -687,13 +687,13 @@ class OP4(object):
                         rows.append(irow - 1)
                         #if not allclose(value,1):
                             #asdf
-                        #print "A[%s,%s] = %s" %(irow-1,icol-1,value)
+                        #print("A[%s,%s] = %s" % (irow-1, icol-1, value))
                         entries.append(value)
                         A[irow - 1, icol - 1] = value
                         irow += 1
                 else:
                     for value in valueList:
-                        #print "A[%s,%s] = %s" %(irow-1,icol-1,value)
+                        #print("A[%s,%s] = %s" % (irow-1, icol-1, value))
                         A[irow - 1, icol - 1] = value
                         irow += 1
                 recordLength -= nValues * NBW
@@ -777,7 +777,7 @@ class OP4(object):
             recordLength = 4 * nWords
             data = f.read(recordLength)
             self.n += recordLength
-            #print "dataFormat=%s RL=%s NNext=%s" %(d,recordLength,self.n)
+            #print("dataFormat=%s RL=%s NNext=%s" % (d, recordLength, self.n))
             if icol == ncols + 1:
                 continue
 
@@ -819,7 +819,7 @@ class OP4(object):
                             realValue = value
                         else:
                             #A[irow,icol] = complex(realValue,value)
-                            #print "A[%s,%s] = %s" %(irow,icol,complex(realValue,value))
+                            #print("A[%s,%s] = %s" % (irow, icol, complex(realValue, value)))
                             A[irow, icol] = complex(realValue, value)
                             entries.append(complex(realValue, value))
                             irow += 1
@@ -828,15 +828,15 @@ class OP4(object):
                         if i % 2 == 0:
                             realValue = value
                         else:
-                            #print "A[%s,%s] = %s" %(irow,icol,complex(realValue,value))
+                            #print("A[%s,%s] = %s" % (irow, icol, complex(realValue, value)))
                             A[irow, icol] = complex(realValue, value)
                             irow += 1
 
                 recordLength -= nValues * NBW
                 data = data[nValues * NBW:]
-                #print "recordLength=%s NBW=%s" %(recordLength,NBW)
-                #print print_matrix(A)
-                #print "********",data
+                #print("recordLength=%s NBW=%s" % (recordLength, NBW))
+                #print(print_matrix(A))
+                #print("********", data)
 
         if isSparse:  # Initialize a complex matrix
             A = coo_matrix((entries, (rows, cols)), shape=(
@@ -876,7 +876,7 @@ class OP4(object):
                 nWords -= 1
         else:
             (a, icol, irow, nWords) = self.read_start_marker(f)
-            #print "N=%s a=%s icol=%s irow=%s nWords=%s"%(self.n,a,icol,irow,nWords)
+            #print("N=%s a=%s icol=%s irow=%s nWords=%s"% (self.n, a, icol, irow, nWords))
         return (icol, irow, nWords)
 
 #--------------------------------------------------------------------------
@@ -1026,11 +1026,11 @@ class OP4(object):
 
                     #L = complexFactor*(2+nPacks)+1
                     #L = len(pack)+complexFactor*2
-                    #msg = '%8i%8i%8i\n' %(j+1,0,L+1)
+                    #msg = '%8i%8i%8i\n' % (j+1, 0, L+1)
                     msg += '%8i%8i\n' % (L, irow + 1)
                 else:
                     #L = complexFactor*(2*len(pack))
-                    #msg = '%8i%8i%8i\n' %(j+1,0,L+1)
+                    #msg = '%8i%8i%8i\n' % (j+1, 0, L+1)
 
                     IS = irow + 65536 * (L + 1) + 1
                     msg += '%8i\n' % (IS)
@@ -1154,7 +1154,7 @@ class OP4(object):
                 valueStr = ''
                 #i=0
                 if Type in [1, 2]:
-                    #print "iStart=%s iEnd=%s" %(iStart,iEnd)
+                    #print("iStart=%s iEnd=%s" % (iStart, iEnd))
                     for i, irow in enumerate(xrange(iStart, iEnd)):
                         if abs(A[irow, icol]) > tol:
                             valueStr += '%23.16E' % (A[irow, icol])
@@ -1166,7 +1166,7 @@ class OP4(object):
                             valueStr = ''
                 else:
                     i = 0
-                    #print "iStart=%s iEnd=%s" %(iStart,iEnd)
+                    #print("iStart=%s iEnd=%s" % (iStart, iEnd))
                     for irow in range(iStart, iEnd):
                         if abs(A[irow, icol].real) > tol:
                             valueStr += '%23.16E' % (A[irow, icol].real)
@@ -1241,24 +1241,24 @@ def compressColumn(col):
     i = 0
     packi = []
     while i < len(col):
-        #print "i=%s n=%s col[i]=%s" %(i,n,col[i])
+        #print("i=%s n=%s col[i]=%s" % (i, n, col[i]))
         if col[i] == n + 1:
-            #print "i=n=%s" %(i)
+            #print("i=n=%s" % i)
             packi.append(i)
             n += 1
         else:
             if packi:
                 packs.append(packi)
-                #print "pack = ",pack
+                #print("pack = ", pack)
             packi = [i]
             n = col[i]
-        #print "pack = ",pack
+        #print("pack = ", pack)
         i += 1
 
     if packi:
         packs.append(packi)
-    #print "packs = ",packs
-    return (packs)
+    #print("packs = ", packs)
+    return packs
 
 if __name__ == '__main__':
     #compressColumn([14, 15, 16, 20, 21, 22, 26, 27, 28])
