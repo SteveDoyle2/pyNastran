@@ -41,16 +41,16 @@ class TestShells(unittest.TestCase):
         self.assertFalse(p.isSymmetrical())
         self.assertEqual(p.nPlies(), 3)
 
-        self.assertAlmostEquals(p.Thickness(), 0.6)
-        self.assertAlmostEquals(p.Thickness(0), 0.1)
-        self.assertAlmostEquals(p.Thickness(1), 0.2)
-        self.assertAlmostEquals(p.Thickness(2), 0.3)
+        self.assertAlmostEqual(p.Thickness(), 0.6)
+        self.assertAlmostEqual(p.Thickness(0), 0.1)
+        self.assertAlmostEqual(p.Thickness(1), 0.2)
+        self.assertAlmostEqual(p.Thickness(2), 0.3)
         with self.assertRaises(RuntimeError):
             p.Thickness(3)
 
-        self.assertAlmostEquals(p.Theta(0), 0.)
-        self.assertAlmostEquals(p.Theta(1), 10.)
-        self.assertAlmostEquals(p.Theta(2), 20.)
+        self.assertAlmostEqual(p.Theta(0), 0.)
+        self.assertAlmostEqual(p.Theta(1), 10.)
+        self.assertAlmostEqual(p.Theta(2), 20.)
         with self.assertRaises(RuntimeError):
             p.Theta(3)
         
@@ -99,17 +99,17 @@ class TestShells(unittest.TestCase):
             #p.mids = [m, m, m]
         
         #Rho
-        self.assertAlmostEquals(p.Rho(0), 1.0)
-        self.assertAlmostEquals(p.Rho(1), 1.0)
-        self.assertAlmostEquals(p.Rho(2), 1.0)
+        self.assertAlmostEqual(p.Rho(0), 1.0)
+        self.assertAlmostEqual(p.Rho(1), 1.0)
+        self.assertAlmostEqual(p.Rho(2), 1.0)
         with self.assertRaises(RuntimeError):
             p.Rho(3)
 
         # MassPerArea
-        self.assertAlmostEquals(p.MassPerArea(), 0.6)
-        self.assertAlmostEquals(p.MassPerArea(0), 0.1)
-        self.assertAlmostEquals(p.MassPerArea(1), 0.2)
-        self.assertAlmostEquals(p.MassPerArea(2), 0.3)
+        self.assertAlmostEqual(p.MassPerArea(), 0.6)
+        self.assertAlmostEqual(p.MassPerArea(0), 0.1)
+        self.assertAlmostEqual(p.MassPerArea(1), 0.2)
+        self.assertAlmostEqual(p.MassPerArea(2), 0.3)
         with self.assertRaises(RuntimeError):
             p.MassPerArea(3)
 
@@ -119,32 +119,32 @@ class TestShells(unittest.TestCase):
 
         self.assertEqual(p.Nsm(), 1.0)
         # MassPerArea
-        self.assertAlmostEquals(p.MassPerArea(), 1.6)
-        self.assertAlmostEquals(p.MassPerArea(0, method='nplies'), 0.1+1/3.)
-        self.assertAlmostEquals(p.MassPerArea(1, method='nplies'), 0.2+1/3.)
-        self.assertAlmostEquals(p.MassPerArea(2, method='nplies'), 0.3+1/3.)
+        self.assertAlmostEqual(p.MassPerArea(), 1.6)
+        self.assertAlmostEqual(p.MassPerArea(0, method='nplies'), 0.1+1/3.)
+        self.assertAlmostEqual(p.MassPerArea(1, method='nplies'), 0.2+1/3.)
+        self.assertAlmostEqual(p.MassPerArea(2, method='nplies'), 0.3+1/3.)
 
-        self.assertAlmostEquals(p.MassPerArea(0, method='rho*t'), 0.1+1/6.)
-        self.assertAlmostEquals(p.MassPerArea(1, method='rho*t'), 0.2+2/6.)
-        self.assertAlmostEquals(p.MassPerArea(2, method='rho*t'), 0.3+3/6.)
+        self.assertAlmostEqual(p.MassPerArea(0, method='rho*t'), 0.1+1/6.)
+        self.assertAlmostEqual(p.MassPerArea(1, method='rho*t'), 0.2+2/6.)
+        self.assertAlmostEqual(p.MassPerArea(2, method='rho*t'), 0.3+3/6.)
 
-        self.assertAlmostEquals(p.MassPerArea(0, method='t'), 0.1+1/6.)
-        self.assertAlmostEquals(p.MassPerArea(1, method='t'), 0.2+2/6.)
-        self.assertAlmostEquals(p.MassPerArea(2, method='t'), 0.3+3/6.)
+        self.assertAlmostEqual(p.MassPerArea(0, method='t'), 0.1+1/6.)
+        self.assertAlmostEqual(p.MassPerArea(1, method='t'), 0.2+2/6.)
+        self.assertAlmostEqual(p.MassPerArea(2, method='t'), 0.3+3/6.)
         with self.assertRaises(RuntimeError):
             p.MassPerArea(3, method='nplies')
         
         z = p.get_z_locations()
         z_expected = array([0., T[0], T[0]+T[1], T[0]+T[1]+T[2]])
         for za, ze in zip(z, z_expected):
-            self.assertAlmostEquals(za, ze)
+            self.assertAlmostEqual(za, ze)
         
         #z0  = 
         p.z0 = 1.0
         z_expected = 1.0 + z_expected
         z = p.get_z_locations()
         for za, ze in zip(z, z_expected):
-            self.assertAlmostEquals(za, ze)
+            self.assertAlmostEqual(za, ze)
 
     def test_PCOMP_02(self):
         """
@@ -167,22 +167,22 @@ class TestShells(unittest.TestCase):
         self.assertTrue(p.isSymmetrical())
         self.assertEqual(p.nPlies(), 6)
         
-        self.assertAlmostEquals(p.Thickness(), 1.2)
-        self.assertAlmostEquals(p.Thickness(0), 0.1)
-        self.assertAlmostEquals(p.Thickness(1), 0.2)
-        self.assertAlmostEquals(p.Thickness(2), 0.3)
-        self.assertAlmostEquals(p.Thickness(3), 0.1)
-        self.assertAlmostEquals(p.Thickness(4), 0.2)
-        self.assertAlmostEquals(p.Thickness(5), 0.3)
+        self.assertAlmostEqual(p.Thickness(), 1.2)
+        self.assertAlmostEqual(p.Thickness(0), 0.1)
+        self.assertAlmostEqual(p.Thickness(1), 0.2)
+        self.assertAlmostEqual(p.Thickness(2), 0.3)
+        self.assertAlmostEqual(p.Thickness(3), 0.1)
+        self.assertAlmostEqual(p.Thickness(4), 0.2)
+        self.assertAlmostEqual(p.Thickness(5), 0.3)
         with self.assertRaises(RuntimeError):
             p.Thickness(6)
 
-        self.assertAlmostEquals(p.Theta(0), 0.)
-        self.assertAlmostEquals(p.Theta(1), 10.)
-        self.assertAlmostEquals(p.Theta(2), 20.)
-        self.assertAlmostEquals(p.Theta(3), 0.)
-        self.assertAlmostEquals(p.Theta(4), 10.)
-        self.assertAlmostEquals(p.Theta(5), 20.)
+        self.assertAlmostEqual(p.Theta(0), 0.)
+        self.assertAlmostEqual(p.Theta(1), 10.)
+        self.assertAlmostEqual(p.Theta(2), 20.)
+        self.assertAlmostEqual(p.Theta(3), 0.)
+        self.assertAlmostEqual(p.Theta(4), 10.)
+        self.assertAlmostEqual(p.Theta(5), 20.)
         with self.assertRaises(RuntimeError):
             p.Theta(6)
         
@@ -224,23 +224,23 @@ class TestShells(unittest.TestCase):
             p.plies[iply][0] = m # MAT1
 
         #Rho
-        self.assertAlmostEquals(p.Rho(0), 1.0)
-        self.assertAlmostEquals(p.Rho(1), 1.0)
-        self.assertAlmostEquals(p.Rho(2), 1.0)
-        self.assertAlmostEquals(p.Rho(3), 1.0)
-        self.assertAlmostEquals(p.Rho(4), 1.0)
-        self.assertAlmostEquals(p.Rho(5), 1.0)
+        self.assertAlmostEqual(p.Rho(0), 1.0)
+        self.assertAlmostEqual(p.Rho(1), 1.0)
+        self.assertAlmostEqual(p.Rho(2), 1.0)
+        self.assertAlmostEqual(p.Rho(3), 1.0)
+        self.assertAlmostEqual(p.Rho(4), 1.0)
+        self.assertAlmostEqual(p.Rho(5), 1.0)
         with self.assertRaises(RuntimeError):
             p.Rho(6)
 
         # MassPerArea
-        self.assertAlmostEquals(p.MassPerArea(), 1.2)
-        self.assertAlmostEquals(p.MassPerArea(0), 0.1)
-        self.assertAlmostEquals(p.MassPerArea(1), 0.2)
-        self.assertAlmostEquals(p.MassPerArea(2), 0.3)
-        self.assertAlmostEquals(p.MassPerArea(3), 0.1)
-        self.assertAlmostEquals(p.MassPerArea(4), 0.2)
-        self.assertAlmostEquals(p.MassPerArea(5), 0.3)
+        self.assertAlmostEqual(p.MassPerArea(), 1.2)
+        self.assertAlmostEqual(p.MassPerArea(0), 0.1)
+        self.assertAlmostEqual(p.MassPerArea(1), 0.2)
+        self.assertAlmostEqual(p.MassPerArea(2), 0.3)
+        self.assertAlmostEqual(p.MassPerArea(3), 0.1)
+        self.assertAlmostEqual(p.MassPerArea(4), 0.2)
+        self.assertAlmostEqual(p.MassPerArea(5), 0.3)
         with self.assertRaises(RuntimeError):
             p.MassPerArea(6)
         
@@ -251,13 +251,13 @@ class TestShells(unittest.TestCase):
 
         self.assertEqual(p.Nsm(), 1.0)
         # MassPerArea
-        self.assertAlmostEquals(p.MassPerArea(), 2.2)
-        self.assertAlmostEquals(p.MassPerArea(0, method='nplies'), 0.1+1/6.)
-        self.assertAlmostEquals(p.MassPerArea(1, method='nplies'), 0.2+1/6.)
-        self.assertAlmostEquals(p.MassPerArea(2, method='nplies'), 0.3+1/6.)
-        self.assertAlmostEquals(p.MassPerArea(3, method='nplies'), 0.1+1/6.)
-        self.assertAlmostEquals(p.MassPerArea(4, method='nplies'), 0.2+1/6.)
-        self.assertAlmostEquals(p.MassPerArea(5, method='nplies'), 0.3+1/6.)
+        self.assertAlmostEqual(p.MassPerArea(), 2.2)
+        self.assertAlmostEqual(p.MassPerArea(0, method='nplies'), 0.1+1/6.)
+        self.assertAlmostEqual(p.MassPerArea(1, method='nplies'), 0.2+1/6.)
+        self.assertAlmostEqual(p.MassPerArea(2, method='nplies'), 0.3+1/6.)
+        self.assertAlmostEqual(p.MassPerArea(3, method='nplies'), 0.1+1/6.)
+        self.assertAlmostEqual(p.MassPerArea(4, method='nplies'), 0.2+1/6.)
+        self.assertAlmostEqual(p.MassPerArea(5, method='nplies'), 0.3+1/6.)
         with self.assertRaises(RuntimeError):
             p.MassPerArea(6)        
 
