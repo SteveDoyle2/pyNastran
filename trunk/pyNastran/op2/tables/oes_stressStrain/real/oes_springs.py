@@ -88,7 +88,7 @@ class CelasStressObject(StressObject):
         msg += '%-6s %6s ' % ('EID', 'eType')
         headers = ['stress']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for dt, stress in sorted(self.stress.iteritems()):
@@ -96,9 +96,9 @@ class CelasStressObject(StressObject):
             for eid, istress in sorted(stress.iteritems()):
                 msg += '%-6g %6s ' % (eid, self.eType[eid])
                 if abs(istress) < 1e-6:
-                    msg += '%10s ' % ('0')
+                    msg += '%10s ' % '0'
                 else:
-                    msg += '%10g ' % (istress)
+                    msg += '%10g ' % istress
                 msg += '\n'
         return msg
 
@@ -110,16 +110,16 @@ class CelasStressObject(StressObject):
         msg += '%-8s %6s ' % ('EID', 'eType')
         headers = ['stress']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
         #print "self.code = ",self.code
         for eid, istress in sorted(self.stress.iteritems()):
             #print "eType",self.eType
             msg += '%-8i %6s ' % (eid, self.eType[eid])
             if abs(istress) < 1e-6:
-                msg += '%10s ' % ('0')
+                msg += '%10s ' % '0'
             else:
-                msg += '%10i ' % (istress)
+                msg += '%10i ' % istress
             msg += '\n'
             #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg
@@ -200,7 +200,7 @@ class CelasStrainObject(StrainObject):
         msg += '%-8s %6s ' % ('EID', 'eType')
         headers = ['strain']
         for header in headers:
-            msg += '%8s ' % (header)
+            msg += '%8s ' % header
         msg += '\n'
 
         for eid, strain in sorted(self.strain.iteritems()):
@@ -208,9 +208,9 @@ class CelasStrainObject(StrainObject):
             msg += '%-8i %6s ' % (eid, self.eType[eid])
 
             if abs(strain) < 1e-7:
-                msg += '%8s ' % ('0')
+                msg += '%8s ' % '0'
             else:
-                msg += '%8.3g ' % (strain)
+                msg += '%8.3g ' % strain
             msg += '\n'
         return msg
 
@@ -291,7 +291,7 @@ class NonlinearSpringStressObject(StressObject):
         msg += '%-6s %6s ' % ('EID', 'eType')
         headers = ['stress']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for dt, stress in sorted(self.stress.iteritems()):
@@ -299,9 +299,9 @@ class NonlinearSpringStressObject(StressObject):
             for eid, istress in sorted(stress.iteritems()):
                 msg += '%-6g %6s ' % (eid, self.eType[eid])
                 if abs(istress) < 1e-6:
-                    msg += '%10s ' % ('0')
+                    msg += '%10s ' % '0'
                 else:
-                    msg += '%10g ' % (istress)
+                    msg += '%10g ' % istress
                 msg += '\n'
         return msg
 
@@ -315,7 +315,7 @@ class NonlinearSpringStressObject(StressObject):
         msg += '%-8s %6s ' % ('EID', 'eType')
         headers = ['stress']
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
         #print "self.code = ",self.code
         for eid, istress in sorted(self.stress.iteritems()):
@@ -323,9 +323,9 @@ class NonlinearSpringStressObject(StressObject):
             #print "eType",self.eType
             msg += '%-8i %6s ' % (eid, self.eType[eid])
             if abs(istress) < 1e-6:
-                msg += '%10s ' % ('0')
+                msg += '%10s ' % '0'
             else:
-                msg += '%10i ' % (istress)
+                msg += '%10i ' % istress
             msg += '\n'
             #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg

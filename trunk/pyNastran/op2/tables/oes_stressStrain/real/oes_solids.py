@@ -505,7 +505,7 @@ class SolidStressObject(StressObject):
         headers = self.getHeaders()
         msg += '%-6s %6s %8s ' % ('EID', 'eType', 'nodeID')
         for header in headers:
-            msg += '%9s ' % (header)
+            msg += '%9s ' % header
         msg += '\n'
         for eid, oxxNodes in sorted(self.oxx.iteritems()):
             eType = self.eType[eid]
@@ -525,9 +525,9 @@ class SolidStressObject(StressObject):
                 vals = [oxx, oyy, ozz, txy, tyz, txz, ovm]
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%9s ' % ('0')
+                        msg += '%9s ' % '0'
                     else:
-                        msg += '%9i ' % (val)
+                        msg += '%9i ' % val
                 msg += '\n'
                 #msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
 
@@ -538,7 +538,7 @@ class SolidStressObject(StressObject):
         msg += '%-6s %6s %8s ' % ('EID', 'eType', 'nodeID')
         headers = self.getHeaders()
         for header in headers:
-            msg += '%9s ' % (header)
+            msg += '%9s ' % header
         msg += '\n'
 
         for dt, oxxs in sorted(self.oxx.iteritems()):
@@ -562,9 +562,9 @@ class SolidStressObject(StressObject):
                     vals = [oxx, oyy, ozz, txy, tyz, txz, ovm]
                     for val in vals:
                         if abs(val) < 1e-6:
-                            msg += '%9s ' % ('0')
+                            msg += '%9s ' % '0'
                         else:
-                            msg += '%9i ' % (val)
+                            msg += '%9i ' % val
                     msg += '\n'
                     #msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
 
@@ -1092,7 +1092,7 @@ class SolidStrainObject(StrainObject):
         headers = self.getHeaders()
         msg += '%-6s %6s %8s ' % ('EID', 'eType', 'nodeID')
         for header in headers:
-            msg += '%9s ' % (header)
+            msg += '%9s ' % header
         msg += '\n'
         for eid, oxxNodes in sorted(self.oxx.iteritems()):
             eType = self.eType[eid]
@@ -1112,9 +1112,9 @@ class SolidStrainObject(StrainObject):
                 vals = [oxx, oyy, ozz, txy, tyz, txz, ovm]
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%9s ' % ('0')
+                        msg += '%9s ' % '0'
                     else:
-                        msg += '%9i ' % (val)
+                        msg += '%9i ' % val
                 msg += '\n'
                 #msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
 
@@ -1128,7 +1128,7 @@ class SolidStrainObject(StrainObject):
         headers = self.getHeaders()
         msg += '%-6s %6s %8s ' % ('EID', 'eType', 'nodeID')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
         for eid, exxNodes in sorted(self.exx.iteritems()):
             eType = self.eType[eid]
@@ -1144,9 +1144,9 @@ class SolidStrainObject(StrainObject):
                 vals = [exx, eyy, ezz, exy, eyz, exz, evm]
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % ('0')
+                        msg += '%10s ' % '0'
                     else:
-                        msg += '%10.3e ' % (val)
+                        msg += '%10.3e ' % val
                 msg += '\n'
                 #msg += "eid=%-4s eType=%-6s nid=%-2i exx=%-5i eyy=%-5i ezz=%-5i exy=%-5i eyz=%-5i exz=%-5i evm=%-5i\n" %(eid,eType,nid,exx,eyy,ezz,exy,eyz,exz,evm)
 
@@ -1158,7 +1158,7 @@ class SolidStrainObject(StrainObject):
         headers = self.getHeaders()
         msg2 = '%-6s %6s %8s ' % ('EID', 'eType', 'nodeID')
         for header in headers:
-            msg2 += '%10s ' % (header)
+            msg2 += '%10s ' % header
         msg2 += '\n'
         msg.append(msg2)
         for dt, exxs in sorted(self.exx.iteritems()):
@@ -1178,9 +1178,9 @@ class SolidStrainObject(StrainObject):
                     vals = [exx, eyy, ezz, exy, eyz, exz, evm]
                     for val in vals:
                         if abs(val) < 1e-6:
-                            msg2 += '%10s ' % ('0')
+                            msg2 += '%10s ' % '0'
                         else:
-                            msg2 += '%10.3e ' % (val)
+                            msg2 += '%10.3e ' % val
                     msg2 += '\n'
                     msg.append(msg2)
                     #msg += "eid=%-4s eType=%-6s nid=%-2i exx=%-5i eyy=%-5i ezz=%-5i exy=%-5i eyz=%-5i exz=%-5i evm=%-5i\n" %(eid,eType,nid,exx,eyy,ezz,exy,eyz,exz,evm)

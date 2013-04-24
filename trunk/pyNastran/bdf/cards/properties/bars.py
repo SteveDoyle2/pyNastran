@@ -19,12 +19,13 @@ from numpy import zeros, pi, array
 
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
-from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
 from pyNastran.bdf.cards.baseCard import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string, string_or_blank,
     integer_or_double, double_string_or_blank, fields)
+from pyNastran.utils import is_string
+from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
 
 def IyyBeam(b, h):
     return 1 / 12. * b * h ** 3
@@ -1747,7 +1748,7 @@ class PBEAML(IntegratedLineProperty):
                 else:  # other blocks, n>0 ???
                     #print "*2",
                     #print "dim = ",Dim
-                    if isinstance(dim, unicode):
+                    if is_string(dim):
                         msg = ('nsm is a string...nsm=|%s|; fields=%s'
                                % (dim, card.fields()))
                         raise RuntimeError(msg)
@@ -1769,7 +1770,7 @@ class PBEAML(IntegratedLineProperty):
                 #print "DimB = ",Dim
                 self.dim.append(Dim)
                 self.nsm.append(0.0)
-                if isinstance(self.nsm[0], unicode):
+                if is_string(self.nsm[0]):
                     msg = 'nsm is a string...nsm=|%s|' % (self.nsm)
                     raise RuntimeError(msg)
 

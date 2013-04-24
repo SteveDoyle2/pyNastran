@@ -380,7 +380,7 @@ class CompositePlateStressObject(StressObject):
         msg += '%-6s %8s %8s ' % ('EID', 'eType', 'iLayer')
         headers = self.getHeaders()
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for eid, o11s in sorted(self.o11.iteritems()):
@@ -401,9 +401,9 @@ class CompositePlateStressObject(StressObject):
                 vals = [o11, o22, t12, t1z, t2z, ovm]
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % ('0')
+                        msg += '%10s ' % '0'
                     else:
-                        msg += '%10i ' % (val)
+                        msg += '%10i ' % val
                 msg += '\n'
         return msg
 
@@ -412,11 +412,11 @@ class CompositePlateStressObject(StressObject):
         msg += '%-6s %8s %8s ' % ('EID', 'eType', 'iLayer')
         headers = self.getHeaders()
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for dt, O11s in sorted(self.o11.iteritems()):
-            msg += "dt = %s\n" % (dt)
+            msg += "dt = %s\n" % dt
             for eid, o11s in sorted(O11s.iteritems()):
                 eType = self.eType[eid]
                 for iLayer in xrange(len(o11s)):
@@ -435,9 +435,9 @@ class CompositePlateStressObject(StressObject):
                     vals = [o11, o22, t12, t1z, t2z, ovm]
                     for val in vals:
                         if abs(val) < 1e-6:
-                            msg += '%10s ' % ('0')
+                            msg += '%10s ' % '0'
                         else:
-                            msg += '%10i ' % (val)
+                            msg += '%10i ' % val
                     msg += '\n'
         return msg
 
@@ -756,7 +756,7 @@ class CompositePlateStrainObject(StrainObject):
         msg += '%-6s %8s %8s ' % ('EID', 'eType', 'iLayer')
         headers = self.getHeaders()
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for eid, e11s in sorted(self.e11.iteritems()):
@@ -777,9 +777,9 @@ class CompositePlateStrainObject(StrainObject):
                 vals = [e11, e22, e12, e1z, e2z, evm]
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % ('0')
+                        msg += '%10s ' % '0'
                     else:
-                        msg += '%10.3g ' % (val)
+                        msg += '%10.3g ' % val
                 msg += '\n'
         return msg
 
@@ -788,7 +788,7 @@ class CompositePlateStrainObject(StrainObject):
         headers = self.getHeaders()
         msg += '%-6s %8s %8s ' % ('EID', 'eType', 'iLayer')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for dt, E11s in sorted(self.e11.iteritems()):
@@ -811,8 +811,8 @@ class CompositePlateStrainObject(StrainObject):
                     vals = [e11, e22, e12, e1z, e2z, evm]
                     for val in vals:
                         if abs(val) < 1e-6:
-                            msg += '%10s ' % ('0')
+                            msg += '%10s ' % '0'
                         else:
-                            msg += '%10.3g ' % (val)
+                            msg += '%10.3g ' % val
                     msg += '\n'
         return msg

@@ -1046,7 +1046,7 @@ class OP4(object):
 
                     if Type in [1, 2]:
                         if abs(val) > tol:
-                            valueStr += '%23.16E' % (val)
+                            valueStr += '%23.16E' % val
                         else:
                             valueStr += ' 0.0000000000000000E+00'
                         if (i + 1) % 3 == 0:

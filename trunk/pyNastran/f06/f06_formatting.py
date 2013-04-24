@@ -4,7 +4,7 @@ def writeFloats10E(vals):
     vals2 = []
     isAllZeros = True
     for v in vals:
-        v2 = '%10.3E' % (v)
+        v2 = '%10.3E' % v
         if v2 == ' 0.000E+00' or v2 == '-0.000E+00':
             v2 = ' 0.0      '
         else:
@@ -17,7 +17,7 @@ def writeFloats12E(vals):
     vals2 = []
     isAllZeros = True
     for v in vals:
-        v2 = '%12.5E' % (v)
+        v2 = '%12.5E' % v
         if v2 == ' 0.00000E+00' or v2 == '-0.00000E+00':
             v2 = ' 0.0        '
         else:
@@ -30,7 +30,7 @@ def writeFloats13E(vals):
     vals2 = []
     isAllZeros = True
     for v in vals:
-        v2 = '%13.6E' % (v)
+        v2 = '%13.6E' % v
         if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
             v2 = ' 0.0         '
         else:
@@ -82,7 +82,7 @@ def writeFloats8p4F(vals):
     vals2 = []
     isAllZeros = True
     for v in vals:
-        v2 = '%8.4f' % (v)
+        v2 = '%8.4f' % v
         if v2 == '  0.0000' or v2 == ' -0.0000':
             v2 = '  0.0   '
         else:

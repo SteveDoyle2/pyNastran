@@ -47,9 +47,9 @@ class AccelerationObject(TableObject):  # approach_code=11, thermal=0
             vals = [dx, dy, dz, rx, ry, rz]
             for val in vals:
                 if abs(val) < 1e-6:
-                    msg += '%10s ' % (0)
+                    msg += '%10s ' % 0
                 else:
-                    msg += '%10.3e ' % (val)
+                    msg += '%10.3e ' % val
             msg += '\n'
         return msg
 
@@ -69,9 +69,9 @@ class AccelerationObject(TableObject):  # approach_code=11, thermal=0
                 vals = [dx, dy, dz, rx, ry, rz]
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % (0)
+                        msg += '%10s ' % 0
                     else:
-                        msg += '%10.3e ' % (val)
+                        msg += '%10.3e ' % val
                 msg += '\n'
         return msg
 
@@ -109,7 +109,7 @@ class ComplexAccelerationObject(ComplexTableObject):  # table_code=11, approach_
         headers = ['DxReal', 'DxImag', 'DyReal', 'DyImag', 'DzReal', 'DyImag', 'RxReal', 'RxImag', 'RyReal', 'RyImag', 'RzReal', 'RzImag']
         msg += '%-10s ' % ('nodeID')
         for header in headers:
-            msg += '%10s ' % (header)
+            msg += '%10s ' % header
         msg += '\n'
 
         for freq, translations in sorted(self.translations.iteritems()):
@@ -122,8 +122,8 @@ class ComplexAccelerationObject(ComplexTableObject):  # table_code=11, approach_
                 vals = translation + rotation
                 for val in vals:
                     if abs(val) < 1e-6:
-                        msg += '%10s ' % (0)
+                        msg += '%10s ' % 0
                     else:
-                        msg += '%10.3e ' % (val)
+                        msg += '%10.3e ' % val
                 msg += '\n'
         return msg

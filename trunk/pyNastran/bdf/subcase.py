@@ -3,7 +3,7 @@
 Subcase creation/extraction class
 """
 #import sys
-
+from pyNastran.utils import is_string
 
 class Subcase(object):
     """
@@ -361,7 +361,7 @@ class Subcase(object):
         key = update_param_name(key)
         #print("adding isubcase=%s key=|%s| value=|%s| options=|%s| "
         #      "param_type=%s" %(self.id, key, value, options, param_type))
-        if isinstance(value, unicode) and value.isdigit():
+        if is_string(value) and value.isdigit():
             value = int(value)
 
         (key, value, options) = self._simplify_data(key, value, options,
