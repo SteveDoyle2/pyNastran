@@ -14,6 +14,136 @@ class ShellPropertyBackup(Property):
     def __init__(self):
         pass
 
+    def ABD(self):
+        raise NotImplementedError('ABD is not implemented')
+        z = self.get_z_locations()
+        z0 = z[:-1]
+        z1 = z[1:]
+        dz = z1-z0
+        dz2 = (z1**2 - z0**2)/2
+        dz3 = (z1**3 - z0**3)/3
+        #Qb = self.Qbar()
+        
+        A = zeros((3,3), dtype='float64')
+        B = A
+        D = A
+        
+        Q = zeros(3,3)
+
+        #T = array([ [cc, ss,  2*s*c],
+        #            [ss, cc, -2*s*c],
+        #            [-sc, sc, cc-ss]], dtype='float64')
+        #Q = array([ [Q11, Q12, 0.],
+        #            [Q12, Q22, 0.],
+        #            [0., 0., Q66]], dtype='float64')
+        #iT = T.inv()
+        #Qbar = dot(dot(iT, Q), transpose(iT))
+        #Q45 = array([ [Q44, 0.],
+        #              [0., Q55]], dtype='float64')
+        
+        
+        #S11 = 1/E1
+        #S12 = -nu12/E1
+        #S22 = 1/E2
+        #S66 = 1/G12
+        #S = array([ [S11, S12, 0.],
+        #            [S12, S22, 0.],
+        #            [0., 0., S66]], dtype='float64')
+        #Sbar = dot(dot(iT, S), transpose(iT))
+        #Sb11 = S11*cccc + (2*S12*S66)*ss*cc + S22*ssss
+        #Sb22 = S11*ssss + (2*S12*S66)*ss*cc + S22*cccc
+        #Sb66 = 2*(2*S11+2*S22+4*S12-S66)*ss*cc+S66*(ssss+cccc)
+        #Sb12 = S12*(ssss+cccc) + (S11+S22-S66)*ss*cc
+        #Sb16 = (2*S11-2*S12-S66)*s*ccc - (2*S22-2*S12-S66)*sss*c
+        #Sb26 = (2*S11-2*S12-S66)*sss*c - (2*S22-2*S12-S66)*s*ccc
+        
+        #Qb16 = 0. # for isotropic
+        #Qb26 = 0. # for isotropic
+
+        for iply in range(self.nPlies()):
+            theta = radians(self.Theta(iply))
+            s = sin(theta)
+            c = cos(theta)
+            ss = s * s
+            sss = ss * s
+            ssss = ss * ss
+            cc = c * c
+            ccc = cc * c
+            cccc = cc * cc
+
+            mat = self.Material(iply)
+            E = mat.E()
+            G = mat.G()
+            nu = mat.Nu()
+            
+            E11 = E
+            E22 = E
+            G12 = G
+            G23 = G
+            G31 = 0.01
+            nu12 = nu
+            nu21 = E2/E1 * nu12
+            
+            Q11 = E1     /(1-nu12*nu21)
+            Q12 = nu21*E1/(1-nu12*nu21)
+            Q22 = E2     /(1-nu12*nu21)
+            Q44 = G23
+            Q55 = G31
+            Q66 = G12
+
+            Qb11 = Q11*cccc + 2*(Q12+2Q66)*ss*cc + Q22*ssss
+            Qb22 = Q11*ssss + 2*(Q12+2Q66)*ss*cc + Q22*cccc
+            Qb66 = (Q11 + Q22 - 2*Q12 - 2*Q66) * ss*cc + Q66*(ssss + cccc)
+
+            Qb12 = (Q11 - Q12 - 4*Q66)*ss*cc + Q12*(ssss+cccc)
+            Qb16 = (Q11 - Q12 - 2*Q66)*s*ccc + (Q12-Q22-2*Q66)*sss*c
+            Qb26 = (Q11 - Q12 - 2*Q66)*sss*c + (Q12-Q22-2*Q66)*s*ccc
+            
+            Qb44 = Q44*cc + Q55*ss
+            Qb55 = Q44*ss + Q55*cc
+            Qb45 = (Q55-Q44)*ss*cc
+            Qb = array([ [Qb11, Qb12, Qb166],
+                         [Qb12, Qb22, Qb26],
+                         [Qb16, Qb26, Qb66]], dtype='float64')
+            Qb45 = array([ [Q44, 0.],
+                          [0., Q55]], dtype='float64')
+
+            A += Qb * dz[iply]
+            B += Qb * dz2[iply]
+            D += Qb * dz3[iply]
+
+            A45 += Qb45 * dz[iply]
+            B45 += Qb45 * dz2[iply]
+            D45 += Qb45 * dz3[iply]
+            #N += Q * alpha * dz
+            #M += 1/2. * Q * alpha * dz2
+        
+        if self.isSymmetrical():
+            B = zeros(Q.shape)
+            B45 = zeros(Q.shape)
+        return A, B, D, A45, B45, C45
+
+    def FGH(self):
+        raise NotImplementedError('FGH is not implemented')
+        (A, B, D, A45, B45, C45) = self.ABD()
+        A = matrix(A)
+        B = matrix(B)
+        D = matrix(D)
+
+        iD = D.inv()
+        iA = A.inv()
+        if max(B)==min(B) and B[0,0]==0.0:
+            F = iA
+            G = B
+            H = iD
+        else:
+            F = inv(A-B*iD*B)
+            DBiAB = D-B*iA*B
+            iDBiAB = DBiAB.inv()
+            G = -iA*B*iDBiAB
+            H = iDBiAB
+        return F, G, H
+
     def S(self):
         r"""
         Calculates the compliance matrix for a lamina
@@ -57,7 +187,7 @@ class ShellPropertyBackup(Property):
         [My] = [  [B]   [D] ] [ k_yy0    ]
         [Mz] = [            ] [ k_xy0    ]
         @endcode
-		
+        
         \f[ \large  A_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k  -z_{k-1}   \right) = \Sigma_{k=1}^N (Q_{ij})_k t_k                                                                                    \f]
         \f[ \large  B_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k^2-z_{k-1}^2 \right) = \Sigma_{k=1}^N (Q_{ij})_k                           \left( \overline{z} t_k                      \right)         \f]
         \f[ \large  D_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k^3-z_{k-1}^3 \right) = \Sigma_{k=1}^N (Q_{ij})_k                           \left( \overline{z}^2 t_k + \frac{t_k^3}{12} \right)         \f]
@@ -160,11 +290,11 @@ class ShellPropertyBackup(Property):
           \end{array} \right]
         \f]
         
-		@code
+        @code
                  [ m^2  n^2        2mn]
         [T]    = [ n^2  m^2       -2mn]   # transformation matrix
                  [ -mn   mn    m^2-n^2]
-		@endcode
+        @endcode
 
         inverse transformation matrix \f$ [T]^{-1} \f$
         \f[ \large  [T]^{-1} = \left[

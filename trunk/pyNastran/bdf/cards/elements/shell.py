@@ -267,6 +267,22 @@ class CTRIA3(TriShell):
                 assert isinstance(c[i], float)
                 assert isinstance(n[i], float)
 
+    #def Thickness(self):
+        #if self.T1 + self.T2 + self.T3 > 0.0:
+        #    if self.TFlag == 0:
+        #        t = self.pid.Thickness()
+        #        T1 = self.T1 / t
+        #        T2 = self.T2 / t
+        #        T3 = self.T3 / t
+        #    else:
+        #        T1 = self.T1
+        #        T2 = self.T2
+        #        T3 = self.T3
+        #    t = (T1+T2+T3)/3.
+        #else:
+        #    t = self.pid.Thickness()
+        #return t
+
     def flipNormal(self):
         """
         @code
