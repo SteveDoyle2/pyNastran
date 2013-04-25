@@ -21,16 +21,39 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.f06.f06Writer import F06Writer
 from pyNastran.f06.matlabWriter import MatlabWriter
 
-
-class OP2(BDF,
-          FortranFile, Op2Codes, GeometryTables, ResultTable, F06Writer,
-          MatlabWriter):
+class OP2Deprecated(object):
 
     def readOP2(self):
         """
         reads the op2 file
+        @warning will be removed in v0.7 in favor of read_op2
         """
+        warnings.warn('readOP2 has been deprecated; use '
+                      'read_op2', DeprecationWarning, stacklevel=2)
         self.read_op2()
+
+    def setSubcases(self, iSubcases):
+        """
+        @see set_subcases
+        @warning will be removed in v0.7 in favor of set_subcases
+        """
+        warnings.warn('setSubcases has been deprecated; use '
+                      'set_subcases', DeprecationWarning, stacklevel=2)
+        self.set_subcases(iSubcases)
+
+    def setTransientTimes(self, times):  # TODO this name sucks...
+        """
+        @see set_transient_times
+        @warning will be removed in v0.7 in favor of set_transient_times
+        """
+        warnings.warn('setTransientTimes has been deprecated; use '
+                      'set_transient_times', DeprecationWarning, stacklevel=2)
+        self.set_transient_times(times)
+
+
+class OP2(BDF,
+          FortranFile, Op2Codes, GeometryTables, ResultTable, F06Writer,
+          MatlabWriter, OP2Deprecated):
 
     def set_subcases(self, subcases=None):
         """
@@ -66,24 +89,6 @@ class OP2(BDF,
             eTimes.sort()
             expected_times[isubcase] = array(eTimes)
         self.expected_times = expected_times
-
-    def setSubcases(self, iSubcases):
-        """
-        @see set_subcases
-        @warning will be removed after v0.7 in favor of set_subcases
-        """
-        warnings.warn('setSubcases has been deprecated; use '
-                      'set_subcases', DeprecationWarning, stacklevel=2)
-        self.set_subcases(iSubcases)
-
-    def setTransientTimes(self, times):  # TODO this name sucks...
-        """
-        @see set_transient_times
-        @warning will be removed after v0.7 in favor of set_transient_times
-        """
-        warnings.warn('setTransientTimes has been deprecated; use '
-                      'set_transient_times', DeprecationWarning, stacklevel=2)
-        self.set_transient_times(times)
 
     def is_valid_subcase(self):
         """
