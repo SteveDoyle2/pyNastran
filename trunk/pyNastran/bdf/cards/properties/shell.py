@@ -32,7 +32,7 @@ class CompositeShellProperty(ShellProperty):
     def cross_reference(self, model):
         """
         links the material ID to the materials
-        @param self the object pointer
+        @param self the PCOMP object
         @param model a BDF object
         """
         for iply in xrange(len(self.plies)):
@@ -51,10 +51,11 @@ class CompositeShellProperty(ShellProperty):
         When a ply is symmetrical and the iply value is greater than the number of plies
         we return the mirrored ply.
         @param self the PCOMP object
-        @param iply
+        @param iply the ply ID
+        @raises IndexError if iply is invalid
         
         @code
-        Case 1 (nplies=6, len(plies)=3):
+        Case 1 (nplies=6, len(plies)=3, lam='SYM'):
             ply 2
             ply 1
             ply 0
@@ -66,12 +67,12 @@ class CompositeShellProperty(ShellProperty):
           Ask for ply 4, return ply 1
           Ask for ply 5, return ply 2
 
-        Case 2 (nplies=5, len(plies)=3):
-            ply 2
+        Case 2 (nplies=5, len(plies)=5, lam='NO'):
+            ply 5
+            ply 4
+            ply 3
             ply 1
-            ply 0 ------- sym
-            ply 1 / 3
-            ply 2 / 4
+            ply 0
           Ask for ply 3, return ply 1
           Ask for ply 4, return ply 2
         @endcode
@@ -82,18 +83,17 @@ class CompositeShellProperty(ShellProperty):
         nplies = len(self.plies)
         if iply >= nplies:
             if iply < self.nPlies():
-                #if nplies % 2 == 1:  # symmetric about ply 0; ## TODO: verify
-                    #iply = iply - nplies + 1
-                #else:
                 iply = iply - nplies
             else:
-                raise RuntimeError('invalid value for iply=%r' % iply)
+                raise IndexError('invalid value for iply=%r' % iply)
+        elif iply < 0:
+            raise IndexError('invalid value for iply=%r' % iply)
         return iply
 
     def Thickness(self, iply='all'):
         """
         gets the thickness of the ith ply
-        @param self the object pointer
+        @param self the PCOMP object
         @param iply the string 'all' (default) or the mass per area of the ith
          ply
         """
@@ -132,7 +132,7 @@ class CompositeShellProperty(ShellProperty):
     def Mid(self, iply):
         """
         gets the material ID of the ith ply
-        @param self the object pointer
+        @param self the PCOMP object
         @param iply the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
@@ -144,7 +144,7 @@ class CompositeShellProperty(ShellProperty):
     def Mids(self):
         """
         gets the material IDs of all the plies
-        @param self the object pointer
+        @param self the PCOMP object
         @retval mids the material IDs
         """
         mids = []
@@ -157,7 +157,7 @@ class CompositeShellProperty(ShellProperty):
     def Rho(self, iply):
         """
         gets the density of the ith ply
-        @param self the object pointer
+        @param self the PCOMP object
         @param iply the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
@@ -169,7 +169,7 @@ class CompositeShellProperty(ShellProperty):
         """
         gets the material of the ith ply (not the ID unless it's not
         cross-referenced)
-        @param self the object pointer
+        @param self the PCOMP object
         @param iply the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
@@ -179,7 +179,7 @@ class CompositeShellProperty(ShellProperty):
     def Theta(self, iply):
         """
         Gets the ply angle of the ith ply (not the ID)
-        @param self the object pointer
+        @param self the PCOMP object
         @param iply the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
