@@ -1,4 +1,4 @@
-from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpret_value
+from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 #from pyNastran.bdf.caseControlDeck import CaseControlDeck
 
 
@@ -95,19 +95,19 @@ def _parseEntry(lines):
     lineUpper = line.upper()
 
     if lineUpper.startswith('SUBCASE'):
-        #print "line = |%r|" %(line)
+        #print("line = |%r|" % line)
         line2 = line.replace('=', '')
         sline = line2.split()
         if len(sline) != 2:
-            msg = "trying to parse |%s|..." % (line)
-            raise SyntaxError("Invalid Subcase: %s", (msg))
+            msg = "trying to parse |%s|..." % line
+            raise SyntaxError("Invalid Subcase: %s" % msg)
         (key, isubcase) = sline
         #print "key=|%s| isubcase=|%s|" %(key,isubcase)
         value = int(isubcase)
         #self. subcase = int(isubcase)
         paramType = 'SUBCASE-type'
-    elif (lineUpper.startswith(('LABEL', 'SUBTITLE')):
-          or lineUpper.startswith('TITLE')):
+    elif (lineUpper.startswith(('LABEL', 'SUBTITLE')) or
+          lineUpper.startswith('TITLE') ):
         eIndex = line.index('=')
         key = line[0:eIndex].strip()
         value = line[eIndex + 1:].strip()
