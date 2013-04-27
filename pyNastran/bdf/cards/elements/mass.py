@@ -421,12 +421,12 @@ class CONM1(PointMassElement):
 
 class CONM2(PointMassElement):
     """
-    @param self the CONM2 object
-    @param eid element ID
-    @param nid node ID
-    @param cid coordinate frame of the offset (-1=absolute coordinates)
-    @param X offset vector
-    @param I mass moment of inertia matrix about the CG
+    :param self: the CONM2 object
+    :param eid:  element ID
+    :param nid:  node ID
+    :param cid:  coordinate frame of the offset (-1=absolute coordinates)
+    :param X:    offset vector
+    :param I:    mass moment of inertia matrix about the CG
     @code
     CONM2    501274  11064          132.274
     @endcode
@@ -484,7 +484,7 @@ class CONM2(PointMassElement):
     def Inertia(self):
         """
         Returns the 3x3 inertia matrix
-        @warning doesnt handle offsets or coordinate systems
+        .. warning:: doesnt handle offsets or coordinate systems
         """
         I = self.I
         A = [[I[0], I[1], I[3]],

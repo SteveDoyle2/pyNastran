@@ -33,7 +33,7 @@ class Subcase(object):
     def get_stress_code(self, key, options, value):
         """
         Method get_stress_code:
-        @note the individual element must take the stress_code and reduce it to
+        .. note:: the individual element must take the stress_code and reduce it to
          what the element can return.  For example, for an isotropic CQUAD4
          the fiber field doesnt mean anything.
 
@@ -58,9 +58,9 @@ class Subcase(object):
         """
         Gets the format code that will be used by the op2 based on
         the options
-        :self:     the Subcase object
-        :options:  the options for a parameter
-        :value:    the value of the parameter
+        :param self:     the Subcase object
+        :param options:  the options for a parameter
+        :param value:    the value of the parameter
         .. todo::  not done...only supports REAL, IMAG, PHASE, not RANDOM
         """
         format_code = 0
@@ -77,9 +77,9 @@ class Subcase(object):
         """
         Gets the sort code of a given set of options and value
 
-        :self:    the Subcase object
-        :options: the options for a parameter
-        :value:   the value of the parameter
+        :param self:    the Subcase object
+        :param options: the options for a parameter
+        :param value:   the value of the parameter
         """
         sort_code = 0
         if 'COMPLEX' in options:
@@ -94,9 +94,9 @@ class Subcase(object):
         """
         Gets the device code of a given set of options and value
 
-        :self:    the Subcase object
-        :options: the options for a parameter
-        :value:   the value of the parameter
+        :param self:    the Subcase object
+        :param options: the options for a parameter
+        :param value:   the value of the parameter
         """
         device_code = 0
         if 'PRINT' in options:
@@ -112,12 +112,13 @@ class Subcase(object):
 
     def get_analysis_code(self, sol):
         """
-        8 - post-buckling (maybe 7 depending on NLPARM???)
+         * 8 - post-buckling (maybe 7 depending on NLPARM???)
 
         # not important
-        3/4 - differential stiffness (obsolete)
-        11  - old geometric nonlinear statics
-        12  - contran (???)
+         * 3/4 - differential stiffness (obsolete)
+         * 11  - old geometric nonlinear statics
+         * 12  - contran (???)
+
         .. todo:: verify
         """
         codes = {
@@ -153,9 +154,9 @@ class Subcase(object):
         modal solution, in which case it makes an OUGV1 table of eigenvectors
         and has a table code of 7.
 
-        :self:    the Subcase object
-        :options: the options for a parameter
-        :value:   the value of the parameter
+        :param self:    the Subcase object
+        :param options: the options for a parameter
+        :param value:   the value of the parameter
         """
         if table_name in ['VECTOR', 'PRESSURE']:
             table_name = 'DISPLACEMENT'  # equivalent tables...
@@ -342,24 +343,24 @@ class Subcase(object):
     def has_parameter(self, param_name):
         """
         Checks to see if a parameter name is in the subcase.
-        :self:       the Subcase object
-        :param_name: the case control parameter to check for
+        :param self:       the Subcase object
+        :param param_name: the case control parameter to check for
         """
-        if paramName in self.params:
+        if param_name in self.params:
             return True
         return False
 
     def get_parameter(self, param_name):
         """
         Gets the [value, options] for a subcase.
-        :self:       the Subcase object
-        :param_name: the case control parameter to check for
+        :param self:       the Subcase object
+        :param param_name: the case control parameter to check for
         """
-        paramName = update_param_name(paramName)
+        paramName = update_param_name(param_name)
         if paramName not in self.params:
             raise KeyError('%s doesnt exist in subcase=%s in the case '
-                           'control deck.' % (paramName, self.id))
-        return self.params[paramName][0:2]
+                           'control deck.' % (param_name, self.id))
+        return self.params[param_name][0:2]
 
     def _add_data(self, key, value, options, param_type):
         key = update_param_name(key)
@@ -513,7 +514,7 @@ class Subcase(object):
         """
         Prints a single entry of the a subcase from the global or local
         subcase list.
-        :self: the Subcase object
+        :param self: the Subcase object
         """
         msg = ''
         #msg += 'id=%s   ' %(self.id)
@@ -576,8 +577,8 @@ class Subcase(object):
     def cross_reference(self, model):
         """
         Method crossReference:
-        :self:   the Subcase object
-        ::model: the BDF object
+        :param self:   the Subcase object
+        :param model: the BDF object
         .. note::
           this is not integrated and probably never will be as it's not
           really that necessary.  it's only really useful when running an
@@ -624,7 +625,7 @@ class Subcase(object):
         """
         Removes the subcase parameter from the subcase to avoid printing it in
         a funny spot
-        :self:     the Subcase object
+        :param self:  the Subcase object
         """
         if 'SUBCASE' in self.params:
             del self.params['SUBCASE']
@@ -632,9 +633,9 @@ class Subcase(object):
 
     def write_subcase(self, subcase0):
         """
-        internal method to print a subcase
-        :self:     the Subcase object
-        :subcase0: the global Subcase object
+        Internal method to print a subcase
+        :param self:     the Subcase object
+        :param subcase0: the global Subcase object
         """
         if self.id == 0:
             msg = str(self)
@@ -669,8 +670,8 @@ class Subcase(object):
         Does a "smart" sort on the keys such that SET cards increment in
         numerical order.  Also puts the sets first.
 
-        :self:  the Subcase object
-        :lst:   the list of subcase list objects
+        :param self:  the Subcase object
+        :param lst:   the list of subcase list objects
         @retval listB the sorted version of listA
         """
         # presort the list to put all the SET cards next to each other
@@ -746,8 +747,8 @@ def update_param_name(param_name):
     Takes an abbreviated name and expands it so the user can type DISP or
     DISPLACEMENT and get the same answer
 
-    :param_name: the parameter name to be standardized
-                 (e.g. DISP vs. DIPLACEMENT)
+    :param param_name: the parameter name to be standardized
+                       (e.g. DISP vs. DIPLACEMENT)
     ..todo:: not a complete list
     """
     if   param_name.startswith('ACCE'):

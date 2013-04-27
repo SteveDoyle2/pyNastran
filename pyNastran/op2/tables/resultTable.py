@@ -67,7 +67,8 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 
     def add_data_parameter(self, data, Name, Type, fieldNum, applyNonlinearFactor=True, fixDeviceCode=False):
         """
-        self.mode = self.get_values(data,'i',5) ## mode number
+        >>> self.mode = self.get_values(data,'i',5) ## mode number
+        >>>
         """
         value = self.get_values(data, Type, fieldNum)
         if fixDeviceCode:
@@ -93,7 +94,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         Creates a transient object (or None if the subcase should be skippied).
         @param storageObj  the dictionary to store the object in (e.g. self.bars)
         @param classObj    the class object to instantiate
-        @note dt can also be load_step depending on the class
+        .. note:: dt can also be load_step depending on the class
         """
         if debug:
             print("create Transient Object")
@@ -269,7 +270,9 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         return isBlockDone
 
     def readTable4DataSetup(self, table4Data, iTable):  # iTable=-4
-        """checks to see if table 4 is done, loads the data, and handles skipping"""
+        """
+        Checks to see if table 4 is done, loads the data, and handles skipping
+        """
         isTable4Done = False
         isBlockDone = False
 
@@ -368,38 +371,6 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 
         return readCase
 
-    def handleResultsBufferShort(self, func, debug=False):
-        raise RuntimeError('this function has been removed...')
-        nOld = self.n
-        markers = self.read_header()
-
-        if markers < 0:  # not a buffer, the table may be done
-            self.goto(nOld)
-            if markers is not None and markers % 2 == 1:
-                self.isBufferDone = True
-        else:
-            data = self.read_block()
-            self.data += data
-            func()
-
-    def handleResultsBufferNoRecursion(self, f, debug=False):
-        """prototype method for getting results without recursion"""
-        raise RuntimeError('this function has been removed...')
-        stopBuffer = False
-        while not(stopBuffer):
-            f()
-            nOld = self.n
-            markers = self.read_header()
-
-            if markers < 0:  # not a buffer, the table may be done
-                self.goto(nOld)
-                if markers is not None and markers % 2 == 1:
-                    self.isBufferDone = True
-            else:
-                data = self.read_block()
-                self.data += data
-                stopBuffer = True
-
     def not_implemented_or_skip(self, msg=''):
         """stops if code is in development and continues otherwise"""
         if False:
@@ -411,41 +382,33 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 
     def handle_results_buffer(self, f, resultName, debug=False):
         """
+        Method for getting results without recursion, which for large OP2s
+        is necessary to prevent going past the recursion limit.
+
         Works by knowing that:
         
-        * the end of an unbuffered table has a
-        
+        * the end of an unbuffered table has a:
           - [4]
-        
-        * the end of an table with a buffer has a
-        
+        * the end of an table with a buffer has a:
           - [4,4,x,4] where x is the next buffer size, which may have another
             buffer
-        
         * the end of the final buffer block has
-        
           - nothing!
 
-        @param self
-          the object pointer
-        @param func
-          the function to recursively call (the function that called this)
-        @param debug
-          developer debug
+        :self:  the object pointer
+        :func:  the function to recursively call
+                (the function that called this)
+        :debug: developer debug
 
-        @note
-          The code knows that the large buffer is the default size and the
-          only way there will be a smaller buffer is if there are no more
-          buffers.  So, the op2 is shifted by 1 word (4 bytes) to account for
-          this end shift.  An extra marker value is read, but no big deal.
+        .. note:: The code knows that the large buffer is the default size
+          and the only way there will be a smaller buffer is if there are no
+          more buffers.  So, the op2 is shifted by 1 word (4 bytes) to account
+          for this end shift.  An extra marker value is read, but no big deal
           Beyond that it's just appending some data to the binary string and
           calling the function that's passed in
 
-        @warning
-          Dont modify this without LOTS of testing.
-          It's a VERY important function
-        
-        method for getting results without recursion
+        .. warning:: Dont modify this without LOTS of testing.
+                     It's a VERY important function
         """
         #if resultName not in self.allowedResultNames:
         #    return self.self.skipOES_Element()
@@ -479,58 +442,6 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             if i == 2000:
                 raise RuntimeError('Infinite Loop or a really big model...')
             #print "isBufferDone=%s" %(self.isBufferDone)
-
-    def handle_results_buffer_old(self, func, debug=False):
-        raise RuntimeError('this function has been removed...')
-        #print self.obj
-        #print "len(data) = ",len(self.data)
-        #if marker[0]==4:
-        #    self.log.debug("found a 4 - end of unbuffered table")
-
-        #if debug:
-        #    self.log.debug(self.print_section(120))
-
-        nOld = self.n
-        #try:
-        markers = self.read_header()
-        #except AssertionError:  # end of table - poor catch
-        #    self.goto(nOld)
-        #   self.log.debug(self.print_section(120))
-        #    return
-
-        #print "markers = ",markers
-        #print self.print_section(160)
-
-        if markers < 0:  # not a buffer, the table may be done
-            self.goto(nOld)
-            if markers is not None and markers % 2 == 1:
-                self.isBufferDone = True
-
-            #print self.print_section(120)
-            #sys.exit('found a marker')
-            #print 'found a marker'
-
-        else:
-            #print "*******len(self.data)=%s...assuming a buffer block" %(len(self.data))
-            #markers = self.read_header()
-            #print "markers = ",markers
-            data = self.read_block()
-            #if len(data)<marker:
-            #    self.goto(self.n-4) # handles last buffer not having an extra 4
-            self.data += data
-            func()
-
-    def readMappedScalarsOut(self, debug=False):
-        raise RuntimeError('this function must be modified to call ...')
-        readCase = True
-        #print "is_sort1() = ",self.is_sort1()
-        if self.isubcase in self.expected_times and len(self.expected_times[self.isubcase]) > 0:
-            readCase = self.update_dt_map()
-
-        if self.obj and readCase and self.is_sort1():
-            self.readScalarsOut(debug=False)
-        else:
-            self.skipOES_Element()
 
 
 def get_close_num(v1, v2, closePoint):

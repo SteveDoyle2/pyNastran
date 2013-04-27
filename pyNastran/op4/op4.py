@@ -11,16 +11,8 @@ from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 #from pyNastran.op2.fortranFile import FortranFile
 import io
 
-#class OP4(FortranFile):
-class OP4(object):
-    """
-    .. todo:: add endian checking
-    .. todo:: test on big matrices
-    """
-    def __init__(self, log=None):
-        #FortranFile.__init__(self)
-        self.n = 0
-        self.endian = ''
+
+class OP4Deprecated(object):
 
     def readOP4(self, op4Name, matrixNames=None, precision='default'):
         """@see read_op4"""
@@ -34,7 +26,18 @@ class OP4(object):
         """@see read_op4_binary"""
         return self.read_op4_binary(op4Name, matrixNames, precision)
 
-#--------------------------------------------------------------------------
+    
+#class OP4(FortranFile):
+class OP4(OP4Deprecated):
+    """
+    .. todo:: add endian checking
+    .. todo:: test on big matrices
+    """
+    def __init__(self, log=None):
+        #FortranFile.__init__(self)
+        self.n = 0
+        self.endian = ''
+
     def read_op4(self, op4_filename, matrix_names=None, precision='default'):
         """
         Reads a NASTRAN OUTPUT4 file, regular or sparse, and stores the
@@ -62,19 +65,19 @@ class OP4(object):
         (formA,A) = matrices['A']
         @endcode
 
-        @param op4_filename an OP4 filename.  Type=STRING.
-        @param matrix_names list of matrix names (or None); Type=LIST OF STRINGS / NONE.
-        @param precision specifies if the matrices are in single or double precsion
+        :param op4_filename: an OP4 filename.  Type=STRING.
+        :param matrix_names: list of matrix names (or None); Type=LIST OF STRINGS / NONE.
+        :param precision: specifies if the matrices are in single or double precsion
                (values='default','single','double') which means the format will be whatever the file is in
 
         @retval dictionary of matrices where the key is the name and the value is a matrix:
             Dense Type:  NUMPY.NDARRAY
             Sparse Type: SCIPY.SPARSE.COO_MATRIX
 
-        @note based off the MATLAB code SAVEOP4 developed by ATA-E and later UCSD.
-        @note it's strongly recommended that you convert sparse matrices to another
+        .. note:: based off the MATLAB code SAVEOP4 developed by ATA-E and later UCSD.
+        .. note:: it's strongly recommended that you convert sparse matrices to another
          format before doing math on them.  This is standard with sparse matrices.
-        @warning sparse binary is buggy right now        """
+        .. warning:: sparse binary is buggy right now        """
         assert precision in ['default', 'single', 'double'], "precison=|%s| valid=['default','single','double']"
         if isinstance(matrix_names, str):
             matrix_names = [matrix_names]
@@ -882,8 +885,8 @@ class OP4(object):
 #--------------------------------------------------------------------------
     def getTypeNWV(self, A, precision='default'):
         """
-        @param A a matrix or entry in a matrix (to save memory)
-        @param precision data precision ='default','single','double'
+        :param A: a matrix or entry in a matrix (to save memory)
+        :param precision: data precision ='default','single','double'
         @retval Type matrix type 1=real,single; 2=real,double; 3=complex,single; 4=complex,double
         @retval NWV Number of Words per Value
         """
@@ -922,9 +925,9 @@ class OP4(object):
         """
         Writes a real/complex matrix
 
-        @param name the name of the matrix
-        @param matrix a two-dimensional NUMPY.NDARRAY
-        @param form Form is defined as one of the following:
+        :param name: the name of the matrix
+        :param matrix: a two-dimensional NUMPY.NDARRAY
+        :param form: Form is defined as one of the following:
         
         ==== ===============
         Form Definition
@@ -950,7 +953,7 @@ class OP4(object):
         15.  Sparse upper triangular factor
         ==== ===============================
 
-        @note form defaults to 2, but 1 can be easily determined.  Any others must be specified.
+        .. note:: form defaults to 2, but 1 can be easily determined.  Any others must be specified.
         .. todo:: call the actual function for now...not hooked up
         """
         assert isinstance(name, str), name

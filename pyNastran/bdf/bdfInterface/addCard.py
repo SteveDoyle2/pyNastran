@@ -194,14 +194,6 @@ class AddMethods(object):
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
             self.pdampt[key] = prop
 
-
-    def add_material(self, material, allowOverwrites=False):
-        """
-        only for adding structural materials
-        @deprecated this method will be renamed in v0.3 to add_structural_material.
-        """
-        self.add_structural_material(material, allowOverwrites)
-
     def add_structural_material(self, material, allowOverwrites=False):
         key = material.mid
         if key in self.materials and not allowOverwrites:
@@ -232,9 +224,8 @@ class AddMethods(object):
     def add_creep_material(self, material, allowOverwrites=False):
         """
         Method add_creep_material:
-        @note
-         May be removed in the future.  Are CREEP cards materials? 
-         They have an MID, but reference structural materials.
+        ..note:: May be removed in the future.  Are CREEP cards materials? 
+                 They have an MID, but reference structural materials.
         """
         key = material.mid
         if key in self.thermalMaterials and not allowOverwrites:

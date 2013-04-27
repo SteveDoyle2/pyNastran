@@ -53,8 +53,8 @@ class FREQ(BaseCard):
         Combines the frequencies from 1 FREQx object with another.
         All FREQi entries with the same frequency set identification numbers
         will be used. Duplicate frequencies will be ignored.
-        :self:  the object pointer
-        :freqs: the frequencies for a FREQx object
+        :param self:  the object pointer
+        :param freqs: the frequencies for a FREQx object
         """
         #print "self.freqs = ",self.freqs
         #print "freqs = ",freqs
@@ -63,8 +63,8 @@ class FREQ(BaseCard):
 
     def addFrequencyObject(self, freq):
         """
-        :self: the object pointer
-        :freq: a FREQx object
+        :param self: the object pointer
+        :param freq: a FREQx object
 
         .. seealso:: addFrequencies
         """
@@ -81,7 +81,7 @@ class FREQ1(FREQ):
     response problems by specification of a starting frequency, frequency
     increment, and the number of increments desired.
     FREQ1 SID F1 DF NDF
-    @note this card rewrites as a FREQ card
+    .. note:: this card rewrites as a FREQ card
     """
     type = 'FREQ1'
 
@@ -106,7 +106,7 @@ class FREQ2(FREQ):
     response problems by specification of a starting frequency, final
     frequency, and the number of logarithmic increments desired.
     FREQ2 SID F1 F2 NDF
-    @note this card rewrites as a FREQ card
+    .. note:: this card rewrites as a FREQ card
     """
     type = 'FREQ2'
 
@@ -142,7 +142,7 @@ class FREQ4(FREQ):
     frequency and the number of equally spaced excitation frequencies within
     the spread.
     FREQ4 SID F1 F2 FSPD NFM
-    @note this card rewrites as a FREQ card
+    .. note:: this card rewrites as a FREQ card
     .. todo:: not done...
     """
     type = 'FREQ4'

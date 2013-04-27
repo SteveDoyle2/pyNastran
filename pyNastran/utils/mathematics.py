@@ -22,7 +22,7 @@ if sys.version_info < (3, 0):
         >>> sys.exit(1)
 
     The program's return code is 0
-    @note Python v3.0+ doesn't have scipy.weave
+    .. note:: Python v3.0+ doesn't have scipy.weave
     """
     import scipy.weave
 
@@ -30,8 +30,8 @@ if sys.version_info < (3, 0):
 def integrate_line(x, y):
     """
     Integrates a line of length 1.0
-    @param x the independent variable
-    @param y the dependent variable
+    :x: the independent variable
+    :y: the dependent variable
     """
     if len(set(y)) == 1:
         return y[0]  # (x1-x0 = 1., so yBar*1 = yBar)
@@ -48,9 +48,9 @@ def integrate_line(x, y):
 def build_spline(x, y):
     """
     Builds a cubic spline or 1st order spline if there are less than 3 terms
-    @param x the independent variable
-    @param y the dependent variable
-    @note a 1st order spline is the same as linear interpolation
+    :param x: the independent variable
+    :param y: the dependent variable
+    .. note:: a 1st order spline is the same as linear interpolation
     """
     # build a linearly interpolated representation or cubic one
     return splrep(x, y, k=1) if len(x) < 3 else splrep(x, y)
@@ -59,8 +59,8 @@ def build_spline(x, y):
 def integrate_positive_line(x, y, minValue=0.):
     """
     Integrates a line of length 1.0
-    @param x the independent variable
-    @param y the   dependent variable
+    :param x: the independent variable
+    :param y: the dependent variable
     """
     if len(set(y)) == 1:
         return y[0]  # (x1-x0 = 1., so yBar*1 = yBar)
@@ -217,9 +217,9 @@ def gauss(n):
      - \f$ \pm\frac{1}{3}\sqrt{5+2\sqrt{10/7}} \f$ --> \f$ (322-13\sqrt{70})/900 \f$ 
 
 
-    @param n Number of quadrature points
+    :param n: Number of quadrature points
     @retval Two lists: points and corresponding weights, sorted by points value
-    @see http://en.wikipedia.org/wiki/Gaussian_quadrature
+    .. seealso:: http://en.wikipedia.org/wiki/Gaussian_quadrature
     """
     if n == 1:
         return ([0.], [2.])

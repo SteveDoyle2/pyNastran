@@ -18,8 +18,7 @@ def is_binary(filename):
     
     @raise IOError if the file cannot be opened.
     @retval True if filename is a binary file (contains null byte) and False otherwise.
-    @warning this may not work for unicode.
-    """
+    .. warning:: this may not work for unicode."""
     with io.open(filename, mode='rb') as fil:
         for chunk in iter(lambda: fil.read(1024), bytes()):
             if b"\0" in chunk:  # found null byte
@@ -38,10 +37,9 @@ def obscure(num, debug=False):
     >>> de_obscure('kbn')
     35214
     @endcode
-    @param num positive integer number
-    @param debug display additional information about conversion process
-    @retval shortened version of num
-    """
+    :param num:   positive integer number
+    :param debug: display additional information about conversion process
+    @retval shortened version of num"""
     vals = list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
     tmp = num
     pack = ['a'] if tmp == 0 else []
@@ -67,8 +65,9 @@ def de_obscure(num, debug=False):
     >>> de_obscure('kbn')
     35214
     @endcode
-    @param debug display additional information about conversion process
-    @retval integer value of shortened version of a number, @see obscure
+    :param debug:   display additional information about conversion process
+    @retval integer value of shortened version of a number
+    .. seealso:: :func: `obscure`
     """
     dict_vals = dict(zip(list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'),xrange(52)))
     val = 0
@@ -82,9 +81,9 @@ def de_obscure(num, debug=False):
 def get_files_of_type(dirname, extension='.txt', maxSize=100.):
     """
     Gets the list of all the files with a given extension in the specified directory 
-    @param dirname the directory name
-    @param extension list of filetypes to get (default='.txt')
-    @param maxSize size in MB for max file size
+    :param dirname:   the directory name
+    :param extension: list of filetypes to get (default='.txt')
+    :param maxSize:   size in MB for max file size
     @retval list of all the files with a given extension in the specified directory 
     """
     return [pjoin(dirname, f) for f in os.listdir(dirname) if extension in
@@ -93,10 +92,13 @@ def get_files_of_type(dirname, extension='.txt', maxSize=100.):
 
 def print_bad_path(path):
     """
-    Prints information about the existence (access possibility) of the parts of the given path.
-    Useful for debugging when the path to a given file is wrong.
-    @param path path to check
-    @retval string with informations whether access to parts of the path is possible
+    Prints information about the existence (access possibility) of the parts
+    of the given path. Useful for debugging when the path to a given file
+    is wrong.
+
+    :param path: path to check
+    @retval string with informations whether access to parts of the path
+            is possible
     """
     path = os.path.abspath(path)
     npath = os.path.dirname(path)
@@ -112,7 +114,8 @@ def list_print(lst):
     """
     Prints a list, numpy array, or numpy matrix in an abbreviated format.
     Supported element types: None, string, numbers. Useful for debugging.
-    @param lst list, numpy array or numpy matrix
+
+    :param lst: list, numpy array or numpy matrix
     @retval the clean string representation of the object
     """
     def _print(val):
@@ -166,18 +169,14 @@ def object_methods(obj, mode = "public"):
     List the names of methods of a class as strings. Returns public methos
     as default.
     
-    @param obj
-      the object for checking
-    @param mode
-      defines what kind of methods will be listed
-       
+    :param obj:  the object for checking
+    :param mode: defines what kind of methods will be listed
        * "public" - names that do not begin with underscore
        * "private" - names that begin with single underscore
        * "both" - private and public
        * "all" - all methods that are defined for the object 
-    @retval 
-      sorted list of the names of methods of a given type or None if the mode
-      is wrong
+    @retval  sorted list of the names of methods of a given type
+             or None if the mode is wrong
     """
     return __object_attr(obj, mode, lambda x: isinstance(x, MethodType))
 
@@ -187,11 +186,8 @@ def object_attributes(obj, mode = "public"):
     List the names of attributes of a class as strings. Returns public methos
     as default.
     
-    @param obj
-      the object for checking
-    @param mode 
-      defines what kind of attributes will be listed
-       
+    :param obj:  the object for checking
+    :param mode: defines what kind of attributes will be listed
        * "public" - names that do not begin with underscore
        * "private" - names that begin with single underscore
        * "both" - private and public

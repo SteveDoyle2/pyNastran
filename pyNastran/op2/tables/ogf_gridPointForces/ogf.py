@@ -52,7 +52,7 @@ class OGF(object):
         ## approach code ???
         self.add_data_parameter(data,'appCode', 'i', 9, False)
         ## number of words per entry in record
-        ## @note is this needed for this table ???
+        ## .. note:: is this needed for this table ???
         self.add_data_parameter(data,'num_wide', 'i', 10, False)
         ## Data Value 1
         self.add_data_parameter(data,'value1', 'i', 11, False)

@@ -369,9 +369,9 @@ class GRID(Node):
 
     def Position(self, debug=False):
         """
-        returns the point in the global XYZ coordinate system
-        :self:  the object pointer
-        :debug: developer debug
+        Gets the point in the global XYZ coordinate system
+        :param self:  the object pointer
+        :param debug: developer debug
         """
         p, matrix = self.cp.transformToGlobal(self.xyz, debug=debug)
         return p
@@ -380,10 +380,10 @@ class GRID(Node):
         """
         Gets the point which started in some arbitrary local coordinate
         system and returns it in the desired coordinate system
-        :self:  the object pointer
-        :model: the BDF model object
-        :cid:   the desired coordinate ID (int)
-        :debug: developer debug
+        :param self:  the object pointer
+        :param model: the BDF model object
+        :param cid:   the desired coordinate ID (int)
+        :param debug: developer debug
         """
         if cid == self.Cp():
             return self.xyz
@@ -496,8 +496,8 @@ class POINT(Node):
         """
         Gets the point in the global XYZ coordinate system
 
-        :self: the object pointer
-        :debug: developer debug
+        :param self:  the object pointer
+        :param debug: developer debug
         """
         p, matrix = self.cp.transformToGlobal(self.xyz, debug=debug)
         return p
@@ -507,10 +507,10 @@ class POINT(Node):
         Gets the point which started in some arbitrary local coordinate
         system and returns it in the desired coordinate system
 
-        :self:  the object pointer
-        :model: the BDF model object
-        :cid:   the desired coordinate ID (int)
-        :debug: developer debug
+        :param self:  the object pointer
+        :param model: the BDF model object
+        :param cid:   the desired coordinate ID (int)
+        :param debug: developer debug
         """
         if cid == self.Cp():
             return self.xyz

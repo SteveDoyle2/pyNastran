@@ -6,7 +6,8 @@ def make_log(display=False):
     """
     Creates 'pyNastran.log' file with information about working environment,
     such as Python version, platform, architecture, etc. Useful for debugging.
-    @param display do not only create file but also print log information
+
+    :param display: do not only create file but also print log information
     """
     smsg = [("sys.version", sys.version), ("sys.version_info", sys.version_info)]
     pmsg = ["machine", "platform", "processor", "architecture", "python_branch", 
@@ -27,8 +28,8 @@ def make_log(display=False):
 def stderr_logging(typ, msg):
     """
     Default logging function. Takes a text and outputs to stderr.
-    @param typ messeage type
-    @param msg message to be displayed
+    :param typ: messeage type
+    :param msg: message to be displayed
     
     Message will have format 'typ: msg'
     """
@@ -42,7 +43,7 @@ class SimpleLogger(object):
     Two levels are supported: 'debug' and 'info'. Info level discards debug
     messages, 'debug' level displays all messages.
     
-    @note Logging module is currently not supported because I don't
+    .. note:: Logging module is currently not supported because I don't
       know how to repoint the log file if the program is called a second
       time.  Poor logging can result in:\n
         1) double logging to a single file\n
@@ -52,9 +53,8 @@ class SimpleLogger(object):
     """
     def __init__(self, level='debug', log_func=stderr_logging):
         """
-        @param
-          level level of logging: 'info' or 'debug'
-        @param log_func
+        :param level: level of logging: 'info' or 'debug'
+        :param log_func:
           funtion that will be used to print log. It should take one argument:
           string that is produces by a logger. Default: print messages to
           stderr using @see stderr_logging function.
@@ -71,7 +71,7 @@ class SimpleLogger(object):
     def debug(self, msg):
         """
         Log DEBUG message
-        @param msg message to be logged
+        :param msg: message to be logged
         """
         if self.level != 'debug':
             return
@@ -82,8 +82,8 @@ class SimpleLogger(object):
     def msg_typ(self, typ, msg):
         """
         Log message of a given type
-        @param typ type of a message (e.g. INFO)
-        @param msg message to be logged
+        :param typ: type of a message (e.g. INFO)
+        :param msg: message to be logged
         """
         n, fn = self.properties()
         self.log_func(typ, '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg))
@@ -91,42 +91,42 @@ class SimpleLogger(object):
     def simple_msg(self,msg, typ = None):
         """
         Log message directly without any altering.
-        @param msg message to be looged without any alteration.
+        :param msg: message to be looged without any alteration.
         """
         self.log_func(typ, msg)
 
     def info(self, msg):
         """
         Log INFO message
-        @param msg message to be logged
+        :param msg: message to be logged
         """
         self.msg_typ("INFO", msg)
 
     def warning(self, msg):
         """
         Log WARNING message
-        @param msg message to be logged
+        :param msg: message to be logged
         """
         self.msg_typ("WARNING", msg)
 
     def error(self, msg):
         """
         Log ERROR message
-        @param msg message to be logged
+        :param msg: message to be logged
         """
         self.msg_typ("ERROR", msg)
 
     def exception(self, msg):
         """
         Log EXCEPTION message
-        @param msg message to be logged
+        :param msg: message to be logged
         """
         self.msg_typ("ERROR", msg)
 
     def critical(self, msg):
         """
         Log CRITICAL message
-        @param msg message to be logged
+        :param msg: message to be logged
         """
         self.msg_typ("CRITICAL", msg)
 
@@ -134,8 +134,8 @@ class SimpleLogger(object):
 def get_logger(log=None, level='debug'):
     """
     This function is useful as it will instantiate a simpleLogger object if log=None.
-    @param log a logger object or None
-    @param level level of logging: 'info' or 'debug'
+    :param log:   a logger object or None
+    :param level: level of logging: 'info' or 'debug'
     """
     return SimpleLogger(level) if log is None else log
 

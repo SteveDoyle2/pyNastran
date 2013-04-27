@@ -205,7 +205,7 @@ class ShearStrainObject(StrainObject):
     def add_new_transient(self, dt):
         """
         initializes the transient variables
-        @note make sure you set self.dt first
+        .. note:: make sure you set self.dt first
         """
         self.dt = dt
         self.maxShear[dt] = {}

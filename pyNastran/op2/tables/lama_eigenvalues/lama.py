@@ -85,7 +85,7 @@ class LAMA(object):
 
         #print self.data_code
         #self.add_data_parameter(data,'format_code',  'i',9,False)   ## format code
-        #self.add_data_parameter(data,'num_wide',     'i',10,False)  ## number of words per entry in record; @note is this needed for this table ???
+        #self.add_data_parameter(data,'num_wide',     'i',10,False)  ## number of words per entry in record; .. note:: is this needed for this table ???
 
         #if self.analysis_code==2: # sort2
         #    self.lsdvmn = self.get_values(data,'i',5)

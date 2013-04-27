@@ -379,7 +379,7 @@ class BeamStrainObject(StrainObject):
     def add_new_transient(self, dt):
         """
         initializes the transient variables
-        @note make sure you set self.dt first
+        .. note:: make sure you set self.dt first
         """
         #print "addNewTransient_beam+1+0"
         self.dt = dt

@@ -343,7 +343,7 @@ class Geometry3(object):
     def readTEMP(self, data):
         """
         TEMP(5701,57,27) - the marker for Record 32
-        @warning buggy
+        .. warning:: buggy
         """
         #print "reading TEMP"
         n = 0

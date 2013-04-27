@@ -31,8 +31,8 @@ class FluxObject(scalarObject):  # approach_code=1, table_code=3, thermal=1
 
     def write_op2(self, block3, device_code=1):
         """
-        creates the binary data for writing the table
-        @warning hasnt been tested...
+        Creates the binary data for writing the table
+        .. warning:: hasnt been tested...
         """
         msg = block3
         for nodeID, flux in sorted(self.fluxes.iteritems()):

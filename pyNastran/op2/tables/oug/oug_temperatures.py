@@ -101,7 +101,7 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
    # def write_op2(self,block3,device_code=1):
    #     """
    #     creates the binary data for writing the table
-   #     @warning hasnt been tested...
+   #     .. warning:: hasnt been tested...
    #     """
    #     msg = block3
    #     for nodeID,T in sorted(self.temperatures.iteritems()):
@@ -112,8 +112,8 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
    # def write_op2_transient(self,block3,device_code=1):
    #     """
    #     creates the binary data for writing the table
-   #     @warning hasnt been tested...
-   #     @warning dt slot needs to be fixed...
+   #     .. warning:: hasnt been tested...
+   #     .. warning:: dt slot needs to be fixed...
    #     """
    #     msg = ''
    #     for dt,temperatures in sorted(self.temperatures.iteritems()):

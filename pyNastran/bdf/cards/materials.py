@@ -1322,8 +1322,8 @@ class MATS1(MaterialDependence):
     def E(self, strain=None):
         """
         Gets E (Young's Modulus) for a given strain
-        :self:   the object pointer
-        :strain: the strain (None -> linear E value)
+        :param self:   the object pointer
+        :param strain: the strain (None -> linear E value)
         @retval E (Young's Modulus)
         """
         msg = "E (Young's Modulus) not implemented for MATS1"

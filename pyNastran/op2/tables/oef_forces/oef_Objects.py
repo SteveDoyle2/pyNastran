@@ -30,7 +30,7 @@ class nonlinearFluxObject(scalarObject):  # approach_code=10, sort_code=0
     def add_new_transient(self):
         """
         initializes the transient variables
-        @note make sure you set self.dt first
+        .. note:: make sure you set self.dt first
         """
         self.fluxes[self.load_step] = {}
         self.gradients[self.load_step] = {}

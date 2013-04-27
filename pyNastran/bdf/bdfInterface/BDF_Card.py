@@ -24,8 +24,8 @@ class BDFCard(object):
         """
         Returns True if the card is of type cardName
 
-        :self:     the object pointer
-        :cardName: the cardName to compare against
+        :param self:     the object pointer
+        :param cardName: the cardName to compare against
         @retval IsACardName True/False
         """
         if self.card.field(0) == cardName.upper():
@@ -51,7 +51,7 @@ class BDFCard(object):
         """
         Prints the card as a list
 
-        :self:  the object pointer
+        :param self:  the object pointer
         @retval msg the string representation of the card
         """
         return str(self.card)
@@ -60,7 +60,7 @@ class BDFCard(object):
         """
         Gets how many fields are on the card
 
-        :self:  the object pointer
+        :param self:  the object pointer
         @retval nFields the number of fields on the card
         """
         return self.nfields
@@ -71,13 +71,13 @@ class BDFCard(object):
     def fields(self, i=0, j=None, defaults=None, debug=False):
         """
         Gets multiple fields on the card
-        :self:     the object pointer
-        :i:        the ith field on the card (following list notation)
-        :j:        the jth field on the card (None means till the end of the
-                   card)
-        :defaults: the default value for the field (as a list)
-                   len(defaults)=i-j-1
-        :debug:    prints out the values at intermediate steps
+        :param self:     the object pointer
+        :param i:        the ith field on the card (following list notation)
+        :param j:        the jth field on the card (None means till the end
+                         of the card)
+        :param defaults: the default value for the field (as a list)
+                         len(defaults)=i-j-1
+        :param debug:    prints out the values at intermediate steps
         @retval the values on the ith-jth fields
         """
         if defaults is None:
@@ -106,9 +106,9 @@ class BDFCard(object):
         """
         Gets the ith field on the card
 
-        :self:    the object pointer
-        :i:       the ith field on the card (following list notation)
-        :default: the default value for the field
+        :param self:    the object pointer
+        :param i:       the ith field on the card (following list notation)
+        :param default: the default value for the field
         @retval the value on the ith field
         """
         if(i < self.nfields and self.card[i] is not None and
@@ -234,8 +234,8 @@ def wipe_empty_fields(card):
     Removes an trailing Nones from the card.
     Also converts empty strings to None.
 
-    :self: the object pointer
-    :card: the fields on the card as a list
+    :param self: the object pointer
+    :param card: the fields on the card as a list
     @retval shortCard the card with no trailing blank fields
     """
     cardB = []
