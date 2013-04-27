@@ -73,7 +73,7 @@ class PELAS(SpringProperty):
 
     def writeCodeAster(self):
         """
-        @todo
+        .. todo::
           check if there are 1 (DISCRET    => K_T_D_N) or
                              2 (DISCRET_2D => K_T_D_L) nodes
         """
@@ -92,7 +92,7 @@ class PELAS(SpringProperty):
         msg += "     )\n"
         msg += "\n"
 
-        if self.c1 == 1:  # @todo what is this???
+        if self.c1 == 1:  # .. todo:: what is this???
             msg += "VALE=(%g,0.,0.)\n" % (self.k)
         elif self.c1 == 2:
             msg += "VALE=(0.,%g,0.)\n" % (self.k)

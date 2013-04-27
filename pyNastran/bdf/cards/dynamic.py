@@ -143,7 +143,7 @@ class FREQ4(FREQ):
     the spread.
     FREQ4 SID F1 F2 FSPD NFM
     @note this card rewrites as a FREQ card
-    @todo not done...
+    .. todo:: not done...
     """
     type = 'FREQ4'
 
@@ -263,7 +263,7 @@ class TSTEPNL(BaseCard):
                 self.kStep = integer_or_blank(card, 6, 'kStep', 10)
             elif self.method in ['AUTO', 'TSTEP']:
                 pass
-                #self.kStep = blank(card, 6, 'kStep') #: @todo not blank
+                #self.kStep = blank(card, 6, 'kStep') #: .. todo:: not blank
             else:
                 msg = 'invalid TSTEPNL Method.  method=|%s|' % (self.method)
                 raise RuntimeError(msg)

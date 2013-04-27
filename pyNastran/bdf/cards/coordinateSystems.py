@@ -225,7 +225,7 @@ class Coord(BaseCard):
         if isinstance(self.rid, int):
             return (p3, matrix)
         else:
-            ## @todo do i need to multiply rid.transform(p3)[1]*matrix
+            ## .. todo:: do i need to multiply rid.transform(p3)[1]*matrix
             return (self.rid.transformToGlobal(p3)[0], matrix)
 
     def transformToLocal(self, p, matrix, debug=False):
@@ -329,7 +329,7 @@ class CylindricalCoord(object):
     @note
       \f$ \phi \f$ and \f$ \theta \f$ are flipped per wikipedia to be
       consistent with nastran's documentation
-    @see refman.pdf
+    .. seealso:: refman.pdf
     """
     def coordToXYZ(self, p):
         r"""
@@ -372,7 +372,7 @@ class SphericalCoord(object):
     @note
       \f$ \phi \f$ and \f$ \theta \f$ are flipped per wikipedia to be
       consistent with nastran's documentation
-    @see refman.pdf
+    .. seealso:: refman.pdf
     """
     def XYZtoCoord(self, p):
         (x, y, z) = p

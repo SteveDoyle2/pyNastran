@@ -54,7 +54,7 @@ class Ougv1Writer(object):
     def writeOUG_displacements(self, isubcase, data, thermal=0):
         """
         this function writes table 3 for the OUGV1 Table
-        @todo add the buffer and block caps
+        .. todo:: add the buffer and block caps
         """
         msg = ''
         disp = data[isubcase]
@@ -72,7 +72,7 @@ class Ougv1Writer(object):
 
         table_code = 1  # statics
         sort_code = 0
-        randomCode = 0  # 8 @todo no idea...
+        randomCode = 0  # 8 .. todo:: no idea...
         format_code = 1  # 9 - Real numbers
         num_wide = 7  # 10
         #thermal = 0 # 23

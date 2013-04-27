@@ -136,7 +136,7 @@ class MPT(object):
     def readMAT9(self, data):
         """
         MAT9(2603,26,300) - record 9
-        @todo buggy
+        .. todo:: buggy
         """
         #print "reading MAT9"
         while len(data) >= 140:  # 35*4
@@ -228,7 +228,7 @@ class MPT(object):
     def readRADM(self, data):
         """
         RADM(8802,88,413) - record 25
-        @todo add object
+        .. todo:: add object
         """
         #print "reading RADM"
         return

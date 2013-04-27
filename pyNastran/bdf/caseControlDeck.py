@@ -38,10 +38,10 @@ class CaseControlDeck(object):
     """
     def __init__(self, lines, log=None):
         """
-        @param self the case control deck object
-        @param lines list of lines that represent the case control deck
-          ending with BEGIN BULK
-        @param log a logger object
+        :self:  the CaseControlDeck object
+        :lines: list of lines that represent the case control deck
+                ending with BEGIN BULK
+        :log:   a logger object
         """
         # pulls the logger from the BDF object
         self.log = get_logger(log, "debug")
@@ -64,12 +64,9 @@ class CaseControlDeck(object):
         """
         Checks to see if a parameter (e.g. STRESS) is defined in a certain
         subcase ID.
-        @param self
-          the CaseControl object
-        @param isubcase
-          the subcase ID to check
-        @param param_name
-          the parameter name to look for
+        :self:       the CaseControlDeck object
+        :isubcase:   the subcase ID to check
+        :param_name: the parameter name to look for
         """
         if self.has_subcase(isubcase):
             return self.subcases[isubcase].has_parameter(param_name.upper())
@@ -79,9 +76,9 @@ class CaseControlDeck(object):
         Get the [value, options] of a subcase's parameter.  For example, for
         STRESS(PLOT,POST)=ALL, param_name=STRESS, value=ALL, options=['PLOT',
         'POST']
-        @param self the CaseControl object
-        @param isubcase the subcase ID to check
-        @param param_name the parameter name to get the [value, options] for
+        :self:  the CaseControlDeck object
+        :isubcase:   the subcase ID to check
+        :param_name: the parameter name to get the [value, options] for
         """
         if self.has_subcase(isubcase):
             return self.subcases[isubcase].get_parameter(param_name.upper())
@@ -90,8 +87,8 @@ class CaseControlDeck(object):
     def has_subcase(self, isubcase):
         """
         Checks to see if a subcase exists.
-        @param self the case control deck object
-        @param isubcase the subcase ID
+        :self:     the CaseControlDeck object
+        :isubcase: the subcase ID
         @retval does_subcase_exist (type = bool)
         """
         if isubcase in self.subcases:
@@ -114,6 +111,12 @@ class CaseControlDeck(object):
         #self.subcases[isubcase] = Subcase(id=isubcase)
 
     def delete_subcase(self, isubcase):
+        """
+        Deletes a subcase.
+
+        :self:     the CaseControlDeck object
+        :isubcase: the Subcase to delete
+        """
         if not self.has_subcase(isubcase):
             sys.stderr.write('subcase %s doesnt exist...skipping\n' %
                              isubcase)
@@ -122,14 +125,11 @@ class CaseControlDeck(object):
     def copy_subcase(self, i_from_subcase, i_to_subcase, overwrite_subcase=True):
         """
         Overwrites the parameters from one subcase to another.
-        @param self
-          the case control deck object
-        @param i_from_subcase
-          the subcase to pull the data from
-        @param i_to_subcase
-          the subcase to map the data to
-        @param overwrite_subcase
-          NULLs i_to_subcase before copying i_from_subcase
+
+        :self:              the CaseControlDeck object
+        :i_from_subcase:    the Subcase to pull the data from
+        :i_to_subcase:      the Subcase to map the data to
+        :overwrite_subcase: NULLs i_to_subcase before copying i_from_subcase
         """
         #print("copying subcase from=%s to=%s overwrite=%s" % (i_from_subcase, i_to_subcase, overwrite_subcase))
         if not self.has_subcase(i_from_subcase):
@@ -167,9 +167,17 @@ class CaseControlDeck(object):
 
     def add_parameter_to_global_subcase(self, param):
         """
-        takes in a single-lined string
-        @note
-            dont worry about overbounding the line
+        Takes in a single-lined string and adds it to the global Subcase.
+        :self:    the CaseControlDeck object
+        :param:   the variable to add
+        .. note:: dont worry about overbounding the line
+        
+        >>> bdf = BDF()
+        >>> bdf.read_bdf(bdf_filename)
+        >>> bdf.case_control.add_parameter_to_global_subcase('DISP=ALL')
+        >>>
+        TITLE = DUMMY LINE
+        DISP = ALL
         """
         (j, key, value, options, paramType) = self._parse_data_from_user(param)
         subcase_list = self.get_subcase_list()
@@ -178,11 +186,33 @@ class CaseControlDeck(object):
                                            isubcase)
 
     def add_parameter_to_local_subcase(self, isubcase, param):
+        """
+        Takes in a single-lined string and adds it to a single Subcase.
+
+        :self:     the CaseControlDeck object
+        :isubcase: the subcase ID to add
+        :param:    the variable to add
+        .. note::  dont worry about overbounding the line
+        
+        >>> bdf = BDF()
+        >>> bdf.read_bdf(bdf_filename)
+        >>> bdf.case_control.add_parameter_to_local_subcase(1, 'DISP=ALL')
+        >>> print bdf.case_control
+        TITLE = DUMMY LINE
+        SUBCASE 1
+            DISP = ALL
+        >>>
+        """
         (j, key, value, options, param_type) = self._parse_data_from_user(param)
         self._add_parameter_to_subcase(key, value, options, param_type,
                                        isubcase)
 
     def _parse_data_from_user(self, param):
+        """
+        Parses a case control line
+
+        :self: the CaseControlDeck object
+        """
         if '\n' in param or '\r' in param or '\t' in param:
             msg = 'doesnt support embedded endline/tab characters\n'
             msg += '  param = |%r|' % (param)
@@ -193,7 +223,12 @@ class CaseControlDeck(object):
         return (j, key, value, options, param_type)
 
     def _clean_lines(self, lines):
-        """removes comment characters $"""
+        """
+        Removes comment characters defined by a *$*.
+
+        :self:  the CaseControlDeck object
+        :lines: the lines to clean.
+        """
         lines2 = []
         for line in lines:
             line = line.strip(' \n\r').split('$')[0].rstrip()
@@ -203,11 +238,11 @@ class CaseControlDeck(object):
 
     def _read(self, lines):
         """
-        reads the case control deck
-        @note supports comment lines
-        @warning
-            doesnt check for 72 character width lines, but will follow that
-            when it's written out
+        Reads the case control deck
+
+        .. note::    supports comment lines
+        .. warning:: doesnt check for 72 character width lines, but will
+                     follow that when it's written out
         """
         isubcase = 0
         lines = self._clean_lines(lines)
@@ -273,8 +308,8 @@ class CaseControlDeck(object):
             they arent as clear, but the paramType lets the program know how to format it
             when writing it out.
 
-        @param self  the case control deck object
-        @param lines list of lines
+        :self:  the CaseControlDeck object
+        :lines: list of lines
         @retval paramName see brief
         @retval value     see brief
         @retval options   see brief
@@ -357,7 +392,7 @@ class CaseControlDeck(object):
                     self.log.debug('SET-type key=%s ID=%s' % (key, ID))
                 fivalues = value.rstrip(' ,').split(',')  # float/int values
 
-                ## @todo should be more efficient multiline reader...
+                ## .. todo:: should be more efficient multiline reader...
                 # read more lines....
                 if line[-1].strip() == ',':
                     i += 1
@@ -418,14 +453,16 @@ class CaseControlDeck(object):
         """
         removes any unwanted data in the subcase...specifically the SUBCASE
         data member.  Otherwise it will print out after a key like stress.
+        :self:  the CaseControlDeck object
         """
         for subcase in self.subcases.itervalues():
             subcase.finish_subcase()
 
     def convert_to_sol_200(self, model):
         """
-        Takes a case control deck and changes it from a
-        @todo not done...
+        Takes a case control deck and changes it from a SOL xxx to a SOL 200
+        :self:    the CaseControlDeck object
+        .. todo:: not done...
         """
         analysis = model.rsolmap_toStr[model.sol]
         model.sol = 200
@@ -435,7 +472,10 @@ class CaseControlDeck(object):
 
     def _add_parameter_to_subcase(self, key, value, options, param_type,
                                   isubcase):
-        """internal method"""
+        """
+        internal method
+        self:  the CaseControlDeck object
+        """
         if self.debug:
             a = 'key=|%s|' % (key)
             b = 'value=|%s|' % (value)
@@ -474,6 +514,8 @@ class CaseControlDeck(object):
     def get_op2_data(self):
         """
         returns the relevant op2 parameters required for a given subcase
+        :self:  the CaseControlDeck object
+        .. todo:: not done...
         """
         cases = {}
         for (isubcase, subcase) in sorted(self.subcases.iteritems()):
@@ -483,6 +525,9 @@ class CaseControlDeck(object):
         return cases
 
     def __repr__(self):
+        """
+        :self:  the CaseControlDeck object
+        """
         msg = ''
         subcase0 = self.subcases[0]
         for subcase in self.subcases.itervalues():

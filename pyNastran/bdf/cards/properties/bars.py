@@ -61,7 +61,7 @@ def getInertiaRectangular(sections):
       y right, z up)
     @retval interiaParameters
         list of [Area,Iyy,Izz,Iyz]
-    @see http://www.webs1.uidaho.edu/mindworks/Machine_Design/Posters/PDF/Moment%20of%20Inertia.pdf
+    .. seealso:: http://www.webs1.uidaho.edu/mindworks/Machine_Design/Posters/PDF/Moment%20of%20Inertia.pdf
     """
     As = []
     Ax = 0.
@@ -218,7 +218,7 @@ class LineProperty(Property):
             Iyy = 1 / 12. * w1 * h1 ** 3
             ## w1             I_{yy}=\frac{hb^3}{12}
             Izz = 1 / 12. * h1 * w1 ** 3
-            Iyz = 0.  ## @todo is the Ixy of a bar 0 ???
+            Iyz = 0.  #: .. todo:: is the Ixy of a bar 0 ???
 
         else:
             msg = 'Type=%s is not supported for %s class...' % (self.Type,
@@ -669,7 +669,9 @@ class PTUBE(LineProperty):
         return A2
 
     #def massMatrix(self):
-        #"""@todo not done"""
+        #"""
+        .. todo:: not done
+        """
         #m = zeros(6, 6)
         #m[0, 0] = 1.
         #return m
@@ -692,7 +694,7 @@ class PBAR(LineProperty):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        @todo
+        .. todo::
             support solution 600 default
             do a check for mid -> MAT1      for structural
             do a check for mid -> MAT4/MAT5 for thermal
@@ -744,7 +746,7 @@ class PBAR(LineProperty):
             self.j = data[5]
 
             self.nsm = data[6]
-            #self.fe  = data[7] #: @todo not documented....
+            #self.fe  = data[7] #: .. todo:: not documented....
             self.C1 = data[8]
             self.C2 = data[9]
             self.D1 = data[10]
@@ -1314,7 +1316,7 @@ class PBEAM(IntegratedLineProperty):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        @todo fix 0th entry of self.so, self.xxb
+        .. todo:: fix 0th entry of self.so, self.xxb
         """
         IntegratedLineProperty.__init__(self, card, data)
         if comment:
@@ -1583,7 +1585,7 @@ class PBEAM(IntegratedLineProperty):
         msg += "              VALE=(%g,  %g,  %g,  %g),\n" % (a, iy, iz, j)
 
         msg += "              ORIENTATION=_F( \n"
-        msg += "                  CARA=('VECT_Y'), # direction of beam ???\n"  ## @todo is this correct
+        msg += "                  CARA=('VECT_Y'), # direction of beam ???\n"  ## .. todo:: is this correct
         msg += "                  VALE=(1.0,0.0,0.0,)"
 
         if [self.n1a, self.n1b] != [0., 0.]:
@@ -1926,7 +1928,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
-    def reprFields(self):  ## @todo: not done
+    def reprFields(self):  ## .. todo:: not done
         list_fields = ['PBEAM3', self.pid, self.Mid(), ]  # other
         return list_fields
 

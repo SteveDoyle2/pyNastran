@@ -168,7 +168,7 @@ class TableObject(scalarObject):  # displacement style table
     #    """
     #    msg = ''
     #    for dt,displacements in sorted(self.displacements.iteritems()):
-    #        XXX = 50 ## this isnt correct... @todo update dt
+    #        XXX = 50 ## this isnt correct... .. todo:: update dt
     #        msg += block3[0:XXX] + pack('i',dt) + block3[XXX+4:]
     #        #msg += '%s = %g\n' %(self.data_code['name'],dt)
     #
@@ -467,7 +467,7 @@ class TableObject(scalarObject):  # displacement style table
         @param alphaLegend the transparency of the legend;
                (0.0=solid; 1.0=transparent; default=0.5)
 
-        @todo fix alphaLegend; test options more...
+        .. todo:: fix alphaLegend; test options more...
         """
         (results, nodeList, markers, Title, xLabel, yLabel) = getPlotData(
             self, nodeList, resultType, coord, markers, Title, hasLegend,
@@ -783,7 +783,7 @@ class ComplexTableObject(scalarObject):
         @param alphaLegend the transparency of the legend;
                (0.0=solid; 1.0=transparent; default=0.5)
 
-        @todo fix alphaLegend; test options more...
+        .. todo:: fix alphaLegend; test options more...
         """
         displayType = displayType.title()
         (results, nodeList, markers, Title, xLabel, yLabel) = getPlotData(

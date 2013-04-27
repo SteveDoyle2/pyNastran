@@ -10,8 +10,8 @@ from pyNastran.bdf.fieldWriter import print_card
 class WriteMeshDeprecated(object):
     def writeBDF(self, outFileName='fem.out.bdf', size=8, debug=False):
         """
-        @see write_bdf
-        @warning will be removed after v0.7 in favor of write_bdf
+        .. seealso:: write_bdf
+        .. deprecated: will be replaced in version 0.7 with write_bdf
         """
         warnings.warn('writeBDF has been deprecated; use '
                       'write_bdf', DeprecationWarning, stacklevel=2)
@@ -19,8 +19,8 @@ class WriteMeshDeprecated(object):
 
     def writeBDFAsPatran(self, outFileName='fem.out.bdf', size=8, debug=False):
         """
-        @see write_bdf_as_patran
-        @warning will be removed after v0.7 in favor of write_bdf_as_patran
+        .. seealso:: write_bdf_as_patran
+        .. deprecated: will be replaced in version 0.7 with write_bdf_as_patran
         """
         warnings.warn('writeBDFAsPatran has been deprecated; use '
                       'write_bdf_as_patran', DeprecationWarning, stacklevel=2)
@@ -28,8 +28,8 @@ class WriteMeshDeprecated(object):
 
     def echoBDF(self, infileName):
         """
-        @see echo_bdf
-        @warning will be removed after v0.7 in favor of echo_bdf
+        .. seealso:: echo_bdf
+        .. deprecated: will be replaced in version 0.7 with echo_bdf
         """
         warnings.warn('echoBDF has been deprecated; use '
                       'echo_bdf', DeprecationWarning, stacklevel=2)

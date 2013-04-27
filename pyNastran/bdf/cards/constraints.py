@@ -73,7 +73,7 @@ class ConstraintObject(object):
         For example an MPCADD that references 2 MPCADDs which reference 4 MPCs
         should return 4 MPCs (or rather the IDs of those MPCs).
 
-        @todo This function *should* also find unassociated constraints.
+        .. todo:: This function *should* also find unassociated constraints.
          not really done yet, idea needs to be integrated/separated from
          cross-referencing.  no point in doing it twice
         """

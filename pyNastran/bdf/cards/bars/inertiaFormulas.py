@@ -276,8 +276,8 @@ def T():
     (b-e)_y = D2
     a-h     = D3
     f-e     = D4
-    @todo Area seems off
-    @todo Inertias should be relative to the CG
+    .. todo:: Area seems off
+    .. todo:: Inertias should be relative to the CG
     @warning wrong...
     """
     print "---T---"

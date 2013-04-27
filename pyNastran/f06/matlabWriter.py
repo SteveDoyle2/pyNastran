@@ -91,7 +91,7 @@ class MatlabWriter(object):
 
     def loadOp2(self, isTesting=False):
         print("self.class = ",self.__class__.__name__)
-        if isTesting == False:  # @todo implement in way that doesnt require a variable (e.g. check parent class)
+        if isTesting == False:  # .. todo:: implement in way that doesnt require a variable (e.g. check parent class)
             msg = ("Don't call this method unless you're testing the "
                    "F06Writer.  It breaks the F06 and OP2 classes.")
             raise RuntimeError(msg)

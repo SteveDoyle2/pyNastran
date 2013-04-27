@@ -218,7 +218,7 @@ class CHEXA20(CHEXA8):
 
     def Centroid(self):
         """
-        @see CHEXA8.Centroid
+        .. seealso:: CHEXA8.Centroid
         """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
@@ -231,7 +231,7 @@ class CHEXA20(CHEXA8):
 
     def Volume(self):
         """
-        @see CHEXA8.Volume
+        .. seealso:: CHEXA8.Volume
         """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
@@ -396,7 +396,7 @@ class CPENTA15(CPENTA6):
 
     def Centroid(self):
         """
-        @see CPENTA6.Centroid
+        .. seealso:: CPENTA6.Centroid
         """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
@@ -408,7 +408,7 @@ class CPENTA15(CPENTA6):
 
     def Volume(self):
         """
-        @see CPENTA6.Volume
+        .. seealso:: CPENTA6.Volume
         """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
@@ -600,14 +600,14 @@ class CTETRA10(CTETRA4):
 
     def Volume(self):
         """
-        @see CTETRA4.Volume
+        .. seealso:: CTETRA4.Volume
         """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.nodePositions()
         return volume4(n1, n2, n3, n4)
 
     def Centroid(self):
         """
-        @see CTETRA4.Centroid
+        .. seealso:: CTETRA4.Centroid
         """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.nodePositions()
         return (n1 + n2 + n3 + n4) / 4.

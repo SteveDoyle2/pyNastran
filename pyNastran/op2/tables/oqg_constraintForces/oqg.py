@@ -65,7 +65,7 @@ class OQG(object):
             self.add_data_parameter(data, 'mode', 'i', 5)
             ## real eigenvalue
             self.add_data_parameter(data, 'eigr', 'f', 6, False)
-            ## mode or cycle @todo confused on the type - F1???
+            ## mode or cycle .. todo:: confused on the type - F1???
             self.add_data_parameter(data, 'mode_cycle', 'f', 7, False)
             self.apply_data_code_value('dataNames', ['mode', 'eigr', 'mode_cycle'])
         #elif self.analysis_code==3: # differential stiffness

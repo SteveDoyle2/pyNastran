@@ -45,7 +45,7 @@ class QBDY1(ThermalLoad):
                 j += 1
             ## CHBDYj element identification numbers (Integer)
             assert len(eids) > 0
-            self.eids = expand_thru(eids)  ## @todo use expand_thru_by ???
+            self.eids = expand_thru(eids)  ## .. todo:: use expand_thru_by ???
         else:
             self.sid = data[0]
             self.qFlux = data[1]
@@ -193,7 +193,7 @@ class QBDY3(ThermalLoad):
         list_fields = ['QBDY3', self.sid, self.Q0, cntrlnd] + collapse_thru_by(eids)
         return list_fields
 
-    def getLoads(self):  ## @todo: return loads
+    def getLoads(self):  ## .. todo:: return loads
         return []
 
 
@@ -302,7 +302,7 @@ class TEMP(ThermalLoad):
         """Writes the TEMP card"""
         return self.rawFields()
 
-    def getLoads(self):  ## @todo: return loads
+    def getLoads(self):  ## .. todo:: return loads
         return []
 
 # Loads

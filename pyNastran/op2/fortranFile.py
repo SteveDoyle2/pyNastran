@@ -23,7 +23,7 @@ class FortranFile(object):
     def set_endian(self, endian='<'):
         """
         Sets the endian
-        @todo hasnt been implemented
+        .. todo:: hasnt been implemented
         """
         self.endian = endian
 
@@ -598,7 +598,7 @@ class FortranFile(object):
     def skip_next_table(self, buffer_size=10000):
         """
         skips a table
-        @todo fix bugs
+        .. todo:: fix bugs
         """
         table_name = self.read_table_name(rewind=False)  # GEOM1
         self.table_init(table_name)

@@ -143,7 +143,7 @@ class Geometry1(object):
     def readCord3G(self, data):
         """
         (14301,143,651) - the marker for Record 7
-        @todo isnt this a CORD3G, not a CORD3R ???
+        .. todo:: isnt this a CORD3G, not a CORD3R ???
         """
         #print "reading CORD3G"
         n = 0

@@ -82,11 +82,11 @@ def make_end():
 class F06WriterDeprecated(object):
     def writeF06(self, f06OutName, isMagPhase=False, makeFile=True,
                  deleteObjects=True):
-        """@see write_f06"""
+        """.. seealso:: write_f06"""
         self.write_f06(f06OutName, isMagPhase, makeFile, deleteObjects)
 
     def loadOp2(self, isTesting=False):
-        """@see load_op2"""
+        """.. seealso:: load_op2"""
         self.load_op2(isTesting)
 
 class F06Writer(object):

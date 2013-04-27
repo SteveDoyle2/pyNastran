@@ -335,7 +335,7 @@ class NastranMatrix(BaseCard):
 
     def __repr__(self):
         """
-        @todo support double precision
+        .. todo:: support double precision
         """
         msg = '\n$' + '-' * 80
         msg += '\n$ %s Matrix %s\n' % (self.type, self.name)
@@ -567,9 +567,9 @@ class DMI(BaseCard):
 
     def __repr__(self):
         """
-        @todo support shortened output format.  There's a stupidly low 1000
+        .. todo:: support shortened output format.  There's a stupidly low 1000
         DMI cap, I assume this is entries and not matrices.
-        @todo support double precision
+        .. todo:: support double precision
         """
         msg = '\n$' + '-' * 80
         msg += '\n$ %s Matrix %s\n' % (self.type, self.name)

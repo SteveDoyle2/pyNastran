@@ -223,7 +223,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
         self.log = get_logger(log, 'debug' if debug else 'info')
 
-    def getGridPointSingularities(self):  # @todo not done
+    def getGridPointSingularities(self):  # .. todo:: not done
         """
         @code
                     G R I D   P O I N T   S I N G U L A R I T Y   T A B L E
@@ -235,7 +235,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         """
         pass
 
-    def getMaxSpcForces(self):  # @todo not done
+    def getMaxSpcForces(self):  # .. todo:: not done
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int, float, float, float, float, float, float])
@@ -243,7 +243,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         #self.disp[isubcase] = DisplacementObject(isubcase,data)
         #print self.disp[isubcase]
 
-    def getMaxDisplacements(self):  # @todo not done
+    def getMaxDisplacements(self):  # .. todo:: not done
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int, float, float, float, float, float, float])
@@ -253,7 +253,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         #self.disp[isubcase] = DisplacementObject(isubcase,data)
         #print self.disp[isubcase]
 
-    def getMaxAppliedLoads(self):  # @todo not done
+    def getMaxAppliedLoads(self):  # .. todo:: not done
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int, float, float, float, float, float, float])
@@ -261,7 +261,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         #self.disp[isubcase] = DisplacementObject(isubcase,data)
         #print self.disp[isubcase]
 
-    def getGridWeight(self):  # @todo not done
+    def getGridWeight(self):  # .. todo:: not done
         line = ''
         while 'PAGE' not in line:
             line = self.infile.readline()[1:]
@@ -350,7 +350,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         @endcode
         """
         #(subcaseName,isubcase,transient,dt,analysis_code,is_sort1) = self.readSubcaseNameID()
-        isubcase = 1  # @todo fix this...
+        isubcase = 1  # .. todo:: fix this...
 
         headers = self.skip(2)
         data = self.readTable([int, int, float, float, float, float])
@@ -536,7 +536,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         Reads displacement, spc/mpc forces
 
         :self:   the object pointer
-        :Format: @see parseLine
+        :Format: .. seealso:: parseLine
         """
         sline = True
         data = []

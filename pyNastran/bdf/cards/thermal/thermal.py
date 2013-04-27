@@ -135,7 +135,10 @@ class CHBDYE(ThermalElement):
         return list_fields
 
     def reprFields(self):
-        #eids = collapse_thru_by(self.eids)  ## @todo is this done
+        """
+        .. todo:: is this done
+        """
+        #eids = collapse_thru_by(self.eids)
         list_fields = ['CHBDYE', self.eid, self.eid2, self.side,
                   self.iViewFront, self.iViewBack, self.radMidFront,
                   self.radMidBack]
