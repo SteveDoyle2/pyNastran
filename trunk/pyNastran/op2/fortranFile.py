@@ -232,7 +232,7 @@ class FortranFile(object):
         """
         Prints a data set in int/float/double/string format to
         determine table info.  doesn't move cursor.
-        @note this is a great function for debugging
+        .. note:: this is a great function for debugging
         """
         data2 = data
         nData = len(data)
@@ -260,7 +260,7 @@ class FortranFile(object):
         """
         Prints a data set in int/float/double/string format to
         determine table info.  doesn't move cursor.
-        @note this is a great function for debugging
+        .. note:: this is a great function for debugging
         """
         msg = ''
         ints = self.get_ints2(data, endian)
@@ -310,7 +310,7 @@ class FortranFile(object):
         @param nBytes the number of bytes to print the data specs on
         @retval msg ints/floats/strings of the next nBytes
           (handles poorly sized nBytes; uncrashable :) )
-        @note this the BEST function when adding new cards/tables/debugging
+        .. note:: this the BEST function when adding new cards/tables/debugging
         """
         data = self.op2.read(nBytes)
         msg = self.print_block(data)
@@ -324,7 +324,7 @@ class FortranFile(object):
         @param nBytes the number of bytes to print the data specs on
         @retval msg ints/floats/strings of the next nBytes
          (handles poorly sized nBytes; uncrashable :) )
-        @note this the BEST function when adding new cards/tables/debugging
+        .. note:: this the BEST function when adding new cards/tables/debugging
         """
         data = self.op2.read(nBytes)
         msg = self.print_block2(data, endian)
@@ -432,7 +432,7 @@ class FortranFile(object):
         jumps to position n in the file
         @param self the object pointer
         @param n the position to goto
-        @note n>0
+        .. note:: n>0
         """
         #print "goto n = |%s|" % (n)
         assert n > 0

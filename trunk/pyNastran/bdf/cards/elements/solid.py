@@ -532,10 +532,8 @@ class CTETRA4(SolidElement):
               x_4 & y_4 & z_4 \\
           \end{array} \right]
         \f]
-         @todo
-            this has got to be wrong
-         @warning
-            this has got to be wrong
+         .. todo::    this has got to be wrong
+         .. warning:: this has got to be wrong
         """
         m = matrix((6, 6), 'd')
         (n1, n2, n3, n4) = self.nodePositions()

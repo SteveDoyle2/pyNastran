@@ -96,8 +96,7 @@ from .bdfInterface.crossReference import XrefMesh
 class BDFDeprecated(object):
     def readBDF(self, bdf_filename, includeDir=None, xref=True, punch=False):
         """
-        .. seealso:: read_bdf
-        .. deprecated: will be replaced in version 0.7 with read_bdf
+        .. deprecated: will be replaced in version 0.7 with :func: `read_bdf`
         """
         warnings.warn('readBDF has been deprecated; use '
                       'read_bdf', DeprecationWarning, stacklevel=2)
@@ -105,8 +104,7 @@ class BDFDeprecated(object):
 
     def updateSolution(self, sol, method=None):
         """
-        .. seealso:: update_solution
-        .. deprecated: will be replaced in version 0.7 with update_solution
+        .. deprecated: will be replaced in version 0.7 with :func: update_solution
         """
         warnings.warn('updateSolution has been deprecated; use '
                       'update_solution', DeprecationWarning, stacklevel=2)
@@ -114,8 +112,7 @@ class BDFDeprecated(object):
 
     def setDynamicSyntax(self, dictOfVars):
         """
-        .. seealso:: set_dynamic_syntax
-        .. deprecated: will be replaced in version 0.7 with set_dynamic_syntax
+        .. deprecated: will be replaced in version 0.7 with :func: `set_dynamic_syntax`
         """
         warnings.warn('setDynamicSyntax has been deprecated; use '
                       'set_dynamic_syntax', DeprecationWarning, stacklevel=2)
@@ -123,8 +120,7 @@ class BDFDeprecated(object):
 
     def addCard(self, card, cardName, iCard=0, oldCardObj=None):
         """
-        .. seealso:: add_card
-        .. deprecated: will be replaced in version 0.7 with add_card
+        .. deprecated: will be replaced in version 0.7 with :func: `add_card`
         """
         warnings.warn('addCard has been deprecated; use add_card',
                       DeprecationWarning, stacklevel=2)
@@ -132,8 +128,7 @@ class BDFDeprecated(object):
 
     def disableCards(self, cards):
         """
-        .. seealso:: disable_cards
-        .. deprecated: will be replaced in version 0.7 with disable_cards
+        .. deprecated: will be replaced in version 0.7 with :func: `disable_cards`
         """
         warnings.warn('disableCards has been deprecated; use '
                       'disable_cards', DeprecationWarning, stacklevel=2)
@@ -146,12 +141,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     """
     modelType = 'nastran'
     isDict = True
+    
+    __slots__ = ['_is_dynamic_syntax']
     def __init__(self, debug=True, log=None):
         """
         Initializes the BDF object
-        :self:  the BDF object
-        :debug: used to set the logger if no logger is passed in
-        :log:   a python logging module object
+        :param self:  the BDF object
+        :param debug: used to set the logger if no logger is passed in
+        :param log:   a python logging module object
         """
         # file management parameters
         self.ifile = -1
@@ -178,37 +175,37 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             self._relpath = False
         self.log = get_logger(log, 'debug' if debug else 'info')
 
-        ## list of all read in cards - useful in determining if entire BDF
-        ## was read & really useful in debugging
+        #: list of all read in cards - useful in determining if entire BDF
+        #: was read & really useful in debugging
         self.card_count = {}
-        ## stores the card_count of cards that have been rejected
+        #: stores the card_count of cards that have been rejected
         self.reject_count = {}
-        ## was an ENDDATA card found
+        #: was an ENDDATA card found
         self.foundEndData = False
 
-        ## allows the BDF variables to be scoped properly (i think...)
+        #: allows the BDF variables to be scoped properly (i think...)
         GetMethods.__init__(self)
         AddMethods.__init__(self)
         BDFMethods.__init__(self)
         WriteMesh.__init__(self)
         XrefMesh.__init__(self)
 
-        ## useful in debugging errors in input
+        #: useful in debugging errors in input
         self.debug = debug
-        ## flag that allows for OpenMDAO-style optimization syntax to be used
+        #: flag that allows for OpenMDAO-style optimization syntax to be used
         self._is_dynamic_syntax = False
-        ## lines that were rejected b/c they were for a card that isnt supported
+        #: lines that were rejected b/c they were for a card that isnt supported
         self.rejects = []
-        ## cards that were created, but not processed
+        #: cards that were created, but not processed
         self.reject_cards = []
-        ## list of execive control deck lines
+        #: list of execive control deck lines
         self.executive_control_lines = []
-        ## list of case control deck lines
+        #: list of case control deck lines
         self.case_control_lines = []
 
         self.__init_attributes()
 
-        ## the list of possible cards that will be parsed
+        #: the list of possible cards that will be parsed
         self.cardsToRead = set([
             'PARAM',
             'GRID', 'GRDSET', 'SPOINT',  # 'RINGAX',
@@ -325,10 +322,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             # initial conditions - sid (set ID)
             #'TIC',  (in tables.py)
 
-            ## methods - .. todo:: EIGRL not done???
+            #: methods - .. todo:: EIGRL not done???
             'EIGB', 'EIGR', 'EIGRL',
 
-            ## cMethods - .. todo:: EIGC not done???
+            #: cMethods - .. todo:: EIGC not done???
             'EIGC', 'EIGP',
 
             # other
@@ -341,15 +338,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         self.uniqueBulkDataCards = self.cardsToRead.difference(
             caseControlCards)
 
-        ## / is the delete from restart card
+        #: / is the delete from restart card
         self.specialCards = ['DEQATN', '/']
 
     def disable_cards(self, cards):
         """
         Method for removing broken cards from the reader
 
-        :self:  the BDF object
-        :cards: a list/set of cards that should not be read
+        :param self:  the BDF object
+        :param cards: a list/set of cards that should not be read
         """
         disableSet = set(cards)
         self.cardsToRead.difference(disableSet)
@@ -445,62 +442,62 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         }
 
         # ------------------------ structural defaults -----------------------
-        ## the analysis type
+        #: the analysis type
         self.sol = None
-        ## used in solution 600, method
+        #: used in solution 600, method
         self.solMethod = None
-        ## the line with SOL on it, marks ???
+        #: the line with SOL on it, marks ???
         self.iSolLine = None
         self.caseControlDeck = None
 
-        ## store the PARAM cards
+        #: store the PARAM cards
         self.params = {}
 
         # ------------------------------- nodes -------------------------------
         # main structural block
-        ## stores SPOINT, GRID cards
+        #: stores SPOINT, GRID cards
         self.nodes = {}
-        ## stores POINT cards
+        #: stores POINT cards
         self.points = {}
         #self.grids = {}
         self.spoints = None
         #self.epoints = None
-        ## stores GRIDSET card
+        #: stores GRIDSET card
         self.gridSet = None
 
-        ## stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
-        ## etc.)
+        #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
+        #: etc.)
         self.elements = {}
-        ## stores rigid elements (RBE2, RBE3, RJOINT, etc.)
+        #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigidElements = {}
-        ## store CMASS1,CMASS2,CMASS3,CMASS4,CMASS5
+        #: store CMASS1,CMASS2,CMASS3,CMASS4,CMASS5
         #self.massElements = {}
-        ## stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
+        #: stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}
-        ## stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
+        #: stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
         self.materials = {}
-        ## stores MATS1
+        #: stores MATS1
         self.materialDeps = {}
-        ## stores the CREEP card
+        #: stores the CREEP card
         self.creepMaterials = {}
 
         # loads
-        ## stores LOAD, FORCE, MOMENT, etc.
+        #: stores LOAD, FORCE, MOMENT, etc.
         self.loads = {}
         #self.gusts  = {} # Case Control GUST = 100
         #self.random = {} # Case Control RANDOM = 100
 
-        ## stores coordinate systems
+        #: stores coordinate systems
         self.coords = {0: CORD2R()}
 
         # --------------------------- constraints ----------------------------
-        ## stores SUPORT1s
+        #: stores SUPORT1s
         #self.constraints = {} # suport1, anything else???
         self.suports = []  # suport, suport1
 
-        ## stores SPCADD,SPC,SPC1,SPCD,SPCAX
+        #: stores SPCADD,SPC,SPC1,SPCD,SPCAX
         self.spcObject2 = ConstraintObject()
-        ## stores MPCADD,MPC
+        #: stores MPCADD,MPC
         self.mpcObject2 = ConstraintObject()
 
         self.spcs = {}
@@ -510,18 +507,18 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         self.mpcadds = {}
 
         # --------------------------- dynamic ----------------------------
-        ## stores DAREA
+        #: stores DAREA
         self.dareas = {}
 
         self.pbusht = {}
         self.pdampt = {}
         self.pelast = {}
 
-        ## frequencies
+        #: frequencies
         self.frequencies = {}
 
         # ----------------------------------------------------------------
-        ## direct matrix input - DMIG
+        #: direct matrix input - DMIG
         self.dmis = {}
         self.dmigs = {}
         self.dmijs = {}
@@ -530,23 +527,23 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         self.dequations = {}
 
         # ----------------------------------------------------------------
-        ## SETx
+        #: SETx
         self.sets = {}
         self.asets = []
         self.bsets = []
         self.csets = []
         self.qsets = []
-        ## SESETx
+        #: SESETx
         self.setsSuper = {}
 
         # ----------------------------------------------------------------
-        ## tables
+        #: tables
         self.tables = {}
-        ## randomTables
+        #: randomTables
         self.randomTables = {}
 
         # ----------------------------------------------------------------
-        ## EIGB, EIGR, EIGRL methods
+        #: EIGB, EIGR, EIGRL methods
         self.methods = {}
         # EIGC, EIGP methods
         self.cMethods = {}
@@ -558,67 +555,67 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         self.ddvals = {}
         self.dlinks = {}
         self.dresps = {}
-        ## stores DVPREL1, DVPREL2...might change to DVxRel
+        #: stores DVPREL1, DVPREL2...might change to DVxRel
         self.dvprels = {}
         self.dvmrels = {}
         self.doptprm = None
 
         # ------------------------- nonlinear defaults -----------------------
-        ## stores NLPCI
+        #: stores NLPCI
         self.nlpcis = {}
-        ## stores NLPARM
+        #: stores NLPARM
         self.nlparms = {}
-        ## stores TSTEPs
+        #: stores TSTEPs
         self.tsteps = {}
-        ## stores TSTEPNL
+        #: stores TSTEPNL
         self.tstepnls = {}
         # --------------------------- aero defaults --------------------------
         # aero cards
-        ## stores CAEROx
+        #: stores CAEROx
         self.caeros = {}
-        ## stores PAEROx
+        #: stores PAEROx
         self.paeros = {}
-        ## stores AERO
+        #: stores AERO
         self.aero = {}
-        ## stores AEROS
+        #: stores AEROS
         self.aeros = {}
 
-        ## stores AEFACT
+        #: stores AEFACT
         self.aefacts = {}
-        ## stores AELINK
+        #: stores AELINK
         self.aelinks = {}
-        ## stores AELIST
+        #: stores AELIST
         self.aelists = {}
-        ## stores AEPARAM
+        #: stores AEPARAM
         self.aeparams = {}
-        ## stores AESURF
+        #: stores AESURF
         self.aesurfs = {}
-        ## stores AESTAT
+        #: stores AESTAT
         self.aestats = {}
 
-        ## stores GUST cards
+        #: stores GUST cards
         self.gusts = {}
-        ## stores FLFACT
-        self.flfacts = {}  ## .. todo:: can this be simplified ???
-        ## stores FLUTTER
+        #: stores FLFACT
+        self.flfacts = {}  #: .. todo:: can this be simplified ???
+        #: stores FLUTTER
         self.flutters = {}
-        ## mkaeros
+        #: mkaeros
         self.mkaeros = []
-        ## store SPLINE1,SPLINE2,SPLINE4,SPLINE5
+        #: store SPLINE1,SPLINE2,SPLINE4,SPLINE5
         self.splines = {}
-        ## stores TRIM
+        #: stores TRIM
         self.trims = {}
 
         # ------------------------- thermal defaults -------------------------
         # BCs
-        ## stores thermal boundary conditions - CONV,RADBC
+        #: stores thermal boundary conditions - CONV,RADBC
         self.bcs = {}  # e.g. RADBC
-        ## defines the MAT4, MAT5, MATT4, etc.  .. todo:: verify MATT4
+        #: defines the MAT4, MAT5, MATT4, etc.  .. todo:: verify MATT4
         self.thermalMaterials = {}
 
-        ## stores PHBDY
+        #: stores PHBDY
         self.phbdys = {}
-        ## stores convection properties - PCONV, PCONVM ???
+        #: stores convection properties - PCONV, PCONVM ???
         self.convectionProperties = {}
         # ----------------------------------------------------------------
 
@@ -662,12 +659,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         Read method for the bdf files
         
-        :self: the BDF object
-        :bdf_filename: the input bdf
-        :include_dir:  the relative path to any include files (default=None
-                       if no include files)
-        :xref:  should the bdf be cross referenced (default=True)
-        :punch: indicates whether the file is a punch file (default=False)
+        :param self:         the BDF object
+        :param bdf_filename: the input bdf
+        :param include_dir:  the relative path to any include files
+                             (default=None if no include files)
+        :param xref:  should the bdf be cross referenced (default=True)
+        :param punch: indicates whether the file is a punch file (default=False)
         
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename, xref=True)
@@ -684,12 +681,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         >>>
         """
         try:
-            ## the active filename (string)
+            #: the active filename (string)
             self.bdf_filename = bdf_filename
 
             if include_dir is None:
                 include_dir = os.path.dirname(bdf_filename)
-            ## the directory of the 1st BDF (include BDFs are relative to this one)
+            #: the directory of the 1st BDF (include BDFs are relative to this one)
             self.include_dir = include_dir
 
             self.open_file(self.bdf_filename)
@@ -757,10 +754,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         Updates the overall solution type (e.g. 101,200,600)
 
-        :self:     the object pointer
-        :sol:      the solution type (101,103, etc)
-        :method:   the solution method (only for SOL=600)
-        :iSolLine: the line to put the SOL/method on
+        :param self:     the object pointer
+        :param sol:      the solution type (101,103, etc)
+        :param method:   the solution method (only for SOL=600)
+        :param iSolLine: the line to put the SOL/method on
         """
         self.iSolLine = iSolLine
         ## the integer of the solution type (e.g. SOL 101)
@@ -775,7 +772,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             self.sol = self._solmap_to_value[sol]
 
         if self.sol == 600:
-            ## solution 600 method modifier
+            #: solution 600 method modifier
             self.solMethod = method.strip()
             self.log.debug("sol=%s method=%s" % (self.sol, self.solMethod))
         else:  # very common
@@ -786,8 +783,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         Uses the OpenMDAO syntax of %varName in an embedded BDF to
         update the values for an optimization study.
 
-        :self: the BDF object
-        :dict_of_vars: dictionary of 7 character variable names to map.
+        :param self:         the BDF object
+        :param dict_of_vars: dictionary of 7 character variable names to map.
 
         @code
         GRID, 1, %xVar, %yVar, %zVar
@@ -819,10 +816,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         Applies the dynamic syntax for %varName
 
-        :self: the BDF object
-        :key:  the uppercased key
-        @retval value the dynamic value defined by dictOfVars
-        .. seealso:: set_dynamic_syntax
+        :param self: the BDF object
+        :param key:  the uppercased key
+        @retval value the dynamic value defined by dict_of_vars
+        .. seealso:: :func: `set_dynamic_syntax`
         """
         #print "*** valueRaw.lstrip() = |%r|" % valueRaw.lstrip()
         #key = key.lstrip('%%')
@@ -854,7 +851,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         Reads the case control deck
 
-        :self: the BDF object
+        :param self: the BDF object
         .. note:: called with recursion if an INCLUDE file is found
         """
         self._break_comment = False
@@ -913,8 +910,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         Can the card be read
 
-        :self: the BDF object
-        :card_name: the card_name -> 'GRID'
+        :param self: the BDF object
+        :param card_name: the card_name -> 'GRID'
         """
         if card_name.startswith('='):
             return False
@@ -931,7 +928,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         Opens the primary bdf/dat file and all subsequent INCLUDE files.
 
-        :fname:  the name of the bdf/dat file to open
+        :param fname:  the name of the bdf/dat file to open
         @return None
 
         .. note:: Doesn't allow reuse of the same bdf/dat file twice.
@@ -968,7 +965,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             self.card_streams.append(self.stream_card(line_gen))
     
 
-    def close_file(self, ):
+    def close_file(self):
         self.log.info('closing %r' % self.active_filename)
         if self.ifile == 0:
             self.ifile = -1
@@ -997,7 +994,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         Returns the next Bulk Data Card in the BDF
 
-        :self: the BDF object
+        :param self: the BDF object
+        :param line_stream: the generator for the file
         @retval lines the lines of the card
         @retval comment the comment for the card
         @retval cardname the name of the card
@@ -1177,8 +1175,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         Returns the name of the card defined by the provided lines
 
-        :self:  the BDF object
-        :lines: the lines of the card
+        :param self:  the BDF object
+        :param lines: the lines of the card
         @retval cardname the name of the card
         """
         card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('*\t ')
@@ -1191,7 +1189,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         Parses the Bulk Data Deck
 
-        :self: the BDF object
+        :param self: the BDF object
         """
         self.log.info("reading Bulk Data Deck...")
         self._break_comment = True
@@ -1259,10 +1257,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         Used for testing to check that the number of cards going in is the
         same as each time the model is read verifies proper writing of cards
 
-        :self:       the BDF object
-        :card_name:  the card_name -> 'GRID'
+        :param self:      the BDF object
+        :param card_name: the card_name -> 'GRID'
 
-        .. warning:: this wont guarantee proper reading of cards, but will help
+        >>> bdf.read_bdf(bdf_filename)
+        >>> bdf.card_count['GRID']
+        50
+        
+        .. note:: this wont guarantee proper reading of cards, but will help
         """
         if card_name == '':  # stupid null case
             return
@@ -1319,7 +1321,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
     def process_card(self, card_lines, debug=False):
         """
-        :self: the BDF object
+        :param self: the BDF object
         """
         card_name = self.get_card_name(card_lines)
         fields = to_fields(card_lines, card_name)
@@ -1334,14 +1336,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     def add_card(self, card_lines, card_name, comment='', is_list=True):
         """
         Adds a card object to the BDF object.
-        :self:       the BDF object
-        :card_lines: the list of the card fields
+        :param self:       the BDF object
+        :param card_lines: the list of the card fields
          >>> ['GRID,1,2',]  # (is_list = False)
          >>> ['GRID',1,2,]  # (is_list = True; default)
 
-        :card_name: the card_name -> 'GRID'
-        :comment:   an optional the comment for the card
-        :is_list:   changes card_lines from a list of lines to
+        :param card_name: the card_name -> 'GRID'
+        :param comment:   an optional the comment for the card
+        :param is_list:   changes card_lines from a list of lines to
                     a list of fields
         @retval card_object the card object representation of card
 
@@ -1573,8 +1575,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             elif 'ENDDATA' in card_name:
                 self.foundEndData = True
             else:
-                ## ..warning:: cards with = signs in them
-                ## are not announced when they are rejected
+                #: ..warning:: cards with = signs in them
+                #:             are not announced when they are rejected
                 if '=' not in card[0]:
                     self.log.info('rejecting processed equal signed card %s' % card)
                 self.reject_cards.append(card)
@@ -1591,8 +1593,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         Takes a path such as C:/work/fem.bdf and locates the file using
         relative paths.  If it's on another drive, the path is not modified.
 
-        :self:     the BDF object
-        :filename: a filename string
+        :param self:     the BDF object
+        :param filename: a filename string
         @retval filenameString a shortened representation of the filename
         """
         driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
@@ -1603,7 +1605,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     def card_stats(self):
         """
         Print statistics for the BDF
-        :self: the BDF object
+
+        :param self: the BDF object
         .. note:: if a card is not supported and not added to the proper
                   lists, this method will fail
         """
@@ -1744,7 +1747,7 @@ def _clean_comment(comment, end=-1):
     Removes specific pyNastran comment lines so duplicate lines aren't
     created.
 
-    :comment: the comment to possibly remove
+    :param comment: the comment to possibly remove
     """
     if comment[:end] in ['$EXECUTIVE CONTROL DECK',
                    '$CASE CONTROL DECK',
@@ -1768,8 +1771,8 @@ def to_fields(card_lines, card_name):
     Converts a series of lines in a card into string versions of the field.
     Handles large, small, and CSV formatted cards.
 
-    :lines:     the lines of the BDF card object
-    :card_name: the card_name -> 'GRID'
+    :param lines:     the lines of the BDF card object
+    :param card_name: the card_name -> 'GRID'
     @retval fields the string formatted fields of the card
     """
     fields = []
@@ -1855,8 +1858,8 @@ def get_include_filename(cardLines, include_dir=''):
     """
     Parses an INCLUDE file split into multiple lines (as a list).
 
-    :cardLines:   the list of lines in the include card (all the lines!)
-    :include_dir: the include directory (default='')
+    :param cardLines:   the list of lines in the include card (all the lines!)
+    :param include_dir: the include directory (default='')
     @retval filename the INCLUDE filename
     """
     cardLines2 = []

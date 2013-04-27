@@ -32,8 +32,8 @@ class CompositeShellProperty(ShellProperty):
     def cross_reference(self, model):
         """
         links the material ID to the materials
-        :self:  the PCOMP object
-        :model: a BDF object
+        :param self:  the PCOMP object
+        :param model: a BDF object
         """
         for iply in xrange(len(self.plies)):
             mid = self.plies[iply][0]
@@ -51,8 +51,8 @@ class CompositeShellProperty(ShellProperty):
         When a ply is symmetrical and the iply value is greater than the
         number of plies, we return the mirrored ply.
 
-        :self: the PCOMP object
-        :iply: the ply ID
+        :param self: the PCOMP object
+        :param iply: the ply ID
         @raises IndexError if iply is invalid
         
         @code
@@ -94,8 +94,8 @@ class CompositeShellProperty(ShellProperty):
     def Thickness(self, iply='all'):
         """
         Gets the thickness of the ith ply
-        :self: the PCOMP object
-        :iply: the string 'all' (default) or the mass per area of the ith ply
+        :param self: the PCOMP object
+        :param iply: the string 'all' (default) or the mass per area of the ith ply
         """
         nplies = len(self.plies)
         if iply == 'all':  # get all layers
@@ -132,8 +132,8 @@ class CompositeShellProperty(ShellProperty):
     def Mid(self, iply):
         """
         Gets the material ID of the ith ply
-        :self: the PCOMP object
-        :iply: the ply ID (starts from 0)
+        :param self: the PCOMP object
+        :param iply: the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
         Mid = self.Material(iply)
@@ -144,7 +144,7 @@ class CompositeShellProperty(ShellProperty):
     def Mids(self):
         """
         Gets the material IDs of all the plies
-        :self: the PCOMP object
+        :param self: the PCOMP object
         @retval mids the material IDs
         """
         mids = []
@@ -157,8 +157,8 @@ class CompositeShellProperty(ShellProperty):
     def Rho(self, iply):
         """
         Gets the density of the ith ply
-        :self: the PCOMP object
-        :iply: the ply ID (starts from 0)
+        :param self: the PCOMP object
+        :param iply: the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
         mid = self.Material(iply)
@@ -169,8 +169,8 @@ class CompositeShellProperty(ShellProperty):
         """
         Gets the material of the ith ply (not the ID unless it's not
         cross-referenced)
-        :self: the PCOMP object
-        :iply: the ply ID (starts from 0)
+        :param self: the PCOMP object
+        :param iply: the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
         Mid = self.plies[iply][0]
@@ -179,8 +179,8 @@ class CompositeShellProperty(ShellProperty):
     def Theta(self, iply):
         """
         Gets the ply angle of the ith ply (not the ID)
-        :self: the PCOMP object
-        :iply: the ply ID (starts from 0)
+        :param self: the PCOMP object
+        :param iply: the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
         Theta = self.plies[iply][2]
@@ -210,9 +210,9 @@ class CompositeShellProperty(ShellProperty):
         \f[ \large  \frac{m}{A} =\rho t + nsm \f]
         mass/A = rho*t for the various layers
 
-        :self: the PCOMP object
-        :iply: the string 'all' (default) or the mass per area of the ith ply
-        :method: the method to compute MassPerArea
+        :param self:   the PCOMP object
+        :param iply:   the string 'all' (default) or the mass per area of the ith ply
+        :param method: the method to compute MassPerArea
            * Case 1 (iply = all)
              method has no effect
            * Case 2 (iply != all)

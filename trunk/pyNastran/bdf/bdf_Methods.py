@@ -95,7 +95,7 @@ class BDFMethods(BDFMethodsDeprecated):
         for element in self.elements.itervalues():
             m = element.Mass()
             mass += m
-        return (mass)
+        return mass
 
     # def flip_normals(self, starterEid, eids=None, flipStarter=False):
     #     """
@@ -104,13 +104,12 @@ class BDFMethods(BDFMethodsDeprecated):
     #     no internal elements, all the normals on the outside will point
     #     outwards (or inwards).
     #
-    #     :starterEid: the element to copy the normal of
-    #     :eids:       the element IDs to flip to the common direction (default=None -> all)
-    #     :flipStarter should the staring element be flipped (default=False)
+    #     :param starterEid:  the element to copy the normal of
+    #     :param eids:        the element IDs to flip to the common direction (default=None -> all)
+    #     :param flipStarter: should the staring element be flipped (default=False)
     #
-    #     @todo
-    #       finish method...think i need to build a edge list...
-    #       that'd be a lot easier to loop through stuff...
+    #     .. todo:: finish method...think i need to build a edge list...
+    #               that'd be a lot easier to loop through stuff...
     #     """
     #     raise NotImplementedError()
     #     normals = {}
@@ -173,8 +172,8 @@ class BDFMethods(BDFMethodsDeprecated):
         """
         Puts all nodes in a common coordinate system (mainly for cid testing)
 
-        :self: the object pointer
-        :cid:  the cid to resolve the nodes to
+        :param self: the object pointer
+        :param cid:  the cid to resolve the nodes to
         .. note:: loses association with previous coordinate systems so to go
                   back requires another fem
         """
@@ -188,9 +187,9 @@ class BDFMethods(BDFMethodsDeprecated):
         """
         Puts all nodes back to original coordinate system.
 
-        :self:       the object pointer
-        :fem_old:    the old model that hasnt lost it's connection to the
-                     node cids
+        :param self:       the object pointer
+        :param fem_old:    the old model that hasnt lost it's connection to
+                           the node cids
         .. warning:: hasnt been tested well...
         """
         debug = False
@@ -206,7 +205,7 @@ class BDFMethods(BDFMethodsDeprecated):
         Considers FORCE, FORCE1, FORCE2.
 
         @retval Forces the forces as a numpy array
-        @warning not validated
+        .. warning:: not validated
         """
         for (key, loadCase) in self.loads.iteritems():
             F = array([0., 0., 0.])

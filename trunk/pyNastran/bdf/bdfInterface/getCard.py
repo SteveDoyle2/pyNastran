@@ -83,10 +83,9 @@ class GetMethods(object):
     def getNodeIDToElementIDsMap(self):
         """
         Returns a dictionary that maps a node ID to a list of elemnents
-        @todo
-          support 0d or 1d elements
-        @todo
-          support elements with missing nodes (e.g. CQUAD8 with missing nodes)
+        .. todo:: support 0d or 1d elements
+        .  todo:: support elements with missing nodes
+                  (e.g. CQUAD8 with missing nodes)
         """
         nidToElementsMap = {}
         for nid in self.nodes:  # initalize the mapper
@@ -128,9 +127,8 @@ class GetMethods(object):
     def getMaterialIDToPropertyIDsMap(self):
         """
         Returns a dictionary that maps a material ID to a list of properties
-        @note
-          all properties require an mid to be counted (except for PCOMP,
-          which has multiple mids)
+        .. note:: all properties require an mid to be counted (except for
+                  PCOMP, which has multiple mids)
         """
         midToPidsMap = {}
         for mid in self.materialIDs():

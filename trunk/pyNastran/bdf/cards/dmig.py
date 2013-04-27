@@ -16,7 +16,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 def ssq(*listA):
     """
     sum of squares
-    @note used for DEQATN
+    .. note:: used for DEQATN
     """
     out = 0.
     for x in listA:
@@ -27,7 +27,7 @@ def ssq(*listA):
 def sum2(*listA):
     """
     sum of listA
-    @note used for DEQATN
+    .. note:: used for DEQATN
     """
     return sum(listA)
 
@@ -35,7 +35,7 @@ def sum2(*listA):
 def mod(x, y):
     """
     x%y
-    @note used for DEQATN
+    .. note:: used for DEQATN
     """
     return x % y
 
@@ -43,14 +43,14 @@ def mod(x, y):
 def logx(x, y):
     """
     log base x of y
-    @note used for DEQATN
+    .. note:: used for DEQATN
     """
     log(y, x)
 
 
 def dim(x, y):
     """
-    @note used for DEQATN
+    .. note:: used for DEQATN
     """
     return x - min(x, y)
 
@@ -205,12 +205,12 @@ class NastranMatrix(BaseCard):
     def getMatrix(self, isSparse=False):
         """
         builds the Matrix
-        @param self the object pointer
-        @param isSparse should the matrix be returned as a sparse matrix (default=True).  Slower for dense matrices.
+        :param self:     the object pointer
+        :param isSparse: should the matrix be returned as a sparse matrix (default=True).  Slower for dense matrices.
         @retval M the matrix
         @retval rows dictionary of keys=rowID,    values=(Grid,Component) for the matrix
         @retval cols dictionary of keys=columnID, values=(Grid,Component) for the matrix
-        @warning isSparse WILL fail
+        .. warning:: isSparse WILL fail
         """
         i = 0
         rows = {}

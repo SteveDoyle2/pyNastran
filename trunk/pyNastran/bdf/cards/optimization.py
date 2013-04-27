@@ -558,27 +558,27 @@ class DVPREL2(OptConstraint):
         """
         if comment:
             self._comment = comment
-        ## Unique identification number
+        #: Unique identification number
         self.oid = integer(card, 1, 'oid')
-        ## Name of a property entry, such as PBAR, PBEAM, etc
+        #: Name of a property entry, such as PBAR, PBEAM, etc
         self.Type = string(card, 2, 'Type')
-        ## Property entry identification number
+        #: Property entry identification number
         self.pid = integer(card, 3, 'pid')
-        ## Property name, such as 'T', 'A', or field position of the property
-        ## entry, or word position in the element property table of the
-        ## analysis model. Property names that begin with an integer such as
-        ## 12I/T**3 may only be referred to by field position.
-        ## (Character or Integer 0)
+        #: Property name, such as 'T', 'A', or field position of the property
+        #: entry, or word position in the element property table of the
+        #: analysis model. Property names that begin with an integer such as
+        #: 12I/T**3 may only be referred to by field position.
+        #: (Character or Integer 0)
         self.pNameFid = integer_or_string(card, 4, 'pName_FID')
-        ## Minimum value allowed for this property. If FID references a stress
-        ## recovery location field, then the default value for PMIN is -1.0+35.
-        ## PMIN must be explicitly set to a negative number for properties that
-        ## may be less than zero (for example, field ZO on the PCOMP entry).
-        ## (Real; Default = 1.E-15)
+        #: Minimum value allowed for this property. If FID references a stress
+        #: recovery location field, then the default value for PMIN is -1.0+35.
+        #: PMIN must be explicitly set to a negative number for properties that
+        #: may be less than zero (for example, field ZO on the PCOMP entry).
+        #: (Real; Default = 1.E-15)
         self.pMin = double_or_blank(card, 5, 'pMin')  #: .. todo:: bad default (see DVMREL1)
-        ## Maximum value allowed for this property. (Real; Default = 1.0E20)
+        #: Maximum value allowed for this property. (Real; Default = 1.0E20)
         self.pMax = double_or_blank(card, 6, 'pMax', 1e20)
-        ## DEQATN entry identification number. (Integer > 0)
+        #: DEQATN entry identification number. (Integer > 0)
         self.eqID = integer_or_blank(card, 7, 'eqID') #: .. todo:: or blank?
 
         fields = card[9:]

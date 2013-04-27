@@ -37,7 +37,7 @@ def print_float_16(value, tol=0.):
     Prints a float in nastran 16-character width syntax
     using the highest precision possbile.
     .. seealso:: print_float_8
-    @warning completely unimplemented & untested
+    .. warning:: completely unimplemented & untested
     """
     if abs(value) <= tol:  # tol=1e-8
         field = "%16s" % ('0.')
@@ -166,8 +166,9 @@ def print_float_16(value, tol=0.):
 
 def print_field_16(value):
     """
-    prints a single 16-character width field
-    :value: the value to print
+    Prints a single 16-character width field
+
+    :param value: the value to print
     @retval field an 16-character (tested) string
     """
     if isinstance(value, int):
@@ -188,8 +189,10 @@ def print_field_16(value):
 def print_card_16(fields):
     """
     Prints a nastran-style card with 16-character width fields.
-    :fields: all the fields in the BDF card (no blanks)
-    @note A large field format follows the  8-16-16-16-16-8 = 80
+
+    :param fields: all the fields in the BDF card (no blanks)
+
+    .. note:: A large field format follows the  8-16-16-16-16-8 = 80
      format where the first 8 is the card name or blank (continuation).
      The last 8-character field indicates an optional continuation,
      but because it's a left-justified unneccessary field,

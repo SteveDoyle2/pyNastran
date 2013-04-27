@@ -268,7 +268,7 @@ class SLOAD(Load):
     Static Scalar Load
     Defines concentrated static loads on scalar or grid points.
 
-    @note Can be used in statics OR dynamics.
+    .. note:: Can be used in statics OR dynamics.
 
     If Si refers to a grid point, the load is applied to component T1 of the
     displacement coordinate system (see the CD field on the GRID entry).
@@ -278,7 +278,7 @@ class SLOAD(Load):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-            ## load ID
+            #: load ID
         self.sid = integer(card, 1, 'sid')
 
         nfields = len(card) - 2
@@ -335,32 +335,32 @@ class TLOAD1(TabularLoad):
         if comment:
             self._comment = comment
         if card:
-            ## load ID
+            #: load ID
             self.sid = integer(card, 1, 'sid')
 
-            ## Identification number of DAREA or SPCD entry set or a thermal load
-            ## set (in heat transfer analysis) that defines {A}. (Integer > 0)
+            #: Identification number of DAREA or SPCD entry set or a thermal load
+            #: set (in heat transfer analysis) that defines {A}. (Integer > 0)
             self.exciteID = integer(card, 2, 'exciteID')
 
-            ## If it is a non-zero integer, it represents the
-            ## identification number of DELAY Bulk Data entry that defines . If it
-            ## is real, then it directly defines the value of that will be used for
-            ## all degrees-of-freedom that are excited by this dynamic load entry.
-            ## See also Remark 9. (Integer >= 0, real or blank)
+            #: If it is a non-zero integer, it represents the
+            #: identification number of DELAY Bulk Data entry that defines . If it
+            #: is real, then it directly defines the value of that will be used for
+            #: all degrees-of-freedom that are excited by this dynamic load entry.
+            #: See also Remark 9. (Integer >= 0, real or blank)
             self.delay = integer_double_or_blank(card, 3, 'delay')
 
-            ## Defines the type of the dynamic excitation. (LOAD,DISP, VELO, ACCE)
+            #: Defines the type of the dynamic excitation. (LOAD,DISP, VELO, ACCE)
             self.Type = integer_string_or_blank(card, 4, 'Type', 'LOAD')
 
-            ## Identification number of TABLEDi entry that gives F(t). (Integer > 0)
+            #: Identification number of TABLEDi entry that gives F(t). (Integer > 0)
             self.tid = integer(card, 5, 'tid')
 
-            ## Factor for initial displacements of the enforced degrees-of-freedom.
-            ## (Real; Default = 0.0)
+            #: Factor for initial displacements of the enforced degrees-of-freedom.
+            #: (Real; Default = 0.0)
             self.us0 = double_or_blank(card, 6, 'us0', 0.0)
 
-            ## Factor for initial velocities of the enforced degrees-of-freedom.
-            ## (Real; Default = 0.0)
+            #: Factor for initial velocities of the enforced degrees-of-freedom.
+            #: (Real; Default = 0.0)
             self.vs0 = double_or_blank(card, 7, 'vs0', 0.0)
             if   self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
                 self.Type = 'LOAD'
@@ -419,39 +419,39 @@ class TLOAD2(TabularLoad):
         if comment:
             self._comment = comment
         if card:
-            ## load ID
-            ## SID must be unique for all TLOAD1, TLOAD2, RLOAD1, RLOAD2, and ACSRCE entries.
+            #: load ID
+            #: SID must be unique for all TLOAD1, TLOAD2, RLOAD1, RLOAD2, and ACSRCE entries.
             self.sid = integer(card, 1, 'sid')
 
             self.exciteID = integer(card, 2, 'exciteID')
             self.delay = integer_or_blank(card, 3, 'delay', 0)
 
-            ## Defines the type of the dynamic excitation. (Integer; character
-            ## or blank; Default = 0)
+            #: Defines the type of the dynamic excitation. (Integer; character
+            #: or blank; Default = 0)
             self.Type = integer_string_or_blank(card, 4, 'Type', 'LOAD')
 
-            ## Time constant. (Real >= 0.0)
+            #: Time constant. (Real >= 0.0)
             self.T1 = double_or_blank(card, 5, 'T1', 0.0)
             #if self.delay == 0:
             #self.T1 = double_or_blank(card, 5, 'T1', 0.)
             #else:
             #self.T1 = blank(card, 5, 'T1')
 
-            ## Time constant. (Real; T2 > T1)
+            #: Time constant. (Real; T2 > T1)
             self.T2 = double_or_blank(card, 6, 'T2', self.T1)
-            ## Frequency in cycles per unit time. (Real >= 0.0; Default = 0.0)
+            #: Frequency in cycles per unit time. (Real >= 0.0; Default = 0.0)
             self.frequency = double_or_blank(card, 7, 'frequency', 0.)
-            ## Phase angle in degrees. (Real; Default = 0.0)
+            #: Phase angle in degrees. (Real; Default = 0.0)
             self.phase = double_or_blank(card, 8, 'phase', 0.)
-            ## Exponential coefficient. (Real; Default = 0.0)
+            #: Exponential coefficient. (Real; Default = 0.0)
             self.c = double_or_blank(card, 9, 'c', 0.)
-            ## Growth coefficient. (Real; Default = 0.0)
+            #: Growth coefficient. (Real; Default = 0.0)
             self.b = double_or_blank(card, 10, 'b', 0.)
-            ## Factor for initial displacements of the enforced degrees-of-freedom.
-            ## (Real; Default = 0.0)
+            #: Factor for initial displacements of the enforced degrees-of-freedom.
+            #: (Real; Default = 0.0)
             self.us0 = double_or_blank(card, 11, 'us0', 0.)
-            ## Factor for initial velocities of the enforced degrees-of-freedom
-            ## (Real; Default = 0.0)
+            #: Factor for initial velocities of the enforced degrees-of-freedom
+            #: (Real; Default = 0.0)
             self.vs0 = double_or_blank(card, 12, 'vs0', 0.)
 
             if self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
@@ -736,22 +736,22 @@ class RANDPS(RandomLoad):
         if comment:
             self._comment = comment
         if card:
-            ## Random analysis set identification number. (Integer > 0)
-            ## Defined by RANDOM in the Case Control Deck.
+            #: Random analysis set identification number. (Integer > 0)
+            #: Defined by RANDOM in the Case Control Deck.
             self.sid = integer(card, 1, 'sid')
 
-            ## Subcase identification number of the excited load set.
-            ## (Integer > 0)
+            #: Subcase identification number of the excited load set.
+            #: (Integer > 0)
             self.j = integer(card, 2, 'j')
 
-            ## Subcase identification number of the applied load set.
-            ## (Integer >= 0; K >= J)
+            #: Subcase identification number of the applied load set.
+            #: (Integer >= 0; K >= J)
             self.k = integer(card, 3, 'k')
 
-            ## Components of the complex number. (Real)
+            #: Components of the complex number. (Real)
             self.x = double_or_blank(card, 4, 'x', 0.0)
             self.y = double_or_blank(card, 5, 'y', 0.0)
-            ## Identification number of a TABRNDi entry that defines G(F).
+            #: Identification number of a TABRNDi entry that defines G(F).
             self.tid = integer_or_blank(card, 6, 'tid', 0)
             assert len(card) <= 7, 'len(RANDPS card) = %i' % len(card)
         else:

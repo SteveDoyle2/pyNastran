@@ -58,19 +58,19 @@ class OP2(BDF,
     def set_subcases(self, subcases=None):
         """
         Allows you to read only the subcases in the list of iSubcases
-        @param subcases
-          list of [subcase1_ID,subcase2_ID]  (default=None; all subcases)
+        :param subcases: list of [subcase1_ID,subcase2_ID]
+                         (default=None; all subcases)
         """
-        ## stores the set of all subcases that are in the OP2
+        #: stores the set of all subcases that are in the OP2
         self.subcases = set()
         if subcases is None or subcases == []:
-            ## stores if the user entered [] for iSubcases
+            #: stores if the user entered [] for iSubcases
             self.isAllSubcases = True
             self.valid_subcases = []
         else:
-            ## should all the subcases be read (default=True)
+            #: should all the subcases be read (default=True)
             self.isAllSubcases = False
-            ## the set of valid subcases -> set([1,2,3])
+            #: the set of valid subcases -> set([1,2,3])
             self.valid_subcases = set(subcases)
         self.log.debug("set_subcases - subcases = %s" % self.valid_subcases)
 
@@ -100,13 +100,14 @@ class OP2(BDF,
             return False
         return True
 
-    def __init__(self, op2FileName, makeGeom=False, debug=True, log=None):
+    def __init__(self, op2FileName, make_geom=False, debug=True, log=None):
         """
         Initializes the OP2 object
-        @param op2FileName the file to be parsed
-        @param makeGeom reads the BDF tables (default=False)
-        @param debug prints data about how the OP2 was parsed (default=False)
-        @param log a logging object to write debug messages to
+
+        :param op2FileName: the file to be parsed
+        :param make_geom: reads the BDF tables (default=False)
+        :param debug: prints data about how the OP2 was parsed (default=False)
+        :param log: a logging object to write debug messages to
          (.. seealso:: import logging)
         """
         BDF.__init__(self, debug=debug, log=log)
@@ -117,33 +118,33 @@ class OP2(BDF,
         (fname, extension) = os.path.splitext(op2FileName)
         self.table_name = 'temp'
 
-        ## should the BDF tables be parsed
+        #: should the BDF tables be parsed
         self.makeGeom = makeGeom
 
-        ## the input OP2 filename
+        #: the input OP2 filename
         self.op2FileName = op2FileName
 
-        ## the expected BDF filename (guessed)
+        #: the expected BDF filename (guessed)
         self.bdfFileName = fname + bdfExtension
 
-        ## the expected F06 filename (guessed)
+        #: the expected F06 filename (guessed)
         self.f06FileName = fname + f06Extension
         #print "bdfFileName = ",self.bdfFileName
 
-        ## developer parameter to write the OP2 is ASCII format
-        ## to better understand it
+        #: developer parameter to write the OP2 is ASCII format
+        #: to better understand it
         self.make_op2_debug = False
 
-        ## BDF Title
+        #: BDF Title
         self.Title = ''
-        ## limit output DTs
+        #: limit output DTs
         self.expected_times = {}
         #self.expected_times = {1:array([0.1,0.12])}
 
-        ## file object containing the skipped cards
+        #: file object containing the skipped cards
         self.skippedCardsFile = open('skippedCards.out', 'a')
 
-        ## the list of supported tables (dont edit this)
+        #: the list of supported tables (dont edit this)
         self.tablesToRead = [
             # nodes/geometry/loads/BCs
             'GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',      # regular
@@ -215,21 +216,21 @@ class OP2(BDF,
             'DBCOPT',
         ]
 
-        ## a dictionary that maps an integer of the subcaseName to the
-        ## subcaseID
+        #: a dictionary that maps an integer of the subcaseName to the
+        #: subcaseID
         self.iSubcaseNameMap = {}
 
-        ## list of OP2 tables that were read
-        ## mainly for debugging
+        #: list of OP2 tables that were read
+        #: mainly for debugging
         self.tablenames = []
 
         self.__objects_init__()
 
     def __objects_init__(self):
-        ## ESE
+        #: ESE
         self.eigenvalues = {}
 
-        ## OUG - displacement
+        #: OUG - displacement
         self.displacements = {}           # tCode=1 thermal=0
         self.displacementsPSD = {}        # random
         self.displacementsATO = {}        # random
@@ -238,16 +239,16 @@ class OP2(BDF,
         self.displacementsNO = {}        # random
         self.scaledDisplacements = {}     # tCode=1 thermal=8
 
-        ## OUG - temperatures
+        #: OUG - temperatures
         self.temperatures = {}           # tCode=1 thermal=1
 
-        ## OUG - eigenvectors
+        #: OUG - eigenvectors
         self.eigenvectors = {}            # tCode=7 thermal=0
 
-        ## OUG - velocity
+        #: OUG - velocity
         self.velocities = {}              # tCode=10 thermal=0
 
-        ## OUG - acceleration
+        #: OUG - acceleration
         self.accelerations = {}           # tCode=11 thermal=0
 
         # OEF - Forces - tCode=4 thermal=0
@@ -281,68 +282,68 @@ class OP2(BDF,
         #self.temperatureForces = {}
 
         # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
-        ## OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
+        #: OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
         self.celasStress = {}
-        ## OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
+        #: OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
         self.celasStrain = {}
 
-        ## OES - CTRIAX6
+        #: OES - CTRIAX6
         self.ctriaxStress = {}
         self.ctriaxStrain = {}
 
-        ## OES - isotropic CROD/CONROD/CTUBE stress
+        #: OES - isotropic CROD/CONROD/CTUBE stress
         self.rodStress = {}
-        ## OES - isotropic CROD/CONROD/CTUBE strain
+        #: OES - isotropic CROD/CONROD/CTUBE strain
         self.rodStrain = {}
-        ## OES - nonlinear CROD/CONROD/CTUBE stress
+        #: OES - nonlinear CROD/CONROD/CTUBE stress
         self.nonlinearRodStress = {}
-        ## OES - nonlinear CROD/CONROD/CTUBE strain
+        #: OES - nonlinear CROD/CONROD/CTUBE strain
         self.nonlinearRodStrain = {}
-        ## OES - isotropic CBAR stress
+        #: OES - isotropic CBAR stress
         self.barStress = {}
-        ## OES - isotropic CBAR strain
+        #: OES - isotropic CBAR strain
         self.barStrain = {}
-        ## OES - isotropic CBEAM stress
+        #: OES - isotropic CBEAM stress
         self.beamStress = {}
-        ## OES - isotropic CBEAM strain
+        #: OES - isotropic CBEAM strain
         self.beamStrain = {}
-        ## OES - isotropic CBUSH stress
+        #: OES - isotropic CBUSH stress
         self.bushStress = {}
-        ## OES - isotropic CBUSH strain
+        #: OES - isotropic CBUSH strain
         self.bushStrain = {}
-         ## OES - isotropic CBUSH1D strain/strain
+         #: OES - isotropic CBUSH1D strain/strain
         self.bush1dStressStrain = {}
 
-        ## OES - isotropic CTRIA3/CQUAD4 stress
+        #: OES - isotropic CTRIA3/CQUAD4 stress
         self.plateStress = {}
-        ## OES - isotropic CTRIA3/CQUAD4 strain
+        #: OES - isotropic CTRIA3/CQUAD4 strain
         self.plateStrain = {}
-        ## OESNLXR - CTRIA3/CQUAD4 stress
+        #: OESNLXR - CTRIA3/CQUAD4 stress
         self.nonlinearPlateStress = {}
-        ## OESNLXR - CTRIA3/CQUAD4 strain
+        #: OESNLXR - CTRIA3/CQUAD4 strain
         self.nonlinearPlateStrain = {}
         self.hyperelasticPlateStress = {}
         self.hyperelasticPlateStrain = {}
 
-        ## OES - isotropic CTETRA/CHEXA/CPENTA stress
+        #: OES - isotropic CTETRA/CHEXA/CPENTA stress
         self.solidStress = {}
-        ## OES - isotropic CTETRA/CHEXA/CPENTA strain
+        #: OES - isotropic CTETRA/CHEXA/CPENTA strain
         self.solidStrain = {}
-        ## OES - composite CTRIA3/CQUAD4 stress
+        #: OES - composite CTRIA3/CQUAD4 stress
         self.compositePlateStress = {}
-        ## OES - composite CTRIA3/CQUAD4 strain
+        #: OES - composite CTRIA3/CQUAD4 strain
         self.compositePlateStrain = {}
 
-        ## OES - CSHEAR stress
+        #: OES - CSHEAR stress
         self.shearStress = {}
-        ## OES - CSHEAR strain
+        #: OES - CSHEAR strain
         self.shearStrain = {}
 
-        ## OES - CELAS1 224, CELAS3 225,
+        #: OES - CELAS1 224, CELAS3 225,
         self.nonlinearSpringStress = {}
-        ## OES - GAPNL 86
+        #: OES - GAPNL 86
         self.nonlinearGapStress = {}
-        ## OES - CBUSH 226
+        #: OES - CBUSH 226
         self.nolinearBushStress = {}
 
         # OQG - spc/mpc forces
@@ -352,20 +353,20 @@ class OP2(BDF,
         # OQG - thermal forces
         self.thermalGradientAndFlux = {}
 
-        ## OGF - grid point forces
+        #: OGF - grid point forces
         self.gridPointForces = {}  # tCode=19
 
-        ## OGS1 - grid point stresses
+        #: OGS1 - grid point stresses
         self.gridPointStresses = {}       # tCode=26
         self.gridPointVolumeStresses = {}  # tCode=27
 
-        ## OPG - summation of loads for each element
+        #: OPG - summation of loads for each element
         self.loadVectors = {}       # tCode=2  thermal=0
         self.thermalLoadVectors = {}  # tCode=2  thermal=1
         self.appliedLoads = {}       # tCode=19 thermal=0
         self.forceVectors = {}       # tCode=12 thermal=0
 
-        ## OEE - strain energy density
+        #: OEE - strain energy density
         self.strainEnergy = {}  # tCode=18
 
     def get_op2_stats(self):
@@ -714,13 +715,13 @@ class OP2(BDF,
         return data
 
     def read_op2(self):
-        ## the OP2 file object
+        #: the OP2 file object
         self.op2 = open(self.op2FileName, 'rb')
         try:
             if self.make_op2_debug:
-                ## a developer debug file (largely unsupported)
+                #: a developer debug file (largely unsupported)
                 self.op2Debug = open('debug.out', 'wb')
-            ## the byte position in the OP2
+            #: the byte position in the OP2
             self.n = self.op2.tell()
 
             try:
@@ -1012,7 +1013,7 @@ class OP2(BDF,
             #print("    sort_code = %s" %(sort_code))
             i -= 1
         #print("sort_bits = %s" %(bits))
-        ## the bytes describe the SORT information
+        #: the bytes describe the SORT information
         self.sort_bits = bits
 
         self.data_code['sort_bits'] = self.sort_bits
@@ -1023,20 +1024,20 @@ class OP2(BDF,
         element_type or something else depending on the table type
         """
         (aCode, tCode, int3, isubcase) = unpack(b'iiii', data[:16])
-        ## the local subcase ID
+        #: the local subcase ID
         self.isubcase = isubcase
         #print("isubcase = %s" %(isubcase))
         self.subcases.add(self.isubcase)  # set notation
 
-        ## the type of result being processed
+        #: the type of result being processed
         self.table_code = tCode % 1000
-        ## used to create sort_bits
+        #: used to create sort_bits
         self.sort_code = tCode // 1000
-        ## what type of data was saved from the run; used to parse the
-        ## approach_code and grid_device.  device_code defines what options
-        ## inside a result, STRESS(PLOT,PRINT), are used.
+        #: what type of data was saved from the run; used to parse the
+        #: approach_code and grid_device.  device_code defines what options
+        #: inside a result, STRESS(PLOT,PRINT), are used.
         self.device_code = aCode % 10
-        ## what solution was run (e.g. Static/Transient/Modal)
+        #: what solution was run (e.g. Static/Transient/Modal)
         self.analysis_code = (aCode - self.device_code) // 10
 
         if self.device_code == 3:
@@ -1049,8 +1050,8 @@ class OP2(BDF,
             #self.log.info('  print and plot can cause bad results...'
             #              'if there's a crash, try plot only')
 
-        ## data_code stores the active variables; these pass important
-        ## self variables into the result object
+        #: data_code stores the active variables; these pass important
+        #: self variables into the result object
         self.data_code = {'analysis_code': self.analysis_code,
                          'device_code': self.device_code,
                          'table_code': self.table_code,
@@ -1074,20 +1075,20 @@ class OP2(BDF,
         element_type or something else depending on the table type
         """
         (aCode, tCode, int3, ID) = unpack(b'iiii', data[:16])
-        ## the local subcase ID
+        #: the local subcase ID
         self.ID = ID
         #print("isubcase = %s" %(isubcase))
         self.subcases.add(self.ID)  # set notation
 
-        ## the type of result being processed
+        #: the type of result being processed
         self.table_code = tCode % 1000
-        ## used to create sort_bits
+        #: used to create sort_bits
         self.sort_code = tCode // 1000
-        ## what type of data was saved from the run; used to parse the
-        ## approach_code and grid_device.  device_code defines what options
-        ## inside a result, STRESS(PLOT,PRINT), are used.
+        #: what type of data was saved from the run; used to parse the
+        #: approach_code and grid_device.  device_code defines what options
+        #: inside a result, STRESS(PLOT,PRINT), are used.
         self.device_code = aCode % 10
-        ## what solution was run (e.g. Static/Transient/Modal)
+        #: what solution was run (e.g. Static/Transient/Modal)
         self.analysis_code = (aCode - self.device_code) // 10
 
         if self.device_code == 3:
@@ -1100,8 +1101,8 @@ class OP2(BDF,
             #self.log.info('  print and plot can cause bad results...'
             #              'if there's a crash, try plot only')
 
-        ## data_code stores the active variables; these pass important
-        ## self variables into the result object
+        #: data_code stores the active variables; these pass important
+        #: self variables into the result object
         self.data_code = {'analysis_code': self.analysis_code,
                          'device_code': self.device_code,
                          'table_code': self.table_code,
@@ -1125,12 +1126,11 @@ class OP2(BDF,
         supports multiple inputs with iWordStop (note this is words,
         not outputs)
 
-        @param self the object pointer
-        @param data the binary data that is as long as the buffer size
-        @param iWordStart the word to start reading from
-        @param iWordStop  the word to stop reading on (largely unused)
-        @warning
-            works with nastran syntax, not standard python syntax
+        :param self: the object pointer
+        :param data: the binary data that is as long as the buffer size
+        :param iWordStart: the word to start reading from
+        :param iWordStop:  the word to stop reading on (largely unused)
+        .. warning:: works with nastran syntax, not standard python syntax
             this makes it work with what's documented in the DMAP manual
         """
         if iWordStop is None:
@@ -1174,12 +1174,12 @@ class OP2(BDF,
         reads the Title, Subtitle, and Label.
         Puts them in self.iSubcaseNameMap[isubcase] = [Subtitle,Label]
         """
-        ## the title of the analysis
+        #: the title of the analysis
         word = self.read_string(384)  # titleSubtitleLabel
         self.Title = word[0:128].strip()
-        ## the subtitle of the subcase
+        #: the subtitle of the subcase
         self.subtitle = word[128:256].strip()
-        ## the label of the subcase
+        #: the label of the subcase
         self.label = word[256:328].strip()
 
         # not really a hollerith, just the end of the block (so buffer_words*4)
@@ -1199,9 +1199,9 @@ class OP2(BDF,
         """
         Starts a new table
         """
-        ## the local table name
+        #: the local table name
         self.table_name = word.strip()
-        ## the names of all the tables
+        #: the names of all the tables
         self.tablenames.append(word)
         #msg = '*' * 20 + word + '*' * 20 + '\n'
         #print(msg)

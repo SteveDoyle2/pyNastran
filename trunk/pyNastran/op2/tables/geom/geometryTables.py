@@ -24,7 +24,7 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
 
     def readRecordTable(self, expectedTableName):
         """
-        @note assumes self.iTableMap has already been set
+        .. note:: assumes self.iTableMap has already been set
         """
         if self.makeGeom == False:
             self.iTableMap = {}

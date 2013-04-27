@@ -613,7 +613,7 @@ class PTUBE(LineProperty):
             self.t = data[3]
             self.nsm = data[4]
             self.OD2 = self.OD1
-            #self.OD2 = data[5]  #: @note quirk to this one...
+            #self.OD2 = data[5]  #: .. note:: quirk to this one...
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -670,8 +670,8 @@ class PTUBE(LineProperty):
 
     #def massMatrix(self):
         #"""
-        .. todo:: not done
-        """
+        #.. todo:: not done
+        #"""
         #m = zeros(6, 6)
         #m[0, 0] = 1.
         #return m
@@ -868,7 +868,7 @@ class PBAR(LineProperty):
 
 class PBARL(LineProperty):
     """
-    @warning doesnt support user-defined types
+    .. warning:: doesnt support user-defined types
     """
     type = 'PBARL'
     validTypes = {
@@ -1529,12 +1529,12 @@ class PBEAM(IntegratedLineProperty):
             raise NotImplementedError(data)
 
     #def Area(self):
-    #    """@warning area field not supported fully on PBEAM card"""
+    #    """.. warning:: area field not supported fully on PBEAM card"""
     #    #raise RuntimeError(self.A[0])
     #    return self.A[0]
 
     #def Nsm(self):
-    #    """@warning nsm field not supported fully on PBEAM card"""
+    #    """.. warning:: nsm field not supported fully on PBEAM card"""
     #    #raise RuntimeError(self.nsm[0])
     #    return self.nsm[0]
 
@@ -1808,11 +1808,11 @@ class PBEAML(IntegratedLineProperty):
 
     def cross_reference(self, model):
         """
-        @warning For structural problems, PBEAML entries must reference a MAT1
+        .. warning:: For structural problems, PBEAML entries must reference a MAT1
          material entry
-        @warning For heat-transfer problems, the MID must reference a MAT4 or
+        .. warning:: For heat-transfer problems, the MID must reference a MAT4 or
          MAT5 material entry.
-        @note what happens when there are 2 subcases?
+        .. note:: what happens when there are 2 subcases?
         """
         self.mid = model.Material(self.mid)
 
@@ -1922,7 +1922,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
             raise NotImplementedError(data)
 
     def Nsm(self):
-        """@warning nsm field not supported fully on PBEAM3 card"""
+        """.. warning:: nsm field not supported fully on PBEAM3 card"""
         return self.nsm
 
     def cross_reference(self, model):
@@ -2022,7 +2022,7 @@ class PBEND(LineProperty):
             raise NotImplementedError(data)
 
     #def Nsm(self):
-        #"""@warning nsm field not supported fully on PBEND card"""
+        #""".. warning:: nsm field not supported fully on PBEND card"""
         #raise RuntimeError(self.nsm[0])
         #return self.nsm
 

@@ -38,10 +38,10 @@ class CaseControlDeck(object):
     """
     def __init__(self, lines, log=None):
         """
-        :self:  the CaseControlDeck object
-        :lines: list of lines that represent the case control deck
+        :param self:  the CaseControlDeck object
+        :param lines: list of lines that represent the case control deck
                 ending with BEGIN BULK
-        :log:   a logger object
+        :param log:   a :mod: `logging` object
         """
         # pulls the logger from the BDF object
         self.log = get_logger(log, "debug")
@@ -64,9 +64,9 @@ class CaseControlDeck(object):
         """
         Checks to see if a parameter (e.g. STRESS) is defined in a certain
         subcase ID.
-        :self:       the CaseControlDeck object
-        :isubcase:   the subcase ID to check
-        :param_name: the parameter name to look for
+        :param self:       the CaseControlDeck object
+        :param isubcase:   the subcase ID to check
+        :param param_name: the parameter name to look for
         """
         if self.has_subcase(isubcase):
             return self.subcases[isubcase].has_parameter(param_name.upper())
@@ -76,9 +76,9 @@ class CaseControlDeck(object):
         Get the [value, options] of a subcase's parameter.  For example, for
         STRESS(PLOT,POST)=ALL, param_name=STRESS, value=ALL, options=['PLOT',
         'POST']
-        :self:  the CaseControlDeck object
-        :isubcase:   the subcase ID to check
-        :param_name: the parameter name to get the [value, options] for
+        :param self:       the CaseControlDeck object
+        :param isubcase:   the subcase ID to check
+        :param param_name: the parameter name to get the [value, options] for
         """
         if self.has_subcase(isubcase):
             return self.subcases[isubcase].get_parameter(param_name.upper())
@@ -87,8 +87,8 @@ class CaseControlDeck(object):
     def has_subcase(self, isubcase):
         """
         Checks to see if a subcase exists.
-        :self:     the CaseControlDeck object
-        :isubcase: the subcase ID
+        :param self:     the CaseControlDeck object
+        :param isubcase: the subcase ID
         @retval does_subcase_exist (type = bool)
         """
         if isubcase in self.subcases:
@@ -114,8 +114,8 @@ class CaseControlDeck(object):
         """
         Deletes a subcase.
 
-        :self:     the CaseControlDeck object
-        :isubcase: the Subcase to delete
+        :param self:     the CaseControlDeck object
+        :param isubcase: the Subcase to delete
         """
         if not self.has_subcase(isubcase):
             sys.stderr.write('subcase %s doesnt exist...skipping\n' %
@@ -126,10 +126,11 @@ class CaseControlDeck(object):
         """
         Overwrites the parameters from one subcase to another.
 
-        :self:              the CaseControlDeck object
-        :i_from_subcase:    the Subcase to pull the data from
-        :i_to_subcase:      the Subcase to map the data to
-        :overwrite_subcase: NULLs i_to_subcase before copying i_from_subcase
+        :param self:              the CaseControlDeck object
+        :param i_from_subcase:    the Subcase to pull the data from
+        :param i_to_subcase:      the Subcase to map the data to
+        :param overwrite_subcase: NULLs i_to_subcase before copying
+                                  i_from_subcase
         """
         #print("copying subcase from=%s to=%s overwrite=%s" % (i_from_subcase, i_to_subcase, overwrite_subcase))
         if not self.has_subcase(i_from_subcase):
@@ -168,8 +169,8 @@ class CaseControlDeck(object):
     def add_parameter_to_global_subcase(self, param):
         """
         Takes in a single-lined string and adds it to the global Subcase.
-        :self:    the CaseControlDeck object
-        :param:   the variable to add
+        :param self:  the CaseControlDeck object
+        :param param: the variable to add
         .. note:: dont worry about overbounding the line
         
         >>> bdf = BDF()
@@ -189,9 +190,9 @@ class CaseControlDeck(object):
         """
         Takes in a single-lined string and adds it to a single Subcase.
 
-        :self:     the CaseControlDeck object
-        :isubcase: the subcase ID to add
-        :param:    the variable to add
+        :param self:     the CaseControlDeck object
+        :param isubcase: the subcase ID to add
+        :param param:    the variable to add
         .. note::  dont worry about overbounding the line
         
         >>> bdf = BDF()
@@ -211,7 +212,7 @@ class CaseControlDeck(object):
         """
         Parses a case control line
 
-        :self: the CaseControlDeck object
+        :param self: the CaseControlDeck object
         """
         if '\n' in param or '\r' in param or '\t' in param:
             msg = 'doesnt support embedded endline/tab characters\n'
@@ -226,8 +227,8 @@ class CaseControlDeck(object):
         """
         Removes comment characters defined by a *$*.
 
-        :self:  the CaseControlDeck object
-        :lines: the lines to clean.
+        :param self:  the CaseControlDeck object
+        :param lines: the lines to clean.
         """
         lines2 = []
         for line in lines:
@@ -278,42 +279,41 @@ class CaseControlDeck(object):
 
     def _parse_entry(self, lines):
         """
-        @brief
-            internal method for parsing a card of the case control deck
+        internal method for parsing a card of the case control deck
 
-            parses a single case control deck card into 4 sections
-            1.  paramName - obvious
-            2.  Value     - still kind of obvious
-            3.  options   - rarely used data
-            4.  paramType - STRESS-type, SUBCASE-type, PARAM-type, SET-type, BEGIN_BULK-type
+        parses a single case control deck card into 4 sections
+        1.  paramName - obvious
+        2.  Value     - still kind of obvious
+        3.  options   - rarely used data
+        4.  paramType - STRESS-type, SUBCASE-type, PARAM-type, SET-type, BEGIN_BULK-type
 
-            It's easier with examples:
+        It's easier with examples:
 
-            paramType = SUBCASE-type
-              SUBCASE 1              ->   paramName=SUBCASE  value=1            options=[]
-            paramType = STRESS-type
-              STRESS       = ALL     ->   paramName=STRESS    value=ALL         options=[]
-              STRAIN(PLOT) = 5       ->   paramName=STRAIN    value=5           options=[PLOT]
-              TITLE        = stuff   ->   paramName=TITLE     value=stuff       options=[]
-            paramType = SET-type
-              SET 1 = 10,20,30       ->   paramName=SET       value=[10,20,30]  options = 1
-            paramType = BEGIN_BULK-type
-              BEGIN BULK             ->   paramName=BEGIN     value=BULK        options = []
-            paramType = CSV-type
-              PARAM,FIXEDB,-1        ->   paramName=PARAM     value=FIXEDB      options = [-1]
+        paramType = SUBCASE-type
+          SUBCASE 1              ->   paramName=SUBCASE  value=1            options=[]
+        paramType = STRESS-type
+          STRESS       = ALL     ->   paramName=STRESS    value=ALL         options=[]
+          STRAIN(PLOT) = 5       ->   paramName=STRAIN    value=5           options=[PLOT]
+          TITLE        = stuff   ->   paramName=TITLE     value=stuff       options=[]
+        paramType = SET-type
+          SET 1 = 10,20,30       ->   paramName=SET       value=[10,20,30]  options = 1
+        paramType = BEGIN_BULK-type
+          BEGIN BULK             ->   paramName=BEGIN     value=BULK        options = []
+        paramType = CSV-type
+          PARAM,FIXEDB,-1        ->   paramName=PARAM     value=FIXEDB      options = [-1]
 
-            The paramType is the "macro" form of the data (similar to integer, float, string).
-            The value is generally whats on the RHS of the equals sign (assuming it's there).
-            Options are modifiers on the data.  Form things like the PARAM card or the SET card
-            they arent as clear, but the paramType lets the program know how to format it
-            when writing it out.
+        The paramType is the "macro" form of the data (similar to integer, float, string).
+        The value is generally whats on the RHS of the equals sign (assuming it's there).
+        Options are modifiers on the data.  Form things like the PARAM card or the SET card
+        they arent as clear, but the paramType lets the program know how to format it
+        when writing it out.
 
-        :self:  the CaseControlDeck object
-        :lines: list of lines
-        @retval paramName see brief
-        @retval value     see brief
-        @retval options   see brief
-        @retval paramType see brief
+        :param self:  the CaseControlDeck object
+        :param lines: list of lines
+        :return: paramName see brief
+        :return: value     see brief
+        :return: options   see brief
+        :return: paramType see brief
         """
         i = 0
         options = []
@@ -453,7 +453,7 @@ class CaseControlDeck(object):
         """
         removes any unwanted data in the subcase...specifically the SUBCASE
         data member.  Otherwise it will print out after a key like stress.
-        :self:  the CaseControlDeck object
+        :param self:  the CaseControlDeck object
         """
         for subcase in self.subcases.itervalues():
             subcase.finish_subcase()
@@ -461,7 +461,7 @@ class CaseControlDeck(object):
     def convert_to_sol_200(self, model):
         """
         Takes a case control deck and changes it from a SOL xxx to a SOL 200
-        :self:    the CaseControlDeck object
+        :param self:    the CaseControlDeck object
         .. todo:: not done...
         """
         analysis = model.rsolmap_toStr[model.sol]
@@ -514,7 +514,7 @@ class CaseControlDeck(object):
     def get_op2_data(self):
         """
         returns the relevant op2 parameters required for a given subcase
-        :self:  the CaseControlDeck object
+        :param self:  the CaseControlDeck object
         .. todo:: not done...
         """
         cases = {}
@@ -526,7 +526,7 @@ class CaseControlDeck(object):
 
     def __repr__(self):
         """
-        :self:  the CaseControlDeck object
+        :param self:  the CaseControlDeck object
         """
         msg = ''
         subcase0 = self.subcases[0]
@@ -541,7 +541,7 @@ class CaseControlDeck(object):
 
     #def parseParam(self,param):
     #    """
-    #    @warning doesnt support comment characters
+    #    .. warning:: doesnt support comment characters
     #    """
     #    param = param.substr('\n','').substr('\r','') # remove line endings
     #    parse(param)

@@ -335,7 +335,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
     #          -1 &  1
     #       \end{array} \right]
     #     \f]
-    #     @warning formula not verified
+    #     .. warning:: formula not verified
     #     """
     #     raise NotImplementedError()
     #     L = self.Length()

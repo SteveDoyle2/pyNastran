@@ -671,7 +671,7 @@ class Geometry2(object):
     def readCQUAD8(self, data):
         """
         CQUAD8(4701,47,326)  - the marker for Record 71
-        @warning inconsistent with dmap manual
+        .. warning:: inconsistent with dmap manual
         """
         #print "reading CQUAD8"
         return
@@ -825,7 +825,7 @@ class Geometry2(object):
     def readCTRIA6(self, data):
         """
         CTRIA6(4801,48,327)    - the marker for Record 95
-        @warning inconsistent with dmap manual
+        .. warning:: inconsistent with dmap manual
         """
         #print "reading CTRIA6"
         return

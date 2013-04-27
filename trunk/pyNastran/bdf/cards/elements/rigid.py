@@ -214,7 +214,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         if nSpaces < 8:
             list_fields += [None] * nSpaces
 
-        ## overly complicated loop to print the UM section
+        # overly complicated loop to print the UM section
         list_fields += ['UM']
         j = 1
         for (i, gm, cm) in izip(count(), self.Gmi, self.Cmi):
@@ -249,24 +249,24 @@ class RBE2(RigidElement):
         if comment:
             self._comment = comment
         if card:
-            ## Element identification number
+            #: Element identification number
             self.eid = integer(card, 1, 'eid')
 
-            ## Identification number of grid point to which all six independent
-            ## degrees-of-freedom for the element are assigned. (Integer > 0)
+            #: Identification number of grid point to which all six independent
+            #: degrees-of-freedom for the element are assigned. (Integer > 0)
             self.gn = integer(card, 2, 'gn')
 
-            ## Component numbers of the dependent degrees-of-freedom in the
-            ## global coordinate system at grid points GMi. (Integers 1 through
-            ## 6 with no embedded blanks.)
+            #: Component numbers of the dependent degrees-of-freedom in the
+            #: global coordinate system at grid points GMi. (Integers 1 through
+            #: 6 with no embedded blanks.)
             self.cm = components_or_blank(card, 3, 'cm')
 
-            ## Grid point identification numbers at which dependent
-            ## degrees-of-freedom are assigned. (Integer > 0)
+            #: Grid point identification numbers at which dependent
+            #: degrees-of-freedom are assigned. (Integer > 0)
             self.Gmi = fields(integer, card, 'Gm', i=4, j=len(card))
             if len(self.Gmi) > 0 and isinstance(self.Gmi[-1], float):
-                ## Thermal expansion coefficient. See Remark 11.
-                ## (Real > 0.0 or blank)
+                #: Thermal expansion coefficient. See Remark 11.
+                #: (Real > 0.0 or blank)
                 self.alpha = self.Gmi.pop()  # the last field is not part of
                                              # Gmi
             else:
@@ -347,7 +347,10 @@ class RBE2(RigidElement):
         return list_fields
 
 
-class RBE3(RigidElement):  ## @todo: not done, needs testing badly
+class RBE3(RigidElement):
+    """
+    ..todo:: not done, needs testing badly
+    """
     type = 'RBE3'
 
     def __init__(self, card=None, data=None, comment=''):
@@ -445,7 +448,7 @@ class RBE3(RigidElement):  ## @todo: not done, needs testing badly
         if iAlpha:
             self.alpha = double_or_blank(card, iAlpha + 1, 'alpha')
         else:
-            ## thermal expansion coefficient
+            #: thermal expansion coefficient
             self.alpha = 0.0
         #print self
 

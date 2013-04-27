@@ -32,12 +32,11 @@ class SpringElement(Element):
         r"""
         Returns the length of a bar/rod/beam element
         \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
-        @param self the object pointer
-        @param n1 a Node object (default=None)
-        @param n2 a Node object (default=None)
-        @note
-            if n1 AND n2 are both none (the default), then the model must
-            be cross-referenced already
+        :param self: the object pointer
+        :param n1: a Node object (default=None)
+        :param n2: a Node object (default=None)
+        .. note:: if n1 AND n2 are both none (the default), then the model
+                  must be cross-referenced already
         """
         L = norm(n1.Position() - n2.Position())
         return L
@@ -95,7 +94,7 @@ class SpringElement(Element):
         Returns the length of a bar/rod/beam element
         \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
         @param self the object pointer
-        @note the model must be cross-referenced already
+        .. note:: the model must be cross-referenced already
         """
         #print self.type
         return self.Length_noXref(self.nodes[1], self.nodes[0])

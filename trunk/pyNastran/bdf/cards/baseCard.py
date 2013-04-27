@@ -67,9 +67,9 @@ class BaseCard(object):
         @endcode
 
         and then pads the rest of the fields with None's
-        :fields: the fields to enter, including DESVAR
-        :nStart: the number of blank fields at the start of the line (default=1)
-        :nEnd:   the number of blank fields at the end of the line (default=0)
+        :param fields: the fields to enter, including DESVAR
+        :param nStart: the number of blank fields at the start of the line (default=1)
+        :param nEnd:   the number of blank fields at the end of the line (default=0)
 
         .. note:: will be used for DVPREL2, RBE1, RBE3
         .. warning:: only works for small field format???
@@ -350,7 +350,7 @@ def expand_thru_by(fields):
     expands a list of values of the form [1,5,THRU,9,BY,2,13]
     to be [1,5,7,9,13]
     .. todo:: not tested
-    @note used for QBDY3, ???
+    .. note:: used for QBDY3, ???
     """
     if len(fields) == 1:
         return fields
@@ -389,7 +389,7 @@ def expand_thru_exclude(self, fields):
     """
     expands a list of values of the form [1,5,THRU,11,EXCEPT,7,8,13]
     to be [1,5,6,9,10,11,13]
-    @warning hasnt been tested
+    .. warning:: hasnt been tested
     """
     fieldsOut = []
     nFields = len(fields)
@@ -486,8 +486,8 @@ def build_thru(packs, maxDV=None):
     list.  This means that [1,1001,2] represents 500 values.
     [1,1001,1] represents 1001 values and will be written as [1,THRU,1001]..
 
-    :packs: list of packs (list of 3 values: [first, last, delta] )
-    :maxDV: integer defining the max allowable delta between two values
+    :param packs: list of packs (list of 3 values: [first, last, delta] )
+    :param maxDV: integer defining the max allowable delta between two values
             (default=None; no limit)
     """
     fields = []
@@ -530,9 +530,9 @@ def build_thru_float(packs, maxDV=None):
     list.  This means that [1,1001,2] represents 500 values.
     [1,1001,1] represents 1001 values and will be written as [1,THRU,1001]..
 
-    :packs: list of packs (list of 3 values: [first, last, delta] )
-    :maxDV: integer defining the max allowable delta between two values
-            (default=None; no limit)
+    :param packs: list of packs (list of 3 values: [first, last, delta] )
+    :param maxDV: integer defining the max allowable delta between two values
+                  (default=None; no limit)
     """
     fields = []
     for (firstVal, lastVal, dv) in packs:

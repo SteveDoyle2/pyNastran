@@ -50,7 +50,9 @@ class OEE(object):
         self.add_data_parameter(data, 'load_set', 'i', 8, False)
         ## format code
         self.add_data_parameter(data, 'format_code', 'i', 9, False)
-        self.add_data_parameter(data, 'num_wide', 'i', 10, False)  ## number of words per entry in record; @note is this needed for this table ???
+        #: number of words per entry in record
+        #: .. note:: is this needed for this table ???
+        self.add_data_parameter(data, 'num_wide', 'i', 10, False)
         ## C
         self.add_data_parameter(data, 'cvalres', 'i', 11, False)
         

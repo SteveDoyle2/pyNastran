@@ -40,7 +40,7 @@ class LOAD(LoadCombination):
 
     def getLoadIDs(self):
         """
-        @note requires a cross referenced load
+        .. note:: requires a cross referenced load
         """
         load_IDs = []
         for loads in self.loadIDs:
@@ -68,7 +68,7 @@ class LOAD(LoadCombination):
 
     def getLoadTypes(self):
         """
-        @note requires a cross referenced load
+        .. note:: requires a cross referenced load
         """
         loadTypes = []
         for loads in self.loadIDs:
@@ -165,9 +165,10 @@ class LOAD(LoadCombination):
 
     def getReducedLoads(self):
         """
-        Get all load objects in a simplified form,
-        which means all scale factors are already applied and
-        only base objects (no LOAD cards) will be returned.
+        Get all load objects in a simplified form, which means all
+        scale factors are already applied and only base objects
+        (no LOAD cards) will be returned.
+
         .. todo:: lots more object types to support
         """
         scale_factors = []
@@ -557,7 +558,9 @@ class FORCE(Force):
         #return self.node
 
     def cross_reference(self, model):
-        """@todo cross reference and fix repr function"""
+        """
+        .. todo:: cross reference and fix repr function
+        """
         self.cid = model.Coord(self.cid)
 
     def rawFields(self):
@@ -598,7 +601,9 @@ class FORCE1(Force):
             self.g2 = data[4]
 
     def cross_reference(self, model):
-        """@todo cross reference and fix repr function"""
+        """
+        .. todo:: cross reference and fix repr function
+        """
         self.node = model.Node(self.node)
         self.g1 = model.Node(self.g1)
         self.g2 = model.Node(self.g2)
@@ -662,7 +667,9 @@ class FORCE2(Force):
             self.g4 = data[6]
 
     def cross_reference(self, model):
-        """@todo cross reference and fix repr function"""
+        """
+        .. todo:: cross reference and fix repr function
+        """
         self.node = model.Node(self.node)
 
         v12 = model.Node(self.g2).Position() - model.Node(self.g1).Position()
@@ -794,7 +801,9 @@ class MOMENT1(Moment):
         self.xyz = None
 
     def cross_reference(self, model):
-        """@todo cross reference and fix repr function"""
+        """
+        .. todo:: cross reference and fix repr function
+        """
         self.node = model.Node(self.node)
         self.xyz = model.Node(self.g2).Position() - model.Node(self.g1).Position()
         self.normalize()
@@ -863,7 +872,9 @@ class MOMENT2(Moment):
         self.xyz = array(xyz)
 
     def cross_reference(self, model):
-        """@todo cross reference and fix repr function"""
+        """
+        .. todo:: cross reference and fix repr function
+        """
         #(self.g1, self.g2, self.g3, self.g4) = model.Nodes([self.g1, self.g2,
         #                                                    self.g3, self.g4])
         self.g1 = model.Node(self.g1)
@@ -914,7 +925,9 @@ class PLOAD(Load):
         assert len(self.nodes) in [3, 4], 'nodes=%s' % self.nodes
 
     def cross_reference(self, model):
-        """@todo cross reference and fix repr function"""
+        """
+        .. todo:: cross reference and fix repr function
+        """
         pass
 
     def getLoads(self):
@@ -963,7 +976,9 @@ class PLOAD1(Load):
         assert self.scale in self.validScales, '%s is an invalid scale on the PLOAD1 card' % (self.scale)
 
     def cross_reference(self, model):
-        """@todo cross reference and fix repr function"""
+        """
+        .. todo:: cross reference and fix repr function
+        """
         pass
 
     def getLoads(self):
@@ -1003,7 +1018,9 @@ class PLOAD2(Load):
             #print "PLOAD2 = ",data
 
     def cross_reference(self, model):
-        """@todo cross reference and fix repr function"""
+        """
+        .. todo:: cross reference and fix repr function
+        """
         pass
 
     def getLoads(self):
@@ -1088,8 +1105,8 @@ class PLOAD4(Load):
 
     def transformLoad(self):
         """
-        @warning sorl=SURF is supported (not LINE)
-        @warning ldir=NORM is supported (not X,Y,Z)
+        .. warning:: sorl=SURF is supported (not LINE)
+        .. warning:: ldir=NORM is supported (not X,Y,Z)
         """
         assert self.sorl == 'SURF', 'only surface loads are supported.  required_sorl=SURF.  actual=%s' % (self.sorl)
         assert self.ldir == 'NORM', 'only normal loads are supported.   required_ldir=NORM.  actual=%s' % (self.ldir)
@@ -1108,7 +1125,7 @@ class PLOAD4(Load):
         vector = array(self.eid.Normal())
         vectors = []
         for (nid, p) in izip(faceNodeIDs, self.pressures):
-            ## @warning only supports normal pressures
+            ## .. warning:: only supports normal pressures
             vectors.append(vector * p * Area / n)  # Force_i
 
         isLoad = None

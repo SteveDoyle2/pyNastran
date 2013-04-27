@@ -149,7 +149,7 @@ class TableObject(scalarObject):  # displacement style table
     #def write_op2(self,block3,device_code=1):
         #"""
         #creates the binary data for writing the table
-        #@warning hasnt been tested...
+        #.. warning:: hasnt been tested...
         #"""
         #msg = block3
         #for nodeID,translation in sorted(self.translations.iteritems()):
@@ -163,8 +163,8 @@ class TableObject(scalarObject):  # displacement style table
     #def write_op2_transient(self,block3,device_code=1):
     #    """
     #    creates the binary data for writing the table
-    #    @warning hasnt been tested...
-    #    @warning dt slot needs to be fixed...
+    #    .. warning:: hasnt been tested...
+    #    .. warning:: dt slot needs to be fixed...
     #    """
     #    msg = ''
     #    for dt,displacements in sorted(self.displacements.iteritems()):
@@ -451,20 +451,20 @@ class TableObject(scalarObject):  # displacement style table
     def plot(self, nodeList=None, resultType='Translation', coord=3, markers=None,
              Title=None, hasLegend=True, Legend=None, xLabel=None, yLabel=None, alphaLegend=0.5):
         """
-        @param nodeList a list of the node IDs to plot vs the
+        :param nodeList: a list of the node IDs to plot vs the
                independent variable (default=None; all nodes)
-        @param resultType the variable to plot ('Translation','Rotation')
-        @param coord the coordinate to plot (for <x,y,z>, x=0,y=1,z=2,Mag=3);
+        :param resultType: the variable to plot ('Translation','Rotation')
+        :param coord: the coordinate to plot (for <x,y,z>, x=0,y=1,z=2,Mag=3);
                default=Magnitude
-        @param markers  a list of colors/marker shapes for each line
-        @param Title title of the plot (default=the object name)
-        @param hasLegend should a legend be shown (default=False)
-        @param Legend the list of the legend titles (default=No Legend)
-        @param xLabel the name of the xAxis (default=the name of
+        :param markers:  a list of colors/marker shapes for each line
+        :param Title: title of the plot (default=the object name)
+        :param hasLegend: should a legend be shown (default=False)
+        :param Legend: the list of the legend titles (default=No Legend)
+        :param xLabel: the name of the xAxis (default=the name of
                the independent variable; string)
-        @param yLabel the name of the xAxis (default=the name of
+        :param yLabel: the name of the xAxis (default=the name of
                the dependent variable; string)
-        @param alphaLegend the transparency of the legend;
+        :param alphaLegend: the transparency of the legend;
                (0.0=solid; 1.0=transparent; default=0.5)
 
         .. todo:: fix alphaLegend; test options more...
@@ -766,21 +766,21 @@ class ComplexTableObject(scalarObject):
     def plot(self, nodeList=None, resultType='Translation', displayType='Real Imag', coord=3, markers=None,
              Title=None, hasLegend=True, Legend=None, xLabel=None, yLabel=None, alphaLegend=0.5):
         """
-        @param nodeList a list of the node IDs to plot vs the
+        :param nodeList: a list of the node IDs to plot vs the
                independent variable (default=None; all nodes)
-        @param resultType the variable to plot ('Translation','Rotation')
-        @param displayType 'Real Imag' or 'Mag Phase'
-        @param coord the coordinate to plot (for <x,y,z>, x=0,y=1,z=2,Mag=3);
+        :param resultType: the variable to plot ('Translation','Rotation')
+        :param displayType: 'Real Imag' or 'Mag Phase'
+        :param coord: the coordinate to plot (for <x,y,z>, x=0,y=1,z=2,Mag=3);
                default=Magnitude
-        @param markers  a list of colors/marker shapes for each line
-        @param Title title of the plot (default=the object name)
-        @param hasLegend should a legend be shown (default=False)
-        @param Legend the list of the legend titles (default=No Legend)
-        @param xLabel the name of the xAxis (default=the name of
+        :param markers: a list of colors/marker shapes for each line
+        :param Title: title of the plot (default=the object name)
+        :param hasLegend: should a legend be shown (default=False)
+        :param Legend: the list of the legend titles (default=No Legend)
+        :param xLabel: the name of the xAxis (default=the name of
                the independent variable; string)
-        @param yLabel the name of the xAxis (default=the name of
+        :param yLabel: the name of the xAxis (default=the name of
                the dependent variable; string)
-        @param alphaLegend the transparency of the legend;
+        :param alphaLegend: the transparency of the legend;
                (0.0=solid; 1.0=transparent; default=0.5)
 
         .. todo:: fix alphaLegend; test options more...

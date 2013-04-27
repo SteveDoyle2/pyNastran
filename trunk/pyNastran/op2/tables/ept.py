@@ -77,7 +77,7 @@ class EPT(object):
     def readPBAR(self, data):
         """
         PBAR(52,20,181) - the marker for Record 11
-        @warning this makes a funny property...
+        .. warning:: this makes a funny property...
         """
         #print "reading PBAR"
         while len(data) >= 76:  # 19*4
@@ -368,7 +368,7 @@ class EPT(object):
         PTUBE(1602,16,30) - the marker for Record 56
         .. todo:: OD2 only exists for heat transfer...how do i know if there's heat transfer at this point...
         .. todo:: I could store all the tubes and add them later, but what about themal/non-thermal subcases
-        @warning assuming OD2 is not written (only done for thermal)
+        .. warning:: assuming OD2 is not written (only done for thermal)
         """
         #print "reading PTUBE"
         while len(data) >= 20:  # 5*4

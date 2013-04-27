@@ -59,7 +59,7 @@ class OUG(object):
         self.add_data_parameter(data, 'randomCode', 'i', 8, False)
         ## format code
         self.add_data_parameter(data, 'format_code', 'i', 9, False)
-        ## number of words per entry in record; @note is this needed for this table ???
+        ## number of words per entry in record; .. note:: is this needed for this table ???
         self.add_data_parameter(data, 'num_wide', 'i', 10, False)
         ## acoustic pressure flag
         self.add_data_parameter(data, 'acousticFlag', 'f', 13, False)
@@ -139,7 +139,7 @@ class OUG(object):
         self.add_data_parameter(data, 'randomCode', 'i', 8, False)
         ## format code
         self.add_data_parameter(data, 'format_code', 'i', 9, False)
-        ## number of words per entry in record; @note is this needed for this table ???
+        ## number of words per entry in record; .. note:: is this needed for this table ???
         self.add_data_parameter(data, 'num_wide', 'i', 10, False)
         ## acoustic pressure flag
         self.add_data_parameter(data, 'acousticFlag', 'f', 13, False)
@@ -270,7 +270,7 @@ class OUG(object):
                 extract = self.extractSort1
                 #if self.analysis_code in [5]:
                     #extract==self.extractSort2
-            else:  # values from IDENT   #@todo test this...
+            else:  # values from IDENT   #: .. todo:: test this...
                 #print "SORT2"
                 #print "SORT2 - %s" %(self.get_element_type(self.element_type))
                 if self.analysis_code in [2, 3, 4, 6, 7, 8, 11]:

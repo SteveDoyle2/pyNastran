@@ -51,17 +51,20 @@ class OEF(ThermalElements, RealForces, ComplexForces):
         aCode = self.get_block_int_entry(data, 1)
 
         self.parse_approach_code(data)
-        ## element type
+        #: element type
         self.add_data_parameter( data, 'element_type', 'i', 3, False)  
-        ## dynamic load set ID/random code        self.add_data_parameter(data, 'dLoadID', 'i', 8, False)
-        ## format code
+
+        # dynamic load set ID/random code
+        #self.add_data_parameter(data, 'dLoadID', 'i', 8, False)
+
+        #: format code
         self.add_data_parameter( data, 'format_code', 'i', 9, False)
-        ## number of words per entry in record
-        ## @note is this needed for this table ???
+        #: number of words per entry in record
+        #: .. note: is this needed for this table ???
         self.add_data_parameter(data, 'num_wide', 'i', 10, False)
-        ## undefined in DMAP...
+        #: undefined in DMAP...
         self.add_data_parameter(data, 'oCode', 'i', 11, False)
-        ## thermal flag; 1 for heat ransfer, 0 otherwise
+        #: thermal flag; 1 for heat ransfer, 0 otherwise
         self.add_data_parameter(data, 'thermal', 'i', 23, False)
 
         #print "dLoadID(8)=%s format_code(9)=%s numwde(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.format_code,self.num_wide,self.oCode,self.thermal)
@@ -78,18 +81,18 @@ class OEF(ThermalElements, RealForces, ComplexForces):
             self.apply_data_code_value('dataNames', ['loadID'])
             self.setNullNonlinearFactor()
         elif self.analysis_code == 2:  # normal modes/buckling (real eigenvalues)
-            ## mode number
+            #: mode number
             self.add_data_parameter(data, 'mode', 'i', 5)
-            ## eigenvalue
+            #: eigenvalue
             self.add_data_parameter(data, 'eign', 'f', 6, False)
             self.apply_data_code_value('dataNames', ['mode', 'eigr', 'mode_cycle'])
             #print "mode(5)=%s eigr(6)=%s mode_cycle(7)=%s" %(self.mode,self.eigr,self.mode_cycle)
         elif self.analysis_code == 3:  # differential stiffness 0
-            ## load set ID number
+            #: load set ID number
             self.add_data_parameter(data, 'loadID', 'i', 5)
             self.apply_data_code_value('dataNames', ['loadID'])
         elif self.analysis_code == 4:  # differential stiffness 1
-            ## load set ID number
+            #: load set ID number
             self.add_data_parameter(data, 'loadID', 'i', 5)
             self.apply_data_code_value('dataNames', ['loadID'])
         elif self.analysis_code == 5:   # frequency
@@ -99,31 +102,31 @@ class OEF(ThermalElements, RealForces, ComplexForces):
             self.add_data_parameter(data, 'time', 'f', 5)  # time step
             self.apply_data_code_value('dataNames', ['time'])
         elif self.analysis_code == 7:  # pre-buckling
-            ## load set ID number
+            #: load set ID number
             self.add_data_parameter(data, 'loadID', 'i', 5)
             #self.apply_data_code_value('dataNames',['lsdvmn'])
             self.apply_data_code_value('dataNames', ['loadID'])
         elif self.analysis_code == 8:  # post-buckling
-            ## load set ID number
+            #: load set ID number
             self.add_data_parameter(data, 'loadID', 'i', 5)
-            ## real eigenvalue
+            #: real eigenvalue
             self.add_data_parameter( data, 'eigr', 'f', 6, False)
             self.apply_data_code_value('dataNames', ['lsdvmn', 'eigr'])
             #print "loadID(5)=%s  eigr(6)=%s" %(self.loadID,self.eigr)
         elif self.analysis_code == 9:  # complex eigenvalues
-            ## mode number
+            #: mode number
             self.add_data_parameter(data, 'mode', 'i', 5)
-            ## real eigenvalue
+            #: real eigenvalue
             self.add_data_parameter(data, 'eigr', 'f', 6, False)
-            ## imaginary eigenvalue
+            #: imaginary eigenvalue
             self.add_data_parameter(data, 'eigi', 'f', 7, False)
             self.apply_data_code_value('dataNames', ['mode', 'eigr', 'eigi'])
         elif self.analysis_code == 10:  # nonlinear statics
-            ## load step
+            #: load step
             self.add_data_parameter(data, 'load_step', 'f', 5)
             self.apply_data_code_value('dataNames', ['load_step'])
         elif self.analysis_code == 11:  # geometric nonlinear statics
-            ## load set ID number
+            #: load set ID number
             self.add_data_parameter(data, 'loadID', 'i', 5)
             self.apply_data_code_value('dataNames', ['loadID'])
             #print "loadID(5)=%s" %(self.loadID)

@@ -14,7 +14,7 @@ from pyNastran.utils import is_string
 def is_same(value1, value2):
     """
     Checks to see if 2 values are the same
-    @note this method is used by almost every card when printing
+    .. note:: this method is used by almost every card when printing
     """
     if is_string(value1) or value1 is None:
         return True if value1 == value2 else False
@@ -26,9 +26,8 @@ def set_blank_if_default(value, default):
     """
     Used when setting the output data of a card to clear default values
 
-    :value: the field value the may be set to None (blank)
-     if value=default
-    :param: default the default value for the field
+    :param value: the field value the may be set to None (blank)
+                  if value=default, the default value for the field
     .. note:: this method is used by almost every card when printing
     """
     return None if is_same(value, default) else value
@@ -46,7 +45,8 @@ def print_scientific_8(value):
     """
     Prints a value in 8-character scientific notation.
     This is a sub-method and shouldnt typically be called
-    .. seealso:: print_float_8 for a better method
+
+    .. seealso:: :func: `print_float_8` for a better method
     """
     python_value = '%8.11e' % value
     (svalue, sExponent) = python_value.strip().split('e')
@@ -173,7 +173,7 @@ def print_field(value):
     """
     Prints a single 8-character width field
 
-    :value: the value to print
+    :param value: the value to print
     @retval field an 8-character (tested) string
     """
     if isinstance(value, int):
@@ -195,9 +195,10 @@ def print_card(fields, size=8):
     """
     Prints a nastran-style card with 8 or 16-character width fields
 
-    :fields: all the fields in the BDF card (no blanks)
-    :size: the width of a field (size=8 or 16)
-    @warning 8 or 16 is required, but 16 is not checked for
+    :param fields: all the fields in the BDF card (no blanks)
+    :param size:   the width of a field (size=8 or 16)
+
+    .. warning:: 8 or 16 is required, but 16 is not checked for
     """
     if size == 8:
         return print_card_8(fields)
@@ -210,8 +211,7 @@ def print_card(fields, size=8):
 
 def printCard(fields, tol=0.):
     """
-    .. seealso:: print_card
-    .. deprecated: will be replaced in version 0.7 with print_card
+    .. deprecated: will be replaced in version 0.7 with :func: `print_card`
     """
     warnings.warn('update printCard to print_card', DeprecationWarning,
                   stacklevel=2)
@@ -258,8 +258,8 @@ def print_int_card(fields):
     This is used to speed up SET cards.
     Prints a nastran-style card with 8-character width fields.
 
-    :fields: the list of fields to write to a nastran card.
-             The first field is a word, all other fields are integers.
+    :param fields: The list of fields to write to a nastran card.
+                   The first field is a word, all other fields are integers.
 
     .. warning:: Blanks are not allowed!
     """

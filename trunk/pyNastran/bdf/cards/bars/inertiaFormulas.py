@@ -213,7 +213,7 @@ def Box1():
     #(g-c)_x = D5
     #(d-h)_x = D6
 
-    @warning inertia is wrong b/c 0 is assumed to be <0,0> when it should
+    .. warning:: inertia is wrong b/c 0 is assumed to be <0,0> when it should
     be the output of the first inertia calculation
     """
     print "---Box1---"
@@ -278,7 +278,7 @@ def T():
     f-e     = D4
     .. todo:: Area seems off
     .. todo:: Inertias should be relative to the CG
-    @warning wrong...
+    .. warning:: wrong...
     """
     print "---T---"
 
