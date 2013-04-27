@@ -43,11 +43,10 @@ class OES_Object(scalarObject):
 
     def getOrderedETypes(self, validTypes):
         """
-        @param validTypes list of valid element types
-               e.g. ['CTRIA3','CTRIA6','CQUAD4','CQUAD8']
-
-        @retval TypesOut the ordered list of types
-        @retval orderedETypes dictionary of Type-IDs to write
+        :param validTypes: list of valid element types
+                           e.g. ['CTRIA3', 'CTRIA6', 'CQUAD4', 'CQUAD8']
+        :returns TypesOut:      the ordered list of types
+        :returns orderedETypes: dictionary of Type-IDs to write
         """
         orderedETypes = {}
 

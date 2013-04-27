@@ -14,10 +14,12 @@ def is_string(value):
 def is_binary(filename):
     """
     Return true if the given filename is binary.
-    Based on the idea (see http://bytes.com/topic/python/answers/21222-determine-file-type-binary-text) that file is binary if it contains null.
+    Based on the idea (see http://bytes.com/topic/python/answers/21222-determine-file-type-binary-text)
+    that file is binary if it contains null.
     
-    @raise IOError if the file cannot be opened.
-    @retval True if filename is a binary file (contains null byte) and False otherwise.
+    :raises:  IOError if the file cannot be opened.
+    :returns: True if filename is a binary file (contains null byte)
+              and False otherwise.
     .. warning:: this may not work for unicode."""
     with io.open(filename, mode='rb') as fil:
         for chunk in iter(lambda: fil.read(1024), bytes()):
@@ -39,7 +41,7 @@ def obscure(num, debug=False):
     @endcode
     :param num:   positive integer number
     :param debug: display additional information about conversion process
-    @retval shortened version of num"""
+    :returns: shortened version of num"""
     vals = list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
     tmp = num
     pack = ['a'] if tmp == 0 else []
@@ -66,7 +68,7 @@ def de_obscure(num, debug=False):
     35214
     @endcode
     :param debug:   display additional information about conversion process
-    @retval integer value of shortened version of a number
+    :returns: integer value of shortened version of a number
     .. seealso:: :func: `obscure`
     """
     dict_vals = dict(zip(list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'),xrange(52)))
@@ -84,7 +86,7 @@ def get_files_of_type(dirname, extension='.txt', maxSize=100.):
     :param dirname:   the directory name
     :param extension: list of filetypes to get (default='.txt')
     :param maxSize:   size in MB for max file size
-    @retval list of all the files with a given extension in the specified directory 
+    :returns: list of all the files with a given extension in the specified directory
     """
     return [pjoin(dirname, f) for f in os.listdir(dirname) if extension in
             splitext(f)[1] and getsize(pjoin(dirname, f)) / (1048576.) <= maxSize]
@@ -97,8 +99,8 @@ def print_bad_path(path):
     is wrong.
 
     :param path: path to check
-    @retval string with informations whether access to parts of the path
-            is possible
+    :returns: string with informations whether access to parts of the path
+              is possible
     """
     path = os.path.abspath(path)
     npath = os.path.dirname(path)
@@ -116,7 +118,7 @@ def list_print(lst):
     Supported element types: None, string, numbers. Useful for debugging.
 
     :param lst: list, numpy array or numpy matrix
-    @retval the clean string representation of the object
+    :returns: the clean string representation of the object
     """
     def _print(val):
         if val is None or isinstance(val, basestring):
@@ -175,8 +177,8 @@ def object_methods(obj, mode = "public"):
        * "private" - names that begin with single underscore
        * "both" - private and public
        * "all" - all methods that are defined for the object 
-    @retval  sorted list of the names of methods of a given type
-             or None if the mode is wrong
+    :returns:  sorted list of the names of methods of a given type
+               or None if the mode is wrong
     """
     return __object_attr(obj, mode, lambda x: isinstance(x, MethodType))
 
@@ -192,9 +194,8 @@ def object_attributes(obj, mode = "public"):
        * "private" - names that begin with single underscore
        * "both" - private and public
        * "all" - all attributes that are defined for the object 
-    @retval 
-      sorted list of the names of attributes of a given type or None if the mode
-      is wrong
+    :returns: sorted list of the names of attributes of a given type or None
+              if the mode is wrong
     """
     return __object_attr(obj, mode, lambda x: not isinstance(x, MethodType))
 
@@ -481,4 +482,3 @@ if __name__ == '__main__':
 
 
     #dictB2 = eval(msg)
-    

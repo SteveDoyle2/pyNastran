@@ -219,8 +219,7 @@ def gauss(n):
 
     :param n: Number of quadrature points
     @retval Two lists: points and corresponding weights, sorted by points value
-    .. seealso:: http://en.wikipedia.org/wiki/Gaussian_quadrature
-    """
+    .. seealso:: http://en.wikipedia.org/wiki/Gaussian_quadrature"""
     if n == 1:
         return ([0.], [2.])
     if n == 2:

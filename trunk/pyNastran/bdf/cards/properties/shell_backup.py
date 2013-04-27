@@ -275,10 +275,10 @@ class ShellPropertyBackup(Property):
     def T(self, theta):
         r"""
         calculates the Transformation matricies \$ [T] \$ and  \f$ [T]^{-1} \f$
-        @param self           the object pointer
-        @param theta          in radians...
-        @retval Tinv          the inverse transformation matrix
-        @retval TinvTranspose the transposed inverse transformation matrix
+        :param self:            the object pointer
+        :param theta:           in radians...
+        :returns Tinv:          the inverse transformation matrix
+        :returns TinvTranspose: the transposed inverse transformation matrix
         .. todo:: document better
 
         tranformation matrix  \f$ [T] \f$

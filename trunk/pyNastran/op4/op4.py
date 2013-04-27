@@ -15,23 +15,23 @@ import io
 class OP4Deprecated(object):
 
     def readOP4(self, op4Name, matrixNames=None, precision='default'):
-        """@see read_op4"""
+        """..seealso:: :func: `read_op4`"""
         return self.read_op4(op4Name, matrixNames, precision)
 
     def readOP4Ascii(self, op4Name, matrixNames=None, precision='default'):
-        """@see read_op4_ascii"""
+        """..seealso:: :func: `read_op4_ascii`"""
         return self.read_op4_ascii(op4Name, matrixNames, precision)
 
     def readOP4Binary(self, op4Name, matrixNames=None, precision='default'):
-        """@see read_op4_binary"""
+        """..seealso:: :func: `read_op4_binary`"""
         return self.read_op4_binary(op4Name, matrixNames, precision)
 
     
 #class OP4(FortranFile):
 class OP4(OP4Deprecated):
     """
-    .. todo:: add endian checking
-    .. todo:: test on big matrices
+    todo:: add endian checking
+    todo:: test on big matrices
     """
     def __init__(self, log=None):
         #FortranFile.__init__(self)
@@ -70,7 +70,8 @@ class OP4(OP4Deprecated):
         :param precision: specifies if the matrices are in single or double precsion
                (values='default','single','double') which means the format will be whatever the file is in
 
-        @retval dictionary of matrices where the key is the name and the value is a matrix:
+        :returns: dictionary of matrices where the key is the name and the
+                  value is a matrix:
             Dense Type:  NUMPY.NDARRAY
             Sparse Type: SCIPY.SPARSE.COO_MATRIX
 
@@ -241,8 +242,7 @@ class OP4(OP4Deprecated):
         Method read_complex_ascii:
         .. todo:: possibly split this into readDenseComplex and readSparseComplex
          to get rid of all the extra isSparse checks.  This would cleanup the
-         runLoop condition as well.
-        """
+         runLoop condition as well."""
         if isSparse:
             rows = []
             cols = []
@@ -887,8 +887,8 @@ class OP4(OP4Deprecated):
         """
         :param A: a matrix or entry in a matrix (to save memory)
         :param precision: data precision ='default','single','double'
-        @retval Type matrix type 1=real,single; 2=real,double; 3=complex,single; 4=complex,double
-        @retval NWV Number of Words per Value
+        :returns: Type matrix type 1=real,single; 2=real,double; 3=complex,single; 4=complex,double
+        :returns: NWV Number of Words per Value
         """
         #print A.dtype.type()
         if isinstance(A.dtype.type(), float32):
@@ -954,8 +954,7 @@ class OP4(OP4Deprecated):
         ==== ===============================
 
         .. note:: form defaults to 2, but 1 can be easily determined.  Any others must be specified.
-        .. todo:: call the actual function for now...not hooked up
-        """
+        .. todo:: call the actual function for now...not hooked up"""
         assert isinstance(name, str), name
         assert isinstance(form, int), form
 
@@ -1082,9 +1081,7 @@ class OP4(OP4Deprecated):
         f.write(' 1.0000000000000000E+00\n')
 
     def writeDenseMatrixBinary(self, name, matrix, form=2, precision='default', tol=1e-15):
-        """
-        24 is the record length
-        """
+        """24 is the record length"""
         msg = ''
         A = matrix
         (Type, NWV) = self.getTypeNWV(A[0, 0], precision)
