@@ -53,8 +53,8 @@ class FREQ(BaseCard):
         Combines the frequencies from 1 FREQx object with another.
         All FREQi entries with the same frequency set identification numbers
         will be used. Duplicate frequencies will be ignored.
-        @param self the object pointer
-        @param freqs the frequencies for a FREQx object
+        :self:  the object pointer
+        :freqs: the frequencies for a FREQx object
         """
         #print "self.freqs = ",self.freqs
         #print "freqs = ",freqs
@@ -63,9 +63,10 @@ class FREQ(BaseCard):
 
     def addFrequencyObject(self, freq):
         """
-        @see addFrequencies
-        @param self the object pointer
-        @param freq a FREQx object
+        :self: the object pointer
+        :freq: a FREQx object
+
+        .. seealso:: addFrequencies
         """
         self.addFrequencies(freq.freqs)
 
@@ -254,7 +255,7 @@ class TSTEPNL(BaseCard):
             assert self.dt > 0.
             self.no = integer_or_blank(card, 4, 'no', 1)
 
-            ## @note not listed in all QRGs
+            #: .. note:: not listed in all QRGs
             self.method = string_or_blank(card, 5, 'method', 'ADAPT')
             if self.method == 'ADAPT':
                 self.kStep = integer_or_blank(card, 6, 'kStep', 2)
@@ -262,7 +263,7 @@ class TSTEPNL(BaseCard):
                 self.kStep = integer_or_blank(card, 6, 'kStep', 10)
             elif self.method in ['AUTO', 'TSTEP']:
                 pass
-                #self.kStep = blank(card, 6, 'kStep') ## @todo not blank
+                #self.kStep = blank(card, 6, 'kStep') #: @todo not blank
             else:
                 msg = 'invalid TSTEPNL Method.  method=|%s|' % (self.method)
                 raise RuntimeError(msg)

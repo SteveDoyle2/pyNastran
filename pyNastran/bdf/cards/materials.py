@@ -381,7 +381,7 @@ class MAT2(AnisotropicMaterial):
         D[0, 1] = nu * Emu
         D[1, 0] = D[0, 1]
         D[2, 2] = 1. - nu / 2. * Emu
-        #D[4,4] =      ## @ todo verify
+        #D[4,4] =      #: @ todo verify
         #D[5,5] = G22
         #D[6,6] = G33
         return D
@@ -582,7 +582,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
             self._comment = comment
         if card:
             self.mid = integer(card, 1, 'mid')
-            ## Thermal conductivity (assumed default=0.0)
+            #: Thermal conductivity (assumed default=0.0)
             self.kxx = double_or_blank(card, 2, 'kxx', 0.0)
             self.kxy = double_or_blank(card, 3, 'kxy', 0.0)
             self.kxz = double_or_blank(card, 4, 'kxz', 0.0)
@@ -650,9 +650,9 @@ class MAT8(AnisotropicMaterial):
             self._comment = comment
         if card:
             self.mid = integer(card, 1, 'mid')
-            self.e11 = double(card, 2, 'E11')    ## @todo is this the correct default
-            self.e22 = double(card, 3, 'E22')    ## @todo is this the correct default
-            self.nu12 = double(card, 4, 'nu12')  ## @todo is this the correct default
+            self.e11 = double(card, 2, 'E11')    #: @todo is this the correct default
+            self.e22 = double(card, 3, 'E22')    #: @todo is this the correct default
+            self.nu12 = double(card, 4, 'nu12')  #: @todo is this the correct default
 
             self.g12 = double_or_blank(card, 5, 'g12', 0.0)
             self.g1z = double_or_blank(card, 6, 'g1z', 1e8)
@@ -1251,13 +1251,13 @@ class MATS1(MaterialDependence):
         if comment:
             self._comment = comment
         if card:
-            ## Identification number of a MAT1, MAT2, or MAT9 entry.
+            #: Identification number of a MAT1, MAT2, or MAT9 entry.
             self.mid = integer(card, 1, 'mid')
-            ## Identification number of a TABLES1 or TABLEST entry. If H is
-            ## given, then this field must be blank.
+            #: Identification number of a TABLES1 or TABLEST entry. If H is
+            #: given, then this field must be blank.
             self.tid = integer_or_blank(card, 2, 'tid')
-            ## Type of material nonlinearity. ('NLELAST' for nonlinear elastic
-            ## or 'PLASTIC' for elastoplastic.)
+            #: Type of material nonlinearity. ('NLELAST' for nonlinear elastic
+            #: or 'PLASTIC' for elastoplastic.)
             self.Type = string(card, 3, 'Type')
 
             if self.Type == 'NLELAST':
@@ -1267,28 +1267,28 @@ class MATS1(MaterialDependence):
                 self.limit1 = blank(card, 7, 'yf')
                 self.limit2 = blank(card, 8, 'yf')
             else:
-                ## Work hardening slope (slope of stress versus plastic strain) in
-                ## units of stress. For elastic-perfectly plastic cases, H=0.0.
-                ## For more than a single slope in the plastic range, the
-                ## stress-strain data must be supplied on a TABLES1 entry
-                ## referenced by TID, and this field must be blank
+                #: Work hardening slope (slope of stress versus plastic strain) in
+                #: units of stress. For elastic-perfectly plastic cases, H=0.0.
+                #: For more than a single slope in the plastic range, the
+                #: stress-strain data must be supplied on a TABLES1 entry
+                #: referenced by TID, and this field must be blank
                 self.h = double_or_blank(card, 4, 'H')
 
-                ## Yield function criterion, selected by one of the following
-                ## values (1) Von Mises (2) Tresca (3) Mohr-Coulomb
-                ## (4) Drucker-Prager
+                #: Yield function criterion, selected by one of the following
+                #: values (1) Von Mises (2) Tresca (3) Mohr-Coulomb
+                #: (4) Drucker-Prager
                 self.yf = integer_or_blank(card, 5, 'yf', 1)
 
-                ## Hardening Rule, selected by one of the following values
-                ## (Integer): (1) Isotropic (Default) (2) Kinematic
-                ## (3) Combined isotropic and kinematic hardening
+                #: Hardening Rule, selected by one of the following values
+                #: (Integer): (1) Isotropic (Default) (2) Kinematic
+                #: (3) Combined isotropic and kinematic hardening
                 self.hr = integer_or_blank(card, 6, 'hr', 1)
-                ## Initial yield point
+                #: Initial yield point
                 self.limit1 = double(card, 7, 'limit1')
 
                 if self.yf == 3 or self.yf == 4:
-                    ## Internal friction angle, measured in degrees, for the
-                    ## Mohr-Coulomb and Drucker-Prager yield criteria
+                    #: Internal friction angle, measured in degrees, for the
+                    #: Mohr-Coulomb and Drucker-Prager yield criteria
                     self.limit2 = double(card, 8, 'limit2')
                 else:
                     #self.limit2 = blank(card, 8, 'limit2')
@@ -1322,8 +1322,8 @@ class MATS1(MaterialDependence):
     def E(self, strain=None):
         """
         Gets E (Young's Modulus) for a given strain
-        @param self the object pointer
-        @param strain the strain (None -> linear E value)
+        :self:   the object pointer
+        :strain: the strain (None -> linear E value)
         @retval E (Young's Modulus)
         """
         msg = "E (Young's Modulus) not implemented for MATS1"
@@ -1363,7 +1363,7 @@ class EQUIV(Material):
         if comment:
             self._comment = comment
         if card:
-            ## Identification number of a MAT1, MAT2, or MAT9 entry.
+            #: Identification number of a MAT1, MAT2, or MAT9 entry.
             self.mid = integer(card, 1, 'mid')
             self.field2 = integer(card, 2, 'field2')
             self.field3 = integer(card, 3, 'field3')

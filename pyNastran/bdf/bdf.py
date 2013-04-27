@@ -96,8 +96,8 @@ from .bdfInterface.crossReference import XrefMesh
 class BDFDeprecated(object):
     def readBDF(self, bdf_filename, includeDir=None, xref=True, punch=False):
         """
-        @see read_bdf
-        @warning will be removed after v0.7 in favor of read_bdf
+        .. seealso:: read_bdf
+        @deprecated will be removed after v0.6 in favor of read_bdf
         """
         warnings.warn('readBDF has been deprecated; use '
                       'read_bdf', DeprecationWarning, stacklevel=2)
@@ -105,8 +105,8 @@ class BDFDeprecated(object):
 
     def updateSolution(self, sol, method=None):
         """
-        @see update_solution
-        @warning will be removed after v0.7 in favor of update_solution
+        .. seealso:: update_solution
+        @deprecated will be removed after v0.6 in favor of update_solution
         """
         warnings.warn('updateSolution has been deprecated; use '
                       'update_solution', DeprecationWarning, stacklevel=2)
@@ -114,8 +114,8 @@ class BDFDeprecated(object):
 
     def setDynamicSyntax(self, dictOfVars):
         """
-        @see set_dynamic_syntax
-        @warning will be removed after v0.7 in favor of set_dynamic_syntax
+        .. seealso:: set_dynamic_syntax
+        @deprecated will be removed after v0.6 in favor of set_dynamic_syntax
         """
         warnings.warn('setDynamicSyntax has been deprecated; use '
                       'set_dynamic_syntax', DeprecationWarning, stacklevel=2)
@@ -123,8 +123,8 @@ class BDFDeprecated(object):
 
     def addCard(self, card, cardName, iCard=0, oldCardObj=None):
         """
-        @see add_card
-        @warning will be removed after v0.7 in favor of add_card
+        .. seealso:: add_card
+        @deprecated will be removed after v0.6 in favor of add_card
         """
         warnings.warn('addCard has been deprecated; use add_card',
                       DeprecationWarning, stacklevel=2)
@@ -132,7 +132,7 @@ class BDFDeprecated(object):
 
     def disableCards(self, cards):
         """
-        @see disable_cards
+        .. seealso:: disable_cards
         @warning will be removed after v0.7 in favor of disable_cards
         """
         warnings.warn('disableCards has been deprecated; use '
@@ -149,9 +149,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     def __init__(self, debug=True, log=None):
         """
         Initializes the BDF object
-        @param self the BDF object
-        @param debug used to set the logger if no logger is passed in
-        @param log a python logging module object
+        :self:  the BDF object
+        :debug: used to set the logger if no logger is passed in
+        :log:   a python logging module object
         """
         # file management parameters
         self.ifile = -1
@@ -347,8 +347,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     def disable_cards(self, cards):
         """
         Method for removing broken cards from the reader
-        @param self the BDF object
-        @param cards a list/set of cards that should not be read
+
+        :self:  the BDF object
+        :cards: a list/set of cards that should not be read
         """
         disableSet = set(cards)
         self.cardsToRead.difference(disableSet)
@@ -660,12 +661,27 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     def read_bdf(self, bdf_filename, include_dir=None, xref=True, punch=False):
         """
         Read method for the bdf files
-        @param self the BDF object
-        @param bdf_filename the input bdf
-        @param include_dir the relative path to any include files (default=None
-          if no include files)
-        @param xref should the bdf be cross referenced (default=True)
-        @param punch indicates whether the file is a punch file (default=False)
+        
+        :self: the BDF object
+        :bdf_filename: the input bdf
+        :include_dir:  the relative path to any include files (default=None
+                       if no include files)
+        :xref:  should the bdf be cross referenced (default=True)
+        :punch: indicates whether the file is a punch file (default=False)
+        
+        >>> bdf = BDF()
+        >>> bdf.read_bdf(bdf_filename, xref=True)
+        >>> g1 = bdf.Node(1)
+        >>> print g1.Position()
+        [10.0, 12.0, 42.0]
+        >>> bdf.write_bdf_as_patran(bdf_filename2)
+        >>> print bdf.card_stats()
+        ---BDF Statistics---
+        SOL 101
+        bdf.nodes = 20
+        bdf.elements = 10
+        etc.
+        >>>
         """
         try:
             ## the active filename (string)
@@ -740,10 +756,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     def update_solution(self, sol, method, iSolLine):
         """
         Updates the overall solution type (e.g. 101,200,600)
-        @param self   the object pointer
-        @param sol    the solution type (101,103, etc)
-        @param method the solution method (only for SOL=600)
-        @param iSolLine the line to put the SOL/method on
+
+        :self:     the object pointer
+        :sol:      the solution type (101,103, etc)
+        :method:   the solution method (only for SOL=600)
+        :iSolLine: the line to put the SOL/method on
         """
         self.iSolLine = iSolLine
         ## the integer of the solution type (e.g. SOL 101)
@@ -768,12 +785,24 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         Uses the OpenMDAO syntax of %varName in an embedded BDF to
         update the values for an optimization study.
-        Variables should be 7 characters to fit in an 8-character field.
-        Case sensitivity is supported.
-        %varName
-        dict_of_vars = {'varName': 10}
-        @param self the BDF object
-        @param dict_of_vars dictionary of 7 character variable names to map.
+
+        :self: the BDF object
+        :dict_of_vars: dictionary of 7 character variable names to map.
+
+        @code
+        GRID, 1, %xVar, %yVar, %zVar
+        @endcode
+
+        >>> dict_of_vars = {'xVar': 1.0, 'yVar', 2.0, 'zVar':3.0}
+        >>> bdf = BDF()
+        >>> bdf.set_dynamic_syntax(dict_of_vars)
+        >>> bdf,read_bdf(bdf_filename, xref=True)
+        >>>
+
+        .. note:: Case sensitivity is supported.
+        .. warning:: Type matters!
+        .. warning:: Variables should be 7 characters to fit in an
+                     8-character field.
         """
         self.dict_of_vars = {}
         assert len(dict_of_vars) > 0, 'nvars = %s' % len(dict_of_vars)
@@ -789,13 +818,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     def _parse_dynamic_syntax(self, key):
         """
         Applies the dynamic syntax for %varName
-        @param self the object pointer
-        @param key the uppercased key
+
+        :self: the BDF object
+        :key:  the uppercased key
         @retval value the dynamic value defined by dictOfVars
-        @note
-          %varName is actually %VARNAME b/c of auto-uppercasing the string,
-          so the setDynamicSyntax method uppercases the key prior to this step.
-        @see setDynamicSyntax
+        .. seealso:: set_dynamic_syntax
         """
         #print "*** valueRaw.lstrip() = |%r|" % valueRaw.lstrip()
         #key = key.lstrip('%%')
@@ -826,7 +853,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     def _read_case_control_deck(self):
         """
         Reads the case control deck
-        @note called with recursion if an INCLUDE file is found
+
+        :self: the BDF object
+        .. note:: called with recursion if an INCLUDE file is found
         """
         self._break_comment = False
         #print("reading Case Control Deck...")
@@ -883,8 +912,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     def is_reject(self, card_name):
         """
         Can the card be read
-        @param self the BDF object
-        @param card_name the card_name -> 'GRID'
+
+        :self: the BDF object
+        :card_name: the card_name -> 'GRID'
         """
         if card_name.startswith('='):
             return False
@@ -900,9 +930,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     def open_file(self, bdf_filename):
         """
         Opens the primary bdf/dat file and all subsequent INCLUDE files.
-        @param fname:  the name of the bdf/dat file to open
-        @return: None
-        @note Doesn't allow reuse of the same bdf/dat file twice.
+
+        :fname:  the name of the bdf/dat file to open
+        @return None
+
+        .. note:: Doesn't allow reuse of the same bdf/dat file twice.
         """
         bdf_filename = os.path.join(self.include_dir, str(bdf_filename))
         if not os.path.exists(bdf_filename):
@@ -964,7 +996,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     def stream_card(self, line_stream):
         """
         Returns the next Bulk Data Card in the BDF
-        @param self the BDF object
+
+        :self: the BDF object
         @retval lines the lines of the card
         @retval comment the comment for the card
         @retval cardname the name of the card
@@ -1143,7 +1176,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     def get_card_name(self, lines):
         """
         Returns the name of the card defined by the provided lines
-        @param lines the lines of the card
+
+        :self:  the BDF object
+        :lines: the lines of the card
         @retval cardname the name of the card
         """
         card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('*\t ')
@@ -1155,7 +1190,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     def _read_bulk_data_deck(self):
         """
         Parses the Bulk Data Deck
-        @param self the BDF object
+
+        :self: the BDF object
         """
         self.log.info("reading Bulk Data Deck...")
         self._break_comment = True
@@ -1222,9 +1258,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         Used for testing to check that the number of cards going in is the
         same as each time the model is read verifies proper writing of cards
-        @param self the BDF object
-        @param card_name the card_name -> 'GRID'
-        @warning this wont guarantee proper reading of cards, but will help
+
+        :self:       the BDF object
+        :card_name:  the card_name -> 'GRID'
+
+        .. warning:: this wont guarantee proper reading of cards, but will help
         """
         if card_name == '':  # stupid null case
             return
@@ -1280,6 +1318,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         #file.close()
 
     def process_card(self, card_lines, debug=False):
+        """
+        :self: the BDF object
+        """
         card_name = self.get_card_name(card_lines)
         fields = to_fields(card_lines, card_name)
         if self._is_dynamic_syntax:
@@ -1293,24 +1334,24 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     def add_card(self, card_lines, card_name, comment='', is_list=True):
         """
         Adds a card object to the BDF object.
-        @param self the BDF object
-        @param card_lines the list of the card fields
-           ['GRID,1,2',]  (is_list = False)
-           ['GRID',1,2,]  (is_list = True; default)
-        @param card_name the card_name -> 'GRID'
-        @param comment an optional the comment for the card
-        @param is_list changes card_lines from a list of lines to
-          a list of fields
+        :self:       the BDF object
+        :card_lines: the list of the card fields
+         >>> ['GRID,1,2',]  # (is_list = False)
+         >>> ['GRID',1,2,]  # (is_list = True; default)
+
+        :card_name: the card_name -> 'GRID'
+        :comment:   an optional the comment for the card
+        :is_list:   changes card_lines from a list of lines to
+                    a list of fields
         @retval card_object the card object representation of card
-        @note
-          this is a very useful method for interfacing with the code
-        @note
-           the cardObject is not a card-type object...so not a GRID card
-           or CQUAD4 object.  It's a BDFCard Object.  However, you know the
-           type (assuming a GRID), so just call the mesh.Node(nid) to get the
-           Node object that was just created.
-        @warning
-          cardObject is not returned
+
+        .. note:: this is a very useful method for interfacing with the code
+        .. note:: the cardObject is not a card-type object...so not a GRID
+                  card or CQUAD4 object.  It's a BDFCard Object.  However,
+                  you know the type (assuming a GRID), so just call the
+                  *mesh.Node(nid)* to get the Node object that was just
+                  created.
+        .. warning:: cardObject is not returned
         """
         #comment = ''.join(comment)
         #self.log.debug("card_name = |%r|" % (card_name))
@@ -1532,7 +1573,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             elif 'ENDDATA' in card_name:
                 self.foundEndData = True
             else:
-                ## @warning cards with = signs in them
+                ## ..warning:: cards with = signs in them
                 ## are not announced when they are rejected
                 if '=' not in card[0]:
                     self.log.info('rejecting processed equal signed card %s' % card)
@@ -1549,8 +1590,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         Takes a path such as C:/work/fem.bdf and locates the file using
         relative paths.  If it's on another drive, the path is not modified.
-        @param self the object pointer
-        @param filename a filename string
+
+        :self:     the BDF object
+        :filename: a filename string
         @retval filenameString a shortened representation of the filename
         """
         driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
@@ -1561,10 +1603,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     def card_stats(self):
         """
         Print statistics for the BDF
-        @param self the BDF object
-        @note
-          if a card is not supported and not added to the proper lists,
-          this method will fail
+        :self: the BDF object
+        .. note:: if a card is not supported and not added to the proper
+                  lists, this method will fail
         """
         card_stats = [
             'params', 'nodes', 'points', 'elements', 'rigidElements',
@@ -1702,7 +1743,8 @@ def _clean_comment(comment, end=-1):
     """
     Removes specific pyNastran comment lines so duplicate lines aren't
     created.
-    @param comment the comment to possibly remove
+
+    :comment: the comment to possibly remove
     """
     if comment[:end] in ['$EXECUTIVE CONTROL DECK',
                    '$CASE CONTROL DECK',
@@ -1725,8 +1767,9 @@ def to_fields(card_lines, card_name):
     """
     Converts a series of lines in a card into string versions of the field.
     Handles large, small, and CSV formatted cards.
-    @param lines the lines of the BDF card object
-    @param card_name the card_name -> 'GRID'
+
+    :lines:     the lines of the BDF card object
+    :card_name: the card_name -> 'GRID'
     @retval fields the string formatted fields of the card
     """
     fields = []
@@ -1811,8 +1854,9 @@ def to_fields(card_lines, card_name):
 def get_include_filename(cardLines, include_dir=''):
     """
     Parses an INCLUDE file split into multiple lines (as a list).
-    @param cardLines the list of lines in the include card (all the lines!)
-    @param include_dir the include directory (default='')
+
+    :cardLines:   the list of lines in the include card (all the lines!)
+    :include_dir: the include directory (default='')
     @retval filename the INCLUDE filename
     """
     cardLines2 = []

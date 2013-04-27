@@ -27,8 +27,8 @@ class NSM(PointProperty):
     Defines a set of non structural mass.
     """
     type = 'NSM'
-    ## Set points to either Property entries or Element entries.
-    ## Properties are:
+    #: Set points to either Property entries or Element entries.
+    #: Properties are:
     validProperties = [
         'PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
         'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PCONEAX', 'PRAC2D']
@@ -70,7 +70,7 @@ class PMASS(PointProperty):
             self._comment = comment
         if card:
             nOffset *= 2
-            ## Property ID
+            #: Property ID
             self.pid = integer(card, 1 + nOffset, 'pid')
             self.mass = double_or_blank(card, 2 + nOffset, 'mass', 0.)
         else:

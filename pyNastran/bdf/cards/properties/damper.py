@@ -35,11 +35,11 @@ class PDAMP(DamperProperty):
         nOffset = nPDAMP * 2
         if card:
             # 3 PDAMP properties can be defined on 1 PDAMP card
-            ## Property ID
+            #: Property ID
             self.pid = integer(card, 1 + nOffset, 'pid')
 
             # these are split into 2 separate cards
-            ## Force per unit velocity (Real)
+            #: Force per unit velocity (Real)
             self.b = double(card, 2 + nOffset, 'b')
         else:
             self.pid = data[0]
@@ -65,13 +65,13 @@ class PDAMP5(DamperProperty):
         if comment:
             self._comment = comment
         if card:
-            ## Property ID
+            #: Property ID
             self.pid = integer(card, 1, 'pid')
-            ## Material ID
+            #: Material ID
             self.mid = integer(card, 2, 'mid')
-            ## Damping multiplier. (Real > 0.0)
-            ## B is the mass that multiplies the heat capacity CP on the MAT4
-            ## or MAT5 entry.
+            #: Damping multiplier. (Real > 0.0)
+            #: B is the mass that multiplies the heat capacity CP on the MAT4
+            #: or MAT5 entry.
             self.b = double(card, 3, 'b')
             assert len(card) == 4, 'len(PDAMP5 card) = %i' % len(card)
         else:
@@ -103,10 +103,10 @@ class PDAMPT(DamperProperty):
         if comment:
             self._comment = comment
         if card:
-            ## Property ID
+            #: Property ID
             self.pid = integer(card, 1, 'pid')
-            ## Identification number of a TABLEDi entry that defines the
-            ## damping force per-unit velocity versus frequency relationship
+            #: Identification number of a TABLEDi entry that defines the
+            #: damping force per-unit velocity versus frequency relationship
             self.tbid = integer_or_blank(card, 2, 'tbid', 0)
             assert len(card) <= 3, 'len(PDAMPT card) = %i' % len(card)
         else:

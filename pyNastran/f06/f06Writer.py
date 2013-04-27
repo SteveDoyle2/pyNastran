@@ -79,19 +79,20 @@ def make_end():
     return ''.join(lines)
 
 
-class F06Writer(object):
-    def __init__(self, model='tria3'):
-        self.Title = ''
-        self.set_f06_name(model)
-
+class F06WriterDeprecated(object):
     def writeF06(self, f06OutName, isMagPhase=False, makeFile=True,
                  deleteObjects=True):
         """@see write_f06"""
         self.write_f06(f06OutName, isMagPhase, makeFile, deleteObjects)
 
     def loadOp2(self, isTesting=False):
-        """@see write_f06"""
+        """@see load_op2"""
         self.load_op2(isTesting)
+
+class F06Writer(object):
+    def __init__(self, model='tria3'):
+        self.Title = ''
+        self.set_f06_name(model)
 
     def set_f06_name(self, model):
         self.model = model
@@ -136,15 +137,15 @@ class F06Writer(object):
                  deleteObjects=True):
         """
         Writes an F06 file based on the data we have stored in the object
-        @param self the F06 object
-        @param f06OutName the name of the F06 file to write
-        @param isMagPhase
-               should complex data be written using
-               Magnitude/Phase instead of Real/Imaginary (default=False; Real/Imag)
-               Real objects don't use this parameter.
-        @param makeFile
-               True  -> makes a file,
-               False -> makes a StringIO object for testing (default=True)
+
+        :self:       the F06 object
+        :f06OutName: the name of the F06 file to write
+        :isMagPhase: should complex data be written using Magnitude/Phase
+                     instead of Real/Imaginary (default=False; Real/Imag)
+                      Real objects don't use this parameter.
+        :makeFile:
+           * True  -> makes a file
+           * False -> makes a StringIO object for testing (default=True)
         """
         if makeFile:
             f = open(f06OutName, 'wb')
@@ -298,5 +299,5 @@ if __name__ == '__main__':
 
     model = sys.argv[1]
     f06 = F06Writer(model)
-    f06.loadOp2(isTesting=True)
+    f06.load_op2(isTesting=True)
     f06.write_f06()

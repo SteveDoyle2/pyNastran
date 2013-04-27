@@ -17,18 +17,23 @@ from pyNastran.f06.f06Writer import F06Writer
 
 
 
-class F06(OES, OUG, OQG, F06Writer):
+class F06Deprecated(object):
+    def readF06(self):
+        """... seealso::: read_f06"""
+        self.read_f06()
+
+
+class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
     def __init__(self, f06FileName, debug=False, log=None):
         """
         Initializes the F06 object
-        @param f06FileName
-          the file to be parsed
-        @param makeGeom
-          reads the BDF tables (default=False)
-        @param debug
-          prints data about how the F06 was parsed (default=False)
-        @param log
-          a logging object to write debug messages to (@see import logging)
+
+        :f06FileName: the file to be parsed
+        :makeGeom:    reads the BDF tables (default=False)
+        :debug:       prints data about how the F06 was parsed (default=False)
+        :log:         a logging object to write debug messages to
+        
+        .. seealso:: import logging
         """
         self.f06FileName = f06FileName
         if not os.path.exists(self.f06FileName):
@@ -210,9 +215,10 @@ class F06(OES, OUG, OQG, F06Writer):
     def start_log(self, log=None, debug=False):
         """
         Sets up a dummy logger if one is not provided
-        @param self the object pointer
-        @param log a python logging object
-        @param debug adds debug messages (True/False)
+
+        :self:  the object pointer
+        :log:   a python logging object
+        :debug: adds debug messages (True/False)
         """
 
         self.log = get_logger(log, 'debug' if debug else 'info')
@@ -527,9 +533,10 @@ class F06(OES, OUG, OQG, F06Writer):
 
     def readTable(self, Format):
         """
-        reads displacement, spc/mpc forces
-        @param self the object pointer
-        @param Format @see parseLine
+        Reads displacement, spc/mpc forces
+
+        :self:   the object pointer
+        :Format: @see parseLine
         """
         sline = True
         data = []
@@ -546,10 +553,9 @@ class F06(OES, OUG, OQG, F06Writer):
 
     def parseLine(self, sline, Format):
         """
-        @param self the object pointer
-        @param sline list of strings (split line)
-        @param Format list of types [int,str,float,float,float] that maps to
-          sline
+        :self:   the object pointer
+        :sline:  list of strings (split line)
+        :Format: list of types [int,str,float,float,float] that maps to sline
         """
         out = []
         for entry, iFormat in izip(sline, Format):
@@ -580,14 +586,11 @@ class F06(OES, OUG, OQG, F06Writer):
             out.append(entry2)
         return out
 
-    def readF06(self):
-        """@see read_f06"""
-        self.read_f06()
-
     def read_f06(self):
         """
         Reads the F06 file
-        @param self the object pointer
+
+        :self: the object pointer
         """
         #print "reading..."
         blank = 0
@@ -674,7 +677,7 @@ if __name__ == '__main__':
     f06Name = sys.argv[1]
     model = f06Name.split('.f06')[0]
     f06 = F06(f06Name)
-    f06.readF06()
+    f06.read_f06()
 
     f06.write_f06(model + 'f06.out')
     f06.print_results()

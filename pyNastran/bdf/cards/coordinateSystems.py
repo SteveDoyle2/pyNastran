@@ -21,9 +21,10 @@ class Coord(BaseCard):
     def __init__(self, card, data):
         """
         Defines a general CORDxx object
-        @param self the coordinate system object
-        @param card a BDFCard object
-        @param data a list analogous to the card
+
+        :self: the coordinate system object
+        :card: a BDFCard object
+        :data: a list analogous to the card
         """
         ## has the coordinate system been linked yet
         self.isCrossReferenced = False
@@ -164,15 +165,14 @@ class Coord(BaseCard):
         * \f$ g  \f$ is the global directional vector (e.g. \f$ g_x = [1,0,0]\f$)
         * \f$ ijk \f$ is the ith direction in the local coordinate system
 
-        @param self the coordinate system object
-        @param p the point to be transformed.  Type=NUMPY.NDARRAY
-        @param resolveAltCoord should the CD field be resolved (default=True)
-        @param debug developer debug (default=False)
-        @warning
-          make sure you cross-reference before calling this
-        @warning
-          you probably shouldnt call this, call the Node methods Position
-          and PositionWRT
+        :self:            the coordinate system object
+        :p:               the point to be transformed.  Type=NUMPY.NDARRAY
+        :resolveAltCoord: should the CD field be resolved (default=True)
+        :debug:           developer debug (default=False)
+
+        .. warning:: make sure you cross-reference before calling this
+        .. warning:: you probably shouldnt call this, call the Node methods
+                     Position and PositionWRT
         """
         if debug:
             print("p = %s" % p)
@@ -231,20 +231,18 @@ class Coord(BaseCard):
     def transformToLocal(self, p, matrix, debug=False):
         r"""
         Transforms the global point p to the local coordinate system
-        @param self
-          the coordinate system object
-        @param p
-          the point to transform
-        @param matrix
-          the transformation matrix to apply - created by transformToGlobal
-        @param debug
-          developer debug
-        @note
-          uses the matrix as there is no linking from a global coordinate
-          system to the local
-        @note
-          the matrix that comes in is the local to global, so we need to invert
-          the matrix. Luckily the inverse of a tranformation matrix
+
+        :self:   the coordinate system object
+        :p:      the point to transform
+        :matrix: the transformation matrix to apply - created by transformToGlobal
+        :debug:  developer debug
+
+        .. note::  uses the matrix as there is no linking from a global coordinate
+                   system to the local
+        .. note::  the matrix that comes in is the local to global, so we need
+                   to invert the matrix. Luckily the inverse of a
+                   tranformation matrix
+
           \f$ [\phi] \f$ is the transpose of the matrix.
           \f[ p_{Global} = (p_{Local}-e_1 )[\phi]+e_1 \f]
           \f[ [phi]^{-1} = [phi]^T \f]
@@ -270,10 +268,8 @@ class Coord(BaseCard):
     def normalize(self, v):
         """
         Normalizes v into a unit vector
-        @param self
-          the coordinate system object
-        @param v
-          the vector to normalize
+        :self: the coordinate system object
+        :v:    the vector to normalize
         @retval
           nNorm v has been normalized
         """
@@ -347,7 +343,7 @@ class CylindricalCoord(object):
 
         \f[ \large x = R \cos(\theta) \f]
         \f[ \large y = R \sin(\theta) \f]
-        @param self the coordinate system object
+        :self: the coordinate system object
         """
         R = p[0]
         theta = radians(p[1])
@@ -403,9 +399,10 @@ class Cord2x(Coord):
     def __init__(self, card, data):
         """
         Defines the CORD2x class
-        @param self the coordinate system object
-        @param card a BDFCard object
-        @param data a list analogous to the card
+
+        :self: the coordinate system object
+        :card: a BDFCard object
+        :data: a list analogous to the card
         """
         self.isResolved = False
         Coord.__init__(self, card, data)
@@ -494,12 +491,11 @@ class Cord2x(Coord):
     def cross_reference(self, model):
         """
         Links self.rid to a coordinate system.
-        @param self the coordinate system object
-        @param model the BDF object
-        @warning
-            Doesn't set rid to the coordinate system if it's in the global.
-            This isn't a problem, it's meant to speed up the code in order
-            to resolve extra coordinate systems.
+        :self:  the coordinate system object
+        :model: the BDF object
+        ..warning:: Doesn't set rid to the coordinate system if it's in the
+                    global.  This isn't a problem, it's meant to speed up the
+                    code in order to resolve extra coordinate systems.
         """
         self.isCrossReferenced = True
         if self.rid != 0:
@@ -551,8 +547,9 @@ class Cord1x(Coord):
     def to_CORD2x(self, model):
         """
         Converts a coordinate system from a CORD1x to a CORD2x
-        @param self the coordinate system object
-        @param model a BDF model
+
+        :self:  the coordinate system object
+        :model: a BDF model
         """
         rid1 = self.g1.cid
         rid2 = self.g2.cid
@@ -592,8 +589,9 @@ class Cord1x(Coord):
     def cross_reference(self, model):
         """
         Links self.rid to a coordinate system.
-        @param self  the coordinate system object
-        @param model the BDF object
+
+        :self:  the coordinate system object
+        :model: the BDF object
         """
         self.isCrossReferenced = True
         msg = ' which is required by %s cid=%s' % (self.type, self.cid)
@@ -608,7 +606,8 @@ class Cord1x(Coord):
         """
         Finds the position of the nodes used define the coordinate system
         and sets the ijk vectors
-        @param self the coordinate system object
+
+        :self: the coordinate system object
         """
         ## the origin
         self.e1 = self.g1.Position()
@@ -636,7 +635,8 @@ class Cord1x(Coord):
     def NodeIDs(self):
         """
         Returns [g1,g2,g3]
-        @param self the coordinate system object
+
+        :self: the coordinate system object
         """
         grids = [self.G1(), self.G2(), self.G3()]
         return grids
@@ -660,8 +660,9 @@ class CORD3G(Coord):  # not done
     def __init__(self, card=[0, 0, 0, 0, 0, 0, 0], data=None, comment=''):
         """
         Intilizes the CORD3G
-        @param self the CORD3G coordinate system object
-        @param card a list version of the fields
+
+        :self: the CORD3G coordinate system object
+        :card: a list version of the fields
         """
         if comment:
             self._comment = comment
@@ -699,11 +700,12 @@ class CORD3G(Coord):  # not done
 
     def coord3g_transformToGlobal(self, p, debug=False):
         """
-        @param self the coordinate system object
-        @param p the point to transform.  TYPE=NUMPY.NDARRAY.
-        @param debug should debug messages be printed
-        @warning not done, just setting up how you'd do this
-        @note per http://en.wikipedia.org/wiki/Euler_angles
+        :self:  the coordinate system object
+        :p:     the point to transform.  TYPE=NUMPY.NDARRAY.
+        :debug: should debug messages be printed
+
+        .. warning:: not done, just setting up how you'd do this
+        .. note::    per http://en.wikipedia.org/wiki/Euler_angles
          "This means for example that a convention named (YXZ) is the result
          of performing first an intrinsic Z rotation, followed by X and
          Y rotations, in the moving axes (Note: the order of multiplication
@@ -755,10 +757,11 @@ class CORD1R(Cord1x, RectangularCoord):
     def __init__(self, card=None, nCoord=0, data=None, comment=''):
         """
         Intilizes the CORD1R
-        @param self the CORD1R coordinate system object
-        @param nCoord the coordinate location on the line
-         (there are possibly 2 coordinates on 1 card)
-        @param card a list version of the fields (1 CORD1R only)
+
+        :self:   the CORD1R coordinate system object
+        :nCoord: the coordinate location on the line
+                 (there are possibly 2 coordinates on 1 card)
+        :card:    a list version of the fields (1 CORD1R only)
         """
         Cord1x.__init__(self, card, nCoord, data)
         if comment:
@@ -778,11 +781,12 @@ class CORD1C(Cord1x, CylindricalCoord):
     def __init__(self, card=None, nCoord=0, data=None, comment=''):
         """
         Intilizes the CORD1R
-        @param self the CORD1C coordinate system object
-        @param card a BDFCard object
-        @param nCoord the coordinate location on the line
-         (there are possibly 2 coordinates on 1 card)
-        @param data a list version of the fields (1 CORD1R only)
+
+        :self:   the CORD1C coordinate system object
+        :card:   a BDFCard object
+        :nCoord: the coordinate location on the line
+                 (there are possibly 2 coordinates on 1 card)
+        :data:    a list version of the fields (1 CORD1R only)
         """
         Cord1x.__init__(self, card, nCoord, data)
         if comment:
@@ -802,11 +806,12 @@ class CORD1S(Cord1x, SphericalCoord):
     def __init__(self, card=None, nCoord=0, data=None, comment=''):
         """
         Intilizes the CORD1S
-        @param self the CORD1S coordinate system object
-        @param card a BDFCard object
-        @param nCoord the coordinate location on the line
-         (there are possibly 2 coordinates on 1 card)
-        @param data a list version of the fields (1 CORD1S only)
+
+        :self:   the CORD1S coordinate system object
+        :card:   a BDFCard object
+        :nCoord: the coordinate location on the line
+                 (there are possibly 2 coordinates on 1 card)
+        :data:   a list version of the fields (1 CORD1S only)
         """
         Cord1x.__init__(self, card, nCoord, data)
         if comment:
@@ -824,12 +829,10 @@ class CORD2R(Cord2x, RectangularCoord):
                  data=[0, 0, 0., 0., 0., 0., 0., 1., 1., 0., 0.], comment=''):
         """
         Intilizes the CORD2R
-        @param self
-            the CORD2R coordinate system object
-        @param card
-          a BDFCard object
-        @param data
-          a list version of the fields (1 CORD2R only)
+
+        :self: the CORD2R coordinate system object
+        :card: a BDFCard object
+        :data: a list version of the fields (1 CORD2R only)
         """
         Cord2x.__init__(self, card, data)
         if comment:
@@ -854,9 +857,9 @@ class CORD2S(Cord2x, SphericalCoord):
     def __init__(self, card=None, data=None, comment=''):
         """
         Intilizes the CORD2R
-        @param self the CORD2S coordinate system object
-        @param card a BDFCard object
-        @param data a list version of the fields (1 CORD2S only)
+        ;self: the CORD2S coordinate system object
+        :card: a BDFCard object
+        :data: a list version of the fields (1 CORD2S only)
         """
         Cord2x.__init__(self, card, data)
         if comment:
@@ -881,9 +884,10 @@ class CORD2C(Cord2x, CylindricalCoord):
     def __init__(self, card=None, data=None, comment=''):
         """
         Intilizes the CORD2C
-        @param self the CORD2C coordinate system object
-        @param card a BDFCard object
-        @param data a list version of the fields (1 CORD2C only)
+
+        :self: the CORD2C coordinate system object
+        :card: a BDFCard object
+        :data: a list version of the fields (1 CORD2C only)
         """
         Cord2x.__init__(self, card, data)
         if comment:

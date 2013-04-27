@@ -29,27 +29,27 @@ class PFAST(Property):
         if comment:
             self._comment = comment
         if card:
-            ## Property ID
+            #: Property ID
             self.pid = integer(card, 1, 'pid')
-            ## diameter of the fastener
+            #: diameter of the fastener
             self.d = double(card, 2, 'd')
             assert self.d > 0
-            ## Specifies the element stiffness coordinate system
+            #: Specifies the element stiffness coordinate system
             self.mcid = integer_or_blank(card, 3, 'mcid', -1)
             assert self.mcid >= -1
             self.mflag = integer_or_blank(card, 4, 'mflag', 0)  # 0-absolute 1-relative
             assert self.mflag in [0, 1]
-            ## stiffness values in directions 1-3
+            #: stiffness values in directions 1-3
             self.kt1 = double(card, 5, 'kt1')
             self.kt2 = double(card, 6, 'kt2')
             self.kt3 = double(card, 7, 'kt3')
-            ## Rotational stiffness values in directions 1-3
+            #: Rotational stiffness values in directions 1-3
             self.kr1 = double_or_blank(card, 8, 'kr1', 0.0)
             self.kr2 = double_or_blank(card, 9, 'kr2', 0.0)
             self.kr3 = double_or_blank(card, 10, 'kr3', 0.0)
-            ## Lumped mass of fastener
+            #: Lumped mass of fastener
             self.mass = double_or_blank(card, 11, 'mass', 0.0)
-            ## Structural damping
+            #: Structural damping
             self.ge = double_or_blank(card, 12, 'ge', 0.0)
             assert len(card) <= 13, 'len(PFAST card) = %i' % len(card)
         else:
@@ -97,21 +97,21 @@ class PGAP(Property):
         if comment:
             self._comment = comment
         if card:
-            ## Property ID
+            #: Property ID
             self.pid = integer(card, 1, 'pid')
-            ## initial gap opening
+            #: initial gap opening
             self.u0 = double_or_blank(card, 2, 'u0', 0.)
-            ## preload
+            #: preload
             self.f0 = double_or_blank(card, 3, 'f0', 0.)
-            ## axial stiffness of closed gap
+            #: axial stiffness of closed gap
             self.ka = double_or_blank(card, 4, 'ka', 1.e8)
-            ## axial stiffness of open gap
+            #: axial stiffness of open gap
             self.kb = double_or_blank(card, 5, 'kb', 1e-14 * self.ka)
-            ## static friction coeff
+            #: static friction coeff
             self.mu1 = double_or_blank(card, 7, 'mu1', 0.)
-            ## transverse stiffness of closed gap
+            #: transverse stiffness of closed gap
             self.kt = double_or_blank(card, 6, 'kt', self.mu1 * self.ka)
-            ## kinetic friction coeff
+            #: kinetic friction coeff
             self.mu2 = double_or_blank(card, 8, 'mu2', self.mu1)
             self.tmax = double_or_blank(card, 9, 'tmax', 0.)
             self.mar = double_or_blank(card, 10, 'mar', 100.)
@@ -178,11 +178,11 @@ class PLSOLID(SolidProperty):
         if comment:
             self._comment = comment
         if card:
-            ## Property ID
+            #: Property ID
             self.pid = integer(card, 1, 'pid')
-            ## Material ID
+            #: Material ID
             self.mid = integer(card, 2, 'mid')
-            ## Location of stress and strain output
+            #: Location of stress and strain output
             self.str = string_or_blank(card, 3, 'str', 'GRID')
             assert len(card) <= 4, 'len(PLSOLID card) = %i' % len(card)
         else:
@@ -216,9 +216,9 @@ class PSOLID(SolidProperty):
         if comment:
             self._comment = comment
         if card:
-            ## Property ID
+            #: Property ID
             self.pid = integer(card, 1, 'pid')
-            ## Material ID
+            #: Material ID
             self.mid = integer(card, 2, 'mid')
             self.cordm = integer_or_blank(card, 3, 'cordm', 0)
             self.integ = integer_string_or_blank(card, 4, 'integ')
@@ -290,25 +290,25 @@ class PRAC2D(CrackProperty):
         if comment:
             self._comment = comment
         if card:
-            ## Property ID
+            #: Property ID
             self.pid = integer(card, 1, 'pid')
-            ## Material ID
+            #: Material ID
             self.mid = integer(card, 2, 'mid')
             self.thick = double(card, 3, 'thick')
-            ## Plane strain or plane stress option.
-            ## Use 0 for plane strain; 1 for plane stress. (Integer = 0 or 1)
+            #: Plane strain or plane stress option.
+            #: Use 0 for plane strain; 1 for plane stress. (Integer = 0 or 1)
             self.iPlane = integer(card, 4, 'iPlane')
             if self.iPlane not in [0, 1]:
                 raise RuntimeError('Invalid value for iPlane on PRAC2D, can '
                                    'only be 0,1 iPlane=|%s|' % self.iPlane)
-            ## Non-structural mass per unit area.(Real >= 0.0; Default = 0)
+            #: Non-structural mass per unit area.(Real >= 0.0; Default = 0)
             self.nsm = double_or_blank(card, 5, 'nsm', 0.)
-            ## Exponent used in the displacement field. See Remark 4.
-            ## (Real; Default = 0.5)
+            #: Exponent used in the displacement field. See Remark 4.
+            #: (Real; Default = 0.5)
             self.gamma = double_or_blank(card, 6, 'gamma', 0.5)
-            ## Angle (in degrees) relative to the element x-axis along which
-            ## stress intensity factors are to be calculated. See Remark 4.
-            ## (Real; Default = 180.0)
+            #: Angle (in degrees) relative to the element x-axis along which
+            #: stress intensity factors are to be calculated. See Remark 4.
+            #: (Real; Default = 180.0)
             self.phi = double_or_blank(card, 7, 'phi', 180.)
             assert len(card) <= 8, 'len(PRAC2D card) = %i' % len(card)
 
@@ -344,16 +344,16 @@ class PRAC3D(CrackProperty):
         if comment:
             self._comment = comment
         if card:
-            ## Property ID
+            #: Property ID
             self.pid = integer(card, 1, 'pid')
-            ## Material ID
+            #: Material ID
             self.mid = integer(card, 2, 'mid')
-            ## Exponent used in the displacement field. See Remark 4.
-            ## (Real; Default = 0.5)
+            #: Exponent used in the displacement field. See Remark 4.
+            #: (Real; Default = 0.5)
             self.gamma = double_or_blank(card, 3, 'gamma', 0.5)
-            ## Angle (in degrees) relative to the element x-axis along which
-            ## stress intensity factors are to be calculated. See Remark 4.
-            ## (Real; Default = 180.0)
+            #: Angle (in degrees) relative to the element x-axis along which
+            #: stress intensity factors are to be calculated. See Remark 4.
+            #: (Real; Default = 180.0)
             self.phi = double_or_blank(card, 4, 'gamma', 180.)
             assert len(card) <= 5, 'len(PRAC3D card) = %i' % len(card)
         else:
@@ -381,9 +381,9 @@ class PCONEAX(Property):
         if comment:
             self._comment = comment
         if card:
-            ## Property ID
+            #: Property ID
             self.pid = integer(card, 1, 'pid')
-            ## Material ID
+            #: Material ID
             self.mid1 = integer_or_blank(card, 2, 'mid1', 0)
             self.t1 = double_or_blank(card, 3, 't1')
 
