@@ -20,7 +20,7 @@ if __name__ == '__main__':
     dimension = range(1000, 15000, 1000) # 14 matrices sized 1000 x 1000 to
                                          # 14000 x 14000.  The largest will
                                          # be 1.5 GB.
-    #dimension = range(1000, 10000, 1000)
+    dimension = range(1000, 5000, 1000)
     #print dimension
 
     File      = []

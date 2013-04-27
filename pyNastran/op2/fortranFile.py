@@ -96,9 +96,9 @@ class FortranFile(object):
     def read_ints(self, nInts, debug=True):
         """
         Reads a list of nIntegers
-        @param self the object pointer
-        @param nInts the number of ints to read
-        @param debug for developer: debug combined with make_op2_debug
+        :param self:  the object pointer
+        :param nInts: the number of ints to read
+        :param debug: for developer: debug combined with make_op2_debug
         """
         nData = 4 * nInts
         #print "nData = ",nData
@@ -115,9 +115,9 @@ class FortranFile(object):
     def read_doubles(self, nData, debug=True):
         """
         Reads a list of nDoubles
-        @param self the object pointer
-        @param nData the number of doubles to read
-        @param debug for developer: debug combined with make_op2_debug
+        :param self:  the object pointer
+        :param nData: the number of doubles to read
+        :param debug: for developer: debug combined with make_op2_debug
         """
         data = self.op2.read(nData)
         self.n += nData
@@ -306,9 +306,9 @@ class FortranFile(object):
     def print_section(self, nBytes):
         """
         Prints data, but doesn't move the cursor
-        @param self the object pointer
-        @param nBytes the number of bytes to print the data specs on
-        @retval msg ints/floats/strings of the next nBytes
+        :param self:   the object pointer
+        :param nBytes: the number of bytes to print the data specs on
+        :returns msg:  ints/floats/strings of the next nBytes
           (handles poorly sized nBytes; uncrashable :) )
         .. note:: this the BEST function when adding new cards/tables/debugging
         """
@@ -320,9 +320,9 @@ class FortranFile(object):
     def print_section2(self, nBytes, endian):
         """
         Prints data, but doesn't move the cursor
-        @param self the object pointer
-        @param nBytes the number of bytes to print the data specs on
-        @retval msg ints/floats/strings of the next nBytes
+        :param self:   the object pointer
+        :param nBytes: the number of bytes to print the data specs on
+        :returns msg:  ints/floats/strings of the next nBytes
          (handles poorly sized nBytes; uncrashable :) )
         .. note:: this the BEST function when adding new cards/tables/debugging
         """
@@ -430,8 +430,8 @@ class FortranFile(object):
     def goto(self, n):
         """
         jumps to position n in the file
-        @param self the object pointer
-        @param n the position to goto
+        :param self: the object pointer
+        :param n:    the position to goto
         .. note:: n>0
         """
         #print "goto n = |%s|" % (n)

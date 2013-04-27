@@ -10,10 +10,11 @@ def polar_to_real_imag(mag, phase):
     """
     Converts magnitude-phase to real-imaginary
     so all complex results are consistent
-    @param mag magnitude c^2
-    @param phase phase angle phi (degrees; theta)
-    @retval realValue the real component a of a+bi
-    @retval imagValue the imaginary component b of a+bi
+
+    :param mag:   magnitude c^2
+    :param phase: phase angle phi (degrees; theta)
+    :returns realValue: the real component a of a+bi
+    :returns imagValue: the imaginary component b of a+bi
     """
     return rect(mag, radians(phase))
     #realValue = mag*cos(radians(phase)) # phase in degrees

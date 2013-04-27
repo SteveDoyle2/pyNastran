@@ -92,8 +92,9 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
     def create_transient_object(self, storageObj, classObj, debug=False):
         """
         Creates a transient object (or None if the subcase should be skippied).
-        @param storageObj  the dictionary to store the object in (e.g. self.bars)
-        @param classObj    the class object to instantiate
+
+        :param storageObj:  the dictionary to store the object in (e.g. self.bars)
+        :param classObj:    the class object to instantiate
         .. note:: dt can also be load_step depending on the class
         """
         if debug:
