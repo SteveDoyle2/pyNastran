@@ -119,7 +119,7 @@ class Geometry3(object):
     def readLOAD(self, data):
         """
         (4551, 61, 84) - the marker for Record 8
-        @todo add object
+        .. todo:: add object
         """
         #print "reading LOAD"
         while len(data) >= 16:  # 4*4
@@ -363,7 +363,7 @@ class Geometry3(object):
     def readTEMPD(self, data):
         """
         TEMPD(5641,65,98) - the marker for Record 33
-        @todo add object
+        .. todo:: add object
         """
         #print "reading TEMPD"
         n = 0

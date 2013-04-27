@@ -20,7 +20,7 @@ class XrefMesh(object):
 
     def crossReference(self, xref=True):
         """
-        @see cross_reference
+        .. seealso:: cross_reference
         """
         warnings.warn('crossReference is deprecated; use cross_reference')
         self.cross_reference(xref)

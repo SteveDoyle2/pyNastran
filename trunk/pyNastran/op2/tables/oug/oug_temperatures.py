@@ -117,7 +117,7 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
    #     """
    #     msg = ''
    #     for dt,temperatures in sorted(self.temperatures.iteritems()):
-   #         XXX = 50 ## this isnt correct... @todo update dt
+   #         XXX = 50 ## this isnt correct... .. todo:: update dt
    #         msg += block3[0:XXX] + pack('i',dt) + block3[XXX+4:]
    #         #msg += '%s = %g\n' %(self.data_code['name'],dt)
    #

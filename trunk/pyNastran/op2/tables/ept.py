@@ -53,7 +53,7 @@ class EPT(object):
     def readNSM(self, data):
         """
         NSM(3201,32,55) - the marker for Record 2
-        @todo this isnt a property...
+        .. todo:: this isnt a property...
         """
         #print "reading NSM"
         return
@@ -146,7 +146,7 @@ class EPT(object):
     def readPBEAM(self, data):
         """
         PBEAM(5402,54,262) - the marker for Record 14
-        @todo add object
+        .. todo:: add object
         """
         #print "reading PBEAM"
         while len(data) >= 1072:  # 44+12*84+20
@@ -366,8 +366,8 @@ class EPT(object):
     def readPTUBE(self, data):
         """
         PTUBE(1602,16,30) - the marker for Record 56
-        @todo OD2 only exists for heat transfer...how do i know if there's heat transfer at this point...
-        @todo I could store all the tubes and add them later, but what about themal/non-thermal subcases
+        .. todo:: OD2 only exists for heat transfer...how do i know if there's heat transfer at this point...
+        .. todo:: I could store all the tubes and add them later, but what about themal/non-thermal subcases
         @warning assuming OD2 is not written (only done for thermal)
         """
         #print "reading PTUBE"

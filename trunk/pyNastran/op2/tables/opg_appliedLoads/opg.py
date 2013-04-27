@@ -69,7 +69,7 @@ class OPG(object):
             self.add_data_parameter(data, 'mode', 'i', 5)
             ## real eigenvalue
             self.add_data_parameter(data, 'eign', 'f', 6, False)
-            ## mode or cycle @todo confused on the type - F1???            self.add_data_parameter(data, 'mode_cycle', 'f', 7, False)
+            ## mode or cycle .. todo:: confused on the type - F1???            self.add_data_parameter(data, 'mode_cycle', 'f', 7, False)
             self.apply_data_code_value('dataNames', ['mode', 'eign', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
         #    ## load set number
@@ -318,7 +318,7 @@ class OPG(object):
 
     def readOPGForces(self):
         """
-        @todo needs some work...
+        .. todo:: needs some work...
         """
         raise RuntimeError('this should never been called...')
         dt = self.nonlinear_factor

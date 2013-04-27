@@ -255,7 +255,7 @@ class ShellPropertyBackup(Property):
     def Q(self):
         r"""
         Calculates the stiffness matrix \f$ [Q] \f$ for a lamina
-        @todo is this done?
+        .. todo:: is this done?
         p. 114 "Introduction to Composite Material Design"
         """
         raise NotImplementedError()
@@ -279,7 +279,7 @@ class ShellPropertyBackup(Property):
         @param theta          in radians...
         @retval Tinv          the inverse transformation matrix
         @retval TinvTranspose the transposed inverse transformation matrix
-        @todo document better
+        .. todo:: document better
 
         tranformation matrix  \f$ [T] \f$
         \f[ \large  [T] = \left[

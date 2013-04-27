@@ -656,7 +656,7 @@ def string_or_blank(card, n, fieldname, default=None):
 def interpretValue(valueRaw, card='', debug=False):
     """
     .. seealso:: interpret_value
-    .. warning:: will be removed after v0.7 in favor of interpret_value
+    .. deprecated: will be replaced in version 0.7 with interpret_value
     """
     warnings.warn('interpretValue has been deprecated; use '
                   'interpret_value', DeprecationWarning, stacklevel=2)

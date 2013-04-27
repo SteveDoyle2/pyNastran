@@ -46,7 +46,7 @@ def print_scientific_8(value):
     """
     Prints a value in 8-character scientific notation.
     This is a sub-method and shouldnt typically be called
-    @see print_float_8 for a better method
+    .. seealso:: print_float_8 for a better method
     """
     python_value = '%8.11e' % value
     (svalue, sExponent) = python_value.strip().split('e')
@@ -210,8 +210,8 @@ def print_card(fields, size=8):
 
 def printCard(fields, tol=0.):
     """
-    @see print_card
-    @warning will be removed after v0.7 in favor of print_card
+    .. seealso:: print_card
+    .. deprecated: will be replaced in version 0.7 with print_card
     """
     warnings.warn('update printCard to print_card', DeprecationWarning,
                   stacklevel=2)

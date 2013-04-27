@@ -102,9 +102,10 @@ class EIGB(Method):
         return list_fields
 
 
-class EIGC(Method):  #: @todo: not done
+class EIGC(Method):
     """
     Defines data needed to perform complex eigenvalue analysis
+    .. todo: not done
     """
     type = 'EIGC'
 

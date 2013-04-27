@@ -4,7 +4,8 @@ def print_scientific_16(value):
     """
     Prints a value in 16-character scientific notation.
     This is a sub-method and shouldnt typically be called
-    @see print_float_16 for a better method
+
+    .. seealso:: print_float_16 for a better method
     """
     pythonValue = '%16.14e' % value  # -1.e-2
     (svalue, sExponent) = pythonValue.strip().split('e')
@@ -35,7 +36,7 @@ def print_float_16(value, tol=0.):
     """
     Prints a float in nastran 16-character width syntax
     using the highest precision possbile.
-    @see print_float_8
+    .. seealso:: print_float_8
     @warning completely unimplemented & untested
     """
     if abs(value) <= tol:  # tol=1e-8
@@ -43,7 +44,7 @@ def print_float_16(value, tol=0.):
     else:
         if value > 0.:  # positive, not perfect...
 
-            if value < 5e-16:  ## @todo does this work properly with tol
+            if value < 5e-16:  ## .. todo:: does this work properly with tol
                 field = print_scientific_16(value)
                 return field
             elif value < 0.001:
@@ -100,7 +101,7 @@ def print_float_16(value, tol=0.):
                     field = print_scientific_16(value)
                 return field
         else:
-            if value > -5e-15:  ## @todo does this work properly with tol
+            if value > -5e-15:  ## .. todo:: does this work properly with tol
                 field = print_scientific_16(value)
                 return field
             elif value > -0.01:  # -0.001
@@ -163,11 +164,10 @@ def print_float_16(value, tol=0.):
     return field
 
 
-def print_field_16(value, tol=0.):
+def print_field_16(value):
     """
     prints a single 16-character width field
-    @param value the value to print
-    @param tol the abs(tol) to consider value=0 (default=0.)
+    :value: the value to print
     @retval field an 16-character (tested) string
     """
     if isinstance(value, int):
@@ -185,11 +185,10 @@ def print_field_16(value, tol=0.):
     return field
 
 
-def print_card_16(fields, tol=0.):
+def print_card_16(fields):
     """
     Prints a nastran-style card with 16-character width fields.
-    @param fields all the fields in the BDF card (no blanks)
-    @param tol the abs(tol) to consider value=0 (default=0.)
+    :fields: all the fields in the BDF card (no blanks)
     @note A large field format follows the  8-16-16-16-16-8 = 80
      format where the first 8 is the card name or blank (continuation).
      The last 8-character field indicates an optional continuation,
@@ -214,7 +213,7 @@ def print_card_16(fields, tol=0.):
     for i in xrange(1, len(fields)):
         field = fields[i]
         try:
-            out += print_field_16(field, tol=tol)
+            out += print_field_16(field)
         except:
             print("bad fields = %s" % fields)
             raise

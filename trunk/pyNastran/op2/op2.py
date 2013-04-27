@@ -26,7 +26,7 @@ class OP2Deprecated(object):
     def readOP2(self):
         """
         reads the op2 file
-        @warning will be removed in v0.7 in favor of read_op2
+        .. deprecated: will be replaced in version 0.7 with read_op2
         """
         warnings.warn('readOP2 has been deprecated; use '
                       'read_op2', DeprecationWarning, stacklevel=2)
@@ -34,8 +34,8 @@ class OP2Deprecated(object):
 
     def setSubcases(self, iSubcases):
         """
-        @see set_subcases
-        @warning will be removed in v0.7 in favor of set_subcases
+        .. seealso:: set_subcases
+        .. deprecated: will be replaced in version 0.7 with set_subcases
         """
         warnings.warn('setSubcases has been deprecated; use '
                       'set_subcases', DeprecationWarning, stacklevel=2)
@@ -43,8 +43,8 @@ class OP2Deprecated(object):
 
     def setTransientTimes(self, times):  # TODO this name sucks...
         """
-        @see set_transient_times
-        @warning will be removed in v0.7 in favor of set_transient_times
+        .. seealso:: set_transient_times
+        .. deprecated: will be replaced in version 0.7 with set_transient_times
         """
         warnings.warn('setTransientTimes has been deprecated; use '
                       'set_transient_times', DeprecationWarning, stacklevel=2)
@@ -107,7 +107,7 @@ class OP2(BDF,
         @param makeGeom reads the BDF tables (default=False)
         @param debug prints data about how the OP2 was parsed (default=False)
         @param log a logging object to write debug messages to
-         (@see import logging)
+         (.. seealso:: import logging)
         """
         BDF.__init__(self, debug=debug, log=log)
         self.set_subcases()  # initializes the variables
@@ -531,7 +531,7 @@ class OP2(BDF,
     def read_tape_code(self):
         """
         Reads the OP2 header.  This table is still very much in development.
-        @todo whats in this table?
+        .. todo:: whats in this table?
         """
         #self.print_section(500)
         #sys.exit('op2-readTapeCode')

@@ -81,7 +81,7 @@ class ComplexCelasStressObject(complexStressObject):
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         """
-        @todo doesnt write...
+        .. todo:: doesnt write...
         """
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
@@ -90,7 +90,7 @@ class ComplexCelasStressObject(complexStressObject):
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         """
-        @todo improve formatting
+        .. todo:: improve formatting
         """
         words = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 1 )\n',
                  '                                                          (REAL/IMAGINARY)\n',

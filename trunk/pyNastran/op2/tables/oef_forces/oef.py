@@ -326,7 +326,7 @@ class OEF(ThermalElements, RealForces, ComplexForces):
 
         elif self.element_type in [11, 12, 13, 14]:  # CELAS1,CELAS2,CELAS3,CELAS4
             resultName = 'springForces'
-            if self.num_wide == numWideReal:  # @todo is this correct or is DMAP wrong (CELAS1)???
+            if self.num_wide == numWideReal:  # .. todo:: is this correct or is DMAP wrong (CELAS1)???
                 self.create_transient_object(self.springForces, RealSpringForce)
                 self.handle_results_buffer(self.OEF_Spring, resultName)
             elif self.num_wide == numWideImag:

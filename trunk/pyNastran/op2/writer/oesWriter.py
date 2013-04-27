@@ -5,7 +5,7 @@ class Oes1Writer(object):
     def writeOES1(self):
         """
         writes isotropic/composite stress/strain
-        @todo assumes s_code=0 (stress) or 10 (strain)
+        .. todo:: assumes s_code=0 (stress) or 10 (strain)
         """
         msg += self.print_header('OES1X1', 8)
         # OES1X1

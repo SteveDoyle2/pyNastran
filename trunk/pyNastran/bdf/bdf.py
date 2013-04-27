@@ -97,7 +97,7 @@ class BDFDeprecated(object):
     def readBDF(self, bdf_filename, includeDir=None, xref=True, punch=False):
         """
         .. seealso:: read_bdf
-        @deprecated will be removed after v0.6 in favor of read_bdf
+        .. deprecated: will be replaced in version 0.7 with read_bdf
         """
         warnings.warn('readBDF has been deprecated; use '
                       'read_bdf', DeprecationWarning, stacklevel=2)
@@ -106,7 +106,7 @@ class BDFDeprecated(object):
     def updateSolution(self, sol, method=None):
         """
         .. seealso:: update_solution
-        @deprecated will be removed after v0.6 in favor of update_solution
+        .. deprecated: will be replaced in version 0.7 with update_solution
         """
         warnings.warn('updateSolution has been deprecated; use '
                       'update_solution', DeprecationWarning, stacklevel=2)
@@ -115,7 +115,7 @@ class BDFDeprecated(object):
     def setDynamicSyntax(self, dictOfVars):
         """
         .. seealso:: set_dynamic_syntax
-        @deprecated will be removed after v0.6 in favor of set_dynamic_syntax
+        .. deprecated: will be replaced in version 0.7 with set_dynamic_syntax
         """
         warnings.warn('setDynamicSyntax has been deprecated; use '
                       'set_dynamic_syntax', DeprecationWarning, stacklevel=2)
@@ -124,7 +124,7 @@ class BDFDeprecated(object):
     def addCard(self, card, cardName, iCard=0, oldCardObj=None):
         """
         .. seealso:: add_card
-        @deprecated will be removed after v0.6 in favor of add_card
+        .. deprecated: will be replaced in version 0.7 with add_card
         """
         warnings.warn('addCard has been deprecated; use add_card',
                       DeprecationWarning, stacklevel=2)
@@ -133,7 +133,7 @@ class BDFDeprecated(object):
     def disableCards(self, cards):
         """
         .. seealso:: disable_cards
-        @warning will be removed after v0.7 in favor of disable_cards
+        .. deprecated: will be replaced in version 0.7 with disable_cards
         """
         warnings.warn('disableCards has been deprecated; use '
                       'disable_cards', DeprecationWarning, stacklevel=2)
@@ -325,10 +325,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             # initial conditions - sid (set ID)
             #'TIC',  (in tables.py)
 
-            ## methods - @todo EIGRL not done???
+            ## methods - .. todo:: EIGRL not done???
             'EIGB', 'EIGR', 'EIGRL',
 
-            ## cMethods - @todo EIGC not done???
+            ## cMethods - .. todo:: EIGC not done???
             'EIGC', 'EIGP',
 
             # other
@@ -599,7 +599,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         ## stores GUST cards
         self.gusts = {}
         ## stores FLFACT
-        self.flfacts = {}  ## @todo can this be simplified ???
+        self.flfacts = {}  ## .. todo:: can this be simplified ???
         ## stores FLUTTER
         self.flutters = {}
         ## mkaeros
@@ -613,7 +613,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         # BCs
         ## stores thermal boundary conditions - CONV,RADBC
         self.bcs = {}  # e.g. RADBC
-        ## defines the MAT4, MAT5, MATT4, etc.  @todo verify MATT4
+        ## defines the MAT4, MAT5, MATT4, etc.  .. todo:: verify MATT4
         self.thermalMaterials = {}
 
         ## stores PHBDY
@@ -837,7 +837,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
     def _is_case_control_deck(self, line):
         """
-        @todo not done...
+        .. todo:: not done...
         """
         lineUpper = line.upper().strip()
         if 'CEND' in line.upper():

@@ -399,7 +399,7 @@ class PCOMP(CompositeShellProperty):
             for (mid, t, theta, sout) in izip(Mid, T, Theta, Sout):
                 if sout == 0:
                     sout = 'NO'
-                elif sout == 1:  #: @todo not sure  0=NO,1=YES (most likely)
+                elif sout == 1:  #: .. todo:: not sure  0=NO,1=YES (most likely)
                     sout = 'YES'
                 else:
                     raise RuntimeError('unsupported sout.  sout=%r and must be 0 or 1.'
@@ -869,11 +869,11 @@ class PSHELL(ShellProperty):
         msg = ''
         msg += "    COQUE=_F(GROUP_MA='P%s', # COQUE=PSHELL\n" % self.pid
         msg += "              EPAIS=%g, # EPAIS=thickness\n" % self.t
-        msg += "              ANGL_REP=(0.,90.),  # ???\n"  #: @todo what is this?
+        msg += "              ANGL_REP=(0.,90.),  # ???\n"  #: .. todo:: what is this?
         #msg += "              VECTEUR=(1.0,0.0,0.0,)  #  local coordinate system\n"
         msg += "              EXCENTREMENT=%g,  # offset-Z1\n" % self.z1
         msg += "              COQUE_NCOU=1,  # Number of Integration Layers\n"
-        msg += "              CARA=('NSM'), # ???\n"  #: @todo check
+        msg += "              CARA=('NSM'), # ???\n"  #: .. todo:: check
         msg += "              VALE=(%g),),\n" % self.nsm
         return msg
 

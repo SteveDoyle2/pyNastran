@@ -14,8 +14,8 @@ import io
 #class OP4(FortranFile):
 class OP4(object):
     """
-    @todo add endian checking
-    @todo test on big matrices
+    .. todo:: add endian checking
+    .. todo:: test on big matrices
     """
     def __init__(self, log=None):
         #FortranFile.__init__(self)
@@ -155,7 +155,7 @@ class OP4(object):
     def read_real_ascii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
         """
         Method read_real_ascii:
-        @todo possibly split this into readDenseReal and readSparseReal
+        .. todo:: possibly split this into readDenseReal and readSparseReal
          to get rid of all the extra isSparse checks.  This would cleanup the
          runLoop condition as well.
         """
@@ -236,7 +236,7 @@ class OP4(object):
     def read_complex_ascii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
         """
         Method read_complex_ascii:
-        @todo possibly split this into readDenseComplex and readSparseComplex
+        .. todo:: possibly split this into readDenseComplex and readSparseComplex
          to get rid of all the extra isSparse checks.  This would cleanup the
          runLoop condition as well.
         """
@@ -951,7 +951,7 @@ class OP4(object):
         ==== ===============================
 
         @note form defaults to 2, but 1 can be easily determined.  Any others must be specified.
-        @todo call the actual function for now...not hooked up
+        .. todo:: call the actual function for now...not hooked up
         """
         assert isinstance(name, str), name
         assert isinstance(form, int), form

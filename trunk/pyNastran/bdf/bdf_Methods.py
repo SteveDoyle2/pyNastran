@@ -7,16 +7,53 @@ from pyNastran.bdf.cards.loads.staticLoads import Moment, Force
 from pyNastran.bdf.cards.elements.shell import ShellElement
 
 
-class BDFMethods(object):
-    def __init__(self):
-        pass
-
+class BDFMethodsDeprecated(object):
     def MassProperties(self):
         """
-        @see mass_properties
-        @warning will be removed after v0.7 in favor of mass_properties
+        .. seealso:: mass_properties
+        .. deprecated: will be replaced in version 0.7 with mass_properties
         """
         return self.mass_properties()
+
+    def Mass(self):
+        """
+        .. seealso:: mass
+        .. deprecated: will be replaced in version 0.7 with mass
+        """
+        return self.mass()
+
+    def resolveGrids(self, cid=0):
+        """
+        .. seealso:: resolve_grids
+        .. deprecated: will be replaced in version 0.7 with resolve_grids
+        """
+        return self.resolve_grids(cid)
+
+    def unresolveGrids(self, femOld):
+        """
+        .. seealso:: unresolve_grids
+        .. deprecated: will be replaced in version 0.7 with unresolve_grids
+        """
+        return self.unresolve_grids(femOld)
+
+    def sumForces(self):
+        """
+        .. seealso:: sum_forces
+        .. deprecated: will be replaced in version 0.7 with sum_forces
+        """
+        return self.sum_forces()
+
+    def sumMoments(self, p0):
+        """
+        .. seealso:: sum_moments
+        .. deprecated: will be replaced in version 0.7 with sum_moments
+        """
+        return self.sum_moments(p0)
+
+
+class BDFMethods(BDFMethodsDeprecated):
+    def __init__(self):
+        pass
 
     def mass_properties(self):
         """
@@ -52,13 +89,6 @@ class BDFMethods(object):
         cg = cg / mass
         return (mass, cg, I)
 
-    def Mass(self):
-        """
-        @see mass
-        @warning will be removed after v0.7 in favor of mass
-        """
-        return self.mass_properties()
-
     def mass(self):
         """Calculates mass in the global coordinate system"""
         mass = 0.
@@ -74,12 +104,9 @@ class BDFMethods(object):
     #     no internal elements, all the normals on the outside will point
     #     outwards (or inwards).
     #
-    #     @param starterEid
-    #       the element to copy the normal of
-    #     @param eids
-    #       the element IDs to flip to the common direction (default=None -> all)
-    #     @param flipStarter
-    #       should the staring element be flipped (default=False)
+    #     :starterEid: the element to copy the normal of
+    #     :eids:       the element IDs to flip to the common direction (default=None -> all)
+    #     :flipStarter should the staring element be flipped (default=False)
     #
     #     @todo
     #       finish method...think i need to build a edge list...
@@ -136,18 +163,11 @@ class BDFMethods(object):
     #
     # def _get_adjacent_elements(self, nids, nidToEidMap):
     #     """
-    #     @todo doesnt work...
+    #     .. todo:: doesnt work...
     #     """
     #     raise NotImplementedError()
     #     normals = {}
     #     #for nid in
-
-    def resolveGrids(self, cid=0):
-        """
-        @see sum_forces
-        @warning will be removed after v0.7 in favor of resolve_grids
-        """
-        return self.resolve_grids(cid)
 
     def resolve_grids(self, cid=0):
         """
@@ -164,13 +184,6 @@ class BDFMethods(object):
             p = node.PositionWRT(self, cid)
             node.UpdatePosition(self, p, cid)
 
-    def unresolveGrids(self, femOld):
-        """
-        @see sum_forces
-        @warning will be removed after v0.7 in favor of unresolve_grids
-        """
-        return self.unresolve_grids(femOld)
-
     def unresolve_grids(self, fem_old):
         """
         Puts all nodes back to original coordinate system.
@@ -186,13 +199,6 @@ class BDFMethods(object):
             (p, matrix) = coord.transformToGlobal(self.xyz, debug=debug)
             p2 = coord.transformToLocal(p, matrix, debug=debug)
             self.nodes[nid].UpdatePosition(self, p2, coord.cid)
-
-    def sumForces(self):
-        """
-        @see sum_forces
-        @warning will be removed after v0.7 in favor of sum_forces
-        """
-        return self.sum_forces()
 
     def sum_forces(self):
         """
@@ -212,13 +218,6 @@ class BDFMethods(object):
                     F += f
             self.log.info("case=%s F=%s\n\n" % (key, F))
         return F
-
-    def sumMoments(self, p0):
-        """
-        @see sum_moments
-        @warning will be removed after v0.7 in favor of sum_moments
-        """
-        return self.sum_moments(p0)
 
     def sum_moments(self, p0):
         """

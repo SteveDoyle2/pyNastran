@@ -349,7 +349,7 @@ def expand_thru_by(fields):
     """
     expands a list of values of the form [1,5,THRU,9,BY,2,13]
     to be [1,5,7,9,13]
-    @todo not tested
+    .. todo:: not tested
     @note used for QBDY3, ???
     """
     if len(fields) == 1:
@@ -442,7 +442,7 @@ def condense(valueList):
     """
     Builds a list of packs (list of 3 values representing the first, last,
     and delta values for condensing a SET card.
-    @see build_thru
+    .. seealso:: build_thru
     """
     if len(valueList) == 0:
         return []

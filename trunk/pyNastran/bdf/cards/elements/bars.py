@@ -13,7 +13,9 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_double_or_blank, double, double_or_blank,
     string_or_blank, integer_double_string_or_blank)
 
+
 class RodElement(Element):  # CROD, CONROD, CTUBE
+
     def __init__(self, card, data):
         Element.__init__(self, card, data)
 
@@ -180,7 +182,7 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
 
     def Stiffness1D(self, model):  # CROD/CONROD
         """
-        @todo remove this method after making sure it still works
+        .. todo:: remove this method after making sure it still works
         """
         #L = norm(r)
         (n1, n2) = self.nodeIDs()
@@ -502,7 +504,9 @@ class CTUBE(RodElement):
         return self.pid.Area()
 
     def Centroid(self):
-        """@todo improve the formuala for CTUBE centroid"""
+        """
+        .. todo:: improve the formuala for CTUBE centroid
+        """
         return (self.nodes[0].Position() + self.nodes[1].Position()) / 2.
 
     def rawFields(self):
@@ -678,7 +682,7 @@ class CBAR(LineElement):
             self.w2b = double_or_blank(card, 15, 'w2b', 0.0)
             self.w3b = double_or_blank(card, 16, 'w3b', 0.0)
             assert len(card) <= 17, 'len(CBAR card) = %i' % len(card)
-        else:  ## @todo verify
+        else:  #: .. todo:: verify
             #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
             #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
 
@@ -700,7 +704,7 @@ class CBAR(LineElement):
             self.ga = main[2]
             self.gb = main[3]
             #self.offt = str(data[4]) # GGG
-            self.offt = 'GGG'  ## @todo offt can be an integer; translate to char
+            self.offt = 'GGG'  #: .. todo:: offt can be an integer; translate to char
             self.pa = main[4]
             self.pb = main[5]
 
@@ -810,7 +814,9 @@ class CBAR(LineElement):
         self.pid = model.Property(self.pid, msg=msg)
 
     #def updateNodes(self,nodes):
-    #    """@todo maybe improve"""
+    #    """
+    #    .. todo:: maybe improve
+    #    """
     #    self.cross_reference(self,nodes)
 
     def Ga(self):
@@ -988,7 +994,9 @@ class CBAR(LineElement):
         return Lambda
 
     def rawFields(self):
-        """@todo not perfectly accurate"""
+        """
+        .. todo:: not perfectly accurate
+        """
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = set_blank_if_default(self.offt, 'GGG')
         list_fields = ['CBAR', self.eid, self.Pid(), self.Ga(), self.Gb(), x1, x2,
@@ -1064,8 +1072,8 @@ class CBEAM3(CBAR):
 
     def Length(self):
         """
-        L = gb-ga
-        @todo improve formula
+        L = g_b - g_a
+        .. todo:: improve formula
         """
         L = norm(self.gb.Position() - self.ga.Position())
         assert isinstance(L, float)
@@ -1141,7 +1149,7 @@ class CBEAM(CBAR):
             self.sa = integer_or_blank(card, 17, 'sa')
             self.sb = integer_or_blank(card, 18, 'sb')
             assert len(card) <= 19, 'len(CBEAM card) = %i' % len(card)
-        else:  ## @todo verify
+        else:  ## .. todo:: verify
             #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
             #        [f,g0]]
             #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
@@ -1168,9 +1176,9 @@ class CBEAM(CBAR):
             self.sa = main[4]
             self.sb = main[5]
 
-            self.isOfft = True  ## @todo is this correct???
+            self.isOfft = True  ## .. todo:: is this correct???
             #self.offt = str(data[6]) # GGG
-            self.offt = 'GGG'  ## @todo is this correct???
+            self.offt = 'GGG'  ## .. todo:: is this correct???
 
             self.pa = main[6]
             self.pb = main[7]

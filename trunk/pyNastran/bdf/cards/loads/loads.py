@@ -125,19 +125,21 @@ class LoadCombination(Load):  # LOAD, DLOAD
         #return load.lid
 
     def getLoads(self):
-        """@note requires a cross referenced load"""
+        """
+        .. note:: requires a cross referenced load
+        """
         loads = []
         for allLoads in self.loadIDs:
             for load in allLoads:
                 loads += load.getLoads()
-            #loads += self.ID  # @todo:  what does this mean, was uncommented
+            #loads += self.ID  #: :: todo:  what does this mean, was uncommented
         return loads
 
 
 class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     """
     Defines a sequence of static load sets
-    @todo how does this work...
+    .. todo:: how does this work...
     """
     type = 'LSEQ'
 
@@ -303,7 +305,10 @@ class SLOAD(Load):
             return node
         return node.nid
 
-    def getLoads(self):  ## @todo:  not done
+    def getLoads(self):
+        """
+        .. todo::  not done
+        """
         return []
 
     def rawFields(self):

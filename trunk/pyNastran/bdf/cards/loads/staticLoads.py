@@ -168,7 +168,7 @@ class LOAD(LoadCombination):
         Get all load objects in a simplified form,
         which means all scale factors are already applied and
         only base objects (no LOAD cards) will be returned.
-        @todo lots more object types to support
+        .. todo:: lots more object types to support
         """
         scale_factors = []
         loads = []
@@ -742,7 +742,7 @@ class MOMENT(Moment):
 
     def cross_reference(self, model):
         """
-        @todo cross reference and fix repr function
+        .. todo:: cross reference and fix repr function
         """
         pass
 

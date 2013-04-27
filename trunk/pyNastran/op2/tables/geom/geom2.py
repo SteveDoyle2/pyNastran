@@ -751,7 +751,7 @@ class Geometry2(object):
     def readCTETP(self, data):
         """
         CTETP(12201,122,9013)    - the marker for Record 86
-        @todo create object
+        .. todo:: create object
         """
         #print "reading CTETP"
         raise NotImplementedError('needs work...')

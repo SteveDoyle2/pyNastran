@@ -158,7 +158,7 @@ class OUG(object):
                                       'i', 5)  # mode number
                 self.add_data_parameter(data, 'eigr',
                                       'f', 6, False)  # real eigenvalue
-                self.add_data_parameter(data, 'mode_cycle', 'i', 7, False)  # mode or cycle @todo confused on the type - F1???
+                self.add_data_parameter(data, 'mode_cycle', 'i', 7, False)  # mode or cycle .. todo:: confused on the type - F1???
                 self.apply_data_code_value('dataNames', [
                     'mode', 'eigr', 'mode_cycle'])
             #elif self.analysis_code==3: # differential stiffness
