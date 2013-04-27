@@ -149,20 +149,20 @@ class GRDSET(Node):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        ## Grid point coordinate system
+        #: Grid point coordinate system
         blank(card, 1, 'blank')
         self.cp = integer_or_blank(card, 2, 'cp', 0)
         blank(card, 3, 'blank')
         blank(card, 4, 'blank')
         blank(card, 5, 'blank')
 
-        ## Analysis coordinate system
+        #: Analysis coordinate system
         self.cd = integer_or_blank(card, 6, 'cd', 0)
 
-        ## Default SPC constraint on undefined nodes
+        #: Default SPC constraint on undefined nodes
         self.ps = str(integer_or_blank(card, 7, 'ps', ''))
 
-        ## Superelement ID
+        #: Superelement ID
         self.seid = integer_or_blank(card, 8, 'seid', 0)
         assert len(card) <= 9, 'len(GRDSET card) = %i' % len(card)
 
@@ -264,6 +264,13 @@ class GRIDB(Node):
 
 
 class GRID(Node):
+    """
+    +------+-----+----+----+----+----+----+----+------+
+    |   1  |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9   |
+    +======+=====+====+====+====+====+====+====+======+
+    | GRID | NID | CP | X1 | X2 | X3 | CD | PS | SEID | 
+    +------+-----+----+----+----+----+----+----+------+
+    """
     type = 'GRID'
 
     def __init__(self, card=None, data=None, comment=''):
@@ -276,25 +283,25 @@ class GRID(Node):
         Node.__init__(self, card, data)
 
         if card:
-            ## Node ID
+            #: Node ID
             self.nid = integer(card, 1, 'nid')
 
-            ## Grid point coordinate system
+            #: Grid point coordinate system
             self.cp = integer_or_blank(card, 2, 'cp', 0)
             
             x = double_or_blank(card, 3, 'x1', 0.)
             y = double_or_blank(card, 4, 'x2', 0.)
             z = double_or_blank(card, 5, 'x3', 0.)
-            ## node location in local frame
+            #: node location in local frame
             self.xyz = array([x, y, z])
 
-            ## Analysis coordinate system
+            #: Analysis coordinate system
             self.cd = integer_or_blank(card, 6, 'cd', 0)
 
-            ## SPC constraint
+            #: SPC constraint
             self.ps = str(integer_or_blank(card, 7, 'ps', ''))
 
-            ## Superelement ID
+            #: Superelement ID
             self.seid = integer_or_blank(card, 8, 'seid', 0)
             assert len(card) <= 9, 'len(GRID card) = %i' % len(card)
         else:
@@ -363,20 +370,20 @@ class GRID(Node):
     def Position(self, debug=False):
         """
         returns the point in the global XYZ coordinate system
-        @param self the object pointer
-        @param debug developer debug
+        :self:  the object pointer
+        :debug: developer debug
         """
         p, matrix = self.cp.transformToGlobal(self.xyz, debug=debug)
         return p
 
     def PositionWRT(self, model, cid, debug=False):
         """
-        returns the point which started in some arbitrary local coordinate
+        Gets the point which started in some arbitrary local coordinate
         system and returns it in the desired coordinate system
-        @param self the object pointer
-        @param model the BDF model object
-        @param cid the desired coordinate ID (int)
-        @param debug developer debug
+        :self:  the object pointer
+        :model: the BDF model object
+        :cid:   the desired coordinate ID (int)
+        :debug: developer debug
         """
         if cid == self.Cp():
             return self.xyz
@@ -426,6 +433,13 @@ class GRID(Node):
 
 
 class POINT(Node):
+    """
+    +-------+-----+----+----+----+----+----+----+------+
+    |    1  |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9   |
+    +=======+=====+====+====+====+====+====+====+======+
+    | POINT | NID | CP | X1 | X2 | X3 |    |    |      | 
+    +-------+-----+----+----+----+----+----+----+------+
+    """
     type = 'POINT'
 
     def __init__(self, card=None, data=None, comment=''):
@@ -438,26 +452,26 @@ class POINT(Node):
         Node.__init__(self, card, data)
 
         if card:
-            ## Node ID
+            #: Node ID
             self.nid = integer(card, 1, 'nid')
 
-            ## Grid point coordinate system
+            #: Grid point coordinate system
             self.cp = integer_or_blank(card, 2, 'cp', 0)
 
             x = double_or_blank(card, 3, 'x1', 0.)
             y = double_or_blank(card, 4, 'x2', 0.)
             z = double_or_blank(card, 5, 'x3', 0.)
-            #xyz = card.fields(3, 6, [0., 0., 0.])
-            ## node location in local frame
+
+            #: node location in local frame
             self.xyz = array([x, y, z])
 
-            ## Analysis coordinate system
+            #: Analysis coordinate system
             self.cd = integer_or_blank(card, 6, 'cd', 0)
 
-            ## SPC constraint
+            #: SPC constraint
             self.ps = str(integer_or_blank(card, 7, 'ps', ''))
 
-            ## Superelement ID
+            #: Superelement ID
             self.seid = integer_or_blank(card, 8, 'seid', 0)
             assert len(card) <= 9, 'len(POINT card) = %i' % len(card)
         else:
@@ -480,21 +494,23 @@ class POINT(Node):
 
     def Position(self, debug=False):
         """
-        returns the point in the global XYZ coordinate system
-        @param self the object pointer
-        @param debug developer debug
+        Gets the point in the global XYZ coordinate system
+
+        :self: the object pointer
+        :debug: developer debug
         """
         p, matrix = self.cp.transformToGlobal(self.xyz, debug=debug)
         return p
 
     def PositionWRT(self, model, cid, debug=False):
         """
-        returns the point which started in some arbitrary local coordinate
+        Gets the point which started in some arbitrary local coordinate
         system and returns it in the desired coordinate system
-        @param self the object pointer
-        @param model the BDF model object
-        @param cid the desired coordinate ID (int)
-        @param debug developer debug
+
+        :self:  the object pointer
+        :model: the BDF model object
+        :cid:   the desired coordinate ID (int)
+        :debug: developer debug
         """
         if cid == self.Cp():
             return self.xyz

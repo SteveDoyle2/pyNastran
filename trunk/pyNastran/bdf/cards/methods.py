@@ -42,35 +42,35 @@ class EIGB(Method):
         if comment:
             self._comment = comment
         if card:
-            ## Set identification number. (Unique Integer > 0)
+            #: Set identification number. (Unique Integer > 0)
             self.sid = integer(card, 1, 'sid')
 
-            ## Method of eigenvalue extraction. (Character: 'INV' for inverse
-            ## power method or 'SINV' for enhanced inverse power method.)
+            #: Method of eigenvalue extraction. (Character: 'INV' for inverse
+            #: power method or 'SINV' for enhanced inverse power method.)
             self.method = string(card, 2, 'method')
             
             if self.method not in ['INV', 'SINV']:
                 msg = 'method must be INV or SINV.  method=|%s|' % self.method
                 raise RuntimeError(msg)
 
-            ## Eigenvalue range of interest. (Real, L1 < L2)
+            #: Eigenvalue range of interest. (Real, L1 < L2)
             self.L1 = double(card, 3, 'L1')
             self.L2 = double(card, 4, 'L2')
             if not(self.L1 < self.L2):
                 msg = 'L1=%s L2=%s; L1<L2 is requried' % (self.L1, self.L2)
                 raise RuntimeError(msg)
 
-            ## Estimate of number of roots in positive range not used for
-            ## METHOD = 'SINV'. (Integer > 0)
+            #: Estimate of number of roots in positive range not used for
+            #: METHOD = 'SINV'. (Integer > 0)
             self.nep = integer_or_blank(card, 5, 'nep', 0)
 
-            ## Desired number of positive and negative roots.
-            ## (Integer>0; Default = 3*NEP)
+            #: Desired number of positive and negative roots.
+            #: (Integer>0; Default = 3*NEP)
             self.ndp = integer_or_blank(card, 6, 'ndp', 3 * self.nep)
             self.ndn = integer_or_blank(card, 7, 'ndn', 3 * self.nep)
 
-            ## Method for normalizing eigenvectors.
-            ## ('MAX' or 'POINT';Default='MAX')
+            #: Method for normalizing eigenvectors.
+            #: ('MAX' or 'POINT';Default='MAX')
             self.norm = string_or_blank(card, 9, 'norm', 'MAX')
             if self.norm == 'POINT':
                 self.G = integer(card, 10, 'G')
@@ -102,7 +102,7 @@ class EIGB(Method):
         return list_fields
 
 
-class EIGC(Method):  ## @todo: not done
+class EIGC(Method):  #: @todo: not done
     """
     Defines data needed to perform complex eigenvalue analysis
     """
@@ -126,30 +126,30 @@ class EIGC(Method):  ## @todo: not done
         self.NDJs = []
 
         if card:
-            ## Set identification number. (Unique Integer > 0)
+            #: Set identification number. (Unique Integer > 0)
             self.sid = integer(card, 1, 'sid')
-            ## Method of complex eigenvalue extraction
+            #: Method of complex eigenvalue extraction
             self.method = string(card, 2, 'method')
             assert self.method in ['INV', 'HESS', 'CLAN'],(
                     'method=%s is not INV, HESS, CLAN' % (self.method))
-            ## Method for normalizing eigenvectors
+            #: Method for normalizing eigenvectors
             self.norm = string_or_blank(card, 3, 'norm')
             if self.norm == 'POINT':
-                ## Grid or scalar point identification number. Required only if
-                ## NORM='POINT'. (Integer>0)
+                #: Grid or scalar point identification number. Required only if
+                #: NORM='POINT'. (Integer>0)
                 self.G = integer(card, 4, 'G')
 
-                ## Component number. Required only if NORM='POINT' and G is a
-                ## geometric grid point. (1<Integer<6)
+                #: Component number. Required only if NORM='POINT' and G is a
+                #: geometric grid point. (1<Integer<6)
                 self.C = components(card, 5, 'C')
             else:
                 self.G = blank(card, 4, 'G')
                 self.C = blank(card, 5, 'C')
             
-            ## Convergence criterion. (Real > 0.0. Default values are:
-            # 10^-4 for METHOD = "INV",
-            # 10^-15 for METHOD = "HESS",
-            ## E is machine dependent for METHOD = "CLAN".)
+            #: Convergence criterion. (Real > 0.0. Default values are:
+            #: 10^-4 for METHOD = "INV",
+            #: 10^-15 for METHOD = "HESS",
+            #: E is machine dependent for METHOD = "CLAN".)
             self.E = double_or_blank(card, 6, 'E')
             self.ndo = integer_double_string_or_blank(card, 7, 'ND0')
 
@@ -284,23 +284,23 @@ class EIGP(Method):
         if comment:
             self._comment = comment
         if card:
-            ## Set identification number. (Unique Integer > 0)
+            #: Set identification number. (Unique Integer > 0)
             self.sid = integer(card, 1, 'sid')
 
-            ## Coordinates of point in complex plane. (Real)
+            #: Coordinates of point in complex plane. (Real)
             self.alpha1 = double(card, 2, 'alpha1')
-            ## Coordinates of point in complex plane. (Real)
+            #: Coordinates of point in complex plane. (Real)
             self.omega1 = double(card, 3, 'omega1')
-            ## Multiplicity of complex root at pole defined by point at ALPHAi
-            ## and OMEGAi
+            #: Multiplicity of complex root at pole defined by point at ALPHAi
+            #: and OMEGAi
             self.m1 = integer(card, 4, 'm1')
 
-            ## Coordinates of point in complex plane. (Real)
+            #: Coordinates of point in complex plane. (Real)
             self.alpha2 = double(card, 5, 'alpha2')
-            ## Coordinates of point in complex plane. (Real)
+            #: Coordinates of point in complex plane. (Real)
             self.omega2 = double(card, 6, 'omega2')
-            ## Multiplicity of complex root at pole defined by point at ALPHAi
-            ## and OMEGAi
+            #: Multiplicity of complex root at pole defined by point at ALPHAi
+            #: and OMEGAi
             self.m2 = integer(card, 7, 'm2')
             assert len(card) == 8, 'len(EIGP card) = %i' % len(card)
         else:
@@ -329,23 +329,23 @@ class EIGR(Method):
         if comment:
             self._comment = comment
         if card:
-            ## Set identification number. (Unique Integer > 0)
+            #: Set identification number. (Unique Integer > 0)
             self.sid = integer(card, 1, 'sid')
 
-            ## Method of eigenvalue extraction. (Character: 'INV' for inverse
-            ## power method or 'SINV' for enhanced inverse power method.)
+            #: Method of eigenvalue extraction. (Character: 'INV' for inverse
+            #: power method or 'SINV' for enhanced inverse power method.)
             self.method = string_or_blank(card, 2, 'method', 'LAN')
             assert self.method in ['LAN', 'AHOU', 'INV', 'SINV', 'GIV', 'MGIV', 'HOU', 'MHOU', 'AGIV'], 'method=%s' % self.method
 
-            ## Frequency range of interest
+            #: Frequency range of interest
             self.f1 = double_or_blank(card, 3, 'f1')
             self.f2 = double_or_blank(card, 4, 'f2')
 
-            ## Estimate of number of roots in range (Required for
-            ## METHOD = 'INV'). Not used by 'SINV' method.
+            #: Estimate of number of roots in range (Required for
+            #: METHOD = 'INV'). Not used by 'SINV' method.
             self.ne = integer_or_blank(card, 5, 'ne')
 
-            ## Desired number of roots (default=600 for SINV 3*ne for INV)
+            #: Desired number of roots (default=600 for SINV 3*ne for INV)
             if self.method in ['SINV']:
                 self.nd = integer_or_blank(card, 6, 'nd', 600)
             if self.method in ['INV']:
@@ -354,18 +354,18 @@ class EIGR(Method):
                 self.nd = integer_or_blank(card, 6, 'nd', 0)
             else:
                 self.nd = integer(card, 6, 'nd')
-            ## Method for normalizing eigenvectors. ('MAX' or 'POINT';
-            ## Default='MAX')
+            #: Method for normalizing eigenvectors. ('MAX' or 'POINT';
+            #: Default='MAX')
             self.norm = string_or_blank(card, 9, 'norm', 'MASS')
             assert self.norm in ['POINT', 'MASS', 'MAX']
 
             if self.method == 'POINT':
-                ## Grid or scalar point identification number. Required only if
-                ## NORM='POINT'. (Integer>0)
+                #: Grid or scalar point identification number. Required only if
+                #: NORM='POINT'. (Integer>0)
                 self.G = integer(card, 10, 'G')
 
-                ## Component number. Required only if NORM='POINT' and G is a
-                ## geometric grid point. (1<Integer<6)
+                #: Component number. Required only if NORM='POINT' and G is a
+                #: geometric grid point. (1<Integer<6)
                 self.C = components(card, 11, 'C')
             else:
                 self.G = blank(card, 10, 'G')
@@ -402,23 +402,23 @@ class EIGRL(Method):
         if comment:
             self._comment = comment
         if card:
-            ## Set identification number. (Unique Integer > 0)
+            #: Set identification number. (Unique Integer > 0)
             self.sid = integer(card, 1, 'sid')
-            ## For vibration analysis: frequency range of interest. For
-            ## buckling analysis: eigenvalue range of interest. See Remark 4.
-            ## (Real or blank, -5 10e16 <= V1 < V2 <= 5.10e16)
+            #: For vibration analysis: frequency range of interest. For
+            #: buckling analysis: eigenvalue range of interest. See Remark 4.
+            #: (Real or blank, -5 10e16 <= V1 < V2 <= 5.10e16)
             self.v1 = double_or_blank(card, 2, 'v1')
             self.v2 = double_or_blank(card, 3, 'v2')
-            ## Number of roots desired
+            #: Number of roots desired
             self.nd = integer_or_blank(card, 4, 'nd')
-            ## Diagnostic level. (0 < Integer < 4; Default = 0)
+            #: Diagnostic level. (0 < Integer < 4; Default = 0)
             self.msglvl = integer_or_blank(card, 5, 'msglvl', 0)
-            ## Number of vectors in block or set. Default is machine dependent
+            #: Number of vectors in block or set. Default is machine dependent
             self.maxset = integer_or_blank(card, 6, 'maxset')
-            ## Estimate of the first flexible mode natural frequency
-            ## (Real or blank)
+            #: Estimate of the first flexible mode natural frequency
+            #: (Real or blank)
             self.shfscl = double_or_blank(card, 7, 'shfscl')
-            ## Method for normalizing eigenvectors (Character: 'MASS' or 'MAX')
+            #: Method for normalizing eigenvectors (Character: 'MASS' or 'MAX')
             self.norm = string_or_blank(card, 8, 'norm')
 
             optionValues = card[9:]
@@ -431,7 +431,7 @@ class EIGRL(Method):
                 self.options.append(option)
                 self.values.append(value)
 
-            ## Method for normalizing eigenvectors
+            #: Method for normalizing eigenvectors
             if sol in [103, 115, 146]:
                 # normal modes,cyclic normal modes, flutter
                 self.norm = string_or_blank(card, 8, 'norm', 'MASS')

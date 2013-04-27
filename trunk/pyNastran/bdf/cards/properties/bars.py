@@ -613,7 +613,7 @@ class PTUBE(LineProperty):
             self.t = data[3]
             self.nsm = data[4]
             self.OD2 = self.OD1
-            #self.OD2 = data[5]  ## @note quirk to this one...
+            #self.OD2 = data[5]  #: @note quirk to this one...
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -701,20 +701,20 @@ class PBAR(LineProperty):
         if comment:
             self._comment = comment
         if card:
-            ## property ID -> use Pid()
+            #: property ID -> use Pid()
             self.pid = integer(card, 1, 'pid')
-            ## material ID -> use Mid()
+            #: material ID -> use Mid()
             self.mid = integer(card, 2, 'mid')
-            ## Area -> use Area()
+            #: Area -> use Area()
             self.A = double_or_blank(card, 3, 'A', 0.0)
-            ## Izz -> use Izz()
+            #: Izz -> use Izz()
             self.i1 = double_or_blank(card, 4, 'I1', 0.0)
-            ## Iyy -> use Iyy()
+            #: Iyy -> use Iyy()
             self.i2 = double_or_blank(card, 5, 'I2', 0.0)
-            ## Polar Moment of Inertia J -> use J()
+            #: Polar Moment of Inertia J -> use J()
             # default=1/2(I1+I2) for SOL=600,otherwise 0.0
             self.j = double_or_blank(card, 6, 'J', 0.0)
-            ## nonstructral mass -> use Nsm()
+            #: nonstructral mass -> use Nsm()
             self.nsm = double_or_blank(card, 7, 'nsm', 0.0)
 
             self.C1 = double_or_blank(card, 9, 'C1', 0.0)
@@ -726,9 +726,9 @@ class PBAR(LineProperty):
             self.F1 = double_or_blank(card, 15, 'F1', 0.0)
             self.F2 = double_or_blank(card, 16, 'F2', 0.0)
 
-            ## default=infinite
+            #: default=infinite
             self.K1 = double_or_blank(card, 17, 'K1', 1e8)
-            ## default=infinite
+            #: default=infinite
             self.K2 = double_or_blank(card, 18, 'K2', 1e8)
             self.i12 = double_or_blank(card, 19, 'I12', 0.0)
             if self.A == 0.0:
@@ -744,7 +744,7 @@ class PBAR(LineProperty):
             self.j = data[5]
 
             self.nsm = data[6]
-            #self.fe  = data[7] ## @todo not documented....
+            #self.fe  = data[7] #: @todo not documented....
             self.C1 = data[8]
             self.C2 = data[9]
             self.D1 = data[10]
@@ -1142,7 +1142,7 @@ class PBARL(LineProperty):
             xi = points[1,:-1]
             xip1 = points[1,1:]
             
-            ## @see http://en.wikipedia.org/wiki/Area_moment_of_inertia
+            #: .. seealso:: http://en.wikipedia.org/wiki/Area_moment_of_inertia
             ai = xi*yip1 - xip1*yi
             Ixx1 = 1/12*sum((yi**2 + yi*yip1+yip1**2)*ai)
             Iyy1 = 1/12*sum((xi**2 + xi*xip1+xip1**2)*ai)
@@ -1154,7 +1154,7 @@ class PBARL(LineProperty):
             xi = points[1,:-1]
             xip1 = points[1,1:]
             
-            ## @see http://en.wikipedia.org/wiki/Area_moment_of_inertia
+            #: .. seealso:: http://en.wikipedia.org/wiki/Area_moment_of_inertia
             ai = xi*yip1 - xip1*yi
             Ixx2 = 1/12*sum((yi**2 + yi*yip1+yip1**2)*ai)
             Iyy2 = 1/12*sum((xi**2 + xi*xip1+xip1**2)*ai)
@@ -1177,7 +1177,7 @@ class PBARL(LineProperty):
             xi = points[1,:-1]
             xip1 = points[1,1:]
             
-            ## @see http://en.wikipedia.org/wiki/Area_moment_of_inertia
+            #: .. seealso:: http://en.wikipedia.org/wiki/Area_moment_of_inertia
             ai = xi*yip1 - xip1*yi
             Ixx = 1/12*sum((yi**2 + yi*yip1+yip1**2)*ai)
             Iyy = 1/12*sum((xi**2 + xi*xip1+xip1**2)*ai)
@@ -1186,7 +1186,7 @@ class PBARL(LineProperty):
             msg = 'J for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
             raise NotImplementedError(msg)
 
-        ## @see http://en.wikipedia.org/wiki/Perpendicular_axis_theorem
+        #: .. seealso:: http://en.wikipedia.org/wiki/Perpendicular_axis_theorem
         J = Ixx + Iyy
         return J
 
@@ -1229,7 +1229,7 @@ class PBCOMP(LineProperty):
         if comment:
             self._comment = comment
         if card:
-            ## Property ID
+            #: Property ID
             self.pid = integer(card, 1, 'pid')
             self.mid = integer(card, 2, 'mid')
             self.A = double_or_blank(card, 3, 'A', 0.0)
@@ -1406,10 +1406,10 @@ class PBEAM(IntegratedLineProperty):
                 x = nmajor * 16 + 1
 
                 # If it's an SO field, we don't read the footer
-                ## remark 6:
-                ## The fourth and fifth continuation entries, which
-                ## contain fields K1 through N2(B), are optional
-                ## and may be omitted if the default values are appropriate.
+                # remark 6:
+                # The fourth and fifth continuation entries, which
+                # contain fields K1 through N2(B), are optional
+                # and may be omitted if the default values are appropriate.
                 if card.field(x) in ['YES', 'YESA', 'NO']:  # there is no footer
                     nmajor += 1
                     x += 16
@@ -1435,7 +1435,7 @@ class PBEAM(IntegratedLineProperty):
             # ----------------------------------------------------------------
             for nRepeated in xrange(1, nmajor): # start at 1 to drop the header
                 #print("  adding a major")
-                ## field 17 is the first possible so
+                # field 17 is the first possible so
                 if isCDEF:
                     nStart = nRepeated * 16 + 1
                 else:
@@ -1494,31 +1494,31 @@ class PBEAM(IntegratedLineProperty):
             
 
             # footer fields
-            ## Shear stiffness factor K in K*A*G for plane 1/2.
+            #: Shear stiffness factor K in K*A*G for plane 1/2.
             self.k1 = double_or_blank(card, x, 'k1', 1.0)
             self.k2 = double_or_blank(card, x + 1, 'k2', 1.0)
             
-            ## Shear relief coefficient due to taper for plane 1/2.
+            #: Shear relief coefficient due to taper for plane 1/2.
             self.s1 = double_or_blank(card, x + 2, 's1', 0.0)
             self.s2 = double_or_blank(card, x + 3, 's2', 0.0)
             
-            ## non structural mass moment of inertia per unit length
-            ## about nsm center of gravity at Point A/B.
+            #: non structural mass moment of inertia per unit length
+            #: about nsm center of gravity at Point A/B.
             self.nsia = double_or_blank(card, x + 4, 'nsia', 0.0)
             self.nsib = double_or_blank(card, x + 5, 'nsib', self.nsia)
 
-            ## warping coefficient for end A/B.  
+            #: warping coefficient for end A/B.  
             self.cwa = double_or_blank(card, x + 6, 'cwa', 0.0)
             self.cwb = double_or_blank(card, x + 7, 'cwb', self.cwa)
 
-            ## (y,z) coordinates of center of gravity of
-            ## nonstructural mass for end A/B.
+            #: (y,z) coordinates of center of gravity of
+            #: nonstructural mass for end A/B.
             self.m1a = double_or_blank(card, x + 8, 'm1a', 0.0)
             self.m2a = double_or_blank(card, x + 9, 'm2a', self.m1a)
             self.m1b = double_or_blank(card, x + 10, 'm1b', 0.0)
             self.m2b = double_or_blank(card, x + 11, 'm2b', self.m1b)
 
-            ## (y,z) coordinates of neutral axis for end A/B.
+            #: (y,z) coordinates of neutral axis for end A/B.
             self.n1a = double_or_blank(card, x + 12, 'n1a', 0.0)
             self.n2a = double_or_blank(card, x + 13, 'n2a', self.n1a)
             self.n1b = double_or_blank(card, x + 14, 'n1a', 0.0)

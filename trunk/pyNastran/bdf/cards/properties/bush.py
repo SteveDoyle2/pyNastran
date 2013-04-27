@@ -51,7 +51,7 @@ class PBUSH(BushingProperty):
         self.et = None
 
         if card:
-            ## Property ID
+            #: Property ID
             self.pid = integer(card, 1, 'pid')
 
             nFields = card.nFields()
@@ -85,8 +85,8 @@ class PBUSH(BushingProperty):
         ## the element coordinate system.
         #self.k = string(card, iStart, 'k')
 
-        ## Nominal stiffness values in directions 1 through 6.
-        ## See Remarks 2 and 3. (Real; Default = 0.0)
+        #: Nominal stiffness values in directions 1 through 6.
+        #: See Remarks 2 and 3. (Real; Default = 0.0)
         self.Ki = fields(double_or_blank, card, 'Ki', iStart + 1, iStart + 7)
         #print "Ki = ",self.Ki
         self.vars.append('K')
@@ -96,9 +96,9 @@ class PBUSH(BushingProperty):
         ## damping.
         #self.b = string(card, iStart, 'b')
 
-        ## Force per unit velocity (Real)
-        ## Nominal damping coefficients in direction 1 through 6 in units of
-        ## force per unit velocity. See Remarks 2, 3, and 9. (Real; Default=0.)
+        #: Force per unit velocity (Real)
+        #: Nominal damping coefficients in direction 1 through 6 in units of
+        #: force per unit velocity. See Remarks 2, 3, and 9. (Real; Default=0.)
         self.Bi = fields(double_or_blank, card, 'Bi', iStart + 1, iStart + 7)
         self.vars.append('B')
 
@@ -107,8 +107,8 @@ class PBUSH(BushingProperty):
         ## damping constants. See Remark 7. (Character)
         #self.ge = string(card, iStart, 'ge')
 
-        ## Nominal structural damping constant in directions 1 through 6. See
-        ## Remarks 2. and 3. (Real; Default = 0.0)
+        #: Nominal structural damping constant in directions 1 through 6. See
+        #: Remarks 2. and 3. (Real; Default = 0.0)
         self.GEi = fields(double_or_blank, card, 'GEi', iStart + 1, iStart + 7)
         self.vars.append('GE')
 
@@ -192,7 +192,7 @@ class PBUSH1D(BushingProperty):
         self.shockIDECSD = None
 
         if card:
-            ## Property ID
+            #: Property ID
             self.pid = integer(card, 1, 'pid')
             self.k = double_or_blank(card, 2, 'k', 0.0)
             self.c = double_or_blank(card, 3, 'c', 0.0)

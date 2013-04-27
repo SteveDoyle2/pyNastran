@@ -152,10 +152,11 @@ class BDFMethods(object):
     def resolve_grids(self, cid=0):
         """
         Puts all nodes in a common coordinate system (mainly for cid testing)
-        @param self the object pointer
-        @param cid the cid to resolve the nodes to
-        @note loses association with previous coordinate systems so to go back
-         requires another fem
+
+        :self: the object pointer
+        :cid:  the cid to resolve the nodes to
+        .. note:: loses association with previous coordinate systems so to go
+                  back requires another fem
         """
         assert cid in self.coords, ('cannot resolve nodes to '
                                     'cid=|%s| b/c it doesnt exist' % (cid))
@@ -173,12 +174,11 @@ class BDFMethods(object):
     def unresolve_grids(self, fem_old):
         """
         Puts all nodes back to original coordinate system.
-        @param self
-          the object pointer
-        @param fem_old
-          the old model that hasnt lost it's connection to the node cids
-        @warning
-          hasnt been tested well...
+
+        :self:       the object pointer
+        :fem_old:    the old model that hasnt lost it's connection to the
+                     node cids
+        .. warning:: hasnt been tested well...
         """
         debug = False
         for (nid, node_old) in fem_old.nodes.iteritems():
@@ -226,10 +226,10 @@ class BDFMethods(object):
         for all load cases.
         Considers FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2.
 
-        @param p0 the reference point
+        :p0: the reference point
         @retval Moments the moments as a numpy array
         @retval Forces the forces as a numpy array
-        @warning not validated
+        ..warning:: not validated
         """
         p = array(p0)
         for (key, loadCase) in self.loads.iteritems():

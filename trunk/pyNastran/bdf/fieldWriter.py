@@ -25,10 +25,11 @@ def is_same(value1, value2):
 def set_blank_if_default(value, default):
     """
     Used when setting the output data of a card to clear default values
-    @param value the field value the may be set to None (blank)
+
+    :value: the field value the may be set to None (blank)
      if value=default
-    @param default the default value for the field
-    @note this method is used by almost every card when printing
+    :param: default the default value for the field
+    .. note:: this method is used by almost every card when printing
     """
     return None if is_same(value, default) else value
 
@@ -171,7 +172,8 @@ def print_float_8(value):
 def print_field(value):
     """
     Prints a single 8-character width field
-    @param value the value to print
+
+    :value: the value to print
     @retval field an 8-character (tested) string
     """
     if isinstance(value, int):
@@ -191,9 +193,10 @@ def print_field(value):
 
 def print_card(fields, size=8):
     """
-    prints a nastran-style card with 8 or 16-character width fields
-    @param fields all the fields in the BDF card (no blanks)
-    @param size the width of a field (size=8 or 16)
+    Prints a nastran-style card with 8 or 16-character width fields
+
+    :fields: all the fields in the BDF card (no blanks)
+    :size: the width of a field (size=8 or 16)
     @warning 8 or 16 is required, but 16 is not checked for
     """
     if size == 8:
@@ -218,12 +221,13 @@ def printCard(fields, tol=0.):
 def print_card_8(fields):
     """
     Prints a nastran-style card with 8-character width fields.
-    @param fields all the fields in the BDF card (no blanks)
-    @note A small field format follows the  8-8-8-8-8-8-8-8 = 80
-     format where the first 8 is the card name or blank (continuation).
-     The last 8-character field indicates an optional continuation,
-     but because it's a left-justified unneccessary field,
-     print_card doesnt use it.
+
+    :fields all the fields in the BDF card (no blanks)
+    .. note:: A small field format follows the  8-8-8-8-8-8-8-8 = 80
+              format where the first 8 is the card name or
+              blank (continuation).  The last 8-character field indicates
+              an optional continuation, but because it's a left-justified
+              unneccessary field, print_card doesnt use it.
     """
     try:
         out = '%-8s' % fields[0]
@@ -253,9 +257,11 @@ def print_int_card(fields):
     All fields (other than the first field) must be integers.
     This is used to speed up SET cards.
     Prints a nastran-style card with 8-character width fields.
-    @param fields the list of fields to write to a nastran card.
-     The first field is a word, all other fields are integers.
-    @warning Blanks are not allowed!
+
+    :fields: the list of fields to write to a nastran card.
+             The first field is a word, all other fields are integers.
+
+    .. warning:: Blanks are not allowed!
     """
     try:
         out = '%-8s' % fields[0]

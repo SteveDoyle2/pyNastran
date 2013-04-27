@@ -54,18 +54,16 @@ def make_single_streamed_card(log, card, debug=False):
 def nastran_split(log, line, is_large_field, debug=False):
     """
     Splits a single BDF line into large field or small field format
-    @param line
-      the BDF line
-    @param is_large_field
-      a flag indicating small/large field format (True/False)
-    @param
-      debug extra developer debug
+
+    :line: the BDF line
+    :is_large_field: a flag indicating small/large field format (True/False)
+    :debug: extra developer debug
 
     @retval fields
       the 9 (small) or 5 (large) fields for the line
 
-    @note CSV Format is handled by parse_csv
-    @note tabs are handled prior to running this
+    .. note:: CSV Format is handled by parse_csv
+    .. note:: tabs are handled prior to running this
     """
     if debug:
         print("is_large_field = %s" % (is_large_field))

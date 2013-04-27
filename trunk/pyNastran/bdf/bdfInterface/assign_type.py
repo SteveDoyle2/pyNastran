@@ -2,6 +2,11 @@ from pyNastran.utils import is_string
 from .BDF_Card import BDFCard
 
 def components(card, n, fieldname):
+    """
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
+    """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
@@ -36,6 +41,12 @@ def components(card, n, fieldname):
     return svalue3
 
 def components_or_blank(card, n, fieldname, default=None):
+    """
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
+    :default:   the default value for the field (default=None)
+    """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
@@ -53,6 +64,12 @@ def components_or_blank(card, n, fieldname, default=None):
         return default
 
 def blank(card, n, fieldname, default=None):
+    """
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
+    :default:   the default value for the field (default=None)
+    """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
@@ -68,6 +85,11 @@ def blank(card, n, fieldname, default=None):
     raise SyntaxError('%s = %r (field #%s) on card must be blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     
 def field(card, n, fieldname):
+    """
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
+    """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
@@ -91,6 +113,12 @@ def field(card, n, fieldname):
         #return svalue
 
 def integer_double_string_or_blank(card, n, fieldname, default=None):
+    """
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
+    :default:   the default value for the field (default=None)
+    """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
@@ -146,6 +174,11 @@ def fields_or_blank(f, card, fieldname, i, j=None, defaults=None):
     return fs
 
 def integer(card, n, fieldname):
+    """
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
+    """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
@@ -165,6 +198,12 @@ def integer(card, n, fieldname):
         raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
 
 def integer_or_blank(card, n, fieldname, default=None):
+    """
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
+    :default:   the default value for the field (default=None)
+    """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
@@ -195,6 +234,11 @@ def integer_or_blank(card, n, fieldname, default=None):
     #return default
     
 def double(card, n, fieldname):
+    """
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
+    """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
@@ -246,6 +290,12 @@ def double(card, n, fieldname):
     return value
 
 def double_or_blank(card, n, fieldname, default=None):
+    """
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
+    :default:   the default value for the field (default=None)
+    """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
@@ -271,6 +321,11 @@ def double_or_blank(card, n, fieldname, default=None):
     return default
     
 def double_or_string(card, n, fieldname):
+    """
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
+    """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
@@ -303,10 +358,10 @@ def double_or_string(card, n, fieldname):
 
 def double_string_or_blank(card, n, fieldname, default=None):
     """
-    @param card BDF card as a list
-    @param n field number
-    @param fieldname name of field
-    @param default the default value for the field (default=None)
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
+    :default:   the default value for the field (default=None)
     @return a double, string, or default value
     @raise SyntaxError if there is an invalid type
     """
@@ -343,9 +398,9 @@ def double_string_or_blank(card, n, fieldname, default=None):
 
 def integer_or_double(card, n, fieldname):
     """
-    @param card a BDF_card object
-    @param n the field index
-    @param fieldname the name of the field
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
     @return the value with the proper type
     @raise SyntaxError if there's an invalid type
     """
@@ -376,6 +431,12 @@ def integer_or_double(card, n, fieldname):
     return value
 
 def integer_double_or_blank(card, n, fieldname, default=None):
+    """
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
+    :default:   the default value for the field (default=None)
+    """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
@@ -398,6 +459,12 @@ def integer_double_or_blank(card, n, fieldname, default=None):
     return default
     
 def integer_or_string(card, n, fieldname):
+    """
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
+    :default:   the default value for the field (default=None)
+    """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
@@ -428,6 +495,12 @@ def integer_or_string(card, n, fieldname):
     return value
 
 def integer_string_or_blank(card, n, fieldname, default=None):
+    """
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
+    :default:   the default value for the field (default=None)
+    """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
@@ -452,6 +525,10 @@ def integer_string_or_blank(card, n, fieldname, default=None):
     return default
 
 def getType(value):
+    """
+    Returns the type of the input value in a form that is clear.
+    :value: the value to get the type of
+    """
     #print('Type value=%s' % value)
     try:
         value = interpret_value(value)
@@ -471,6 +548,11 @@ def getType(value):
 
 
 def integer_double_or_string(card, n, fieldname):
+    """
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
+    """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
@@ -498,6 +580,11 @@ def integer_double_or_string(card, n, fieldname):
 
 
 def string(card, n, fieldname):
+    """
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
+    """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
@@ -521,6 +608,12 @@ def string(card, n, fieldname):
 
 
 def string_or_blank(card, n, fieldname, default=None):
+    """
+    :card:      BDF card as a list
+    :n:         field number
+    :fieldname: name of field
+    :default:   the default value for the field (default=None)
+    """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
@@ -562,8 +655,8 @@ def string_or_blank(card, n, fieldname, default=None):
 
 def interpretValue(valueRaw, card='', debug=False):
     """
-    @see interpret_value
-    @warning will be removed after v0.7 in favor of interpret_value
+    .. seealso:: interpret_value
+    .. warning:: will be removed after v0.7 in favor of interpret_value
     """
     warnings.warn('interpretValue has been deprecated; use '
                   'interpret_value', DeprecationWarning, stacklevel=2)
