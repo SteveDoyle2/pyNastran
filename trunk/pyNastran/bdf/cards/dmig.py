@@ -207,9 +207,9 @@ class NastranMatrix(BaseCard):
         builds the Matrix
         :param self:     the object pointer
         :param isSparse: should the matrix be returned as a sparse matrix (default=True).  Slower for dense matrices.
-        @retval M the matrix
-        @retval rows dictionary of keys=rowID,    values=(Grid,Component) for the matrix
-        @retval cols dictionary of keys=columnID, values=(Grid,Component) for the matrix
+        :returns M:    the matrix
+        :returns rows: dictionary of keys=rowID,    values=(Grid,Component) for the matrix
+        :returns cols: dictionary of keys=columnID, values=(Grid,Component) for the matrix
         .. warning:: isSparse WILL fail
         """
         i = 0
@@ -452,16 +452,16 @@ class DMI(BaseCard):
             self.name = string(card, 1, 'name')
             #zero
 
-            ## Form of the matrix:  1=Square (not symmetric); 2=Rectangular;
-            ## 3=Diagonal (m=nRows,n=1);  4=Lower Triangular; 5=Upper Triangular;
-            ## 6=Symmetric; 8=Identity (m=nRows, n=m)
+            #: Form of the matrix:  1=Square (not symmetric); 2=Rectangular;
+            #: 3=Diagonal (m=nRows,n=1);  4=Lower Triangular; 5=Upper Triangular;
+            #: 6=Symmetric; 8=Identity (m=nRows, n=m)
             self.form = integer(card, 3, 'form')
 
-            ## 1-Real, Single Precision; 2=Real,Double Precision;
-            ## 3=Complex, Single; 4=Complex, Double
+            #: 1-Real, Single Precision; 2=Real,Double Precision;
+            #: 3=Complex, Single; 4=Complex, Double
             self.tin = integer(card, 4, 'tin')
 
-            ## 0-Set by cell precision
+            #: 0-Set by cell precision
             self.tout = integer_or_blank(card, 5, 'tout', 0)
 
             self.nRows = integer(card, 7, 'nrows')
@@ -482,7 +482,7 @@ class DMI(BaseCard):
             self.readReal(card)
 
     def readReal(self, card):
-        ## column number
+        # column number
         j = integer(card, 2, 'icol')
 
         # counter

@@ -44,7 +44,7 @@ def print_float_16(value, tol=0.):
     else:
         if value > 0.:  # positive, not perfect...
 
-            if value < 5e-16:  ## .. todo:: does this work properly with tol
+            if value < 5e-16:  #: .. todo:: does this work properly with tol
                 field = print_scientific_16(value)
                 return field
             elif value < 0.001:
@@ -101,7 +101,7 @@ def print_float_16(value, tol=0.):
                     field = print_scientific_16(value)
                 return field
         else:
-            if value > -5e-15:  ## .. todo:: does this work properly with tol
+            if value > -5e-15:  #: .. todo:: does this work properly with tol
                 field = print_scientific_16(value)
                 return field
             elif value > -0.01:  # -0.001
@@ -168,8 +168,8 @@ def print_field_16(value):
     """
     Prints a single 16-character width field
 
-    :param value: the value to print
-    @retval field an 16-character (tested) string
+    :param value:   the value to print
+    :returns field: an 16-character string
     """
     if isinstance(value, int):
         field = "%16s" % value

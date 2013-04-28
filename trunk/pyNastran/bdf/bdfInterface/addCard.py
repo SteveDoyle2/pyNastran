@@ -115,7 +115,7 @@ class AddMethods(object):
             self.massElements[key] = elem
 
     def add_damper_element(self, elem, allowOverwrites=False):
-        """@warning can dampers have the same ID as a standard element?"""
+        """..warning:: can dampers have the same ID as a standard element?"""
         return self.add_element(elem, allowOverwrites)
         # key = elem.eid
         # if key in self.damperElements and not allowOverwrites:

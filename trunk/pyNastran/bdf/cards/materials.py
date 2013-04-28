@@ -118,8 +118,9 @@ class CREEP(Material):
 
 class MAT1(Material):
     """
-    Defines the material properties for linear isotropic materials.
-    MAT1     1      1.03+7  3.9615+6.3      .098
+    Defines the material properties for linear isotropic materials.::
+
+      MAT1     1      1.03+7  3.9615+6.3      .098
     """
     type = 'MAT1'
 
@@ -193,7 +194,7 @@ class MAT1(Material):
 
     def set_E_G_nu(self, card):
         r"""
-        \f[ \large G = \frac{E}{2 (1+\nu)} \f]
+        \f[ G = \frac{E}{2 (1+\nu)} \f]
         """
         E = double_or_blank(card, 2, 'E')
         G = double_or_blank(card, 3, 'G')
@@ -287,11 +288,11 @@ class MAT1(Material):
 class MAT2(AnisotropicMaterial):
     """
     Defines the material properties for linear anisotropic materials for
-    two-dimensional elements.
+    two-dimensional elements.::
 
-    MAT2 MID G11 G12 G13 G22 G23 G33 RHO
-    A1 A2 A3 TREF GE ST SC SS
-    MCSID
+      MAT2 MID G11 G12 G13 G22 G23 G33 RHO
+      A1 A2 A3 TREF GE ST SC SS
+      MCSID
     """
     type = 'MAT2'
 
@@ -447,9 +448,10 @@ class MAT2(AnisotropicMaterial):
 class MAT3(AnisotropicMaterial):
     """
     Defines the material properties for linear orthotropic materials used by
-    the CTRIAX6 element entry.
-    MAT3 MID EX  ETH EZ  NUXTH NUTHZ NUZX RHO
-    -    -   GZX AX  ATH AZ TREF GE
+    the CTRIAX6 element entry.::
+
+      MAT3 MID EX  ETH EZ  NUXTH NUTHZ NUZX RHO
+      -    -   GZX AX  ATH AZ TREF GE
     """
     type = 'MAT3'
 
@@ -515,10 +517,10 @@ class MAT4(ThermalMaterial):
     Defines the constant or temperature-dependent thermal material properties
     for conductivity, heat capacity, density, dynamic viscosity, heat
     generation, reference enthalpy, and latent heat associated with a
-    single-phase change.
+    single-phase change.::
 
-    MAT4 MID K CP H HGEN REFENTH
-    TCH TDELTA QLAT
+      MAT4 MID K CP H HGEN REFENTH
+      TCH TDELTA QLAT
     """
     type = 'MAT4'
 
@@ -569,10 +571,10 @@ class MAT4(ThermalMaterial):
 
 class MAT5(ThermalMaterial):  # also AnisotropicMaterial
     """
-    Defines the thermal material properties for anisotropic materials.
+    Defines the thermal material properties for anisotropic materials.::
 
-    MAT5 MID KXX KXY KXZ KYY KYZ KZZ CP
-    RHO HGEN
+      MAT5 MID KXX KXY KXZ KYY KYZ KZZ CP
+      RHO HGEN
     """
     type = 'MAT5'
 
@@ -639,8 +641,9 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
 class MAT8(AnisotropicMaterial):
     """
     Defines the material property for an orthotropic material for isoparametric
-    shell elements.
-    MAT8          10  1.25+7  9.75+6     .28  1.11+7                   2.4-2
+    shell elements.::
+
+      MAT8          10  1.25+7  9.75+6     .28  1.11+7                   2.4-2
     """
     type = 'MAT8'
 
@@ -771,12 +774,12 @@ class MAT9(AnisotropicMaterial):
     """
     Defines the material properties for linear, temperature-independent,
     anisotropic materials for solid isoparametric elements (see PSOLID entry
-    description).
+    description).::
 
-    MAT9 MID G11 G12 G13 G14 G15 G16 G22
-    G23 G24 G25 G26 G33 G34 G35 G36
-    G44 G45 G46 G55 G56 G66 RHO A1
-    A2 A3 A4 A5 A6 TREF GE
+      MAT9 MID G11 G12 G13 G14 G15 G16 G22
+      G23 G24 G25 G26 G33 G34 G35 G36
+      G44 G45 G46 G55 G56 G66 RHO A1
+      A2 A3 A4 A5 A6 TREF GE
     """
     type = 'MAT9'
 
@@ -785,6 +788,7 @@ class MAT9(AnisotropicMaterial):
         if comment:
             self._comment = comment
         if card:
+            #: Material ID
             self.mid = integer(card, 1, 'mid')
             self.G11 = double_or_blank(card, 2, 'G11', 0.0)
             self.G12 = double_or_blank(card, 3, 'G12', 0.0)
@@ -897,8 +901,9 @@ class MAT9(AnisotropicMaterial):
 class MAT10(Material):
     """
     Defines material properties for fluid elements in coupled fluid-structural
-    analysis.
-    MAT10 MID BULK RHO C GE
+    analysis.::
+
+      MAT10 MID BULK RHO C GE
     """
     type = 'MAT10'
 
@@ -933,7 +938,7 @@ class MAT10(Material):
         
     def getBulkRhoC(self, card):
         r"""
-        \f[ \large bulk = c^2 \rho \f]
+        .. math:: bulk = c^2 \rho
         """
         bulk = double_or_blank(card, 2, 'bulk')
         rho = double_or_blank(card, 3, 'rho')
@@ -974,9 +979,10 @@ class MAT10(Material):
 class MAT11(Material):
     """
     Defines the material properties for a 3D orthotropic material for
-    isoparametric solid elements.
-    MAT10 MID E1 E2 E3 NU12 Nu13 NU23 G12
-    - G13 G23 RHO A1 A2 A3 TREF GE
+    isoparametric solid elements.::
+
+      MAT10 MID E1 E2 E3 NU12 Nu13 NU23 G12
+      - G13 G23 RHO A1 A2 A3 TREF GE
     """
     type = 'MAT11'
 
@@ -1324,7 +1330,7 @@ class MATS1(MaterialDependence):
         Gets E (Young's Modulus) for a given strain
         :param self:   the object pointer
         :param strain: the strain (None -> linear E value)
-        @retval E (Young's Modulus)
+        :returns E:    Young's Modulus
         """
         msg = "E (Young's Modulus) not implemented for MATS1"
         raise NotImplementedError(msg)

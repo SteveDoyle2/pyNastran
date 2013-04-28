@@ -27,10 +27,10 @@ class Table(BaseCard):
 class TableObj(object):
     def __init__(self, xy, nrepeated, isData=False):
         """
-        @param self the Table Object
-        @param xy the X/Y data with an ENDT appended
-        @param nrepeated ???
-        @param isData did this come from the OP2/BDF (True -> OP2)
+        :param self: the Table Object
+        :param xy:   the X/Y data with an ENDT appended
+        :param nrepeated: ???
+        :param isData:     did this come from the OP2/BDF (True -> OP2)
         """
         self.table = []
         xy = self._cleanup_xy(xy, isData)
@@ -56,9 +56,10 @@ class TableObj(object):
     def _crash_fields(self, xy, nrepeated, nxy):
         """
         Creates the print message if there was an error
-        @param xy the xy data as a table with alternating x, y entries
-        @param nrepeated
-        @param nxy
+
+        :param xy:        the xy data as a table with alternating x, y entries
+        :param nrepeated: ???
+        :param nxy:       ???
         """
         try:
             msg = ''
@@ -79,9 +80,10 @@ class TableObj(object):
 
     def _cleanup_xy(self, xy, isData=False):
         """
-
-        @param xy the xy data as a table with alternating x, y entries
-        @param isData did this come from the OP2/BDF (True -> OP2)
+        Removes the **ENDT** field.
+        
+        :param xy:     the xy data as a table with alternating x, y entries
+        :param isData: did this come from the OP2/BDF (True -> OP2)
         """
         xy2 = []  # remove extra ENDTs
 
@@ -538,13 +540,13 @@ class TABRNDG(RandomTable):
         if comment:
             self._comment = comment
         if card:
-            ## Table identification number. (Integer >0)
+            #: Table identification number. (Integer >0)
             self.tid = integer(card, 1, 'tid')
-            ## PSD Type: 1. von Karman; 2. Dryden
+            #: PSD Type: 1. von Karman; 2. Dryden
             self.Type = integer(card, 2, 'Type')
-            ## Scale of turbulence divided by velocity (units of time; Real)
+            #: Scale of turbulence divided by velocity (units of time; Real)
             self.LU = double(card, 3, 'LU')
-            ## Root-mean-square gust velocity. (Real)
+            #: Root-mean-square gust velocity. (Real)
             self.WG = double(card, 4, 'WG')
             assert self.Type in [1, 2], ('Type must be 1 or 2.  '
                                          'Type=%s' % (self.Type))

@@ -31,10 +31,12 @@ class SpringElement(Element):
     def Length_noXref(self, n1=None, n2=None):
         r"""
         Returns the length of a bar/rod/beam element
-        \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
+        .. math:: \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
+
         :param self: the object pointer
-        :param n1: a Node object (default=None)
-        :param n2: a Node object (default=None)
+        :param n1:   a Node object (default=None)
+        :param n2:   a Node object (default=None)
+
         .. note:: if n1 AND n2 are both none (the default), then the model
                   must be cross-referenced already
         """
@@ -92,8 +94,9 @@ class SpringElement(Element):
     def Length(self):
         r"""
         Returns the length of a bar/rod/beam element
-        \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
-        @param self the object pointer
+
+        .. math:: \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
+        :param self: the object pointer
         .. note:: the model must be cross-referenced already
         """
         #print self.type
@@ -120,11 +123,11 @@ class CELAS1(SpringElement):
         if card:
             self.eid = integer(card, 1, 'eid')
 
-            ## property ID
+            #: property ID
             self.pid = integer_or_blank(card, 2, 'pid', self.eid)
 
             nids = [integer(card, 3, 'g1'), integer_or_blank(card, 5, 'g2', 0)]
-            ## component number
+            #: component number
             self.c1 = integer_or_blank(card, 4, 'c1', 0)
             self.c2 = integer_or_blank(card, 6, 'c2', 0)
             assert len(card) <= 7, 'len(CELAS1 card) = %i' % len(card)
@@ -194,20 +197,20 @@ class CELAS2(SpringElement):
         if card:
             self.eid = integer(card, 1, 'eid')
 
-            ## stiffness of the scalar spring
+            #: stiffness of the scalar spring
             self.k = double(card, 2, 'k')
 
             nids = [integer_or_blank(card, 3, 'g1', 0),
                     integer_or_blank(card, 5, 'g2', 0)]
 
-            ## component number
+            #: component number
             self.c1 = integer_or_blank(card, 4, 'c1', 0)
             self.c2 = integer_or_blank(card, 6, 'c2', 0)
 
-            ## damping coefficient
+            #: damping coefficient
             self.ge = double_or_blank(card, 7, 'ge', 0.)
 
-            ## stress coefficient
+            #: stress coefficient
             self.s = double_or_blank(card, 8, 's', 0.)
             assert len(card) <= 9, 'len(CELAS2 card) = %i' % len(card)
         else:
@@ -312,10 +315,10 @@ class CELAS3(SpringElement):
             self._comment = comment
         if card:
             self.eid = integer(card, 1, 'eid')
-            ## property ID
+            #: property ID
             self.pid = integer_or_blank(card, 2, 'pid', self.eid)
 
-            ## Scalar point identification numbers
+            #: Scalar point identification numbers
             self.s1 = integer_or_blank(card, 3, 's1', 0)
             self.s2 = integer_or_blank(card, 4, 's2', 0)
             assert len(card) <= 5, 'len(CELAS3 card) = %i' % len(card)
@@ -365,10 +368,10 @@ class CELAS4(SpringElement):
         if card:
             self.eid = integer(card, 1, 'eid')
 
-            ## stiffness of the scalar spring
+            #: stiffness of the scalar spring
             self.k = double(card, 2, 'k')
 
-            ## Scalar point identification numbers
+            #: Scalar point identification numbers
             self.s1 = integer_or_blank(card, 3, 's1', 0)
             self.s2 = integer_or_blank(card, 4, 's2', 0)
             assert self.s1 > 0 or self.s2 > 0, 's1=%s s2=%s' % (self.s1, self.s2)

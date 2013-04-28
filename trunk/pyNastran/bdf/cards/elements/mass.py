@@ -427,9 +427,10 @@ class CONM2(PointMassElement):
     :param cid:  coordinate frame of the offset (-1=absolute coordinates)
     :param X:    offset vector
     :param I:    mass moment of inertia matrix about the CG
-    @code
-    CONM2    501274  11064          132.274
-    @endcode
+    
+    ::
+
+      CONM2    501274  11064          132.274
     """
     type = 'CONM2'
 

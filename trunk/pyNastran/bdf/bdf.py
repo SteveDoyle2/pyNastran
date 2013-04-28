@@ -139,9 +139,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     """
     NASTRAN BDF Reader/Writer/Editor class.
     """
+    #: this is a nastran model
     modelType = 'nastran'
+    #: Flips between a dictionary based storage BDF storage method and
+    #: a list based method.  Don't modify this.
     isDict = True
     
+    #: required for sphinx bug
+    #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
     __slots__ = ['_is_dynamic_syntax']
     def __init__(self, debug=True, log=None):
         """
@@ -786,9 +791,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         :param self:         the BDF object
         :param dict_of_vars: dictionary of 7 character variable names to map.
 
-        @code
-        GRID, 1, %xVar, %yVar, %zVar
-        @endcode
+        ::
+
+          GRID, 1, %xVar, %yVar, %zVar
 
         >>> dict_of_vars = {'xVar': 1.0, 'yVar', 2.0, 'zVar':3.0}
         >>> bdf = BDF()
@@ -818,7 +823,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
         :param self: the BDF object
         :param key:  the uppercased key
-        @retval value the dynamic value defined by dict_of_vars
+        :returns value: the dynamic value defined by dict_of_vars
         .. seealso:: :func: `set_dynamic_syntax`
         """
         #print "*** valueRaw.lstrip() = |%r|" % valueRaw.lstrip()
@@ -928,8 +933,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         Opens the primary bdf/dat file and all subsequent INCLUDE files.
 
-        :param fname:  the name of the bdf/dat file to open
-        @return None
+        :param bdf_filename: the name of the bdf/dat file to open
+        :returns: None
 
         .. note:: Doesn't allow reuse of the same bdf/dat file twice.
         """
@@ -994,11 +999,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         Returns the next Bulk Data Card in the BDF
 
-        :param self: the BDF object
+        :param self:        the BDF object
         :param line_stream: the generator for the file
-        @retval lines the lines of the card
-        @retval comment the comment for the card
-        @retval cardname the name of the card
+        :returns lines:    the lines of the card
+        :returns comment:  the comment for the card
+        :returns cardname: the name of the card
         """
         for (i, line, comment) in line_stream:
         #while 1:
@@ -1177,7 +1182,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
         :param self:  the BDF object
         :param lines: the lines of the card
-        @retval cardname the name of the card
+        :returns cardname: the name of the card
         """
         card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('*\t ')
         if len(card_name) == 0:
@@ -1344,8 +1349,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         :param card_name: the card_name -> 'GRID'
         :param comment:   an optional the comment for the card
         :param is_list:   changes card_lines from a list of lines to
-                    a list of fields
-        @retval card_object the card object representation of card
+                          a list of fields
+        :returns card_object: the card object representation of card
 
         .. note:: this is a very useful method for interfacing with the code
         .. note:: the cardObject is not a card-type object...so not a GRID
@@ -1595,7 +1600,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
         :param self:     the BDF object
         :param filename: a filename string
-        @retval filenameString a shortened representation of the filename
+        :returns filename_string: a shortened representation of the filename
         """
         driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
         if driveLetter == os.path.splitdrive(os.curdir)[0] and self._relpath:
@@ -1773,7 +1778,7 @@ def to_fields(card_lines, card_name):
 
     :param lines:     the lines of the BDF card object
     :param card_name: the card_name -> 'GRID'
-    @retval fields the string formatted fields of the card
+    :returns fields:  the string formatted fields of the card
     """
     fields = []
     #print('---------------')
@@ -1854,13 +1859,13 @@ def to_fields(card_lines, card_name):
 
     return fields
 
-def get_include_filename(cardLines, include_dir=''):
+def get_include_filename(card_lines, include_dir=''):
     """
     Parses an INCLUDE file split into multiple lines (as a list).
 
-    :param cardLines:   the list of lines in the include card (all the lines!)
+    :param card_lines:  the list of lines in the include card (all the lines!)
     :param include_dir: the include directory (default='')
-    @retval filename the INCLUDE filename
+    :returns filename:  the INCLUDE filename
     """
     cardLines2 = []
     for line in cardLines:

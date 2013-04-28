@@ -173,7 +173,7 @@ class BDFMethods(BDFMethodsDeprecated):
         Puts all nodes in a common coordinate system (mainly for cid testing)
 
         :param self: the object pointer
-        :param cid:  the cid to resolve the nodes to
+        :param cid:  the cid to resolve the nodes to (default=0)
         .. note:: loses association with previous coordinate systems so to go
                   back requires another fem
         """
@@ -183,13 +183,13 @@ class BDFMethods(BDFMethodsDeprecated):
             p = node.PositionWRT(self, cid)
             node.UpdatePosition(self, p, cid)
 
-    def unresolve_grids(self, fem_old):
+    def unresolve_grids(self, model_old):
         """
         Puts all nodes back to original coordinate system.
 
-        :param self:       the object pointer
-        :param fem_old:    the old model that hasnt lost it's connection to
-                           the node cids
+        :param self:      the object pointer
+        :param model_old: the old model that hasnt lost it's connection to
+                          the node cids
         .. warning:: hasnt been tested well...
         """
         debug = False
@@ -204,7 +204,7 @@ class BDFMethods(BDFMethodsDeprecated):
         Sums applied forces for all load cases.
         Considers FORCE, FORCE1, FORCE2.
 
-        @retval Forces the forces as a numpy array
+        :returns Forces: the forces as a numpy array
         .. warning:: not validated
         """
         for (key, loadCase) in self.loads.iteritems():
@@ -224,9 +224,9 @@ class BDFMethods(BDFMethodsDeprecated):
         for all load cases.
         Considers FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2.
 
-        :p0: the reference point
-        @retval Moments the moments as a numpy array
-        @retval Forces the forces as a numpy array
+        :param p0:        the reference point
+        :returns Moments: the moments as a numpy array
+        :returns Forces:  the forces as a numpy array
         ..warning:: not validated
         """
         p = array(p0)

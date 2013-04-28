@@ -140,8 +140,10 @@ class FREQ4(FREQ):
     Defines a set of frequencies used in the solution of modal frequency
     response problems by specifying the amount of 'spread' around each natural
     frequency and the number of equally spaced excitation frequencies within
-    the spread.
-    FREQ4 SID F1 F2 FSPD NFM
+    the spread.::
+    
+      FREQ4 SID F1 F2 FSPD NFM
+
     .. note:: this card rewrites as a FREQ card
     .. todo:: not done...
     """

@@ -31,7 +31,7 @@ class CompositeShellProperty(ShellProperty):
 
     def cross_reference(self, model):
         """
-        links the material ID to the materials
+        Links the Material IDs to the materials.
         :param self:  the PCOMP object
         :param model: a BDF object
         """
@@ -40,43 +40,50 @@ class CompositeShellProperty(ShellProperty):
             self.plies[iply][0] = model.Material(mid)  # mid
 
     def isSymmetrical(self):
-        """is the laminate symmetrical"""
+        """
+        Is the laminate symmetrical?
+        :returns; True or False
+        """
         if self.lam == 'SYM':
             return True
         return False
 
     def _adjust_ply_id(self, iply):
         """
+        Gets the ply ID that's stored in **self.plies**.
+
         When a ply is not symmetric, this function returns the input iply.
         When a ply is symmetrical and the iply value is greater than the
-        number of plies, we return the mirrored ply.
+        number of plies, we return the mirrored ply.  For the case of a
+        symmetrical ply, the element will always have an even number of
+        layers.
 
         :param self: the PCOMP object
         :param iply: the ply ID
-        @raises IndexError if iply is invalid
+        :raises: IndexError if iply is invalid
         
-        @code
-        Case 1 (nplies=6, len(plies)=3, lam='SYM'):
-            ply 2
-            ply 1
-            ply 0
-            ------- sym
-            ply 0 / 3
-            ply 1 / 4
-            ply 2 / 5
-          Ask for ply 3, return ply 0
-          Ask for ply 4, return ply 1
-          Ask for ply 5, return ply 2
+        ::
 
-        Case 2 (nplies=5, len(plies)=5, lam='NO'):
-            ply 5
-            ply 4
-            ply 3
-            ply 1
-            ply 0
-          Ask for ply 3, return ply 1
-          Ask for ply 4, return ply 2
-        @endcode
+          Case 1 (nplies=6, len(plies)=3, lam='SYM'):
+              ply 2
+              ply 1
+              ply 0
+              ------- sym
+              ply 0 / 3
+              ply 1 / 4
+              ply 2 / 5
+            Ask for ply 3, return ply 0
+            Ask for ply 4, return ply 1
+            Ask for ply 5, return ply 2
+
+          Case 2 (nplies=5, len(plies)=5, lam='NO'):
+              ply 5
+              ply 4
+              ply 3
+              ply 1
+              ply 0
+            Ask for ply 3, return ply 1
+            Ask for ply 4, return ply 2
         """
         if iply == 'all':
             return iply
@@ -93,9 +100,11 @@ class CompositeShellProperty(ShellProperty):
 
     def Thickness(self, iply='all'):
         """
-        Gets the thickness of the ith ply
+        Gets the thickness of the :math:`i^{th}` ply.
+
         :param self: the PCOMP object
-        :param iply: the string 'all' (default) or the mass per area of the ith ply
+        :param iply: the string **'all'** (default) or the mass per area of
+                     the :math:`i^{th}` ply
         """
         nplies = len(self.plies)
         if iply == 'all':  # get all layers
@@ -112,14 +121,15 @@ class CompositeShellProperty(ShellProperty):
             return t
 
     def nPlies(self):
-        """
-        returns the number of plies including the core
-        @code
-        if Lam=SYM:
-          returns nPlies*2   (even)
-        else:
-          returns nPlies
-        @endcode
+        r"""
+        Gets the number of plies including the core.
+
+        ::
+
+          if Lam=SYM:
+            returns nPlies*2   (even)
+          else:
+            returns nPlies
         """
         nplies = len(self.plies)
         if self.isSymmetrical():
@@ -127,12 +137,18 @@ class CompositeShellProperty(ShellProperty):
         return nplies
 
     def Nsm(self):
+        """
+        Gets the non-structural mass :math:`i^{th}` ply
+
+        :param self: the PCOMP/PCOMPG object
+        """
         return self.nsm
 
     def Mid(self, iply):
         """
-        Gets the material ID of the ith ply
-        :param self: the PCOMP object
+        Gets the Material ID of the :math:`i^{th}` ply.
+
+        :param self: the PCOMP/PCOMPG object
         :param iply: the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
@@ -144,8 +160,9 @@ class CompositeShellProperty(ShellProperty):
     def Mids(self):
         """
         Gets the material IDs of all the plies
-        :param self: the PCOMP object
-        @retval mids the material IDs
+
+        :param self: the PCOMP/PCOMPG object
+        :returns mids: the material IDs
         """
         mids = []
         for iply in xrange(self.nPlies()):
@@ -156,8 +173,9 @@ class CompositeShellProperty(ShellProperty):
 
     def Rho(self, iply):
         """
-        Gets the density of the ith ply
-        :param self: the PCOMP object
+        Gets the density of the :math:`i^{th}` ply
+
+        :param self: the PCOMP/PCOMPG object
         :param iply: the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
@@ -167,9 +185,10 @@ class CompositeShellProperty(ShellProperty):
 
     def Material(self, iply):
         """
-        Gets the material of the ith ply (not the ID unless it's not
-        cross-referenced)
-        :param self: the PCOMP object
+        Gets the material of the :math:`i^{th}` ply (not the ID unless
+        it's not cross-referenced)
+
+        :param self: the PCOMP/PCOMPG object
         :param iply: the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
@@ -178,8 +197,9 @@ class CompositeShellProperty(ShellProperty):
 
     def Theta(self, iply):
         """
-        Gets the ply angle of the ith ply (not the ID)
-        :param self: the PCOMP object
+        Gets the ply angle of the :math:`i^{th}` ply (not the ID)
+
+        :param self: the PCOMP/PCOMPG object
         :param iply: the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
@@ -187,11 +207,28 @@ class CompositeShellProperty(ShellProperty):
         return Theta
 
     def sout(self, iply):
+        """
+        Gets the ply angle of the :math:`i^{th}` ply (not the ID)
+
+        :param self: the PCOMP/PCOMPG object
+        :param iply: the ply ID (starts from 0)
+        """
         iply = self._adjust_ply_id(iply)
         Sout = self.plies[iply][3]
         return Sout
 
     def get_z_locations(self):
+        """
+        Gets the z locations for the various plies.
+
+        :param self: the PCOMP/PCOMPG object
+        :param iply: the ply ID (starts from 0)
+        
+        Assume there are 2 plies, each of 1.0 thick, starting from :math:`z=0`.
+
+        >>> pcomp.get_z_locations()
+        [0., 1., 2.]
+        """
         zi = self.z0
         z = [zi]
         for i in range(self.nPlies()):
@@ -204,30 +241,58 @@ class CompositeShellProperty(ShellProperty):
         r"""
         Gets the Mass/Area for the property.
 
-        \f[ \large  m = A ( \rho t + nsm ) \f]
-        mass = rho*A*t
-        but area comes from the element, so:
-        \f[ \large  \frac{m}{A} =\rho t + nsm \f]
-        mass/A = rho*t for the various layers
+        .. math:: \frac{m}{A} = \sum(\rho t) + nsm
+
+        or
+
+        .. math:: \frac{m}{A} - nsm = \sum(\rho t)
+
+        and
+
+        .. math:: \frac{m_i}{A} = rho_i t_i + nsm_i
+
+        where :math:`nsm_i` is the non-structural mass of the
+        :math:`i^{th}` ply
 
         :param self:   the PCOMP object
-        :param iply:   the string 'all' (default) or the mass per area of the ith ply
+        :param iply:   the string 'all' (default) or the mass per area of
+                       the :math:`i^{th}` ply
         :param method: the method to compute MassPerArea
-           * Case 1 (iply = all)
-             method has no effect
-           * Case 2 (iply != all)
-             method 'nplies' the nsm is divided by the number of plies to get (default)
-             the value for the ith ply
-           * Case 3 (iply != all)
-             method 'rho*t' smear the nsm based on the rho*t distribution
-           * Case 4 (iply != all)
-             method 't' smear the nsm based on the thickness distribution
+
+           * **Case 1 (iply = all)**
+
+             method has no effect because the total nsm is defined
+
+           * **Case 2 (iply != all)**
+
+             method **'nplies'** smear the nsm based on :math:`n_{plies}` (default)
+
+             :math:`nsm_i = nsm / n_{plies}`  # smear based on nplies
+
+           * **Case 3 (iply != all)**
+
+             method **'rho*t'** smear the nsm based on the mass distribution
+
+             .. math:: nsm_i = \rho_i t_i \frac{nsm}{\sum(\rho_i t_i)}
+
+             .. math:: nsm_i = \rho_i t_i \frac{nsm}{\frac{m}{A} - nsm}
+
+           * **Case 4 (iply != all)**
+
+             method **'t'** smear the nsm based on the thickness distribution
+
+             .. math:: nsm_i = t_i \frac{nsm}{\sum(t_i)}
+
         .. note:: final mass calculation will be done later
         """
-        assert method in ['nplies', 'rho*t', 't'], 'method=%r is invalid' % method
+        assert method not in ['nplies', 'rho*t', 't'], 'method=%r is invalid' % method
         nplies = len(self.plies)
         iply = self._adjust_ply_id(iply)
         if iply == 'all':  # get all layers
+            #massPerAreaTotal = m/A = sum(rho*t) + nsm
+            #massPerAreaTotal = mpa-nsm = sum(rho*t)
+            #(m/A)i = rho*t + nsmi
+            # where nsmi has two methods
             massPerArea = 0.
             nplies = len(self.plies)
             for iply in xrange(nplies):
@@ -240,10 +305,6 @@ class CompositeShellProperty(ShellProperty):
             return massPerArea + self.nsm
         else:
             assert isinstance(iply, int), 'iply must be an integer; iply=%r' % iply
-            #massPerAreaTotal = m/A = sum(rho*t) + nsm
-            #massPerAreaTotal = mpa-nsm = sum(rho*t)
-            #(m/A)i = rho*t + nsmi
-            # where nsmi has two methods
             rho = self.Rho(iply)
             t = self.plies[iply][1]
             
@@ -294,12 +355,12 @@ class CompositeShellProperty(ShellProperty):
 
 class PCOMP(CompositeShellProperty):
     """
-    @code
-    PCOMP     701512   0.0+0 1.549-2                   0.0+0   0.0+0     SYM
-              300704   3.7-2   0.0+0     YES  300704   3.7-2     45.     YES
-              300704   3.7-2    -45.     YES  300704   3.7-2     90.     YES
-              300705      .5   0.0+0     YES
-    @endcode
+    ::
+    
+      PCOMP     701512   0.0+0 1.549-2                   0.0+0   0.0+0     SYM
+                300704   3.7-2   0.0+0     YES  300704   3.7-2     45.     YES
+                300704   3.7-2    -45.     YES  300704   3.7-2     90.     YES
+                300705      .5   0.0+0     YES
     """
     type = 'PCOMP'
 
@@ -314,9 +375,13 @@ class PCOMP(CompositeShellProperty):
             #: Non-Structural Mass per unit Area
             self.nsm = double_or_blank(card, 3, 'nsm', 0.0)
             self.sb = double_or_blank(card, 4, 'sb', 0.0)
+            #: Failure Theory
+            #:
+            #:   ['HILL', 'HOFF', 'TSAI', 'STRN', None]
             self.ft = string_or_blank(card, 5, 'ft')
             assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', None]
             
+            #: Reference Temperature (default=0.0)
             self.TRef = double_or_blank(card, 6, 'TRef', 0.0)
             self.ge = double_or_blank(card, 7, 'ge', 0.0)
 
@@ -675,7 +740,7 @@ class PSHEAR(ShellProperty):
 
 
 class PSHELL(ShellProperty):
-    """
+    r"""
     PSHELL PID MID1 T MID2 12I/T**3 MID3 TS/T NSM
     Z1 Z2 MID4
     PSHELL   41111   1      1.0000   1               1               0.02081"""
@@ -686,16 +751,22 @@ class PSHELL(ShellProperty):
         if comment:
             self._comment = comment
         if card:
+            #: Property ID
             self.pid = integer(card, 1, 'pid')
             self.mid1 = integer_or_blank(card, 2, 'mid1')
+            #: thickness
             self.t = double(card, 3, 't')
             
             #: Material identification number for bending
             self.mid2 = integer_or_blank(card, 4, 'mid2')
-            #: \f$ \frac{12I}{t^3} \f$
+            #: Scales the moment of interia of the element based on the
+            #: moment of interia for a plate
+            #:
+            #: ..math:: I = \frac{12I}{t^3} I_{plate}
             self.twelveIt3 = double_or_blank(card, 5, '12*I/t^3', 1.0)  # poor name
             self.mid3 = integer_or_blank(card, 6, 'mid3')
             self.tst = double_or_blank(card, 7, 'ts/t', 0.833333)
+            #: Non-structural Mass
             self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
 
             tOver2 = self.t / 2.
@@ -824,9 +895,10 @@ class PSHELL(ShellProperty):
         return self.nsm
 
     def MassPerArea(self):
-        r"""
-        calculates mass per area
-        \f[ \large  \frac{mass}{A} = nsm + \rho t \f]
+        """
+        Calculates mass per area.
+
+        .. math:: \frac{m}{A} = nsm + \rho t
         """
         try:
             massPerArea = self.nsm + self.Rho() * self.t
@@ -861,7 +933,7 @@ class PSHELL(ShellProperty):
         * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/shell/static
         * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/platedynamics
         
-        the angle_rep is a direction angle, use either angle(a,b) or
+        The angle_rep is a direction angle, use either angle(a,b) or
         vecteur(x,y,z)
         coque_ncou is the number of gauss nodes along the thickness, for
         linear analysis one node is sufficient.

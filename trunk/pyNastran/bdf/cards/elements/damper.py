@@ -45,7 +45,7 @@ class CDAMP1(LineDamper):
             nids = [integer_or_blank(card, 3, 'g1', 0),
                     integer_or_blank(card, 5, 'g2', 0)]
 
-            ## component number
+            #: component number
             self.c1 = integer_or_blank(card, 4, 'c1', 0)
             self.c2 = integer_or_blank(card, 6, 'c2', 0)
             assert len(card) <= 7, 'len(CDAMP1 card) = %i' % len(card)
@@ -96,12 +96,12 @@ class CDAMP2(LineDamper):
         if card:
             self.eid = integer(card, 1, 'eid')
 
-            ## Value of the scalar damper (Real)
+            #: Value of the scalar damper (Real)
             self.b = double(card, 2, 'b')
             nids = [integer_or_blank(card, 3, 'n1', 0),
                     integer_or_blank(card, 5, 'n2', 0)]
 
-            ## component number
+            #: component number
             self.c1 = integer_or_blank(card, 4, 'c1', 0)
             self.c2 = integer_or_blank(card, 6, 'c2', 0)
             assert len(card) <= 7, 'len(CDAMP2 card) = %i' % len(card)
@@ -175,7 +175,7 @@ class CDAMP4(LineDamper):
             self._comment = comment
         if card:
             self.eid = integer(card, 1, 'eid')
-            ## Value of the scalar damper (Real)
+            #: Value of the scalar damper (Real)
             self.b = double(card, 2, 'b')
             nids = [integer_or_blank(card, 3, 'n1', 0),
                     integer_or_blank(card, 4, 'n2', 0)]
@@ -209,7 +209,7 @@ class CDAMP5(LineDamper):
             self._comment = comment
         if card:
             self.eid = integer(card, 1, 'eid')
-            ## Property ID
+            #: Property ID
             self.pid = integer(card, 2, 'pid')
             nids = [integer_or_blank(card, 3, 'n1', 0),
                     integer_or_blank(card, 4, 'n2', 0)]

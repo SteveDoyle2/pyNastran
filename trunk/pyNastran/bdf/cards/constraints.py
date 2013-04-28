@@ -91,7 +91,7 @@ class ConstraintObject(object):
 
             constraints2[key] = constraints
 
-        ## not needed b/c there are no MPCADD/SPCADD
+        # not needed b/c there are no MPCADD/SPCADD
         #for key,constraints in sorted(self.constraints.iteritems()):
             #for constraint in constraints:
                 #conID = constraint.ConID()
@@ -156,9 +156,9 @@ class Constraint(BaseCard):
 
 class SUPORT1(Constraint):
     """
-    @code
-    SUPORT1 SID ID1 C1 ID2 C2 ID3 C3
-    @endcode
+    ::
+
+      SUPORT1 SID ID1 C1 ID2 C2 ID3 C3
     """
     type = 'SUPORT1'
 
@@ -198,10 +198,10 @@ class SUPORT1(Constraint):
 
 class SUPORT(Constraint):
     """
-    @code
-    SUPORT  ID1 C1 ID2 C2 ID3 C3 ID4 C4
-    SUPORT1 SID ID1 C1 ID2 C2 ID3 C3
-    @endcode
+    ::
+
+      SUPORT  ID1 C1 ID2 C2 ID3 C3 ID4 C4
+      SUPORT1 SID ID1 C1 ID2 C2 ID3 C3
     """
     type = 'SUPORT'
 
@@ -250,14 +250,14 @@ class MPC(Constraint):
             self._comment = comment
 
         if card:
-            ## Set identification number. (Integer > 0)
+            #: Set identification number. (Integer > 0)
             self.conid = integer(card, 1, 'conid')
-            ## Identification number of grid or scalar point. (Integer > 0)
+            #: Identification number of grid or scalar point. (Integer > 0)
             self.gids = []
-            ## Component number. (Any one of the Integers 1 through 6 for grid
-            ## points; blank or zero for scalar points.)
+            #: Component number. (Any one of the Integers 1 through 6 for grid
+            #: points; blank or zero for scalar points.)
             self.constraints = []
-            ## Coefficient. (Real; Default = 0.0 except A1 must be nonzero.)
+            #: Coefficient. (Real; Default = 0.0 except A1 must be nonzero.)
             self.enforced = []
 
             fields = card.fields(0)
@@ -305,12 +305,10 @@ class MPC(Constraint):
 class SPC(Constraint):
     """
     Defines enforced displacement/temperature (static analysis)
-    velocity/acceleration (dynamic analysis)
+    velocity/acceleration (dynamic analysis).::
 
-    @code
-    SPC SID G1 C1 D1   G2 C2 D2
-    SPC 2   32 3  -2.6  5
-    @endcode
+      SPC SID G1 C1 D1   G2 C2 D2
+      SPC 2   32 3  -2.6  5
     """
     type = 'SPC'
 
@@ -322,8 +320,7 @@ class SPC(Constraint):
         if card:
             self.conid = integer(card, 1, 'sid')
             self.gids = [integer(card, 2, 'G1'), integer_or_blank(card, 5, 'G2')]
-            ## 0 if scalar point 1-6 if grid
-            
+            # 0 if scalar point 1-6 if grid
             self.constraints = [components_or_blank(card, 3, 'C1', 0),
                                 components_or_blank(card, 6, 'C2', 0)]
             self.enforced = [double_or_blank(card, 4, 'D1', 0.0),
@@ -369,12 +366,10 @@ class SPC(Constraint):
 class SPCD(SPC):
     """
     Defines an enforced displacement value for static analysis and an enforced
-    motion value (displacement, velocity or acceleration) in dynamic analysis.
+    motion value (displacement, velocity or acceleration) in dynamic analysis.::
 
-    @code
-    SPCD SID G1  C1   D1 G2 C2  D2
-    SPCD 100 32 436 -2.6  5    2.9
-    @endcode
+      SPCD SID G1  C1   D1 G2 C2  D2
+      SPCD 100 32 436 -2.6  5    2.9
     """
     type = 'SPCD'
 
@@ -396,12 +391,10 @@ class SPCD(SPC):
 class SPCAX(Constraint):
     """
     Defines a set of single-point constraints or enforced displacements
-    for conical shell coordinates.
+    for conical shell coordinates.::
 
-    @code
-    SPCAX SID RID HID C    D
-    SPCAX 2   3     4 13 6.0
-    @endcode
+      SPCAX SID RID HID C    D
+      SPCAX 2   3     4 13 6.0
     """
     type = 'SPCAX'
 
@@ -412,16 +405,16 @@ class SPCAX(Constraint):
         if comment:
             self._comment = comment
         if card:
-            ## Identification number of a single-point constraint set.
+            #: Identification number of a single-point constraint set.
             self.conid = integer(card, 1, 'conid')
-            ## Ring identification number. See RINGAX entry.
+            #: Ring identification number. See RINGAX entry.
             self.rid = integer(card, 2, 'rid')
-            ## Harmonic identification number. (Integer >= 0)
+            #: Harmonic identification number. (Integer >= 0)
             self.hid = integer(card, 3, 'hid')
-            ## Component identification number. (Any unique combination of the
-            ## Integers 1 through 6.)
+            #: Component identification number. (Any unique combination of the
+            #: Integers 1 through 6.)
             self.c = components(card, 4, 'c')
-            ## Enforced displacement value
+            #: Enforced displacement value
             self.d = double(card, 5, 'd')
         else:
             msg = '%s has not implemented data parsing' % self.type
@@ -437,17 +430,17 @@ class SPCAX(Constraint):
 
 class SPC1(Constraint):
     """
-    @code
-    SPC1 SID C G1 G2 G3 G4 G5 G6
-    G7 G8 G9 -etc.-
+    ::
 
-    SPC1     3       246     209075  209096  209512  209513  209516
-    SPC1 3 2 1 3 10 9 6 5
-    2 8
+      SPC1 SID C G1 G2 G3 G4 G5 G6
+      G7 G8 G9 -etc.-
 
-    SPC1 SID C    G1 THRU G2
-    SPC1 313 12456 6 THRU 32
-    @endcode
+      SPC1     3       246     209075  209096  209512  209513  209516
+      SPC1 3 2 1 3 10 9 6 5
+      2 8
+
+      SPC1 SID C    G1 THRU G2
+      SPC1 313 12456 6 THRU 32
     """
     type = 'SPC1'
 
@@ -519,11 +512,9 @@ class ConstraintADD(Constraint):
 class SPCADD(ConstraintADD):
     """
     Defines a single-point constraint set as a union of single-point constraint
-    sets defined on SPC or SPC1 entries.
+    sets defined on SPC or SPC1 entries.::
 
-    @code
-    SPCADD   2       1       3
-    @endcode
+      SPCADD   2       1       3
     """
     type = 'SPCADD'
 

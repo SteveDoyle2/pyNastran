@@ -11,9 +11,19 @@ from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.utils import is_string
 
 
+def printCard(fields, tol=0.):
+    """
+    .. deprecated: will be replaced in version 0.7 with :func: `print_card`
+    """
+    warnings.warn('update printCard to print_card', DeprecationWarning,
+                  stacklevel=2)
+    return print_card_8(fields)
+
+
 def is_same(value1, value2):
     """
     Checks to see if 2 values are the same
+
     .. note:: this method is used by almost every card when printing
     """
     if is_string(value1) or value1 is None:
@@ -173,8 +183,8 @@ def print_field(value):
     """
     Prints a single 8-character width field
 
-    :param value: the value to print
-    @retval field an 8-character (tested) string
+    :param value:   the value to print
+    :returns field: an 8-character string
     """
     if isinstance(value, int):
         field = "%8s" % value
@@ -207,15 +217,6 @@ def print_card(fields, size=8):
     else:
         msg = 'fields = %s\nsize = %s' % (fields, size)
         raise ValueError(msg)
-
-
-def printCard(fields, tol=0.):
-    """
-    .. deprecated: will be replaced in version 0.7 with :func: `print_card`
-    """
-    warnings.warn('update printCard to print_card', DeprecationWarning,
-                  stacklevel=2)
-    return print_card_8(fields)
 
 
 def print_card_8(fields):
@@ -254,9 +255,9 @@ def print_card_8(fields):
 
 def print_int_card(fields):
     """
+    Prints a nastran-style card with 8-character width fields.
     All fields (other than the first field) must be integers.
     This is used to speed up SET cards.
-    Prints a nastran-style card with 8-character width fields.
 
     :param fields: The list of fields to write to a nastran card.
                    The first field is a word, all other fields are integers.
@@ -284,5 +285,5 @@ def print_int_card(fields):
     return out
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     pass

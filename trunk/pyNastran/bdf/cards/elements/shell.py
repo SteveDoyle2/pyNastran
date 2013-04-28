@@ -34,18 +34,17 @@ def _triangle_area_centroid_normal(nodes):
     """
     Returns area,centroid,unitNormal
 
-    @param nodes:
-      list of three triangle vertices
+    :param nodes: list of three triangle vertices
 
-    @code
-    n = Normal = a x b
-    Area   = 1/2 * |a x b|
-    V = <v1,v2,v3>
-    |V| = sqrt(v1^0.5+v2^0.5+v3^0.5) = norm(V)
+    ::
 
-    Area = 0.5 * |n|
-    unitNormal = n/|n|
-    @endcode
+      n = Normal = a x b
+      Area = 1/2 * |a x b|
+      V = <v1,v2,v3>
+      |V| = sqrt(v1^0.5+v2^0.5+v3^0.5) = norm(V)
+
+      Area = 0.5 * |n|
+      unitNormal = n/|n|
     """
     (n0, n1, n2) = nodes
     vector = cross(n0 - n1, n0 - n2)
@@ -117,7 +116,7 @@ class ShellElement(Element):
 
     def Mass(self):
         r"""
-        \f[ \large  mass = \frac{mass}{area} area  \f]
+        .. math:: m = \frac{m}{A} A  \f]
         """
         return self.pid.MassPerArea() * self.Area()
 
@@ -145,8 +144,9 @@ class TriShell(ShellElement):
 
     def Area(self):
         r"""
-        Returns the normal vector
-        \f[ \large A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)  \f]
+        Get the area.::
+        
+          A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)
         """
         (n0, n1, n2) = self.nodePositions()
         a = n0 - n1
@@ -156,17 +156,21 @@ class TriShell(ShellElement):
 
     def Normal(self):
         r"""
-        returns the normal vector
-        \f[ \large a = (n_0-n_1) \times (n_0-n_2)  \f]
-        \f[ \large n = \frac{n}{norm(N)}           \f]
+        Get the normal vector.
+
+        ..math::
+          A = (n_0-n_1) \times (n_0-n_2)
+          n = \frac{n}{\abs(n)}
         """
         (n0, n1, n2) = self.nodePositions()
         return _normal(n0 - n1, n0 - n2)
 
     def Centroid(self):
         r"""
-        Returns the centroid
-        \f[ \large CG = \frac{1}{3} (n_0+n_1+n_2)  \f]
+        Get the centroid.
+
+        .. math::
+          CG = \frac{1}{3} (n_0+n_1+n_2)
         """
         (n0, n1, n2) = self.nodePositions()
         centroid = centroid_triangle(n0, n1, n2)
@@ -200,7 +204,7 @@ class CTRIA3(TriShell):
         if comment:
             self._comment = comment
         if card:
-            ## element ID number
+            #: element ID number
             self.eid = integer(card, 1, 'eid')
             self.pid = integer(card, 2, 'pid')
 
@@ -285,12 +289,11 @@ class CTRIA3(TriShell):
 
     def flipNormal(self):
         """
-        @code
-             1           1
-            * *   -->   * *
-           *   *       *   *
-          2-----3     3-----2
-        @endcode
+        ::
+               1           1
+              * *   -->   * *
+             *   *       *   *
+            2-----3     3-----2
         """
         (n1, n2, n3) = self.nodes
         self.nodes = [n1, n3, n2]
@@ -361,7 +364,7 @@ class CTRIA6(TriShell):
         if comment:
             self._comment = comment
         if card:
-            ## element ID number
+            #: element ID number
             self.eid = integer(card, 1, 'eid')
             self.pid = integer(card, 2, 'pid')
 
@@ -443,8 +446,10 @@ class CTRIA6(TriShell):
 
     def Area(self):
         r"""
-        Returns the normal vector
-        \f[ \large A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)  \f]
+        Get the normal vector.
+
+        .. math::
+           A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         a = n1 - n2
@@ -454,17 +459,19 @@ class CTRIA6(TriShell):
 
     def Normal(self):
         r"""
-        Returns the normal vector
-        \f[ \large a = (n_0-n_1) \times (n_0-n_2)  \f]
-        \f[ \large n = \frac{n}{norm(N)}           \f]
+        Get the normal vector.
+        .. math::
+          A = (n_0-n_1) \times (n_0-n_2)
+          n = \frac{n}{\abs(n)}
         """
         (n0, n1, n2) = self.nodePositions()[:3]
         return _normal(n0 - n1, n0 - n2)
 
     def Centroid(self):
         r"""
-        Returns the centroid
-        \f[ \large CG = \frac{1}{3} (n_1+n_2+n_3)  \f]
+        Get the centroid.
+        .. math::
+          CG = \frac{1}{3} (n_1+n_2+n_3)
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         centroid = centroid_triangle(n1, n2, n3)
@@ -472,14 +479,14 @@ class CTRIA6(TriShell):
 
     def flipNormal(self):
         """
-        @code
-             1                1
-             **               **
-            *  *             *  *
-           4    6   -->     6    4
-          *      *         *      *
-         2----5---3       3----5---2
-        @endcode
+        ::
+
+               1                1
+               **               **
+              *  *             *  *
+             4    6   -->     6    4
+            *      *         *      *
+           2----5---3       3----5---2
         """
         (n1, n2, n3, n4, n5, n6) = self.nodes
         self.nodes = [n1, n3, n2, n6, n5, n4]
@@ -513,7 +520,7 @@ class CTRIAR(TriShell):
         TriShell.__init__(self, card, data)
         if comment:
             self._comment = comment
-        ## element ID number
+        #: element ID number
         self.eid = integer(card, 1, 'eid')
         self.pid = integer(card, 2, 'pid')
 
@@ -549,12 +556,12 @@ class CTRIAR(TriShell):
 
     def flipNormal(self):
         """
-        @code
-             1           1
-            * *   -->   * *
-           *   *       *   *
-          2-----3     3-----2
-        @endcode
+        ::
+
+               1           1
+              * *   -->   * *
+             *   *       *   *
+            2-----3     3-----2
         """
         (n1, n2, n3) = self.nodes
         self.nodes = [n1, n3, n2]
@@ -589,7 +596,7 @@ class CTRIAX(TriShell):
         if comment:
             self._comment = comment
         if card:
-            ## element ID number
+            #: element ID number
             self.eid = integer(card, 1, 'eid')
             self.pid = integer(card, 2, 'pid')
 
@@ -626,13 +633,12 @@ class CTRIAX(TriShell):
 class CTRIAX6(TriShell):
     """
     Nodes defined in a non-standard way
-    @code
-         5
-        / \
-       6   4
-     /       \
-    1----2----3
-    @endcode
+    ::
+           5
+          / \
+         6   4
+       /       \
+      1----2----3
     """
     type = 'CTRIAX6'
     #calculixType = 'CAX6'
@@ -641,7 +647,7 @@ class CTRIAX6(TriShell):
         if comment:
             self._comment = comment
         if card:
-            ## element ID number
+            #: element ID number
             self.eid = integer(card, 1, 'eid')
             self.mid = integer(card, 2, 'mid')
 
@@ -652,7 +658,7 @@ class CTRIAX6(TriShell):
                     integer(card, 7, 'n5'),
                     integer_or_blank(card, 8, 'n6')]
 
-            ## theta
+            #: theta
             self.theta = double_or_blank(card, 9, 'theta', 0.0)
             assert len(card) <= 10, 'len(CTRIAX6 card) = %i' % len(card)
         else:
@@ -702,8 +708,9 @@ class CTRIAX6(TriShell):
     
     def Area(self):
         r"""
-        returns the normal vector
-        \f[ \large A = \frac{1}{2} (n_0-n_1) times (n_0-n_2)  \f]
+        Get the normal vector.
+
+        .. math:: A = \frac{1}{2} (n_0-n_1) times (n_0-n_2)
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         a = n1 - n3
@@ -733,13 +740,13 @@ class CTRIAX6(TriShell):
 
     def flipNormal(self):
         """
-        @code
-             5               5
-            / \             / \
-           6   4   -->     6   4
-         /       \       /       \
-        1----2----3     1----2----3
-        @endcode
+        ::
+
+               5               5
+              / \             / \
+             6   4   -->     6   4
+           /       \       /       \
+          1----2----3     1----2----3
         """
         (n1, n2, n3, n4, n5, n6) = self.nodes
         self.nodes = [n1, n6, n5, n4, n3, n2]
@@ -776,20 +783,19 @@ class QuadShell(ShellElement):
 
     def AreaCentroid(self):
         """
-        @code
-        1-----2
-        |    /|
-        | A1/ |
-        |  /  |
-        |/ A2 |
-        4-----3
+        ::
+          1-----2
+          |    /|
+          | A1/ |
+          |  /  |
+          |/ A2 |
+          4-----3
 
-        centroid
-           c = sum(ci*Ai)/sum(A)
-           where:
-             c=centroid
-             A=area
-        @endcode
+          centroid
+             c = sum(ci*Ai)/sum(A)
+             where:
+               c=centroid
+               A=area
         """
         (n1, n2, n3, n4) = self.nodePositions()
         a = n1 - n2
@@ -855,12 +861,11 @@ class QuadShell(ShellElement):
 
     def flipNormal(self):
         """
-        @code
-        1---2        1---4
-        |   |  -->   |   |
-        |   |        |   |
-        4---3        2---3
-        @endcode
+        ::
+          1---2        1---4
+          |   |  -->   |   |
+          |   |        |   |
+          4---3        2---3
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -932,20 +937,19 @@ class CSHEAR(QuadShell):
 
     def AreaCentroid(self):
         """
-        @code
-        1-----2
-        |    /|
-        | A1/ |
-        |  /  |
-        |/ A2 |
-        4-----3
+        ::
+          1-----2
+          |    /|
+          | A1/ |
+          |  /  |
+          |/ A2 |
+          4-----3
 
-        centroid
-           c = sum(ci*Ai)/sum(A)
-           where:
-             c=centroid
-             A=area
-        @endcode
+          centroid
+             c = sum(ci*Ai)/sum(A)
+             where:
+               c=centroid
+               A=area
         """
         (n1, n2, n3, n4) = self.nodePositions()
         a = n1 - n2
@@ -979,12 +983,12 @@ class CSHEAR(QuadShell):
 
     def flipNormal(self):
         """
-        @code
-        1---2        1---4
-        |   |  -->   |   |
-        |   |        |   |
-        4---3        2---3
-        @endcode
+        ::
+
+          1---2        1---4
+          |   |  -->   |   |
+          |   |        |   |
+          4---3        2---3
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -1007,7 +1011,7 @@ class CQUAD4(QuadShell):
         if comment:
             self._comment = comment
         if card:
-            ## element ID number
+            #: element ID number
             self.eid = integer(card, 1, 'eid')
             self.pid = integer(card, 2, 'pid')
             nids = [integer(card, 3, 'n1'),
@@ -1076,12 +1080,12 @@ class CQUAD4(QuadShell):
 
     def flipNormal(self):
         """
-        @code
-        1---2        1---4
-        |   |  -->   |   |
-        |   |        |   |
-        4---3        2---3
-        @endcode
+        ::
+
+          1---2        1---4
+          |   |  -->   |   |
+          |   |        |   |
+          4---3        2---3
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -1124,7 +1128,7 @@ class CQUADR(QuadShell):
         if comment:
             self._comment = comment
         if card:
-            ## element ID number
+            #: element ID number
             self.eid = integer(card, 1, 'eid')
             self.pid = integer(card, 2, 'pid')
             nids = [integer_or_blank(card, 3, 'n1'),
@@ -1199,12 +1203,12 @@ class CQUADR(QuadShell):
 
     def flipNormal(self):
         """
-        @code
-        1---2        1---4
-        |   |  -->   |   |
-        |   |        |   |
-        4---3        2---3
-        @endcode
+        ::
+
+          1---2        1---4
+          |   |  -->   |   |
+          |   |        |   |
+          4---3        2---3
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -1229,7 +1233,7 @@ class CQUAD(QuadShell):
         QuadShell.__init__(self, card, data)
         if comment:
             self._comment = comment
-        ## element ID number
+        #: element ID number
         self.eid = integer(card, 1, 'eid')
         self.pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 'n1'),
@@ -1258,13 +1262,13 @@ class CQUAD(QuadShell):
 
     def flipNormal(self):
         """
-        @code
-        1--5--2        1--8--4
-        |     |  -->   |     |
-        8  9  6        5  9  7
-        |     |        |     |
-        4--7--3        2--6--3
-        @endcode
+        ::
+
+          1--5--2        1--8--4
+          |     |  -->   |     |
+          8  9  6        5  9  7
+          |     |        |     |
+          4--7--3        2--6--3
         """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]
@@ -1288,7 +1292,7 @@ class CQUAD8(QuadShell):
         if comment:
             self._comment = comment
         if card:
-            ## element ID number
+            #: element ID number
             self.eid = integer(card, 1, 'eid')
             self.pid = integer(card, 2, 'pid')
             nids = [integer(card, 3, 'n1'),
@@ -1357,20 +1361,20 @@ class CQUAD8(QuadShell):
 
     def AreaCentroid(self):
         """
-        @code
-        1-----2
-        |    /|
-        | A1/ |
-        |  /  |
-        |/ A2 |
-        4-----3
+        ::
 
-        centroid
-           c = sum(ci*Ai)/sum(A)
-           where:
-             c=centroid
-             A=area
-        @endcode
+          1-----2
+          |    /|
+          | A1/ |
+          |  /  |
+          |/ A2 |
+          4-----3
+
+          centroid
+             c = sum(ci*Ai)/sum(A)
+             where:
+               c=centroid
+               A=area
         """
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()
         a = n1 - n2
@@ -1420,7 +1424,7 @@ class CQUADX(QuadShell):
         if comment:
             self._comment = comment
         if card:
-            ## element ID number
+            #: element ID number
             self.eid = integer(card, 1, 'eid')
             self.pid = integer(card, 2, 'pid')
             nids = [integer_or_blank(card, 3, 'n1'),
@@ -1451,13 +1455,13 @@ class CQUADX(QuadShell):
 
     def flipNormal(self):
         """
-        @code
-        1--5--2        1--8--4
-        |     |  -->   |     |
-        8  9  6        5  9  7
-        |     |        |     |
-        4--7--3        2--6--3
-        @endcode
+        ::
+
+          1--5--2        1--8--4
+          |     |  -->   |     |
+          8  9  6        5  9  7
+          |     |        |     |
+          4--7--3        2--6--3
         """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]

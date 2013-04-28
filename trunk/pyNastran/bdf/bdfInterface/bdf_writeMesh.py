@@ -62,8 +62,9 @@ class WriteMesh(WriteMeshDeprecated):
 
     def _write_elements_as_CTRIA3(self, size):
         """
-        takes the cquad4 elements and splits them
-        @retval msg  string representation of the elements
+        Takes the cquad4 elements and splits them
+
+        :returns msg:  string representation of the elements
         """
         eids = self.elementIDs()
         #print "eids = ",eids
@@ -79,9 +80,9 @@ class WriteMesh(WriteMeshDeprecated):
 
     def _write_dmigs(self, size):
         """
-        :param self: the BDF object
-        :param size: large field (16) or small field (8)
-        @return: msg part of the BDF
+        :param self:  the BDF object
+        :param size:  large field (16) or small field (8)
+        :returns msg: string representation of the DMIGs
         """
         msg = []
         for (name, dmig) in sorted(self.dmigs.iteritems()):
@@ -100,7 +101,7 @@ class WriteMesh(WriteMeshDeprecated):
         """
         method to write the common outputs so none get missed...
         :param self: the BDF object
-        @retval msg part of the bdf
+        :returns msg: part of the bdf
         """
         msg = ''
         msg += self._write_rigid_elements(size)
