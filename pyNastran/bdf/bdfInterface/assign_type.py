@@ -348,8 +348,8 @@ def double_string_or_blank(card, n, fieldname, default=None):
     :param n:         field number
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
-    @return a double, string, or default value
-    @raise SyntaxError if there is an invalid type
+    :returns value:   a double, string, or default value
+    :raises SyntaxError: if there is an invalid type
     """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
@@ -387,8 +387,8 @@ def integer_or_double(card, n, fieldname):
     :param card:      BDF card as a list
     :param n:         field number
     :param fieldname: name of field
-    @return the value with the proper type
-    @raise SyntaxError if there's an invalid type
+    :returns value:   the value with the proper type
+    :raises SyntaxError: if there's an invalid type
     """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)

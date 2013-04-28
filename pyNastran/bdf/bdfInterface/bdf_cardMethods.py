@@ -6,7 +6,7 @@ import warnings
 
 def isLargeField(card):
     """
-    @returns True if the card is in 16-character width fields
+    :returns: True if the card is in 16-character width fields
     """
     star_fields = ['*' in field for field in card]
     if any(star_fields):
@@ -55,12 +55,15 @@ def nastran_split(log, line, is_large_field, debug=False):
     """
     Splits a single BDF line into large field or small field format
 
-    :line: the BDF line
-    :is_large_field: a flag indicating small/large field format (True/False)
-    :debug: extra developer debug
+    :param line:           the BDF line
+    :type line:            str
+    :param is_large_field: a flag indicating small/large field format
+                           (True/False)
+    :type is_large_field:  bool
+    :param debug: extra developer debug
+    :type debug:  bool
 
-    @retval fields
-      the 9 (small) or 5 (large) fields for the line
+    :returns fields: the 9 (small) or 5 (large) fields for the line
 
     .. note:: CSV Format is handled by parse_csv
     .. note:: tabs are handled prior to running this

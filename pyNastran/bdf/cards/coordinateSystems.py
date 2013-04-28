@@ -150,20 +150,23 @@ class Coord(BaseCard):
         Transforms a point from the local coordinate system to the reference
         coordinate frames "global" coordinate system.
 
-        \f[ \large [p_{global}]_{1\times 3} =
-            [p_{local} -p_{origin}]_{1\times 3}[\beta_{ij}]_{3\times 3}  \f]
+        .. math::
+            [p_{global}]_{1\times 3} =
+            [p_{local} -p_{origin}]_{1\times 3}[\beta_{ij}]_{3\times 3}
 
-        where   \f$ [\beta]_{ij} \f$ is the transformation matrix
-        \f[ \large  [\beta]_{ij} \left[
+        where :math:`[\beta]_{ij}` is the transformation matrix
+
+        .. math::
+          [\beta]_{ij} = \left[
           \begin{array}{ccc}
               g_x \cdot i  &  g_x \cdot j  &  g_x \cdot k    \\
               g_y \cdot i  &  g_y \cdot j  &  g_y \cdot k    \\
               g_z \cdot i  &  g_z \cdot j  &  g_z \cdot k
           \end{array} \right]
-        \f]
+        
 
-        * \f$ g  \f$ is the global directional vector (e.g. \f$ g_x = [1,0,0]\f$)
-        * \f$ ijk \f$ is the ith direction in the local coordinate system
+        * :math:`g` is the global directional vector (e.g. :math:`g_x = [1,0,0]`)
+        * :math:`ijk` is the ith direction in the local coordinate system
 
         :param self:            the coordinate system object
         :param p:               the point to be transformed.  Type=NUMPY.NDARRAY
@@ -225,38 +228,42 @@ class Coord(BaseCard):
         if isinstance(self.rid, int):
             return (p3, matrix)
         else:
-            ## .. todo:: do i need to multiply rid.transform(p3)[1]*matrix
+            #: .. todo:: do i need to multiply rid.transform(p3)[1]*matrix
             return (self.rid.transformToGlobal(p3)[0], matrix)
 
-    def transformToLocal(self, p, matrix, debug=False):
+    def transformToLocal(self, p, M, debug=False):
         r"""
         Transforms the global point p to the local coordinate system
 
         :param self:   the coordinate system object
         :param p:      the point to transform
-        :param matrix: the transformation matrix to apply - created by
+        :param M:      the transformation matrix to apply - created by
                        transformToGlobal
         :param debug:  developer debug
 
         .. note::  uses the matrix as there is no linking from a global
                    coordinate system to the local
+
         .. note::  the matrix that comes in is the local to global, so we need
-                   to invert the matrix. Luckily the inverse of a
-                   tranformation matrix
+                   to invert the matrix. The inverse of the tranformation
+                   matrix :math:`[\phi]` is the transpose of the matrix.
 
-          \f$ [\phi] \f$ is the transpose of the matrix.
-          \f[ p_{Global} = (p_{Local}-e_1 )[\phi]+e_1 \f]
-          \f[ [phi]^{-1} = [phi]^T \f]
-          (pc-e1) =(pG-e1)mT
-          (pc-e1)*m = pG-e1
-          (pc-e1)*m+e1 = pG
+        .. math:: p_{Global} = (p_{Local}-e_1 )[\phi]+e_1
 
-        .. note:: Be very careful of when you apply e1.  It gets removed
-                  whenever rotations are applied.  These equations need
-                  some TLC, but the methods are ok.
+        .. math:: [\phi]^{-1} = [\phi]^T
+
+        .. math:: (p_{coord}-e_1) =(p_{Global}-e_1) [M]^T
+
+        .. math:: (p_{coord}-e_1)[M] = p_{Global}-e_1
+
+        .. math:: (p_{coord}-e_1)[M]+e_1 = p_{Global}
+
+        .. note:: Be very careful of when you apply :math:`e_1`.
+                  It gets removed whenever rotations are applied.
+                  These equations need some TLC, but the methods are ok.
         """
         #pGlobal = self.transformToGlobal(p, debug=False)
-        pCoord = dot(p - self.e1, transpose(matrix))
+        pCoord = dot(p - self.e1, transpose(M))
         pLocal = self.XYZtoCoord(pCoord)
         if debug:
             print("p      = %s" % p)
@@ -267,10 +274,14 @@ class Coord(BaseCard):
 
     def normalize(self, v):
         """
-        Normalizes v into a unit vector
+        Normalizes v into a unit vector.
+
         :param self: the coordinate system object
         :param v:    the vector to normalize
-        @retval nNorm v has been normalized
+
+        :returns:  normalized v
+        
+        .. math:: v_{norm} = \frac{v}{\abs{v}}
         """
         normV = norm(v)
         if not normV > 0.:
@@ -280,16 +291,17 @@ class Coord(BaseCard):
     def T(self):
         r"""
         Returns the 6x6 transformation
-        \f[ \large  [\lambda] = [B_{ij}] \f]
-        \f[
-        [T] =
-        \left[
-          \begin{array}{cc}
-          \lambda  & 0 \\
-          0  & \lambda \\
-          \end{array}
-        \right]
-        \f]
+        
+        .. math:: [\lambda] = [B_{ij}]
+  
+        .. math:: 
+          [T] =
+          \left[
+            \begin{array}{cc}
+            \lambda  & 0 \\
+            0  & \lambda \\
+            \end{array}
+          \right]
         """
         (a, matrix) = self.transformToGlobal(self.e1)
         t = zeros((6, 6))  # transformation matrix
@@ -316,14 +328,14 @@ class RectangularCoord(object):
 
 class CylindricalCoord(object):
     r"""
-    \f[ r        = \sqrt(x^2+y^2)      \f]
-    \f[ \theta   = tan^-1(\frac{y}{x}) \f]
-    \f[ z        = z                   \f]
+    .. math:: r      = \sqrt(x^2+y^2)
+    .. math:: \theta = tan^{-1}\left(\frac{y}{x}\right)
+    .. math:: z      = z
 
-    \f[ x = r cos(\theta) \f]
-    \f[ y = r sin(\theta) \f]
-    \f[ z = z             \f]
-    \f[ p = [x,y,z] + e_1 \f]
+    .. math:: x = r cos(\theta)
+    .. math:: y = r sin(\theta)
+    .. math:: z = z
+    .. math:: p = [x,y,z] + e_1
     http://en.wikipedia.org/wiki/Cylindrical_coordinate_system
 
     .. note:: \f$ \phi \f$ and \f$ \theta \f$ are flipped per wikipedia to be
@@ -332,16 +344,17 @@ class CylindricalCoord(object):
     """
     def coordToXYZ(self, p):
         r"""
-        @code
-        y       R
-        |     /
-        |   /
-        | / theta
-        *------------x
-        @endcode
+        ::
 
-        \f[ \large x = R \cos(\theta) \f]
-        \f[ \large y = R \sin(\theta) \f]
+          y       R
+          |     /
+          |   /
+          | / theta
+          *------------x
+
+        .. math:: x = R \cos(\theta)
+        .. math:: y = R \sin(\theta)
+
         :param self: the coordinate system object
         """
         R = p[0]
@@ -359,18 +372,24 @@ class CylindricalCoord(object):
 
 class SphericalCoord(object):
     r"""
-    \f[ r = \rho = \sqrt(x^2+y^2+z^2)  \f]
-    \f[ \theta   = tan^-1(\frac{y}{x}) \f]
-    \f[ \phi     = cos^-1(\frac{z}{r}) \f]
+    .. math:: r = \rho = \sqrt(x^2+y^2+z^2)
 
-    \f[ x = r cos(\theta)sin(\phi) \f]
-    \f[ y = r sin(\theta)sin(\phi) \f]
-    \f[ z = r cos(\phi)            \f]
-    \f[ p = [x,y,z] + e_1          \f]
-    http://en.wikipedia.org/wiki/Spherical_coordinate_system
+    .. math:: \theta   = \tan^{-1}(\frac{y}{x})
 
-    .. note:: \f$ \phi \f$ and \f$ \theta \f$ are flipped per wikipedia to be
+    .. math:: \phi     = \cos^{-1}(\frac{z}{r})
+
+    .. math:: x = r \cos(\theta)\sin(\phi)
+
+    .. math:: y = r \sin(\theta)\sin(\phi)
+
+    .. math:: z = r \cos(\phi)
+
+    .. math:: p = [x,y,z] + e_1
+
+    .. seealso:: http://en.wikipedia.org/wiki/Spherical_coordinate_system
+    .. note:: :math:`\phi and :math`\theta` are flipped per wikipedia to be
               consistent with nastran's documentation
+
     .. seealso:: refman.pdf http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM44CXOHiyfZC2cfPjNIytbE62YKLbGNB9Ao/snxTMP3Lg=
     """
     def XYZtoCoord(self, p):
@@ -407,20 +426,20 @@ class Cord2x(Coord):
         Coord.__init__(self, card, data)
 
         if card:
-            ## coordinate system ID
+            #: coordinate system ID
             self.cid = integer(card, 1, 'cid')
-            ## reference coordinate system ID
+            #: reference coordinate system ID
             self.rid = integer_or_blank(card, 2, 'rid', 0)
 
-            ## origin in a point relative to the rid coordinate system
+            #: origin in a point relative to the rid coordinate system
             self.e1 = array([double_or_blank(card, 3, 'e1x', 0.0),
                              double_or_blank(card, 4, 'e1y', 0.0),
                              double_or_blank(card, 5, 'e1z', 0.0)])
-            ## z-axis in a point relative to the rid coordinate system
+            #: z-axis in a point relative to the rid coordinate system
             self.e2 = array([double_or_blank(card, 6, 'e2x', 0.0),
                              double_or_blank(card, 7, 'e2y', 0.0),
                              double_or_blank(card, 8, 'e2z', 0.0)])
-            ## a point on the xz-plane relative to the rid coordinate system
+            #: a point on the xz-plane relative to the rid coordinate system
             self.e3 = array([double_or_blank(card, 9, 'e3x', 0.0),
                              double_or_blank(card, 10, 'e3y', 0.0),
                              double_or_blank(card, 11, 'e3z', 0.0)])
@@ -468,21 +487,21 @@ class Cord2x(Coord):
             #print "  resolving cid=%s rid=%s" % (self.cid, self.Rid())
             self.rid.resolveCid()
 
-        ## rid coordinate system is now resolved, time to resolve the cid
-        ## coordinate system. rid may be in a different coordinate system
-        ## than cid
+        #: rid coordinate system is now resolved, time to resolve the cid
+        #: coordinate system. rid may be in a different coordinate system
+        #: than cid
         self.isResolved = True
         self.e1, matrix = self.transformToGlobal(self.e1)
 
-        ## the axes are normalized, so assume they're points and
-        ## resolve them in the XYZ system, but dont subtract e1 off
-        ## (hence the False)
+        #: the axes are normalized, so assume they're points and
+        #: resolve them in the XYZ system, but dont subtract e1 off
+        #: (hence the False)
         self.e1, matrix = self.rid.transformToGlobal(self.e1)  # origin
         i, matrix = self.rid.transformToGlobal(self.i, False)
         j, matrix = self.rid.transformToGlobal(self.j, False)
         k, matrix = self.rid.transformToGlobal(self.k, False)
 
-        ## the axes are global, so now we put them in the cid
+        #: the axes are global, so now we put them in the cid
         self.i = i
         self.j = j
         self.k = k
@@ -490,6 +509,7 @@ class Cord2x(Coord):
     def cross_reference(self, model):
         """
         Links self.rid to a coordinate system.
+
         :param self:  the coordinate system object
         :param model: the BDF object
         ..warning:: Doesn't set rid to the coordinate system if it's in the
@@ -517,13 +537,13 @@ class Cord1x(Coord):
             assert nCoord == 0 or nCoord == 1, 'nCoord=|%s|' % (nCoord)
             nCoord *= 4  # 0 if the 1st coord, 4 if the 2nd
 
-            ## the coordinate ID
+            #: the coordinate ID
             self.cid = integer(card, 1 + nCoord, 'cid')
-            ## a Node at the origin
+            #: a Node at the origin
             self.g1 = integer(card, 2 + nCoord, 'g1')
-            ## a Node on the z-axis
+            #: a Node on the z-axis
             self.g2 = integer(card, 3 + nCoord, 'g2')
-            ## a Node on the xz-plane
+            #: a Node on the xz-plane
             self.g3 = integer(card, 4 + nCoord, 'g3')
         else:
             self.cid = data[0]
@@ -594,11 +614,11 @@ class Cord1x(Coord):
         """
         self.isCrossReferenced = True
         msg = ' which is required by %s cid=%s' % (self.type, self.cid)
-        ## grid point 1
+        #: grid point 1
         self.g1 = model.Node(self.g1, msg=msg)
-        ## grid point 2
+        #: grid point 2
         self.g2 = model.Node(self.g2, msg=msg)
-        ## grid point 3
+        #: grid point 3
         self.g3 = model.Node(self.g3, msg=msg)
 
     def resolveCid(self):
@@ -608,11 +628,11 @@ class Cord1x(Coord):
 
         :param self: the coordinate system object
         """
-        ## the origin
+        #: the origin
         self.e1 = self.g1.Position()
-        ## a point on the z-axis
+        #: a point on the z-axis
         self.e2 = self.g2.Position()
-        ## a point on the xz-plane
+        #: a point on the xz-plane
         self.e3 = self.g3.Position()
         self.setup()
 
@@ -646,12 +666,10 @@ class CORD3G(Coord):  # not done
     Defines a general coordinate system using three rotational angles as
     functions of coordinate values in the reference coordinate system.
     The CORD3G entry is used with the MAT9 entry to orient material principal
-    axes for 3-D composite analysis
+    axes for 3-D composite analysis.::
 
-    @code
-    CORD3G CID METHOD FORM THETAID1 THETAID2 THETAID3 CIDREF
-    CORD3G 100 E313   EQN  110      111      112      0
-    @endcode
+      CORD3G CID METHOD FORM THETAID1 THETAID2 THETAID3 CIDREF
+      CORD3G 100 E313   EQN  110      111      112      0
     """
 
     type = 'CORD3G'
@@ -749,7 +767,9 @@ class CORD3G(Coord):  # not done
 
 class CORD1R(Cord1x, RectangularCoord):
     """
-    CORD1R CIDA G1A G2A G3A CIDB G1B G2B G3B
+    ::
+
+      CORD1R CIDA G1A G2A G3A CIDB G1B G2B G3B
     """
     type = 'CORD1R'
 
@@ -773,7 +793,9 @@ class CORD1R(Cord1x, RectangularCoord):
 
 class CORD1C(Cord1x, CylindricalCoord):
     """
-    CORD1C CIDA G1A G2A G3A CIDB G1B G2B G3B
+    ::
+
+      CORD1C CIDA G1A G2A G3A CIDB G1B G2B G3B
     """
     type = 'CORD1C'
 
@@ -798,7 +820,9 @@ class CORD1C(Cord1x, CylindricalCoord):
 
 class CORD1S(Cord1x, SphericalCoord):
     """
-    CORD1S CIDA G1A G2A G3A CIDB G1B G2B G3B
+    ::
+    
+      CORD1S CIDA G1A G2A G3A CIDB G1B G2B G3B
     """
     type = 'CORD1S'
 

@@ -173,10 +173,10 @@ class DOPTPRM(OptConstraint):
         Design Optimization Parameters
         Overrides default values of parameters used in design optimization
 
-        @code
-        DOPTPRM PARAM1 VAL1 PARAM2 VAL2 PARAM3 VAL3 PARAM4 VAL4
-                PARAM5 VAL5 -etc.-
-        @endcode
+        ::
+
+          DOPTPRM PARAM1 VAL1 PARAM2 VAL2 PARAM3 VAL3 PARAM4 VAL4
+                  PARAM5 VAL5 -etc.-
         """
         if comment:
             self._comment = comment
@@ -206,12 +206,10 @@ class DLINK(OptConstraint):
     def __init__(self, card=None, data=None, comment=''):
         """
         Multiple Design Variable Linking
-        Relates one design variable to one or more other design variables
+        Relates one design variable to one or more other design variables.::
 
-        @code
-        DLINK ID DDVID C0 CMULT IDV1 C1 IDV2 C2
-              IDV3 C3 -etc.-
-        @endcode
+          DLINK ID DDVID C0 CMULT IDV1 C1 IDV2 C2
+                IDV3 C3 -etc.-
         """
         if comment:
             self._comment = comment
@@ -252,9 +250,9 @@ class DRESP1(OptConstraint):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        @code
-        DRESP1         1S1      CSTRAIN PCOMP                  1       1   10000
-        @endcode
+        ::
+
+          DRESP1         1S1      CSTRAIN PCOMP                  1       1   10000
         """
         if comment:
             self._comment = comment
@@ -268,7 +266,7 @@ class DRESP1(OptConstraint):
             assert self.ptype in ['ELEM', 'PSHELL', 'PBAR', 'PROD', 'PCOMP',
                                   'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
                                   'PBEAML', 'PSHEAR', 'PTUBE', 
-                                  'PKNL',   ## TODO: is this correct?
+                                  'PKNL',   #: .. todo:: is this correct?
                                   None], 'DRESP1 ptype=%s' % self.ptype
         self.region = integer_or_blank(card, 5, 'region')
         self.atta = integer_double_string_or_blank(card, 6, 'atta')
@@ -384,12 +382,12 @@ class DSCREEN(OptConstraint):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        ## Response type for which the screening criteria apply. (Character)
+        #: Response type for which the screening criteria apply. (Character)
         self.rType = string(card, 1, 'rType')
-        ## Truncation threshold. (Real; Default = -0.5)
+        #: Truncation threshold. (Real; Default = -0.5)
         self.trs = double_or_blank(card, 2, 'trs', -0.5)
-        ## Maximum number of constraints to be retained per region per load
-        ## case. (Integer > 0; Default = 20)
+        #: Maximum number of constraints to be retained per region per load
+        #: case. (Integer > 0; Default = 20)
         self.nstr = integer(card, 3, 'nstr', 20)
         assert len(card) == 4, 'len(DSCREEN card) = %i' % len(card)
 
@@ -410,11 +408,10 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
     def __init__(self, card=None, data=None, comment=''):
         """
         Design Variable to Material Relation
-        Defines the relation between a material property and design variables
-        @code
-        DVMREL1 ID TYPE MID MPNAME MPMIN MPMAX C0
-                DVID1 COEF1 DVID2 COEF2 DVID3 COEF3 -etc.-
-        @endcode
+        Defines the relation between a material property and design variables.::
+
+          DVMREL1 ID TYPE MID MPNAME MPMIN MPMAX C0
+                  DVID1 COEF1 DVID2 COEF2 DVID3 COEF3 -etc.-
         """
         if comment:
             self._comment = comment
@@ -482,10 +479,10 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        @code
-        DVPREL1   200000   PCOMP    2000      T2
-                  200000     1.0
-        @endcode
+        ::
+
+          DVPREL1   200000   PCOMP    2000      T2
+                    200000     1.0
         """
         if comment:
             self._comment = comment
@@ -548,13 +545,13 @@ class DVPREL2(OptConstraint):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        @code
-        DVPREL2 ID TYPE PID PNAME/FID PMIN PMAX EQID
-        'DESVAR' DVID1 DVID2 DVID3 DVID4 DVID5 DVID6 DVID7
-                 DVID8 -etc.-
-        'DTABLE' LABL1 LABL2 LABL3 LABL4 LABL5 LABL6 LABL7
-                 LABL8 -etc.-
-        @endcode
+        ::
+
+          DVPREL2 ID TYPE PID PNAME/FID PMIN PMAX EQID
+          'DESVAR' DVID1 DVID2 DVID3 DVID4 DVID5 DVID6 DVID7
+                   DVID8 -etc.-
+          'DTABLE' LABL1 LABL2 LABL3 LABL4 LABL5 LABL6 LABL7
+                   LABL8 -etc.-
         """
         if comment:
             self._comment = comment

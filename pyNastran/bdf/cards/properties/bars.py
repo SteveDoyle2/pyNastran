@@ -55,12 +55,13 @@ def IBeamOffset(b, h, y, z):
 
 def getInertiaRectangular(sections):
     """
-    calculates the moment of inertia for a section about the CG
-    @param sections
-      [[b,h,y,z]_1,...] y,z is the centroid (x in the direction of the beam,
-      y right, z up)
-    @retval interiaParameters
-        list of [Area,Iyy,Izz,Iyz]
+    Calculates the moment of inertia for a section about the CG.
+    
+    :param sections: [[b,h,y,z]_1,...] y,z is the centroid
+                     (x in the direction of the beam,
+                      y right, z up)
+    :returns: interiaParameters list of [Area, Iyy, Izz, Iyz]
+    
     .. seealso:: http://www.webs1.uidaho.edu/mindworks/Machine_Design/Posters/PDF/Moment%20of%20Inertia.pdf
     """
     As = []
@@ -103,17 +104,17 @@ class LineProperty(Property):
         self.nsm = None
         Property.__init__(self, card, data)
 
-    def D_bending(self):
-        pass
+    #def D_bending(self):
+        #pass
 
-    def D_axial(self):
-        pass
+    #def D_axial(self):
+        #pass
 
-    def D_thermal(self):
-        pass
+    #def D_thermal(self):
+        #pass
 
-    def D_shear(self):
-        pass
+    #def D_shear(self):
+        #pass
 
     def Rho(self):
         return self.mid.rho
@@ -147,21 +148,21 @@ class LineProperty(Property):
 
     def CA_Section(self, iFace, iStart, dims):
         """
-        @code
-        ---msg1---
-        H1=0.1
-        W1=0.05
+        ::
 
-        ---msg2---
-        Face_1 = geompy.MakeFaceHW(H1, W1, 1)
-        geompy.addToStudy( Face_1, 'Face_1' )
+          ---msg1---
+          H1=0.1
+          W1=0.05
 
-        ---msg---
-        H1=0.1
-        W1=0.05
-        Face_1 = geompy.MakeFaceHW(H1, W1, 1)
-        geompy.addToStudy( Face_1, 'Face_1' )
-        @endcode
+          ---msg2---
+          Face_1 = geompy.MakeFaceHW(H1, W1, 1)
+          geompy.addToStudy( Face_1, 'Face_1' )
+
+          ---msg---
+          H1=0.1
+          W1=0.05
+          Face_1 = geompy.MakeFaceHW(H1, W1, 1)
+          geompy.addToStudy( Face_1, 'Face_1' )
         """
         msg1 = ''
         msg2 = 'Face_%s = geompy.MakeFaceHW(' % (iFace + 1)
@@ -210,13 +211,19 @@ class LineProperty(Property):
             (A, Iyy, Izz, Iyz) = getInertiaRectangular(sections)
             assert Iyz == 0.
 
-        elif self.Type == 'BAR':  # *-------*
-            h1 = dim[1]  # |       |
-            w1 = dim[0]  # |       |h1
-            A = h1 * w1  # |       |
-            ## *-------*          I_{xx}=\frac{bh^3}{12}
+        elif self.Type == 'BAR':
+            #: *-------*
+            #: |       |
+            #: |  BAR  |h1
+            #: |       |
+            #: *-------*
+            #:    w1
+            #: I_{xx}=\frac{bh^3}{12}
+            #: I_{yy}=\frac{hb^3}{12}
+            h1 = dim[1]  
+            w1 = dim[0]  
+            A = h1 * w1  
             Iyy = 1 / 12. * w1 * h1 ** 3
-            ## w1             I_{yy}=\frac{hb^3}{12}
             Izz = 1 / 12. * h1 * w1 ** 3
             Iyz = 0.  #: .. todo:: is the Ixy of a bar 0 ???
 
@@ -243,22 +250,24 @@ class LineProperty(Property):
         return I[2]
 
     def I1_I2_I12(self):
-        """
-        @code
-        BAR
-            2
-            ^
-            |
-        *---|--*
-        |   |  |
-        |   |  |
-        |h  *-----------> 1
-        |      |
-        |   b  |
-        *------*
-        I1 = 1/12*b*h^3
-        I2 = 1/12*h*b^3
-        @endcode
+        r"""
+        ::
+
+          BAR
+              2
+              ^
+              |
+          *---|--*
+          |   |  |
+          |   |  |
+          |h  *-----------> 1
+          |      |
+          |   b  |
+          *------*
+        
+        .. math:: I_1 = \frac{1}{12} b h^3
+
+        .. math:: I_2 = \frac{1}{12} h b^3
         """
         dim = self.dim
         if self.Type == 'ROD':
@@ -279,10 +288,14 @@ class LineProperty(Property):
 
     def areaL(self, dim):
         """
-        Area method for the PBARL and PBEAML classes (pronounced Area-L)
-        @param self the object pointer
-        @param dim a list of the dimensions associated with self.Type
-        @retval Area of the given cross section
+        Area(x) method for the PBARL and PBEAML classes (pronounced **Area-L**)
+
+        :param self:   the object pointer
+        :param dim:    a list of the dimensions associated with **self.Type**
+        :returns Area: Area of the given cross section defined
+                       by **self.Type**
+        
+        .. note:: internal method
         """
         try:
             if self.Type == 'ROD':
@@ -626,19 +639,39 @@ class PTUBE(LineProperty):
         assert isinstance(nsm, float), 'nsm=%r' % nsm
 
     def Nsm(self):
+        """
+        Gets the non-structural mass :math:`nsm` of the CTUBE.
+        """
         return self.nsm
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def Rho(self):
+        """
+        Gets the density :math:`\rho` of the CTUBE.
+        """
         return self.mid.Rho()
 
     def MassPerLength(self):
+        r"""
+        Gets the mass per length :math:`\frac{m}{L}` of the CTUBE.
+        
+        .. math:: {m}{L} = A \rho nsm
+        """
         return self.Area() * self.Rho() + self.nsm
 
     def Area(self):
-        A = (self.area1() + self.area2()) / 2.
+        r"""
+        Gets the area :math:`A` of the CTUBE.
+         
+        .. math:: A_1 = \pi \frac{d_1^2}{4} - \pi {(D_1-2t)^2}{4}
+        
+        .. math:: A_2 = \pi \frac{d_2^2}{4} - \pi {(D_2-2t)^2}{4}
+        
+        .. math:: A = A_1 + A_2
+        """
+        A = (self._area1() + self._area2()) / 2.
 
         #A1 = pi*D1^2/4 - pi*((D1-2t)^2)/4
         #A2 = pi*D2^2/4 - pi*((D2-2t)^2)/4
@@ -656,13 +689,15 @@ class PTUBE(LineProperty):
             #raise RuntimeError(msg)
         return A
 
-    def area1(self):
+    def _area1(self):
+        """Gets the Area of Section 1 of the CTUBE."""
         Dout = self.OD1
         Din = Dout - 2 * self.t
         A1 = pi / 4. * (Dout * Dout - Din * Din)
         return A1
 
-    def area2(self):
+    def _area2(self):
+        """Gets the Area of Section 2 of the CTUBE."""
         Dout = self.OD2
         Din = Dout - 2 * self.t
         A2 = pi / 4. * (Dout * Dout - Din * Din)
@@ -709,12 +744,14 @@ class PBAR(LineProperty):
             self.mid = integer(card, 2, 'mid')
             #: Area -> use Area()
             self.A = double_or_blank(card, 3, 'A', 0.0)
-            #: Izz -> use Izz()
+            #: I1 -> use I1()
             self.i1 = double_or_blank(card, 4, 'I1', 0.0)
-            #: Iyy -> use Iyy()
+            #: I2 -> use I2()
             self.i2 = double_or_blank(card, 5, 'I2', 0.0)
+
             #: Polar Moment of Inertia J -> use J()
-            # default=1/2(I1+I2) for SOL=600,otherwise 0.0
+            #: default=1/2(I1+I2) for SOL=600, otherwise 0.0
+            #: .. todo:: support SOL 600 default
             self.j = double_or_blank(card, 6, 'J', 0.0)
             #: nonstructral mass -> use Nsm()
             self.nsm = double_or_blank(card, 7, 'nsm', 0.0)
@@ -728,10 +765,11 @@ class PBAR(LineProperty):
             self.F1 = double_or_blank(card, 15, 'F1', 0.0)
             self.F2 = double_or_blank(card, 16, 'F2', 0.0)
 
-            #: default=infinite
+            #: default=infinite; assume 1e8
             self.K1 = double_or_blank(card, 17, 'K1', 1e8)
-            #: default=infinite
+            #: default=infinite; assume 1e8
             self.K2 = double_or_blank(card, 18, 'K2', 1e8)
+            #: I12 -> use I12()
             self.i12 = double_or_blank(card, 19, 'I12', 0.0)
             if self.A == 0.0:
                 assert self.K1 is None
@@ -777,7 +815,9 @@ class PBAR(LineProperty):
 
     def MassPerLength(self):
         r"""
-        \f[ \frac{m}{L} = \rho A+nsm \f]
+        Gets the mass per length :math:`\frac{m}{L}` of the CBAR.
+        
+        .. math:: \frac{m}{L} = \rho A + nsm
         """
         A = self.Area()
         rho = self.Rho()
@@ -788,6 +828,9 @@ class PBAR(LineProperty):
         self.mid = model.Material(self.mid)
 
     def Area(self):
+        """
+        Gets the area :math:`A` of the CBAR.
+        """
         return self.A
 
     #def Nsm(self):
@@ -795,15 +838,6 @@ class PBAR(LineProperty):
 
     #def J(self):
     #    return self.j
-
-    #def Izz(self):
-    #    return self.i1
-
-    #def Iyy(self):
-    #    return self.i2
-
-    #def Iyz(self):
-    #    return self.i12
 
     def I11(self):
         return self.i1
@@ -859,8 +893,6 @@ class PBAR(LineProperty):
         K1 = set_blank_if_default(self.K1, 1e8)
         K2 = set_blank_if_default(self.K2, 1e8)
 
-        #print "line3 = ",line3
-
         list_fields = ['PBAR', self.pid, self.Mid(), self.A, i1, i2, j, nsm,
                        None, C1, C2, D1, D2, E1, E2, F1, F2, K1, K2, i12]
         return list_fields
@@ -868,7 +900,7 @@ class PBAR(LineProperty):
 
 class PBARL(LineProperty):
     """
-    .. warning:: doesnt support user-defined types
+    .. todo:: doesnt support user-defined types
     """
     type = 'PBARL'
     validTypes = {
@@ -899,18 +931,24 @@ class PBARL(LineProperty):
         if comment:
             self._comment = comment
         if card:
+            #: Property ID
             self.pid = integer(card, 1, 'pid')
+            #: Material ID
             self.mid = integer(card, 2, 'mid')
             self.group = string_or_blank(card, 3, 'group', 'MSCBMLO')
+            #: Section Type (e.g. 'ROD', 'TUBE', 'I', 'H')
             self.Type = string(card, 4, 'Type')
 
             #nDim = len(self.dim)-1
             nDim = self.validTypes[self.Type]
             j = 9 + nDim + 1
+
+            #: dimension list
             self.dim = fields(double_or_blank, card, 'dim', i=9, j=j)
+
+            #: non-structural mass
             self.nsm = double_or_blank(card, 9 + nDim + 1, 'nsm', 0.0)
 
-            #self.dim = fields(9)
             if nDim > 0:
                 self.nsm = set_default_if_blank(self.dim.pop(), 0.0)
             else:
@@ -924,8 +962,8 @@ class PBARL(LineProperty):
             self.Type = data[3].strip()
             self.dim = list(data[4:-1])
             self.nsm = data[-1]
-            #print "group = |%s|" %(self.group)
-            #print "Type  = |%s|" %(self.Type)
+            #print "group = |%s|" % self.group
+            #print "Type  = |%s|" % self.Type
             #print "dim = ",self.dim
             #print str(self)
             #print "*PBARL = ",data
@@ -966,17 +1004,22 @@ class PBARL(LineProperty):
         assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
 
     def Area(self):
+        """
+        Gets the area :math:`A` of the CBAR.
+        """
         return self.areaL(self.dim)
 
     def Nsm(self):
+        """
+        Gets the non-structural mass :math:`nsm` of the CBAR.
+        """
         return self.nsm
 
     def MassPerLength(self):
-        """
-        @code
-        mass = L*(Area*rho+nsm)
-        mass/L = Area*rho+nsm
-        @endcode
+        r"""
+        Gets the mass per length :math:`\frac{m}{L}` of the CBAR.
+        
+        .. math:: \frac{m}/{L} = A \rho + nsm
         """
         rho = self.Rho()
         area = self.Area()
@@ -1233,12 +1276,16 @@ class PBCOMP(LineProperty):
         if card:
             #: Property ID
             self.pid = integer(card, 1, 'pid')
+            #: Material ID
             self.mid = integer(card, 2, 'mid')
+            # Area
             self.A = double_or_blank(card, 3, 'A', 0.0)
             self.i1 = double_or_blank(card, 4, 'I1', 0.0)
             self.i2 = double_or_blank(card, 5, 'I2', 0.0)
             self.i12 = double_or_blank(card, 6, 'I12', 0.0)
+            #: Polar Moment of Inertia :math:`J`
             self.j = double_or_blank(card, 7, 'J', 0.0)
+            #: Non-structural mass per unit length :math:`\frac{m}{L}`
             self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
             self.k1 = double_or_blank(card, 9, 'k1', 1.0)
             self.k2 = double_or_blank(card, 10, 'k2', 1.0)
@@ -1322,19 +1369,29 @@ class PBEAM(IntegratedLineProperty):
         if comment:
             self._comment = comment
         if card:
+            #: Property ID
             self.pid = integer(card, 1, 'pid')
+            #: Material ID
             self.mid = integer(card, 2, 'mid')
 
             # at least one cross section are required
             # so[0] and xxb[0] aren't used
+            #: Output flag
             self.so = ['YES']
+            #: Section position
             self.xxb = [0.]
             A = double(card, 3, 'A')
+            #: Area
             self.A = [A]
+            #: Moment of Inertia about the 1 axis :math:`I_1`
             self.i1 = [double_or_blank(card, 4, 'I1', 0.0)]
+            #: Moment of Inertia about the 2 axis  :math:`I_2`
             self.i2 = [double_or_blank(card, 5, 'I2', 0.0)]
+            #: Moment of Inertia about the 12 axis  :math:`I_{12}`
             self.i12 = [double_or_blank(card, 6, 'I12', 0.0)]
+            #: Polar Moment of Inertia :math:`J`
             self.j = [double_or_blank(card, 7, 'J', 0.0)]
+            #: Non-structural mass :math:`nsm`
             self.nsm = [double_or_blank(card, 8, 'nsm', 0.0)]
             
             isCDEF = False
@@ -1496,34 +1553,50 @@ class PBEAM(IntegratedLineProperty):
             
 
             # footer fields
-            #: Shear stiffness factor K in K*A*G for plane 1/2.
+            #: Shear stiffness factor K in K*A*G for plane 1.
             self.k1 = double_or_blank(card, x, 'k1', 1.0)
+            #: Shear stiffness factor K in K*A*G for plane 2.
             self.k2 = double_or_blank(card, x + 1, 'k2', 1.0)
             
-            #: Shear relief coefficient due to taper for plane 1/2.
+            #: Shear relief coefficient due to taper for plane 1.
             self.s1 = double_or_blank(card, x + 2, 's1', 0.0)
+            #: Shear relief coefficient due to taper for plane 2.
             self.s2 = double_or_blank(card, x + 3, 's2', 0.0)
             
             #: non structural mass moment of inertia per unit length
-            #: about nsm center of gravity at Point A/B.
+            #: about nsm center of gravity at Point A.
             self.nsia = double_or_blank(card, x + 4, 'nsia', 0.0)
+            #: non structural mass moment of inertia per unit length
+            #: about nsm center of gravity at Point B.
             self.nsib = double_or_blank(card, x + 5, 'nsib', self.nsia)
 
-            #: warping coefficient for end A/B.  
+            #: warping coefficient for end A.
             self.cwa = double_or_blank(card, x + 6, 'cwa', 0.0)
+            #: warping coefficient for end B.
             self.cwb = double_or_blank(card, x + 7, 'cwb', self.cwa)
 
-            #: (y,z) coordinates of center of gravity of
-            #: nonstructural mass for end A/B.
+            #: y coordinate of center of gravity of
+            #: nonstructural mass for end A.
             self.m1a = double_or_blank(card, x + 8, 'm1a', 0.0)
+            #: z coordinate of center of gravity of
+            #: nonstructural mass for end A.
             self.m2a = double_or_blank(card, x + 9, 'm2a', self.m1a)
+
+            #: y coordinate of center of gravity of
+            #: nonstructural mass for end B.
             self.m1b = double_or_blank(card, x + 10, 'm1b', 0.0)
+            #: z coordinate of center of gravity of
+            #: nonstructural mass for end B.
             self.m2b = double_or_blank(card, x + 11, 'm2b', self.m1b)
 
-            #: (y,z) coordinates of neutral axis for end A/B.
+            #: y coordinate of neutral axis for end A.
             self.n1a = double_or_blank(card, x + 12, 'n1a', 0.0)
+            #: z coordinate of neutral axis for end A.
             self.n2a = double_or_blank(card, x + 13, 'n2a', self.n1a)
+
+            #: y coordinate of neutral axis for end B.
             self.n1b = double_or_blank(card, x + 14, 'n1a', 0.0)
+            #: z coordinate of neutral axis for end B.
             self.n2b = double_or_blank(card, x + 15, 'n2b', self.n1b)
         else:
             raise NotImplementedError(data)
@@ -1718,21 +1791,29 @@ class PBEAML(IntegratedLineProperty):
         if comment:
             self._comment = comment
         if card:
+            #: Property ID
             self.pid = integer(card, 1, 'pid')
+            #: Material ID
             self.mid = integer(card, 2, 'mid')
             self.group = string_or_blank(card, 3, 'group', 'MSCBMLO')
+            #: Section Type (e.g. 'ROD', 'TUBE', 'I', 'H')
             self.Type = string(card, 4, 'Type')
 
+            # determine the number of required dimensions on the PBEAM
             nDim = self.validTypes[self.Type]
-            #nAll = nDim+1
+            #nAll = nDim + 1
 
-            #nDim = len(self.dim)-1
+            #nDim = len(self.dim) - 1
             dimAll = fields(double, card, 'dim', i=9, j=len(card))
 
+            #: dimension list
             self.dim = []
             Dim = []
+            #: Section position
             self.xxb = [0.]
+            #: Output flag
             self.so = ['YES']
+            #: non-structural mass :math:`nsm`
             self.nsm = []
 
             j = 0  # the dimension counter
@@ -1780,9 +1861,12 @@ class PBEAML(IntegratedLineProperty):
             #print self
 
     def MassPerLength(self):
-        """
-        mass = L*(Area*rho+nsm)
-        mass/L = Area*rho+nsm
+        r"""
+        Gets the mass per length :math:`\frac{m}{L}` of the PBEAML.
+        
+        .. math:: \frac{m}{L} = A(x) \rho + nsm
+        
+        .. math:: \frac{m}{L} = nsm L + \rho \int \, A(x) \dif x
         """
         rho = self.Rho()
         massPerLs = []
@@ -1797,6 +1881,13 @@ class PBEAML(IntegratedLineProperty):
         return massPerL
 
     def Area(self):
+        r"""
+        Gets the Area :math:`A` of the PBEAML.
+        
+        .. math:: A = \int \, A(x) \dif x
+        
+        .. note:: a spline is fit to :math:`A(x)` and then integrated.
+        """
         Areas = []
         for dim in self.dim:
             Areas.append(self.areaL(dim))
@@ -1808,11 +1899,11 @@ class PBEAML(IntegratedLineProperty):
 
     def cross_reference(self, model):
         """
-        .. warning:: For structural problems, PBEAML entries must reference a MAT1
-         material entry
-        .. warning:: For heat-transfer problems, the MID must reference a MAT4 or
-         MAT5 material entry.
-        .. note:: what happens when there are 2 subcases?
+        .. warning:: For structural problems, PBEAML entries must
+                     reference a MAT1 material entry
+        .. warning:: For heat-transfer problems, the MID must
+                     reference a MAT4 or MAT5 material entry.
+        .. todo:: What happens when there are 2 subcases?
         """
         self.mid = model.Material(self.mid)
 
@@ -1831,6 +1922,7 @@ class PBEAML(IntegratedLineProperty):
         return j
 
     def J(self):
+        #raise NotImplementedError()
         #Js = self._J()
         #j = integrate_positive_line(self.xxb, Js)
         j = None
@@ -1853,14 +1945,12 @@ class PBEAML(IntegratedLineProperty):
 
     def writeCodeAster(self, iCut=0, iFace=0, iStart=0):  # PBEAML
         msg = ''
-
         msg2 = 'Cut_%s = geompy.MakeCut(' % (iCut + 1)
         for (xxb, so, dim, nsm) in izip(self.xxb, self.so, self.dim, self.nsm):
             msg += self.CA_Section(iFace, iStart, self.dim)
             msg2 += 'Face_%i, ' % (iFace + 1)
             iFace += 1
             iStart += len(self.dim)
-
         msg2 = msg2[-2:]
         msg2 += ')\n'
 
@@ -1922,13 +2012,17 @@ class PBEAM3(LineProperty):  # not done, cleanup
             raise NotImplementedError(data)
 
     def Nsm(self):
-        """.. warning:: nsm field not supported fully on PBEAM3 card"""
+        """
+        Gets the non-structural mass :math:`nsm`.
+        .. warning:: nsm field not supported fully on PBEAM3 card
+        """
         return self.nsm
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
-    def reprFields(self):  ## .. todo:: not done
+    def reprFields(self):
+        """.. todo:: not done"""
         list_fields = ['PBEAM3', self.pid, self.Mid(), ]  # other
         return list_fields
 
@@ -1947,19 +2041,19 @@ class PBEND(LineProperty):
             value3 = integer_or_double(card, 3, 'A_FSI')
             if isinstance(value3, float):
                 self.beamType = 1
-                ## Area of the beam cross section
+                #: Area of the beam cross section
                 self.A = double(card, 3, 'A')
 
-                ## Area moments of inertia in planes 1 and 2.
+                #: Area moments of inertia in planes 1 and 2.
                 self.i1 = double(card, 4, 'I1')
                 self.i2 = double(card, 5, 'I2')
 
-                ## Torsional stiffness
+                #: Torsional stiffness :math:`J`
                 self.j = double(card, 6, 'J')
 
                 # line2
-                ## The r,z locations from the geometric centroid for stress
-                ## data recovery.
+                #: The r,z locations from the geometric centroid for stress
+                #: data recovery.
                 self.c1 = double(card, 9, 'c1')
                 self.c2 = double(card, 10, 'c2')
                 self.d1 = double(card, 11, 'd1')
@@ -1970,51 +2064,53 @@ class PBEND(LineProperty):
                 self.f2 = double(card, 16, 'f2')
 
                 # line 3
-                ## Shear stiffness factor K in K*A*G for plane 1 and plane 2.
+                #: Shear stiffness factor K in K*A*G for plane 1.
                 self.k1 = double(card, 17, 'k1')
+                #: Shear stiffness factor K in K*A*G for plane 2.
                 self.k2 = double(card, 18, 'k2')
 
-                ## Nonstructural mass per unit length.
+                #: Nonstructural mass per unit length.
                 self.nsm = double(card, 19, 'nsm')
 
-                ## Radial offset of the geometric centroid from points GA and GB
+                #: Radial offset of the geometric centroid from points GA and GB.
                 self.rc = double(card, 20, 'rc')
 
-                ## Offset of the geometric centroid in a direction perpendicular
-                ## to the plane of points GA and GB and vector v
+                #: Offset of the geometric centroid in a direction perpendicular
+                #: to the plane of points GA and GB and vector v
                 self.zc = double(card, 21, 'zc')
 
-                ## Radial offset of the neutral axis from the geometric
-                ## centroid, positive is toward the center of curvature
+                #: Radial offset of the neutral axis from the geometric
+                #: centroid, positive is toward the center of curvature
                 self.deltaN = double(card, 22, 'deltaN')
 
             elif isinstance(value3, int):  # alternate form
                 self.beamType = 2
-                ## Flag selecting the flexibility and stress intensification
-                ## factors. See Remark 3. (Integer = 1, 2, or 3)
+                #: Flag selecting the flexibility and stress intensification
+                #: factors. See Remark 3. (Integer = 1, 2, or 3)
                 self.fsi = integer(card, 3, 'fsi')
                 assert self.fsi in [1, 2, 3]
 
-                ## Mean cross-sectional radius of the curved pipe
+                #: Mean cross-sectional radius of the curved pipe
                 self.rm = double(card, 4, 'rm')
 
-                ## Wall thickness of the curved pipe
+                #: Wall thickness of the curved pipe
                 self.t = double(card, 5, 't')
 
-                ## Internal pressure
+                #: Internal pressure
                 self.p = double(card, 6, 'p')
 
                 # line3
+                # Non-structural mass :math:`nsm`
                 self.nsm = double(card, 11, 'nsm')
                 self.rc = double(card, 12, 'rc')
                 self.zc = double(card, 13, 'zc')
             else:
                 raise RuntimeError('Area/FSI on CBEND must be defined...')
 
-            ## Bend radius of the line of centroids
+            #: Bend radius of the line of centroids
             self.rb = double_or_blank(card, 7, 'rb')
 
-            ## Arc angle of element  (optional)
+            #: Arc angle :math:`\theta_B` of element  (optional)
             self.thetab = double_or_blank(card, 8, 'thetab')
             assert len(card) <= 23, 'len(PBEND card) = %i' % len(card)
 

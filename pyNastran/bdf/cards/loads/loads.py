@@ -55,16 +55,16 @@ class LoadCombination(Load):  # LOAD, DLOAD
         Load.__init__(self, card, data)
 
         if card:
-            ## load ID
+            #: load ID
             self.sid = integer(card, 1, 'sid')
 
-            ## overall scale factor
+            #: overall scale factor
             self.scale = double(card, 2, 'scale')
 
-            ## individual scale factors (corresponds to loadIDs)
+            #: individual scale factors (corresponds to loadIDs)
             self.scaleFactors = []
 
-            ## individual loadIDs (corresponds to scaleFactors)
+            #: individual loadIDs (corresponds to scaleFactors)
             self.loadIDs = []
 
             # alternating of scale factor & load set ID

@@ -60,16 +60,18 @@ class BaseCard(object):
     def buildTableLines(self, fields, nStart=1, nEnd=0):
         """
         builds a table of the form:
-        @code
-        'DESVAR' DVID1 DVID2 DVID3 DVID4 DVID5 DVID6 DVID7
-                 DVID8 -etc.-
-        'UM'     VAL1  VAL2  -etc.-
-        @endcode
+        ::
+          'DESVAR' DVID1 DVID2 DVID3 DVID4 DVID5 DVID6 DVID7
+                   DVID8 -etc.-
+          'UM'     VAL1  VAL2  -etc.-
 
         and then pads the rest of the fields with None's
+
         :param fields: the fields to enter, including DESVAR
-        :param nStart: the number of blank fields at the start of the line (default=1)
-        :param nEnd:   the number of blank fields at the end of the line (default=0)
+        :param nStart: the number of blank fields at the start of the
+                       line (default=1)
+        :param nEnd:   the number of blank fields at the end of the
+                       line (default=0)
 
         .. note:: will be used for DVPREL2, RBE1, RBE3
         .. warning:: only works for small field format???

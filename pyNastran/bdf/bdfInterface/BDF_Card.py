@@ -26,7 +26,7 @@ class BDFCard(object):
 
         :param self:     the object pointer
         :param cardName: the cardName to compare against
-        @retval IsACardName True/False
+        :returns IsACardName: True/False
         """
         if self.card.field(0) == cardName.upper():
             return True
@@ -52,7 +52,7 @@ class BDFCard(object):
         Prints the card as a list
 
         :param self:  the object pointer
-        @retval msg the string representation of the card
+        :returns msg: the string representation of the card
         """
         return str(self.card)
 
@@ -60,8 +60,8 @@ class BDFCard(object):
         """
         Gets how many fields are on the card
 
-        :param self:  the object pointer
-        @retval nFields the number of fields on the card
+        :param self:      the object pointer
+        :returns nfields: the number of fields on the card
         """
         return self.nfields
 
@@ -78,7 +78,7 @@ class BDFCard(object):
         :param defaults: the default value for the field (as a list)
                          len(defaults)=i-j-1
         :param debug:    prints out the values at intermediate steps
-        @retval the values on the ith-jth fields
+        :returns: the values on the ith-jth fields
         """
         if defaults is None:
             defaults = []
@@ -109,7 +109,7 @@ class BDFCard(object):
         :param self:    the object pointer
         :param i:       the ith field on the card (following list notation)
         :param default: the default value for the field
-        @retval the value on the ith field
+        :returns: the value on the ith field
         """
         if(i < self.nfields and self.card[i] is not None and
            self.card[i] is not ''):
@@ -234,9 +234,8 @@ def wipe_empty_fields(card):
     Removes an trailing Nones from the card.
     Also converts empty strings to None.
 
-    :param self: the object pointer
-    :param card: the fields on the card as a list
-    @retval shortCard the card with no trailing blank fields
+    :param card:        the fields on the card as a list
+    :returns shortCard: the card with no trailing blank fields
     """
     cardB = []
     for field in card:

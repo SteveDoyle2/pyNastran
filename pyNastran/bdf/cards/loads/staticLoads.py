@@ -278,22 +278,22 @@ class GRAV(BaseCard):
         if comment:
             self._comment = comment
         if card:
-            ## Set identification number
+            #: Set identification number
             self.sid = integer(card, 1, 'sid')
-            ## Coordinate system identification number.
+            #: Coordinate system identification number.
             self.cid = integer_or_blank(card, 2, 'cid', 0)
-            ## scale factor
+            #: scale factor
             self.scale = double(card, 3, 'scale')
-            ## Acceleration vector components measured in coordinate system CID
+            #: Acceleration vector components measured in coordinate system CID
             self.N = array([double_or_blank(card, 4, 'N1', 0.0),
                             double_or_blank(card, 5, 'N2', 0.0),
                             double_or_blank(card, 6, 'N3', 0.0)])
-            ## Indicates whether the CID coordinate system is defined in the
-            ## main Bulk Data Section (MB = -1) or the partitioned superelement
-            ## Bulk Data Section (MB = 0). Coordinate systems referenced in the
-            ## main Bulk Data Section are considered stationary with respect to
-            ## the assembly basic coordinate system. See Remark 10.
-            ## (Integer; Default = 0)
+            #: Indicates whether the CID coordinate system is defined in the
+            #: main Bulk Data Section (MB = -1) or the partitioned superelement
+            #: Bulk Data Section (MB = 0). Coordinate systems referenced in the
+            #: main Bulk Data Section are considered stationary with respect to
+            #: the assembly basic coordinate system. See Remark 10.
+            #: (Integer; Default = 0)
             self.mb = integer_or_blank(card, 7, 'mb', 0)
             assert len(card) <= 8, 'len(GRAV card) = %i' % len(card)
         else:
@@ -373,17 +373,17 @@ class ACCEL1(BaseCard):
         if comment:
             self._comment = comment
         if card:
-            ## Load set identification number (Integer>0)
+            #: Load set identification number (Integer>0)
             self.sid = integer(card, 1, 'sid')
 
-            ## Coordinate system identification number. (Integer>0: Default=0)
+            #: Coordinate system identification number. (Integer>0: Default=0)
             self.cid = integer_or_blank(card, 2, 'cid', 0)
 
-            ## Acceleration vector scale factor. (Real)
+            #: Acceleration vector scale factor. (Real)
             self.scale = double(card, 3, 'scale')
 
-            ## Components of the acceleration vector measured in coordinate system
-            ## CID. (Real; at least one Ni != 0)
+            #: Components of the acceleration vector measured in coordinate system
+            #: CID. (Real; at least one Ni != 0)
             self.N = array([double_or_blank(card, 4, 'N1', 0.0),
                             double_or_blank(card, 5, 'N2', 0.0),
                             double_or_blank(card, 6, 'N3', 0.0)])
@@ -393,7 +393,7 @@ class ACCEL1(BaseCard):
         else:
             raise NotImplementedError(data)
 
-        ## nodes to apply the acceleration to
+        #: nodes to apply the acceleration to
         self.nodes = expand_thru_by(nodes)
 
     def cross_reference(self, model):
@@ -1064,15 +1064,15 @@ class PLOAD4(Load):
                 self.g1 = None
                 self.g34 = None
             else:
-                ## used for CPENTA, CHEXA
+                #: used for CPENTA, CHEXA
                 self.eids = [self.eid]
-                ## used for solid element only
+                #: used for solid element only
                 self.g1 = integer_or_blank(card, 7, 'g1')
-                ## g3/g4 - different depending on CHEXA/CPENTA or CTETRA
+                #: g3/g4 - different depending on CHEXA/CPENTA or CTETRA
                 self.g34 = integer_or_blank(card, 8, 'g34')
 
-            ## Coordinate system identification number. See Remark 2.
-            ## (Integer >= 0;Default=0)
+            #: Coordinate system identification number. See Remark 2.
+            #: (Integer >= 0;Default=0)
             self.cid = integer_or_blank(card, 9, 'cid', 0)
             #print "PLOAD4 cid = ",self.cid
             self.NVector = array([double_or_blank(card, 10, 'N1', 0.0),
@@ -1125,7 +1125,7 @@ class PLOAD4(Load):
         vector = array(self.eid.Normal())
         vectors = []
         for (nid, p) in izip(faceNodeIDs, self.pressures):
-            ## .. warning:: only supports normal pressures
+            #: .. warning:: only supports normal pressures
             vectors.append(vector * p * Area / n)  # Force_i
 
         isLoad = None

@@ -147,14 +147,14 @@ class ShellPropertyBackup(Property):
     def S(self):
         r"""
         Calculates the compliance matrix for a lamina
-        \f[ \large [Q] = [S]^{-1}  \f]
+        \f[ [Q] = [S]^{-1}  \f]
         """
         return self.Q().inv()
 
     def ABDH(self):
         r"""
         tranforms load to strain/bending curvature taken at \f$ z=0 \f$
-        \f[ \large  \left[
+        \f[ \left[
           \begin{array}{c}
               Nx  \\
               Ny  \\
@@ -179,19 +179,18 @@ class ShellPropertyBackup(Property):
           \end{array} \right]
         \f]
 
-        @code
-        [Nx] = [            ] [ e_xx0    ]
-        [Ny] = [  [A]   [B] ] [ e_yy0    ]
-        [Nz] = [            ] [ gamma_xy0]
-        [Mx] = [            ] [ k_xx0    ]
-        [My] = [  [B]   [D] ] [ k_yy0    ]
-        [Mz] = [            ] [ k_xy0    ]
-        @endcode
+        ::
+          [Nx] = [            ] [ e_xx0    ]
+          [Ny] = [  [A]   [B] ] [ e_yy0    ]
+          [Nz] = [            ] [ gamma_xy0]
+          [Mx] = [            ] [ k_xx0    ]
+          [My] = [  [B]   [D] ] [ k_yy0    ]
+          [Mz] = [            ] [ k_xy0    ]
         
-        \f[ \large  A_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k  -z_{k-1}   \right) = \Sigma_{k=1}^N (Q_{ij})_k t_k                                                                                    \f]
-        \f[ \large  B_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k^2-z_{k-1}^2 \right) = \Sigma_{k=1}^N (Q_{ij})_k                           \left( \overline{z} t_k                      \right)         \f]
-        \f[ \large  D_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k^3-z_{k-1}^3 \right) = \Sigma_{k=1}^N (Q_{ij})_k                           \left( \overline{z}^2 t_k + \frac{t_k^3}{12} \right)         \f]
-        \f[ \large  H_{ij} =                                                                       \Sigma_{k=1}^N (Q_{ij})_k \left( t_k -\frac{4}{t^2} \left( \overline{z}^2 t_k + \frac{t_k^3}{12} \right) \right) \f]
+        \f[ A_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k  -z_{k-1}   \right) = \Sigma_{k=1}^N (Q_{ij})_k t_k                                                                                    \f]
+        \f[ B_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k^2-z_{k-1}^2 \right) = \Sigma_{k=1}^N (Q_{ij})_k                           \left( \overline{z} t_k                      \right)         \f]
+        \f[ D_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k^3-z_{k-1}^3 \right) = \Sigma_{k=1}^N (Q_{ij})_k                           \left( \overline{z}^2 t_k + \frac{t_k^3}{12} \right)         \f]
+        \f[ H_{ij} =                                                                       \Sigma_{k=1}^N (Q_{ij})_k \left( t_k -\frac{4}{t^2} \left( \overline{z}^2 t_k + \frac{t_k^3}{12} \right) \right) \f]
 
         p. 138 of "Introduction to Composite Material Design"
         """
@@ -221,8 +220,8 @@ class ShellPropertyBackup(Property):
     def Qall(self, thetad):
         r"""
         Caculates the laminate tranformation  stiffness \f$ [Q]_{all} \f$
-        \f[ \large  [Q]_{all} = [T]^{-1} [Q] [R][T][R]^{-1}  \f]
-        \f[ \large  [Q]_{all} = [T]^{-1} [Q] [T]^{-T}        \f]
+        \f[ [Q]_{all} = [T]^{-1} [Q] [R][T][R]^{-1}  \f]
+        \f[ [Q]_{all} = [T]^{-1} [Q] [T]^{-T}        \f]
 
         p. 123 of "Introduction to Composite Material Design"
         """
@@ -282,7 +281,7 @@ class ShellPropertyBackup(Property):
         .. todo:: document better
 
         tranformation matrix  \f$ [T] \f$
-        \f[ \large  [T] = \left[
+        \f[ [T] = \left[
           \begin{array}{ccc}
               m^2 & n^2 &  2mn    \\
               n^2 & m^2 & -2mn    \\
@@ -290,14 +289,13 @@ class ShellPropertyBackup(Property):
           \end{array} \right]
         \f]
         
-        @code
-                 [ m^2  n^2        2mn]
-        [T]    = [ n^2  m^2       -2mn]   # transformation matrix
-                 [ -mn   mn    m^2-n^2]
-        @endcode
+        ::
+                   [ m^2  n^2        2mn]
+          [T]    = [ n^2  m^2       -2mn]   # transformation matrix
+                   [ -mn   mn    m^2-n^2]
 
         inverse transformation matrix \f$ [T]^{-1} \f$
-        \f[ \large  [T]^{-1} = \left[
+        \f[ [T]^{-1} = \left[
           \begin{array}{ccc}
               m^2 & n^2 & -2mn    \\
               n^2 & m^2 &  2mn    \\
@@ -305,13 +303,12 @@ class ShellPropertyBackup(Property):
           \end{array} \right]
         \f]
         
-        @code
-                 [ m^2  n^2       -2mn]
-        [T]^-1 = [ n^2  m^2        2mn]   # inverse transform
-                 [ mn   -mn    m^2-n^2]
-        @endcode
+        ::
+                   [ m^2  n^2       -2mn]
+          [T]^-1 = [ n^2  m^2        2mn]   # inverse transform
+                   [ mn   -mn    m^2-n^2]
 
-        \f[ \large  \left[
+        \f[ \left[
             \begin{array}{c}
                  \sigma_{xx}   \\
                  \sigma_{yy}   \\

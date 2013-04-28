@@ -22,18 +22,20 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, f
 def volume4(n1, n2, n3, n4):
     r"""
     V = (a-d) * ((b-d) x (c-d))/6   where x is cross and * is dot
-    \f[ \large V = \frac{(a-d) \cdot \left( (b-d) \times (c-d) \right) }{6} \f]
+    
+    .. math:: V = \frac{(a-d) \cdot \left( (b-d) \times (c-d) \right) }{6}
     """
     V = -dot((n1 - n4), cross(n2 - n4, n3 - n4)) / 6.
     return V
 
 def area_centroid(n1, n2, n3, n4):
     """
-    returns the area and centroid of a quad
-    1------2
-    |   /  |
-    | /    |
-    4------3
+    Gets the area and centroid of a quad.::
+    
+      1------2
+      |   /  |
+      | /    |
+      4------3
     """
     a = n1 - n2
     b = n2 - n4
@@ -112,10 +114,10 @@ class SolidElement(Element):
 
 class CHEXA8(SolidElement):
     """
-    @code
-    CHEXA EID PID G1 G2 G3 G4 G5 G6
-    G7 G8
-    @endcode
+    ::
+
+      CHEXA EID PID G1 G2 G3 G4 G5 G6
+      G7 G8
     """
     type = 'CHEXA'
     asterType = 'HEXA8'
@@ -173,11 +175,10 @@ class CHEXA8(SolidElement):
 
 class CHEXA20(CHEXA8):
     """
-    @code
-    CHEXA EID PID G1 G2 G3 G4 G5 G6
-    G7 G8 G9 G10 G11 G12 G13 G14
-    G15 G16 G17 G18 G19 G20
-    @endcode
+    ::
+      CHEXA EID PID G1 G2 G3 G4 G5 G6
+      G7 G8 G9 G10 G11 G12 G13 G14
+      G15 G16 G17 G18 G19 G20
     """
     type = 'CHEXA'
     asterType = 'HEXA20'
@@ -245,15 +246,15 @@ class CHEXA20(CHEXA8):
 
 class CPENTA6(SolidElement):
     """
-    @code
-    CPENTA EID PID G1 G2 G3 G4 G5 G6
-      *----------*
-     / \        / \
-    / A \      / c \
-    *---*-----*-----*
-    V = (A1+A2)/2  * norm(c1-c2)
-    C = (c1-c2)/2
-    @endcode
+    ::
+    
+      CPENTA EID PID G1 G2 G3 G4 G5 G6
+        *----------*
+       / \        / \
+      / A \      / c \
+      *---*-----*-----*
+      V = (A1+A2)/2  * norm(c1-c2)
+      C = (c1-c2)/2
     """
     type = 'CPENTA'
     asterType = 'PENTA6'
@@ -281,7 +282,8 @@ class CPENTA6(SolidElement):
         nids = self.nodeIDs()[:6]
         indx1 = nids.index(nid)
         indx2 = nids.index(nidOpposite)
-        ##  offset so it's easier to map the nodes with the QRG
+
+        #  offset so it's easier to map the nodes with the QRG
         pack = [indx1 + 1, indx2 + 1]
         pack.sort()
         mapper = {  # reverse points away from the element
@@ -366,11 +368,11 @@ class CPENTA6(SolidElement):
 
 class CPENTA15(CPENTA6):
     """
-    @code
-    CPENTA EID PID G1 G2 G3 G4 G5 G6
-    G7 G8 G9 G10 G11 G12 G13 G14
-    G15
-    @endcode
+    ::
+
+      CPENTA EID PID G1 G2 G3 G4 G5 G6
+      G7 G8 G9 G10 G11 G12 G13 G14
+      G15
     """
     type = 'CPENTA'
     asterType = 'PENTA15'
@@ -424,9 +426,9 @@ class CPENTA15(CPENTA6):
 
 class CTETRA4(SolidElement):
     """
-    @code
-    CTETRA EID PID G1 G2 G3 G4
-    @endcode
+    ::
+
+      CTETRA EID PID G1 G2 G3 G4
     """
     type = 'CTETRA'
     asterType = 'TETRA4'
@@ -555,12 +557,12 @@ class CTETRA4(SolidElement):
 
 class CTETRA10(CTETRA4):
     """
-    @code
-    CTETRA EID PID G1 G2 G3 G4 G5 G6
-    G7 G8 G9 G10
-    CTETRA   1       1       239     229     516     99      335     103
-             265     334     101     102
-    @endcode
+    ::
+
+      CTETRA EID PID G1 G2 G3 G4 G5 G6
+      G7 G8 G9 G10
+      CTETRA   1       1       239     229     516     99      335     103
+               265     334     101     102
     """
     type = 'CTETRA'
     asterType = 'TETRA10'

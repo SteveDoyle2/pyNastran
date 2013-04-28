@@ -48,7 +48,7 @@ class CaseControlDeck(object):
         self.debug = False
         #self.debug = True
         
-        ## stores a single copy of 'BEGIN BULK' or 'BEGIN SUPER'
+        #: stores a single copy of 'BEGIN BULK' or 'BEGIN SUPER'
         self.begin_bulk = ['BEGIN', 'BULK']
         
         # allows BEGIN BULK to be turned off
@@ -87,9 +87,11 @@ class CaseControlDeck(object):
     def has_subcase(self, isubcase):
         """
         Checks to see if a subcase exists.
+
         :param self:     the CaseControlDeck object
         :param isubcase: the subcase ID
-        @retval does_subcase_exist (type = bool)
+        :type isubcase: int
+        :returns val: does_subcase_exist (type = bool)
         """
         if isubcase in self.subcases:
             return True
@@ -98,9 +100,11 @@ class CaseControlDeck(object):
     def create_new_subcase(self, isubcase):
         """
         Method create_new_subcase:
-        @warning
-         be careful you dont add data to the global subcase after running
-         this...is this True???
+
+        :param isubcase: the subcase ID
+        :type isubcase: int
+        .. warning:: be careful you dont add data to the global subcase
+                     after running this...is this True???
         """
         #print("creating subcase=%s" % isubcase)
         if self.has_subcase(isubcase):
@@ -116,6 +120,7 @@ class CaseControlDeck(object):
 
         :param self:     the CaseControlDeck object
         :param isubcase: the Subcase to delete
+        :type isubcase: int
         """
         if not self.has_subcase(isubcase):
             sys.stderr.write('subcase %s doesnt exist...skipping\n' %
@@ -212,7 +217,8 @@ class CaseControlDeck(object):
         """
         Parses a case control line
 
-        :param self: the CaseControlDeck object
+        :param self:  the CaseControlDeck object
+        :param param: the variable to add
         """
         if '\n' in param or '\r' in param or '\t' in param:
             msg = 'doesnt support embedded endline/tab characters\n'
@@ -278,8 +284,8 @@ class CaseControlDeck(object):
         self.finish_subcases()
 
     def _parse_entry(self, lines):
-        """
-        internal method for parsing a card of the case control deck
+        r"""
+        Internal method for parsing a card of the case control deck
 
         parses a single case control deck card into 4 sections
         1.  paramName - obvious
@@ -392,7 +398,7 @@ class CaseControlDeck(object):
                     self.log.debug('SET-type key=%s ID=%s' % (key, ID))
                 fivalues = value.rstrip(' ,').split(',')  # float/int values
 
-                ## .. todo:: should be more efficient multiline reader...
+                #: .. todo:: should be more efficient multiline reader...
                 # read more lines....
                 if line[-1].strip() == ',':
                     i += 1
@@ -453,6 +459,7 @@ class CaseControlDeck(object):
         """
         removes any unwanted data in the subcase...specifically the SUBCASE
         data member.  Otherwise it will print out after a key like stress.
+
         :param self:  the CaseControlDeck object
         """
         for subcase in self.subcases.itervalues():
@@ -461,7 +468,8 @@ class CaseControlDeck(object):
     def convert_to_sol_200(self, model):
         """
         Takes a case control deck and changes it from a SOL xxx to a SOL 200
-        :param self:    the CaseControlDeck object
+
+        :param self: the CaseControlDeck object
         .. todo:: not done...
         """
         analysis = model.rsolmap_toStr[model.sol]
@@ -473,7 +481,8 @@ class CaseControlDeck(object):
     def _add_parameter_to_subcase(self, key, value, options, param_type,
                                   isubcase):
         """
-        internal method
+        Internal method
+
         self:  the CaseControlDeck object
         """
         if self.debug:
@@ -513,7 +522,8 @@ class CaseControlDeck(object):
 
     def get_op2_data(self):
         """
-        returns the relevant op2 parameters required for a given subcase
+        Gets the relevant op2 parameters required for a given subcase
+
         :param self:  the CaseControlDeck object
         .. todo:: not done...
         """
@@ -672,7 +682,7 @@ def verify_card2(key, value, options, line):
     else:
         raise NotImplementedError('key=%r line=%r' % (key, line))
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     lines = [
         'SUBCASE 1',
         '    ACCELERATION(PLOT,PRINT,PHASE) = ALL',

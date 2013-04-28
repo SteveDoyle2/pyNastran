@@ -86,27 +86,27 @@ class CHBDYE(ThermalElement):
         if comment:
             self._comment = comment
         if card:
-            ## Surface element ID number for a side of an
-            ## element. (0 < Integer < 100,000,000)
+            #: Surface element ID number for a side of an
+            #: element. (0 < Integer < 100,000,000)
             self.eid = integer(card, 1, 'eid')
 
-            ## A heat conduction element identification
+            #: A heat conduction element identification
             self.eid2 = integer(card, 2, 'eid2')
 
-            ## A consistent element side identification number (1 < Integer < 6)
+            #: A consistent element side identification number (1 < Integer < 6)
             self.side = integer(card, 3, 'side')
             assert 0 < self.side < 7
 
-            ## A VIEW entry identification number for the front face
+            #: A VIEW entry identification number for the front face
             self.iViewFront = integer_or_blank(card, 4, 'iViewFront', 0)
-            ## A VIEW entry identification number for the back face
+            #: A VIEW entry identification number for the back face
             self.iViewBack = integer_or_blank(card, 5, 'iViewBack', 0)
 
-            ## RADM identification number for front face of surface element
-            ## (Integer > 0)
+            #: RADM identification number for front face of surface element
+            #: (Integer > 0)
             self.radMidFront = integer_or_blank(card, 6, 'radMidFront', 0)
-            ## RADM identification number for back face of surface element
-            ## (Integer > 0)
+            #: RADM identification number for back face of surface element
+            #: (Integer > 0)
             self.radMidBack = integer_or_blank(card, 7, 'radMidBack', 0)
             assert len(card) <= 8, 'len(CHBDYE card) = %i' % len(card)
         else:
@@ -157,26 +157,26 @@ class CHBDYG(ThermalElement):
         if comment:
             self._comment = comment
         if card:
-            ## Surface element ID
+            #: Surface element ID
             self.eid = integer(card, 1, 'eid')
             # no field 2
 
-            ## Surface type
+            #: Surface type
             self.Type = string(card, 3, 'Type')
             assert self.Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8']
 
-            ## A VIEW entry identification number for the front face
+            #: A VIEW entry identification number for the front face
             self.iViewFront = integer_or_blank(card, 4, 'iViewFront', 0)
 
-            ## A VIEW entry identification number for the back face
+            #: A VIEW entry identification number for the back face
             self.iViewBack = integer_or_blank(card, 8, 'iViewBack', 0)
 
-            ## RADM identification number for front face of surface element
-            ## (Integer > 0)
+            #: RADM identification number for front face of surface element
+            #: (Integer > 0)
             self.radMidFront = integer_or_blank(card, 6, 'radMidFront', 0)
 
-            ## RADM identification number for back face of surface element
-            ## (Integer > 0)
+            #: RADM identification number for back face of surface element
+            #: (Integer > 0)
             self.radMidBack = integer_or_blank(card, 7, 'radMidBack', 0)
             # no field 8
 
@@ -234,10 +234,10 @@ class CHBDYP(ThermalElement):
         if comment:
             self._comment = comment
         if card:
-            ## Surface element ID
+            #: Surface element ID
             self.eid = integer(card, 1, 'eid')
 
-            ## PHBDY property entry identification numbers. (Integer > 0)
+            #: PHBDY property entry identification numbers. (Integer > 0)
             self.pid = integer(card, 2, 'pid')
             assert self.pid > 0
 
@@ -246,43 +246,43 @@ class CHBDYP(ThermalElement):
             # msg = 'CHBDYP Type=|%s|' (self.Type)
             #assert self.Type in ['POINT','LINE','ELCYL','FTUBE','TUBE'], msg
 
-            ## A VIEW entry identification number for the front face.
+            #: A VIEW entry identification number for the front face.
             self.iViewFront = integer_or_blank(card, 4, 'iViewFront', 0)
 
-            ## A VIEW entry identification number for the back face.
+            #: A VIEW entry identification number for the back face.
             self.iViewBack = integer_or_blank(card, 5, 'iViewBack', 0)
 
-            ## Grid point identification numbers of grids bounding the surface.
-            ## (Integer > 0)
+            #: Grid point identification numbers of grids bounding the surface.
+            #: (Integer > 0)
             self.g1 = integer(card, 6, 'g1')
-            ## Grid point identification numbers of grids bounding the surface.
-            ## (Integer > 0)
+            #: Grid point identification numbers of grids bounding the surface.
+            #: (Integer > 0)
             if self.Type != 'POINT':
                 self.g2 = integer(card, 7, 'g2')
             else:
                 self.g2 = blank(card, 7, 'g2')
 
-            ## Orientation grid point. (Integer > 0; Default = 0)
+            #: Orientation grid point. (Integer > 0; Default = 0)
             self.g0 = integer_or_blank(card, 8, 'g0', 0)
 
-            ## RADM identification number for front face of surface element.
-            ## (Integer > 0)
+            #: RADM identification number for front face of surface element.
+            #: (Integer > 0)
             self.radMidFront = integer_or_blank(card, 9, 'radMidFront', 0)
 
-            ## RADM identification number for back face of surface element.
-            ## (Integer > 0)
+            #: RADM identification number for back face of surface element.
+            #: (Integer > 0)
             self.radMidBack = integer_or_blank(card, 10, 'radMidBack', 0)
 
-            ## Grid point identification number of a midside node if it is used
-            ## with the line type surface element.
+            #: Grid point identification number of a midside node if it is used
+            #: with the line type surface element.
             self.gmid = integer_or_blank(card, 11, 'gmid')
-            ## Coordinate system for defining orientation vector.
-            ## (Integer > 0; Default = 0
+            #: Coordinate system for defining orientation vector.
+            #: (Integer > 0; Default = 0
             self.ce = integer_or_blank(card, 12, 'ce', 0)
 
-            ## Components of the orientation vector in coordinate system CE.
-            ## The origin of the orientation vector is grid point G1.
-            ## (Real or blank)
+            #: Components of the orientation vector in coordinate system CE.
+            #: The origin of the orientation vector is grid point G1.
+            #: (Real or blank)
             self.e1 = double_or_blank(card, 13, 'e3')
             self.e2 = double_or_blank(card, 14, 'e3')
             self.e3 = double_or_blank(card, 15, 'e3')
@@ -330,43 +330,43 @@ class PCONV(ThermalProperty):
         if comment:
             self._comment = comment
         if card:
-            ## Convection property identification number. (Integer > 0)
+            #: Convection property identification number. (Integer > 0)
             self.pconid = integer(card, 1, 'pconid')
             assert self.pconid > 0
 
-            ## Material property identification number. (Integer > 0)
+            #: Material property identification number. (Integer > 0)
             self.mid = integer(card, 2, 'mid')
             assert self.mid > 0
 
-            ## Type of formula used for free convection.
-            ## (Integer 0, 1, 10, 11, 20, or 21)
+            #: Type of formula used for free convection.
+            #: (Integer 0, 1, 10, 11, 20, or 21)
             self.form = integer_or_blank(card, 3, 'form', 0)
             assert self.form in [0, 1, 10, 11, 20, 21]
 
-            ## Free convection exponent as implemented within the context of the
-            ## particular form that is chosen
+            #: Free convection exponent as implemented within the context of the
+            #: particular form that is chosen
             self.expf = double_or_blank(card, 4, 'expf', 0.0)
 
-            ## Formula type for various configurations of free convection
+            #: Formula type for various configurations of free convection
             self.ftype = integer_or_blank(card, 5, 'ftype', 0)
 
-            ## Identification number of a TABLEHT entry that specifies the two
-            ## variable tabular function of the free convection heat transfer
-            ## coefficient
+            #: Identification number of a TABLEHT entry that specifies the two
+            #: variable tabular function of the free convection heat transfer
+            #: coefficient
             self.tid = integer_or_blank(card, 6, 'tid')
 
-            ## Characteristic length
+            #: Characteristic length
             self.chlen = double_or_blank(card, 9, 'chlen')
 
-            ## Grid ID of the referenced inlet point
+            #: Grid ID of the referenced inlet point
             self.gidin = double_or_blank(card, 10, 'gidin')
 
-            ## Coordinate system for defining orientation vector.
-            ## (Integer > 0;Default = 0
+            #: Coordinate system for defining orientation vector.
+            #: (Integer > 0;Default = 0
             self.ce = integer_or_blank(card, 11, 'ce', 0)
 
-            ## Components of the orientation vector in coordinate system CE. The
-            ## origin of the orientation vector is grid point G1. (Real or blank)
+            #: Components of the orientation vector in coordinate system CE. The
+            #: origin of the orientation vector is grid point G1. (Real or blank)
             self.e1 = double_or_blank(card, 12, 'e1')
             self.e2 = double_or_blank(card, 13, 'e2')
             self.e3 = double_or_blank(card, 14, 'e3')
@@ -404,34 +404,34 @@ class PCONVM(ThermalProperty):
         if comment:
             self._comment = comment
         if card:
-            ## Convection property identification number. (Integer > 0)
+            #: Convection property identification number. (Integer > 0)
             self.pconid = integer(card, 1, 'pconid')
             assert self.pconid > 0
 
-            ## Material property identification number. (Integer > 0)
+            #: Material property identification number. (Integer > 0)
             self.mid = integer(card, 2, 'mid')
             assert self.mid > 0
 
-            ## Type of formula used for free convection.
-            ## (Integer 0, 1, 10, 11, 20, or 21)
+            #: Type of formula used for free convection.
+            #: (Integer 0, 1, 10, 11, 20, or 21)
             self.form = integer_or_blank(card, 3, 'form', 0)
             assert self.form in [0, 1, 10, 11, 20, 21]
 
-            ## Flag for mass flow convection. (Integer = 0 or 1; Default = 0)
+            #: Flag for mass flow convection. (Integer = 0 or 1; Default = 0)
             self.flag = integer_or_blank(card, 4, 'flag', 0)
 
-            ## Constant coefficient used for forced convection
+            #: Constant coefficient used for forced convection
             self.coef = double(card, 5, 'coef')
 
-            ## Reynolds number convection exponent. (Real > 0.0; Default = 0.0)
+            #: Reynolds number convection exponent. (Real > 0.0; Default = 0.0)
             self.expr = double_or_blank(card, 6, 'expr', 0.0)
 
-            ## Prandtl number convection exponent for heat transfer into the
-            ## workingfluid. (Real > 0.0; Default = 0.0)
+            #: Prandtl number convection exponent for heat transfer into the
+            #: workingfluid. (Real > 0.0; Default = 0.0)
             self.exppi = double_or_blank(card, 7, 'exppi', 0.0)
 
-            ## Prandtl number convection exponent for heat transfer into the
-            ## working fluid. (Real > 0.0; Default = 0.0)
+            #: Prandtl number convection exponent for heat transfer into the
+            #: working fluid. (Real > 0.0; Default = 0.0)
             self.exppo = double_or_blank(card, 8, 'exppo', 0.0)
             assert len(card) <= 9, 'len(PCONVM card) = %i' % len(card)
         else:
@@ -466,19 +466,19 @@ class PHBDY(ThermalProperty):
         if comment:
             self._comment = comment
         if card:
-            ## Property identification number. (Unique Integer among all PHBDY
-            ## entries). (Integer > 0)
+            #: Property identification number. (Unique Integer among all PHBDY
+            #: entries). (Integer > 0)
             self.pid = integer(card, 1, 'pid')
             assert self.pid > 0
 
-            ## Area factor of the surface used only for CHBDYP element
-            ## TYPE = 'POINT', TYPE = 'LINE', TYPE = 'TUBE', or
-            ## TYPE = 'ELCYL'. For TYPE = 'TUBE', AF is the constant thickness of
-            ## the hollow tube. (Real > 0.0 or blank)
+            #: Area factor of the surface used only for CHBDYP element
+            #: TYPE = 'POINT', TYPE = 'LINE', TYPE = 'TUBE', or
+            #: TYPE = 'ELCYL'. For TYPE = 'TUBE', AF is the constant thickness of
+            #: the hollow tube. (Real > 0.0 or blank)
             self.af = double_or_blank(card, 2, 'af')
 
-            ## Diameters associated with the surface. Used with CHBDYP element
-            ## TYPE='ELCYL','TUBE','FTUBE'
+            #: Diameters associated with the surface. Used with CHBDYP element
+            #: TYPE='ELCYL','TUBE','FTUBE'
             self.d1 = double_or_blank(card, 3, 'd1')
             self.d2 = double_or_blank(card, 4, 'd2', self.d1)
             assert len(card) <= 5, 'len(PHBDY card) = %i' % len(card)
@@ -514,26 +514,26 @@ class CONV(ThermalBC):
             self._comment = comment
         #ThermalBC.__init__(self, card, data)
         if card:
-            ## CHBDYG, CHBDYE, or CHBDYP surface element identification number.
-            ## (Integer > 0)
+            #: CHBDYG, CHBDYE, or CHBDYP surface element identification number.
+            #: (Integer > 0)
             self.eid = integer(card, 1, 'eid')
             assert self.eid > 0
 
-            ## Convection property identification number of a PCONV entry
+            #: Convection property identification number of a PCONV entry
             self.pconID = integer(card, 2, 'pconID')
 
-            ## Point for film convection fluid property temperature
+            #: Point for film convection fluid property temperature
             self.flmnd = integer_or_blank(card, 3, 'flmnd', 0)
 
-            ## Control point for free convection boundary condition.
+            #: Control point for free convection boundary condition.
             self.cntrlnd = integer_or_blank(card, 4, 'cntrlnd', 0)
 
             TA1 = integer(card, 5, 'TA1')
             assert TA1 > 0
 
-            ## Ambient points used for convection 0's are allowed for TA2 and
-            ## higher.  (Integer > 0 for TA1 and Integer > 0 for TA2 through TA8;
-            ## Default for TA2 through TA8 is TA1.)
+            #: Ambient points used for convection 0's are allowed for TA2 and
+            #: higher.  (Integer > 0 for TA1 and Integer > 0 for TA2 through TA8;
+            #: Default for TA2 through TA8 is TA1.)
             TA2 = integer_or_blank(card, 6, 'ta2', TA1)
             TA3 = integer_or_blank(card, 7, 'ta3', TA1)
             TA4 = integer_or_blank(card, 8, 'ta4', TA1)
@@ -637,7 +637,7 @@ class RADM(ThermalBC):
         if comment:
             self._comment = comment
         if card:
-            ## Material identification number
+            #: Material identification number
             self.radmid = integer(card, 1, 'radmid')
             assert self.radmid > 0
 
@@ -672,22 +672,22 @@ class RADBC(ThermalBC):
         if comment:
             self._comment = comment
         if card:
-            ## NODAMB Ambient point for radiation exchange. (Integer > 0)
+            #: NODAMB Ambient point for radiation exchange. (Integer > 0)
             self.nodamb = integer(card, 1, 'nodamb')
             assert self.nodamb > 0
 
-            ## Radiation view factor between the face and the ambient point.
-            ## (Real > 0.0)
+            #: Radiation view factor between the face and the ambient point.
+            #: (Real > 0.0)
             self.famb = double(card, 2, 'famb')
             assert self.famb > 0.0
 
-            ## Control point for thermal flux load. (Integer > 0; Default = 0)
+            #: Control point for thermal flux load. (Integer > 0; Default = 0)
             self.cntrlnd = integer_or_blank(card, 3, 'cntrlnd', 0)
             assert self.cntrlnd >= 0
 
             nfields = card.nFields()
             eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
-            ## CHBDYi element identification number
+            #: CHBDYi element identification number
             self.eids = expand_thru_by(eids)
         else:
             raise NotImplementedError(data)

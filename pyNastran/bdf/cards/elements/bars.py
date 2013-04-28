@@ -30,17 +30,19 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
 
     def Length(self):
         r"""
-        Returns the length of the element
-        \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
-        @param self the CROD/CONROD/CTUBE element
+        Gets the length of the element.
+
+        .. math:: \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
+        :param self: the CROD/CONROD/CTUBE element
         """
         L = norm(self.nodes[1].Position() - self.nodes[0].Position())
         return L
 
     def Mass(self):
         r"""
-        returns the mass of the element
-        \f[ \large  mass = \left( \rho A + nsm \right) L  \f]
+        get the mass of the element.
+        
+        .. math:: m = \left( \rho A + nsm \right) L
         """
         L = self.Length()
         mass = (self.Rho() * self.Area() + self.Nsm()) * L
@@ -48,14 +50,15 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
 
     def Rmatrix(self, model, is3D):
         r"""
-        where   \f$ [R]_{ij} \f$ is the tranformation matrix
-        \f[ \large  [R]_{ij} \left[
+        where   :math:`[R]_{ij}` is the tranformation matrix
+        
+        .. math::
+          [R]_{ij} \left[
           \begin{array}{ccc}
               g_x \dot e_x & g_x \dot e_y &  g_x \dot e_z    \\
               g_y \dot e_x & g_y \dot e_y &  g_y \dot e_z    \\
               g_z \dot e_x & g_z \dot e_y &  g_z \dot e_z
           \end{array} \right]
-        \f]
         """
         (n1, n2) = self.nodeIDs()
         v1 = model.Node(n2).xyz - model.Node(n1).xyz
@@ -253,11 +256,11 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         return self.pid.I12()
 
     def Nu(self):
-        r"""returns Poisson's Ratio  \f$ \nu \f$"""
+        r"""Get Poisson's Ratio  \f$ \nu \f$"""
         return self.pid.mid.nu
 
     def Rho(self):
-        r"""returns the material density  \f$ \rho \f$"""
+        r"""Get the material density  \f$ \rho \f$"""
         #print str(self.pid),type(self.pid)
         #raise NotImplementedError('implement self.Rho() for %s' % self.type)
         return self.pid.mid.rho
@@ -267,14 +270,14 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         raise NotImplementedError('implement self.Area() for %s' % self.type)
 
     def MassPerLength(self):
-        """Returns the mass per unit length"""
+        """Get the mass per unit length"""
         return self.pid.MassPerLength()
 
     def Mass(self):
         r"""
-        returns the mass of the element
+        Get the mass of the element.
 
-        \f[ \large  mass = \left( \rho A + nsm \right) L  \f]
+        .. math:: m = \left( \rho A + nsm \right) L
         """
         L = self.Length()
         mass = L * self.MassPerLength()
@@ -296,9 +299,11 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
 
     def Length(self):
         r"""
-        Returns the length of the element
-        \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
-        @param self the object pointer
+        Gets the length of the element.
+
+        .. math:: \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
+
+        :param self: the object pointer
         """
         L = norm(self.nodes[1].Position() - self.nodes[0].Position())
         return L
@@ -1149,7 +1154,7 @@ class CBEAM(CBAR):
             self.sa = integer_or_blank(card, 17, 'sa')
             self.sb = integer_or_blank(card, 18, 'sb')
             assert len(card) <= 19, 'len(CBEAM card) = %i' % len(card)
-        else:  ## .. todo:: verify
+        else:  #: .. todo:: verify
             #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
             #        [f,g0]]
             #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
@@ -1176,9 +1181,9 @@ class CBEAM(CBAR):
             self.sa = main[4]
             self.sb = main[5]
 
-            self.isOfft = True  ## .. todo:: is this correct???
+            self.isOfft = True  #: .. todo:: is this correct???
             #self.offt = str(data[6]) # GGG
-            self.offt = 'GGG'  ## .. todo:: is this correct???
+            self.offt = 'GGG'  #: .. todo:: is this correct???
 
             self.pa = main[6]
             self.pb = main[7]

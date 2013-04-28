@@ -389,9 +389,9 @@ class Subcase(object):
                         raise RuntimeError(msg)
                     values2.append(ivalue)
 
-            ## .. todo:: expand values with THRU and EXCLUDE
-            ## .. todo:: sort values
-            ## .. todo:: collapse values when printing
+            #: .. todo:: expand values with THRU and EXCLUDE
+            #: .. todo:: sort values
+            #: .. todo:: collapse values when printing
 
             #print "values2 = ",values2
             options = int(options)
@@ -549,7 +549,7 @@ class Subcase(object):
             msg = spaces + msg
 
         elif param_type == 'SET-type':
-            ## .. todo:: collapse data...not written yet
+            #: .. todo:: collapse data...not written yet
             starter = 'SET %s = ' % (options)
             msg2 = spaces + starter
             nChars = len(msg2)
@@ -670,9 +670,9 @@ class Subcase(object):
         Does a "smart" sort on the keys such that SET cards increment in
         numerical order.  Also puts the sets first.
 
-        :param self:  the Subcase object
-        :param lst:   the list of subcase list objects
-        @retval listB the sorted version of listA
+        :param self:    the Subcase object
+        :param lst:     the list of subcase list objects
+        :returns listB: the sorted version of listA
         """
         # presort the list to put all the SET cards next to each other
         # instead of listA.sort() as it allows lst to be any iterable
