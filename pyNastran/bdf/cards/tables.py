@@ -1,4 +1,23 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
+"""
+All table cards are defined in this file.  This includes:
+* Table
+ * TABLED1 - Dynamic Table = f(Time, Frequency)
+ * TABLED2
+ * TABLED3
+ * TABLEM1 - Material table = f(Temperature)
+ * TABLEM2
+ * TABLEM3
+ * TABLEM4
+ * TABLES1 - Material table = f(Stress)
+ * TABLEST
+ * RandomTable
+   * TABRND1
+ * TABRNDG
+ * TIC
+
+All tables have a self.table parameter that is a TableObj
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
@@ -528,7 +547,7 @@ class TABRND1(RandomTable):
 
 
 class TABRNDG(RandomTable):
-    """
+    r"""
     Gust Power Spectral Density
     Defines the power spectral density (PSD) of a gust for aeroelastic response
     analysis.

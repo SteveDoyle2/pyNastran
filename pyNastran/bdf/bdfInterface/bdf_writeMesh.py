@@ -433,7 +433,7 @@ class WriteMesh(WriteMeshDeprecated):
 
         if self.spcs or self.spcadds:
             msg.append('$SPCs\n')
-            strSPC = str(self.spcObject2)
+            strSPC = str(self.spcObject)
             if strSPC:
                 msg.append(strSPC)
             else:
@@ -445,7 +445,7 @@ class WriteMesh(WriteMeshDeprecated):
 
         if self.mpcs or self.mpcadds:
             msg.append('$MPCs\n')
-            strMPC = str(self.mpcObject2)
+            strMPC = str(self.mpcObject)
             if strMPC:
                 msg.append(strMPC)
             else:
