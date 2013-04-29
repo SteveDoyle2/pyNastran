@@ -501,9 +501,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         self.suports = []  # suport, suport1
 
         #: stores SPCADD,SPC,SPC1,SPCD,SPCAX
-        self.spcObject2 = ConstraintObject()
+        self.spcObject = ConstraintObject()
         #: stores MPCADD,MPC
-        self.mpcObject2 = ConstraintObject()
+        self.mpcObject = ConstraintObject()
 
         self.spcs = {}
         self.spcadds = {}

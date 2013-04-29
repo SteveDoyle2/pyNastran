@@ -53,21 +53,21 @@ class XrefMesh(object):
         #self.spcObject.cross_reference(self)  # enable to output SPCs
         #self.mpcObject.cross_reference(self)  # enable to output MPCs
 
-        #self.spcObject2 = constraintObject2()
+        #self.spcObject = constraintObject()
         for spcadd in self.spcadds.itervalues():
-            self.spcObject2.Add(spcadd)
+            self.spcObject.Add(spcadd)
 
         for spcs in self.spcs.itervalues():
             for spc in spcs:
-                self.spcObject2.append(spc)
+                self.spcObject.append(spc)
 
         for mpcadd in self.mpcadds.itervalues():
-            self.mpcObject2.Add(mpcadd)
+            self.mpcObject.Add(mpcadd)
 
         for mpcs in self.mpcs.itervalues():
             for mpc in mpcs:
-                self.mpcObject2.append(mpc)
-        #self.mpcObject2 = constraintObject2()
+                self.mpcObject.append(mpc)
+        #self.mpcObject = constraintObject()
         #self.spcObject.cross_reference(self)
 
     def _cross_reference_coordinates(self):

@@ -1,17 +1,19 @@
 # pylint: disable=R0904,R0902
 """
 All constraint cards are defined in this file.  This includes:
+* Constraint
  * SUPORT
  * SUPORT1
  * SPC
  * SPC1
  * SPCAX
  * SPCD
- * SPCADD
  * MPC
- * MPCADD
+ * ConstraintADD
+  * SPCADD
+  * MPCADD
 
-All cards are Constraint objects.
+The ConstraintObject contain multiple constraints.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
