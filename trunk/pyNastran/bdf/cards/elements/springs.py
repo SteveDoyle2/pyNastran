@@ -28,21 +28,6 @@ class SpringElement(Element):
     def Eid(self):
         return self.eid
 
-    def Length_noXref(self, n1=None, n2=None):
-        r"""
-        Returns the length of a bar/rod/beam element
-        .. math:: \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
-
-        :param self: the object pointer
-        :param n1:   a Node object (default=None)
-        :param n2:   a Node object (default=None)
-
-        .. note:: if n1 AND n2 are both none (the default), then the model
-                  must be cross-referenced already
-        """
-        L = norm(n1.Position() - n2.Position())
-        return L
-
     def Centroid(self):
         p = (self.nodes[1].Position() - self.nodes[0].Position()) / 2.
         return p
@@ -53,11 +38,12 @@ class SpringElement(Element):
 
     def Lambda(self, model):
         """
-        2d  [l,m,0,0]
-            [0,0,l,m]
+        ::
+          2d  [l,m,0,0]
+              [0,0,l,m]
 
-        3d  [l,m,n,0,0,0]
-            [0,0,0,l,m,n]
+          3d  [l,m,n,0,0,0]
+              [0,0,0,l,m,n]
         """
         is3D = False
         #R = self.Rmatrix(model,is3D)
@@ -93,14 +79,17 @@ class SpringElement(Element):
 
     def Length(self):
         r"""
-        Returns the length of a bar/rod/beam element
+        Returns the length, :math:`L`, of a bar/rod/beam element.
 
-        .. math:: \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
+        .. math:: L = \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
+
         :param self: the object pointer
+        :returns Length: the length of the element
+
         .. note:: the model must be cross-referenced already
         """
-        #print self.type
-        return self.Length_noXref(self.nodes[1], self.nodes[0])
+        L = norm(self.nodes[1].Position() - self.nodes[0].Position())
+        return L
 
     def Mass(self):
         return 0.0
@@ -144,7 +133,7 @@ class CELAS1(SpringElement):
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         eid = self.Eid()
         k = self.K()
         nodeIDs = self.nodeIDs(allowEmptyNodes=True)
@@ -157,7 +146,7 @@ class CELAS1(SpringElement):
         assert isinstance(c2, int), 'c2=%r' % c2
         #assert isinstance(ge, float), 'ge=%r' % ge
         #assert isinstance(s, float), 'ge=%r' % s
-        if isxref:
+        if xref:
             assert len(nodeIDs) == len(self.nodes)
             #for nodeID, node in zip(nodeIDs, self.nodes):
                 #assert node.node.nid
@@ -232,7 +221,7 @@ class CELAS2(SpringElement):
         msg = ' which is required by CELAS2 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         eid = self.Eid()
         k = self.K()
         nodeIDs = self.nodeIDs(allowEmptyNodes=True)
@@ -245,7 +234,7 @@ class CELAS2(SpringElement):
         assert isinstance(c2, int), 'c2=%r' % c2
         assert isinstance(ge, float), 'ge=%r' % ge
         assert isinstance(s, float), 'ge=%r' % s
-        if isxref:
+        if xref:
             assert len(nodeIDs) == len(self.nodes)
             #for nodeID, node in zip(nodeIDs, self.nodes):
                 #assert node.node.nid

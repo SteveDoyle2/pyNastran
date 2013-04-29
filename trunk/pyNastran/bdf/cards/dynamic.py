@@ -29,8 +29,12 @@ class FREQ(BaseCard):
     """
     Defines a set of frequencies to be used in the solution of frequency
     response problems.
-    FREQ SID F1 F2 F3 F4 F5 F6 F7
-    F8 F9 F10
+
+    +-----+-----+-----+-----+------+-----+-----+-----+-----+
+    |  1  |  2  |  3  |  4  |  5   |  6  |  7  |  8  |  9  |
+    +=====+=====+=====+=====+======+=====+=====+=====+=====+
+    |FREQ | SID | F1  | F2  | etc. |     |     |     |     |
+    +-----+-----+-----+-----+------+-----+-----+-----+-----+
     """
     type = 'FREQ'
 
@@ -53,6 +57,7 @@ class FREQ(BaseCard):
         Combines the frequencies from 1 FREQx object with another.
         All FREQi entries with the same frequency set identification numbers
         will be used. Duplicate frequencies will be ignored.
+
         :param self:  the object pointer
         :param freqs: the frequencies for a FREQx object
         """
@@ -66,7 +71,7 @@ class FREQ(BaseCard):
         :param self: the object pointer
         :param freq: a FREQx object
 
-        .. seealso:: addFrequencies
+        .. seealso:: :func:`addFrequencies`
         """
         self.addFrequencies(freq.freqs)
 
@@ -80,7 +85,13 @@ class FREQ1(FREQ):
     Defines a set of frequencies to be used in the solution of frequency
     response problems by specification of a starting frequency, frequency
     increment, and the number of increments desired.
-    FREQ1 SID F1 DF NDF
+
+    +------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |  1   |  2  | 3   |  4  |  5  |  6  |  7  |  8  |  9  |
+    +======+=====+=====+=====+=====+=====+=====+=====+=====+
+    |FREQ1 | SID |  F1 | DF  | NDF |     |     |     |     |
+    +------+-----+-----+-----+-----+-----+-----+-----+-----+
+
     .. note:: this card rewrites as a FREQ card
     """
     type = 'FREQ1'
@@ -105,7 +116,13 @@ class FREQ2(FREQ):
     Defines a set of frequencies to be used in the solution of frequency
     response problems by specification of a starting frequency, final
     frequency, and the number of logarithmic increments desired.
-    FREQ2 SID F1 F2 NDF
+
+    +-------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |   1   |  2  | 3   |  4  |  5  |  6  |  7  |  8  |  9  |
+    +=======+=====+=====+=====+=====+=====+=====+=====+=====+
+    | FREQ2 | SID |  F1 | F2  | NDF |     |     |     |     |
+    +-------+-----+-----+-----+-----+-----+-----+-----+-----+
+
     .. note:: this card rewrites as a FREQ card
     """
     type = 'FREQ2'
@@ -140,9 +157,13 @@ class FREQ4(FREQ):
     Defines a set of frequencies used in the solution of modal frequency
     response problems by specifying the amount of 'spread' around each natural
     frequency and the number of equally spaced excitation frequencies within
-    the spread.::
+    the spread.
     
-      FREQ4 SID F1 F2 FSPD NFM
+    +------+-----+-----+-----+------+-----+-----+-----+-----+
+    |  1   |  2  | 3   |  4  |  5   |  6  |  7  |  8  |  9  |
+    +======+=====+=====+=====+======+=====+=====+=====+=====+
+    |FREQ4 | SID |  F1 | F2  | FSPD | NFM |     |     |     |
+    +------+-----+-----+-----+------+-----+-----+-----+-----+
 
     .. note:: this card rewrites as a FREQ card
     .. todo:: not done...
@@ -207,6 +228,16 @@ class TSTEP(BaseCard):
     Transient Time Step
     Defines time step intervals at which a solution will be generated and
     output in transient analysis.
+
+    +-------+------+-----+-----+-----+-----+-----+-----+-----+
+    |   1   |   2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |
+    +-------+------+-----+-----+-----+-----+-----+-----+-----+
+    | TSTEP |  N1  | DT1 | NO1 |     |     |     |     |     |
+    +-------+------+-----+-----+-----+-----+-----+-----+-----+
+    |       |  N2  | DT2 | NO2 |     |     |     |     |     |
+    +-------+------+-----+-----+-----+-----+-----+-----+-----+
+    |       | etc. |     |     |     |     |     |     |     |
+    +-------+------+-----+-----+-----+-----+-----+-----+-----+
     """
     type = 'TSTEP'
 
@@ -242,7 +273,17 @@ class TSTEPNL(BaseCard):
     """
     Defines parametric controls and data for nonlinear transient structural or
     heat transfer analysis. TSTEPNL is intended for SOLs 129, 159, and 600.
-    Parameters for Nonlinear Transient Analysis
+    Parameters for Nonlinear Transient Analysis.
+
+    +---------+--------+--------+-------+--------+--------+-------+---------+------+
+    |    1    |   2    |   3    |   4   |   5    |   6    |   7   |    8    |  9   |
+    +---------+--------+--------+-------+--------+--------+-------+---------+------+
+    | TSTEPNL |   ID   |  NDT   |  DT   |   NO   | METHOD | KSTEP | MAXITER | CONV |
+    +---------+--------+--------+-------+--------+--------+-------+---------+------+
+    |         |  ESPU  |  EPSP  |  EPSW | MAXDIV | MAXQN  | MAXLS | FSTRESS |      |
+    +---------+--------+--------+-------+--------+--------+-------+---------+------+
+    |         | MAXBIS | ADJUST | MSTEP |   RB   | MAXR   | UTOL  | RTOLB   |      |
+    +---------+--------+--------+-------+--------+--------+-------+---------+------+
     """
     type = 'TSTEPNL'
 
@@ -334,7 +375,7 @@ class TSTEPNL(BaseCard):
         return list_fields
 
     def reprFields(self):
-        #no      = set_blank_if_default(self.no,1)
+        #no = set_blank_if_default(self.no,1)
         no = self.no
         method = set_blank_if_default(self.method, 'ADAPT')
 
@@ -376,9 +417,16 @@ class NLPARM(BaseCard):
     """
     Defines a set of parameters for nonlinear static analysis iteration
     strategy.
-    NLPARM ID NINC DT KMETHOD KSTEP MAXITER CONV INTOUT
-    EPSU EPSP EPSW MAXDIV MAXQN MAXLS FSTRESS LSTOL
-    MAXBIS MAXR RTOLB
+
+    +--------+--------+------+------+---------+-------+---------+---------+--------+
+    |    1   |  2     |  3   |  4   |    5    |   6   |   7     |  8      |   9    |
+    +========+========+======+======+=========+=======+=========+=========+========+
+    | NLPARM |   ID   | NINC |  DT  | KMETHOD | KSTEP | MAXITER |  CONV   | INTOUT |
+    +--------+--------+------+------+---------+-------+---------+---------+--------+
+    |        |  ESPU  | EPSP | EPSW | MAXDIV  | MAXQN | MAXLS   | FSTRESS | LSTOL  |
+    +--------+--------+------+------+---------+-------+---------+---------+--------+
+    |        | MAXBIS |      |      |         | MAXR  |         | RTOLB   | CONV   |
+    +--------+--------+------+------+---------+-------+---------+---------+--------+
     """
     type = 'NLPARM'
 

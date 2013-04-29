@@ -31,6 +31,11 @@ class IsotropicMaterial(Material):
         Material.__init__(self, card, data)
 
 
+class OrthotropicMaterial(Material):
+    """Orthotropic Material Class"""
+    def __init__(self, card, data):
+        Material.__init__(self, card, data)
+
 class AnisotropicMaterial(Material):
     """Anisotropic Material Class"""
     def __init__(self, card, data):
@@ -116,16 +121,22 @@ class CREEP(Material):
         return list_fields
 
 
-class MAT1(Material):
+class MAT1(IsotropicMaterial):
     """
-    Defines the material properties for linear isotropic materials.::
+    Defines the material properties for linear isotropic materials.
 
-      MAT1     1      1.03+7  3.9615+6.3      .098
+    +-----+-----+-----+-----+-------+-----+------+------+-----+
+    |  1  |  2  | 3   | 4   |   5   |  6  |  7   |  8   |  9  |
+    +=====+=====+=====+=====+=======+=====+======+======+=====+
+    |MAT1 | MID |  E  |  G  |  NU   | RHO |  A   | TREF | GE  |
+    +-----+-----+-----+-----+-------+-----+------+------+-----+
+    |     | ST  | SC  | SS  | MCSID |     |      |      |     |
+    +-----+-----+-----+-----+-------+-----+------+------+-----+
     """
     type = 'MAT1'
 
     def __init__(self, card=None, data=None, comment=''):
-        Material.__init__(self, card, data)
+        IsotropicMaterial.__init__(self, card, data)
         if comment:
             self._comment = comment
         if card:
@@ -154,7 +165,7 @@ class MAT1(Material):
             self.Ss = data[10]
             self.Mcsid = data[11]
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         mid = self.Mid()
         E = self.E()
         G = self.G()
@@ -288,11 +299,17 @@ class MAT1(Material):
 class MAT2(AnisotropicMaterial):
     """
     Defines the material properties for linear anisotropic materials for
-    two-dimensional elements.::
+    two-dimensional elements.
 
-      MAT2 MID G11 G12 G13 G22 G23 G33 RHO
-      A1 A2 A3 TREF GE ST SC SS
-      MCSID
+    +-----+-------+-----+-----+------+-----+------+-----+-----+
+    |  1  |   2   |  3  |  4  |  5   |  6  |  7   | 8   |  9  |
+    +=====+=======+=====+=====+======+=====+======+=====+=====+
+    |MAT2 |  MID  | G11 | G12 | G13  | G22 | G23  | G33 | RHO |
+    +-----+-------+-----+-----+------+-----+------+-----+-----+
+    |     |  A1   | A2  | A3  | TREF | GE  |  ST  | SC  | SS  |
+    +-----+-------+-----+-----+------+-----+------+-----+-----+
+    |     | MCSID |     |     |      |     |      |     |     |
+    +-----+-------+-----+-----+------+-----+------+-----+-----+
     """
     type = 'MAT2'
 
@@ -445,18 +462,23 @@ class MAT2(AnisotropicMaterial):
         return list_fields
 
 
-class MAT3(AnisotropicMaterial):
+class MAT3(OrthotropicMaterial):
     """
     Defines the material properties for linear orthotropic materials used by
-    the CTRIAX6 element entry.::
+    the CTRIAX6 element entry.
 
-      MAT3 MID EX  ETH EZ  NUXTH NUTHZ NUZX RHO
-      -    -   GZX AX  ATH AZ TREF GE
+    +-----+-----+----+-----+----+-------+-------+------+-----+
+    |  1  |  2  |  3 |  4  | 5  |   6   |   7   |  8   |  9  |
+    +=====+=====+====+=====+====+=======+=======+======+=====+
+    |MAT3 | MID | EX | ETH | EZ | NUXTH | NUTHZ | NUZX | RHO |
+    +-----+-----+----+-----+----+-------+-------+------+-----+
+    |     |     |    | GZX | AX |  ATH  |  AZ   | TREF | GE  |
+    +-----+-----+----+-----+----+-------+-------+------+-----+
     """
     type = 'MAT3'
 
     def __init__(self, card=None, data=None, comment=''):
-        AnisotropicMaterial.__init__(self, card, data)
+        OrthotropicMaterial.__init__(self, card, data)
         if comment:
             self._comment = comment
         if card:
@@ -517,10 +539,15 @@ class MAT4(ThermalMaterial):
     Defines the constant or temperature-dependent thermal material properties
     for conductivity, heat capacity, density, dynamic viscosity, heat
     generation, reference enthalpy, and latent heat associated with a
-    single-phase change.::
+    single-phase change.
 
-      MAT4 MID K CP H HGEN REFENTH
-      TCH TDELTA QLAT
+    +-----+-----+--------+------+-----+----+-----+------+---------+
+    |  1  |  2  |   3    |   4  |  5  | 6  |  7  |  8   |    9    |
+    +=====+=====+========+======+=====+====+=====+======+=========+
+    |MAT4 | MID |   K    |  CP  | RHO | MU |  H  | HGEN | REFENTH |
+    +-----+-----+--------+------+-----+----+-----+------+---------+
+    |     | TCH | TDELTA | QLAT |     |    |     |      |         |
+    +-----+-----+--------+------+-----+----+-----+------+---------+
     """
     type = 'MAT4'
 
@@ -571,10 +598,15 @@ class MAT4(ThermalMaterial):
 
 class MAT5(ThermalMaterial):  # also AnisotropicMaterial
     """
-    Defines the thermal material properties for anisotropic materials.::
+    Defines the thermal material properties for anisotropic materials.
 
-      MAT5 MID KXX KXY KXZ KYY KYZ KZZ CP
-      RHO HGEN
+    +-----+-----+-------+-----+-----+-----+-----+-----+----+
+    |  1  |  2  |   3   |  4  |  5  |  6  |  7  |  8  | 9  |
+    +=====+=====+=======+=====+=====+=====+=====+=====+====+
+    |MAT5 | MID |  KXX  | KXY | KXZ | KYY | KYZ | KZZ | CP |
+    +-----+-----+-------+-----+-----+-----+-----+-----+----+
+    |     | RHO |  HGEN |     |     |     |     |     |    |
+    +-----+-----+-------+-----+-----+-----+-----+-----+----+
     """
     type = 'MAT5'
 
@@ -638,17 +670,25 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         return list_fields
 
 
-class MAT8(AnisotropicMaterial):
+class MAT8(OrthotropicMaterial):
     """
     Defines the material property for an orthotropic material for isoparametric
-    shell elements.::
+    shell elements.
 
-      MAT8          10  1.25+7  9.75+6     .28  1.11+7                   2.4-2
+    +-----+-----+-----+------+------+-----+-----+-----+-----+
+    |  1  |  2  |  3  |  4   |  5   |  6  |  7  |  8  |  9  |
+    +=====+=====+=====+======+======+=====+=====+=====+=====+
+    |MAT8 | MID | E1  |  E2  | NU12 | G12 | G1Z | G2Z | RHO |
+    +-----+-----+-----+------+------+-----+-----+-----+-----+
+    |     | A1  |  A2 | TREF |  Xt  |  Xc |  Yt |  Yc |  S  |
+    +-----+-----+-----+------+------+-----+-----+-----+-----+
+    |     | GE1 | F12 | STRN |      |     |     |     |     |
+    +-----+-----+-----+------+------+-----+-----+-----+-----+
     """
     type = 'MAT8'
 
     def __init__(self, card=None, data=None, comment=''):
-        AnisotropicMaterial.__init__(self, card, data)
+        OrthotropicMaterial.__init__(self, card, data)
         if comment:
             self._comment = comment
         if card:
@@ -695,7 +735,7 @@ class MAT8(AnisotropicMaterial):
             self.F12 = data[17]
             self.strn = data[18]
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         mid = self.Mid()
         E11 = self.E11()
         E22 = self.E22()
@@ -774,12 +814,19 @@ class MAT9(AnisotropicMaterial):
     """
     Defines the material properties for linear, temperature-independent,
     anisotropic materials for solid isoparametric elements (see PSOLID entry
-    description).::
+    description).
 
-      MAT9 MID G11 G12 G13 G14 G15 G16 G22
-      G23 G24 G25 G26 G33 G34 G35 G36
-      G44 G45 G46 G55 G56 G66 RHO A1
-      A2 A3 A4 A5 A6 TREF GE
+    +-----+-----+-----+-----+-----+-----+------+-----+-----+
+    |  1  |  2  | 3   | 4   |  5  |  6  |  7   | 8   |  9  |
+    +=====+=====+=====+=====+=====+=====+======+=====+=====+
+    |MAT9 | MID | G11 | G12 | G13 | G14 | G15  | G16 | G22 |
+    +-----+-----+-----+-----+-----+-----+------+-----+-----+
+    |     | G23 | G24 | G25 | G26 | G33 | G34  | G35 | G36 |
+    +-----+-----+-----+-----+-----+-----+------+-----+-----+
+    |     | G44 | G45 | G46 | G55 | G56 | G66  | RHO | A1  |
+    +-----+-----+-----+-----+-----+-----+------+-----+-----+
+    |     | A2  | A3  | A4  | A5  | A6  | TREF | GE  |     |
+    +-----+-----+-----+-----+-----+-----+------+-----+-----+
     """
     type = 'MAT9'
 
@@ -851,7 +898,7 @@ class MAT9(AnisotropicMaterial):
 
         assert len(self.A) == 6
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         mid = self.Mid()
         #E11 = self.E11()
         #E22 = self.E22()
@@ -901,9 +948,13 @@ class MAT9(AnisotropicMaterial):
 class MAT10(Material):
     """
     Defines material properties for fluid elements in coupled fluid-structural
-    analysis.::
+    analysis.
 
-      MAT10 MID BULK RHO C GE
+    +------+-----+------+-----+-----+-----+-----+-----+-----+
+    |  1   |  2  |  3   |  4  |  5  |  6  |  7  |  8  |  9  |
+    +======+=====+======+=====+=====+=====+=====+=====+=====+
+    |MAT10 | MID | BULK | RHO |  C  | GE  |     |     |     |
+    +------+-----+------+-----+-----+-----+-----+-----+-----+
     """
     type = 'MAT10'
 
@@ -923,7 +974,7 @@ class MAT10(Material):
             self.c = data[3]
             self.ge = data[4]
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         mid = self.Mid()
         bulk = self.bulk
         rho = self.rho
@@ -979,10 +1030,15 @@ class MAT10(Material):
 class MAT11(Material):
     """
     Defines the material properties for a 3D orthotropic material for
-    isoparametric solid elements.::
+    isoparametric solid elements.
 
-      MAT10 MID E1 E2 E3 NU12 Nu13 NU23 G12
-      - G13 G23 RHO A1 A2 A3 TREF GE
+    +------+-----+-----+-----+----+------+------+------+-----+
+    |  1   |  2  |  3  |  4  |  5 |   6  |  7   |  8   |  9  |
+    +======+=====+=====+=====+====+======+======+======+=====+
+    |MAT11 | MID |  E1 | E2  | E3 | NU12 | NU13 | NU23 | G12 |
+    +------+-----+-----+-----+----+------+------+------+-----+
+    |      | G13 | G23 | RHO | A1 |  A2  |  A3  | TREF | GE  |
+    +------+-----+-----+-----+----+------+------+------+-----+
     """
     type = 'MAT11'
 
@@ -1327,7 +1383,8 @@ class MATS1(MaterialDependence):
 
     def E(self, strain=None):
         """
-        Gets E (Young's Modulus) for a given strain
+        Gets E (Young's Modulus) for a given strain.
+
         :param self:   the object pointer
         :param strain: the strain (None -> linear E value)
         :returns E:    Young's Modulus

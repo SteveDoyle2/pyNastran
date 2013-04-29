@@ -1,4 +1,4 @@
-## pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914
 """
 All method cards are defined in this file.  This includes:
  * EIGB

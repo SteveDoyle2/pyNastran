@@ -100,8 +100,8 @@ class ConstraintObject(object):
 
     # def remapSPCs(self, constraints):
     #     """not really done yet"""
-    #     ## takes the MPCADDs that reference MPCADDs and makes them
-    #     ## reference MPCs
+    #     # takes the MPCADDs that reference MPCADDs and makes them
+    #     # reference MPCs
     #     constraints2 = {}
     #     key = constraints.keys()
     #     nkeys = len(key) - 1

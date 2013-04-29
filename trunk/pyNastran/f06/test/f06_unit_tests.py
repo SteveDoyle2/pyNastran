@@ -21,8 +21,8 @@ class TestF06(unittest.TestCase):
                 print('dynamic')
                 bdf.set_dynamic_syntax(dynamic_vars)
             bdf.read_bdf(bdf_name)
-            bdf.write_bdf(bdf_name+'.out')
-            bdf.write_bdf_as_patran(bdf_name+'.out')
+            bdf.write_bdf(bdf_name+'.out', interspersed=False)
+            bdf.write_bdf(bdf_name+'.out', interspersed=True)
             outputs.append(bdf)
 
         if f06_name:

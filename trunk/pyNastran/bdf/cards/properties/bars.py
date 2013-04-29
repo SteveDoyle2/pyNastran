@@ -149,15 +149,15 @@ class LineProperty(Property):
     def CA_Section(self, iFace, iStart, dims):
         """
         ::
-
+          
           ---msg1---
           H1=0.1
           W1=0.05
-
+          
           ---msg2---
           Face_1 = geompy.MakeFaceHW(H1, W1, 1)
           geompy.addToStudy( Face_1, 'Face_1' )
-
+          
           ---msg---
           H1=0.1
           W1=0.05
@@ -193,18 +193,28 @@ class LineProperty(Property):
             Iyz = 0.
 
         elif self.Type == 'I':
+            # |  ------------
+            # |  |    A     | d5
+            # |  ------------
+            # |     >| |<--d3
+            # |      |B|           "I" beam
+            # | d1   | |
+            # |      | |
+            # |   ----------
+            # |   |   C    |  d5
+            # |   ----------
             sections = []
             h1 = dim[5]  # d2
-            w1 = dim[2]                         # |  ------------
-            y1 = dim[0] / 2. - h1                   # |  |    A     | d5
-            sections.append([w1, h1, 0., y1])   # |  ------------
-                                                # |     >| |<--d3
-            h3 = dim[4]                         # |      |B|
-            w3 = dim[1]                         # | d1   | |
-            y3 = -dim[0] / 2. + h3                  # |      | |
-            sections.append([w3, h3, 0., y1])   # |   ----------
-                                                # |   |   C    |  d5
-            h2 = dim[0] - h1 - h3                   # |   ----------
+            w1 = dim[2]                         
+            y1 = dim[0] / 2. - h1               
+            sections.append([w1, h1, 0., y1])   
+                                                
+            h3 = dim[4]                         
+            w3 = dim[1]                         
+            y3 = -dim[0] / 2. + h3              
+            sections.append([w3, h3, 0., y1])   
+                                                
+            h2 = dim[0] - h1 - h3               
             w2 = dim[3]  # d1
             sections.append([w2, h2, 0., 0.])
 
@@ -657,7 +667,7 @@ class PTUBE(LineProperty):
         r"""
         Gets the mass per length :math:`\frac{m}{L}` of the CTUBE.
         
-        .. math:: {m}{L} = A \rho nsm
+        .. math:: \frac{m}{L} = (A \rho) nsm
         """
         return self.Area() * self.Rho() + self.nsm
 
@@ -1019,7 +1029,7 @@ class PBARL(LineProperty):
         r"""
         Gets the mass per length :math:`\frac{m}{L}` of the CBAR.
         
-        .. math:: \frac{m}/{L} = A \rho + nsm
+        .. math:: \frac{m}{L} = A \rho + nsm
         """
         rho = self.Rho()
         area = self.Area()
@@ -1866,7 +1876,7 @@ class PBEAML(IntegratedLineProperty):
         
         .. math:: \frac{m}{L} = A(x) \rho + nsm
         
-        .. math:: \frac{m}{L} = nsm L + \rho \int \, A(x) \dif x
+        .. math:: \frac{m}{L} = nsm L + \rho \int \, A(x) dx
         """
         rho = self.Rho()
         massPerLs = []
@@ -1884,7 +1894,7 @@ class PBEAML(IntegratedLineProperty):
         r"""
         Gets the Area :math:`A` of the PBEAML.
         
-        .. math:: A = \int \, A(x) \dif x
+        .. math:: A = \int \, A(x) dx
         
         .. note:: a spline is fit to :math:`A(x)` and then integrated.
         """

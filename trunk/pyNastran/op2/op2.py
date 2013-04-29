@@ -119,7 +119,7 @@ class OP2(BDF,
         self.table_name = 'temp'
 
         #: should the BDF tables be parsed
-        self.makeGeom = makeGeom
+        self.make_geom = make_geom
 
         #: the input OP2 filename
         self.op2FileName = op2FileName

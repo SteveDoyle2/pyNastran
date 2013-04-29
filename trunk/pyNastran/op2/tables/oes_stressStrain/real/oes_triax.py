@@ -7,14 +7,13 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 class TriaxStressObject(StressObject):
     """
-    @code
-    # format_code=1 sort_code=0 stressCode=0
-                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S
-    ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES
-       ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR
-       5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
-                4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
-    @endcode
+    ::
+      # format_code=1 sort_code=0 stressCode=0
+                                        S T R E S S E S   I N   T R I A X 6   E L E M E N T S
+      ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES
+         ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR
+         5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
+                  4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StressObject.__init__(self, data_code, isubcase)
@@ -235,14 +234,14 @@ class TriaxStressObject(StressObject):
 
 class TriaxStrainObject(StrainObject):
     """
-    @code
-    # format_code=1 sort_code=0 stressCode=0
-                                      S T R A I N S   I N   T R I A X 6   E L E M E N T S
-    ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES
-       ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR
-       5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
-                4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
-    @endcode
+    ::
+
+      # format_code=1 sort_code=0 stressCode=0
+                                        S T R A I N S   I N   T R I A X 6   E L E M E N T S
+      ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES
+         ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR
+         5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
+                  4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StrainObject.__init__(self, data_code, isubcase)

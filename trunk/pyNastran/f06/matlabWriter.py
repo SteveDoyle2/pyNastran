@@ -129,14 +129,12 @@ class MatlabWriter(object):
     def write_matlab(self, mFileOutName, isMagPhase=False, deleteObjects=True):
         """
         Writes an F06 file based on the data we have stored in the object
-        @param self
-               the object pointer
-        @param mFileOutName
-               the name of the M (Matlab) file to write
-        @param isMagPhase
-               should complex data be written using
-               Magnitude/Phase instead of Real/Imaginary (default=False; Real/Imag)
-               Real objects don't use this parameter.
+
+        :param self:         the object pointer
+        :param mFileOutName: the name of the M (Matlab) file to write
+        :param isMagPhase:   should complex data be written using
+                             Magnitude/Phase instead of Real/Imaginary (default=False; Real/Imag)
+                             Real objects don't use this parameter.
         """
         f = open(mFileOutName, 'wb')
 

@@ -46,25 +46,24 @@ class OP4(OP4Deprecated):
         be read.  The resulting output is a dictionary of matrices that are
         accessed by their name.
 
-        @code
-        from pyNastran.op4.op4 import OP4
-        op4 = OP4()
+        >>> from pyNastran.op4.op4 import OP4
+        >>> op4 = OP4()
+
         #alternative way to get all the matrices
-        matrices = op4.read_op4(op4_name)
-        (formA,A) = matrices['A']
-        (formB,B) = matrices['B']
-        (formC,C) = matrices['C']
+        >>> matrices = op4.read_op4(op4_name)
+        >>> (formA,A) = matrices['A']
+        >>> (formB,B) = matrices['B']
+        >>> (formC,C) = matrices['C']
 
         # or to reduce memory usage
-        matrices = op4.read_op4(op4_filename, matrix_names=['A','B'])
-        (formA,A) = matrices['A']
-        (formB,B) = matrices['B']
+        >>> matrices = op4.read_op4(op4_filename, matrix_names=['A','B'])
+        >>> (formA,A) = matrices['A']
+        >>> (formB,B) = matrices['B']
 
         # or because you only want A
-        matrices = op4.read_op4(op4_filename, matrix_names='A')
-        (formA,A) = matrices['A']
-        @endcode
-
+        >>> matrices = op4.read_op4(op4_filename, matrix_names='A')
+        >>> (formA,A) = matrices['A']
+        >>>
         :param op4_filename: an OP4 filename.  Type=STRING.
         :param matrix_names: list of matrix names (or None); Type=LIST OF STRINGS / NONE.
         :param precision: specifies if the matrices are in single or double precsion

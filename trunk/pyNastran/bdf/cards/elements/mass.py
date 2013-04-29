@@ -76,7 +76,7 @@ class CMASS1(PointMassElement):
     def Mass(self):
         return self.pid.mass
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
         mass = self.Mass()
@@ -303,18 +303,20 @@ class CONM1(PointMassElement):
     def __init__(self, card=None, data=None, comment=''):
         """
         Concentrated Mass Element Connection, General Form
-        Defines a 6 x 6 symmetric mass matrix at a geometric grid point
+        Defines a 6 x 6 symmetric mass matrix at a geometric grid point::
 
-        CONM1 EID G CID M11 M21 M22 M31 M32
-              M33 M41 M42 M43 M44 M51 M52 M53
-              M54 M55 M61 M62 M63 M64 M65 M66
+          CONM1 EID G CID M11 M21 M22 M31 M32
+                M33 M41 M42 M43 M44 M51 M52 M53
+                M54 M55 M61 M62 M63 M64 M65 M66
 
-        [M] = [M11 M21 M31 M41 M51 M61]
-              [    M22 M32 M42 M52 M62]
-              [        M33 M43 M53 M63]
-              [            M44 M54 M64]
-              [    Sym         M55 M65]
-              [                    M66]
+        ::
+
+          [M] = [M11 M21 M31 M41 M51 M61]
+                [    M22 M32 M42 M52 M62]
+                [        M33 M43 M53 M63]
+                [            M44 M54 M64]
+                [    Sym         M55 M65]
+                [                    M66]
         """
         PointMassElement.__init__(self, card, data)
         if comment:
@@ -462,7 +464,7 @@ class CONM2(PointMassElement):
             self.X = data[4:7]
             self.I = data[7:]
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         eid = self.Eid()
         nid = self.Nid()
         cid = self.Cid()

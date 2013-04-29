@@ -133,7 +133,7 @@ class BDFMethods(BDFMethodsDeprecated):
     #             normals[starterEid] = elem.Normal()
     #             validNids = validNids.union(set(elem.nodeIDs()))
     #
-    #     ## clean up the elements that will be considered
+    #     # clean up the elements that will be considered
     #     elemsToCheck = set([])
     #     nidToEidMap = self.getNodeIDToElementIDsMap()
     #     for (nid, eidsMap) in sorted(nidToEidMap.iteritems()):
@@ -148,9 +148,9 @@ class BDFMethods(BDFMethodsDeprecated):
     #                 elemsToCheck = elemsToCheck.union(set(eids2))
     #             nidToEidMap[nid] = eids2
     #
-    #     ## starts with the starter element, loops thru adjacent elements
-    #     ## and checks to see if the normal is 'close' to the elements
-    #     ## normal from before
+    #     # starts with the starter element, loops thru adjacent elements
+    #     # and checks to see if the normal is 'close' to the elements
+    #     # normal from before
     #     goEid = starterEid
     #
     #     # no recursion to avoid recursion limit

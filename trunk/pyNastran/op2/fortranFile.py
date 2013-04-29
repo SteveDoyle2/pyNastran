@@ -7,9 +7,9 @@ from struct import unpack, pack
 
 class FortranFile(object):
     def __init__(self):
-        ## the endian of the processor (typically '<' for Windows/Linux/Mac,
-        ##                              '>' for old HPCs)
-        ## currently does nothing
+        #: the endian of the processor (typically '<' for Windows/Linux/Mac,
+        #:                              '>' for old HPCs)
+        #: currently does nothing
         self.endian = '<'
         ## currently does nothing
         self.buffer_size = 65535
@@ -23,6 +23,7 @@ class FortranFile(object):
     def set_endian(self, endian='<'):
         """
         Sets the endian
+
         .. todo:: hasnt been implemented
         """
         self.endian = endian
@@ -115,6 +116,7 @@ class FortranFile(object):
     def read_doubles(self, nData, debug=True):
         """
         Reads a list of nDoubles
+
         :param self:  the object pointer
         :param nData: the number of doubles to read
         :param debug: for developer: debug combined with make_op2_debug
@@ -232,6 +234,7 @@ class FortranFile(object):
         """
         Prints a data set in int/float/double/string format to
         determine table info.  doesn't move cursor.
+
         .. note:: this is a great function for debugging
         """
         data2 = data
@@ -260,6 +263,7 @@ class FortranFile(object):
         """
         Prints a data set in int/float/double/string format to
         determine table info.  doesn't move cursor.
+
         .. note:: this is a great function for debugging
         """
         msg = ''
@@ -279,7 +283,7 @@ class FortranFile(object):
 
     def get_data(self, n):
         """
-        gets a data set of length N
+        Gets a data set of length N
         """
         if n <= 0:
             raise RuntimeError('Zero Buffer Error')
@@ -306,6 +310,7 @@ class FortranFile(object):
     def print_section(self, nBytes):
         """
         Prints data, but doesn't move the cursor
+
         :param self:   the object pointer
         :param nBytes: the number of bytes to print the data specs on
         :returns msg:  ints/floats/strings of the next nBytes
@@ -429,7 +434,8 @@ class FortranFile(object):
 
     def goto(self, n):
         """
-        jumps to position n in the file
+        Jumps to position n in the file
+
         :param self: the object pointer
         :param n:    the position to goto
         .. note:: n>0
@@ -441,7 +447,7 @@ class FortranFile(object):
 
     def read_block(self):
         """
-        reads a fortran formatted data block
+        Reads a fortran formatted data block
         nWords  data1 data2 data3 nWords
         """
         data = self.op2.read(4)
@@ -459,7 +465,7 @@ class FortranFile(object):
 
     def read_full_block(self):
         """
-        reads a fortran formatted data block
+        Reads a fortran formatted data block
         nWords  data1 data2 data3 nWords
         includes nWords in the output
         """
@@ -476,8 +482,7 @@ class FortranFile(object):
         """
         Reads a fortran formatted block
         assumes that the data is made up of integers only
-        """
-        """
+
         reads a fortran formatted data block
         nWords  data1 data2 data3 nWords
         includes nWords in the output
@@ -502,7 +507,7 @@ class FortranFile(object):
 
     def read_string_block(self, debug=True):
         """
-        reads a fortran formatted block
+        Reads a fortran formatted block
         assumes that the data is made up of characters only
         """
         data = self.read_block()
@@ -556,8 +561,8 @@ class FortranFile(object):
     def rewind(self, n):
         """
         Rewinds the file nBytes
-        @warning
-            doesnt support a full rewind, only a partial
+
+        .. warning:: doesnt support a full rewind, only a partial
         """
         self.n -= n
         self.op2.seek(self.n)
@@ -597,7 +602,8 @@ class FortranFile(object):
 
     def skip_next_table(self, buffer_size=10000):
         """
-        skips a table
+        Skips a table
+
         .. todo:: fix bugs
         """
         table_name = self.read_table_name(rewind=False)  # GEOM1

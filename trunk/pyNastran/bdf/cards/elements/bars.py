@@ -32,7 +32,7 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         r"""
         Gets the length of the element.
 
-        .. math:: \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
+        .. math:: L = \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
         :param self: the CROD/CONROD/CTUBE element
         """
         L = norm(self.nodes[1].Position() - self.nodes[0].Position())
@@ -53,7 +53,7 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         where   :math:`[R]_{ij}` is the tranformation matrix
         
         .. math::
-          [R]_{ij} \left[
+          [R]_{ij} = \left[
           \begin{array}{ccc}
               g_x \dot e_x & g_x \dot e_y &  g_x \dot e_z    \\
               g_y \dot e_x & g_y \dot e_y &  g_y \dot e_z    \\
@@ -86,11 +86,15 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
 
     def Lambda(self, model, debug=True):
         """
-        2d  [l,m,0,0]
-            [0,0,l,m]
+        ::
 
-        3d  [l,m,n,0,0,0]
-            [0,0,0,l,m,n]
+          2d  [l,m,0,0]
+              [0,0,l,m]
+
+        ::
+
+          3d  [l,m,n,0,0,0]
+              [0,0,0,l,m,n]
         """
         is3D = False
         #R = self.Rmatrix(model,is3D)
@@ -232,45 +236,47 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         raise NotImplementedError('implement self.Area() for %s' % self.type)
 
     def E(self):
-        r"""returns the Young's Modulus  \f$ E \f$"""
+        """returns the Young's Modulus, :math:`E`"""
         return self.pid.mid.E()
 
     def G(self):
-        r"""returns the Shear Modulus   \f$ G \f$"""
+        """returns the Shear Modulus, :math:`G`"""
         return self.pid.mid.G()
 
     def J(self):
-        r"""returns the Polar Moment of Inertia.   \f$ J \f$"""
+        """returns the Polar Moment of Inertia, :math:`J`"""
         return self.pid.J()
 
     def I11(self):
-        r"""returns the Moment of Inertia.   \f$ I_{11} \f$"""
+        """returns the Moment of Inertia, :math:`I_{11}`"""
         return self.pid.I11()
 
     def I22(self):
-        r"""returns the Moment of Inertia.   \f$ I_{22} \f$"""
+        """returns the Moment of Inertia, :math:`I_{22}`"""
         return self.pid.I22()
 
     def I12(self):
-        r"""returns the Moment of Inertia.   \f$ I_{12} \f$"""
+        """returns the Moment of Inertia, :math:`I_{12}`"""
         return self.pid.I12()
 
     def Nu(self):
-        r"""Get Poisson's Ratio  \f$ \nu \f$"""
+        """Get Poisson's Ratio, :math:`\nu`"""
         return self.pid.mid.nu
 
     def Rho(self):
-        r"""Get the material density  \f$ \rho \f$"""
+        """Get the material density, :math:`\rho`"""
         #print str(self.pid),type(self.pid)
         #raise NotImplementedError('implement self.Rho() for %s' % self.type)
         return self.pid.mid.rho
 
     def Nsm(self):
-        """Placeholder method for the non-structural mass"""
+        """Placeholder method for the non-structural mass, :math:`nsm`"""
         raise NotImplementedError('implement self.Area() for %s' % self.type)
 
     def MassPerLength(self):
-        """Get the mass per unit length"""
+        """
+        Get the mass per unit length, :math:`\frac{m}{L}`
+        """
         return self.pid.MassPerLength()
 
     def Mass(self):
@@ -299,9 +305,9 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
 
     def Length(self):
         r"""
-        Gets the length of the element.
+        Gets the length, :math:`L`, of the element.
 
-        .. math:: \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
+        .. math:: L = \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
 
         :param self: the object pointer
         """
@@ -509,9 +515,6 @@ class CTUBE(RodElement):
         return self.pid.Area()
 
     def Centroid(self):
-        """
-        .. todo:: improve the formuala for CTUBE centroid
-        """
         return (self.nodes[0].Position() + self.nodes[1].Position()) / 2.
 
     def rawFields(self):
@@ -599,7 +602,7 @@ class CONROD(RodElement):
         return self.A
 
     def J(self):
-        r"""returns the Polar Moment of Inertia.   \f$ J \f$"""
+        r"""returns the Polar Moment of Inertia, :math:`J`"""
         return self.j
 
     def Nsm(self):
@@ -607,19 +610,19 @@ class CONROD(RodElement):
         return self.nsm
 
     def E(self):
-        r"""returns the Young's Modulus  \f$ E \f$"""
+        r"""returns the Young's Modulus, :math:`E`$"""
         return self.mid.E()
 
     def G(self):
-        r"""returns the Shear Modulus   \f$ G \f$"""
+        r"""returns the Shear Modulus, :math:`G`"""
         return self.mid.G()
 
     def Nu(self):
-        r"""returns Poisson's Ratio  \f$ \nu \f$"""
+        r"""returns Poisson's Ratio, :math:`\nu`"""
         return self.mid.nu
 
     def Rho(self):
-        r"""returns the material density  \f$ \rho \f$"""
+        r"""returns the material density, :math:`\rho`"""
         return self.mid.rho
 
     def writeCodeAster(self):
@@ -651,14 +654,20 @@ class CONROD(RodElement):
 
 class CBAR(LineElement):
     """
-    CBAR EID PID GA GB X1 X2 X3 OFFT
-    PA PB W1A W2A W3A W1B W2B W3B
-    or
-    CBAR EID PID GA GB G0 OFFT
-    PA PB W1A W2A W3A W1B W2B W3B
+    ::
 
-    CBAR       22062       4   21798   21799   0.0+0   0.0+0     -1.
-                               0.0+0   0.0+0     -9.   0.0+0   0.0+0     -9.
+      CBAR EID PID GA GB X1 X2 X3 OFFT
+      PA PB W1A W2A W3A W1B W2B W3B
+
+    or::
+    
+      CBAR EID PID GA GB G0 OFFT
+      PA PB W1A W2A W3A W1B W2B W3B
+
+    ::
+
+      CBAR       22062       4   21798   21799   0.0+0   0.0+0     -1.
+                                 0.0+0   0.0+0     -9.   0.0+0   0.0+0     -9.
     """
     type = 'CBAR'
     asterType = 'CBAR'
@@ -805,9 +814,6 @@ class CBAR(LineElement):
             #                                  self.x3)
 
     def cross_reference(self, model):
-        """
-        set g0-ga to x1,x2,x3
-        """
         #if self.g0:
         #    v = nodes[self.g0].Position()-nodes[self.ga].Position()
         #    self.x1 = v[0]
@@ -1077,8 +1083,7 @@ class CBEAM3(CBAR):
 
     def Length(self):
         """
-        L = g_b - g_a
-        .. todo:: improve formula
+        .. math:: L = g_b - g_a
         """
         L = norm(self.gb.Position() - self.ga.Position())
         assert isinstance(L, float)
@@ -1118,13 +1123,17 @@ class CBEAM3(CBAR):
 
 class CBEAM(CBAR):
     """
-    CBEAM EID PID GA GB X1 X2 X3 OFFT/BIT
-    PA PB W1A W2A W3A W1B W2B W3B
-    SA SB
-    or
-    CBEAM EID PID GA GB G0 - - OFFT/BIT
-    PA PB W1A W2A W3A W1B W2B W3B
-    SA SB
+    ::
+
+      CBEAM EID PID GA GB X1 X2 X3 OFFT/BIT
+      PA PB W1A W2A W3A W1B W2B W3B
+      SA SB
+
+    or::
+
+      CBEAM EID PID GA GB G0 - - OFFT/BIT
+      PA PB W1A W2A W3A W1B W2B W3B
+      SA SB
     """
     type = 'CBEAM'
 

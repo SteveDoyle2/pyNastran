@@ -38,16 +38,16 @@ class PELAS(SpringProperty):
             # 2 PELAS properties can be defined on 1 PELAS card
             # these are split into 2 separate cards
 
-            ## Property identification number. (Integer > 0)
+            #: Property identification number. (Integer > 0)
             self.pid = integer(card, 1 + nOffset, 'pid')
-            ## Ki Elastic property value. (Real)
+            #: Ki Elastic property value. (Real)
             self.k = double(card, 2 + nOffset, 'k')
 
-            ## Damping coefficient, . See Remarks 5. and 6. (Real)
-            ## To obtain the damping coefficient GE, multiply the
-            ## critical damping ratio c/c0 by 2.0.
+            #: Damping coefficient, . See Remarks 5. and 6. (Real)
+            #: To obtain the damping coefficient GE, multiply the
+            #: critical damping ratio c/c0 by 2.0.
             self.ge = double_or_blank(card, 3 + nOffset, 'ge', 0.)
-            ## Stress coefficient. (Real)
+            #: Stress coefficient. (Real)
             self.s = double_or_blank(card, 4 + nOffset, 's', 0.)
         else:
             self.pid = data[0]
@@ -63,7 +63,7 @@ class PELAS(SpringProperty):
     def K(self):
         return self.k
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         eid = self.Pid()
         k = self.K()
         ge = self.ge

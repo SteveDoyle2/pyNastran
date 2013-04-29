@@ -1055,8 +1055,9 @@ class GUST(BaseCard):
             self.V = data[4]
             assert len(data) == 5, 'data = %s' % data
 
-        ## angle = self.wg*self.t*(t-(x-self.x0)/self.V) # T is the tabular
-        ## function
+    #def Angle(self):
+        #angle = self.wg*self.t*(t-(x-self.x0)/self.V) # T is the tabular
+        #return angle
 
     def rawFields(self):
         list_fields = ['GUST', self.sid, self.dload, self.wg, self.x0, self.V]

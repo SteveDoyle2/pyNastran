@@ -30,8 +30,10 @@ class RBAR(RigidElement):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        RBAR EID GA GB CNA    CNB CMA CMB ALPHA
-        RBAR 5   1   2 123456             6.5-6
+        ::
+
+          RBAR EID GA GB CNA    CNB CMA CMB ALPHA
+          RBAR 5   1   2 123456             6.5-6
         """
         RigidElement.__init__(self, card, data)
         if comment:
@@ -101,8 +103,10 @@ class RBAR1(RigidElement):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        RBAR1 EID GA GB CB  ALPHA
-        RBAR1 5    1  2 123 6.5-6
+        ::
+
+          RBAR1 EID GA GB CB  ALPHA
+          RBAR1 5    1  2 123 6.5-6
         """
         RigidElement.__init__(self, card, data)
         if comment:
@@ -242,8 +246,10 @@ class RBE2(RigidElement):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        RBE2 EID GN CM GM1 GM2 GM3 GM4 GM5
-        GM6 GM7 GM8 -etc.- ALPHA
+        ::
+
+          RBE2 EID GN CM GM1 GM2 GM3 GM4 GM5
+          GM6 GM7 GM8 -etc.- ALPHA
         """
         RigidElement.__init__(self, card, data)
         if comment:
@@ -288,10 +294,12 @@ class RBE2(RigidElement):
 
     def convertToMPC(self, mpcID):
         """
-        -Ai*ui + Aj*uj = 0
-        where ui are the base DOFs (max=6)
-        mpc sid   g1 c1 a1  g2 c2 a2
-        rbe2 eid  gn cm g1  g2 g3 g4
+        .. math:: -A_i u_i + A_j u_j = 0
+
+        where :math:`u_i` are the base DOFs (max=6)::
+        
+          mpc sid   g1 c1 a1  g2 c2 a2
+          rbe2 eid  gn cm g1  g2 g3 g4
         """
         #i = 0
         nCM = len(self.cm)

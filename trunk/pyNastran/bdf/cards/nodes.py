@@ -28,10 +28,13 @@ class Node(BaseCard):
 
 class RINGAX(Ring):
     """
-    Defines a ring for conical shell problems.::
+    Defines a ring for conical shell problems.
 
-      RINGAX ID R    Z    PS
-      RINGAX 3  2.0 -10.0 162
+    +-------+-----+-----+-----+----+-----+-----+------+-----+
+    |   1   |  2  |  3  |  4  |  5 |  6  |  7  |  8   |  9  |
+    +=======+=====+=====+=====+====+=====+=====+======+=====+
+    |RINGAX | MID |     |  R  |  Z |     |     | PS   |     |
+    +-------+-----+-----+-----+----+-----+-----+------+-----+
     """
     type = 'RINGAX'
 
@@ -82,14 +85,15 @@ class SPOINT(Node):
 
 class SPOINTs(Node):
     """
-    ::
-
-      SPOINT ID1 ID2 ID3 ID4 ID5 ID6 ID7 ID8
-
-    or::
-
-      SPOINT ID1 THRU ID2
-      SPOINT 5   THRU 649
+    +--------+-----+------+-----+-----+-----+-----+-----+-----+
+    |   1    |  2  |  3   |  4  |  5  |  6  |  7  |  8  |  9  |
+    +========+=====+======+=====+=====+=====+=====+=====+=====+
+    | SPOINT | ID1 | THRU | ID2 |     |     |     |     |     |
+    +--------+-----+------+-----+-----+-----+-----+-----+-----+
+    | SPOINT | ID1 | ID1  | ID3 | ID4 | ID5 | ID6 | ID7 | ID8 |
+    +--------+-----+------+-----+-----+-----+-----+-----+-----+
+    |        | ID8 | etc. |     |     |     |     |     |     |
+    +--------+-----+------+-----+-----+-----+-----+-----+-----+
     """
     type = 'SPOINT'
 
@@ -111,7 +115,7 @@ class SPOINTs(Node):
         return len(self.spoints)
 
     def addSPoints(self, sList):
-        #print('old=%s new=%s' %(self.spoints,sList))
+        #print('old=%s new=%s' % (self.spoints, sList))
         self.spoints = self.spoints.union(set(sList))
 
     def cross_reference(self, model):
@@ -127,7 +131,7 @@ class SPOINTs(Node):
         #print("SPOINTi")
         spoints = list(self.spoints)
         spoints.sort()
-        #print("self.spoints = %s" %(self.spoints))
+        #print("self.spoints = %s" % self.spoints)
         spoints = collapse_thru(spoints)
         list_fields = ['SPOINT'] + spoints
         return list_fields
@@ -139,6 +143,12 @@ class SPOINTs(Node):
 class GRDSET(Node):
     """
     Defines default options for fields 3, 7, 8, and 9 of all GRID entries.
+
+    +--------+-----+----+----+----+----+----+----+------+
+    |    1   |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9   |
+    +========+=====+====+====+====+====+====+====+======+
+    | GRDSET |     | CP |    |    |    | CD | PS | SEID |
+    +--------+-----+----+----+----+----+----+----+------+
     """
     type = 'GRDSET'
 
@@ -264,7 +274,7 @@ class GRID(Node):
     +------+-----+----+----+----+----+----+----+------+
     |   1  |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9   |
     +======+=====+====+====+====+====+====+====+======+
-    | GRID | NID | CP | X1 | X2 | X3 | CD | PS | SEID | 
+    | GRID | NID | CP | X1 | X2 | X3 | CD | PS | SEID |
     +------+-----+----+----+----+----+----+----+------+
     """
     type = 'GRID'
@@ -365,7 +375,8 @@ class GRID(Node):
 
     def Position(self, debug=False):
         """
-        Gets the point in the global XYZ coordinate system
+        Gets the point in the global XYZ coordinate system.
+
         :param self:  the object pointer
         :param debug: developer debug
         """
@@ -376,6 +387,7 @@ class GRID(Node):
         """
         Gets the point which started in some arbitrary local coordinate
         system and returns it in the desired coordinate system
+
         :param self:  the object pointer
         :param model: the BDF model object
         :param cid:   the desired coordinate ID (int)
@@ -430,11 +442,11 @@ class GRID(Node):
 
 class POINT(Node):
     """
-    +-------+-----+----+----+----+----+----+----+------+
-    |    1  |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9   |
-    +=======+=====+====+====+====+====+====+====+======+
-    | POINT | NID | CP | X1 | X2 | X3 |    |    |      | 
-    +-------+-----+----+----+----+----+----+----+------+
+    +-------+-----+----+----+----+----+----+----+-----+
+    |   1   |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9  |
+    +=======+=====+====+====+====+====+====+====+=====+
+    | POINT | NID | CP | X1 | X2 | X3 |    |    |     | 
+    +-------+-----+----+----+----+----+----+----+-----+
     """
     type = 'POINT'
 
@@ -490,7 +502,7 @@ class POINT(Node):
 
     def Position(self, debug=False):
         """
-        Gets the point in the global XYZ coordinate system
+        Gets the point in the global XYZ coordinate system.
 
         :param self:  the object pointer
         :param debug: developer debug
@@ -500,13 +512,17 @@ class POINT(Node):
 
     def PositionWRT(self, model, cid, debug=False):
         """
-        Gets the point which started in some arbitrary local coordinate
-        system and returns it in the desired coordinate system
+        Gets the location of the GRID which started in some arbitrary
+        local coordinate system and returns it in the desired coordinate
+        system.
 
         :param self:  the object pointer
         :param model: the BDF model object
         :param cid:   the desired coordinate ID (int)
-        :param debug: developer debug
+        :param debug: developer debug (default=True)
+
+        :returns position: the position of the GRID in an arbitrary
+                           coordinate system
         """
         if cid == self.Cp():
             return self.xyz

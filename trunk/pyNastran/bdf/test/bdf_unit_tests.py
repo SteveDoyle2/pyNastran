@@ -69,7 +69,7 @@ class TestBDF(Tester):
             assert len(fem.materials) == 0, 'len(materials) = %i' % len(fem.materials)
             assert len(fem.elements) == 1, 'len(elements) = %i' % len(fem.elements)
             assert len(fem.methods) == 0, 'len(methods) = %i' % len(fem.methods)
-            assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)  ## PBEAML issue
+            assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)  # PBEAML issue
         self.run_bdf(folder, bdfFilename, xref=True)
 
     def test_bdf_03(self):
@@ -84,14 +84,14 @@ class TestBDF(Tester):
             assert len(fem.materials) == 1, 'len(materials) = %i' % len(fem.materials)
             assert len(fem.elements) == 11, 'len(elements) = %i' % len(fem.elements)
             assert len(fem.methods) == 1, 'len(methods) = %i' % len(fem.methods)
-            assert len(fem.properties) == 3, 'len(properties) = %i' % len(fem.properties)  ## PBEAML issue
-        #self.run_bdf(folder, bdfFilename, xref=True) ## PBEAML is not supported
+            assert len(fem.properties) == 3, 'len(properties) = %i' % len(fem.properties)  # PBEAML issue
+        #self.run_bdf(folder, bdfFilename, xref=True) # PBEAML is not supported
 
     def test_bdf_05(self):
         bdfFilename = 'testA.bdf'
         folder = os.path.abspath(os.path.join(pkg_path, 'bdf', 'test', 'unit'))
         self.run_bdf(folder, bdfFilename)
-        #self.run_bdf(folder, bdfFilename, xref=True) ## PBEAML is not supported
+        #self.run_bdf(folder, bdfFilename, xref=True) # PBEAML is not supported
 
 class BaseCard_Test(Tester):
     def test_base_card_01_collapse_thru(self):
