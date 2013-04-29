@@ -225,13 +225,13 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
     def getGridPointSingularities(self):  # .. todo:: not done
         """
-        @code
-                    G R I D   P O I N T   S I N G U L A R I T Y   T A B L E
-        POINT    TYPE   FAILED      STIFFNESS       OLD USET           NEW USET
-         ID            DIRECTION      RATIO     EXCLUSIVE  UNION   EXCLUSIVE  UNION
-          1        G      4         0.00E+00          B        F         SB       S    *
-          1        G      5         0.00E+00          B        F         SB       S    *
-        @endcode
+        ::
+
+                      G R I D   P O I N T   S I N G U L A R I T Y   T A B L E
+          POINT    TYPE   FAILED      STIFFNESS       OLD USET           NEW USET
+           ID            DIRECTION      RATIO     EXCLUSIVE  UNION   EXCLUSIVE  UNION
+            1        G      4         0.00E+00          B        F         SB       S    *
+            1        G      5         0.00E+00          B        F         SB       S    *
         """
         pass
 
@@ -319,12 +319,12 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
     def getRealEigenvalues(self):
         """
-        @code
-                                                   R E A L   E I G E N V A L U E S
-         MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
-          NO.       ORDER                                                                       MASS              STIFFNESS
-              1         1        6.158494E+07        7.847607E+03        1.248985E+03        1.000000E+00        6.158494E+07
-        @endcode
+        ::
+
+                                                     R E A L   E I G E N V A L U E S
+           MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
+            NO.       ORDER                                                                       MASS              STIFFNESS
+                1         1        6.158494E+07        7.847607E+03        1.248985E+03        1.000000E+00        6.158494E+07
         """
         (subcaseName, isubcase, transient, dt, analysis_code,
             is_sort1) = self.readSubcaseNameID()
@@ -341,13 +341,13 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
     def getComplexEigenvalues(self):
         """
-        @code
-                               C O M P L E X   E I G E N V A L U E   S U M M A R Y
-        ROOT     EXTRACTION                  EIGENVALUE                     FREQUENCY              DAMPING
-         NO.        ORDER             (REAL)           (IMAG)                (CYCLES)            COEFFICIENT
-             1           6          0.0              6.324555E+01          1.006584E+01          0.0
-             2           5          0.0              6.324555E+01          1.006584E+01          0.0
-        @endcode
+        ::
+
+                                 C O M P L E X   E I G E N V A L U E   S U M M A R Y
+          ROOT     EXTRACTION                  EIGENVALUE                     FREQUENCY              DAMPING
+           NO.        ORDER             (REAL)           (IMAG)                (CYCLES)            COEFFICIENT
+               1           6          0.0              6.324555E+01          1.006584E+01          0.0
+               2           5          0.0              6.324555E+01          1.006584E+01          0.0
         """
         #(subcaseName,isubcase,transient,dt,analysis_code,is_sort1) = self.readSubcaseNameID()
         isubcase = 1  # .. todo:: fix this...
@@ -365,24 +365,22 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
     def getRealEigenvectors(self, marker):
         """
-        @code
-                                                                                                               SUBCASE 1
-        EIGENVALUE =  6.158494E+07
-            CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
+        ::
+                                                                                                                 SUBCASE 1
+          EIGENVALUE =  6.158494E+07
+              CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
+  
+          POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+                 1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
+              2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
 
-        POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
-               1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
-            2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
-
-        analysis_code = 2 (Normal modes)
-        table_code    = 7 (Eigenvector)
-
-        device_code   = 1 (Print)
-        sort_code     = 0 (Sort2,Real,Sorted Results) => sort_bits = [0,0,0]
-        format_code   = 1 (Real)
-        #s_code        = 0 (Stress)
-        num_wide      = 8 (???)
-        @endcode
+        * analysis_code = 2 (Normal modes)
+        * table_code    = 7 (Eigenvector)
+        * device_code   = 1 (Print)
+        * sort_code     = 0 (Sort2,Real,Sorted Results) => sort_bits = [0,0,0]
+        * format_code   = 1 (Real)
+        * #s_code        = 0 (Stress)
+        * num_wide      = 8 (???)
         """
         cycle, iMode = marker.strip().split('R E A L   E I G E N V E C T O R   N O .')
         iMode = int(iMode)
@@ -429,18 +427,18 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
     def getElementStrainEnergies(self):
         """
-        @code
-        EIGENVALUE = -3.741384E-04
-        CYCLES =  3.078479E-03
-                                           E L E M E N T   S T R A I N   E N E R G I E S
+        ::
 
-                ELEMENT-TYPE = QUAD4               * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =  -1.188367E-05
-                   MODE               1            * TOTAL ENERGY OF ALL ELEMENTS IN SET      -1 =  -1.188367E-05
-
-                                    ELEMENT-ID          STRAIN-ENERGY           PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY
-                                             1         -5.410134E-08                -0.0929             -4.328107E-05
-                                             2         -3.301516E-09                -0.0057             -2.641213E-06
-        @endcode
+          EIGENVALUE = -3.741384E-04
+          CYCLES =  3.078479E-03
+                                             E L E M E N T   S T R A I N   E N E R G I E S
+  
+                  ELEMENT-TYPE = QUAD4               * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =  -1.188367E-05
+                     MODE               1            * TOTAL ENERGY OF ALL ELEMENTS IN SET      -1 =  -1.188367E-05
+  
+                                      ELEMENT-ID          STRAIN-ENERGY           PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY
+                                               1         -5.410134E-08                -0.0929             -4.328107E-05
+                                               2         -3.301516E-09                -0.0057             -2.641213E-06
         """
         isubcase = 1 # TODO not correct
         cycles = self.storedLines[-1][1:].strip()

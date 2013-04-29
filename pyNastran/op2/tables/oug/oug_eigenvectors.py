@@ -7,15 +7,15 @@ from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
     """
-    @code
-    EIGENVALUE =  6.158494E+07
-        CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
+    ::
 
-    POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
-           1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
-        2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
-        2003      G      0.0            0.0            0.0            0.0            0.0            0.0
-    @endcode
+      EIGENVALUE =  6.158494E+07
+          CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
+  
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
+          2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
+          2003      G      0.0            0.0            0.0            0.0            0.0            0.0
     """
     def __init__(self, data_code, is_sort1, isubcase, imode):
         TableObject.__init__(self, data_code, is_sort1, isubcase, imode)
@@ -68,15 +68,15 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         """
-        @code
-        EIGENVALUE =  6.158494E+07
-            CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
+        ::
 
-        POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
-               1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
-            2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
-            2003      G      0.0            0.0            0.0            0.0            0.0            0.0
-        @endcode
+          EIGENVALUE =  6.158494E+07
+              CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
+  
+          POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+                 1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
+              2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
+              2003      G      0.0            0.0            0.0            0.0            0.0            0.0
         """
         msg = []
         hasCycle = hasattr(self, 'mode_cycle')
@@ -148,12 +148,12 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
 
 class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, thermal=0
     """
-    @code
-                                         R E A L   E I G E N V E C T O R   N O .          1
-      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
-             1      G      0.0            0.0            0.0            0.0            1.260264E-01   0.0
-             7      G      9.999849E-01   0.0            6.728968E-03   0.0            8.021386E-03   0.0
-    @endcode
+    ::
+
+                                           R E A L   E I G E N V E C T O R   N O .          1
+        POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+               1      G      0.0            0.0            0.0            0.0            1.260264E-01   0.0
+               7      G      9.999849E-01   0.0            6.728968E-03   0.0            8.021386E-03   0.0
     """
     def __init__(self, data_code, isubcase, iMode):
         scalarObject.__init__(self, data_code, isubcase)
@@ -225,15 +225,15 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
         """
-        @code
-        EIGENVALUE =  6.158494E+07
-                                           R E A L   E I G E N V E C T O R   N O .          1
+        ::
 
-        POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
-               1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
-            2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
-            2003      G      0.0            0.0            0.0            0.0            0.0            0.0
-        @endcode
+          EIGENVALUE =  6.158494E+07
+                                             R E A L   E I G E N V E C T O R   N O .          1
+  
+          POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+                 1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
+              2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
+              2003      G      0.0            0.0            0.0            0.0            0.0            0.0
         """
         msg = []
         #print self.data_code

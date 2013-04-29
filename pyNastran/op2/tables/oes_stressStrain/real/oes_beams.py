@@ -7,14 +7,14 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 class BeamStressObject(StressObject):
     """
-    @code
-    [1,0,0]
-                 S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )
-                      STAT DIST/
-     ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C
-            1       1   0.000   -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04
-                    2   1.000   -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04
-    @endcode
+    ::
+
+      [1,0,0]
+                   S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )
+                        STAT DIST/
+       ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C
+              1       1   0.000   -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04
+                      2   1.000   -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StressObject.__init__(self, data_code, isubcase)

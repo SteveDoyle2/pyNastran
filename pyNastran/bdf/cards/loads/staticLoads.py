@@ -268,9 +268,10 @@ class LOAD(LoadCombination):
 
 class GRAV(BaseCard):
     """
-    Defines acceleration vectors for gravity or other acceleration loading
-    GRAV SID CID A     N1  N2 N3    MB
-    GRAV 1   3   32.2 0.0 0.0 -1.0
+    Defines acceleration vectors for gravity or other acceleration loading.::
+    
+      GRAV SID CID A     N1  N2 N3    MB
+      GRAV 1   3   32.2 0.0 0.0 -1.0
     """
     type = 'GRAV'
 
@@ -365,6 +366,7 @@ class GRAV(BaseCard):
 class ACCEL1(BaseCard):
     """
     Acceleration Load
+
     Defines static acceleration loads at individual GRID points.
     """
     type = 'ACCEL1'
@@ -423,25 +425,12 @@ class ACCEL1(BaseCard):
         return list_fields
 
 
-class OneDeeLoad(Load):  # FORCE/MOMENT
-    type = '1D_Load'
+class Force(Load):
+    """Generic class for all Forces"""
+    type = 'Force'
 
     def __init__(self, card, data):
-        self.cid = None
-        self.mag = None
-        self.xyz = None
         Load.__init__(self, card, data)
-
-    def getLoads(self):
-        return [self]
-
-    def transformLoad(self):
-        #print("self.xyz = ",self.xyz)
-        (xyz, matrix) = self.cid.transformToGlobal(self.xyz)
-        if self.mag > 0.:
-            #print("mag=%s xyz=%s" % (self.mag, xyz))
-            return (True, self.node, self.mag * xyz)  # load
-        return (False, self.node, xyz)  # enforced displacement
 
     def normalize(self):
         """
@@ -454,13 +443,13 @@ class OneDeeLoad(Load):  # FORCE/MOMENT
             self.mag *= normXYZ
             self.xyz = self.xyz / normXYZ
 
-
-class Force(OneDeeLoad):
-    """Generic class for all Forces"""
-    type = '1D_Load'
-
-    def __init__(self, card, data):
-        OneDeeLoad.__init__(self, card, data)
+    def transformLoad(self):
+        #print("self.xyz = ",self.xyz)
+        (xyz, matrix) = self.cid.transformToGlobal(self.xyz)
+        if self.mag > 0.:
+            #print("mag=%s xyz=%s" % (self.mag, xyz))
+            return (True, self.node, self.mag * xyz)  # load
+        return (False, self.node, xyz)  # enforced displacement
 
     def getLoads(self):
         return [self]
@@ -486,12 +475,31 @@ class Force(OneDeeLoad):
                 gravityLoads)
 
 
-class Moment(OneDeeLoad):
+class Moment(Load):
     """Generic class for all Moments"""
     type = 'Moment'
 
     def __init__(self, card, data):
-        OneDeeLoad.__init__(self, card, data)
+        Load.__init__(self, card, data)
+
+    def normalize(self):
+        """
+        adjust the vector to a unit length
+        scale up the magnitude of the vector
+        """
+        if self.mag != 0.0:  # enforced displacement
+            normXYZ = norm(self.xyz)
+            #mag = self.mag*normXYZ
+            self.mag *= normXYZ
+            self.xyz = self.xyz / normXYZ
+
+    def transformLoad(self):
+        #print("self.xyz = ",self.xyz)
+        (xyz, matrix) = self.cid.transformToGlobal(self.xyz)
+        if self.mag > 0.:
+            #print("mag=%s xyz=%s" % (self.mag, xyz))
+            return (True, self.node, self.mag * xyz)  # load
+        return (False, self.node, xyz)  # enforced displacement
 
     def getLoads(self):
         return [self]
@@ -522,7 +530,9 @@ class FORCE(Force):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        FORCE          3       1            100.      0.      0.      1.
+        ::
+
+          FORCE          3       1            100.      0.      0.      1.
         """
         Force.__init__(self, card, data)
         if comment:
@@ -643,7 +653,9 @@ class FORCE2(Force):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        FORCE2 SID G F G1 G2 G3 G4
+        ::
+
+          FORCE2 SID G F G1 G2 G3 G4
         """
         Force.__init__(self, card, data)
         if comment:
@@ -719,10 +731,10 @@ class MOMENT(Moment):
     def __init__(self, card=None, data=None, comment=''):
         """
         Defines a static concentrated moment at a grid point by specifying a
-        scale factor and a vector that determines the direction.
+        scale factor and a vector that determines the direction.::
 
-        MOMENT SID G CID M    N1  N2  N3
-        MOMENT 2   5   6 2.9 0.0 1.0 0.0
+          MOMENT SID G CID M    N1  N2  N3
+          MOMENT 2   5   6 2.9 0.0 1.0 0.0
         """
         Moment.__init__(self, card, data)
         if comment:
@@ -771,9 +783,9 @@ class MOMENT1(Moment):
     def __init__(self, card=None, data=None, comment=''):
         """
         Defines a static concentrated moment at a grid point by specifying a
-        magnitude and two grid points that determine the direction
+        magnitude and two grid points that determine the direction.::
 
-        MOMENT1 SID G M G1 G2
+          MOMENT1 SID G M G1 G2
         """
         Moment.__init__(self, card, data)
         if comment:
@@ -840,9 +852,9 @@ class MOMENT2(Moment):
     def __init__(self, card=None, data=None, comment=''):
         """
         Defines a static concentrated moment at a grid point by specification
-        of a magnitude and four grid points that determine the direction.
+        of a magnitude and four grid points that determine the direction.::
 
-        MOMENT2 SID G M G1 G2 G3 G4
+          MOMENT2 SID G M G1 G2 G3 G4
         """
         Moment.__init__(self, card, data)
         if comment:

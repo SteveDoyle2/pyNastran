@@ -199,16 +199,19 @@ class NastranMesh(BDF):
         """
         Creates a quadrilateral plane made of CTRIA3s.  This output
         can be intersected with another geometry.
-        @param width width of plane
-        @param height height of plane
-        @param nx number of elements along the width
-        @param ny number of elements along the height
-        @param eidStart the starting elementID
 
-        1-----2
-        | \ B |
-        | A \ |
-        4-----3
+        :param width:    width of plane
+        :param height:   height of plane
+        :param nx:       number of elements along the width
+        :param ny:       number of elements along the height
+        :param eidStart: the starting elementID
+
+        ::
+
+          1-----2
+          | \ B |
+          | A \ |
+          4-----3
         """
         assert nx > 0
         assert ny > 0

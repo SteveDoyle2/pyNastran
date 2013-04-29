@@ -26,7 +26,7 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
         """
         .. note:: assumes self.iTableMap has already been set
         """
-        if self.makeGeom == False:
+        if self.make_geom == False:
             self.iTableMap = {}
 
         table_name = self.read_table_name(rewind=False)  # GEOM1
@@ -138,7 +138,7 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
                     msg = "skipping %s iTable=%-3s with tableType=%s" % (
                         self.table_name, iTable, tableType)
                     #self.skippedCardsFile.write(msg+'\n')
-                    if self.makeGeom:
+                    if self.make_geom:
                         self.log.debug(msg)
             #self.op2Debug.write('ints = %s\n' %(str(ints)))
 

@@ -74,19 +74,19 @@ class CBUSH(BushElement):
                 self.g0 = None
                 self.x = [None, None, None]
 
-            ## Element coordinate system identification. A 0 means the basic
-            ## coordinate system. If CID is blank, then the element coordinate
-            ## system is determined from GO or Xi.
-            ## (default=blank=element-based)
+            #: Element coordinate system identification. A 0 means the basic
+            #: coordinate system. If CID is blank, then the element coordinate
+            #: system is determined from GO or Xi.
+            #: (default=blank=element-based)
             self.cid = integer_or_blank(card, 8, 'cid')
-            ## Location of spring damper (0 <= s <= 1.0)
+            #: Location of spring damper (0 <= s <= 1.0)
             self.s = double_or_blank(card, 9, 's', 0.5)
-            ## Coordinate system identification of spring-damper offset. See
-            ## Remark 9. (Integer > -1; Default = -1, which means the offset
-            ## point lies on the line between GA and GB
+            #: Coordinate system identification of spring-damper offset. See
+            #: Remark 9. (Integer > -1; Default = -1, which means the offset
+            #: point lies on the line between GA and GB
             self.ocid = integer_or_blank(card, 10, 'ocid', -1)
-            ## Components of spring-damper offset in the OCID coordinate system
-            ## if OCID > 0.
+            #: Components of spring-damper offset in the OCID coordinate system
+            #: if OCID > 0.
             self.si = [double_or_blank(card, 11, 's1'),
                        double_or_blank(card, 12, 's2'),
                        double_or_blank(card, 13, 's3')]
@@ -95,7 +95,7 @@ class CBUSH(BushElement):
             self.eid = data[0]
             raise NotImplementedError('CBUSH data...')
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         ga = self.Ga()
         gb = self.Gb()
         cid = self.Cid()
@@ -191,7 +191,7 @@ class CBUSH1D(BushElement):
         if self.cid is not None:
             self.cid = model.Coord(self.cid)
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         ga = self.Ga()
         gb = self.Gb()
         cid = self.Cid()
@@ -254,7 +254,7 @@ class CBUSH2D(BushElement):
             self.ga = data[2]
             self.gb = data[3]
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         ga = self.Ga()
         gb = self.Gb()
         cid = self.Cid()

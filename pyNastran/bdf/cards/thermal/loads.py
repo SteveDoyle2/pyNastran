@@ -255,9 +255,10 @@ class QHBDY(ThermalLoad):
 class TEMP(ThermalLoad):
     """
     Defines temperature at grid points for determination of thermal loading,
-    temperature-dependent material properties, or stress recovery.
-    TEMP SID G1 T1 G2 T2 G3 T3
-    TEMP 3 94 316.2 49 219.8
+    temperature-dependent material properties, or stress recovery.::
+
+      TEMP SID G1 T1 G2 T2 G3 T3
+      TEMP 3 94 316.2 49 219.8
     """
     type = 'TEMP'
 

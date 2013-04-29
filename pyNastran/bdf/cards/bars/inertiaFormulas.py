@@ -1,15 +1,16 @@
+"""
+The purpose of this code is to automatically generate
+the moment of inertia equations.  only the locations of
+The nodes of the elements are required, as well as the
+triangular sections that are generated.
+For example, [1,a,b] means a positive triangular section (+1)
+with the 3 nodes at a, b, and <0,0>.
+This is easily understood if the triangle creates an area.
+Some are positive, some are negative, but if you sum them all
+up you get the total area of the section.  This allows you
+to generate the moments of inertia for complex sections.
+"""
 from sympy import Symbol, simplify, Rational, Matrix
-
-## The purpose of this code is to automatically generate
-## the moment of inertia equations.  only the locations of
-## The nodes of the elements are required, as well as the
-## triangular sections that are generated.
-## For example, [1,a,b] means a positive triangular section (+1)
-## with the 3 nodes at a, b, and <0,0>.
-## This is easily understood if the triangle creates an area.
-## Some are positive, some are negative, but if you sum them all
-## up you get the total area of the section.  This allows you
-## to generate the moments of inertia for complex sections.
 
 
 def bar():

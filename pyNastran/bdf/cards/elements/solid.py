@@ -21,7 +21,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, f
 
 def volume4(n1, n2, n3, n4):
     r"""
-    V = (a-d) * ((b-d) x (c-d))/6   where x is cross and * is dot
+    Gets the volume, :math:`V`, of the tetrahedron.
     
     .. math:: V = \frac{(a-d) \cdot \left( (b-d) \times (c-d) \right) }{6}
     """
@@ -30,12 +30,12 @@ def volume4(n1, n2, n3, n4):
 
 def area_centroid(n1, n2, n3, n4):
     """
-    Gets the area and centroid of a quad.::
+    Gets the area, :math:`A`, and centroid of a quad.::
     
-      1------2
-      |   /  |
-      | /    |
-      4------3
+      1-----2
+      |   / |
+      | /   |
+      4-----3
     """
     a = n1 - n2
     b = n2 - n4
@@ -128,7 +128,9 @@ class CHEXA8(SolidElement):
         if comment:
             self._comment = comment
         if card:
+            #: Element ID
             self.eid = integer(card, 1, 'eid')
+            #: Property ID
             self.pid = integer(card, 2, 'pid')
             nids = fields(integer, card, 'nid', i=3, j=11)
             assert len(card) == 11, 'len(CHEXA8 card) = %i' % len(card)
@@ -140,7 +142,7 @@ class CHEXA8(SolidElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 8
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.nodeIDs()
@@ -148,7 +150,7 @@ class CHEXA8(SolidElement):
         assert isinstance(pid, int)
         for i,nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
-        if isxref:
+        if xref:
             c = self.Centroid()
             v = self.Volume()
             assert isinstance(v, float)
@@ -176,6 +178,7 @@ class CHEXA8(SolidElement):
 class CHEXA20(CHEXA8):
     """
     ::
+
       CHEXA EID PID G1 G2 G3 G4 G5 G6
       G7 G8 G9 G10 G11 G12 G13 G14
       G15 G16 G17 G18 G19 G20
@@ -190,7 +193,9 @@ class CHEXA20(CHEXA8):
         if comment:
             self._comment = comment
         if card:
+            #: Element ID
             self.eid = integer(card, 1, 'eid')
+            #: Property ID
             self.pid = integer(card, 2, 'pid')
             nids = [integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
                     integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
@@ -266,7 +271,9 @@ class CPENTA6(SolidElement):
         if comment:
             self._comment = comment
         if card:
+            #: Element ID
             self.eid = integer(card, 1, 'eid')
+            #: Property ID
             self.pid = integer(card, 2, 'pid')
             nids = fields(integer, card, 'nid', i=3, j=9)
             assert len(card) == 9, 'len(CPENTA6 card) = %i' % len(card)
@@ -333,7 +340,7 @@ class CPENTA6(SolidElement):
             A = Area(a, b)
         return [faceNodeIDs, A]
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.nodeIDs()
@@ -341,7 +348,7 @@ class CPENTA6(SolidElement):
         assert isinstance(pid, int)
         for i,nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
-        if isxref:
+        if xref:
             c = self.Centroid()
             v = self.Volume()
             assert isinstance(v, float)
@@ -384,7 +391,9 @@ class CPENTA15(CPENTA6):
         if comment:
             self._comment = comment
         if card:
+            #: Element ID
             self.eid = integer(card, 1, 'eid')
+            #: Property ID
             self.pid = integer(card, 2, 'pid')
             nids = fields(integer, card, 'nid', i=3, j=18)
             assert len(card) <= 18, 'len(CPENTA15 card) = %i' % len(card)
@@ -439,7 +448,9 @@ class CTETRA4(SolidElement):
         if comment:
             self._comment = comment
         if card:
+            #: Element ID
             self.eid = integer(card, 1, 'eid')
+            #: Property ID
             self.pid = integer(card, 2, 'pid')
             nids = fields(integer, card, 'nid', i=3, j=7)
             assert len(card) == 7, 'len(CTETRA4 card) = %i' % len(card)
@@ -451,7 +462,7 @@ class CTETRA4(SolidElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.nodeIDs()
@@ -459,7 +470,7 @@ class CTETRA4(SolidElement):
         assert isinstance(pid, int)
         for i,nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
-        if isxref:
+        if xref:
             c = self.Centroid()
             v = self.Volume()
             assert isinstance(v, float)
@@ -524,17 +535,16 @@ class CTETRA4(SolidElement):
 
     def Jacobian(self):
         r"""
-        \f[ \large   [J] =
-          \left[
-          \begin{array}{ccc}
-              1   & 1   & 1   \\
-              x_1 & y_1 & z_1 \\
-              x_2 & y_2 & z_2 \\
-              x_3 & y_3 & z_3 \\
-              x_4 & y_4 & z_4 \\
-          \end{array} \right]
-        \f]
-         .. todo::    this has got to be wrong
+        .. math::
+              [J] = \left[
+              \begin{array}{ccc}
+                1   & 1   & 1   \\
+                x_1 & y_1 & z_1 \\
+                x_2 & y_2 & z_2 \\
+                x_3 & y_3 & z_3 \\
+                x_4 & y_4 & z_4 \\
+              \end{array} \right]
+        
          .. warning:: this has got to be wrong
         """
         m = matrix((6, 6), 'd')
@@ -573,7 +583,9 @@ class CTETRA10(CTETRA4):
         if comment:
             self._comment = comment
         if card:
+            #: Element ID
             self.eid = integer(card, 1, 'eid')
+            #: Property ID
             self.pid = integer(card, 2, 'pid')
             nids = fields(integer, card, 'nid', i=3, j=13)
             assert len(card) <= 13, 'len(CTETRA10 card) = %i' % len(card)
@@ -600,6 +612,8 @@ class CTETRA10(CTETRA4):
 
     def Volume(self):
         """
+        Gets the volume, :math:`V`, of the primary tetrahedron.
+
         .. seealso:: CTETRA4.Volume
         """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.nodePositions()
@@ -607,6 +621,8 @@ class CTETRA10(CTETRA4):
 
     def Centroid(self):
         """
+        Gets the cenroid of the primary tetrahedron.
+
         .. seealso:: CTETRA4.Centroid
         """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.nodePositions()

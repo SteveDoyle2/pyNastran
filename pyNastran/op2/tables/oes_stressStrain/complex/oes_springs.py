@@ -10,12 +10,12 @@ complexStrainObject = StrainObject
 
 class ComplexCelasStressObject(complexStressObject):
     """
-    @code
-                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )
-        TIME         STRESS              TIME         STRESS              TIME         STRESS              TIME         STRESS
-    0.0            0.0               5.000000E-02   0.0               1.000000E-01   0.0               1.500000E-01   0.0
-    2.000000E-01   0.0               2.500000E-01   0.0               3.000000E-01   0.0               3.500000E-01   0.0
-    @endcode
+    ::
+
+                                S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )
+          TIME         STRESS              TIME         STRESS              TIME         STRESS              TIME         STRESS
+      0.0            0.0               5.000000E-02   0.0               1.000000E-01   0.0               1.500000E-01   0.0
+      2.000000E-01   0.0               2.500000E-01   0.0               3.000000E-01   0.0               3.500000E-01   0.0
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StressObject.__init__(self, data_code, isubcase)

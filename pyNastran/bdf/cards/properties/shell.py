@@ -285,7 +285,7 @@ class CompositeShellProperty(ShellProperty):
 
         .. note:: final mass calculation will be done later
         """
-        assert method not in ['nplies', 'rho*t', 't'], 'method=%r is invalid' % method
+        assert method in ['nplies', 'rho*t', 't'], 'method=%r is invalid' % method
         nplies = len(self.plies)
         iply = self._adjust_ply_id(iply)
         if iply == 'all':  # get all layers
@@ -740,10 +740,12 @@ class PSHEAR(ShellProperty):
 
 
 class PSHELL(ShellProperty):
-    r"""
-    PSHELL PID MID1 T MID2 12I/T**3 MID3 TS/T NSM
-    Z1 Z2 MID4
-    PSHELL   41111   1      1.0000   1               1               0.02081"""
+    """
+    ::
+
+      PSHELL PID MID1 T MID2 12I/T**3 MID3 TS/T NSM
+      Z1 Z2 MID4
+      PSHELL   41111   1      1.0000   1               1               0.02081"""
     type = 'PSHELL'
 
     def __init__(self, card=None, data=None, comment=''):

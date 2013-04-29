@@ -11,7 +11,7 @@ class WriteMeshDeprecated(object):
     def writeBDF(self, outFileName='fem.out.bdf', size=8, debug=False):
         """
         .. seealso:: write_bdf
-        .. deprecated: will be replaced in version 0.7 with write_bdf
+        .. deprecated:: will be replaced in version 0.7 with write_bdf with interspersed=False
         """
         warnings.warn('writeBDF has been deprecated; use '
                       'write_bdf', DeprecationWarning, stacklevel=2)
@@ -19,8 +19,8 @@ class WriteMeshDeprecated(object):
 
     def writeBDFAsPatran(self, outFileName='fem.out.bdf', size=8, debug=False):
         """
-        .. seealso:: write_bdf_as_patran
-        .. deprecated: will be replaced in version 0.7 with write_bdf_as_patran
+        .. seealso:: write_bdf
+        .. deprecated:: will be replaced in version 0.7 with write_bdf with an interspersed=True
         """
         warnings.warn('writeBDFAsPatran has been deprecated; use '
                       'write_bdf_as_patran', DeprecationWarning, stacklevel=2)
@@ -29,7 +29,7 @@ class WriteMeshDeprecated(object):
     def echoBDF(self, infileName):
         """
         .. seealso:: echo_bdf
-        .. deprecated: will be replaced in version 0.7 with echo_bdf
+        .. deprecated:: will be replaced in version 0.7 with echo_bdf
         """
         warnings.warn('echoBDF has been deprecated; use '
                       'echo_bdf', DeprecationWarning, stacklevel=2)
@@ -122,50 +122,23 @@ class WriteMesh(WriteMeshDeprecated):
         msg += self._write_coords(size)
         return msg
 
-    def write_bdf_as_patran(self, out_filename='fem.out.bdf', size=8,
-                            debug=False):
+    def write_bdf(self, out_filename='fem.out.bdf', interspersed=True,
+                  size=8, debug=False):
         """
-        Writes a bdf with properties & elements interspersed like how
-        Patran writes the bdf.  This takes longer than the write method
-        but makes it easier to compare to a Patran-formatted bdf.
-
-        :param self: the BDF object
-        :param out_filename: the name to call the output bdf
-        :param debug: developer debug (unused)
-        """
-        assert size in [8, 16]
-        #size = 16
-        fname = self.print_filename(out_filename)
-        self.log.debug("***writing %s" % fname)
-
-        outfile = open(out_filename, 'wb')
-        msg = self._write_header()
-        msg += self._write_params(size)
-        outfile.write(msg)
-        
-        msg = self._write_nodes(size)
-        outfile.write(msg)
-
-        msg = self._write_elements_properties(size)
-        outfile.write(msg)
-
-        msg = self._write_materials(size)
-        msg += self._write_common(size)
-        msg += 'ENDDATA\n'
-        outfile.write(msg)
-        outfile.close()
-
-    def write_bdf(self, out_filename='fem.out.bdf', size=8, debug=False):
-        """
-        Writes the bdf.  It groups the various sections together to make it
-        easy to find cards.  This method is slightly more stable than
-        :func: `write_bdf_as_patran` due to the properties sometimes being
-        a little funny.
+        Writes the BDF.
 
         :param self:         the BDF object
         :param out_filename: the name to call the output bdf
         :param debug:        developer debug (unused)
+        :param interspersed: Writes a bdf with properties & elements
+              interspersed like how Patran writes the bdf.  This takes
+              slightly longer than if interspersed=False, but makes it
+              much easier to compare to a Patran-formatted bdf and is
+              more clear. (default=True)
+        :param size:  the field size (8 is recommended)
+        :param debug: developer debug
         """
+        assert isinstance(interspersed, bool)
         assert size in [8, 16]
         #size = 16
         fname = self.print_filename(out_filename)
@@ -179,11 +152,16 @@ class WriteMesh(WriteMeshDeprecated):
         msg = self._write_nodes(size)
         outfile.write(msg)
 
-        msg = self._write_elements(size)
+        if interspersed:
+            msg = self._write_elements_properties(size)
+        else:
+            msg = self._write_elements(size)
+            outfile.write(msg)
+            msg = self._write_properties(size)
+
         outfile.write(msg)
 
-        msg = self._write_properties(size)
-        msg += self._write_materials(size)
+        msg = self._write_materials(size)
         msg += self._write_common(size)
         msg += 'ENDDATA\n'
         outfile.write(msg)

@@ -26,9 +26,9 @@ class Coord(BaseCard):
         :param card: a BDFCard object
         :param data: a list analogous to the card
         """
-        ## has the coordinate system been linked yet
+        #: has the coordinate system been linked yet
         self.isCrossReferenced = False
-        ## have all the transformation matricies been determined
+        #: have all the transformation matricies been determined
         self.isResolved = False
         self.cid = None
         self.e1 = None
@@ -42,20 +42,21 @@ class Coord(BaseCard):
 
     def setup(self, debug=False):
         r"""
-        \f[ e_{13}  = e_3 - e_1                \f]
-        \f[ e_{12}  = e_2 - e_1                \f]
-        \f[ k       = \frac{e_{12}}{|e_{12}|}  \f]
-        \f[ j_{dir} = k \times e_{13}          \f]
-        \f[ j = \frac{j_{dir}}{|j_{dir}|}      \f]
-        \f[ i = j \times k                     \f]
+        .. math::
+          e_{13}  = e_3 - e_1
+          e_{12}  = e_2 - e_1
+          k       = \frac{e_{12}}{|e_{12}|}
+          j_{dir} = k \times e_{13}
+          j = \frac{j_{dir}}{|j_{dir}|}
+          i = j \times k
         """
         try:
             assert len(self.e1) == 3, self.e1
             assert len(self.e2) == 3, self.e2
             assert len(self.e3) == 3, self.e3
-            ## e_{13}
+            # e_{13}
             e13 = self.e3 - self.e1
-            ## e_{12}
+            # e_{12}
             e12 = self.e2 - self.e1
             #print("e13 = %s" % e13)
             #print("e12 = %s" % e12)
@@ -74,7 +75,7 @@ class Coord(BaseCard):
         #print "e3 = ",self.e3
 
         try:
-            ## k = (G3 cross G1) normalized
+            #: k = (G3 cross G1) normalized
             self.k = self.normalize(e12)
         except RuntimeError:
             print("---InvalidUnitVectorError---")
@@ -88,7 +89,7 @@ class Coord(BaseCard):
             raise
 
         try:
-            ## j = (k cross e13) normalized
+            # j = (k cross e13) normalized
             self.j = self.normalize(cross(self.k, e13))
         except RuntimeError:
             print("---InvalidUnitVectorError---")
@@ -103,7 +104,7 @@ class Coord(BaseCard):
             print("j = norm(cross(k,e13))")
             raise
         try:
-            ## i = j cross k
+            #: i = j cross k
             self.i = cross(self.j, self.k)
         except RuntimeError:
             print("---InvalidUnitVectorError---")
@@ -166,7 +167,7 @@ class Coord(BaseCard):
         
 
         * :math:`g` is the global directional vector (e.g. :math:`g_x = [1,0,0]`)
-        * :math:`ijk` is the ith direction in the local coordinate system
+        * :math:`ijk` is the math:`i^{th}` direction in the local coordinate system
 
         :param self:            the coordinate system object
         :param p:               the point to be transformed.  Type=NUMPY.NDARRAY
@@ -273,7 +274,7 @@ class Coord(BaseCard):
         return pLocal
 
     def normalize(self, v):
-        """
+        r"""
         Normalizes v into a unit vector.
 
         :param self: the coordinate system object
@@ -281,7 +282,7 @@ class Coord(BaseCard):
 
         :returns:  normalized v
         
-        .. math:: v_{norm} = \frac{v}{\abs{v}}
+        .. math:: v_{norm} = \frac{v}{\lvert v \lvert}
         """
         normV = norm(v)
         if not normV > 0.:
@@ -290,7 +291,7 @@ class Coord(BaseCard):
 
     def T(self):
         r"""
-        Returns the 6x6 transformation
+        Gets the 6x6 transformation
         
         .. math:: [\lambda] = [B_{ij}]
   
@@ -336,11 +337,17 @@ class CylindricalCoord(object):
     .. math:: y = r sin(\theta)
     .. math:: z = z
     .. math:: p = [x,y,z] + e_1
+
     http://en.wikipedia.org/wiki/Cylindrical_coordinate_system
 
-    .. note:: \f$ \phi \f$ and \f$ \theta \f$ are flipped per wikipedia to be
-              consistent with nastran's documentation
-    .. seealso:: refman.pdf http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM44CXOHiyfZC2cfPjNIytbE62YKLbGNB9Ao/snxTMP3Lg=
+    .. note:: :math`\phi` and :math:`\theta` are flipped per wikipedia
+              to be consistent with nastran's documentation
+
+    .. _msc:  http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=
+    .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
+
+
+    
     """
     def coordToXYZ(self, p):
         r"""
@@ -374,9 +381,9 @@ class SphericalCoord(object):
     r"""
     .. math:: r = \rho = \sqrt(x^2+y^2+z^2)
 
-    .. math:: \theta   = \tan^{-1}(\frac{y}{x})
+    .. math:: \theta   = \tan^{-1}\left(\frac{y}{x}\right)
 
-    .. math:: \phi     = \cos^{-1}(\frac{z}{r})
+    .. math:: \phi     = \cos^{-1}\left(\frac{z}{r}\right)
 
     .. math:: x = r \cos(\theta)\sin(\phi)
 
@@ -387,10 +394,10 @@ class SphericalCoord(object):
     .. math:: p = [x,y,z] + e_1
 
     .. seealso:: http://en.wikipedia.org/wiki/Spherical_coordinate_system
-    .. note:: :math:`\phi and :math`\theta` are flipped per wikipedia to be
-              consistent with nastran's documentation
+    .. note:: :math:`\phi` and :math`\theta` are flipped per wikipedia
+              to be consistent with nastran's documentation
 
-    .. seealso:: refman.pdf http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM44CXOHiyfZC2cfPjNIytbE62YKLbGNB9Ao/snxTMP3Lg=
+    .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
     """
     def XYZtoCoord(self, p):
         (x, y, z) = p
@@ -521,7 +528,7 @@ class Cord2x(Coord):
             self.rid = model.Coord(self.rid)
 
     def Rid(self):
-        """Returns the reference coordinate system self.rid"""
+        """Gets the reference coordinate system self.rid"""
         if isinstance(self.rid, int):
             return self.rid
         return self.rid.cid
@@ -653,7 +660,7 @@ class Cord1x(Coord):
 
     def NodeIDs(self):
         """
-        Returns [g1,g2,g3]
+        Gets the integers for the node [g1,g2,g3]
 
         :param self: the coordinate system object
         """
@@ -880,6 +887,7 @@ class CORD2S(Cord2x, SphericalCoord):
     def __init__(self, card=None, data=None, comment=''):
         """
         Intilizes the CORD2R
+
         :param self: the CORD2S coordinate system object
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2S only)

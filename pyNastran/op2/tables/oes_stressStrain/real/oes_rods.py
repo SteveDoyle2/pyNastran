@@ -34,18 +34,18 @@ class RodDamperObject(StressObject):
 
 class RodStressObject(StressObject):
     """
-    @code
-    # format_code=1 stressCode=0
-                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
-       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
-         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
-             1    5.000000E+03              0.0                               2    0.0                       0.0
+    ::
 
-    # format_code=1 stressCode=0
-                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
-      ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
-        ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
-    @endcode
+      # format_code=1 stressCode=0
+                                       S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
+         ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
+           ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
+               1    5.000000E+03              0.0                               2    0.0                       0.0
+
+      # format_code=1 stressCode=0
+                                       S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
+        ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
+          ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StressObject.__init__(self, data_code, isubcase)
@@ -304,18 +304,18 @@ class RodStressObject(StressObject):
 
 class RodStrainObject(StrainObject):
     """
-    @code
-    # s_code=1
-                                     S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )
-    ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
-      ID.        STRAIN       MARGIN        STRAIN      MARGIN
+    ::
 
-    # s_code=10
-                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C O N R O D )
-    ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
-      ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN
-       1001    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00         1007    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00
-    @endcode
+      # s_code=1
+                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )
+      ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
+        ID.        STRAIN       MARGIN        STRAIN      MARGIN
+  
+      # s_code=10
+                                         S T R A I N S   I N   R O D   E L E M E N T S      ( C O N R O D )
+      ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
+        ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN
+         1001    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00         1007    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StrainObject.__init__(self, data_code, isubcase)

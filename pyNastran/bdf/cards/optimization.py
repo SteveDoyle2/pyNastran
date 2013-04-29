@@ -490,7 +490,10 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         self.Type = string(card, 2, 'Type')
         self.pid = integer(card, 3, 'pid')
         self.pNameFid = integer_or_string(card, 4, 'pName_FID')
-        self.pMin = double_or_blank(card, 5, 'pMin')  #: .. todo:: bad default (see DVMREL1)
+
+        #: Minimum value allowed for this property.
+        #: .. todo:: bad default (see DVMREL1)
+        self.pMin = double_or_blank(card, 5, 'pMin')
         self.pMax = double_or_blank(card, 6, 'pMax', 1e20)
         self.c0 = double_or_blank(card, 7, 'c0', 0.0)
 

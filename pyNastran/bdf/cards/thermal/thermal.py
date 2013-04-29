@@ -121,7 +121,7 @@ class CHBDYE(ThermalElement):
 
     # def sideToEIDs(self, eid):
     #     sideIDs = self.sideMaps[eid.type][self.side]
-    #     ## [1,2,3]
+    #     # [1,2,3]
     #
     #     # id-1 is for the 0 based python index
     #     nodes = [enodes[id - 1] for id in xrange(len(eid.nodes))
@@ -180,7 +180,7 @@ class CHBDYG(ThermalElement):
             self.radMidBack = integer_or_blank(card, 7, 'radMidBack', 0)
             # no field 8
 
-            ## Grid point IDs of grids bounding the surface (Integer > 0)
+            #: Grid point IDs of grids bounding the surface (Integer > 0)
             self.grids = []
             n = 1
             for i in range(9, len(card)):

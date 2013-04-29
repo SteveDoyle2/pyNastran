@@ -14,12 +14,14 @@ def is_string(value):
 def is_binary(filename):
     """
     Return true if the given filename is binary.
-    Based on the idea (see http://bytes.com/topic/python/answers/21222-determine-file-type-binary-text)
-    that file is binary if it contains null.
     
     :raises:  IOError if the file cannot be opened.
     :returns: True if filename is a binary file (contains null byte)
               and False otherwise.
+
+    Based on the idea (..seealso:: http://bytes.com/topic/python/answers/21222-determine-file-type-binary-text)
+    that file is binary if it contains null.
+
     .. warning:: this may not work for unicode."""
     with io.open(filename, mode='rb') as fil:
         for chunk in iter(lambda: fil.read(1024), bytes()):
@@ -30,15 +32,16 @@ def is_binary(filename):
 
 def obscure(num, debug=False):
     """
-    Takes a large positive number and shrinks it down...similar to binary, but base 52.
-    A base 52 value takes up a fewer characters than a base 10 number
-    which helps to do Mat12345678 when there's an 8 character limit on variable names.
-    @code
+    Takes a large positive number and shrinks it down...similar to binary,
+    but base 52.  A base 52 value takes up a fewer characters than a
+    base 10 number, which helps to do Mat12345678 when there's an 8 character
+    limit on variable names.
+
     >>> obscure(35214)
     'kbn'
     >>> de_obscure('kbn')
     35214
-    @endcode
+
     :param num:   positive integer number
     :param debug: display additional information about conversion process
     :returns: shortened version of num"""
@@ -61,14 +64,14 @@ def de_obscure(num, debug=False):
     Unpacks an "obscured" positive number...similar to binary, but base 52.
     A base 52 value takes up a fewer characters than a base 10 number
     which helps to do Mat12345678 when there's an 8 character limit on variable names.
-    @code
+
     >>> obscure(35214)
     'kbn'
     >>> de_obscure('kbn')
     35214
-    @endcode
-    :param debug:   display additional information about conversion process
-    :returns: integer value of shortened version of a number
+
+    :param debug: display additional information about conversion process
+    :returns:     integer value of shortened version of a number
     .. seealso:: :func: `obscure`
     """
     dict_vals = dict(zip(list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'),xrange(52)))
@@ -83,6 +86,7 @@ def de_obscure(num, debug=False):
 def get_files_of_type(dirname, extension='.txt', maxSize=100.):
     """
     Gets the list of all the files with a given extension in the specified directory 
+
     :param dirname:   the directory name
     :param extension: list of filetypes to get (default='.txt')
     :param maxSize:   size in MB for max file size
@@ -143,8 +147,9 @@ def list_print(lst):
     except: # not a list
         return _print(lst)
 
-# list object attributes of a given type 
+
 def __object_attr(obj, mode, attr_type):
+    """list object attributes of a given type"""
     test = {"public":  lambda k: not k.startswith('_'),
             "private": lambda k: (k.startswith('_') and not k.startswith('__')),
             "both": lambda k: not k.startswith('__'),
@@ -202,7 +207,7 @@ def object_attributes(obj, mode = "public"):
 
 def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=False):
     """
-    writes a series of nested objects
+    Writes a series of nested objects
     """
     spaces = (nbase+nspaces) * ' '
     msg = spaces
@@ -214,7 +219,7 @@ def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=F
 
     if debug:
         print("attr=%s equals=|%s|" % (name, equals))
-    ## name
+    # name
     if isinstance(obj, dict):
         if nspaces == 0:
             msg += '%s %s ' % (name, equals)
@@ -241,7 +246,7 @@ def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=F
     if debug:
         print("name=%s type=%s" % (name, type(obj)))
 
-    ## write the object
+    # write the object
     if isinstance(obj, int) or isinstance(obj, float) or obj is None:
         xml += '<name=%s value=%s type=%s>' % (name, obj, type(obj))
         msg += '%s %s %s,\n' % (key, equals, write_value(obj, nspaces, nbase, isClass))

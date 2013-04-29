@@ -12,20 +12,19 @@ class OUG(object):
 
     def getDisplacement(self):
         """
-        @code
-                                             D I S P L A C E M E N T   V E C T O R
+        ::
+                                               D I S P L A C E M E N T   V E C T O R
+  
+          POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+                 1      G      9.663032E-05   0.0           -2.199001E-04   0.0           -9.121119E-05   0.0
+                 2      G      0.0            0.0            0.0            0.0            0.0            0.0
+                 3      G      0.0            0.0            0.0            0.0            0.0            0.0
 
-        POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
-               1      G      9.663032E-05   0.0           -2.199001E-04   0.0           -9.121119E-05   0.0
-               2      G      0.0            0.0            0.0            0.0            0.0            0.0
-               3      G      0.0            0.0            0.0            0.0            0.0            0.0
-
-        analysis_code = 1 (Statics)
-        device_code   = 1 (Print)
-        table_code    = 1 (Displacement)
-        sort_code     = 0 (Sort2,Real,Sorted Results) => sort_bits = [0,0,0]
-        num_wide      = 8 (???)
-        @endcode
+        * analysis_code = 1 (Statics)
+        * device_code   = 1 (Print)
+        * table_code    = 1 (Displacement)
+        * sort_code     = 0 (Sort2,Real,Sorted Results) => sort_bits = [0,0,0]
+        * num_wide      = 8 (???)
         """
         (subcaseName, isubcase, transient, dt, analysis_code,
             is_sort1) = self.readSubcaseNameID()
@@ -49,23 +48,23 @@ class OUG(object):
 
     def getComplexDisplacement(self):
         """
-        @code
-          BACKWARD WHIRL
-                                                                                                                 SUBCASE 2
-          POINT-ID =       101
-                                           C O M P L E X   D I S P L A C E M E N T   V E C T O R
-                                                             (MAGNITUDE/PHASE)
+        ::
 
-          FREQUENCY   TYPE          T1             T2             T3             R1             R2             R3
-        2.000000E+01     G      3.242295E-16   1.630439E-01   1.630439E-01   1.691497E-17   1.362718E-01   1.362718E-01
-                                196.0668        90.0000       180.0000        63.4349       180.0000       270.0000
+            BACKWARD WHIRL
+                                                                                                                   SUBCASE 2
+            POINT-ID =       101
+                                             C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                               (MAGNITUDE/PHASE)
+  
+            FREQUENCY   TYPE          T1             T2             T3             R1             R2             R3
+          2.000000E+01     G      3.242295E-16   1.630439E-01   1.630439E-01   1.691497E-17   1.362718E-01   1.362718E-01
+                                  196.0668        90.0000       180.0000        63.4349       180.0000       270.0000
 
-        table_code    = 1 (Displacement)
-        format_code   = 3 (Magnitude/Phase)
-        sort_bits     = [0,1,1]  (Sort1,Real/Imaginary,RandomResponse)
-        analysis_code = 5 (Frequency)
-        sort_code     = 2 (Random Response)
-        @endcode
+        * table_code    = 1 (Displacement)
+        * format_code   = 3 (Magnitude/Phase)
+        * sort_bits     = [0,1,1]  (Sort1,Real/Imaginary,RandomResponse)
+        * analysis_code = 5 (Frequency)
+        * sort_code     = 2 (Random Response)
         """
         (subcaseName, isubcase, transient, dt, analysis_code,
             is_sort1) = self.readSubcaseNameID()

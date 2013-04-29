@@ -142,9 +142,9 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, cid):
     if cid is not None and xref:
         fem1.resolveGrids(cid=cid)
     if meshForm == 'combined':
-        fem1.write_bdf_as_patran(outModel)
+        fem1.write_bdf(outModel, interspersed=True)
     elif meshForm == 'separate':
-        fem1.write_bdf(outModel)
+        fem1.write_bdf(outModel, interspersed=False)
     else:
         msg = "meshForm=|%r| allowedForms=['combined','separate']" % (meshForm)
         raise NotImplementedError(msg)
@@ -167,7 +167,7 @@ def run_fem2(bdfModel, outModel, xref, punch, debug=False, log=None):
     #fem2.sumForces()
     #fem2.sumMoments()
     outModel2 = bdfModel + '_out2'
-    fem2.write_bdf_as_patran(outModel2)
+    fem2.write_bdf(outModel2, interspersed=True)
     #fem2.writeAsCTRIA3(outModel2)
     os.remove(outModel2)
     return (fem2)

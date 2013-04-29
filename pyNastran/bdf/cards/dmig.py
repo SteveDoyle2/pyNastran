@@ -121,11 +121,11 @@ class NastranMatrix(BaseCard):
             self.name = string(card, 1, 'name')
             #zero
 
-            ## 4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
+            #: 4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
             self.ifo = integer(card, 3, 'ifo')
-            ## 1-Real, Single Precision; 2=Real,Double Precision; 3=Complex, Single; 4=Complex, Double
+            #: 1-Real, Single Precision; 2=Real,Double Precision; 3=Complex, Single; 4=Complex, Double
             self.tin = integer(card, 4, 'tin')
-            ## 0-Set by cell precision
+            #: 0-Set by cell precision
             self.tout = integer_or_blank(card, 5, 'tout', 0)
 
             self.polar = integer_or_blank(card, 6, 'polar')
@@ -204,9 +204,11 @@ class NastranMatrix(BaseCard):
 
     def getMatrix(self, isSparse=False):
         """
-        builds the Matrix
+        Builds the Matrix
+
         :param self:     the object pointer
         :param isSparse: should the matrix be returned as a sparse matrix (default=True).  Slower for dense matrices.
+
         :returns M:    the matrix
         :returns rows: dictionary of keys=rowID,    values=(Grid,Component) for the matrix
         :returns cols: dictionary of keys=columnID, values=(Grid,Component) for the matrix
@@ -526,7 +528,7 @@ class DMI(BaseCard):
     # def readComplex(self, card):
     #     msg = 'complex matrices not supported in the DMI reader...'
     #     raise NotImplementedError(msg)
-    #     ## column number
+    #     # column number
     #     j = integer(card, 2, 'icol')
     #
     #     # counter

@@ -139,6 +139,7 @@ class LoadCombination(Load):  # LOAD, DLOAD
 class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     """
     Defines a sequence of static load sets
+
     .. todo:: how does this work...
     """
     type = 'LSEQ'
@@ -232,8 +233,10 @@ class DAREA(BaseCard):
     Defines scale (area) factors for static and dynamic loads. In dynamic
     analysis, DAREA is used in conjunction with ACSRCE, RLOADi and TLOADi
     entries.
-    DAREA SID P1 C1 A1  P2 C2 A2
-    DAREA 3   6   2 8.2 15 1  10.1
+    ::
+
+      DAREA SID P1 C1 A1  P2 C2 A2
+      DAREA 3   6   2 8.2 15 1  10.1
     """
     type = 'DAREA'
 
@@ -266,6 +269,7 @@ class TabularLoad(BaseCard):
 class SLOAD(Load):
     """
     Static Scalar Load
+    
     Defines concentrated static loads on scalar or grid points.
 
     .. note:: Can be used in statics OR dynamics.
@@ -324,8 +328,12 @@ class SLOAD(Load):
 class TLOAD1(TabularLoad):
     r"""
     Transient Response Dynamic Excitation, Form 1
+    
     Defines a time-dependent dynamic load or enforced motion of the form:
-    \f[ {P(t)} = {A} \cdot F(t-\tau) \f]
+    
+    .. math::
+      \left\{ P(t) \right\} = \left\{ A \right\} \cdot F(t-\tau)
+    
     for use in transient response analysis.
     """
     type = 'TLOAD1'
@@ -408,8 +416,12 @@ class TLOAD1(TabularLoad):
 class TLOAD2(TabularLoad):
     r"""
     Transient Response Dynamic Excitation, Form 1
+
     Defines a time-dependent dynamic load or enforced motion of the form:
-    \f[ {P(t)} = {A} \cdot F(t-\tau) \f]
+
+    .. math::
+      \left\{ P(t) \right\} = \left\{ A \right\} \cdot F(t-\tau)
+
     for use in transient response analysis.
     """
     type = 'TLOAD2'
@@ -561,11 +573,17 @@ class RFORCE(Load):
 class RLOAD1(TabularLoad):
     r"""
     Defines a frequency-dependent dynamic load of the form
-    for use in frequency response problems.
-    RLOAD1 SID EXCITEID DELAY DPHASE TC TD TYPE
-    \f[ \large \left\{ P(f)  \right\}  = \left\{A\right\} [ C(f)+iD(f)]
-        e^{  i \left\{\theta - 2 \pi f \tau \right\} } \f]
-    RLOAD1 5   3                     1
+    for use in frequency response problems.::
+
+      RLOAD1 SID EXCITEID DELAY DPHASE TC TD TYPE
+
+    .. math::
+      \left\{ P(f)  \right\}  = \left\{A\right\} [ C(f)+iD(f)]
+         e^{  i \left\{\theta - 2 \pi f \tau \right\} }
+
+    ::
+
+      RLOAD1 5   3                     1
     """
     type = 'RLOAD1'
 
@@ -641,10 +659,13 @@ class RLOAD2(TabularLoad):
     Defines a frequency-dependent dynamic load of the form
     for use in frequency response problems.
 
-    \f[ \large \left\{ P(f)  \right\}  = \left\{A\right\} * B(f)
-        e^{  i \left\{ \phi(f) + \theta - 2 \pi f \tau \right\} } \f]
-    RLOAD2 SID EXCITEID DELAY DPHASE TB TP TYPE
-    RLOAD2 5   3                     1
+    .. math:: \left\{ P(f)  \right\}  = \left\{A\right\} * B(f)
+        e^{  i \left\{ \phi(f) + \theta - 2 \pi f \tau \right\} }
+    
+    ::
+
+      RLOAD2 SID EXCITEID DELAY DPHASE TB TP TYPE
+      RLOAD2 5   3                     1
     """
     type = 'RLOAD2'
 
@@ -726,9 +747,11 @@ class RandomLoad(BaseCard):
 class RANDPS(RandomLoad):
     r"""
     Power Spectral Density Specification
+
     Defines load set power spectral density factors for use in random analysis
     having the frequency dependent form:
-    \f[ S_{jk}(F) = (X+iY)G(F) \f]
+    
+    .. math:: S_{jk}(F) = (X+iY)G(F)
     """
     type = 'RANDPS'
 

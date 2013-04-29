@@ -203,7 +203,7 @@ class Element(BaseCard):
     def __init__(self, card, data):
         BaseCard.__init__(self)
         assert card is None or data is None
-        ## the list of node IDs for an element (default=None)
+        #: the list of node IDs for an element (default=None)
         self.nodes = None
         #self.nids = []
 

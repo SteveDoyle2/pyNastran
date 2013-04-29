@@ -76,13 +76,13 @@ class PBUSH(BushingProperty):
             raise NotImplementedError('PBUSH data...')
         #print self
 
-    def _verify(self, isxref=False):
+    def _verify(self, xref=False):
         pid = self.Pid()
         assert isinstance(pid, int), 'pid=%r' % pid
 
     def getK(self, card, iStart):
-        ## Flag indicating that the next 1 to 6 fields are stiffness values in
-        ## the element coordinate system.
+        # Flag indicating that the next 1 to 6 fields are stiffness values in
+        # the element coordinate system.
         #self.k = string(card, iStart, 'k')
 
         #: Nominal stiffness values in directions 1 through 6.
@@ -92,8 +92,8 @@ class PBUSH(BushingProperty):
         self.vars.append('K')
 
     def getB(self, card, iStart):
-        ## Flag indicating that the next 1 to 6 fields are force-per-velocity
-        ## damping.
+        # Flag indicating that the next 1 to 6 fields are force-per-velocity
+        # damping.
         #self.b = string(card, iStart, 'b')
 
         #: Force per unit velocity (Real)
@@ -103,8 +103,8 @@ class PBUSH(BushingProperty):
         self.vars.append('B')
 
     def getGE(self, card, iStart):
-        ## Flag indicating that the next fields, 1 through 6 are structural
-        ## damping constants. See Remark 7. (Character)
+        # Flag indicating that the next fields, 1 through 6 are structural
+        # damping constants. See Remark 7. (Character)
         #self.ge = string(card, iStart, 'ge')
 
         #: Nominal structural damping constant in directions 1 through 6. See
@@ -113,9 +113,10 @@ class PBUSH(BushingProperty):
         self.vars.append('GE')
 
     def getRCV(self, card, iStart):
-        ## Flag indicating that the next 1 to 4 fields are stress or strain
-        ## coefficients. (Character)
+        # Flag indicating that the next 1 to 4 fields are stress or strain
+        # coefficients. (Character)
         #self.rcv = string(card, iStart, 'rcv')
+
         self.sa = double_or_blank(card, iStart + 1, 'sa', 1.)
         self.st = double_or_blank(card, iStart + 2, 'st', 1.)
         self.ea = double_or_blank(card, iStart + 3, 'ea', 1.)

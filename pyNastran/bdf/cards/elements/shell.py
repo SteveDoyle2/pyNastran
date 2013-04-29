@@ -144,9 +144,9 @@ class TriShell(ShellElement):
 
     def Area(self):
         r"""
-        Get the area.::
+        Get the area, :math:`A`.
         
-          A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)
+        .. math:: A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)
         """
         (n0, n1, n2) = self.nodePositions()
         a = n0 - n1
@@ -156,11 +156,11 @@ class TriShell(ShellElement):
 
     def Normal(self):
         r"""
-        Get the normal vector.
+        Get the normal vector, :math:`n`.
 
-        ..math::
-          A = (n_0-n_1) \times (n_0-n_2)
-          n = \frac{n}{\abs(n)}
+        .. math::
+          n = \frac{(n_0-n_1) \times (n_0-n_2)}
+             {\lvert (n_0-n_1) \times (n_0-n_2) \lvert}
         """
         (n0, n1, n2) = self.nodePositions()
         return _normal(n0 - n1, n0 - n2)
@@ -204,8 +204,9 @@ class CTRIA3(TriShell):
         if comment:
             self._comment = comment
         if card:
-            #: element ID number
+            #: Element ID
             self.eid = integer(card, 1, 'eid')
+            #: Property ID
             self.pid = integer(card, 2, 'pid')
 
             nids = [integer(card, 3, 'n1'),
@@ -290,6 +291,7 @@ class CTRIA3(TriShell):
     def flipNormal(self):
         """
         ::
+        
                1           1
               * *   -->   * *
              *   *       *   *
@@ -364,8 +366,9 @@ class CTRIA6(TriShell):
         if comment:
             self._comment = comment
         if card:
-            #: element ID number
+            #: Element ID
             self.eid = integer(card, 1, 'eid')
+            #: Property ID
             self.pid = integer(card, 2, 'pid')
 
             nids = [integer(card, 3, 'n1'),
@@ -432,13 +435,13 @@ class CTRIA6(TriShell):
 
     def Thickness(self):
         """
-        Returns the thickness
+        Returns the thickness, :math:`t`
         """
         return self.pid.Thickness()
 
     def AreaCentroidNormal(self):
         """
-        Returns area,centroid, normal as it's more efficient to do them
+        Returns area, centroid, normal as it's more efficient to do them
         together
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
@@ -446,10 +449,9 @@ class CTRIA6(TriShell):
 
     def Area(self):
         r"""
-        Get the normal vector.
+        Get the area, :math:`A`.
 
-        .. math::
-           A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)
+        .. math:: A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         a = n1 - n2
@@ -459,10 +461,10 @@ class CTRIA6(TriShell):
 
     def Normal(self):
         r"""
-        Get the normal vector.
+        Get the normal vector, :math:`n`.
+
         .. math::
-          A = (n_0-n_1) \times (n_0-n_2)
-          n = \frac{n}{\abs(n)}
+          n = \frac{(n_0-n_1) \times (n_0-n_2)}{\lvert (n_0-n_1) \times (n_0-n_2) \lvert}
         """
         (n0, n1, n2) = self.nodePositions()[:3]
         return _normal(n0 - n1, n0 - n2)
@@ -470,6 +472,7 @@ class CTRIA6(TriShell):
     def Centroid(self):
         r"""
         Get the centroid.
+
         .. math::
           CG = \frac{1}{3} (n_1+n_2+n_3)
         """
@@ -478,9 +481,9 @@ class CTRIA6(TriShell):
         return centroid
 
     def flipNormal(self):
-        """
+        r"""
         ::
-
+        
                1                1
                **               **
               *  *             *  *
@@ -520,8 +523,9 @@ class CTRIAR(TriShell):
         TriShell.__init__(self, card, data)
         if comment:
             self._comment = comment
-        #: element ID number
+        #: Element ID
         self.eid = integer(card, 1, 'eid')
+        #: Property ID
         self.pid = integer(card, 2, 'pid')
 
         nids = [integer(card, 3, 'n1'),
@@ -555,9 +559,9 @@ class CTRIAR(TriShell):
         return self.pid.Thickness()
 
     def flipNormal(self):
-        """
+        r"""
         ::
-
+        
                1           1
               * *   -->   * *
              *   *       *   *
@@ -596,8 +600,9 @@ class CTRIAX(TriShell):
         if comment:
             self._comment = comment
         if card:
-            #: element ID number
+            #: Element ID
             self.eid = integer(card, 1, 'eid')
+            #: Property ID
             self.pid = integer(card, 2, 'pid')
 
             nids = [integer_or_blank(card, 3, 'n1'),
@@ -616,6 +621,7 @@ class CTRIAX(TriShell):
     def cross_reference(self, model):
         msg = ' which is required by CTRIAX eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        #: Property ID
         self.pid = model.Property(self.pid, msg=msg)
 
     def rawFields(self):
@@ -647,8 +653,9 @@ class CTRIAX6(TriShell):
         if comment:
             self._comment = comment
         if card:
-            #: element ID number
+            #: Element ID
             self.eid = integer(card, 1, 'eid')
+            #: Material ID
             self.mid = integer(card, 2, 'mid')
 
             nids = [integer(card, 3, 'n1'),
@@ -739,9 +746,9 @@ class CTRIAX6(TriShell):
         return self.mid.mid
 
     def flipNormal(self):
-        """
+        r"""
         ::
-
+        
                5               5
               / \             / \
              6   4   -->     6   4
@@ -791,11 +798,13 @@ class QuadShell(ShellElement):
           |/ A2 |
           4-----3
 
-          centroid
-             c = sum(ci*Ai)/sum(A)
-             where:
-               c=centroid
-               A=area
+        .. math:
+            c = \frac{\sum(c_i A_i){\sum{A_i}}
+
+         c = sum(ci*Ai)/sum(A)
+         where:
+           c=centroid
+           A=area
         """
         (n1, n2, n3, n4) = self.nodePositions()
         a = n1 - n2
@@ -860,12 +869,13 @@ class QuadShell(ShellElement):
         return Mass
 
     def flipNormal(self):
-        """
+        r"""
         ::
-          1---2        1---4
-          |   |  -->   |   |
-          |   |        |   |
-          4---3        2---3
+        
+          1---2       1---4
+          |   |  -->  |   |
+          |   |       |   |
+          4---3       2---3
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -907,7 +917,9 @@ class CSHEAR(QuadShell):
         if comment:
             self._comment = comment
         if card:
+            #: Element ID
             self.eid = integer(card, 1, 'eid')
+            #: Property ID
             self.pid = integer(card, 2, 'pid')
             nids = [integer_or_blank(card, 3, 'n1'),
                     integer_or_blank(card, 4, 'n2'),
@@ -982,13 +994,13 @@ class CSHEAR(QuadShell):
         return area
 
     def flipNormal(self):
-        """
+        r"""
         ::
-
-          1---2        1---4
-          |   |  -->   |   |
-          |   |        |   |
-          4---3        2---3
+        
+          1---2       1---4
+          |   |  -->  |   |
+          |   |       |   |
+          4---3       2---3
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -1011,8 +1023,9 @@ class CQUAD4(QuadShell):
         if comment:
             self._comment = comment
         if card:
-            #: element ID number
+            #: Element ID
             self.eid = integer(card, 1, 'eid')
+            #: Property ID
             self.pid = integer(card, 2, 'pid')
             nids = [integer(card, 3, 'n1'),
                     integer(card, 4, 'n2'),
@@ -1079,13 +1092,13 @@ class CQUAD4(QuadShell):
                 assert isinstance(n[i], float)
 
     def flipNormal(self):
-        """
+        r"""
         ::
-
-          1---2        1---4
-          |   |  -->   |   |
-          |   |        |   |
-          4---3        2---3
+        
+          1---2       1---4
+          |   |  -->  |   |
+          |   |       |   |
+          4---3       2---3
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -1128,8 +1141,9 @@ class CQUADR(QuadShell):
         if comment:
             self._comment = comment
         if card:
-            #: element ID number
+            #: Element ID
             self.eid = integer(card, 1, 'eid')
+            #: Property ID
             self.pid = integer(card, 2, 'pid')
             nids = [integer_or_blank(card, 3, 'n1'),
                     integer_or_blank(card, 4, 'n2'),
@@ -1202,13 +1216,13 @@ class CQUADR(QuadShell):
         return self.pid.Thickness()
 
     def flipNormal(self):
-        """
+        r"""
         ::
-
-          1---2        1---4
-          |   |  -->   |   |
-          |   |        |   |
-          4---3        2---3
+        
+          1---2       1---4
+          |   |  -->  |   |
+          |   |       |   |
+          4---3       2---3
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -1233,8 +1247,9 @@ class CQUAD(QuadShell):
         QuadShell.__init__(self, card, data)
         if comment:
             self._comment = comment
-        #: element ID number
+        #: Element ID
         self.eid = integer(card, 1, 'eid')
+        #: Property ID
         self.pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 'n1'),
                 integer_or_blank(card, 4, 'n2'),
@@ -1261,14 +1276,14 @@ class CQUAD(QuadShell):
         return self.pid.Thickness()
 
     def flipNormal(self):
-        """
+        r"""
         ::
 
-          1--5--2        1--8--4
-          |     |  -->   |     |
-          8  9  6        5  9  7
-          |     |        |     |
-          4--7--3        2--6--3
+          1--5--2       1--8--4
+          |     |  -->  |     |
+          8  9  6       5  9  7
+          |     |       |     |
+          4--7--3       2--6--3
         """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]
@@ -1292,8 +1307,9 @@ class CQUAD8(QuadShell):
         if comment:
             self._comment = comment
         if card:
-            #: element ID number
+            #: Element ID
             self.eid = integer(card, 1, 'eid')
+            #: Property ID
             self.pid = integer(card, 2, 'pid')
             nids = [integer(card, 3, 'n1'),
                     integer(card, 4, 'n2'),
@@ -1345,12 +1361,14 @@ class CQUAD8(QuadShell):
         return self.pid.Thickness()
 
     def flipNormal(self):
-        """
-        1--5--2        1--8--4
-        |     |  -->   |     |
-        8     6        5     7
-        |     |        |     |
-        4--7--3        2--6--3
+        r"""
+        ::
+
+          1--5--2       1--8--4
+          |     |  -->  |     |
+          8     6       5     7
+          |     |       |     |
+          4--7--3       2--6--3
         """
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5]
@@ -1424,8 +1442,9 @@ class CQUADX(QuadShell):
         if comment:
             self._comment = comment
         if card:
-            #: element ID number
+            #: Element ID
             self.eid = integer(card, 1, 'eid')
+            #: Property ID
             self.pid = integer(card, 2, 'pid')
             nids = [integer_or_blank(card, 3, 'n1'),
                     integer_or_blank(card, 4, 'n2'),
@@ -1454,14 +1473,14 @@ class CQUADX(QuadShell):
         return self.pid.Thickness()
 
     def flipNormal(self):
-        """
+        r"""
         ::
-
-          1--5--2        1--8--4
-          |     |  -->   |     |
-          8  9  6        5  9  7
-          |     |        |     |
-          4--7--3        2--6--3
+        
+          1--5--2       1--8--4
+          |     |  -->  |     |
+          8  9  6       5  9  7
+          |     |       |     |
+          4--7--3       2--6--3
         """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]
