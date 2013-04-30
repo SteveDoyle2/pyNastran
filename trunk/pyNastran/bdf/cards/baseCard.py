@@ -59,8 +59,9 @@ class BaseCard(object):
 
     def buildTableLines(self, fields, nStart=1, nEnd=0):
         """
-        builds a table of the form:
+        Builds a table of the form:
         ::
+
           'DESVAR' DVID1 DVID2 DVID3 DVID4 DVID5 DVID6 DVID7
                    DVID8 -etc.-
           'UM'     VAL1  VAL2  -etc.-
@@ -310,7 +311,7 @@ class Element(BaseCard):
             raise
 
     def prepareNodeIDs(self, nids, allowEmptyNodes=False):
-        """verifies all node IDs exist and that they're integers"""
+        """Verifies all node IDs exist and that they're integers"""
         self.nodes = []
         for nid in nids:
             if isinstance(nid, int):
@@ -326,7 +327,7 @@ class Element(BaseCard):
 
 def expand_thru(fields):
     """
-    expands a list of values of the form [1,5,THRU,9,13]
+    Expands a list of values of the form [1,5,THRU,9,13]
     to be [1,5,6,7,8,9,13]
     """
     if isinstance(fields, int):
@@ -349,8 +350,9 @@ def expand_thru(fields):
 
 def expand_thru_by(fields):
     """
-    expands a list of values of the form [1,5,THRU,9,BY,2,13]
+    Expands a list of values of the form [1,5,THRU,9,BY,2,13]
     to be [1,5,7,9,13]
+
     .. todo:: not tested
     .. note:: used for QBDY3, ???
     """
@@ -389,8 +391,9 @@ def expand_thru_by(fields):
 
 def expand_thru_exclude(self, fields):
     """
-    expands a list of values of the form [1,5,THRU,11,EXCEPT,7,8,13]
+    Expands a list of values of the form [1,5,THRU,11,EXCEPT,7,8,13]
     to be [1,5,6,9,10,11,13]
+
     .. warning:: hasnt been tested
     """
     fieldsOut = []
@@ -444,6 +447,7 @@ def condense(valueList):
     """
     Builds a list of packs (list of 3 values representing the first, last,
     and delta values for condensing a SET card.
+
     .. seealso:: build_thru
     """
     if len(valueList) == 0:

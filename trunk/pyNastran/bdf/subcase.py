@@ -33,6 +33,7 @@ class Subcase(object):
     def get_stress_code(self, key, options, value):
         """
         Method get_stress_code:
+
         .. note:: the individual element must take the stress_code and reduce it to
          what the element can return.  For example, for an isotropic CQUAD4
          the fiber field doesnt mean anything.
@@ -57,7 +58,8 @@ class Subcase(object):
     def get_format_code(self, options, value):
         """
         Gets the format code that will be used by the op2 based on
-        the options
+        the options.
+
         :param self:     the Subcase object
         :param options:  the options for a parameter
         :param value:    the value of the parameter
@@ -343,6 +345,7 @@ class Subcase(object):
     def has_parameter(self, param_name):
         """
         Checks to see if a parameter name is in the subcase.
+
         :param self:       the Subcase object
         :param param_name: the case control parameter to check for
         """
@@ -353,6 +356,7 @@ class Subcase(object):
     def get_parameter(self, param_name):
         """
         Gets the [value, options] for a subcase.
+
         :param self:       the Subcase object
         :param param_name: the case control parameter to check for
         """
@@ -514,6 +518,7 @@ class Subcase(object):
         """
         Prints a single entry of the a subcase from the global or local
         subcase list.
+
         :param self: the Subcase object
         """
         msg = ''
@@ -577,12 +582,12 @@ class Subcase(object):
     def cross_reference(self, model):
         """
         Method crossReference:
+
         :param self:   the Subcase object
         :param model: the BDF object
-        .. note::
-          this is not integrated and probably never will be as it's not
-          really that necessary.  it's only really useful when running an
-          analysis
+        .. note:: this is not integrated and probably never will be as it's
+          not really that necessary.  it's only really useful when running an
+          analysis.
         """
         print("keys = %s" % (sorted(self.params.keys())))
         if 'LOAD' in self.params:
@@ -625,6 +630,7 @@ class Subcase(object):
         """
         Removes the subcase parameter from the subcase to avoid printing it in
         a funny spot
+
         :param self:  the Subcase object
         """
         if 'SUBCASE' in self.params:
@@ -634,6 +640,7 @@ class Subcase(object):
     def write_subcase(self, subcase0):
         """
         Internal method to print a subcase
+
         :param self:     the Subcase object
         :param subcase0: the global Subcase object
         """

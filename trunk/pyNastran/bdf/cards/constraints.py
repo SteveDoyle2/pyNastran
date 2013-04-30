@@ -1,6 +1,7 @@
 # pylint: disable=R0904,R0902
 """
 All constraint cards are defined in this file.  This includes:
+
 * Constraint
  * SUPORT
  * SUPORT1
@@ -322,7 +323,7 @@ class SPC(Constraint):
         if card:
             self.conid = integer(card, 1, 'sid')
             self.gids = [integer(card, 2, 'G1'), integer_or_blank(card, 5, 'G2')]
-            # 0 if scalar point 1-6 if grid
+            # :0 if scalar point 1-6 if grid
             self.constraints = [components_or_blank(card, 3, 'C1', 0),
                                 components_or_blank(card, 6, 'C2', 0)]
             self.enforced = [double_or_blank(card, 4, 'D1', 0.0),
@@ -560,8 +561,8 @@ class SPCADD(ConstraintADD):
 class MPCADD(ConstraintADD):
     r"""
     Defines a multipoint constraint equation of the form
-    \f$ \Sigma_j A_j u_j =0 \f$ where \f$ u_j \f$ represents
-    degree-of-freedom \f$ C_j \f$ at grid or scalar point \f$ G_j \f$.
+    :math:`\Sigma_j A_j u_j =0` where :math:`u_j` represents
+    degree-of-freedom :math:`C_j` at grid or scalar point :math:`G_j`.
     mPCADD   2       1       3
     """
     type = 'MPCADD'

@@ -64,6 +64,7 @@ class CaseControlDeck(object):
         """
         Checks to see if a parameter (e.g. STRESS) is defined in a certain
         subcase ID.
+
         :param self:       the CaseControlDeck object
         :param isubcase:   the subcase ID to check
         :param param_name: the parameter name to look for
@@ -76,6 +77,7 @@ class CaseControlDeck(object):
         Get the [value, options] of a subcase's parameter.  For example, for
         STRESS(PLOT,POST)=ALL, param_name=STRESS, value=ALL, options=['PLOT',
         'POST']
+
         :param self:       the CaseControlDeck object
         :param isubcase:   the subcase ID to check
         :param param_name: the parameter name to get the [value, options] for
@@ -174,6 +176,7 @@ class CaseControlDeck(object):
     def add_parameter_to_global_subcase(self, param):
         """
         Takes in a single-lined string and adds it to the global Subcase.
+
         :param self:  the CaseControlDeck object
         :param param: the variable to add
         .. note:: dont worry about overbounding the line
@@ -181,7 +184,7 @@ class CaseControlDeck(object):
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename)
         >>> bdf.case_control.add_parameter_to_global_subcase('DISP=ALL')
-        >>>
+        >>> print bdf.case_control
         TITLE = DUMMY LINE
         DISP = ALL
         """
@@ -287,7 +290,8 @@ class CaseControlDeck(object):
         r"""
         Internal method for parsing a card of the case control deck
 
-        parses a single case control deck card into 4 sections
+        Parses a single case control deck card into 4 sections
+
         1.  paramName - obvious
         2.  Value     - still kind of obvious
         3.  options   - rarely used data
@@ -457,7 +461,7 @@ class CaseControlDeck(object):
 
     def finish_subcases(self):
         """
-        removes any unwanted data in the subcase...specifically the SUBCASE
+        Removes any unwanted data in the subcase...specifically the SUBCASE
         data member.  Otherwise it will print out after a key like stress.
 
         :param self:  the CaseControlDeck object

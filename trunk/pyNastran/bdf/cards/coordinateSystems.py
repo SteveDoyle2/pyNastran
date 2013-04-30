@@ -37,18 +37,22 @@ class Coord(BaseCard):
         #print("card = \n", card)
 
     def Cid(self):
-        """returns the coordinate ID"""
+        """Gets the coordinate ID"""
         return self.cid
 
     def setup(self, debug=False):
-        r"""
-        .. math::
-          e_{13}  = e_3 - e_1
-          e_{12}  = e_2 - e_1
-          k       = \frac{e_{12}}{|e_{12}|}
-          j_{dir} = k \times e_{13}
-          j = \frac{j_{dir}}{|j_{dir}|}
-          i = j \times k
+        """
+        .. math:: e_{13} = e_3 - e_1
+
+        .. math:: e_{12} = e_2 - e_1
+
+        .. math:: k = \frac{e_{12}}{|e_{12}|}
+
+        .. math:: j_{dir} = k \times e_{13}
+
+        .. math:: j = \frac{j_{dir}}{|j_{dir}|}
+
+        .. math:: i = j \times k
         """
         try:
             assert len(self.e1) == 3, self.e1

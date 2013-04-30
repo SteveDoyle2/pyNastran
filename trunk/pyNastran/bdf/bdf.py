@@ -143,11 +143,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     modelType = 'nastran'
     #: Flips between a dictionary based storage BDF storage method and
     #: a list based method.  Don't modify this.
-    isDict = True
+    _isDict = True
     
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
-    __slots__ = ['_is_dynamic_syntax']
+    #__slots__ = ['_is_dynamic_syntax']
     def __init__(self, debug=True, log=None):
         """
         Initializes the BDF object
@@ -156,12 +156,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         :param log:   a python logging module object
         """
         # file management parameters
-        self.ifile = -1
+        self._ifile = -1
         self.include_dir = ''
         self.active_filename = None
         self.active_filenames = []
         #self.used_filenames = []
-        if self.isDict:
+        if self._isDict:
             self._stored_Is = {}
             self._stored_lines = {}
             self._stored_comments = {}
@@ -802,9 +802,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         >>>
 
         .. note:: Case sensitivity is supported.
-        .. warning:: Type matters!
-        .. warning:: Variables should be 7 characters to fit in an
+        .. note:: Variables should be 7 characters or less to fit in an
                      8-character field.
+        .. warning:: Type matters!
         """
         self.dict_of_vars = {}
         assert len(dict_of_vars) > 0, 'nvars = %s' % len(dict_of_vars)
@@ -950,21 +950,21 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             raise RuntimeError(msg)
         self.log.info('opening %r' % bdf_filename)
         
-        self.ifile += 1
+        self._ifile += 1
         self.active_filename = bdf_filename
         #self.used_filenames.append(bdf_filename)
         
         self.active_filenames.append(bdf_filename)
         
-        self._stored_Is[self.ifile] = []
-        self._stored_lines[self.ifile] = []
-        self._stored_comments[self.ifile] = []
+        self._stored_Is[self._ifile] = []
+        self._stored_lines[self._ifile] = []
+        self._stored_comments[self._ifile] = []
         
         line_gen = self._stream_line()
-        if self.isDict:
-            #print "making ifile=%s" % self.ifile
-            self._line_streams[self.ifile] = line_gen
-            self._card_streams[self.ifile] = self._stream_card(line_gen)
+        if self._isDict:
+            #print "making ifile=%s" % self._ifile
+            self._line_streams[self._ifile] = line_gen
+            self._card_streams[self._ifile] = self._stream_card(line_gen)
         else:
             self._line_streams.append(line_gen)
             self._card_streams.append(self._stream_card(line_gen))
@@ -972,24 +972,24 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
     def _close_file(self):
         self.log.info('closing %r' % self.active_filename)
-        if self.ifile == 0:
-            self.ifile = -1
+        if self._ifile == 0:
+            self._ifile = -1
             self.active_filename = None
             return
-        if self.isDict:
-            #print "killing ifile=%s" % self.ifile
-            del self._stored_Is[self.ifile]
-            del self._stored_lines[self.ifile]
-            del self._stored_comments[self.ifile]
-            del self._line_streams[self.ifile]
-            del self._card_streams[self.ifile]
+        if self._isDict:
+            #print "killing ifile=%s" % self._ifile
+            del self._stored_Is[self._ifile]
+            del self._stored_lines[self._ifile]
+            del self._stored_comments[self._ifile]
+            del self._line_streams[self._ifile]
+            del self._card_streams[self._ifile]
         else:
             self._stored_Is.pop()
             self._stored_lines.pop()
             self._stored_comments.pop()
             self._line_streams.pop()
             self._card_streams.pop()
-        self.ifile -= 1
+        self._ifile -= 1
 
         self.active_filenames.pop()
         #print "active_filenames =", self.active_filenames
@@ -1127,9 +1127,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             # next card
             if Is2:
                 #print "storing lines2 %s" % lines2
-                self._stored_Is[self.ifile] = Is2
-                self._stored_lines[self.ifile] = lines2
-                self._stored_comments[self.ifile] = comments2
+                self._stored_Is[self._ifile] = Is2
+                self._stored_lines[self._ifile] = lines2
+                self._stored_comments[self._ifile] = comments2
             #Is2 = []
             #lines2 = []
             #comments2 = []
@@ -1144,8 +1144,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
             #if not in_loop:
                 #self._stored_Is.append(i)
-                #self._stored_lines[self.ifile].append(line)
-                #self._stored_comments[self.ifile].append(comment)
+                #self._stored_lines[self._ifile].append(line)
+                #self._stored_comments[self._ifile].append(comment)
                 #print "non-continuation line = ", line
                 #print "lines = ", lines
 
@@ -1155,11 +1155,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             #if in_loop:
                 #print "stored_lines =", self._stored_lines
                 #print "storing line..."
-                self._stored_Is[self.ifile].append(i)
-                self._stored_lines[self.ifile].append(line)
+                self._stored_Is[self._ifile].append(i)
+                self._stored_lines[self._ifile].append(line)
                 comment = _clean_comment(comment)
                 if comment:
-                    self._stored_comments[self.ifile].append(comment)
+                    self._stored_comments[self._ifile].append(comment)
             #if comment:
             #    self._stored_comments.append(comment)
             #print "linesE = %s" % lines
@@ -1204,7 +1204,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         while self.active_filename: # or self._stored_lines:
             #print "self._stored_lines = ", self._stored_lines
             try:
-                (lines, comment) = self._card_streams[self.ifile].next()
+                (lines, comment) = self._card_streams[self._ifile].next()
             except StopIteration:
                 self._close_file()
                 continue
@@ -1268,8 +1268,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         >>> bdf.read_bdf(bdf_filename)
         >>> bdf.card_count['GRID']
         50
-        
-        .. note:: this wont guarantee proper reading of cards, but will help
         """
         if card_name == '':  # stupid null case
             return
@@ -1280,17 +1278,17 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             self.card_count[card_name] = 1
 
     def _get_line(self):
-        #print "ifile =", self.ifile
+        #print "ifile =", self._ifile
         try:
-            return self._line_streams[self.ifile].next()
+            return self._line_streams[self._ifile].next()
         except StopIteration:
-            #print "ifile =", self.ifile
+            #print "ifile =", self._ifile
             self._close_file()
-            #print "ifile =", self.ifile
+            #print "ifile =", self._ifile
             return self._get_line()
-            #print "ifile =", self.ifile
-            #lines = self._stored_lines[self.ifile]
-            #comments = self._stored_comments[self.ifile]
+            #print "ifile =", self._ifile
+            #lines = self._stored_lines[self._ifile]
+            #comments = self._stored_comments[self._ifile]
             #return lines, comments
         except KeyError:
             #return None, None, None
@@ -1311,13 +1309,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 #print "############################"
                 yield n, line, comment
 
-                while self._stored_lines[self.ifile]:
+                while self._stored_lines[self._ifile]:
                     comment = ''
-                    i2 = self._stored_Is[self.ifile].pop(0)
-                    line2 = self._stored_lines[self.ifile].pop(0)
+                    i2 = self._stored_Is[self._ifile].pop(0)
+                    line2 = self._stored_lines[self._ifile].pop(0)
                     if self._stored_comments:
-                        comment = ''.join(self._stored_comments[self.ifile])
-                        self._stored_comments[self.ifile] = []
+                        comment = ''.join(self._stored_comments[self._ifile])
+                        self._stored_comments[self._ifile] = []
 
                     #print "  yieldingA line=|%s|" % line2
                     #print "############################"

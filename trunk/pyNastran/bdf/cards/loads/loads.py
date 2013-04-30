@@ -573,9 +573,7 @@ class RFORCE(Load):
 class RLOAD1(TabularLoad):
     r"""
     Defines a frequency-dependent dynamic load of the form
-    for use in frequency response problems.::
-
-      RLOAD1 SID EXCITEID DELAY DPHASE TC TD TYPE
+    for use in frequency response problems.
 
     .. math::
       \left\{ P(f)  \right\}  = \left\{A\right\} [ C(f)+iD(f)]
@@ -583,6 +581,7 @@ class RLOAD1(TabularLoad):
 
     ::
 
+      RLOAD1 SID EXCITEID DELAY DPHASE TC TD TYPE
       RLOAD1 5   3                     1
     """
     type = 'RLOAD1'

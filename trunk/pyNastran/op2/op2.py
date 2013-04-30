@@ -25,8 +25,9 @@ class OP2Deprecated(object):
 
     def readOP2(self):
         """
-        reads the op2 file
-        .. deprecated: will be replaced in version 0.7 with read_op2
+        Reads the op2 file
+
+        .. deprecated: will be replaced in version 0.7 with :func:`read_op2`
         """
         warnings.warn('readOP2 has been deprecated; use '
                       'read_op2', DeprecationWarning, stacklevel=2)
@@ -34,17 +35,16 @@ class OP2Deprecated(object):
 
     def setSubcases(self, iSubcases):
         """
-        .. seealso:: set_subcases
-        .. deprecated: will be replaced in version 0.7 with set_subcases
+        .. deprecated: will be replaced in version 0.7 with :func:`set_subcases`
         """
         warnings.warn('setSubcases has been deprecated; use '
                       'set_subcases', DeprecationWarning, stacklevel=2)
         self.set_subcases(iSubcases)
 
-    def setTransientTimes(self, times):  # TODO this name sucks...
+    def setTransientTimes(self, times):
         """
-        .. seealso:: set_transient_times
-        .. deprecated: will be replaced in version 0.7 with set_transient_times
+        .. todo:: rename this
+        .. deprecated: will be replaced in version 0.7 with :func:`set_transient_times`
         """
         warnings.warn('setTransientTimes has been deprecated; use '
                       'set_transient_times', DeprecationWarning, stacklevel=2)
@@ -77,11 +77,10 @@ class OP2(BDF,
     def set_transient_times(self, times):  # TODO this name sucks...
         """
         Takes a dictionary of list of times in a transient case and
-        gets the output closest to those timse
-        @code
-        times = {subcaseID_1: [time1, time2],
-                 subcaseID_2: [time3, time4]}
-        @endcode
+        gets the output closest to those times.::
+
+          times = {subcaseID_1: [time1, time2],
+                   subcaseID_2: [time3, time4]}
         """
         expected_times = {}
         for (isubcase, eTimes) in times.iteritems():
@@ -371,7 +370,7 @@ class OP2(BDF,
 
     def get_op2_stats(self):
         """
-        gets info about the contents of the different attributes of the
+        Gets info about the contents of the different attributes of the
         OP2 class
         """
         table_types = [
@@ -532,6 +531,7 @@ class OP2(BDF,
     def read_tape_code(self):
         """
         Reads the OP2 header.  This table is still very much in development.
+
         .. todo:: whats in this table?
         """
         #self.print_section(500)
@@ -1122,7 +1122,7 @@ class OP2(BDF,
 
     def get_values(self, data, iFormat, iWordStart, iWordStop=None):
         """
-        extracts the ith word from the data structure as the provided type
+        Extracts the ith word from the data structure as the provided type
         supports multiple inputs with iWordStop (note this is words,
         not outputs)
 
@@ -1145,7 +1145,7 @@ class OP2(BDF,
 
     def _delete_attributes(self, params):
         """
-        deletes any parameters before going to the next table to avoid
+        Deletes any parameters before going to the next table to avoid
         messing up data
         """
         params += ['data_code', 'device_code', 'analysis_code', 'table_code',
@@ -1170,8 +1170,9 @@ class OP2(BDF,
         assert buffer_words > 0, self.print_section(220)
 
     def read_title(self):
-        """
-        reads the Title, Subtitle, and Label.
+        r"""
+        Reads the Title, Subtitle, and Label.
+
         Puts them in self.iSubcaseNameMap[isubcase] = [Subtitle,Label]
         """
         #: the title of the analysis
