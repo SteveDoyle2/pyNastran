@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 """
 All table cards are defined in this file.  This includes:
+
 * Table
  * TABLED1 - Dynamic Table = f(Time, Frequency)
  * TABLED2
@@ -549,6 +550,7 @@ class TABRND1(RandomTable):
 class TABRNDG(RandomTable):
     r"""
     Gust Power Spectral Density
+
     Defines the power spectral density (PSD) of a gust for aeroelastic response
     analysis.
     """

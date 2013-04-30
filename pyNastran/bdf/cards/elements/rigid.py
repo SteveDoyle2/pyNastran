@@ -357,7 +357,7 @@ class RBE2(RigidElement):
 
 class RBE3(RigidElement):
     """
-    ..todo:: not done, needs testing badly
+    .. todo:: not done, needs testing badly
     """
     type = 'RBE3'
 
