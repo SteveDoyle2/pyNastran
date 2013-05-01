@@ -93,7 +93,8 @@ class CHBDYE(ThermalElement):
             #: A heat conduction element identification
             self.eid2 = integer(card, 2, 'eid2')
 
-            #: A consistent element side identification number (1 < Integer < 6)
+            #: A consistent element side identification number
+            #: (1 < Integer < 6)
             self.side = integer(card, 3, 'side')
             assert 0 < self.side < 7
 

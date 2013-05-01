@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0302
 """
 All shell elements are defined in this file.  This includes:
+
  * CTRIA3
  * CTRIA6
  * CTRIAX

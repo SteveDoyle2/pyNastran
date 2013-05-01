@@ -26,7 +26,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.utils import list_print, is_string
-from pyNastran.bdf.bdfInterface.assign_type import (fields, integer,
+from pyNastran.bdf.bdfInterface.assign_type import (integer,  # fields, 
     double, components, string, string_or_blank)
 
 class Table(BaseCard):
@@ -589,9 +589,9 @@ class TIC(Table):
     def __init__(self, card=None, data=None, comment=''):
         """
         Defines values for the initial conditions of variables used in
-        structural transient analysis. Both displacement and velocity values may
-        be specified at independent degrees-of-freedom. This entry may not be
-        used for heat transfer analysis.
+        structural transient analysis. Both displacement and velocity values
+        may be specified at independent degrees-of-freedom. This entry may not
+        be used for heat transfer analysis.
         """
         Table.__init__(self, card, data)
         if comment:

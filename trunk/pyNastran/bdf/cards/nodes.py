@@ -199,7 +199,11 @@ class GRDSET(Node):
         cp = self.Cp()
         seid = self.SEid()
         cd = self.Cd()
-
+        ps = self.Ps()
+        assert isinstance(cp, int), 'cp=%r' % cp
+        assert isinstance(cd, int), 'cd=%r' % cd
+        assert isinstance(seid, int), 'seid=%r' % seid
+        
     def rawFields(self):
         list_fields = ['GRDSET', None, self.Cp(), None, None, None,
                   self.Cd(), self.ps, self.SEid()]

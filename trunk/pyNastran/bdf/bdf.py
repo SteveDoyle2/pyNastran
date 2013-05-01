@@ -732,7 +732,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         self._break_comment = False
         lineUpper = ''
         while 'CEND' not in lineUpper[:4] and 'BEGIN' not in lineUpper and 'BULK' not in lineUpper:
-            lines = []
+            #lines = []
             (i, line, comment) = self._get_line()
             line = line.rstrip('\n\r\t ')
             #print("line exec = %r" % line)
@@ -1135,7 +1135,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             #comments2 = []
 
             c = ''
-            if comment:  c=' comment=|%s|' % comment.strip()
+            if comment:  c =' comment=|%s|' % comment.strip()
             #print "lineD2 %s line=|%s|%s" % (i, line.strip(), c)
             #if 'PBARL' in lines[0]:
             #print '===end of block 2 (done with continuation lines)=== lines=%r' % lines

@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 """
 All ungrouped elements are defined in this file.  This includes:
+
  * CFAST
  * CGAP
  * CRAC2D
@@ -14,7 +15,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    integer_double_or_blank, double, double_or_blank, string)
+    integer_double_or_blank, double_or_blank, string)  # double
  
 class CFAST(Element):
     type = 'CFAST'

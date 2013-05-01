@@ -2,15 +2,15 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import izip
-from math import ceil
+#from math import ceil
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
-    collapse_thru_by_float, condense, build_thru_float)
+from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by)
+    #collapse_thru_by_float, condense, build_thru_float)
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, integer_or_string,
     integer_string_or_blank, double, double_or_blank, string,
     string_or_blank, integer_double_or_blank,
-    integer_or_double, integer_double_string_or_blank,
+    integer_double_string_or_blank, # integer_or_double, 
     double_string_or_blank)
 
 class OptConstraint(BaseCard):
@@ -575,7 +575,8 @@ class DVPREL2(OptConstraint):
         #: PMIN must be explicitly set to a negative number for properties that
         #: may be less than zero (for example, field ZO on the PCOMP entry).
         #: (Real; Default = 1.E-15)
-        self.pMin = double_or_blank(card, 5, 'pMin')  #: .. todo:: bad default (see DVMREL1)
+        #: .. todo:: bad default (see DVMREL1)
+        self.pMin = double_or_blank(card, 5, 'pMin')
         #: Maximum value allowed for this property. (Real; Default = 1.0E20)
         self.pMax = double_or_blank(card, 6, 'pMax', 1e20)
         #: DEQATN entry identification number. (Integer > 0)

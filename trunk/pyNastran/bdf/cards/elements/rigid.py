@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 """
 All rigid elements are defined in this file.  This includes:
+
  * RBAR
  * RBAR1
  * RBE1
@@ -16,9 +17,10 @@ from itertools import izip, count
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_double, integer_double_or_blank, integer_or_blank,
-    double, double_or_blank, components, components_or_blank, blank, fields, string)
-
+from pyNastran.bdf.bdfInterface.assign_type import (integer,
+    integer_double_or_blank, integer_or_blank, double_or_blank,
+    components, components_or_blank, blank, fields, string)
+# integer_or_double, double,
 
 class RigidElement(Element):
     def cross_reference(self, model):
@@ -154,9 +156,9 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
         if isinstance(card[-1], float):
             self.alpha = card.fields[-1].pop()  # the last field is not part of fields
-            nfields = len(card) - 1
+            #nfields = len(card) - 1
         else:
-            nfields = len(card)
+            #nfields = len(card)
             self.alpha = 0.
 
         # loop till UM, no field9,field10
