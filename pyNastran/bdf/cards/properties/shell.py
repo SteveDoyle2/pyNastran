@@ -1,6 +1,7 @@
 #pylint: disable=C0103,C0111
 """
 All shell properties are defined in this file.  This includes:
+
  * PCOMP
  * PCOMPG
  * PLPLANE
@@ -818,7 +819,8 @@ class PSHELL(ShellProperty):
         assert mid3 is None or isinstance(mid3, int), 'mid3=%r' % mid3
         assert mid4 is None or isinstance(mid4, int), 'mid4=%r' % mid4
 
-        mids = [mid for mid in [self.mid1, self.mid2, self.mid3, self.mid4] if mid is not None]
+        mids = [mid for mid in [self.mid1, self.mid2, self.mid3, self.mid4]
+                if mid is not None]
         assert len(mids) > 0
         if xref:
             assert isinstance(self.mid(), Material), 'mid=%r' % self.mid()

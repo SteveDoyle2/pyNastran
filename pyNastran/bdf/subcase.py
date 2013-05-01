@@ -34,9 +34,9 @@ class Subcase(object):
         """
         Method get_stress_code:
 
-        .. note:: the individual element must take the stress_code and reduce it to
-         what the element can return.  For example, for an isotropic CQUAD4
-         the fiber field doesnt mean anything.
+        .. note:: the individual element must take the stress_code and reduce
+        it to what the element can return.  For example, for an isotropic
+        CQUAD4 the fiber field doesnt mean anything.
 
         BAR - no von mises/fiber
         ISOTROPIC - no fiber

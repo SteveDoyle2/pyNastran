@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 """
 All spring properties are defined in this file.  This includes:
+
  * PELAS
  * PELAST
 
@@ -64,10 +65,12 @@ class PELAS(SpringProperty):
         return self.k
 
     def _verify(self, xref=False):
-        eid = self.Pid()
+        pid = self.Pid()
         k = self.K()
         ge = self.ge
         s = self.s
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(k, float), 'k=%r' % k
         assert isinstance(ge, float), 'ge=%r' % ge
         assert isinstance(s, float), 'ge=%r' % s
 

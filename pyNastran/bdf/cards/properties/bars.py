@@ -15,7 +15,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 from itertools import izip, count
-from numpy import zeros, pi, array
+from numpy import pi, array
 
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
@@ -1495,7 +1495,7 @@ class PBEAM(IntegratedLineProperty):
                 x = nmajor * 8 + 1
 
                 if card.field(x) in ['YES', 'YESA', 'NO']:  # there is no footer
-                    nMajor += 1
+                    nmajor += 1
                     x += 8
                 else:
                     # read the footer
@@ -1510,8 +1510,8 @@ class PBEAM(IntegratedLineProperty):
                 else:
                     nStart = nRepeated * 8 + 1
 
-                propFields = []
-                n = 1
+                #propFields = []
+                #n = 1
                 so  = string(card,  nStart, 'SO%i' % nRepeated)
                 xxb = double(card,  nStart + 1, 'x/xb%i' % nRepeated)
                 A   = double_or_blank(card,  nStart + 2, 'Area%i' % nRepeated, 0.0)
@@ -1653,7 +1653,7 @@ class PBEAM(IntegratedLineProperty):
         assert isinstance(J, float), 'cid=%r' % J
         assert isinstance(nsm, float), 'nsm=%r' % nsm
         if xref:
-            assert self.mid.type in ['MAT1', 'MAT4', 'MAT5'], 'pid.type=%s; mid.type=%s' %(self.type, self.mid.type)
+            assert self.mid.type in ['MAT1', 'MAT4', 'MAT5'], 'pid.type=%s; mid.type=%s' % (self.type, self.mid.type)
             #self.MassPerLength()
 
     def writeCodeAster(self):  # PBEAM

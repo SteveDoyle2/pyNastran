@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 """
 All spring elements are defined in this file.  This includes:
+
  * CELAS1
  * CELAS2
  * CELAS3
@@ -142,8 +143,10 @@ class CELAS1(SpringElement):
         #ge = self.ge
         #s = self.s
         
+        assert isinstance(eid, int), 'eid=%r' % eid
         assert isinstance(c1, int), 'c1=%r' % c1
         assert isinstance(c2, int), 'c2=%r' % c2
+        assert isinstance(k, float), 'k=%r' % k
         #assert isinstance(ge, float), 'ge=%r' % ge
         #assert isinstance(s, float), 'ge=%r' % s
         if xref:
@@ -230,8 +233,10 @@ class CELAS2(SpringElement):
         ge = self.ge
         s = self.s
         
+        assert isinstance(eid, int), 'eid=%r' % eid
         assert isinstance(c1, int), 'c1=%r' % c1
         assert isinstance(c2, int), 'c2=%r' % c2
+        assert isinstance(k, float), 'k=%r' % k
         assert isinstance(ge, float), 'ge=%r' % ge
         assert isinstance(s, float), 'ge=%r' % s
         if xref:

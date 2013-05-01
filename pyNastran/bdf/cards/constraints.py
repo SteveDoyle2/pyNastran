@@ -18,7 +18,7 @@ The ConstraintObject contain multiple constraints.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from math import ceil
+#from math import ceil
 from itertools import izip, count
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru

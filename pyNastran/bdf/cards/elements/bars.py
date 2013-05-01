@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 
-from numpy import matrix, zeros, ones, array, transpose, dot
+from numpy import matrix, zeros, array, transpose, dot # ones, 
 from numpy.linalg import norm
 
 from pyNastran.utils import is_string
@@ -754,7 +754,7 @@ class CBAR(LineElement):
         assert isinstance(A, float), 'A=%r' % A
         assert isinstance(L, float), 'L=%r' % L
         assert isinstance(nsm, float), 'nsm=%r' % nsm
-        assert isinstance(mpl, float), 'mass_per_length=%r' % mpa
+        assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
         assert isinstance(mass, float), 'nass=%r' % mass
 
     def Mid(self):

@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 """
 All damper elements are defined in this file.  This includes:
+
  * CDAMP1
  * CDAMP2
  * CDAMP3
@@ -14,7 +15,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.bdf.cards.baseCard import Element
-from pyNastran.bdf.bdfInterface.assign_type import integer, integer_or_blank, double
+from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+                                                    double)
 
 
 class DamperElement(Element):

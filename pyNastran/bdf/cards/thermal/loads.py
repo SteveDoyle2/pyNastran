@@ -6,7 +6,7 @@ from ...bdfInterface.BDF_Card import wipe_empty_fields
 from .thermal import ThermalCard
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from ..baseCard import (expand_thru, expand_thru_by,
-    collapse_thru, collapse_thru_by)
+    collapse_thru_by) # collapse_thru, 
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     integer_or_string, string, fields)

@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914,W0231,R0201
 """
 All static loads are defined in this file.  This includes:
+
  * LSEQ
  * DLOAD
  * DAREA

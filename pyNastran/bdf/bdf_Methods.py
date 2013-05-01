@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from numpy import array, cross
 
 from pyNastran.bdf.cards.loads.staticLoads import Moment, Force
-from pyNastran.bdf.cards.elements.shell import ShellElement
+#from pyNastran.bdf.cards.elements.shell import ShellElement
 
 
 class BDFMethodsDeprecated(object):
@@ -55,23 +55,39 @@ class BDFMethods(BDFMethodsDeprecated):
     def __init__(self):
         pass
 
-    def mass_properties(self):
+    def mass_properties(self, reference_point=None):
         """
-        Caclulates mass properties in the global system about <0,0,0>
-        I   = mass*centroid*centroid
-        Ixx =  mass*(y^2+z^2)
-        Iyz = -mass*y*z
-        http://en.wikipedia.org/wiki/Moment_of_inertia#Moment_of_inertia_tensor
+        Caclulates mass properties in the global system about the reference point.
+        :param self: the BDF object
+        :param reference_point: an array that defines the origin of the frame.
+            default = <0,0,0>.
+        :returns mass: the mass of the model
+        :returns cg: the cg of the model as an array.
+        :returns I: moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
+        
+        I = mass * centroid * centroid
+
+        .. math:: I_{xx} = m (dy^2 + dz^2)
+
+        .. math:: I_{yz} = -m * dy * dz
+
+        where:
+        .. math:: dx = x_{element} - x_{ref}
+
+        .. seealso:: http://en.wikipedia.org/wiki/Moment_of_inertia#Moment_of_inertia_tensor
         """
+        if reference_point is None:
+            reference_point = array([0., 0., 0.])
+
                  #Ixx Iyy Izz, Ixy, Ixz Iyz
         I = array([0., 0., 0., 0., 0., 0., ])
         cg = array([0., 0., 0.])
         mass = 0.
         for element in self.elements.itervalues():
             try:
-                p = element.Centroid()  # not really coded across the board
+                p = element.Centroid()
                 m = element.Mass()
-                (x, y, z) = p
+                (x, y, z) = p - reference_point
                 x2 = x * x
                 y2 = y * y
                 z2 = z * z
@@ -85,7 +101,7 @@ class BDFMethods(BDFMethodsDeprecated):
                 cg += m * p
             except:
                 self.log().warning("could not get inertia for element"
-                                   "...\n%s" % (element))
+                                   "...\n%s" % element)
         cg = cg / mass
         return (mass, cg, I)
 
@@ -178,7 +194,7 @@ class BDFMethods(BDFMethodsDeprecated):
                   back requires another fem
         """
         assert cid in self.coords, ('cannot resolve nodes to '
-                                    'cid=|%s| b/c it doesnt exist' % (cid))
+                                    'cid=|%s| b/c it doesnt exist' % cid)
         for nid, node in sorted(self.nodes.iteritems()):
             p = node.PositionWRT(self, cid)
             node.UpdatePosition(self, p, cid)
@@ -193,7 +209,7 @@ class BDFMethods(BDFMethodsDeprecated):
         .. warning:: hasnt been tested well...
         """
         debug = False
-        for (nid, node_old) in fem_old.nodes.iteritems():
+        for (nid, node_old) in model_old.nodes.iteritems():
             coord = node_old.cp
             (p, matrix) = coord.transformToGlobal(self.xyz, debug=debug)
             p2 = coord.transformToLocal(p, matrix, debug=debug)
@@ -220,8 +236,8 @@ class BDFMethods(BDFMethodsDeprecated):
 
     def sum_moments(self, p0):
         """
-        Sums applied forces & moments about a reference point p0
-        for all load cases.
+        Sums applied forces & moments about a reference point p0 for all
+        load cases.
         Considers FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2.
 
         :param p0:        the reference point

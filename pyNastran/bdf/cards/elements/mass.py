@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 """
 All mass elements are defined in this file.  This includes:
+
  * CMASS1
  * CMASS2
  * CMASS3
@@ -15,7 +16,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from numpy import zeros, array
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import Element, BaseCard
+from pyNastran.bdf.cards.baseCard import Element #, BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                        double_or_blank)
 
@@ -537,8 +538,8 @@ class CONM2(PointMassElement):
         msg = ''
         msg += "    DISCRET=_F(\n"
         msg += "             'CARA='M_T_D_N'\n"
-        msg += "              NOEUD=N%s\n" % (self.Nid())
-        msg += "              VALE=%g),\n" % (self.mass)
+        msg += "              NOEUD=N%s\n" % self.Nid()
+        msg += "              VALE=%g),\n" % self.mass
         return msg
 
     def rawFields(self):

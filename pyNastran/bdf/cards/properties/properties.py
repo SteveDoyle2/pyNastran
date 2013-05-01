@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 """
 All ungrouped properties are defined in this file.  This includes:
+
  * PFAST
  * PGAP
  * PLSOLID (SolidProperty)

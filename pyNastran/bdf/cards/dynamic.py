@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 """
 All dynamic control cards are defined in this file.  This includes:
+
  * FREQ
  * FREQ1
  * FREQ2 (not implemented)
