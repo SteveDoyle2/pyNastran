@@ -4,6 +4,7 @@
 import os
 import wx
 #import vtk
+from PIL import Image
 import sys
 #from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
 
@@ -32,13 +33,13 @@ ID_EXPORT = 930
 
 
 pkgPath = pyNastran.gui.__path__[0]
-#print "pkgPath = |%r|" %(pkgPath)
+print "pkgPath = |%r|" %(pkgPath)
 
 if '?' in pkgPath:
     iconPath = 'icons'
 else:
     iconPath = os.path.join(pkgPath, 'icons')
-#print "iconPath = |%r|" %(iconPath)
+print "iconPath = |%r|" %(iconPath)
 
 #------------------------------------------------------------------------------
 
@@ -253,14 +254,22 @@ class AppFrame(wx.Frame):
         #                     shortHelp=wx.MenuItem.GetLabelFromText(self.menuText),
         #             longHelp=self.helpText)
 
-        topen = toolbar1.AddLabelTool(ID_BDF, '', wx.Bitmap(os.path.join(
-            iconPath, 'topen.png')), longHelp='Loads a BDF')
-        wireframe = toolbar1.AddLabelTool(ID_WIREFRAME, '', wx.Bitmap(os.path.join(iconPath, 'twireframe.png')), longHelp='Set to Wireframe Model')
-        surface = toolbar1.AddLabelTool(ID_SURFACE, '', wx.Bitmap(os.path.join(iconPath, 'tsolid.png')), longHelp='Set to Surface/Solid Model')
-        camera = toolbar1.AddLabelTool(ID_CAMERA, '', wx.Bitmap(os.path.join(
-            iconPath, 'tcamera.png')), longHelp='Take a Screenshot')
-        etool = toolbar1.AddLabelTool(wx.ID_EXIT, '', wx.Bitmap(os.path.join(
-            iconPath, 'texit.png')), longHelp='Exit pyNastran GUI')
+        topen = os.path.join(iconPath, 'topen.png')
+        assert os.path.exists(topen), 'topen=%r' % topen
+        topen = wx.Image(topen, wx.BITMAP_TYPE_ANY)
+        topen = toolbar1.AddLabelTool(ID_BDF, '', wx.BitmapFromImage(topen), longHelp='Loads a BDF')
+
+        twireframe = wx.Image(os.path.join(iconPath, 'twireframe.png'), wx.BITMAP_TYPE_ANY)
+        wireframe = toolbar1.AddLabelTool(ID_WIREFRAME, '', wx.BitmapFromImage(twireframe), longHelp='Set to Wireframe Model')
+
+        tsolid = wx.Image(os.path.join(iconPath, 'tsolid.png'), wx.BITMAP_TYPE_ANY)
+        surface = toolbar1.AddLabelTool(ID_SURFACE, '', wx.BitmapFromImage(tsolid), longHelp='Set to Surface/Solid Model')
+
+        tcamera = wx.Image(os.path.join(iconPath, 'tcamera.png'), wx.BITMAP_TYPE_ANY)
+        camera = toolbar1.AddLabelTool(ID_CAMERA, '', wx.BitmapFromImage(tcamera), longHelp='Take a Screenshot')
+
+        texit = wx.Image(os.path.join(iconPath, 'texit.png'), wx.BITMAP_TYPE_ANY)
+        etool = toolbar1.AddLabelTool(wx.ID_EXIT, '', wx.BitmapFromImage(texit), longHelp='Exit pyNastran GUI')
         #toolbar1.EnableTool(wx.ID_REDO, False)
         toolbar1.Realize()
 
