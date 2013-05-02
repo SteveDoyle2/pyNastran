@@ -241,6 +241,9 @@ class QHBDY(ThermalLoad):
             self.af = data[3]
             self.grids = data[4:]
 
+    def getLoads(self):
+        return [self]
+
     def cross_reference(self, model):
         pass
 
