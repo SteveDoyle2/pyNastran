@@ -41,7 +41,7 @@ class MPT(object):
         self.readRecordTable('MPTS')
 
     def addOp2Material(self, mat):
-        self.add_material(mat, allowOverwrites=True)
+        self.add_structural_material(mat, allowOverwrites=True)
 
     def readCREEP(self, data):
         """

@@ -30,7 +30,7 @@ def make_f06_header():
         n + '/*                                                                      */\n',
         n + '/*              A Python reader/editor/writer for the various           */\n',
         n + '/*                        NASTRAN file formats.                         */\n',
-        n + '/*                  Copyright (C) 2011-2012 Steven Doyle                */\n',
+        n + '/*                  Copyright (C) 2011-2013 Steven Doyle                */\n',
         n + '/*                                                                      */\n',
         n + '/*    This program is free software; you can redistribute it and/or     */\n',
         n + '/*    modify it under the terms of the GNU Lesser General Public        */\n',
@@ -126,13 +126,13 @@ class MatlabWriter(object):
         """If this class is inherited, the PAGE stamp may be overwritten"""
         return make_stamp(Title)
 
-    def write_matlab(self, mFileOutName, isMagPhase=False, deleteObjects=True):
+    def write_matlab(self, mFileOutName, is_mag_phase=False, delete_objects=True):
         """
         Writes an F06 file based on the data we have stored in the object
 
         :param self:         the object pointer
         :param mFileOutName: the name of the M (Matlab) file to write
-        :param isMagPhase:   should complex data be written using
+        :param is_mag_phase: should complex data be written using
                              Magnitude/Phase instead of Real/Imaginary (default=False; Real/Imag)
                              Real objects don't use this parameter.
         """
@@ -178,7 +178,7 @@ class MatlabWriter(object):
             header[1] = '0                                                                                                            SUBCASE %i\n \n' % (isubcase)
             print(result.__class__.__name__)
             nSubcase = nSubcases[isubcase]
-            result.write_matlab(nSubcase, f=f, isMagPhase=isMagPhase)
+            result.write_matlab(nSubcase, f=f, is_mag_phase=is_mag_phase)
            #result.write_matlab(f=f)
 
         for isubcase, result in sorted(self.eigenvectors.iteritems()):  # has a special header
@@ -188,7 +188,7 @@ class MatlabWriter(object):
             header[1] = '0                                                                                                            SUBCASE %i\n' % (isubcase)
             print(result.__class__.__name__)
             nSubcase = nSubcases[isubcase]
-            result.write_matlab(nSubcase, f=f, isMagPhase=isMagPhase)
+            result.write_matlab(nSubcase, f=f, is_mag_phase=is_mag_phase)
            #result.write_matlab(f=f)
 
         # subcase name, subcase ID, transient word & value
@@ -243,7 +243,7 @@ class MatlabWriter(object):
                             #print "result name = %s" %(result.name())
                             raise
 
-                        if deleteObjects:
+                        if delete_objects:
                             del result
 
         if 0:

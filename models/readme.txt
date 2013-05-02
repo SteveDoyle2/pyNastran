@@ -30,4 +30,8 @@ plate
        $ASSIGN OUTPUT2 = 'plate.op2', UNIT = 12, FORM = FORMATTED
   - only the unormatted op2 works in the op2 reader
  - tested using the bdf_unit_tests, f06_unit_tests, and op2_unit_tests codes
-  
+
+
+contact
+ - op2
+   - skips CONTACT table, but reads stresses and displacements
