@@ -8,11 +8,15 @@ packages = find_packages()+['gui/icons/*.*']
 #print "packages = ",packages
 #sys.exit()
 
-extra = {}
-if sys.version_info >= (3,):
-    extra['use_2to3'] = True
+#extra = {}
+#if sys.version_info >= (3,):
+    #extra['use_2to3'] = True
     #extra['convert_2to3_doctests'] = ['src/your/module/README.txt']  # what does this do?
     #extra['use_2to3_fixers'] = ['your.fixers']
+
+py2_scripts = []
+if sys.version_info <= (3,):
+    py2_scripts = ['pyNastranGUI = pyNastran.gui.gui:main',]
 
 setup(name='pyNastran',
       version=pyNastran.__version__,
@@ -41,15 +45,30 @@ setup(name='pyNastran',
 #          'vtk >= 5.8.0',
 #          'wx >= 2.8.12.0',
 #          'cython',
-      ],
+      ],#{'': ['license.txt']}
+      #package_data={'': ['*.png']},
+      data_files=[('pyNastran/gui/icons',
+        [   
+            'pyNastran/gui/icons/topen.png',
+            'pyNastran/gui/icons/tbdf.png',
+            'pyNastran/gui/icons/top2.png',
+            #'pyNastran/gui/icons/topen.png',
+            'pyNastran/gui/icons/twireframe.png',
+            'pyNastran/gui/icons/tsolid.png',
+            #'pyNastran/gui/icons/tsave.png',
+            #'pyNastran/gui/icons/tsaveas.png',
+            'pyNastran/gui/icons/texit.png',
+            'pyNastran/gui/icons/tcamera.png',
+            #'pitz/pitztypes/tracpitz.py.sample',
+        ])],
+
       entry_points = {
         'console_scripts': [
                             'test_bdf = pyNastran.bdf.test.test_bdf:main',
                             'test_op2 = pyNastran.op2.test.test_op2:main',
                             'test_f06 = pyNastran.f06.test.test_f06:main',
-                            'pyNastranGUI = pyNastran.gui.gui:main',
                            #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
-                           ]
+                           ] + py2_scripts
       },
       test_suite = 'pyNastran.all_tests',
       )
