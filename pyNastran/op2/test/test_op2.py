@@ -29,7 +29,7 @@ def get_failed_files(filename):
         files.append(line.strip())
     return files
 
-def run_lots_of_files(files ,makeGeom=True, writeBDF=False, write_f06=True,
+def run_lots_of_files(files ,make_geom=True, writeBDF=False, write_f06=True,
                    write_matlab=True, delete_f06=True, print_results=True,
                    debug=True, saveCases=True, skipFiles=[],
                    stopOnFailure=False, nStart=0, nStop=1000000000):
@@ -79,7 +79,7 @@ def run_lots_of_files(files ,makeGeom=True, writeBDF=False, write_f06=True,
     print(msg)
     sys.exit(msg)
 
-def run_op2(op2FileName, makeGeom=False, writeBDF=False, write_f06=True,
+def run_op2(op2FileName, make_geom=False, writeBDF=False, write_f06=True,
             write_matlab=True, isMagPhase=False, delete_f06=False,
             print_results=True, iSubcases=[], debug=False, stopOnFailure=True):
     assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' %(op2FileName)
@@ -87,7 +87,7 @@ def run_op2(op2FileName, makeGeom=False, writeBDF=False, write_f06=True,
     stopOnFailure = False
     #debug = True
     try:
-        op2 = OP2(op2FileName, makeGeom=makeGeom, debug=debug)
+        op2 = OP2(op2FileName, make_geom=make_geom, debug=debug)
         op2.set_subcases(iSubcases)
 
         #op2.read_bdf(op2.bdfFileName,includeDir=None,xref=False)
@@ -212,7 +212,7 @@ def run_arg_parse():
     print("debug       = %s" %(not(args.quiet)))
 
     debug         = not(args.quiet)
-    makeGeom      = args.geometry
+    make_geom      = args.geometry
     writeBDF      = args.writeBDF
     write_f06     = args.write_f06
     isMagPhase    = args.isMagPhase
@@ -220,14 +220,14 @@ def run_arg_parse():
     print_results = args.print_results
     op2FileName   = args.op2FileName[0]
 
-    return (op2FileName,makeGeom,writeBDF,write_f06,write_matlab,isMagPhase,print_results,debug)
+    return (op2FileName,make_geom,writeBDF,write_f06,write_matlab,isMagPhase,print_results,debug)
 
 def main():
-    (op2FileName,makeGeom,writeBDF,write_f06,write_matlab,isMagPhase,print_results,debug) = run_arg_parse()
+    (op2FileName,make_geom,writeBDF,write_f06,write_matlab,isMagPhase,print_results,debug) = run_arg_parse()
 
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
-    run_op2(op2FileName,makeGeom=makeGeom,writeBDF=writeBDF,write_f06=write_f06,write_matlab=write_matlab,isMagPhase=isMagPhase,print_results=print_results,debug=debug)
+    run_op2(op2FileName,make_geom=make_geom,writeBDF=writeBDF,write_f06=write_f06,write_matlab=write_matlab,isMagPhase=isMagPhase,print_results=print_results,debug=debug)
 
 if __name__=='__main__':  # op2
     main()

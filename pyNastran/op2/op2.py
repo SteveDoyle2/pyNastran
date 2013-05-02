@@ -212,7 +212,7 @@ class OP2(BDF,
             'PMRF', 'PERF', 'PFRF',
             'FOL',
             
-            'DBCOPT',
+            'DBCOPT','CONTACT', 
         ]
 
         #: a dictionary that maps an integer of the subcaseName to the
@@ -914,7 +914,7 @@ class OP2(BDF,
                 elif table_name in ['OQGPSD2', 'OQGATO2', 'OQGRMS2', 'OQGNO2',
                                    'OQGCRM2', 'PVT0', 'CASECC', 'CASEXX', 'EDOM', 'DBCOPT',]:
                     self.readTable_DUMMY_GEOM(table_name)
-                elif table_name in ['BGPDT', 'BGPDTS', 'EDTS', ]:
+                elif table_name in ['BGPDT', 'BGPDTS', 'EDTS', 'CONTACT']:
                     self.readTable_DUMMY_GEOM(table_name)
                 else:
                     msg = 'unhandled table_name=|%s|' % table_name
