@@ -29,7 +29,7 @@ def make_f06_header():
         n + '/*                                                                      */\n',
         n + '/*              A Python reader/editor/writer for the various           */\n',
         n + '/*                        NASTRAN file formats.                         */\n',
-        n + '/*                  Copyright (C) 2011-2012 Steven Doyle                */\n',
+        n + '/*                  Copyright (C) 2011-2013 Steven Doyle                */\n',
         n + '/*                                                                      */\n',
         n + '/*    This program is free software; you can redistribute it and/or     */\n',
         n + '/*    modify it under the terms of the GNU Lesser General Public        */\n',
@@ -133,21 +133,31 @@ class F06Writer(object):
         """If this class is inherited, the PAGE stamp may be overwritten"""
         return make_stamp(Title)
 
-    def write_f06(self, f06OutName, isMagPhase=False, makeFile=True,
+    def writeF06(self, f06OutName, isMagPase=False, makeFile=True,
                  deleteObjects=True):
+        """
+        .. deprecated: will be replaced in version 0.7 with :func:`read_op2`
+        """
+        warnings.warn('writeF06 has been deprecated; use '
+                      'write_f06', DeprecationWarning, stacklevel=2)
+        self.write_f06(self, f06OutName, is_mag_phase=isMagPase, make_file=makeFile,
+                 delete_objects=deleteObjects)
+
+    def write_f06(self, f06OutName, is_mag_phase=False, make_file=True,
+                 delete_objects=True):
         """
         Writes an F06 file based on the data we have stored in the object
 
         :self:       the F06 object
         :f06OutName: the name of the F06 file to write
-        :isMagPhase: should complex data be written using Magnitude/Phase
-                     instead of Real/Imaginary (default=False; Real/Imag)
-                      Real objects don't use this parameter.
-        :makeFile:
+        :is_mag_phase: should complex data be written using Magnitude/Phase
+                       instead of Real/Imaginary (default=False; Real/Imag)
+                       Real objects don't use this parameter.
+        :make_file:
            * True  -> makes a file
            * False -> makes a StringIO object for testing (default=True)
         """
-        if makeFile:
+        if make_file:
             f = open(f06OutName, 'wb')
         else:
             from StringIO import StringIO
@@ -169,8 +179,8 @@ class F06Writer(object):
             header[1] = '0                                                                                                            SUBCASE %i\n \n' % (isubcase)
             print(result.__class__.__name__)
             (msg, pageNum) = result.write_f06(header, pageStamp,
-                                             pageNum=pageNum, f=f, isMagPhase=isMagPhase)
-            if deleteObjects:
+                                             pageNum=pageNum, f=f, is_mag_phase=is_mag_phase)
+            if delete_objects:
                 del result
             f.write(msg)
             pageNum += 1
@@ -183,8 +193,8 @@ class F06Writer(object):
             header[1] = '0                                                                                                            SUBCASE %i\n' % (isubcase)
             print(result.__class__.__name__)
             (msg, pageNum) = result.write_f06(header, pageStamp,
-                                             pageNum=pageNum, f=f, isMagPhase=isMagPhase)
-            if deleteObjects:
+                                             pageNum=pageNum, f=f, is_mag_phase=is_mag_phase)
+            if delete_objects:
                 del result
             f.write(msg)
             pageNum += 1
@@ -275,7 +285,7 @@ class F06Writer(object):
                         except:
                             #print "result name = %s" %(result.name())
                             raise
-                        if deleteObjects:
+                        if delete_objects:
                             del result
                         f.write(msg)
                         pageNum += 1
@@ -283,12 +293,12 @@ class F06Writer(object):
             for res in resTypes:
                 for isubcase, result in sorted(res.iteritems()):
                     (msg, pageNum) = result.write_f06(header, pageStamp, pageNum=pageNum, f=f, isMagPhase=False)
-                    if deleteObjects:
+                    if delete_objects:
                         del result
                     f.write(msg)
                     pageNum += 1
         f.write(make_end())
-        if not makeFile:
+        if not make_file:
             print(f.getvalue())
         f.close()
 
