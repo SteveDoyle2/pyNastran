@@ -98,10 +98,10 @@ class ComplexBushStressObject(StressObject):
         self.translations[dt][eid] = [tx, ty, tz]
         self.rotations[dt][eid] = [rx, ry, rz]
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         raise NotImplementedError('CBUSH')
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
 
         msg = header + [
             '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -119,7 +119,7 @@ class ComplexBushStressObject(StressObject):
 
             vals = [s1[0], s2[0], s3[0], s4[0], axial,
                     s1[1], s2[1], s3[1], s4[1], ]
-            (vals2, isAllZeros) = writeImagFloats13E(vals, isMagPhase)
+            (vals2, isAllZeros) = writeImagFloats13E(vals, is_mag_phase)
             [s1ar, s2ar, s3ar, s4ar, axialr,
              s1br, s2br, s3br, s4br,
              s1ai, s2ai, s3ai, s4ai, axiali,
@@ -137,7 +137,7 @@ class ComplexBushStressObject(StressObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         raise NotImplementedError('CBUSH')
         words = [
             '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -157,7 +157,7 @@ class ComplexBushStressObject(StressObject):
                 s4 = self.s4[dt][eid]
                 vals = [s1[0], s2[0], s3[0], s4[0], axial,
                         s1[1], s2[1], s3[1], s4[1], ]
-                (vals2, isAllZeros) = writeImagFloats13E(vals, isMagPhase)
+                (vals2, isAllZeros) = writeImagFloats13E(vals, is_mag_phase)
                 [s1ar, s2ar, s3ar, s4ar, axialr,
                  s1br, s2br, s3br, s4br,
                  s1ai, s2ai, s3ai, s4ai, axiali,
@@ -348,11 +348,11 @@ class ComplexBushStrainObject(StrainObject):
         self.rotations[dt][eid] = [rx, ry, rz]
 
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         raise NotImplementedError('CBUSH')
         return 'ComplexBarStress write_f06 not implemented...', pageNum
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
 
         msg = header + [
             '                                  S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -378,7 +378,7 @@ class ComplexBushStrainObject(StrainObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         raise NotImplementedError('CBUSH')
         words = [
             '                                  S T R A I N S    I N   B A R   E L E M E N T S           ( C B A R )\n',

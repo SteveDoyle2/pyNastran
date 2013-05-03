@@ -175,6 +175,9 @@ class CHEXA8(SolidElement):
         V = (A1 + A2) / 2. * norm(c1 - c2)
         return abs(V)
 
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=False)
+
 
 class CHEXA20(CHEXA8):
     """
@@ -218,7 +221,7 @@ class CHEXA20(CHEXA8):
         else:
             self.eid = data[0]
             self.pid = data[1]
-            nids = data[2:]
+            nids = [d if d > 0 else None for d in data[2:]]
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         msg = 'len(nids)=%s nids=%s' % (len(nids), nids)
         assert len(self.nodes) <= 20, msg
@@ -248,6 +251,9 @@ class CHEXA20(CHEXA8):
         (A2, c2) = area_centroid(n5, n6, n7, n8)
         V = (A1 + A2) / 2. * norm(c1 - c2)
         return abs(V)
+
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=True)
 
 
 class CPENTA6(SolidElement):
@@ -373,6 +379,13 @@ class CPENTA6(SolidElement):
         V = (A1 + A2) / 2. * norm(c1 - c2)
         return abs(V)
 
+    def rawFields(self):
+        list_fields = ['CPENTA', self.eid, self.Pid()] + self._nodeIDs(allowEmptyNodes=False)
+        return list_fields
+
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=False)
+
 
 class CPENTA15(CPENTA6):
     """
@@ -401,7 +414,7 @@ class CPENTA15(CPENTA6):
         else:
             self.eid = data[0]
             self.pid = data[1]
-            nids = data[2:]
+            nids = [d if d > 0 else None for d in data[2:]]
             assert len(data) == 17, 'len(data)=%s data=%s' % (len(data), data)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) <= 15
@@ -432,6 +445,9 @@ class CPENTA15(CPENTA6):
 
         V = (A1 + A2) / 2. * norm(c1 - c2)
         return abs(V)
+
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=True)
 
 
 class CTETRA4(SolidElement):
@@ -565,6 +581,8 @@ class CTETRA4(SolidElement):
         m[3][3] = n4[2]
         return m
 
+    def nodeIDs(self):
+        return self._nodeIDs()
 
 class CTETRA10(CTETRA4):
     """
@@ -593,7 +611,7 @@ class CTETRA10(CTETRA4):
         else:
             self.eid = data[0]
             self.pid = data[1]
-            nids = data[2:]
+            nids = [d if d > 0 else None for d in data[2:]]
             assert len(data) == 12, 'len(data)=%s data=%s' % (len(data), data)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) <= 10
@@ -634,3 +652,6 @@ class CTETRA10(CTETRA4):
         indx = nids.index(nidOpposite)
         nids.pop(indx)
         return nids
+
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=True)

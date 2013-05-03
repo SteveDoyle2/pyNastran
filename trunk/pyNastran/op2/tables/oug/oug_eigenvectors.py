@@ -62,11 +62,11 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
     def eigenvalues(self):
         return self.eigrs
 
-    def write_matlab(self, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
         name = 'eigenvectors'
-        return self._write_matlab_transient(name, isubcase, f, isMagPhase)
+        return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         """
         ::
 
@@ -219,11 +219,11 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
     def eigenvalues(self):
         return self.eigrs
 
-    def write_matlab(self, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
         name = 'eigenvectors'
-        return self._write_matlab_transient(name, isubcase, f, isMagPhase)
+        return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         """
         ::
 
@@ -324,7 +324,11 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
     def eigenvalues(self):
         return sorted(self.translations.keys())
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
+        name = 'complex_eigenvectors'
+        return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         msg = []
         #print self.data_code
         hasCycle = hasattr(self, 'mode_cycle')
@@ -345,7 +349,7 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
                 (rx, ry, rz) = rotation
 
                 vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, isAllZeros) = writeImagFloats13E(vals, isMagPhase)
+                (vals2, isAllZeros) = writeImagFloats13E(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr, dxi, dyi,
                     dzi, rxi, ryi, rzi] = vals2
 

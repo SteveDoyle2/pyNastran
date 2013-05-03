@@ -3,17 +3,18 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class TemperatureGradientAndFluxObject(TableObject):
+
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_matlab(self, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
         name = 'spcForces'
         if self.nonlinear_factor is None:
             return self._write_matlab(name, isubcase, f)
         else:
             return self._write_matlab_transient(name, isubcase, f)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
         msg = header + ['                   F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S\n',
@@ -37,7 +38,7 @@ class TemperatureGradientAndFluxObject(TableObject):
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = ['                   F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S\n',
                  ' \n',
                  '   ELEMENT-ID   EL-TYPE        X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX\n']
@@ -107,16 +108,16 @@ class ComplexTemperatureGradientAndFluxObject(ComplexTableObject):
         asdf
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_matlab(self, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
         name = 'spcForces'
         if self.nonlinear_factor is None:
             return self._write_matlab(name, isubcase, f)
         else:
             return self._write_matlab_transient(name, isubcase, f)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
         msg = header + ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
                         ' \n',
                         '   ELEMENT-ID   EL-TYPE        X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX\n']
@@ -145,9 +146,9 @@ class ComplexTemperatureGradientAndFluxObject(ComplexTableObject):
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = ['                         C O M P L E X   F O R C E S   O F   S I N G L E   P O I N T   C O N S T R A I N T\n']
-        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f, isMagPhase)
+        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f, is_mag_phase)
 
     def __reprTransient__(self):
         msg = '---COMPLEX SPC FORCES---\n'

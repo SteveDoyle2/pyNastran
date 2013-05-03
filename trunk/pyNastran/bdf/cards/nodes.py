@@ -64,10 +64,12 @@ class SPOINT(Node):
     type = 'SPOINT'
 
     def __init__(self, nid, comment=''):
+        asd
         Node.__init__(self, card=None, data=None)
         if comment:
             self._comment = comment
         self.nid = nid
+        assert isinstance(nid, int), nid
 
     def cross_reference(self, model):
         pass
@@ -109,6 +111,8 @@ class SPOINTs(Node):
                 fields.append(field)
         else:
             fields = data
+            assert isinstance(data, list), data
+            assert isinstance(data[0], int), data
         self.spoints = set(expand_thru(fields))
 
     def nDOF(self):

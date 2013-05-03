@@ -356,9 +356,9 @@ class ComplexSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
         #self.eType[eid] = eType
         self.force[dt][eid] = force
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
         msg = header + ['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
                         '                                                          (REAL/IMAGINARY)\n',
                         ' \n',
@@ -384,7 +384,7 @@ class ComplexSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
@@ -789,7 +789,7 @@ class ComplexPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx[dt][eid].append(tx)
         self.ty[dt][eid].append(ty)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
         return 'ComplexPlate write_f06 not implemented...\n'
@@ -800,7 +800,7 @@ class ComplexPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         #words += self.getTableMarker()
         #return self._writeF06Block(words,header,pageStamp,pageNum,f)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         return 'ComplexPlate _write_f06_transient not implemented...\n'
         #raise NotImplementedError()
 
@@ -883,7 +883,7 @@ class ComplexCBarForce(scalarObject):  # 34-CBAR
         self.axial[dt][eid] = af
         self.torque[dt][eid] = trq
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
 
         words = ['                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
                  '                                                          (REAL/IMAGINARY)\n',
@@ -900,7 +900,7 @@ class ComplexCBarForce(scalarObject):  # 34-CBAR
                 ts1, ts2 = self.shear[dt][eid]
                 af = self.axial[dt][eid]
                 trq = self.torque[dt][eid]
-                (vals2, isAllZeros) = writeImagFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq], isMagPhase)
+                (vals2, isAllZeros) = writeImagFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq], is_mag_phase)
                 [bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
                  bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi] = vals2
                 msg.append('     %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' % (eid, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr))
@@ -912,9 +912,9 @@ class ComplexCBarForce(scalarObject):  # 34-CBAR
             pageNum += 1
         return (''.join(msg), pageNum - 1)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
         msg = header + ['                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
                         '                                                          (REAL/IMAGINARY)\n',
                         '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
@@ -926,7 +926,7 @@ class ComplexCBarForce(scalarObject):  # 34-CBAR
             ts1, ts2 = self.shear[eid]
             af = self.axial[eid]
             trq = self.torque[eid]
-            (vals2, isAllZeros) = writeImagFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq], isMagPhase)
+            (vals2, isAllZeros) = writeImagFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq], is_mag_phase)
             [bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
              bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi] = vals2
             msg.append('     %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' % (eid, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr))

@@ -170,7 +170,7 @@ class BeamStressObject(StressObject):
             self.MS_tension[dt][eid].append(mst)
             self.MS_compression[dt][eid].append(msc)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
 
@@ -202,7 +202,7 @@ class BeamStressObject(StressObject):
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = ['                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                  '                    STAT DIST/\n',
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
@@ -456,7 +456,7 @@ class BeamStrainObject(StrainObject):
             self.MS_tension[dt][eid].append(mst)
             self.MS_compression[dt][eid].append(msc)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
 
@@ -488,7 +488,7 @@ class BeamStrainObject(StrainObject):
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = ['                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                  '                    STAT DIST/\n',
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']

@@ -24,6 +24,9 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=False)
+
     def Rho(self):
         r"""returns the material density  \f$ \rho \f$"""
         return self.pid.mid.rho

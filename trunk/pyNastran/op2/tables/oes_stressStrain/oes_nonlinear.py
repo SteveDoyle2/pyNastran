@@ -7,6 +7,7 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class NonlinearQuadObject(StressObject):
+
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StressObject.__init__(self, data_code, isubcase)
         #self.eType = 'QUAD4FD' # or CTRIA3
@@ -136,7 +137,7 @@ class NonlinearQuadObject(StressObject):
         self.eps[dt][eid].append(eps)
         self.ecs[dt][eid].append(ecs)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=None):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=None):
         msgStart = ['      ELEMENT-ID =     129\n'
                     '               N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )\n'
                     ' \n',
@@ -268,7 +269,7 @@ class HyperelasticQuadObject(StressObject):
         self.majorP[dt][eid].append(majorP)
         self.minorP[dt][eid].append(minorP)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):  # .. todo:: doesnt support CTRIA3NL (calls them CQUAD4s)
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):  # .. todo:: doesnt support CTRIA3NL (calls them CQUAD4s)
         msg = ['           S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUAD4FD )\n',
                '  ELEMENT     GRID/    POINT       ---------CAUCHY STRESSES--------             PRINCIPAL STRESSES (ZERO SHEAR)\n',
                '     ID       GAUSS      ID      NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR\n', ]
@@ -374,7 +375,7 @@ class NonlinearRodObject(StressObject):
         self.linearTorsionalStress[dt][eid] = data[6]
         #print data
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):  # .. todo:: doesnt support CONROD/CTUBE (calls them CRODs)
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):  # .. todo:: doesnt support CONROD/CTUBE (calls them CRODs)
         """
         ::
 

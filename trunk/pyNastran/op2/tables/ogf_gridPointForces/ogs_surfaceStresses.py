@@ -3,6 +3,7 @@ from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats10E
 
 
 class GridPointStressesObject(scalarObject):
+
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         scalarObject.__init__(self, data_code, isubcase)
         self.nx = {}
@@ -126,7 +127,7 @@ class GridPointStressesObject(scalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
 
@@ -166,7 +167,7 @@ class GridPointStressesObject(scalarObject):
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         return 'GridPointStressesObject write_f06 is not implemented...', pageNum
         #raise NotImplementedError()
         msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
@@ -330,7 +331,7 @@ class GridPointStressesVolumeObject(scalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         return 'GridPointStressesVolumeObject write_f06 is not implemented...', pageNum
         #raise NotImplementedError()
         if self.nonlinear_factor is not None:
@@ -370,7 +371,7 @@ class GridPointStressesVolumeObject(scalarObject):
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         return 'GridPointStressesVolumeObject _write_f06_transient is not implemented...', pageNum
         #raise NotImplementedError()
         msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',

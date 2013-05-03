@@ -7,15 +7,17 @@ from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 class StrainEnergyObject(scalarObject):
     """
-                               E L E M E N T   S T R A I N   E N E R G I E S
-
-    ELEMENT-TYPE = QUAD4      * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =   9.817708E+08
-    SUBCASE               1   * TOTAL ENERGY OF ALL ELEMENTS IN SET       1 =   4.192036E+08
-
-       ELEMENT-ID   STRAIN-ENERGY  PERCENT OF TOTAL  STRAIN-ENERGY-DENSITY
-               12   2.291087E+07        2.3336            2.291087E+02
-               13   1.582968E+07        1.6124            1.055312E+02
-               14   6.576075E+07        6.6982            3.288037E+02
+    ::
+    
+                                 E L E M E N T   S T R A I N   E N E R G I E S
+  
+      ELEMENT-TYPE = QUAD4      * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =   9.817708E+08
+      SUBCASE               1   * TOTAL ENERGY OF ALL ELEMENTS IN SET       1 =   4.192036E+08
+  
+         ELEMENT-ID   STRAIN-ENERGY  PERCENT OF TOTAL  STRAIN-ENERGY-DENSITY
+                 12   2.291087E+07        2.3336            2.291087E+02
+                 13   1.582968E+07        1.6124            1.055312E+02
+                 14   6.576075E+07        6.6982            3.288037E+02
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         scalarObject.__init__(self, data_code, isubcase)

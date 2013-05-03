@@ -220,18 +220,18 @@ class TableObject(scalarObject):  # displacement style table
             #    rotations2[nodeID]    = rotation
         return (translations2, rotations2)
 
-    def _write_matlab(self, name, isubcase, f=None, isMagPhase=False):
+    def _write_matlab(self, name, isubcase, f=None, is_mag_phase=False):
         """
         name = displacements
         """
         if self.nonlinear_factor is not None:
-            self._write_matlab_transient(name, isubcase, f, isMagPhase)
+            self._write_matlab_transient(name, isubcase, f, is_mag_phase)
         #print "static!!!!"
         #msg = []
         #magPhase = 0
-        #if isMagPhase:
+        #if is_mag_phase:
         #    magPhase = 1
-        #msg.append('fem.%s.isMagPhase = %s' %(name,magPhase))
+        #msg.append('fem.%s.is_mag_phase = %s' %(name,magPhase))
 
         nodes = self.translations.keys()
 
@@ -270,7 +270,7 @@ class TableObject(scalarObject):  # displacement style table
         f.write(msgT)
         f.write(msgR)
 
-    def _write_matlab_transient(self, name, isubcase, f=None, isMagPhase=False):
+    def _write_matlab_transient(self, name, isubcase, f=None, is_mag_phase=False):
         """
         name = displacements
         """
@@ -642,7 +642,7 @@ class ComplexTableObject(scalarObject):
         self.translations[dt][nodeID] = [v1, v2, v3]  # dx,dy,dz
         self.rotations[dt][nodeID] = [v4, v5, v6]  # rx,ry,rz
 
-    def _write_matlab_transient(self, name, isubcase, f=None, isMagPhase=False):
+    def _write_matlab_transient(self, name, isubcase, f=None, is_mag_phase=False):
         """
         name = displacements
         """
@@ -694,9 +694,9 @@ class ComplexTableObject(scalarObject):
             f.write(msgT)
             f.write(msgR)
 
-    def _write_f06_block(self, words, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_block(self, words, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         #words += self.getTableMarker()
-        if isMagPhase:
+        if is_mag_phase:
             words += ['                                                         (MAGNITUDE/PHASE)\n', ]
         else:
             words += ['                                                          (REAL/IMAGINARY)\n', ]
@@ -725,8 +725,8 @@ class ComplexTableObject(scalarObject):
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient_block(self, words, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if isMagPhase:
+    def _write_f06_transient_block(self, words, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        if is_mag_phase:
             words += ['                                                         (MAGNITUDE/PHASE)\n', ]
         else:
             words += ['                                                          (REAL/IMAGINARY)\n', ]
@@ -749,7 +749,7 @@ class ComplexTableObject(scalarObject):
                 (rx, ry, rz) = rotation
 
                 vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, isAllZeros) = writeImagFloats13E(vals, isMagPhase)
+                (vals2, isAllZeros) = writeImagFloats13E(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr, dxi, dyi,
                     dzi, rxi, ryi, rzi] = vals2
                 if not isAllZeros:

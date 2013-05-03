@@ -5,8 +5,7 @@ from .oes_objects import StressObject
 
 
 class NonlinearGapStressObject(StressObject):
-    """
-    """
+
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = {}

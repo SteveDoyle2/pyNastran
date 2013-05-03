@@ -6,8 +6,7 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class BushStressObject(StressObject):
-    """
-    """
+
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
@@ -89,9 +88,9 @@ class BushStressObject(StressObject):
         self.translations[dt][eid] = [tx, ty, tz]
         self.rotations[dt][eid] = [rx, ry, rz]
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
 
         msg = header + [
             '                                  S T R E S S E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n\n',
@@ -111,7 +110,7 @@ class BushStressObject(StressObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = [
             '                                  S T R E S S E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n\n',
             '                  ELEMENT-ID        STRESS-TX     STRESS-TY     STRESS-TZ    STRESS-RX     STRESS-RY     STRESS-RZ \n',
@@ -301,11 +300,11 @@ class BushStrainObject(StrainObject):
         self.rotations[dt][eid] = [rx, ry, rz]
 
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         raise NotImplementedError('CBUSH')
         return 'BushStress write_f06 not implemented...', pageNum
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
 
         msg = header + [
             '                                  S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -331,7 +330,7 @@ class BushStrainObject(StrainObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         raise NotImplementedError('CBUSH')
         words = [
             '                                  S T R A I N S    I N   B A R   E L E M E N T S           ( C B A R )\n',

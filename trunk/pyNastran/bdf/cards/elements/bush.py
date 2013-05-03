@@ -42,10 +42,6 @@ class BushElement(Element):
             #return self.gb
         #return self.gb.nid
 
-    #def NodeIDs(self):
-        #print self.nodeIDs()
-        #return [self.Ga(), self.Gb()]
-
 
 class CBUSH(BushElement):
     type = 'CBUSH'
@@ -95,6 +91,9 @@ class CBUSH(BushElement):
         else:
             self.eid = data[0]
             raise NotImplementedError('CBUSH data...')
+
+    def nodeIDs(self):
+        return [self.Ga(), self.Gb()]
 
     def _verify(self, xref=False):
         ga = self.Ga()
@@ -216,6 +215,9 @@ class CBUSH1D(BushElement):
             return None
         return self.gb.nid
 
+    def nodeIDs(self):
+        return [self.Ga(), self.Gb()]
+
     def rawFields(self):
         list_fields = ['CBUSH1D', self.eid, self.Pid(), self.Ga(), self.Gb(),
                   self.Cid()]
@@ -277,10 +279,8 @@ class CBUSH2D(BushElement):
             return self.gb
         return self.gb.nid
 
-    def rawFields(self):
-        list_fields = ['CBUSH2D', self.eid, self.Pid(), self.Ga(), self.Gb(),
-                  self.Cid(), self.plane, self.sptid]
-        return list_fields
+    def nodeIDs(self):
+        return [self.Ga(), self.Gb()]
 
     def cross_reference(self, model):
         msg = ' which is required by CBUSH2D eid=%s' % self.eid
@@ -289,6 +289,11 @@ class CBUSH2D(BushElement):
         #self.pid = model.Property(self.pid)
         if self.cid is not None:
             self.cid = model.Coord(self.cid, msg=msg)
+
+    def rawFields(self):
+        list_fields = ['CBUSH2D', self.eid, self.Pid(), self.Ga(), self.Gb(),
+                  self.Cid(), self.plane, self.sptid]
+        return list_fields
 
     #def reprFields(self):
         #return self.rawFields()

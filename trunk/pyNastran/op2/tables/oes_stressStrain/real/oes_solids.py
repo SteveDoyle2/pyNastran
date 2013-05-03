@@ -9,7 +9,7 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 class SolidStressObject(StressObject):
     """
-    :::
+    ::
 
       # s_code=0
               N O N L I N E A R   S T R E S S E S   I N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )
@@ -368,7 +368,7 @@ class SolidStressObject(StressObject):
                 raise NotImplementedError('eType=|%r|' % (eType))
         return (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
         msg = []
@@ -393,7 +393,7 @@ class SolidStressObject(StressObject):
 
         return (''.join(msg), pageNum - 1)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         msg = []
         (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
             pentaEids) = self.getF06_Header()
@@ -955,7 +955,7 @@ class SolidStrainObject(StrainObject):
 
         return (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
         msg = []
@@ -980,7 +980,7 @@ class SolidStrainObject(StrainObject):
 
         return (''.join(msg), pageNum - 1)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         msg = []
         (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
             pentaEids) = self.getF06_Header()

@@ -912,7 +912,7 @@ class Geometry2(object):
         while len(data) >= 4:  # 4*4
             eData = data[:4]
             data = data[4:]
-            (nid) = unpack(b'i', eData)
+            (nid,) = unpack(b'i', eData)
             spoint = SPOINTs(None, [nid])
             self.add_SPOINT(spoint)
 

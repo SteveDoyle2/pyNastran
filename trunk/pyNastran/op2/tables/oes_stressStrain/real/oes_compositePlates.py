@@ -233,7 +233,7 @@ class CompositePlateStressObject(StressObject):
             headers.append('maxShear')
         return headers
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
 
@@ -298,7 +298,7 @@ class CompositePlateStressObject(StressObject):
         return (msg, pageNum)
 
     def _write_f06_transient(self, header, pageStamp,
-                             pageNum=1, f=None, isMagPhase=False):
+                             pageNum=1, f=None, is_mag_phase=False):
         if self.isVonMises():
             von = 'VON'
             mises = 'MISES'
@@ -609,7 +609,7 @@ class CompositePlateStrainObject(StrainObject):
             headers.append('maxShear')
         return headers
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
 
@@ -675,7 +675,7 @@ class CompositePlateStrainObject(StrainObject):
         msg = ''.join(quadMsg + triMsg)
         return (msg, pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.isVonMises():
             von = 'VON'
             mises = 'MISES'
