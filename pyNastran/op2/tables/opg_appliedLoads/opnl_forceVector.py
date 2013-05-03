@@ -3,17 +3,18 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class ForceVectorObject(TableObject):  # table_code=12, sort_code=0, thermal=0
+
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_matlab(self, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
         name = 'forceVector'
         if self.nonlinear_factor is None:
             return self._write_matlab(name, isubcase, f)
         else:
             return self._write_matlab_transient(name, isubcase, f)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
 
@@ -38,7 +39,7 @@ class ForceVectorObject(TableObject):  # table_code=12, sort_code=0, thermal=0
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         msg = []
         words = ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n'
                  ' \n',
@@ -122,16 +123,16 @@ class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_c
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_matlab(self, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
         name = 'forceVector'
         if self.nonlinear_factor is None:
-            return self._write_matlab(name, isubcase, f, isMagPhase)
+            return self._write_matlab(name, isubcase, f, is_mag_phase)
         else:
-            return self._write_matlab_transient(name, isubcase, f, isMagPhase)
+            return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase=False)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase=False)
         msg = header + ['                                       C O M P L E X   FORCE   V E C T O R\n',
                         '                                                          (REAL/IMAGINARY)\n',
                         ' \n',
@@ -169,7 +170,7 @@ class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_c
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = ['                                       C O M P L E X   F O R C E   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',

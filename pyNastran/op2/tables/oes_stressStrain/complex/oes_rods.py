@@ -122,11 +122,11 @@ class ComplexRodStressObject(StressObject):
                 #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         return 'ComplexRodStress write_f06 not implemented...', pageNum
         raise NotImplementedError()
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
 
         msg = header + ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
                         '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
@@ -155,7 +155,7 @@ class ComplexRodStressObject(StressObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return(''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         return 'ComplexRodStress _write_f06_transient not implemented...', pageNum
         raise NotImplementedError()
         words = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
@@ -326,11 +326,11 @@ class ComplexRodStrainObject(StrainObject):
                 #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         return 'ComplexRodStrain write_f06 not implemented...', pageNum
         raise NotImplementedError()
         if self.dt is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
 
         msg = header + ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )\n',
                         '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
@@ -358,7 +358,7 @@ class ComplexRodStrainObject(StrainObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return(''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         return 'ComplexRodStress _write_f06_transient not implemented...', pageNum
         raise NotImplementedError()
         words = ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )\n',

@@ -8,6 +8,7 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 class TriaxStressObject(StressObject):
     """
     ::
+
       # format_code=1 sort_code=0 stressCode=0
                                         S T R E S S E S   I N   T R I A X 6   E L E M E N T S
       ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES
@@ -156,7 +157,7 @@ class TriaxStressObject(StressObject):
         self.oms[dt][eid][nid] = tmax
         self.ovm[dt][eid][nid] = octs
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
 
@@ -191,7 +192,7 @@ class TriaxStressObject(StressObject):
         return(''.join(msg), pageNum)
 
     def _write_f06_transient(self, header, pageStamp,
-                          pageNum=1, f=None, isMagPhase=False):
+                          pageNum=1, f=None, is_mag_phase=False):
         words = ['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
                  '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
                  '      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n', ]
@@ -353,7 +354,7 @@ class TriaxStrainObject(StrainObject):
         self.ems[dt][eid][nid] = emax
         self.evm[dt][eid][nid] = ects
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
 
@@ -388,7 +389,7 @@ class TriaxStrainObject(StrainObject):
         return(''.join(msg), pageNum)
 
     def _write_f06_transient(self, header, pageStamp,
-                          pageNum=1, f=None, isMagPhase=False):
+                          pageNum=1, f=None, is_mag_phase=False):
         words = ['                                      S T R A I N S   I N   T R I A X 6   E L E M E N T S\n',
                  '   ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
                  '      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n', ]

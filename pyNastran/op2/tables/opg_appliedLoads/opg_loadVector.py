@@ -3,17 +3,18 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
+
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_matlab(self, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
         name = 'loadVector'
         if self.nonlinear_factor is None:
             return self._write_matlab(name, isubcase, f)
         else:
             return self._write_matlab_transient(name, isubcase, f)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
 
@@ -38,7 +39,7 @@ class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         msg = []
         words = ['                                                     L O A D   V E C T O R\n',
                  ' \n',
@@ -122,16 +123,16 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_matlab(self, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
         name = 'loadVector'
         if self.nonlinear_factor is None:
-            return self._write_matlab(name, isubcase, f, isMagPhase)
+            return self._write_matlab(name, isubcase, f, is_mag_phase)
         else:
-            return self._write_matlab_transient(name, isubcase, f, isMagPhase)
+            return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
         msg = header + ['                                               C O M P L E X   L O A D   V E C T O R\n',
                         '                                                          (REAL/IMAGINARY)\n',
                         ' \n',
@@ -143,7 +144,7 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
 
-            if isMagPhase:
+            if is_mag_phase:
                 dxr = abs(dx)
                 dxi = angle(dx, deg=True)
                 dyr = abs(dy)
@@ -185,12 +186,12 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = ['                                               C O M P L E X   L O A D   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        #return self.__write_f06_transient_block(words,header,pageStamp,pageNum,f,isMagPhase)
+        #return self.__write_f06_transient_block(words,header,pageStamp,pageNum,f,is_mag_phase)
         msg = []
         for dt, translations in sorted(self.translations.iteritems()):
             header[2] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
@@ -202,7 +203,7 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
                 (dx, dy, dz) = translation
                 (rx, ry, rz) = rotation
 
-                if isMagPhase:
+                if is_mag_phase:
                     dxr = abs(dx)
                     dxi = angle(dx, deg=True)
                     dyr = abs(dy)
@@ -280,7 +281,7 @@ class ThermalVector(TableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
 
@@ -305,7 +306,7 @@ class ThermalVector(TableObject):
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         msg = []
         words = ['                                              T E M P E R A T U R E   V E C T O R\n',
                  ' \n',

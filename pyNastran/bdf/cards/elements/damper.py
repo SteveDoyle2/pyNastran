@@ -64,6 +64,9 @@ class CDAMP1(LineDamper):
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
 
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=True)
+
     def isSameCard(self, elem, debug=False):
         if self.type != elem.type:
             return False
@@ -82,7 +85,7 @@ class CDAMP1(LineDamper):
         self.pid = model.Property(self.pid, msg=msg)
 
     def rawFields(self):
-        nodes = self.nodeIDs(allowEmptyNodes=True)
+        nodes = self.nodeIDs()
         fields = ['CDAMP1', self.eid, self.Pid(), nodes[0], self.c1,
                   nodes[1], self.c2]
         return fields
@@ -127,8 +130,11 @@ class CDAMP2(LineDamper):
         msg = ' which is required by CDAMP2 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
 
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=True)
+
     def rawFields(self):
-        nodes = self.nodeIDs(allowEmptyNodes=True)
+        nodes = self.nodeIDs()
         fields = ['CDAMP2', self.eid, self.b, nodes[0], self.c1,
                   nodes[1], self.c2]
         return fields
@@ -162,8 +168,11 @@ class CDAMP3(LineDamper):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=True)
+
     def rawFields(self):
-        nodes = self.nodeIDs(allowEmptyNodes=True)
+        nodes = self.nodeIDs()
         list_fields = ['CDAMP3', self.eid, self.pid, nodes[0], nodes[1]]
         return list_fields
 
@@ -196,8 +205,11 @@ class CDAMP4(LineDamper):
         msg = ' which is required by CDAMP4 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
 
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=True)
+
     def rawFields(self):
-        nodes = self.nodeIDs(allowEmptyNodes=True)
+        nodes = self.nodeIDs()
         list_fields = ['CDAMP4', self.eid, self.b, nodes[0], nodes[1]]
         return list_fields
 
@@ -228,8 +240,11 @@ class CDAMP5(LineDamper):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=True)
+
     def rawFields(self):
-        nodes = self.nodeIDs(allowEmptyNodes=True)
+        nodes = self.nodeIDs()
         list_fields = ['CDAMP5', self.eid, self.Pid(), nodes[0], nodes[1]]
         return list_fields
 
@@ -256,6 +271,9 @@ class CVISC(LineDamper):
 
     def B(self):
         return self.pid.ce
+
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=True)
 
     def rawFields(self):
         list_fields = ['CVISC', self.eid, self.Pid()] + self.nodeIDs()

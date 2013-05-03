@@ -270,7 +270,7 @@ class Element(BaseCard):
         #assert 0 not in nodeIDs, 'nodeIDs = %s' % nodeIDs
         #return nodeIDs
 
-    def nodeIDs(self, nodes=None, allowEmptyNodes=False, msg=''):
+    def _nodeIDs(self, nodes=None, allowEmptyNodes=False, msg=''):
         """returns nodeIDs for repr functions"""
         try:
             if not nodes:
@@ -279,6 +279,7 @@ class Element(BaseCard):
             if allowEmptyNodes:
                 nodes2 = []
                 for i, node in enumerate(nodes):
+                    #print("node=%r type=%r" % (node, type(node)))
                     if node == 0 or node is None:
                         nodes2.append(None)
                     elif isinstance(node, int):
@@ -290,6 +291,7 @@ class Element(BaseCard):
                 try:
                     nodeIDs = []
                     for i, node in enumerate(nodes):
+                        #print("node=%r type=%r" % (node, type(node)))
                         if isinstance(node, int):
                             nodeIDs.append(node)
                         else:
@@ -462,7 +464,12 @@ def condense(valueList):
     lastVal = firstVal
 
     for val in valueList[1:]:
-        dv = val - lastVal
+        try:
+            dv = val - lastVal
+        except TypeError:
+            print("lastVal=%r val=%r" % (lastVal, val))
+            print("valueList=%r" % valueList)
+            raise
 
         # sets up the first item of the pack
         if dvOld is None:

@@ -89,7 +89,7 @@ class MatlabWriter(object):
         self.model = model
         self.f06OutName = '%s.f06.out' % (self.model)
 
-    def loadOp2(self, isTesting=False):
+    def load_op2(self, isTesting=False):
         print("self.class = ",self.__class__.__name__)
         if isTesting == False:  # .. todo:: implement in way that doesnt require a variable (e.g. check parent class)
             msg = ("Don't call this method unless you're testing the "
@@ -98,7 +98,7 @@ class MatlabWriter(object):
         from pyNastran.op2.op2 import OP2
         self.op2Name = model + '.op2'
         op2 = OP2(self.op2Name)
-        op2.readOP2()
+        op2.read_op2()
 
         # oug
         self.eigenvectors = op2.eigenvectors
@@ -147,7 +147,7 @@ class MatlabWriter(object):
         #print "pageStamp = |%r|" %(pageStamp)
         #print "stamp     = |%r|" %(stamp)
 
-        #isMagPhase = False
+        #is_mag_phase = False
         pageNum = 1
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n']
@@ -238,7 +238,7 @@ class MatlabWriter(object):
                         try:
                             print(result.__class__.__name__)
                             nSubcase = nSubcases[isubcase]
-                            result.write_matlab(nSubcase, f=f, isMagPhase=False)
+                            result.write_matlab(nSubcase, f=f, is_mag_phase=False)
                         except:
                             #print "result name = %s" %(result.name())
                             raise
@@ -250,7 +250,7 @@ class MatlabWriter(object):
             for res in resTypes:
                 for isubcase, result in sorted(res.iteritems()):
                     (msg, pageNum) = result.write_matlab(
-                        isubcase, f=f, isMagPhase=False)
+                        isubcase, f=f, is_mag_phase=False)
                     f.write(msg)
                     pageNum += 1
 
@@ -263,5 +263,5 @@ if __name__ == '__main__':
 
     model = sys.argv[1]
     f06 = MatlabWriter(model)
-    f06.loadOp2(isTesting=True)
+    f06.load_op2(isTesting=True)
     f06.write_matlab()

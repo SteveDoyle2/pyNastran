@@ -134,10 +134,13 @@ class CELAS1(SpringElement):
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
 
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=True)
+
     def _verify(self, xref=False):
         eid = self.Eid()
         k = self.K()
-        nodeIDs = self.nodeIDs(allowEmptyNodes=True)
+        nodeIDs = self.nodeIDs()
         c1 = self.c2
         c2 = self.c1
         #ge = self.ge
@@ -172,7 +175,7 @@ class CELAS1(SpringElement):
         self.pid = model.Property(self.pid, msg=msg)
 
     def rawFields(self):
-        nodes = self.nodeIDs(allowEmptyNodes=True)
+        nodes = self.nodeIDs()
         list_fields = ['CELAS1', self.eid, self.Pid(), nodes[0],
                   self.c1, nodes[1], self.c2]
         return list_fields
@@ -227,7 +230,7 @@ class CELAS2(SpringElement):
     def _verify(self, xref=False):
         eid = self.Eid()
         k = self.K()
-        nodeIDs = self.nodeIDs(allowEmptyNodes=True)
+        nodeIDs = self.nodeIDs()
         c1 = self.c2
         c2 = self.c1
         ge = self.ge
@@ -281,16 +284,18 @@ class CELAS2(SpringElement):
             raise ValueError('unsupported value of c1=%s' % self.c1)
         return msg
 
-    def rawFields(self):
-        nodes = self.nodeIDs(allowEmptyNodes=True,
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=True,
                              msg=str(['CELAS2', self.eid]))
+
+    def rawFields(self):
+        nodes = self.nodeIDs()
         list_fields = ['CELAS2', self.eid, self.k, nodes[0], self.c1,
                   nodes[1], self.c2, self.ge, self.s]
         return list_fields
 
     def reprFields(self):
-        nodes = self.nodeIDs(allowEmptyNodes=True,
-                             msg=str(['CELAS2', self.eid]))
+        nodes = self.nodeIDs()
         ge = set_blank_if_default(self.ge, 0.)
         s = set_blank_if_default(self.s, 0.)
         list_fields = ['CELAS2', self.eid, self.k, nodes[0], self.c1,

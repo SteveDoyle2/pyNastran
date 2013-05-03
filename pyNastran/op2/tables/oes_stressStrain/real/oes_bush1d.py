@@ -135,9 +135,9 @@ class Bush1DStressObject(StressObject):
         self.plastic_strain[dt][eid] = ep
         self.is_failed[dt][eid] = fail
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
 
         raise NotImplementedError('CBUSH1D')
         msg = header + [
@@ -162,7 +162,7 @@ class Bush1DStressObject(StressObject):
             #s4 = self.s4[eid]
 
             vals = [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed]
-            (vals2, isAllZeros) = self.writeImagFloats13E(vals, isMagPhase)
+            (vals2, isAllZeros) = self.writeImagFloats13E(vals, is_mag_phase)
             [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed] = vals2
             msg.append('0%8i   %13s  %13s  %13s  %13s  %-s\n' %
                        (eid, element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed.rstrip()))
@@ -177,7 +177,7 @@ class Bush1DStressObject(StressObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         #raise NotImplementedError('CBUSH1D')
         words = [
 #      ELEMENT-ID =    7001

@@ -54,10 +54,10 @@ if __name__=='__main__':
 
     iSubcases = []
     debug     = False
-    makeGeom  = False
-    writeBDF  = False
+    make_geom  = False
+    write_bdf  = False
     write_f06  = True
-    write_matlab = False
+    write_matlab = True
     print_results = False
 
     delete_f06 = True
@@ -85,7 +85,7 @@ if __name__=='__main__':
         pass
 
     print("nFiles = %s" %(len(files)))
-    run_lots_of_files(files,makeGeom,writeBDF,write_f06,write_matlab,delete_f06,
+    run_lots_of_files(files,make_geom,write_bdf,write_f06,write_matlab,delete_f06,
                    print_results,debug,saveCases,skipFiles,stopOnFailure,
                    nStart,nStop)
     sys.exit('final stop...')

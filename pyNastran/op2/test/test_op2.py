@@ -49,13 +49,13 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
             n = '%s ' %(i)
             sys.stderr.write('%sfile=%s\n' %(n, op2file))
             nTotal += 1
-            isPassed = run_op2(op2file, makeGeom=makeGeom, write_bdf=write_bdf,
+            isPassed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
                                write_f06=write_f06, write_matlab=write_matlab,
                                delete_f06=delete_f06, print_results=print_results,
                                iSubcases=iSubcases, debug=debug,
                                stopOnFailure=stopOnFailure) # True/False
             if not isPassed:
-                sys.stderr.write('**file=%s\n' %(op2file))
+                sys.stderr.write('**file=%s\n' % op2file)
                 failedCases.append(op2file)
                 nFailed +=1
             else:
@@ -70,7 +70,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
     
     seconds = time.time()-t0
     minutes = seconds/60.
-    print("dt = %s seconds = %s minutes" %(seconds,minutes))
+    print("dt = %s seconds = %s minutes" % (seconds, minutes))
     
     #op2 = OP2('test_tet10_subcase_1.op2')
     #op2.read_op2()
@@ -196,11 +196,11 @@ def run_arg_parse():
     group.add_argument( '-q','--quiet',    dest='quiet',    action='store_true',help='Prints   debug messages (default=True)')
 
     #group2 = parser.add_mutually_exclusive_group()  # should this be exclusive???
-    parser.add_argument('-g','--geometry', dest='geometry',    action='store_true', help='Reads the OP2 for geometry, which can be written out')
-    parser.add_argument('-w','--write_bdf', dest='write_bdf',    action='store_true', help='Writes the bdf to fem.bdf.out')
-    parser.add_argument('-f','--write_f06', dest='write_f06',    action='store_true', help='Writes the f06 to fem.f06.out')
-    parser.add_argument('-z','--is_mag_phase', dest='is_mag_phase',  action='store_true', help='F06/Matlab Writer writes Magnitude/Phase instead of Real/Imaginary (still stores Real/Imag)')
-    parser.add_argument('-m','--matlab',   dest='write_matlab', action='store_true', help='Matlab Writer is enabled (fails for transient; limited support)')
+    parser.add_argument('-g','--geometry',     dest='geometry',       action='store_true', help='Reads the OP2 for geometry, which can be written out')
+    parser.add_argument('-w','--write_bdf',    dest='write_bdf',      action='store_true', help='Writes the bdf to fem.bdf.out')
+    parser.add_argument('-f','--write_f06',    dest='write_f06',      action='store_true', help='Writes the f06 to fem.f06.out')
+    parser.add_argument('-z','--is_mag_phase', dest='is_mag_phase',   action='store_true', help='F06/Matlab Writer writes Magnitude/Phase instead of Real/Imaginary (still stores Real/Imag)')
+    parser.add_argument('-m','--matlab',       dest='write_matlab',   action='store_true', help='Matlab Writer is enabled (fails for transient; limited support)')
     parser.add_argument('-p','--print_results',dest='print_results',  action='store_true', help='Prints objects to screen which can require lots of memory')
     parser.add_argument('-v','--version',action='version',version=ver)
     
@@ -212,10 +212,10 @@ def run_arg_parse():
     print("debug       = %s" %(not(args.quiet)))
 
     debug         = not(args.quiet)
-    make_geom      = args.geometry
-    write_bdf      = args.write_bdf
+    make_geom     = args.geometry
+    write_bdf     = args.write_bdf
     write_f06     = args.write_f06
-    is_mag_phase    = args.is_mag_phase
+    is_mag_phase  = args.is_mag_phase
     write_matlab  = args.write_matlab
     print_results = args.print_results
     op2FileName   = args.op2FileName[0]

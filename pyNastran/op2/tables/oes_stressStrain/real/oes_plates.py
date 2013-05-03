@@ -336,9 +336,9 @@ class PlateStressObject(StressObject):
                         msg += '\n'
         return msg
 
-    def write_matlab(self, name, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, name, isubcase, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_matlab_transient(name, isubcase, f, isMagPhase)
+            return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
 
         #if self.isVonMises():
         #    vonMises = 'vonMises'
@@ -460,9 +460,9 @@ class PlateStressObject(StressObject):
                     msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip())
         return msg
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
 
         if self.isVonMises():
             vonMises = 'VON MISES'
@@ -572,7 +572,7 @@ class PlateStressObject(StressObject):
                 pageNum += 1
         return (''.join(msg), pageNum - 1)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:
@@ -1134,7 +1134,7 @@ class PlateStrainObject(StrainObject):
             headers.append('maxShear')
         return headers
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
 
@@ -1248,7 +1248,7 @@ class PlateStrainObject(StrainObject):
                 pageNum += 1
         return (''.join(msg), pageNum - 1)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:

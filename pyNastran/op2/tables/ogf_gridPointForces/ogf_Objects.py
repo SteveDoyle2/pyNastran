@@ -4,6 +4,7 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class gridPointForcesObject(scalarObject):
+
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         scalarObject.__init__(self, data_code, isubcase)
         self.forces = {}

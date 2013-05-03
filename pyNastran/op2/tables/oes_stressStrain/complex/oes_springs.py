@@ -79,16 +79,16 @@ class ComplexCelasStressObject(complexStressObject):
         self.eType[eid] = self.element_name
         self.stress[dt][eid] = stress
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         """
         .. todo:: doesnt write...
         """
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
         return 'ComplexCelasStressObject write_f06 not implemented...\n'
         #raise NotImplementedError()
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         """
         .. todo:: improve formatting
         """
@@ -103,7 +103,7 @@ class ComplexCelasStressObject(complexStressObject):
 #                   1007       7.689395E+00 /  0.0                            1008       7.689395E+00 /  0.0
 #                   1009       7.689395E+00 /  0.0                            1010       7.689395E+00 /  0.0
         msg = []
-        isMagPhase = False
+        is_mag_phase = False
         for dt, Stress in sorted(self.stress.iteritems()):
             if isinstance(dt, float):  # fix
                 header[1] = ' %s = %10.4E float %s\n' % (self.data_code[
@@ -116,14 +116,14 @@ class ComplexCelasStressObject(complexStressObject):
             i = 0
             for elementID, stress in sorted(Stress.iteritems()):
 
-                if isMagPhase:
+                if is_mag_phase:
                     stressr = abs(stressr)
                     stressi = angle(stress, deg=True)
                 else:
                     stressr = stress.real
                     stressi = stress.imag
 
-                (vals2, isAllZeros) = writeImagFloats13E([stress], isMagPhase)
+                (vals2, isAllZeros) = writeImagFloats13E([stress], is_mag_phase)
                 if i == 0:
                     elementID1 = elementID
                     [stress1Real, stress1Imag] = vals2

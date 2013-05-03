@@ -8,10 +8,12 @@ from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 class BarStressObject(StressObject):
     """
-    # s_code=0
-                               S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )
-    ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
-      ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C
+    ::
+    
+      # s_code=0
+                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )
+      ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
+        ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StressObject.__init__(self, data_code, isubcase)
@@ -204,7 +206,7 @@ class BarStressObject(StressObject):
 
         #if nodeID==0: raise Exception(msg)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
 
@@ -239,7 +241,7 @@ class BarStressObject(StressObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = [
                 '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
@@ -372,11 +374,12 @@ class BarStressObject(StressObject):
 
 class BarStrainObject(StrainObject):
     """
-    # s_code=10
-                                     S T R A I N S   I N   B A R   E L E M E N T S          ( C B A R )
-    ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
-      ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C
+    ::
 
+      # s_code=10
+                                       S T R A I N S   I N   B A R   E L E M E N T S          ( C B A R )
+      ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
+        ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StrainObject.__init__(self, data_code, isubcase)
@@ -539,7 +542,7 @@ class BarStrainObject(StrainObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.isTransient:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
 
@@ -574,7 +577,7 @@ class BarStrainObject(StrainObject):
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = [
                 '                                  S T R A I N S    I N   B A R   E L E M E N T S           ( C B A R )\n',
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',

@@ -6,11 +6,13 @@ from .oes_objects import StressObject, StrainObject
 
 class ShearStressObject(StressObject):
     """
-    # format_code=1 sort_code=0 stressCode=0
-                                   S T R E S S E S   I N   S H E A R   P A N E L S      ( C S H E A R )
-    ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY
-      ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN
-        328        1.721350E+03   1.570314E+03   7.2E+01
+    ::
+    
+      # format_code=1 sort_code=0 stressCode=0
+                                     S T R E S S E S   I N   S H E A R   P A N E L S      ( C S H E A R )
+      ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY
+        ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN
+          328        1.721350E+03   1.570314E+03   7.2E+01
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StressObject.__init__(self, data_code, isubcase)
@@ -153,8 +155,7 @@ class ShearStressObject(StressObject):
 
 
 class ShearStrainObject(StrainObject):
-    """
-    """
+
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = 'CSHEAR'

@@ -80,10 +80,10 @@ def make_end():
 
 
 class F06WriterDeprecated(object):
-    def writeF06(self, f06OutName, isMagPhase=False, makeFile=True,
+    def writeF06(self, f06OutName, is_mag_phase=False, makeFile=True,
                  deleteObjects=True):
         """.. seealso:: write_f06"""
-        self.write_f06(f06OutName, isMagPhase, makeFile, deleteObjects)
+        self.write_f06(f06OutName, is_mag_phase, makeFile, deleteObjects)
 
     def loadOp2(self, isTesting=False):
         """.. seealso:: load_op2"""
@@ -96,7 +96,7 @@ class F06Writer(object):
 
     def set_f06_name(self, model):
         self.model = model
-        self.f06OutName = '%s.f06.out' % (self.model)
+        self.f06OutName = '%s.f06.out' % self.model
 
     def load_op2(self, isTesting=False):
         print("self.class = ",self.__class__.__name__)
@@ -133,14 +133,14 @@ class F06Writer(object):
         """If this class is inherited, the PAGE stamp may be overwritten"""
         return make_stamp(Title)
 
-    def writeF06(self, f06OutName, isMagPase=False, makeFile=True,
+    def writeF06(self, f06OutName, is_mag_phase=False, makeFile=True,
                  deleteObjects=True):
         """
         .. deprecated: will be replaced in version 0.7 with :func:`read_op2`
         """
         warnings.warn('writeF06 has been deprecated; use '
                       'write_f06', DeprecationWarning, stacklevel=2)
-        self.write_f06(self, f06OutName, is_mag_phase=isMagPase, make_file=makeFile,
+        self.write_f06(self, f06OutName, is_mag_phase=is_mag_phase, make_file=makeFile,
                  delete_objects=deleteObjects)
 
     def write_f06(self, f06OutName, is_mag_phase=False, make_file=True,
@@ -168,7 +168,7 @@ class F06Writer(object):
         #print "pageStamp = |%r|" %(pageStamp)
         #print "stamp     = |%r|" %(stamp)
 
-        #isMagPhase = False
+        #is_mag_phase = False
         pageNum = 1
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n']
@@ -281,7 +281,7 @@ class F06Writer(object):
                         result = resType[isubcase]
                         try:
                             print(result.__class__.__name__)
-                            (msg, pageNum) = result.write_f06(header, pageStamp, pageNum=pageNum, f=f, isMagPhase=False)
+                            (msg, pageNum) = result.write_f06(header, pageStamp, pageNum=pageNum, f=f, is_mag_phase=False)
                         except:
                             #print "result name = %s" %(result.name())
                             raise
@@ -292,7 +292,7 @@ class F06Writer(object):
         if 0:
             for res in resTypes:
                 for isubcase, result in sorted(res.iteritems()):
-                    (msg, pageNum) = result.write_f06(header, pageStamp, pageNum=pageNum, f=f, isMagPhase=False)
+                    (msg, pageNum) = result.write_f06(header, pageStamp, pageNum=pageNum, f=f, is_mag_phase=False)
                     if delete_objects:
                         del result
                     f.write(msg)

@@ -286,17 +286,17 @@ class ComplexPlateStressObject(StressObject):
                         msg += '\n'
         return msg
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         assert f is not None
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, isMagPhase)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
 
         #if self.isVonMises():
         #    vonMises = 'VON MISES'
         #else:
         #    vonMises = 'MAX SHEAR'
 
-        if isMagPhase:
+        if is_mag_phase:
             pass
         else:
             magReal = ['                                                          (REAL/IMAGINARY)\n', ' \n']
@@ -375,8 +375,8 @@ class ComplexPlateStressObject(StressObject):
 
         return (''.join(msg), pageNum - 1)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
-        if isMagPhase:
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        if is_mag_phase:
             magReal = ['                                                         (MAGNITUDE/PHASE)\n \n']
         else:
             magReal = ['                                                          (REAL/IMAGINARY)\n \n']
@@ -469,7 +469,7 @@ class ComplexPlateStressObject(StressObject):
                                 'name'], dt)
                             msg += header + msgPack
                             for eid in eids:
-                                out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4, isMagPhase)
+                                out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4, is_mag_phase)
                                 msg.append(out)
                             msg.append(pageStamp + str(pageNum) + '\n')
                             pageNum += 1
@@ -482,7 +482,7 @@ class ComplexPlateStressObject(StressObject):
                                 'name'], dt)
                             msg += header + msgPack
                             for eid in eids:
-                                out = self.writeF06_Tri3Transient(dt, eid, isMagPhase)
+                                out = self.writeF06_Tri3Transient(dt, eid, is_mag_phase)
                                 msg.append(out)
                             msg.append(pageStamp + str(pageNum) + '\n')
                             pageNum += 1
@@ -496,7 +496,7 @@ class ComplexPlateStressObject(StressObject):
                         msg += header + msgPack
                         for eid in eids:
                             out = self.writeF06_Tri3Transient(dt,
-                                                              eid, isMagPhase)
+                                                              eid, is_mag_phase)
                             msg.append(out)
                         msg.append(pageStamp + str(pageNum) + '\n')
                         pageNum += 1
@@ -509,7 +509,7 @@ class ComplexPlateStressObject(StressObject):
                             self.data_code['name'], dt)
                         msg += header + msgPack
                         for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3, isMagPhase)
+                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3, is_mag_phase)
                             msg.append(out)
                         msg.append(pageStamp + str(pageNum) + '\n')
                         pageNum += 1
@@ -522,7 +522,7 @@ class ComplexPlateStressObject(StressObject):
                             self.data_code['name'], dt)
                         msg += header + msgPack
                         for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 8, isMagPhase)
+                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 8, is_mag_phase)
                             msg.append(out)
                         msg.append(pageStamp + str(pageNum) + '\n')
                         pageNum += 1
@@ -538,7 +538,7 @@ class ComplexPlateStressObject(StressObject):
 
         return (''.join(msg), pageNum - 1)
 
-    def writeF06_Quad4_Bilinear(self, eid, n, isMagPhase):
+    def writeF06_Quad4_Bilinear(self, eid, n, is_mag_phase):
         msg = ''
         k = self.oxx[eid].keys()
         k.remove('C')
@@ -550,7 +550,7 @@ class ComplexPlateStressObject(StressObject):
                 oyy = self.oyy[eid][nid][iLayer]
                 txy = self.txy[eid][nid][iLayer]
                 ([fd, oxxr, oyyr, txyr,
-                  fdi, oxxi, oyyi, txyi], isAllZeros) = writeImagFloats13E([fd, oxx, oyy, txy], isMagPhase)
+                  fdi, oxxi, oyyi, txyi], isAllZeros) = writeImagFloats13E([fd, oxx, oyy, txy], is_mag_phase)
 
                 if nid == 'C' and iLayer == 0:
                     msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' % (eid, 'CEN/' + str(n), fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi.rstrip())
@@ -562,7 +562,7 @@ class ComplexPlateStressObject(StressObject):
                     raise Exception('Invalid option for cquad4')
         return msg
 
-    def writeF06_Quad4_BilinearTransient(self, dt, eid, n, isMagPhase):
+    def writeF06_Quad4_BilinearTransient(self, dt, eid, n, is_mag_phase):
         msg = ''
         k = self.oxx[dt][eid].keys()
         k.remove('C')
@@ -574,7 +574,7 @@ class ComplexPlateStressObject(StressObject):
                 oyy = self.oyy[dt][eid][nid][iLayer]
                 txy = self.txy[dt][eid][nid][iLayer]
                 ([fd, oxxr, oyyr, txyr,
-                  fdi, oxxi, oyyi, txyi], isAllZeros) = writeImagFloats13E([fd, oxx, oyy, txy], isMagPhase)
+                  fdi, oxxi, oyyi, txyi], isAllZeros) = writeImagFloats13E([fd, oxx, oyy, txy], is_mag_phase)
 
                 if nid == 'C' and iLayer == 0:
                     msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' % (eid, 'CEN/' + str(n), fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi.rstrip())
@@ -587,7 +587,7 @@ class ComplexPlateStressObject(StressObject):
                     raise Exception('Invalid option for cquad4')
         return msg
 
-    def writeF06_Tri3(self, eid, isMagPhase):
+    def writeF06_Tri3(self, eid, is_mag_phase):
         msg = ''
         k = self.oxx[eid].keys()
         k.remove('C')
@@ -606,7 +606,7 @@ class ComplexPlateStressObject(StressObject):
                     msg += ' H  %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy)
         return msg
 
-    def writeF06_Tri3Transient(self, dt, eid, isMagPhase):
+    def writeF06_Tri3Transient(self, dt, eid, is_mag_phase):
         msg = ''
         k = self.oxx[dt][eid].keys()
         k.remove('C')
@@ -618,7 +618,7 @@ class ComplexPlateStressObject(StressObject):
                 oyy = self.oyy[dt][eid][nid][iLayer]
                 txy = self.txy[dt][eid][nid][iLayer]
                 ([fd, oxxr, oyyr, txyr,
-                  fdi, oxxi, oyyi, txyi], isAllZeros) = writeImagFloats13E([fd, oxx, oyy, txy], isMagPhase)
+                  fdi, oxxi, oyyi, txyi], isAllZeros) = writeImagFloats13E([fd, oxx, oyy, txy], is_mag_phase)
 
                 if iLayer == 0:
                     msg += '0  %6i   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' % (eid, fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi)
@@ -903,7 +903,7 @@ class ComplexPlateStrainObject(StrainObject):
             headers.append('maxShear')
         return headers
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         assert f is not None
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
@@ -1019,7 +1019,7 @@ class ComplexPlateStrainObject(StrainObject):
 
         return (''.join(msg), pageNum - 1)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:
@@ -1094,7 +1094,7 @@ class ComplexPlateStrainObject(StrainObject):
                         for dt in dts:
                             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                             for eid in eids:
-                                out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4, isMagPhase)
+                                out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4, is_mag_phase)
                                 msg.append(out)
                             msg.append(pageStamp + str(pageNum) + '\n')
                             if f is not None:
@@ -1106,7 +1106,7 @@ class ComplexPlateStrainObject(StrainObject):
                             header[1] = ' %s = %10.4E\n' % (self.data_code[
                                 'name'], dt)
                             for eid in eids:
-                                out = self.writeF06_Tri3Transient(dt, eid, isMagPhase)
+                                out = self.writeF06_Tri3Transient(dt, eid, is_mag_phase)
                                 msg.append(out)
                             msg.append(pageStamp + str(pageNum) + '\n')
                             if f is not None:
@@ -1119,7 +1119,7 @@ class ComplexPlateStrainObject(StrainObject):
                             self.data_code['name'], dt)
                         for eid in eids:
                             out = self.writeF06_Tri3Transient(dt,
-                                                              eid, isMagPhase)
+                                                              eid, is_mag_phase)
                             msg.append(out)
                         msg.append(pageStamp + str(pageNum) + '\n')
                         if f is not None:
@@ -1131,7 +1131,7 @@ class ComplexPlateStrainObject(StrainObject):
                         header[1] = ' %s = %10.4E\n' % (
                             self.data_code['name'], dt)
                         for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 5, isMagPhase)
+                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 5, is_mag_phase)
                             msg.append(out)
                         msg.append(pageStamp + str(pageNum) + '\n')
                         if f is not None:
@@ -1143,7 +1143,7 @@ class ComplexPlateStrainObject(StrainObject):
                         header[1] = ' %s = %10.4E\n' % (
                             self.data_code['name'], dt)
                         for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3, isMagPhase)
+                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3, is_mag_phase)
                             msg.append(out)
                         msg.append(pageStamp + str(pageNum) + '\n')
                         if f is not None:
@@ -1155,7 +1155,7 @@ class ComplexPlateStrainObject(StrainObject):
                                               (eType))  # CQUAD8, CTRIA6
         return (''.join(msg), pageNum - 1)
 
-    def writeF06_Quad4_Bilinear(self, eid, n, isMagPhase):
+    def writeF06_Quad4_Bilinear(self, eid, n, is_mag_phase):
         msg = ''
         k = self.exx[eid].keys()
         k.remove('C')
@@ -1167,7 +1167,7 @@ class ComplexPlateStrainObject(StrainObject):
                 eyy = self.eyy[eid][nid][iLayer]
                 exy = self.exy[eid][nid][iLayer]
                 ([fd, exxr, eyyr, exyr,
-                  fdi, exxi, eyyi, exyi], isAllZeros) = writeImagFloats13E([fd, exx, eyy, exy], isMagPhase)
+                  fdi, exxi, eyyi, exyi], isAllZeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
 
                 if nid == 'C' and iLayer == 0:
                     msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' % (eid, 'CEN/' + str(n), fd, exxr, exxi, eyyr, eyyi, exyr, exyi.rstrip())
@@ -1179,7 +1179,7 @@ class ComplexPlateStrainObject(StrainObject):
                     raise Exception('Invalid option for cquad4')
         return msg
 
-    def writeF06_Quad4_BilinearTransient(self, dt, eid, n, isMagPhase):
+    def writeF06_Quad4_BilinearTransient(self, dt, eid, n, is_mag_phase):
         msg = ''
         k = self.exx[dt][eid].keys()
         k.remove('C')
@@ -1191,7 +1191,7 @@ class ComplexPlateStrainObject(StrainObject):
                 eyy = self.eyy[dt][eid][nid][iLayer]
                 exy = self.exy[dt][eid][nid][iLayer]
                 ([fd, exxr, eyyr, exyr,
-                  fdi, exxi, eyyi, exyi], isAllZeros) = writeImagFloats13E([fd, exx, eyy, exy], isMagPhase)
+                  fdi, exxi, eyyi, exyi], isAllZeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
 
                 if nid == 'C' and iLayer == 0:
                     msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' % (eid, 'CEN/' + str(n), fd, exxr, exxi, eyyr, eyyi, exyr, exyi.rstrip())
@@ -1203,7 +1203,7 @@ class ComplexPlateStrainObject(StrainObject):
                     raise Exception('Invalid option for cquad4')
         return msg
 
-    def writeF06_Tri3(self, eid, isMagPhase):
+    def writeF06_Tri3(self, eid, is_mag_phase):
         msg = ''
         k = self.exx[eid].keys()
         k.remove('C')
@@ -1216,14 +1216,14 @@ class ComplexPlateStrainObject(StrainObject):
                 exy = self.exy[eid][nid][iLayer]
 
                 ([fd, exxr, eyyr, exyr,
-                  fdi, exxi, eyyi, exyi], isAllZeros) = writeImagFloats13E([fd, exx, eyy, exy], isMagPhase)
+                  fdi, exxi, eyyi, exyi], isAllZeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
                 if iLayer == 0:
                     msg += '0  %6i   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' % (eid, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
                 else:
                     msg += '   %6s   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' % ('', fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
         return msg
 
-    def writeF06_Tri3Transient(self, dt, eid, isMagPhase):
+    def writeF06_Tri3Transient(self, dt, eid, is_mag_phase):
         msg = ''
         k = self.exx[dt][eid].keys()
         k.remove('C')
@@ -1236,7 +1236,7 @@ class ComplexPlateStrainObject(StrainObject):
                 exy = self.exy[dt][eid][nid][iLayer]
 
                 ([fd, exxr, eyyr, exyr,
-                  fdi, exxi, eyyi, exyi], isAllZeros) = writeImagFloats13E([fd, exx, eyy, exy], isMagPhase)
+                  fdi, exxi, eyyi, exyi], isAllZeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
                 if iLayer == 0:
                     msg += '0  %6i   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' % (eid, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
                 else:

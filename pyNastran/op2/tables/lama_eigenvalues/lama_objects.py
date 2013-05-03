@@ -5,6 +5,7 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class RealEigenvalues(baseScalarObject):
+
     def __init__(self, isubcase):
         #self.modeNumber = []
         baseScalarObject.__init__(self)
@@ -44,7 +45,7 @@ class RealEigenvalues(baseScalarObject):
         for line in data:
             self.addF06Line(line)
 
-    def write_matlab(self, isubcase, f=None, isMagPhase=False):
+    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
         iModesMsg = 'fem.eigenvalues(%i).iModes    = [' % isubcase
         modesMsg = 'fem.eigenvalues(%i).modes     = [' % isubcase
         orderMsg = 'fem.eigenvalues(%i).order     = [' % isubcase
@@ -69,7 +70,7 @@ class RealEigenvalues(baseScalarObject):
         f.write(massMsg + '];\n')
         f.write(stiffMsg + '];\n')
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         msg = header + ['                                              R E A L   E I G E N V A L U E S\n',
                         '   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED\n',
                         '    NO.       ORDER                                                                       MASS              STIFFNESS\n']
@@ -133,7 +134,7 @@ class ComplexEigenvalues(baseScalarObject):
         for line in data:
             self.addF06Line(line)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, isMagPhase=False):  # not proper msg start
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):  # not proper msg start
         msg = header + ['                                        C O M P L E X   E I G E N V A L U E S\n',
                         '   MODE    EXTRACTION      EIGENVALUE            CYCLES            DAMPING\n',
                         '    NO.       ORDER\n']
