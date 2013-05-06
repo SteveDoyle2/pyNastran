@@ -53,7 +53,7 @@ def main():
     iSubcases = []
     debug = False
     saveCases = True
-    regenerate = True
+    regenerate = False
     stopOnFailure = False
     getSkipCards = False
 
@@ -61,7 +61,8 @@ def main():
         files2 = parse_skipped_cards('skippedCards.out')
     elif regenerate:
         files2 = get_files_of_type(moveDir, '.f06')
-        files2 = []
+        #print files2
+        #files2 = []
         files2 += files
     else:
         files2 = get_failed_files('failedCases.in')

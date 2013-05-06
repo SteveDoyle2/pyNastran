@@ -64,7 +64,6 @@ class SPOINT(Node):
     type = 'SPOINT'
 
     def __init__(self, nid, comment=''):
-        asd
         Node.__init__(self, card=None, data=None)
         if comment:
             self._comment = comment

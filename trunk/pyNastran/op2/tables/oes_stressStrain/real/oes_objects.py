@@ -118,7 +118,7 @@ class StrainObject(OES_Object):
             self.log.debug("updating strain...%s=%s element_name=%s" %
                            (self.data_code['name'], dt, self.element_name))
             self.dt = dt
-            self.add_new_transient()
+            self.add_new_transient(dt)
 
     def isStress(self):
         return False

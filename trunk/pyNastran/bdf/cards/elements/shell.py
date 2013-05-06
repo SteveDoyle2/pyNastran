@@ -417,7 +417,7 @@ class CTRIA6(TriShell):
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
-        nids = self.nodeIDs(allowEmptyNodes=True)
+        nids = self.nodeIDs()
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
