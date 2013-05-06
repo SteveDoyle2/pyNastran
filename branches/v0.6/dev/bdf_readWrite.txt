@@ -1,0 +1,488 @@
+------------------------------BDF Info------------------------------
+
+In order for a card to be supported, it must read AND write ALL fields.
+Important calculated parameters are nice, but not required.
+
+ 
+BDF Cards Supported Reading/Writing
+
+----Nodes----:
+GRID    (done)
+GRDSET  (done)
+SPOINT  (done)
+
+----Coordinates----:
+CORD1R  (done)
+CORD2R  (done)
+CORD1C  (done)
+CORD2C  (done)
+CORD1S  (done)
+CORD2S  (done)
+CORD3G  (partial)
+
+----Rods/Bars/Beams (Elements/Properties)----:
+CBAR    (done)
+CROD    (done)
+CTUBE   (done)
+CBEAM   (done)
+CBEAM3  (done)
+CBEND   (done)
+CONROD  (done)
+
+PROD    (done)
+PBAR    (done)
+PBARL   (done)
+PBEAM   (done)
+PBEAML  (partial)
+PBEAM3
+
+PBCOMP  (done)
+PBRSECT
+PBMSECT
+
+PBEND   (done)
+PTUBE   (done)
+
+----Plates/Shells (Elements/Properties)----:
+CTRIA3  (done)
+CTRIA6  (done)
+CTRIAR  (done)
+
+CQUAD   (done)
+CQUAD4  (done)
+CQUAD8  (done)
+CQUADR  (done)
+
+PSHELL  (done)
+PCOMP   (done)
+PCOMPG  (done)
+
+CSHEAR  (done)
+PSHEAR  (done)
+
+----Springs (Elements/Properties)----:
+CELAS1  (done)
+CELAS2  (done)
+CELAS3  (done)
+CELAS4  (done)
+PELAS   (done)
+PELAST  (not added)
+
+----Bushings (Elements/Properties)----:
+CBUSH   (done)
+CBUSH1D (done)
+CBUSH2D (done)
+
+PBUSH   (done)
+PBUSH1D (done)
+PBUSH2D (done)
+PBUSHT  (done)
+
+----Dampers (Elements/Properties)----:
+CDAMP1  (done)  # scalar damper
+CDAMP2  (done)
+CDAMP3  (done)
+CDAMP4  (done)
+CDAMP5  (done)
+
+PDAMP   (done)
+PDAMP5  (done)
+PDAMPT  (done)
+
+CVISC   (done) # viscous damper
+PVISC   (done)
+
+----Masses (Elements/Properties)----:
+CONM1   (disabled)
+CONM2   (cid!=0)
+
+CMASS1  (done)
+CMASS2  (done)
+CMASS3  (done)
+CMASS4  (done)
+PMASS   (done)
+NSM
+NSM1
+
+----Solids (Elements/Properties)----:
+CTETRA  (done)
+CPENTA  (done)
+CHEXA   (done)
+
+PSOLID  (done)
+PLSOLID (done)
+
+----Cracks (Elements/Properties)----:
+CRAC2D (done)
+CRAC3D (done)
+PRAC2D (done)
+PRAC3D (done)
+
+----Other Elements/Properties----:
+CFAST   (done)
+PFAST   (done)
+
+CGAP    (done)
+PGAP    (done)
+
+PBCOMP  (done)
+
+PLPLANE (done)
+
+----Rigid Elements----:
+RROD
+RTRPLT
+RBAR  (done)
+RBAR1 (done)
+RBE1  (done)
+RBE2  (done)
+RBE3  (done)
+
+----Materials----:
+CREEP (done)
+MAT1  (done)
+MAT2  (done)
+MAT3  (done)
+MAT8  (done)
+MAT9  (done)
+MAT10 (done)
+MATHP (done)
+
+----Thermal Materials----:
+MAT4  (done)
+MAT5  (done)
+
+----Nonlinear Materials----:
+MATS1  (done)
+MATT1
+MATT2
+MATT3
+MATT4
+MATT5
+MATT8
+MATT9
+
+----Constraints----:
+SPC     (done)
+SPC1    (done)
+SPCD    (done)
+SPCADD  (done)
+
+MPC     (done)
+MPCADD  (done)
+
+SUPORT  (done)
+SUPORT1 (done)
+
+----Loads----:
+LOAD    (done)
+LSEQ    (done)
+
+FORCE   (done)
+FORCE1  (done)
+FORCE2  (done)
+RFORCE  (done)
+
+ACCEL1  (done)
+GRAV    (done)
+
+PLOAD   (done)
+PLOAD1  (done)
+PLOAD2  (done)
+PLOAD4  (done)
+PLOADB3
+
+MOMENT  (done)
+MOMENT1 (done)
+MOMENT2 (done)
+
+DLOAD   (done)
+SLOAD   (done)
+
+TLOAD1  (done)
+TLOAD2  (done)
+RLOAD1  (done)
+RLOAD2  (done)
+
+----Thermal Loads----:
+TEMP   (done)
+TEMPD  (not integrated)
+TEMPD1
+
+QHBDY  (done)
+QBDY1  (done)
+QBDY2  (done)
+QBDY3  (done)
+
+----Thermal Elements----:
+CHBDYE (done)
+CHBDYG (done)
+CHBDYP (done)
+CONVM
+
+----Thermal BCs----:
+CONV   (done)
+RADBC  (done)
+RADM   (not integrated)
+TEMPBC
+RADCAV
+RADSET
+
+----Thermal Properties----:
+PCONV  (done)
+PCONVM (done)
+PHBDY  (done)
+
+----Aero----:
+AERO    (done)
+AEROS   (done)
+GUST    (done)
+FLUTTER (done)
+FLFACT  (done)
+
+AEFACT  (done)
+AELINK  (done)
+AELIST  (done)
+AEPARAM (done)
+AESTAT  (done)
+AESURF  (done)
+AESURFS (not integrated)
+
+CAERO1  (done)
+CAERO2  (done)
+CAERO3
+CAERO4  (done)
+CAERO5
+
+PAERO1  (done)
+PAERO2  (done)
+PAERO3
+PAERO4
+PAERO5
+
+SPLINE1 (done)
+SPLINE2 (done)
+SPLINE3
+SPLINE4 (done)
+SPLINE5 (done)
+SPLINE6
+SPLINE7
+
+CSSCHD  (not integrated)
+TRIM    (done)
+
+----Dynamic----:
+DAREA   (done)
+NLPARM  (done)
+NLPCI   (done)
+TSTEP   (done)
+TSTEPNL (done)
+
+----Modal Cards----:
+FREQ  (done)
+FREQ1 (done)
+FREQ2 (done)
+FREQ3
+FREQ4
+FREQ5
+
+----Optimization----:
+DCONSTR  (done)
+DESVAR   (done)
+DDVAL    (done)
+DOPTPRM  (done)
+DRESP1   (done)
+DRESP2   (done)
+DRESP3
+DVGRID
+DVCREL1         # element  DV
+DVCREL2
+DVPREL1  (done) # property DV
+DVPREL2  (done)
+DVMREL1  (done) # material DV
+DVMREL2
+DLINK   (done)
+DEQATN  (in progress)
+
+---Tables---
+DTABLE
+TABLED1  (done)
+TABLED2  (done)
+TABLED3  (done)
+TABLED4
+TABLEHT
+TABLEH1
+TABLEM1  (done)
+TABLEM2  (done)
+TABLEM3  (done)
+TABLEM4  (done)
+TABLES1  (done)
+TABLEST  (done)
+TIC      (not integrated)
+
+---Random Tables---
+TABRND1  (done)
+TABRNDG  (done)
+
+----Sets----:
+ASET   (done)
+BSET   (done)
+CSET   (done)
+QSET   (done)
+ASET1  (done)
+BSET1  (done)
+CSET1  (done)
+QSET1  (done)
+
+SET1   (done)
+SET2
+SET3   (done)
+SESET  (done)
+SEQSEP (not integrated...is this a set)
+SEQSET1
+RADSET (not integrated)
+
+----Methods----:
+EIGB    (done)
+EIGC    (done)
+EIGP    (done)
+EIGR    (done)
+EIGRL   (done)
+MKAERO1 (done)
+MKAERO2 (done)
+
+----MATRICES----:
+DMIG        (done)
+DMIG,UACCEL
+DMIJ        (done)
+DMIJI       (done)
+DMIK        (done)
+
+----Other----:
+INCLUDE (partial - case control deck & bulk data deck ONLY)
+PARAM (done)
+
+-----------------------------------------------
+
+----Axial Nodes----:
+RINGAX (not integrated)
+POINTAX
+
+----Axial Elements----:
+CCONEAX
+CTRIAX  (done)
+CTRIAX6 (done)
+CQUADX  (done)
+RINGAX
+
+----Axial Properties----:
+PCONEAX
+
+----Axial Loads----:
+FORCEAX
+PLOADX1 (done)
+MOMAX
+TEMPAX
+PRESAX
+
+----Axial Constraints----:
+MPCAX
+SPCAX   (done)
+SUPAX
+
+----Axial Other----:
+AXIC
+OMITAX
+SECTAX
+
+-----------------------------------------------
+
+Not supported - ask for the cards you want
+
+
+---- Elements w/ Properties----:
+CBARAO
+
+---- Elements----:
+PLOTEL
+MBOLTUS
+BAROR
+BEAMOR
+CBARAO
+
+---- Rigid Elements----:
+RROD
+RSPLINE
+RTRPLT
+RBE2GS
+RBJOINT
+RBJSTIF
+RJOINT
+RTRPLT1
+MATRIG
+
+----Patran Loads----:
+QVECT
+QVOL
+
+RADCAV
+RADMT
+
+TEMPP1
+TEMPRB
+
+VIEW
+VIEW3D
+
+----Nodes----:
+EGRID
+GRIDG
+MONPNT1
+MONPNT2
+MONPNT3
+
+----Thermal Loads----:
+CONTRLT
+BDYOR
+
+----Thermal----:
+RADBND
+RADLST
+RADMTX
+RADSET
+
+----Special----:
+GENEL
+
+----Dynamics/Nonlinear---:
+EPOINT
+
+----Super Elements----:
+CSUPER
+CSUPEXT
+EXTRN
+SEELT
+SEEXCLD
+SELABEL
+SELOC
+SEMPLN
+SENQST
+SEQGP
+SEQSEP
+SEQSET
+SEQSET1
+SESUP
+
+----Acoustic----:
+ACSRCE
+CHACAB
+CHACBR
+
+----Unclassified----:
+CGEN
+SPCG
+
+-------------------------------------------
+
+msc Patran card support
+http://www.mscsoftware.com/training_videos/patran/Reverb_help/index.html#page/MD%2520Nastran%2520Structural/nas_input_forms.06.3.html
