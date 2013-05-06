@@ -88,11 +88,14 @@ class OUG(object):
             sline = line.strip().split()
             line2 = self.infile.readline()[1:].rstrip('\r\n ')
             sline += line2.strip().split()
-            out = [float(sline[0]), sline[1].strip(),
-                   float(sline[2]), float(sline[3]), float(sline[4]),
-                   float(sline[5]), float(sline[6]), float(sline[7]),
-                   float(sline[8]), float(sline[9]), float(sline[10]),
-                   float(sline[11]), float(sline[12]), float(sline[13]), ]
+            
+            dx = float(sline[2]) + float(sline[8])*1j
+            dy = float(sline[3]) + float(sline[9])*1j
+            dz = float(sline[4]) + float(sline[10])*1j
+            rx = float(sline[5]) + float(sline[11])*1j
+            ry = float(sline[6]) + float(sline[12])*1j
+            rz = float(sline[7]) + float(sline[13])*1j
+            out = [float(sline[0]), sline[1].strip(), dx, dy, dz, rx, ry, rz]
             #print sline
             #print out
             data.append(out)

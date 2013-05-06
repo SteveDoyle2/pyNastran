@@ -594,8 +594,8 @@ class RLOAD1(TabularLoad):
         if card:
             self.sid = integer(card, 1, 'sid')
             self.exciteID = integer(card, 2, 'exciteID')
-            self.delay = integer_or_blank(card, 3, 'delay')
-            self.dphase = integer_or_blank(card, 4, 'dphase')
+            self.delay = integer_double_or_blank(card, 3, 'delay')
+            self.dphase = integer_double_or_blank(card, 4, 'dphase')
             self.tc = integer_or_blank(card, 5, 'tc', 0)
             self.td = integer_or_blank(card, 6, 'td', 0)
             self.Type = integer_string_or_blank(card, 7, 'Type', 'LOAD')
@@ -676,8 +676,8 @@ class RLOAD2(TabularLoad):
         if card:
             self.sid = integer(card, 1, 'sid')
             self.exciteID = integer(card, 2, 'exciteID')
-            self.delay = integer_or_blank(card, 3, 'delay')
-            self.dphase = integer_or_blank(card, 4, 'dphase')
+            self.delay = integer_double_or_blank(card, 3, 'delay')
+            self.dphase = integer_double_or_blank(card, 4, 'dphase')
             self.tb = integer_or_blank(card, 5, 'tb', 0)
             self.tp = integer_or_blank(card, 6, 'tp', 0)
             self.Type = string_or_blank(card, 7, 'Type', 'LOAD')
