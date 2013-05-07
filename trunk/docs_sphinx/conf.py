@@ -14,8 +14,14 @@
 import sys
 import os.path
 import re
+import pyNastran
+pkg_path = pyNastran.__path__[0]
 sys.path.append(os.path.dirname(os.getcwd()))
-
+sys.path.append(os.path.dirname(pkg_path))
+sys.path.append(pkg_path)
+sys.path.append(os.path.join(pkg_path, 'bdf'))
+sys.path.append(os.path.join(pkg_path, 'op2'))
+sys.path.append(os.path.join(pkg_path, 'f06'))
 
 
 # If extensions (or modules to document with autodoc) are in another directory,
