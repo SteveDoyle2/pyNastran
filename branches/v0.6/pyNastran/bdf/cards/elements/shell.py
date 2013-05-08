@@ -1341,6 +1341,9 @@ class CQUAD(QuadShell):
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]
         assert len(self.nodes) == 9
 
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=True)
+
     def rawFields(self):
         list_fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields

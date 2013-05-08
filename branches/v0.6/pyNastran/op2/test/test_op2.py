@@ -110,6 +110,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
     isPassed = False
     stopOnFailure = False
     #debug = True
+    write_matlab = False
     try:
         op2 = OP2(op2FileName, make_geom=make_geom, debug=debug)
         op2.set_subcases(iSubcases)
@@ -193,11 +194,11 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
     #    isPassed = True
     #except IndexError: # bad bdf
     #    isPassed = True
-    except IOError: # missing file
-        isPassed = False
-        raise
-    except SyntaxError: #Param Parse
-        isPassed = True
+    #except IOError: # missing file
+        #isPassed = False
+        #raise
+    #except SyntaxError: #Param Parse
+        #isPassed = True
     except:
         #print e
         print_exc(file=sys.stdout)
@@ -224,7 +225,6 @@ def run_arg_parse():
     parser.add_argument('-w','--write_bdf',    dest='write_bdf',      action='store_true', help='Writes the bdf to fem.bdf.out')
     parser.add_argument('-f','--write_f06',    dest='write_f06',      action='store_true', help='Writes the f06 to fem.f06.out')
     parser.add_argument('-z','--is_mag_phase', dest='is_mag_phase',   action='store_true', help='F06/Matlab Writer writes Magnitude/Phase instead of Real/Imaginary (still stores Real/Imag)')
-    parser.add_argument('-m','--matlab',       dest='write_matlab',   action='store_true', help='Matlab Writer is enabled (fails for transient; limited support)')
     parser.add_argument('-p','--print_results',dest='print_results',  action='store_true', help='Prints objects to screen which can require lots of memory')
     parser.add_argument('-v','--version',action='version',version=ver)
     
@@ -240,7 +240,7 @@ def run_arg_parse():
     write_bdf     = args.write_bdf
     write_f06     = args.write_f06
     is_mag_phase  = args.is_mag_phase
-    write_matlab  = args.write_matlab
+    write_matlab  = False
     print_results = args.print_results
     op2FileName   = args.op2FileName[0]
 
