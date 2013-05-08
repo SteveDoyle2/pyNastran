@@ -34,12 +34,45 @@ real Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`oes_bush` Module
+----------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.real.oes_bush
+
+.. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_bush
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`oes_bush1d` Module
+------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d
+
+.. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`oes_compositePlates` Module
 ---------------------------------
 
 .. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`oes_gap` Module
+---------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.real.oes_gap
+
+.. automodule:: pyNastran.op2.tables.oes_stressStrain.real.oes_gap
     :members:
     :private-members:
     :undoc-members:

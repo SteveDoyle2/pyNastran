@@ -37,6 +37,19 @@ op2 Package
 :mod:`op2_helper` Module
 ------------------------
 
+.. inheritance-diagram:: pyNastran.op2.op2_helper
+
+.. automodule:: pyNastran.op2.op2_helper
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`op2_helper` Module
+------------------------
+
+.. inheritance-diagram:: pyNastran.op2.op2_helper
+
 .. automodule:: pyNastran.op2.op2_helper
     :members:
     :private-members:
@@ -50,5 +63,5 @@ Subpackages
 
     pyNastran.op2.resultObjects
     pyNastran.op2.tables
-    pyNastran.op2.writer
+    pyNastran.op2.test
 

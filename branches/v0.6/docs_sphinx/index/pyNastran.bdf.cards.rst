@@ -144,6 +144,17 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`tables` Module
+--------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.tables
+
+.. automodule:: pyNastran.bdf.cards.tables
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 Subpackages
 -----------
 

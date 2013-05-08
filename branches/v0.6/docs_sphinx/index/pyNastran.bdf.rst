@@ -34,10 +34,10 @@ bdf Package
     :undoc-members:
     :show-inheritance:
 
-
 :mod:`fieldWriter` Module
 -------------------------
 
+.. inheritance-diagram:: pyNastran.bdf.fieldWriter
 
 .. automodule:: pyNastran.bdf.fieldWriter
     :members:
@@ -48,8 +48,20 @@ bdf Package
 :mod:`fieldWriter16` Module
 ---------------------------
 
+.. inheritance-diagram:: pyNastran.bdf.fieldWriter16
 
 .. automodule:: pyNastran.bdf.fieldWriter16
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`subcase` Module
+---------------------
+
+.. inheritance-diagram:: pyNastran.bdf.subcase
+
+.. automodule:: pyNastran.bdf.subcase
     :members:
     :private-members:
     :undoc-members:
@@ -73,5 +85,5 @@ Subpackages
 
     pyNastran.bdf.bdfInterface
     pyNastran.bdf.cards
-    pyNastran.bdf.dmap
+    pyNastran.bdf.test
 
