@@ -20,5 +20,8 @@ sphinx-apidoc.exe -d 4 -o index -V 0.6.0 -H pyNastran -A SteveDoyle ../pyNastran
 python makeIndex.py
 
 
+# does the same thing...
+sphinx-apidoc -o output ../pyNastran
+
 # final command
 make html
