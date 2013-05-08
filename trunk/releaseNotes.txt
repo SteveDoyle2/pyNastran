@@ -52,7 +52,7 @@ Solver
       - still need to build Kgg/Fg/SPC/MPC matrices, partition matrices, solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
------------------------v0.6 released 2013/04/??-----------------------
+-----------------------v0.6 released 2013/05/07-----------------------
 
 Overall Notes
    - significant improvement in BDF reader
