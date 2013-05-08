@@ -12,9 +12,6 @@ version = pyNastran.__version__
 #from pyNastran.gui.mouseStyle import MouseStyle
 from pyNastran.gui.actionsControl import pyWidget
 from pyNastran.gui.nastranIO import NastranIO
-from pyNastran.converters.cart3d.cart3dIO import Cart3dIO
-from pyNastran.converters.LaWGS.wgsIO import LaWGS_IO
-from pyNastran.converters.panair.panairIO import PanairIO
 
 
 def getScreenCorner(x, y):
@@ -24,8 +21,7 @@ def getScreenCorner(x, y):
     yCorner = (yScreen - y) // 2
     return(xCorner, yCorner)
 
-
-class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
+class Pan(wx.Panel, NastranIO):
     def __init__(self, *args, **kwargs):
         isEdges = kwargs['isEdges']
         self.isNodal = kwargs['isNodal']
@@ -35,7 +31,6 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         del kwargs['isCentroidal']
         wx.Panel.__init__(self, *args, **kwargs)
         NastranIO.__init__(self)
-        Cart3dIO.__init__(self)
         #isEdges = False
         print("isEdges = %s" % (isEdges))
         self.isEdges = isEdges  # surface wireframe

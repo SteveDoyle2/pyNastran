@@ -306,15 +306,6 @@ class AppFrame(wx.Frame):
         loadOP2 = fileMenu.Append(ID_OP2,
                                   'Load O&P2',
                                   'Loads an OP2 Results File')
-        loadCart3d = fileMenu.Append(ID_CART3D,
-                                     'Load &Cart3D',
-                                     'Loads a Cart3D Input/Results File')
-        loadLaWGS = fileMenu.Append(ID_LAWGS,
-                                    'Load &LaWGS',
-                                    'Loads an LaWGS File')
-        loadPanair = fileMenu.Append(ID_PANAIR,
-                                     'Load &Panair',
-                                     'Loads a Panair Input File')
         #export     = fileMenu.Append(ID_EXPORT,'Export to...', 'Export the Model to Another Format')
         #print "topen = ",os.path.join(iconPath,'topen.png')
         sys.stdout.flush()
