@@ -15,44 +15,7 @@ This code was written entirely in Python and should install easily.
 
 *** Not done....
 
---------------------------------Future--------------------------------
-Overall Notes
-
-Added BDF
-   - *** SET2,PEALST,TIC,DMI,CONM1
-
-Overall OP2
-   - ***added support for SORT2
-
-BDF Bug Fixes
-BDF API Additions
-
-Removed BDF
-
-Overall OP2
-   - added plotting support for "standard" results (***complex)
-      - ***complex results may plot in real/imag or mag/phase or PSD (power spectral density)
-      - ***no temperature, stress, element forces, energy
-
-
-Overall F06 Reader/Writer
-Added F06 Reader
-Added F06 Writer
-
-Overall GUI
-Added GUI
-GUI Bug Fixes
-
-Solver
-   - not released
-   - rewriting pyNastran solver (SOL 101)
-      - improved support for 3D
-      - uses case control deck to identify loads/BCs
-      - still uses dense matricies, but layout will be easier to add sparse matricies later
-      - still need to build Kgg/Fg/SPC/MPC matrices, partition matrices, solve, calculate responses
-   - added D matricies for PSHELL, PCOMP, PSOLID
-
------------------------v0.6 released 2013/04/??-----------------------
+-----------------------v0.6 released 2013/05/07-----------------------
 
 Overall Notes
    - significant improvement in BDF reader

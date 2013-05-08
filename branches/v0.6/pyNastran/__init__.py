@@ -16,7 +16,7 @@ if dev:
     print("changes = %s" %(changes))
     #client.update('./examples/pysvn')
 else:
-    revision = 'locr'
+    revision = 'dev'
 
 __author__  = 'Steven Doyle, Al Danials, Marcin Gasiorek'
 __email__   = 'mesheb82@gmail.com'
@@ -25,7 +25,7 @@ __copyright__   = 'Copyright 2011-2013, pyNastran; %s' % __author__
 __license__     = 'LGPLv3'
 __releaseDate__ = '2013/4/??'
 __releaseDate2__ = 'APRIL ??, 2013'
-__version__     = '0.6.%s' % revision
+__version__     = '0.6.0_%s' % revision
 __website__     = 'http://code.google.com/p/pynastran/'
 
 isRelease = True  ## turns on skipping of tables that aren't supported
