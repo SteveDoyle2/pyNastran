@@ -14,9 +14,18 @@
 import sys
 import os.path
 import re
-import pyNastran
-pkg_path = pyNastran.__path__[0]
-sys.path.append(os.path.dirname(os.getcwd()))
+
+cwd = os.getcwd()
+try:
+    import pyNastran
+    pkg_path = pyNastran.__path__[0]
+except ImportError:  # hopefully makes readthedocs work
+    pkg_path2 = os.path.join(os.path.dirname(cwd), 'pyNastran')
+print "cwd", cwd
+print "pkg_path", pkg_path
+sys.stdout.flush()
+
+sys.path.append(os.path.dirname(cwd))
 sys.path.append(os.path.dirname(pkg_path))
 sys.path.append(pkg_path)
 sys.path.append(os.path.join(pkg_path, 'bdf'))
