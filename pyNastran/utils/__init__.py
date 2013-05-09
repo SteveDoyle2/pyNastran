@@ -7,7 +7,7 @@ from numpy import ndarray
 import io
 
 def is_string(value):
-    if isinstance(value, unicode) or isinstance(value, str):
+    if isinstance(value, basestring):
         return True
     return False
 
@@ -484,6 +484,5 @@ if __name__ == '__main__':
     f.close()
 
     import junk
-
 
     #dictB2 = eval(msg)
