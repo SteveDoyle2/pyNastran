@@ -189,7 +189,7 @@ class CBUSH1D(BushElement):
             self.gb = model.Node(self.gb, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
         if self.cid is not None:
-            self.cid = model.Coord(self.cid)
+            self.cid = model.Coord(self.cid, msg=msg)
 
     def _verify(self, xref=False):
         ga = self.Ga()

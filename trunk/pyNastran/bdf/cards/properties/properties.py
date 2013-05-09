@@ -249,7 +249,7 @@ class PSOLID(SolidProperty):
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(mid, int), 'mid=%r' % mid
         
-        if xref == 1:
+        if xref == 1:  # True
             assert self.mid.type in ['MAT1', 'MAT4', 'MAT9', 'MAT10'], 'mid=%i self.mid.type=%s' % (mid, self.mid.type)
 
     def writeCalculix(self, elementSet=999):

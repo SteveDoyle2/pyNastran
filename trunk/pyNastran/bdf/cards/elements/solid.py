@@ -151,7 +151,7 @@ class CHEXA8(SolidElement):
         assert isinstance(pid, int)
         for i,nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
-        if xref:
+        if xref == 1:  # True
             c = self.Centroid()
             v = self.Volume()
             assert isinstance(v, float)
@@ -355,7 +355,7 @@ class CPENTA6(SolidElement):
         assert isinstance(pid, int)
         for i,nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
-        if xref:
+        if xref == 1:  # True
             c = self.Centroid()
             v = self.Volume()
             assert isinstance(v, float)
@@ -487,7 +487,7 @@ class CTETRA4(SolidElement):
         assert isinstance(pid, int)
         for i,nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
-        if xref:
+        if xref == 1:  # True
             c = self.Centroid()
             v = self.Volume()
             assert isinstance(v, float)

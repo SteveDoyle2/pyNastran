@@ -586,7 +586,7 @@ class PROD(LineProperty):
 
     def cross_reference(self, model):
         msg = ' which is required by PROD mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg)
+        self.mid = model.Material(self.mid, msg=msg)
 
     def writeCodeAster(self, iCut, iFace, iStart):  # PROD
         msg = ''
@@ -657,7 +657,7 @@ class PTUBE(LineProperty):
 
     def cross_reference(self, model):
         msg = ' which is required by PTUBE mid=%s' % self.mid
-        self.mid = model.Material(self.mid)
+        self.mid = model.Material(self.mid, msg=msg)
 
     def Rho(self):
         """
@@ -838,7 +838,7 @@ class PBAR(LineProperty):
 
     def cross_reference(self, model):
         msg = ' which is required by PBAR mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg)
+        self.mid = model.Material(self.mid, msg=msg)
 
     def Area(self):
         """
@@ -996,7 +996,7 @@ class PBARL(LineProperty):
 
     def cross_reference(self, model):
         msg = ' which is required by PBARL mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg)
+        self.mid = model.Material(self.mid, msg=msg)
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -1335,7 +1335,7 @@ class PBCOMP(LineProperty):
 
     def cross_reference(self, model):
         msg = ' which is required by PBCOMP mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg)
+        self.mid = model.Material(self.mid, msg=msg)
 
     def rawFields(self):
         list_fields = ['PBCOMP', self.pid, self.Mid(), self.A, self.i1,
@@ -1640,7 +1640,7 @@ class PBEAM(IntegratedLineProperty):
 
     def cross_reference(self, model):
         msg = ' which is required by PBEAM mid=%s' % self.mid
-        self.mid = model.Material(self.mid)
+        self.mid = model.Material(self.mid, msg=msg)
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -1658,7 +1658,7 @@ class PBEAM(IntegratedLineProperty):
         assert isinstance(A, float), 'pid=%r' % A
         assert isinstance(J, float), 'cid=%r' % J
         assert isinstance(nsm, float), 'nsm=%r' % nsm
-        if xref:
+        if xref == 1:  # True
             assert self.mid.type in ['MAT1', 'MAT4', 'MAT5'], 'pid.type=%s; mid.type=%s' % (self.type, self.mid.type)
             #self.MassPerLength()
 
@@ -1922,7 +1922,7 @@ class PBEAML(IntegratedLineProperty):
         .. todo:: What happens when there are 2 subcases?
         """
         msg = ' which is required by PBEAML mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg)
+        self.mid = model.Material(self.mid, msg=msg)
 
     def verify(self, model, isubcase):
         if model.is_thermal_solution(isubcase):
@@ -2037,7 +2037,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
 
     def cross_reference(self, model):
         msg = ' which is required by PBEAM3 mid=%s' % self.mid
-        self.mid = model.Material(self.mid)
+        self.mid = model.Material(self.mid, msg=msg)
 
     def reprFields(self):
         """.. todo:: not done"""
@@ -2142,7 +2142,7 @@ class PBEND(LineProperty):
 
     def cross_reference(self, model):
         msg = ' which is required by PBEND mid=%s' % self.mid
-        self.mid = model.Material(self.mid)
+        self.mid = model.Material(self.mid, msg=msg)
 
     def reprFields(self):
         list_fields = ['PBEND', self.pid, self.Mid(), ]  # other

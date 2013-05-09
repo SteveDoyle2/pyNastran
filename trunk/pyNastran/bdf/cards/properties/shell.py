@@ -668,7 +668,7 @@ class PLPLANE(ShellProperty):
         mid = self.Mid()
         cid = self.Cid()
         str = self.str
-        if xref:
+        if xref == 1:  # True
             assert self.mid.type in ['MATHE', 'MATHP'], 'mid.type=%s' % self.mid.type
         
     #def Pid(self):
@@ -823,7 +823,7 @@ class PSHELL(ShellProperty):
         mids = [mid for mid in [self.mid1, self.mid2, self.mid3, self.mid4]
                 if mid is not None]
         assert len(mids) > 0
-        if xref:
+        if xref == 1:  # True
             assert isinstance(self.mid(), Material), 'mid=%r' % self.mid()
             
             for mid in mids:

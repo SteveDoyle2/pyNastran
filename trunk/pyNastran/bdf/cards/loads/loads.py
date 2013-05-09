@@ -126,11 +126,14 @@ class LoadCombination(Load):  # LOAD, DLOAD
         #return load.lid
 
     def getLoads(self):
-        """
-        .. note:: requires a cross referenced load
-        """
         loads = []
+        print("self.loadIDs =", self.loadIDs)
+        print("****")
         for allLoads in self.loadIDs:
+            #if isinstance(allLoads, int):  ## has a problem with partial
+                #print("allLoads =", allLoads)
+                #loads.append(allLoads)
+                #continue
             for load in allLoads:
                 loads += load.getLoads()
             #loads += self.ID  #: :: todo:  what does this mean, was uncommented
@@ -174,7 +177,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         self.lid = model.Load(self.lid, msg=msg)
         if self.tid:
-            self.tid = model.Load(self.tid, msg=msg)
+            self.tid = model.Table(self.tid, msg=msg)
 
     def LoadID(self, lid):
         if isinstance(lid, int):
@@ -199,7 +202,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     def Tid(self):
         if self.tid is None:
             return None
-        if isinstance(self.tid, int):
+        elif isinstance(self.tid, int):
             return self.tid
         return self.tid.tid
 
@@ -536,9 +539,10 @@ class RFORCE(Load):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
+        msg = ' which is required by RFORCE sid=%s' % self.sid
         if self.nid > 0:
-            self.nid = model.Node(self.nid)
-        self.cid = model.Coord(self.cid)
+            self.nid = model.Node(self.nid, msg=msg)
+        self.cid = model.Coord(self.cid, msg=msg)
         pass
 
     def Nid(self):
@@ -616,7 +620,7 @@ class RLOAD1(TabularLoad):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
-        msg = ' which is required by %s=%s' % (self.type, self.sid)
+        msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
         if self.tc:
             self.tc = model.Table(self.tc, msg=msg)
         if self.td:
@@ -698,7 +702,7 @@ class RLOAD2(TabularLoad):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
-        msg = ' which is required by %s=%s' % (self.type, self.sid)
+        msg = ' which is required by RLOAD2=%s' % (self.sid)
         if self.tb:
             self.tb = model.Table(self.tb, msg=msg)
         if self.tp:
@@ -782,7 +786,7 @@ class RANDPS(RandomLoad):
 
     def cross_reference(self, model):
         if self.tid:
-            msg = ' which is required by %s=%s' % (self.type, self.sid)
+            msg = ' which is required by RANDPS sid=%s' % (self.sid)
             self.tid = model.Table(self.tid, msg=msg)
 
     def getLoads(self):
