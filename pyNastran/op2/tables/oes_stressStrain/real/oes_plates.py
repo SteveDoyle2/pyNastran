@@ -1,8 +1,12 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
+from numpy import zeros, array
 from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats8p4F
+
+
+as_array = True
 
 
 class PlateStressObject(StressObject):
@@ -37,6 +41,24 @@ class PlateStressObject(StressObject):
         self.majorP = {}
         self.minorP = {}
         self.ovmShear = {}
+        
+        self.ovmShear2 = None
+
+        # eid_layer = [eid1, ilayer1]
+        #             [eid1, ilayer2]
+        #             [eid2, ilayer1]
+        #             [eid2, ilayer2]
+        
+        # ovm[1] = [1234.5]
+        #    [2] = [1234.5]
+        #    [3]   [5678.8]
+        #    [4]   [5678.8]
+        #
+        # >>> elements2, col = numpy.where(eid_layer[:,0] == eid2)
+        # >>> print elements
+        # array([2, 3])
+        # >>> ovm[elements2]
+        # [5678.8, 5678.8]
 
         self.dt = dt
         if is_sort1:
@@ -44,11 +66,14 @@ class PlateStressObject(StressObject):
                 self.add = self.add_sort1
                 self.add_new_eid = self.add_new_eid_sort1
                 self.addNewNode = self.addNewNodeSort1
+                
+                self.add_array = self.add_array_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
             self.add_new_eid = self.add_new_eid_sort2
             self.addNewNode = self.addNewNodeSort2
+            self.add_array = self.add_array_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -67,11 +92,44 @@ class PlateStressObject(StressObject):
 
     def add_f06_data(self, data, transient):
         if transient is None:
+            #print(data)
+            
             eType = data[0][0]
+            print('eType = %s' % eType)
+            
+            n = 0
+            line2 = data[0]
+            if eType == 'CTRIA3':
+                n = 1
+            elif eType == 'CQUAD4':
+                if len(line2) == 19:  # Centroid - bilinear
+                    n += 5
+                elif len(line2) == 18:  # Centroid
+                    n += 1
+            
+            n *= 2 # 2 layers - top & bottom
+            #n = 10
+            eTypes = zeros(n, dtype='string')
+            ovmShear = zeros(n, dtype='float32')
+            index_to_elementNodeLayer = zeros((n, 3), dtype='int32')  # layer=0 -> center
+            
+            #print(index_to_elementNodeLayer)
+            #import sys
+            #print(data)
+            #sys.exit()
+            i = 0
+            as_array = True
             for line in data:
                 if eType == 'CTRIA3':
                     (eType, eid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
                      f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+
+                    if as_array:
+                        index_to_elementNodeLayer[i]   = [eid, 0, 0]
+                        index_to_elementNodeLayer[i+1] = [eid, 0, 1]
+                        #eTypes[i:i+1]   = [eType, eType]
+                        #ovmShear[i:i+1] = [ovm1, ovm2]
+
                     self.eType[eid] = eType
                     self.fiberCurvature[eid] = {'C': [f1, f2]}
                     self.oxx[eid] = {'C': [ox1, ox2]}
@@ -81,11 +139,24 @@ class PlateStressObject(StressObject):
                     self.majorP[eid] = {'C': [o11, o12]}
                     self.minorP[eid] = {'C': [o21, o22]}
                     self.ovmShear[eid] = {'C': [ovm1, ovm2]}
+                    i += 2
                 elif eType == 'CQUAD4':
                     #assert len(line)==19,'len(line)=%s' %(len(line))
                     if len(line) == 19:  # Centroid - bilinear
                         (eType, eid, nid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
                                           f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                        if as_array:
+                            index_to_elementNodeLayer[i]   = [eid, 0, 0]
+                            index_to_elementNodeLayer[i+1] = [eid, 0, 1]
+                            #print(eTypes)
+                            #a = array([eType, eType])
+                            #print(a.shape)
+                            #print(eTypes.shape)
+                            #print(i)
+                            #eTypes[i:i+1] = a
+                            #print(eTypes)
+                            #ovmShear[i:i+1] = [ovm1, ovm2]
+
                         if nid == 'CEN/4':
                             nid = 'C'
                         self.eType[eid] = eType
@@ -123,11 +194,14 @@ class PlateStressObject(StressObject):
                         self.minorP[eid][nid] = [o21, o22]
                         self.ovmShear[eid][nid] = [ovm1, ovm2]
                     else:
-                        assert len(line) == 19, 'len(line)=%s' % (len(line))
+                        assert len(line) == 19, 'line=%s len(line)=%s' % (line, len(line))
                         raise NotImplementedError()
                 else:
                     msg = 'line=%s not supported...' % (line)
                     raise NotImplementedError(msg)
+
+            self.eTypes2 = eTypes
+            self.ovmShear2 = ovmShear
             return
         #for line in data:
             #print line
