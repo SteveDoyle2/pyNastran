@@ -7,9 +7,12 @@ from pyNastran.bdf.cards.nodes import SPOINT
 
 class DeprecatedGetMethods(object):
 
-    def Grav(self, sid):
+    def Grav(self, sid, msg):
         raise DeprecationWarning('use Load(sid) instead of Grav(sid)')
-        return self.Load(sid)
+        return self.Load(sid, msg)
+
+    def Flfact(self, sid, msg):
+        return self.FLFACT(sid, msg)
 
 
 class GetMethods(DeprecatedGetMethods):
@@ -34,24 +37,29 @@ class GetMethods(DeprecatedGetMethods):
     def getNodeIDsWithElement(self, eid):
         return self.getNodeIDsWithElements([eid])
 
-    def getNodeIDsWithElements(self, eids):
+    def getNodeIDsWithElements(self, eids, msg=''):
         nids2 = set([])
         for eid in eids:
-            element = self.Element(eid)
+            element = self.Element(eid, msg=msg)
             self.log.debug("element.pid = %s" % (element.pid))
             nids = set(element.nids)
             nids2 = nids2.union(nids)
         return nids2
 
     def Node(self, nid, allowEmptyNodes=False, msg=''):
-        if (nid == 0 or nid is None) and allowEmptyNodes:
-            return None
-        elif nid in self.nodes:
-            return self.nodes[nid]
-        elif self.spoints and nid in self.spoints.spoints:
-            return SPOINT(nid)
-        else:
-            raise RuntimeError('nid=%s is not a GRID or SPOINT%s' % (nid, msg))
+        try:
+            if (nid == 0 or nid is None) and allowEmptyNodes:
+                return None
+            elif nid in self.nodes:
+                return self.nodes[nid]
+            elif self.spoints and nid in self.spoints.spoints:
+                return SPOINT(nid)
+            else:
+                raise KeyError('nid=%s is not a GRID or SPOINT%s' % (nid, msg))
+        except:
+            if self._xref == 2: # 'partial'
+                return nid
+            raise
 
     def Nodes(self, nids, allowEmptyNodes=False, msg=''):
         """
@@ -76,12 +84,12 @@ class GetMethods(DeprecatedGetMethods):
     def getElementIDsWithPID(self, pid):
         return self.getElementIDsWithPIDs([pid])
 
-    def getElementIDsWithPIDs(self, pids):
+    def getElementIDsWithPIDs(self, pids, msg=''):
         eids = self.elementIDs()
         eids2 = []
         #print "eids = ",eids
         for eid in eids:
-            element = self.Element(eid)
+            element = self.Element(eid, msg)
             if element.Pid() in pids:
                 eids2.append(eid)
         return (eids2)
@@ -205,7 +213,7 @@ class GetMethods(DeprecatedGetMethods):
             properties.append(self.Property(pid, msg))
         return properties
 
-    def Phbdy(self, pid):
+    def Phbdy(self, pid, msg):
         try:
             return self.phbdys[pid]
         except KeyError:
@@ -394,7 +402,7 @@ class GetMethods(DeprecatedGetMethods):
     #--------------------
     # FLUTTER CARDS
 
-    def Flfact(self, sid, msg):
+    def FLFACT(self, sid, msg):
         try:
             return self.flfacts[sid]
         except KeyError:
@@ -445,35 +453,83 @@ class GetMethods(DeprecatedGetMethods):
     #--------------------
     # SET CARDS
 
-    def Set(self, sid):
-        return self.sets[sid]
+    def Set(self, sid, msg):
+        try:
+            return self.sets[sid]
+        except KeyError:
+            if self._xref == 2:
+                return sid
+            raise KeyError('sid=%s not found%s.  Allowed SETx=%s'
+                           % (sid, msg, self.sets.keys()))
 
-    def SetSuper(self, seid):
-        return self.setsSuper[seid]
+    def SetSuper(self, seid, msg):
+        try:
+            return self.setsSuper[seid]
+        except KeyError:
+            if self._xref == 2:
+                return seid
+            raise KeyError('seid=%s not found%s.  Allowed SETx=%s'
+                           % (seid, msg, self.setsSuper.keys()))
 
     #--------------------
     # METHOD CARDS
-    def Method(self, sid):
-        return self.methods[sid]
+    def Method(self, sid, msg):
+        try:
+            return self.methods[sid]
+        except KeyError:
+            if self._xref == 2:
+                return sid
+            raise KeyError('sid=%s not found%s.  Allowed METHODs=%s'
+                           % (sid, msg, self.methods.keys()))
 
-    def CMethod(self, sid):
-        return self.cMethods[sid]
+    def CMethod(self, sid, msg):
+        try:
+            return self.cmethods[sid]
+        except KeyError:
+            if self._xref == 2:
+                return sid
+            raise KeyError('sid=%s not found%s.  Allowed CMETHODs=%s'
+                           % (sid, msg, self.cmethods.keys()))
 
     #--------------------
     # TABLE CARDS
     def Table(self, tid, msg):
-        return self.tables[tid]
+        try:
+            return self.tables[tid]
+        except KeyError:
+            if self._xref == 2:
+                return tid
+            raise KeyError('tid=%s not found%s.  Allowed TABLEs=%s'
+                           % (tid, msg, self.tables.keys()))
 
     def RandomTable(self, tid, msg):
-        return self.randomTables[tid]
+        try:
+            return self.randomTables[tid]
+        except KeyError:
+            if self._xref == 2:
+                return tid
+            raise KeyError('tid=%s not found%s.  Allowed TABLEs=%s'
+                           % (tid, msg, self.randomTables.keys()))
 
     #--------------------
     # NONLINEAR CARDS
 
     def NLParm(self, nid, msg):
-        return self.nlparms[nid]
+        try:
+            return self.nlparms[nid]
+        except KeyError:
+            if self._xref == 2:
+                return nid
+            raise KeyError('nid=%s not found%s.  Allowed NLPARMs=%s'
+                           % (nid, msg, self.nlparms.keys()))
 
     #--------------------
     # MATRIX ENTRY CARDS
-    def DMIG(self, dname):
-        return self.dmig[dname]
+    def DMIG(self, dname, msg):
+        try:
+            return self.dmigs[dname]
+        except KeyError:
+            if self._xref == 2:
+                return dname
+            raise KeyError('dname=%s not found%s.  Allowed DMIGs=%s'
+                           % (dname, msg, self.dmigs.keys()))

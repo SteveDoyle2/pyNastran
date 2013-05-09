@@ -99,7 +99,8 @@ class CREEP(Material):
             self.g = data[15]
 
     def cross_reference(self, model):
-        self.mid = model.Material(self.mid)
+        msg = ' which is required by CREEP pid=%s' % self.mid
+        self.mid = model.Material(self.mid, msg=msg)
 
     def Mid(self):  # links up to MAT1, MAT2, MAT9 or same mid
         if isinstance(self.mid, int):
@@ -261,7 +262,8 @@ class MAT1(IsotropicMaterial):
         return msg
 
     #def cross_reference(self, model):
-        #self.Mcsid = model.Coord(self.Mcsid)  # used only for PARAM,CURVPLOT
+        #msg = ' which is required by MAT1 pid=%s' % self.mid
+        #self.Mcsid = model.Coord(self.Mcsid, msg=msg)  # used only for PARAM,CURVPLOT
         #pass
 
     def rawFields(self):
@@ -1397,9 +1399,10 @@ class MATS1(MaterialDependence):
         return E
 
     def cross_reference(self, model):
-        self.mid = model.Material(self.mid)
+        msg = ' which is required by MATS1 mid=%s' % self.mid
+        self.mid = model.Material(self.mid, msg=msg)
         if self.tid:  # then self.h is used
-            self.tid = model.Table(self.tid)
+            self.tid = model.Table(self.tid, msg=msg)
 
     def Mid(self):
         if isinstance(self.mid, int):

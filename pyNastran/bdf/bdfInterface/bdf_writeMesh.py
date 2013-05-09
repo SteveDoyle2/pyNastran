@@ -362,7 +362,7 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(prop.print_card(size))
                 eids.sort()
                 for eid in eids:
-                    element = self.Element(eid)
+                    element = self.Element(eid, msg='')
                     try:
                         msg.append(element.print_card(size))
                     except:
@@ -379,7 +379,7 @@ class WriteMesh(WriteMeshDeprecated):
             msg.append('$ELEMENTS_WITH_NO_PROPERTIES '
                        '(PID=0 and unanalyzed properties)\n')
             for eid in sorted(eids_missing):
-                element = self.Element(eid)
+                element = self.Element(eid, msg='')
                 try:
                     msg.append(element.print_card(size))
                 except:

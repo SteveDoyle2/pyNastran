@@ -335,8 +335,8 @@ class GRAV(BaseCard):
         #return msg
 
     def cross_reference(self, model):
-        #print("xref GRAV")
-        self.cid = model.Coord(self.cid)
+        msg = ' which is required by GRAV sid=%s' % self.sid
+        self.cid = model.Coord(self.cid, msg=msg)
 
     def Cid(self):
         if isinstance(self.cid, int):
@@ -400,8 +400,9 @@ class ACCEL1(BaseCard):
         self.nodes = expand_thru_by(nodes)
 
     def cross_reference(self, model):
-        self.cid = model.Coord(self.cid)
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True)
+        msg = ' which is required by ACCEL1 sid=%s' % self.sid
+        self.cid = model.Coord(self.cid, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
 
     def Cid(self):
         if isinstance(self.cid, int):
@@ -572,7 +573,8 @@ class FORCE(Force):
         """
         .. todo:: cross reference and fix repr function
         """
-        self.cid = model.Coord(self.cid)
+        msg = ' which is required by FORCE sid=%s' % self.sid
+        self.cid = model.Coord(self.cid, msg=msg)
 
     def rawFields(self):
         list_fields = ['FORCE', self.sid, self.node, self.Cid(),
@@ -615,9 +617,10 @@ class FORCE1(Force):
         """
         .. todo:: cross reference and fix repr function
         """
-        self.node = model.Node(self.node)
-        self.g1 = model.Node(self.g1)
-        self.g2 = model.Node(self.g2)
+        msg = ' which is required by FORCE1 sid=%s' % self.sid
+        self.node = model.Node(self.node, msg=msg)
+        self.g1 = model.Node(self.g1, msg=msg)
+        self.g2 = model.Node(self.g2, msg=msg)
         self.xyz = self.g2.Position() - self.g1.Position()
         self.normalize()
 
@@ -683,7 +686,8 @@ class FORCE2(Force):
         """
         .. todo:: cross reference and fix repr function
         """
-        self.node = model.Node(self.node)
+        msg = ' which is required by FORCE2 sid=%s' % self.sid
+        self.node = model.Node(self.node, msg=msg)
 
         v12 = model.Node(self.g2).Position() - model.Node(self.g1).Position()
         v34 = model.Node(self.g4).Position() - model.Node(self.g3).Position()
@@ -764,6 +768,7 @@ class MOMENT(Moment):
         """
         .. todo:: cross reference and fix repr function
         """
+        #msg = ' which is required by MOMENT sid=%s' % self.sid
         pass
 
     def rawFields(self):
@@ -817,8 +822,11 @@ class MOMENT1(Moment):
         """
         .. todo:: cross reference and fix repr function
         """
-        self.node = model.Node(self.node)
-        self.xyz = model.Node(self.g2).Position() - model.Node(self.g1).Position()
+        msg = ' which is required by MOMENT1 sid=%s' % self.sid
+        self.node = model.Node(self.node, msg=msg)
+        self.g1 = model.Node(self.g1, msg=msg)
+        self.g2 = model.Node(self.g2, msg=msg)
+        self.xyz = self.g2.Position() - self.g1.Position()
         self.normalize()
     
     def get_node_id(self):
@@ -888,12 +896,11 @@ class MOMENT2(Moment):
         """
         .. todo:: cross reference and fix repr function
         """
-        #(self.g1, self.g2, self.g3, self.g4) = model.Nodes([self.g1, self.g2,
-        #                                                    self.g3, self.g4])
-        self.g1 = model.Node(self.g1)
-        self.g2 = model.Node(self.g2)
-        self.g3 = model.Node(self.g3)
-        self.g4 = model.Node(self.g4)
+        msg = ' which is required by MOMENT2 sid=%s' % self.sid
+        self.g1 = model.Node(self.g1, msg=msg)
+        self.g2 = model.Node(self.g2, msg=msg)
+        self.g3 = model.Node(self.g3, msg=msg)
+        self.g4 = model.Node(self.g4, msg=msg)
         
         v12 = self.g2.Position() - self.g1.Position()
         v34 = self.g4.Position() - self.g3.Position()
@@ -1150,14 +1157,15 @@ class PLOAD4(Load):
         return self.cid.cid
 
     def cross_reference(self, model):
-        self.eid = model.Element(self.eid)
-        self.cid = model.Coord(self.cid)
+        msg = ' which is required by PLOAD4 sid=%s' % self.sid
+        self.eid = model.Element(self.eid, msg=msg)
+        self.cid = model.Coord(self.cid, msg=msg)
         if self.g1:
-            self.g1 = model.Node(self.g1)
+            self.g1 = model.Node(self.g1, msg=msg)
         if self.g34:
-            self.g34 = model.Node(self.g34)
+            self.g34 = model.Node(self.g34, msg=msg)
         if self.eids:
-            self.eids = model.Elements(self.eids)
+            self.eids = model.Elements(self.eids, msg=msg)
 
     def Eid(self, eid):
         if isinstance(eid, int):
@@ -1238,6 +1246,7 @@ class PLOADX1(Load):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
+        #msg = ' which is required by PLOADX1 lid=%s' % self.sid
         #self.eid = model.Element(self.eid)
         #self.ga = model.Node(self.ga)
         #self.gb = model.Node(self.gb)

@@ -152,7 +152,7 @@ class CELAS1(SpringElement):
         assert isinstance(k, float), 'k=%r' % k
         #assert isinstance(ge, float), 'ge=%r' % ge
         #assert isinstance(s, float), 'ge=%r' % s
-        if xref:
+        if xref == 1:  # True
             assert len(nodeIDs) == len(self.nodes)
             #for nodeID, node in zip(nodeIDs, self.nodes):
                 #assert node.node.nid
@@ -242,7 +242,7 @@ class CELAS2(SpringElement):
         assert isinstance(k, float), 'k=%r' % k
         assert isinstance(ge, float), 'ge=%r' % ge
         assert isinstance(s, float), 'ge=%r' % s
-        if xref:
+        if xref == 1:  # True
             assert len(nodeIDs) == len(self.nodes)
             #for nodeID, node in zip(nodeIDs, self.nodes):
                 #assert node.node.nid

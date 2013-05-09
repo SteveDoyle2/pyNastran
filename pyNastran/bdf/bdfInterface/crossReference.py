@@ -41,11 +41,14 @@ class XrefMesh(object):
         #########################
         ## THIS IS A HACK...   ##
         #########################
+        #xref = 2
         if 0:
             xref = 2
 
             null_prop = False
             null_mat = True
+            null_loads = False
+            null_constraints = False
             if null_prop:
                 self.card_count['PBUSH'] = 0
                 self.properties = {}
@@ -53,7 +56,7 @@ class XrefMesh(object):
                 self.materials = {}
             if null_loads:
                 self.loads = {}
-            if null_constraints = {}
+            if null_constraints:
                 self.constraints = {}
         #########################
         ## THIS IS A HACK...   ##

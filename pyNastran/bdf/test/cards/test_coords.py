@@ -152,7 +152,7 @@ class TestCoords(unittest.TestCase):
         for (nid, grid) in enumerate(grids):
             (cid, x, y, z) = grid
             model.add_card(['GRID', nid + 1, cid, x, y, z], 'GRID')
-            gridObj = model.Node(nid + 1)
+            gridObj = model.Node(nid + 1, msg='')
             if debug:
                 print(gridObj)
 
@@ -160,7 +160,7 @@ class TestCoords(unittest.TestCase):
             #print coord
             (rid, x, y, z) = coord
             model.add_card(['CORD2R', cid + 1, rid] + x + y + z, 'CORD2R')
-            coordObj = model.Coord(cid + 1)
+            coordObj = model.Coord(cid + 1, msg='')
             if debug:
                 print(coordObj)
 

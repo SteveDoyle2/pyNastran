@@ -529,7 +529,8 @@ class Cord2x(Coord):
         """
         self.isCrossReferenced = True
         if self.rid != 0:
-            self.rid = model.Coord(self.rid)
+            msg = ' which is required by %s cid=%s' % (self.type, self.cid)
+            self.rid = model.Coord(self.rid, msg=msg)
 
     def Rid(self):
         """Gets the reference coordinate system self.rid"""

@@ -69,7 +69,7 @@ if __name__ == '__main__':
     print("nFiles = %s" % len(files))
     cid = None
     check = True
-    xref = True
+    xref = 'partial'
     debug = False
     failed_files = run_lots_of_files(files, debug=debug, xref=xref,
                                      check=check, cid=cid)

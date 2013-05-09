@@ -203,7 +203,8 @@ class CHBDYG(ThermalElement):
 
     def cross_reference(self, model):
         pass
-        #self.pid = model.Phbdy(self.pid)
+        #msg = ' which is required by CHBDYG eid=%s' % self.eid
+        #self.pid = model.Phbdy(self.pid, msg=msg)
         #self.grids
 
     def rawFields(self):
@@ -292,7 +293,8 @@ class CHBDYP(ThermalElement):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
-        self.pid = model.Phbdy(self.pid)
+        msg = ' which is required by CHBDYP pid=%s' % self.pid
+        self.pid = model.Phbdy(self.pid, msg=msg)
 
     def rawFields(self):
         list_fields = ['CHBDYP', self.eid, self.Pid(), self.Type, self.iViewFront,
@@ -374,6 +376,7 @@ class PCONV(ThermalProperty):
             assert len(card) <= 15, 'len(PCONV card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
+
     #def cross_reference(self,model):
     #    pass
 
@@ -437,6 +440,7 @@ class PCONVM(ThermalProperty):
             assert len(card) <= 9, 'len(PCONVM card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
+
     #def cross_reference(self,model):
     #    pass
 
@@ -548,8 +552,10 @@ class CONV(ThermalBC):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
-        self.eid = model.Element(self.eid)
-        assert self.eid.type in ['CHBDYG', 'CHBDYE', 'CHBDYP']
+        msg = ' which is required by CONV eid=%s' % self.eid
+        self.eid = model.Element(self.eid, msg=msg)
+        if model._xref == 1:  # True
+            assert self.eid.type in ['CHBDYG', 'CHBDYE', 'CHBDYP']
 
     def TA(self, i=None):
         if i is None:
@@ -603,9 +609,10 @@ class CONVM(ThermalBC):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
-        self.eid = model.CYBDY(self.eid)
-        self.pconvmID = model.PCONV(self.pconvmID)
-        self.filmNode = model.Grid(self.filmNode)
+        msg = ' which is required by CONVM eid=%s' % self.eid
+        self.eid = model.CYBDY(self.eid, msg=msg)
+        self.pconvmID = model.PCONV(self.pconvmID, msg=msg)
+        self.filmNode = model.Grid(self.filmNode, msg=msg)
 
     def film_node(self):
         if isinstance(self.filmNode, int):
@@ -694,8 +701,9 @@ class RADBC(ThermalBC):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
+        msg = ' which is required by RADBC pid=%s' % self.nodamb
         for i, eid in enumerate(self.eids):
-            self.eids[i] = model.Element(eid)
+            self.eids[i] = model.Element(eid, msg=msg)
 
     def Eids(self):
         eids = []
