@@ -55,7 +55,7 @@ print element1.Mass()       # gets the mass
 # without cross-referencing
 mesh.read_bdf(fname, xref=False) # reads the bdf
 element1  = mesh.Element(1)  # assume a CROD with pid=1, nids=[1,2]
-pid1 = element.Pid()
+pid1 = element1.Pid()
 
 nodes = element1.nodeIDs()
 n1 = mesh.Node(nodes[0])
