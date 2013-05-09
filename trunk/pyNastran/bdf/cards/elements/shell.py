@@ -250,7 +250,7 @@ class CTRIA3(TriShell):
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.nodeIDs()
@@ -260,7 +260,7 @@ class CTRIA3(TriShell):
         for i,nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
-        if xref:
+        if xref == 1:  # True
             assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             if not self.pid.type in ['PLPLANE']:
                 t = self.Thickness()
@@ -414,7 +414,7 @@ class CTRIA6(TriShell):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.nodeIDs()
@@ -424,7 +424,7 @@ class CTRIA6(TriShell):
         #for i,nid in enumerate(nids):
             #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
-        if xref:
+        if xref == 1:  # True
             assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             if not self.pid.type in ['PLPLANE']:
                 t = self.Thickness()
@@ -631,7 +631,6 @@ class CTRIAX(TriShell):
     def cross_reference(self, model):
         msg = ' which is required by CTRIAX eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
-        #: Property ID
         self.pid = model.Property(self.pid, msg=msg)
 
     def nodeIDs(self):
@@ -689,9 +688,9 @@ class CTRIAX6(TriShell):
     def cross_reference(self, model):
         msg = ' which is required by CTRIAX6 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
-        self.mid = model.Material(self.mid)
+        self.mid = model.Material(self.mid, msg)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.Eid()
         #pid = self.Pid()
         nids = self.nodeIDs()
@@ -701,7 +700,7 @@ class CTRIAX6(TriShell):
         for i,nid in enumerate(nids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer or blank; nid=%s' %(i, nid)
 
-        if xref:
+        if xref == 1:  # True
             assert self.mid.type in ['MAT1'], 'mid=%s self.mid.type=%s' % (mid, self.mid.type)
             #assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             #if not self.pid.type in ['PLPLANE']:
@@ -1091,7 +1090,7 @@ class CQUAD4(QuadShell):
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.nodeIDs()
@@ -1100,7 +1099,7 @@ class CQUAD4(QuadShell):
         for i,nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
-        if xref:
+        if xref == 1:  # True
             assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             if not self.pid.type in ['PLPLANE']:
                 t = self.Thickness()
@@ -1212,7 +1211,7 @@ class CQUADR(QuadShell):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.nodeIDs()
@@ -1222,7 +1221,7 @@ class CQUADR(QuadShell):
         #for i,nid in enumerate(nids):
             #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
-        if xref:
+        if xref == 1:  # True
             assert self.pid.type in ['PSHELL'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             t = self.Thickness()
             a,c,n = self.AreaCentroidNormal()

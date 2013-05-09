@@ -57,7 +57,8 @@ class PFAST(Property):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
-        self.mcid = model.Coord(self.mcid)
+        msg = ' which is required by PFAST pid=%s' % self.pid
+        self.mcid = model.Coord(self.mcid, msg)
 
     def Mcid(self):
         if isinstance(self.mcid, int):
@@ -196,7 +197,8 @@ class PLSOLID(SolidProperty):
                                'output value set; valid=["GRID", "GAUS"]\n' % self.str)
 
     def cross_reference(self, model):
-        self.mid = model.Material(self.mid)
+        msg = ' which is required by PLSOLID pid=%s' % self.pid
+        self.mid = model.Material(self.mid, msg)
 
     def rawFields(self):
         stressStrain = set_blank_if_default(self.str, 'GRID')
@@ -241,13 +243,13 @@ class PSOLID(SolidProperty):
             if self.fctn == 'SMEC':
                 self.fctn = 'SMECH'
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mid = self.Mid()
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(mid, int), 'mid=%r' % mid
         
-        if xref:
+        if xref == 1:
             assert self.mid.type in ['MAT1', 'MAT4', 'MAT9', 'MAT10'], 'mid=%i self.mid.type=%s' % (mid, self.mid.type)
 
     def writeCalculix(self, elementSet=999):
@@ -317,7 +319,8 @@ class PRAC2D(CrackProperty):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
-        self.mid = model.Material(self.mid)  # MAT1, MAT2, MAT8
+        msg = ' which is required by PRAC2D pid=%s' % self.pid
+        self.mid = model.Material(self.mid, msg)  # MAT1, MAT2, MAT8
 
     def rawFields(self):
         list_fields = ['PRAC2D', self.pid, self.Mid(), self.thick,
@@ -361,7 +364,8 @@ class PRAC3D(CrackProperty):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
-        self.mid = model.Material(self.mid)  # MAT1, MAT9
+        msg = ' which is required by PRAC3D pid=%s' % self.pid
+        self.mid = model.Material(self.mid, msg)  # MAT1, MAT9
 
     def rawFields(self):
         list_fields = ['PRAC3D', self.pid, self.Mid(), self.gamma, self.phi]

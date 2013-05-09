@@ -82,6 +82,6 @@ def update_copyright():
     print_tree(files)
 
 if __name__ == '__main__':
-    pass
-    #update_copyright()
+    update_copyright()
+    
     

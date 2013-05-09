@@ -668,7 +668,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         :param bdf_filename: the input bdf
         :param include_dir:  the relative path to any include files
                              (default=None if no include files)
-        :param xref:  should the bdf be cross referenced (default=True)
+        :param xref:
+            1. xref = True (default) cards are interlinked, which allows for new
+                      methods (e.g. node.Position())
+            2. xref = False; cards are not interlinked
+            3. xref = 'partial'; cards are interlinked if possible
         :param punch: indicates whether the file is a punch file (default=False)
         
         >>> bdf = BDF()
@@ -685,6 +689,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         etc.
         >>>
         """
+        assert xref in [True, False, 'partial'], 'xref=%s is not supported' % xref
         try:
             #: the active filename (string)
             self.bdf_filename = bdf_filename
@@ -705,7 +710,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
             self._read_bulk_data_deck()
             self.cross_reference(xref=xref)
-            self._xref = xref
+            self.xref = xref
             self._cleanup_file_streams()
         except:
             self._cleanup_file_streams()

@@ -743,6 +743,9 @@ def interpret_value(valueRaw, card='', debug=False):
                "card=%s\nYou also might have mixed tabs/spaces/commas."
                % (valueRaw, valueLeft, card))
         raise SyntaxError(msg)
+    
+    if 'D' == sline[0][-1]:
+        sline[0] = sline[0][:-1]
 
     try:
         s0 = vFactor * float(sline[0])

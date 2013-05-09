@@ -142,11 +142,11 @@ def fix_file(fname, isPython2, isPython3):
                     print("***",line)
 
                 elif "'wb')" in line:
-                    line = line.replace("'wb')","'w',encoding='utf-8')")
+                    line = line.replace("'wb')","'w')")
                 elif "'w')" in line:
-                    line = line.replace("'w')","'w',encoding='utf-8')")
+                    line = line.replace("'w')","'w')")
                 elif "'r')" in line:
-                    line = line.replace("'r')","'r',encoding='utf-8')")
+                    line = line.replace("'r')","'r')")
                 elif 'format1 = bytes(format1)' in line:
                     line = ''
                 elif 'format2 = bytes(format2)' in line:
