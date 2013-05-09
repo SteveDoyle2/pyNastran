@@ -29,7 +29,38 @@ class XrefMesh(object):
         """
         Links up all the cards to the cards they reference
         """
-        if xref:
+        if xref==False:
+            xref = 0
+        elif xref==True:
+            xref = 1
+        elif xref=='partial':
+            xref = 2
+        else:
+            raise NotImplementedError('xref=%r is not supported')
+        
+        #########################
+        ## THIS IS A HACK...   ##
+        #########################
+        if 0:
+            xref = 2
+
+            null_prop = False
+            null_mat = True
+            if null_prop:
+                self.card_count['PBUSH'] = 0
+                self.properties = {}
+            if null_mat:
+                self.materials = {}
+            if null_loads:
+                self.loads = {}
+            if null_constraints = {}
+                self.constraints = {}
+        #########################
+        ## THIS IS A HACK...   ##
+        #########################
+        self._xref = xref
+
+        if self._xref:
             self.log.debug("Cross Referencing...")
             #for key,e in self.elements.iteritems():
                 #print(e)
