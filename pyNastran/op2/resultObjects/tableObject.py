@@ -1,5 +1,6 @@
 #from struct import pack
-from numpy import array, sqrt, abs, angle  # dot,
+import numpy as np
+from numpy import array, sqrt, abs, angle, zeros  # dot,
 
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
@@ -10,6 +11,8 @@ try:
 except ImportError:
     pass
 
+add_array = False
+
 
 class TableObject(scalarObject):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -17,17 +20,26 @@ class TableObject(scalarObject):  # displacement style table
         self.table_name = None
         self.analysis_code = None
         scalarObject.__init__(self, data_code, isubcase)
+
+        # new method, not finished
+        self.nodeIDs_to_index = None
+        self.gridTypes2 = None
+        self.translations2 = None
+        #self.rotations2 = {}  # should I just remove this???
+
         self.gridTypes = {}
         self.translations = {}
         self.rotations = {}
-
+        
         self.dt = dt
         if is_sort1:
             if dt is not None:
                 self.add = self.add_sort1
+                self.add_array = self.add_array_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
+            self.add_array = self.add_sort2
 
     def get_stats(self):
         ngrids = len(self.gridTypes)
@@ -46,7 +58,35 @@ class TableObject(scalarObject):  # displacement style table
     def isImaginary(self):
         return False
 
+    def add_array_f06_data(self, data, transient):
+        nnodes = len(data)
+
+        nodeIDs_to_index = zeros(nnodes, dtype='int32')
+        gridTypes = zeros(nnodes, dtype='string')
+        translations = zeros((nnodes, 6), dtype='float32')
+
+        for i, line in enumerate(data):
+            (nodeID, gridType, t1, t2, t3, r1, r2, r3) = line
+            nodeIDs_to_index[i] = nodeID
+            gridTypes[i] = gridType
+            translations[i, :] = array([t1, t2, t3, r1, r2, r3])
+
+        if transient is None:
+            self.add_array(None, nodeIDs_to_index, gridTypes, translations)
+            #print('%s gridTypes=%s'  % (self.__class__.__name__, gridTypes))
+            return
+        else:
+            (dtName, dt) = transient
+            self.data_code['name'] = dtName
+            if dt not in self.translations:
+                self.update_dt(self.data_code, dt)
+            self.add_array_sort1(dt, nodeIDs_to_index, gridTypes, translations)
+
     def add_f06_data(self, data, transient):
+        if add_array:
+            return self.add_array_f06_data(data, transient)
+
+        #raise RuntimeError('this should be commented out')
         if transient is None:
             for line in data:
                 (nodeID, gridType, t1, t2, t3, r1, r2, r3) = line
@@ -77,11 +117,17 @@ class TableObject(scalarObject):  # displacement style table
             self.add_new_transient(dt)
 
     def delete_transient(self, dt):
-        del self.translations[dt]
-        del self.rotations[dt]
+        if as_array:
+            del self.translations[dt]
+            del self.rotations[dt]
+        else:
+            np.delete(self.translations2, np.s_[dt, :, :], 1) # delete the dt
 
     def get_transients(self):
-        k = self.translations.keys()
+        if as_array:
+            k = self.translations.keys()
+        else:
+            k = self.translations[:, 0, 0]  # itime, inode, icomponent
         k.sort()
         return k
 
@@ -101,6 +147,8 @@ class TableObject(scalarObject):  # displacement style table
         #self.rotations[nodeID]    = array([v4,v5,v6]) # rx,ry,rz
 
     def add(self, dt, out):
+        if add_array:
+            return
         (nodeID, gridType, v1, v2, v3, v4, v5, v6) = out
         msg = "nodeID=%s gridType=%s v1=%s v2=%s v3=%s" % (
             nodeID, gridType, v1, v2, v3)
@@ -113,7 +161,26 @@ class TableObject(scalarObject):  # displacement style table
         self.translations[nodeID] = array([v1, v2, v3])  # dx,dy,dz
         self.rotations[nodeID] = array([v4, v5, v6])  # rx,ry,rz
 
+    def add_array(self, dt, nodeIDs_to_index, gridTypes, translations):
+        #print "dt =", dt
+        if not add_array:
+            return
+        assert min(nodeIDs_to_index) > -1
+        assert max(nodeIDs_to_index) < 1000000000
+        #assert -1 < nodeID < 1000000000, msg
+        #assert isinstance(nodeID, int), msg
+        #assert nodeID not in self.translations,'displacementObject - static failure'
+
+        if self.gridTypes2 is None:
+            self.nodeIDs_to_index = nodeIDs_to_index
+            self.gridTypes2 = gridTypes
+            self.translations2 = translations
+        else:
+            raise NotImplementedError('add_array multiple tables...')
+
     def add_sort1(self, dt, out):
+        if add_array:
+            return
         #print "dt=%s out=%s" %(dt,out)
         (nodeID, gridType, v1, v2, v3, v4, v5, v6) = out
         if dt not in self.translations:
@@ -129,7 +196,19 @@ class TableObject(scalarObject):  # displacement style table
         self.translations[dt][nodeID] = array([v1, v2, v3])  # dx,dy,dz
         self.rotations[dt][nodeID] = array([v4, v5, v6])  # rx,ry,rz
 
+    def add_array_sort1(self, dt, nodeIDs_to_index, gridTypes, translations):
+        if not add_array:
+            return
+        if self.gridTypes2 is None:
+            self.nodeIDs_to_index = nodeIDs_to_index
+            self.gridTypes2 = gridTypes
+            self.translations2 = translations
+        else:
+            raise NotImplementedError('add_array_sort1 multiple tables...')
+
     def add_sort2(self, nodeID, out):
+        if add_array:
+            return
         (dt, gridType, v1, v2, v3, v4, v5, v6) = out
         if dt not in self.translations:
             self.add_new_transient(dt)
@@ -145,6 +224,17 @@ class TableObject(scalarObject):  # displacement style table
         self.gridTypes[nodeID] = self.recastGridType(gridType)
         self.translations[dt][nodeID] = array([v1, v2, v3])  # dx,dy,dz
         self.rotations[dt][nodeID] = array([v4, v5, v6])  # rx,ry,rz
+
+    def add_array_sort2(self, dt, nodeIDs_to_index, gridTypes, translations):
+        if not add_array:
+            return
+        raise NotImplementedError('add_array_sort2 multiple tables...')
+        if self.gridTypes2 is None:
+            self.nodeIDs_to_index = nodeIDs_to_index
+            self.gridTypes2 = gridTypes
+            self.translations2 = translations
+        else:
+            raise NotImplementedError('add_array_sort2 multiple tables...')
 
     #def write_op2(self,block3,device_code=1):
         #"""

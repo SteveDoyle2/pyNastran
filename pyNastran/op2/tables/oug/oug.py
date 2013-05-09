@@ -1,6 +1,7 @@
 # http://www.cadfamily.com/online-help/I-DEAS/SDRCHelp/LANG/English/slv_ug/NAS_results_imported.htm
 import sys
 from struct import unpack
+from numpy import zeros
 
 from pyNastran.op2.tables.oug.oug_displacements import (
     DisplacementObject,              # table_code=1     format_code=1 sort_code=0
@@ -483,6 +484,14 @@ class OUG(object):
         #print("format1 =",format1)
 
         #print "len(data) = ",len(self.data)
+        nnodes = len(self.data) // 32
+        #print('nnodes =', nnodes)
+        
+        nodeIDs_to_index = zeros(nnodes, dtype='int32')
+        gridTypes = zeros(nnodes, dtype='int32')
+        translations = zeros((nnodes, 6), dtype='float32')
+
+        inode = 0
         while len(self.data) >= 32:  # 8*4
             eData = self.data[0:32]
             self.data = self.data[32:]
@@ -494,13 +503,22 @@ class OUG(object):
             #print "eType=%s" %(eType)
 
             dataIn = [eid2, gridType, tx, ty, tz, rx, ry, rz]
+            nodeIDs_to_index[inode] = eid2
+            gridTypes[inode] = gridType
+            translations[inode, :] = [tx, ty, tz, rx, ry, rz]
             #if self.debug:
-            #    print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid, gridType, tx, ty, tz, rx, ry, rz))
+                #print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid, gridType, tx, ty, tz, rx, ry, rz))
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #print "%s" %(self.table_name),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
+            inode += 1
+        
+        #print('nodeIDs_to_index =', nodeIDs_to_index)
+        #print('gridTypes =', gridTypes)
+        #print('translations =', translations)
+        self.obj.add_array(dt, nodeIDs_to_index, gridTypes, translations)
 
     def OUG_ComplexTable(self):
         dt = self.nonlinear_factor
@@ -511,6 +529,13 @@ class OUG(object):
         #print "format1 = ",format1
         is_magnitude_phase = self.is_magnitude_phase()
 
+        nnodes = len(self.data) // 56
+        #print('nnodes =', nnodes)
+        nodeIDs_to_index = zeros(nnodes, dtype='int32')
+        gridTypes = zeros(nnodes, dtype='int32')
+        translations = zeros((nnodes, 6), dtype='complex32')
+        
+        inode = 0
         while len(self.data) >= 56:  # 14*4
             eData = self.data[0:56]
             self.data = self.data[56:]
@@ -538,9 +563,14 @@ class OUG(object):
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
 
+            nodeIDs_to_index[inode] = eid2
+            gridTypes[inode] = gridType
+            translations[inode, :] = [tx, ty, tz, rx, ry, rz]
+
             dataIn = [eid2, gridType, tx, ty, tz, rx, ry, rz]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
-
+            inode += 1
+        self.obj.add_array(dt, nodeIDs_to_index, gridTypes, translations)
