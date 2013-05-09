@@ -13,12 +13,12 @@ Eventually, you started doing:
 5/3 = 1.666
 
 Python treats:
-5/3 = 1 (the truncated result)
+5/3 = 5//3 = 1 (the truncated result)
 
 and:
 5%3 = 2 (the remainder)
 
-5/3. = 5./3 = 1.666 (an input is a float, so the outputs is a float)
+5/3.0 = 5.0/3 = 1.666 (an input is a float, so the outputs is a float)
 
 It's strongly recommended that all integer division in Python be done as:
 5//3 and not 5/3
