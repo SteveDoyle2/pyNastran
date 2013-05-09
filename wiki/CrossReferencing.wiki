@@ -18,7 +18,7 @@ mesh = BDF() # instantiates the class with the default set of cards
 {{{
 #---NODES---
 # with cross-referencing
-mesh.read(xref=True) # reads the bdf
+mesh.read_bdf(fname, xref=True) # reads the bdf
 n1 = mesh.Node(1)   # gets element 1
 print n1.type       # GRID
 print n1.cp         # gets the Cp coordinate card
@@ -28,7 +28,7 @@ print n1.Cd()       # gets the Cd ID
 print n1.Position() # gets the position of the node in the global coordinate system (CORD2R.id=0)
 
 # without cross-referencing
-mesh.read(xref=False) # reads the bdf
+mesh.read_bdf(fname, xref=False) # reads the bdf
 n1 = mesh.Node(1)   # gets element 1
 print n1.type       # GRID
 print n1.cp         # gets the Cp ID
@@ -48,12 +48,12 @@ position = coord.transformToGlobal(n1.xyz) # equivalent to n1.Position()
 {{{
 #----ELEMENTS---
 # with cross-referencing
-mesh.read(xref=True)        # reads the bdf
+mesh.read_bdf(fname, xref=True)        # reads the bdf
 element1 = mesh.Element(1)  # assume a CROD
 print element1.Mass()       # gets the mass
 
 # without cross-referencing
-mesh.read(xref=False) # reads the bdf
+mesh.read_bdf(fname, xref=False) # reads the bdf
 element1  = mesh.Element(1)  # assume a CROD with pid=1, nids=[1,2]
 pid1 = element.Pid()
 
