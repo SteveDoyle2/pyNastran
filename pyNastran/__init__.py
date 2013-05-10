@@ -29,3 +29,7 @@ __version__     = '0.7.0_%s' % revision
 __website__     = 'http://code.google.com/p/pynastran/'
 
 isRelease = True  ## turns on skipping of tables that aren't supported
+
+# converts the OP2 objects to array from instead of dictionary form
+# breaks F06 writing, but is faster
+as_array = False

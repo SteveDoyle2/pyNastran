@@ -82,7 +82,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
 def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
             write_matlab=True, is_mag_phase=False, delete_f06=False,
             print_results=True, iSubcases=[], debug=False, stopOnFailure=True):
-    assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' %(op2FileName)
+    assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' % op2FileName
     isPassed = False
     stopOnFailure = False
     #debug = True
@@ -93,6 +93,12 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
         #op2.read_bdf(op2.bdfFileName,includeDir=None,xref=False)
         #op2.write_bdf_as_patran()
         op2.read_op2()
+        
+        #from pympler import muppy, summary
+        #all_objects = muppy.get_objects()
+        #sum1 = summary.summarize(all_objects)
+        #print(summary.print_(sum1))
+
         print("---stats for %s---" % op2FileName)
         #op2.get_op2_stats()
         print(op2.get_op2_stats())
@@ -227,7 +233,11 @@ def main():
 
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
+
+    import time
+    t0 = time.time()
     run_op2(op2FileName,make_geom=make_geom,write_bdf=write_bdf,write_f06=write_f06,write_matlab=write_matlab,is_mag_phase=is_mag_phase,print_results=print_results,debug=debug)
+    print("dt = %f" %(time.time() - t0))
 
 if __name__=='__main__':  # op2
     main()

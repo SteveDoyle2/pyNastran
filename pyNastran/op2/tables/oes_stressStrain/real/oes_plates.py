@@ -2,11 +2,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from numpy import zeros, array
+
+from pyNastran import as_array
 from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats8p4F
-
-
-as_array = True
 
 
 class PlateStressObject(StressObject):
@@ -118,7 +117,6 @@ class PlateStressObject(StressObject):
             #print(data)
             #sys.exit()
             i = 0
-            as_array = True
             for line in data:
                 if eType == 'CTRIA3':
                     (eType, eid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
