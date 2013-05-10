@@ -1,7 +1,9 @@
 #from struct import pack
 import numpy as np
+import numpy
 from numpy import array, sqrt, abs, angle, zeros  # dot,
 
+from pyNastran import as_array
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
@@ -10,8 +12,6 @@ try:
     import matplotlib.pyplot as plt
 except ImportError:
     pass
-
-add_array = False
 
 
 class TableObject(scalarObject):  # displacement style table
@@ -147,7 +147,7 @@ class TableObject(scalarObject):  # displacement style table
         #self.rotations[nodeID]    = array([v4,v5,v6]) # rx,ry,rz
 
     def add(self, dt, out):
-        if add_array:
+        if as_array:
             return
         (nodeID, gridType, v1, v2, v3, v4, v5, v6) = out
         msg = "nodeID=%s gridType=%s v1=%s v2=%s v3=%s" % (
@@ -163,7 +163,7 @@ class TableObject(scalarObject):  # displacement style table
 
     def add_array(self, dt, nodeIDs_to_index, gridTypes, translations):
         #print "dt =", dt
-        if not add_array:
+        if not as_array:
             return
         assert min(nodeIDs_to_index) > -1
         assert max(nodeIDs_to_index) < 1000000000
@@ -176,10 +176,18 @@ class TableObject(scalarObject):  # displacement style table
             self.gridTypes2 = gridTypes
             self.translations2 = translations
         else:
-            raise NotImplementedError('add_array multiple tables...')
+            #print(self.nodeIDs_to_index)
+            #print(nodeIDs_to_index)
+            self.nodeIDs_to_index = numpy.concatenate((self.nodeIDs_to_index, nodeIDs_to_index))
+            self.gridTypes2       = numpy.concatenate((self.gridTypes2, gridTypes))
+            self.translations2    = numpy.concatenate((self.translations2, translations))
+            #print "translations.shape = ", translations.shape
+            #print "translations2.shape = ", self.translations2.shape
+            #print(self.nodeIDs_to_index)
+            #raise NotImplementedError('add_array multiple tables...')
 
     def add_sort1(self, dt, out):
-        if add_array:
+        if as_array:
             return
         #print "dt=%s out=%s" %(dt,out)
         (nodeID, gridType, v1, v2, v3, v4, v5, v6) = out
@@ -197,7 +205,7 @@ class TableObject(scalarObject):  # displacement style table
         self.rotations[dt][nodeID] = array([v4, v5, v6])  # rx,ry,rz
 
     def add_array_sort1(self, dt, nodeIDs_to_index, gridTypes, translations):
-        if not add_array:
+        if not as_array:
             return
         if self.gridTypes2 is None:
             self.nodeIDs_to_index = nodeIDs_to_index
@@ -207,8 +215,6 @@ class TableObject(scalarObject):  # displacement style table
             raise NotImplementedError('add_array_sort1 multiple tables...')
 
     def add_sort2(self, nodeID, out):
-        if add_array:
-            return
         (dt, gridType, v1, v2, v3, v4, v5, v6) = out
         if dt not in self.translations:
             self.add_new_transient(dt)
@@ -226,8 +232,6 @@ class TableObject(scalarObject):  # displacement style table
         self.rotations[dt][nodeID] = array([v4, v5, v6])  # rx,ry,rz
 
     def add_array_sort2(self, dt, nodeIDs_to_index, gridTypes, translations):
-        if not add_array:
-            return
         raise NotImplementedError('add_array_sort2 multiple tables...')
         if self.gridTypes2 is None:
             self.nodeIDs_to_index = nodeIDs_to_index

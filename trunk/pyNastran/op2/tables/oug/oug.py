@@ -3,6 +3,7 @@ import sys
 from struct import unpack
 from numpy import zeros
 
+from pyNastran import as_array
 from pyNastran.op2.tables.oug.oug_displacements import (
     DisplacementObject,              # table_code=1     format_code=1 sort_code=0
     ComplexDisplacementObject)       # analysis_code=5  format_code=3 sort_code=1
@@ -511,14 +512,16 @@ class OUG(object):
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #print "%s" %(self.table_name),dataIn
             #eid = self.obj.add_new_eid(out)
-            self.obj.add(dt, dataIn)
+            if not as_array:
+                self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
             inode += 1
         
         #print('nodeIDs_to_index =', nodeIDs_to_index)
         #print('gridTypes =', gridTypes)
         #print('translations =', translations)
-        self.obj.add_array(dt, nodeIDs_to_index, gridTypes, translations)
+        if as_array:
+            self.obj.add_array(dt, nodeIDs_to_index, gridTypes, translations)
 
     def OUG_ComplexTable(self):
         dt = self.nonlinear_factor
