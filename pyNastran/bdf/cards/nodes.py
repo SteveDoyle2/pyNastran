@@ -1,7 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
+import sys
 from numpy import array
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -361,17 +361,18 @@ class GRID(Node):
     #def SEid(self):
         #return self.seid
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         nid = self.Nid()
         cp = self.Cp()
         cd = self.Cd()
         xyz = self.xyz
-        pos_xyz = self.Position()
         ps = self.Ps()
         seid = self.SEid()
         assert isinstance(nid, int), 'nid=%r' % nid
         assert isinstance(cp, int), 'cp=%r' % cp
         assert isinstance(cd, int), 'cd=%r' % cd
+        if xref:
+            pos_xyz = self.Position()
         
     def nDOF(self):
         return 6

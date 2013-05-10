@@ -1,7 +1,7 @@
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
+import sys
 
 from numpy import matrix, zeros, array, transpose, dot # ones, 
 from numpy.linalg import norm
@@ -280,7 +280,11 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         """
         Get the mass per unit length, :math:`\frac{m}{L}`
         """
-        return self.pid.MassPerLength()
+        try:
+            mpl = self.pid.MassPerLength()
+        except AttributeError:
+            mpl = None
+        return mpl
 
     def Mass(self):
         r"""
@@ -289,7 +293,13 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         .. math:: m = \left( \rho A + nsm \right) L
         """
         L = self.Length()
-        mass = L * self.MassPerLength()
+        mpl = self.MassPerLength()
+        try:
+            mass = L * mpl
+        except TypeError:
+            # an error was already printed
+            mass = None
+            pass
         #try:
             #mass = (self.Rho() * self.Area() + self.Nsm()) * L
         #except TypeError:
@@ -421,6 +431,7 @@ class CROD(RodElement):
         assert len(self.nodes) == 2
 
     def _verify(self, xref):
+        eid = self.Eid()
         pid = self.Pid()
         assert isinstance(pid, int), 'pid=%r' % pid
 
@@ -431,12 +442,12 @@ class CROD(RodElement):
             L = self.Length()
             mpa = self.MassPerLength()
             mass = self.Mass()
-            assert isinstance(mid, int), 'mid=%r' % mid
-            assert isinstance(L, float), 'L=%r' % L
-            assert isinstance(A, float), 'A=%r' % A
-            assert isinstance(nsm, float), 'nsm=%r' % nsm
-            assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
-            assert isinstance(mass, float), 'mass=%r' % mass
+            #assert isinstance(mid, int), 'mid=%r' % mid
+            #assert isinstance(L, float), 'L=%r' % L
+            #assert isinstance(A, float), 'A=%r' % A
+            #assert isinstance(nsm, float), 'nsm=%r' % nsm
+            #assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
+            #assert isinstance(mass, float), 'mass=%r' % mass
         
         c = self.Centroid()
         for i in range(3):
@@ -749,8 +760,13 @@ class CBAR(LineElement):
         assert self.offt[1] in ['G', 'O', 'E'], msg
         assert self.offt[2] in ['G', 'O', 'E'], msg
 
+    def Eid(self):
+        return self.eid
+
     def _verify(self, xref):
+        eid = self.Eid()
         pid = self.Pid()
+        assert isinstance(eid, int), 'eid=%r' % eid
         assert isinstance(pid, int), 'pid=%r' % pid
 
         if xref == 1:  # True
@@ -760,41 +776,80 @@ class CBAR(LineElement):
             mpl = self.MassPerLength()
             L = self.Length()
             mass = self.Mass()
-            assert isinstance(A, float), 'A=%r' % A
-            assert isinstance(nsm, float), 'nsm=%r' % nsm
-            assert isinstance(mid, int), 'mid=%r' % mid
-            assert isinstance(L, float), 'L=%r' % L
-            assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
-            assert isinstance(mass, float), 'nass=%r' % mass
+            #assert isinstance(A, float), 'A=%r' % A
+            #assert isinstance(nsm, float), 'nsm=%r' % nsm
+            #assert isinstance(mid, int), 'mid=%r' % mid
+            #assert isinstance(L, float), 'L=%r' % L
+            #assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
+            #assert isinstance(mass, float), 'nass=%r' % mass
 
     def Mid(self):
-        return self.pid.Mid()
+        try:
+            mid = self.pid.Mid()
+        except AttributeError:
+            sys.stderr.write('could not determine Mid for CBAR eid=%i because pid=%i does not exist\n' % (self.eid, self.pid))
+            mid = None
+        return mid
 
     def Area(self):
-        A = self.pid.Area()
-        assert isinstance(A, float)
+        try:
+            A = self.pid.Area()
+            assert isinstance(A, float), 'A=%r for CBAR eid=%s pid=%s pidType=%s\n' % (A, self.eid, self.pid.pid, self.pid.type)
+        except AttributeError:
+            sys.stderr.write('could not determine A for CBAR eid=%i because pid=%i does not exist\n' % (self.eid, self.pid))
+            A = None
         return A
 
     def J(self):
-        j = self.pid.J()
-        assert isinstance(j, float), 'J=%r for CBAR eid=%s pid=%s pidType=%s' % (j, self.eid, self.pid.pid, self.pid.type)
-        return j
+        try:
+            J = self.pid.J()
+            assert isinstance(j, float), 'J=%r for CBAR eid=%s pid=%s pidType=%s\n' % (J, self.eid, self.pid.pid, self.pid.type)
+        except AttributeError:
+            sys.stderr.write('could not determine J for CBAR eid=%i because pid=%i does not exist\n' % (self.eid, self.pid))
+            J = None
+        return J
 
     def Length(self):
-        L = norm(self.gb.Position() - self.ga.Position())
-        assert isinstance(L, float)
+        try:
+            ga = self.ga.Position()
+        except AttributeError:
+            sys.stderr.write('could not determine Ga for CBAR eid=%i because ga=%s does not exist\n' % (self.eid, self.ga))
+            return None
+
+        try:
+            gb = self.gb.Position()
+        except AttributeError:
+            sys.stderr.write('could not determine Gb for CBAR eid=%i because gb=%s does not exist\n' % (self.eid, self.gb))
+            return None
+
+        L = norm(gb - ga)
+        assert isinstance(L, float), 'L=%r for CBAR eid=%s\n' % (L, self.eid)
         return L
 
     def Nsm(self):
-        nsm = self.pid.Nsm()
-        assert isinstance(nsm, float)
+        try:
+            nsm = self.pid.Nsm()
+            assert isinstance(nsm, float)
+        except AttributeError:
+            sys.stderr.write('could not determine Nsm for CBAR eid=%i because pid=%i does not exist\n' % (self.eid, self.pid))
+            nsm = None
         return nsm
 
     def I1(self):
-        return self.pid.I1()
+        try:
+            i1 = self.pid.I1()
+        except AttributeError:
+            sys.stderr.write('could not determine I1 for CBAR eid=%i because pid=%i does not exist\n' % (self.eid, self.pid))
+            i1 = None
+        return i1
 
     def I2(self):
-        return self.pid.I2()
+        try:
+            i2 = self.pid.I2()
+        except AttributeError:
+            sys.stderr.write('could not determine I1 for CBAR eid=%i because pid=%i does not exist\n' % (self.eid, self.pid))
+            i2 = None
+        return i2
 
     def Centroid(self):
         return (self.ga.Position() + self.gb.Position()) / 2.

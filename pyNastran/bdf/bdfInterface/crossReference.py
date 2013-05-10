@@ -37,7 +37,7 @@ class XrefMesh(object):
             xref = 2
         else:
             raise NotImplementedError('xref=%r is not supported')
-        
+
         #########################
         ## THIS IS A HACK...   ##
         #########################
@@ -79,6 +79,7 @@ class XrefMesh(object):
             self._cross_reference_constraints()
             self._cross_reference_loads()
             #self.caseControlDeck.cross_reference(self)
+        #self._xref = 1  ## HACK!
 
     def _cross_reference_constraints(self):
         """
