@@ -304,6 +304,12 @@ class PlateStressObject(StressObject):
         if nodeID == 0:
             raise ValueError(msg)
 
+    def add_array_sort1(self, dt, sadf):
+        raise NotImplementedError()
+
+    def add_array_sort2(self, dt, sadf):
+        raise NotImplementedError()
+
     def add_sort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
         #print "***addTransient"
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" % (dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
