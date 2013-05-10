@@ -687,9 +687,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         bdf.nodes = 20
         bdf.elements = 10
         etc.
-        >>>
         """
         assert xref in [True, False, 'partial'], 'xref=%s is not supported' % xref
+        #xref = False
+        #xref = 'partial'
+        #xref = True
         try:
             #: the active filename (string)
             self.bdf_filename = bdf_filename
