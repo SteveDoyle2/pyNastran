@@ -406,7 +406,6 @@ def integer_or_double(card, n, fieldname):
     elif svalue is None:
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer or float (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-        #raise SyntaxError('%s (field #%s) on card must be an integer or float (not blank).\ncard=%s' % (fieldname, n, card) )
 
     if '.' in svalue:  # float/exponent
         try:
