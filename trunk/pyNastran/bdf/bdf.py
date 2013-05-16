@@ -727,12 +727,18 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         self._break_comment = False  # speeds up self._get_line()
         while self._get_line():
             pass
-        del self._stored_Is
-        del self._stored_lines
-        del self._stored_comments
-        del self._line_streams
-        del self._card_streams
-        del self._break_comment
+        if self._isDict:
+            self._stored_Is = {}
+            self._stored_lines = {}
+            self._stored_comments = {}
+            self._line_streams = {}
+            self._card_streams = {}
+        else:
+            self._stored_Is = []
+            self._stored_lines = []
+            self._stored_comments = []
+            self._line_streams = []
+            self._card_streams = []
 
     def _read_executive_control_deck(self):
         """Reads the executive control deck"""
