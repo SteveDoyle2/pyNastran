@@ -739,6 +739,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             self._stored_comments = []
             self._line_streams = []
             self._card_streams = []
+        #del self._break_comment
 
     def _read_executive_control_deck(self):
         """Reads the executive control deck"""

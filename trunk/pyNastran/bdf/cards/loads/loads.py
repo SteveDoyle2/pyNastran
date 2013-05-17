@@ -127,8 +127,6 @@ class LoadCombination(Load):  # LOAD, DLOAD
 
     def getLoads(self):
         loads = []
-        print("self.loadIDs =", self.loadIDs)
-        print("****")
         for allLoads in self.loadIDs:
             #if isinstance(allLoads, int):  ## has a problem with partial
                 #print("allLoads =", allLoads)
