@@ -700,7 +700,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         >>> g1 = bdf.Node(1)
         >>> print g1.Position()
         [10.0, 12.0, 42.0]
-        >>> bdf.write_bdf_as_patran(bdf_filename2)
+        >>> bdf.write_bdf(bdf_filename2)
         >>> print bdf.card_stats()
         ---BDF Statistics---
         SOL 101

@@ -65,9 +65,14 @@ class AEFACT(BaseCard):
     """
     Defines real numbers for aeroelastic analysis.::
 
-      AEFACT SID D1 D2 D3 D4 D5 D6 D7
-             D8  D9 -etc.-
-      AEFACT 97 .3 .7 1.0
+    +--------+-----+----+--------+-----+----+----+----+----+
+    | AEFACT | SID | D1 | D2     | D3  | D4 | D5 | D6 | D7 |
+    +--------+-----+----+--------+-----+----+----+----+----+
+    |        | D8  | D9 | -etc.- |
+    +--------+-----+----+--------+
+    +--------+-----+----+--------+-----+
+    | AEFACT | 97  |.3  | 0.7    | 1.0 |
+    +--------+-----+----+--------+-----+
     """
     type = 'AEFACT'
 
@@ -95,13 +100,18 @@ class AELINK(BaseCard):
     r"""
     Defines relationships between or among AESTAT and AESURF entries, such
     that:
-      \f[ u^D + \Sigma_{i=1}^n C_i u_i^I = 0.0\f]
+    
+    .. math:: u^D + \Sigma_{i=1}^n C_i u_i^I = 0.0
 
-    ::
+    +--------+-------+-------+--------+----+-------+----+-------+----+
+    | AELINK | ID    | LABLD | LABL1  | C1 | LABL2 | C2 | LABL3 | C3 |
+    +--------+-------+-------+--------+----+-------+----+-------+----+
+    |        | LABL4 | C4    | etc.   | 
+    +--------+-------+-------+--------+
 
-      AELINK ID LABLD LABL1 C1 LABL2 C2 LABL3 C3
-             LABL4 C4 -etc.-
-      AELINK 10 INBDA OTBDA -2.0
+    +--------+-------+-------+-------+------+
+    | AELINK | 10    | INBDA | OTBDA | -2.0 |
+    +--------+-------+-------+-------+------+
     """
     type = 'AELINK'
 
@@ -141,12 +151,20 @@ class AELIST(BaseCard):
     Defines a list of aerodynamic elements to undergo the motion prescribed
     with the AESURF Bulk Data entry for static aeroelasticity.
 
-    ::
+    +---------+------+------+------+------+------+------+------+------+
+    |  AELIST |  SID | E1   | E2   | E3   | E4   | E5   | E6   | E7   |
+    +---------+------+------+------+------+------+------+------+------+
+    |         |  E8  | etc. |
+    +---------+------+------+
 
-      AELIST SID E1 E2 E3 E4 E5 E6 E7 E8...
-      AELIST 75 1001 THRU 1075 1101 THRU 1109 1201 1202
+    +---------+------+------+------+------+------+------+------+------+
+    |  AELIST |  75  | 1001 | THRU | 1075 | 1101 | THRU | 1109 | 1201 |
+    +---------+------+------+------+------+------+------+------+------+
+    |         | 1202 |
+    +---------+------+
 
-    Remarks:
+    Remarks
+    -------
 
     1. These entries are referenced by the AESURF entry.
     2. When the THRU option is used, all intermediate grid points must exist.
@@ -184,10 +202,14 @@ class AEPARM(BaseCard):
     """
     Defines a general aerodynamic trim variable degree-of-freedom (aerodynamic
     extra point). The forces associated with this controller will be derived
-    from AEDW, AEFORCE and AEPRESS input data.::
+    from AEDW, AEFORCE and AEPRESS input data.
 
-      AEPARM ID LABEL UNITS
-      AEPARM 5 THRUST LBS
+    +--------+----+--------+-------+
+    | AEPARM | ID | LABEL  | UNITS |
+    +--------+----+--------+-------+
+    +--------+----+--------+-------+
+    | AEPARM | 5  | THRUST | LBS   |
+    +--------+----+--------+-------+
     """
     type = 'AEPARM'
 
@@ -213,10 +235,14 @@ class AEPARM(BaseCard):
 class AESTAT(BaseCard):
     """
     Specifies rigid body motions to be used as trim variables in static
-    aeroelasticity.::
+    aeroelasticity.
 
-      AESTAT ID   LABEL
-      AESTAT 5001 ANGLEA
+    +--------+------+--------+
+    | AESTAT | ID   | LABEL  |
+    +--------+------+--------+
+    +--------+------+--------+
+    | AESTAT | 5001 | ANGLEA |
+    +--------+------+--------+
     """
     type = 'AESTAT'
 
@@ -243,10 +269,13 @@ class AESURF(BaseCard):
     aerodynamic extra points. The forces associated with this controller will
     be derived from rigid rotation of the aerodynamic model about the hinge
     line(s) and from AEDW, AEFORCE and AEPRESS input data. The mass properties
-    of the control surface can be specified using an AESURFS entry.::
+    of the control surface can be specified using an AESURFS entry.
 
-      AESURF ID LABEL CID1 ALID1 CID2 ALID2 EFF LDW
-      CREFC CREFS PLLIM PULIM HMLLIM HMULIM TQLLIM TQULIM
+    +--------+--------+-------+-------+-------+--------+--------+--------+--------+
+    | AESURF |  ID    | LABEL | CID1  | ALID1 | CID2   | ALID2  | EFF    | LDW    |
+    +--------+--------+-------+-------+-------+--------+--------+--------+--------+
+    |        |  CREFC | CREFS | PLLIM | PULIM | HMLLIM | HMULIM | TQLLIM | TQULIM |
+    +--------+--------+-------+-------+-------+--------+--------+--------+--------+
     """
     type = 'AESURF'
 
@@ -331,10 +360,15 @@ class AESURFS(BaseCard):  # not integrated
     mass associated with these structural nodes define the control surface
     moment(s) of inertia about the hinge line(s).
     Specifies rigid body motions to be used as trim variables in static
-    aeroelasticity.::
+    aeroelasticity.
 
-      AESURFS ID   LABEL - LIST1 - LIST2
-      AESURFS 6001 ELEV  - 6002  - 6003
+    +---------+------+-------+---+-------+---+-------+
+    |    1    |  2   |   3   | 4 |   5   | 6 |   7   |
+    +---------+------+-------+---+-------+---+-------+
+    | AESURFS | ID   | LABEL |   | LIST1 |   | LIST2 |
+    +---------+------+-------+---+-------+---+-------+
+    | AESURFS | 6001 | ELEV  |   | 6002  |   | 6003  |
+    +---------+------+-------+---+-------+---+-------+
     """
     type = 'AESURFS'
 
@@ -394,10 +428,15 @@ class Aero(BaseCard):
 
 class AERO(Aero):
     """
-    Gives basic aerodynamic parameters for unsteady aerodynamics.::
+    Gives basic aerodynamic parameters for unsteady aerodynamics.
 
-      AERO ACSID VELOCITY REFC RHOREF SYMXZ SYMXY
-      AERO 3     1.3+4    100.  1.-5  1     -1
+    +------+-------+----------+------+--------+-------+-------+
+    | 1    | 2     | 3        | 4    | 5      | 6     | 7     |
+    +------+-------+----------+------+--------+-------+-------+
+    | AERO | ACSID | VELOCITY | REFC | RHOREF | SYMXZ | SYMXY |
+    +------+-------+----------+------+--------+-------+-------+
+    | AERO | 3     | 1.3+4    | 100. |  1.-5  | 1     | -1    |
+    +------+-------+----------+------+--------+-------+-------+
     """
     type = 'AERO'
 
@@ -440,10 +479,16 @@ class AERO(Aero):
 
 class AEROS(Aero):
     """
-    Gives basic aerodynamic parameters for unsteady aerodynamics.::
+    Gives basic aerodynamic parameters for unsteady aerodynamics.
 
-      AEROS ACSID RCSID REFC REFB REFS SYMXZ SYMXY
-      AEROS 10   20     10.  100. 1000. 1
+    +-------+-------+-------+------+------+-------+------+-------+
+    | 1     | 2     | 3     | 4    | 5    | 6     | 7    |   8   |
+    +-------+-------+-------+------+------+-------+------+-------+
+    | AEROS | ACSID | RCSID | REFC | REFB | REFS  |SYMXZ | SYMXY |
+    +-------+-------+-------+------+------+-------+------+-------+
+    +-------+-------+-------+------+------+-------+------+-------+
+    | AEROS | 10    | 20    | 10.  | 100. | 1000. | 1    |       |
+    +-------+-------+-------+------+------+-------+------+-------+
     """
     type = 'AEROS'
 
@@ -488,7 +533,11 @@ class CSSCHD(BaseCard):
     Defines a scheduled control surface deflection as a function of Mach number
     and angle of attack.::
 
-      CSSCHD SlD AESID LALPHA LMACH LSCHD
+    +--------+-----+-------+--------+-------+-------+
+    |    1   |  2  |   3   |   4    |   5   |   6   |
+    +--------+-----+-------+--------+-------+-------+
+    | CSSCHD | SlD | AESID | LALPHA | LMACH | LSCHD |
+    +--------+-----+-------+--------+-------+-------+
     """
     type = 'ASSCHD'
 
@@ -551,13 +600,18 @@ class CAERO1(BaseCard):
     locations and side chords. This is used for Doublet-Lattice theory for
     subsonic aerodynamics and the ZONA51 theory for supersonic aerodynamics.::
 
-      CAERO1 EID PID CP NSPAN NCHORD LSPAN LCHORD IGID
-      X1 Y1 Z1 X12 X4 Y4 Z4 X43
+    +--------+-----+-----+----+-------+--------+--------+--------+------+
+    |   1    |  2  |  3  | 4  |   5   |   6    |    7   |   8    |   9  |
+    +--------+-----+-----+----+-------+--------+--------+--------+------+
+    | CAERO1 | EID | PID | CP | NSPAN | NCHORD |  LSPAN | LCHORD | IGID |
+    +--------+-----+-----+----+-------+--------+--------+--------+------+
+    |        |  X1 | Y1  | Z1 | X12   | X4     | Y4     | Z4     | X43  |
+    +--------+-----+-----+----+-------+--------+--------+--------+------+
     """
     type = 'CAERO1'
 
     def __init__(self, card=None, data=None, comment=''):
-        """
+        r"""
         ::
         
           1
@@ -898,15 +952,29 @@ class CAERO5(BaseCard):
 
 class FLFACT(BaseCard):
     """
-    ::
+    +--------+-----+----+------+----+----+----+----+----+
+    |   1    |  2  |  3 |   4  | 5  | 6  | 7  | 8  | 9  |
+    +--------+-----+----+------+----+----+----+----+----+
+    | FLFACT | SID | F1 | F2   | F3 | F4 | F5 | F6 | F7 |
+    +--------+-----+----+------+----+----+----+----+----+
+    |        | F8  | F9 | etc. |
+    +--------+-----+----+------+
 
-      FLFACT SID F1 F2 F3 F4 F5 F6 F7
-      F8 F9 -etc.-
+    +--------+-----+----+------+-----+
+    |   1    |  2  |  3 |   4  | 5   |
+    +--------+-----+----+------+------
+    | FLFACT | 97  | .3 |.7    | 3.5 |
+    +--------+-----+----+------+------
 
-      FLFACT 97 .3 .7 3.5
+    # delta quantity approach
 
-      FLFACT SID F1 THRU FNF NF FMID       # delta quantity approach
-      FLFACT 201 .200 THRU .100 11 .133333
+    +--------+-----+-------+------+-------+----+--------+
+    |   1    |  2  |  3    |   4  |   5   | 6  |     7  |
+    +--------+-----+-------+------+-------+----+--------+
+    | FLFACT | SID | F1    | THRU | FNF   | NF | FMID   |
+    +--------+-----+-------+------+-------+----+--------+
+    | FLFACT | 201 | 0.200 | THRU | 0.100 | 11 | 0.1333 |
+    +--------+-----+-------+------+-------+----+--------+
     """
     type = 'FLFACT'
 
@@ -949,10 +1017,15 @@ class FLFACT(BaseCard):
 
 class FLUTTER(BaseCard):
     """
-    Defines data needed to perform flutter analysis.::
+    Defines data needed to perform flutter analysis.
 
-      FLUTTER SID METHOD DENS MACH RFREQ IMETH NVALUE/OMAX EPS
-      FLUTTER 19  K      119  219  319       S 5           1.-4
+    +---------+-----+--------+------+------+-------+-------+-------------+------+
+    |    1    |  2  |   3    |  4   |  5   |   6   |   7   |      8      |  9   |
+    +---------+-----+--------+------+------+-------+-------+-------------+------+
+    | FLUTTER | SID | METHOD | DENS | MACH | RFREQ | IMETH | NVALUE/OMAX | EPS  |
+    +---------+-----+--------+------+------+-------+-------+-------------+------+
+    | FLUTTER | 19  | K      | 119  | 219  | 319   |     S | 5           | 1.-4 |
+    +---------+-----+--------+------+------+-------+-------+-------------+------+
     """
     type = 'FLUTTER'
 
@@ -1055,10 +1128,15 @@ class FLUTTER(BaseCard):
 class GUST(BaseCard):
     """
     Defines a stationary vertical gust for use in aeroelastic response
-    analysis.::
+    analysis.
 
-      GUST SID DLOAD WG  X0   V
-      GUST 133 61    1.0 0.   1.+4
+    +------+-----+-------+-----+-----+------+
+    |   1  |  2  |   3   |  4  |  5  |  6   |
+    +------+-----+-------+-----+-----+------+
+    | GUST | SID | DLOAD | WG  | X0  | V    |
+    +------+-----+-------+-----+-----+------+
+    | GUST | 133 | 61    | 1.0 | 0.  | 1.+4 |
+    +------+-----+-------+-----+-----+------+
     """
     type = 'GUST'
 
@@ -1092,10 +1170,15 @@ class GUST(BaseCard):
 class MKAERO1(BaseCard):
     """
     Provides a table of Mach numbers (m) and reduced frequencies (k) for
-    aerodynamic matrix calculation.::
+    aerodynamic matrix calculation.
 
-      MKAERO1 m1 m2 m3 m4 m5 m6 m7 m8
-              k1 k2 k3 k4 k5 k6 k7 k8
+    +---------+----+----+----+----+----+----+----+----+
+    |    1    |  2 | 3  |  4 | 5  | 6  | 7  | 8  | 9  |
+    +---------+----+----+----+----+----+----+----+----+
+    | MKAERO1 | m1 | m2 | m3 | m4 | m5 | m6 | m7 | m8 |
+    +---------+----+----+----+----+----+----+----+----+
+    |         | k1 | k2 | k3 | k4 | k5 | k6 | k7 | k8 |
+    +---------+----+----+----+----+----+----+----+----+
     """
     type = 'MKAERO1'
 
@@ -1149,9 +1232,13 @@ class MKAERO1(BaseCard):
 class MKAERO2(BaseCard):
     """
     Provides a table of Mach numbers (m) and reduced frequencies (k) for
-    aerodynamic matrix calculation.::
+    aerodynamic matrix calculation.
 
-      MKAERO2 m1 k1 m2 k2 m3 k3 m4 k4
+    +---------+----+----+----+----+----+----+----+----+
+    |    1    | 2  | 3  | 4  | 5  | 6  | 7  | 8  | 9  |
+    +---------+----+----+----+----+----+----+----+----+
+    | MKAERO2 | m1 | k1 | m2 | k2 | m3 | k3 | m4 | k4 |
+    +---------+----+----+----+----+----+----+----+----+
     """
     type = 'MKAERO2'
 

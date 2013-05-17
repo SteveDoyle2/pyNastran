@@ -424,7 +424,8 @@ def integer_or_double(card, n, fieldname):
     if isinstance(svalue, int) or isinstance(svalue, float):
         return svalue
     elif svalue is None:
-        raise SyntaxError('%s (field #%s) on card must be an integer or float (not blank).\ncard=%s' % (fieldname, n, card) )
+        Type = getType(svalue)
+        raise SyntaxError('%s = %r (field #%s) on card must be an integer or float (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
 
     if '.' in svalue:  # float/exponent
         try:
@@ -767,6 +768,9 @@ def interpret_value(valueRaw, card='', debug=False):
                "card=%s\nYou also might have mixed tabs/spaces/commas."
                % (valueRaw, valueLeft, card))
         raise SyntaxError(msg)
+    
+    if 'D' == sline[0][-1]:
+        sline[0] = sline[0][:-1]
 
     try:
         s0 = vFactor * float(sline[0])

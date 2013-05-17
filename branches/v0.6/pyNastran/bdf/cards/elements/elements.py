@@ -202,8 +202,11 @@ class CRAC2D(CrackElement):
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 18
 
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=True)
+
     def rawFields(self):
-        list_fields = ['CRAC2D', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True)
+        list_fields = ['CRAC2D', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
 
@@ -229,6 +232,9 @@ class CRAC3D(CrackElement):
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 64
 
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=True)
+
     def rawFields(self):
-        list_fields = ['CRAC3D', self.eid, self.Pid()] + self.nodeIDs(allowEmptyNodes=True)
+        list_fields = ['CRAC3D', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields

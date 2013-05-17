@@ -42,8 +42,8 @@ from itertools import izip, count
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
-    integer_double_or_blank, integer_or_blank, double_or_blank,
-    components, components_or_blank, blank, fields, string)
+    integer_or_double, integer_double_or_blank, integer_or_blank,
+    double_or_blank, components, components_or_blank, blank, fields, string)
 # integer_or_double, double,
 
 class RigidElement(Element):
@@ -272,10 +272,13 @@ class RBE2(RigidElement):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        ::
-
-          RBE2 EID GN CM GM1 GM2 GM3 GM4 GM5
-          GM6 GM7 GM8 -etc.- ALPHA
+        +-------+-----+-----+-----+------+-------+-----+-----+-----+
+        |   1   |  2  |  3  |  4  |  5   |   6   |  7  |  8  |  9  |
+        +-------+-----+-----+-----+------+-------+-----+-----+-----+
+        |  RBE2 | EID | GN  | CM  | GM1  | GM2   | GM3 | GM4 | GM5 |
+        +-------+-----+-----+-----+------+-------+-----+-----+-----+
+        |       | GM6 | GM7 | GM8 | etc. | ALPHA |
+        +-------+-----+-----+-----+------+-------+
         """
         RigidElement.__init__(self, card, data)
         if comment:
@@ -293,16 +296,25 @@ class RBE2(RigidElement):
             #: 6 with no embedded blanks.)
             self.cm = components_or_blank(card, 3, 'cm')
 
-            #: Grid point identification numbers at which dependent
-            #: degrees-of-freedom are assigned. (Integer > 0)
-            self.Gmi = fields(integer, card, 'Gm', i=4, j=len(card))
-            if len(self.Gmi) > 0 and isinstance(self.Gmi[-1], float):
-                #: Thermal expansion coefficient. See Remark 11.
-                #: (Real > 0.0 or blank)
-                self.alpha = self.Gmi.pop()  # the last field is not part of
-                                             # Gmi
+            alpha = integer_or_double(card, len(card) - 1, 'alpha')
+            if isinstance(alpha, float):
+                #: Grid point identification numbers at which dependent
+                #: degrees-of-freedom are assigned. (Integer > 0)
+                self.alpha = alpha
+                
+                # the last field is not part of Gmi
+                n = 1
             else:
+                # the last field is part of Gmi
+                n = 0
                 self.alpha = 0.0
+
+            j=4
+            self.Gmi = []
+            for i in range(len(card)-4-n):
+                gmi = integer(card, j + i, 'Gm%i' % (i + 1))
+                #print('gm%i = %s' % (i + 1, gmi))
+                self.Gmi.append(gmi)
         else:
             self.eid = data[0]
             self.gn = data[1]

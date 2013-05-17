@@ -30,7 +30,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     string, string_or_blank,
     integer_or_string, integer_string_or_blank,
     double_or_string, double_string_or_blank,
-    blank, components)
+    blank, components, getType, interpret_value)
 
 class ExtendedTestCase(unittest.TestCase):
 
@@ -345,6 +345,11 @@ class Test(ExtendedTestCase):
         with self.assertRaises(SyntaxError):
             val = components(BDFCard(['-1']), 0, 'field')
 
+    def test_bad(self):
+        val = getType('1.000000000D+00')
+        print "val = ", val
+        val = interpret_value('1.000000000D+00')
+        print "val = ", val
         
 if __name__ == '__main__':
     unittest.main()

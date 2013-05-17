@@ -174,6 +174,9 @@ class GetMethods(object):
                         midToPidsMap[mid].append(pid)
         return (midToPidsMap)
 
+    def elementIDs(self):
+        return self.elements.keys()
+
     def Element(self, eid):
         return self.elements[eid]
 

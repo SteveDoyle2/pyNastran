@@ -57,7 +57,7 @@ class CompositeShellProperty(ShellProperty):
     def cross_reference(self, model):
         """
         Links the Material IDs to the materials.
-        :param self:  the PCOMP object
+        :param self:  the PCOMP/PCOMPG object
         :param model: a BDF object
         """
         for iply in xrange(len(self.plies)):
