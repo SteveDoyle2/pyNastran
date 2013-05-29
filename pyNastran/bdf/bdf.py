@@ -698,8 +698,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas)|*.bdf;*.dat;*.nas|" \
                     "All files (*.*)|*.*"
                 wildcard_qt = "Nastran BDF (*.bdf *.dat *.pch);;All files (*)"
-                stitle = 'Please select a BDF/DAT/PCH to load'
-                bdf_filename = load_file_dialog(stitle, wildcard_wx, wildcard_qt)
+                title = 'Please select a BDF/DAT/PCH to load'
+                bdf_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
                 if bdf_filename.lower().endswith('.pch'):
                     punch = True
 

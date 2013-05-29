@@ -38,7 +38,7 @@ class OP4(OP4Deprecated):
         self.n = 0
         self.endian = ''
 
-    def read_op4(self, op4_filename, matrix_names=None, precision='default'):
+    def read_op4(self, op4_filename=None, matrix_names=None, precision='default'):
         """
         Reads a NASTRAN OUTPUT4 file, regular or sparse, and stores the
         matrices as the output arguments of the function.  The number of matrices
@@ -79,6 +79,13 @@ class OP4(OP4Deprecated):
          format before doing math on them.  This is standard with sparse matrices.
         .. warning:: sparse binary is buggy right now        """
         assert precision in ['default', 'single', 'double'], "precison=|%s| valid=['default','single','double']"
+        if op4_filename is None:
+            wildcard_wx = "Nastran OP4 (*.op4)|*.op4|" \
+                "All files (*.*)|*.*"
+            wildcard_qt = "Nastran OP4 (*.op4);;All files (*)"
+            title = 'Please select a OP4 to load'
+            op4_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
+        
         if isinstance(matrix_names, str):
             matrix_names = [matrix_names]
         #assert isinstance(matrix_names, list), 'type(matrix_names)=%s' % type(matrix_names)
