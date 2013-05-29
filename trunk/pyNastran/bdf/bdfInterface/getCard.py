@@ -23,16 +23,10 @@ class GetMethods(DeprecatedGetMethods):
     # NODE CARDS
 
     def nNodes(self):
-        return len(self.nodes)
+        return len(self.nodes.nids)
 
     def nodeIDs(self):
-        return self.nodes.keys()
-
-    def getNodes(self):
-        nodes = []
-        for (nid, node) in sorted(self.nodes.iteritems()):
-            nodes.append(node)
-        return nodes
+        return self.nodes.nids.keys()
 
     def getNodeIDsWithElement(self, eid):
         return self.getNodeIDsWithElements([eid])
@@ -50,8 +44,8 @@ class GetMethods(DeprecatedGetMethods):
         try:
             if (nid == 0 or nid is None) and allowEmptyNodes:
                 return None
-            elif nid in self.nodes:
-                return self.nodes[nid]
+            elif nid in self.nodes.nid:
+                return nid
             elif self.spoints and nid in self.spoints.spoints:
                 return SPOINT(nid)
             else:

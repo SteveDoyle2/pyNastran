@@ -184,37 +184,6 @@ class BDFMethods(BDFMethodsDeprecated):
     #     normals = {}
     #     #for nid in
 
-    def resolve_grids(self, cid=0):
-        """
-        Puts all nodes in a common coordinate system (mainly for cid testing)
-
-        :param self: the object pointer
-        :param cid:  the cid to resolve the nodes to (default=0)
-        .. note:: loses association with previous coordinate systems so to go
-                  back requires another fem
-        """
-        assert cid in self.coords, ('cannot resolve nodes to '
-                                    'cid=|%s| b/c it doesnt exist' % cid)
-        for nid, node in sorted(self.nodes.iteritems()):
-            p = node.PositionWRT(self, cid)
-            node.UpdatePosition(self, p, cid)
-
-    def unresolve_grids(self, model_old):
-        """
-        Puts all nodes back to original coordinate system.
-
-        :param self:      the object pointer
-        :param model_old: the old model that hasnt lost it's connection to
-                          the node cids
-        .. warning:: hasnt been tested well...
-        """
-        debug = False
-        for (nid, node_old) in model_old.nodes.iteritems():
-            coord = node_old.cp
-            (p, matrix) = coord.transformToGlobal(self.xyz, debug=debug)
-            p2 = coord.transformToLocal(p, matrix, debug=debug)
-            self.nodes[nid].UpdatePosition(self, p2, coord.cid)
-
     def sum_forces(self):
         """
         Sums applied forces for all load cases.

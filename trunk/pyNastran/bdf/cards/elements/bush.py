@@ -97,7 +97,7 @@ class CBUSH(BushElement):
     def nodeIDs(self):
         return [self.Ga(), self.Gb()]
 
-    def _verify(self, xref=False):
+    def _verify(self, model, xref):
         ga = self.Ga()
         gb = self.Gb()
         cid = self.Cid()
@@ -136,8 +136,8 @@ class CBUSH(BushElement):
 
     def cross_reference(self, model):
         msg = ' which is required by CBUSH eid=%s' % self.eid
-        self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
+        #self.ga = model.Node(self.ga, msg=msg)
+        #self.gb = model.Node(self.gb, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
         if self.cid is not None:
             self.cid = model.Coord(self.cid, msg=msg)
@@ -186,14 +186,14 @@ class CBUSH1D(BushElement):
 
     def cross_reference(self, model):
         msg = ' which is required by CBUSH1D eid=%s' % self.eid
-        self.ga = model.Node(self.ga, msg=msg)
-        if self.gb:
-            self.gb = model.Node(self.gb, msg=msg)
+        #self.ga = model.Node(self.ga, msg=msg)
+        #if self.gb:
+            #self.gb = model.Node(self.gb, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
         if self.cid is not None:
             self.cid = model.Coord(self.cid, msg=msg)
 
-    def _verify(self, xref=False):
+    def _verify(self, model, xref):
         ga = self.Ga()
         gb = self.Gb()
         cid = self.Cid()
@@ -259,7 +259,7 @@ class CBUSH2D(BushElement):
             self.ga = data[2]
             self.gb = data[3]
 
-    def _verify(self, xref=False):
+    def _verify(self, model, xref):
         ga = self.Ga()
         gb = self.Gb()
         cid = self.Cid()
@@ -286,8 +286,8 @@ class CBUSH2D(BushElement):
 
     def cross_reference(self, model):
         msg = ' which is required by CBUSH2D eid=%s' % self.eid
-        self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
+        #self.ga = model.Node(self.ga, msg=msg)
+        #self.gb = model.Node(self.gb, msg=msg)
         #self.pid = model.Property(self.pid)
         if self.cid is not None:
             self.cid = model.Coord(self.cid, msg=msg)

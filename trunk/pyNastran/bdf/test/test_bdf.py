@@ -140,7 +140,7 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, cid):
     #fem1.sumMoments()
     outModel = bdfModel + '_out'
     if cid is not None and xref:
-        fem1.resolveGrids(cid=cid)
+        fem1.nodes.resolve_grids(fem1, cid=cid)
     if meshForm == 'combined':
         fem1.write_bdf(outModel, interspersed=True)
     elif meshForm == 'separate':

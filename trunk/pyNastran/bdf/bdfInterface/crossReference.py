@@ -137,12 +137,14 @@ class XrefMesh(object):
         Links the nodes to coordinate systems
         """
         gridSet = self.gridSet
-        for n in self.nodes.itervalues():
-            try:
-                n.cross_reference(self, gridSet)
-            except:
-                self.log.error("Couldn't cross reference GRID.\n%s" % (str(n)))
-                raise
+        
+        self.nodes.finalize()
+        #for n in self.nodes.itervalues():
+            #try:
+                #n.cross_reference(self, gridSet)
+            #except:
+                #self.log.error("Couldn't cross reference GRID.\n%s" % (str(n)))
+                #raise
 
         if self.spoints:
             self.spointi = self.spoints.createSPOINTi()

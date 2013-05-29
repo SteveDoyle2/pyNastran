@@ -228,15 +228,20 @@ class Element(BaseCard):
         else:
             return self.pid.pid
 
-    def nodePositions(self, nodes=None):
-        """returns the positions of multiple node objects"""
+    def nodePositions(self, model, nodes=None):
+        """
+        returns the positions of multiple node objects  ## TODO: WRONG...
+        nodes - node IDs
+        """
         if not nodes:
             nodes = self.nodes
         
         positions = []
-        for node in nodes:
-            if node is not None:
-                positions.append(node.Position())
+        #print("nodes =", nodes)
+        for nid in nodes:
+            if nid is not None:
+                pos = model.nodes.get_position(model, nid)
+                positions.append(pos)
             else:
                 positions.append(None)
         return positions

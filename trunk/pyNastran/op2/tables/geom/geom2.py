@@ -5,7 +5,7 @@ from pyNastran.bdf.cards.elements.elements import CGAP
 from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
                                                  CDAMP4, CDAMP5, CVISC)
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
-from pyNastran.bdf.cards.elements.shell import (CTRIA3, CQUAD4, CTRIA6,
+from pyNastran.bdf.cards.elements.shell import (CTRIA6,
                                                 CQUADR, CQUAD8, CQUAD, CQUADX,
                                                 CSHEAR)
 from pyNastran.bdf.cards.elements.bars import (CROD, CBAR, CTUBE, CONROD,
