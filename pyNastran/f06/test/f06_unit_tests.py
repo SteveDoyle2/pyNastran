@@ -67,7 +67,7 @@ class TestF06(unittest.TestCase):
         (bdf, f06, op2) = self.run_model(bdfname, f06name, op2name)
         self.assertEquals(bdf.properties[1].t,  0.3, 't=%s' % bdf.properties[1].t)
 
-        self.assertEquals(len(bdf.nodes), 36, bdf.nodes)
+        self.assertEquals(len(bdf.nodes.nid), 36, bdf.nodes)
         self.assertEquals(len(bdf.elements), 25, bdf.elements)
         self.assertEquals(len(bdf.properties), 1, bdf.properties)
         self.assertEquals(len(bdf.materials), 1, bdf.materials)

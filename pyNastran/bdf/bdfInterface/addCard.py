@@ -69,18 +69,22 @@ class AddMethods(object):
             self.params[key] = param
 
     def add_node(self, node, allowOverwrites=False):
-        key = node.nid
-        if key in self.nodes and not allowOverwrites:
-            if not node.isSameCard(self.nodes[key]):
-                print('nid=%s\noldNode=\n%snewNode=\n%s' %
-                     (key, self.nodes[key], node))
-                assert node.nid not in self.nodes, 'nid=%s\noldNode=\n%snewNode=\n%s' % (node.nid, self.nodes[key], node)
-            else:
+        bbbb
+        self.nodes.add_grid(node)
+        return
+        
+        #key = node.nid
+        #if key in self.nodes and not allowOverwrites:
+            #if not node.isSameCard(self.nodes[key]):
+                #print('nid=%s\noldNode=\n%snewNode=\n%s' %
+                     #(key, self.nodes[key], node))
+                #assert node.nid not in self.nodes, 'nid=%s\noldNode=\n%snewNode=\n%s' % (node.nid, self.nodes[key], node)
+            #else:
                 #print 'Node was duplicated...nid=%s\nnode=\n%s' %(key,node)
-                pass
-        else:
-            assert key > 0, 'nid=%s node=%s' % (key, node)
-            self.nodes[key] = node
+                #pass
+        #else:
+            #assert key > 0, 'nid=%s node=%s' % (key, node)
+            #self.nodes[key] = node
 
     def add_SPOINT(self, spoint):
         if self.spoints is None:

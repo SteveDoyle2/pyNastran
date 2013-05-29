@@ -20,7 +20,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 
-from numpy import array, eye, cross, allclose  # zeros,dot
+from numpy import array, eye, cross, allclose, float32  # zeros,dot
 from numpy.linalg import det  # inv
 
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
@@ -35,7 +35,9 @@ def _triangle_area_centroid_normal(nodes):
     """
     Returns area,centroid,unitNormal
 
-    :param nodes: list of three triangle vertices
+    Paramters
+    ---------
+    nodes : list of three triangle vertices
 
     ::
 
@@ -115,11 +117,11 @@ class ShellElement(Element):
         """
         return self.pid.MassPerArea()
 
-    def Mass(self):
+    def Mass(self, model):
         r"""
         .. math:: m = \frac{m}{A} A  \f]
         """
-        return self.pid.MassPerArea() * self.Area()
+        return self.pid.MassPerArea() * self.Area(model)
 
     def flipNormal(self):
         raise NotImplementedError('flipNormal undefined for %s' % (self.type))
@@ -131,31 +133,43 @@ class TriShell(ShellElement):
 
     def Thickness(self):
         """
-        Returns the thickness
+        Returns
+        -------
+        out : float
+              thickness
         """
         return self.pid.Thickness()
 
-    def AreaCentroidNormal(self):
+    def AreaCentroidNormal(self, model):
         """
         Returns area,centroid, normal as it's more efficient to do them
         together
+
+        Returns
+        -------
+        area : float
+               the area
+        centroid : (3,) array
+               the centroid
+        normal : (3,) array
+               the normal vector
         """
-        (n0, n1, n2) = self.nodePositions()
+        (n0, n1, n2) = self.nodePositions(model)
         return _triangle_area_centroid_normal([n0, n1, n2])
 
-    def Area(self):
+    def Area(self, model):
         r"""
         Get the area, :math:`A`.
         
         .. math:: A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)
         """
-        (n0, n1, n2) = self.nodePositions()
+        (n0, n1, n2) = self.nodePositions(model)
         a = n0 - n1
         b = n0 - n2
         area = Area(a, b)
         return area
 
-    def Normal(self):
+    def Normal(self, model):
         r"""
         Get the normal vector, :math:`n`.
 
@@ -163,17 +177,17 @@ class TriShell(ShellElement):
           n = \frac{(n_0-n_1) \times (n_0-n_2)}
              {\lvert (n_0-n_1) \times (n_0-n_2) \lvert}
         """
-        (n0, n1, n2) = self.nodePositions()
+        (n0, n1, n2) = self.nodePositions(model)
         return _normal(n0 - n1, n0 - n2)
 
-    def Centroid(self):
+    def Centroid(self, model):
         r"""
         Get the centroid.
 
         .. math::
           CG = \frac{1}{3} (n_0+n_1+n_2)
         """
-        (n0, n1, n2) = self.nodePositions()
+        (n0, n1, n2) = self.nodePositions(model)
         centroid = centroid_triangle(n0, n1, n2)
         return centroid
 
@@ -182,7 +196,7 @@ class TriShell(ShellElement):
         6x6 mass matrix triangle
         http://www.colorado.edu/engineering/cas/courses.d/IFEM.d/IFEM.Ch32.d/IFEM.Ch32.pdf
         """
-        mass = self.Mass()  # rho*A*t
+        mass = self.Mass(model)  # rho*A*t
         if isLumped:  # lumped mass matrix
             Mass = mass / 3 * eye(6)
         else:  # consistent mass
@@ -193,171 +207,6 @@ class TriShell(ShellElement):
             M[5, 3] = M[5, 3] = 1.
             Mass = mass / 12 * M
         return Mass
-
-
-class CTRIA3(TriShell):
-    type = 'CTRIA3'
-    asterType = 'TRIA3'
-    calculixType = 'S3'
-
-    def __init__(self, card=None, data=None, comment=''):
-        TriShell.__init__(self, card, data)
-        if comment:
-            self._comment = comment
-        if card:
-            #: Element ID
-            self.eid = integer(card, 1, 'eid')
-            #: Property ID
-            self.pid = integer(card, 2, 'pid')
-
-            nids = [integer(card, 3, 'n1'),
-                    integer(card, 4, 'n2'),
-                    integer(card, 5, 'n3')]
-
-            self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
-            self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
-            blank(card, 8, 'blank')
-            blank(card, 9, 'blank')
-
-            self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-            self.T1 = double_or_blank(card, 11, 'T1', 1.0)
-            self.T2 = double_or_blank(card, 12, 'T2', 1.0)
-            self.T3 = double_or_blank(card, 13, 'T3', 1.0)
-            assert len(card) <= 14, 'len(CTRIA3 card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:5]
-
-            self.thetaMcid = data[5]
-            self.zOffset = data[6]
-            self.TFlag = data[7]
-            self.T1 = data[8]
-            self.T2 = data[9]
-            self.T3 = data[10]
-            if self.T1 == -1.0:
-                self.T1 = 1.0
-            if self.T2 == -1.0:
-                self.T2 = 1.0
-            if self.T3 == -1.0:
-                self.T3 = 1.0
-
-        self.prepareNodeIDs(nids)
-        assert len(self.nodes) == 3
-
-    def cross_reference(self, model):
-        msg = ' which is required by CTRIA3 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
-
-    def _verify(self, xref):
-        eid = self.Eid()
-        pid = self.Pid()
-        nids = self.nodeIDs()
-
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
-
-        if xref == 1:  # True
-            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
-            if not self.pid.type in ['PLPLANE']:
-                t = self.Thickness()
-                assert isinstance(t, float), 'thickness=%r' % t
-                mass = self.Mass()
-                assert isinstance(mass, float), 'mass=%r' % mass
-            a,c,n = self.AreaCentroidNormal()
-            assert isinstance(a, float), 'Area=%r' % a
-            for i in range(3):
-                assert isinstance(c[i], float)
-                assert isinstance(n[i], float)
-
-    #def Thickness(self):
-        #if self.T1 + self.T2 + self.T3 > 0.0:
-        #    if self.TFlag == 0:
-        #        t = self.pid.Thickness()
-        #        T1 = self.T1 / t
-        #        T2 = self.T2 / t
-        #        T3 = self.T3 / t
-        #    else:
-        #        T1 = self.T1
-        #        T2 = self.T2
-        #        T3 = self.T3
-        #    t = (T1+T2+T3)/3.
-        #else:
-        #    t = self.pid.Thickness()
-        #return t
-
-    def flipNormal(self):
-        """
-        ::
-        
-               1           1
-              * *   -->   * *
-             *   *       *   *
-            2-----3     3-----2
-        """
-        (n1, n2, n3) = self.nodes
-        self.nodes = [n1, n3, n2]
-
-    def Interp(self, un):
-        """
-        Interpolation based on the area coordinates
-        """
-        (n0, n1, n2) = self.nodePositions()
-        nc = (n0 + n1 + n2) / 3.
-
-        a = n0 - nc
-        b = n1 - nc
-        c = n2 - nc
-
-        tA1 = det(cross(b, c))   # 2*A1
-        tA2 = det(cross(c, a))   # 2*A2
-        tA3 = det(cross(a, b))   # 2*A3
-        otA = 1. / (tA1 + tA2 + tA3)  # 1/2A
-
-        S = array([tA1, tA2, tA3]) * otA  # Ai/A
-        u = S * un
-        return u
-
-    def Jacob(self):
-        (n0, n1, n2) = self.nodePositions()
-        (nx0, ny0, nz0) = n0
-        (nx1, ny1, nz1) = n1
-        (nx2, ny2, nz2) = n2
-        #J = matrix([n0,n1-n0,n2-n0])
-
-        J = array([[nx0, nx1 - nx0, nx2 - nx0],
-                   [ny0, ny1 - ny0, ny2 - ny0],
-                   [nz0, nz1 - nz0, nz2 - nz0], ])
-        #detJ = J.det()
-        return J
-
-    def getReprDefaults(self):
-        zOffset = set_blank_if_default(self.zOffset, 0.0)
-        TFlag = set_blank_if_default(self.TFlag, 0)
-        thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
-
-        T1 = set_blank_if_default(self.T1, 1.0)
-        T2 = set_blank_if_default(self.T2, 1.0)
-        T3 = set_blank_if_default(self.T3, 1.0)
-        return (thetaMcid, zOffset, TFlag, T1, T2, T3)
-
-    def nodeIDs(self):
-        return self._nodeIDs(allowEmptyNodes=False)
-
-    def rawFields(self):
-        list_fields = (['CTRIA3', self.eid, self.Pid()] + self.nodeIDs() +
-                  [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
-                   self.T1, self.T2, self.T3])
-        return list_fields
-
-    def reprFields(self):
-        (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
-        list_fields = ([self.type, self.eid, self.Pid()] + self.nodeIDs() +
-                  [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
-        return list_fields
 
 
 class CTRIA6(TriShell):
@@ -411,10 +260,10 @@ class CTRIA6(TriShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CTRIA6 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        #self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
-    def _verify(self, xref):
+    def _verify(self, model, xref):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.nodeIDs()
@@ -429,9 +278,9 @@ class CTRIA6(TriShell):
             if not self.pid.type in ['PLPLANE']:
                 t = self.Thickness()
                 assert isinstance(t, float), 'thickness=%r' % t
-                mass = self.Mass()
+                mass = self.Mass(model)
                 assert isinstance(mass, float), 'mass=%r' % mass
-            a,c,n = self.AreaCentroidNormal()
+            a,c,n = self.AreaCentroidNormal(model)
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
                 assert isinstance(c[i], float)
@@ -443,44 +292,44 @@ class CTRIA6(TriShell):
         """
         return self.pid.Thickness()
 
-    def AreaCentroidNormal(self):
+    def AreaCentroidNormal(self, model):
         """
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
-        (n1, n2, n3, n4, n5, n6) = self.nodePositions()
+        (n1, n2, n3, n4, n5, n6) = self.nodePositions(model)
         return _triangle_area_centroid_normal([n1, n2, n3])
 
-    def Area(self):
+    def Area(self, model):
         r"""
         Get the area, :math:`A`.
 
         .. math:: A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)
         """
-        (n1, n2, n3, n4, n5, n6) = self.nodePositions()
+        (n1, n2, n3, n4, n5, n6) = self.nodePositions(model)
         a = n1 - n2
         b = n1 - n3
         area = Area(a, b)
         return area
 
-    def Normal(self):
+    def Normal(self, model):
         r"""
         Get the normal vector, :math:`n`.
 
         .. math::
           n = \frac{(n_0-n_1) \times (n_0-n_2)}{\lvert (n_0-n_1) \times (n_0-n_2) \lvert}
         """
-        (n0, n1, n2) = self.nodePositions()[:3]
+        (n0, n1, n2) = self.nodePositions(model)[:3]
         return _normal(n0 - n1, n0 - n2)
 
-    def Centroid(self):
+    def Centroid(self, model):
         r"""
         Get the centroid.
 
         .. math::
           CG = \frac{1}{3} (n_1+n_2+n_3)
         """
-        (n1, n2, n3, n4, n5, n6) = self.nodePositions()
+        (n1, n2, n3, n4, n5, n6) = self.nodePositions(model)
         centroid = centroid_triangle(n1, n2, n3)
         return centroid
 
@@ -556,7 +405,7 @@ class CTRIAR(TriShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CTRIAR eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, msg=msg)
+        #self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
     def Thickness(self):
@@ -630,7 +479,7 @@ class CTRIAX(TriShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CTRIAX eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        #self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
     def nodeIDs(self):
@@ -687,10 +536,10 @@ class CTRIAX6(TriShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CTRIAX6 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        #self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.mid = model.Material(self.mid, msg)
 
-    def _verify(self, xref):
+    def _verify(self, model, xref):
         eid = self.Eid()
         #pid = self.Pid()
         nids = self.nodeIDs()
@@ -706,9 +555,9 @@ class CTRIAX6(TriShell):
             #if not self.pid.type in ['PLPLANE']:
                 #t = self.Thickness()
                 #assert isinstance(t, float), 'thickness=%r' % t
-                #mass = self.Mass()
+                #mass = self.Mass(model)
                 #assert isinstance(mass, float), 'mass=%r' % mass
-            a,c,n = self.AreaCentroidNormal()
+            a,c,n = self.AreaCentroidNormal(model)
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
                 assert isinstance(c[i], float)
@@ -717,21 +566,21 @@ class CTRIAX6(TriShell):
     def Pid(self):
         raise AttributeError("CTRIAX6 doesn't have a Property")
 
-    def AreaCentroidNormal(self):
+    def AreaCentroidNormal(self, model):
         """
         Returns area,centroid, normal as it's more efficient to do them
         together
         """
-        (n0, n1, n2, n3, n4, n5) = self.nodePositions()
+        (n0, n1, n2, n3, n4, n5) = self.nodePositions(model)
         return _triangle_area_centroid_normal([n0, n2, n4])
     
-    def Area(self):
+    def Area(self, model):
         r"""
         Get the normal vector.
 
         .. math:: A = \frac{1}{2} (n_0-n_1) times (n_0-n_2)
         """
-        (n1, n2, n3, n4, n5, n6) = self.nodePositions()
+        (n1, n2, n3, n4, n5, n6) = self.nodePositions(model)
         a = n1 - n3
         b = n1 - n5
         area = Area(a, b)
@@ -749,7 +598,7 @@ class CTRIAX6(TriShell):
     def MassPerArea(self):
         raise AttributeError('CTRIAX6 does not have a MassPerArea')
 
-    def Mass(self):
+    def Mass(self, model):
         raise NotImplementedError('CTRIAX6 does not have a Mass method yet')
 
     def Mid(self):
@@ -794,16 +643,16 @@ class QuadShell(ShellElement):
         """
         return self.pid.Thickness()
 
-    def Normal(self):
-        (n1, n2, n3, n4) = self.nodePositions()
+    def Normal(self, model):
+        (n1, n2, n3, n4) = self.nodePositions(model)
         return _normal(n1 - n3, n2 - n4)
 
-    def AreaCentroidNormal(self):
-        (area, centroid) = self.AreaCentroid()
-        normal = self.Normal()
+    def AreaCentroidNormal(self, model):
+        (area, centroid) = self.AreaCentroid(model)
+        normal = self.Normal(model)
         return (area, centroid, normal)
 
-    def AreaCentroid(self):
+    def AreaCentroid(self, model):
         """
         ::
           1-----2
@@ -821,7 +670,7 @@ class QuadShell(ShellElement):
            c=centroid
            A=area
         """
-        (n1, n2, n3, n4) = self.nodePositions()
+        (n1, n2, n3, n4) = self.nodePositions(model)
         a = n1 - n2
         b = n2 - n4
         area1 = Area(a, b)
@@ -836,28 +685,28 @@ class QuadShell(ShellElement):
         centroid = (c1 * area1 + c2 * area2) / area
         return(area, centroid)
 
-    def Centroid(self):
-        #nodes = self.nodePositions()
-        (area, centroid) = self.AreaCentroid()
+    def Centroid(self, model):
+        #nodes = self.nodePositions(model)
+        (area, centroid) = self.AreaCentroid(model)
         return centroid
 
-    def Area(self):
+    def Area(self, model):
         r"""
         \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
         where a and b are the quad's cross node point vectors
         """
-        (n1, n2, n3, n4) = self.nodePositions()
+        (n1, n2, n3, n4) = self.nodePositions(model)
         a = n1 - n3
         b = n2 - n4
         area = Area(a, b)
         return area
 
-    def MassMatrix(self, isLumped=True, gauss=1):
+    def MassMatrix(self, model, isLumped=True, gauss=1):
         """
         6x6 mass matrix triangle
         http://www.colorado.edu/engineering/cas/courses.d/IFEM.d/IFEM.Ch32.d/IFEM.Ch32.pdf
         """
-        mass = self.Mass()  # rho*A*t
+        mass = self.Mass(model)  # rho*A*t
         if isLumped:  # lumped mass matrix
             Mass = mass / 3 * eye(6)
         else:  # consistent mass
@@ -953,21 +802,22 @@ class CSHEAR(QuadShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CSHEAR eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        #self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
-    def Normal(self):
-        (n1, n2, n3, n4) = self.nodePositions()
+    def Normal(self, model):
+        (n1, n2, n3, n4) = self.nodePositions(model)
         return _normal(n1 - n3, n2 - n4)
 
-    def AreaCentroidNormal(self):
-        (area, centroid) = self.AreaCentroid()
-        normal = self.Normal()
+    def AreaCentroidNormal(self, model):
+        (area, centroid) = self.AreaCentroid(model)
+        normal = self.Normal(model)
         return (area, centroid, normal)
 
-    def AreaCentroid(self):
-        """
+    def AreaCentroid(self, model):
+        r"""
         ::
+
           1-----2
           |    /|
           | A1/ |
@@ -981,7 +831,7 @@ class CSHEAR(QuadShell):
                c=centroid
                A=area
         """
-        (n1, n2, n3, n4) = self.nodePositions()
+        (n1, n2, n3, n4) = self.nodePositions(model)
         a = n1 - n2
         b = n2 - n4
         area1 = Area(a, b)
@@ -996,16 +846,16 @@ class CSHEAR(QuadShell):
         centroid = (c1 * area1 + c2 * area2) / area
         return(area, centroid)
 
-    def Centroid(self):
-        (area, centroid) = self.AreaCentroid()
+    def Centroid(self, model):
+        (area, centroid) = self.AreaCentroid(model)
         return centroid
 
-    def Area(self):
+    def Area(self, model):
         r"""
         \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
         where a and b are the quad's cross node point vectors
         """
-        (n1, n2, n3, n4) = self.nodePositions()
+        (n1, n2, n3, n4) = self.nodePositions(model)
         a = n1 - n3
         b = n2 - n4
         area = Area(a, b)
@@ -1087,10 +937,10 @@ class CQUAD4(QuadShell):
     
     def cross_reference(self, model):
         msg = ' which is required by CQUAD4 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, msg=msg)
+        #self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
-    def _verify(self, xref):
+    def _verify(self, model, xref):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.nodeIDs()
@@ -1104,13 +954,13 @@ class CQUAD4(QuadShell):
             if not self.pid.type in ['PLPLANE']:
                 t = self.Thickness()
                 assert isinstance(t, float), 'thickness=%r' % t
-                mass = self.Mass()
+                mass = self.Mass(model)
                 assert isinstance(mass, float), 'mass=%r' % mass
-            a,c,n = self.AreaCentroidNormal()
+            a,c,n = self.AreaCentroidNormal(model)
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
-                assert isinstance(c[i], float)
-                assert isinstance(n[i], float)
+                assert isinstance(c[i], float32), type(c[i])
+                assert isinstance(n[i], float32), type(n[i])
 
     def flipNormal(self):
         r"""
@@ -1208,10 +1058,10 @@ class CQUADR(QuadShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CQUADR eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        #self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
-    def _verify(self, xref):
+    def _verify(self, model, xref):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.nodeIDs()
@@ -1224,13 +1074,13 @@ class CQUADR(QuadShell):
         if xref == 1:  # True
             assert self.pid.type in ['PSHELL'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             t = self.Thickness()
-            a,c,n = self.AreaCentroidNormal()
+            a,c,n = self.AreaCentroidNormal(model)
             assert isinstance(t, float), 'thickness=%r' % t
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
                 assert isinstance(c[i], float)
                 #assert isinstance(n[i], float)
-            mass = self.Mass()
+            mass = self.Mass(model)
             assert isinstance(mass, float), 'mass=%r' % mass
 
     def Thickness(self):
@@ -1293,7 +1143,7 @@ class CQUAD(QuadShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CQUAD eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        #self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
     def Thickness(self):
@@ -1381,7 +1231,7 @@ class CQUAD8(QuadShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CQUAD8 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        #self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
     def Thickness(self):
@@ -1403,12 +1253,12 @@ class CQUAD8(QuadShell):
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5]
 
-    def Normal(self):
-        (n1, n2, n3, n4) = self.nodePositions()[:4]
+    def Normal(self, model):
+        (n1, n2, n3, n4) = self.nodePositions(model)[:4]
         return _normal(n1 - n3, n2 - n4)
 
-    def AreaCentroid(self):
-        """
+    def AreaCentroid(self, model):
+        r"""
         ::
 
           1-----2
@@ -1424,7 +1274,7 @@ class CQUAD8(QuadShell):
                c=centroid
                A=area
         """
-        (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()
+        (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions(model)
         a = n1 - n2
         b = n2 - n4
         area1 = Area(a, b)
@@ -1439,12 +1289,14 @@ class CQUAD8(QuadShell):
         centroid = (c1 * area1 + c2 * area2) / area
         return(area, centroid)
 
-    def Area(self):
+    def Area(self, model):
         r"""
-        \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
-        where a and b are the quad's cross node point vectors
+        .. math::
+          A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
+
+        where **a** and **b** are the quad's cross node point vectors
         """
-        (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()
+        (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions(model)
         a = n1 - n3
         b = n2 - n4
         area = Area(a, b)
@@ -1496,7 +1348,7 @@ class CQUADX(QuadShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CQUADX eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        #self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
     def Thickness(self):

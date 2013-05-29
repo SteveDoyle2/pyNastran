@@ -17,6 +17,7 @@ import traceback
 
 from pyNastran.utils import list_print, is_string, object_attributes
 from pyNastran.utils.log import get_logger
+from pyNastran.io import load_file_dialog
 
 
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
@@ -660,12 +661,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 print(str(card))
                 raise
         
-    def read_bdf(self, bdf_filename, include_dir=None, xref=True, punch=False):
+    def read_bdf(self, bdf_filename=None, include_dir=None, xref=True, punch=False):
         """
         Read method for the bdf files
         
         :param self:         the BDF object
-        :param bdf_filename: the input bdf
+        :param bdf_filename: the input bdf (default=None; popup a dialog)
         :param include_dir:  the relative path to any include files
                              (default=None if no include files)
         :param xref:
@@ -693,6 +694,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         #xref = 'partial'
         #xref = True
         try:
+            if bdf_filename is None:
+                wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas)|*.bdf;*.dat;*.nas|" \
+                    "All files (*.*)|*.*"
+                wildcard_qt = "Nastran BDF (*.bdf *.dat *.pch);;All files (*)"
+                stitle = 'Please select a BDF/DAT/PCH to load'
+                bdf_filename = load_file_dialog(stitle, wildcard_wx, wildcard_qt)
+                if bdf_filename.lower().endswith('.pch'):
+                    punch = True
+
             #: the active filename (string)
             self.bdf_filename = bdf_filename
 

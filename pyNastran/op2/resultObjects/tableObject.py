@@ -83,7 +83,7 @@ class TableObject(scalarObject):  # displacement style table
             self.add_array_sort1(dt, nodeIDs_to_index, gridTypes, translations)
 
     def add_f06_data(self, data, transient):
-        if add_array:
+        if as_array:
             return self.add_array_f06_data(data, transient)
 
         #raise RuntimeError('this should be commented out')

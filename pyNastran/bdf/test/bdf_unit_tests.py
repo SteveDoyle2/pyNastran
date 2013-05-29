@@ -36,7 +36,7 @@ class TestBDF(Tester):
         for fem in [fem1, fem2]:
             assert len(fem.params) == 2, 'len(params) = %i' % len(fem.params)
             assert len(fem.coords) == 1, 'len(coords) = %i' % len(fem.coords)
-            assert len(fem.nodes) == 72, 'len(nodes) = %i' % len(fem.nodes)
+            assert len(fem.nodes.nid) == 72, 'len(nodes.nid) = %i' % len(fem.nodes.nid)
             assert len(fem.materials) == 1, 'len(materials) = %i' % len(fem.materials)
             assert len(fem.elements) == 186, 'len(elements) = %i' % len(fem.elements)
             assert len(fem.methods) == 0, 'len(methods) = %i' % len(fem.methods)
@@ -51,9 +51,13 @@ class TestBDF(Tester):
         for fem in [fem1, fem2]:
             assert len(fem.coords) == 3, 'len(coords) = %i' % len(fem.coords)
             assert len(fem.params) == 6, 'len(params) = %i' % len(fem.params)
-            assert len(fem.nodes) == 231, 'len(nodes) = %i' % len(fem.nodes)
             assert len(fem.materials) == 1, 'len(materials) = %i' % len(fem.materials)
-            assert len(fem.elements) == 200, 'len(elements) = %i' % len(fem.elements)
+
+            assert len(fem.nodes.nid) == 231, 'len(nodes.nid) = %i' % len(fem.nodes.ni)
+
+            assert len(fem.elements) == 0, 'len(elements) = %i' % len(fem.elements)
+            assert len(fem.cquad4s.eid) == 200, 'len(cquad4s.eid) = %i' % len(fem.cquad4s.eid)
+
             assert len(fem.methods) == 1, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)
 
@@ -65,7 +69,7 @@ class TestBDF(Tester):
         for fem in [fem1, fem2]:
             assert len(fem.params) == 6, 'len(params) = %i' % len(fem.params)
             assert len(fem.coords) == 1, 'len(coords) = %i' % len(fem.coords)
-            assert len(fem.nodes) == 2, 'len(nodes) = %i' % len(fem.nodes)
+            assert len(fem.nodes.nid) == 2, 'len(nodes.nid) = %i' % len(fem.nodes.nid)
             assert len(fem.materials) == 0, 'len(materials) = %i' % len(fem.materials)
             assert len(fem.elements) == 1, 'len(elements) = %i' % len(fem.elements)
             assert len(fem.methods) == 0, 'len(methods) = %i' % len(fem.methods)
@@ -80,7 +84,7 @@ class TestBDF(Tester):
         for fem in [fem1, fem2]:
             assert len(fem.params) == 6, 'len(params) = %i' % len(fem.params)
             assert len(fem.coords) == 1, 'len(coords) = %i' % len(fem.coords)
-            assert len(fem.nodes) == 12, 'len(nodes) = %i' % len(fem.nodes)
+            assert len(fem.nodes.nid) == 12, 'len(nodes.nid) = %i' % len(fem.nodes.nid)
             assert len(fem.materials) == 1, 'len(materials) = %i' % len(fem.materials)
             assert len(fem.elements) == 11, 'len(elements) = %i' % len(fem.elements)
             assert len(fem.methods) == 1, 'len(methods) = %i' % len(fem.methods)

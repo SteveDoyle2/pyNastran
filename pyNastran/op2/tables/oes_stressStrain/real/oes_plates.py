@@ -812,7 +812,6 @@ class PlateStressObject(StressObject):
                     msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, oxx, oyy, txy, angle, major, minor, ovm)
                 else:
                     raise Exception('Invalid option for cquad4')
-
         return msg
 
     def writeF06_Quad4_BilinearTransient(self, dt, eid, n):
@@ -890,6 +889,10 @@ class PlateStressObject(StressObject):
 
     def __repr__(self):
         #print "sCodes = ",self.sCodes
+        msg = "<PlateStressObject>\n"
+        #msg += self.__dict__.keys()
+        return msg
+
         if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 
@@ -1560,6 +1563,9 @@ class PlateStrainObject(StrainObject):
         return msg
 
     def __repr__(self):
+        msg = "<PlateStainObject>\n"
+        #msg += self.__dict__.keys()
+        return msg
         if self.nonlinear_factor is not None:
             return self.__reprTransient__()
 

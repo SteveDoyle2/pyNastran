@@ -136,10 +136,11 @@ class TestCoords(unittest.TestCase):
         card = model.process_card(coord)
         model.add_card(card, card[0])
         model.cross_reference()
-
-        g = model.Node(20143)
+    
+        fields = [20145, 0, 0.,0.,0., 0, 123, 0]
+        model.nodes.add_grid(data=fields)
         #print(g.Position(debug=False))
-        diff = g.Position() - array([1.106704, .207647, -0.068531])
+        diff = self.nodes.Position(model, g) - array([1.106704, .207647, -0.068531])
 
         assert allclose(diff, 0.)
 
@@ -169,7 +170,7 @@ class TestCoords(unittest.TestCase):
         for (i, grid) in enumerate(grids_expected):
             (cid, x, y, z) = grid
             node = model.Node(i + 1)
-            pos = node.Position()
+            pos = self.nodes.Position(model, nid)
             n = array([x, y, z])
 
             msg = 'expected=%s actual=%s\n' % (n, pos)

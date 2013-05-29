@@ -149,11 +149,11 @@ class WriteMesh(WriteMeshDeprecated):
         msg += self._write_params(size)
         outfile.write(msg)
 
-        msg = self._write_nodes(size)
+        msg = self._write_nodes(outfile, size)
         outfile.write(msg)
 
         if interspersed:
-            msg = self._write_elements_properties(size)
+            msg = self._write_elements_properties(outfile, size)
         else:
             msg = self._write_elements(size)
             outfile.write(msg)
@@ -185,7 +185,7 @@ class WriteMesh(WriteMeshDeprecated):
         msg += self._write_params(size)
         outfile.write(msg)
 
-        msg = self._write_nodes(size)
+        msg = self._write_nodes(outfile, size)
         outfile.write(msg)
 
         msg = self._write_elements_as_CTRIA3(size)
@@ -251,7 +251,7 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(param.print_card(size))
         return ''.join(msg)
 
-    def _write_nodes(self, size):
+    def _write_nodes(self, outfile, size):
         """
         Writes the NODE-type cards
         :param self: the BDF object
@@ -260,19 +260,24 @@ class WriteMesh(WriteMeshDeprecated):
         if self.spoints:
             msg.append('$SPOINTS\n')
             msg.append(str(self.spoints))
+            outfile.write(''.join(msg))
 
         if self.nodes:
+            msg = []
             msg.append('$NODES\n')
             if self.gridSet:
                 msg.append(self.gridSet.print_card(size))
-            for (nid, node) in sorted(self.nodes.iteritems()):
-                msg.append(node.print_card(size))
-        if 0:
-            self._write_nodes_associated(size)
 
+            self.nodes.write(outfile)
+            #for (nid, node) in sorted(self.nodes.iteritems()):
+                #msg.append(node.print_card(size))
+        if 0:
+            self._write_nodes_associated(outfile, size)
+
+        msg = []
         return ''.join(msg)
 
-    def _write_nodes_associated(self, size):
+    def _write_nodes_associated(self, f, size):
         """
         Writes the NODE-type in associated and unassociated groups.
         :param self: the BDF object
@@ -347,10 +352,15 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(prop.print_card(size))
         return ''.join(msg)
 
-    def _write_elements_properties(self, size):
+    def _write_elements_properties(self, outfile, size):
         """Writes the elements and properties in and interspersed order"""
         msg = []
         missing_properties = []
+
+        msg.append('$BROKEN ELEMENTS\n')
+        msg.append(self.cquad4s.write(f=outfile))
+        msg.append(self.ctria3s.write(f=outfile))
+
         if self.properties:
             msg.append('$ELEMENTS_WITH_PROPERTIES\n')
 
