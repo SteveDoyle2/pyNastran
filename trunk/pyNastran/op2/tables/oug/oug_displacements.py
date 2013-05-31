@@ -3,8 +3,8 @@ from pyNastran.op2.resultObjects.tableObject import (TableObject,
 
 
 class DisplacementObject(TableObject):  # approach_code=1, thermal=0
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
+        TableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
     def write_matlab(self, isubcase, f=None, is_mag_phase=False):
         name = 'displacements'

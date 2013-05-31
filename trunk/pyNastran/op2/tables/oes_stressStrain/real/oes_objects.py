@@ -6,10 +6,10 @@ from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 
 class OES_Object(scalarObject):
-    def __init__(self, data_code, isubcase):
-        scalarObject.__init__(self, data_code, isubcase)
-        self.log.debug("starting OES...element_name=%s isubcase=%s" %
-                       (self.element_name, self.isubcase))
+    def __init__(self, data_code, isubcase, read_mode):
+        scalarObject.__init__(self, data_code, isubcase, read_mode)
+        #self.log.debug("starting OES...element_name=%s isubcase=%s" %
+        #              (self.element_name, self.isubcase))
         #print self.data_code
 
     def isCurvatureOld(self):
@@ -82,8 +82,8 @@ class OES_Object(scalarObject):
 
 
 class StressObject(OES_Object):
-    def __init__(self, data_code, isubcase):
-        OES_Object.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, isubcase, read_mode):
+        OES_Object.__init__(self, data_code, isubcase, read_mode)
 
     def update_dt(self, data_code, dt):
         self.data_code = data_code
@@ -105,8 +105,8 @@ class StressObject(OES_Object):
 
 
 class StrainObject(OES_Object):
-    def __init__(self, data_code, isubcase):
-        OES_Object.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, isubcase, read_mode):
+        OES_Object.__init__(self, data_code, isubcase, read_mode)
 
     def update_dt(self, data_code, dt):
         self.data_code = data_code

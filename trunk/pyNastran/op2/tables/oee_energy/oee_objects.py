@@ -19,11 +19,14 @@ class StrainEnergyObject(scalarObject):
                  13   1.582968E+07        1.6124            1.055312E+02
                  14   6.576075E+07        6.6982            3.288037E+02
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        scalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
+        scalarObject.__init__(self, data_code, isubcase, read_mode)
+
         self.energy = {}
         self.percent = {}
         self.density = {}
+        #if read_mode == 0:
+            #return
         #print self.data_code
         #print "num_wide = %s %s"  %(self.data_code['num_wide'],type(self.data_code['num_wide']))
 

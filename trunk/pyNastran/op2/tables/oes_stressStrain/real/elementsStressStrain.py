@@ -222,6 +222,8 @@ class RealElementsStressStrain(object):
             #print "len(data) = ",len(self.data)
 
     def OES_CBUSH1D_40(self):
+        if self.read_mode in [0, 1]:
+            return
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
 
@@ -231,8 +233,8 @@ class RealElementsStressStrain(object):
         format1 = bytes(format1)
 
         n = 0
-        nEntries = len(self.data) // ntotal
-        for i in xrange(nEntries):
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
             eData = self.data[n:n + ntotal]
 
             out = unpack(format1, eData)  # num_wide=25
@@ -721,6 +723,8 @@ class RealElementsStressStrain(object):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
+        if self.read_mode in [0, 1]:
+            return
         #term = data[0:4] CEN/
         #data = data[4:]
         #print "*****"

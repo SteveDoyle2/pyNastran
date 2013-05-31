@@ -116,6 +116,10 @@ class OP2(BDF,
         f06Extension = '.f06'
         (fname, extension) = os.path.splitext(op2FileName)
         self.table_name = 'temp'
+        
+        # the mode is flipped after preallocation
+        self.read_mode = 0 # setup
+        #self.read_mode = 1 # reading
 
         #: should the BDF tables be parsed
         self.make_geom = make_geom
@@ -774,6 +778,10 @@ class OP2(BDF,
             raise
         self.op2.close()
         self.skippedCardsFile.close()
+        
+        if self.read_mode == 0:
+            self.read_mode = 1
+            self.read_op2()
 
     def read_table(self, table_name):
         if table_name in self.tablesToRead:
@@ -1057,7 +1065,6 @@ class OP2(BDF,
                          'table_code': self.table_code,
                          'sort_code': self.sort_code,
                          'dt': None,
-                         'log': self.log,
                          }
         #print("isubcase = ",self.isubcase)
         self.parse_sort_code()

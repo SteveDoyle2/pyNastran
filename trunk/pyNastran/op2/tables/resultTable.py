@@ -65,7 +65,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         #grid_device, = unpack(b'i',data)
         return timeFreq
 
-    def add_data_parameter(self, data, Name, Type, fieldNum, applyNonlinearFactor=True, fixDeviceCode=False):
+    def add_data_parameter(self, data, name, Type, fieldNum, applyNonlinearFactor=True, fixDeviceCode=False):
         """
         >>> self.mode = self.get_values(data,'i',5) ## mode number
         >>>
@@ -73,14 +73,16 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         value = self.get_values(data, Type, fieldNum)
         if fixDeviceCode:
             value = (value - self.device_code) // 10
-        #print "Name=%s Type=%s fieldNum=%s aCode=%s value=%s" %(Name,Type,fieldNum,self.analysis_code,value)
-        setattr(self, Name, value)
-        self.data_code[Name] = value
+        #print(self.data_code)
+        if self.table_name == 'OUGV1':
+            print("name=%s Type=%s fieldNum=%s aCode=%s value=%s" %(name,Type,fieldNum,self.analysis_code,value))
+        setattr(self, name, value)
+        self.data_code[name] = value
 
         if applyNonlinearFactor:
             self.nonlinear_factor = value
             self.data_code['nonlinear_factor'] = value
-            self.data_code['name'] = Name
+            self.data_code['name'] = name
 
     def setNullNonlinearFactor(self):
         self.nonlinear_factor = None
@@ -109,21 +111,25 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 #print "obj = ",self.obj.__class__.__name__
                 #print self.obj.write_f06(['',''],'PAGE ',1)[0]
 
+                if self.read_mode == 0:
+                    return
                 try:
+                    #print("data_code =", self.data_code)
                     self.obj.update_data_code(self.data_code)
                     #self.obj.update_dt(self.data_code,self.nonlinear_factor)
                 except:
                     #try:
-                        #print "objName = ",self.obj.name()
+                        #print("objName = ",self.obj.name())
                     #except:
-                        #print "objName = ",self.obj
+                        #print("objName = ",self.obj)
                     raise
             else:
                 #if self.isRegular:
                     #self.obj = classObj(self.data_code,not(self.isRegular),self.isubcase,self.nonlinear_factor)
                 #else:
-                self.obj = classObj(self.data_code, self.is_sort1(
-                ), self.isubcase, self.nonlinear_factor)
+                #print("data_code =", self.data_code)
+                print('class_name =', classObj.__name__)
+                self.obj = classObj(self.data_code, self.is_sort1(), self.isubcase, self.nonlinear_factor, self.read_mode)
                 #print "obj2 = ",self.obj.__class__.__name__
             storageObj[self.isubcase] = self.obj
         else:
@@ -184,7 +190,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             marker = self.get_marker()
             self.goto(n)
             if marker != 146:
-                self.log.debug("marker = %s" % (marker))
+                self.log.debug("marker = %s" % marker)
                 exitFast = True
                 break
 

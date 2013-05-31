@@ -1,7 +1,8 @@
 # http://www.cadfamily.com/online-help/I-DEAS/SDRCHelp/LANG/English/slv_ug/NAS_results_imported.htm
 import sys
 from struct import unpack
-from numpy import zeros
+from numpy import zeros, ones
+import pandas as pd
 
 from pyNastran import as_array
 from pyNastran.op2.tables.oug.oug_displacements import (
@@ -248,6 +249,7 @@ class OUG(object):
             raise NotImplementedError('sort2...')
 
         #self.print_block(data)
+        print('----------------------------------')
         self.read_title()
 
     def getOUG_FormatStart(self):
@@ -486,42 +488,57 @@ class OUG(object):
 
         #print "len(data) = ",len(self.data)
         nnodes = len(self.data) // 32
-        #print('nnodes =', nnodes)
-        
+        if self.read_mode == 0:  # figure out the shape
+            self.obj._increase_size(dt, nnodes)
+            iend = 32 * (nnodes + 1)
+            self.data = self.data[iend:]
+            return
+        else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
+            #index_data = (nodeIDs_to_index)
+            #index_data = pd.MultiIndex.from_tuples(zip(data))
+
+            (inode_start, inode_end) = self.obj._preallocate(dt, nnodes)
+
         nodeIDs_to_index = zeros(nnodes, dtype='int32')
         gridTypes = zeros(nnodes, dtype='int32')
         translations = zeros((nnodes, 6), dtype='float32')
 
-        inode = 0
-        while len(self.data) >= 32:  # 8*4
-            eData = self.data[0:32]
-            self.data = self.data[32:]
-            #print "len(data) = ",len(eData)
+        istart = 0
+        iend = 32
+        for inode in range(nnodes):
+            eData = self.data[istart:iend]
 
             out = unpack(format1, eData)
             (eid, gridType, tx, ty, tz, rx, ry, rz) = out
             eid2 = extract(eid, dt)
-            #print "eType=%s" %(eType)
 
-            dataIn = [eid2, gridType, tx, ty, tz, rx, ry, rz]
             nodeIDs_to_index[inode] = eid2
             gridTypes[inode] = gridType
             translations[inode, :] = [tx, ty, tz, rx, ry, rz]
-            #if self.debug:
-                #print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid, gridType, tx, ty, tz, rx, ry, rz))
-            #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            #print "%s" %(self.table_name),dataIn
-            #eid = self.obj.add_new_eid(out)
-            if not as_array:
-                self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
-            inode += 1
-        
-        #print('nodeIDs_to_index =', nodeIDs_to_index)
-        #print('gridTypes =', gridTypes)
-        #print('translations =', translations)
-        if as_array:
-            self.obj.add_array(dt, nodeIDs_to_index, gridTypes, translations)
+
+            #if not as_array:
+                #self.obj.add(dt, dataIn)
+            istart = iend
+            iend += 32
+
+        self.data = self.data[iend:]
+
+        #print "nnodes =", nnodes, len(self.obj.data['node_id'][inode_start:inode_end]), len(nodeIDs_to_index)
+        self.obj.data['node_id'][inode_start:inode_end] = nodeIDs_to_index
+        if dt:
+            self.obj.data['dt'][inode_start:inode_end] = ones(inode_end - inode_start) * dt
+        #self.obj.grid_type[inode_start:inode_end] = gridTypes
+        self.obj.data['T1'][inode_start:inode_end] = translations[:, 0]
+        self.obj.data['T2'][inode_start:inode_end] = translations[:, 1]
+        self.obj.data['T3'][inode_start:inode_end] = translations[:, 2]
+        self.obj.data['R1'][inode_start:inode_end] = translations[:, 3]
+        self.obj.data['R2'][inode_start:inode_end] = translations[:, 4]
+        self.obj.data['R3'][inode_start:inode_end] = translations[:, 5]
+
+        #print self.obj.data['dt'].to_string()
+        if len(self.obj.data['T1'])==inode_end:
+            self.obj._finalize()
+        self.obj.add_array(dt, nodeIDs_to_index, gridTypes)
 
     def OUG_ComplexTable(self):
         dt = self.nonlinear_factor
@@ -576,4 +593,4 @@ class OUG(object):
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
             inode += 1
-        self.obj.add_array(dt, nodeIDs_to_index, gridTypes, translations)
+        self.obj.add_array(dt, gridTypes)
