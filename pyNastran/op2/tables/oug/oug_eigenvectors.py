@@ -17,18 +17,18 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
           2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
           2003      G      0.0            0.0            0.0            0.0            0.0            0.0
     """
-    def __init__(self, data_code, is_sort1, isubcase, imode):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, imode)
+    def __init__(self, data_code, is_sort1, isubcase, imode, read_mode):
+        TableObject.__init__(self, data_code, is_sort1, isubcase, imode, read_mode)
+        self.gridTypes = {}
+        if read_mode == 0:
+            return
         #self.caseVal = mode
         self.update_dt = self.update_mode
-        #print "mode = %s" %(mode)
-        #print "data_code = ",self.data_code
+        #print("mode = %s" % mode)
+        #print("data_code = ", self.data_code)
         self.set_data_members()
 
         #assert mode>=0.
-        self.gridTypes = {}
-        self.translations = {imode: {}}
-        self.rotations    = {imode: {}}
 
     def read_f06_data(self, data_code, data):
         imode = data_code['mode']
@@ -42,7 +42,7 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
             self.rotations[imode][nid] = array([r1, r2, r3])
         assert self.eigrs[-1] == data_code['eigr']
 
-    def update_mode(self, data_code, imode):
+    def update_mode(self, data_code, imode, read_mode):
         """
         this method is called if the object
         already exits and a new time step is found
@@ -52,12 +52,7 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
         self.apply_data_code()
         #self.caseVal = imode
         #print "mode = %s" %(str(mode))
-        self.add_new_mode(imode)
         self.set_data_members()
-
-    def add_new_mode(self, imode):
-        self.translations[imode] = {}
-        self.rotations[imode] = {}
 
     def eigenvalues(self):
         return self.eigrs
@@ -155,23 +150,17 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
                1      G      0.0            0.0            0.0            0.0            1.260264E-01   0.0
                7      G      9.999849E-01   0.0            6.728968E-03   0.0            8.021386E-03   0.0
     """
-    def __init__(self, data_code, isubcase, iMode):
+    def __init__(self, data_code, isubcase, imode):
         scalarObject.__init__(self, data_code, isubcase)
         #self.caseVal = mode
-        #print "mode = %s" %(iMode)
+        #print "mode = %s" % imode
         self.caseVal = self.getUnsteadyValue()
         self.set_data_members()
 
         #assert mode>=0.
         self.gridTypes = {}
-        self.translations = {iMode: {}}
-        self.rotations = {iMode: {}}
 
-    def add_new_mode(self, iMode):
-        self.translations[iMode] = {}
-        self.rotations[iMode] = {}
-
-    def update_dt(self, data_code, dt):
+    def update_dt(self, data_code, dt, read_mode):
         #print " self.data_code = ",self.data_code
         self.data_code = data_code
         self.apply_data_code()
@@ -182,15 +171,6 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
         self.translations[self.caseVal] = {}
         self.rotations[self.caseVal] = {}
 
-    def delete_transient(self, dt):
-        del self.translations[dt]
-        del self.rotations[dt]
-
-    def get_transients(self):
-        k = self.translations.keys()
-        k.sort()
-        return k
-
     def add(self, nodeID, gridType, v1, v2, v3, v4, v5, v6):
         msg = "nodeID=%s v1=%s v2=%s v3=%s" % (nodeID, v1, v2, v3)
         msg += "           v4=%s v5=%s v6=%s" % (v4, v5, v6)
@@ -198,20 +178,8 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
         assert 0 < nodeID < 1000000000, msg
         #assert nodeID not in self.translations
 
-        if gridType == 1:
-            Type = 'G'
-        elif gridType == 2:
-            Type = 'S'
-        elif gridType == 7:
-            Type = 'L'
-        else:
-            raise ValueError('invalid grid type...gridType=%s' % (gridType))
-
+        Type = self.recastGridType(gridType)
         self.gridTypes[nodeID] = Type
-        #print 'self.caseVal = %s' %(self.caseVal),type(self.caseVal)
-        #print "d = ",self.translations
-        self.translations[self.caseVal][nodeID] = [v1, v2, v3]
-        self.rotations[self.caseVal][nodeID] = [v4, v5, v6]
 
     def modes(self):
         return sorted(self.translations.keys())
@@ -292,34 +260,27 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
 
 class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_code=0, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, iMode):
-        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, iMode)
-        self.caseVal = iMode
+        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, imode)
+        self.caseVal = imode
         self.update_dt = self.update_mode
         self.set_data_members()
 
         #print "mode = %s" %(mode)
 
         #assert mode>=0.
-        #self.gridTypes = {}
-        #self.translations = {iMode: {}}
-        #self.rotations    = {iMode: {}}
 
-    def update_mode(self, data_code, iMode):
+    def update_mode(self, data_code, imode):
         """
         this method is called if the object
         already exits and a new time step is found
         """
         #assert mode>=0.
-        self.caseVal = iMode
+        self.caseVal = imode
         self.data_code = data_code
         self.apply_data_code()
         self.set_data_members()
         #print "mode = %s" %(str(mode))
-        self.add_new_mode(iMode)
-
-    def add_new_mode(self, iMode):
-        self.translations[iMode] = {}
-        self.rotations[iMode] = {}
+        self.add_new_mode(imode)
 
     def eigenvalues(self):
         return sorted(self.translations.keys())

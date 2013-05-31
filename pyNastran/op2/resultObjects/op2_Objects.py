@@ -25,15 +25,17 @@ class baseScalarObject(Op2Codes):
 
 
 class scalarObject(baseScalarObject):
-    def __init__(self, data_code, isubcase):
+    def __init__(self, data_code, isubcase, read_mode):
         assert 'nonlinear_factor' in data_code, data_code
         baseScalarObject.__init__(self)
         self.isubcase = isubcase
         self.isTransient = False
         self.dt = None
+        if read_mode == 0:
+            return
         self.data_code = data_code
         self.apply_data_code()
-        #self.log.debug(self.code_information())
+        #print(self.code_information())
 
     def isImaginary(self):
         return bool(self.sort_bits[1])
@@ -58,13 +60,10 @@ class scalarObject(baseScalarObject):
                 f.write(msg)
 
     def apply_data_code(self):
-        self.log = self.data_code['log']
         for key, value in sorted(self.data_code.iteritems()):
-            if key is not 'log':
-                self.__setattr__(key, value)
-                #self.log.debug("  key=%s value=%s" %(key,value))
-                #print "  key=%s value=%s" %(key,value)
-        #self.log.debug("")
+            self.__setattr__(key, value)
+            #print "  key=%s value=%s" %(key,value)
+        #print("")
 
     def get_data_code(self):
         msg = []
@@ -102,7 +101,6 @@ class scalarObject(baseScalarObject):
         """
         this appends a data member to a variable that may or may not exist
         """
-        #print "append..."
         hasList = self.start_data_member(varName, valueName)
         if hasList:
             listA = self.getVar(varName)

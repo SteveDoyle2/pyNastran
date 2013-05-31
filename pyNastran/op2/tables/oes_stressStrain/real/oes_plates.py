@@ -24,12 +24,14 @@ class PlateStressObject(StressObject):
             6    CEN/4  -1.250000E-01  -4.278394E+02  8.021165E+03 -1.550089E+02   -88.9493   8.024007E+03 -4.306823E+02  4.227345E+03
                          1.250000E-01   5.406062E+02  1.201854E+04 -4.174177E+01   -89.7916   1.201869E+04  5.404544E+02  5.739119E+03
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
 
         #self.append_data_member('sCodes','s_code')
         #print "self.s_code = ",self.s_code
+        if read_mode == 0:
+            return
         self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.fiberCurvature = {}
@@ -254,79 +256,6 @@ class PlateStressObject(StressObject):
         #print msg
         if nodeID == 0:
             raise Exception(msg)
-
-    def add_new_eid_sort1(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #print "***addNewEidTransient..."
-        #msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
-        msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g major=%g vm=%g" % (
-            dt, eid, nodeID, fd, oxx, majorP, ovm)
-        #print msg
-        #if eid in self.ovmShear[dt]:
-        #    return self.add(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
-
-        if dt in self.oxx and eid in self.oxx[dt]:  # SOL200, erase the old result
-            #nid = nodeID
-            #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s major=%s vm=%s" %(dt,eid,nodeID,str(self.fiberCurvature[eid][nid]),str(self.oxx[dt][eid][nid]),str(self.majorP[dt][eid][nid]),str(self.ovmShear[dt][eid][nid]))
-            self.delete_transient(dt)
-            self.add_new_transient(dt)
-
-        assert isinstance(eid, int)
-        self.eType[eid] = eType
-        if dt not in self.oxx:
-            self.add_new_transient(dt)
-        self.fiberCurvature[eid] = {nodeID: [fd]}
-        self.oxx[dt][eid] = {nodeID: [oxx]}
-        self.oyy[dt][eid] = {nodeID: [oyy]}
-        self.txy[dt][eid] = {nodeID: [txy]}
-        self.angle[dt][eid] = {nodeID: [angle]}
-        self.majorP[dt][eid] = {nodeID: [majorP]}
-        self.minorP[dt][eid] = {nodeID: [minorP]}
-        self.ovmShear[dt][eid] = {nodeID: [ovm]}
-        #print msg
-        if nodeID == 0:
-            raise ValueError(msg)
-
-    def add(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #print "***add"
-        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        #print msg
-        #print self.oxx
-        #print self.fiberCurvature
-        assert isinstance(eid, int)
-        self.fiberCurvature[eid][nodeID].append(fd)
-        self.oxx[eid][nodeID].append(oxx)
-        self.oyy[eid][nodeID].append(oyy)
-        self.txy[eid][nodeID].append(txy)
-        self.angle[eid][nodeID].append(angle)
-        self.majorP[eid][nodeID].append(majorP)
-        self.minorP[eid][nodeID].append(minorP)
-        self.ovmShear[eid][nodeID].append(ovm)
-        if nodeID == 0:
-            raise ValueError(msg)
-
-    def add_array_sort1(self, dt, sadf):
-        raise NotImplementedError()
-
-    def add_array_sort2(self, dt, sadf):
-        raise NotImplementedError()
-
-    def add_sort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #print "***addTransient"
-        msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" % (dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        #print msg
-        #print self.oxx
-        #print self.fiberCurvatrure
-        assert eid is not None
-        self.fiberCurvature[eid][nodeID].append(fd)
-        self.oxx[dt][eid][nodeID].append(oxx)
-        self.oyy[dt][eid][nodeID].append(oyy)
-        self.txy[dt][eid][nodeID].append(txy)
-        self.angle[dt][eid][nodeID].append(angle)
-        self.majorP[dt][eid][nodeID].append(majorP)
-        self.minorP[dt][eid][nodeID].append(minorP)
-        self.ovmShear[dt][eid][nodeID].append(ovm)
-        if nodeID == 0:
-            raise ValueError(msg)
 
     def addNewNode(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
         #print "***addNewNode"
@@ -1093,29 +1022,6 @@ class PlateStrainObject(StrainObject):
         self.majorP[dt] = {}
         self.minorP[dt] = {}
         self.evmShear[dt] = {}
-
-    def add_new_eid(self, eType, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
-        #print "Plate add..."
-        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
-
-        if nodeID != 'C':  # centroid
-            assert 0 < nodeID < 1000000000, 'nodeID=%s %s' % (nodeID, msg)
-
-        #if eid in self.exx:
-            #return self.add(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
-        #assert eid not in self.exx
-        self.eType[eid] = eType
-        self.fiberCurvature[eid] = {nodeID: [curvature]}
-        self.exx[eid] = {nodeID: [exx]}
-        self.eyy[eid] = {nodeID: [eyy]}
-        self.exy[eid] = {nodeID: [exy]}
-        self.angle[eid] = {nodeID: [angle]}
-        self.majorP[eid] = {nodeID: [majorP]}
-        self.minorP[eid] = {nodeID: [minorP]}
-        self.evmShear[eid] = {nodeID: [evm]}
-        #print msg
-        if nodeID == 0:
-            raise ValueError(msg)
 
     def add_new_eid_sort1(self, eType, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
         #print "Plate add..."
