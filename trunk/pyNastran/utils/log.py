@@ -148,4 +148,4 @@ if __name__ == '__main__':
         test_log.warning('warning')
         test_log.error('errors')
         test_log.exception('exception')
-   
+    make_log(display=True)

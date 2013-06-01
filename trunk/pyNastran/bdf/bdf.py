@@ -17,7 +17,7 @@ import traceback
 
 from pyNastran.utils import list_print, is_string, object_attributes
 from pyNastran.utils.log import get_logger
-from pyNastran.io import load_file_dialog
+from pyNastran.utils.io import load_file_dialog
 
 
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
@@ -33,7 +33,7 @@ from .cards.elements.solid import (CTETRA4, CTETRA10, CPENTA6, CPENTA15,
 from .cards.elements.rigid import (RBAR, RBAR1, RBE1, RBE2, RBE3, RigidElement)
 
 from .cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
-                                   CSHEAR, CTRIA3, CTRIA6, CTRIAX,
+                                   CSHEAR, CTRIA6, CTRIAX, # CTRIA3, 
                                    CTRIAX6, CTRIAR, ShellElement)
 from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE
 from .cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D

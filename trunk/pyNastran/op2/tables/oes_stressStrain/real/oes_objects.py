@@ -8,19 +8,20 @@ from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 class OES_Object(scalarObject):
     def __init__(self, data_code, isubcase, read_mode):
         scalarObject.__init__(self, data_code, isubcase, read_mode)
-        #self.log.debug("starting OES...element_name=%s isubcase=%s" %
+        #print("starting OES...element_name=%s isubcase=%s" %
         #              (self.element_name, self.isubcase))
-        #print self.data_code
+        #print(self.data_code)
 
-    def isCurvatureOld(self):
+    def _isCurvatureOld(self):
         if self.stress_bits[2] == 0:
             return True
         return False
 
     def isCurvature(self):
+        print('scode', self.s_code)
         if self.s_code in [0, 1, 14, 15, 16, 17, 27, 30, 31]:  # fiber distance
             return False
-        elif self.s_code in [10, 11, 26, ]:  # fiber curvature
+        elif self.s_code in [10, 11, 26]:  # fiber curvature
             return True
         raise NotImplementedError('add s_code=%s' % (self.s_code))
 
@@ -98,10 +99,10 @@ class StressObject(OES_Object):
             self.add_new_transient(dt)
 
     def isStrain(self):
-        return True
+        return False
 
     def isStress(self):
-        return False
+        return True
 
 
 class StrainObject(OES_Object):
