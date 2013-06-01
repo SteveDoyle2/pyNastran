@@ -1,7 +1,8 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from numpy import array, sqrt
+from numpy import array, sqrt, ones, zeros
 from numpy.linalg import eigh
+import pandas as pd
 
 from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
@@ -29,48 +30,57 @@ class SolidStressObject(StressObject):
                              Y   4.094179E+02  YZ   5.456968E-12   B  -1.251798E+02  LY 0.00 0.72 0.69
                              Z   1.000000E+04  ZX  -4.547474E-13   C   9.845177E+02  LZ 1.00 0.00 0.00
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
 
-        self.eType = {}
+        self.shape = {}
+        self._istart = None
+        self._iend = None
+        self._ielement_start = None
+        self._ielement_end = None
+
+        if read_mode == 0:
+            return
         self.code = [self.format_code, self.sort_code, self.s_code]
 
-        self.cid = {}  # gridGauss
-        self.oxx = {}
-        self.oyy = {}
-        self.ozz = {}
-        self.txy = {}
-        self.tyz = {}
-        self.txz = {}
-        self.o1 = {}
-        self.o2 = {}
-        self.o3 = {}
-        self.ovmShear = {}
-
         self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-        else:
-            assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+        #if is_sort1:
+            #if dt is not None:
+                #self.add = self.add_sort1
+                #self.add_new_eid = self.add_new_eid_sort1
+        #else:
+            #assert dt is not None
+            #self.add = self.addSort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
-        nelements = len(self.eType)
+        ndt, nelements, nnodes, dts = self._get_shape()
+        nelements = len(self.element_data['element_id'])
 
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.oxx)
+            ntimes = len(self.oxx)  # bug
+            dtstring = self.data_code['name'] + ', '
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
+            dtstring = ''
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
-        msg.append('  eType, cid, oxx, oyy, ozz, txy, tyz, txz, '
-                   'o1, o2, o3, ovmShear\n  ')
-        msg.append(', '.join(set(self.eType.values())))
+        
+        if self.isVonMises():
+            ovmstr = 'ovm'
+        else:
+            ovmstr = 'max_shear'
+
+        etypes = self.element_data['element_type']
+        msg.append('  element_data: index        : element_id\n')
+        msg.append('                results      : element_type, cid\n')
+        msg.append('  data:         index        : %selement_id, node_id\n' % dtstring)
+        msg.append('                results      : oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, %s\n' % ovmstr)
+        msg.append('                element_types: %s' %(', '.join(set(etypes))))
+        
+        print("self.element_data\n", self.element_data.to_string())
         msg.append('\n')
         return msg
 
@@ -162,155 +172,118 @@ class SolidStressObject(StressObject):
             self.rotations[dt][nodeID] = array([r1, r2, r3])
         del self.data
 
-    def delete_transient(self, dt):
-        del self.oxx[dt]
-        del self.oyy[dt]
-        del self.ozz[dt]
-        del self.txy[dt]
-        del self.tyz[dt]
-        del self.txz[dt]
-        del self.o1[dt]
-        del self.o2[dt]
-        del self.o3[dt]
+    def _get_shape(self):
+        ndt = len(self.shape)
+        dts = self.shape.keys()
+        shape0 = dts[0]
+        nelements = self.shape[shape0][0]
+        nnodes = self.shape[shape0][1]
+        print("ndt=%r nnodes=%r dts=%r" % (str(ndt), str(nnodes), str(dts)))
+        return ndt, nelements, nnodes, dts
 
-    def get_transients(self):
-        k = self.oxx.keys()
-        k.sort()
-        return k
+    def _increase_size(self, dt, nelements, nnodes):
+        #self.shape += 1
+        if dt in self.shape:  # default dictionary
+            self.shape[dt][0] += nelements
+            self.shape[dt][1] += nnodes
+        else:
+            self.shape[dt] = [nelements, nnodes]
+        print("shape =", self.shape)
 
-    def add_new_transient(self, dt):
-        """
-        initializes the transient variables
-        """
-        self.oxx[dt] = {}
-        self.oyy[dt] = {}
-        self.ozz[dt] = {}
-        self.txy[dt] = {}
-        self.tyz[dt] = {}
-        self.txz[dt] = {}
-        self.o1[dt] = {}
-        self.o2[dt] = {}
-        self.o3[dt] = {}
+    def _preallocate(self, dt, nelements, nnodes):
+        if self.shape is None:
+            self._istart += nnodes
+            self._iend += nnodes
+            self._ielement_start += nelements
+            self._ielement_end += nelements
+        else:
+            ndt, nelements_size, nnodes_size, dts = self._get_shape()
+            #print("ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts)))
 
-        #self.aCos[dt] = {}
-        #self.bCos[dt] = {}
-        #self.cCos[dt] = {}
-        #self.pressure[dt] = {}
-        self.ovmShear[dt] = {}
+            if self._istart is not None:
+                self._istart += nnodes
+                self._iend += nnodes
+                self._ielement_start += nelements
+                self._ielement_end += nelements
+                return self._istart, self._iend, self._ielement_start, self._ielement_end
+            
+            self._istart = 0
+            self._iend = nnodes
+            
+            self._ielement_start = 0
+            self._ielement_end = nelements
+            
+            data = {}
+            element_data = {}
+            columns = []
+            if dts[0] is not None:
+                if isinstance(dt, int):
+                    data['dt'] = pd.Series(zeros((ndt * nnodes_size), dtype='int32'))
+                else:
+                    data['dt'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+                columns.append('dt')
+            
+            element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
+            element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
 
-    def add_new_eid(self, eType, cid, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
-        #print "Solid Stress add..."
-        #assert eid not in self.oxx
-        assert cid >= 0
-        assert eid >= 0
-        self.eType[eid] = eType
-        self.cid[eid] = cid
-        self.oxx[eid] = {nodeID: oxx}
-        self.oyy[eid] = {nodeID: oyy}
-        self.ozz[eid] = {nodeID: ozz}
-        self.txy[eid] = {nodeID: txy}
-        self.tyz[eid] = {nodeID: tyz}
-        self.txz[eid] = {nodeID: txz}
-        self.o1[eid] = {nodeID: o1}
-        self.o2[eid] = {nodeID: o2}
-        self.o3[eid] = {nodeID: o3}
-        #self.aCos[eid] = {nodeID: aCos}
-        #self.bCos[eid] = {nodeID: bCos}
-        #self.cCos[eid] = {nodeID: cCos}
-        #self.pressure[eid] = {nodeID: pressure}
-        self.ovmShear[eid] = {nodeID: ovm}
-        msg = "*eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
-        #print msg
-        if nodeID == 0:
-            raise ValueError(msg)
+            data['element_id'] = pd.Series(zeros((ndt * nnodes_size), dtype='int32'))
+            data['node_id'] = pd.Series(zeros((ndt * nnodes_size), dtype='int32'))
+            
+            #columns.append('element_type')
+            columns.append('element_id')
+            columns.append('node_id')
 
-    def add_new_eid_sort1(self, eType, cid, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
-        #print "Solid Stress add transient..."
-        assert cid >= 0
-        assert eid >= 0
+            #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
+            #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
+            data['oxx'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            data['oyy'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            data['ozz'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
 
-        #print "dt=%s eid=%s eType=%s" %(dt,eid,eType)
-        if dt not in self.oxx:
-            self.add_new_transient(dt)
-        assert eid not in self.oxx[dt], self.oxx[dt]
+            data['txy'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            data['txz'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            data['tyz'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
 
-        self.eType[eid] = eType
-        self.cid[eid] = cid
-        self.oxx[dt][eid] = {nodeID: oxx}
-        self.oyy[dt][eid] = {nodeID: oyy}
-        self.ozz[dt][eid] = {nodeID: ozz}
-        self.txy[dt][eid] = {nodeID: txy}
-        self.tyz[dt][eid] = {nodeID: tyz}
-        self.txz[dt][eid] = {nodeID: txz}
+            data['o1'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            data['o2'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            data['o3'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            
+            if self.isVonMises():
+                data['ovm'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            else:
+                data['max_shear'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            
+            #pressure
+            #aCos
+            #bCos
+            #cCos
+            columns += ['oxx', 'oyy', 'ozz', 'txy', 'txz', 'tyz', 'o1', 'o2', 'o3']
+            
+            if self.isVonMises():
+                key = 'ovm'
+            else:
+                key = 'max_shear'
+            data[key] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
+            columns.append(key)
 
-        self.o1[dt][eid] = {nodeID: o1}
-        self.o2[dt][eid] = {nodeID: o2}
-        self.o3[dt][eid] = {nodeID: o3}
+            self.data = pd.DataFrame(data, columns=columns)
+            self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type', 'cid'])
+        return self._istart, self._iend, self._ielement_start, self._ielement_end
 
-        #self.aCos[dt][eid] = {nodeID: aCos}
-        #self.bCos[dt][eid] = {nodeID: bCos}
-        #self.cCos[dt][eid] = {nodeID: cCos}
-        #self.pressure[dt][eid] = {nodeID: pressure}
-        self.ovmShear[dt][eid] = {nodeID: ovm}
-        msg = "*eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
-        #print msg
-        if nodeID == 0:
-            raise ValueError(msg)
+    def _finalize(self):
+        ndt, nelements, nnodes, dts = self._get_shape()
+        
+        #grid_type_str = []
+        #for grid_type in self.grid_type:
+            #grid_type_str.append('C' if grid_type==0 else grid_type)
+        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
 
-    def add(self, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
-        #print "***add"
-        msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
-        #print msg
-        #print self.oxx
-        #print self.fiberDistance
-        self.oxx[eid][nodeID] = oxx
-        self.oyy[eid][nodeID] = oyy
-        self.ozz[eid][nodeID] = ozz
-
-        self.txy[eid][nodeID] = txy
-        self.tyz[eid][nodeID] = tyz
-        self.txz[eid][nodeID] = txz
-
-        self.o1[eid][nodeID] = o1
-        self.o2[eid][nodeID] = o2
-        self.o3[eid][nodeID] = o3
-
-        #self.aCos[eid][nodeID] = aCos
-        #self.bCos[eid][nodeID] = bCos
-        #self.cCos[eid][nodeID] = cCos
-        #self.pressure[eid][nodeID] = pressure
-        self.ovmShear[eid][nodeID] = ovm
-        if nodeID == 0:
-            raise ValueError(msg)
-
-    def add_sort1(self, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
-        #print "***add"
-        msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
-        #print msg
-        #print self.oxx
-        #print self.fiberDistance
-
-        #self.eType[eid] = eType
-        #print "eid=%s nid=%s oxx=%s" %(eid,nodeID,oxx)
-        self.oxx[dt][eid][nodeID] = oxx
-        self.oyy[dt][eid][nodeID] = oyy
-        self.ozz[dt][eid][nodeID] = ozz
-        #print self.oxx
-        self.txy[dt][eid][nodeID] = txy
-        self.tyz[dt][eid][nodeID] = tyz
-        self.txz[dt][eid][nodeID] = txz
-
-        self.o1[dt][eid][nodeID] = o1
-        self.o2[dt][eid][nodeID] = o2
-        self.o3[dt][eid][nodeID] = o3
-
-        #self.aCos[dt][eid][nodeID] = aCos
-        #self.bCos[dt][eid][nodeID] = bCos
-        #self.cCos[dt][eid][nodeID] = cCos
-        #self.pressure[dt][eid][nodeID] = pressure
-        self.ovmShear[dt][eid][nodeID] = ovm
-        if nodeID == 0:
-            raise ValueError(msg)
+        if dts[0] is not None:
+            self.data = self.data.set_index(['dt', 'element_id', 'node_id'])
+        else:
+            self.data = self.data.set_index(['element_id', 'node_id'])
+        #print "final\n", self.data
+        del self._istart
+        del self._iend
 
     def getHeaders(self):
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
@@ -597,51 +570,69 @@ class SolidStrainObject(StrainObject):
                              Y  -2.289814E-04  YZ  -2.369997E-04   B  -2.909276E-04  LY-0.10 0.71-0.70
                              Z   9.383460E-04  ZX  -2.369997E-04   C  -1.917288E-04  LZ 0.99 0.00-0.15
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StrainObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
+        StrainObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
 
+        if read_mode == 0:
+            return
         self.code = [self.format_code, self.sort_code, self.s_code]
 
-        self.cid = {}
-        self.exx = {}
-        self.eyy = {}
-        self.ezz = {}
-        self.exy = {}
-        self.eyz = {}
-        self.exz = {}
-        self.e1 = {}
-        self.e2 = {}
-        self.e3 = {}
         #self.aCos = {}
         #self.bCos = {}
         #self.cCos = {}
         #self.pressure = {}
-        self.evmShear = {}
 
         self.nonlinear_factor = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-        else:
-            assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+        #if is_sort1:
+            #if dt is not None:
+                #self.add = self.add_sort1
+                #self.add_new_eid = self.add_new_eid_sort1
+        #else:
+            #assert dt is not None
+            #self.add = self.addSort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
-        nelements = len(self.eType)
+        ndt, nelements, nnodes, dts = self._get_shape()
+        nelements = len(self.element_data['element_id'])
 
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.exx)
+            ntimes = len(self.exx)  # bug
+            dtstring = self.data_code['name'] + ', '
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
+            dtstring = ''
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
-        msg.append('  eType, cid, exx, eyy, ezz, exy, eyz, exz, '
-                   'e1, e2, e3, evmShear\n')
+        
+        if self.isVonMises():
+            ovmstr = 'evm'
+        else:
+            ovmstr = 'max_shear'
+        msg.append('  element_data: index  : element_id\n')
+        msg.append('                results: element_type, cid\n')
+        msg.append('  data:         index  : %selement_id, node_id\n' % dtstring)
+        msg.append('                results: exx, eyy, ezz, exy, eyz, exz, '
+                   'e1, e2, e3, %s\n' % ovmstr)
+        msg.append(', '.join(set(self.eType.values())))
+        msg.append('\n')
+        return msg
+    #def get_stats(self):
+        #nelements = len(self.eType)
+
+        #msg = self.get_data_code()
+        #if self.nonlinear_factor is not None:  # transient
+            #ntimes = len(self.exx)
+            #msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       #% (self.__class__.__name__, ntimes, nelements))
+        #else:
+            #msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     #nelements))
+        #msg.append('  eType, cid, exx, eyy, ezz, exy, eyz, exz, '
+                   #'e1, e2, e3, evmShear\n')
         return msg
 
     def add_f06_data(self, data, transient):
@@ -733,152 +724,89 @@ class SolidStrainObject(StrainObject):
             self.rotations[dt][nodeID] = array([r1, r2, r3])
         del self.data
 
-    def delete_transient(self, dt):
-        del self.exx[dt]
-        del self.eyy[dt]
-        del self.ezz[dt]
-        del self.exy[dt]
-        del self.eyz[dt]
-        del self.exz[dt]
-        del self.e1[dt]
-        del self.e2[dt]
-        del self.e3[dt]
+    def _get_shape(self):
+        ndt = len(self.shape)
+        dts = self.shape.keys()
+        shape0 = dts[0]
+        nnodes = self.shape[shape0]
+        print("ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts)))
+        return ndt, nnodes, dts
 
-    def get_transients(self):
-        k = self.exx.keys()
-        k.sort()
-        return k
+    def _increase_size(self, dt, nelements, nnodes):
+        #self.shape += 1
+        if dt in self.shape:  # default dictionary
+            self.shape[dt][0] += nelements
+            self.shape[dt][1] += nnodes
+        else:
+            self.shape[dt] = [nnodes]
 
-    def add_new_transient(self, dt):
-        """
-        initializes the transient variables
-        """
-        self.nonlinear_factor = dt
-        self.exx[dt] = {}
-        self.eyy[dt] = {}
-        self.ezz[dt] = {}
-        self.exy[dt] = {}
-        self.eyz[dt] = {}
-        self.exz[dt] = {}
-        self.e1[dt] = {}
-        self.e2[dt] = {}
-        self.e3[dt] = {}
+    def _preallocate(self, dt, nelements_size, nnodes_size):
+        if self.shape is None:
+            self._istart += nnodes
+            self._iend += nnodes
+        else:
+            ndt, nelements, nnodes, dts = self._get_shape()
+            #print("ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts)))
+            
+            data = {}
+            columns = []
+            if dts[0] is not None:
+                if isinstance(dt, int):
+                    data['dt'] = pd.Series(zeros((ndt * nnodes), dtype='int32'))
+                else:
+                    data['dt'] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
+                columns.append('dt')
 
-        #self.aCos[dt] = {}
-        #self.bCos[dt] = {}
-        #self.cCos[dt] = {}
-        #self.pressure[dt] = {}
-        self.evmShear[dt] = {}
+            data['element_id'] = pd.Series(zeros((ndt * nnodes), dtype='int32'))
+            data['node_id'] = pd.Series(zeros((ndt * nnodes), dtype='int32'))
 
-    def add_new_eid(self, eType, cid, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
-        #print "Solid Strain add..."
-        assert eid not in self.exx
-        assert cid >= 0
-        assert eid >= 0
-        self.eType[eid] = eType
-        self.cid[eid] = cid
-        self.exx[eid] = {nodeID: exx}
-        self.eyy[eid] = {nodeID: eyy}
-        self.ezz[eid] = {nodeID: ezz}
-        self.exy[eid] = {nodeID: exy}
-        self.eyz[eid] = {nodeID: eyz}
-        self.exz[eid] = {nodeID: exz}
-        self.e1[eid] = {nodeID: e1}
-        self.e2[eid] = {nodeID: e2}
-        self.e3[eid] = {nodeID: e3}
-        #self.aCos[eid] = {nodeID: aCos}
-        #self.bCos[eid] = {nodeID: bCos}
-        #self.cCos[eid] = {nodeID: cCos}
-        #self.pressure[eid] = {nodeID: pressure}
-        self.evmShear[eid] = {nodeID: evm}
-        msg = "*eid=%s nodeID=%s evmShear=%g" % (eid, nodeID, evm)
-        #print msg
-        if nodeID == 0:
-            raise Exception(msg)
+            columns.append('element_id')
+            columns.append('node_id')
 
-    def add_new_eid_sort1(self, eType, cid, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
-        #print "Solid Strain add..."
-        assert cid >= 0
-        assert eid >= 0
+            #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
+            #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
+            data['exx'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            data['eyy'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            data['ezz'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            data['exy'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            data['exz'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            data['eyz'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            data['e1'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            data['e2'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            data['e3'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            
+            if self.isVonMises():
+                data['evm'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            else:
+                data['max_shear'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+            #pressure
+            #aCos
+            #bCos
+            #cCos
+            columns += ['exx', 'eyy', 'ezz', 'exy', 'exz', 'e1', 'e2', 'e3']
 
-        if dt not in self.exx:
-            self.add_new_transient(dt)
+            self.data = pd.DataFrame(data, columns=columns)
+            self.element_data = pd.DataFrame(element_data, columns=['cid'])
+            self._istart = 0
+            self._iend = nnodes
+        return self._istart, self._iend
 
-        assert eid not in self.exx[dt], self.exx[dt]
-        self.eType[eid] = eType
-        self.cid[eid] = cid
-        self.exx[dt][eid] = {nodeID: exx}
-        self.eyy[dt][eid] = {nodeID: eyy}
-        self.ezz[dt][eid] = {nodeID: ezz}
-        self.exy[dt][eid] = {nodeID: exy}
-        self.eyz[dt][eid] = {nodeID: eyz}
-        self.exz[dt][eid] = {nodeID: exz}
-        self.e1[dt][eid] = {nodeID: e1}
-        self.e2[dt][eid] = {nodeID: e2}
-        self.e3[dt][eid] = {nodeID: e3}
-        #self.aCos[dt][eid] = {nodeID: aCos}
-        #self.bCos[dt][eid] = {nodeID: bCos}
-        #self.cCos[dt][eid] = {nodeID: cCos}
-        #self.pressure[dt][eid] = {nodeID: pressure}
-        self.evmShear[dt][eid] = {nodeID: evm}
-        msg = "*eid=%s nodeID=%s evmShear=%g" % (eid, nodeID, evm)
-        #print msg
-        if nodeID == 0:
-            raise Exception(msg)
+    def _finalize(self):
+        ndt, nelements, nnodes, dts = self._get_shape()
+        
+        #grid_type_str = []
+        #for grid_type in self.grid_type:
+            #grid_type_str.append('C' if grid_type==0 else grid_type)
+        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
 
-    def add(self, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
-        #print "***add"
-        msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, evm)
-        #print msg
-        #print self.exx
-        #print self.fiberDistance
-        self.exx[eid][nodeID] = exx
-        self.eyy[eid][nodeID] = eyy
-        self.ezz[eid][nodeID] = ezz
-
-        self.exy[eid][nodeID] = exy
-        self.eyz[eid][nodeID] = eyz
-        self.exz[eid][nodeID] = exz
-        self.e1[eid][nodeID] = e1
-        self.e2[eid][nodeID] = e2
-        self.e3[eid][nodeID] = e3
-
-        #self.aCos[eid][nodeID] = aCos
-        #self.bCos[eid][nodeID] = bCos
-        #self.cCos[eid][nodeID] = cCos
-        #self.pressure[eid][nodeID] = pressure
-        self.evmShear[eid][nodeID] = evm
-
-        if nodeID == 0:
-            raise Exception(msg)
-
-    def add_sort1(self, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
-        #print "***add"
-        msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, evm)
-        #print msg
-        #print self.exx
-        #print self.fiberDistance
-
-        self.exx[dt][eid][nodeID] = exx
-        self.eyy[dt][eid][nodeID] = eyy
-        self.ezz[dt][eid][nodeID] = ezz
-
-        self.exy[dt][eid][nodeID] = exy
-        self.eyz[dt][eid][nodeID] = eyz
-        self.exz[dt][eid][nodeID] = exz
-
-        self.e1[dt][eid][nodeID] = e1
-        self.e2[dt][eid][nodeID] = e2
-        self.e3[dt][eid][nodeID] = e3
-
-        #self.aCos[dt][eid][nodeID] = aCos
-        #self.bCos[dt][eid][nodeID] = bCos
-        #self.cCos[dt][eid][nodeID] = cCos
-        #self.pressure[dt][eid][nodeID] = pressure
-        self.evmShear[dt][eid][nodeID] = evm
-
-        if nodeID == 0:
-            raise Exception(msg)
+        if dts[0] is not None:
+            self.data = self.data.set_index(['dt', 'element_id', 'node_id'])
+        else:
+            self.data = self.data.set_index(['element_id', 'node_id'])
+        self.element_data = self.element_data.set_index(['element_id'])
+        #print "final\n", self.data
+        del self._istart
+        del self._iend
 
     def getHeaders(self):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']

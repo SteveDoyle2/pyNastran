@@ -310,7 +310,25 @@ class RealElementsStressStrain(object):
         ntotal = 16 + 84 * nNodesExpected
         nelements = len(self.data) // ntotal
 
+        nnodes = len(self.data) // ntotal
+        if self.read_mode == 0:  # figure out the shape
+            self.obj._increase_size(dt, nelements, nnodes)
+            iend = ntotal * nelements
+            self.data = self.data[iend:]
+            return
+        else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
+            #index_data = (nodeIDs_to_index)
+            #index_data = pd.MultiIndex.from_tuples(zip(data))
+
+            print("nelements =",nelements)
+            (inode_start, inode_end, ielement_start, ielement_end
+                ) = self.obj._preallocate(dt, nelements, nnodes)
+
         ibase = 0
+
+        cids=[]; etypes=[]; eids=[]; element_ids=[]; nodes=[]; grids=[];
+        oxx=[]; oyy=[]; ozz=[]; txy=[]; txz=[]; tyz=[]
+        o1=[]; o2=[]; o3=[]; ovmShear=[]
         for i in xrange(nelements):
             out = unpack(format1, self.data[ibase:ibase+16])
             (eid, cid, abcd, nNodes) = out
@@ -319,6 +337,11 @@ class RealElementsStressStrain(object):
             #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" % (eid,cid,nNodes,nNodesExpected)
 
             assert nNodes < 21, self.print_block(eData)
+
+
+            etypes.append(ElementType)
+            cids.append(cid)
+            eids.append(eid2)
 
             ibase += 16
             for nodeID in xrange(nNodesExpected):  # nodes pts, +1 for centroid (???)
@@ -333,6 +356,16 @@ class RealElementsStressStrain(object):
                     #grid = (grid_device - device_code) // 10
                     grid = grid_device
 
+                element_ids.append(eid2)
+                grids.append(grid_device)
+                oxx.append(sxx)
+                oyy.append(syy)
+                ozz.append(szz)
+                txy.append(sxy)
+                txz.append(sxz)
+                tyz.append(syz)
+                ovmShear.append(svm)
+                
                 #print "%s eid=%s cid=%s grid=%s sxx=%-6i txy=%-5i s1=%-6i a1=%i a2=%i a3=%i press=%i vm=%s" % (element_type,eid,cid,grid,sxx,sxy,s1,a1,a2,a3,pressure,svm)
                 #print "%s eid=%s cid=%s grid=%s syy=%-6i tyz=%-5i s2=%-6i b1=%i b2=%i b3=%i"                % (element_type,eid,cid,grid,syy,syz,s2,b1,b2,b3)
                 #print "%s eid=%s cid=%s grid=%s szz=%-6i txz=%-5i s3=%-6i c1=%i c2=%i c3=%i"                % (element_type,eid,cid,grid,szz,sxz,s3,c1,c2,c3)
@@ -343,12 +376,63 @@ class RealElementsStressStrain(object):
                 aCos = []
                 bCos = []
                 cCos = []
-                if nodeID == 0:
-                    self.obj.add_new_eid(ElementType, cid, dt, eid2, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
-                else:
-                    self.obj.add(dt, eid2, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
+                #if nodeID == 0:  # center point
+                    #self.obj.add_new_eid(ElementType, cid, dt, eid2, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
+                #else:
+                    #self.obj.add(dt, eid2, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
                 ibase += 84
         self.data = self.data[ibase:]
+
+        if dt:
+            self.obj.data['dt'][inode_start:inode_end] = ones(inode_end - inode_start) * dt
+        #self.obj.grid_type[inode_start:inode_end] = gridTypes
+        
+        if self.obj.isStress():
+            self.obj.data['oxx'][inode_start:inode_end] = oxx
+            self.obj.data['oyy'][inode_start:inode_end] = oyy
+            self.obj.data['ozz'][inode_start:inode_end] = ozz
+
+            self.obj.data['txy'][inode_start:inode_end] = txy
+            self.obj.data['txz'][inode_start:inode_end] = txz
+            self.obj.data['tyz'][inode_start:inode_end] = tyz
+            
+            self.obj.data['o1'][inode_start:inode_end] = o1
+            self.obj.data['o2'][inode_start:inode_end] = o2
+            self.obj.data['o3'][inode_start:inode_end] = o3
+            if self.obj.isVonMises():
+                self.obj.data['ovm'][inode_start:inode_end] = ovmShear
+            else:
+                self.obj.data['max_shear'][inode_start:inode_end] = ovmShear
+        else:
+            print('type', self.obj.__class__.__name__)
+            self.obj.data['exx'][inode_start:inode_end] = oxx
+            self.obj.data['eyy'][inode_start:inode_end] = oyy
+            self.obj.data['ezz'][inode_start:inode_end] = ozz
+
+            self.obj.data['exy'][inode_start:inode_end] = txy
+            self.obj.data['exz'][inode_start:inode_end] = txz
+            self.obj.data['eyz'][inode_start:inode_end] = tyz
+
+            self.obj.data['e1'][inode_start:inode_end] = o1
+            self.obj.data['e2'][inode_start:inode_end] = o2
+            self.obj.data['e3'][inode_start:inode_end] = o3
+            if self.obj.isVonMises():
+                self.obj.data['evm'][inode_start:inode_end] = ovmShear
+            else:
+                self.obj.data['max_shear'][inode_start:inode_end] = ovmShear
+            
+        self.obj.element_data['element_id'][ielement_start:ielement_end] = eids
+        self.obj.element_data['element_type'][ielement_start:ielement_end] = etypes
+        self.obj.element_data['cid'][ielement_start:ielement_end] = cids
+        # pressure
+        # aCos
+        # bCos
+        # cCos
+        #self.obj.data[''][inode_start:inode_end] = translations[:, 5]
+
+        #print self.obj.data['dt'].to_string()
+        if len(self.obj.data['element_id'])==inode_end:
+            self.obj._finalize()
 
     def OES_CTRIA3_74(self):
         """
