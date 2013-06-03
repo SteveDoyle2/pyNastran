@@ -27,7 +27,7 @@ elif fmode in [1, 2]:
             self.setGeometry(1, 1, 0, 0)
  
 #----------------------------------------------------------------------
-print "fmode =", fmode
+#print "fmode =", fmode
 def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
     fname = None
     if dirname == '':

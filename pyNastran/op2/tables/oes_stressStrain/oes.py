@@ -5,6 +5,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from struct import unpack
 
 from pyNastran import isRelease
+
+from .real.elementsStressStrain2 import RealElementsStressStrain2
+
 from .real.elementsStressStrain import RealElementsStressStrain
 from .real.oes_bars import BarStressObject, BarStrainObject
 from .real.oes_beams import BeamStressObject, BeamStrainObject
@@ -32,7 +35,7 @@ from .complex.oes_springs import ComplexCelasStressObject, ComplexCelasStrainObj
 from .oes_nonlinear import NonlinearRodObject, NonlinearQuadObject, HyperelasticQuadObject
 
 
-class OES(RealElementsStressStrain, ComplexElementsStressStrain):
+class OES(RealElementsStressStrain, ComplexElementsStressStrain, RealElementsStressStrain2):
     """Table of stresses/strains"""
 
     def readTable_OES(self):

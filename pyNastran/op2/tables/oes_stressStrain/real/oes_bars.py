@@ -1,5 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+import pandas as pd
+from numpy import zeros
 
 from pyNastran.utils import is_string
 from .oes_objects import StressObject, StrainObject
@@ -15,51 +17,21 @@ class BarStressObject(StressObject):
       ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
         ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
 
+        self.shape = {}
+        self._ncount = 0
+        self._inode_start = None
+        self._inode_end = None
+        self._ielement_start = None
+        self._ielement_end = None
+
+        if read_mode == 0:
+            return
+
         self.code = [self.format_code, self.sort_code, self.s_code]
-
-        self.s1 = {}
-        self.s2 = {}
-        self.s3 = {}
-        self.s4 = {}
-        self.axial = {}
-        self.smax = {}
-        self.smin = {}
-        self.MS_tension = {}
-        self.MS_compression = {}
-
-        #if self.element_type==100:
-            #self.getLength = self.getLength100_format1_sort0
-            #self.add_new_eid = self.addNewEid100
-
-        self.dt = dt
-        #print "BAR dt=%s" %(dt)
-        if is_sort1:
-            if dt is not None:
-                #self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-        else:
-            assert dt is not None
-            #self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
-
-    def get_stats(self):
-        nelements = len(self.eType)
-
-        msg = self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.s1)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, s1, s2, s3, s4, axial, smax, smin, '
-                   'MS_tension, MS_compression\n')
-        return msg
 
     def add_f06_data(self, data, transient):
         if transient is None:
@@ -105,106 +77,121 @@ class BarStressObject(StressObject):
     def getLength(self):
         return (68, 'iffffffffffffffff')
 
-    def delete_transient(self, dt):
-        del self.s1[dt]
-        del self.s2[dt]
-        del self.s3[dt]
-        del self.s4[dt]
-        del self.axial[dt]
-        del self.smax[dt]
-        del self.smin[dt]
-
-    def get_transients(self):
-        k = self.s1.keys()
-        k.sort()
-        return k
-
-    def add_new_transient(self, dt):
-        """
-        initializes the transient variables
-        """
-        #print "****add new transient****"
-        self.dt = dt
-        self.s1[dt] = {}
-        self.s2[dt] = {}
-        self.s3[dt] = {}
-        self.s4[dt] = {}
-        self.axial[dt] = {}
-        self.smax[dt] = {}
-        self.smin[dt] = {}
-        #self.MS_tension[dt]     = {}
-        #self.MS_compression[dt] = {}
-
-    def addNewEid100(self, dt, out):
-        #print "out = ",out
-        #return
-        (eid, s1, s2, s3, s4, axial, smax, smin, MSt, MSc) = out
-        #print "Bar Stress add..."
-        self.eType[eid] = 'CBAR'  # eType
-
-        if self.eid in self.s1:
-            self.s1[eid].append(s1)
-            self.s2[eid].append(s2)
-            self.s3[eid].append(s3)
-            self.s4[eid].append(s4)
-            self.axial[eid].append(axial)
-            self.smax[eid].append(smax)
-            self.smin[eid].append(smin)
-            #self.MS_tension[eid].append(MSt)
-            #self.MS_compression[eid].append(MSc)
+    def _increase_size(self, dt, nelements, nnodes):
+        if dt in self.shape:  # default dictionary
+            self.shape[dt][0] += nelements
+            self.shape[dt][1] += nnodes
         else:
-            self.s1[eid] = [s1]
-            self.s2[eid] = [s2]
-            self.s3[eid] = [s3]
-            self.s4[eid] = [s4]
-            self.axial[eid] = axial
-            self.smax[eid] = [smax]
-            self.smin[eid] = [smin]
-            #self.MS_tension[eid]     = MSt
-            #self.MS_compression[eid] = MSc
+            self.shape[dt] = [nelements, nnodes]
+        #print("shape =", self.shape)
 
-        #msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
-        #print msg
-        #if nodeID==0: raise Exception(msg)
+    def _get_shape(self):
+        ndt = len(self.shape)
+        dts = self.shape.keys()
+        shape0 = dts[0]
+        nelements = self.shape[shape0][0]
+        nnodes = self.shape[shape0][1]
+        #print("ndt=%s nnodes=%s dts=%s" % (str(ndt), str(nnodes), str(dts)))
+        return ndt, nelements, nnodes, dts
 
-    def add_new_eid(self, eType, dt, eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
-        s1b, s2b, s3b, s4b, smaxb, sminb, MSc):
-        #print "Bar Stress add..."
-        self.eType[eid] = eType
+    def _increment(self, nnodes, nelements):
+        self._inode_start += nnodes
+        self._inode_end += nnodes
+        self._ielement_start += nelements
+        self._ielement_end += nelements
+        return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
+        
+    def _preallocate(self, dt, nnodes, nelements):
+        ndt, nelements_size, nnodes_size, dts = self._get_shape()
+        #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
+        
+        if self._inode_start is not None:
+            return (self._inode_start, self._inode_start + nnodes,
+                    self._ielement_start, self._ielement_start + nelements)
+        print('----definition----')
+        n = ndt * nnodes_size
+        if self._ncount != 0:
+            asfd
+        self._ncount += 1
+        self._inode_start = 0
+        self._inode_end = nnodes
 
-        self.s1[eid] = [s1a, s1b]
-        self.s2[eid] = [s2a, s2b]
-        self.s3[eid] = [s3a, s3b]
-        self.s4[eid] = [s4a, s4b]
-        self.axial[eid] = axial
-        self.smax[eid] = [smaxa, smaxb]
-        self.smin[eid] = [smina, sminb]
-        #self.MS_tension[eid]     = MSt
-        #self.MS_compression[eid] = MSc
+        self._ielement_start = 0
+        self._ielement_end = nelements
 
-        #msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
-        #print msg
-        #if nodeID==0: raise Exception(msg)
+        data = {}
+        #element_data = {}
+        columns = []
+        if dts[0] is not None:
+            name = self.data_code['name']
+            if isinstance(dt, int):
+                data[name] = pd.Series(zeros((n), dtype='int32'))
+            else:
+                data[name] = pd.Series(zeros((n), dtype='float32'))
+            columns.append(name)
 
-    def add_new_eid_sort1(self, eType, dt, eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
-                                             s1b, s2b, s3b, s4b, smaxb, sminb, MSc):
-        #msg = "dt=%s eid=%s s1a=%s" % (dt, eid, s1a)
-        #print msg
-        if dt not in self.s1:
-            self.add_new_transient(dt)
-        self.eType[eid] = eType
-        #print self.s1
-        self.s1[dt][eid] = [s1a, s1b]
-        self.s2[dt][eid] = [s2a, s2b]
-        self.s3[dt][eid] = [s3a, s3b]
-        self.s4[dt][eid] = [s4a, s4b]
-        self.axial[dt][eid] = axial
-        self.smax[dt][eid] = [smaxa, smaxb]
-        self.smin[dt][eid] = [smina, sminb]
-        #self.MS_tension[dt][eid]     = MSt
-        #self.MS_compression[dt][eid] = MSc
+        #element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
+        #element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
 
-        #if nodeID==0: raise Exception(msg)
+        data['element_id'] = pd.Series(zeros((n), dtype='int32'))
+        #data['element_type'] = pd.Series(zeros((n), dtype='str'))
+        #data['node_id'] = pd.Series(zeros((n), dtype='int32'))
+
+        #columns.append('element_type')
+        #columns.append('element_id')
+        #columns.append('node_id')
+
+        #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
+        #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
+        #print('n =', n)
+
+        data['s1a'] = pd.Series(zeros((n), dtype='float32'))
+        data['s2a'] = pd.Series(zeros((n), dtype='float32'))
+        data['s3a'] = pd.Series(zeros((n), dtype='float32'))
+        data['s4a'] = pd.Series(zeros((n), dtype='float32'))
+        data['smaxa'] = pd.Series(zeros((n), dtype='float32'))
+        data['smina'] = pd.Series(zeros((n), dtype='float32'))
+
+        data['s1b'] = pd.Series(zeros((n), dtype='float32'))
+        data['s2b'] = pd.Series(zeros((n), dtype='float32'))
+        data['s3b'] = pd.Series(zeros((n), dtype='float32'))
+        data['s4b'] = pd.Series(zeros((n), dtype='float32'))
+        data['smaxb'] = pd.Series(zeros((n), dtype='float32'))
+        data['sminb'] = pd.Series(zeros((n), dtype='float32'))
+
+        data['axial'] = pd.Series(zeros((n), dtype='float32'))
+        data['MS_tension'] = pd.Series(zeros((n), dtype='float32'))
+        data['MS_compression'] = pd.Series(zeros((n), dtype='float32'))
+        # element_type
+
+        columns += ['element_id', 's1a', 's2a', 's3a', 's4a', 's1b', 's2b', 's3b', 's4b', 'axial', 'smaxa', 'smina', 'smaxb', 'sminb', 'MS_tension', 'MS_compression']
+
+        self.data = pd.DataFrame(data, columns=columns)
+        #self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type', 'cid'])
+        return (self._inode_start, self._inode_end, self._ielement_start, self._ielement_end)
+
+    def _finalize(self, dt):
+        ndt, nelements, nnodes, dts = self._get_shape()
+        
+        if dt != max(dts):
+            return
+        print("----finalize----")
+        
+        #grid_type_str = []
+        #for grid_type in self.grid_type:
+            #grid_type_str.append('C' if grid_type==0 else grid_type)
+        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
+
+        if dts[0] is not None:
+            name = self.data_code['name']
+            self.data = self.data.set_index([name, 'element_id'])
+        else:
+            self.data = self.data.set_index('element_id')
+        #print "final\n", self.data
+        del self._inode_start
+        del self._inode_end
+        print("---BarStressObject---")
+        print(self.data.to_string())
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -215,7 +202,6 @@ class BarStressObject(StressObject):
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
                 '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
               ]
-
         for eid, S1s in sorted(self.s1.iteritems()):
             #eType = self.eType[eid]
             axial = self.axial[eid]
@@ -277,99 +263,22 @@ class BarStressObject(StressObject):
             pageNum += 1
         return (''.join(msg), pageNum - 1)
 
+    def get_stats(self):
+        nelements = len(self.data['axial'])
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.s1)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, s1, s2, s3, s4, axial, smax, smin, '
+                   'MS_tension, MS_compression\n')
+        return msg
+
     def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---BAR STRESS---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['s1', 's2', 's3', 's4', 'Axial', 'sMax', 'sMin']
-        for header in headers:
-            msg += '%8s ' % header
-        msg += '\n'
-
-        for eid, S1s in sorted(self.s1.iteritems()):
-            eType = self.eType[eid]
-            axial = self.axial[eid]
-            #MSt = self.MSt[eid]
-            #MSc = self.MSc[eid]
-
-            s1 = self.s1[eid]
-            s2 = self.s2[eid]
-            s3 = self.s3[eid]
-            s4 = self.s4[eid]
-            smax = self.smax[eid]
-            smin = self.smin[eid]
-            msg += '%-6i %6s ' % (eid, eType)
-            vals = [s1[0], s2[0], s3[0], s4[0], axial, smax[0], smin[0]]
-            for val in vals:
-                if abs(val) < 1e-6:
-                    msg += '%8s ' % '0'
-                else:
-                    msg += '%8i ' % val
-            msg += '\n'
-
-            msg += '%s ' % (' ' * 13)
-            vals = [s1[1], s2[1], s3[1], s4[1], '', smax[1], smin[1]]
-            for val in vals:
-                if is_string(val):
-                    msg += '%8s ' % val
-                elif abs(val) < 1e-6:
-                    msg += '%8s ' % '0'
-                else:
-                    msg += '%8i ' % val
-            msg += '\n'
-
-            #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i smax=%-5i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
-            #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-5i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
-
-        return msg
-
-    def __reprTransient__(self):
-        msg = '---BAR STRESS---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['s1', 's2', 's3', 's4', 'Axial', 'sMax', 'sMin']
-        for header in headers:
-            msg += '%8s ' % header
-        msg += '\n'
-
-        for dt, S1ss in sorted(self.s1.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid, S1s in sorted(S1ss.iteritems()):
-                eType = self.eType[eid]
-                axial = self.axial[dt][eid]
-                #MSt = self.MSt[dt][eid]
-                #MSc = self.MSc[dt][eid]
-
-                s1 = self.s1[dt][eid]
-                s2 = self.s2[dt][eid]
-                s3 = self.s3[dt][eid]
-                s4 = self.s4[dt][eid]
-                smax = self.smax[dt][eid]
-                smin = self.smin[dt][eid]
-                msg += '%-6i %6s ' % (eid, eType)
-                vals = [s1[0], s2[0], s3[0], s4[0], axial, smax[0], smin[0]]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%8s ' % '0'
-                    else:
-                        msg += '%8i ' % val
-                msg += '\n'
-
-                msg += '%s ' % (' ' * 13)
-                vals = [s1[1], s2[1], s3[1], s4[1], '', smax[1], smin[1]]
-                for val in vals:
-                    if is_string(val):
-                        msg += '%8s ' % val
-                    elif abs(val) < 1e-6:
-                        msg += '%8s ' % '0'
-                    else:
-                        msg += '%8i ' % val
-                msg += '\n'
-
-                #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i smax=%-5i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
-                #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-5i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
-        return msg
+        return self.get_stats()
 
 
 class BarStrainObject(StrainObject):
@@ -418,21 +327,6 @@ class BarStrainObject(StrainObject):
             self.add = self.addSort2
             self.add_new_eid = self.NewEidSort2
 
-    def get_stats(self):
-        nelements = len(self.eType)
-
-        msg = self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.e1)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, e1, e2, e3, e4, axial, emax, emin, '
-                   'MS_tension, MS_compression\n')
-        return msg
-
     def add_f06_data(self, data, transient):
         if transient is None:
             for line in data:
@@ -472,75 +366,10 @@ class BarStrainObject(StrainObject):
             #self.MS_tension[dt][eid]     = MSt
             #self.MS_compression[dt][eid] = MSc
 
-    def delete_transient(self, dt):
-        del self.e1[dt]
-        del self.e2[dt]
-        del self.e3[dt]
-        del self.e4[dt]
-        del self.exial[dt]
-        del self.emax[dt]
-        del self.emin[dt]
-
     def get_transients(self):
         k = self.e1.keys()
         k.sort()
         return k
-
-    def add_new_transient(self, dt):
-        """
-        initializes the transient variables
-        """
-        self.e1[dt] = {}
-        self.e2[dt] = {}
-        self.e3[dt] = {}
-        self.e4[dt] = {}
-        self.axial[dt] = {}
-        self.emax[dt] = {}
-        self.emin[dt] = {}
-        #self.MS_tension[dt]     = {}
-        #self.MS_compression[dt] = {}
-
-    def add_new_eid(
-        self, eType, dt, eid, e1a, e2a, e3a, e4a, axial, emaxa, emina, MSt,
-                                    e1b, e2b, e3b, e4b, emaxb, eminb, MSc):
-        #print "Bar Stress add..."
-        self.eType[eid] = eType
-        self.e1[eid] = [e1a, e1b]
-        self.e2[eid] = [e2a, e2b]
-        self.e3[eid] = [e3a, e3b]
-        self.e4[eid] = [e4a, e4b]
-        self.axial[eid] = axial
-        self.emax[eid] = [emaxa, emaxb]
-        self.emin[eid] = [emina, eminb]
-        #self.MS_tension[eid]     = MSt
-        #self.MS_compression[eid] = MSc
-
-        #msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
-        #print msg
-        #if nodeID==0: raise Exception(msg)
-
-    def add_new_eid_sort1(
-        self, eType, dt, eid, e1a, e2a, e3a, e4a, axial, emaxa, emina, MSt,
-                                         e1b, e2b, e3b, e4b, emaxb, eminb, MSc):
-        #print "Bar Stress add..."
-
-        self.eType[eid] = eType
-        if dt not in self.e1:
-            self.add_new_transient(dt)
-
-        self.e1[dt][eid] = [e1a, e1b]
-        self.e2[dt][eid] = [e2a, e2b]
-        self.e3[dt][eid] = [e3a, e3b]
-        self.e4[dt][eid] = [e4a, e4b]
-        self.axial[dt][eid] = axial
-        self.emax[dt][eid] = [emaxa, emaxb]
-        self.emin[dt][eid] = [emina, eminb]
-        #self.MS_tension[dt][eid]     = MSt
-        #self.MS_compression[dt][eid] = MSc
-
-        #msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
-        #print msg
-        #if nodeID==0: raise Exception(msg)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.isTransient:
@@ -613,97 +442,20 @@ class BarStrainObject(StrainObject):
             pageNum += 1
         return (''.join(msg), pageNum - 1)
 
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.e1)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, e1, e2, e3, e4, axial, emax, emin, '
+                   'MS_tension, MS_compression\n')
+        return msg
+
     def __repr__(self):
-        if self.isTransient:
-            return self.__reprTransient__()
-
-        msg = '---BAR STRAIN---\n'
-        msg += '%-8s %6s ' % ('EID', 'eType')
-        headers = ['e1', 'e2', 'e3', 'e4', 'Axial', 'eMax', 'eMin']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for eid, E1s in sorted(self.e1.iteritems()):
-            eType = self.eType[eid]
-            axial = self.axial[eid]
-            #MSt  = self.MS_tension[eid]
-            #MSc  = self.MS_compression[eid]
-
-            e1 = self.e1[eid]
-            e2 = self.e2[eid]
-            e3 = self.e3[eid]
-            e4 = self.e4[eid]
-            emax = self.emax[eid]
-            emin = self.emin[eid]
-            msg += '%-8i %6s ' % (eid, eType)
-            vals = [e1[0], e2[0], e3[0], e4[0], axial, emax[0], emin[0]]
-            for val in vals:
-                if abs(val) < 1e-6:
-                    msg += '%10s ' % '0'
-                else:
-                    msg += '%10.3g ' % val
-            msg += '\n'
-
-            msg += '%s ' % (' ' * 17)
-            vals = [e1[1], e2[1], e3[1], e4[1], '', emax[1], emin[1]]
-            for val in vals:
-                if is_string(val):
-                    msg += '%10s ' % val
-                elif abs(val) < 1e-6:
-                    msg += '%10s ' % '0'
-                else:
-                    msg += '%10.3g ' % val
-            msg += '\n'
-
-            #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i smax=%-5i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
-            #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-5i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
-
-        return msg
-
-    def __reprTransient__(self):
-        msg = '---BAR STRAIN---\n'
-        msg += '%-8s %6s ' % ('EID', 'eType')
-        headers = ['e1', 'e2', 'e3', 'e4', 'Axial', 'eMax', 'eMin']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, E1s in sorted(self.e1.iteritems()):
-            msg += "%s = %g\n" % (self.data_code['name'], dt)
-            for eid, e1s in sorted(Els.iteritems()):
-                eType = self.eType[eid]
-                axial = self.axial[dt][eid]
-                #MSt  = self.MS_tension[dt][eid]
-                #MSc  = self.MS_compression[dt][eid]
-
-                e1 = self.e1[dt][eid]
-                e2 = self.e2[dt][eid]
-                e3 = self.e3[dt][eid]
-                e4 = self.e4[dt][eid]
-                emax = self.emax[dt][eid]
-                emin = self.emin[dt][eid]
-                msg += '%-8i %6s ' % (eid, eType)
-                vals = [e1[0], e2[0], e3[0], e4[0], axial, emax[0], emin[0]]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10.3g ' % val
-                msg += '\n'
-
-                msg += '%s ' % (' ' * 17)
-                vals = [e1[1], e2[1], e3[1], e4[1], '', emax[1], emin[1]]
-                for val in vals:
-                    if is_string(val):
-                        msg += '%10s ' % val
-                    elif abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10.3g ' % val
-                msg += '\n'
-
-                #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i smax=%-5i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
-                #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-5i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
-
-        return msg
+        return self.get_stats()

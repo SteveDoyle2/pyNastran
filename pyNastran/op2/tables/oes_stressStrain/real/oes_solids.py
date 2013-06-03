@@ -34,8 +34,9 @@ class SolidStressObject(StressObject):
         StressObject.__init__(self, data_code, isubcase, read_mode)
 
         self.shape = {}
-        self._istart = None
-        self._iend = None
+        self._ncount = 0
+        self._inode_start = None
+        self._inode_end = None
         self._ielement_start = None
         self._ielement_end = None
 
@@ -52,37 +53,6 @@ class SolidStressObject(StressObject):
             #assert dt is not None
             #self.add = self.addSort2
             #self.add_new_eid = self.add_new_eid_sort2
-
-    def get_stats(self):
-        ndt, nelements, nnodes, dts = self._get_shape()
-        nelements = len(self.element_data['element_id'])
-
-        msg = self.get_data_code()
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.oxx)  # bug
-            dtstring = self.data_code['name'] + ', '
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            dtstring = ''
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        
-        if self.isVonMises():
-            ovmstr = 'ovm'
-        else:
-            ovmstr = 'max_shear'
-
-        etypes = self.element_data['element_type']
-        msg.append('  element_data: index        : element_id\n')
-        msg.append('                results      : element_type, cid\n')
-        msg.append('  data:         index        : %selement_id, node_id\n' % dtstring)
-        msg.append('                results      : oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, %s\n' % ovmstr)
-        msg.append('                element_types: %s' %(', '.join(set(etypes))))
-        
-        print("self.element_data\n", self.element_data.to_string())
-        msg.append('\n')
-        return msg
 
     def add_f06_data(self, data, transient):
         if transient is None:
@@ -172,17 +142,7 @@ class SolidStressObject(StressObject):
             self.rotations[dt][nodeID] = array([r1, r2, r3])
         del self.data
 
-    def _get_shape(self):
-        ndt = len(self.shape)
-        dts = self.shape.keys()
-        shape0 = dts[0]
-        nelements = self.shape[shape0][0]
-        nnodes = self.shape[shape0][1]
-        print("ndt=%r nnodes=%r dts=%r" % (str(ndt), str(nnodes), str(dts)))
-        return ndt, nelements, nnodes, dts
-
     def _increase_size(self, dt, nelements, nnodes):
-        #self.shape += 1
         if dt in self.shape:  # default dictionary
             self.shape[dt][0] += nelements
             self.shape[dt][1] += nnodes
@@ -190,87 +150,104 @@ class SolidStressObject(StressObject):
             self.shape[dt] = [nelements, nnodes]
         print("shape =", self.shape)
 
-    def _preallocate(self, dt, nelements, nnodes):
-        if self.shape is None:
-            self._istart += nnodes
-            self._iend += nnodes
-            self._ielement_start += nelements
-            self._ielement_end += nelements
+    def _get_shape(self):
+        ndt = len(self.shape)
+        dts = self.shape.keys()
+        shape0 = dts[0]
+        nelements = self.shape[shape0][0]
+        nnodes = self.shape[shape0][1]
+        print("ndt=%s nnodes=%s dts=%s" % (str(ndt), str(nnodes), str(dts)))
+        return ndt, nelements, nnodes, dts
+
+    def _increment(self, nnodes, nelements):
+        self._inode_start += nnodes
+        self._inode_end += nnodes
+        self._ielement_start += nelements
+        self._ielement_end += nelements
+        return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
+        
+    def _preallocate(self, dt, nnodes, nelements):
+        ndt, nelements_size, nnodes_size, dts = self._get_shape()
+        print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
+        
+        if self._inode_start is not None:
+            return (self._inode_start, self._inode_start + nnodes,
+                    self._ielement_start, self._ielement_start + nelements)
+        print('----definition----')
+        n = ndt * nnodes_size
+        if self._ncount != 0:
+            asfd
+        self._ncount += 1
+        self._inode_start = 0
+        self._inode_end = nnodes
+
+        self._ielement_start = 0
+        self._ielement_end = nelements
+
+        data = {}
+        element_data = {}
+        columns = []
+        if dts[0] is not None:
+            if isinstance(dt, int):
+                data['dt'] = pd.Series(zeros((n), dtype='int32'))
+            else:
+                data['dt'] = pd.Series(zeros((n), dtype='float32'))
+            columns.append('dt')
+
+        element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
+        element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
+
+        data['element_id'] = pd.Series(zeros((n), dtype='int32'))
+        data['node_id'] = pd.Series(zeros((n), dtype='int32'))
+
+        #columns.append('element_type')
+        columns.append('element_id')
+        columns.append('node_id')
+
+        #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
+        #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
+        print('n =', n)
+        data['oxx'] = pd.Series(zeros((n), dtype='float32'))
+        data['oyy'] = pd.Series(zeros((n), dtype='float32'))
+        data['ozz'] = pd.Series(zeros((n), dtype='float32'))
+
+        data['txy'] = pd.Series(zeros((n), dtype='float32'))
+        data['txz'] = pd.Series(zeros((n), dtype='float32'))
+        data['tyz'] = pd.Series(zeros((n), dtype='float32'))
+
+        data['o1'] = pd.Series(zeros((n), dtype='float32'))
+        data['o2'] = pd.Series(zeros((n), dtype='float32'))
+        data['o3'] = pd.Series(zeros((n), dtype='float32'))
+
+        if self.isVonMises():
+            data['ovm'] = pd.Series(zeros((n), dtype='float32'))
         else:
-            ndt, nelements_size, nnodes_size, dts = self._get_shape()
-            #print("ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts)))
+            data['max_shear'] = pd.Series(zeros((n), dtype='float32'))
 
-            if self._istart is not None:
-                self._istart += nnodes
-                self._iend += nnodes
-                self._ielement_start += nelements
-                self._ielement_end += nelements
-                return self._istart, self._iend, self._ielement_start, self._ielement_end
-            
-            self._istart = 0
-            self._iend = nnodes
-            
-            self._ielement_start = 0
-            self._ielement_end = nelements
-            
-            data = {}
-            element_data = {}
-            columns = []
-            if dts[0] is not None:
-                if isinstance(dt, int):
-                    data['dt'] = pd.Series(zeros((ndt * nnodes_size), dtype='int32'))
-                else:
-                    data['dt'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-                columns.append('dt')
-            
-            element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
-            element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
+        #pressure
+        #aCos
+        #bCos
+        #cCos
+        columns += ['oxx', 'oyy', 'ozz', 'txy', 'txz', 'tyz', 'o1', 'o2', 'o3']
 
-            data['element_id'] = pd.Series(zeros((ndt * nnodes_size), dtype='int32'))
-            data['node_id'] = pd.Series(zeros((ndt * nnodes_size), dtype='int32'))
-            
-            #columns.append('element_type')
-            columns.append('element_id')
-            columns.append('node_id')
+        if self.isVonMises():
+            key = 'ovm'
+        else:
+            key = 'max_shear'
+        data[key] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
+        columns.append(key)
 
-            #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
-            #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
-            data['oxx'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            data['oyy'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            data['ozz'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
+        self.data = pd.DataFrame(data, columns=columns)
+        self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type', 'cid'])
+        return (self._inode_start, self._inode_end, self._ielement_start, self._ielement_end)
 
-            data['txy'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            data['txz'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            data['tyz'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-
-            data['o1'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            data['o2'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            data['o3'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            
-            if self.isVonMises():
-                data['ovm'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            else:
-                data['max_shear'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            
-            #pressure
-            #aCos
-            #bCos
-            #cCos
-            columns += ['oxx', 'oyy', 'ozz', 'txy', 'txz', 'tyz', 'o1', 'o2', 'o3']
-            
-            if self.isVonMises():
-                key = 'ovm'
-            else:
-                key = 'max_shear'
-            data[key] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
-            columns.append(key)
-
-            self.data = pd.DataFrame(data, columns=columns)
-            self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type', 'cid'])
-        return self._istart, self._iend, self._ielement_start, self._ielement_end
-
-    def _finalize(self):
+    def _finalize(self, dt):
         ndt, nelements, nnodes, dts = self._get_shape()
+        
+        if dt != max(dts):
+            return
+        print(self.data.to_string())
+        print("----finalize----")
         
         #grid_type_str = []
         #for grid_type in self.grid_type:
@@ -282,8 +259,8 @@ class SolidStressObject(StressObject):
         else:
             self.data = self.data.set_index(['element_id', 'node_id'])
         #print "final\n", self.data
-        del self._istart
-        del self._iend
+        del self._inode_start
+        del self._inode_end
 
     def getHeaders(self):
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
@@ -472,80 +449,40 @@ class SolidStressObject(StressObject):
             msg = ['']
         return ''.join(msg)
 
+    def get_stats(self):
+        ndt, nelements, nnodes, dts = self._get_shape()
+        nelements = len(self.element_data['element_id'])
+
+        msg = self.get_data_code()
+        if self.nonlinear_factor is not None:  # transient
+            ntimes = len(self.oxx)  # bug
+            dtstring = self.data_code['name'] + ', '
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            dtstring = ''
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        
+        if self.isVonMises():
+            ovmstr = 'ovm'
+        else:
+            ovmstr = 'max_shear'
+
+        etypes = self.element_data['element_type']
+        msg.append('  element_data: index        : element_id\n')
+        msg.append('                results      : element_type, cid\n')
+        msg.append('  data:         index        : %selement_id, node_id\n' % dtstring)
+        msg.append('                results      : oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, %s\n' % ovmstr)
+        msg.append('                element_types: %s' %(', '.join(set(etypes))))
+        
+        #print("self.element_data\n", self.element_data.to_string())
+        print("self.data\n", self.data.to_string())
+        msg.append('\n')
+        return msg
+
     def __repr__(self):
-        #print "self.dt = ",self.dt
-        #print "self.nf = ",self.nonlinear_factor
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---SOLID STRESS---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s ' % ('EID', 'eType', 'nodeID')
-        for header in headers:
-            msg += '%9s ' % header
-        msg += '\n'
-        for eid, oxxNodes in sorted(self.oxx.iteritems()):
-            eType = self.eType[eid]
-            for nid in sorted(oxxNodes):
-                oxx = self.oxx[eid][nid]
-                oyy = self.oyy[eid][nid]
-                ozz = self.ozz[eid][nid]
-                txy = self.txy[eid][nid]
-                tyz = self.tyz[eid][nid]
-                txz = self.txz[eid][nid]
-
-                #o1 = self.o1[eid][nid]
-                #o2 = self.o2[eid][nid]
-                #o3 = self.o3[eid][nid]
-                ovm = self.ovmShear[eid][nid]
-                msg += '%-6i %6s %8s ' % (eid, eType, nid)
-                vals = [oxx, oyy, ozz, txy, tyz, txz, ovm]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%9s ' % '0'
-                    else:
-                        msg += '%9i ' % val
-                msg += '\n'
-                #msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
-
-        return msg
-
-    def __reprTransient__(self):
-        msg = '---SOLID STRESS---\n'
-        msg += '%-6s %6s %8s ' % ('EID', 'eType', 'nodeID')
-        headers = self.getHeaders()
-        for header in headers:
-            msg += '%9s ' % header
-        msg += '\n'
-
-        for dt, oxxs in sorted(self.oxx.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid, oxxNodes in sorted(oxxs.iteritems()):
-                eType = self.eType[eid]
-                for nid in sorted(oxxNodes):
-                    oxx = self.oxx[dt][eid][nid]
-                    oyy = self.oyy[dt][eid][nid]
-                    ozz = self.ozz[dt][eid][nid]
-                    txy = self.txy[dt][eid][nid]
-                    tyz = self.tyz[dt][eid][nid]
-                    txz = self.txz[dt][eid][nid]
-
-                    #o1 = self.o1[dt][eid][nid]
-                    #o2 = self.o2[dt][eid][nid]
-                    #o3 = self.o3[dt][eid][nid]
-
-                    ovm = self.ovmShear[dt][eid][nid]
-                    msg += '%-6i %6s %8s ' % (eid, eType, nid)
-                    vals = [oxx, oyy, ozz, txy, tyz, txz, ovm]
-                    for val in vals:
-                        if abs(val) < 1e-6:
-                            msg += '%9s ' % '0'
-                        else:
-                            msg += '%9i ' % val
-                    msg += '\n'
-                    #msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
-
-        return msg
+        return self.get_stats()
 
 
 class SolidStrainObject(StrainObject):
@@ -592,48 +529,6 @@ class SolidStrainObject(StrainObject):
             #assert dt is not None
             #self.add = self.addSort2
             #self.add_new_eid = self.add_new_eid_sort2
-
-    def get_stats(self):
-        ndt, nelements, nnodes, dts = self._get_shape()
-        nelements = len(self.element_data['element_id'])
-
-        msg = self.get_data_code()
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.exx)  # bug
-            dtstring = self.data_code['name'] + ', '
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            dtstring = ''
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        
-        if self.isVonMises():
-            ovmstr = 'evm'
-        else:
-            ovmstr = 'max_shear'
-        msg.append('  element_data: index  : element_id\n')
-        msg.append('                results: element_type, cid\n')
-        msg.append('  data:         index  : %selement_id, node_id\n' % dtstring)
-        msg.append('                results: exx, eyy, ezz, exy, eyz, exz, '
-                   'e1, e2, e3, %s\n' % ovmstr)
-        msg.append(', '.join(set(self.eType.values())))
-        msg.append('\n')
-        return msg
-    #def get_stats(self):
-        #nelements = len(self.eType)
-
-        #msg = self.get_data_code()
-        #if self.nonlinear_factor is not None:  # transient
-            #ntimes = len(self.exx)
-            #msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       #% (self.__class__.__name__, ntimes, nelements))
-        #else:
-            #msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     #nelements))
-        #msg.append('  eType, cid, exx, eyy, ezz, exy, eyz, exz, '
-                   #'e1, e2, e3, evmShear\n')
-        return msg
 
     def add_f06_data(self, data, transient):
         if transient is None:
@@ -742,8 +637,8 @@ class SolidStrainObject(StrainObject):
 
     def _preallocate(self, dt, nelements_size, nnodes_size):
         if self.shape is None:
-            self._istart += nnodes
-            self._iend += nnodes
+            self._inode_start += nnodes
+            self._inode_end += nnodes
         else:
             ndt, nelements, nnodes, dts = self._get_shape()
             #print("ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts)))
@@ -787,9 +682,9 @@ class SolidStrainObject(StrainObject):
 
             self.data = pd.DataFrame(data, columns=columns)
             self.element_data = pd.DataFrame(element_data, columns=['cid'])
-            self._istart = 0
-            self._iend = nnodes
-        return self._istart, self._iend
+            self._inode_start = 0
+            self._inode_end = nnodes
+        return self._inode_start, self._inode_end
 
     def _finalize(self):
         ndt, nelements, nnodes, dts = self._get_shape()
@@ -805,8 +700,8 @@ class SolidStrainObject(StrainObject):
             self.data = self.data.set_index(['element_id', 'node_id'])
         self.element_data = self.element_data.set_index(['element_id'])
         #print "final\n", self.data
-        del self._istart
-        del self._iend
+        del self._inode_start
+        del self._inode_end
 
     def getHeaders(self):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']
@@ -1016,104 +911,33 @@ class SolidStrainObject(StrainObject):
             msg = ['']
         return ''.join(msg)
 
-    def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
+    def get_stats():
+        ndt, nelements, nnodes, dts = self._get_shape()
+        nelements = len(self.element_data['element_id'])
 
-        msg = '---SOLID STRESS---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s ' % ('EID', 'eType', 'nodeID')
-        for header in headers:
-            msg += '%9s ' % header
-        msg += '\n'
-        for eid, oxxNodes in sorted(self.oxx.iteritems()):
-            eType = self.eType[eid]
-            for nid in sorted(oxxNodes):
-                oxx = self.oxx[eid][nid]
-                oyy = self.oyy[eid][nid]
-                ozz = self.ozz[eid][nid]
-                txy = self.txy[eid][nid]
-                tyz = self.tyz[eid][nid]
-                txz = self.txz[eid][nid]
-
-                #o1 = self.o1[eid][nid]
-                #o2 = self.o2[eid][nid]
-                #o3 = self.o3[eid][nid]
-                ovm = self.ovmShear[eid][nid]
-                msg += '%-6i %6s %8s ' % (eid, eType, nid)
-                vals = [oxx, oyy, ozz, txy, tyz, txz, ovm]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%9s ' % '0'
-                    else:
-                        msg += '%9i ' % val
-                msg += '\n'
-                #msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
-
+        msg = self.get_data_code()
+        if self.nonlinear_factor is not None:  # transient
+            ntimes = len(self.exx)  # bug
+            dtstring = self.data_code['name'] + ', '
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            dtstring = ''
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        
+        if self.isVonMises():
+            ovmstr = 'evm'
+        else:
+            ovmstr = 'max_shear'
+        msg.append('  element_data: index  : element_id\n')
+        msg.append('                results: element_type, cid\n')
+        msg.append('  data:         index  : %selement_id, node_id\n' % dtstring)
+        msg.append('                results: exx, eyy, ezz, exy, eyz, exz, '
+                   'e1, e2, e3, %s\n' % ovmstr)
+        msg.append(', '.join(set(self.eType.values())))
+        msg.append('\n')
         return msg
 
     def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---SOLID STRAIN---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s ' % ('EID', 'eType', 'nodeID')
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-        for eid, exxNodes in sorted(self.exx.iteritems()):
-            eType = self.eType[eid]
-            for nid in sorted(exxNodes):
-                exx = self.exx[eid][nid]
-                eyy = self.eyy[eid][nid]
-                ezz = self.ezz[eid][nid]
-                exy = self.exy[eid][nid]
-                eyz = self.eyz[eid][nid]
-                exz = self.exz[eid][nid]
-                evm = self.evmShear[eid][nid]
-                msg += '%-6i %6s %8s ' % (eid, eType, nid)
-                vals = [exx, eyy, ezz, exy, eyz, exz, evm]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10.3e ' % val
-                msg += '\n'
-                #msg += "eid=%-4s eType=%-6s nid=%-2i exx=%-5i eyy=%-5i ezz=%-5i exy=%-5i eyz=%-5i exz=%-5i evm=%-5i\n" %(eid,eType,nid,exx,eyy,ezz,exy,eyz,exz,evm)
-
-        return msg
-
-    def __reprTransient__(self):
-        #return ''
-        msg = ['---SOLID STRAIN---\n']
-        headers = self.getHeaders()
-        msg2 = '%-6s %6s %8s ' % ('EID', 'eType', 'nodeID')
-        for header in headers:
-            msg2 += '%10s ' % header
-        msg2 += '\n'
-        msg.append(msg2)
-        for dt, exxs in sorted(self.exx.iteritems()):
-            msg.append('%s = %g\n' % (self.data_code['name'], dt))
-            for eid, exxNodes in sorted(exxs.iteritems()):
-                eType = self.eType[eid]
-                msg2 = ''
-                for nid in sorted(exxNodes):
-                    exx = self.exx[dt][eid][nid]
-                    eyy = self.eyy[dt][eid][nid]
-                    ezz = self.ezz[dt][eid][nid]
-                    exy = self.exy[dt][eid][nid]
-                    eyz = self.eyz[dt][eid][nid]
-                    exz = self.exz[dt][eid][nid]
-                    evm = self.evmShear[dt][eid][nid]
-                    msg2 += '%-6i %6s %8s ' % (eid, eType, nid)
-                    vals = [exx, eyy, ezz, exy, eyz, exz, evm]
-                    for val in vals:
-                        if abs(val) < 1e-6:
-                            msg2 += '%10s ' % '0'
-                        else:
-                            msg2 += '%10.3e ' % val
-                    msg2 += '\n'
-                    msg.append(msg2)
-                    #msg += "eid=%-4s eType=%-6s nid=%-2i exx=%-5i eyy=%-5i ezz=%-5i exy=%-5i eyz=%-5i exz=%-5i evm=%-5i\n" % (eid, eType, nid, exx, eyy, ezz, exy, eyz, exz, evm)
-        return ''.join(msg)
+        return self.get_stats()

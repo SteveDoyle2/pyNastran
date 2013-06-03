@@ -1,6 +1,7 @@
 #pylint: disable=C0103,C0301,R0914,E1101
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from numpy import ones
 from struct import unpack
 from pyNastran import isRelease
 
@@ -102,38 +103,6 @@ class RealElementsStressStrain(object):
             n += ntotal
         self.data = self.data[n:]
 
-    def OES_CBEAM_2(self):
-        dt = self.nonlinear_factor
-        (formatStart, extract) = self.getOUG_FormatStart()
-
-        nNodes = 10  # 11-1
-        ntotal = self.obj.getLengthTotal()
-        (n1, format1) = self.obj.getLength1()
-        (n2, format2) = self.obj.getLength2()
-        format1 = formatStart + format1
-        format1 = bytes(format1)
-        format2 = bytes(format2)
-
-        while len(self.data) >= ntotal:
-            eData = self.data[0:n1]
-            self.data = self.data[n1:]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1, eData)
-            #print "outA = ",out
-            eid2 = extract(out[0], dt)
-            self.obj.add_new_eid(dt, eid2, out[1:])
-
-            for iNode in xrange(nNodes):
-                eData = self.data[0:n2]
-                self.data = self.data[n2:]
-                out = unpack(format2, eData)
-                #print "outB = ",out
-                self.obj.add(dt, eid2, out)
-
-            #print "eid=%i axial=%i torsion=%i" % (eid,axial,torsion)
-            #print "len(data) = ",len(self.data)
-
     def OES_CQUAD4_33(self):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
@@ -195,32 +164,6 @@ class RealElementsStressStrain(object):
             #self.print_section(100)
             #self.dn += 348
 
-    def OES_CBAR_34(self):
-        dt = self.nonlinear_factor
-        #print "len(data) = ",len(self.data)
-        assert self.num_wide == 16, ('invalid num_wide...num_wide=%s'
-                                    % (self.num_wide))
-
-        (format1, extract) = self.getOUG_FormatStart()
-        format1 += '15f'
-        format1 = bytes(format1)
-
-        while len(self.data) >= 64:
-            #self.print_block(self.data)
-            eData = self.data[0:64]
-            self.data = self.data[64:]
-            #print "len(data) = ",len(eData)
-
-            (eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
-             s1b, s2b, s3b, s4b, smaxb, sminb, MSc) = unpack(format1, eData)
-            eid2 = extract(eid, dt)
-            self.obj.add_new_eid('CBAR', dt, eid2, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
-                               s1b, s2b, s3b, s4b, smaxb, sminb, MSc)
-
-            #print "eid=%i s1=%i s2=%i s3=%i s4=%i axial=%-5i smax=%i smin=%i MSt=%i MSc=%i" % (eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,MSc)
-            #print "         s1=%i s2=%i s3=%i s4=%i          smax=%i smin=%i" % (s1b,s2b,s3b,s4b,smaxb,sminb)
-            #print "len(data) = ",len(self.data)
-
     def OES_CBUSH1D_40(self):
         if self.read_mode in [0, 1]:
             return
@@ -270,175 +213,12 @@ class RealElementsStressStrain(object):
                 ibase += 32  # 4*8
         self.data = self.data[ibase:]
 
-    def OES_CSOLID_39_67_68(self):
-        """
-        stress is extracted at the centroid
-        self.element_type in [39, 67, 68]:   # ctetra/chexa/cpenta (linear)
-        CTETRA_39
-        CPENTA_67
-        CHEXA_68
-        """
-        dt = self.nonlinear_factor
-        (format1, extract) = self.getOUG_FormatStart()
-        format1 += "i4si"
-        format1 = bytes(format1)
-
-        #nNodes = 5 # 1 centroid + 4 corner points
-        #self.print_section(20)
-        #term      = self.data[0:4] CEN/
-        #self.data = self.data[4:]
-        #print "*****"
-        ElementType = self.get_element_type(self.element_type)
-        nNodes = 1  # this is a minimum, it will be reset later
-        nNodesExpected = 1
-        #assert self.num_wide in [109,151,193],'invalid num_wide...num_wide=%s' % (self.num_wide)
-
-        # overly complicated way to get the element type
-        # so we can figure out how many elements there are
-        if self.element_type == 39: # CTETRA
-            nNodesExpected = 5
-        elif self.element_type == 67: # CPENTA
-            nNodesExpected = 7
-        elif self.element_type == 68: # CHEXA
-            nNodesExpected = 9
-        else:
-            msg = ('not supported....EType=%s eType=%s nNodes=%s'
-                   'num_wide=%s' % (ElementType, self.element_type,
-                                   nNodes, self.num_wide))
-            raise NotImplementedError(msg)
-
-        ntotal = 16 + 84 * nNodesExpected
-        nelements = len(self.data) // ntotal
-
-        nnodes = len(self.data) // ntotal
-        if self.read_mode == 0:  # figure out the shape
-            self.obj._increase_size(dt, nelements, nnodes)
-            iend = ntotal * nelements
-            self.data = self.data[iend:]
-            return
-        else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
-            #index_data = (nodeIDs_to_index)
-            #index_data = pd.MultiIndex.from_tuples(zip(data))
-
-            print("nelements =",nelements)
-            (inode_start, inode_end, ielement_start, ielement_end
-                ) = self.obj._preallocate(dt, nelements, nnodes)
-
-        ibase = 0
-
-        cids=[]; etypes=[]; eids=[]; element_ids=[]; nodes=[]; grids=[];
-        oxx=[]; oyy=[]; ozz=[]; txy=[]; txz=[]; tyz=[]
-        o1=[]; o2=[]; o3=[]; ovmShear=[]
-        for i in xrange(nelements):
-            out = unpack(format1, self.data[ibase:ibase+16])
-            (eid, cid, abcd, nNodes) = out
-            eid2 = extract(eid, dt)
-            #print "abcd = |%s|" % (abcd)
-            #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" % (eid,cid,nNodes,nNodesExpected)
-
-            assert nNodes < 21, self.print_block(eData)
-
-
-            etypes.append(ElementType)
-            cids.append(cid)
-            eids.append(eid2)
-
-            ibase += 16
-            for nodeID in xrange(nNodesExpected):  # nodes pts, +1 for centroid (???)
-                out = unpack(b'i20f',self.data[ibase:ibase + 84]) # 4*21 = 84
-                (grid_device, sxx, sxy, s1, a1, a2, a3, pressure, svm,
-                              syy, syz, s2, b1, b2, b3,
-                              szz, sxz, s3, c1, c2, c3) = out
-
-                if grid_device == 0:
-                    grid = 'C'
-                else:
-                    #grid = (grid_device - device_code) // 10
-                    grid = grid_device
-
-                element_ids.append(eid2)
-                grids.append(grid_device)
-                oxx.append(sxx)
-                oyy.append(syy)
-                ozz.append(szz)
-                txy.append(sxy)
-                txz.append(sxz)
-                tyz.append(syz)
-                ovmShear.append(svm)
-                
-                #print "%s eid=%s cid=%s grid=%s sxx=%-6i txy=%-5i s1=%-6i a1=%i a2=%i a3=%i press=%i vm=%s" % (element_type,eid,cid,grid,sxx,sxy,s1,a1,a2,a3,pressure,svm)
-                #print "%s eid=%s cid=%s grid=%s syy=%-6i tyz=%-5i s2=%-6i b1=%i b2=%i b3=%i"                % (element_type,eid,cid,grid,syy,syz,s2,b1,b2,b3)
-                #print "%s eid=%s cid=%s grid=%s szz=%-6i txz=%-5i s3=%-6i c1=%i c2=%i c3=%i"                % (element_type,eid,cid,grid,szz,sxz,s3,c1,c2,c3)
-                #print ""
-                #smax = max(s1,s2,s3)
-                #smin = min(s1,s2,s3)
-
-                aCos = []
-                bCos = []
-                cCos = []
-                #if nodeID == 0:  # center point
-                    #self.obj.add_new_eid(ElementType, cid, dt, eid2, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
-                #else:
-                    #self.obj.add(dt, eid2, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
-                ibase += 84
-        self.data = self.data[ibase:]
-
-        if dt:
-            self.obj.data['dt'][inode_start:inode_end] = ones(inode_end - inode_start) * dt
-        #self.obj.grid_type[inode_start:inode_end] = gridTypes
-        
-        if self.obj.isStress():
-            self.obj.data['oxx'][inode_start:inode_end] = oxx
-            self.obj.data['oyy'][inode_start:inode_end] = oyy
-            self.obj.data['ozz'][inode_start:inode_end] = ozz
-
-            self.obj.data['txy'][inode_start:inode_end] = txy
-            self.obj.data['txz'][inode_start:inode_end] = txz
-            self.obj.data['tyz'][inode_start:inode_end] = tyz
-            
-            self.obj.data['o1'][inode_start:inode_end] = o1
-            self.obj.data['o2'][inode_start:inode_end] = o2
-            self.obj.data['o3'][inode_start:inode_end] = o3
-            if self.obj.isVonMises():
-                self.obj.data['ovm'][inode_start:inode_end] = ovmShear
-            else:
-                self.obj.data['max_shear'][inode_start:inode_end] = ovmShear
-        else:
-            print('type', self.obj.__class__.__name__)
-            self.obj.data['exx'][inode_start:inode_end] = oxx
-            self.obj.data['eyy'][inode_start:inode_end] = oyy
-            self.obj.data['ezz'][inode_start:inode_end] = ozz
-
-            self.obj.data['exy'][inode_start:inode_end] = txy
-            self.obj.data['exz'][inode_start:inode_end] = txz
-            self.obj.data['eyz'][inode_start:inode_end] = tyz
-
-            self.obj.data['e1'][inode_start:inode_end] = o1
-            self.obj.data['e2'][inode_start:inode_end] = o2
-            self.obj.data['e3'][inode_start:inode_end] = o3
-            if self.obj.isVonMises():
-                self.obj.data['evm'][inode_start:inode_end] = ovmShear
-            else:
-                self.obj.data['max_shear'][inode_start:inode_end] = ovmShear
-            
-        self.obj.element_data['element_id'][ielement_start:ielement_end] = eids
-        self.obj.element_data['element_type'][ielement_start:ielement_end] = etypes
-        self.obj.element_data['cid'][ielement_start:ielement_end] = cids
-        # pressure
-        # aCos
-        # bCos
-        # cCos
-        #self.obj.data[''][inode_start:inode_end] = translations[:, 5]
-
-        #print self.obj.data['dt'].to_string()
-        if len(self.obj.data['element_id'])==inode_end:
-            self.obj._finalize()
-
     def OES_CTRIA3_74(self):
         """
         DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR,MINOR,VONMISES
         stress is extracted at the centroid
         """
+        CTRIA3
         assert self.num_wide == 17, ('invalid num_wide...num_wide=%s'
                                     % self.num_wide)
 
@@ -717,6 +497,7 @@ class RealElementsStressStrain(object):
          97 - CTRIA3
          98 - CTRIA6 (composite)
         """
+        CQUAD495
         eType = self.get_element_type(self.element_type)
 
         #self.print_section(20)
@@ -802,84 +583,6 @@ class RealElementsStressStrain(object):
             self.obj.add_new_eid(self.element_type, dt, eid, tx, ty, tz, rx, ry, rz)
             n += ntotal
         self.data = self.data[n:]
-
-    def OES_CQUAD4_144(self):
-        """
-        GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
-        """
-        if self.read_mode in [0, 1]:
-            return
-        #term = data[0:4] CEN/
-        #data = data[4:]
-        #print "*****"
-        #self.print_block(self.data)
-        #assert self.num_wide==87,'invalid num_wide...num_wide=%s' % (self.num_wide)
-        #if self.num_wide==87: # 2+(17-1)*5 = 87 -> 87*4 = 348
-
-        if self.element_type == 144:  # CQUAD4
-            ntotal = 348  # 2+17*5 = 87 -> 87*4 = 348
-            nNodes = 4    # centroid + 4 corner points
-            eType = 'CQUAD4'
-        elif self.element_type == 64:  # CQUAD8
-            ntotal = 348  # 2+17*5 = 87 -> 87*4 = 348
-            nNodes = 4    # centroid + 4 corner points
-            eType = 'CQUAD8'
-        elif self.element_type == 82:  # CQUADR
-            ntotal = 348  # 2+17*5 = 87 -> 87*4 = 348
-            nNodes = 4    # centroid + 4 corner points
-            eType = 'CQUAD4'  #: .. todo:: write the word CQUADR
-
-        elif self.element_type == 75:  # CTRIA6
-            ntotal = 280  # 2+17*3 = 70 -> 70*4 = 280
-            nNodes = 3    # centroid + 3 corner points
-            eType = 'CTRIA6'
-        elif self.element_type == 70:  # CTRIAR
-            ntotal = 280  # 2+17*3 = 70 -> 70*4 = 280
-            nNodes = 3    # centroid + 3 corner points
-            eType = 'CTRIAR'  #: .. todo:: write the word CTRIAR
-        else:
-            raise NotImplementedError('element_type=%s ntotal not defined...'
-                                      % (self.element_type))
-
-        dt = self.nonlinear_factor
-        (format1, extract) = self.getOUG_FormatStart()
-        format1 += '16f'
-        format1 = bytes(format1)
-        
-        nelements = len(self.data) // ntotal
-        nrows = (1 + nNodes) * nelements
-        #print('nrows = %i' % nrows)
-        
-        ibase = 0
-        gridC = 'C'
-        cformat = b'i4s'+format1  # center format
-        nformat = b'i16f'         # node format
-        for i in xrange(nelements):
-            eData = self.data[ibase:ibase + 76]  # 8 + 68
-
-            (eid, _, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                           fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = unpack(cformat, eData)  # len=17*4
-            #gridC = 'C'
-            eid = extract(eid, dt)
-            self.obj.add_new_eid(eType, dt, eid, gridC, fd1, sx1, sy1,
-                                 txy1, angle1, major1, minor1, vm1)
-            self.obj.add(dt, eid, gridC, fd2, sx2, sy2, txy2,
-                         angle2, major2, minor2, vm2)
-
-            ibase += 76
-            for nodeID in xrange(nNodes):  # nodes pts
-                out = unpack(nformat, self.data[ibase:ibase + 68])
-                (grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                 fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
-
-                #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-                #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-                self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1,
-                                    txy1, angle1, major1, minor1, vm1)
-                self.obj.add(dt, eid, grid, fd2, sx2, sy2,
-                             txy2, angle2, major2, minor2, vm2)
-                ibase += 68
-        self.data = self.data[ibase:]
 
     def OES_VUQUAD_189(self):
         if self.element_type == 144:  # CQUAD4

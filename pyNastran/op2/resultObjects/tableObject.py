@@ -22,6 +22,8 @@ class TableObject(scalarObject):  # displacement style table
         self.table_name = None
         self.analysis_code = None
         self.shape = {}
+        self._inode_start = None
+        self._inode_end = None
         scalarObject.__init__(self, data_code, isubcase, read_mode)
 
         # new method, not finished
@@ -110,17 +112,9 @@ class TableObject(scalarObject):  # displacement style table
         self.data_code = data_code
         self.apply_data_code()
         if dt is not None:
-            self.log.debug("updating %s...%s=%s  isubcase=%s"
-                        % (self.data_code['name'], self.data_code['name'],
-                           dt, self.isubcase))
+            print("updating %s...%s=%s  isubcase=%s" % (self.data_code['name'],
+                self.data_code['name'], dt, self.isubcase))
             self.dt = dt
-
-    def delete_transient(self, dt):
-        if as_array:
-            del self.translations[dt]
-            del self.rotations[dt]
-        else:
-            np.delete(self.translations2, np.s_[dt, :, :], 1) # delete the dt
 
     def get_transients(self):
         if as_array:
@@ -132,8 +126,8 @@ class TableObject(scalarObject):  # displacement style table
 
     def _preallocate(self, dt, nnodes):
         if self.shape is None:
-            self._istart += nnodes
-            self._iend += nnodes
+            self._inode_start += nnodes
+            self._inode_end += nnodes
         else:
             ndt, nnodes, dts = self._get_shape()
             #print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
@@ -162,9 +156,9 @@ class TableObject(scalarObject):  # displacement style table
             columns += ['node_id', 'T1', 'T2', 'T3', 'R1', 'R2', 'R3']
 
             self.data = pd.DataFrame(data, columns=columns)
-            self._istart = 0
-            self._iend = nnodes
-        return self._istart, self._iend
+            self._inode_start = 0
+            self._inode_end = nnodes
+        return self._inode_start, self._inode_end
 
     def _finalize(self):
         ndt, nnodes, dts = self._get_shape()
@@ -182,8 +176,8 @@ class TableObject(scalarObject):  # displacement style table
         else:
             self.data = self.data.set_index('node_id')
         #print "final\n", self.data
-        del self._istart
-        del self._iend
+        del self._inode_start
+        del self._inode_end
 
     def _increase_size(self, dt, nnodes):
         #self.shape += 1
@@ -210,85 +204,6 @@ class TableObject(scalarObject):  # displacement style table
             #else:
                 #self.gridTypes2 = numpy.concatenate((self.gridTypes2, gridTypes))
             print 'gridTypes2', self.gridTypes2
-
-    def add_array_sort1(self, dt, nodeIDs_to_index, gridTypes, translations):
-        if not as_array:
-            return
-        if self.gridTypes2 is None:
-            #self.nodeIDs_to_index = nodeIDs_to_index
-            self.gridTypes2 = gridTypes
-            #self.translations2 = translations
-        else:
-            raise NotImplementedError('add_array_sort1 multiple tables...')
-
-    def add_sort2(self, nodeID, out):
-        (dt, gridType, v1, v2, v3, v4, v5, v6) = out
-        if dt not in self.translations:
-            self.add_new_transient(dt)
-        msg = "nodeID=%s v1=%s v2=%s v3=%s\n" % (nodeID, v1, v2, v3)
-        msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
-        msg = 'dt=%s nodeID=%s' % (dt, nodeID)
-        #print msg
-        assert 0 < nodeID < 1000000000, msg    # remove
-        assert isinstance(nodeID, int), msg  # remove
-        assert -0.5 < dt, msg  # remove
-        #assert nodeID not in self.translations[self.dt],'displacementObject - transient failure'
-
-        self.gridTypes[nodeID] = self.recastGridType(gridType)
-        self.translations[dt][nodeID] = array([v1, v2, v3])  # dx,dy,dz
-        self.rotations[dt][nodeID] = array([v4, v5, v6])  # rx,ry,rz
-
-    def add_array_sort2(self, dt, nodeIDs_to_index, gridTypes, translations):
-        raise NotImplementedError('add_array_sort2 multiple tables...')
-        if self.gridTypes2 is None:
-            self.gridTypes2 = gridTypes
-        else:
-            raise NotImplementedError('add_array_sort2 multiple tables...')
-
-    #def write_op2(self,block3,device_code=1):
-        #"""
-        #creates the binary data for writing the table
-        #.. warning:: hasnt been tested...
-        #"""
-        #msg = block3
-        #for nodeID,translation in sorted(self.translations.iteritems()):
-            #rotation = self.rotations[nodeID]
-            #(dx,dy,dz) = translation
-            #(rx,ry,rz) = rotation
-            #grid = nodeID*10+device_code
-            #msg += pack('iffffff',grid,dx,dy,dz,rx,ry,rz)
-        #return msg
-
-    #def write_op2_transient(self,block3,device_code=1):
-    #    """
-    #    creates the binary data for writing the table
-    #    .. warning:: hasnt been tested...
-    #    .. warning:: dt slot needs to be fixed...
-    #    """
-    #    msg = ''
-    #    for dt,displacements in sorted(self.displacements.iteritems()):
-    #        XXX = 50 ## this isnt correct... .. todo:: update dt
-    #        msg += block3[0:XXX] + pack('i',dt) + block3[XXX+4:]
-    #        #msg += '%s = %g\n' %(self.data_code['name'],dt)
-    #
-    #        for nodeID,displacement in sorted(displacements.iteritems()):
-    #            rotation = self.rotations[nodeID]
-    #            (dx,dy,dz) = displacement
-    #            (rx,ry,rz) = rotation
-    #
-    #            grid = nodeID*10+device_code
-    #            msg += pack('iffffff',grid,dx,dy,dz,rx,ry,rz)
-    #    return msg
-
-    def write_header(self):
-        #(mainHeaders,headers) = self.getHeaders()
-        mainHeaders = ('nodeID', 'gridType')
-        headers = ('T1', 'T2', 'T3', 'R1', 'R2', 'R3')
-        msg = '%-10s %8s ' % (mainHeaders)
-        for header in headers:
-            msg += '%10s ' % (header)
-        msg += '\n'
-        return msg
 
     def get_as_sort1(self):
         return (self.translations, self.rotations)
@@ -398,6 +313,8 @@ class TableObject(scalarObject):  # displacement style table
             name, isubcase, dtName, nDt)
         #msgT = 'fem.%s(%i).translations.%s = zeros(%i,3);\n' %(name,isubcase,dtName,n+1,nNodes)
         #msgR = 'fem.%s(%i).rotations.%s    = zeros(%i,3);\n' %(name,isubcase,dtName,n+1,nNodes)
+        
+        node_ids = self.data['node_id']
         for n, (dt, translations) in enumerate(sorted(self.translations.iteritems())):
             #msgT = 'fem.%s(%i).translations.%s(%i) = zeros(%i,3);\n' %(name,isubcase,dtName,n+1,nNodes)
             #msgR = 'fem.%s(%i).rotations.%s(%i)    = zeros(%i,3);\n' %(name,isubcase,dtName,n+1,nNodes)
@@ -408,7 +325,8 @@ class TableObject(scalarObject):  # displacement style table
                 name, isubcase, dtName, n + 1)
 
             i = 0
-            for nodeID, translation in sorted(translations.iteritems()):
+            for nodeID in node_ids:
+                translation = self.translations[dt][nodeID]
                 rotation = self.rotations[dt][nodeID]
                 #gridType = self.gridTypes[nodeID]
 
@@ -433,7 +351,11 @@ class TableObject(scalarObject):  # displacement style table
     def _write_f06_block(self, words, header, pageStamp, pageNum=1, f=None):
         msg = words
         #assert f is not None # remove
-        for nodeID, translation in sorted(self.translations.iteritems()):
+        
+        print self.data.to_string()
+        node_ids = self.data['node_id']
+        for nodeID in node_ids:
+            translation = self.translations[nodeID]
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
@@ -708,39 +630,6 @@ class ComplexTableObject(scalarObject):
         self.gridTypes[nodeID] = self.recastGridType(gridType)
         self.translations[nodeID] = [v1, v2, v3]  # dx,dy,dz
         self.rotations[nodeID] = [v4, v5, v6]  # rx,ry,rz
-
-    def add_sort1(self, dt, out):
-        (nodeID, gridType, v1, v2, v3, v4, v5, v6) = out
-        #msg = "dt=%s nodeID=%s v1=%s v2=%s v3=%s" %(dt,nodeID,v1,v2,v3)
-        #print msg
-        if dt not in self.translations:
-            self.add_new_transient(dt)
-        assert isinstance(nodeID, int), nodeID  # remove
-        msg = "nodeID=%s v1=%s v2=%s v3=%s\n" % (nodeID, v1, v2, v3)
-        msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
-        #print msg
-        assert 0 < nodeID < 1000000000, msg  # -1
-        assert -0.5 < dt, msg  # remove
-        assert isinstance(nodeID, int), msg
-        #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
-
-        self.gridTypes[nodeID] = self.recastGridType(gridType)
-        self.translations[dt][nodeID] = [v1, v2, v3]  # dx,dy,dz
-        self.rotations[dt][nodeID] = [v4, v5, v6]  # rx,ry,rz
-
-    def add_sort2(self, nodeID, data):
-        [dt, gridType, v1, v2, v3, v4, v5, v6] = data
-
-        msg = "dt=%s nodeID=%s v1=%s v2=%s v3=%s\n" % (dt, nodeID, v1, v2, v3)
-        msg += "                v4=%s v5=%s v6=%s" % (v4, v5, v6)
-        #print msg
-        assert 0 < nodeID < 1000000000, msg  # -1
-        assert -0.5 < dt, msg  # remove
-        assert isinstance(nodeID, int), msg
-
-        self.gridTypes[nodeID] = self.recastGridType(gridType)
-        self.translations[dt][nodeID] = [v1, v2, v3]  # dx,dy,dz
-        self.rotations[dt][nodeID] = [v4, v5, v6]  # rx,ry,rz
 
     def _write_matlab_transient(self, name, isubcase, f=None, is_mag_phase=False):
         """
