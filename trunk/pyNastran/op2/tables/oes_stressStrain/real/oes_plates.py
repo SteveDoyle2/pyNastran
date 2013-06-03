@@ -2,6 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from numpy import zeros, array
+import pandas as pd
 
 from pyNastran import as_array
 from .oes_objects import StressObject, StrainObject
@@ -30,9 +31,12 @@ class PlateStressObject(StressObject):
 
         #self.append_data_member('sCodes','s_code')
         #print "self.s_code = ",self.s_code
-        if read_mode == 0:
-            return
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        self.shape = {}
+        self._inode_start = None
+        self._inode_end = None
+        self._ielement_start = None
+        self._ielement_end = None
+        self._ncount = 0
 
         self.fiberCurvature = {}
         self.oxx = {}
@@ -44,6 +48,11 @@ class PlateStressObject(StressObject):
         self.ovmShear = {}
         
         self.ovmShear2 = None
+
+        if read_mode == 0:
+            return
+        self.code = [self.format_code, self.sort_code, self.s_code]
+        
 
         # eid_layer = [eid1, ilayer1]
         #             [eid1, ilayer2]
@@ -75,21 +84,6 @@ class PlateStressObject(StressObject):
             self.add_new_eid = self.add_new_eid_sort2
             self.addNewNode = self.addNewNodeSort2
             self.add_array = self.add_array_sort2
-
-    def get_stats(self):
-        nelements = len(self.eType)
-
-        msg = self.get_data_code()
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.oxx)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, fiberCurvature, oxx, oyy, txy, angle, '
-                   'majorP, minorP, ovmShear\n')
-        return msg
 
     def add_f06_data(self, data, transient):
         if transient is None:
@@ -207,21 +201,6 @@ class PlateStressObject(StressObject):
             #print line
         raise NotImplementedError('transient results not supported')
 
-    def delete_transient(self, dt):
-        #del self.fiberCurvature[dt]
-        del self.oxx[dt]
-        del self.oyy[dt]
-        del self.txy[dt]
-        del self.angle[dt]
-        del self.majorP[dt]
-        del self.minorP[dt]
-        del self.ovmShear[dt]
-
-    def get_transients(self):
-        k = self.oxx.keys()
-        k.sort()
-        return k
-
     def add_new_transient(self, dt):
         """
         initializes the transient variables
@@ -235,6 +214,119 @@ class PlateStressObject(StressObject):
         self.majorP[dt] = {}
         self.minorP[dt] = {}
         self.ovmShear[dt] = {}
+
+    def _increase_size(self, dt, nelements, nnodes):
+        if dt in self.shape:  # default dictionary
+            self.shape[dt][0] += nelements
+            self.shape[dt][1] += nnodes
+        else:
+            self.shape[dt] = [nelements, nnodes]
+        print("shape =", self.shape)
+
+    def _get_shape(self):
+        ndt = len(self.shape)
+        dts = self.shape.keys()
+        shape0 = dts[0]
+        nelements = self.shape[shape0][0]
+        nnodes = self.shape[shape0][1]
+        #print("ndt=%s nnodes=%s dts=%s" % (str(ndt), str(nnodes), str(dts)))
+        return ndt, nelements, nnodes, dts
+
+    def _increment(self, nnodes, nelements):
+        self._inode_start += nnodes
+        self._inode_end += nnodes
+        self._ielement_start += nelements
+        self._ielement_end += nelements
+        return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
+        
+    def _preallocate(self, dt, nnodes, nelements):
+        ndt, nelements_size, nnodes_size, dts = self._get_shape()
+        #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
+        
+        if self._inode_start is not None:
+            return (self._inode_start, self._inode_start + nnodes,
+                    self._ielement_start, self._ielement_start + nelements)
+        print('----definition----')
+        n = ndt * nnodes_size
+        if self._ncount != 0:
+            asfd
+        self._ncount += 1
+        self._inode_start = 0
+        self._inode_end = nnodes
+
+        self._ielement_start = 0
+        self._ielement_end = nelements
+
+        data = {}
+        element_data = {}
+        columns = []
+        if dts[0] is not None:
+            name = self.data_code['name']
+            print('***name=%r***' % name)
+            if isinstance(dt, int):
+                data[name] = pd.Series(zeros((n), dtype='int32'))
+            else:
+                data[name] = pd.Series(zeros((n), dtype='float32'))
+            columns.append(name)
+
+        element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
+        element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
+
+        data['element_id'] = pd.Series(zeros((n), dtype='int32'))
+        data['node_id'] = pd.Series(zeros((n), dtype='float32'))
+        data['layer'] = pd.Series(zeros((n), dtype='float32'))
+
+        #columns.append('element_type')
+
+        #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
+        #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
+        #print('n =', n)
+        
+
+        #data['fiber_distance'] = pd.Series(zeros((n), dtype='float32'))
+        #data['fiber_curvature'] = pd.Series(zeros((n), dtype='float32'))
+        data['oxx'] = pd.Series(zeros((n), dtype='float32'))
+        data['oyy'] = pd.Series(zeros((n), dtype='float32'))
+        data['txy'] = pd.Series(zeros((n), dtype='float32'))
+
+        data['angle'] = pd.Series(zeros((n), dtype='float32'))
+        data['omax'] = pd.Series(zeros((n), dtype='float32'))
+        data['omin'] = pd.Series(zeros((n), dtype='float32'))
+
+        if self.isVonMises():
+            key = 'ovm'
+        else:
+            key = 'max_shear'
+        data[key] = pd.Series(zeros((n), dtype='float32'))
+
+        columns += ['element_id', 'node_id', 'layer', 'oxx', 'oyy', 'txy', 'angle', 'omax' , 'omin', key]
+
+        self.data = pd.DataFrame(data, columns=columns)
+        self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type'])
+        return (self._inode_start, self._inode_end, self._ielement_start, self._ielement_end)
+
+    def _finalize(self, dt):
+        ndt, nelements, nnodes, dts = self._get_shape()
+        
+        if dt != max(dts):
+            return
+        print("----finalize----")
+        
+        #grid_type_str = []
+        #for grid_type in self.grid_type:
+            #grid_type_str.append('C' if grid_type==0 else grid_type)
+        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
+
+        if dts[0] is not None:
+            name = self.data_code['name']
+            self.data = self.data.set_index([name, 'element_id', 'element_id', 'node_id', 'layer'])
+        else:
+            self.data = self.data.set_index(['element_id', 'node_id', 'layer'])
+        #print("final\n", self.data.to_string())
+        del self._inode_start
+        del self._inode_end
+        print('---BeamStressObject---')
+        print(self.data.to_string())
 
     def add_new_eid(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
         #print "***add_new_eid..."
@@ -303,45 +395,6 @@ class PlateStressObject(StressObject):
         else:
             headers.append('maxShear')
         return headers
-
-    def __reprTransient__(self):
-        msg = '---ISOTROPIC PLATE STRESS---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        #print self.oxx.keys()
-        for dt, oxxs in sorted(self.oxx.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid, oxxNodes in sorted(oxxs.iteritems()):
-                eType = self.eType[eid]
-                for nid in sorted(oxxNodes):
-                    for iLayer in xrange(len(self.oxx[dt][eid][nid])):
-                        fd = self.fiberCurvature[eid][nid][iLayer]
-                        oxx = self.oxx[dt][eid][nid][iLayer]
-                        oyy = self.oyy[dt][eid][nid][iLayer]
-                        txy = self.txy[dt][eid][nid][iLayer]
-                       #angle = self.angle[ dt][eid][nid][iLayer]
-                        major = self.majorP[dt][eid][nid][iLayer]
-                        minor = self.minorP[dt][eid][nid][iLayer]
-                        ovm = self.ovmShear[dt][eid][nid][iLayer]
-
-                        msg += '%-6i %6s %8s %7s %10g ' % (eid, eType,
-                                                           nid, iLayer + 1, fd)
-                        vals = [oxx, oyy, txy, major, minor, ovm]
-                        for val in vals:
-                            if abs(val) < 1e-6:
-                                msg += '%10s ' % '0'
-                            else:
-                                try:
-                                    msg += '%10i ' % int(val)
-                                except:
-                                    print("bad val = %s" % val)
-                                    raise
-                        msg += '\n'
-        return msg
 
     def write_matlab(self, name, isubcase, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -816,50 +869,23 @@ class PlateStressObject(StressObject):
                     msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm)
         return msg
 
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.nonlinear_factor is not None:  # transient
+            ntimes = len(self.oxx)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, fiberCurvature, oxx, oyy, txy, angle, '
+                   'majorP, minorP, ovmShear\n')
+        return msg
+
     def __repr__(self):
-        #print "sCodes = ",self.sCodes
-        msg = "<PlateStressObject>\n"
-        #msg += self.__dict__.keys()
-        return msg
-
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---ISOTROPIC PLATE STRESS---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        #print self.oxx.keys()
-        for eid, oxxNodes in sorted(self.oxx.iteritems()):
-            eType = self.eType[eid]
-            for nid in sorted(oxxNodes):
-                for iLayer in xrange(len(self.oxx[eid][nid])):
-                    fd = self.fiberCurvature[eid][nid][iLayer]
-                    oxx = self.oxx[eid][nid][iLayer]
-                    oyy = self.oyy[eid][nid][iLayer]
-                    txy = self.txy[eid][nid][iLayer]
-                   #angle = self.angle[eid][nid][iLayer]
-                    major = self.majorP[eid][nid][iLayer]
-                    minor = self.minorP[eid][nid][iLayer]
-                    ovm = self.ovmShear[eid][nid][iLayer]
-
-                    msg += '%-6i %6s %8s %7s %10g ' % (
-                        eid, eType, nid, iLayer + 1, fd)
-                    vals = [oxx, oyy, txy, major, minor, ovm]
-                    for val in vals:
-                        if abs(val) < 1e-6:
-                            msg += '%10s ' % '0'
-                        else:
-                            try:
-                                msg += '%10i ' % val
-                            except:
-                                print("bad val = %s" % val)
-                                raise
-                    msg += '\n'
-        return msg
+        return self.get_stats()
 
 
 class PlateStrainObject(StrainObject):
@@ -910,21 +936,6 @@ class PlateStrainObject(StrainObject):
             assert dt is not None
             self.add = self.addSort2
             self.add_new_eid = self.add_new_eid_sort2
-
-    def get_stats(self):
-        nelements = len(self.eType)
-
-        msg = self.get_data_code()
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.exx)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, fiberCurvature, exx, eyy, exy, angle, '
-                   'majorP, minorP, evmShear\n')
-        return msg
 
     def add_f06_data(self, data, transient):
         if transient is None:
@@ -994,21 +1005,6 @@ class PlateStrainObject(StrainObject):
                     raise NotImplementedError(msg)
             return
         raise NotImplementedError('transient results not supported')
-
-    def delete_transient(self, dt):
-        #del self.fiberCurvature[dt]
-        del self.exx[dt]
-        del self.eyy[dt]
-        del self.exy[dt]
-        del self.angle[dt]
-        del self.majorP[dt]
-        del self.minorP[dt]
-        del self.evmShear[dt]
-
-    def get_transients(self):
-        k = self.exx.keys()
-        k.sort()
-        return k
 
     def add_new_transient(self, dt):
         """
@@ -1468,80 +1464,20 @@ class PlateStrainObject(StrainObject):
                                                     angle, major, minor, evm))
         return msg
 
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.nonlinear_factor is not None:  # transient
+            ntimes = len(self.exx)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, fiberCurvature, exx, eyy, exy, angle, '
+                   'majorP, minorP, evmShear\n')
+        return msg
+
     def __repr__(self):
-        msg = "<PlateStainObject>\n"
-        #msg += self.__dict__.keys()
-        return msg
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---ISOTROPIC PLATE STRAIN---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for eid, exxNodes in sorted(self.exx.iteritems()):
-            eType = self.eType[eid]
-            for nid in sorted(exxNodes):
-                for iLayer in xrange(len(self.exx[eid][nid])):
-                    fd = self.fiberCurvature[eid][nid][iLayer]
-                    exx = self.exx[eid][nid][iLayer]
-                    eyy = self.eyy[eid][nid][iLayer]
-                    exy = self.exy[eid][nid][iLayer]
-                   #angle = self.angle[eid][nid][iLayer]
-                    major = self.majorP[eid][nid][iLayer]
-                    minor = self.minorP[eid][nid][iLayer]
-                    evm = self.evmShear[eid][nid][iLayer]
-
-                    msg += '%-6i %6s %8s %7s %10g ' % (
-                        eid, eType, nid, iLayer + 1, fd)
-                    vals = [exx, eyy, exy, major, minor, evm]
-                    for val in vals:
-                        if abs(val) < 1e-6:
-                            msg += '%10s ' % '0.'
-                        else:
-                            msg += '%10.3g ' % val
-                    msg += '\n'
-
-                    #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy,evm)
-        return msg
-
-    def __reprTransient__(self):
-        msg = '---ISOTROPIC PLATE STRAIN---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, exx in sorted(self.exx.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid, exxNodes in sorted(exx.iteritems()):
-                eType = self.eType[eid]
-                for nid in sorted(exxNodes):
-                    for iLayer in xrange(len(self.exx[dt][eid][nid])):
-                        fd = self.fiberCurvature[eid][nid][iLayer]
-                        exx = self.exx[dt][eid][nid][iLayer]
-                        eyy = self.eyy[dt][eid][nid][iLayer]
-                        exy = self.exy[dt][eid][nid][iLayer]
-                       #angle = self.angle[ dt][eid][nid][iLayer]
-                        major = self.majorP[dt][eid][nid][iLayer]
-                        minor = self.minorP[dt][eid][nid][iLayer]
-                        evm = self.evmShear[dt][eid][nid][iLayer]
-
-                        msg += '%-6i %6s %8s %7s %10g ' % (eid, eType,
-                                                           nid, iLayer + 1, fd)
-                        vals = [exx, eyy, exy, major, minor, evm]
-                        for val in vals:
-                            if abs(val) < 1e-6:
-                                msg += '%10s ' % '0.'
-                            else:
-                                msg += '%10.3g ' % val
-                        msg += '\n'
-
-                        #msg += ('eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g '
-                        #        'eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n'
-                        #      % (eid, eType, nid, iLayer, exx, eyy, exy, evm))
-        return msg
+        return self.get_stats()

@@ -1,5 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+import pandas as pd
+from numpy import zeros
 
 from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
@@ -16,11 +18,20 @@ class BeamStressObject(StressObject):
               1       1   0.000   -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04
                       2   1.000   -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CBEAM'
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        self.shape = {}
+        self.data = None
+        self.element_data = None
+
+        self._ncount = 0
+        self._inode_start = None
+        self._inode_end = None
+        self._ielement_start = None
+        self._ielement_end = None
+
         self.xxb = {}
         self.grids = {}
         self.smax = {}
@@ -36,6 +47,10 @@ class BeamStressObject(StressObject):
         self.sxf = {}
         #self.isImaginary = False
 
+        if read_mode == 0:
+            return
+
+        self.code = [self.format_code, self.sort_code, self.s_code]
         self.dt = dt
         if is_sort1:
             if dt is not None:
@@ -46,22 +61,6 @@ class BeamStressObject(StressObject):
             self.add = self.addSort2
             self.add_new_eid = self.add_new_eid_sort2
 
-    def get_stats(self):
-        msg = self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.smax)
-            s0 = self.smax.keys()[0]
-            nelements = len(self.smax[s0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            nelements = len(self.smax)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, xxb, grids, smax, smin, MS_tension, '
-                   'MS_compression, sxc, sxd, sxe, sxf\n')
-        return msg
-
     def getLengthTotal(self):
         return 444  # 44+10*40   (11 nodes)
 
@@ -71,104 +70,111 @@ class BeamStressObject(StressObject):
     def getLength2(self):
         return (40, 'ifffffffff')
 
-    def delete_transient(self, dt):
-        del self.sxc[dt]
-        del self.sxd[dt]
-        del self.sxe[dt]
-        del self.sxf[dt]
-        del self.smax[dt]
-        del self.smin[dt]
-        del self.MS_tension[dt]
-        del self.MS_compression[dt]
+    def _increase_size(self, dt, nelements, nnodes):
+        if dt in self.shape:  # default dictionary
+            self.shape[dt][0] += nelements
+            self.shape[dt][1] += nnodes
+        else:
+            self.shape[dt] = [nelements, nnodes]
+        #print("shape =", self.shape)
 
-    def get_transients(self):
-        k = self.smax.keys()
-        k.sort()
-        return k
+    def _get_shape(self):
+        ndt = len(self.shape)
+        dts = self.shape.keys()
+        shape0 = dts[0]
+        nelements = self.shape[shape0][0]
+        nnodes = self.shape[shape0][1]
+        #print("ndt=%s nnodes=%s dts=%s" % (str(ndt), str(nnodes), str(dts)))
+        return ndt, nelements, nnodes, dts
 
-    def add_new_transient(self, dt):
-        """
-        initializes the transient variables
-        """
-        #print "addNewTransient_beam+1+0"
-        self.dt = dt
-        self.sxc[dt] = {}
-        self.sxd[dt] = {}
-        self.sxe[dt] = {}
-        self.sxf[dt] = {}
-        self.smax[dt] = {}
-        self.smin[dt] = {}
-        self.MS_tension[dt] = {}
-        self.MS_compression[dt] = {}
+    def _increment(self, nnodes, nelements):
+        self._inode_start += nnodes
+        self._inode_end += nnodes
+        self._ielement_start += nelements
+        self._ielement_end += nelements
+        return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
+        
+    def _preallocate(self, dt, nnodes, nelements):
+        ndt, nelements_size, nnodes_size, dts = self._get_shape()
+        #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
+        
+        if self._inode_start is not None:
+            return (self._inode_start, self._inode_start + nnodes,
+                    self._ielement_start, self._ielement_start + nelements)
+        print('----definition----')
+        n = ndt * nnodes_size
+        if self._ncount != 0:
+            asfd
+        self._ncount += 1
+        self._inode_start = 0
+        self._inode_end = nnodes
 
-    def add_new_eid(self, dt, eid, out):
-        #print "Beam Stress add_new_eid..."
-        (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-        #print "eid=%s grid=%s" %(eid,grid)
-        assert eid >= 0
-        #assert isinstance(eid,int)
-        #assert isinstance(grid,int)
-        self.grids[eid] = [grid]
-        self.xxb[eid] = [sd]
-        self.sxc[eid] = [sxc]
-        self.sxd[eid] = [sxd]
-        self.sxe[eid] = [sxe]
-        self.sxf[eid] = [sxf]
-        self.smax[eid] = [smax]
-        self.smin[eid] = [smin]
-        self.MS_tension[eid] = [mst]
-        self.MS_compression[eid] = [msc]
-        return eid
+        self._ielement_start = 0
+        self._ielement_end = nelements
 
-    def add_new_eid_sort1(self, dt, eid, out):
-        #print "Beam Transient Stress add_new_eid..."
-        (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
+        data = {}
+        element_data = {}
+        columns = []
+        if dts[0] is not None:
+            name = self.data_code['name']
+            if isinstance(dt, int):
+                data[name] = pd.Series(zeros((n), dtype='int32'))
+            else:
+                data[name] = pd.Series(zeros((n), dtype='float32'))
+            columns.append(name)
 
-        assert eid >= 0
-        if dt not in self.sxc:
-            self.add_new_transient(dt)
-        self.grids[eid] = [grid]
-        self.xxb[eid] = [sd]
-        self.sxc[dt][eid] = [sxc]
-        self.sxd[dt][eid] = [sxd]
-        self.sxe[dt][eid] = [sxe]
-        self.sxf[dt][eid] = [sxf]
-        self.smax[dt][eid] = [smax]
-        self.smin[dt][eid] = [smin]
-        self.MS_tension[dt][eid] = [mst]
-        self.MS_compression[dt][eid] = [msc]
-        return eid
+        element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
+        element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
 
-    def add(self, dt, eid, out):
-        #print "Beam Stress add..."
-        (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-        if grid:
-            self.grids[eid].append(grid)
-            self.xxb[eid].append(sd)
-            self.sxc[eid].append(sxc)
-            self.sxd[eid].append(sxd)
-            self.sxe[eid].append(sxe)
-            self.sxf[eid].append(sxf)
-            self.smax[eid].append(smax)
-            self.smin[eid].append(smin)
-            self.MS_tension[eid].append(mst)
-            self.MS_compression[eid].append(msc)
+        data['element_id'] = pd.Series(zeros((n), dtype='int32'))
+        data['grid'] = pd.Series(zeros((n), dtype='float32'))
+        data['xxb'] = pd.Series(zeros((n), dtype='float32'))
 
-    def add_sort1(self, dt, eid, out):
-        #print "Beam Transient Stress add..."
-        (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-        if grid:
-            self.grids[eid].append(grid)
-            self.xxb[eid].append(sd)
-            #self.sd[dt][eid].append(sd)
-            self.sxc[dt][eid].append(sxc)
-            self.sxd[dt][eid].append(sxd)
-            self.sxe[dt][eid].append(sxe)
-            self.sxf[dt][eid].append(sxf)
-            self.smax[dt][eid].append(smax)
-            self.smin[dt][eid].append(smin)
-            self.MS_tension[dt][eid].append(mst)
-            self.MS_compression[dt][eid].append(msc)
+        #columns.append('element_type')
+
+        #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
+        #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
+        #print('n =', n)
+        
+        data['sxc'] = pd.Series(zeros((n), dtype='float32'))
+        data['sxd'] = pd.Series(zeros((n), dtype='float32'))
+        data['sxe'] = pd.Series(zeros((n), dtype='float32'))
+        data['sxf'] = pd.Series(zeros((n), dtype='float32'))
+
+        data['smax'] = pd.Series(zeros((n), dtype='float32'))
+        data['smin'] = pd.Series(zeros((n), dtype='float32'))
+        data['MS_tension'] = pd.Series(zeros((n), dtype='float32'))
+        data['MS_compression'] = pd.Series(zeros((n), dtype='float32'))
+        # element_type
+
+        columns += ['element_id', 'grid', 'xxb', 'sxc', 'sxd', 'sxe', 'sxf', 'smax', 'smin', 'MS_tension', 'MS_compression',]
+
+        self.data = pd.DataFrame(data, columns=columns)
+        self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type'])
+        return (self._inode_start, self._inode_end, self._ielement_start, self._ielement_end)
+
+    def _finalize(self, dt):
+        ndt, nelements, nnodes, dts = self._get_shape()
+        
+        if dt != max(dts):
+            return
+        print("----finalize----")
+        
+        #grid_type_str = []
+        #for grid_type in self.grid_type:
+            #grid_type_str.append('C' if grid_type==0 else grid_type)
+        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
+
+        if dts[0] is not None:
+            name = self.data_code['name']
+            self.data = self.data.set_index([name, 'element_id', 'grid'])
+        else:
+            self.data = self.data.set_index(['element_id', 'grid'])
+        #print("final\n", self.data.to_string())
+        del self._inode_start
+        del self._inode_end
+        print('---BeamStressObject---')
+        print(self.data.to_string())
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -235,69 +241,30 @@ class BeamStressObject(StressObject):
             pageNum += 1
         return (''.join(msg), pageNum - 1)
 
-    def __reprTransient__(self):
-        msg = '---BEAM STRESSES---\n'
-        msg += '%-6s %6s %6s %7s' % ('EID', 'eType', 'NID', 'xxb')
-        headers = ['sMax', 'sMin', 'MS_tension', 'MS_compression']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, smax in sorted(self.smax.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid in sorted(smax):
-                for i, nid in enumerate(self.grids[eid]):
-                    xxb = self.xxb[eid][i]
-                    sMax = self.smax[dt][eid][i]
-                    sMin = self.smin[dt][eid][i]
-                    SMt = self.MS_tension[dt][eid][i]
-                    SMc = self.MS_compression[dt][eid][i]
-                    xxb = round(xxb, 2)
-
-                    msg += '%-6i %6s %6i %7.2f ' % (eid, self.eType, nid, xxb)
-                    vals = [sMax, sMin, SMt, SMc]
-                    for val in vals:
-                        if abs(val) < 1e-6:
-                            msg += '%10s ' % '0'
-                        else:
-                            msg += '%10g ' % val
-                    msg += '\n'
-        #print msg
-        #sys.exit('beamT')
+    def get_stats(self):
+        msg = self.get_data_code()
+        if None not in self.shape:  # transient
+            name = self.data_code['name']
+            #print("self.data.index[name] = ", self.data.index)
+            ntimes = len(getattr(self, name+'s'))
+            #ntimes = len(self.data.index[name])
+            #s0 = self.smax.keys()[0]
+            #nelements = len(self.smax[s0])
+            nelements = len(self.data['sxc']) // ntimes // 2
+            msg.append('  type=%s n%s=%s nelements=%s\n'
+                       % (self.__class__.__name__, name, ntimes, nelements))
+        else:
+            nelements = len(self.data['smax'])
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, xxb, grids, smax, smin, MS_tension, '
+                   'MS_compression, sxc, sxd, sxe, sxf\n')
         return msg
 
     def __repr__(self):
+        return self.get_stats()
         if self.nonlinear_factor is not None:
             return self.__reprTransient__()
-
-        msg = '---BEAM STRESSES---\n'
-        msg += '%-6s %6s %6s %6s' % ('EID', 'eType', 'NID', 'xxb')
-        headers = ['sMax', 'sMin', 'MS_tension', 'MS_compression']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-        #print "self.code = ",self.code
-        for eid in sorted(self.smax):
-            #print self.xxb[eid]
-            for i, nid in enumerate(self.grids[eid]):
-                #print i,nid
-                xxb = self.xxb[eid][i]
-                sMax = self.smax[eid][i]
-                sMin = self.smin[eid][i]
-                SMt = self.MS_tension[eid][i]
-                SMc = self.MS_compression[eid][i]
-
-                xxb = round(xxb, 2)
-                msg += '%-6i %6s %6i %4.2f ' % (eid, self.eType, nid, xxb)
-
-                vals = [sMax, sMin, SMt, SMc]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10g ' % val
-                msg += '\n'
-        return msg
 
 
 class BeamStrainObject(StrainObject):
@@ -334,24 +301,6 @@ class BeamStrainObject(StrainObject):
             self.dt = self.nonlinear_factor
             self.add_new_transient()
 
-    def get_stats(self):
-        nelements = len(self.eType)
-
-        msg = self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.smax)
-            s0 = self.smax.keys()[0]
-            nelements = len(self.smax[s0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            nelements = len(self.smax)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, xxb, grids, smax, smin, MS_tension, '
-                   'MS_compression, sxc, sxd, sxe, sxf\n')
-        return msg
-
     def getLengthTotal(self):
         return 444  # 44+10*40   (11 nodes)
 
@@ -360,16 +309,6 @@ class BeamStrainObject(StrainObject):
 
     def getLength2(self):
         return (40, 'ifffffffff')
-
-    def delete_transient(self, dt):
-        del self.sxc[dt]
-        del self.sxd[dt]
-        del self.sxe[dt]
-        del self.sxf[dt]
-        del self.smax[dt]
-        del self.smin[dt]
-        del self.MS_tension[dt]
-        del self.MS_compression[dt]
 
     def get_transients(self):
         k = self.smax.keys()
@@ -520,34 +459,23 @@ class BeamStrainObject(StrainObject):
             pageNum += 1
         return (''.join(msg), pageNum - 1)
 
-    def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
+    def get_stats(self):
+        nelements = len(self.eType)
 
-        msg = '---BEAM STRAINS---\n'
-        msg += '%-6s %6s %6s %6s' % ('EID', 'eType', 'NID', 'xxb')
-        headers = ['sMax', 'sMin', 'MS_tension', 'MS_compression']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-        #print "self.code = ",self.code
-        for eid in sorted(self.smax):
-            #print self.xxb[eid]
-            for i, nid in enumerate(self.grids[eid]):
-                xxb = self.xxb[eid][i]
-                sMax = self.smax[eid][i]
-                sMin = self.smin[eid][i]
-                SMt = self.MS_tension[eid][i]
-                SMc = self.MS_compression[eid][i]
-
-                xxb = round(xxb, 2)
-                msg += '%-6i %6s %6i %4.2f ' % (eid, self.eType, nid, xxb)
-
-                vals = [sMax, sMin, SMt, SMc]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10.3e ' % val
-                msg += '\n'
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.smax)
+            s0 = self.smax.keys()[0]
+            nelements = len(self.smax[s0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.smax)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, xxb, grids, smax, smin, MS_tension, '
+                   'MS_compression, sxc, sxd, sxe, sxf\n')
         return msg
+
+    def __repr__(self):
+        return self.get_stats()
