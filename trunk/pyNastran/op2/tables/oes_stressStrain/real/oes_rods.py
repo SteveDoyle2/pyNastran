@@ -6,8 +6,8 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class RodDamperObject(StressObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CBUSH'
 
         self.code = [self.format_code, self.sort_code, self.s_code]
@@ -47,8 +47,8 @@ class RodStressObject(StressObject):
         ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
           ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CROD'
 
         self.code = [self.format_code, self.sort_code, self.s_code]
@@ -121,12 +121,6 @@ class RodStressObject(StressObject):
     def getLength(self):
         return (20, 'ffff')
 
-    def delete_transient(self, dt):
-        del self.axial[dt]
-        del self.torsion[dt]
-        del self.MS_axial[dt]
-        del self.MS_torsion[dt]
-
     def get_transients(self):
         k = self.axial.keys()
         k.sort()
@@ -170,32 +164,6 @@ class RodStressObject(StressObject):
         self.MS_axial[dt][eid] = SMa
         self.torsion[dt][eid] = torsion
         self.MS_torsion[dt][eid] = SMt
-
-    def __reprTransient__(self):
-        msg = '---ROD STRESSES---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['axial', 'torsion', 'MS_axial', 'MS_torsion']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, axial in sorted(self.axial.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid in sorted(axial):
-                axial = self.axial[dt][eid]
-                torsion = self.torsion[dt][eid]
-                SMa = self.MS_axial[dt][eid]
-                SMt = self.MS_torsion[dt][eid]
-                msg += '%-6i %6s ' % (eid, self.eType)
-                vals = [axial, torsion, SMa, SMt]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10i ' % val
-                msg += '\n'
-                #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
-        return msg
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -273,33 +241,7 @@ class RodStressObject(StressObject):
         return(''.join(msg), pageNum - 1)
 
     def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        #print 'axial = ',self.axial
-        msg = '---ROD STRESSES---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['axial', 'torsion', 'MS_axial', 'MS_torsion']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-        #print "self.code = ",self.code
-        for eid in sorted(self.axial):
-            #print self.__dict__.keys()
-            axial = self.axial[eid]
-            torsion = self.torsion[eid]
-            SMa = self.MS_axial[eid]
-            SMt = self.MS_torsion[eid]
-            msg += '%-6i %6s ' % (eid, self.eType)
-            vals = [axial, torsion, SMa, SMt]
-            for val in vals:
-                if abs(val) < 1e-6:
-                    msg += '%10s ' % '0'
-                else:
-                    msg += '%10i ' % val
-            msg += '\n'
-            #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
-        return msg
+        return self.get_stats()
 
 
 class RodStrainObject(StrainObject):
@@ -317,8 +259,8 @@ class RodStrainObject(StrainObject):
         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN
          1001    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00         1007    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StrainObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StrainObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CROD'  # {} # 'CROD/CONROD/CTUBE'
 
         self.code = [self.format_code, self.sort_code, self.s_code]
@@ -389,12 +331,6 @@ class RodStrainObject(StrainObject):
     def getLength(self):
         return (20, 'ffff')
 
-    def delete_transient(self, dt):
-        del self.axial[dt]
-        del self.torsion[dt]
-        del self.MS_axial[dt]
-        del self.MS_torsion[dt]
-
     def get_transients(self):
         k = self.axial.keys()
         k.sort()
@@ -440,32 +376,6 @@ class RodStrainObject(StrainObject):
         self.MS_axial[dt][eid] = SMa
         self.torsion[dt][eid] = torsion
         self.MS_torsion[dt][eid] = SMt
-
-    def __reprTransient__(self):
-        msg = '---ROD STRAINS---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['axial', 'torsion', 'MS_axial', 'MS_torsion']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, axial in sorted(self.axial.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid in sorted(axial):
-                axial = self.axial[dt][eid]
-                torsion = self.torsion[dt][eid]
-                SMa = self.MS_axial[dt][eid]
-                SMt = self.MS_torsion[dt][eid]
-                msg += '%-6i %6s ' % (eid, self.eType)
-                vals = [axial, torsion, SMa, SMt]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10g ' % val
-                msg += '\n'
-                #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
-        return msg
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.dt is not None:
@@ -540,27 +450,4 @@ class RodStrainObject(StrainObject):
         return(''.join(msg), pageNum - 1)
 
     def __repr__(self):
-        if self.dt is not None:
-            return self.__reprTransient__()
-
-        msg = '---ROD STRAINS---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['axial', 'torsion', 'MS_tension', 'MS_compression']
-        for header in headers:
-            msg += '%8s ' % header
-        msg += '\n'
-
-        for eid in sorted(self.axial):
-            axial = self.axial[eid]
-            torsion = self.torsion[eid]
-            SMa = self.MS_axial[eid]
-            SMt = self.MS_torsion[eid]
-            msg += '%-6i %6s ' % (eid, self.eType)
-            vals = [axial, torsion, SMa, SMt]
-            for val in vals:
-                if abs(val) < 1e-7:
-                    msg += '%8s ' % '0'
-                else:
-                    msg += '%8.3g ' % val
-            msg += '\n'
-        return msg
+        return self.get_stats()

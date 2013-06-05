@@ -6,8 +6,8 @@ from .oes_objects import StressObject
 
 class NonlinearGapStressObject(StressObject):
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
         self.element_name = self.data_code['element_name']
 
@@ -48,9 +48,6 @@ class NonlinearGapStressObject(StressObject):
 
     def getLength(self):
         return (8, 'f')
-
-    def delete_transient(self, dt):
-        del self.compX[dt]
 
     def get_transients(self):
         k = self.compX.keys()
@@ -110,47 +107,5 @@ class NonlinearGapStressObject(StressObject):
         self.slipV[dt][eid] = slv
         self.slipW[dt][eid] = slp
 
-    def __reprTransient__(self):
-        raise NotImplementedError('GAPNL')
-        msg = '---CELASx STRESSES---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['stress']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, stress in sorted(self.stress.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid, istress in sorted(stress.iteritems()):
-                msg += '%-6g %6s ' % (eid, self.eType[eid])
-                if abs(istress) < 1e-6:
-                    msg += '%10s ' % '0'
-                else:
-                    msg += '%10g ' % istress
-                msg += '\n'
-        return msg
-
     def __repr__(self):
-        raise NotImplementedError('GAPNL')
-        #print "spring dt=%s" %(self.dt)
-        if self.dt is not None:
-            return self.__reprTransient__()
-
-        msg = '---CELASx STRESSES---\n'
-        msg += '%-8s %6s ' % ('EID', 'eType')
-        headers = ['stress']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-        #print "self.code = ",self.code
-        for eid, istress in sorted(self.stress.iteritems()):
-            #print "eid=",eid
-            #print "eType",self.eType
-            msg += '%-8i %6s ' % (eid, self.eType[eid])
-            if abs(istress) < 1e-6:
-                msg += '%10s ' % '0'
-            else:
-                msg += '%10i ' % istress
-            msg += '\n'
-            #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
-        return msg
+        return self.get_stats()

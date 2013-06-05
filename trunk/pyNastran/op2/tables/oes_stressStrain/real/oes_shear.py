@@ -14,8 +14,8 @@ class ShearStressObject(StressObject):
         ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN
           328        1.721350E+03   1.570314E+03   7.2E+01
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CSHEAR'
 
         self.code = [self.format_code, self.sort_code, self.s_code]
@@ -59,11 +59,6 @@ class ShearStressObject(StressObject):
     def getLength(self):
         return (16, 'fff')
 
-    def delete_transient(self, dt):
-        del self.maxShear[dt]
-        del self.avgShear[dt]
-        del self.margin[dt]
-
     def get_transients(self):
         k = self.maxShear.keys()
         k.sort()
@@ -99,59 +94,8 @@ class ShearStressObject(StressObject):
         self.avgShear[dt][eid] = avgShear
         self.margin[dt][eid] = margin
 
-    def __reprTransient__(self):
-        msg = '---TRANSIENT CSHEAR STRESSES---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['maxShear', 'avgShear', 'Margin']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, maxShears in sorted(self.maxShear.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid in sorted(maxShears):
-                maxShear = self.maxShear[dt][eid]
-                avgShear = self.avgShear[dt][eid]
-                margin = self.margin[dt][eid]
-                msg += '%-6i %6s ' % (eid, self.eType)
-                vals = [maxShear, avgShear, margin]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10i ' % val
-                msg += '\n'
-                msg += ('eid=%-4s eType=%s axial=%-4i '
-                        'torsion=%-4i\n' %(eid, self.eType, axial, torsion))
-        return msg
-
     def __repr__(self):
-        if self.dt is not None:
-            return self.__reprTransient__()
-
-        msg = '---CSHEAR STRESSES---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['maxShear', 'avgShear', 'margin']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-        #print "self.code = ",self.code
-        for eid in sorted(self.maxShear):
-            #print self.__dict__.keys()
-            maxShear = self.maxShear[eid]
-            avgShear = self.avgShear[eid]
-            margin = self.margin[eid]
-            msg += '%-6i %6s ' % (eid, self.eType)
-            vals = [maxShear, avgShear, margin]
-            for val in vals:
-                if abs(val) < 1e-6:
-                    msg += '%10s ' % '0'
-                else:
-                    msg += '%10i ' % val
-            msg += '\n'
-            #msg += ('eid=%-4s eType=%s axial=%-4i '
-            #        'torsion=%-4i\n' %(eid, self.eType, axial, torsion)
-        return msg
+        return self.get_stats()
 
 
 class ShearStrainObject(StrainObject):
@@ -192,11 +136,6 @@ class ShearStrainObject(StrainObject):
 
     def getLength(self):
         return (16, 'fff')
-
-    def delete_transient(self, dt):
-        del self.maxShear[dt]
-        del self.avgShear[dt]
-        del self.margin[dt]
 
     def get_transients(self):
         k = self.maxShear.keys()
@@ -244,56 +183,5 @@ class ShearStrainObject(StrainObject):
         self.avgShear[dt][eid] = avgShear
         self.margin[dt][eid] = margin
 
-    def __reprTransient__(self):
-        msg = '---TRANSIENT CSHEAR STRAINS---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['maxShear', 'avgShear', 'Margin']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, maxShears in sorted(self.maxShear.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid in sorted(maxShears):
-                maxShear = self.maxShear[dt][eid]
-                avgShear = self.avgShear[dt][eid]
-                margin = self.margin[dt][eid]
-                msg += '%-6i %6s ' % (eid, self.eType)
-                vals = [maxShear, avgShear, margin]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10g ' % val
-                msg += '\n'
-                #msg += ('eid=%-4s eType=%s axial=%-4i '
-                #        'torsion=%-4i\n' %(eid, self.eType, axial, torsion))
-        return msg
-
     def __repr__(self):
-        if self.dt is not None:
-            return self.__reprTransient__()
-
-        msg = '---CSHEAR STRAINS---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['maxShear', 'avgShear', 'margin']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        #print "self.code = ",self.code
-        for eid in sorted(self.maxShear):
-            #print self.__dict__.keys()
-            maxShear = self.maxShear[eid]
-            avgShear = self.avgShear[eid]
-            margin = self.margin[eid]
-            msg += '%-6i %6s ' % (eid, self.eType)
-            vals = [maxShear, avgShear, margin]
-
-            for val in vals:
-                if abs(val) < 1e-7:
-                    msg += '%8s ' % '0'
-                else:
-                    msg += '%8.3g ' % val
-            msg += '\n'
-        return msg
+        return self.get_stats()

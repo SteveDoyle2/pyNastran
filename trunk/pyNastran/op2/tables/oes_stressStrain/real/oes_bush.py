@@ -7,11 +7,11 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 class BushStressObject(StressObject):
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.translations = {}
         self.rotations = {}
@@ -219,9 +219,9 @@ class BushStressObject(StressObject):
 class BushStrainObject(StrainObject):
     """
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         raise NotImplementedError('is this used?')
-        StrainObject.__init__(self, data_code, isubcase)
+        StrainObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
 
         self.code = [self.format_code, self.sort_code, self.s_code]

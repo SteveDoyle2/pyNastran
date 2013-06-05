@@ -263,13 +263,11 @@ class BeamStressObject(StressObject):
 
     def __repr__(self):
         return self.get_stats()
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
 
 
 class BeamStrainObject(StrainObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StrainObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StrainObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CBEAM'  # {} # 'CBEAM/CONBEAM'
 
         self.code = [self.format_code, self.sort_code, self.s_code]
