@@ -553,13 +553,24 @@ class OUG(object):
         #print('nnodes =', nnodes)
         nodeIDs_to_index = zeros(nnodes, dtype='int32')
         gridTypes = zeros(nnodes, dtype='int32')
-        translations = zeros((nnodes, 6), dtype='complex32')
+        translations = zeros((nnodes, 6), dtype='complex64')  # 2 32-bit numbers
         
+
+        if self.read_mode == 0:  # figure out the shape
+            self.obj._increase_size(dt, nnodes)
+            iend = 32 * (nnodes + 1)
+            self.data = self.data[iend:]
+            return
+        else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
+            #index_data = (nodeIDs_to_index)
+            #index_data = pd.MultiIndex.from_tuples(zip(data))
+            (inode_start, inode_end) = self.obj._preallocate(dt, nnodes)
+
+        istart = 0
+        iend = 56  # 14 * 4
         inode = 0
-        while len(self.data) >= 56:  # 14*4
-            eData = self.data[0:56]
-            self.data = self.data[56:]
-            #print "len(data) = ",len(eData)
+        for i in range(nnodes):
+            eData = self.data[istart:iend]
 
             out = unpack(format1, eData)
             (eid, gridType, txr, tyr, tzr, rxr, ryr, rzr,
@@ -587,10 +598,23 @@ class OUG(object):
             gridTypes[inode] = gridType
             translations[inode, :] = [tx, ty, tz, rx, ry, rz]
 
-            dataIn = [eid2, gridType, tx, ty, tz, rx, ry, rz]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
-            self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
             inode += 1
-        self.obj.add_array(dt, gridTypes)
+            istart = iend
+            iend += 56
+        
+        self.obj.data['node_id'][inode_start:inode_end] = nodeIDs_to_index
+        if dt:
+            self.obj.data['dt'][inode_start:inode_end] = ones(inode_end - inode_start) * dt
+        #self.obj.grid_type[inode_start:inode_end] = gridTypes
+        self.obj.data['T1'][inode_start:inode_end] = translations[:, 0]
+        self.obj.data['T2'][inode_start:inode_end] = translations[:, 1]
+        self.obj.data['T3'][inode_start:inode_end] = translations[:, 2]
+        self.obj.data['R1'][inode_start:inode_end] = translations[:, 3]
+        self.obj.data['R2'][inode_start:inode_end] = translations[:, 4]
+        self.obj.data['R3'][inode_start:inode_end] = translations[:, 5]
+
+        #print self.obj.data['dt'].to_string()
+        if len(self.obj.data['T1'])==inode_end:
+            self.obj._finalize()
+        #self.obj.add_array(dt, nodeIDs_to_index, gridTypes)

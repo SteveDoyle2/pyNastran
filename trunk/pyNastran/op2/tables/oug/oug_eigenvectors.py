@@ -150,8 +150,9 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
                1      G      0.0            0.0            0.0            0.0            1.260264E-01   0.0
                7      G      9.999849E-01   0.0            6.728968E-03   0.0            8.021386E-03   0.0
     """
-    def __init__(self, data_code, isubcase, imode):
-        scalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, isubcase, imode, read_mode):
+        self.shape = {}
+        scalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.caseVal = mode
         #print "mode = %s" % imode
         self.caseVal = self.getUnsteadyValue()
@@ -159,6 +160,8 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
 
         #assert mode>=0.
         self.gridTypes = {}
+        if read_mode == 0:
+            return
 
     def update_dt(self, data_code, dt, read_mode):
         #print " self.data_code = ",self.data_code
@@ -259,14 +262,16 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
 
 
 class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_code=0, thermal=0
-    def __init__(self, data_code, is_sort1, isubcase, iMode):
-        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, imode)
-        self.caseVal = imode
-        self.update_dt = self.update_mode
-        self.set_data_members()
+    def __init__(self, data_code, is_sort1, isubcase, imode, read_mode):
+        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, imode, read_mode)
+        self.shape = {}
+        if read_mode == 0:
+            return
+        #self.caseVal = imode
+        #self.update_dt = self.update_mode
+        #self.set_data_members()
 
         #print "mode = %s" %(mode)
-
         #assert mode>=0.
 
     def update_mode(self, data_code, imode):
