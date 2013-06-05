@@ -35,13 +35,6 @@ class TableObject(scalarObject):  # displacement style table
         #self.rotations = {}
         
         self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                pass
-        else:
-            assert dt is not None
-            self.add = self.add_sort2
-            self.add_array = self.add_sort2
 
     def get_stats(self):
         ndt, nnodes, dts = self._get_shape()
@@ -193,17 +186,6 @@ class TableObject(scalarObject):  # displacement style table
         nnodes = self.shape[shape0]
         print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
         return ndt, nnodes, dts
-
-    def add_array(self, dt, nodeIDs_to_index, gridTypes):
-        dts = self.shape.keys()
-        if dts[0] == dt:
-            for nid, gridType in zip(nodeIDs_to_index, gridTypes):
-                self.gridTypes2[nid] = gridType
-            #if self.gridTypes2 is None:
-                #self.gridTypes2 = gridTypes
-            #else:
-                #self.gridTypes2 = numpy.concatenate((self.gridTypes2, gridTypes))
-            print 'gridTypes2', self.gridTypes2
 
     def get_as_sort1(self):
         return (self.translations, self.rotations)
@@ -536,23 +518,25 @@ class TableObject(scalarObject):  # displacement style table
 
 
 class ComplexTableObject(scalarObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt):
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         self.nonlinear_factor = None
         self.table_name = None
         self.analysis_code = None
-        scalarObject.__init__(self, data_code, isubcase)
+        scalarObject.__init__(self, data_code, isubcase, read_mode)
         self.gridTypes = {}
         self.translations = {}
         self.rotations = {}
+        self._inode_start = None
+        self._inode_end = None
 
         self.dt = dt
-        if is_sort1:
-            pass
+        #if is_sort1:
+            #pass
             #if dt is not None:
                 #self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.addSort2
+        #else:
+            #assert dt is not None
+            #self.add = self.addSort2
 
     def get_stats(self):
         ngrids = len(self.gridTypes)
@@ -606,30 +590,75 @@ class ComplexTableObject(scalarObject):
         self.data_code = data_code
         self.apply_data_code()
 
-    def delete_transient(self, dt):
-        del self.translations[dt]
-        del self.rotations[dt]
+    def _preallocate(self, dt, nnodes):
+        if self.shape is None:
+            self._inode_start += nnodes
+            self._inode_end += nnodes
+        else:
+            ndt, nnodes, dts = self._get_shape()
+            #print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
+            
+            data = {}
+            columns = []
+            indexs = []
+            if dts[0] is not None:
+                if isinstance(dt, int):
+                    data['dt'] = pd.Series(zeros((ndt * nnodes), dtype='int32'))
+                else:
+                    data['dt'] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
+                columns.append('dt')
+                indexs = ['dt']
+            data['node_id'] = pd.Series(zeros((ndt * nnodes), dtype='int32'))
+            indexs.append('node_id')
 
-    def get_transients(self):
-        k = self.translations.keys()
-        k.sort()
-        return k
+            #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
+            #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
+            data['T1'] = pd.Series(zeros((ndt * nnodes), dtype='complex64'))
+            data['T2'] = pd.Series(zeros((ndt * nnodes), dtype='complex64'))
+            data['T3'] = pd.Series(zeros((ndt * nnodes), dtype='complex64'))
+            data['R1'] = pd.Series(zeros((ndt * nnodes), dtype='complex64'))
+            data['R2'] = pd.Series(zeros((ndt * nnodes), dtype='complex64'))
+            data['R3'] = pd.Series(zeros((ndt * nnodes), dtype='complex64'))
+            columns += ['node_id', 'T1', 'T2', 'T3', 'R1', 'R2', 'R3']
 
-    def add(self, dt, out):
-        (nodeID, gridType, v1, v2, v3, v4, v5, v6) = out
-        #msg = "dt=%s nodeID=%s v1=%s v2=%s v3=%s" %(dt,nodeID,v1,v2,v3)
-        #assert isinstance(nodeID,int),nodeID
-        msg = "nodeID=%s v1=%s v2=%s v3=%s\n" % (nodeID, v1, v2, v3)
-        msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
-        #print msg
-        assert 0 < nodeID < 1000000000, msg  # -1
-        assert -0.5 < dt, msg              # remove
-        assert isinstance(nodeID, int), msg
-        #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
+            self.data = pd.DataFrame(data, columns=columns)
+            self._inode_start = 0
+            self._inode_end = nnodes
+        return self._inode_start, self._inode_end
 
-        self.gridTypes[nodeID] = self.recastGridType(gridType)
-        self.translations[nodeID] = [v1, v2, v3]  # dx,dy,dz
-        self.rotations[nodeID] = [v4, v5, v6]  # rx,ry,rz
+    def _finalize(self):
+        ndt, nnodes, dts = self._get_shape()
+        
+        mapper = {
+            1 : 'G',
+        }
+        #grid_type_str = []
+        #for grid_type in self.grid_type:
+            #grid_type_str.append(mapper[grid_type])
+        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
+
+        if dts[0] is not None:
+            self.data = self.data.set_index(['dt', 'node_id'])
+        else:
+            self.data = self.data.set_index('node_id')
+        #print "final\n", self.data
+        del self._inode_start
+        del self._inode_end
+
+    def _increase_size(self, dt, nnodes):
+        #self.shape += 1
+        if dt in self.shape:  # default dictionary
+            self.shape[dt] += nnodes
+        else:
+            self.shape[dt] = nnodes
+
+    def _get_shape(self):
+        ndt = len(self.shape)
+        dts = self.shape.keys()
+        shape0 = dts[0]
+        nnodes = self.shape[shape0]
+        #print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
+        return ndt, nnodes, dts
 
     def _write_matlab_transient(self, name, isubcase, f=None, is_mag_phase=False):
         """
