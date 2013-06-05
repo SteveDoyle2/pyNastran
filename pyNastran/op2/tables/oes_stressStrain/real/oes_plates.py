@@ -25,7 +25,7 @@ class PlateStressObject(StressObject):
             6    CEN/4  -1.250000E-01  -4.278394E+02  8.021165E+03 -1.550089E+02   -88.9493   8.024007E+03 -4.306823E+02  4.227345E+03
                          1.250000E-01   5.406062E+02  1.201854E+04 -4.174177E+01   -89.7916   1.201869E+04  5.404544E+02  5.739119E+03
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
 
@@ -911,8 +911,8 @@ class PlateStrainObject(StrainObject):
       ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)          MAX
         ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR         SHEAR
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StrainObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StrainObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
 
         self.code = [self.format_code, self.sort_code, self.s_code]

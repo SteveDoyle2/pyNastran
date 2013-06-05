@@ -14,8 +14,8 @@ class CompositePlateStressObject(StressObject):
       ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
         ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
 
         self.code = [self.format_code, self.sort_code, self.s_code]
@@ -109,17 +109,6 @@ class CompositePlateStressObject(StressObject):
         #for line in data:
             #print line
         raise NotImplementedError('transient results not supported')
-
-    def delete_transient(self, dt):
-        del self.o11[dt]
-        del self.o22[dt]
-        del self.t12[dt]
-        del self.t1z[dt]
-        del self.t2z[dt]
-        del self.angle[dt]
-        del self.majorP[dt]
-        del self.minorP[dt]
-        del self.ovmShear[dt]
 
     def get_transients(self):
         k = self.o11.keys()
@@ -372,74 +361,7 @@ class CompositePlateStressObject(StressObject):
         return (''.join(msg), pageNum - 1)
 
     def __repr__(self):
-        return self.write_f06(['', '', ''], 'PAGE ', 1)[0]
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---COMPOSITE PLATE STRESS---\n'
-        msg += '%-6s %8s %8s ' % ('EID', 'eType', 'iLayer')
-        headers = self.getHeaders()
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for eid, o11s in sorted(self.o11.iteritems()):
-            eType = self.eType[eid]
-            for iLayer in xrange(len(o11s)):
-                o11 = self.o11[eid][iLayer]
-                o22 = self.o22[eid][iLayer]
-                t12 = self.t12[eid][iLayer]
-                t1z = self.t1z[eid][iLayer]
-                t2z = self.t2z[eid][iLayer]
-
-                #angle = self.angle[eid][iLayer]
-                #major = self.majorP[eid][iLayer]
-                #minor = self.minorP[eid][iLayer]
-                ovm = self.ovmShear[eid][iLayer]
-
-                msg += '%-6i %8s %8s ' % (eid, eType, iLayer + 1,)
-                vals = [o11, o22, t12, t1z, t2z, ovm]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10i ' % val
-                msg += '\n'
-        return msg
-
-    def __reprTransient__(self):
-        msg = '---COMPOSITE PLATE STRESS---\n'
-        msg += '%-6s %8s %8s ' % ('EID', 'eType', 'iLayer')
-        headers = self.getHeaders()
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, O11s in sorted(self.o11.iteritems()):
-            msg += "dt = %s\n" % dt
-            for eid, o11s in sorted(O11s.iteritems()):
-                eType = self.eType[eid]
-                for iLayer in xrange(len(o11s)):
-                    o11 = self.o11[dt][eid][iLayer]
-                    o22 = self.o22[dt][eid][iLayer]
-                    t12 = self.t12[dt][eid][iLayer]
-                    t1z = self.t1z[dt][eid][iLayer]
-                    t2z = self.t2z[dt][eid][iLayer]
-
-                    #angle = self.angle[dt][eid][iLayer]
-                    #major = self.majorP[dt][eid][iLayer]
-                    #minor = self.minorP[dt][eid][iLayer]
-                    ovm = self.ovmShear[dt][eid][iLayer]
-
-                    msg += '%-6i %8s %8s ' % (eid, eType, iLayer + 1,)
-                    vals = [o11, o22, t12, t1z, t2z, ovm]
-                    for val in vals:
-                        if abs(val) < 1e-6:
-                            msg += '%10s ' % '0'
-                        else:
-                            msg += '%10i ' % val
-                    msg += '\n'
-        return msg
+        return self.get_stats()
 
 
 class CompositePlateStrainObject(StrainObject):
@@ -493,17 +415,6 @@ class CompositePlateStrainObject(StrainObject):
                                                      nelements))
         msg.append('  eType, e11, e22, e12, e1z, e2z, angle, majorP, minorP\n')
         return msg
-
-    def delete_transient(self, dt):
-        del self.e11[dt]
-        del self.e22[dt]
-        del self.e12[dt]
-        del self.e1z[dt]
-        del self.e2z[dt]
-        del self.angle[dt]
-        del self.majorP[dt]
-        del self.minorP[dt]
-        del self.evmShear[dt]
 
     def get_transients(self):
         k = self.e11.keys()
@@ -748,71 +659,4 @@ class CompositePlateStrainObject(StrainObject):
         return (''.join(msg), pageNum - 1)
 
     def __repr__(self):
-        return self.write_f06(['', '', ''], 'PAGE ', 1)[0]
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---COMPOSITE PLATE STAIN---\n'
-        msg += '%-6s %8s %8s ' % ('EID', 'eType', 'iLayer')
-        headers = self.getHeaders()
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for eid, e11s in sorted(self.e11.iteritems()):
-            eType = self.eType[eid]
-            for iLayer in xrange(len(e11s)):
-                e11 = self.e11[eid][iLayer]
-                e22 = self.e22[eid][iLayer]
-                e12 = self.e12[eid][iLayer]
-                e1z = self.e1z[eid][iLayer]
-                e2z = self.e2z[eid][iLayer]
-
-                #angle = self.angle[eid][iLayer]
-                #major = self.majorP[eid][iLayer]
-                #minor = self.minorP[eid][iLayer]
-                evm = self.evmShear[eid][iLayer]
-
-                msg += '%-6i %8s %8s ' % (eid, eType, iLayer + 1,)
-                vals = [e11, e22, e12, e1z, e2z, evm]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10.3g ' % val
-                msg += '\n'
-        return msg
-
-    def __reprTransient__(self):
-        msg = '---COMPOSITE PLATE STAIN---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %8s %8s ' % ('EID', 'eType', 'iLayer')
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, E11s in sorted(self.e11.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid, e11s in sorted(E11s.iteritems()):
-                eType = self.eType[eid]
-                for iLayer in xrange(len(e11s)):
-                    e11 = self.e11[dt][eid][iLayer]
-                    e22 = self.e22[dt][eid][iLayer]
-                    e12 = self.e12[dt][eid][iLayer]
-                    e1z = self.e1z[dt][eid][iLayer]
-                    e2z = self.e2z[dt][eid][iLayer]
-
-                    #angle = self.angle[dt][eid][iLayer]
-                    #major = self.majorP[dt][eid][iLayer]
-                    #minor = self.minorP[dt][eid][iLayer]
-                    evm = self.evmShear[dt][eid][iLayer]
-
-                    msg += '%-6i %8s %8s ' % (eid, eType, iLayer + 1,)
-                    vals = [e11, e22, e12, e1z, e2z, evm]
-                    for val in vals:
-                        if abs(val) < 1e-6:
-                            msg += '%10s ' % '0'
-                        else:
-                            msg += '%10.3g ' % val
-                    msg += '\n'
-        return msg
+        return self.get_stats()

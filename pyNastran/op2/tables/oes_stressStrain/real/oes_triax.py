@@ -16,8 +16,8 @@ class TriaxStressObject(StressObject):
          5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
                   4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CTRIAX6'
 
         self.code = [self.format_code, self.sort_code, self.s_code]
@@ -86,15 +86,6 @@ class TriaxStressObject(StressObject):
             self.MS_axial[dt][eid] = MSa
             self.torsion[dt][eid] = torsion
             self.MS_torsion[dt][eid] = MSt
-
-    def delete_transient(self, dt):
-        del self.radial[dt]
-        del self.azimuthal[dt]
-        del self.axial[dt]
-        del self.shear[dt]
-        del self.omax[dt]
-        del self.oms[dt]
-        del self.ovm[dt]
 
     def get_transients(self):
         k = self.axial.keys()
@@ -228,9 +219,7 @@ class TriaxStressObject(StressObject):
         return(''.join(msg), pageNum - 1)
 
     def __repr__(self):
-        return self.write_f06(['', ''], 'PAGE ', 1)[0]
-        if self.nonlinear_factor is not None:
-            pass
+        return self.get_stats()
 
 
 class TriaxStrainObject(StrainObject):
@@ -244,8 +233,8 @@ class TriaxStrainObject(StrainObject):
          5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
                   4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StrainObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StrainObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CTRIAX6'
 
         self.code = [self.format_code, self.sort_code, self.s_code]
@@ -285,15 +274,6 @@ class TriaxStrainObject(StrainObject):
 
     def add_f06_data(self, data, transient):
         raise Exception('Not Implemented')
-
-    def delete_transient(self, dt):
-        del self.radial[dt]
-        del self.azimuthal[dt]
-        del self.axial[dt]
-        del self.shear[dt]
-        del self.emax[dt]
-        del self.ems[dt]
-        del self.evm[dt]
 
     def get_transients(self):
         k = self.axial.keys()
@@ -427,6 +407,4 @@ class TriaxStrainObject(StrainObject):
         return(''.join(msg), pageNum - 1)
 
     def __repr__(self):
-        return self.write_f06(['', ''], 'PAGE ', 1)[0]
-        if self.nonlinear_factor is not None:
-            pass
+        return self.get_stats()
