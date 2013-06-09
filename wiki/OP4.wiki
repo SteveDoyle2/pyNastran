@@ -76,8 +76,31 @@ matrices.keys()
 >>> ['D']
 }}}
 
+=Cython OP4 Reader (v0.6)=
+The Cython OP4 reader is faster and uses less memory than the pure Python version, but has a slightly different API. 
+Import the OP4 reader
+{{{
+import pyNastran.op4.cop4 as op4
+}}}
 
-=Cython OP4 Reader (v0.4)=
+==Examining OP4 File Contents==
+Print detailed information on the matrices stored in the file sol103.op4.
+{{{
+op4.OP4('sol103.op4').print_header()
+}}}
+Store the OP4 header information in the Python variable 'header'.
+{{{
+header = op4.OP4('sol103.op4')
+}}}
+Print the names of the matrices in the file 'sol103.op4'.
+{{{
+for i in range(header.nmat): print('%2d. %s' % (i+1, header.name[i]))
+}}}
+    
+==Load Matrices==
+
+
+=Cython OP4 Reader (v0.4, v0.5)=
 The Cython OP4 reader is faster than the pure Python version, but has a slightly different API.  It requires that you know the order of your matrices in the OP4.
 
 Import the OP4 reader
