@@ -197,7 +197,7 @@ def __object_attr(obj, mode, attr_type):
 
 def object_methods(obj, mode = "public"):
     """
-    List the names of methods of a class as strings. Returns public methos
+    List the names of methods of a class as strings. Returns public methods
     as default.
     
     :param obj:  the object for checking
@@ -214,7 +214,7 @@ def object_methods(obj, mode = "public"):
 
 def object_attributes(obj, mode = "public"):
     """
-    List the names of attributes of a class as strings. Returns public methos
+    List the names of attributes of a class as strings. Returns public attributes
     as default.
     
     :param obj:  the object for checking
