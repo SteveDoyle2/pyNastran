@@ -98,6 +98,35 @@ for i in range(header.nmat): print('%2d. %s' % (i+1, header.name[i]))
 }}}
     
 ==Load Matrices==
+Load the first matrix from the file kd.op4:
+{{{
+K = op4.Load('kd.op4')
+}}}
+
+Load the first three matrices from file kd.op4:
+{{{
+K, D, M = op4.Load('kd.op4', nmat=3)
+}}}
+
+Skip the first matrix, then load the next two matrices from kd.op4:
+{{{
+D, M = op4.Load('kd.op4', nmat=2, skip=1)
+}}}
+
+Load the matrices named Kxx and Mxx from kd.op4:
+{{{
+K, M = op4.Load('kd.op4', 'Kxx', 'Mxx')
+}}}
+
+Load all matrices from kd.op4.  Returns a dictionary of matrices keyed by matrix name:
+{{{
+Dict = op4.Load('kd.op4', '*')
+}}}
+
+Skip the first matrix, then load all remaining matrices from kd.op4.  Returns a dictionary of matrices keyed by matrix name:
+{{{
+Dict = op4.Load('kd.op4', '*', skip=1)
+}}}
 
 
 =Cython OP4 Reader (v0.4, v0.5)=
