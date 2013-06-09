@@ -655,7 +655,6 @@ class CTRIAX(TriShell):
     def cross_reference(self, model):
         msg = ' which is required by CTRIAX eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
-        #: Property ID
         self.pid = model.Property(self.pid, msg=msg)
 
     def nodeIDs(self):

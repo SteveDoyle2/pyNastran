@@ -285,6 +285,7 @@ class MAT1(IsotropicMaterial):
         return msg
 
     #def cross_reference(self, model):
+        #msg = ' which is required by MAT1 pid=%s' % self.mid
         #self.Mcsid = model.Coord(self.Mcsid)  # used only for PARAM,CURVPLOT
         #pass
 

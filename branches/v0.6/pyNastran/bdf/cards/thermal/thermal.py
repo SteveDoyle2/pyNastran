@@ -227,6 +227,7 @@ class CHBDYG(ThermalElement):
 
     def cross_reference(self, model):
         pass
+        #msg = ' which is required by CHBDYG eid=%s' % self.eid
         #self.pid = model.Phbdy(self.pid)
         #self.grids
 

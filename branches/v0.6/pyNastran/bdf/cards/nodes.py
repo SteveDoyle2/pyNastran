@@ -389,12 +389,13 @@ class GRID(Node):
         cp = self.Cp()
         cd = self.Cd()
         xyz = self.xyz
-        pos_xyz = self.Position()
         ps = self.Ps()
         seid = self.SEid()
         assert isinstance(nid, int), 'nid=%r' % nid
         assert isinstance(cp, int), 'cp=%r' % cp
         assert isinstance(cd, int), 'cd=%r' % cd
+        if xref:
+            pos_xyz = self.Position()
         
     def nDOF(self):
         return 6

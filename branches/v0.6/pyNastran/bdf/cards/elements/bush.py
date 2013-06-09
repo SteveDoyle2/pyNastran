@@ -66,6 +66,8 @@ class BushElement(Element):
             #return self.gb
         #return self.gb.nid
 
+    def Mass(self):
+        return 0.
 
 class CBUSH(BushElement):
     type = 'CBUSH'

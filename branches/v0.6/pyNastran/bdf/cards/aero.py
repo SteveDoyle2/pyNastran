@@ -63,7 +63,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (fields,
 
 class AEFACT(BaseCard):
     """
-    Defines real numbers for aeroelastic analysis.::
+    Defines real numbers for aeroelastic analysis.
 
     +--------+-----+----+--------+-----+----+----+----+----+
     | AEFACT | SID | D1 | D2     | D3  | D4 | D5 | D6 | D7 |

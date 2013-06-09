@@ -912,8 +912,6 @@ class MOMENT2(Moment):
         """
         .. todo:: cross reference and fix repr function
         """
-        #(self.g1, self.g2, self.g3, self.g4) = model.Nodes([self.g1, self.g2,
-        #                                                    self.g3, self.g4])
         self.g1 = model.Node(self.g1)
         self.g2 = model.Node(self.g2)
         self.g3 = model.Node(self.g3)

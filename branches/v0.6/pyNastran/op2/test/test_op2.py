@@ -106,7 +106,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
 def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
             write_matlab=True, is_mag_phase=False, delete_f06=False,
             print_results=True, iSubcases=[], debug=False, stopOnFailure=True):
-    assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' %(op2FileName)
+    assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' % op2FileName
     isPassed = False
     stopOnFailure = False
     #debug = True
@@ -251,7 +251,10 @@ def main():
 
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
+    import time
+    t0 = time.time()
     run_op2(op2FileName,make_geom=make_geom,write_bdf=write_bdf,write_f06=write_f06,write_matlab=write_matlab,is_mag_phase=is_mag_phase,print_results=print_results,debug=debug)
+    print("dt = %f" %(time.time() - t0))
 
 if __name__=='__main__':  # op2
     main()

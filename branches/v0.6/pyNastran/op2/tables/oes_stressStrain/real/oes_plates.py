@@ -147,7 +147,7 @@ class PlateStressObject(StressObject):
                         self.minorP[eid][nid] = [o21, o22]
                         self.ovmShear[eid][nid] = [ovm1, ovm2]
                     else:
-                        assert len(line) == 19, 'len(line)=%s' % (len(line))
+                        assert len(line) == 19, 'line=%s len(line)=%s' % (line, len(line))
                         raise NotImplementedError()
                 else:
                     msg = 'line=%s not supported...' % (line)
@@ -1263,7 +1263,7 @@ class PlateStrainObject(StrainObject):
                         out = self.writeF06_Quad4_Bilinear(eid, 3)
                 else:
                     raise NotImplementedError('eType = |%r|' %
-                                              (eType))  # CQUAD8, CTRIA6
+                                              eType)  # CQUAD8, CTRIA6
                 msg.append(out)
                 msg.append(pageStamp + str(pageNum) + '\n')
                 if f is not None:
@@ -1280,14 +1280,14 @@ class PlateStrainObject(StrainObject):
 
         if self.isFiberDistance():
             quadMsgTemp = ['    ELEMENT              FIBER                STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)                 \n',
-                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % (vonMises)]
+                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % vonMises]
             triMsgTemp = ['  ELEMENT      FIBER               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)                 \n',
-                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % (vonMises)]
+                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % vonMises]
         else:
             quadMsgTemp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)                 \n',
-                           '      ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % (vonMises)]
+                           '      ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % vonMises]
             triMsgTemp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)                 \n',
-                          '    ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % (vonMises)]
+                          '    ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % vonMises]
 
         quadMsg = None
         quad8Msg = None
@@ -1393,7 +1393,10 @@ class PlateStrainObject(StrainObject):
                         pageNum += 1
                 else:
                     raise NotImplementedError('eType = |%r|' %
-                                              (eType))  # CQUAD8, CTRIA6
+                                              eType)  # CQUAD8, CTRIA6
+                if f is not None: # stream write the file to save memory
+                    f.write(''.join(msg))
+                    msg = ['']
         return (''.join(msg), pageNum - 1)
 
     def writeF06_Quad4_Bilinear(self, eid, n):

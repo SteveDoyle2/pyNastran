@@ -15,6 +15,16 @@ This code was written entirely in Python and should install easily.
 
 *** Not done....
 
+-----------------------v0.6.1 released 2013/05/??-----------------------
+BDF Bug Fixes
+   - Parsing of "1.2345D+04".  It worked in Python 2.6, but not 2.7.
+   - RBE2 card with alpha field.
+   - active I12 field on PBAR card now disables AssertionError if K1 or K2 are blank
+   - fixed bug in LSEQ card where table field was cross-referenced as a load (field #4)
+
+OP2/F06 Bug Fixes
+   - improved memory usage in real plates (stress/strain) when writing F06
+      
 -----------------------v0.6 released 2013/05/07-----------------------
 
 Overall Notes

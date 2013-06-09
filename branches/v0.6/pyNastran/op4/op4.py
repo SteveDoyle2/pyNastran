@@ -73,7 +73,7 @@ class OP4(OP4Deprecated):
         >>> from pyNastran.op4.op4 import OP4
         >>> op4 = OP4()
 
-        #alternative way to get all the matrices
+        # get all the matrices
         >>> matrices = op4.read_op4(op4_name)
         >>> (formA,A) = matrices['A']
         >>> (formB,B) = matrices['B']
@@ -89,7 +89,7 @@ class OP4(OP4Deprecated):
         >>> (formA,A) = matrices['A']
         >>>
         :param op4_filename: an OP4 filename.  Type=STRING.
-        :param matrix_names: list of matrix names (or None); Type=LIST OF STRINGS / NONE.
+        :param matrix_names: matrix name(s) (or None); Type=LIST OF STRINGS / STRING / NONE.
         :param precision: specifies if the matrices are in single or double precsion
                (values='default','single','double') which means the format will be whatever the file is in
 
@@ -908,10 +908,24 @@ class OP4(OP4Deprecated):
 #--------------------------------------------------------------------------
     def getTypeNWV(self, A, precision='default'):
         """
+        Determines the Type and number of words per value
+        an entry in the matrix takes up.
+
         :param A: a matrix or entry in a matrix (to save memory)
         :param precision: data precision ='default','single','double'
-        :returns: Type matrix type 1=real,single; 2=real,double; 3=complex,single; 4=complex,double
+
+        :returns: Type matrix type
+                       1=real,single precision;
+                       2=real,double precision;
+                       3=complex,single precision;
+                       4=complex,double precision
         :returns: NWV Number of Words per Value
+        
+        .. note:: A word is 4 bytes
+                  nwords(float32)=1;   single precison
+                  nwords(complex32)=2; single precison
+                  nwords(float64)=2;   double precision
+                  nwords(complex64)=4; double precision
         """
         #print A.dtype.type()
         if isinstance(A.dtype.type(), float32):

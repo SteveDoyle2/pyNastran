@@ -134,7 +134,7 @@ class OP2(BDF,
         """
         BDF.__init__(self, debug=debug, log=log)
         self.set_subcases()  # initializes the variables
-        self.log.debug('op2FileName = %s' % (op2FileName))
+        self.log.debug('op2FileName = %s' % op2FileName)
         bdfExtension = '.bdf'
         f06Extension = '.f06'
         (fname, extension) = os.path.splitext(op2FileName)

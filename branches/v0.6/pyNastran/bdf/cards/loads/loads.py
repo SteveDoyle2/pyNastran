@@ -198,7 +198,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         self.lid = model.Load(self.lid, msg=msg)
         if self.tid:
-            self.tid = model.Load(self.tid, msg=msg)
+            self.tid = model.Table(self.tid, msg=msg)
 
     def LoadID(self, lid):
         if isinstance(lid, int):
@@ -223,7 +223,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     def Tid(self):
         if self.tid is None:
             return None
-        if isinstance(self.tid, int):
+        elif isinstance(self.tid, int):
             return self.tid
         return self.tid.tid
 
@@ -640,7 +640,7 @@ class RLOAD1(TabularLoad):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
-        msg = ' which is required by %s=%s' % (self.type, self.sid)
+        msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
         if self.tc:
             self.tc = model.Table(self.tc, msg=msg)
         if self.td:
@@ -722,7 +722,7 @@ class RLOAD2(TabularLoad):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
-        msg = ' which is required by %s=%s' % (self.type, self.sid)
+        msg = ' which is required by RLOAD2=%s' % (self.sid)
         if self.tb:
             self.tb = model.Table(self.tb, msg=msg)
         if self.tp:
@@ -806,7 +806,7 @@ class RANDPS(RandomLoad):
 
     def cross_reference(self, model):
         if self.tid:
-            msg = ' which is required by %s=%s' % (self.type, self.sid)
+            msg = ' which is required by RANDPS sid=%s' % (self.sid)
             self.tid = model.Table(self.tid, msg=msg)
 
     def getLoads(self):
