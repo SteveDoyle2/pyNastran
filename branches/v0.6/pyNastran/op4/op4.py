@@ -26,14 +26,18 @@
 __all__ = ['OP4']
 
 import os
+import io
 from struct import pack, unpack
+
 from numpy import (array, zeros, float32, float64, complex64, complex128, 
                   allclose)
 from scipy.sparse import coo_matrix
+
 from pyNastran.utils import is_binary
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 #from pyNastran.op2.fortranFile import FortranFile
-import io
+from pyNastran.utils.gui_io import load_file_dialog
+
 
 
 class OP4Deprecated(object):
@@ -62,7 +66,7 @@ class OP4(OP4Deprecated):
         self.n = 0
         self.endian = ''
 
-    def read_op4(self, op4_filename, matrix_names=None, precision='default'):
+    def read_op4(self, op4_filename=None, matrix_names=None, precision='default'):
         """
         Reads a NASTRAN OUTPUT4 file, regular or sparse, and stores the
         matrices as the output arguments of the function.  The number of matrices
@@ -91,24 +95,44 @@ class OP4(OP4Deprecated):
         :param op4_filename: an OP4 filename.  Type=STRING.
         :param matrix_names: matrix name(s) (or None); Type=LIST OF STRINGS / STRING / NONE.
         :param precision: specifies if the matrices are in single or double precsion
-               (values='default','single','double') which means the format will be whatever the file is in
+               (values='default', 'single', 'double') which means the format will be whatever the file is in
 
         :returns: dictionary of matrices where the key is the name and the
-                  value is a matrix:
-            Dense Type:  NUMPY.NDARRAY
-            Sparse Type: SCIPY.SPARSE.COO_MATRIX
+                  value is [form, matrix]
+              ==== ===============
+              Form Definition
+              ==== ===============
+              1.   Square
+              2.   Rectangular
+              3.   Diagonal
+              6.   Symmetric
+              8.   Id entity
+              9.   Pseudoidentity
+              ==== ===============
+
+            Matrix:
+              Dense Type:  NUMPY.NDARRAY
+              Sparse Type: SCIPY.SPARSE.COO_MATRIX
 
         .. note:: based off the MATLAB code SAVEOP4 developed by ATA-E and later UCSD.
         .. note:: it's strongly recommended that you convert sparse matrices to another
-         format before doing math on them.  This is standard with sparse matrices.
+                  format before doing math on them.  This is standard with sparse matrices.
+
         .. warning:: sparse binary is buggy right now        """
         assert precision in ['default', 'single', 'double'], "precison=|%s| valid=['default','single','double']"
+        if op4_filename is None:
+            wildcard_wx = "Nastran OP4 (*.op4)|*.op4|" \
+                "All files (*.*)|*.*"
+            wildcard_qt = "Nastran OP4 (*.op4);;All files (*)"
+            title = 'Please select a OP4 to load'
+            op4_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
+        
         if isinstance(matrix_names, str):
             matrix_names = [matrix_names]
         #assert isinstance(matrix_names, list), 'type(matrix_names)=%s' % type(matrix_names)
 
         if not os.path.exists(op4_filename):
-            raise IOError('cannot find op4_filename=|%s|' % op4_filename)
+            raise IOError('cannot find op4_filename=%r' % op4_filename)
         
         if is_binary(op4_filename):
             return self.read_op4_binary(op4_filename, matrix_names, precision)
@@ -912,20 +936,20 @@ class OP4(OP4Deprecated):
         an entry in the matrix takes up.
 
         :param A: a matrix or entry in a matrix (to save memory)
-        :param precision: data precision ='default','single','double'
+        :param precision: data precision ='default', 'single', 'double'
 
         :returns: Type matrix type
-                       1=real,single precision;
-                       2=real,double precision;
-                       3=complex,single precision;
-                       4=complex,double precision
+                       1 = real,single precision;
+                       2 = real,double precision;
+                       3 = complex,single precision;
+                       4 = complex,double precision
         :returns: NWV Number of Words per Value
         
-        .. note:: A word is 4 bytes
-                  nwords(float32)=1;   single precison
-                  nwords(complex32)=2; single precison
-                  nwords(float64)=2;   double precision
-                  nwords(complex64)=4; double precision
+        .. note:: a word is 4 bytes
+                  nwords(float32)=1;    single precison
+                  nwords(complex64)=2;  single precison
+                  nwords(float64)=2;    double precision
+                  nwords(complex128)=4; double precision
         """
         #print A.dtype.type()
         if isinstance(A.dtype.type(), float32):
