@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 # pylint: disable=C0103,C0111,E1101
 
 #VTK_TRIANGLE = 5
@@ -117,8 +117,8 @@ class NastranIO(object):
 
         #self.aQuadGrid.Allocate(nElements+nNodes, 1000)
 
-        if 'CONM2' in model.cardCount:
-            nCONM2 = model.cardCount['CONM2']
+        if 'CONM2' in model.card_count:
+            nCONM2 = model.card_count['CONM2']
         else:
             nCONM2 = 0
         self.grid.Allocate(self.nElements, 1000)
@@ -185,7 +185,7 @@ class NastranIO(object):
             #elif isinstance(element,CAERO2): # cylinder
                 #pass
             else:
-                print("skipping %s" % (element.type))
+                print("skipping %s" % element.type)
 
         self.mapElements(points, points2, self.nidMap, model, j)
 
@@ -376,13 +376,18 @@ class NastranIO(object):
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
             elif (isinstance(element, LineElement) or
-                  isinstance(element, SpringElement)):
-                elem = vtk.vtkLine()
-                nodeIDs = element.nodeIDs()
-                elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
-                elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
+                  isinstance(element, SpringElement) or
+                  element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
+                      'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                      'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
+
+                    nodeIDs = element.nodeIDs()
+                    if 0 not in nodeIDs:
+                        elem = vtk.vtkLine()
+                        elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
+                        elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
+                        self.grid.InsertNextCell(elem.GetCellType(),
+                                                 elem.GetPointIds())
             elif isinstance(element, CONM2):  # not perfectly located
                 del self.eidMap[eid]
                 i -= 1
@@ -404,7 +409,7 @@ class NastranIO(object):
                 del self.eidMap[eid]
                 i -= 1
 
-                print("skipping %s" % (element.type))
+                print("skipping %s" % element.type)
             i += 1
 
         self.grid.SetPoints(points)

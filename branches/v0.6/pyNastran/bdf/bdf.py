@@ -41,6 +41,7 @@ import traceback
 
 from pyNastran.utils import list_print, is_string, object_attributes
 from pyNastran.utils.log import get_logger
+from pyNastran.utils.gui_io import load_file_dialog
 
 
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
@@ -684,7 +685,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 print(str(card))
                 raise
         
-    def read_bdf(self, bdf_filename, include_dir=None, xref=True, punch=False):
+    def read_bdf(self, bdf_filename=None, include_dir=None, xref=True, punch=False):
         """
         Read method for the bdf files
         
@@ -708,15 +709,24 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         bdf.elements = 10
         etc.
         """
+        if bdf_filename is None:
+            wildcard_wx = "Nastran BDF (*.bdf, *.dat)|*.bdf, *.dat|" \
+                "All files (*.*)|*.*"
+            wildcard_qt = "Nastran BDF (*.bdf,*.dat);;All files (*)"
+            title = 'Please select a BDF to load'
+            op4_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
+
+        #: the active filename (string)
+        self.bdf_filename = bdf_filename
+        if include_dir is None:
+            include_dir = os.path.dirname(bdf_filename)
+
+        #: the directory of the 1st BDF (include BDFs are relative to this one)
+        self.include_dir = include_dir
+
+        if not os.path.exists(bdf_filename):
+            raise IOError('cannot find bdf_filename=%r' % bdf_filename)
         try:
-            #: the active filename (string)
-            self.bdf_filename = bdf_filename
-
-            if include_dir is None:
-                include_dir = os.path.dirname(bdf_filename)
-            #: the directory of the 1st BDF (include BDFs are relative to this one)
-            self.include_dir = include_dir
-
             self._open_file(self.bdf_filename)
             self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
             if not punch:
