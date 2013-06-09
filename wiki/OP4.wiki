@@ -78,12 +78,13 @@ matrices.keys()
 
 =Cython OP4 Reader (v0.6)=
 The Cython OP4 reader is faster and uses less memory than the pure Python version, but has a slightly different API. 
+
 Import the OP4 reader
 {{{
 import pyNastran.op4.cop4 as op4
 }}}
 
-==Examining OP4 File Contents==
+==Examine OP4 File Contents==
 Print detailed information on the matrices stored in the file sol103.op4.
 {{{
 op4.OP4('sol103.op4').print_header()
@@ -92,7 +93,7 @@ Store the OP4 header information in the Python variable 'header'.
 {{{
 header = op4.OP4('sol103.op4')
 }}}
-Print the names of the matrices in the file 'sol103.op4'.
+Print the names of the matrices in the file 'sol103.op4' using the header variable created on the previous line:
 {{{
 for i in range(header.nmat): print('%2d. %s' % (i+1, header.name[i]))
 }}}
@@ -101,6 +102,11 @@ for i in range(header.nmat): print('%2d. %s' % (i+1, header.name[i]))
 Load the first matrix from the file kd.op4:
 {{{
 K = op4.Load('kd.op4')
+}}}
+
+Load the matrices named Kxx and Mxx from kd.op4:
+{{{
+K, M = op4.Load('kd.op4', 'Kxx', 'Mxx')
 }}}
 
 Load the first three matrices from file kd.op4:
@@ -113,11 +119,6 @@ Skip the first matrix, then load the next two matrices from kd.op4:
 D, M = op4.Load('kd.op4', nmat=2, skip=1)
 }}}
 
-Load the matrices named Kxx and Mxx from kd.op4:
-{{{
-K, M = op4.Load('kd.op4', 'Kxx', 'Mxx')
-}}}
-
 Load all matrices from kd.op4.  Returns a dictionary of matrices keyed by matrix name:
 {{{
 Dict = op4.Load('kd.op4', '*')
@@ -126,6 +127,17 @@ Dict = op4.Load('kd.op4', '*')
 Skip the first matrix, then load all remaining matrices from kd.op4.  Returns a dictionary of matrices keyed by matrix name:
 {{{
 Dict = op4.Load('kd.op4', '*', skip=1)
+}}}
+    
+==Save Matrices==
+Write numpy arrays K and D to the file 'kd.op4' with OP4 matrix names "Kxx" and "M0000001" using native binary format (matrices that are not given explicit names, as with D in the line below, receive default names of "M0000001" through "M9999999"):
+{{{
+op4.Save('kd.op4', Kxx=K, D)
+}}}
+
+Write numpy arrays K and D to the file 'kd.op4' with names "Kxx" and "Dxx" as a text file with 5 mantissa digits:
+{{{
+op4.Save('kd.op4', Kxx=K, Dxx=D, digits=5)
 }}}
 
 
