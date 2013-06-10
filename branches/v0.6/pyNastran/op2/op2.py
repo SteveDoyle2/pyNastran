@@ -43,6 +43,8 @@ from pyNastran.op2.tables.geom.geometryTables import GeometryTables
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.f06.f06Writer import F06Writer
+from pyNastran.utils.gui_io import load_file_dialog
+
 
 class OP2Deprecated(object):
 
@@ -122,11 +124,11 @@ class OP2(BDF,
             return False
         return True
 
-    def __init__(self, op2FileName, make_geom=False, debug=True, log=None):
+    def __init__(self, op2FileName=None, make_geom=False, debug=True, log=None):
         """
         Initializes the OP2 object
 
-        :param op2FileName: the file to be parsed
+        :param op2FileName: the file to be parsed (string or None for GUI)
         :param make_geom: reads the BDF tables (default=False)
         :param debug: prints data about how the OP2 was parsed (default=False)
         :param log: a logging object to write debug messages to
@@ -134,6 +136,14 @@ class OP2(BDF,
         """
         BDF.__init__(self, debug=debug, log=log)
         self.set_subcases()  # initializes the variables
+
+        if op2_filename is None:
+            wildcard_wx = "Nastran OP2 (*.op2)|*.op2|" \
+                "All files (*.*)|*.*"
+            wildcard_qt = "Nastran OP2 (*.op2);;All files (*)"
+            title = 'Please select a OP2 to load'
+            op2_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
+
         self.log.debug('op2FileName = %s' % op2FileName)
         bdfExtension = '.bdf'
         f06Extension = '.f06'
@@ -737,8 +747,7 @@ class OP2(BDF,
 
         return data
 
-    def read_op2(self):
-        #: the OP2 file object
+    def read_op2(self, op2_filename=None):
         self.op2 = open(self.op2FileName, 'rb')
         try:
             if self.make_op2_debug:
