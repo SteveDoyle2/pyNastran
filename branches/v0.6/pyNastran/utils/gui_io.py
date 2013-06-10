@@ -25,9 +25,13 @@ elif fmode in [1, 2]:
             # set the position and size of the window
             # make it really small, so we don't see this dummy window
             self.setGeometry(1, 1, 0, 0)
- 
+
 #----------------------------------------------------------------------
 #print "fmode =", fmode
+
+def save_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
+    return load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname)
+
 def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
     fname = None
     if dirname == '':
@@ -46,8 +50,8 @@ def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
             fname = os.path.join(dirname, fileName)
 
     elif fmode in [1, 2]:  # PySide, PyQt4
-        app = QtGui.QApplication.instance() # checks if QApplication already exists 
-	if not app: # create QApplication if it doesnt exist 
+        app = QtGui.QApplication.instance() # checks if QApplication already exists
+	if not app: # create QApplication if it doesnt exist
 	    app = QtGui.QApplication([])
         form = QtDialog()
         form.show()
