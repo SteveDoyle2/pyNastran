@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from struct import unpack
 
 from pyNastran.bdf.cards.loads.staticLoads import (FORCE, FORCE1, FORCE2, GRAV,
@@ -290,7 +290,7 @@ class Geometry3(object):
         #print "reading PLOAD4"
         n = 0
         nEntries = len(data) // 48  # 13*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n + 48]
                          #iiffffiiifffi   ssssssssssssssss
             out = unpack('2i4f3i3f', eData)
@@ -323,7 +323,7 @@ class Geometry3(object):
         #print "reading QBDY1"
         n = 0
         nEntries = len(data) // 12  # 3*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n + 12]
             out = unpack('ifi', eData)
             (sid, q0, eid) = out
@@ -339,7 +339,7 @@ class Geometry3(object):
         #print "reading QBDY2"
         n = 0
         nEntries = len(data) // 40  # 10*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n + 40]
             out = unpack('iiffffffff', eData)
             (sid, eid, q1, q2, q3, q4, q5, q6, q7, q8) = out
@@ -355,7 +355,7 @@ class Geometry3(object):
         #print "reading QBDY3"
         n = 0
         nEntries = len(data) // 16  # 4*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n + 16]
             out = unpack('ifii', eData)
             (sid, q0, cntrlnd, eid) = out
@@ -372,7 +372,7 @@ class Geometry3(object):
         #print "reading TEMP"
         n = 0
         nEntries = len(data) // 12  # 3*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n + 12]
             out = unpack('iif', eData)
             (sid, g, T) = out
@@ -392,7 +392,7 @@ class Geometry3(object):
         #print "reading TEMPD"
         n = 0
         nEntries = len(data) // 8  # 2*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n + 8]
             out = unpack('if', eData)
             (sid, T) = out

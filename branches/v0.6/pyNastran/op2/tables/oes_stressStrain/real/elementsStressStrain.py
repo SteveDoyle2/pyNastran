@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 #pylint: disable=C0103,C0301,R0914,E1101
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -284,13 +284,13 @@ class RealElementsStressStrain(object):
             #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
             self.obj.add_new_eid(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
 
-            ibase += 36  # 4*9
             for i in xrange(3):
                 (loc, rs, azs, As, ss, maxp, tmax, octs) = unpack(b'i7f', self.data[ibase:ibase + 32])
                 #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
                 self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                 ibase += 32  # 4*8
-        self.data = self.data[ibase:]
+        n = nelements * 132
+        self.data = self.data[n:]
 
     def OES_CSOLID_39_67_68(self):
         """
@@ -359,6 +359,7 @@ class RealElementsStressStrain(object):
                 #print "%s eid=%s cid=%s grid=%s syy=%-6i tyz=%-5i s2=%-6i b1=%i b2=%i b3=%i"                % (element_type,eid,cid,grid,syy,syz,s2,b1,b2,b3)
                 #print "%s eid=%s cid=%s grid=%s szz=%-6i txz=%-5i s3=%-6i c1=%i c2=%i c3=%i"                % (element_type,eid,cid,grid,szz,sxz,s3,c1,c2,c3)
                 #print ""
+
                 #smax = max(s1,s2,s3)
                 #smin = min(s1,s2,s3)
 
@@ -370,7 +371,8 @@ class RealElementsStressStrain(object):
                 else:
                     self.obj.add(dt, eid2, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
                 ibase += 84
-        self.data = self.data[ibase:]
+        n = nelements * ntotal
+        self.data = self.data[n:]
 
     def OES_CTRIA3_74(self):
         """
@@ -472,6 +474,7 @@ class RealElementsStressStrain(object):
 
             self.obj.add_new_eid(dt, eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2)
             n += nTotal
+        n = nelements * ntotal
         self.data = self.data[n:]
 
     def OES_RODNL_89_92(self):
@@ -500,7 +503,7 @@ class RealElementsStressStrain(object):
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
 
-        nTotal = 52  # 4*13
+        ntotal = 52  # 4*13
         format1 += '12f'  # 1+12=13
         format1 = bytes(format1)
         assert 13 == self.num_wide, 'num_wide=%s not 13' % self.num_wide
@@ -518,7 +521,8 @@ class RealElementsStressStrain(object):
                     ecs1, ex1, ey1, ez1, exy1)
             self.obj.add_new_eid(self.element_type, dt, data)
             #print "eid=%s axial=%s equivStress=%s totalStrain=%s effPlasticCreepStrain=%s effCreepStrain=%s linearTorsionalStresss=%s" % (eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss)
-            n += nTotal
+            n += ntotal
+        n = nelements * ntotal
         self.data = self.data[n:]
 
     def OES_TETRANL_85_PENTANL_91_CHEXANL_93(self):  # TETRANL 85 / PENTANL 91 / HEXANL 93
@@ -536,7 +540,7 @@ class RealElementsStressStrain(object):
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '4s'
         format1 = bytes(format1)
-        
+
         if self.element_type == 85:
             eType = 'CTETRANL'
             nNodes = 5
@@ -553,7 +557,7 @@ class RealElementsStressStrain(object):
         nTotal = 8 + 64 * nNodes
 
         nelements = len(self.data) // ntotal
-        for i in range(nelements):  # 2+16*9 = 146 -> 146*4 = 584
+        for i in xrange(nelements):  # 2+16*9 = 146 -> 146*4 = 584
             eData = self.data[0:8]
             self.data = self.data[8:]
             (eid, cType) = unpack(format1, eData)
@@ -570,8 +574,9 @@ class RealElementsStressStrain(object):
                 #print "gid=%3s ecs=%.3g   ex=%.3g ey=%.3g ez=%.3g exy=%.3g eyz=%.3g ezx=%.3g"  % (grid,ecs,ex,ey,ez,exy,eyz,exz)
                 #assert cType == 'GRID',cType
                 #print("cType =", cType)
+        n = nelements * ntotal
 
-    def OES_VUHEXA_145_VUPENTA_146_VUTETRA_147(self):  # VUHEXA 145 / 
+    def OES_VUHEXA_145_VUPENTA_146_VUTETRA_147(self):  # VUHEXA 145 /
         """
         VUTETRA - 4 nodes
         VUPENTA 146 - 6 nodes
@@ -581,7 +586,7 @@ class RealElementsStressStrain(object):
         (format1, extract) = self.getOUG_FormatStart()
         format1 += 'i'
         format1 = bytes(format1)
-        
+
         if self.element_type == 147:
             eType = 'VUTETRA'
             nNodes = 4
@@ -628,7 +633,7 @@ class RealElementsStressStrain(object):
         n1 = 24
         format1 = '4s5f'
         format1 = bytes(format1)
-        
+
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             eData = self.data[0:8]
@@ -649,7 +654,7 @@ class RealElementsStressStrain(object):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         composite quad
-        
+
          95 - CQUAD4
          96 - CQUAD8
          97 - CTRIA3
@@ -685,7 +690,8 @@ class RealElementsStressStrain(object):
             self.eid2 = eid
             ibase += 44
             #self.dn += 348
-        self.data = self.data[ibase:]
+        n = nelements * 44
+        self.data = self.data[n:]
         #print "3 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
 
     def OES_QUAD4FD_139(self):  # hyperelastic
@@ -718,6 +724,8 @@ class RealElementsStressStrain(object):
                 #print "***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" % (ID,sx,sy,sxy,angle,smj,smi)
             #self.obj.add(data)
             #x+=1
+        #n = nelements * 148
+        #self.data = self.data[n:]
 
     def OES_CBUSH_102(self):
         dt = self.nonlinear_factor
@@ -739,6 +747,7 @@ class RealElementsStressStrain(object):
 
             self.obj.add_new_eid(self.element_type, dt, eid, tx, ty, tz, rx, ry, rz)
             n += nTotal
+        n = nelements * ntotal
         self.data = self.data[n:]
 
     def OES_CQUAD4_144(self):
@@ -783,9 +792,9 @@ class RealElementsStressStrain(object):
         format1 = bytes(format1)
 
         nelements = len(self.data) // ntotal
-        nrows = (1 + nNodes) * nelements
+        nrows = (1 + nNodes) * nelements  # centroid + nnodes
         #print('nrows = %i' % nrows)
-        
+
         ibase = 0
         gridC = 'C'
         cformat = b'i4s'+format1  # center format
@@ -815,7 +824,8 @@ class RealElementsStressStrain(object):
                 self.obj.add(dt, eid, grid, fd2, sx2, sy2,
                              txy2, angle2, major2, minor2, vm2)
                 ibase += 68
-        self.data = self.data[ibase:]
+        n = nelements * ntotal
+        self.data = self.data[n:]
 
     def OES_VUQUAD_189(self):
         if self.element_type == 144:  # CQUAD4
@@ -857,7 +867,7 @@ class RealElementsStressStrain(object):
             self.data = self.data[68:]
             out = unpack(format1, eData)  # len=17*4
             self.obj.addNewNode(dt, eid, parent, coord, icord, theta, itype)
-            
+
             self.obj.add_new_eid(eType, dt, eid, parent, coord, icord, theta, itype)
             for nodeID in xrange(nNodes):  # nodes pts
                 eData = self.data[0:68]
@@ -869,7 +879,8 @@ class RealElementsStressStrain(object):
                              dummy3, dummy4, dummy5,
                              bcx, bcy, bcxy,tyz,tzx,
                              dummy6,dummy7,dummy8)
-        #self.data = self.data[ibase:]
+        n = nelements * ntotal
+        #self.data = self.data[n:]
 
     def OES_CELAS_224_225(self):
         dt = self.nonlinear_factor
@@ -877,7 +888,7 @@ class RealElementsStressStrain(object):
         (format1, extract) = self.getOUG_FormatStart()
 
         assert self.num_wide == 3, "num_wide=%s not 3" % self.num_wide
-        nTotal = 12  # 4*3
+        ntotal = 12  # 4*3
         format1 += '2f'
         format1 = bytes(format1)
 
@@ -890,6 +901,8 @@ class RealElementsStressStrain(object):
             (eid, force, stress) = out
             eid = extract(eid, dt)
             self.obj.add_new_eid(element_name, dt, eid, force, stress)
+        n = nelements * ntotal
+        #self.data = self.data[n:]
 
     def OESRT_CQUAD4_95(self):
         #dt = self.nonlinear_factor
@@ -911,13 +924,14 @@ class RealElementsStressStrain(object):
             #eid,failure, ply, failureIndexPly, failureIndexBonding, failureIndexMax, flag
             # 3,TSAIWU,1,8.5640,0.0,None
             #print('out', out)
-            
+
             (eid, failure, ply, strengthRatioPly, failureIndexBonding, strengthRatioBonding, flag, flag2) = out
             strengthRatioPly
             #print("eid=%s failure=|%s| ply=%s failureIndexPly=%s  failureIndexBonding=%s strengthRatioBonding=%s flag=%s flag2=%s" % (eid, failure.strip(), ply, failureIndexPly, failureIndexBonding, strengthRatioBonding, flag, flag2))
             print("eid=%s strengthRatioPly=%g failureIndexBonding=%s strengthRatioBonding=%s" % (eid, strengthRatioPly, failureIndexBonding, strengthRatioBonding))
 
             #self.obj.add_new_eid(element_name, dt, eid, force, stress)
-            n += nTotal
+            n += ntotal
+        n = nelements * ntotal
         self.data = self.data[n:]
         asd

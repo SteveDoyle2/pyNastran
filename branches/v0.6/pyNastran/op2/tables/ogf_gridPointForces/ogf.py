@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
@@ -82,7 +82,7 @@ class OGF(object):
         self.add_data_parameter(data,'value1', 'i', 11, False)
         ## Data Value 2
         self.add_data_parameter(data,'value2', 'f', 12, False)
-        
+
         #self.print_block(data) # on
         ## assuming tCode=1
         if self.analysis_code == 1:   # statics / displacement / heat flux

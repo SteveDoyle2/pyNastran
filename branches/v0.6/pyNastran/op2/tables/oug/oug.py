@@ -500,7 +500,6 @@ class OUG(object):
             self.not_implemented_or_skip('only num_wide=8 or 14 is allowed  num_wide=%s' % (self.num_wide))
 
     def OUG_RealTable(self):
-        print("---starting OUG_RealTable---")
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
         #format1 = 'f'
@@ -511,8 +510,6 @@ class OUG(object):
         istart = 0
         iend = 32
         for inode in xrange(nnodes):
-            #print('istart=%i iend=%i' % (istart, iend))
-            print('inode=%i nnodes=%i' % (inode, nnodes))
             eData = self.data[istart:iend]
 
             out = unpack(format1, eData)
@@ -521,17 +518,15 @@ class OUG(object):
             #print "eType=%s" %(eType)
 
             dataIn = [eid2, gridType, tx, ty, tz, rx, ry, rz]
-            print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid2, gridType, tx, ty, tz, rx, ry, rz))
+            #print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid2, gridType, tx, ty, tz, rx, ry, rz))
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #print "%s" %(self.table_name),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             istart = iend
             iend += 32
-        iend2 = 32 * (nnodes + 1)
-        print("iend=%i iend2=%i" % (iend, iend2))
+        iend = 32 * nnodes  # need to reset b/c last iend is wrong
         self.data = self.data[iend:]
-        print("len(self.data)=%i" % len(self.data))
 
     def OUG_ComplexTable(self):
         dt = self.nonlinear_factor
@@ -546,7 +541,7 @@ class OUG(object):
         #print('nnodes =', nnodes)
         istart = 0
         iend = 56  # 14 * 4
-        for i in range(nnodes):
+        for i in xrange(nnodes):
             eData = self.data[istart:iend]
 
             out = unpack(format1, eData)
@@ -577,5 +572,6 @@ class OUG(object):
             self.obj.add(dt, dataIn)
             istart = iend
             iend += 56
+        iend = 56 * nnodes  # need to reset b/c last iend is wrong
         self.data = self.data[iend:]
 
