@@ -747,7 +747,7 @@ class OP2(BDF,
 
         return data
 
-    def read_op2(self, op2_filename=None):
+    def read_op2(self):
         #: the OP2 file object
         self.op2 = open(self.op2FileName, 'rb')
         try:
