@@ -123,7 +123,8 @@ class ComplexBushStressObject(StressObject):
         self.rotations[dt][eid] = [rx, ry, rz]
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
-        raise NotImplementedError('CBUSH')
+        return('NotImplementedError CBUSH\n', pageNum)
+        #raise NotImplementedError('CBUSH')
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
 

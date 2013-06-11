@@ -77,7 +77,7 @@ class RealElementsStressStrain(object):
             raise NotImplementedError('invalid SORTx code')
 
     def OES_Thermal(self, debug=False):
-        #assert self.num_wide==5,'invalid num_wide...num_wide=%s' % (self.num_wide)
+        #assert self.num_wide==5,'invalid num_wide...num_wide=%s' % self.num_wide
 
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
@@ -175,7 +175,7 @@ class RealElementsStressStrain(object):
         #self.print_block(self.data)
 
         assert self.num_wide == 17, ('invalid num_wide...num_wide=%s'
-                                    % (self.num_wide))
+                                    % self.num_wide)
 
         while len(self.data) >= 68:  # 2+17*5 = 87 -> 87*4 = 348
             #print self.print_block(self.data[0:100])
@@ -223,7 +223,7 @@ class RealElementsStressStrain(object):
         dt = self.nonlinear_factor
         #print "len(data) = ",len(self.data)
         assert self.num_wide == 16, ('invalid num_wide...num_wide=%s'
-                                    % (self.num_wide))
+                                    % self.num_wide)
 
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '15f'
@@ -249,7 +249,7 @@ class RealElementsStressStrain(object):
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
 
-        assert self.num_wide == 8, "num_wide=%s not 8" % (self.num_wide)
+        assert self.num_wide == 8, "num_wide=%s not 8" % self.num_wide
         nTotal = 32  # 4*8
         format1 += '6fi'
         format1 = bytes(format1)
@@ -313,7 +313,7 @@ class RealElementsStressStrain(object):
         ElementType = self.get_element_type(self.element_type)
         nNodes = 1  # this is a minimum, it will be reset later
         nNodesExpected = 1
-        #assert self.num_wide in [109,151,193],'invalid num_wide...num_wide=%s' % (self.num_wide)
+        #assert self.num_wide in [109,151,193],'invalid num_wide...num_wide=%s' % self.num_wide
 
         # overly complicated way to get the element type
         # so we can figure out how many elements there are
@@ -340,7 +340,7 @@ class RealElementsStressStrain(object):
             #print "abcd = |%s|" % (abcd)
             #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" % (eid,cid,nNodes,nNodesExpected)
 
-            assert nNodes < 21, self.print_block(eData)
+            assert nNodes < 21,  self.print_block(self.data[ibase:ibase+16])
 
             ibase += 16
             for nodeID in xrange(nNodesExpected):  # nodes pts, +1 for centroid (???)
@@ -459,21 +459,21 @@ class RealElementsStressStrain(object):
         (format1, extract) = self.getOUG_FormatStart()
 
         assert self.num_wide == 11, "num_wide=%s not 11" % (self.num_wide)
-        nTotal = 44  # 4*11
+        ntotal = 44  # 4*11
         format1 += '8f4s4s'
         format1 = bytes(format1)
 
         n = 0
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
-            eData = self.data[n:n + nTotal]
+            eData = self.data[n:n + ntotal]
 
             out = unpack(format1, eData)  # num_wide=25
             (eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2) = out
             eid = extract(eid, dt)
 
             self.obj.add_new_eid(dt, eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2)
-            n += nTotal
+            n += ntotal
         n = nelements * ntotal
         self.data = self.data[n:]
 
@@ -511,7 +511,7 @@ class RealElementsStressStrain(object):
         n = 0
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
-            eData = self.data[n:n + nTotal]
+            eData = self.data[n:n + ntotal]
             out = unpack(format1, eData)  # num_wide=13
 
             (eid, fd1, sx1, sy1, sz1, txy1, es1, eps1, ecs1,
@@ -554,7 +554,7 @@ class RealElementsStressStrain(object):
             #nTotal = 584
         else:
             raise NotImplementedError(self.element_type)
-        nTotal = 8 + 64 * nNodes
+        ntotal = 8 + 64 * nNodes
 
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):  # 2+16*9 = 146 -> 146*4 = 584
@@ -574,7 +574,8 @@ class RealElementsStressStrain(object):
                 #print "gid=%3s ecs=%.3g   ex=%.3g ey=%.3g ez=%.3g exy=%.3g eyz=%.3g ezx=%.3g"  % (grid,ecs,ex,ey,ez,exy,eyz,exz)
                 #assert cType == 'GRID',cType
                 #print("cType =", cType)
-        n = nelements * ntotal
+        #n = nelements * ntotal
+        #self.data = self.data[n:]
 
     def OES_VUHEXA_145_VUPENTA_146_VUTETRA_147(self):  # VUHEXA 145 /
         """
@@ -732,21 +733,21 @@ class RealElementsStressStrain(object):
         (format1, extract) = self.getOUG_FormatStart()
 
         assert self.num_wide == 7, "num_wide=%s not 7" % self.num_wide
-        nTotal = 28  # 4*7
+        ntotal = 28  # 4*7
         format1 += '6f'
         format1 = bytes(format1)
 
         n = 0
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
-            eData = self.data[n:n + nTotal]
+            eData = self.data[n:n + ntotal]
             out = unpack(format1, eData)  # num_wide=7
 
             (eid, tx, ty, tz, rx, ry, rz) = out
             eid = extract(eid, dt)
 
             self.obj.add_new_eid(self.element_type, dt, eid, tx, ty, tz, rx, ry, rz)
-            n += nTotal
+            n += ntotal
         n = nelements * ntotal
         self.data = self.data[n:]
 
@@ -758,7 +759,7 @@ class RealElementsStressStrain(object):
         #data = data[4:]
         #print "*****"
         #self.print_block(self.data)
-        #assert self.num_wide==87,'invalid num_wide...num_wide=%s' % (self.num_wide)
+        #assert self.num_wide==87,'invalid num_wide...num_wide=%s' % self.num_wide
         #if self.num_wide==87: # 2+(17-1)*5 = 87 -> 87*4 = 348
 
         if self.element_type == 144:  # CQUAD4
@@ -894,14 +895,14 @@ class RealElementsStressStrain(object):
 
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
-            eData = self.data[0:nTotal]
-            self.data = self.data[nTotal:]
+            eData = self.data[0:ntotal]
+            self.data = self.data[ntotal:]
 
             out = unpack(format1, eData)  # num_wide=3
             (eid, force, stress) = out
             eid = extract(eid, dt)
             self.obj.add_new_eid(element_name, dt, eid, force, stress)
-        n = nelements * ntotal
+        #n = nelements * ntotal
         #self.data = self.data[n:]
 
     def OESRT_CQUAD4_95(self):
