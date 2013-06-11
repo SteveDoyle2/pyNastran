@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 #from struct import pack
 from numpy import array, sqrt, abs, angle  # dot,
 
@@ -55,7 +55,7 @@ class TableObject(scalarObject):  # displacement style table
 
     def get_stats(self):
         ngrids = len(self.gridTypes)
-        
+
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.translations)
@@ -144,7 +144,7 @@ class TableObject(scalarObject):  # displacement style table
             self.add_new_transient(dt)
         msg = "nodeID=%s v1=%s v2=%s v3=%s\n" % (nodeID, v1, v2, v3)
         msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
-        #print msg
+        print msg
         assert -1 < nodeID < 1000000000, msg
         #assert isinstance(nodeID,int),msg
         #assert nodeID not in self.translations[self.dt],'displacementObject - transient failure'
@@ -569,7 +569,7 @@ class ComplexTableObject(scalarObject):
                        % (self.__class__.__name__, ngrids))
         msg.append('  translations, rotations, gridTypes\n')
         return msg
-            
+
     def isImaginary(self):
         return True
 
@@ -590,7 +590,7 @@ class ComplexTableObject(scalarObject):
         self.data_code['name'] = dtName
         if dt not in self.translations:
             self.update_dt(self.data_code, dt)
-        
+
         for line in data:
             try:
                 (nodeID, gridType, v1, v2, v3, v4, v5, v6) = line

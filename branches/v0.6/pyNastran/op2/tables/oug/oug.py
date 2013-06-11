@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 # http://www.cadfamily.com/online-help/I-DEAS/SDRCHelp/LANG/English/slv_ug/NAS_results_imported.htm
 import sys
 from struct import unpack
@@ -500,15 +500,19 @@ class OUG(object):
             self.not_implemented_or_skip('only num_wide=8 or 14 is allowed  num_wide=%s' % (self.num_wide))
 
     def OUG_RealTable(self):
+        print("---starting OUG_RealTable---")
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
         #format1 = 'f'
         format1 += 'i6f'
         #print("format1 =",format1)
 
-        #print "len(data) = ",len(self.data)
         nnodes = len(self.data) // 32
-        for inode in range(nnodes):
+        istart = 0
+        iend = 32
+        for inode in xrange(nnodes):
+            #print('istart=%i iend=%i' % (istart, iend))
+            print('inode=%i nnodes=%i' % (inode, nnodes))
             eData = self.data[istart:iend]
 
             out = unpack(format1, eData)
@@ -517,20 +521,23 @@ class OUG(object):
             #print "eType=%s" %(eType)
 
             dataIn = [eid2, gridType, tx, ty, tz, rx, ry, rz]
-            #if self.debug:
-            #    print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid, gridType, tx, ty, tz, rx, ry, rz))
+            print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid2, gridType, tx, ty, tz, rx, ry, rz))
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #print "%s" %(self.table_name),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+            istart = iend
+            iend += 32
+        iend2 = 32 * (nnodes + 1)
+        print("iend=%i iend2=%i" % (iend, iend2))
         self.data = self.data[iend:]
+        print("len(self.data)=%i" % len(self.data))
 
     def OUG_ComplexTable(self):
         dt = self.nonlinear_factor
 
         (format1, extract) = self.getOUG_FormatStart()
-        
+
         format1 += 'i12f'
         #print "format1 = ",format1
         is_magnitude_phase = self.is_magnitude_phase()
@@ -568,5 +575,7 @@ class OUG(object):
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
+            istart = iend
+            iend += 56
         self.data = self.data[iend:]
 

@@ -11,8 +11,6 @@ op2 = OP2(op2_filename)
 #assert os.path.exists(op2_filename), print_bad_path(op2_filename)
 op2.read_op2()
 
-# <codecell>
-
 from pyNastran.utils import object_methods
 from numpy import abs
 
@@ -46,13 +44,11 @@ plate_stress.isVonMises()  # True
 ovm = plate_stress.ovmShear
 #ovm.keys()  # modes 1-6
 #ovm[6].keys()  # elements 1-3277
-print "vals =", ovm[6][1000]['C'] 
+print "vals =", ovm[6][1000]['C']
 ovm_mode6_eid1000 = abs_max_min(ovm[6][1000]['C'])
 print "ovm_mode6_eid1000 =", ovm_mode6_eid1000
 
 ps = copy.deepcopy(plate_stress)
-
-# <codecell>
 
 ps = copy.deepcopy(plate_stress)
 print "ps.mode_cycles", ps.mode_cycles

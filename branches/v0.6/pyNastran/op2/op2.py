@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 #pylint: disable=C0103,W0201,W0223,R0901,R0902,R0904
 """
 Main OP2 class
@@ -137,12 +137,12 @@ class OP2(BDF,
         BDF.__init__(self, debug=debug, log=log)
         self.set_subcases()  # initializes the variables
 
-        if op2_filename is None:
+        if op2FileName is None:
             wildcard_wx = "Nastran OP2 (*.op2)|*.op2|" \
                 "All files (*.*)|*.*"
             wildcard_qt = "Nastran OP2 (*.op2);;All files (*)"
             title = 'Please select a OP2 to load'
-            op2_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
+            op2FileName = load_file_dialog(title, wildcard_wx, wildcard_qt)
 
         self.log.debug('op2FileName = %s' % op2FileName)
         bdfExtension = '.bdf'
@@ -244,8 +244,8 @@ class OP2(BDF,
             'AFRF', 'AGRF',
             'PMRF', 'PERF', 'PFRF',
             'FOL',
-            
-            'DBCOPT','CONTACT', 
+
+            'DBCOPT','CONTACT',
         ]
 
         #: a dictionary that maps an integer of the subcaseName to the
