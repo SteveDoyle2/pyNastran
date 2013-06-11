@@ -71,16 +71,29 @@ class OP4(OP4Deprecated):
         :param op4_filename: an OP4 filename.  Type=STRING.
         :param matrix_names: matrix name(s) (or None); Type=LIST OF STRINGS / STRING / NONE.
         :param precision: specifies if the matrices are in single or double precsion
-               (values='default','single','double') which means the format will be whatever the file is in
+               (values='default', 'single', 'double') which means the format will be whatever the file is in
 
         :returns: dictionary of matrices where the key is the name and the
-                  value is a matrix:
-            Dense Type:  NUMPY.NDARRAY
-            Sparse Type: SCIPY.SPARSE.COO_MATRIX
+                  value is [form, matrix]
+              ==== ===============
+              Form Definition
+              ==== ===============
+              1.   Square
+              2.   Rectangular
+              3.   Diagonal
+              6.   Symmetric
+              8.   Id entity
+              9.   Pseudoidentity
+              ==== ===============
+
+            Matrix:
+              Dense Type:  NUMPY.NDARRAY
+              Sparse Type: SCIPY.SPARSE.COO_MATRIX
 
         .. note:: based off the MATLAB code SAVEOP4 developed by ATA-E and later UCSD.
         .. note:: it's strongly recommended that you convert sparse matrices to another
-         format before doing math on them.  This is standard with sparse matrices.
+                  format before doing math on them.  This is standard with sparse matrices.
+
         .. warning:: sparse binary is buggy right now        """
         assert precision in ['default', 'single', 'double'], "precison=|%s| valid=['default','single','double']"
         if op4_filename is None:

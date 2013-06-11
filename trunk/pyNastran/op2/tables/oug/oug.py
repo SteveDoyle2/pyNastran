@@ -602,6 +602,7 @@ class OUG(object):
             inode += 1
             istart = iend
             iend += 56
+        self.data = self.data[iend:]
         
         self.obj.data['node_id'][inode_start:inode_end] = nodeIDs_to_index
         if dt:
