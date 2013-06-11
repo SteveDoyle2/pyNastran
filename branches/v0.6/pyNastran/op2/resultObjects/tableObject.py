@@ -144,7 +144,7 @@ class TableObject(scalarObject):  # displacement style table
             self.add_new_transient(dt)
         msg = "nodeID=%s v1=%s v2=%s v3=%s\n" % (nodeID, v1, v2, v3)
         msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
-        print msg
+        #print msg
         assert -1 < nodeID < 1000000000, msg
         #assert isinstance(nodeID,int),msg
         #assert nodeID not in self.translations[self.dt],'displacementObject - transient failure'
