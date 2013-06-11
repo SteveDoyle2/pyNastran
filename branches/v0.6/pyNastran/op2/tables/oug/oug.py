@@ -507,10 +507,9 @@ class OUG(object):
         #print("format1 =",format1)
 
         #print "len(data) = ",len(self.data)
-        while len(self.data) >= 32:  # 8*4
-            eData = self.data[0:32]
-            self.data = self.data[32:]
-            #print "len(data) = ",len(eData)
+        nnodes = len(self.data) // 32
+        for inode in range(nnodes):
+            eData = self.data[istart:iend]
 
             out = unpack(format1, eData)
             (eid, gridType, tx, ty, tz, rx, ry, rz) = out
@@ -525,6 +524,7 @@ class OUG(object):
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
+        self.data = self.data[iend:]
 
     def OUG_ComplexTable(self):
         dt = self.nonlinear_factor
@@ -535,10 +535,12 @@ class OUG(object):
         #print "format1 = ",format1
         is_magnitude_phase = self.is_magnitude_phase()
 
-        while len(self.data) >= 56:  # 14*4
-            eData = self.data[0:56]
-            self.data = self.data[56:]
-            #print "len(data) = ",len(eData)
+        nnodes = len(self.data) // 56
+        #print('nnodes =', nnodes)
+        istart = 0
+        iend = 56  # 14 * 4
+        for i in range(nnodes):
+            eData = self.data[istart:iend]
 
             out = unpack(format1, eData)
             (eid, gridType, txr, tyr, tzr, rxr, ryr, rzr,
@@ -566,5 +568,5 @@ class OUG(object):
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+        self.data = self.data[iend:]
 

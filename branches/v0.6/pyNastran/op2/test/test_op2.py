@@ -194,11 +194,11 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
     #    isPassed = True
     #except IndexError: # bad bdf
     #    isPassed = True
-    #except IOError: # missing file
-        #isPassed = False
-        #raise
-    #except SyntaxError: #Param Parse
-        #isPassed = True
+    except IOError: # missing file
+        isPassed = False
+        raise
+    except SyntaxError: #Param Parse
+        isPassed = True
     except:
         #print e
         print_exc(file=sys.stdout)
@@ -251,6 +251,7 @@ def main():
 
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
+
     import time
     t0 = time.time()
     run_op2(op2FileName,make_geom=make_geom,write_bdf=write_bdf,write_f06=write_f06,write_matlab=write_matlab,is_mag_phase=is_mag_phase,print_results=print_results,debug=debug)

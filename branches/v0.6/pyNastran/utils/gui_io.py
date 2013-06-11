@@ -51,8 +51,8 @@ def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
 
     elif fmode in [1, 2]:  # PySide, PyQt4
         app = QtGui.QApplication.instance() # checks if QApplication already exists
-	if not app: # create QApplication if it doesnt exist
-	    app = QtGui.QApplication([])
+        if not app: # create QApplication if it doesnt exist
+            app = QtGui.QApplication([])
         form = QtDialog()
         form.show()
 
