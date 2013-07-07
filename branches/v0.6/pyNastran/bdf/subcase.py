@@ -858,6 +858,8 @@ def update_param_name(param_name):
         param_name = 'YTITLE'
     elif param_name.startswith('SACCE'):
         param_name = 'SACCELERATION'
+    elif param_name.startswith('GPSTRE'):
+        param_name = 'GPSTRESS'
     elif param_name.startswith('GPSTR'):
         param_name = 'GPSTRAIN'
     elif param_name in ['DEFO', 'DEFOR']:
