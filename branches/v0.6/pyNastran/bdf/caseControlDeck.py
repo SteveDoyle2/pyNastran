@@ -78,7 +78,6 @@ class CaseControlDeck(object):
         # allows BEGIN BULK to be turned off
         self.write_begin_bulk = True
         self._begin_count = 0
-
         
         self.lines = lines
         self.subcases = {0: Subcase(id=0)}
@@ -187,15 +186,42 @@ class CaseControlDeck(object):
                 subcase_to[key] = copy.deepcopy(param)
 
     def get_subcase_list(self):
+        """
+        Gets the list of subcases including the global subcase ID (0)
+
+        :param self:  the CaseControlDeck object
+        """
         return sorted(self.subcases.keys())
 
     def get_local_subcase_list(self):
-        key_list = [key for key in self.subcases if key != 0]  # skip the global
-        return sorted(key_list)
+        """
+        Gets the list of subcases that aren't the global subcase ID
+
+        :param self:  the CaseControlDeck object
+        """
+        id_list = [id for id in self.subcases if id != 0]  # skip the global
+        return sorted(id_list)
 
     def update_solution(self, isubcase, sol):
-        """sol = STATICS, FLUTTER, MODAL, etc."""
-        self.add_parameter_to_local_subcase(isubcase, 'ANALYSIS %s' % (sol))
+        """
+        sol = STATICS, FLUTTER, MODAL, etc.
+
+        :param self:  the CaseControlDeck object
+        :param isubcase: the subcase ID to update
+        :param sol: the solution type to change the solution to
+        
+        >>> print bdf.case_control
+        SUBCASE 1
+            DISP = ALL
+        
+        >>> bdf.case_control.update_solution(1, 'FLUTTER')
+        >>> print bdf.case_control
+        SUBCASE 1
+            ANALYSIS FLUTTER
+            DISP = ALL
+        >>> 
+        """
+        self.add_parameter_to_local_subcase(isubcase, 'ANALYSIS %s' % sol)
 
     def add_parameter_to_global_subcase(self, param):
         """
@@ -252,23 +278,9 @@ class CaseControlDeck(object):
             msg += '  param = |%r|' % (param)
             raise SyntaxError(msg)
         #self.read([param])
-        lines = self._clean_lines([param])
+        lines = _clean_lines(self, [param])
         (j, key, value, options, param_type) = self._parse_entry(lines)
         return (j, key, value, options, param_type)
-
-    def _clean_lines(self, lines):
-        """
-        Removes comment characters defined by a *$*.
-
-        :param self:  the CaseControlDeck object
-        :param lines: the lines to clean.
-        """
-        lines2 = []
-        for line in lines:
-            line = line.strip(' \n\r').split('$')[0].rstrip()
-            if line:
-                lines2.append(line)
-        return lines2
 
     def _read(self, lines):
         """
@@ -279,8 +291,10 @@ class CaseControlDeck(object):
                      follow that when it's written out
         """
         isubcase = 0
-        lines = self._clean_lines(lines)
+        lines = _clean_lines(self, lines)
+        self.output_lines = []
         i = 0
+        is_output_lines = False
         while i < len(lines):
             line = lines[i]
 
@@ -299,7 +313,11 @@ class CaseControlDeck(object):
                 self.begin_bulk = [key, value]
                 self._begin_count += 1
                 continue
-            
+            elif is_output_lines or line.startswith('OUTPUT'):
+                is_output_lines = True
+                #output_line = '%s(%s) = %s\n' % (key, options, value)
+                self.output_lines.append(line)
+                continue
             #print("")
             #print("key=|%s| value=|%s| options=|%s| paramType=%s" %(key, value,
             #                                                        options,
@@ -475,12 +493,13 @@ class CaseControlDeck(object):
             options = None
             param_type = 'KEY-type'
         else:
-            msg = 'generic catch all...line=|%r|' % (line)
+            msg = 'generic catch all...line=|%r|' % line
             key = ''
             value = line
             options = None
             param_type = 'KEY-type'
         i += 1
+        
         return (i, key, value, options, param_type)
 
     def finish_subcases(self):
@@ -573,6 +592,9 @@ class CaseControlDeck(object):
             msg += subcase.write_subcase(subcase0)
         #if len(self.subcases) == 1:
             #msg += 'BEGIN BULK\n'
+        
+        if self.output_lines:
+            msg += '\n'.join(self.output_lines) + '\n'
         if self.write_begin_bulk:
             msg += ' '.join(self.begin_bulk) + '\n'
         return msg
@@ -709,6 +731,22 @@ def verify_card2(key, value, options, line):
         assert value in ['YES'], 'line=%r is invalid; value=%r' % (line, value)
     else:
         raise NotImplementedError('key=%r line=%r' % (key, line))
+
+
+def _clean_lines(case_control, lines):
+    """
+    Removes comment characters defined by a *$*.
+
+    :param case_control:  the CaseControlDeck object
+    :param lines: the lines to clean.
+    """
+    lines2 = []
+    for line in lines:
+        line = line.strip(' \n\r').split('$')[0].rstrip()
+        if line:
+            lines2.append(line)
+    return lines2
+
 
 if __name__ == '__main__':  # pragma: no cover
     lines = [
