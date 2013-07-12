@@ -29,8 +29,25 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.bdf.cards.nodes import SPOINT
 
+class GetMethodsDeprecated(object):
 
-class GetMethods(object):
+    def getElementIDsWithPID(self, pid):
+        """
+        Gets all the element IDs with a specific property ID
+
+        :param pid: property ID
+        :returns elementIDs: as a list
+
+        .. deprecated:: will be removed in version 0.8
+
+        The same functionality may be used by calling
+          >>> self.getElementIDsWithPIDs([pid], mode='list')
+        """
+        warnings.warn('getElementIDsWithPID has been deprecated; use '
+                      'getElementIDsWithPIDs', DeprecationWarning, stacklevel=2)
+        return self.getElementIDsWithPIDs([pid], mode='list')
+
+class GetMethods(GetMethodsDeprecated):
     def __init__(self):
         pass
 
@@ -91,18 +108,33 @@ class GetMethods(object):
     def elementIDs(self):
         return self.elements.keys()
 
-    def getElementIDsWithPID(self, pid):
-        return self.getElementIDsWithPIDs([pid])
+    def getElementIDsWithPIDs(self, pids, mode='list'):
+        """
+        Gets all the element IDs with a specific property ID
+        .
+        :param self: the BDF object
+        :param pids: list of property ID
+        :param mode:  'list' - returns the data as one list (default)
+                      'dict' - returns the data as a dictionary of lists based on the property ID
 
-    def getElementIDsWithPIDs(self, pids):
-        eids = self.elementIDs()
-        eids2 = []
-        #print "eids = ",eids
-        for eid in eids:
-            element = self.Element(eid)
-            if element.Pid() in pids:
-                eids2.append(eid)
-        return (eids2)
+        :returns elementIDs: as a list or dictionary of lists by property based on the mode
+        """
+        if mode not in ['list', 'dict']:
+            msg = "mode=%r is not supported.  Use 'list' or 'dict'\n" % mode
+            raise ValueError(msg)
+        if mode == 'list':
+            eids2 = []
+            for eid, element in self.elements.iteritems():
+                if element.Pid() in pids:
+                    eids2.append(eid)
+        else:
+            eids2 = {}
+            for pid in pids:
+                eids2[pid] = []
+            for eid, element in self.elements.iteritems():
+                if element.Pid() in pids:
+                    eids2[pid].append(eid)            
+        return eids2
 
     def getNodeIDToElementIDsMap(self):
         """

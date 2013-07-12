@@ -240,9 +240,9 @@ class WriteMesh(WriteMeshDeprecated):
         if self.executive_control_lines:
             msg = '$EXECUTIVE CONTROL DECK\n'
             if self.sol == 600:
-                newSol = 'SOL 600,%s' % (self.solMethod)
+                newSol = 'SOL 600,%s' % self.solMethod
             else:
-                newSol = 'SOL %s' % (self.sol)
+                newSol = 'SOL %s' % self.sol
 
             if self.iSolLine is not None:
                 self.executive_control_lines[self.iSolLine] = newSol
@@ -372,16 +372,20 @@ class WriteMesh(WriteMeshDeprecated):
         return ''.join(msg)
 
     def _write_elements_properties(self, size):
-        """Writes the elements and properties in and interspersed order"""
+        """
+        Writes the elements and properties in and interspersed order
+        """
         msg = []
         missing_properties = []
         if self.properties:
             msg.append('$ELEMENTS_WITH_PROPERTIES\n')
 
         eids_written = []
-        for (pid, prop) in sorted(self.properties.iteritems()):
-            eids = self.getElementIDsWithPID(pid)
+        pids = sorted(self.properties.keys())
+        eids2 = self.getElementIDsWithPIDs(pids, mode='dict')
 
+        for (pid, eids) in sorted(eids2.iteritems()):
+            prop = self.properties[pid]
             if eids:
                 msg.append(prop.print_card(size))
                 eids.sort()
