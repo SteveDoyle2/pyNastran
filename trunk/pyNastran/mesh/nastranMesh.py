@@ -1,5 +1,5 @@
 from itertools import izip
-from numpy import array, dot
+from numpy import array, dot, norm
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.fieldWriter import print_card
@@ -9,18 +9,18 @@ class NastranMesh(BDF):
     def __init__(self):
         BDF.__init__(self)
 
-    def tankFill(self, mFuel, percentStart=.50, rhoFuel=51.19,
-                 tankElements=[], gravity=None,
-                 massTol=0.05, nIterMax=10, addElements=True):
+    def tank_fill(self, mFuel, percent_start=.50, rho_fuel=51.19,
+                 tank_elements=[], gravity=None,
+                 mass_tol=0.05, nIterMax=10, add_elements=True):
         """
         Fills a single fuel tank in consistent units
-        :percentStart: the percentage to start at.
-                       percentStart = z/(zMax-zMin); default=0.50
-        :mFuel:        mass (or weight) of fuel to add to the tank
-        :rhoFuel:      density of fuel (default = 51.19 lb/ft^3 = 6.6 lb/gal)
-        :tankElements: list of elements defining the boundary of the tank
-        :gravity:      vector defining the direction of gravity in cid=0; <0,0,-32.2>=default
-        :massTol:      tolerance on the mass (massError = massTol*mFuel; default=0.05)
+        :percent_start: the percentage to start at.
+                        percent_start = z/(zMax-zMin); default=0.50
+        :mFuel:         mass (or weight) of fuel to add to the tank
+        :rhoFuel:       density of fuel (default = 51.19 lb/ft^3 = 6.6 lb/gal)
+        :tank_elements: list of elements defining the boundary of the tank
+        :gravity:       vector defining the direction of gravity in cid=0; <0,0,-32.2>=default
+        :mass_tol:      tolerance on the mass (massError = massTol*mFuel; default=0.05)
         :nIterMax:     the maximum number of iterations (default=10)
         :addElements:  create CONM2 elements if True
 
@@ -34,10 +34,13 @@ class NastranMesh(BDF):
         Method:
            1.  Create a new CORD2R coordinate system (cid=-2)
            2.  Rotate the geometry into the gravity coordinate system
-           3.  find the z0 (zero fill line) by taking z0=percentStart*(zMax-zMin)
+           3.  find the z0 (zero fill line) by taking
+               z0=percent_start*(zMax-zMin)
            4.  find the nodes below the waterline (z0)
-           5.  apply mass to the nodes based on their depth; mass = (z-z0)*g*rho
-           6.  compare this to the required mass (or weight) for convergence test
+           5.  apply mass to the nodes based on their depth;
+               mass = (z-z0)*g*rho
+           6.  compare this to the required mass (or weight) for convergence
+               test
            7.  interpolate using a spline to get the next point to check
 
         Requirements:
@@ -47,24 +50,26 @@ class NastranMesh(BDF):
            4.  percentStart < 1.
            5.  massTol < 0.20
         """
-        assert percentStart < 1.
-        assert massTol < 0.20
-        percentStarts.append(0.)  # x; empty tank
-        massErrors.append(-mFuel)  # y; the mass is too low by mFuel
+        assert percent_start < 1.
+        assert mass_tol < 0.20
+        percent_starts = []
+        mass_errors = []
+        percent_starts.append(0.)   # x; empty tank
+        mass_errors.append(-mFuel)  # y; the mass is too low by mFuel
 
         # find the vector with the maximum difference with the gravity vector
         if gravity is None:
             gravity = array([0., 0., -32.2])
-        magGravity = abs(array)  # magnitude
+        #mag_gravity = norm(gravity)  # magnitude
         A = array([1., 0., 0.])  # global x
         B = array([0., 1., 0.])  # global y
         C = array([0., 0., 1.])  # global z
 
-        AdotGravity = dot(A, gravity)
-        BdotGravity = dot(B, gravity)
-        CdotGravity = dot(C, gravity)
+        Adot_gravity = dot(A, gravity)
+        Bdot_gravity = dot(B, gravity)
+        Cdot_gravity = dot(C, gravity)
         ABC = [A, B, C]
-        ABCdot = [AdotGravity, CdotGravity, CdotGravity]
+        ABCdot = [Adot_gravity, Bdot_gravity, Cdot_gravity]
         ABCmax = max(ABCdot)
         i = ABCdot.index(ABCmax)
 
@@ -84,9 +89,9 @@ class NastranMesh(BDF):
         # convert all points into the gravity frame
         cid = -2
         elementNodeIDs = {}  # CQUAD4, CTRIA3
-        nodeLocations = {}
+        node_locations = {}
 
-        for eid in tankElements:
+        for eid in tank_elements:
             elem = self.elements[eid]
             if (elem.type == 'CQUAD4') or (elem.type == 'CTRIA3'):
                 nodes = elem.nodes
@@ -95,28 +100,28 @@ class NastranMesh(BDF):
                 for node in nodes:
                     nid = node.nid
                     elementNodeIDs[eid].append(nid)
-                    if nid not in nodeLocations:
+                    if nid not in node_locations:
                         p = node.PositionWRT(self, cid)
-                        nodeLocations[nid] = p
+                        node_locations[nid] = p
 
-        zMax = nodeLocations[nid][2]
+        zMax = node_locations[nid][2]
         zMin = zMax
-        for nid, node in sorted(nodeLocations.iteritems()):
+        for nid, node in sorted(node_locations.iteritems()):
             zMax = max(zMax, node[2])
             zMin = min(zMin, node[2])
 
         # max sure to go into the while looop
         massToli = 2.  # 2*mFuel
-        percentFill = percentStart
+        percentFill = percent_start
 
         nIter = 0
-        while massToli > massTol and nIter < nIterMax:
+        while massToli > mass_tol and nIter < nIterMax:
             # find the z0 (zero fill line) by taking z0=percentStart*(zMax-zMin)
             z0 = percentFill * (zMax - zMin)
 
             aboveNodes = set()
             belowNodes = set()
-            for nid, node in sorted(nodeLocations.iteritems()):
+            for nid, node in sorted(node_locations.iteritems()):
                 if node[2] >= z0:
                     aboveNodes.add(nid)
                 else:
@@ -161,22 +166,22 @@ class NastranMesh(BDF):
             for nid in belowNodes:
                 # mass = g*rho*(z0-z)
                 # it's (z0-z) b/c magGravity is always positive and z0 is higher than z
-                mass = magGravity * (z0 - nodeLocations[nid][2])
+                mass = mag_gravity * (z0 - node_locations[nid][2])
                 nodalMasses[nid] = mass
                 totalMass += mass
             massError = mFuel - totalMass
 
-            percentStarts.append(percentStart)  # x
-            massErrors.append(massError)       # y
-            massToli = massError / mFuel
+            percent_starts.append(percent_start)  # x
+            mass_errors.append(massError)         # y
+            mass_toli = massError / mFuel
 
             #x=[]; y=[]
-            for xi, yi in massFound:
+            for xi, yi in mass_found:
                 x.append(xi)
                 y.append(yi)
             i = argsort(x)
-            X = array(percentStarts)[i]  # sorted x
-            Y = array(massToli)[i]       # sorted y
+            X = array(percent_starts)[i]  # sorted x
+            Y = array(mass_toli)[i]       # sorted y
 
             spline = buildSpline(Y, X)  # reverse interpolation
             yi = 0.  # find 0. mass
@@ -185,7 +190,7 @@ class NastranMesh(BDF):
 
             nIter += 1
 
-        if addElements:
+        if add_elements:
             maxEid = max(self.elements) + 1  # get the next available eid
             for (nid, mass) in sorted(nodalMasses.iteritems()):
                 card = ['CONM2', maxEid, nid, 0, mass]
@@ -195,16 +200,16 @@ class NastranMesh(BDF):
         del self.coords[cid]
         return masses, X, Y
 
-    def createPlane(self, width, height, nx, ny, eidStart):
+    def create_plane(self, width, height, nx, ny, eid_start):
         """
         Creates a quadrilateral plane made of CTRIA3s.  This output
         can be intersected with another geometry.
 
-        :param width:    width of plane
-        :param height:   height of plane
-        :param nx:       number of elements along the width
-        :param ny:       number of elements along the height
-        :param eidStart: the starting elementID
+        :param width:     width of plane
+        :param height:    height of plane
+        :param nx:        number of elements along the width
+        :param ny:        number of elements along the height
+        :param eid_start: the starting elementID
 
         ::
 
@@ -329,7 +334,7 @@ class NastranMesh(BDF):
             if intersectionNodes:
                 print("intersectionNodes[%s] = %s" % (nid, intersectionNodes))
 
-if __name__ == '__main__':
+if __name__ == '__main__':  ## pragma: no cover
     mesh = NastranMesh()
     if 0:
         width = 10.
@@ -341,5 +346,20 @@ if __name__ == '__main__':
     mesh.read_bdf('combo.bdf')
 
     # plane eids
-    eids = [200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396, 397, 398, 399, ]
+    eids = [200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212,
+            213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225,
+            226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238,
+            239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251,
+            252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264,
+            265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277,
+            278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290,
+            291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303,
+            304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316,
+            317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329,
+            330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342,
+            343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355,
+            356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368,
+            369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381,
+            382, 383, 384, 385, 386, 387, 388, 389, 390, 391, 392, 393, 394,
+            395, 396, 397, 398, 399, ]
     mesh.intersect(eids)

@@ -54,7 +54,7 @@ def write_include(filename, is_windows=True):
 
     return pth
 
-if __name__ == '__main__':
+if __name__ == '__main__':  ## pragma: no cover
     fname = r'C:\NASA\m4\formats\pynastran_v0.6\pyNastran\bdf\writePath.py'
     print '%r' % write_include(fname, is_windows=True)
 

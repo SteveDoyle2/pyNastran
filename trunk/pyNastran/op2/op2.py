@@ -24,34 +24,8 @@ from pyNastran.utils.gui_io import load_file_dialog
 
 
 class OP2Deprecated(object):
-
-    def readOP2(self):
-        """
-        Reads the op2 file
-
-        .. deprecated: will be replaced in version 0.7 with :func:`read_op2`
-        """
-        warnings.warn('readOP2 has been deprecated; use '
-                      'read_op2', DeprecationWarning, stacklevel=2)
-        self.read_op2()
-
-    def setSubcases(self, iSubcases):
-        """
-        .. deprecated: will be replaced in version 0.7 with :func:`set_subcases`
-        """
-        warnings.warn('setSubcases has been deprecated; use '
-                      'set_subcases', DeprecationWarning, stacklevel=2)
-        self.set_subcases(iSubcases)
-
-    def setTransientTimes(self, times):
-        """
-        .. todo:: rename this
-        .. deprecated: will be replaced in version 0.7 with :func:`set_transient_times`
-        """
-        warnings.warn('setTransientTimes has been deprecated; use '
-                      'set_transient_times', DeprecationWarning, stacklevel=2)
-        self.set_transient_times(times)
-
+    def __init__(self):
+        pass
 
 class OP2(BDF,
           FortranFile, Op2Codes, GeometryTables, ResultTable, F06Writer,

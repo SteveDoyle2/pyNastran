@@ -1962,7 +1962,7 @@ def clean_empty_lines(lines):
     return lines2
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  ## pragma: no cover
     bdf = BDF()
     import pyNastran
     pkg_path = pyNastran.__path__[0]
