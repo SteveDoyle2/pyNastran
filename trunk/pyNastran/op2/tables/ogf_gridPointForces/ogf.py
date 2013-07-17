@@ -5,7 +5,7 @@ from struct import unpack
 
 # pyNastran
 from pyNastran.op2.op2_helper import polar_to_real_imag
-from .ogf_Objects import gridPointForcesObject, complexGridPointForcesObject
+from .ogf_Objects import GridPointForcesObject, ComplexGridPointForcesObject
 
 
 class OGF(object):

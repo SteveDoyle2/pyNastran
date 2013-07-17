@@ -75,7 +75,7 @@ class OP2(BDF,
             return False
         return True
 
-    def __init__(self, op2FileName=None, make_geom=False, debug=True, log=None):
+    def __init__(self, op2_filename=None, make_geom=False, debug=True, log=None):
         """
         Initializes the OP2 object
 
@@ -95,10 +95,10 @@ class OP2(BDF,
             title = 'Please select a OP2 to load'
             op2_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
 
-        self.log.debug('op2FileName = %s' % op2FileName)
+        self.log.debug('op2_filename = %s' % op2_filename)
         bdfExtension = '.bdf'
         f06Extension = '.f06'
-        (fname, extension) = os.path.splitext(op2FileName)
+        (fname, extension) = os.path.splitext(op2_filename)
         self.table_name = 'temp'
         
         # the mode is flipped after preallocation
@@ -109,7 +109,7 @@ class OP2(BDF,
         self.make_geom = make_geom
 
         #: the input OP2 filename
-        self.op2FileName = op2FileName
+        self.op2_filename = op2_filename
 
         #: the expected BDF filename (guessed)
         self.bdfFileName = fname + bdfExtension
@@ -210,6 +210,9 @@ class OP2(BDF,
         #: list of OP2 tables that were read
         #: mainly for debugging
         self.tablenames = []
+        
+        #: pops up a dialog for the user to select what data they want to load
+        self.is_gui = False
 
         self.__objects_init__()
 
@@ -356,10 +359,9 @@ class OP2(BDF,
         #: OEE - strain energy density
         self.strainEnergy = {}  # tCode=18
 
-    def get_op2_stats(self):
+    def get_table_types(self):
         """
-        Gets info about the contents of the different attributes of the
-        OP2 class
+        Gets a list of OP2 data members that may or may not have results.
         """
         table_types = [
             ## OUG - displacement
@@ -435,7 +437,6 @@ class OP2(BDF,
             'nonlinearGapStress',
             ## OES - CBUSH 226
             'nolinearBushStress',
-
         ]
 
         table_types += [
@@ -502,18 +503,50 @@ class OP2(BDF,
             ## OEE - strain energy density
             'strainEnergy',  # tCode=18
         ]
+        return table_types
+
+    def _on_pop_dialog_table_types(self):
+        table_types = self._get_full_table_types()
+        names = []
+        for table_type in table_types:
+            table = getattr(self, table_type)
+            for isubcase in sorted(table.iterkeys()):
+                names.append('%s : Subcase %s' % (table_type, isubcase))
+        print("names =", names)
+        return names
+
+    def _get_full_table_types(self):
+        """
+        Gets the list of OP2 objects that have data members.
+        """
+        table_types = self.get_table_types()
+        
+        table_types2 = []
+        for table_type in table_types:
+            table = getattr(self, table_type)
+            for isubcase, subcase in sorted(table.iteritems()):
+                if hasattr(subcase, 'data'):
+                    table_types2.append(table_type)
+        return table_types2
+        
+    def get_op2_stats(self):
+        """
+        Gets info about the contents of the different attributes of the OP2
+        class.
+        """
+        table_types = self.get_table_types()
+
         msg = []
         for table_type in table_types:
             table = getattr(self, table_type)
             for isubcase, subcase in sorted(table.iteritems()):
-                if hasattr(subcase,'get_stats'):
+                if hasattr(subcase, 'get_stats'):
                     msg.append('op2.%s[%s]\n' % (table_type, isubcase))
                     msg.extend(subcase.get_stats())
                     msg.append('\n')
                 else:
                     msg.append('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
                     #raise RuntimeError('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
-
         return ''.join(msg)
 
     def read_tape_code(self):
@@ -704,7 +737,7 @@ class OP2(BDF,
 
     def read_op2(self):
         #: the OP2 file object
-        self.op2 = open(self.op2FileName, 'rb')
+        self.op2 = open(self.op2_filename, 'rb')
         try:
             if self.make_op2_debug:
                 #: a developer debug file (largely unsupported)
@@ -765,7 +798,8 @@ class OP2(BDF,
         
         if self.read_mode == 0:
             self.read_mode = 1
-            self.read_op2()
+            self._on_pop_dialog_table_types()
+            #self.read_op2()
 
     def read_table(self, table_name):
         if table_name in self.tablesToRead:
@@ -913,18 +947,18 @@ class OP2(BDF,
                     raise KeyError(msg)
                 #print("endTell   = ",self.op2.tell())
                 #print("---isAnotherTable---")
-                (isAnotherTable) = self.has_more_tables()
+                (is_another_table) = self.has_more_tables()
                 #isAnotherTable = True
             except EOFError:
-                isAnotherTable = False
+                is_another_table = False
         else:
             if table_name not in [None]:
                 raise NotImplementedError('%s is not supported' % table_name)
-            (isAnotherTable) = self.skip_next_table()
+            (is_another_table) = self.skip_next_table()
             #return isAnotherTable
         #print(self.print_section(140))
         self.log.debug("*** finished table_name = |%r|" % table_name)
-        return isAnotherTable
+        return is_another_table
 
     def read_monitor(self):
         table_name = self.read_table_name(rewind=False)  # LAMA
@@ -974,8 +1008,6 @@ class OP2(BDF,
         #word = self.read_string_block()  # MONITOR
         #print("word = |%s|" %(word))
 
-
-
         #print(self.print_section(200))
         #sys.exit()
 
@@ -1001,10 +1033,10 @@ class OP2(BDF,
             value = sort_code % 2
             sort_code = (sort_code - value) // 2
             bits[i] = value
-            #print("    *bit = %s" %(value))
-            #print("    sort_code = %s" %(sort_code))
+            #print("    *bit = %s" % value)
+            #print("    sort_code = %s" % sort_code)
             i -= 1
-        #print("sort_bits = %s" %(bits))
+        #print("sort_bits = %s" % bits)
         #: the bytes describe the SORT information
         self.sort_bits = bits
 
@@ -1114,8 +1146,8 @@ class OP2(BDF,
     def get_values(self, data, iFormat, iWordStart, iWordStop=None):
         """
         Extracts the ith word from the data structure as the provided type
-        supports multiple inputs with iWordStop (note this is words,
-        not outputs)
+        supports multiple inputs with iWordStop (note this is words, not
+        outputs)
 
         :param self: the object pointer
         :param data: the binary data that is as long as the buffer size
@@ -1130,14 +1162,14 @@ class OP2(BDF,
             ds = data[(iWordStart - 1) * 4:iWordStart * 4]
             iFormat = bytes(iFormat)
             return unpack(iFormat, ds)[0]
-        #print("type(data) = ",type(data))
+        #print("type(data) = ", type(data))
         ds = data[(iWordStart - 1) * 4:(iWordStop - 1) * 4]
         return unpack(iFormat, ds)
 
     def _delete_attributes(self, params):
         """
-        Deletes any parameters before going to the next table to avoid
-        messing up data
+        Deletes any parameters before going to the next table to avoid messing
+        up data
         """
         params += ['data_code', 'device_code', 'analysis_code', 'table_code',
                    'sort_code', 'isubcase', 'data', 'num_wide',
@@ -1243,7 +1275,6 @@ class OP2(BDF,
             # OEE - Strain Energy
             self.strainEnergy,
         ]
-
         msg = '---ALL RESULTS---\n'
         for result in results:
             for (isubcase, res) in sorted(result.iteritems()):

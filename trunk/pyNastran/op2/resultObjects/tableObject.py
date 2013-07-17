@@ -6,7 +6,7 @@ import pandas as pd
 from numpy import array, sqrt, abs, angle, zeros, ones  # dot,
 
 from pyNastran import as_array
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 try:
@@ -16,7 +16,7 @@ except ImportError:
     pass
 
 
-class TableObject(scalarObject):  # displacement style table
+class TableObject(ScalarObject):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         self.nonlinear_factor = None
         self.table_name = None
@@ -24,7 +24,7 @@ class TableObject(scalarObject):  # displacement style table
         self.shape = {}
         self._inode_start = None
         self._inode_end = None
-        scalarObject.__init__(self, data_code, isubcase, read_mode)
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
 
         # new method, not finished
         self.nodeIDs_to_index = None
@@ -517,12 +517,12 @@ class TableObject(scalarObject):  # displacement style table
         show()
 
 
-class ComplexTableObject(scalarObject):
+class ComplexTableObject(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         self.nonlinear_factor = None
         self.table_name = None
         self.analysis_code = None
-        scalarObject.__init__(self, data_code, isubcase, read_mode)
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         self.gridTypes = {}
         self.translations = {}
         self.rotations = {}
