@@ -1,6 +1,7 @@
 from __future__ import print_function
 #from numpy import array
-from numpy import angle
+#from numpy import angle
+
 from pyNastran.op2.op2Codes import Op2Codes
 from pyNastran.utils import list_print
 
@@ -31,10 +32,11 @@ class ScalarObject(BaseScalarObject):
         self.isubcase = isubcase
         self.isTransient = False
         self.dt = None
+        self.data_code = {}
         if read_mode == 0:
             return
-        self.data_code = data_code
-        self.apply_data_code()
+        #self.data_code = data_code
+        #self.apply_data_code()
         #print(self.code_information())
 
     def isImaginary(self):
@@ -67,6 +69,9 @@ class ScalarObject(BaseScalarObject):
 
     def get_data_code(self):
         msg = []
+        if 'dataNames' not in self.data_code:
+            return []
+
         for name in self.data_code['dataNames']:
             try:
                 if hasattr(self, name + 's'):

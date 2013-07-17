@@ -389,7 +389,8 @@ class OUG(object):
                     isSkip = True
                     self.not_implemented_or_skip('***table=%s***\n%s' % (self.table_name, self.code_information()))
                 if not isSkip:
-                    self.handle_results_buffer(self.OUG_RealTable, resultName)
+                    name = resultName + ': Subcase %s' % self.isubcase
+                    self.handle_results_buffer(self.OUG_RealTable, resultName, name)
             elif self.thermal == 1:
                 resultName = 'temperatures'
                 self.create_transient_object(
@@ -479,7 +480,7 @@ class OUG(object):
         else:
             self.not_implemented_or_skip('only num_wide=8 or 14 is allowed  num_wide=%s' % (self.num_wide))
 
-    def OUG_RealTable(self):
+    def OUG_RealTable(self, name):
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
         #format1 = 'f'
@@ -489,6 +490,7 @@ class OUG(object):
         #print "len(data) = ",len(self.data)
         nnodes = len(self.data) // 32
         if self.read_mode == 0:  # figure out the shape
+            self._result_names.append(name)
             self.obj._increase_size(dt, nnodes)
             iend = 32 * (nnodes + 1)
             self.data = self.data[iend:]
@@ -517,10 +519,13 @@ class OUG(object):
             translations[inode, :] = [tx, ty, tz, rx, ry, rz]
 
             #if not as_array:
+            print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid, gridType, tx, ty, tz, rx, ry, rz))
                 #self.obj.add(dt, dataIn)
             istart = iend
             iend += 32
 
+        iend2 = 32 * (nnodes + 1)
+        print('iend=%i iend2=%i' % (iend, iend2))
         self.data = self.data[iend:]
 
         #print "nnodes =", nnodes, len(self.obj.data['node_id'][inode_start:inode_end]), len(nodeIDs_to_index)
@@ -540,7 +545,7 @@ class OUG(object):
             self.obj._finalize()
         self.obj.add_array(dt, nodeIDs_to_index, gridTypes)
 
-    def OUG_ComplexTable(self):
+    def OUG_ComplexTable(self, name):
         dt = self.nonlinear_factor
 
         (format1, extract) = self.getOUG_FormatStart()
@@ -555,8 +560,8 @@ class OUG(object):
         gridTypes = zeros(nnodes, dtype='int32')
         translations = zeros((nnodes, 6), dtype='complex64')  # 2 32-bit numbers
         
-
         if self.read_mode == 0:  # figure out the shape
+            self._result_names.append(name)
             self.obj._increase_size(dt, nnodes)
             iend = 32 * (nnodes + 1)
             self.data = self.data[iend:]

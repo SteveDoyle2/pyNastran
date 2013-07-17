@@ -61,11 +61,12 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         return (eidDevice - self.device_code) // 10
 
     def extractSort2(self, timeFreq, eid):
-        #print "timeFreq=%s eid=%s" %(timeFreq,eid)
-        #grid_device, = unpack(b'i',data)
+        #print "timeFreq=%s eid=%s" %(timeFreq, eid)
+        #grid_device, = unpack(b'i', data)
         return timeFreq
 
-    def add_data_parameter(self, data, name, Type, fieldNum, applyNonlinearFactor=True, fixDeviceCode=False):
+    def add_data_parameter(self, data, name, Type, fieldNum, applyNonlinearFactor=True,
+                           fixDeviceCode=False):
         """
         >>> self.mode = self.get_values(data,'i',5) ## mode number
         >>>
@@ -75,7 +76,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             value = (value - self.device_code) // 10
         #print(self.data_code)
         if self.table_name == 'OUGV1':
-            print("name=%s Type=%s fieldNum=%s aCode=%s value=%s" %(name,Type,fieldNum,self.analysis_code,value))
+            print("name=%s Type=%s fieldNum=%s aCode=%s value=%s" % (name, Type, fieldNum, self.analysis_code, value))
         setattr(self, name, value)
         self.data_code[name] = value
 
@@ -101,27 +102,27 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         """
         if debug:
             print("create Transient Object")
-            print("***NF = %s" % (self.nonlinear_factor))
-            #print "DC = ",self.data_code
+            print("***NF = %s" % self.nonlinear_factor)
+            #print "DC = ", self.data_code
 
         if hasattr(self,'isubcase'):
             if self.isubcase in storageObj:
                 #print "updating dt..."
                 self.obj = storageObj[self.isubcase]
-                #print "obj = ",self.obj.__class__.__name__
-                #print self.obj.write_f06(['',''],'PAGE ',1)[0]
+                #print "obj = ", self.obj.__class__.__name__
+                #print self.obj.write_f06(['', ''], 'PAGE ', 1)[0]
 
                 if self.read_mode == 0:
                     return
                 try:
                     #print("data_code =", self.data_code)
                     self.obj.update_data_code(self.data_code)
-                    #self.obj.update_dt(self.data_code,self.nonlinear_factor)
+                    #self.obj.update_dt(self.data_code, self.nonlinear_factor)
                 except:
                     #try:
-                        #print("objName = ",self.obj.name())
+                        #print("objName = ", self.obj.name())
                     #except:
-                        #print("objName = ",self.obj)
+                        #print("objName = ", self.obj)
                     raise
             else:
                 #if self.isRegular:
@@ -143,12 +144,12 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         #print resultName
         if self.isubcase in resultName:
             self.obj = resultName[self.isubcase]
-            #print "returning isubcase result=%s" %(self.isubcase)
+            #print "returning isubcase result=%s" % self.isubcase
         else:
             self.obj = objClass(self.data_code, is_sort1,
                                 self.isubcase, self.nonlinear_factor)
             resultName[self.isubcase] = self.obj
-            #print "creating isubcase result=%s" %(self.isubcase)
+            #print "creating isubcase result=%s" % self.isubcase
         #return self.obj
 
     def read_results_table(self, table3, table4Data, flag=0):
@@ -159,13 +160,13 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 
         self.read_markers([-1, 7], table_name)
         ints = self.read_int_block()
-        #print "*ints = ",ints
+        #print "*ints = ", ints
 
         self.read_markers([-2, 1, 0], table_name)  # 7
         buffer_words = self.get_marker()
-        #print "1-buffer_words = ",buffer_words,buffer_words*4
+        #print "1-buffer_words = ", buffer_words,buffer_words*4
         ints = self.read_int_block()
-        #print "*ints = ",ints
+        #print "*ints = ", ints
 
         markerA = -4
         markerB = 0
@@ -177,7 +178,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         while [markerA, markerB] != [0, 2]:
             self.isBufferDone = False
             #print self.print_section(140)
-            #print "reading iTable3=%s" %(iTable)
+            #print "reading iTable3=%s" % iTable
             #self.obj = None
 
             ## the results object
@@ -206,12 +207,12 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             isBlockDone = self.readTable4(table4Data, flag, iTable - 1)
             #self.firstPass = False
 
-            #print "self.tellB = ",self.op2.tell()
+            #print "self.tellB = ", self.op2.tell()
             iTable -= 2
-            #print "isBlockDone = ",isBlockDone
+            #print "isBlockDone = ", isBlockDone
             #sys.exit('stopping')
             if isBlockDone:
-                #print "iTable = ",iTable
+                #print "iTable = ", iTable
                 #self.n = self.markerStart
                 #self.op2.seek(self.n)
                 break
@@ -269,11 +270,11 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             self.op2.seek(self.n)
 
             self.n = self.op2.tell()
-            #print "***markerA = ",markerA
+            #print "***markerA = ", markerA
 
             iTable -= 1
-            #print "isBlockDone = ",isBlockDone
-        #print "isBlockDone = ",isBlockDone
+            #print "isBlockDone = ", isBlockDone
+        #print "isBlockDone = ", isBlockDone
         return isBlockDone
 
     def readTable4DataSetup(self, table4Data, iTable):  # iTable=-4
@@ -284,7 +285,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         isBlockDone = False
 
         buffer_words = self.get_marker(self.table_name)
-        #print "buffer_words = ",buffer_words
+        #print "buffer_words = ", buffer_words
         #print len(buffer_words)
         self.data = self.read_block()
         #self.print_block(data)
@@ -352,8 +353,8 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             if vact != self.dtMap[isubcase][iclose]:
                 del self.dtMap[isubcase][iclose]
                 self.obj.delete_transient(v1)
-                #print "num=%s closest=%s iclose=%s" %(num,actualValue,iclose)
-                #print "***deleted v1=%s num=%s vact=%s actual=%s" %(v1,num,vact,actualValue)
+                #print "num=%s closest=%s iclose=%s" %(num, actualValue, iclose)
+                #print "***deleted v1=%s num=%s vact=%s actual=%s" %(v1, num, vact, actualValue)
                 self.dtMap[isubcase][iclose] = vact
                 readCase = True
                 #print self.dtMap
@@ -361,17 +362,17 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             else:  # cleanup previous creation of empty dt case (happened in update_dt outside this function)
                 readCase = False
                 #print self.dtMap
-                #print "num=%s closest=%s iclose=%s" %(num,actualValue,iclose)
+                #print "num=%s closest=%s iclose=%s" %(num, actualValue, iclose)
                 #print "B"
                 self.obj.delete_transient(num)
         else:  # read case
             self.dtMap[isubcase][iclose] = num
             readCase = True
-            #print "num=%s closest=%s iclose=%s" %(num,actualValue,iclose)
+            #print "num=%s closest=%s iclose=%s" %(num, actualValue, iclose)
             #print self.dtMap
             #print "C"
         #print "delta = ",delta,'\n'
-        #print "readCase = ",readCase
+        #print "readCase = ", readCase
         #if num>=0.14:
             #print self.obj.get_transients()
             #sys.exit('OUG !!!')
@@ -387,7 +388,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             #self.log.info("\n" + self.code_information())
             self.skipOES_Element()
 
-    def handle_results_buffer(self, f, resultName, debug=False):
+    def handle_results_buffer(self, f, resultName, name, debug=False):
         """
         Method for getting results without recursion, which for large OP2s
         is necessary to prevent going past the recursion limit.
@@ -424,9 +425,9 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         i = 0
         #print self.code_information()
         while not(self.isBufferDone):
-            #print "n=%s len(data)=%s" %(self.n,len(self.data))
+            #print "n=%s len(data)=%s" %(self.n, len(self.data))
             #sys.stdout.flush()
-            f()
+            f(name)
             nOld = self.n
             markers = self.read_header()
             #print "nOld=%s markers=%s" %(nOld,markers)
@@ -454,7 +455,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 def get_close_num(v1, v2, closePoint):
     numList = [v1, v2]
     delta = array([v1, v2]) - closePoint
-    #print "**delta=%s" %(delta)
+    #print "**delta=%s" % delta
     absDelta = list(abs(delta))
     closest = min(absDelta)
     iclose = absDelta.index(closest)

@@ -217,6 +217,10 @@ class OP2(BDF,
         self.__objects_init__()
 
     def __objects_init__(self):
+        #: stores the sequential list of subcases that the user may select
+        #: from in the popup dialog
+        self._result_names = []
+
         #: ESE
         self.eigenvalues = {}
 
@@ -511,8 +515,10 @@ class OP2(BDF,
         for table_type in table_types:
             table = getattr(self, table_type)
             for isubcase in sorted(table.iterkeys()):
-                names.append('%s : Subcase %s' % (table_type, isubcase))
+                names.append('%s: Subcase %s' % (table_type, isubcase))
         print("names =", names)
+        print("result_names =", self._result_names)
+        
         return names
 
     def _get_full_table_types(self):
