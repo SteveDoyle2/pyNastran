@@ -671,7 +671,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                     msg += str(result[isubcase])
         return msg
 
-if __name__ == '__main__':
+if __name__ == '__main__':  ## pragma: no cover
     f06Name = sys.argv[1]
     model = f06Name.split('.f06')[0]
     f06 = F06(f06Name)

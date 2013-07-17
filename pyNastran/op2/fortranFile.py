@@ -30,9 +30,8 @@ class FortranFile(object):
 
     def read_hollerith(self):
         """
-        Doesnt really read a hollerith, it's an integer
-        of value=528 which corresponds to the length of
-        iTable=3
+        Doesnt really read a hollerith, it's an integer of value=528, which
+        corresponds to the length of iTable=3
         """
         self.skip(4)
 
@@ -97,6 +96,7 @@ class FortranFile(object):
     def read_ints(self, nInts, debug=True):
         """
         Reads a list of nIntegers
+
         :param self:  the object pointer
         :param nInts: the number of ints to read
         :param debug: for developer: debug combined with make_op2_debug
@@ -238,7 +238,7 @@ class FortranFile(object):
         .. note:: this is a great function for debugging
         """
         data2 = data
-        nData = len(data)
+        #nData = len(data)
         #if nData>nMax:
             #print("oops!  too much data...limiting to %s bytes.  nData=%s" % (nMax,nData))
             #data2 = data[:nMax]
@@ -261,8 +261,8 @@ class FortranFile(object):
 
     def print_block2(self, data, endian):
         """
-        Prints a data set in int/float/double/string format to
-        determine table info.  doesn't move cursor.
+        Prints a data set in int/float/double/string format to determine table
+        info.  This oesn't move the cursor.
 
         .. note:: this is a great function for debugging
         """
@@ -325,6 +325,7 @@ class FortranFile(object):
     def print_section2(self, nBytes, endian):
         """
         Prints data, but doesn't move the cursor
+
         :param self:   the object pointer
         :param nBytes: the number of bytes to print the data specs on
         :returns msg:  ints/floats/strings of the next nBytes
@@ -337,12 +338,12 @@ class FortranFile(object):
         return msg
 
     def skip(self, n):
-        """skips nBits"""
+        """Skips nBits"""
         self.n += n
         self.op2.seek(self.n)
 
     def scan(self, n):
-        """same as skip, but actually reads the data instead of using seek"""
+        """Same as skip, but actually reads the data instead of using seek"""
         self.op2.read(n)
         self.n += n
 
@@ -360,16 +361,16 @@ class FortranFile(object):
     def read_markers(self, markers, table_name=None, debug=False,
                      printErrorOnFailure=True):
         """
-        Reads a set of predefined markers e.g. [-3,1,0]
-        and makes sure it is correct.
+        Reads a set of predefined markers e.g. [-3,1,0] and makes sure it is
+        correct.
 
         A marker (e.g. a -3) is a series of 3 integers [4,-3,4].  Typically 3
         markers are put together (e.g. [-3,1,0]) such that the integers are
         [4,-3,4, 4,1,4, 4,0,4] to mark important parts of the table.
 
-        Markers will "increment" during table reading, such that the first marker
-        is [-1,1,0], then [-2,1,0], etc.  Tables will end (or really the next table starts)
-        when a [-1,1,0] or a [0,1,0] marker is found.
+        Markers will "increment" during table reading, such that the first
+        marker is [-1,1,0], then [-2,1,0], etc.  Tables will end (or really
+        the next table starts) when a [-1,1,0] or a [0,1,0] marker is found.
 
         # Verify the following statement...
         Occassionally, buffer markers will be embedded inside the
@@ -406,7 +407,7 @@ class FortranFile(object):
             self.log.debug("")
 
     def getNMarkers(self, nMarkers, rewind=False):
-        """gets the next N markers, verifies they're correct"""
+        """Gets the next N markers, verifies they're correct"""
         markers = []
         for iMarker in xrange(nMarkers):
             table_code = self.read_header(None)
@@ -448,6 +449,7 @@ class FortranFile(object):
     def read_block(self):
         """
         Reads a fortran formatted data block
+        
         nWords  data1 data2 data3 nWords
         """
         data = self.op2.read(4)
@@ -466,6 +468,7 @@ class FortranFile(object):
     def read_full_block(self):
         """
         Reads a fortran formatted data block
+
         nWords  data1 data2 data3 nWords
         includes nWords in the output
         """
@@ -480,10 +483,9 @@ class FortranFile(object):
 
     def read_full_int_block(self):
         """
-        Reads a fortran formatted block
-        assumes that the data is made up of integers only
+        Reads a fortran formatted data block
+        ..note:: assumes that the data is made up of integers only
 
-        reads a fortran formatted data block
         nWords  data1 data2 data3 nWords
         includes nWords in the output
         """
@@ -508,7 +510,8 @@ class FortranFile(object):
     def read_string_block(self, debug=True):
         """
         Reads a fortran formatted block
-        assumes that the data is made up of characters only
+
+        ..note:: assumes that the data is made up of characters only
         """
         data = self.read_block()
         nLetters = len(data)
@@ -525,7 +528,8 @@ class FortranFile(object):
     def read_int_block(self):
         """
         Reads a fortran formatted block
-        assumes that the data is made up of integers only
+
+        ..note:: assumes that the data is made up of integers only
         """
         data = self.read_block()
         nInts = len(data) // 4
@@ -537,7 +541,8 @@ class FortranFile(object):
     def read_float_block(self):
         """
         Reads a fortran formatted block
-        assumes that the data is made up of floats only
+
+        ..note:: assumes that the data is made up of floats only
         """
         data = self.read_block()
         nFloats = len(data) // 4
@@ -549,7 +554,8 @@ class FortranFile(object):
     def read_double_block(self):
         """
         Reads a fortran formatted block
-        assumes that the data is made up of doubles only
+
+        ..note:: assumes that the data is made up of doubles only
         """
         data = self.read_block()
         nDoubles = len(data) // 8

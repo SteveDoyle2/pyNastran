@@ -686,7 +686,7 @@ def verify_card2(key, value, options, line):
     else:
         raise NotImplementedError('key=%r line=%r' % (key, line))
 
-if __name__ == '__main__':  # pragma: no cover
+if __name__ == '__main__':  ## pragma: no cover
     lines = [
         'SUBCASE 1',
         '    ACCELERATION(PLOT,PRINT,PHASE) = ALL',
