@@ -149,22 +149,25 @@ class OQG(object):
         if magPhase or self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'spcForces'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(self.spcForces,
                                            ComplexSPCForcesObject)
-                self.handle_results_buffer(self.OUG_ComplexTable, resultName)
+                self.handle_results_buffer(self.OUG_ComplexTable, resultName, name)
             else:
                 self.not_implemented_or_skip()
         elif self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'spcForces'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(
                     self.spcForces, SPCForcesObject)
-                self.handle_results_buffer(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName, name)
             elif self.thermal == 1:
                 resultName = 'thermalGradientAndFlux' #'finite element temperature gradients and fluxes'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(
                     self.thermalGradientAndFlux, TemperatureGradientAndFluxObject)
-                self.handle_results_buffer(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName, name)
             else:
                 self.not_implemented_or_skip()
         else:

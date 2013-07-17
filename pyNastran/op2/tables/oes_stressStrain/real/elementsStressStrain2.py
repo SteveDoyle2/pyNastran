@@ -166,7 +166,7 @@ class RealElementsStressStrain2(object):
         else:
             self.obj._increment(nnodes, nelements)
 
-    def OES_CSOLID_39_67_68(self):
+    def OES_CSOLID_39_67_68(self, name):
         """
         stress is extracted at the centroid
         self.element_type in [39, 67, 68]:   # ctetra/chexa/cpenta (linear)

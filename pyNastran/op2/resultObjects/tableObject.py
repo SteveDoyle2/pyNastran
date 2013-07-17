@@ -18,14 +18,15 @@ except ImportError:
 
 class TableObject(ScalarObject):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         self.nonlinear_factor = None
         self.table_name = None
         self.analysis_code = None
         self.shape = {}
         self._inode_start = None
         self._inode_end = None
-        ScalarObject.__init__(self, data_code, isubcase, read_mode)
-
+        self.data = None
+        
         # new method, not finished
         self.nodeIDs_to_index = None
         self.gridTypes2 = {}
