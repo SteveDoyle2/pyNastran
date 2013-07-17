@@ -2,10 +2,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import isnan
 
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
 
-class StrainEnergyObject(scalarObject):
+class StrainEnergyObject(ScalarObject):
     """
     ::
     

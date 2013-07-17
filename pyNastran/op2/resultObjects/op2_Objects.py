@@ -5,7 +5,7 @@ from pyNastran.op2.op2Codes import Op2Codes
 from pyNastran.utils import list_print
 
 
-class baseScalarObject(Op2Codes):
+class BaseScalarObject(Op2Codes):
     def __init__(self):
         pass
 
@@ -24,10 +24,10 @@ class baseScalarObject(Op2Codes):
         return (''.join(msg), pageNum)
 
 
-class scalarObject(baseScalarObject):
+class ScalarObject(BaseScalarObject):
     def __init__(self, data_code, isubcase, read_mode):
         assert 'nonlinear_factor' in data_code, data_code
-        baseScalarObject.__init__(self)
+        BaseScalarObject.__init__(self)
         self.isubcase = isubcase
         self.isTransient = False
         self.dt = None

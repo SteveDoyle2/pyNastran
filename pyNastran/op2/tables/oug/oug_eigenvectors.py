@@ -1,6 +1,6 @@
 from numpy import array
 
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
@@ -141,7 +141,7 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
         return msg
 
 
-class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, thermal=0
+class RealEigenVectorObject(ScalarObject):  # approach_code=2, sort_code=0, thermal=0
     """
     ::
 
@@ -152,7 +152,7 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
     """
     def __init__(self, data_code, isubcase, imode, read_mode):
         self.shape = {}
-        scalarObject.__init__(self, data_code, isubcase, read_mode)
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.caseVal = mode
         #print "mode = %s" % imode
         self.caseVal = self.getUnsteadyValue()

@@ -1,12 +1,12 @@
 from struct import pack
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class gridPointForcesObject(scalarObject):
+class GridPointForcesObject(ScalarObject):
 
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         self.forces = {}
         self.moments = {}
         self.elemName = {}
@@ -166,9 +166,9 @@ class gridPointForcesObject(scalarObject):
         #return '---gridPointForceObject---'
 
 
-class complexGridPointForcesObject(scalarObject):
+class ComplexGridPointForcesObject(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, freq=None):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         raise NotImplementedError()
 
     def get_stats(self):

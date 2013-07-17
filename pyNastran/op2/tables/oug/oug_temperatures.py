@@ -1,12 +1,12 @@
 # pylint: disable=E1101
 #import sys
 #from struct import pack
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
 
-class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=1
+class TemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, thermal=1
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         self.gridTypes = {}
         self.temperatures = {}
 

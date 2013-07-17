@@ -1,8 +1,8 @@
 from numpy import array
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
 
-class AppliedLoadsObject(scalarObject):  # approach_code=1, sort_code=0
+class AppliedLoadsObject(ScalarObject):  # approach_code=1, sort_code=0
 
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         scalarObject.__init__(self, data_code, isubcase)

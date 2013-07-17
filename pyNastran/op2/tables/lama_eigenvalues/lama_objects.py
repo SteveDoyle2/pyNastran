@@ -1,14 +1,14 @@
 from numpy import array
-from pyNastran.op2.resultObjects.op2_Objects import baseScalarObject
+from pyNastran.op2.resultObjects.op2_Objects import BaseScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 #from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
 
 
-class RealEigenvalues(baseScalarObject):
+class RealEigenvalues(BaseScalarObject):
 
     def __init__(self, isubcase):
         #self.modeNumber = []
-        baseScalarObject.__init__(self)
+        BaseScalarObject.__init__(self)
         self. subcase = isubcase
         self.extractionOrder = {}
         self.eigenvalues = {}
@@ -98,9 +98,9 @@ class RealEigenvalues(baseScalarObject):
         return msg
 
 
-class ComplexEigenvalues(baseScalarObject):
+class ComplexEigenvalues(BaseScalarObject):
     def __init__(self, isubcase):
-        baseScalarObject.__init__(self)
+        BaseScalarObject.__init__(self)
         #self.rootNumber = []
         self. subcase = isubcase
         self.extractionOrder = {}
