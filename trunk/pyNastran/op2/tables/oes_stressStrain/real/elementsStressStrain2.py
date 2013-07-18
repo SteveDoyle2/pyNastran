@@ -45,7 +45,9 @@ class RealElementsStressStrain2(object):
         nelements = len(self.data) // ntotal
         #nnodes = nelements * (nNodesPerBeam + 1)
         nnodes = nelements * 2
-        if self.read_mode == 0:  # figure out the shape
+        if self.read_mode == 0 or name not in self._selected_data_names:
+            # figure out the shape
+            self._result_names.append(name)
             self.obj._increase_size(dt, nelements, nnodes)
             iend = ntotal * nelements
             self.data = self.data[iend:]
@@ -60,7 +62,7 @@ class RealElementsStressStrain2(object):
 
         etypes=['CBEAM'] * nelements
         eids2 = []
-        
+
         eids=[]; nids=[]; xxb=[]
         sxc=[]; sxd=[]; sxe=[]; sxf=[]
         s1=[]; s2=[]; s3=[]; s4=[]; axial=[]; smax=[]; smin=[]
@@ -92,13 +94,13 @@ class RealElementsStressStrain2(object):
             smin.append(smini)
             MSt.append(MSti)
             MSc.append(MSci)
-            
+
             istart = iend
             iend = istart + n2
             for inode in xrange(nNodesPerBeam-1):
                 istart = iend
                 iend = istart + n2
-            
+
             #for inode in xrange(nNodesPerBeam):
             if 1:
                 #nids.append(inode + 1)
@@ -174,7 +176,6 @@ class RealElementsStressStrain2(object):
         CPENTA_67
         CHEXA_68
         """
-        #print("***********************************************")
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += "i4si"
@@ -184,7 +185,7 @@ class RealElementsStressStrain2(object):
         #self.print_section(20)
         #term      = self.data[0:4] CEN/
         #self.data = self.data[4:]
-        ElementType = self.get_element_type(self.element_type)
+        element_type = self.get_element_type(self.element_type)
         #nnodes = 1  # this is a minimum, it will be reset later
         #nnodes_expected = 1
         #assert self.num_wide in [109,151,193],'invalid num_wide...num_wide=%s' % self.num_wide
@@ -198,21 +199,23 @@ class RealElementsStressStrain2(object):
         elif self.element_type == 68: # CHEXA
             nnodes_expected = 9
         else:
-            msg = ('not supported....EType=%s eType=%s nNodes=%s'
-                   'num_wide=%s' % (ElementType, self.element_type,
-                                   nNodes, self.num_wide))
+            msg = ('not supported....EType=%s eType=%s '
+                   'num_wide=%s' % (ElementType, self.element_type, self.num_wide))
             raise NotImplementedError(msg)
 
         ntotal = 16 + 84 * nnodes_expected
         nelements = len(self.data) // ntotal
 
         nnodes = nelements * nnodes_expected
-        if self.read_mode == 0:  # figure out the shape
+        if self.read_mode == 0 or name not in self._selected_data_names:
+            # figure out the shape
+            self._result_names.append(name)
             self.obj._increase_size(dt, nelements, nnodes)
             iend = ntotal * nelements
             self.data = self.data[iend:]
             return
-        else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
+        else:
+            # read_mode = 1; # we know the shape so we can make a pandas matrix
             #index_data = (nodeIDs_to_index)
             #index_data = pd.MultiIndex.from_tuples(zip(data))
 
@@ -224,7 +227,7 @@ class RealElementsStressStrain2(object):
         ibase = 0
 
         # element data
-        cids=[]; etypes=[]; eids=[]; 
+        cids=[]; etypes=[]; eids=[];
 
         element_ids=[]; nodes=[]; grids=[];
         oxx=[]; oyy=[]; ozz=[]; txy=[]; txz=[]; tyz=[]
@@ -238,8 +241,7 @@ class RealElementsStressStrain2(object):
 
             assert nNodes < 21, self.print_block(eData)
 
-
-            etypes.append(ElementType)
+            etypes.append(element_type)
             cids.append(cid)
             eids.append(eid2)
 
@@ -264,12 +266,15 @@ class RealElementsStressStrain2(object):
                 txy.append(sxy)
                 txz.append(sxz)
                 tyz.append(syz)
+                o1.append(s1)
+                o2.append(s3)
+                o3.append(s3)
                 ovmShear.append(svm)
 
-                #print "%s eid=%s cid=%s grid=%s sxx=%-6i txy=%-5i s1=%-6i a1=%i a2=%i a3=%i press=%i vm=%s" % (element_type,eid,cid,grid,sxx,sxy,s1,a1,a2,a3,pressure,svm)
-                #print "%s eid=%s cid=%s grid=%s syy=%-6i tyz=%-5i s2=%-6i b1=%i b2=%i b3=%i"                % (element_type,eid,cid,grid,syy,syz,s2,b1,b2,b3)
-                #print "%s eid=%s cid=%s grid=%s szz=%-6i txz=%-5i s3=%-6i c1=%i c2=%i c3=%i"                % (element_type,eid,cid,grid,szz,sxz,s3,c1,c2,c3)
-                #print ""
+                #print("%s eid=%s cid=%s grid=%3s sxx=%-6i txy=%-5i s1=%-6i a1=%i a2=%i a3=%i press=%i vm=%s" % (element_type,eid2,cid,grid,sxx,sxy,s1,a1,a2,a3,pressure,svm))
+                #print("%s eid=%s cid=%s grid=%3s syy=%-6i tyz=%-5i s2=%-6i b1=%i b2=%i b3=%i"                % (element_type,eid2,cid,grid,syy,syz,s2,b1,b2,b3))
+                #print("%s eid=%s cid=%s grid=%3s szz=%-6i txz=%-5i s3=%-6i c1=%i c2=%i c3=%i"                % (element_type,eid2,cid,grid,szz,sxz,s3,c1,c2,c3))
+                #print("")
                 #smax = max(s1,s2,s3)
                 #smin = min(s1,s2,s3)
 
@@ -348,11 +353,13 @@ class RealElementsStressStrain2(object):
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '15f'
         format1 = bytes(format1)
-        
+
         ntotal = 64
         nelements = len(self.data) // 64
         nnodes = nelements
-        if self.read_mode == 0:  # figure out the shape
+        if self.read_mode == 0 or name not in self._selected_data_names:
+            # figure out the shape
+            self._result_names.append(name)
             self.obj._increase_size(dt, nelements, nnodes)
             iend = ntotal * nelements
             self.data = self.data[iend:]
@@ -364,7 +371,7 @@ class RealElementsStressStrain2(object):
 
         istart = 0
         iend = 64
-        
+
         eids=[]; axial=[]; MSt=[]; MSc=[]
         s1a=[]; s2a=[]; s3a=[]; s4a=[]; smaxa=[]; smina=[]
         s1b=[]; s2b=[]; s3b=[]; s4b=[]; smaxb=[]; sminb=[]
@@ -374,7 +381,7 @@ class RealElementsStressStrain2(object):
             (eid, s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
                   s1bi, s2bi, s3bi, s4bi, smaxbi, sminbi, MSci) = unpack(format1, eData)
             eid2 = extract(eid, dt)
-            
+
             eids.append(eid2)
             s1a.append(s1ai)
             s2a.append(s2ai)
@@ -382,14 +389,14 @@ class RealElementsStressStrain2(object):
             s4a.append(s4ai)
             smaxa.append(smaxai)
             smina.append(sminai)
-            
+
             s1b.append(s1bi)
             s2b.append(s2bi)
             s3b.append(s3bi)
             s4b.append(s4bi)
             smaxb.append(smaxbi)
             sminb.append(sminbi)
-            
+
             axial.append(axiali)
             MSt.append(MSti)
             MSc.append(MSci)
@@ -498,24 +505,26 @@ class RealElementsStressStrain2(object):
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '16f'
         format1 = bytes(format1)
-        
+
         nelements = len(self.data) // ntotal
         nrows = (1 + nNodes) * nelements * 2 # 2 layers
         #print('nrows = %i' % nrows)
-        
+
         gridC = 'C'
         cformat = b'i4s'+format1  # center format
         nformat = b'i16f'         # node format
 
         nnodes = nrows #nelements * nNodes
-        if self.read_mode == 0:  # figure out the shape
+        if self.read_mode == 0 or name not in self._selected_data_names:
+            # figure out the shape
+            self._result_names.append(name)
             self.obj._increase_size(dt, nelements, nnodes)
             iend = ntotal * nelements
             self.data = self.data[iend:]
             return
         else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
             print("nelements =",nelements)
-        
+
         (inode_start, inode_end, ielement_start, ielement_end
             ) = self.obj._preallocate(dt, nnodes, nelements)
 
@@ -563,6 +572,8 @@ class RealElementsStressStrain2(object):
             minor.append(minor2i)
             vm.append(vm2i)
 
+            #print("eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1))
+            #print("               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"        % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2))
             #self.obj.add_new_eid(eType, dt, eid, gridC, fd1i, sx1i, sy1i, txy1i, angle1i, major1i, minor1i, vm1i)
             #self.obj.add(               dt, eid, gridC, fd2i, sx2i, sy2i, txy2i, angle2i, major2i, minor2i, vm2i)
 
@@ -589,7 +600,7 @@ class RealElementsStressStrain2(object):
                 major.append(major1i)
                 minor.append(minor1i)
                 vm.append(vm1i)
-                
+
                 fd.append(fd2i)
                 sx.append(sx2i)
                 sy.append(sy2i)
@@ -598,14 +609,14 @@ class RealElementsStressStrain2(object):
                 major.append(major2i)
                 minor.append(minor2i)
                 vm.append(vm2i)
-                #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-                #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+                #print("eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1))
+                #print("               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2))
                 #self.obj.addNewNode(dt, eidi, gridi, fd1i, sx1i, sy1i, txy1i, angle1i, major1i, minor1i, vm1i)
                 #self.obj.add(       dt, eidi, gridi, fd2i, sx2i, sy2i, txy2i, angle2i, major2i, minor2i, vm2i)
                 ibase += 68
         self.data = self.data[ibase:]
 
-        print('delta', inode_end - inode_start, len(eids))
+        #print('delta', inode_end - inode_start, len(eids))
         if dt:
             name = self.obj.data_code['name']
             self.obj.data[name][inode_start:inode_end] = ones(inode_end - inode_start) * dt
