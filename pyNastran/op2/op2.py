@@ -100,7 +100,7 @@ class OP2(BDF,
         f06Extension = '.f06'
         (fname, extension) = os.path.splitext(op2_filename)
         self.table_name = 'temp'
-        
+
         # the mode is flipped after preallocation
         self.read_mode = 0 # setup
         #self.read_mode = 1 # reading
@@ -199,8 +199,8 @@ class OP2(BDF,
             'AFRF', 'AGRF',
             'PMRF', 'PERF', 'PFRF',
             'FOL',
-            
-            'DBCOPT','CONTACT', 
+
+            'DBCOPT','CONTACT',
         ]
 
         #: a dictionary that maps an integer of the subcaseName to the
@@ -210,7 +210,7 @@ class OP2(BDF,
         #: list of OP2 tables that were read
         #: mainly for debugging
         self.tablenames = []
-        
+
         #: pops up a dialog for the user to select what data they want to load
         self.is_gui = False
 
@@ -518,7 +518,7 @@ class OP2(BDF,
                 names.append('%s: Subcase %s' % (table_type, isubcase))
         print("names =", names)
         print("result_names =", self._result_names)
-        
+        self._selected_data_names = self._result_names
         return names
 
     def _get_full_table_types(self):
@@ -526,7 +526,7 @@ class OP2(BDF,
         Gets the list of OP2 objects that have data members.
         """
         table_types = self.get_table_types()
-        
+
         table_types2 = []
         for table_type in table_types:
             table = getattr(self, table_type)
@@ -534,13 +534,13 @@ class OP2(BDF,
                 if hasattr(subcase, 'data'):
                     table_types2.append(table_type)
         return table_types2
-        
+
     def get_op2_stats(self):
         """
         Gets info about the contents of the different attributes of the OP2
         class.
         """
-        table_types = self.get_table_types()
+        table_types = self._get_full_table_types()
 
         msg = []
         for table_type in table_types:
@@ -667,8 +667,6 @@ class OP2(BDF,
             sys.exit('stoppingB')
 
             return
-
-
         sys.exit()
 
         # -----------------------
@@ -801,11 +799,11 @@ class OP2(BDF,
             raise
         self.op2.close()
         self.skippedCardsFile.close()
-        
+
         if self.read_mode == 0:
             self.read_mode = 1
             self._on_pop_dialog_table_types()
-            #self.read_op2()
+            self.read_op2()
 
     def read_table(self, table_name):
         if table_name in self.tablesToRead:

@@ -489,7 +489,8 @@ class OUG(object):
 
         #print "len(data) = ",len(self.data)
         nnodes = len(self.data) // 32
-        if self.read_mode == 0:  # figure out the shape
+        if self.read_mode == 0 or name not in self._selected_data_names:
+            # figure out the shape
             self._result_names.append(name)
             self.obj._increase_size(dt, nnodes)
             iend = 32 * (nnodes + 1)
@@ -519,8 +520,8 @@ class OUG(object):
             translations[inode, :] = [tx, ty, tz, rx, ry, rz]
 
             #if not as_array:
-            print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid, gridType, tx, ty, tz, rx, ry, rz))
-                #self.obj.add(dt, dataIn)
+            #print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid, gridType, tx, ty, tz, rx, ry, rz))
+            #self.obj.add(dt, dataIn)
             istart = iend
             iend += 32
 
@@ -543,13 +544,13 @@ class OUG(object):
         #print self.obj.data['dt'].to_string()
         if len(self.obj.data['T1'])==inode_end:
             self.obj._finalize()
-        self.obj.add_array(dt, nodeIDs_to_index, gridTypes)
+        #self.obj.add_array(dt, nodeIDs_to_index, gridTypes)
 
     def OUG_ComplexTable(self, name):
         dt = self.nonlinear_factor
 
         (format1, extract) = self.getOUG_FormatStart()
-        
+
         format1 += 'i12f'
         #print "format1 = ",format1
         is_magnitude_phase = self.is_magnitude_phase()
@@ -559,8 +560,9 @@ class OUG(object):
         nodeIDs_to_index = zeros(nnodes, dtype='int32')
         gridTypes = zeros(nnodes, dtype='int32')
         translations = zeros((nnodes, 6), dtype='complex64')  # 2 32-bit numbers
-        
-        if self.read_mode == 0:  # figure out the shape
+
+        if self.read_mode == 0 or name not in self._selected_data_names:
+            # figure out the shape
             self._result_names.append(name)
             self.obj._increase_size(dt, nnodes)
             iend = 32 * (nnodes + 1)
@@ -608,7 +610,7 @@ class OUG(object):
             istart = iend
             iend += 56
         self.data = self.data[iend:]
-        
+
         self.obj.data['node_id'][inode_start:inode_end] = nodeIDs_to_index
         if dt:
             self.obj.data['dt'][inode_start:inode_end] = ones(inode_end - inode_start) * dt

@@ -67,7 +67,7 @@ class SolidStressObject(StressObject):
             for line in data:
                 self.data[dt] += data
 
-    def processF06Data(self):
+    def process_f06_data(self):
         """
         ::
 
@@ -165,11 +165,11 @@ class SolidStressObject(StressObject):
         self._ielement_start += nelements
         self._ielement_end += nelements
         return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
-        
+
     def _preallocate(self, dt, nnodes, nelements):
         ndt, nelements_size, nnodes_size, dts = self._get_shape()
         print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
-        
+
         if self._inode_start is not None:
             return (self._inode_start, self._inode_start + nnodes,
                     self._ielement_start, self._ielement_start + nelements)
@@ -243,12 +243,12 @@ class SolidStressObject(StressObject):
 
     def _finalize(self, dt):
         ndt, nelements, nnodes, dts = self._get_shape()
-        
+
         if dt != max(dts):
             return
-        print(self.data.to_string())
-        print("----finalize----")
-        
+        #print(self.data.to_string())
+        #print("----finalize----")
+
         #grid_type_str = []
         #for grid_type in self.grid_type:
             #grid_type_str.append('C' if grid_type==0 else grid_type)
@@ -463,7 +463,7 @@ class SolidStressObject(StressObject):
             dtstring = ''
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
-        
+
         if self.isVonMises():
             ovmstr = 'ovm'
         else:
@@ -475,9 +475,9 @@ class SolidStressObject(StressObject):
         msg.append('  data:         index        : %selement_id, node_id\n' % dtstring)
         msg.append('                results      : oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, %s\n' % ovmstr)
         msg.append('                element_types: %s' %(', '.join(set(etypes))))
-        
+
         #print("self.element_data\n", self.element_data.to_string())
-        print("self.data\n", self.data.to_string())
+        #print("self.data\n", self.data.to_string())
         msg.append('\n')
         return msg
 
@@ -497,7 +497,7 @@ class SolidStrainObject(StrainObject):
                      CENTER  X   4.499200E+02  XY  -5.544791E+02   A   1.000000E+04  LX 0.00 0.69-0.72  -3.619779E+03    9.618462E+03
                              Y   4.094179E+02  YZ   5.456968E-12   B  -1.251798E+02  LY 0.00 0.72 0.69
                              Z   1.000000E+04  ZX  -4.547474E-13   C   9.845177E+02  LZ 1.00 0.00 0.00
-  
+
       # code=[1,0,10]
                          S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )
                      CORNER        ------CENTER AND CORNER POINT  STRAINS---------       DIR.  COSINES       MEAN         OCTAHEDRAL
@@ -563,11 +563,11 @@ class SolidStrainObject(StrainObject):
             n = 0
             while n < len(self.data):
                 line = self.data[n]
-                #print n,line
+                #print(n,line)
 
                 eType = line[0]
                 eid = int(line[1])
-                #print "eType = ",eType
+                #print("eType = ",eType)
                 nNodes = eMap[eType]
                 #nodeID = None
                 self.eType[eid] = eType
@@ -642,7 +642,7 @@ class SolidStrainObject(StrainObject):
         else:
             ndt, nelements, nnodes, dts = self._get_shape()
             #print("ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts)))
-            
+
             data = {}
             columns = []
             if dts[0] is not None:
@@ -669,7 +669,7 @@ class SolidStrainObject(StrainObject):
             data['e1'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
             data['e2'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
             data['e3'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            
+
             if self.isVonMises():
                 data['evm'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
             else:
@@ -688,7 +688,7 @@ class SolidStrainObject(StrainObject):
 
     def _finalize(self):
         ndt, nelements, nnodes, dts = self._get_shape()
-        
+
         #grid_type_str = []
         #for grid_type in self.grid_type:
             #grid_type_str.append('C' if grid_type==0 else grid_type)
@@ -713,8 +713,8 @@ class SolidStrainObject(StrainObject):
 
     def ovm(self, o11, o22, o33, o12, o13, o23):
         """http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
-        ovm = 0.5 * ((o11 - o22) ** 2 + 
-                     (o22 - o33) ** 2 + 
+        ovm = 0.5 * ((o11 - o22) ** 2 +
+                     (o22 - o33) ** 2 +
                      (o11 - o33) ** 2 +
                      6 * (o23 ** 2 + o13 ** 2 + o12 ** 2))
         return ovm
@@ -925,7 +925,7 @@ class SolidStrainObject(StrainObject):
             dtstring = ''
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
-        
+
         if self.isVonMises():
             ovmstr = 'evm'
         else:

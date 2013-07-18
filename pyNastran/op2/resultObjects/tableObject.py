@@ -26,7 +26,7 @@ class TableObject(ScalarObject):  # displacement style table
         self._inode_start = None
         self._inode_end = None
         self.data = None
-        
+
         # new method, not finished
         self.nodeIDs_to_index = None
         self.gridTypes2 = {}
@@ -34,7 +34,7 @@ class TableObject(ScalarObject):  # displacement style table
         #self.gridTypes = {}
         #self.translations = {}
         #self.rotations = {}
-        
+
         self.dt = dt
 
     def get_stats(self):
@@ -125,7 +125,7 @@ class TableObject(ScalarObject):  # displacement style table
         else:
             ndt, nnodes, dts = self._get_shape()
             #print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
-            
+
             data = {}
             columns = []
             indexs = []
@@ -156,7 +156,7 @@ class TableObject(ScalarObject):  # displacement style table
 
     def _finalize(self):
         ndt, nnodes, dts = self._get_shape()
-        
+
         mapper = {
             1 : 'G',
         }
@@ -296,7 +296,7 @@ class TableObject(ScalarObject):  # displacement style table
             name, isubcase, dtName, nDt)
         #msgT = 'fem.%s(%i).translations.%s = zeros(%i,3);\n' %(name,isubcase,dtName,n+1,nNodes)
         #msgR = 'fem.%s(%i).rotations.%s    = zeros(%i,3);\n' %(name,isubcase,dtName,n+1,nNodes)
-        
+
         node_ids = self.data['node_id']
         for n, (dt, translations) in enumerate(sorted(self.translations.iteritems())):
             #msgT = 'fem.%s(%i).translations.%s(%i) = zeros(%i,3);\n' %(name,isubcase,dtName,n+1,nNodes)
@@ -334,7 +334,7 @@ class TableObject(ScalarObject):  # displacement style table
     def _write_f06_block(self, words, header, pageStamp, pageNum=1, f=None):
         msg = words
         #assert f is not None # remove
-        
+
         print self.data.to_string()
         node_ids = self.data['node_id']
         for nodeID in node_ids:
@@ -552,7 +552,7 @@ class ComplexTableObject(ScalarObject):
                        % (self.__class__.__name__, ngrids))
         msg.append('  translations, rotations, gridTypes\n')
         return msg
-            
+
     def isImaginary(self):
         return True
 
@@ -573,7 +573,7 @@ class ComplexTableObject(ScalarObject):
         self.data_code['name'] = dtName
         if dt not in self.translations:
             self.update_dt(self.data_code, dt, read_mode)
-        
+
         for line in data:
             try:
                 (nodeID, gridType, v1, v2, v3, v4, v5, v6) = line
@@ -598,7 +598,7 @@ class ComplexTableObject(ScalarObject):
         else:
             ndt, nnodes, dts = self._get_shape()
             #print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
-            
+
             data = {}
             columns = []
             indexs = []
@@ -629,7 +629,7 @@ class ComplexTableObject(ScalarObject):
 
     def _finalize(self):
         ndt, nnodes, dts = self._get_shape()
-        
+
         mapper = {
             1 : 'G',
         }

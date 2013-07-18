@@ -5,8 +5,7 @@ import os
 import io
 from struct import pack, unpack
 
-from numpy import (array, zeros, float32, float64, complex64, complex128, 
-                  allclose)
+from numpy import (array, zeros, float32, float64, complex64, complex128)
 from scipy.sparse import coo_matrix
 
 from pyNastran.utils import is_binary
@@ -18,17 +17,8 @@ from pyNastran.utils.gui_io import load_file_dialog
 
 class OP4Deprecated(object):
 
-    def readOP4(self, op4Name, matrixNames=None, precision='default'):
-        """..seealso:: :func: `read_op4`"""
-        return self.read_op4(op4Name, matrixNames, precision)
-
-    def readOP4Ascii(self, op4Name, matrixNames=None, precision='default'):
-        """..seealso:: :func: `read_op4_ascii`"""
-        return self.read_op4_ascii(op4Name, matrixNames, precision)
-
-    def readOP4Binary(self, op4Name, matrixNames=None, precision='default'):
-        """..seealso:: :func: `read_op4_binary`"""
-        return self.read_op4_binary(op4Name, matrixNames, precision)
+    def __init__(self):
+        pass
 
     
 #class OP4(FortranFile):
@@ -45,16 +35,16 @@ class OP4(OP4Deprecated):
     def read_op4(self, op4_filename=None, matrix_names=None, precision='default'):
         """
         Reads a NASTRAN OUTPUT4 file, regular or sparse, and stores the
-        matrices as the output arguments of the function.  The number of matrices
-        read is defined by the list matrix_names.  By default, all matrices will
-        be read.  The resulting output is a dictionary of matrices that are
-        accessed by their name.
+        matrices as the output arguments of the function.  The number of
+        matrices read is defined by the list matrix_names.  By default, all
+        matrices will be read.  The resulting output is a dictionary of
+        matrices that are accessed by their name.
 
         >>> from pyNastran.op4.op4 import OP4
         >>> op4 = OP4()
 
         # get all the matrices
-        >>> matrices = op4.read_op4(op4_name)
+        >>> matrices = op4.read_op4(op4_filename)
         >>> (formA,A) = matrices['A']
         >>> (formB,B) = matrices['B']
         >>> (formC,C) = matrices['C']
@@ -67,11 +57,16 @@ class OP4(OP4Deprecated):
         # or because you only want A
         >>> matrices = op4.read_op4(op4_filename, matrix_names='A')
         >>> (formA,A) = matrices['A']
+
+        # get all the matrices, but select the file using a file dialog
+        >>> matrices = op4.read_op4()
         >>>
+
         :param op4_filename: an OP4 filename.  Type=STRING.
         :param matrix_names: matrix name(s) (or None); Type=LIST OF STRINGS / STRING / NONE.
-        :param precision: specifies if the matrices are in single or double precsion
-               (values='default', 'single', 'double') which means the format will be whatever the file is in
+        :param precision: specifies if the matrices are in single or double
+               precsion (values='default', 'single', 'double') which means the
+               format will be whatever the file is in
 
         :returns: dictionary of matrices where the key is the name and the
                   value is [form, matrix]
@@ -90,12 +85,15 @@ class OP4(OP4Deprecated):
               Dense Type:  NUMPY.NDARRAY
               Sparse Type: SCIPY.SPARSE.COO_MATRIX
 
-        .. note:: based off the MATLAB code SAVEOP4 developed by ATA-E and later UCSD.
-        .. note:: it's strongly recommended that you convert sparse matrices to another
-                  format before doing math on them.  This is standard with sparse matrices.
+        .. note:: based off the MATLAB code SAVEOP4 developed by ATA-E and
+                  later UCSD.
+        .. note:: it's strongly recommended that you convert sparse matrices to
+                  another format before doing math on them.  This is standard
+                  with sparse matrices.
 
-        .. warning:: sparse binary is buggy right now        """
-        assert precision in ['default', 'single', 'double'], "precison=|%s| valid=['default','single','double']"
+        .. warning:: sparse binary is buggy right now
+        """
+        assert precision in ['default', 'single', 'double'], "precison=%r valid=['default','single','double']"
         if op4_filename is None:
             wildcard_wx = "Nastran OP4 (*.op4)|*.op4|" \
                 "All files (*.*)|*.*"
@@ -1297,7 +1295,7 @@ def compressColumn(col):
     #print("packs = ", packs)
     return packs
 
-if __name__ == '__main__':
+if __name__ == '__main__':  ## pragma: no cover
     #compressColumn([14, 15, 16, 20, 21, 22, 26, 27, 28])
     filenames = [
         #'test/mat_t_dn.op4',
