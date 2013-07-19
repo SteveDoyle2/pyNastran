@@ -23,7 +23,7 @@ class OEE(object):
     def readTable_OEE_3(self, iTable):  # iTable=-3
         buffer_words = self.get_marker()
         if self.make_op2_debug:
-            self.op2Debug.write('buffer_words=%s\n' % (str(buffer_words)))
+            self.op2Debug.write('buffer_words=%s\n' % str(buffer_words))
         #print "2-buffer_words = ",buffer_words,buffer_words*4,'\n'
 
         data = self.get_data(4)
@@ -42,7 +42,7 @@ class OEE(object):
         except UnicodeDecodeError:
             print("element_name = ", str(element_name))
             raise
-        #print("element_name = %s" %(element_name))
+        #print("element_name = %s" % element_name)
         if element_name.isalpha():
             self.data_code['element_name'] = element_name
 
@@ -55,10 +55,10 @@ class OEE(object):
         self.add_data_parameter(data, 'num_wide', 'i', 10, False)
         ## C
         self.add_data_parameter(data, 'cvalres', 'i', 11, False)
-        
+
         ## Set identification number Number
         self.add_data_parameter(data, 'setID', 'i', 13, False)
-        
+
         self.add_data_parameter(data, 'eigenReal', 'i', 14, False)
             ## Natural eigenvalue - real part
         self.add_data_parameter(data, 'eigenImag', 'i', 15, False)
@@ -111,7 +111,7 @@ class OEE(object):
             self.apply_data_code_value('dataNames', ['time'])
         else:
             raise RuntimeError('invalid analysis_code...analysis_code=%s' %
-                               (self.analysis_code))
+                               self.analysis_code)
 
         #print "*isubcase=%s element_name=|%s|"%(self.isubcase,self.element_name)
         #print "analysis_code=%s table_code=%s" %(self.analysis_code,self.table_code)
@@ -133,17 +133,20 @@ class OEE(object):
 
     def readStrainEnergy_table18(self):  # real ???
         self.create_transient_object(self.strainEnergy, StrainEnergyObject)
+        resultName = 'strainEnergy'
+        name = resultName + ': Subcase %s' % self.isubcase
+
         if self.num_wide == 4:
             self.handle_results_buffer(
-                self.OEE_Strain4, resultName='strainEnergy')
+                self.OEE_Strain4, resultName, name)
         elif self.num_wide == 5:
             self.handle_results_buffer(
-                self.OEE_Strain5, resultName='strainEnergy')
+                self.OEE_Strain5, resultName, name)
         else:
             self.not_implemented_or_skip()
         #self.readMappedScalarsOut(debug=False) # handles dtMap, not correct...
 
-    def OEE_Strain4(self):
+    def OEE_Strain4(self, name):
         #device_code = self.device_code
         dt = self.nonlinear_factor
 
@@ -151,21 +154,38 @@ class OEE(object):
         format1 += 'fff'
         format1 = bytes(format1)
 
-        while len(self.data) >= 16:  # 4*4
-            eData = self.data[0:16]
-            self.data = self.data[16:]
-            #print "len(data) = ",len(eData)
+        npoints = len(self.data) // 16
+        if self.read_mode == 0 or name not in self._selected_data_names:
+            if name not in self._result_names:
+                self._result_names.append(name)
+            # figure out the shape
+            #self.obj._increase_size(dt, nnodes)
+            iend = 16 * (npoints + 1)
+            self.data = self.data[iend:]
+            return
+        else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
+            #index_data = (nodeIDs_to_index)
+            #index_data = pd.MultiIndex.from_tuples(zip(data))
 
-            out = unpack(format1, eData)
-            (eid, energy, percent, density) = out
+            #(inode_start, inode_end) = self.obj._preallocate(dt, nnodes)
+            pass
+
+        n0 = 0
+        n1 = 16
+        for i in xrange(npoints):
+            eData = self.data[n0:n1]
+            (eid, energy, percent, density) = unpack(format1, eData)
             eid2 = extract(eid, dt)
-            #print "eType=%s" %(eType)
+            #print("eType=%s" % eType)
 
             dataIn = [eid2, energy, percent, density]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+            n0 = n1
+            n1 += 16
+        self.data = self.data[:n0]
+        #print('n0=%s n1=%s' % (n0, n1))
         #print self.strainEnergy
 
     def OEE_Strain5(self):
@@ -175,20 +195,23 @@ class OEE(object):
         #(format1,extract) = self.getOUG_FormatStart()  # TODO change to OEE
         format1 = b'8s3f'
 
-        while len(self.data) >= 16:  # 5*4
-            eData = self.data[0:20]
-            self.data = self.data[20:]
-            #print "len(data) = ",len(eData)
+        npoints = len(self.data) // 20
+        n0 = 0
+        n1 = 20
+        for i in xrange(npoints):
+        #while len(self.data) >= 16:  # 5*4
+            eData = self.data[n0:n1]
 
-            out = unpack(format1, eData)
-            (word, energy, percent, density) = out
+            (word, energy, percent, density) = unpack(format1, eData)
             #print "out = ",out
             word = word.strip()
-            #print "eType=%s" %(eType)
+            #print("eType=%s" % eType)
 
             dataIn = [word, energy, percent, density]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+            n0 = n1
+            n1 += 20
+        self.data = self.data[:n0]
         #print self.strainEnergy

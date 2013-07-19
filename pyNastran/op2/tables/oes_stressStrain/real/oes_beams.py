@@ -32,35 +32,6 @@ class BeamStressObject(StressObject):
         self._ielement_start = None
         self._ielement_end = None
 
-        self.xxb = {}
-        self.grids = {}
-        self.smax = {}
-        self.smin = {}
-        self.MS_tension = {}
-        self.MS_compression = {}
-
-        #self.MS_axial   = {}
-        #self.MS_torsion = {}
-        self.sxc = {}
-        self.sxd = {}
-        self.sxe = {}
-        self.sxf = {}
-        #self.isImaginary = False
-
-        if read_mode == 0:
-            return
-
-        self.code = [self.format_code, self.sort_code, self.s_code]
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-        else:
-            assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
-
     def getLengthTotal(self):
         return 444  # 44+10*40   (11 nodes)
 
@@ -93,11 +64,11 @@ class BeamStressObject(StressObject):
         self._ielement_start += nelements
         self._ielement_end += nelements
         return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
-        
+
     def _preallocate(self, dt, nnodes, nelements):
         ndt, nelements_size, nnodes_size, dts = self._get_shape()
         #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
-        
+
         if self._inode_start is not None:
             return (self._inode_start, self._inode_start + nnodes,
                     self._ielement_start, self._ielement_start + nelements)
@@ -135,7 +106,7 @@ class BeamStressObject(StressObject):
         #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
         #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
         #print('n =', n)
-        
+
         data['sxc'] = pd.Series(zeros((n), dtype='float32'))
         data['sxd'] = pd.Series(zeros((n), dtype='float32'))
         data['sxe'] = pd.Series(zeros((n), dtype='float32'))
@@ -155,11 +126,11 @@ class BeamStressObject(StressObject):
 
     def _finalize(self, dt):
         ndt, nelements, nnodes, dts = self._get_shape()
-        
+
         if dt != max(dts):
             return
         print("----finalize----")
-        
+
         #grid_type_str = []
         #for grid_type in self.grid_type:
             #grid_type_str.append('C' if grid_type==0 else grid_type)
@@ -174,7 +145,7 @@ class BeamStressObject(StressObject):
         del self._inode_start
         del self._inode_end
         print('---BeamStressObject---')
-        print(self.data.to_string())
+        #print(self.data.to_string())
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -269,35 +240,15 @@ class BeamStrainObject(StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         StrainObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CBEAM'  # {} # 'CBEAM/CONBEAM'
+        self.shape = {}
+        self.data = None
+        self.element_data = None
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
-
-        self.xxb = {}
-        self.grids = {}
-        self.sxc = {}
-        self.sxd = {}
-        self.sxe = {}
-        self.sxf = {}
-        self.smax = {}
-        self.smin = {}
-        self.MS_tension = {}
-        self.MS_compression = {}
-
-        if self.code in [[1, 0, 10]]:
-            #self.isImaginary = False
-            if dt is not None:
-                self.add_new_transient = self.add_new_transient
-                self.add_new_eid = self.addNewEidTransient
-                self.add = self.addTransient
-            else:
-                self.add_new_eid = self.add_new_eid
-                self.add = self.add
-        else:
-            raise  RuntimeError("Invalid Code: beamStress - get the format/sort/stressCode=%s" % (self.code))
-        if dt is not None:
-            self.isTransient = True
-            self.dt = self.nonlinear_factor
-            self.add_new_transient()
+        self._ncount = 0
+        self._inode_start = None
+        self._inode_end = None
+        self._ielement_start = None
+        self._ielement_end = None
 
     def getLengthTotal(self):
         return 444  # 44+10*40   (11 nodes)
@@ -313,85 +264,111 @@ class BeamStrainObject(StrainObject):
         k.sort()
         return k
 
-    def add_new_transient(self, dt):
-        """
-        initializes the transient variables
-        .. note:: make sure you set self.dt first
-        """
-        #print "addNewTransient_beam+1+0"
-        self.dt = dt
-        self.sxc[dt] = {}
-        self.sxd[dt] = {}
-        self.sxe[dt] = {}
-        self.sxf[dt] = {}
-        self.smax[dt] = {}
-        self.smin[dt] = {}
-        self.MS_tension[dt] = {}
-        self.MS_compression[dt] = {}
+    def _increase_size(self, dt, nelements, nnodes):
+        if dt in self.shape:  # default dictionary
+            self.shape[dt][0] += nelements
+            self.shape[dt][1] += nnodes
+        else:
+            self.shape[dt] = [nelements, nnodes]
+        #print("shape =", self.shape)
 
-    def add_new_eid(self, dt, eid, out):
-        #print "Beam Stress add_new_eid..."
-        (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-        #print "eid=%s grid=%s" %(eid,grid)
-        assert eid >= 0
-        #assert isinstance(eid,int)
-        #assert isinstance(grid,int)
-        self.grids[eid] = [grid]
-        self.xxb[eid] = [sd]
-        self.sxc[eid] = [sxc]
-        self.sxd[eid] = [sxd]
-        self.sxe[eid] = [sxe]
-        self.sxf[eid] = [sxf]
-        self.smax[eid] = [smax]
-        self.smin[eid] = [smin]
-        self.MS_tension[eid] = [mst]
-        self.MS_compression[eid] = [msc]
-        return eid
+    def _get_shape(self):
+        ndt = len(self.shape)
+        dts = self.shape.keys()
+        shape0 = dts[0]
+        nelements = self.shape[shape0][0]
+        nnodes = self.shape[shape0][1]
+        #print("ndt=%s nnodes=%s dts=%s" % (str(ndt), str(nnodes), str(dts)))
+        return ndt, nelements, nnodes, dts
 
-    def add_new_eid_sort1(self, dt, eid, out):
-        #print "Beam Transient Stress add_new_eid..."
-        (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
+    def _increment(self, nnodes, nelements):
+        self._inode_start += nnodes
+        self._inode_end += nnodes
+        self._ielement_start += nelements
+        self._ielement_end += nelements
+        return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
 
-        assert eid >= 0
-        if dt not in self.sxc:
-            self.add_new_transient(dt)
-        self.grids[eid] = [grid]
-        self.xxb[eid] = [sd]
-        self.sxc[dt][eid] = [sxc]
-        self.sxd[dt][eid] = [sxd]
-        self.sxe[dt][eid] = [sxe]
-        self.sxf[dt][eid] = [sxf]
-        self.smax[dt][eid] = [smax]
-        self.smin[dt][eid] = [smin]
-        self.MS_tension[dt][eid] = [mst]
-        self.MS_compression[dt][eid] = [msc]
-        return eid
+    def _preallocate(self, dt, nnodes, nelements):
+        ndt, nelements_size, nnodes_size, dts = self._get_shape()
+        #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
 
-    def add(self, dt, eid, out):
-        #print "Beam Stress add..."
-        (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-        if grid:
-            self.grids[eid].append(grid)
-            self.xxb[eid].append(sd)
-            self.sxc[eid].append(sxc)
-            self.sxd[eid].append(sxd)
-            self.sxe[eid].append(sxe)
-            self.sxf[eid].append(sxf)
-            self.smax[eid].append(smax)
-            self.smin[eid].append(smin)
-            self.MS_tension[eid].append(mst)
-            self.MS_compression[eid].append(msc)
+        if self._inode_start is not None:
+            return (self._inode_start, self._inode_start + nnodes,
+                    self._ielement_start, self._ielement_start + nelements)
+        print('----definition----')
+        n = ndt * nnodes_size
+        if self._ncount != 0:
+            asfd
+        self._ncount += 1
+        self._inode_start = 0
+        self._inode_end = nnodes
 
-    def add_sort1(self, dt, eid, out):
-        #print "Beam Transient Stress add..."
-        (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-        if grid:
-            self.grids[eid].append(grid)
-            self.xxb[eid].append(sd)
-            self.smax[dt][eid].append(smax)
-            self.smin[dt][eid].append(smin)
-            self.MS_tension[dt][eid].append(mst)
-            self.MS_compression[dt][eid].append(msc)
+        self._ielement_start = 0
+        self._ielement_end = nelements
+
+        data = {}
+        element_data = {}
+        columns = []
+        if dts[0] is not None:
+            name = self.data_code['name']
+            if isinstance(dt, int):
+                data[name] = pd.Series(zeros((n), dtype='int32'))
+            else:
+                data[name] = pd.Series(zeros((n), dtype='float32'))
+            columns.append(name)
+
+        element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
+        element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
+
+        data['element_id'] = pd.Series(zeros((n), dtype='int32'))
+        data['grid'] = pd.Series(zeros((n), dtype='float32'))
+        data['xxb'] = pd.Series(zeros((n), dtype='float32'))
+
+        #columns.append('element_type')
+
+        #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
+        #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
+        #print('n =', n)
+
+        data['exc'] = pd.Series(zeros((n), dtype='float32'))
+        data['exd'] = pd.Series(zeros((n), dtype='float32'))
+        data['exe'] = pd.Series(zeros((n), dtype='float32'))
+        data['exf'] = pd.Series(zeros((n), dtype='float32'))
+
+        data['emax'] = pd.Series(zeros((n), dtype='float32'))
+        data['emin'] = pd.Series(zeros((n), dtype='float32'))
+        data['MS_tension'] = pd.Series(zeros((n), dtype='float32'))
+        data['MS_compression'] = pd.Series(zeros((n), dtype='float32'))
+        # element_type
+
+        columns += ['element_id', 'grid', 'xxb', 'exc', 'exd', 'exe', 'exf', 'emax', 'emin', 'MS_tension', 'MS_compression',]
+
+        self.data = pd.DataFrame(data, columns=columns)
+        self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type'])
+        return (self._inode_start, self._inode_end, self._ielement_start, self._ielement_end)
+
+    def _finalize(self, dt):
+        ndt, nelements, nnodes, dts = self._get_shape()
+
+        if dt != max(dts):
+            return
+        print("----finalize----")
+
+        #grid_type_str = []
+        #for grid_type in self.grid_type:
+            #grid_type_str.append('C' if grid_type==0 else grid_type)
+        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
+
+        if dts[0] is not None:
+            name = self.data_code['name']
+            self.data = self.data.set_index([name, 'element_id', 'grid'])
+        else:
+            self.data = self.data.set_index(['element_id', 'grid'])
+        #print("final\n", self.data.to_string())
+        del self._inode_start
+        del self._inode_end
+        print('---BeamStrainObject---')
+        #print(self.data.to_string())
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:

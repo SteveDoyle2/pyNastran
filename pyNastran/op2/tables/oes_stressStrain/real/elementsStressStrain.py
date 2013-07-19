@@ -79,7 +79,7 @@ class RealElementsStressStrain(object):
             #print "len(data) = ",len(self.data)
         #print self.rodStress[self.isubcase]
 
-    def OES_basicElement(self):
+    def OES_basicElement(self, name):
         """
         genericStressReader - works on CROD_1, CELAS2_12
         stress & strain
@@ -103,7 +103,7 @@ class RealElementsStressStrain(object):
             n += ntotal
         self.data = self.data[n:]
 
-    def OES_CQUAD4_33(self):
+    def OES_CQUAD4_33(self, name):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
@@ -164,7 +164,7 @@ class RealElementsStressStrain(object):
             #self.print_section(100)
             #self.dn += 348
 
-    def OES_CBUSH1D_40(self):
+    def OES_CBUSH1D_40(self, name):
         if self.read_mode in [0, 1]:
             return
         dt = self.nonlinear_factor
@@ -189,7 +189,7 @@ class RealElementsStressStrain(object):
             n += ntotal
         self.data = self.data[n:]
 
-    def OES_CTRIAX6_53(self):
+    def OES_CTRIAX6_53(self, name):
         #(Format1,scaleValue) = self.OES_field1()
         #Format = Format1+'ifffffff'
         dt = self.nonlinear_factor
@@ -213,7 +213,7 @@ class RealElementsStressStrain(object):
                 ibase += 32  # 4*8
         self.data = self.data[ibase:]
 
-    def OES_CTRIA3_74(self):
+    def OES_CTRIA3_74(self, name):
         """
         DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR,MINOR,VONMISES
         stress is extracted at the centroid
@@ -246,7 +246,7 @@ class RealElementsStressStrain(object):
             n += ntotal
         self.data = self.data[n:]
 
-    def OES_CQUADR_82(self):
+    def OES_CQUADR_82(self, name):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
@@ -294,7 +294,7 @@ class RealElementsStressStrain(object):
                 self.obj.add(eid, grid, fd2, sx2, sy2,
                              txy2, angle2, major2, minor2, vm2)
 
-    def OES_CGAPNL_86(self):
+    def OES_CGAPNL_86(self, name):
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
 
@@ -316,7 +316,7 @@ class RealElementsStressStrain(object):
             n += ntotal
         self.data = self.data[n:]
 
-    def OES_RODNL_89_92(self):
+    def OES_RODNL_89_92(self, name):
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '6f'  # 1+6=7
@@ -338,7 +338,7 @@ class RealElementsStressStrain(object):
             self.obj.add(self.element_type, dt, data)
         #self.data = self.data[ibase:]
 
-    def OES_CQUAD4NL_90(self):
+    def OES_CQUAD4NL_90(self, name):
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
 
@@ -363,7 +363,7 @@ class RealElementsStressStrain(object):
             n += ntotal
         self.data = self.data[n:]
 
-    def OES_TETRANL_85_PENTANL_91_CHEXANL_93(self):  # TETRANL 85 / PENTANL 91 / HEXANL 93
+    def OES_TETRANL_85_PENTANL_91_CHEXANL_93(self, name):  # TETRANL 85 / PENTANL 91 / HEXANL 93
         """
         The DMAP manual says fields 3-18 repeat 9 times. but they dont.
         They repeat 8 times.  Other DMAP cards are correct with
@@ -378,7 +378,7 @@ class RealElementsStressStrain(object):
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '4s'
         format1 = bytes(format1)
-        
+
         if self.element_type == 85:
             eType = 'CTETRANL'
             nNodes = 5
@@ -413,7 +413,7 @@ class RealElementsStressStrain(object):
                 #assert cType == 'GRID',cType
                 #print("cType =", cType)
 
-    def OES_VUHEXA_145_VUPENTA_146_VUTETRA_147(self):  # VUHEXA 145 / 
+    def OES_VUHEXA_145_VUPENTA_146_VUTETRA_147(self, name):  # VUHEXA 145 /
         """
         VUTETRA - 4 nodes
         VUPENTA 146 - 6 nodes
@@ -423,7 +423,7 @@ class RealElementsStressStrain(object):
         (format1, extract) = self.getOUG_FormatStart()
         format1 += 'i'
         format1 = bytes(format1)
-        
+
         if self.element_type == 147:
             eType = 'VUTETRA'
             nNodes = 4
@@ -458,7 +458,7 @@ class RealElementsStressStrain(object):
                 #assert cType == 'GRID',cType
                 #print("grid =",grid)
 
-    def OES_CBEAM_94(self):
+    def OES_CBEAM_94(self, name):
         #nNodes = 10  # 11-1
 
         #ntotal       = self.obj.getLengthTotal()
@@ -470,7 +470,7 @@ class RealElementsStressStrain(object):
         n1 = 24
         format1 = '4s5f'
         format1 = bytes(format1)
-        
+
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             eData = self.data[0:8]
@@ -487,11 +487,11 @@ class RealElementsStressStrain(object):
                     #print "loc=%s nsx=%s nse=%s te=%s epe=%s ece=%s" % (loc,nsx,nse,te,epe,ece)
                 #self.obj.add(eid,out)
 
-    def OES_CQUAD4_95(self):  # works (doesnt handle all stress/strain cases tho)
+    def OES_CQUAD4_95(self, name):  # works (doesnt handle all stress/strain cases tho)
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         composite quad
-        
+
          95 - CQUAD4
          96 - CQUAD8
          97 - CTRIA3
@@ -510,7 +510,7 @@ class RealElementsStressStrain(object):
         (format1, extract) = self.getOUG_FormatStart()
         format1 += 'i9f'
         format1 = bytes(format1)
-        
+
         nelements = len(self.data) // 44  # 2+17*5 = 87 -> 87*4 = 348
         ibase = 0
         for i in xrange(nelements):
@@ -531,7 +531,7 @@ class RealElementsStressStrain(object):
         self.data = self.data[ibase:]
         #print "3 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
 
-    def OES_QUAD4FD_139(self):  # hyperelastic
+    def OES_QUAD4FD_139(self, name):  # hyperelastic
         """
         Hyperelastic Quad
         36+4*7*4 = 148
@@ -562,7 +562,7 @@ class RealElementsStressStrain(object):
             #self.obj.add(data)
             #x+=1
 
-    def OES_CBUSH_102(self):
+    def OES_CBUSH_102(self, name):
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
 
@@ -584,7 +584,7 @@ class RealElementsStressStrain(object):
             n += ntotal
         self.data = self.data[n:]
 
-    def OES_VUQUAD_189(self):
+    def OES_VUQUAD_189(self, name):
         if self.element_type == 144:  # CQUAD4
             ntotal = 440  # 6+(33-7)*4 =  -> 110*4 = 440
             nNodes = 4    # 4 corner points
@@ -624,7 +624,7 @@ class RealElementsStressStrain(object):
             self.data = self.data[68:]
             out = unpack(format1, eData)  # len=17*4
             self.obj.addNewNode(dt, eid, parent, coord, icord, theta, itype)
-            
+
             self.obj.add_new_eid(eType, dt, eid, parent, coord, icord, theta, itype)
             for nodeID in xrange(nNodes):  # nodes pts
                 eData = self.data[0:68]
@@ -638,7 +638,7 @@ class RealElementsStressStrain(object):
                              dummy6,dummy7,dummy8)
         #self.data = self.data[ibase:]
 
-    def OES_CELAS_224_225(self):
+    def OES_CELAS_224_225(self, name):
         dt = self.nonlinear_factor
         element_name = self.data_code['element_name']
         (format1, extract) = self.getOUG_FormatStart()
@@ -658,7 +658,7 @@ class RealElementsStressStrain(object):
             eid = extract(eid, dt)
             self.obj.add_new_eid(element_name, dt, eid, force, stress)
 
-    def OESRT_CQUAD4_95(self):
+    def OESRT_CQUAD4_95(self, name):
         #dt = self.nonlinear_factor
         #element_name = self.data_code['element_name']
         (format1, extract) = self.getOUG_FormatStart()
@@ -678,7 +678,7 @@ class RealElementsStressStrain(object):
             #eid,failure, ply, failureIndexPly, failureIndexBonding, failureIndexMax, flag
             # 3,TSAIWU,1,8.5640,0.0,None
             #print('out', out)
-            
+
             (eid, failure, ply, strengthRatioPly, failureIndexBonding, strengthRatioBonding, flag, flag2) = out
             strengthRatioPly
             #print("eid=%s failure=|%s| ply=%s failureIndexPly=%s  failureIndexBonding=%s strengthRatioBonding=%s flag=%s flag2=%s" % (eid, failure.strip(), ply, failureIndexPly, failureIndexBonding, strengthRatioBonding, flag, flag2))

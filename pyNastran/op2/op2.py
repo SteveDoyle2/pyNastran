@@ -516,9 +516,12 @@ class OP2(BDF,
             table = getattr(self, table_type)
             for isubcase in sorted(table.iterkeys()):
                 names.append('%s: Subcase %s' % (table_type, isubcase))
-        print("names =", names)
-        print("result_names =", self._result_names)
-        self._selected_data_names = self._result_names
+        #print("names =", names)
+        #print("result_names =", self._result_names)
+        
+        #self._selected_data_names = self._result_names
+        from pyNastran.utils.gui_choices import get_choices
+        self._selected_data_names = get_choices(self._result_names)
         return names
 
     def _get_full_table_types(self):

@@ -46,8 +46,9 @@ class RealElementsStressStrain2(object):
         #nnodes = nelements * (nNodesPerBeam + 1)
         nnodes = nelements * 2
         if self.read_mode == 0 or name not in self._selected_data_names:
+            if name not in self._result_names:
+                self._result_names.append(name)
             # figure out the shape
-            self._result_names.append(name)
             self.obj._increase_size(dt, nelements, nnodes)
             iend = ntotal * nelements
             self.data = self.data[iend:]
@@ -208,8 +209,10 @@ class RealElementsStressStrain2(object):
 
         nnodes = nelements * nnodes_expected
         if self.read_mode == 0 or name not in self._selected_data_names:
+            if name not in self._result_names:
+                self._result_names.append(name)
+
             # figure out the shape
-            self._result_names.append(name)
             self.obj._increase_size(dt, nelements, nnodes)
             iend = ntotal * nelements
             self.data = self.data[iend:]
@@ -358,8 +361,9 @@ class RealElementsStressStrain2(object):
         nelements = len(self.data) // 64
         nnodes = nelements
         if self.read_mode == 0 or name not in self._selected_data_names:
+            if name not in self._result_names:
+                self._result_names.append(name)
             # figure out the shape
-            self._result_names.append(name)
             self.obj._increase_size(dt, nelements, nnodes)
             iend = ntotal * nelements
             self.data = self.data[iend:]
@@ -465,7 +469,7 @@ class RealElementsStressStrain2(object):
         else:
             self.obj._increment(nnodes, nelements)
 
-    def OES_CQUAD4_144(self):
+    def OES_CQUAD4_144(self, name):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
@@ -516,14 +520,16 @@ class RealElementsStressStrain2(object):
 
         nnodes = nrows #nelements * nNodes
         if self.read_mode == 0 or name not in self._selected_data_names:
+            if name not in self._result_names:
+                self._result_names.append(name)
+
             # figure out the shape
-            self._result_names.append(name)
             self.obj._increase_size(dt, nelements, nnodes)
             iend = ntotal * nelements
             self.data = self.data[iend:]
             return
         else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
-            print("nelements =",nelements)
+            print("nelements =", nelements)
 
         (inode_start, inode_end, ielement_start, ielement_end
             ) = self.obj._preallocate(dt, nnodes, nelements)
