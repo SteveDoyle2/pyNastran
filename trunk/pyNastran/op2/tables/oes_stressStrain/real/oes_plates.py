@@ -12,13 +12,13 @@ from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats8p4F
 class PlateStressObject(StressObject):
     """
     ::
-    
+
       ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)
         ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
             6    CEN/4  -1.250000E-01  -4.278394E+02  8.021165E+03 -1.550089E+02   -88.9493   8.024007E+03 -4.306823E+02  4.227345E+03
                          1.250000E-01   5.406062E+02  1.201854E+04 -4.174177E+01   -89.7916   1.201869E+04  5.404544E+02  5.739119E+03
-  
-  
+
+
                            S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
       ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)          MAX
         ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR         SHEAR
@@ -38,27 +38,28 @@ class PlateStressObject(StressObject):
         self._ielement_end = None
         self._ncount = 0
 
-        self.fiberCurvature = {}
-        self.oxx = {}
-        self.oyy = {}
-        self.txy = {}
-        self.angle = {}
-        self.majorP = {}
-        self.minorP = {}
-        self.ovmShear = {}
-        
-        self.ovmShear2 = None
+        #self.fiberCurvature = {}
+        #self.oxx = {}
+        #self.oyy = {}
+        #self.txy = {}
+        #self.angle = {}
+        #self.majorP = {}
+        #self.minorP = {}
+        #self.ovmShear = {}
+
+        #self.ovmShear2 = None
+        self.data = None
 
         if read_mode == 0:
             return
         self.code = [self.format_code, self.sort_code, self.s_code]
-        
+
 
         # eid_layer = [eid1, ilayer1]
         #             [eid1, ilayer2]
         #             [eid2, ilayer1]
         #             [eid2, ilayer2]
-        
+
         # ovm[1] = [1234.5]
         #    [2] = [1234.5]
         #    [3]   [5678.8]
@@ -76,7 +77,7 @@ class PlateStressObject(StressObject):
                 self.add = self.add_sort1
                 self.add_new_eid = self.add_new_eid_sort1
                 self.addNewNode = self.addNewNodeSort1
-                
+
                 self.add_array = self.add_array_sort1
         else:
             assert dt is not None
@@ -88,10 +89,10 @@ class PlateStressObject(StressObject):
     def add_f06_data(self, data, transient):
         if transient is None:
             #print(data)
-            
+
             eType = data[0][0]
             print('eType = %s' % eType)
-            
+
             n = 0
             line2 = data[0]
             if eType == 'CTRIA3':
@@ -101,17 +102,16 @@ class PlateStressObject(StressObject):
                     n += 5
                 elif len(line2) == 18:  # Centroid
                     n += 1
-            
+
             n *= 2 # 2 layers - top & bottom
             #n = 10
             eTypes = zeros(n, dtype='string')
             ovmShear = zeros(n, dtype='float32')
             index_to_elementNodeLayer = zeros((n, 3), dtype='int32')  # layer=0 -> center
-            
+
             #print(index_to_elementNodeLayer)
             #import sys
             #print(data)
-            #sys.exit()
             i = 0
             for line in data:
                 if eType == 'CTRIA3':
@@ -201,20 +201,6 @@ class PlateStressObject(StressObject):
             #print line
         raise NotImplementedError('transient results not supported')
 
-    def add_new_transient(self, dt):
-        """
-        initializes the transient variables
-        """
-        self.dt = dt
-        #self.fiberCurvature[dt] = {}
-        self.oxx[dt] = {}
-        self.oyy[dt] = {}
-        self.txy[dt] = {}
-        self.angle[dt] = {}
-        self.majorP[dt] = {}
-        self.minorP[dt] = {}
-        self.ovmShear[dt] = {}
-
     def _increase_size(self, dt, nelements, nnodes):
         if dt in self.shape:  # default dictionary
             self.shape[dt][0] += nelements
@@ -238,11 +224,11 @@ class PlateStressObject(StressObject):
         self._ielement_start += nelements
         self._ielement_end += nelements
         return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
-        
+
     def _preallocate(self, dt, nnodes, nelements):
         ndt, nelements_size, nnodes_size, dts = self._get_shape()
         #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
-        
+
         if self._inode_start is not None:
             return (self._inode_start, self._inode_start + nnodes,
                     self._ielement_start, self._ielement_start + nelements)
@@ -281,7 +267,7 @@ class PlateStressObject(StressObject):
         #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
         #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
         #print('n =', n)
-        
+
 
         #data['fiber_distance'] = pd.Series(zeros((n), dtype='float32'))
         #data['fiber_curvature'] = pd.Series(zeros((n), dtype='float32'))
@@ -307,11 +293,11 @@ class PlateStressObject(StressObject):
 
     def _finalize(self, dt):
         ndt, nelements, nnodes, dts = self._get_shape()
-        
+
         if dt != max(dts):
             return
         print("----finalize----")
-        
+
         #grid_type_str = []
         #for grid_type in self.grid_type:
             #grid_type_str.append('C' if grid_type==0 else grid_type)
@@ -325,8 +311,8 @@ class PlateStressObject(StressObject):
         #print("final\n", self.data.to_string())
         del self._inode_start
         del self._inode_end
-        print('---BeamStressObject---')
-        print(self.data.to_string())
+        print('---PlateStressObject---')
+        #print(self.data.to_string())
 
     def add_new_eid(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
         #print "***add_new_eid..."
@@ -895,17 +881,17 @@ class PlateStrainObject(StrainObject):
       # ??? - is this just 11
       ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)
         ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
-  
+
       # s_code=11
                              S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
       ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)
         ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       VON MISES
-  
+
       # s_code=15
                              S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )
       ELEMENT      FIBER                STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)
         ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
-  
+
       # s_code=10
                              S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
       ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)          MAX

@@ -393,9 +393,10 @@ class OUG(object):
                     self.handle_results_buffer(self.OUG_RealTable, resultName, name)
             elif self.thermal == 1:
                 resultName = 'temperatures'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(
                     self.temperatures, TemperatureObject)
-                self.handle_results_buffer(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName, name)
             #elif self.thermal == 8:
                 #resultName = 'scaledDisplacements'
                 #self.create_transient_object(self.scaledDisplacements,displacementObject)
@@ -406,9 +407,10 @@ class OUG(object):
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'displacements'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(self.displacements,
                                            ComplexDisplacementObject)
-                self.handle_results_buffer(self.OUG_ComplexTable, resultName)
+                self.handle_results_buffer(self.OUG_ComplexTable, resultName, name)
             else:
                 self.not_implemented_or_skip()
         else:
@@ -419,42 +421,47 @@ class OUG(object):
         if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'eigenvectors'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(self.eigenvectors,
                                            EigenVectorObject)
-                self.handle_results_buffer(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName, name)
             else:
                 self.not_implemented_or_skip()
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'eigenvectors'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(self.eigenvectors,
                                            ComplexEigenVectorObject)
-                self.handle_results_buffer(self.OUG_ComplexTable, resultName)
+                self.handle_results_buffer(self.OUG_ComplexTable, resultName, name)
             else:
                 self.not_implemented_or_skip()
         else:
-            self.not_implemented_or_skip('only num_wide=8 or 14 is allowed  num_wide=%s' % (self.num_wide))
+            self.not_implemented_or_skip('only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide)
 
     def readOUG_Data_table10(self):  # velocity
         if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'velocities'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(
                     self.velocities, VelocityObject)
-                self.handle_results_buffer(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName, name)
             elif self.thermal == 1:
                 resultName = 'velocities'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(self.velocities,
                                            ThermalVelocityVectorObject)
-                self.handle_results_buffer(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName, name)
             else:
                 self.not_implemented_or_skip()
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'velocities'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(self.velocities,
                                            ComplexVelocityObject)
-                self.handle_results_buffer(self.OUG_ComplexTable, resultName)
+                self.handle_results_buffer(self.OUG_ComplexTable, resultName, name)
             else:
                 self.not_implemented_or_skip()
         else:
@@ -464,17 +471,19 @@ class OUG(object):
         if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'accelerations'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(self.accelerations,
                                            AccelerationObject)
-                self.handle_results_buffer(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName, name)
             else:
                 self.not_implemented_or_skip()
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'accelerations'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(self.accelerations,
                                            ComplexAccelerationObject)
-                self.handle_results_buffer(self.OUG_ComplexTable, resultName)
+                self.handle_results_buffer(self.OUG_ComplexTable, resultName, name)
             else:
                 self.not_implemented_or_skip()
         else:
@@ -490,13 +499,18 @@ class OUG(object):
         #print "len(data) = ",len(self.data)
         nnodes = len(self.data) // 32
         if self.read_mode == 0 or name not in self._selected_data_names:
+            print("OUG_REAL...")
+            if name not in self._result_names:
+                self._result_names.append(name)
+
             # figure out the shape
-            self._result_names.append(name)
             self.obj._increase_size(dt, nnodes)
             iend = 32 * (nnodes + 1)
             self.data = self.data[iend:]
             return
         else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
+            print("_selected_data_names =", self._selected_data_names)
+            print("OUG else")
             #index_data = (nodeIDs_to_index)
             #index_data = pd.MultiIndex.from_tuples(zip(data))
 
@@ -562,8 +576,10 @@ class OUG(object):
         translations = zeros((nnodes, 6), dtype='complex64')  # 2 32-bit numbers
 
         if self.read_mode == 0 or name not in self._selected_data_names:
+            if name not in self._result_names:
+                self._result_names.append(name)
+
             # figure out the shape
-            self._result_names.append(name)
             self.obj._increase_size(dt, nnodes)
             iend = 32 * (nnodes + 1)
             self.data = self.data[iend:]

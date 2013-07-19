@@ -49,8 +49,11 @@ class TableObject(ScalarObject):  # displacement style table
         msg.append('  T1, T2, T3, R1, R2, R3, gridTypes\n')
         return msg
 
-    def isImaginary(self):
+    def is_imaginary(self):
         return False
+
+    def is_real(self):
+        return True
 
     def add_array_f06_data(self, data, transient):
         nnodes = len(data)
@@ -99,16 +102,6 @@ class TableObject(ScalarObject):  # displacement style table
             self.gridTypes[nodeID] = gridType
             self.translations[dt][nodeID] = array([t1, t2, t3])
             self.rotations[dt][nodeID] = array([r1, r2, r3])
-
-    def update_dt(self, data_code, dt, read_mode):
-        if read_mode == 1:
-            return
-        self.data_code = data_code
-        self.apply_data_code()
-        if dt is not None:
-            print("updating %s...%s=%s  isubcase=%s" % (self.data_code['name'],
-                self.data_code['name'], dt, self.isubcase))
-            self.dt = dt
 
     def get_transients(self):
         if as_array:
@@ -553,8 +546,11 @@ class ComplexTableObject(ScalarObject):
         msg.append('  translations, rotations, gridTypes\n')
         return msg
 
-    def isImaginary(self):
+    def is_imaginary(self):
         return True
+
+    def is_real(self):
+        return False
 
     def add_f06_data(self, data, transient):
         if transient is None:
