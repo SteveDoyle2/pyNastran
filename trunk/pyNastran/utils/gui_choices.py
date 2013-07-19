@@ -65,26 +65,18 @@ class GetChoices(wx.Dialog):
         self.m_scrolledWindow1.SetScrollRate( 5, 5 )
         
         self.checkboxes = []
-        self.staticTexts= []
+        #self.staticTexts= []
         
-        gSizer1 = wx.GridSizer(n_names + 1, 2, 0, 0 )
+        #gSizer1 = wx.GridSizer(n_names + 1, 2, 0, 0 )
+        gSizer1 = wx.GridSizer(n_names, 1, 0, 0 )
 
-        staticTextA = wx.StaticText( self.m_scrolledWindow1, wx.ID_ANY, 'Result', wx.DefaultPosition, wx.DefaultSize, 0)
-        gSizer1.Add(staticTextA, 0, wx.ALL, 5)
+        staticTextA = wx.StaticText( self.m_scrolledWindow1, wx.ID_ANY, 'Extract...', wx.DefaultPosition, wx.DefaultSize, 0)
         bold(staticTextA)
 
-        staticTextB = wx.StaticText( self.m_scrolledWindow1, wx.ID_ANY, 'Select To Analyze', wx.DefaultPosition, wx.DefaultSize, 0)
-        gSizer1.Add(staticTextB, 0, wx.ALL, 5)
-        bold(staticTextB)
+        gSizer1.Add(staticTextA, 0, wx.ALL, 5)
 
         for name in names:
-            staticText = wx.StaticText( self.m_scrolledWindow1, wx.ID_ANY, name, wx.DefaultPosition, wx.DefaultSize, 0)
-            staticText .Wrap(-1)
-            self.staticTexts.append(staticText)
-            
-            gSizer1.Add(staticText, -1, wx.ALL, 5)
-
-            checkbox = wx.CheckBox( self.m_scrolledWindow1, wx.ID_ANY, u"Analyze!", wx.DefaultPosition, wx.DefaultSize, 0)
+            checkbox = wx.CheckBox( self.m_scrolledWindow1, wx.ID_ANY, name, wx.DefaultPosition, wx.DefaultSize, 0)
             checkbox.SetValue(True)
 
             gSizer1.Add(checkbox, 0, wx.ALL, 5)
@@ -93,6 +85,7 @@ class GetChoices(wx.Dialog):
         self.m_scrolledWindow1.SetSizer( gSizer1)
         self.m_scrolledWindow1.Layout()
         gSizer1.Fit( self.m_scrolledWindow1 )
+        #gSizer1.Fit()
         bSizer1.Add( self.m_scrolledWindow1, 1, wx.EXPAND|wx.ALL, 1)
 
         m_sdbSizer1 = wx.StdDialogButtonSizer()
@@ -107,6 +100,9 @@ class GetChoices(wx.Dialog):
         m_sdbSizer1.AddButton(apply_button)
         m_sdbSizer1.AddButton(cancel_button)
         m_sdbSizer1.Realize()
+
+        #bSizer1.Add(staticTextA, 0, -1, 5)
+        #bSizer1.Add(staticTextB, 0, -1, 5)
         bSizer1.Add(m_sdbSizer1, 0, -1, 10)
 
         self.SetSizer(bSizer1)
@@ -151,7 +147,7 @@ def main(names):
     }
     GetChoices(None, args)
     ex.MainLoop()
-    print "****args = ", args
+    #print "****args = ", args
     selected = args['selected']
     print "****selected = ", selected 
     if selected is None:
@@ -160,7 +156,7 @@ def main(names):
 
 def get_choices(names=None):
     if names is None:
-        names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']*5
+        names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'] * 5
 
     if is_wx:
         selected = main(names)
@@ -170,4 +166,4 @@ def get_choices(names=None):
     return selected
 
 if __name__ == '__main__':
-    print get_choices()
+    selected = get_choices()
