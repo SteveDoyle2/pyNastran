@@ -45,7 +45,7 @@ class RealElementsStressStrain2(object):
         nelements = len(self.data) // ntotal
         #nnodes = nelements * (nNodesPerBeam + 1)
         nnodes = nelements * 2
-        if self.read_mode == 0 or name not in self._selected_data_names:
+        if self.read_mode == 0 or name not in self._selected_names:
             if name not in self._result_names:
                 self._result_names.append(name)
             # figure out the shape
@@ -208,7 +208,7 @@ class RealElementsStressStrain2(object):
         nelements = len(self.data) // ntotal
 
         nnodes = nelements * nnodes_expected
-        if self.read_mode == 0 or name not in self._selected_data_names:
+        if self.read_mode == 0 or name not in self._selected_names:
             if name not in self._result_names:
                 self._result_names.append(name)
 
@@ -360,7 +360,7 @@ class RealElementsStressStrain2(object):
         ntotal = 64
         nelements = len(self.data) // 64
         nnodes = nelements
-        if self.read_mode == 0 or name not in self._selected_data_names:
+        if self.read_mode == 0 or name not in self._selected_names:
             if name not in self._result_names:
                 self._result_names.append(name)
             # figure out the shape
@@ -481,7 +481,7 @@ class RealElementsStressStrain2(object):
         n = 0
         nelements = len(self.data) // ntotal
 
-        if self.read_mode == 0 or name not in self._selected_data_names:
+        if self.read_mode == 0 or name not in self._selected_names:
             if name not in self._result_names:
                 self._result_names.append(name)
             # figure out the shape
@@ -593,7 +593,7 @@ class RealElementsStressStrain2(object):
         nformat = b'i16f'         # node format
 
         nnodes = nrows #nelements * nNodes
-        if self.read_mode == 0 or name not in self._selected_data_names:
+        if self.read_mode == 0 or name not in self._selected_names:
             if name not in self._result_names:
                 self._result_names.append(name)
 

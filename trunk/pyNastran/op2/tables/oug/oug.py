@@ -498,7 +498,7 @@ class OUG(object):
 
         #print "len(data) = ",len(self.data)
         nnodes = len(self.data) // 32
-        if self.read_mode == 0 or name not in self._selected_data_names:
+        if self.read_mode == 0 or name not in self._selected_names:
             print("OUG_REAL...")
             if name not in self._result_names:
                 self._result_names.append(name)
@@ -509,7 +509,7 @@ class OUG(object):
             self.data = self.data[iend:]
             return
         else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
-            print("_selected_data_names =", self._selected_data_names)
+            print("_selected_names =", self._selected_names)
             print("OUG else")
             #index_data = (nodeIDs_to_index)
             #index_data = pd.MultiIndex.from_tuples(zip(data))
@@ -575,7 +575,7 @@ class OUG(object):
         gridTypes = zeros(nnodes, dtype='int32')
         translations = zeros((nnodes, 6), dtype='complex64')  # 2 32-bit numbers
 
-        if self.read_mode == 0 or name not in self._selected_data_names:
+        if self.read_mode == 0 or name not in self._selected_names:
             if name not in self._result_names:
                 self._result_names.append(name)
 
