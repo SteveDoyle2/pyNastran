@@ -21,16 +21,14 @@ class BeamStressObject(StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CBEAM'
-
         self.shape = {}
-        self.data = None
-        self.element_data = None
-
         self._ncount = 0
         self._inode_start = None
         self._inode_end = None
         self._ielement_start = None
         self._ielement_end = None
+        self.data = None
+        self.element_data = None
 
     def getLengthTotal(self):
         return 444  # 44+10*40   (11 nodes)
@@ -241,14 +239,13 @@ class BeamStrainObject(StrainObject):
         StrainObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CBEAM'  # {} # 'CBEAM/CONBEAM'
         self.shape = {}
-        self.data = None
-        self.element_data = None
-
         self._ncount = 0
         self._inode_start = None
         self._inode_end = None
         self._ielement_start = None
         self._ielement_end = None
+        self.data = None
+        self.element_data = None
 
     def getLengthTotal(self):
         return 444  # 44+10*40   (11 nodes)

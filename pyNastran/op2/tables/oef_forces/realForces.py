@@ -74,7 +74,7 @@ class RealForces(object):
             #eid = self.nonlinear_factor
         return (format1, extract)
 
-    def OEF_Rod(self):  # 1-CROD, 3-CTUBE, 10-CONROD
+    def OEF_Rod(self, name):  # 1-CROD, 3-CTUBE, 10-CONROD
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ff'
@@ -97,7 +97,7 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         #print self.rodForces
 
-    def OEF_CVisc(self):  # 24-CVISC
+    def OEF_CVisc(self, name):  # 24-CVISC
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ff'
@@ -120,7 +120,7 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         #print self.viscForces
 
-    def OEF_Beam(self):  # 2-CBEAM   # TODO is this correct???
+    def OEF_Beam(self, name):  # 2-CBEAM   # TODO is this correct???
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         #print self.code_information()
@@ -160,7 +160,7 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         #print self.beamForces
 
-    def OEF_Shear(self):  # 4-CSHEAR
+    def OEF_Shear(self, name):  # 4-CSHEAR
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ffffffffffffffff'
@@ -185,7 +185,7 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         #print self.shearForces
 
-    def OEF_Spring(self):  # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
+    def OEF_Spring(self, name):  # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'f'
@@ -208,7 +208,7 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         #print self.springForces
 
-    def OEF_CBar(self):  # 34-CBAR
+    def OEF_CBar(self, name):  # 34-CBAR
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
@@ -231,7 +231,7 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         #print self.barForces
 
-    def OEF_CBar100(self):  # 100-CBAR
+    def OEF_CBar100(self, name):  # 100-CBAR
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'fffffff'
@@ -254,7 +254,7 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         #print self.bar100Forces
 
-    def OEF_Plate(self):  # 33-CQUAD4,74-CTRIA3
+    def OEF_Plate(self, name):  # 33-CQUAD4,74-CTRIA3
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
@@ -277,7 +277,7 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         #print self.plateForces
 
-    def OEF_Plate2(self):  # 64-CQUAD8,70-CTRIAR,75-CTRIA6,82-CQUAD8,144-CQUAD4-bilinear
+    def OEF_Plate2(self, name):  # 64-CQUAD8,70-CTRIAR,75-CTRIA6,82-CQUAD8,144-CQUAD4-bilinear
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '4s'
@@ -324,7 +324,7 @@ class RealForces(object):
 
         #print self.plateForces2
 
-    def OEF_ConeAx(self):  # 35-CCONEAX
+    def OEF_ConeAx(self, name):  # 35-CCONEAX
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '6f'
@@ -347,7 +347,7 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         #print self.shearForces
 
-    def OEF_CGap(self):  # 38-CGAP
+    def OEF_CGap(self, name):  # 38-CGAP
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
@@ -370,7 +370,7 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         #print self.plateForces
 
-    def OEF_Bend(self):  # 69-CBEND
+    def OEF_Bend(self, name):  # 69-CBEND
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'i13f'
@@ -395,7 +395,7 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         #print self.bendForces
 
-    def OEF_PentaPressure(self):  # 77-CPENTA_PR,78-CTETRA_PR
+    def OEF_PentaPressure(self, name):  # 77-CPENTA_PR,78-CTETRA_PR
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '8s7f'
@@ -418,7 +418,7 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         #print self.pentaPressureForces
 
-    def OEF_CBush(self):  # 102-CBUSH
+    def OEF_CBush(self, name):  # 102-CBUSH
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '6f'
@@ -441,7 +441,7 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         #print self.bushForces
 
-    def OEF_Force_VU(self):  # 191-VUBEAM
+    def OEF_Force_VU(self, name):  # 191-VUBEAM
         dt = self.nonlinear_factor
 
         (format1, extract) = self.getOEF_FormatStart()
@@ -485,7 +485,7 @@ class RealForces(object):
             self.obj.add(nNodes, dt, dataIn)
             #print "len(data) = ",len(self.data)
 
-    def OEF_Force_VUTRIA(self):  # 189-VUQUAD,190-VUTRIA
+    def OEF_Force_VUTRIA(self, name):  # 189-VUQUAD,190-VUTRIA
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ii4sii'

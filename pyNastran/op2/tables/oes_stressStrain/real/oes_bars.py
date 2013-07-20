@@ -11,7 +11,6 @@ from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 class BarStressObject(StressObject):
     """
     ::
-    
       # s_code=0
                                  S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )
       ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
@@ -19,19 +18,14 @@ class BarStressObject(StressObject):
     """
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         StressObject.__init__(self, data_code, isubcase, read_mode)
-        self.eType = {}
-
         self.shape = {}
         self._ncount = 0
         self._inode_start = None
         self._inode_end = None
         self._ielement_start = None
         self._ielement_end = None
-
-        if read_mode == 0:
-            return
-
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        self.data = None
+        self.element_data = None
 
     def add_f06_data(self, data, transient):
         if transient is None:
@@ -100,7 +94,7 @@ class BarStressObject(StressObject):
         self._ielement_start += nelements
         self._ielement_end += nelements
         return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
-        
+
     def _preallocate(self, dt, nnodes, nelements):
         ndt, nelements_size, nnodes_size, dts = self._get_shape()
         #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
@@ -292,40 +286,14 @@ class BarStrainObject(StrainObject):
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StrainObject.__init__(self, data_code, isubcase)
-        self.eType = {}
-
-        self.code = [self.format_code, self.sort_code, self.s_code]
-        if self.code in [[1, 0, 0], [1, 0, 1]]:
-            self.e1 = {}
-            self.e2 = {}
-            self.e3 = {}
-            self.e4 = {}
-            self.axial = {}
-            self.emax = {}
-            self.emin = {}
-            #self.MS_tension = {}
-            #self.MS_compression = {}
-        elif self.code == [1, 0, 10]:
-            self.e1 = {}
-            self.e2 = {}
-            self.e3 = {}
-            self.e4 = {}
-            self.axial = {}
-            self.emax = {}
-            self.emin = {}
-            self.MS_tension = {}
-            self.MS_compression = {}
-        else:
-            raise RuntimeError("Invalid Code: barStrain - get the format/sort/stressCode=%s" % (self.code))
-
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-                self.add_new_eid = self.NewEidSort1
-        else:
-            assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.NewEidSort2
+        self.shape = {}
+        self._ncount = 0
+        self._inode_start = None
+        self._inode_end = None
+        self._ielement_start = None
+        self._ielement_end = None
+        self.data = None
+        self.element_data = None
 
     def add_f06_data(self, data, transient):
         if transient is None:

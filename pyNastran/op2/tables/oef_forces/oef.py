@@ -295,83 +295,90 @@ class OEF(ThermalElements, RealForces, ComplexForces):
 
         if self.element_type in [1, 3, 10]:  # CROD,CTUBE,CONROD
             resultName = 'rodForces'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.num_wide == numWideReal:
                 self.create_transient_object(self.rodForces, RealRodForce)
-                self.handle_results_buffer(self.OEF_Rod, resultName)
+                self.handle_results_buffer(self.OEF_Rod, resultName, name)
             elif self.num_wide == numWideImag:
                 self.create_transient_object(self.rodForces, ComplexRodForce)
-                self.handle_results_buffer(self.OEF_Rod_alt, resultName)
+                self.handle_results_buffer(self.OEF_Rod_alt, resultName, name)
             else:
                 self.not_implemented_or_skip()
 
         elif self.element_type in [2]:  # CBEAM
             resultName = 'beamForces'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.num_wide == numWideReal:
                 self.create_transient_object(self.beamForces, RealCBeamForce)
-                self.handle_results_buffer(self.OEF_Beam, resultName)
+                self.handle_results_buffer(self.OEF_Beam, resultName, name)
             elif self.num_wide == numWideImag:
                 self.create_transient_object(self.beamForces, ComplexCBeamForce)
-                self.handle_results_buffer(self.OEF_Beam_alt, resultName)
+                self.handle_results_buffer(self.OEF_Beam_alt, resultName, name)
             else:
                 self.not_implemented_or_skip()
 
         elif self.element_type in [4]:  # CSHEAR
             resultName = 'shearForces'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.num_wide == numWideReal:
                 self.create_transient_object(self.shearForces, RealCShearForce)
-                self.handle_results_buffer(self.OEF_Shear, resultName)
+                self.handle_results_buffer(self.OEF_Shear, resultName, name)
             elif self.num_wide == numWideImag:
                 self.create_transient_object(
                     self.shearForces, ComplexCShearForce)
-                self.handle_results_buffer(self.OEF_Shear_alt, resultName)
+                self.handle_results_buffer(self.OEF_Shear_alt, resultName, name)
             else:
                 self.not_implemented_or_skip()
 
         elif self.element_type in [11, 12, 13, 14]:  # CELAS1,CELAS2,CELAS3,CELAS4
             resultName = 'springForces'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.num_wide == numWideReal:  # .. todo:: is this correct or is DMAP wrong (CELAS1)???
                 self.create_transient_object(self.springForces, RealSpringForce)
-                self.handle_results_buffer(self.OEF_Spring, resultName)
+                self.handle_results_buffer(self.OEF_Spring, resultName, name)
             elif self.num_wide == numWideImag:
                 self.create_transient_object(
                     self.springForces, ComplexSpringForce)
-                self.handle_results_buffer(self.OEF_Spring_alt, resultName)
+                self.handle_results_buffer(self.OEF_Spring_alt, resultName, name)
             else:
                 self.not_implemented_or_skip()
 
         elif self.element_type in [20, 21, 22, 23]:  # CDAMP1,CDAMP2,CDAMP3,CDAMP4
             resultName = 'damperForces'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.num_wide == numWideReal:
                 self.create_transient_object(self.damperForces, RealDamperForce)
                 self.handle_results_buffer(self.OEF_Spring,
-                                          resultName)  # same reader as for springs
+                                          resultName, name)  # same reader as for springs
             elif self.num_wide == numWideImag:
                 self.create_transient_object(
                     self.damperForces, ComplexDamperForce)
-                self.handle_results_buffer(self.OEF_Spring_alt, resultName)
+                self.handle_results_buffer(self.OEF_Spring_alt, resultName, name)
             else:
                 self.not_implemented_or_skip()
 
         elif self.element_type in [24]:  # CVISC
             resultName = 'viscForces'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.num_wide == numWideReal:
                 self.create_transient_object(self.viscForces, RealViscForce)
-                self.handle_results_buffer(self.OEF_CVisc, resultName)
+                self.handle_results_buffer(self.OEF_CVisc, resultName, name)
             elif self.num_wide == numWideImag:
                 self.create_transient_object(self.viscForces, ComplexViscForce)
-                self.handle_results_buffer(self.OEF_CVisc_alt, resultName)
+                self.handle_results_buffer(self.OEF_CVisc_alt, resultName, name)
             else:
                 self.not_implemented_or_skip()
 
         elif self.element_type in [33, 74, 235]:  # CQUAD4,CTRIA3,CQUADR
             resultName = 'plateForces'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.num_wide == numWideReal:
                 #print(self.code_information())
                 self.create_transient_object(self.plateForces, RealPlateForce)
-                self.handle_results_buffer(self.OEF_Plate, resultName)
+                self.handle_results_buffer(self.OEF_Plate, resultName, name)
             elif self.num_wide == numWideImag:
                 self.create_transient_object(self.plateForces, ComplexPlateForce)
-                self.handle_results_buffer(self.OEF_Plate_alt, resultName)
+                self.handle_results_buffer(self.OEF_Plate_alt, resultName, name)
             else:
                 self.not_implemented_or_skip()
 
@@ -384,69 +391,76 @@ class OEF(ThermalElements, RealForces, ComplexForces):
                 #raise NotImplementedError(self.code_information())
         elif self.element_type in [35]:  # CCONEAX
             resultName = 'coneAxForces'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.num_wide == numWideReal:
                 self.create_transient_object(self.coneAxForces, RealConeAxForce)
-                self.handle_results_buffer(self.OEF_ConeAx, resultName)
+                self.handle_results_buffer(self.OEF_ConeAx, resultName, name)
             else:
                 self.not_implemented_or_skip()
         elif self.element_type in [64, 70, 75, 82, 144]:  # CQUAD8,CTRIAR,CTRIA6,CQUADR,CQUAD4-bilinear
             resultName = 'plateForces2'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.num_wide == numWideReal:
                 self.create_transient_object(self.plateForces2, RealPlate2Force)
-                self.handle_results_buffer(self.OEF_Plate2, resultName)
+                self.handle_results_buffer(self.OEF_Plate2, resultName, name)
             elif self.num_wide == numWideImag:
                 self.create_transient_object(
                     self.plateForces2, ComplexPlate2Force)
-                self.handle_results_buffer(self.OEF_Plate2_alt, resultName)
+                self.handle_results_buffer(self.OEF_Plate2_alt, resultName, name)
             else:
                 self.not_implemented_or_skip()
         elif self.element_type in [34]:  # CBAR
             resultName = 'barForces'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.num_wide == numWideReal:
                 self.create_transient_object(self.barForces, RealCBarForce)
-                self.handle_results_buffer(self.OEF_CBar, resultName)
+                self.handle_results_buffer(self.OEF_CBar, resultName, name)
             elif self.num_wide == numWideImag:
                 self.create_transient_object(self.barForces, ComplexCBarForce)
-                self.handle_results_buffer(self.OEF_CBar_alt, resultName)
+                self.handle_results_buffer(self.OEF_CBar_alt, resultName, name)
             else:
                 self.not_implemented_or_skip()
         elif self.element_type in [100]:  # CBAR
             resultName = 'barForces'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.num_wide == numWideReal:
                 self.create_transient_object(self.bar100Forces, RealCBar100Force)
-                self.handle_results_buffer(self.OEF_CBar100, resultName)
+                self.handle_results_buffer(self.OEF_CBar100, resultName, name)
             elif self.num_wide == numWideImag:
-                self.handle_results_buffer(self.OEF_CBar100_alt, resultName)
+                self.handle_results_buffer(self.OEF_CBar100_alt, resultName, name)
             else:
                 self.not_implemented_or_skip()
         elif self.element_type in [38]:  # CGAP
             resultName = 'gapForces'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.num_wide == numWideReal:
                 self.create_transient_object(self.gapForces, RealCGapForce)
-                self.handle_results_buffer(self.OEF_CGap, resultName)
+                self.handle_results_buffer(self.OEF_CGap, resultName, name)
             elif self.num_wide == numWideImag:
-                self.handle_results_buffer(self.OEF_CGap_alt, resultName)
+                self.handle_results_buffer(self.OEF_CGap_alt, resultName, name)
             else:
                 self.not_implemented_or_skip()
         elif self.element_type in [69]:  # CBEND
             resultName = 'bendForces'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.num_wide == numWideReal:
                 self.create_transient_object(self.bendForces, RealBendForce)
-                self.handle_results_buffer(self.OEF_Bend, resultName)
+                self.handle_results_buffer(self.OEF_Bend, resultName, name)
             elif self.num_wide == numWideImag:
                 self.create_transient_object(self.bendForces, ComplexBendForce)
-                self.handle_results_buffer(self.OEF_Bend_alt, resultName)
+                self.handle_results_buffer(self.OEF_Bend_alt, resultName, name)
             else:
                 self.not_implemented_or_skip()
         elif self.element_type in [76, 77, 78]:  # CHEXA_PR,PENTA_PR,CTETRA_PR
             resultName = 'solidPressureForces'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.num_wide == numWideReal:
                 self.create_transient_object(self.solidPressureForces,
                                            RealPentaPressureForce)
-                self.handle_results_buffer(self.OEF_PentaPressure, resultName)
+                self.handle_results_buffer(self.OEF_PentaPressure, resultName, name)
             elif self.num_wide == numWideImag:
                 self.create_transient_object(self.solidPressureForces,
-                                           ComplexPentaPressureForce)
+                                           ComplexPentaPressureForce, name)
                 self.handle_results_buffer(
                     self.OEF_PentaPressure_alt, resultName)
             else:
@@ -454,26 +468,28 @@ class OEF(ThermalElements, RealForces, ComplexForces):
         #elif self.element_type in [95,96,97,98]: # composite CQUAD4,CQUAD8,CTRIA3,CTRIA6
         #    resultName = '???' # TODO why is there no object...
         #    if self.num_wide == numWideReal:
-        #        self.handle_results_buffer(self.OEF_CompositePlate,resultName)
+        #        self.handle_results_buffer(self.OEF_CompositePlate,resultName, name)
         #    elif self.num_wide == numWideImag:
-        #        self.handle_results_buffer(self.OEF_CompositePlate_alt)
+        #        self.handle_results_buffer(self.OEF_CompositePlate_alt, name)
         #    else:
         #        self.not_implemented_or_skip()
         elif self.element_type in [102]:  # CBUSH
             resultName = 'bushForces'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.num_wide == numWideReal:
                 self.create_transient_object(self.bushForces, RealCBushForce)
-                self.handle_results_buffer(self.OEF_CBush, resultName)
+                self.handle_results_buffer(self.OEF_CBush, resultName, name)
             elif self.num_wide == numWideImag:
                 self.create_transient_object(self.bushForces, ComplexCBushForce)
-                self.handle_results_buffer(self.OEF_CBush_alt, resultName)
+                self.handle_results_buffer(self.OEF_CBush_alt, resultName, name)
             else:
                 self.not_implemented_or_skip()
         elif self.element_type in [189, 190]:  # VUQUAD,VUTRIA
             resultName = 'force_VU_2D'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.num_wide == numWideReal:
                 self.create_transient_object(self.force_VU_2D, RealForce_VU_2D)
-                self.handle_results_buffer(self.OEF_Force_VUTRIA, resultName)
+                self.handle_results_buffer(self.OEF_Force_VUTRIA, resultName, name)
             elif self.num_wide == numWideImag:
                 self.create_transient_object(
                     self.force_VU_2D, ComplexForce_VU_2D)
@@ -483,12 +499,13 @@ class OEF(ThermalElements, RealForces, ComplexForces):
                 self.not_implemented_or_skip()
         elif self.element_type in [191]:  # VUBEAM
             resultName = 'force_VU'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.num_wide == numWideReal:
                 self.create_transient_object(self.force_VU, RealForce_VU)
-                self.handle_results_buffer(self.OEF_Force_VU, resultName)
+                self.handle_results_buffer(self.OEF_Force_VU, resultName, name)
             elif self.num_wide == numWideImag:
                 self.create_transient_object(self.force_VU, ComplexForce_VU)
-                self.handle_results_buffer(self.OEF_Force_VU_alt, resultName)
+                self.handle_results_buffer(self.OEF_Force_VU_alt, resultName, name)
             else:
                 self.not_implemented_or_skip()
         else:

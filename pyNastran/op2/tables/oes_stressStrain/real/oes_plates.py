@@ -8,52 +8,16 @@ from pyNastran import as_array
 from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats8p4F
 
-
-class PlateStressObject(StressObject):
-    """
-    ::
-
-      ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)
-        ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
-            6    CEN/4  -1.250000E-01  -4.278394E+02  8.021165E+03 -1.550089E+02   -88.9493   8.024007E+03 -4.306823E+02  4.227345E+03
-                         1.250000E-01   5.406062E+02  1.201854E+04 -4.174177E+01   -89.7916   1.201869E+04  5.404544E+02  5.739119E+03
-
-
-                           S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
-      ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)          MAX
-        ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR         SHEAR
-            6    CEN/4  -1.250000E-01  -4.278394E+02  8.021165E+03 -1.550089E+02   -88.9493   8.024007E+03 -4.306823E+02  4.227345E+03
-                         1.250000E-01   5.406062E+02  1.201854E+04 -4.174177E+01   -89.7916   1.201869E+04  5.404544E+02  5.739119E+03
-    """
-    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
-        StressObject.__init__(self, data_code, isubcase, read_mode)
-        self.eType = {}
-
-        #self.append_data_member('sCodes','s_code')
-        #print "self.s_code = ",self.s_code
+class RealPlateResults(object):
+    def __init__(self):
         self.shape = {}
         self._inode_start = None
         self._inode_end = None
         self._ielement_start = None
         self._ielement_end = None
         self._ncount = 0
-
-        #self.fiberCurvature = {}
-        #self.oxx = {}
-        #self.oyy = {}
-        #self.txy = {}
-        #self.angle = {}
-        #self.majorP = {}
-        #self.minorP = {}
-        #self.ovmShear = {}
-
-        #self.ovmShear2 = None
         self.data = None
-
-        if read_mode == 0:
-            return
-        self.code = [self.format_code, self.sort_code, self.s_code]
-
+        self.element_data = None
 
         # eid_layer = [eid1, ilayer1]
         #             [eid1, ilayer2]
@@ -71,20 +35,90 @@ class PlateStressObject(StressObject):
         # >>> ovm[elements2]
         # [5678.8, 5678.8]
 
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-                self.addNewNode = self.addNewNodeSort1
-
-                self.add_array = self.add_array_sort1
+    def _increase_size(self, dt, nelements, nnodes):
+        if dt in self.shape:  # default dictionary
+            self.shape[dt][0] += nelements
+            self.shape[dt][1] += nnodes
         else:
-            assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
-            self.addNewNode = self.addNewNodeSort2
-            self.add_array = self.add_array_sort2
+            self.shape[dt] = [nelements, nnodes]
+        print("shape =", self.shape)
+
+    def _get_shape(self):
+        ndt = len(self.shape)
+        dts = self.shape.keys()
+        shape0 = dts[0]
+        nelements = self.shape[shape0][0]
+        nnodes = self.shape[shape0][1]
+        #print("ndt=%s nnodes=%s dts=%s" % (str(ndt), str(nnodes), str(dts)))
+        return ndt, nelements, nnodes, dts
+
+    def _increment(self, nnodes, nelements):
+        self._inode_start += nnodes
+        self._inode_end += nnodes
+        self._ielement_start += nelements
+        self._ielement_end += nelements
+        return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
+
+    def _finalize(self, dt):
+        ndt, nelements, nnodes, dts = self._get_shape()
+
+        if dt != max(dts):
+            return
+        print("----finalize----")
+
+        #grid_type_str = []
+        #for grid_type in self.grid_type:
+            #grid_type_str.append('C' if grid_type==0 else grid_type)
+        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
+
+        if dts[0] is not None:
+            name = self.data_code['name']
+            self.data = self.data.set_index([name, 'element_id', 'element_id', 'node_id', 'layer'])
+        else:
+            self.data = self.data.set_index(['element_id', 'node_id', 'layer'])
+        #print("final\n", self.data.to_string())
+        del self._inode_start
+        del self._inode_end
+        print('---PlateStressObject---')
+        #print(self.data.to_string())
+
+    def get_stats(self):
+        nelements = len(self.eType)
+        msg = self.get_data_code()
+        if self.nonlinear_factor is not None:  # transient
+            ntimes = len(self.exx)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  eType, fiberCurvature, exx, eyy, exy, angle, '
+                   'majorP, minorP, evmShear\n')
+        return msg
+
+    def __repr__(self):
+        return self.get_stats()
+
+
+class PlateStressObject(StressObject, RealPlateResults):
+    """
+    ::
+
+      ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)
+        ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
+            6    CEN/4  -1.250000E-01  -4.278394E+02  8.021165E+03 -1.550089E+02   -88.9493   8.024007E+03 -4.306823E+02  4.227345E+03
+                         1.250000E-01   5.406062E+02  1.201854E+04 -4.174177E+01   -89.7916   1.201869E+04  5.404544E+02  5.739119E+03
+
+
+                           S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
+      ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)          MAX
+        ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR         SHEAR
+            6    CEN/4  -1.250000E-01  -4.278394E+02  8.021165E+03 -1.550089E+02   -88.9493   8.024007E+03 -4.306823E+02  4.227345E+03
+                         1.250000E-01   5.406062E+02  1.201854E+04 -4.174177E+01   -89.7916   1.201869E+04  5.404544E+02  5.739119E+03
+    """
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        RealPlateResults.__init__(self)
+        StressObject.__init__(self, data_code, isubcase, read_mode)
 
     def add_f06_data(self, data, transient):
         if transient is None:
@@ -201,30 +235,6 @@ class PlateStressObject(StressObject):
             #print line
         raise NotImplementedError('transient results not supported')
 
-    def _increase_size(self, dt, nelements, nnodes):
-        if dt in self.shape:  # default dictionary
-            self.shape[dt][0] += nelements
-            self.shape[dt][1] += nnodes
-        else:
-            self.shape[dt] = [nelements, nnodes]
-        print("shape =", self.shape)
-
-    def _get_shape(self):
-        ndt = len(self.shape)
-        dts = self.shape.keys()
-        shape0 = dts[0]
-        nelements = self.shape[shape0][0]
-        nnodes = self.shape[shape0][1]
-        #print("ndt=%s nnodes=%s dts=%s" % (str(ndt), str(nnodes), str(dts)))
-        return ndt, nelements, nnodes, dts
-
-    def _increment(self, nnodes, nelements):
-        self._inode_start += nnodes
-        self._inode_end += nnodes
-        self._ielement_start += nelements
-        self._ielement_end += nelements
-        return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
-
     def _preallocate(self, dt, nnodes, nelements):
         ndt, nelements_size, nnodes_size, dts = self._get_shape()
         #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
@@ -290,85 +300,6 @@ class PlateStressObject(StressObject):
         self.data = pd.DataFrame(data, columns=columns)
         self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type'])
         return (self._inode_start, self._inode_end, self._ielement_start, self._ielement_end)
-
-    def _finalize(self, dt):
-        ndt, nelements, nnodes, dts = self._get_shape()
-
-        if dt != max(dts):
-            return
-        print("----finalize----")
-
-        #grid_type_str = []
-        #for grid_type in self.grid_type:
-            #grid_type_str.append('C' if grid_type==0 else grid_type)
-        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
-
-        if dts[0] is not None:
-            name = self.data_code['name']
-            self.data = self.data.set_index([name, 'element_id', 'element_id', 'node_id', 'layer'])
-        else:
-            self.data = self.data.set_index(['element_id', 'node_id', 'layer'])
-        #print("final\n", self.data.to_string())
-        del self._inode_start
-        del self._inode_end
-        print('---PlateStressObject---')
-        #print(self.data.to_string())
-
-    def add_new_eid(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #print "***add_new_eid..."
-        #if eid in self.oxx:
-            #return self.add(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
-
-        #assert eid not in self.oxx
-        self.eType[eid] = eType
-        self.fiberCurvature[eid] = {nodeID: [fd]}
-        assert isinstance(eid, int)
-        self.oxx[eid] = {nodeID: [oxx]}
-        self.oyy[eid] = {nodeID: [oyy]}
-        self.txy[eid] = {nodeID: [txy]}
-        self.angle[eid] = {nodeID: [angle]}
-        self.majorP[eid] = {nodeID: [majorP]}
-        self.minorP[eid] = {nodeID: [minorP]}
-        self.ovmShear[eid] = {nodeID: [ovm]}
-        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        #print msg
-        if nodeID == 0:
-            raise Exception(msg)
-
-    def addNewNode(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #print "***addNewNode"
-        assert eid is not None
-        #assert nodeID not in self.oxx[eid]
-        self.fiberCurvature[eid][nodeID] = [fd]
-        self.oxx[eid][nodeID] = [oxx]
-        self.oyy[eid][nodeID] = [oyy]
-        self.txy[eid][nodeID] = [txy]
-        self.angle[eid][nodeID] = [angle]
-        self.majorP[eid][nodeID] = [majorP]
-        self.minorP[eid][nodeID] = [minorP]
-        self.ovmShear[eid][nodeID] = [ovm]
-        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        #print msg
-        if nodeID == 0:
-            raise ValueError(msg)
-
-    def addNewNodeSort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #print "***addNewNodeTransient"
-        #print self.oxx
-        assert eid is not None
-        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        #print msg
-        #assert nodeID not in self.oxx[dt][eid]
-        self.fiberCurvature[eid][nodeID] = [fd]
-        self.oxx[dt][eid][nodeID] = [oxx]
-        self.oyy[dt][eid][nodeID] = [oyy]
-        self.txy[dt][eid][nodeID] = [txy]
-        self.angle[dt][eid][nodeID] = [angle]
-        self.majorP[dt][eid][nodeID] = [majorP]
-        self.minorP[dt][eid][nodeID] = [minorP]
-        self.ovmShear[dt][eid][nodeID] = [ovm]
-        if nodeID == 0:
-            raise ValueError(msg)
 
     def getHeaders(self):
         if self.isFiberDistance():
@@ -874,7 +805,7 @@ class PlateStressObject(StressObject):
         return self.get_stats()
 
 
-class PlateStrainObject(StrainObject):
+class PlateStrainObject(StrainObject, RealPlateResults):
     """
     ::
 
@@ -898,30 +829,8 @@ class PlateStrainObject(StrainObject):
         ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR         SHEAR
     """
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        RealPlateResults.__init__(self)
         StrainObject.__init__(self, data_code, isubcase, read_mode)
-        self.eType = {}
-
-        self.code = [self.format_code, self.sort_code, self.s_code]
-
-        #print self.data_code
-        self.fiberCurvature = {}
-        self.exx = {}
-        self.eyy = {}
-        self.exy = {}
-        self.angle = {}
-        self.majorP = {}
-        self.minorP = {}
-        self.evmShear = {}
-
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-        else:
-            assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
 
     def add_f06_data(self, data, transient):
         if transient is None:
@@ -991,104 +900,6 @@ class PlateStrainObject(StrainObject):
                     raise NotImplementedError(msg)
             return
         raise NotImplementedError('transient results not supported')
-
-    def add_new_transient(self, dt):
-        """
-        initializes the transient variables
-        """
-        #self.fiberCurvature[dt] = {}
-        self.exx[dt] = {}
-        self.eyy[dt] = {}
-        self.exy[dt] = {}
-        self.angle[dt] = {}
-        self.majorP[dt] = {}
-        self.minorP[dt] = {}
-        self.evmShear[dt] = {}
-
-    def add_new_eid_sort1(self, eType, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
-        #print "Plate add..."
-        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
-        #print msg
-
-        if nodeID != 'C':  # centroid
-            assert 0 < nodeID < 1000000000, 'nodeID=%s %s' % (nodeID, msg)
-
-        if dt not in self.exx:
-            self.add_new_transient(dt)
-        #if eid in self.evmShear[dt]:  # SOL200, erase the old result
-            #nid = nodeID
-            #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s major=%s vm=%s" %(dt,eid,nodeID,str(self.fiberCurvature[eid][nid]),str(self.oxx[dt][eid][nid]),str(self.majorP[dt][eid][nid]),str(self.ovmShear[dt][eid][nid]))
-            #self.delete_transient(dt)
-            #self.add_new_transient()
-
-        self.eType[eid] = eType
-        self.fiberCurvature[eid] = {nodeID: [curvature]}
-        self.exx[dt][eid] = {nodeID: [exx]}
-        self.eyy[dt][eid] = {nodeID: [eyy]}
-        self.exy[dt][eid] = {nodeID: [exy]}
-        self.angle[dt][eid] = {nodeID: [angle]}
-        self.majorP[dt][eid] = {nodeID: [majorP]}
-        self.minorP[dt][eid] = {nodeID: [minorP]}
-        self.evmShear[dt][eid] = {nodeID: [evm]}
-        #print msg
-        if nodeID == 0:
-            raise ValueError(msg)
-
-    def add(self, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
-        #print "***add"
-        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
-        #print msg
-        #print self.oxx
-        #print self.fiberCurvature
-        if nodeID != 'C':  # centroid
-            assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
-        self.fiberCurvature[eid][nodeID].append(curvature)
-        self.exx[eid][nodeID].append(exx)
-        self.eyy[eid][nodeID].append(eyy)
-        self.exy[eid][nodeID].append(exy)
-        self.angle[eid][nodeID].append(angle)
-        self.majorP[eid][nodeID].append(majorP)
-        self.minorP[eid][nodeID].append(minorP)
-        self.evmShear[eid][nodeID].append(evm)
-        if nodeID == 0:
-            raise ValueError(msg)
-
-    def add_sort1(self, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
-        #print "***add"
-        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
-        #print msg
-        #print self.oxx
-        #print self.fiberCurvature
-        if nodeID != 'C':  # centroid
-            assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
-
-        self.fiberCurvature[eid][nodeID].append(curvature)
-        self.exx[dt][eid][nodeID].append(exx)
-        self.eyy[dt][eid][nodeID].append(eyy)
-        self.exy[dt][eid][nodeID].append(exy)
-        self.angle[dt][eid][nodeID].append(angle)
-        self.majorP[dt][eid][nodeID].append(majorP)
-        self.minorP[dt][eid][nodeID].append(minorP)
-        self.evmShear[dt][eid][nodeID].append(evm)
-        if nodeID == 0:
-            raise ValueError(msg)
-
-    def addNewNode(self, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
-        #print "***addNewNode"
-        #print self.oxx
-        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
-        assert nodeID not in self.exx[eid], msg
-        self.fiberCurvature[eid][nodeID] = [curvature]
-        self.exx[eid][nodeID] = [exx]
-        self.eyy[eid][nodeID] = [eyy]
-        self.exy[eid][nodeID] = [exy]
-        self.angle[eid][nodeID] = [angle]
-        self.majorP[eid][nodeID] = [majorP]
-        self.minorP[eid][nodeID] = [minorP]
-        self.evmShear[eid][nodeID] = [evm]
-        #print msg
-        if nodeID == 0:
-            raise ValueError(msg)
 
     def getHeaders(self):
         if self.isFiberDistance():
@@ -1449,21 +1260,3 @@ class PlateStrainObject(StrainObject):
                             '%13s   %13s  %-s\n' % ('', fd, exx, eyy, exy,
                                                     angle, major, minor, evm))
         return msg
-
-    def get_stats(self):
-        nelements = len(self.eType)
-
-        msg = self.get_data_code()
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.exx)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, fiberCurvature, exx, eyy, exy, angle, '
-                   'majorP, minorP, evmShear\n')
-        return msg
-
-    def __repr__(self):
-        return self.get_stats()
