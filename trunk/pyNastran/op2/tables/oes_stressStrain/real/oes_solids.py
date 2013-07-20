@@ -8,7 +8,67 @@ from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class SolidStressObject(StressObject):
+class RealSolidResults(object):
+
+    def __init__(self):
+        self.shape = {}
+        self._ncount = 0
+        self._inode_start = None
+        self._inode_end = None
+        self._ielement_start = None
+        self._ielement_end = None
+        self.data = None
+        self.element_data = None
+
+    def _get_shape(self):
+        ndt = len(self.shape)
+        dts = self.shape.keys()
+        shape0 = dts[0]
+        nelements = self.shape[shape0][0]
+        nnodes = self.shape[shape0][1]
+        #print("ndt=%s nnodes=%s dts=%s" % (str(ndt), str(nnodes), str(dts)))
+        return ndt, nelements, nnodes, dts
+
+    def _increase_size(self, dt, nelements, nnodes):
+        #self.shape += 1
+        if dt in self.shape:  # default dictionary
+            self.shape[dt][0] += nelements
+            self.shape[dt][1] += nnodes
+        else:
+            self.shape[dt] = [nelements, nnodes]
+
+    def _increment(self, nnodes, nelements):
+        self._inode_start += nnodes
+        self._inode_end += nnodes
+        self._ielement_start += nelements
+        self._ielement_end += nelements
+        return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
+
+    def _finalize(self, dt):
+        ndt, nelements, nnodes, dts = self._get_shape()
+
+        if dt != max(dts):
+            return
+        #print(self.data.to_string())
+        #print("----finalize----")
+
+        #grid_type_str = []
+        #for grid_type in self.grid_type:
+            #grid_type_str.append('C' if grid_type==0 else grid_type)
+        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
+
+        if dts[0] is not None:
+            self.data = self.data.set_index(['dt', 'element_id', 'node_id'])
+        else:
+            self.data = self.data.set_index(['element_id', 'node_id'])
+        #print "final\n", self.data
+        del self._inode_start
+        del self._inode_end
+
+    def __repr__(self):
+        return self.get_stats()
+
+class SolidStressObject(StressObject, RealSolidResults):
     """
     ::
 
@@ -31,28 +91,8 @@ class SolidStressObject(StressObject):
                              Z   1.000000E+04  ZX  -4.547474E-13   C   9.845177E+02  LZ 1.00 0.00 0.00
     """
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        RealSolidResults.__init__(self)
         StressObject.__init__(self, data_code, isubcase, read_mode)
-
-        self.shape = {}
-        self._ncount = 0
-        self._inode_start = None
-        self._inode_end = None
-        self._ielement_start = None
-        self._ielement_end = None
-
-        if read_mode == 0:
-            return
-        self.code = [self.format_code, self.sort_code, self.s_code]
-
-        self.dt = dt
-        #if is_sort1:
-            #if dt is not None:
-                #self.add = self.add_sort1
-                #self.add_new_eid = self.add_new_eid_sort1
-        #else:
-            #assert dt is not None
-            #self.add = self.addSort2
-            #self.add_new_eid = self.add_new_eid_sort2
 
     def add_f06_data(self, data, transient):
         if transient is None:
@@ -142,30 +182,6 @@ class SolidStressObject(StressObject):
             self.rotations[dt][nodeID] = array([r1, r2, r3])
         del self.data
 
-    def _increase_size(self, dt, nelements, nnodes):
-        if dt in self.shape:  # default dictionary
-            self.shape[dt][0] += nelements
-            self.shape[dt][1] += nnodes
-        else:
-            self.shape[dt] = [nelements, nnodes]
-        print("shape =", self.shape)
-
-    def _get_shape(self):
-        ndt = len(self.shape)
-        dts = self.shape.keys()
-        shape0 = dts[0]
-        nelements = self.shape[shape0][0]
-        nnodes = self.shape[shape0][1]
-        print("ndt=%s nnodes=%s dts=%s" % (str(ndt), str(nnodes), str(dts)))
-        return ndt, nelements, nnodes, dts
-
-    def _increment(self, nnodes, nelements):
-        self._inode_start += nnodes
-        self._inode_end += nnodes
-        self._ielement_start += nelements
-        self._ielement_end += nelements
-        return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
-
     def _preallocate(self, dt, nnodes, nelements):
         ndt, nelements_size, nnodes_size, dts = self._get_shape()
         print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
@@ -240,27 +256,6 @@ class SolidStressObject(StressObject):
         self.data = pd.DataFrame(data, columns=columns)
         self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type', 'cid'])
         return (self._inode_start, self._inode_end, self._ielement_start, self._ielement_end)
-
-    def _finalize(self, dt):
-        ndt, nelements, nnodes, dts = self._get_shape()
-
-        if dt != max(dts):
-            return
-        #print(self.data.to_string())
-        #print("----finalize----")
-
-        #grid_type_str = []
-        #for grid_type in self.grid_type:
-            #grid_type_str.append('C' if grid_type==0 else grid_type)
-        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
-
-        if dts[0] is not None:
-            self.data = self.data.set_index(['dt', 'element_id', 'node_id'])
-        else:
-            self.data = self.data.set_index(['element_id', 'node_id'])
-        #print "final\n", self.data
-        del self._inode_start
-        del self._inode_end
 
     def getHeaders(self):
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
@@ -481,11 +476,8 @@ class SolidStressObject(StressObject):
         msg.append('\n')
         return msg
 
-    def __repr__(self):
-        return self.get_stats()
 
-
-class SolidStrainObject(StrainObject):
+class SolidStrainObject(StrainObject, RealSolidResults):
     """
     ::
 
@@ -508,27 +500,8 @@ class SolidStrainObject(StrainObject):
                              Z   9.383460E-04  ZX  -2.369997E-04   C  -1.917288E-04  LZ 0.99 0.00-0.15
     """
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        RealSolidResults.__init__(self)
         StrainObject.__init__(self, data_code, isubcase, read_mode)
-        self.eType = {}
-
-        if read_mode == 0:
-            return
-        self.code = [self.format_code, self.sort_code, self.s_code]
-
-        #self.aCos = {}
-        #self.bCos = {}
-        #self.cCos = {}
-        #self.pressure = {}
-
-        self.nonlinear_factor = dt
-        #if is_sort1:
-            #if dt is not None:
-                #self.add = self.add_sort1
-                #self.add_new_eid = self.add_new_eid_sort1
-        #else:
-            #assert dt is not None
-            #self.add = self.addSort2
-            #self.add_new_eid = self.add_new_eid_sort2
 
     def add_f06_data(self, data, transient):
         if transient is None:
@@ -543,7 +516,7 @@ class SolidStrainObject(StrainObject):
             for line in data:
                 self.data[dt] += data
 
-    def processF06Data(self):
+    def process_f06_data(self):
         """
         ::
 
@@ -619,22 +592,6 @@ class SolidStrainObject(StrainObject):
             self.rotations[dt][nodeID] = array([r1, r2, r3])
         del self.data
 
-    def _get_shape(self):
-        ndt = len(self.shape)
-        dts = self.shape.keys()
-        shape0 = dts[0]
-        nnodes = self.shape[shape0]
-        print("ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts)))
-        return ndt, nnodes, dts
-
-    def _increase_size(self, dt, nelements, nnodes):
-        #self.shape += 1
-        if dt in self.shape:  # default dictionary
-            self.shape[dt][0] += nelements
-            self.shape[dt][1] += nnodes
-        else:
-            self.shape[dt] = [nnodes]
-
     def _preallocate(self, dt, nelements_size, nnodes_size):
         if self.shape is None:
             self._inode_start += nnodes
@@ -686,23 +643,6 @@ class SolidStrainObject(StrainObject):
             self._inode_end = nnodes
         return self._inode_start, self._inode_end
 
-    def _finalize(self):
-        ndt, nelements, nnodes, dts = self._get_shape()
-
-        #grid_type_str = []
-        #for grid_type in self.grid_type:
-            #grid_type_str.append('C' if grid_type==0 else grid_type)
-        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
-
-        if dts[0] is not None:
-            self.data = self.data.set_index(['dt', 'element_id', 'node_id'])
-        else:
-            self.data = self.data.set_index(['element_id', 'node_id'])
-        self.element_data = self.element_data.set_index(['element_id'])
-        #print "final\n", self.data
-        del self._inode_start
-        del self._inode_end
-
     def getHeaders(self):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']
         if self.isVonMises():
@@ -711,23 +651,23 @@ class SolidStrainObject(StrainObject):
             headers.append('maxShear')
         return headers
 
-    def ovm(self, o11, o22, o33, o12, o13, o23):
+    def evm(self, e11, e22, e33, e12, e13, e23):
         """http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
-        ovm = 0.5 * ((o11 - o22) ** 2 +
-                     (o22 - o33) ** 2 +
-                     (o11 - o33) ** 2 +
-                     6 * (o23 ** 2 + o13 ** 2 + o12 ** 2))
-        return ovm
+        evm = 0.5 * ((e11 - e22) ** 2 +
+                     (e22 - e33) ** 2 +
+                     (e11 - e33) ** 2 +
+                     6 * (e23 ** 2 + e13 ** 2 + e12 ** 2))
+        return evm
 
     #def ovmPlane(self,o11,o22,o12):
         #"""http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
         #ovm = sqrt(o11**2+o22**2-o1*o2+3*o12**2)
         #return ovm
 
-    def octahedral(self, o11, o22, o33, o12, o13, o23):
+    def octahedral(self, e11, e22, e33, e12, e13, e23):
         """http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
-        ovm = self.ovm(o11, o22, o33, o12, o13, o23)
-        return ovm * sqrt(2) / 3.
+        evm = self.ovm(e11, e22, e33, e12, e13, e23)
+        return evm * sqrt(2) / 3.
 
     def pressure(self, e1, e2, e3):
         """
@@ -744,7 +684,7 @@ class SolidStrainObject(StrainObject):
         (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
         return v
 
-    def getF06_Header(self):
+    def get_f06_header(self):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:
@@ -938,6 +878,3 @@ class SolidStrainObject(StrainObject):
         msg.append(', '.join(set(self.eType.values())))
         msg.append('\n')
         return msg
-
-    def __repr__(self):
-        return self.get_stats()

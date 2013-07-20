@@ -1,42 +1,139 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
+from numpy import zeros
+import pandas as pd
 from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
+class RealBushResults(object):
 
-class BushStressObject(StressObject):
-
-    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
-        StressObject.__init__(self, data_code, isubcase, read_mode)
+    def __init__(self):
+        self.shape = {}
         self.eType = {}
+        self.data = None
+        self._ncount = 0
+        self._ielement_start = None
+        self._ielement_end = None
 
-        #self.code = [self.format_code, self.sort_code, self.s_code]
+    def is_real(self):
+        return True
 
-        self.translations = {}
-        self.rotations = {}
+    def is_imaginary(self):
+        return False
 
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add_new_eid = self.add_new_eid_sort1
-        else:
-            assert dt is not None
-            self.add_new_eid = self.add_new_eid_sort2
+    def get_transients(self):
+        k = self.translations.keys()
+        k.sort()
+        return k
 
     def get_stats(self):
         nelements = len(self.eType)
-
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.translations)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
-            msg.append('  imaginary type=%s nelements=%s\n' % (self.__class__.__name__,
+            msg.append('  real type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
         msg.append('  eType, translations, rotations\n')
         return msg
+    
+    def _increase_size(self, dt, nelements):
+        if dt in self.shape:  # default dictionary
+            self.shape[dt] += nelements
+        else:
+            self.shape[dt] = nelements
+        #print("shape =", self.shape)
+
+    def _get_shape(self):
+        ndt = len(self.shape)
+        dts = self.shape.keys()
+        shape0 = dts[0]
+        nelements = self.shape[shape0]
+        #print("ndt=%s nnodes=%s dts=%s" % (str(ndt), str(nnodes), str(dts)))
+        return ndt, nelements, dts
+
+    def _increment(self, nelements):
+        self._ielement_start += nelements
+        self._ielement_end += nelements
+        return self._ielement_start, self._ielement_end
+
+    def _preallocate(self, dt, nelements):
+        ndt, nelements_size, dts = self._get_shape()
+        #print("ndt=%s nelements_size=%s dts=%s" % (ndt, nelements_size, str(dts)))
+
+        if self._ielement_start is not None:
+            return (self._ielement_start, self._ielement_start + nelements)
+        print('----definition----')
+        n = ndt * nelements_size
+        if self._ncount != 0:
+            asfd
+        self._ncount += 1
+        self._ielement_start = 0
+        self._ielement_end = nelements
+
+        data = {}
+        columns = []
+        if dts[0] is not None:
+            name = self.data_code['name']
+            if isinstance(dt, int):
+                data[name] = pd.Series(zeros((n), dtype='int32'))
+            else:
+                data[name] = pd.Series(zeros((n), dtype='float32'))
+            columns.append(name)
+
+        #element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
+        #element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
+
+        data['element_id'] = pd.Series(zeros((n), dtype='int32'))
+        #columns.append('element_type')
+
+        #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
+        #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
+        #print('n =', n)
+
+        data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
+        data['T1'] = pd.Series(zeros((n), dtype='float32'))
+        data['T2'] = pd.Series(zeros((n), dtype='float32'))
+        data['T3'] = pd.Series(zeros((n), dtype='float32'))
+
+        data['R1'] = pd.Series(zeros((n), dtype='float32'))
+        data['R2'] = pd.Series(zeros((n), dtype='float32'))
+        data['R3'] = pd.Series(zeros((n), dtype='float32'))
+
+        columns += ['element_id', 'element_type', 'T1', 'T2', 'T3', 'R1', 'R2', 'R3',]
+
+        self.data = pd.DataFrame(data, columns=columns)
+        return (self._ielement_start, self._ielement_end)
+
+    def _finalize(self, dt):
+        ndt, nelements, dts = self._get_shape()
+
+        if dt != max(dts):
+            return
+        print("----finalize----")
+
+        #grid_type_str = []
+        #for grid_type in self.grid_type:
+            #grid_type_str.append('C' if grid_type==0 else grid_type)
+        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
+
+        if dts[0] is not None:
+            name = self.data_code['name'] # dt
+            self.data = self.data.set_index([name, 'element_id'])
+        else:
+            self.data = self.data.set_index(['element_id'])
+        #print("final\n", self.data.to_string())
+        print('---BushStressObject---')
+        #print(self.data.to_string())
+
+class BushStressObject(RealBushResults, StressObject):
+
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        RealBushResults.__init__(self)
+        StressObject.__init__(self, data_code, isubcase, read_mode)
 
     def add_f06_data(self, data, transient):
         if transient is None:
@@ -58,35 +155,6 @@ class BushStressObject(StressObject):
             self.eType[eid] = 'CBUSH'
             self.translations[dt][eid] = [tx, ty, tz]
             self.rotations[dt][eid] = [rx, ry, rz]
-
-    def delete_transient(self, dt):
-        del self.translations[dt]
-        del self.rotations[dt]
-
-    def get_transients(self):
-        k = self.translations.keys()
-        k.sort()
-        return k
-
-    def add_new_transient(self, dt):
-        """
-        initializes the transient variables
-        """
-        self.dt = dt
-        self.translations[dt] = {}
-        self.rotations[dt] = {}
-
-    def add_new_eid(self, eType, dt, eid, tx, ty, tz, rx, ry, rz):
-        self.eType[eid] = eType
-        self.translations[eid] = [tx, ty, tz]
-        self.rotations[eid] = [rx, ry, rz]
-
-    def add_new_eid_sort1(self, eType, dt, eid, tx, ty, tz, rx, ry, rz):
-        if dt not in self.translations:
-            self.add_new_transient(dt)
-        self.eType[eid] = eType
-        self.translations[dt][eid] = [tx, ty, tz]
-        self.rotations[dt][eid] = [rx, ry, rz]
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -216,38 +284,11 @@ class BushStressObject(StressObject):
         return msg
 
 
-class BushStrainObject(StrainObject):
-    """
-    """
+class BushStrainObject(RealBushResults, StrainObject):
+
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
-        raise NotImplementedError('is this used?')
+        RealBushResults.__init__(self)
         StrainObject.__init__(self, data_code, isubcase, read_mode)
-        self.eType = {}
-
-        self.code = [self.format_code, self.sort_code, self.s_code]
-        self.translations = {}
-        self.rotations = {}
-
-        if is_sort1:
-            if dt is not None:
-                self.add_new_eid = self.add_new_eid_sort1
-        else:
-            assert dt is not None
-            self.add_new_eid = self.add_new_eid_sort2
-
-    def get_stats(self):
-        nelements = len(self.eType)
-
-        msg = self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.translations)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  imaginary type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, translations, rotations\n')
-        return msg
 
     def add_f06_data(self, data, transient):
         if transient is None:
@@ -269,36 +310,6 @@ class BushStrainObject(StrainObject):
             self.eType[eid] = 'CBUSH'
             self.translations[dt][eid] = [tx, ty, tz]
             self.rotations[dt][eid] = [rx, ry, rz]
-
-    def delete_transient(self, dt):
-        del self.translations[dt]
-        del self.rotations[dt]
-
-    def get_transients(self):
-        k = self.translations.keys()
-        k.sort()
-        return k
-
-    def add_new_transient(self, dt):
-        """
-        initializes the transient variables
-        """
-        self.dt = dt
-        self.translations[dt] = {}
-        self.rotations[dt] = {}
-
-    def add_new_eid(self, eType, dt, eid, tx, ty, tz, rx, ry, rz):
-        self.eType[eid] = eType
-        self.translations[eid] = [tx, ty, tz]
-        self.rotations[eid] = [rx, ry, rz]
-
-    def add_new_eid_sort1(self, eType, dt, eid, tx, ty, tz, rx, ry, rz):
-        if dt not in self.translations:
-            self.add_new_transient(dt)
-        self.eType[eid] = eType
-        self.translations[dt][eid] = [tx, ty, tz]
-        self.rotations[dt][eid] = [rx, ry, rz]
-
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         raise NotImplementedError('CBUSH')

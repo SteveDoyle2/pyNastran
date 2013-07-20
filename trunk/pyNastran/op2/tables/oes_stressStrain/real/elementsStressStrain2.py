@@ -30,7 +30,7 @@ from struct import unpack
 
 class RealElementsStressStrain2(object):
 
-    def OES_CBEAM_2(self):
+    def OES_CBEAM_2(self, name):
         dt = self.nonlinear_factor
         (formatStart, extract) = self.getOUG_FormatStart()
 
@@ -348,7 +348,7 @@ class RealElementsStressStrain2(object):
         else:
             self.obj._increment(nnodes, nelements)
 
-    def OES_CBAR_34(self):
+    def OES_CBAR_34(self, name):
         dt = self.nonlinear_factor
         assert self.num_wide == 16, ('invalid num_wide...num_wide=%s'
                                     % (self.num_wide))
@@ -468,6 +468,80 @@ class RealElementsStressStrain2(object):
             self.obj._finalize(dt)
         else:
             self.obj._increment(nnodes, nelements)
+
+    def OES_CBUSH_102(self, name):
+        dt = self.nonlinear_factor
+        (format1, extract) = self.getOUG_FormatStart()
+
+        assert self.num_wide == 7, "num_wide=%s not 7" % self.num_wide
+        ntotal = 28  # 4*7
+        format1 += '6f'
+        format1 = bytes(format1)
+
+        n = 0
+        nelements = len(self.data) // ntotal
+
+        if self.read_mode == 0 or name not in self._selected_data_names:
+            if name not in self._result_names:
+                self._result_names.append(name)
+            # figure out the shape
+            self.obj._increase_size(dt, nelements)
+            iend = ntotal * nelements
+            self.data = self.data[iend:]
+            return
+        else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
+            print("nelements =",nelements)
+        
+        (ielement_start, ielement_end) = self.obj._preallocate(dt, nelements)
+
+        istart = 0
+        iend = ntotal
+        etypes=['CBUSH'] * nelements
+
+        eids = []
+        T1 = []; T2=[]; T3=[]; R1=[]; R2=[]; R3=[]
+        for i in xrange(nelements):
+            eData = self.data[n:n + ntotal]
+            out = unpack(format1, eData)  # num_wide=7
+
+            (eid, tx, ty, tz, rx, ry, rz) = out
+            eid = extract(eid, dt)
+            
+            eids.append(eid)
+            T1.append(tx)
+            T2.append(ty)
+            T3.append(tz)
+            R1.append(rx)
+            R2.append(ry)
+            R3.append(rz)
+
+            #self.obj.add_new_eid(self.element_type, dt, eid, tx, ty, tz, rx, ry, rz)
+            n += ntotal
+        self.data = self.data[n:]
+
+        #print('delta', inode_end - inode_start, len(eids))
+        if dt:
+            name = self.obj.data_code['name']
+            self.obj.data[name][ielement_start:ielement_end] = ones(ielement_end - ielement_start) * dt
+
+        #print("inode_start=%r inode_end=%r delta=%r" % (inode_start, inode_end, inode_end-inode_start))
+        #print('len(s1) =', len(s1))
+
+        self.obj.data['element_id'][ielement_start:ielement_end] = eids
+        self.obj.data['element_type'][ielement_start:ielement_end] = etypes
+        #if self.obj.isStress():
+        self.obj.data['T1'][ielement_start:ielement_end] = T1
+        self.obj.data['T2'][ielement_start:ielement_end] = T2
+        self.obj.data['T3'][ielement_start:ielement_end] = T3
+        self.obj.data['R1'][ielement_start:ielement_end] = R1
+        self.obj.data['R2'][ielement_start:ielement_end] = R2
+        self.obj.data['R3'][ielement_start:ielement_end] = R3
+
+        #print('len(eids) = ', len(self.obj.data['element_id']))
+        if len(self.obj.data['element_id']) == ielement_end: # [nodes, elements]
+            self.obj._finalize(dt)
+        else:
+            self.obj._increment(nelements)
 
     def OES_CQUAD4_144(self, name):
         """

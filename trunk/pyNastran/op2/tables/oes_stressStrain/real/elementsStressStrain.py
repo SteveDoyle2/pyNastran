@@ -165,8 +165,6 @@ class RealElementsStressStrain(object):
             #self.dn += 348
 
     def OES_CBUSH1D_40(self, name):
-        if self.read_mode in [0, 1]:
-            return
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
 
@@ -177,6 +175,17 @@ class RealElementsStressStrain(object):
 
         n = 0
         nelements = len(self.data) // ntotal
+        if self.read_mode == 0 or name not in self._selected_data_names:
+            if name not in self._result_names:
+                self._result_names.append(name)
+            # figure out the shape
+            self.obj._increase_size(dt, nelements, nnodes)
+            iend = ntotal * nelements
+            self.data = self.data[iend:]
+            return
+        else:
+            oes_cbush1d_40__elementStressStrain
+
         for i in xrange(nelements):
             eData = self.data[n:n + ntotal]
 
@@ -561,28 +570,6 @@ class RealElementsStressStrain(object):
                 #print "***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" % (ID,sx,sy,sxy,angle,smj,smi)
             #self.obj.add(data)
             #x+=1
-
-    def OES_CBUSH_102(self, name):
-        dt = self.nonlinear_factor
-        (format1, extract) = self.getOUG_FormatStart()
-
-        assert self.num_wide == 7, "num_wide=%s not 7" % self.num_wide
-        ntotal = 28  # 4*7
-        format1 += '6f'
-        format1 = bytes(format1)
-
-        n = 0
-        nelements = len(self.data) // ntotal
-        for i in xrange(nelements):
-            eData = self.data[n:n + ntotal]
-            out = unpack(format1, eData)  # num_wide=7
-
-            (eid, tx, ty, tz, rx, ry, rz) = out
-            eid = extract(eid, dt)
-
-            self.obj.add_new_eid(self.element_type, dt, eid, tx, ty, tz, rx, ry, rz)
-            n += ntotal
-        self.data = self.data[n:]
 
     def OES_VUQUAD_189(self, name):
         if self.element_type == 144:  # CQUAD4

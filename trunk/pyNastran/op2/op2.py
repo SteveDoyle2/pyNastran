@@ -21,6 +21,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.f06.f06Writer import F06Writer
 from pyNastran.f06.matlabWriter import MatlabWriter
 from pyNastran.utils.gui_io import load_file_dialog
+from pyNastran.utils.gui_choices import get_choices
 
 
 class OP2Deprecated(object):
@@ -520,8 +521,37 @@ class OP2(BDF,
         #print("result_names =", self._result_names)
         
         #self._selected_data_names = self._result_names
-        from pyNastran.utils.gui_choices import get_choices
-        self._selected_data_names = get_choices(self._result_names)
+        # Case 1: user calls from iPython
+        #         - filename empty
+        #         - selected = None
+        #        -> popup the dialog
+        # Case 2: user calls from iPython
+        #         - filename empty
+        #         - selected = []
+        #        -> all data; no popup
+
+        # Case 3: user calls from script
+        #         - filename set
+        #         - selected = None
+        #        -> popup the dialog
+        # Case 4: user calls from script
+        #         - filename set
+        #         - selected = []
+        #        -> all data; no popup
+
+        # Case 5: user calls from script
+        #         - filename set
+        #         - selected = ['displacement: Subcase 1']
+        #        -> read only the possible names
+        # Case 6: user calls from script
+        #         - filename set
+        #         - selected = ['not a result: Subcase 1']
+        #        -> ERROR
+        if self._selected_data_names is None:
+            self._selected_data_names = get_choices(self._result_names)
+
+        if self._selected_data_names == []:
+            self._selected_data_names = self._result_names
         return names
 
     def _get_full_table_types(self):
@@ -534,7 +564,7 @@ class OP2(BDF,
         for table_type in table_types:
             table = getattr(self, table_type)
             for isubcase, subcase in sorted(table.iteritems()):
-                if hasattr(subcase, 'data'):
+                if hasattr(subcase, 'data') and subcase.data is not None:
                     table_types2.append(table_type)
         return table_types2
 

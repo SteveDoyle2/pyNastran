@@ -30,11 +30,6 @@ class TableObject(ScalarObject):  # displacement style table
         # new method, not finished
         self.nodeIDs_to_index = None
         self.gridTypes2 = {}
-
-        #self.gridTypes = {}
-        #self.translations = {}
-        #self.rotations = {}
-
         self.dt = dt
 
     def get_stats(self):
