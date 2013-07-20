@@ -76,11 +76,17 @@ class OP2(BDF,
             return False
         return True
 
-    def __init__(self, op2_filename=None, make_geom=False, debug=True, log=None):
+    def __init__(self, op2_filename=None, selected_names=None, make_geom=False, debug=True, log=None):
         """
         Initializes the OP2 object
 
-        :param op2FileName: the file to be parsed (string or None for GUI)
+        :param op2_filename: the file to be parsed (string or None for GUI)
+        :param selected_names: defines which results will be loaded
+            case 1: None (default); popup a GUI to select results
+            case 2: []; load all the results
+            case 3: ['displacement: Subcase 1']; loads the data
+            case 4: ['invalid name']; error
+            case 5: ['displacement: Subcase 1', 'invalid name']; error
         :param make_geom: reads the BDF tables (default=False)
         :param debug: prints data about how the OP2 was parsed (default=False)
         :param log: a logging object to write debug messages to
@@ -215,13 +221,17 @@ class OP2(BDF,
         #: pops up a dialog for the user to select what data they want to load
         self.is_gui = False
 
-        self.__objects_init__()
-
-    def __objects_init__(self):
         #: stores the sequential list of subcases that the user may select
         #: from in the popup dialog
         self._result_names = []
 
+        #: if this is None, the GUI will pop up for the user to select their results
+        self._selected_names = selected_names
+
+        self.__objects_init__()
+
+    def __objects_init__(self):
+        """More variable declarations"""
         #: ESE
         self.eigenvalues = {}
 
@@ -547,11 +557,11 @@ class OP2(BDF,
         #         - filename set
         #         - selected = ['not a result: Subcase 1']
         #        -> ERROR
-        if self._selected_data_names is None:
-            self._selected_data_names = get_choices(self._result_names)
+        if self._selected_names is None:
+            self._selected_names = get_choices(self._result_names)
 
-        if self._selected_data_names == []:
-            self._selected_data_names = self._result_names
+        if self._selected_names == []:
+            self._selected_names = self._result_names
         return names
 
     def _get_full_table_types(self):
