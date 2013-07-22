@@ -40,8 +40,11 @@ class TableObject(ScalarObject):  # displacement style table
             msg.append('  type=%s ntimes=%s nnodes=%s\n'
                        % (self.__class__.__name__, ndt, nnodes))
         else:
-            msg.append('  type=%s nnodes=%s\n' % (self.__class__.__name__, nnodes))
-        msg.append('  T1, T2, T3, R1, R2, R3, gridTypes\n')
+            msg.append('  real type=%s nnodes=%s\n' % (self.__class__.__name__, nnodes))
+        msg.append('  element_data: index  : element_id\n')
+        msg.append('              : results: gridTypes\n')
+        msg.append('  data        : index  : element_id\n')
+        msg.append('              : results: T1, T2, T3, R1, R2, R3\n')
         return msg
 
     def is_imaginary(self):
@@ -538,7 +541,11 @@ class ComplexTableObject(ScalarObject):
         else:
             msg.append('  imaginary type=%s ngrids=%s\n'
                        % (self.__class__.__name__, ngrids))
-        msg.append('  translations, rotations, gridTypes\n')
+        #msg.append('  translations, rotations, gridTypes\n')
+        msg.append('  element_data: index  : element_id\n')
+        msg.append('              : results: gridTypes\n')
+        msg.append('  data        : index  : element_id\n')
+        msg.append('              : results: T1, T2, T3, R1, R2, R3\n')
         return msg
 
     def is_imaginary(self):
