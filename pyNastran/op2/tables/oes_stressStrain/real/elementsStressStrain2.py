@@ -4,25 +4,40 @@
 33  -> TUBE
 92  -> CONRODNL
 
+ OES_basicElement
+   CROD   (1)   linear (centroid)
+   CELAS1 (???) linear (centroid)
+   CELAS2 (12)  linear (centroid)
+   CELAS3 (???) linear (centroid)
+   CELAS4 (???) linear (centroid)
+
+   CDAMP1 (???) linear (centroid)
+   CDAMP2 (???) linear (centroid)
+   CDAMP3 (???) linear (centroid)
+   CDAMP4 (???) linear (centroid)
+   
  OES_CBEAM_2
    CBEAM (2) linear
 
  OES_CSOLID_39_67_68 - solidStress/solidStrain
-   CTETRA (39) linear
-   CPENTA (67) linear
-   CHEXA  (68) linear
+   CTETRA (39) linear (centroid)
+   CPENTA (67) linear (centroid)
+   CHEXA  (68) linear (centroid)
 
  OES_CBAR_34 - barStress/barStrain
    CBAR (34) linear
 
  OES_CTRIA3_74 - plateStress/plateStrain
-   CTRIA3 (74)  linear 3 nodes
+   CTRIA3 (74)  linear 1 node (centroid)
+
+ OES_CQUAD4_33 - plateStress/plateStrain
+   CQUAD4 (33)  linear 1 node (centroid)
 
  OES_CQUAD4_144 - plateStress/plateStrain
-   CQUAD4 (144) linear 5 nodes
-   CQUAD8 (82)  linear 5 nodes
-   CTRIA6 (75)  linear 4 nodes
-   CTRIAR (70)  linear 4 nodes
+   CQUAD4 (144) linear 5 nodes (centroid + 4 corners)
+   CQUAD8 (82)  linear 5 nodes (centroid + 4 corners)
+   CTRIA6 (75)  linear 4 nodes (centroid + 3 corners)
+   CTRIAR (70)  linear 4 nodes (centroid + 3 corners)
 
 OES_CBUSH_102 - bushStress / bushStrain
    CBUSH (102)
@@ -35,6 +50,39 @@ from struct import unpack
 #from pyNastran import isRelease
 
 class RealElementsStressStrain2(object):
+
+    def OES_basicElement(self, name):
+        """
+        genericStressReader - works on CROD_1, CELAS2_12
+        stress & strain
+        format_code=1 sort_code=0 (eid,axial,axialMS,torsion,torsionMS)
+        """
+        dt = self.nonlinear_factor
+        (format1, extract) = self.getOUG_FormatStart()
+        (ntotal, dataFormat) = self.obj.getLength()
+        dataFormat = format1 + dataFormat
+        #print("ntotal=%s dataFormat=%s len(data)=%s" % (ntotal,dataFormat,len(self.data)))
+        dataFormat = bytes(dataFormat)
+
+        nelements = len(self.data) // ntotal
+        if self.read_mode == 0 or name not in self._selected_names:
+            if name not in self._result_names:
+                self._result_names.append(name)
+            # figure out the shape
+            self.obj._increase_size(dt, nelements)
+            iend = ntotal * nelements
+            self.data = self.data[iend:]
+            return
+
+        n = 0
+        for i in xrange(nelements):
+            eData = self.data[n:n + ntotal]
+            out = unpack(dataFormat, eData)
+            #print "out = ",out
+            eid = extract(out[0], dt)
+            self.obj.add_new_eid(dt, eid, out[1:])
+            n += ntotal
+        self.data = self.data[n:]
 
     #-------------------------------------------------------------------------
     # beamStress / beamStrain
@@ -649,6 +697,74 @@ class RealElementsStressStrain2(object):
             #             angle2, major2, minor2, vm2)
             n += ntotal
         self.data = self.data[n:]
+
+    def OES_CQUAD4_33(self, name):
+        """
+        GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
+        """
+        dt = self.nonlinear_factor
+        (format1, extract) = self.getOUG_FormatStart()
+        format1 += '16f'
+        format1 = bytes(format1)
+
+        nNodes = 0  # centroid + 4 corner points
+        #self.print_section(20)
+        #term = data[0:4] CEN/
+        #data = data[4:]
+        #print "*****"
+        #self.print_block(self.data)
+
+        assert self.num_wide == 17, ('invalid num_wide...num_wide=%s'
+                                    % (self.num_wide))
+
+        istart = 0
+        iend = 68
+        ntotal = 68 # 4*17
+        
+        nelements = len(self.data) // 68
+        
+        #while len(self.data) >= 68:  # 2+17*5 = 87 -> 87*4 = 348
+        for i in xrange(nelements):
+            #print self.print_block(self.data[0:100])
+            #(eid,) = unpack(b'i',self.data[0:4])
+            #self.data = self.data[8:]  # 2
+            eData = self.data[istart:iend]
+            #print("len(eData) = ", len(eData))
+            out = unpack(format1, eData)  # 17
+            (eid, fd1, sx1, sy1, txy1, angle1, major1, minor1, maxShear1,
+             fd2, sx2, sy2, txy2, angle2, major2, minor2, maxShear2) = out
+
+            eid = extract(eid, dt)
+
+            #print("eid=%i grid=%s fd1=%-3.1f sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,maxShear1))
+            #print(  "             fd2=%-3.1f sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"       % (fd2,sx2,sy2,txy2,angle2,major2,minor2,maxShear2))
+            #print "nNodes = ",nNodes
+            #self.obj.add_new_eid('CQUAD4', dt, eid, 'C', fd1, sx1, sy1,
+            #                   txy1, angle1, major1, minor1, maxShear1)
+            #self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2,
+            #             angle2, major2, minor2, maxShear2)
+            
+            istart = iend
+            iend += ntotal
+            for nodeID in xrange(nNodes):  # nodes pts
+                asdfasdf
+                eData = self.data[0:68]  # 4*17
+                self.data = self.data[68:]
+                out = unpack(b'i16f', eData[0:68])
+                (grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                       fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+
+                #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+                #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+                #print "len(data) = ",len(self.data)
+                #self.print_block(self.data)
+                #self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1,
+                #                    txy1, angle1, major1, minor1, vm1)
+                #self.obj.add(dt, eid, grid, fd2, sx2, sy2,
+                #             txy2, angle2, major2, minor2, vm2)
+            #print '--------------------'
+            
+        self.data = self.data[istart:]
 
     def OES_CQUAD4_144(self, name):
         """
