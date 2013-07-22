@@ -44,6 +44,84 @@ class RealSolidResults(object):
         self._ielement_end += nelements
         return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
 
+    def _preallocate(self, dt, nnodes, nelements):
+        ndt, nelements_size, nnodes_size, dts = self._get_shape()
+        print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
+
+        if self._inode_start is not None:
+            return (self._inode_start, self._inode_start + nnodes,
+                    self._ielement_start, self._ielement_start + nelements)
+        print('----definition----')
+        n = ndt * nnodes_size
+        if self._ncount != 0:
+            asfd
+        self._ncount += 1
+        self._inode_start = 0
+        self._inode_end = nnodes
+
+        self._ielement_start = 0
+        self._ielement_end = nelements
+
+        data = {}
+        element_data = {}
+        columns = []
+        if dts[0] is not None:
+            if isinstance(dt, int):
+                data['dt'] = pd.Series(zeros((n), dtype='int32'))
+            else:
+                data['dt'] = pd.Series(zeros((n), dtype='float32'))
+            columns.append('dt')
+
+        element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
+        element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
+
+        data['element_id'] = pd.Series(zeros((n), dtype='int32'))
+        data['node_id'] = pd.Series(zeros((n), dtype='int32'))
+
+        #columns.append('element_type')
+        columns.append('element_id')
+        columns.append('node_id')
+
+        #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
+        #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
+        headers = self._get_headers()
+        (oxx, oyy, ozz, txy, txz, tyz, o1, o2, o3, ovm) = headers
+        
+        print('n =', n)
+        data[oxx] = pd.Series(zeros((n), dtype='float32'))
+        data[oyy] = pd.Series(zeros((n), dtype='float32'))
+        data[ozz] = pd.Series(zeros((n), dtype='float32'))
+
+        data[txy] = pd.Series(zeros((n), dtype='float32'))
+        data[txz] = pd.Series(zeros((n), dtype='float32'))
+        data[tyz] = pd.Series(zeros((n), dtype='float32'))
+
+        data[o1] = pd.Series(zeros((n), dtype='float32'))
+        data[o2] = pd.Series(zeros((n), dtype='float32'))
+        data[o3] = pd.Series(zeros((n), dtype='float32'))
+
+        if self.isVonMises():
+            data[ovm] = pd.Series(zeros((n), dtype='float32'))
+        else:
+            data['max_shear'] = pd.Series(zeros((n), dtype='float32'))
+
+        #pressure
+        #aCos
+        #bCos
+        #cCos
+        columns += [oxx, oyy, ozz, txy, txz, tyz, o1, o2, o3]
+
+        if self.isVonMises():
+            key = ovm
+        else:
+            key = 'max_shear'
+        data[key] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
+        columns.append(key)
+
+        self.data = pd.DataFrame(data, columns=columns)
+        self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type', 'cid'])
+        return (self._inode_start, self._inode_end, self._ielement_start, self._ielement_end)
+
     def _finalize(self, dt):
         ndt, nelements, nnodes, dts = self._get_shape()
 
@@ -182,80 +260,8 @@ class SolidStressObject(StressObject, RealSolidResults):
             self.rotations[dt][nodeID] = array([r1, r2, r3])
         del self.data
 
-    def _preallocate(self, dt, nnodes, nelements):
-        ndt, nelements_size, nnodes_size, dts = self._get_shape()
-        print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
-
-        if self._inode_start is not None:
-            return (self._inode_start, self._inode_start + nnodes,
-                    self._ielement_start, self._ielement_start + nelements)
-        print('----definition----')
-        n = ndt * nnodes_size
-        if self._ncount != 0:
-            asfd
-        self._ncount += 1
-        self._inode_start = 0
-        self._inode_end = nnodes
-
-        self._ielement_start = 0
-        self._ielement_end = nelements
-
-        data = {}
-        element_data = {}
-        columns = []
-        if dts[0] is not None:
-            if isinstance(dt, int):
-                data['dt'] = pd.Series(zeros((n), dtype='int32'))
-            else:
-                data['dt'] = pd.Series(zeros((n), dtype='float32'))
-            columns.append('dt')
-
-        element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
-        element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
-
-        data['element_id'] = pd.Series(zeros((n), dtype='int32'))
-        data['node_id'] = pd.Series(zeros((n), dtype='int32'))
-
-        #columns.append('element_type')
-        columns.append('element_id')
-        columns.append('node_id')
-
-        #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
-        #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
-        print('n =', n)
-        data['oxx'] = pd.Series(zeros((n), dtype='float32'))
-        data['oyy'] = pd.Series(zeros((n), dtype='float32'))
-        data['ozz'] = pd.Series(zeros((n), dtype='float32'))
-
-        data['txy'] = pd.Series(zeros((n), dtype='float32'))
-        data['txz'] = pd.Series(zeros((n), dtype='float32'))
-        data['tyz'] = pd.Series(zeros((n), dtype='float32'))
-
-        data['o1'] = pd.Series(zeros((n), dtype='float32'))
-        data['o2'] = pd.Series(zeros((n), dtype='float32'))
-        data['o3'] = pd.Series(zeros((n), dtype='float32'))
-
-        if self.isVonMises():
-            data['ovm'] = pd.Series(zeros((n), dtype='float32'))
-        else:
-            data['max_shear'] = pd.Series(zeros((n), dtype='float32'))
-
-        #pressure
-        #aCos
-        #bCos
-        #cCos
-        columns += ['oxx', 'oyy', 'ozz', 'txy', 'txz', 'tyz', 'o1', 'o2', 'o3']
-
-        if self.isVonMises():
-            key = 'ovm'
-        else:
-            key = 'max_shear'
-        data[key] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
-        columns.append(key)
-
-        self.data = pd.DataFrame(data, columns=columns)
-        self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type', 'cid'])
-        return (self._inode_start, self._inode_end, self._ielement_start, self._ielement_end)
+    def _get_headers(self):
+        return ['oxx', 'oyy', 'ozz', 'txy', 'txz', 'tyz', 'o1', 'o2', 'o3', 'ovm']
 
     def getHeaders(self):
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
@@ -592,56 +598,8 @@ class SolidStrainObject(StrainObject, RealSolidResults):
             self.rotations[dt][nodeID] = array([r1, r2, r3])
         del self.data
 
-    def _preallocate(self, dt, nelements_size, nnodes_size):
-        if self.shape is None:
-            self._inode_start += nnodes
-            self._inode_end += nnodes
-        else:
-            ndt, nelements, nnodes, dts = self._get_shape()
-            #print("ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts)))
-
-            data = {}
-            columns = []
-            if dts[0] is not None:
-                if isinstance(dt, int):
-                    data['dt'] = pd.Series(zeros((ndt * nnodes), dtype='int32'))
-                else:
-                    data['dt'] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
-                columns.append('dt')
-
-            data['element_id'] = pd.Series(zeros((ndt * nnodes), dtype='int32'))
-            data['node_id'] = pd.Series(zeros((ndt * nnodes), dtype='int32'))
-
-            columns.append('element_id')
-            columns.append('node_id')
-
-            #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
-            #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
-            data['exx'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            data['eyy'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            data['ezz'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            data['exy'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            data['exz'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            data['eyz'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            data['e1'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            data['e2'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            data['e3'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-
-            if self.isVonMises():
-                data['evm'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            else:
-                data['max_shear'] = pd.Series(zeros((ndt * nnodes_size), dtype='float32'))
-            #pressure
-            #aCos
-            #bCos
-            #cCos
-            columns += ['exx', 'eyy', 'ezz', 'exy', 'exz', 'e1', 'e2', 'e3']
-
-            self.data = pd.DataFrame(data, columns=columns)
-            self.element_data = pd.DataFrame(element_data, columns=['cid'])
-            self._inode_start = 0
-            self._inode_end = nnodes
-        return self._inode_start, self._inode_end
+    def _get_headers(self):
+        return ['exx', 'eyy', 'ezz', 'exy', 'exz', 'eyz', 'e1', 'e2', 'e3', 'evm']
 
     def getHeaders(self):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']
@@ -851,7 +809,7 @@ class SolidStrainObject(StrainObject, RealSolidResults):
             msg = ['']
         return ''.join(msg)
 
-    def get_stats():
+    def get_stats(self):
         ndt, nelements, nnodes, dts = self._get_shape()
         nelements = len(self.element_data['element_id'])
 
@@ -870,11 +828,13 @@ class SolidStrainObject(StrainObject, RealSolidResults):
             ovmstr = 'evm'
         else:
             ovmstr = 'max_shear'
-        msg.append('  element_data: index  : element_id\n')
-        msg.append('                results: element_type, cid\n')
-        msg.append('  data:         index  : %selement_id, node_id\n' % dtstring)
-        msg.append('                results: exx, eyy, ezz, exy, eyz, exz, '
+
+        etypes = self.element_data['element_type']
+        msg.append('  element_data: index        : element_id\n')
+        msg.append('                results      : element_type, cid\n')
+        msg.append('  data:         index        : %selement_id, node_id\n' % dtstring)
+        msg.append('                results      : exx, eyy, ezz, exy, eyz, exz, '
                    'e1, e2, e3, %s\n' % ovmstr)
-        msg.append(', '.join(set(self.eType.values())))
+        msg.append('                element_types: %s' %(', '.join(set(etypes))))
         msg.append('\n')
         return msg

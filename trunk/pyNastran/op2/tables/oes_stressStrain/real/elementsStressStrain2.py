@@ -1,3 +1,32 @@
+"""
+91  -> PENTANL
+2   -> BEAM
+33  -> TUBE
+92  -> CONRODNL
+
+ OES_CBEAM_2
+   CBEAM (2) linear
+
+ OES_CSOLID_39_67_68 - solidStress/solidStrain
+   CTETRA (39) linear
+   CPENTA (67) linear
+   CHEXA  (68) linear
+
+ OES_CBAR_34 - barStress/barStrain
+   CBAR (34) linear
+
+ OES_CTRIA3_74 - plateStress/plateStrain
+   CTRIA3 (74)  linear 3 nodes
+
+ OES_CQUAD4_144 - plateStress/plateStrain
+   CQUAD4 (144) linear 5 nodes
+   CQUAD8 (82)  linear 5 nodes
+   CTRIA6 (75)  linear 4 nodes
+   CTRIAR (70)  linear 4 nodes
+
+OES_CBUSH_102 - bushStress / bushStrain
+   CBUSH (102)
+"""
 #pylint: disable=C0103,C0301,R0914,E1101
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -5,31 +34,11 @@ from numpy import ones
 from struct import unpack
 #from pyNastran import isRelease
 
-#91  -> PENTANL
-#2   -> BEAM
-#33  -> TUBE
-#92  -> CONRODNL
-
-# OES_CBEAM_2
-#   CBEAM (2) linear
-
-# OES_CSOLID_39_67_68
-#   CTETRA (39) linear
-#   CPENTA (67) linear
-#   CHEXA  (68) linear
-
-# OES_CBAR_34
-#   CBAR (34) linear
-
-# OES_CQUAD4_144
-#   CQUAD4 (144) linear 5 nodes
-#   CQUAD8 (82)  linear 5 nodes
-#   CTRIA6 (75)  linear 4 nodes
-#   CTRIAR (70)  linear 4 nodes
-
-
 class RealElementsStressStrain2(object):
 
+    #-------------------------------------------------------------------------
+    # beamStress / beamStrain
+    #-------------------------------------------------------------------------
     def OES_CBEAM_2(self, name):
         dt = self.nonlinear_factor
         (formatStart, extract) = self.getOUG_FormatStart()
@@ -169,6 +178,9 @@ class RealElementsStressStrain2(object):
         else:
             self.obj._increment(nnodes, nelements)
 
+    #-------------------------------------------------------------------------
+    # solidStress / solidStrain
+    #-------------------------------------------------------------------------
     def OES_CSOLID_39_67_68(self, name):
         """
         stress is extracted at the centroid
@@ -348,6 +360,9 @@ class RealElementsStressStrain2(object):
         else:
             self.obj._increment(nnodes, nelements)
 
+    #-------------------------------------------------------------------------
+    # barStress / barStrain
+    #-------------------------------------------------------------------------
     def OES_CBAR_34(self, name):
         dt = self.nonlinear_factor
         assert self.num_wide == 16, ('invalid num_wide...num_wide=%s'
@@ -370,6 +385,7 @@ class RealElementsStressStrain2(object):
             return
         else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
             print("nelements =",nelements)
+
         (inode_start, inode_end, ielement_start, ielement_end
             ) = self.obj._preallocate(dt, nnodes, nelements)
 
@@ -469,6 +485,9 @@ class RealElementsStressStrain2(object):
         else:
             self.obj._increment(nnodes, nelements)
 
+    #-------------------------------------------------------------------------
+    # bushStress / bushStrain
+    #-------------------------------------------------------------------------
     def OES_CBUSH_102(self, name):
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
@@ -543,6 +562,94 @@ class RealElementsStressStrain2(object):
         else:
             self.obj._increment(nelements)
 
+    #-------------------------------------------------------------------------
+    # plateStress / plateStrain
+    #-------------------------------------------------------------------------
+    def OES_CTRIA3_74(self, name):
+        """
+        DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR,MINOR,VONMISES
+        stress is extracted at the centroid
+        """
+        assert self.num_wide == 17, ('invalid num_wide...num_wide=%s'
+                                    % self.num_wide)
+
+        dt = self.nonlinear_factor
+        (format1, extract) = self.getOUG_FormatStart()
+        format1 += '16f'
+        format1 = bytes(format1)
+
+        ntotal = 68  # 4*17
+        n = 0
+        nelements = len(self.data) // ntotal
+        nrows = nelements * 2 # 2 layers at the centroid
+        nnodes = 1
+        if self.read_mode == 0 or name not in self._selected_names:
+            if name not in self._result_names:
+                self._result_names.append(name)
+
+            # figure out the shape
+            self.obj._increase_size(dt, nelements, nnodes)
+            iend = ntotal * nelements
+            self.data = self.data[iend:]
+            return
+        else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
+            print("nelements =", nelements)
+
+        (inode_start, inode_end, ielement_start, ielement_end
+            ) = self.obj._preallocate(dt, nnodes, nelements)
+
+
+        eids=[]; eTypes=[]; eids2=[]; nids=[]; layer=[]
+        fd=[]; sx=[]; sy=[]; txy=[]; angle=[]; major=[]; minor=[]; vm=[]
+        eTypes = ['CTRIA3'] * nelements
+        for i in xrange(nelements):
+            eData = self.data[n:n + ntotal]
+            out = unpack(format1, eData)
+
+            (eid, fd1i, sx1i, sy1i, txy1i, angle1i, major1i, minor1i, vm1i,
+                  fd2i, sx2i, sy2i, txy2i, angle2i, major2i, minor2i, vm2i) = out
+            eid = extract(eid, dt)
+
+            #eTypes.append(eType)
+            eids.append(eid)
+
+            eids2.append(eid)
+            eids2.append(eid)
+
+            nids.append(0)
+            nids.append(0)
+
+            layer.append(1)
+            layer.append(2)
+
+            fd.append(fd1i)
+            sx.append(sx1i)
+            sy.append(sy1i)
+            txy.append(txy1i)
+            angle.append(angle1i)
+            major.append(major1i)
+            minor.append(minor1i)
+            vm.append(vm1i)
+
+            fd.append(fd2i)
+            sx.append(sx2i)
+            sy.append(sy2i)
+            txy.append(txy2i)
+            angle.append(angle2i)
+            major.append(major2i)
+            minor.append(minor2i)
+            vm.append(vm2i)
+
+            #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+            #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+            
+            #self.obj.add_new_eid('CTRIA3', dt, eid, 'C', fd1, sx1, sy1,
+            #                   txy1, angle1, major1, minor1, vm1)
+            #self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2,
+            #             angle2, major2, minor2, vm2)
+            n += ntotal
+        self.data = self.data[n:]
+
     def OES_CQUAD4_144(self, name):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
@@ -577,7 +684,7 @@ class RealElementsStressStrain2(object):
             eType = 'CTRIAR'  #: .. todo:: write the word CTRIAR
         else:
             raise NotImplementedError('element_type=%s ntotal not defined...'
-                                      % (self.element_type))
+                                      % self.element_type)
 
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()

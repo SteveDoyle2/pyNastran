@@ -38,7 +38,7 @@ class OGF(object):
     def readTable_OGF_3(self, iTable):  # iTable=-3
         buffer_words = self.get_marker()
         if self.make_op2_debug:
-            self.op2Debug.write('buffer_words=%s\n' % (str(buffer_words)))
+            self.op2Debug.write('buffer_words=%s\n' % str(buffer_words))
         #print "2-buffer_words = ",buffer_words,buffer_words*4,'\n'
 
         data = self.get_data(4)
@@ -134,28 +134,30 @@ class OGF(object):
 
     def readOGF_Data_table19(self):  # grid point forces
         #is_sort1 = self.is_sort1()
+        result_name = 'gridPointForces'
+        name = result_name + ': Subcase %s' % self.isubcase
         if self.num_wide == 10:  # real/random
             #if self.thermal==0:
             self.create_transient_object(self.gridPointForces,
-                                       gridPointForcesObject)  # real
+                                       GridPointForcesObject)  # real
             self.handle_results_buffer(self.readOGF_numWide10,
-                                      resultName='gridPointForces')
+                                      result_name, name)
             #else:
                 #self.not_implemented_or_skip()
             #self.handle_results_buffer(self.OUG_RealTable)
         elif self.num_wide == 16:  # real/imaginary or mag/phase
             #if self.thermal==0:
             self.create_transient_object(self.gridPointForces,
-                                       complexGridPointForcesObject)  # complex
+                                       ComplexGridPointForcesObject)  # complex
             self.handle_results_buffer(self.readOGF_numWide16,
-                                      resultName='gridPointForces')
+                                      resultName, name)
             #else:
                 #self.not_implemented_or_skip()
             #self.handle_results_buffer(self.OUG_ComplexTable)
         else:
-            raise NotImplementedError('only num_wide=10 or 16 is allowed  num_wide=%s' % (self.num_wide))
+            raise NotImplementedError('only num_wide=10 or 16 is allowed  num_wide=%s' % self.num_wide)
 
-    def readOGF_numWide10(self):
+    def readOGF_numWide10(self, name):
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'i8s6f'
@@ -173,7 +175,7 @@ class OGF(object):
             #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
         #print len(self.data)
 
-    def readOGF_numWide16(self):
+    def readOGF_numWide16(self, name):
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'i8s12f'

@@ -10,7 +10,7 @@ class RodDamperObject(StressObject):
         StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CBUSH'
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
         self.axial = {}
         self.torsion = {}
 
@@ -51,7 +51,7 @@ class RodStressObject(StressObject):
         StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CROD'
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
         self.axial = {}
         self.torsion = {}
 
@@ -263,7 +263,7 @@ class RodStrainObject(StrainObject):
         StrainObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CROD'  # {} # 'CROD/CONROD/CTUBE'
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.axial = {}
         self.torsion = {}

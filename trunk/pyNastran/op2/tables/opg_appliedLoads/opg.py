@@ -191,22 +191,24 @@ class OPG(object):
         if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'loadVectors'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(
                     self.loadVectors, LoadVectorObject)
-                self.handle_results_buffer(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName, name)
             elif self.thermal == 1:
                 resultName = 'thermalLoadVectors'
                 self.create_transient_object(self.thermalLoadVectors,
                                            ThermalLoadVectorObject)
-                self.handle_results_buffer(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName, name)
             else:
                 self.not_implemented_or_skip()
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'loadVectors'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(self.loadVectors,
                                            ComplexLoadVectorObject)
-                self.handle_results_buffer(self.OUG_ComplexTable, resultName)
+                self.handle_results_buffer(self.OUG_ComplexTable, resultName, name)
             else:
                 self.not_implemented_or_skip()
         else:
@@ -218,31 +220,34 @@ class OPG(object):
         if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'forceVectors'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(self.forceVectors,
                                            ForceVectorObject)
-                self.handle_results_buffer(self.OUG_RealTable, resultName)
+                self.handle_results_buffer(self.OUG_RealTable, resultName, name)
             else:
                 self.not_implemented_or_skip()
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'forceVectors'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(self.forceVectors,
                                            ComplexForceVectorObject)
-                self.handle_results_buffer(self.OUG_ComplexTable, resultName)
+                self.handle_results_buffer(self.OUG_ComplexTable, resultName, name)
             else:
                 self.not_implemented_or_skip()
         else:
-            msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % (self.num_wide)
+            msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
             raise RuntimeError(msg)
 
     def readOPG_Data_table19(self):  # Applied Loads
         #is_sort1 = self.is_sort1()
         if self.num_wide == 8:  # real/random
             resultName = 'appliedLoads'
+            name = resultName + ': Subcase %s' % self.isubcase
             if self.thermal == 0:
                 self.create_transient_object(self.appliedLoads,
-                                           AppliedLoadsObject)
-                self.handle_results_buffer(self.readOPGForces, resultName)
+                                           AppliedLoadsObject, name)
+                self.handle_results_buffer(self.readOPGForces, resultName, name)
             else:
                 self.not_implemented_or_skip()
         #elif self.num_wide == 14:  # real/imaginary or mag/phase
@@ -254,19 +259,20 @@ class OPG(object):
         #    #self.handle_results_buffer(self.OUG_ComplexTable,resultName)
         #    raise NotImplementedError(self.code_information())
         else:
-            msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % (self.num_wide)
+            msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
             raise RuntimeError(msg)
 
     def readOGS1_Data_table26(self):  # OGS1 - grid point stresses - surface
         #is_sort1 = self.is_sort1()
         resultName = 'gridPointStresses'
+        name = resultName + ': Subcase %s' % self.isubcase
         if self.num_wide == 11:  # real/random
             self.create_transient_object(self.gridPointStresses,
                                        GridPointStressesObject)
             self.handle_results_buffer(
-                self.readOGS1_table26_numWide11, resultName)
+                self.readOGS1_table26_numWide11, resultName, name)
         else:
-            msg = 'only num_wide=11 is allowed  num_wide=%s' % (self.num_wide)
+            msg = 'only num_wide=11 is allowed  num_wide=%s' % self.num_wide
             raise RuntimeError(msg)
 
     def readOGS1_table26_numWide11(self):  # surface stresses
@@ -292,10 +298,11 @@ class OPG(object):
         #print(self.code_information())
         if self.num_wide == 9:  # real/random
             resultName = 'gridPointVolumeStresses'
+            name = resultName + ': Subcase %s' % self.isubcase
             self.create_transient_object(self.gridPointVolumeStresses,
                                        GridPointStressesVolumeObject)
             self.handle_results_buffer(
-                self.readOGS1_table27_numWide9, resultName)
+                self.readOGS1_table27_numWide9, resultName, name)
         else:
             msg = 'only num_wide=9 is allowed  num_wide=%s' % (self.num_wide)
             raise RuntimeError(msg)
@@ -329,7 +336,7 @@ class OPG(object):
         #nTotal = self.num_wide*4
         nTotal = 40  # same as dn
         while len(data) > dn:
-            #print "len(data) = ",len(data)
+            #print("len(data) = ",len(data))
             eData = self.data[0:dn]
             #self.print_block(data[:dn])
             (grid_device, eid) = unpack(format1, data[0:8])
@@ -337,7 +344,7 @@ class OPG(object):
 
             source = unpack(b'8s', data[8:16])
             (dx, dy, dz, rx, ry, rz) = unpack(b'6f', data[16:40])
-            #print "source = |%s|" %(source)
+            #print("source = %r" % source)
 
             #print "nodeID=%s eid=%s source=|%s| dx=%-4i dy=%-4i dz=%-4i rx=%-4i ry=%-4i rz=%-4i" %(nodeID,eid,source,dx,dy,dz,rx,ry,rz)
             source2 = source.replace('*', '').replace('-', '').strip()

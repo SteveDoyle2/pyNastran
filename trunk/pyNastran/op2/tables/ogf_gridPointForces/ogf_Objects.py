@@ -5,8 +5,8 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 class GridPointForcesObject(ScalarObject):
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         self.forces = {}
         self.moments = {}
         self.elemName = {}
@@ -167,7 +167,7 @@ class GridPointForcesObject(ScalarObject):
 
 
 class ComplexGridPointForcesObject(ScalarObject):
-    def __init__(self, data_code, is_sort1, isubcase, freq=None):
+    def __init__(self, data_code, is_sort1, isubcase, freq, read_mode):
         ScalarObject.__init__(self, data_code, isubcase)
         raise NotImplementedError()
 
