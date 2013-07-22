@@ -8,7 +8,142 @@ from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 
-class BarStressObject(StressObject):
+class RealBarResults(object):
+    def __init__(self):
+        self.shape = {}
+        self._ncount = 0
+        self._inode_start = None
+        self._inode_end = None
+        self._ielement_start = None
+        self._ielement_end = None
+        self.data = None
+        self.element_data = None
+
+    def _increase_size(self, dt, nelements, nnodes):
+        if dt in self.shape:  # default dictionary
+            self.shape[dt][0] += nelements
+            self.shape[dt][1] += nnodes
+        else:
+            self.shape[dt] = [nelements, nnodes]
+        #print("shape =", self.shape)
+
+    def _get_shape(self):
+        ndt = len(self.shape)
+        dts = self.shape.keys()
+        shape0 = dts[0]
+        nelements = self.shape[shape0][0]
+        nnodes = self.shape[shape0][1]
+        #print("ndt=%s nnodes=%s dts=%s" % (str(ndt), str(nnodes), str(dts)))
+        return ndt, nelements, nnodes, dts
+
+    def _increment(self, nnodes, nelements):
+        self._inode_start += nnodes
+        self._inode_end += nnodes
+        self._ielement_start += nelements
+        self._ielement_end += nelements
+        return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
+
+        
+    def _preallocate(self, dt, nnodes, nelements):
+        ndt, nelements_size, nnodes_size, dts = self._get_shape()
+        #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
+        
+        if self._inode_start is not None:
+            return (self._inode_start, self._inode_start + nnodes,
+                    self._ielement_start, self._ielement_start + nelements)
+        print('----definition----')
+        n = ndt * nnodes_size
+        if self._ncount != 0:
+            asfd
+        self._ncount += 1
+        self._inode_start = 0
+        self._inode_end = nnodes
+
+        self._ielement_start = 0
+        self._ielement_end = nelements
+
+        data = {}
+        #element_data = {}
+        columns = []
+        if dts[0] is not None:
+            name = self.data_code['name']
+            if isinstance(dt, int):
+                data[name] = pd.Series(zeros((n), dtype='int32'))
+            else:
+                data[name] = pd.Series(zeros((n), dtype='float32'))
+            columns.append(name)
+
+        #element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
+        #element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
+
+        data['element_id'] = pd.Series(zeros((n), dtype='int32'))
+        #data['element_type'] = pd.Series(zeros((n), dtype='str'))
+        #data['node_id'] = pd.Series(zeros((n), dtype='int32'))
+
+        #columns.append('element_type')
+        #columns.append('element_id')
+        #columns.append('node_id')
+
+        #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
+        #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
+        #print('n =', n)
+        
+        headers = self._get_headers()
+        (s1a, s2a, s3a, s4a, s1b, s2b, s3b, s4b,
+              smaxa, smina, smaxb, sminb) = headers
+
+        data[s1a] = pd.Series(zeros((n), dtype='float32'))
+        data[s2a] = pd.Series(zeros((n), dtype='float32'))
+        data[s3a] = pd.Series(zeros((n), dtype='float32'))
+        data[s4a] = pd.Series(zeros((n), dtype='float32'))
+        data[smaxa] = pd.Series(zeros((n), dtype='float32'))
+        data[smina] = pd.Series(zeros((n), dtype='float32'))
+
+        data[s1b] = pd.Series(zeros((n), dtype='float32'))
+        data[s2b] = pd.Series(zeros((n), dtype='float32'))
+        data[s3b] = pd.Series(zeros((n), dtype='float32'))
+        data[s4b] = pd.Series(zeros((n), dtype='float32'))
+        data[smaxb] = pd.Series(zeros((n), dtype='float32'))
+        data[sminb] = pd.Series(zeros((n), dtype='float32'))
+
+        data['axial'] = pd.Series(zeros((n), dtype='float32'))
+        data['MS_tension'] = pd.Series(zeros((n), dtype='float32'))
+        data['MS_compression'] = pd.Series(zeros((n), dtype='float32'))
+        # element_type
+
+        columns += ['element_id', s1a, s2a, s3a, s4a, s1b, s2b, s3b, s4b,
+                    'axial', smaxa, smina, smaxb, sminb,
+                    'MS_tension', 'MS_compression']
+
+        self.data = pd.DataFrame(data, columns=columns)
+        #self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type', 'cid'])
+        return (self._inode_start, self._inode_end, self._ielement_start, self._ielement_end)
+
+    def _finalize(self, dt):
+        ndt, nelements, nnodes, dts = self._get_shape()
+        
+        if dt != max(dts):
+            return
+        print("----finalize----")
+        
+        #grid_type_str = []
+        #for grid_type in self.grid_type:
+            #grid_type_str.append('C' if grid_type==0 else grid_type)
+        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
+
+        if dts[0] is not None:
+            name = self.data_code['name']
+            self.data = self.data.set_index([name, 'element_id'])
+        else:
+            self.data = self.data.set_index('element_id')
+        #print "final\n", self.data
+        del self._inode_start
+        del self._inode_end
+        print("---BarStressObject---")
+        print(self.data.to_string())
+
+
+class BarStressObject(StressObject, RealBarResults):
     """
     ::
       # s_code=0
@@ -18,14 +153,7 @@ class BarStressObject(StressObject):
     """
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         StressObject.__init__(self, data_code, isubcase, read_mode)
-        self.shape = {}
-        self._ncount = 0
-        self._inode_start = None
-        self._inode_end = None
-        self._ielement_start = None
-        self._ielement_end = None
-        self.data = None
-        self.element_data = None
+        RealBarResults.__init__(self)
 
     def add_f06_data(self, data, transient):
         if transient is None:
@@ -71,121 +199,9 @@ class BarStressObject(StressObject):
     def getLength(self):
         return (68, 'iffffffffffffffff')
 
-    def _increase_size(self, dt, nelements, nnodes):
-        if dt in self.shape:  # default dictionary
-            self.shape[dt][0] += nelements
-            self.shape[dt][1] += nnodes
-        else:
-            self.shape[dt] = [nelements, nnodes]
-        #print("shape =", self.shape)
-
-    def _get_shape(self):
-        ndt = len(self.shape)
-        dts = self.shape.keys()
-        shape0 = dts[0]
-        nelements = self.shape[shape0][0]
-        nnodes = self.shape[shape0][1]
-        #print("ndt=%s nnodes=%s dts=%s" % (str(ndt), str(nnodes), str(dts)))
-        return ndt, nelements, nnodes, dts
-
-    def _increment(self, nnodes, nelements):
-        self._inode_start += nnodes
-        self._inode_end += nnodes
-        self._ielement_start += nelements
-        self._ielement_end += nelements
-        return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
-
-    def _preallocate(self, dt, nnodes, nelements):
-        ndt, nelements_size, nnodes_size, dts = self._get_shape()
-        #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
-        
-        if self._inode_start is not None:
-            return (self._inode_start, self._inode_start + nnodes,
-                    self._ielement_start, self._ielement_start + nelements)
-        print('----definition----')
-        n = ndt * nnodes_size
-        if self._ncount != 0:
-            asfd
-        self._ncount += 1
-        self._inode_start = 0
-        self._inode_end = nnodes
-
-        self._ielement_start = 0
-        self._ielement_end = nelements
-
-        data = {}
-        #element_data = {}
-        columns = []
-        if dts[0] is not None:
-            name = self.data_code['name']
-            if isinstance(dt, int):
-                data[name] = pd.Series(zeros((n), dtype='int32'))
-            else:
-                data[name] = pd.Series(zeros((n), dtype='float32'))
-            columns.append(name)
-
-        #element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
-        #element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
-
-        data['element_id'] = pd.Series(zeros((n), dtype='int32'))
-        #data['element_type'] = pd.Series(zeros((n), dtype='str'))
-        #data['node_id'] = pd.Series(zeros((n), dtype='int32'))
-
-        #columns.append('element_type')
-        #columns.append('element_id')
-        #columns.append('node_id')
-
-        #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
-        #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
-        #print('n =', n)
-
-        data['s1a'] = pd.Series(zeros((n), dtype='float32'))
-        data['s2a'] = pd.Series(zeros((n), dtype='float32'))
-        data['s3a'] = pd.Series(zeros((n), dtype='float32'))
-        data['s4a'] = pd.Series(zeros((n), dtype='float32'))
-        data['smaxa'] = pd.Series(zeros((n), dtype='float32'))
-        data['smina'] = pd.Series(zeros((n), dtype='float32'))
-
-        data['s1b'] = pd.Series(zeros((n), dtype='float32'))
-        data['s2b'] = pd.Series(zeros((n), dtype='float32'))
-        data['s3b'] = pd.Series(zeros((n), dtype='float32'))
-        data['s4b'] = pd.Series(zeros((n), dtype='float32'))
-        data['smaxb'] = pd.Series(zeros((n), dtype='float32'))
-        data['sminb'] = pd.Series(zeros((n), dtype='float32'))
-
-        data['axial'] = pd.Series(zeros((n), dtype='float32'))
-        data['MS_tension'] = pd.Series(zeros((n), dtype='float32'))
-        data['MS_compression'] = pd.Series(zeros((n), dtype='float32'))
-        # element_type
-
-        columns += ['element_id', 's1a', 's2a', 's3a', 's4a', 's1b', 's2b', 's3b', 's4b', 'axial', 'smaxa', 'smina', 'smaxb', 'sminb', 'MS_tension', 'MS_compression']
-
-        self.data = pd.DataFrame(data, columns=columns)
-        #self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type', 'cid'])
-        return (self._inode_start, self._inode_end, self._ielement_start, self._ielement_end)
-
-    def _finalize(self, dt):
-        ndt, nelements, nnodes, dts = self._get_shape()
-        
-        if dt != max(dts):
-            return
-        print("----finalize----")
-        
-        #grid_type_str = []
-        #for grid_type in self.grid_type:
-            #grid_type_str.append('C' if grid_type==0 else grid_type)
-        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
-
-        if dts[0] is not None:
-            name = self.data_code['name']
-            self.data = self.data.set_index([name, 'element_id'])
-        else:
-            self.data = self.data.set_index('element_id')
-        #print "final\n", self.data
-        del self._inode_start
-        del self._inode_end
-        print("---BarStressObject---")
-        print(self.data.to_string())
+    def _get_headers(self):
+        return ('s1a', 's2a', 's3a', 's4a', 's1b', 's2b', 's3b', 's4b',
+                'smaxa', 'smina', 'smaxb', 'sminb')
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -275,7 +291,7 @@ class BarStressObject(StressObject):
         return self.get_stats()
 
 
-class BarStrainObject(StrainObject):
+class BarStrainObject(StrainObject, RealBarResults):
     """
     ::
 
@@ -284,16 +300,13 @@ class BarStrainObject(StrainObject):
       ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
         ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StrainObject.__init__(self, data_code, isubcase)
-        self.shape = {}
-        self._ncount = 0
-        self._inode_start = None
-        self._inode_end = None
-        self._ielement_start = None
-        self._ielement_end = None
-        self.data = None
-        self.element_data = None
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StrainObject.__init__(self, data_code, isubcase, read_mode)
+        RealBarResults.__init__(self)
+
+    def _get_headers(self):
+        return ('e1a', 'e2a', 'e3a', 'e4a', 'e1b', 'e2b', 'e3b', 'e4b',
+                'emaxa', 'emina', 'emaxb', 'eminb')
 
     def add_f06_data(self, data, transient):
         if transient is None:
@@ -411,7 +424,9 @@ class BarStrainObject(StrainObject):
         return (''.join(msg), pageNum - 1)
 
     def get_stats(self):
-        nelements = len(self.eType)
+        nelements = 0
+        #nelements = len(self.data['element_id'])
+        #nelements = len(self.element_data['element_id'])
 
         msg = self.get_data_code()
         if self.dt is not None:  # transient

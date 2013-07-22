@@ -222,39 +222,6 @@ class RealElementsStressStrain(object):
                 ibase += 32  # 4*8
         self.data = self.data[ibase:]
 
-    def OES_CTRIA3_74(self, name):
-        """
-        DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR,MINOR,VONMISES
-        stress is extracted at the centroid
-        """
-        CTRIA3
-        assert self.num_wide == 17, ('invalid num_wide...num_wide=%s'
-                                    % self.num_wide)
-
-        dt = self.nonlinear_factor
-        (format1, extract) = self.getOUG_FormatStart()
-        format1 += '16f'
-        format1 = bytes(format1)
-
-        ntotal = 68  # 4*17
-        n = 0
-        nelements = len(self.data) // ntotal
-        for i in xrange(nelements):
-            eData = self.data[n:n + ntotal]
-            out = unpack(format1, eData)
-
-            (eid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-             fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
-            eid = extract(eid, dt)
-            #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-            #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-            self.obj.add_new_eid('CTRIA3', dt, eid, 'C', fd1, sx1, sy1,
-                               txy1, angle1, major1, minor1, vm1)
-            self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2,
-                         angle2, major2, minor2, vm2)
-            n += ntotal
-        self.data = self.data[n:]
-
     def OES_CQUADR_82(self, name):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES

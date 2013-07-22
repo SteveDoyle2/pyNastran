@@ -59,6 +59,76 @@ class RealPlateResults(object):
         self._ielement_end += nelements
         return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
 
+    def _preallocate(self, dt, nnodes, nelements):
+        ndt, nelements_size, nnodes_size, dts = self._get_shape()
+        #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
+
+        if self._inode_start is not None:
+            return (self._inode_start, self._inode_start + nnodes,
+                    self._ielement_start, self._ielement_start + nelements)
+        print('----definition----')
+        n = ndt * nnodes_size
+        if self._ncount != 0:
+            asfd
+        self._ncount += 1
+        self._inode_start = 0
+        self._inode_end = nnodes
+
+        self._ielement_start = 0
+        self._ielement_end = nelements
+
+        data = {}
+        element_data = {}
+        columns = []
+        if dts[0] is not None:
+            name = self.data_code['name']
+            print('***name=%r***' % name)
+            if isinstance(dt, int):
+                data[name] = pd.Series(zeros((n), dtype='int32'))
+            else:
+                data[name] = pd.Series(zeros((n), dtype='float32'))
+            columns.append(name)
+
+        element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
+        element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
+
+        data['element_id'] = pd.Series(zeros((n), dtype='int32'))
+        data['node_id'] = pd.Series(zeros((n), dtype='float32'))
+        data['layer'] = pd.Series(zeros((n), dtype='float32'))
+
+        #columns.append('element_type')
+
+        #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
+        #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
+        #print('n =', n)
+
+
+        #data['fiber_distance'] = pd.Series(zeros((n), dtype='float32'))
+        #data['fiber_curvature'] = pd.Series(zeros((n), dtype='float32'))
+        
+        headers = self._get_headers()
+        (oxx, oyy, txy, omax, omin, ovm) = headers
+
+        data[oxx] = pd.Series(zeros((n), dtype='float32'))
+        data[oyy] = pd.Series(zeros((n), dtype='float32'))
+        data[txy] = pd.Series(zeros((n), dtype='float32'))
+
+        data['angle'] = pd.Series(zeros((n), dtype='float32'))
+        data[omax] = pd.Series(zeros((n), dtype='float32'))
+        data[omin] = pd.Series(zeros((n), dtype='float32'))
+
+        if self.isVonMises():
+            key = ovm
+        else:
+            key = 'max_shear'
+        data[key] = pd.Series(zeros((n), dtype='float32'))
+
+        columns += ['element_id', 'node_id', 'layer', oxx, oyy, txy, 'angle', omax, omin, key]
+
+        self.data = pd.DataFrame(data, columns=columns)
+        self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type'])
+        return (self._inode_start, self._inode_end, self._ielement_start, self._ielement_end)
+
     def _finalize(self, dt):
         ndt, nelements, nnodes, dts = self._get_shape()
 
@@ -83,7 +153,10 @@ class RealPlateResults(object):
         #print(self.data.to_string())
 
     def get_stats(self):
-        nelements = len(self.eType)
+        #nelements = len(self.eType)
+        nelements = 0
+        #nelements = len(self.data['element_id'])
+        #nelements = len(self.element_data['element_id'])
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.exx)
@@ -235,71 +308,8 @@ class PlateStressObject(StressObject, RealPlateResults):
             #print line
         raise NotImplementedError('transient results not supported')
 
-    def _preallocate(self, dt, nnodes, nelements):
-        ndt, nelements_size, nnodes_size, dts = self._get_shape()
-        #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
-
-        if self._inode_start is not None:
-            return (self._inode_start, self._inode_start + nnodes,
-                    self._ielement_start, self._ielement_start + nelements)
-        print('----definition----')
-        n = ndt * nnodes_size
-        if self._ncount != 0:
-            asfd
-        self._ncount += 1
-        self._inode_start = 0
-        self._inode_end = nnodes
-
-        self._ielement_start = 0
-        self._ielement_end = nelements
-
-        data = {}
-        element_data = {}
-        columns = []
-        if dts[0] is not None:
-            name = self.data_code['name']
-            print('***name=%r***' % name)
-            if isinstance(dt, int):
-                data[name] = pd.Series(zeros((n), dtype='int32'))
-            else:
-                data[name] = pd.Series(zeros((n), dtype='float32'))
-            columns.append(name)
-
-        element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
-        element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
-
-        data['element_id'] = pd.Series(zeros((n), dtype='int32'))
-        data['node_id'] = pd.Series(zeros((n), dtype='float32'))
-        data['layer'] = pd.Series(zeros((n), dtype='float32'))
-
-        #columns.append('element_type')
-
-        #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
-        #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
-        #print('n =', n)
-
-
-        #data['fiber_distance'] = pd.Series(zeros((n), dtype='float32'))
-        #data['fiber_curvature'] = pd.Series(zeros((n), dtype='float32'))
-        data['oxx'] = pd.Series(zeros((n), dtype='float32'))
-        data['oyy'] = pd.Series(zeros((n), dtype='float32'))
-        data['txy'] = pd.Series(zeros((n), dtype='float32'))
-
-        data['angle'] = pd.Series(zeros((n), dtype='float32'))
-        data['omax'] = pd.Series(zeros((n), dtype='float32'))
-        data['omin'] = pd.Series(zeros((n), dtype='float32'))
-
-        if self.isVonMises():
-            key = 'ovm'
-        else:
-            key = 'max_shear'
-        data[key] = pd.Series(zeros((n), dtype='float32'))
-
-        columns += ['element_id', 'node_id', 'layer', 'oxx', 'oyy', 'txy', 'angle', 'omax' , 'omin', key]
-
-        self.data = pd.DataFrame(data, columns=columns)
-        self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type'])
-        return (self._inode_start, self._inode_end, self._ielement_start, self._ielement_end)
+    def _get_headers(self):
+        return('oxx', 'oyy', 'txy', 'omax', 'omin', 'ovm')
 
     def getHeaders(self):
         if self.isFiberDistance():
@@ -787,7 +797,10 @@ class PlateStressObject(StressObject, RealPlateResults):
         return msg
 
     def get_stats(self):
-        nelements = len(self.eType)
+        nelements = 0
+        #nelements = len(self.data['element_id'])
+        #nelements = len(self.element_data['element_id'])
+        #nelements = len(self.eType)
 
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
@@ -900,6 +913,9 @@ class PlateStrainObject(StrainObject, RealPlateResults):
                     raise NotImplementedError(msg)
             return
         raise NotImplementedError('transient results not supported')
+
+    def _get_headers(self):
+        return('exx', 'eyy', 'exy', 'emax' , 'emin', 'evm')
 
     def getHeaders(self):
         if self.isFiberDistance():
