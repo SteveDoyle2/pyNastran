@@ -2,11 +2,13 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from .oes_objects import StressObject, StrainObject
+from .oes_springs import RealSpringResults
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class RodDamperObject(StressObject):
+class RodDamperObject(RealSpringResults, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        RealSpringResults.__init__(self)
         StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CBUSH'
 
@@ -32,7 +34,7 @@ class RodDamperObject(StressObject):
         return msg
 
 
-class RodStressObject(StressObject):
+class RodStressObject(RealSpringResults, StressObject):
     """
     ::
 
@@ -48,6 +50,7 @@ class RodStressObject(StressObject):
           ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
     """
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        RealSpringResults.__init__(self)
         StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CROD'
 
@@ -244,7 +247,7 @@ class RodStressObject(StressObject):
         return self.get_stats()
 
 
-class RodStrainObject(StrainObject):
+class RodStrainObject(RealSpringResults, StrainObject):
     """
     ::
 
@@ -260,6 +263,7 @@ class RodStrainObject(StrainObject):
          1001    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00         1007    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00
     """
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        RealSpringResults.__init__(self)
         StrainObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CROD'  # {} # 'CROD/CONROD/CTUBE'
 

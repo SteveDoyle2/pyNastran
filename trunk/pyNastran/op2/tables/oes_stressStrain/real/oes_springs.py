@@ -4,21 +4,52 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from .oes_objects import StressObject, StrainObject
 
 
-class CelasStressObject(StressObject):
+class RealSpringResults(object):
+    def __init__(self):
+        self.data = None
+        self.element_name = 'CELAS???'
+
+        self.shape = {}
+        self._ncount = 0
+        self._ielement_start = None
+        self._ielement_end = None
+        self.data = None
+        self.element_data = None
+
+    def _get_shape(self):
+        ndt = len(self.shape)
+        dts = self.shape.keys()
+        shape0 = dts[0]
+        nelements = self.shape[shape0]
+        #print("ndt=%s dts=%s" % (str(ndt), str(dts)))
+        return ndt, nelements, dts
+
+    def _increase_size(self, dt, nelements):
+        if dt in self.shape:  # default dictionary
+            self.shape[dt] += nelements
+        else:
+            self.shape[dt] = nelements
+
+    def _increment(self, nnodes, nelements):
+        self._ielement_start += nelements
+        self._ielement_end += nelements
+        return self._ielement_start, self._ielement_end
+
+class CelasStressObject(RealSpringResults, StressObject):
     """
     ::
-
                                 S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )
           TIME         STRESS              TIME         STRESS              TIME         STRESS              TIME         STRESS
       0.0            0.0               5.000000E-02   0.0               1.000000E-01   0.0               1.500000E-01   0.0
       2.000000E-01   0.0               2.500000E-01   0.0               3.000000E-01   0.0               3.500000E-01   0.0
     """
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        RealSpringResults.__init__(self)
         StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
-        self.element_name = self.data_code['element_name']
+        #self.element_name = self.data_code['element_name']
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
         self.stress = {}
 
         self.dt = dt
@@ -84,13 +115,14 @@ class CelasStressObject(StressObject):
         return self.get_stats()
 
 
-class CelasStrainObject(StrainObject):
+class CelasStrainObject(RealSpringResults, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        RealSpringResults.__init__(self)
         StrainObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
-        self.element_name = self.data_code['element_name']
+        #self.element_name = self.data_code['element_name']
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.isTransient = False
         self.strain = {}

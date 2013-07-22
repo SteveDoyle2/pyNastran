@@ -1,7 +1,7 @@
 # http://www.cadfamily.com/online-help/I-DEAS/SDRCHelp/LANG/English/slv_ug/NAS_results_imported.htm
 import sys
 from struct import unpack
-from numpy import zeros, ones
+from numpy import zeros, ones, array
 import pandas as pd
 
 from pyNastran import as_array
@@ -505,7 +505,7 @@ class OUG(object):
 
             # figure out the shape
             self.obj._increase_size(dt, nnodes)
-            iend = 32 * (nnodes + 1)
+            iend = 32 * nnodes
             self.data = self.data[iend:]
             return
         else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
@@ -522,7 +522,8 @@ class OUG(object):
 
         istart = 0
         iend = 32
-        for inode in range(nnodes):
+        #Tx = []
+        for inode in xrange(nnodes):
             eData = self.data[istart:iend]
 
             out = unpack(format1, eData)
@@ -532,6 +533,7 @@ class OUG(object):
             nodeIDs_to_index[inode] = eid2
             gridTypes[inode] = gridType
             translations[inode, :] = [tx, ty, tz, rx, ry, rz]
+            #Tx.append(tx)
 
             #if not as_array:
             #print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid, gridType, tx, ty, tz, rx, ry, rz))
@@ -539,16 +541,21 @@ class OUG(object):
             istart = iend
             iend += 32
 
-        iend2 = 32 * (nnodes + 1)
-        print('iend=%i iend2=%i' % (iend, iend2))
-        self.data = self.data[iend:]
+        #iend2 = 32 * nnodes
+        #print('iend=%i iend2=%i' % (iend, iend2))
+        #translations = array(translations)
+        self.data = self.data[istart:]
 
-        #print "nnodes =", nnodes, len(self.obj.data['node_id'][inode_start:inode_end]), len(nodeIDs_to_index)
-        self.obj.data['node_id'][inode_start:inode_end] = nodeIDs_to_index
+        print("nnodes =", nnodes,
+                          len(self.obj.data['node_id'][inode_start:inode_end]),
+                          len(nodeIDs_to_index))
+        self.obj.data['node_id'][inode_start:inode_end] = nodeIDs_to_index # fails for large problems???
         if dt:
             self.obj.data['dt'][inode_start:inode_end] = ones(inode_end - inode_start) * dt
         #self.obj.grid_type[inode_start:inode_end] = gridTypes
-        self.obj.data['T1'][inode_start:inode_end] = translations[:, 0]
+
+        #self.obj.data['T1'][inode_start:inode_end] = Tx # works...
+        self.obj.data['T1'][inode_start:inode_end] = translations[:, 0]  # fails for large problems???
         self.obj.data['T2'][inode_start:inode_end] = translations[:, 1]
         self.obj.data['T3'][inode_start:inode_end] = translations[:, 2]
         self.obj.data['R1'][inode_start:inode_end] = translations[:, 3]
@@ -625,7 +632,7 @@ class OUG(object):
             inode += 1
             istart = iend
             iend += 56
-        self.data = self.data[iend:]
+        self.data = self.data[istart:]
 
         self.obj.data['node_id'][inode_start:inode_end] = nodeIDs_to_index
         if dt:
