@@ -51,7 +51,7 @@ class RealBarResults(object):
         if self._inode_start is not None:
             return (self._inode_start, self._inode_start + nnodes,
                     self._ielement_start, self._ielement_start + nelements)
-        print('----definition----')
+
         n = ndt * nnodes_size
         if self._ncount != 0:
             asfd
@@ -139,8 +139,34 @@ class RealBarResults(object):
         #print "final\n", self.data
         del self._inode_start
         del self._inode_end
-        print("---BarStressObject---")
-        print(self.data.to_string())
+        #print("---BarStressObject---")
+        #print(self.data.to_string())
+
+    def get_stats(self):
+        nelements = len(self.data['axial'])
+        msg = self.get_data_code()
+        if self.nonlinear_factor is not None:  # transient
+            ntimes = len(self.shape)
+            msg.append('  real type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements // ntimes))
+        else:
+            msg.append('  real type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                          nelements))
+        headers = self._get_headers()
+        (s1a, s2a, s3a, s4a, 
+         s1b, s2b, s3b, s4b,
+         smaxa, smina, smaxb, sminb) = headers
+
+        msg.append('  element data: index :  element_id\n')
+        msg.append('              : result:  element_type\n')
+        msg.append('  data        : index :  element_id\n')
+        msg.append('              : result:  %s, %s, %s, %s, %s, %s,\n' % (s1a, s2a, s3a, s4a, smaxa, smina) )
+        msg.append('              : result:  %s, %s, %s, %s, %s, %s,\n' % (s1b, s2b, s3b, s4b, smaxb, sminb) )
+        msg.append('                         axial, MS_tension, MS_compression\n')
+        return msg
+
+    def __repr__(self):
+        return self.get_stats()
 
 
 class BarStressObject(StressObject, RealBarResults):
@@ -272,23 +298,6 @@ class BarStressObject(StressObject, RealBarResults):
             msg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
         return (''.join(msg), pageNum - 1)
-
-    def get_stats(self):
-        nelements = len(self.data['axial'])
-        msg = self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.s1)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, s1, s2, s3, s4, axial, smax, smin, '
-                   'MS_tension, MS_compression\n')
-        return msg
-
-    def __repr__(self):
-        return self.get_stats()
 
 
 class BarStrainObject(StrainObject, RealBarResults):
@@ -422,23 +431,3 @@ class BarStrainObject(StrainObject, RealBarResults):
             msg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
         return (''.join(msg), pageNum - 1)
-
-    def get_stats(self):
-        nelements = 0
-        #nelements = len(self.data['element_id'])
-        #nelements = len(self.element_data['element_id'])
-
-        msg = self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.e1)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, e1, e2, e3, e4, axial, emax, emin, '
-                   'MS_tension, MS_compression\n')
-        return msg
-
-    def __repr__(self):
-        return self.get_stats()

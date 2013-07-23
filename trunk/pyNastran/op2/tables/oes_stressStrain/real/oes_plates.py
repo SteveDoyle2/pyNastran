@@ -66,7 +66,7 @@ class RealPlateResults(object):
         if self._inode_start is not None:
             return (self._inode_start, self._inode_start + nnodes,
                     self._ielement_start, self._ielement_start + nelements)
-        print('----definition----')
+
         n = ndt * nnodes_size
         if self._ncount != 0:
             asfd
@@ -82,7 +82,7 @@ class RealPlateResults(object):
         columns = []
         if dts[0] is not None:
             name = self.data_code['name']
-            print('***name=%r***' % name)
+            #print('***name=%r***' % name)
             if isinstance(dt, int):
                 data[name] = pd.Series(zeros((n), dtype='int32'))
             else:
@@ -107,7 +107,7 @@ class RealPlateResults(object):
         #data['fiber_curvature'] = pd.Series(zeros((n), dtype='float32'))
         
         headers = self._get_headers()
-        (oxx, oyy, txy, omax, omin, ovm) = headers
+        (fd, oxx, oyy, txy, omax, omin, ovm) = headers
 
         data[oxx] = pd.Series(zeros((n), dtype='float32'))
         data[oyy] = pd.Series(zeros((n), dtype='float32'))
@@ -134,7 +134,7 @@ class RealPlateResults(object):
 
         if dt != max(dts):
             return
-        print("----finalize----")
+        #print("----finalize----")
 
         #grid_type_str = []
         #for grid_type in self.grid_type:
@@ -149,24 +149,31 @@ class RealPlateResults(object):
         #print("final\n", self.data.to_string())
         del self._inode_start
         del self._inode_end
-        print('---PlateStressObject---')
+        #print('---PlateStressObject---')
         #print(self.data.to_string())
 
     def get_stats(self):
-        #nelements = len(self.eType)
         nelements = 0
+        #nelements = len(self.eType)
         #nelements = len(self.data['element_id'])
         #nelements = len(self.element_data['element_id'])
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.shape)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
+            msg.append('  real type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, fiberCurvature, exx, eyy, exy, angle, '
-                   'majorP, minorP, evmShear\n')
+            msg.append('  real type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                          nelements))
+        headers = self._get_headers()
+        (fd, oxx, oyy, txy, omax, omin, ovm) = headers
+
+        msg.append('  element data: index :  element_id\n')
+        msg.append('              : result:  eType\n')
+        msg.append('  data        : index :  element_id, node_id, layer\n')
+        msg.append('              : result:  %s, %s, %s, %s, angle,\n'
+                   '                         %s, %s, %s\n' % (fd, oxx, oyy, txy,
+                                                              omax, omin, ovm) )
         return msg
 
     def __repr__(self):
@@ -198,7 +205,7 @@ class PlateStressObject(StressObject, RealPlateResults):
             #print(data)
 
             eType = data[0][0]
-            print('eType = %s' % eType)
+            #print('eType = %s' % eType)
 
             n = 0
             line2 = data[0]
@@ -309,7 +316,11 @@ class PlateStressObject(StressObject, RealPlateResults):
         raise NotImplementedError('transient results not supported')
 
     def _get_headers(self):
-        return('oxx', 'oyy', 'txy', 'omax', 'omin', 'ovm')
+        if self.isFiberDistance():
+            fd = 'fiber_distance'
+        else:
+            fd = 'fiber_curvature'
+        return(fd, 'oxx', 'oyy', 'txy', 'omax', 'omin', 'ovm')
 
     def getHeaders(self):
         if self.isFiberDistance():
@@ -796,27 +807,6 @@ class PlateStressObject(StressObject, RealPlateResults):
                     msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm)
         return msg
 
-    def get_stats(self):
-        nelements = 0
-        #nelements = len(self.data['element_id'])
-        #nelements = len(self.element_data['element_id'])
-        #nelements = len(self.eType)
-
-        msg = self.get_data_code()
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.shape)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, fiberCurvature, oxx, oyy, txy, angle, '
-                   'majorP, minorP, ovmShear\n')
-        return msg
-
-    def __repr__(self):
-        return self.get_stats()
-
 
 class PlateStrainObject(StrainObject, RealPlateResults):
     """
@@ -915,7 +905,11 @@ class PlateStrainObject(StrainObject, RealPlateResults):
         raise NotImplementedError('transient results not supported')
 
     def _get_headers(self):
-        return('exx', 'eyy', 'exy', 'emax' , 'emin', 'evm')
+        if self.isFiberDistance():
+            fd = 'fiber_distance'
+        else:
+            fd = 'fiber_curvature'
+        return(fd, 'exx', 'eyy', 'exy', 'emax' , 'emin', 'evm')
 
     def getHeaders(self):
         if self.isFiberDistance():

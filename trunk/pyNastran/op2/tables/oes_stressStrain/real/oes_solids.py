@@ -46,12 +46,12 @@ class RealSolidResults(object):
 
     def _preallocate(self, dt, nnodes, nelements):
         ndt, nelements_size, nnodes_size, dts = self._get_shape()
-        print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
+        #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
 
         if self._inode_start is not None:
             return (self._inode_start, self._inode_start + nnodes,
                     self._ielement_start, self._ielement_start + nelements)
-        print('----definition----')
+        #print('----definition----')
         n = ndt * nnodes_size
         if self._ncount != 0:
             asfd
@@ -66,11 +66,13 @@ class RealSolidResults(object):
         element_data = {}
         columns = []
         if dts[0] is not None:
+            name = self.data_code['name']
+            #print("name =", name)
             if isinstance(dt, int):
-                data['dt'] = pd.Series(zeros((n), dtype='int32'))
+                data[name] = pd.Series(zeros((n), dtype='int32'))
             else:
-                data['dt'] = pd.Series(zeros((n), dtype='float32'))
-            columns.append('dt')
+                data[name] = pd.Series(zeros((n), dtype='float32'))
+            columns.append(name)
 
         element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
         element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
@@ -87,7 +89,7 @@ class RealSolidResults(object):
         headers = self._get_headers()
         (oxx, oyy, ozz, txy, txz, tyz, o1, o2, o3, ovm) = headers
         
-        print('n =', n)
+        #print('n =', n)
         data[oxx] = pd.Series(zeros((n), dtype='float32'))
         data[oyy] = pd.Series(zeros((n), dtype='float32'))
         data[ozz] = pd.Series(zeros((n), dtype='float32'))
@@ -100,23 +102,13 @@ class RealSolidResults(object):
         data[o2] = pd.Series(zeros((n), dtype='float32'))
         data[o3] = pd.Series(zeros((n), dtype='float32'))
 
-        if self.isVonMises():
-            data[ovm] = pd.Series(zeros((n), dtype='float32'))
-        else:
-            data['max_shear'] = pd.Series(zeros((n), dtype='float32'))
+        data[ovm] = pd.Series(zeros((n), dtype='float32'))
 
         #pressure
         #aCos
         #bCos
         #cCos
-        columns += [oxx, oyy, ozz, txy, txz, tyz, o1, o2, o3]
-
-        if self.isVonMises():
-            key = ovm
-        else:
-            key = 'max_shear'
-        data[key] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
-        columns.append(key)
+        columns += [oxx, oyy, ozz, txy, txz, tyz, o1, o2, o3, ovm]
 
         self.data = pd.DataFrame(data, columns=columns)
         self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type', 'cid'])
@@ -142,6 +134,39 @@ class RealSolidResults(object):
         #print "final\n", self.data
         del self._inode_start
         del self._inode_end
+
+    def get_stats(self):
+        ndt, nelements, nnodes, dts = self._get_shape()
+        nelements = len(self.element_data['element_id'])
+
+        msg = self.get_data_code()
+        if self.nonlinear_factor is not None:  # transient
+            ntimes = len(self.shape)
+            name = self.data_code['name']
+            dtstring = name + ', '
+            msg.append('  real type=%s n%ss=%s nelements=%s\n'
+                       % (self.__class__.__name__, name, ntimes, nelements))
+        else:
+            dtstring = ''
+            msg.append('  real type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+
+        etypes = self.element_data['element_type']
+        headers = self._get_headers()
+        (oxx, oyy, ozz, txy, txz, tyz, o1, o2, o3, ovm) = headers
+
+        msg.append('  element_data: index        : element_id\n')
+        msg.append('                results      : element_type, cid\n')
+        msg.append('  data:         index        : %selement_id, node_id\n' % dtstring)
+        msg.append('                results      : %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n' % (oxx, oyy, ozz,
+                                                                                                txy, tyz, txz,
+                                                                                                o1, o2, o3, ovm))
+        msg.append('                element_types: %s' %(', '.join(set(etypes))))
+
+        #print("self.element_data\n", self.element_data.to_string())
+        #print("self.data\n", self.data.to_string())
+        msg.append('\n')
+        return msg
 
     def __repr__(self):
         return self.get_stats()
@@ -261,7 +286,11 @@ class SolidStressObject(StressObject, RealSolidResults):
         del self.data
 
     def _get_headers(self):
-        return ['oxx', 'oyy', 'ozz', 'txy', 'txz', 'tyz', 'o1', 'o2', 'o3', 'ovm']
+        if self.isVonMises():
+            ovm = 'ovm'
+        else:
+            ovm = 'max_shear'
+        return ('oxx', 'oyy', 'ozz', 'txy', 'txz', 'tyz', 'o1', 'o2', 'o3', ovm)
 
     def getHeaders(self):
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
@@ -450,38 +479,6 @@ class SolidStressObject(StressObject, RealSolidResults):
             msg = ['']
         return ''.join(msg)
 
-    def get_stats(self):
-        ndt, nelements, nnodes, dts = self._get_shape()
-        nelements = len(self.element_data['element_id'])
-
-        msg = self.get_data_code()
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.oxx)  # bug
-            dtstring = self.data_code['name'] + ', '
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            dtstring = ''
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-
-        if self.isVonMises():
-            ovmstr = 'ovm'
-        else:
-            ovmstr = 'max_shear'
-
-        etypes = self.element_data['element_type']
-        msg.append('  element_data: index        : element_id\n')
-        msg.append('                results      : element_type, cid\n')
-        msg.append('  data:         index        : %selement_id, node_id\n' % dtstring)
-        msg.append('                results      : oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, %s\n' % ovmstr)
-        msg.append('                element_types: %s' %(', '.join(set(etypes))))
-
-        #print("self.element_data\n", self.element_data.to_string())
-        #print("self.data\n", self.data.to_string())
-        msg.append('\n')
-        return msg
-
 
 class SolidStrainObject(StrainObject, RealSolidResults):
     """
@@ -599,7 +596,11 @@ class SolidStrainObject(StrainObject, RealSolidResults):
         del self.data
 
     def _get_headers(self):
-        return ['exx', 'eyy', 'ezz', 'exy', 'exz', 'eyz', 'e1', 'e2', 'e3', 'evm']
+        if self.isVonMises():
+            evm = 'ovm'
+        else:
+            evm = 'max_shear'
+        return ['exx', 'eyy', 'ezz', 'exy', 'exz', 'eyz', 'e1', 'e2', 'e3', 'evm', evm]
 
     def getHeaders(self):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']
@@ -808,33 +809,3 @@ class SolidStrainObject(StrainObject, RealSolidResults):
             f.write(''.join(msg))
             msg = ['']
         return ''.join(msg)
-
-    def get_stats(self):
-        ndt, nelements, nnodes, dts = self._get_shape()
-        nelements = len(self.element_data['element_id'])
-
-        msg = self.get_data_code()
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.exx)  # bug
-            dtstring = self.data_code['name'] + ', '
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            dtstring = ''
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-
-        if self.isVonMises():
-            ovmstr = 'evm'
-        else:
-            ovmstr = 'max_shear'
-
-        etypes = self.element_data['element_type']
-        msg.append('  element_data: index        : element_id\n')
-        msg.append('                results      : element_type, cid\n')
-        msg.append('  data:         index        : %selement_id, node_id\n' % dtstring)
-        msg.append('                results      : exx, eyy, ezz, exy, eyz, exz, '
-                   'e1, e2, e3, %s\n' % ovmstr)
-        msg.append('                element_types: %s' %(', '.join(set(etypes))))
-        msg.append('\n')
-        return msg

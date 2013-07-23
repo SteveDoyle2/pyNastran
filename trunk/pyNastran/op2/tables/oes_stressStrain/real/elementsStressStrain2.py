@@ -1,14 +1,11 @@
 """
-91  -> PENTANL
-2   -> BEAM
-33  -> TUBE
-92  -> CONRODNL
-
- OES_basicElement
+ OES_basicElement - TODO
    CROD   (1)   linear (centroid)
-   CELAS1 (???) linear (centroid)
+   CTUBE  (3)   linear (centroid)
+   CONROD (10)  linear (centroid)
+   CELAS1 (11)  linear (centroid)
    CELAS2 (12)  linear (centroid)
-   CELAS3 (???) linear (centroid)
+   CELAS3 (13)  linear (centroid)
    CELAS4 (???) linear (centroid)
 
    CDAMP1 (???) linear (centroid)
@@ -16,31 +13,46 @@
    CDAMP3 (???) linear (centroid)
    CDAMP4 (???) linear (centroid)
    
- OES_CBEAM_2
+ OES_CBEAM_2 - beamStress / beamStrain
    CBEAM (2) linear
 
- OES_CSOLID_39_67_68 - solidStress/solidStrain
-   CTETRA (39) linear (centroid)
-   CPENTA (67) linear (centroid)
-   CHEXA  (68) linear (centroid)
+ OES_CSHEAR_4 - shearStress / shearStrain - TODO
+   CSHEAR (4) linear
 
- OES_CBAR_34 - barStress/barStrain
+ OES_CSOLID_39_67_68 - solidStress / solidStrain
+   CTETRA (39) linear (centroid)
+   CPENTA (67) linear (centroid)  ## HEXA???
+   CHEXA  (68) linear (centroid)  ## PENTA??
+
+ OES_CBAR_34 - barStress / barStrain
    CBAR (34) linear
 
- OES_CTRIA3_74 - plateStress/plateStrain
+ OES_CTRIA3_74 - plateStress / plateStrain
    CTRIA3 (74)  linear 1 node (centroid)
 
- OES_CQUAD4_33 - plateStress/plateStrain
+ OES_CQUAD4_33 - plateStress / plateStrain
    CQUAD4 (33)  linear 1 node (centroid)
 
- OES_CQUAD4_144 - plateStress/plateStrain
+ OES_CQUAD4_144 - plateStress / plateStrain
    CQUAD4 (144) linear 5 nodes (centroid + 4 corners)
    CQUAD8 (82)  linear 5 nodes (centroid + 4 corners)
    CTRIA6 (75)  linear 4 nodes (centroid + 3 corners)
    CTRIAR (70)  linear 4 nodes (centroid + 3 corners)
 
+ OES_CQUAD4_95 - compositePlateStress/compositePlateStrain - TODO
+   CQUAD4 (95)  composite ? nodes (centroid + 4 corners)
+   CQUAD8 (96)  composite ? nodes (centroid + 4 corners)
+   CTRIA6 (97)  composite ? nodes (centroid + 3 corners)
+   CTRIAR (98)  composite ? nodes (centroid + 3 corners)
+
 OES_CBUSH_102 - bushStress / bushStrain
-   CBUSH (102)
+   CBUSH (102) linear 1 node (centroid)
+
+ OES_CELAS_224_225 - nonlinearSpringStress - TODO
+   CELAS1 (224???)  nonlinear (centroid)
+   CELAS2 (???)     nonlinear (centroid)
+   CELAS3 (225???)  nonlinear (centroid)
+
 """
 #pylint: disable=C0103,C0301,R0914,E1101
 from __future__ import (nested_scopes, generators, division, absolute_import,
@@ -205,7 +217,7 @@ class RealElementsStressStrain2(object):
             self.obj.data['smax'][inode_start:inode_end] = smax
             self.obj.data['smin'][inode_start:inode_end] = smin
         else:
-            print('type', self.obj.__class__.__name__)
+            #print('type', self.obj.__class__.__name__)
             self.obj.data['e1'][inode_start:inode_end] = s1
             self.obj.data['e2'][inode_start:inode_end] = s2
             self.obj.data['e2'][inode_start:inode_end] = s3
@@ -378,7 +390,7 @@ class RealElementsStressStrain2(object):
             else:
                 self.obj.data['max_shear'][inode_start:inode_end] = ovmShear
         else:
-            print('type', self.obj.__class__.__name__)
+            #print('type', self.obj.__class__.__name__)
             self.obj.data['exx'][inode_start:inode_end] = oxx
             self.obj.data['eyy'][inode_start:inode_end] = oyy
             self.obj.data['ezz'][inode_start:inode_end] = ozz
@@ -528,8 +540,8 @@ class RealElementsStressStrain2(object):
         #self.obj.data['element_id'][ielement_start:ielement_end] = eids
         #self.obj.data['element_type'][ielement_start:ielement_end] = etypes
 
-        print('len(eids) = ', len(self.obj.data['element_id']))
-        print('inode_end // ntotal = ', inode_end)
+        #print('len(eids) = ', len(self.obj.data['element_id']))
+        #print('inode_end // ntotal = ', inode_end)
         if len(self.obj.data['element_id']) == inode_end: # [nodes, elements]
             self.obj._finalize(dt)
         else:
@@ -954,7 +966,7 @@ class RealElementsStressStrain2(object):
             else:
                 key = 'max_shear'
         else:
-            print('type', self.obj.__class__.__name__)
+            #print('type', self.obj.__class__.__name__)
             self.obj.data['exx'][inode_start:inode_end] = sx
             self.obj.data['eyy'][inode_start:inode_end] = sy
             self.obj.data['exy'][inode_start:inode_end] = txy

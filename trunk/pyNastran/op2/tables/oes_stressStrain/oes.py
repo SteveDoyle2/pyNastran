@@ -614,9 +614,9 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain, RealElementsStr
 
         #print 'self.element_type  = ',self.element_type
         (numWideReal, numWideImag, numWideRandom) = self.OES_StressStrainCode()
-        print("numWideReal=%s numWideImag=%s numWideRandom=%s" %(numWideReal, numWideImag, numWideRandom))
-        print('element_type=%s' %(self.element_type))
-        print('self.num_wide = %s' %(self.num_wide))
+        #print("numWideReal=%s numWideImag=%s numWideRandom=%s" % (numWideReal, numWideImag, numWideRandom))
+        #print('element_type=%s' % self.element_type)
+        #print('self.num_wide = %s' % self.num_wide)
 
         if self.element_type == 95:
             self.OESRT_CQUAD4_95()

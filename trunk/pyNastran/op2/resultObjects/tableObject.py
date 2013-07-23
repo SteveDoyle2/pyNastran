@@ -38,13 +38,17 @@ class TableObject(ScalarObject):  # displacement style table
 
         msg = self.get_data_code()
         if dts[0] is not None:
-            msg.append('  type=%s ntimes=%s nnodes=%s\n'
-                       % (self.__class__.__name__, ndt, nnodes))
+            
+            name = self.data_code['name']
+            dtstring = name + ', '
+            msg.append('  real type=%s n%ss=%s nnodes=%s\n'
+                       % (self.__class__.__name__, name, ndt, nnodes))
         else:
+            dtstring = ''
             msg.append('  real type=%s nnodes=%s\n' % (self.__class__.__name__, nnodes))
         msg.append('  element_data: index  : element_id\n')
         msg.append('              : results: gridTypes\n')
-        msg.append('  data        : index  : element_id\n')
+        msg.append('  data        : index  : %selement_id\n' % dtstring)
         msg.append('              : results: T1, T2, T3, R1, R2, R3\n')
         return msg
 
