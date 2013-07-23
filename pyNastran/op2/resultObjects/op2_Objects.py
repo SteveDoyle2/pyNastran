@@ -64,7 +64,7 @@ class ScalarObject(BaseScalarObject):
     def apply_data_code(self):
         for key, value in sorted(self.data_code.iteritems()):
             self.__setattr__(key, value)
-            #print "  key=%s value=%s" %(key,value)
+            #print("  *key=%s value=%s" % (key, value))
         #print("")
 
     def get_data_code(self):
@@ -126,13 +126,17 @@ class ScalarObject(BaseScalarObject):
             raise NotImplementedError(msg + self.code_information())
 
         for name in self.data_code['dataNames']:
-            #print "name = ",name
+            #print("name = ",name)
             self.append_data_member(name + 's', name)
 
     def update_data_code(self, data_code):
-        self.data_code = data_code
-        self.apply_data_code()
-        self.set_data_members()
+        #print("self.data_code =", self.data_code)
+        if not self.data_code or (data_code['nonlinear_factor'] != self.data_code['nonlinear_factor']):
+            self.data_code = data_code
+            self.apply_data_code()
+            self.set_data_members()
+        #else:
+            #print('skipping update...')
 
     def print_data_members(self):
         """
@@ -151,7 +155,7 @@ class ScalarObject(BaseScalarObject):
         for name in self.data_code['dataNames']:
             vals = getattr(self, name + 's')
             keyVals.append(vals)
-            #print "%ss = %s" %(name,vals)
+            #print("%ss = %s" %(name, vals))
 
         msg = ''
         for name in self.data_code['dataNames']:

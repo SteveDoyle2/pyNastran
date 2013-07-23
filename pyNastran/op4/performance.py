@@ -39,7 +39,7 @@ if __name__ == '__main__':
             print('wrote %-20s in %8.3f s' % (File[i], end_elapsed-start_elapsed))
 
     # Method 1: cop4
-    for i in range(len(dimension)):
+    for i in xrange(len(dimension)):
         start_elapsed = time.time()
         B = cop4.Load(File[i])
         end_elapsed = time.time()
@@ -47,7 +47,7 @@ if __name__ == '__main__':
         print('cop4 read %-20s in %8.3f s' % (File[i], cop4_load[i]))
 
     # Method 2: pure Python op4
-    for i in range(len(dimension)):
+    for i in xrange(len(dimension)):
         start_elapsed = time.time()
         op4 = OP4()
         B = op4.readOP4(File[i])

@@ -111,7 +111,8 @@ class RealElementsStressStrain2(object):
             self.data = self.data[iend:]
             return
         else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
-            print("nelements =",nelements)
+            #print("nelements =",nelements)
+            pass
         (inode_start, inode_end, ielement_start, ielement_end
             ) = self.obj._preallocate(dt, nnodes, nelements)
 
@@ -432,7 +433,8 @@ class RealElementsStressStrain2(object):
             self.data = self.data[iend:]
             return
         else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
-            print("nelements =",nelements)
+            #print("nelements =",nelements)
+            pass
 
         (inode_start, inode_end, ielement_start, ielement_end
             ) = self.obj._preallocate(dt, nnodes, nelements)
@@ -557,7 +559,8 @@ class RealElementsStressStrain2(object):
             self.data = self.data[iend:]
             return
         else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
-            print("nelements =",nelements)
+            #print("nelements =",nelements)
+            pass
         
         (ielement_start, ielement_end) = self.obj._preallocate(dt, nelements)
 
@@ -641,7 +644,8 @@ class RealElementsStressStrain2(object):
             self.data = self.data[iend:]
             return
         else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
-            print("nelements =", nelements)
+            #print("nelements =", nelements)
+            pass
 
         (inode_start, inode_end, ielement_start, ielement_end
             ) = self.obj._preallocate(dt, nnodes, nelements)
@@ -826,7 +830,8 @@ class RealElementsStressStrain2(object):
             self.data = self.data[iend:]
             return
         else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
-            print("nelements =", nelements)
+            #print("nelements =", nelements)
+            pass
 
         (inode_start, inode_end, ielement_start, ielement_end
             ) = self.obj._preallocate(dt, nnodes, nelements)

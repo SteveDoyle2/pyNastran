@@ -916,6 +916,11 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
+        self.shape = {}
+        self._inode_start = None
+        self._inode_end = None
+        self.data = None
+
         self.bendingMomentA = {}
         self.bendingMomentB = {}
         self.shear = {}
@@ -929,6 +934,22 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
         else:
             assert dt is not None
             self.add = self.addSort2
+
+    def _increase_size(self, dt, nelements):
+        #self.shape += 1
+        if dt in self.shape:  # default dictionary
+            self.shape[dt] += nelements
+        else:
+            self.shape[dt] = nelements
+            #self.n_nonlinear += 1
+
+    def _get_shape(self):
+        ndt = len(self.shape)
+        dts = self.shape.keys()
+        shape0 = dts[0]
+        nelements = self.shape[shape0]
+        #print "ndt=%s nelements=%s dts=%s" % (ndt, nelements, str(dts))
+        return ndt, nelements, dts
 
     def get_stats(self):
         msg = self.get_data_code()

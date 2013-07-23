@@ -234,7 +234,7 @@ class OP4(OP4Deprecated):
                         wasBroken = True
                         break
 
-                    for i in range(nWordsInLine):
+                    for i in xrange(nWordsInLine):
                         word = line[n:n + lineSize]
                         if isSparse:
                             rows.append(irow - 1)
@@ -305,7 +305,7 @@ class OP4(OP4Deprecated):
                         wasBroken = True
                         break
 
-                    for i in range(nWordsInLine):
+                    for i in xrange(nWordsInLine):
                         value = float(line[n:n + lineSize])
 
                         if iWord % 2 == 0:
@@ -705,7 +705,7 @@ class OP4(OP4Deprecated):
                 #print "isSparse = ",isSparse
                 if isSparse:
                     #cols += [icol]*nValues
-                    #rows += [i+irow for i in range(nValues)]
+                    #rows += [i+irow for i in xrange(nValues)]
                     for value in valueList:
                         cols.append(icol - 1)
                         rows.append(irow - 1)
@@ -837,7 +837,7 @@ class OP4(OP4Deprecated):
 
                 if isSparse:
                     cols += [icol] * nValues
-                    rows += [i + irow for i in range(nValues)]
+                    rows += [i + irow for i in xrange(nValues)]
                     for i, value in enumerate(valueList):
                         if i % 2 == 0:
                             realValue = value
@@ -1127,7 +1127,7 @@ class OP4(OP4Deprecated):
 
         msg += pack(self.endian + '5i8s', 24, ncols, nrows, form,
                     Type, '%-8s' % name)
-        for icol in range(ncols):
+        for icol in xrange(ncols):
             (iStart, iEnd) = self.getStartEndRow(A[:, icol], nrows, tol)
 
             # write the column
@@ -1143,7 +1143,7 @@ class OP4(OP4Deprecated):
                         msg += pack('d', A[irow, icol])
 
                 else:  # complex
-                    for irow in range(iStart, iEnd):
+                    for irow in xrange(iStart, iEnd):
                         msg += pack('dd', A[irow, icol]
                                     .real, A[irow, icol].imag)
 
@@ -1154,7 +1154,7 @@ class OP4(OP4Deprecated):
     def getStartEndRow(self, A, nrows, tol=1e-15):
         """find the starting and ending points of the matrix"""
         iStart = None
-        for irow in range(nrows):
+        for irow in xrange(nrows):
             if abs(A[irow]) > tol:
                 iStart = irow
                 break
@@ -1177,7 +1177,7 @@ class OP4(OP4Deprecated):
         msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' % (
             ncols, nrows, form, Type, name)
 
-        for icol in range(ncols):
+        for icol in xrange(ncols):
             valueStr = ''
             (iStart, iEnd) = self.getStartEndRow(A[:, icol], nrows, tol)
 
@@ -1202,7 +1202,7 @@ class OP4(OP4Deprecated):
                 else:
                     i = 0
                     #print("iStart=%s iEnd=%s" % (iStart, iEnd))
-                    for irow in range(iStart, iEnd):
+                    for irow in xrange(iStart, iEnd):
                         if abs(A[irow, icol].real) > tol:
                             valueStr += '%23.16E' % (A[irow, icol].real)
                         else:

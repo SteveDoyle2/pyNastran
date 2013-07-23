@@ -214,9 +214,34 @@ class RealForces(object):
         format1 += 'ffffffff'
         format1 = bytes(format1)
 
-        while len(self.data) >= 36:  # 9*4
-            eData = self.data[0:36]
-            self.data = self.data[36:]
+        ntotal = 36  # 9*4
+        nelements = len(self.data) // 36
+        if self.read_mode == 0 or name not in self._selected_names:
+            #print("OEF_REAL...")
+            if name not in self._result_names:
+                self._result_names.append(name)
+
+            # figure out the shape
+            self.obj._increase_size(dt, nelements)
+            iend = 32 * nelements
+            self.data = self.data[iend:]
+            return
+        else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
+            #print("_selected_names =", self._selected_names)
+            #print("OEF else")
+            #index_data = (nodeIDs_to_index)
+            #index_data = pd.MultiIndex.from_tuples(zip(data))
+
+            #(inode_start, inode_end) = self.obj._preallocate(dt, nnodes)
+            #(ndt, nnodes_max, dts) = self.obj._get_shape()
+            #ndts = len(dts)
+            pass
+
+        istart = 0
+        iend = ntotal
+        for i in xrange(nelements):
+            eData = self.data[istart:iend]
+            #self.data = self.data[36:]
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
@@ -229,6 +254,9 @@ class RealForces(object):
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
+            istart = iend
+            iend += ntotal
+        self.data = self.data[istart:]
         #print self.barForces
 
     def OEF_CBar100(self, name):  # 100-CBAR

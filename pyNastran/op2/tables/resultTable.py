@@ -449,7 +449,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             i += 1
             if i == 2000:
                 raise RuntimeError('Infinite Loop or a really big model...')
-            #print "isBufferDone=%s" %(self.isBufferDone)
+            #print("isBufferDone=%s" % self.isBufferDone)
 
 
 def get_close_num(v1, v2, closePoint):

@@ -43,7 +43,7 @@ class GetChoices(wx.Dialog):
         width = max(widths)
         
         height = 200 + 20 * n_names
-        max_height = 600
+        max_height = 400
         if height > max_height:
             height = max_height
 
@@ -61,20 +61,23 @@ class GetChoices(wx.Dialog):
 
         bSizer1 = wx.BoxSizer( wx.VERTICAL )
         
-        self.m_scrolledWindow1 = wx.ScrolledWindow( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.EXPAND|wx.HSCROLL|wx.VSCROLL)
-        self.m_scrolledWindow1.SetScrollRate( 5, 5 )
-        
         self.checkboxes = []
         #self.staticTexts= []
         
         #gSizer1 = wx.GridSizer(n_names + 1, 2, 0, 0 )
         gSizer1 = wx.GridSizer(n_names, 1, 0, 0 )
 
-        staticTextA = wx.StaticText( self.m_scrolledWindow1, wx.ID_ANY, 'Extract...', wx.DefaultPosition, wx.DefaultSize, 0)
+        staticTextA = wx.StaticText(self, wx.ID_ANY, 'Extract...', wx.DefaultPosition, wx.DefaultSize, 0)
+        staticTextA.Wrap(-1)
         bold(staticTextA)
 
-        gSizer1.Add(staticTextA, 0, wx.ALL, 5)
+        #bSizer1.Add(staticTextA, 0, wx.ALL, 5)
+        #gSizer1.Add(staticTextA, 0, wx.ALL, 5)
 
+
+        self.m_scrolledWindow1 = wx.ScrolledWindow( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.EXPAND|wx.HSCROLL|wx.VSCROLL)
+        self.m_scrolledWindow1.SetScrollRate( 5, 5 )
+        
         for name in names:
             checkbox = wx.CheckBox( self.m_scrolledWindow1, wx.ID_ANY, name, wx.DefaultPosition, wx.DefaultSize, 0)
             checkbox.SetValue(True)
@@ -85,10 +88,8 @@ class GetChoices(wx.Dialog):
         self.m_scrolledWindow1.SetSizer( gSizer1)
         self.m_scrolledWindow1.Layout()
         gSizer1.Fit( self.m_scrolledWindow1 )
-        #gSizer1.Fit()
-        bSizer1.Add( self.m_scrolledWindow1, 1, wx.EXPAND|wx.ALL, 1)
 
-        m_sdbSizer1 = wx.StdDialogButtonSizer()
+        ok_sizer = wx.StdDialogButtonSizer()
 
         ok_button = wx.Button(self, wx.ID_OK)
         apply_button = wx.Button(self, wx.ID_APPLY)
@@ -96,14 +97,14 @@ class GetChoices(wx.Dialog):
 
         apply_button.SetLabel('Select All')
 
-        m_sdbSizer1.AddButton(ok_button)
-        m_sdbSizer1.AddButton(apply_button)
-        m_sdbSizer1.AddButton(cancel_button)
-        m_sdbSizer1.Realize()
+        ok_sizer.AddButton(ok_button)
+        ok_sizer.AddButton(apply_button)
+        ok_sizer.AddButton(cancel_button)
+        ok_sizer.Realize()
 
-        #bSizer1.Add(staticTextA, 0, -1, 5)
-        #bSizer1.Add(staticTextB, 0, -1, 5)
-        bSizer1.Add(m_sdbSizer1, 0, -1, 10)
+        bSizer1.Add(staticTextA, 0, wx.ALL, 5)
+        bSizer1.Add( self.m_scrolledWindow1, 1, wx.EXPAND|wx.ALL, 1)
+        bSizer1.Add(ok_sizer, 0, -1, 10)
 
         self.SetSizer(bSizer1)
         self.Layout()

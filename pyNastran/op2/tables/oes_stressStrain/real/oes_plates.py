@@ -41,7 +41,7 @@ class RealPlateResults(object):
             self.shape[dt][1] += nnodes
         else:
             self.shape[dt] = [nelements, nnodes]
-        print("shape =", self.shape)
+        #print("shape =", self.shape)
 
     def _get_shape(self):
         ndt = len(self.shape)
@@ -159,7 +159,7 @@ class RealPlateResults(object):
         #nelements = len(self.element_data['element_id'])
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.exx)
+            ntimes = len(self.shape)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
@@ -804,7 +804,7 @@ class PlateStressObject(StressObject, RealPlateResults):
 
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.oxx)
+            ntimes = len(self.shape)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
