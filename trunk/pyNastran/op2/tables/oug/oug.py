@@ -499,7 +499,7 @@ class OUG(object):
         #print "len(data) = ",len(self.data)
         nnodes = len(self.data) // 32
         if self.read_mode == 0 or name not in self._selected_names:
-            print("OUG_REAL...")
+            #print("OUG_REAL...")
             if name not in self._result_names:
                 self._result_names.append(name)
 
@@ -509,12 +509,14 @@ class OUG(object):
             self.data = self.data[iend:]
             return
         else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
-            print("_selected_names =", self._selected_names)
-            print("OUG else")
+            #print("_selected_names =", self._selected_names)
+            #print("OUG else")
             #index_data = (nodeIDs_to_index)
             #index_data = pd.MultiIndex.from_tuples(zip(data))
 
             (inode_start, inode_end) = self.obj._preallocate(dt, nnodes)
+            #(ndt, nnodes_max, dts) = self.obj._get_shape()
+            #ndts = len(dts)
 
         nodeIDs_to_index = zeros(nnodes, dtype='int32')
         gridTypes = zeros(nnodes, dtype='int32')
@@ -522,10 +524,17 @@ class OUG(object):
 
         istart = 0
         iend = 32
+        Tx = zeros(nnodes, dtype='float32'); Rx = zeros(nnodes, dtype='float32')
+        Ty = zeros(nnodes, dtype='float32'); Ry = zeros(nnodes, dtype='float32')
+        Tz = zeros(nnodes, dtype='float32'); Rz = zeros(nnodes, dtype='float32')
         #Tx = []
+        dnode = inode_end - inode_start
+        #print "dnode =", dnode
+        #print "inode_start =", inode_start
+        #print "inode_end =", inode_end
         for inode in xrange(nnodes):
-            eData = self.data[istart:iend]
-
+            eData = self.data[istart : iend]
+            #print "len(eData) =", len(eData)
             out = unpack(format1, eData)
             (eid, gridType, tx, ty, tz, rx, ry, rz) = out
             eid2 = extract(eid, dt)
@@ -533,7 +542,15 @@ class OUG(object):
             nodeIDs_to_index[inode] = eid2
             gridTypes[inode] = gridType
             translations[inode, :] = [tx, ty, tz, rx, ry, rz]
+            
             #Tx.append(tx)
+            #Tx[inode] = tx
+            #Ty[inode] = ty
+            #Tz[inode] = tz
+
+            #Tx[inode] = tx
+            #Ty[inode] = ty
+            #Tz[inode] = tz
 
             #if not as_array:
             #print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid, gridType, tx, ty, tz, rx, ry, rz))
@@ -543,29 +560,33 @@ class OUG(object):
 
         #iend2 = 32 * nnodes
         #print('iend=%i iend2=%i' % (iend, iend2))
-        #translations = array(translations)
         self.data = self.data[istart:]
 
-        print("nnodes =", nnodes,
-                          len(self.obj.data['node_id'][inode_start:inode_end]),
-                          len(nodeIDs_to_index))
-        self.obj.data['node_id'][inode_start:inode_end] = nodeIDs_to_index # fails for large problems???
-        if dt:
-            self.obj.data['dt'][inode_start:inode_end] = ones(inode_end - inode_start) * dt
-        #self.obj.grid_type[inode_start:inode_end] = gridTypes
+        #print("nnodes=%s len(node_id)=%s len(index)=%s" %(nnodes,
+        #                  len(self.obj.data['node_id'][inode_start:inode_end]),
+        #                  len(self.obj.data['node_id'])))
 
-        #self.obj.data['T1'][inode_start:inode_end] = Tx # works...
-        self.obj.data['T1'][inode_start:inode_end] = translations[:, 0]  # fails for large problems???
-        self.obj.data['T2'][inode_start:inode_end] = translations[:, 1]
-        self.obj.data['T3'][inode_start:inode_end] = translations[:, 2]
-        self.obj.data['R1'][inode_start:inode_end] = translations[:, 3]
-        self.obj.data['R2'][inode_start:inode_end] = translations[:, 4]
-        self.obj.data['R3'][inode_start:inode_end] = translations[:, 5]
+        istart = self.obj._size_start
+        iend = istart + nnodes
+        #print "istart=%s iend=%s" % (istart, iend)
+
+        obj_data = self.obj.data
+        obj_data['node_id'][istart : iend] = nodeIDs_to_index # fails for large problems???
+        if dt:
+            obj_data['dt'][istart : iend] = ones(iend - istart) * dt
+        #self.obj.grid_type[istart : iend] = gridTypes
+
+        obj_data['T1'][istart : iend] = translations[:, 0]
+        obj_data['T2'][istart : iend] = translations[:, 1]
+        obj_data['T3'][istart : iend] = translations[:, 2]
+        obj_data['R1'][istart : iend] = translations[:, 3]
+        obj_data['R2'][istart : iend] = translations[:, 4]
+        obj_data['R3'][istart : iend] = translations[:, 5]
 
         #print self.obj.data['dt'].to_string()
-        if len(self.obj.data['T1'])==inode_end:
+        if self.obj._is_full(nnodes):
+            #print "finalize..."
             self.obj._finalize()
-        #self.obj.add_array(dt, nodeIDs_to_index, gridTypes)
 
     def OUG_ComplexTable(self, name):
         dt = self.nonlinear_factor

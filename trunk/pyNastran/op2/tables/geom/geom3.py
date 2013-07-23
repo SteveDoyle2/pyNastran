@@ -266,7 +266,7 @@ class Geometry3(object):
         #print "reading PLOAD4"
         n = 0
         nEntries = len(data) // 48  # 13*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n + 48]
                          #iiffffiiifffi   ssssssssssssssss
             out = unpack('2i4f3i3f', eData)
@@ -299,7 +299,7 @@ class Geometry3(object):
         #print "reading QBDY1"
         n = 0
         nEntries = len(data) // 12  # 3*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n + 12]
             out = unpack('ifi', eData)
             (sid, q0, eid) = out
@@ -315,7 +315,7 @@ class Geometry3(object):
         #print "reading QBDY2"
         n = 0
         nEntries = len(data) // 40  # 10*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n + 40]
             out = unpack('iiffffffff', eData)
             (sid, eid, q1, q2, q3, q4, q5, q6, q7, q8) = out
@@ -331,7 +331,7 @@ class Geometry3(object):
         #print "reading QBDY3"
         n = 0
         nEntries = len(data) // 16  # 4*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n + 16]
             out = unpack('ifii', eData)
             (sid, q0, cntrlnd, eid) = out
@@ -348,7 +348,7 @@ class Geometry3(object):
         #print "reading TEMP"
         n = 0
         nEntries = len(data) // 12  # 3*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n + 12]
             out = unpack('iif', eData)
             (sid, g, T) = out
@@ -368,7 +368,7 @@ class Geometry3(object):
         #print "reading TEMPD"
         n = 0
         nEntries = len(data) // 8  # 2*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n + 8]
             out = unpack('if', eData)
             (sid, T) = out

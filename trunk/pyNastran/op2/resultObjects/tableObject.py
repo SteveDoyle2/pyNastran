@@ -26,6 +26,7 @@ class TableObject(ScalarObject):  # displacement style table
         self._inode_start = None
         self._inode_end = None
         self.data = None
+        self.nnonlinear = 0
 
         # new method, not finished
         self.nodeIDs_to_index = None
@@ -113,6 +114,9 @@ class TableObject(ScalarObject):  # displacement style table
         if self.shape is None:
             self._inode_start += nnodes
             self._inode_end += nnodes
+        elif self.data is not None:
+            #print "data =", self.data
+            return self._inode_start, self._inode_end
         else:
             ndt, nnodes, dts = self._get_shape()
             #print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
@@ -120,30 +124,40 @@ class TableObject(ScalarObject):  # displacement style table
             data = {}
             columns = []
             indexs = []
+            size_end = ndt * nnodes
             if dts[0] is not None:
                 if isinstance(dt, int):
-                    data['dt'] = pd.Series(zeros((ndt * nnodes), dtype='int32'))
+                    data['dt'] = pd.Series(zeros((size_end), dtype='int32'))
                 else:
-                    data['dt'] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
+                    data['dt'] = pd.Series(zeros((size_end), dtype='float32'))
                 columns.append('dt')
                 indexs = ['dt']
-            data['node_id'] = pd.Series(zeros((ndt * nnodes), dtype='int32'))
+            data['node_id'] = pd.Series(zeros((size_end), dtype='int32'))
             indexs.append('node_id')
 
             #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
             #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
-            data['T1'] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
-            data['T2'] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
-            data['T3'] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
-            data['R1'] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
-            data['R2'] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
-            data['R3'] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
+            data['T1'] = pd.Series(zeros((size_end), dtype='float32'))
+            data['T2'] = pd.Series(zeros((size_end), dtype='float32'))
+            data['T3'] = pd.Series(zeros((size_end), dtype='float32'))
+            data['R1'] = pd.Series(zeros((size_end), dtype='float32'))
+            data['R2'] = pd.Series(zeros((size_end), dtype='float32'))
+            data['R3'] = pd.Series(zeros((size_end), dtype='float32'))
+            
+            self._size_start = 0
+            self._size_end = size_end
             columns += ['node_id', 'T1', 'T2', 'T3', 'R1', 'R2', 'R3']
 
             self.data = pd.DataFrame(data, columns=columns)
             self._inode_start = 0
             self._inode_end = nnodes
         return self._inode_start, self._inode_end
+
+    def _is_full(self, nnodes):
+        self._size_start += nnodes
+        if self._size_start == self._size_end:
+            return True
+        return False
 
     def _finalize(self):
         ndt, nnodes, dts = self._get_shape()
@@ -170,13 +184,14 @@ class TableObject(ScalarObject):  # displacement style table
             self.shape[dt] += nnodes
         else:
             self.shape[dt] = nnodes
+            #self.n_nonlinear += 1
 
     def _get_shape(self):
         ndt = len(self.shape)
         dts = self.shape.keys()
         shape0 = dts[0]
         nnodes = self.shape[shape0]
-        print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
+        #print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
         return ndt, nnodes, dts
 
     def get_as_sort1(self):
@@ -326,7 +341,7 @@ class TableObject(ScalarObject):  # displacement style table
         msg = words
         #assert f is not None # remove
 
-        print self.data.to_string()
+        #print self.data.to_string()
         node_ids = self.data['node_id']
         for nodeID in node_ids:
             translation = self.translations[nodeID]
