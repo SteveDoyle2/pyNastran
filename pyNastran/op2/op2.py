@@ -574,7 +574,7 @@ class OP2(BDF,
         for table_type in table_types:
             table = getattr(self, table_type)
             for isubcase, subcase in sorted(table.iteritems()):
-                if hasattr(subcase, 'data') and subcase.data is not None:
+                if hasattr(subcase, 'data'):  #  and subcase.data is not None
                     table_types2.append(table_type)
         return table_types2
 
@@ -584,7 +584,6 @@ class OP2(BDF,
         class.
         """
         table_types = self._get_full_table_types()
-
         msg = []
         for table_type in table_types:
             table = getattr(self, table_type)
@@ -616,7 +615,7 @@ class OP2(BDF,
         self.read_markers([7])
 
         word = self.read_string_block()  # Nastran Fort Tape ID Code -
-        #print "word = |%r|" %(word)
+        #print("word = |%r|" % word)
 
         self.read_markers([2])
         ints = self.read_int_block()

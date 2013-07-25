@@ -137,7 +137,6 @@ class RealSolidResults(object):
 
     def get_stats(self):
         ndt, nelements, nnodes, dts = self._get_shape()
-        nelements = len(self.element_data['element_id'])
 
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
@@ -597,10 +596,10 @@ class SolidStrainObject(StrainObject, RealSolidResults):
 
     def _get_headers(self):
         if self.isVonMises():
-            evm = 'ovm'
+            evm = 'evm'
         else:
             evm = 'max_shear'
-        return ['exx', 'eyy', 'ezz', 'exy', 'exz', 'eyz', 'e1', 'e2', 'e3', 'evm', evm]
+        return ['exx', 'eyy', 'ezz', 'exy', 'exz', 'eyz', 'e1', 'e2', 'e3', evm]
 
     def getHeaders(self):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']

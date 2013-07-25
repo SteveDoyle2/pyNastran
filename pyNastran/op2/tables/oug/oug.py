@@ -107,7 +107,7 @@ class OUG(object):
 
         #print "*isubcase=%s"%(self.isubcase)
         #print "analysis_code=%s table_code=%s thermal=%s" %(self.analysis_code,self.table_code,self.thermal)
-        print(self.code_information())
+        #print(self.code_information())
 
         #self.print_block(data)
         self.read_title()
@@ -249,7 +249,7 @@ class OUG(object):
             raise NotImplementedError('sort2...')
 
         #self.print_block(data)
-        print('----------------------------------')
+        #print('----------------------------------')
         self.read_title()
 
     def getOUG_FormatStart(self):

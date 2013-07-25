@@ -46,9 +46,9 @@ class TableObject(ScalarObject):  # displacement style table
         else:
             dtstring = ''
             msg.append('  real type=%s nnodes=%s\n' % (self.__class__.__name__, nnodes))
-        msg.append('  element_data: index  : element_id\n')
-        msg.append('              : results: gridTypes\n')
-        msg.append('  data        : index  : %selement_id\n' % dtstring)
+        msg.append('  element_data: index  : node_id\n')
+        msg.append('              : results: node_type\n')
+        msg.append('  data        : index  : %snode_id\n' % dtstring)
         msg.append('              : results: T1, T2, T3, R1, R2, R3\n')
         return msg
 
@@ -550,20 +550,21 @@ class ComplexTableObject(ScalarObject):
             #self.add = self.addSort2
 
     def get_stats(self):
-        ngrids = len(self.gridTypes)
+        ndt, ngrids, dts = self._get_shape()
         msg = self.get_data_code()
 
         if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.translations)
-            msg.append('  imaginary type=%s ntimes=%s ngrids=%s\n'
-                       % (self.__class__.__name__, ntimes, ngrids))
+            name = self.data_code['name']
+            dt_string = name + ', '
+            msg.append('  imaginary type=%s n%ss=%s nnodes=%s\n'
+                       % (self.__class__.__name__, name, ndt, ngrids))
         else:
+            dt_string = ''
             msg.append('  imaginary type=%s ngrids=%s\n'
                        % (self.__class__.__name__, ngrids))
-        #msg.append('  translations, rotations, gridTypes\n')
-        msg.append('  element_data: index  : element_id\n')
-        msg.append('              : results: gridTypes\n')
-        msg.append('  data        : index  : element_id\n')
+        msg.append('  element_data: index  : node_id\n')
+        msg.append('              : results: node_type\n')
+        msg.append('  data        : index  : %snode_id\n' % dt_string)
         msg.append('              : results: T1, T2, T3, R1, R2, R3\n')
         return msg
 

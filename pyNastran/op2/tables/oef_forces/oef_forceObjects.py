@@ -953,17 +953,22 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
 
     def get_stats(self):
         msg = self.get_data_code()
+        ndt, nelements, dts = self._get_shape()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
+            name = self.data_code['name']
+            dt_string = name + ', '
             time0 = self.torque.keys()[0]
             nelements = len(self.torque[time0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s n%ss=%s nelements=%s\n'
+                       % (self.__class__.__name__, name, ndt, nelements))
         else:
             nelements = len(self.torque)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+            dt_string = ''
+            msg.append('  real type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
-        msg.append('  bendingMomentA, bendingMomentB, shear, axial, torque\n')
+        msg.append('  data: index  : %selement_id\n' % dt_string)
+        msg.append('  data: results: bendingMomentA, bendingMomentB, shear, axial, torque\n')
         return msg
 
     def add_new_transient(self, dt):
@@ -1035,7 +1040,7 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
         return (''.join(msg), pageNum - 1)
 
     def __repr__(self):
-        return str(self.axial)
+        return self._get_stats()
 
 
 class RealCBar100Force(ScalarObject):  # 100-CBAR

@@ -27,19 +27,6 @@ class RealBushResults(object):
         k.sort()
         return k
 
-    def get_stats(self):
-        nelements = len(self.eType)
-        msg = self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.translations)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  real type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, translations, rotations\n')
-        return msg
-    
     def _increase_size(self, dt, nelements):
         if dt in self.shape:  # default dictionary
             self.shape[dt] += nelements
@@ -129,6 +116,23 @@ class RealBushResults(object):
         print('---BushStressObject---')
         #print(self.data.to_string())
 
+    def get_stats(self):
+        msg = self.get_data_code()
+        ndt, nelements, dts = self._get_shape()
+
+        if self.nonlinear_factor is not None:  # transient
+            name = self.data_code['name']
+            dt_string = '%s, ' % name
+            msg.append('  real type=%s n%ss=%s nelements=%s\n'
+                       % (self.__class__.__name__, name, ndt, nelements))
+        else:
+            dt_string = ''
+            msg.append('  real type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                          nelements))
+        msg.append('  data        : index :  %selement_id\n' % dt_string)
+        msg.append('              : result:  element_type, T1, T2, T3, R1, R2, R3\n')
+        return msg
+    
 class BushStressObject(RealBushResults, StressObject):
 
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
