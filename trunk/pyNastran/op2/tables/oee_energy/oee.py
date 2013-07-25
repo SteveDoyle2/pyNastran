@@ -155,7 +155,7 @@ class OEE(object):
         format1 = bytes(format1)
 
         npoints = len(self.data) // 16
-        if self.read_mode == 0 or name not in self._selected_data_names:
+        if self.read_mode == 0 or name not in self._selected_names:
             if name not in self._result_names:
                 self._result_names.append(name)
             # figure out the shape

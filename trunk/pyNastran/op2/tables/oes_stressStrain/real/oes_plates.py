@@ -153,27 +153,28 @@ class RealPlateResults(object):
         #print(self.data.to_string())
 
     def get_stats(self):
-        nelements = 0
-        #nelements = len(self.eType)
-        #nelements = len(self.data['element_id'])
-        #nelements = len(self.element_data['element_id'])
+        ndt, nelements, nnodes, dts = self._get_shape()
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.shape)
-            msg.append('  real type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            name = self.data_code['name']
+            dt_string = '%s, ' % name
+            msg.append('  real type=%s n%ss=%s nelements=%s\n'
+                       % (self.__class__.__name__, name, ndt, nelements))
         else:
+            dt_string = ''
             msg.append('  real type=%s nelements=%s\n' % (self.__class__.__name__,
                                                           nelements))
         headers = self._get_headers()
         (fd, oxx, oyy, txy, omax, omin, ovm) = headers
 
+        etypes = self.element_data['element_type']
         msg.append('  element data: index :  element_id\n')
-        msg.append('              : result:  eType\n')
-        msg.append('  data        : index :  element_id, node_id, layer\n')
-        msg.append('              : result:  %s, %s, %s, %s, angle,\n'
-                   '                         %s, %s, %s\n' % (fd, oxx, oyy, txy,
+        msg.append('              : result:  element_type\n')
+        msg.append('  data        : index :  %selement_id, node_id, layer\n' % dt_string)
+        msg.append('              : result:  %s, %s, %s, %s, '
+                                            '%s, %s, %s, angle\n' % (fd, oxx, oyy, txy,
                                                               omax, omin, ovm) )
+        msg.append('                element_types: %s' %(', '.join(set(etypes))))
         return msg
 
     def __repr__(self):

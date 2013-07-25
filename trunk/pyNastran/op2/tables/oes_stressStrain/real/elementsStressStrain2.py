@@ -738,8 +738,6 @@ class RealElementsStressStrain2(object):
         ntotal = 68 # 4*17
         
         nelements = len(self.data) // 68
-        
-        #while len(self.data) >= 68:  # 2+17*5 = 87 -> 87*4 = 348
         for i in xrange(nelements):
             #print self.print_block(self.data[0:100])
             #(eid,) = unpack(b'i',self.data[0:4])
@@ -748,7 +746,7 @@ class RealElementsStressStrain2(object):
             #print("len(eData) = ", len(eData))
             out = unpack(format1, eData)  # 17
             (eid, fd1, sx1, sy1, txy1, angle1, major1, minor1, maxShear1,
-             fd2, sx2, sy2, txy2, angle2, major2, minor2, maxShear2) = out
+                  fd2, sx2, sy2, txy2, angle2, major2, minor2, maxShear2) = out
 
             eid = extract(eid, dt)
 
@@ -762,23 +760,6 @@ class RealElementsStressStrain2(object):
             
             istart = iend
             iend += ntotal
-            for nodeID in xrange(nNodes):  # nodes pts
-                asdfasdf
-                eData = self.data[0:68]  # 4*17
-                self.data = self.data[68:]
-                out = unpack(b'i16f', eData[0:68])
-                (grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                       fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
-
-                #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-                #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-                #print "len(data) = ",len(self.data)
-                #self.print_block(self.data)
-                #self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1,
-                #                    txy1, angle1, major1, minor1, vm1)
-                #self.obj.add(dt, eid, grid, fd2, sx2, sy2,
-                #             txy2, angle2, major2, minor2, vm2)
-            #print '--------------------'
             
         self.data = self.data[istart:]
 
@@ -850,7 +831,7 @@ class RealElementsStressStrain2(object):
 
 
         eids=[]; eTypes=[]; eids2=[]; nids=[]; layer=[]
-        fd=[]; sx=[]; sy=[]; txy=[]; angle=[]; major=[]; minor=[]; vm=[]
+        fd=[]; sx=[]; sy=[]; sxy=[]; angle=[]; major=[]; minor=[]; vm=[]
         #['fd1', 'sx1', 'sy1', 'txy1', 'angle1', 'major1', 'minor1', 'vm1',
         # 'fd2', 'sx2', 'sy2', 'txy2', 'angle2', 'major2', 'minor2', 'vm2',]
 
@@ -877,7 +858,7 @@ class RealElementsStressStrain2(object):
             fd.append(fd1i)
             sx.append(sx1i)
             sy.append(sy1i)
-            txy.append(txy1i)
+            sxy.append(txy1i)
             angle.append(angle1i)
             major.append(major1i)
             minor.append(minor1i)
@@ -886,7 +867,7 @@ class RealElementsStressStrain2(object):
             fd.append(fd2i)
             sx.append(sx2i)
             sy.append(sy2i)
-            txy.append(txy2i)
+            sxy.append(txy2i)
             angle.append(angle2i)
             major.append(major2i)
             minor.append(minor2i)
@@ -915,7 +896,7 @@ class RealElementsStressStrain2(object):
                 fd.append(fd1i)
                 sx.append(sx1i)
                 sy.append(sy1i)
-                txy.append(txy1i)
+                sxy.append(txy1i)
                 angle.append(angle1i)
                 major.append(major1i)
                 minor.append(minor1i)
@@ -924,7 +905,7 @@ class RealElementsStressStrain2(object):
                 fd.append(fd2i)
                 sx.append(sx2i)
                 sy.append(sy2i)
-                txy.append(txy2i)
+                sxy.append(txy2i)
                 angle.append(angle2i)
                 major.append(major2i)
                 minor.append(minor2i)
@@ -946,39 +927,24 @@ class RealElementsStressStrain2(object):
         #print("inode_start=%r inode_end=%r delta=%r" % (inode_start, inode_end, inode_end-inode_start))
         #print('len(s1) =', len(s1))
 
-
-        #self.obj.element_data['element_id'][ielement_start:ielement_end] = eids
-        #self.obj.element_data['element_type'][ielement_start:ielement_end] = eTypes
+        self.obj.element_data['element_id'][ielement_start:ielement_end] = eids
+        self.obj.element_data['element_type'][ielement_start:ielement_end] = eTypes
 
         #print('nids',nids)
         self.obj.data['element_id'][inode_start:inode_end] = eids2
         self.obj.data['node_id'][inode_start:inode_end] = nids
         self.obj.data['layer'][inode_start:inode_end] = layer
 
-        if self.obj.isStress():
-            self.obj.data['oxx'][inode_start:inode_end] = sx
-            self.obj.data['oyy'][inode_start:inode_end] = sy
-            self.obj.data['txy'][inode_start:inode_end] = txy
-            self.obj.data['omax'][inode_start:inode_end] = major
-            self.obj.data['omin'][inode_start:inode_end] = minor
-            if self.obj.isVonMises():
-                key = 'ovm'
-            else:
-                key = 'max_shear'
-        else:
-            #print('type', self.obj.__class__.__name__)
-            self.obj.data['exx'][inode_start:inode_end] = sx
-            self.obj.data['eyy'][inode_start:inode_end] = sy
-            self.obj.data['exy'][inode_start:inode_end] = txy
-            self.obj.data['emax'][inode_start:inode_end] = major
-            self.obj.data['emin'][inode_start:inode_end] = minor
-            if self.obj.isVonMises():
-                key = 'evm'
-            else:
-                key = 'max_shear'
-
+        headers = self.obj._get_headers()
+        (fd, oxx, oyy, txy, omax, omin, ovm) = headers
+        
+        self.obj.data[oxx][inode_start:inode_end] = sx
+        self.obj.data[oyy][inode_start:inode_end] = sy
+        self.obj.data[txy][inode_start:inode_end] = sxy
+        self.obj.data[omax][inode_start:inode_end] = major
+        self.obj.data[omin][inode_start:inode_end] = minor
         self.obj.data['angle'][inode_start:inode_end] = angle
-        self.obj.data[key][inode_start:inode_end] = vm
+        self.obj.data[ovm][inode_start:inode_end] = vm
 
         #self.obj.data['element_id'][ielement_start:ielement_end] = eids
         #self.obj.data['element_type'][ielement_start:ielement_end] = etypes
