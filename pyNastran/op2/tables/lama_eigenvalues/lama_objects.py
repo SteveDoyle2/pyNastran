@@ -70,7 +70,7 @@ class RealEigenvalues(BaseScalarObject):
         f.write(massMsg + '];\n')
         f.write(stiffMsg + '];\n')
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         msg = header + ['                                              R E A L   E I G E N V A L U E S\n',
                         '   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED\n',
                         '    NO.       ORDER                                                                       MASS              STIFFNESS\n']
@@ -84,7 +84,8 @@ class RealEigenvalues(BaseScalarObject):
             msg.append(' %8s  %8s       %13s       %13s       %13s       %13s       %13s\n' % (iMode, order, eigen, omega, freq, mass, stiff))
 
         msg.append(pageStamp + str(pageNum) + '\n')
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
     def __repr__(self):
         msg = '%-7s %15s %15s %10s %10s %10s %15s\n' % ('ModeNum', 'ExtractionOrder', 'Eigenvalue', 'Radians', 'Cycles', 'GenMass', 'GenStiffness')
@@ -134,7 +135,7 @@ class ComplexEigenvalues(BaseScalarObject):
         for line in data:
             self.addF06Line(line)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):  # not proper msg start
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):  # not proper msg start
         msg = header + ['                                        C O M P L E X   E I G E N V A L U E S\n',
                         '   MODE    EXTRACTION      EIGENVALUE            CYCLES            DAMPING\n',
                         '    NO.       ORDER\n']
@@ -147,7 +148,8 @@ class ComplexEigenvalues(BaseScalarObject):
             msg.append(' %8s  %8s       %13s       %13s       %13s       %13s       %13s\n' % (iMode, order, eigen, freq, damping))
 
         msg.append(pageStamp + str(pageNum) + '\n')
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
     def __repr__(self):
         msg = '%-7s %15s %15s %10s %10s %10s\n' % ('RootNum',

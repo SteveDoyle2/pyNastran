@@ -529,7 +529,7 @@ class OP2(BDF,
                 names.append('%s: Subcase %s' % (table_type, isubcase))
         #print("names =", names)
         #print("result_names =", self._result_names)
-        
+
         #self._selected_data_names = self._result_names
         # Case 1: user calls from iPython
         #         - filename empty
@@ -557,9 +557,10 @@ class OP2(BDF,
         #         - filename set
         #         - selected = ['not a result: Subcase 1']
         #        -> ERROR
-        if self._selected_names is None:
-            self._selected_names = get_choices(self._result_names)
+        #if self._selected_names is None:
+            #self._selected_names = get_choices(self._result_names)
 
+        self._selected_names = []
         if self._selected_names == []:
             self._selected_names = self._result_names
         return names

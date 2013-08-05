@@ -119,7 +119,7 @@ class ComplexBush1DStressObject(StressObject):
         self.axial_stress[dt][eid] = ao
         self.axial_strain[dt][eid] = ae
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         raise NotImplementedError('CBUSH1D')
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
@@ -156,9 +156,10 @@ class ComplexBush1DStressObject(StressObject):
                 '', s1bi, s2bi, s3bi, s4bi.rstrip()))
 
         msg.append(pageStamp + str(pageNum) + '\n')
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         raise NotImplementedError('CBUSH1D')
         words = [
             '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -194,8 +195,10 @@ class ComplexBush1DStressObject(StressObject):
                            ('', s1bi, s2bi, s3bi, s4bi.rstrip()))
 
             msg.append(pageStamp + str(pageNum) + '\n')
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def __repr__(self):
         raise NotImplementedError('CBUSH1D')

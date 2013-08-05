@@ -95,9 +95,9 @@ class GridPointForcesObject(ScalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None):
+    def write_f06(self, header, pageStamp, f, pageNum=1):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, f, pageNum)
 
         msg = header + ['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
                         ' \n',
@@ -122,12 +122,10 @@ class GridPointForcesObject(ScalarObject):
             zero = '0'
 
         msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None):
+    def _write_f06_transient(self, header, pageStamp, f, pageNum=1):
         msg = header + ['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
                         ' \n',
                         '   POINT-ID    ELEMENT-ID     SOURCE             T1             T2             T3             R1             R2             R3\n', ]
@@ -154,15 +152,14 @@ class GridPointForcesObject(ScalarObject):
                 zero = '0'
 
             msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def __repr__(self):
         return ''
-        return self.write_f06([], 'PAGE ', 1)[0]
+        #return self.write_f06([], 'PAGE ', 1)[0]
         #return '---gridPointForceObject---'
 
 

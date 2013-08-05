@@ -7,16 +7,16 @@ class SPCForcesObject(TableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
-    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
+    def write_matlab(self, isubcase, f, is_mag_phase=False):
         name = 'spcForces'
         if self.nonlinear_factor is None:
             return self._write_matlab(name, isubcase, f)
         else:
             return self._write_matlab_transient(name, isubcase, f)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, f, pageNum)
         msg = header + ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
                         ' \n',
                         '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -33,16 +33,14 @@ class SPCForcesObject(TableObject):
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
         msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         words = ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f)
+        return self._write_f06_transient_block(words, header, pageStamp, f, pageNum)
 
     def __reprTransient__(self):
         msg = '---SPC FORCES---\n'
@@ -107,16 +105,16 @@ class ComplexSPCForcesObject(ComplexTableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
+    def write_matlab(self, isubcase, f, is_mag_phase=False):
         name = 'spcForces'
         if self.nonlinear_factor is None:
             return self._write_matlab(name, isubcase, f)
         else:
             return self._write_matlab_transient(name, isubcase, f)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
+            return self._write_f06_transient(header, pageStamp, f, pageNum, is_mag_phase)
         msg = header + ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
                         ' \n',
                         '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -140,14 +138,12 @@ class ComplexSPCForcesObject(ComplexTableObject):
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
         msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         words = ['                         C O M P L E X   F O R C E S   O F   S I N G L E   P O I N T   C O N S T R A I N T\n']
-        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f, is_mag_phase)
+        return self._write_f06_transient_block(words, header, pageStamp, f, pageNum, is_mag_phase)
 
     def __reprTransient__(self):
         msg = '---COMPLEX SPC FORCES---\n'

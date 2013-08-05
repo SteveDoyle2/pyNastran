@@ -178,12 +178,11 @@ class F06Writer(object):
             header[0] = '     %s\n' % (subtitle)
             header[1] = '0                                                                                                            SUBCASE %i\n \n' % (isubcase)
             print(result.__class__.__name__)
-            (msg, pageNum) = result.write_f06(header, pageStamp,
-                                             pageNum=pageNum, f=f, is_mag_phase=is_mag_phase)
+            pageNum = result.write_f06(header, pageStamp, f,
+                                       pageNum=pageNum, is_mag_phase=is_mag_phase)
+            pageNum += 1
             if delete_objects:
                 del result
-            f.write(msg)
-            pageNum += 1
 
         # has a special header
         for isubcase, result in sorted(self.eigenvectors.iteritems()):
@@ -192,12 +191,11 @@ class F06Writer(object):
             header[0] = '     %s\n' % subtitle
             header[1] = '0                                                                                                            SUBCASE %i\n' % (isubcase)
             print(result.__class__.__name__)
-            (msg, pageNum) = result.write_f06(header, pageStamp,
-                                             pageNum=pageNum, f=f, is_mag_phase=is_mag_phase)
+            pageNum = result.write_f06(header, pageStamp,
+                                       pageNum=pageNum, f=f, is_mag_phase=is_mag_phase)
+            pageNum += 1
             if delete_objects:
                 del result
-            f.write(msg)
-            pageNum += 1
 
         # subcase name, subcase ID, transient word & value
         headerOld = ['     DEFAULT                                                                                                                        \n',
@@ -220,37 +218,37 @@ class F06Writer(object):
                     # OES - strain
 
                     # rods
-                    self.rodStrain, self.nonlinearRodStress, 
-                    
-                    
+                    self.rodStrain, self.nonlinearRodStress,
+
+
                     # bars/beams
-                    self.barStrain, self.beamStrain, 
-                    
+                    self.barStrain, self.beamStrain,
+
                     # bush
                     self.bushStrain,
-                    
+
                     # plates
                     self.plateStrain, self.compositePlateStrain,
                     self.nonlinearPlateStrain,
                     self.ctriaxStrain, self.hyperelasticPlateStress,
-                    
+
                     # solids
                     self.solidStrain,
 
                     #------------------------------------------
                     # OES - stress
-                    
+
                     # rods
-                    self.rodStress, self.nonlinearRodStrain, 
-                    
+                    self.rodStress, self.nonlinearRodStrain,
+
                     # bars/beams
                     self.barStress, self.beamStress,
-                    
+
                     # bush
                     self.bushStress, self.bush1dStressStrain,
-                    
+
                     # plates
-                    self.plateStress, self.compositePlateStress, 
+                    self.plateStress, self.compositePlateStress,
                     self.nonlinearPlateStress,
                     self.ctriaxStress, self.hyperelasticPlateStrain,
                     #self.shearStrain, self.shearStress,
@@ -281,14 +279,13 @@ class F06Writer(object):
                         result = resType[isubcase]
                         try:
                             print(result.__class__.__name__)
-                            (msg, pageNum) = result.write_f06(header, pageStamp, pageNum=pageNum, f=f, is_mag_phase=False)
+                            pageNum = result.write_f06(header, pageStamp, f, pageNum=pageNum, is_mag_phase=False)
                         except:
                             #print "result name = %s" %(result.name())
                             raise
+                        pageNum += 1
                         if delete_objects:
                             del result
-                        f.write(msg)
-                        pageNum += 1
         if 0:
             for res in resTypes:
                 for isubcase, result in sorted(res.iteritems()):

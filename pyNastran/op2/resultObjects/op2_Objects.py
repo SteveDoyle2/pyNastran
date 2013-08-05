@@ -13,16 +13,18 @@ class BaseScalarObject(Op2Codes):
     def name(self):
         return self.__class__.__name__
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
-        msg = ['write_f06 is not implemented in %s\n' % (
-            self.__class__.__name__)]
-        return (''.join(msg), pageNum)
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
+        msg = 'write_f06 is not implemented in %s\n' % (
+            self.__class__.__name__)
+        f.write(msg)
+        return pageNum
 
-    def _write_f06_transient(self, header, pageStamp,
-                          pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, f,
+                          pageNum=1, is_mag_phase=False):
         msg = '_write_f06_transient is not implemented in %s\n' % (
             self.__class__.__name__)
-        return (''.join(msg), pageNum)
+        f.write(msg)
+        return pageNum
 
 
 class ScalarObject(BaseScalarObject):

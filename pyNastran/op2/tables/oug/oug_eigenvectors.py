@@ -11,7 +11,7 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
 
       EIGENVALUE =  6.158494E+07
           CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
-  
+
       POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
              1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
           2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
@@ -57,17 +57,17 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
     def eigenvalues(self):
         return self.eigrs
 
-    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
+    def write_matlab(self, isubcase, f, is_mag_phase=False):
         name = 'eigenvectors'
         return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         """
         ::
 
           EIGENVALUE =  6.158494E+07
               CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
-  
+
           POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
                  1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
               2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
@@ -75,36 +75,48 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
         """
         msg = []
         hasCycle = hasattr(self, 'mode_cycle')
-        
+
         #print "self.eigrs =", self.eigrs
         #print "dir",dir(self)
-        for i, (iMode, eigVals) in enumerate(sorted(self.translations.iteritems())):
+        nmodes, nnodes, modes = self._get_shape()
+        ntotal = nmodes * nnodes
+        data = self.data
+        #mode0 = modes[0]
+        #data.ix[mode0]
+        for imode in xrange(nmodes):
             msg += header
-            freq = self.eigrs[i]
+            freq = self.eigrs[imode]
             msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
 
             if hasCycle:
-                msg.append('%16s = %13E         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', self.mode_cycle, iMode))
+                msg.append('%16s = %13E         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', self.mode_cycle, imode))
             else:
-                msg.append('                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % (iMode))
+                msg.append('                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % imode)
 
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
-            for nodeID, displacement in sorted(eigVals.iteritems()):
-                rotation = self.rotations[iMode][nodeID]
-                gridType = self.gridTypes[nodeID]
-                (dx, dy, dz) = displacement
-                (rx, ry, rz) = rotation
+
+            gridType = 'G'
+            for j in range(nnodes):
+                jj = j + imode * nnodes
+                #gridType = self.gridTypes[nodeID]
+                #ix = data.index[]
+                nodeID = data['node_id'][jj]
+                dx = data['T1'][jj]
+                dy = data['T2'][jj]
+                dz = data['T3'][jj]
+                rx = data['R1'][jj]
+                ry = data['R2'][jj]
+                rz = data['R3'][jj]
 
                 vals = [dx, dy, dz, rx, ry, rz]
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
             msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def __repr__(self):
         msg = '---EIGENVECTORS---\n'
@@ -190,17 +202,17 @@ class RealEigenVectorObject(ScalarObject):  # approach_code=2, sort_code=0, ther
     def eigenvalues(self):
         return self.eigrs
 
-    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
+    def write_matlab(self, isubcase, f, is_mag_phase=False):
         name = 'eigenvectors'
         return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         """
         ::
 
           EIGENVALUE =  6.158494E+07
                                              R E A L   E I G E N V E C T O R   N O .          1
-  
+
           POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
                  1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
               2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
@@ -294,7 +306,7 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
         name = 'complex_eigenvectors'
         return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         msg = []
         #print self.data_code
         hasCycle = hasattr(self, 'mode_cycle')
@@ -323,11 +335,10 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
                 msg.append('%14s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
             msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def __repr__(self):
         msg = '---EIGENVECTORS---\n'
