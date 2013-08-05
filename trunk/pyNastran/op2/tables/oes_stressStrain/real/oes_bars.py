@@ -43,11 +43,11 @@ class RealBarResults(object):
         self._ielement_end += nelements
         return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
 
-        
+
     def _preallocate(self, dt, nnodes, nelements):
         ndt, nelements_size, nnodes_size, dts = self._get_shape()
         #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
-        
+
         if self._inode_start is not None:
             return (self._inode_start, self._inode_start + nnodes,
                     self._ielement_start, self._ielement_start + nelements)
@@ -87,7 +87,7 @@ class RealBarResults(object):
         #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
         #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
         #print('n =', n)
-        
+
         headers = self._get_headers()
         (s1a, s2a, s3a, s4a, s1b, s2b, s3b, s4b,
               smaxa, smina, smaxb, sminb) = headers
@@ -121,11 +121,11 @@ class RealBarResults(object):
 
     def _finalize(self, dt):
         ndt, nelements, nnodes, dts = self._get_shape()
-        
+
         if dt != max(dts):
             return
         print("----finalize----")
-        
+
         #grid_type_str = []
         #for grid_type in self.grid_type:
             #grid_type_str.append('C' if grid_type==0 else grid_type)
@@ -153,7 +153,7 @@ class RealBarResults(object):
             msg.append('  real type=%s nelements=%s\n' % (self.__class__.__name__,
                                                           nelements))
         headers = self._get_headers()
-        (s1a, s2a, s3a, s4a, 
+        (s1a, s2a, s3a, s4a,
          s1b, s2b, s3b, s4b,
          smaxa, smina, smaxb, sminb) = headers
 
@@ -229,9 +229,9 @@ class BarStressObject(StressObject, RealBarResults):
         return ('s1a', 's2a', 's3a', 's4a', 's1b', 's2b', 's3b', 's4b',
                 'smaxa', 'smina', 'smaxb', 'sminb')
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, f, pageNum)
 
         msg = header + [
                 '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -263,7 +263,7 @@ class BarStressObject(StressObject, RealBarResults):
         msg.append(pageStamp + str(pageNum) + '\n')
         return (''.join(msg), pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         words = [
                 '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
@@ -297,7 +297,9 @@ class BarStressObject(StressObject, RealBarResults):
 
             msg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+            f.write(''.join(msg))
+            msg = ['']
+        return pageNum - 1
 
 
 class BarStrainObject(StrainObject, RealBarResults):
@@ -361,9 +363,9 @@ class BarStrainObject(StrainObject, RealBarResults):
         k.sort()
         return k
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.isTransient:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, f, pageNum)
 
         msg = header + [
                 '                                  S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -394,9 +396,10 @@ class BarStrainObject(StrainObject, RealBarResults):
             msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', e11, e21, e31, e41, '', emax1, emin1, MSc.rstrip()))
 
         msg.append(pageStamp + str(pageNum) + '\n')
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         words = [
                 '                                  S T R A I N S    I N   B A R   E L E M E N T S           ( C B A R )\n',
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
@@ -429,5 +432,7 @@ class BarStrainObject(StrainObject, RealBarResults):
                 msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, e10, e20, e30, e40, axial, emax0, emin0, MSt.rstrip()))
                 msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', e11, e21, e31, e41, '', emax1, emin1, MSc.rstrip()))
             msg.append(pageStamp + str(pageNum) + '\n')
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1

@@ -542,7 +542,7 @@ class OUG(object):
             nodeIDs_to_index[inode] = eid2
             gridTypes[inode] = gridType
             translations[inode, :] = [tx, ty, tz, rx, ry, rz]
-            
+
             #Tx.append(tx)
             #Tx[inode] = tx
             #Ty[inode] = ty
@@ -573,7 +573,8 @@ class OUG(object):
         obj_data = self.obj.data
         obj_data['node_id'][istart : iend] = nodeIDs_to_index # fails for large problems???
         if dt:
-            obj_data['dt'][istart : iend] = ones(iend - istart) * dt
+            name = self.data_code['name']
+            obj_data[name][istart : iend] = ones(iend - istart) * dt
         #self.obj.grid_type[istart : iend] = gridTypes
 
         obj_data['T1'][istart : iend] = translations[:, 0]

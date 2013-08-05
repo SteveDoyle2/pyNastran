@@ -79,16 +79,16 @@ class ComplexCelasStressObject(complexStressObject):
         self.eType[eid] = self.element_name
         self.stress[dt][eid] = stress
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         """
         .. todo:: doesnt write...
         """
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
+            return self._write_f06_transient(header, pageStamp, f, pageNum, is_mag_phase)
         return 'ComplexCelasStressObject write_f06 not implemented...\n'
         #raise NotImplementedError()
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         """
         .. todo:: improve formatting
         """
@@ -134,11 +134,10 @@ class ComplexCelasStressObject(complexStressObject):
                     i = -1
                 i += 1
             msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def __reprTransient__(self):
         msg = '---CELASx STRESSES---\n'

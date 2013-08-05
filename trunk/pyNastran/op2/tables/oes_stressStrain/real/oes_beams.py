@@ -145,9 +145,9 @@ class BeamStressObject(StressObject):
         print('---BeamStressObject---')
         #print(self.data.to_string())
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, f, pageNum)
 
         msg = header + ['                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                         '                    STAT DIST/\n',
@@ -172,12 +172,10 @@ class BeamStressObject(StressObject):
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
         msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def __write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         words = ['                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                  '                    STAT DIST/\n',
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
@@ -204,11 +202,10 @@ class BeamStressObject(StressObject):
                     msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
             msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -367,9 +364,9 @@ class BeamStrainObject(StrainObject):
         print('---BeamStrainObject---')
         #print(self.data.to_string())
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, f, pageNum)
 
         msg = header + ['                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                         '                    STAT DIST/\n',
@@ -394,12 +391,10 @@ class BeamStrainObject(StrainObject):
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
         msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         words = ['                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                  '                    STAT DIST/\n',
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
@@ -425,11 +420,10 @@ class BeamStrainObject(StrainObject):
                     msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
             msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def get_stats(self):
         nelements = len(self.eType)

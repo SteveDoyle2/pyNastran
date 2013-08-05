@@ -105,7 +105,7 @@ class RealPlateResults(object):
 
         #data['fiber_distance'] = pd.Series(zeros((n), dtype='float32'))
         #data['fiber_curvature'] = pd.Series(zeros((n), dtype='float32'))
-        
+
         headers = self._get_headers()
         (fd, oxx, oyy, txy, omax, omin, ovm) = headers
 
@@ -335,7 +335,7 @@ class PlateStressObject(StressObject, RealPlateResults):
             headers.append('maxShear')
         return headers
 
-    def write_matlab(self, name, isubcase, f=None, is_mag_phase=False):
+    def write_matlab(self, name, isubcase, f, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
 
@@ -459,9 +459,9 @@ class PlateStressObject(StressObject, RealPlateResults):
                     msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip())
         return msg
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
+            return self._write_f06_transient(header, pageStamp, f, pageNum, is_mag_phase)
 
         if self.isVonMises():
             vonMises = 'VON MISES'
@@ -565,13 +565,12 @@ class PlateStressObject(StressObject, RealPlateResults):
                     raise NotImplementedError('eType = |%r|' %
                                               (eType))  # CQUAD8, CTRIA6
                 msg.append(pageStamp + str(pageNum) + '\n')
-                if f is not None:
-                    f.write(''.join(msg))
-                    msg = ['']
+                f.write(''.join(msg))
+                msg = ['']
                 pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:
@@ -700,12 +699,11 @@ class PlateStressObject(StressObject, RealPlateResults):
                     raise NotImplementedError('eType = |%r|' % eType)  # CQUAD8, CTRIA6
 
                 msg.append(pageStamp + str(pageNum) + '\n')
-                if f is not None:
-                    f.write(''.join(msg))
-                    msg = ['']
+                f.write(''.join(msg))
+                msg = ['']
                 pageNum += 1
 
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def writeF06_Quad4_Bilinear(self, eid, n):
         msg = ''
@@ -925,9 +923,9 @@ class PlateStrainObject(StrainObject, RealPlateResults):
             headers.append('maxShear')
         return headers
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, f, pageNum)
 
         if self.isVonMises():
             vonMises = 'VON MISES'
@@ -1033,13 +1031,12 @@ class PlateStrainObject(StrainObject, RealPlateResults):
                                               eType)  # CQUAD8, CTRIA6
                 msg.append(out)
                 msg.append(pageStamp + str(pageNum) + '\n')
-                if f is not None:
-                    f.write(''.join(msg))
-                    msg = ['']
+                f.write(''.join(msg))
+                msg = ['']
                 pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:
@@ -1161,10 +1158,9 @@ class PlateStrainObject(StrainObject, RealPlateResults):
                 else:
                     raise NotImplementedError('eType = |%r|' %
                                               eType)  # CQUAD8, CTRIA6
-                if f is not None: # stream write the file to save memory
-                    f.write(''.join(msg))
-                    msg = ['']
-        return (''.join(msg), pageNum - 1)
+                f.write(''.join(msg))
+                msg = ['']
+        return pageNum - 1
 
     def writeF06_Quad4_Bilinear(self, eid, n):
         msg = ''

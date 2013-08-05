@@ -7,16 +7,16 @@ class TemperatureGradientAndFluxObject(TableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
+    def write_matlab(self, isubcase, f, is_mag_phase=False):
         name = 'spcForces'
         if self.nonlinear_factor is None:
             return self._write_matlab(name, isubcase, f)
         else:
             return self._write_matlab_transient(name, isubcase, f)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, f, pageNum)
         msg = header + ['                   F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S\n',
                         ' \n',
                         '   ELEMENT-ID   EL-TYPE        X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX\n']
@@ -33,16 +33,14 @@ class TemperatureGradientAndFluxObject(TableObject):
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
         msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         words = ['                   F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S\n',
                  ' \n',
                  '   ELEMENT-ID   EL-TYPE        X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX\n']
-        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f)
+        return self._write_f06_transient_block(words, header, pageStamp, f, pageNum)
 
     def __reprTransient__(self):
         msg = '---SPC FORCES---\n'
@@ -108,16 +106,16 @@ class ComplexTemperatureGradientAndFluxObject(ComplexTableObject):
         asdf
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
+    def write_matlab(self, isubcase, f, is_mag_phase=False):
         name = 'spcForces'
         if self.nonlinear_factor is None:
             return self._write_matlab(name, isubcase, f)
         else:
             return self._write_matlab_transient(name, isubcase, f)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
+            return self._write_f06_transient(header, pageStamp, f, pageNum, is_mag_phase)
         msg = header + ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
                         ' \n',
                         '   ELEMENT-ID   EL-TYPE        X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX\n']
@@ -141,14 +139,12 @@ class ComplexTemperatureGradientAndFluxObject(ComplexTableObject):
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
         msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         words = ['                         C O M P L E X   F O R C E S   O F   S I N G L E   P O I N T   C O N S T R A I N T\n']
-        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f, is_mag_phase)
+        return self._write_f06_transient_block(words, header, pageStamp, f, pageNum, is_mag_phase)
 
     def __reprTransient__(self):
         msg = '---COMPLEX SPC FORCES---\n'

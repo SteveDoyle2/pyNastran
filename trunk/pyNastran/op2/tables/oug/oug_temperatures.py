@@ -20,7 +20,7 @@ class TemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, thermal=
 
     def get_stats(self):
         ngrids = len(self.gridTypes)
-        
+
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.temperatures)
@@ -152,7 +152,7 @@ class TemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, thermal=
                     msg += '%10g\n' % T
         return msg
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         words = ['                                              T E M P E R A T U R E   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
@@ -164,18 +164,15 @@ class TemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, thermal=
                 msg += header + words
                 msg += self.print_temp_lines(temperatures)
                 msg.append(pageStamp + str(pageNum) + '\n')
-                if f is not None:
-                    f.write(''.join(msg))
-                    msg = ['']
+                f.write(''.join(msg))
+                msg = ['']
                 pageNum += 1
-            return(''.join(msg), pageNum - 1)  # transient
+            return pageNum - 1  # transient
 
         msg += self.print_temp_lines(self.temperatures)
         msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return(''.join(msg), pageNum)  # static
+        f.write(''.join(msg))
+        return pageNum  # static
 
     def print_temp_lines(self, temperatures):
         msg = []

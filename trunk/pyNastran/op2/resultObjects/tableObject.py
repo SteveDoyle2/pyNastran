@@ -38,7 +38,7 @@ class TableObject(ScalarObject):  # displacement style table
 
         msg = self.get_data_code()
         if dts[0] is not None:
-            
+
             name = self.data_code['name']
             dtstring = name + ', '
             msg.append('  real type=%s n%ss=%s nnodes=%s\n'
@@ -130,12 +130,13 @@ class TableObject(ScalarObject):  # displacement style table
             indexs = []
             size_end = ndt * nnodes
             if dts[0] is not None:
+                name = self.data_code['name']
                 if isinstance(dt, int):
-                    data['dt'] = pd.Series(zeros((size_end), dtype='int32'))
+                    data[name] = pd.Series(zeros((size_end), dtype='int32'))
                 else:
-                    data['dt'] = pd.Series(zeros((size_end), dtype='float32'))
-                columns.append('dt')
-                indexs = ['dt']
+                    data[name] = pd.Series(zeros((size_end), dtype='float32'))
+                columns.append(name)
+                indexs = [name]
             data['node_id'] = pd.Series(zeros((size_end), dtype='int32'))
             indexs.append('node_id')
 
@@ -147,7 +148,7 @@ class TableObject(ScalarObject):  # displacement style table
             data['R1'] = pd.Series(zeros((size_end), dtype='float32'))
             data['R2'] = pd.Series(zeros((size_end), dtype='float32'))
             data['R3'] = pd.Series(zeros((size_end), dtype='float32'))
-            
+
             self._size_start = 0
             self._size_end = size_end
             columns += ['node_id', 'T1', 'T2', 'T3', 'R1', 'R2', 'R3']
@@ -174,10 +175,11 @@ class TableObject(ScalarObject):  # displacement style table
             #grid_type_str.append(mapper[grid_type])
         #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
 
-        if dts[0] is not None:
-            self.data = self.data.set_index(['dt', 'node_id'])
-        else:
-            self.data = self.data.set_index('node_id')
+        #if dts[0] is not None:
+            #name = self.data_code['name']
+            #self.data = self.data.set_index([name, 'node_id'])
+        #else:
+            #self.data = self.data.set_index('node_id')
         #print "final\n", self.data
         del self._inode_start
         del self._inode_end
@@ -227,7 +229,7 @@ class TableObject(ScalarObject):  # displacement style table
             #    rotations2[nodeID]    = rotation
         return (translations2, rotations2)
 
-    def _write_matlab(self, name, isubcase, f=None, is_mag_phase=False):
+    def _write_matlab(self, name, isubcase, f, is_mag_phase=False):
         """
         name = displacements
         """
@@ -256,7 +258,7 @@ class TableObject(ScalarObject):  # displacement style table
         for nodeID, translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
-            msgG += '%s' % (gridType)
+            msgG += '%s' % gridType
 
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
@@ -277,7 +279,7 @@ class TableObject(ScalarObject):  # displacement style table
         f.write(msgT)
         f.write(msgR)
 
-    def _write_matlab_transient(self, name, isubcase, f=None, is_mag_phase=False):
+    def _write_matlab_transient(self, name, isubcase, f, is_mag_phase=False):
         """
         name = displacements
         """
@@ -341,7 +343,7 @@ class TableObject(ScalarObject):  # displacement style table
             msgT = ''
             msgR = ''
 
-    def _write_f06_block(self, words, header, pageStamp, pageNum=1, f=None):
+    def _write_f06_block(self, words, header, pageStamp, f, pageNum=1):
         msg = words
         #assert f is not None # remove
 
@@ -362,12 +364,10 @@ class TableObject(ScalarObject):  # displacement style table
                         % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
         msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
-    def _write_f06_transient_block(self, words, header, pageStamp, pageNum=1, f=None):
+    def _write_f06_transient_block(self, words, header, pageStamp, f, pageNum=1):
         msg = []
         #assert f is not None # remove
         for dt, translations in sorted(self.translations.iteritems()):
@@ -391,11 +391,10 @@ class TableObject(ScalarObject):  # displacement style table
                     msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
             msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def get_table_marker(self):
         if self.isATO():
@@ -621,12 +620,13 @@ class ComplexTableObject(ScalarObject):
             columns = []
             indexs = []
             if dts[0] is not None:
+                name = self.data_code['name']
                 if isinstance(dt, int):
-                    data['dt'] = pd.Series(zeros((ndt * nnodes), dtype='int32'))
+                    data[name] = pd.Series(zeros((ndt * nnodes), dtype='int32'))
                 else:
-                    data['dt'] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
-                columns.append('dt')
-                indexs = ['dt']
+                    data[name] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
+                columns.append(name)
+                indexs = [name]
             data['node_id'] = pd.Series(zeros((ndt * nnodes), dtype='int32'))
             indexs.append('node_id')
 
@@ -657,7 +657,8 @@ class ComplexTableObject(ScalarObject):
         #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
 
         if dts[0] is not None:
-            self.data = self.data.set_index(['dt', 'node_id'])
+            name = self.data_code['name']
+            self.data = self.data.set_index([name, 'node_id'])
         else:
             self.data = self.data.set_index('node_id')
         #print "final\n", self.data
@@ -679,7 +680,7 @@ class ComplexTableObject(ScalarObject):
         #print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
         return ndt, nnodes, dts
 
-    def _write_matlab_transient(self, name, isubcase, f=None, is_mag_phase=False):
+    def _write_matlab_transient(self, name, isubcase, f, is_mag_phase=False):
         """
         name = displacements
         """
@@ -731,7 +732,7 @@ class ComplexTableObject(ScalarObject):
             f.write(msgT)
             f.write(msgR)
 
-    def _write_f06_block(self, words, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_block(self, words, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         #words += self.getTableMarker()
         if is_mag_phase:
             words += ['                                                         (MAGNITUDE/PHASE)\n', ]
@@ -757,12 +758,10 @@ class ComplexTableObject(ScalarObject):
                        ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
         msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
-    def _write_f06_transient_block(self, words, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient_block(self, words, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if is_mag_phase:
             words += ['                                                         (MAGNITUDE/PHASE)\n', ]
         else:
@@ -794,11 +793,10 @@ class ComplexTableObject(ScalarObject):
                     msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
             msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def plot(self, nodeList=None, resultType='Translation', displayType='Real Imag', coord=3, markers=None,
              Title=None, hasLegend=True, Legend=None, xLabel=None, yLabel=None, alphaLegend=0.5):
