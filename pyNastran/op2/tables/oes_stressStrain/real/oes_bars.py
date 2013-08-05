@@ -43,7 +43,6 @@ class RealBarResults(object):
         self._ielement_end += nelements
         return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
 
-
     def _preallocate(self, dt, nnodes, nelements):
         ndt, nelements_size, nnodes_size, dts = self._get_shape()
         #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
@@ -131,11 +130,11 @@ class RealBarResults(object):
             #grid_type_str.append('C' if grid_type==0 else grid_type)
         #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
 
-        if dts[0] is not None:
-            name = self.data_code['name']
-            self.data = self.data.set_index([name, 'element_id'])
-        else:
-            self.data = self.data.set_index('element_id')
+        #if dts[0] is not None:
+            #name = self.data_code['name']
+            #self.data = self.data.set_index([name, 'element_id'])
+        #else:
+            #self.data = self.data.set_index('element_id')
         #print "final\n", self.data
         del self._inode_start
         del self._inode_end
@@ -167,6 +166,116 @@ class RealBarResults(object):
 
     def __repr__(self):
         return self.get_stats()
+
+    def _write_f06_helper(self, words, header, pageStamp, f, pageNum):
+        msg = words
+        ndt, nelements, nnodes, dts = self._get_shape()
+        ntotal = 1 * nnodes
+        data = self.data
+
+        headers = self._get_headers()
+        (s1a, s2a, s3a, s4a, s1b, s2b, s3b, s4b,
+              smaxa, smina, smaxb, sminb) = headers
+
+        element_ids = data['element_id']
+        s1A = data[s1a]
+        s2A = data[s2a]
+        s3A = data[s3a]
+        s4A = data[s4a]
+        smaxA = data[smaxa]
+        sminA = data[smina]
+
+        s1B = data[s1b]
+        s2B = data[s2b]
+        s3B = data[s3b]
+        s4B = data[s4b]
+        smaxB = data[smaxb]
+        sminB = data[sminb]
+
+        axial = data['axial']
+        MSt = data['MS_tension']
+        MSc = data['MS_compression']
+
+        for j in range(nelements):
+            jj = j + idt * nelements
+
+            #eType = self.eType[eid]
+            eid = element_ids[jj]
+            #axiali = axial[jj]
+            #MSt = self.MSt[eid]
+            #MSc = self.MSc[eid]
+            MSti = ''
+            MSci = ''
+            vals = [s1A[jj], s2A[jj], s3A[jj], s4A[jj], axial[jj], smaxA[jj], sminA[jj],
+                    s1B[jj], s2B[jj], s3B[jj], s4B[jj],            smaxB[jj], sminB[jj],
+                    ]
+            (vals2, isAllZeros) = writeFloats13E(vals)
+            [s1a, s2a, s3a, s4a, axiali, smaxa, smina,
+             s1b, s2b, s3b, s4b, smaxb, sminb] = vals2
+            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, s1a, s2a, s3a, s4a, axiali, smaxa, smina, MSt.rstrip()))
+            msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('',  s1b, s2b, s3b, s4b, '',     smaxb, sminb, MSc.rstrip()))
+
+        msg.append(pageStamp + str(pageNum) + '\n')
+        f.write(''.join(msg))
+        return pageNum
+
+    def _write_f06_transient_helper(self, words, header, pageStamp, f, pageNum=1, is_mag_phase=False):
+        msg = []
+        ndt, nelements, nnodes, dts = self._get_shape()
+        ntotal = ndt * nnodes
+        data = self.data
+
+        headers = self._get_headers()
+        (s1a, s2a, s3a, s4a, s1b, s2b, s3b, s4b,
+              smaxa, smina, smaxb, sminb) = headers
+
+        element_ids = data['element_id']
+        s1A = data[s1a]
+        s2A = data[s2a]
+        s3A = data[s3a]
+        s4A = data[s4a]
+        smaxA = data[smaxa]
+        sminA = data[smina]
+
+        s1B = data[s1b]
+        s2B = data[s2b]
+        s3B = data[s3b]
+        s4B = data[s4b]
+        smaxB = data[smaxb]
+        sminB = data[sminb]
+
+        axial = data['axial']
+        MSt = data['MS_tension']
+        MSc = data['MS_compression']
+
+        for idt, dt in enumerate(dts):
+            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+            msg += header + words
+            for j in range(nelements):
+                jj = j + idt * nelements
+
+                #eType = self.eType[eid]
+                eid = element_ids[jj]
+                #axiali = axial[jj]
+                #MSt = self.MSt[eid]
+                #MSc = self.MSc[eid]
+                MSti = ''
+                MSci = ''
+                vals = [s1A[jj], s2A[jj], s3A[jj], s4A[jj], axial[jj], smaxA[jj], sminA[jj],
+                        s1B[jj], s2B[jj], s3B[jj], s4B[jj],            smaxB[jj], sminB[jj],
+                        ]
+                (vals2, isAllZeros) = writeFloats13E(vals)
+                [s1a, s2a, s3a, s4a, axiali, smaxa, smina,
+                 s1b, s2b, s3b, s4b, smaxb, sminb] = vals2
+                msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, s1a, s2a, s3a, s4a, axiali, smaxa, smina, MSti.rstrip()))
+                msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', s1b, s2b, s3b, s4b, '',      smaxb, sminb, MSci.rstrip()))
+
+            msg.append(pageStamp + str(pageNum) + '\n')
+            f.write(''.join(msg))
+            msg = ['']
+            pageNum += 1
+        return pageNum - 1
+
 
 
 class BarStressObject(StressObject, RealBarResults):
@@ -233,35 +342,12 @@ class BarStressObject(StressObject, RealBarResults):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, f, pageNum)
 
-        msg = header + [
+        words = header + [
                 '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
                 '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
               ]
-        for eid, S1s in sorted(self.s1.iteritems()):
-            #eType = self.eType[eid]
-            axial = self.axial[eid]
-            #MSt = self.MSt[eid]
-            #MSc = self.MSc[eid]
-            MSt = ''
-            MSc = ''
-
-            s1 = self.s1[eid]
-            s2 = self.s2[eid]
-            s3 = self.s3[eid]
-            s4 = self.s4[eid]
-            smax = self.smax[eid]
-            smin = self.smin[eid]
-            vals = [s1[0], s2[0], s3[0], s4[0], axial, smax[0], smin[0],
-                    s1[1], s2[1], s3[1], s4[1], smax[1], smin[1]]
-            (vals2, isAllZeros) = writeFloats13E(vals)
-            [s1a, s2a, s3a, s4a, axial, smaxa, smina,
-             s1b, s2b, s3b, s4b, smaxb, sminb] = vals2
-            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt.rstrip()))
-            msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', s1b, s2b, s3b, s4b, '', smaxb, sminb, MSc.rstrip()))
-
-        msg.append(pageStamp + str(pageNum) + '\n')
-        return (''.join(msg), pageNum)
+        return self._write_f06_helper(words, header, pageStamp, f, pageNum)
 
     def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         words = [
@@ -269,37 +355,7 @@ class BarStressObject(StressObject, RealBarResults):
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
                 '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
               ]
-        msg = []
-        for dt, S1s in sorted(self.s1.iteritems()):
-            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            msg += header + words
-            for eid, S1 in sorted(S1s.iteritems()):
-                #eType = self.eType[eid]
-                axial = self.axial[dt][eid]
-                #MSt = self.MSt[eid]
-                #MSc = self.MSc[eid]
-                MSt = ''
-                MSc = ''
-
-                s1 = self.s1[dt][eid]
-                s2 = self.s2[dt][eid]
-                s3 = self.s3[dt][eid]
-                s4 = self.s4[dt][eid]
-                smax = self.smax[dt][eid]
-                smin = self.smin[dt][eid]
-                vals = [s1[0], s2[0], s3[0], s4[0], axial, smax[0], smin[0],
-                        s1[1], s2[1], s3[1], s4[1], smax[1], smin[1]]
-                (vals2, isAllZeros) = writeFloats13E(vals)
-                [s1a, s2a, s3a, s4a, axial, smaxa, smina,
-                 s1b, s2b, s3b, s4b, smaxb, sminb] = vals2
-                msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt.rstrip()))
-                msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', s1b, s2b, s3b, s4b, '', smaxb, sminb, MSc.rstrip()))
-
-            msg.append(pageStamp + str(pageNum) + '\n')
-            pageNum += 1
-            f.write(''.join(msg))
-            msg = ['']
-        return pageNum - 1
+        return self._write_f06_transient_helper(words, header, pageStamp, f, pageNum, is_mag_phase)
 
 
 class BarStrainObject(StrainObject, RealBarResults):
@@ -372,32 +428,7 @@ class BarStrainObject(StrainObject, RealBarResults):
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
                 '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
               ]
-        for eid, E1s in sorted(self.e1.iteritems()):
-            #eType = self.eType[eid]
-            axial = self.axial[eid]
-            #MSt = self.MSt[eid]
-            #MSc = self.MSc[eid]
-            MSt = ''
-            MSc = ''
-
-            e1 = self.e1[eid]
-            e2 = self.e2[eid]
-            e3 = self.e3[eid]
-            e4 = self.e4[eid]
-            emax = self.emax[eid]
-            emin = self.emin[eid]
-            vals = [e1[0], e2[0], e3[0], e4[0], axial, emax[0], emin[0],
-                    e1[1], e2[1], e3[1], e4[1], emax[1], emin[1]]
-            (vals2, isAllZeros) = writeFloats13E(vals)
-            [e10, e20, e30, e40, axial, emax0, emin0,
-             e11, e21, e31, e41, emax1, emin1] = vals2
-
-            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, e10, e20, e30, e40, axial, emax0, emin0, MSt.rstrip()))
-            msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', e11, e21, e31, e41, '', emax1, emin1, MSc.rstrip()))
-
-        msg.append(pageStamp + str(pageNum) + '\n')
-        f.write(''.join(msg))
-        return pageNum
+        return self._write_f06_helper(words, header, pageStamp, f, pageNum)
 
     def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         words = [
@@ -405,34 +436,4 @@ class BarStrainObject(StrainObject, RealBarResults):
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
                 '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
               ]
-        msg = []
-        for dt, E1s in sorted(self.e1.iteritems()):
-            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            msg += header + words
-            for eid, e1s in sorted(E1s.iteritems()):
-                #eType = self.eType[eid]
-                axial = self.axial[eid]
-                #MSt = self.MSt[eid]
-                #MSc = self.MSc[eid]
-                MSt = ''
-                MSc = ''
-
-                e1 = self.e1[eid]
-                e2 = self.e2[eid]
-                e3 = self.e3[eid]
-                e4 = self.e4[eid]
-                emax = self.emax[eid]
-                emin = self.emin[eid]
-                vals = [e1[0], e2[0], e3[0], e4[0], axial, emax[0], emin[0],
-                        e1[1], e2[1], e3[1], e4[1], emax[1], emin[1]]
-                (vals2, isAllZeros) = writeFloats13E(vals)
-                [e10, e20, e30, e40, axial, emax0, emin0,
-                 e11, e21, e31, e41, emax1, emin1] = vals2
-
-                msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, e10, e20, e30, e40, axial, emax0, emin0, MSt.rstrip()))
-                msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', e11, e21, e31, e41, '', emax1, emin1, MSc.rstrip()))
-            msg.append(pageStamp + str(pageNum) + '\n')
-            f.write(''.join(msg))
-            msg = ['']
-            pageNum += 1
-        return pageNum - 1
+        return self._write_f06_transient_helper(words, header, pageStamp, f, pageNum, is_mag_phase)
