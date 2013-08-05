@@ -277,7 +277,6 @@ class RealBarResults(object):
         return pageNum - 1
 
 
-
 class BarStressObject(StressObject, RealBarResults):
     """
     ::
