@@ -38,7 +38,6 @@ class TableObject(ScalarObject):  # displacement style table
 
         msg = self.get_data_code()
         if dts[0] is not None:
-
             name = self.data_code['name']
             dtstring = name + ', '
             msg.append('  real type=%s n%ss=%s nnodes=%s\n'
@@ -345,17 +344,26 @@ class TableObject(ScalarObject):  # displacement style table
 
     def _write_f06_block(self, words, header, pageStamp, f, pageNum=1):
         msg = words
-        #assert f is not None # remove
+        ndt, nnodes, dts = self._get_shape()
 
         #print self.data.to_string()
         node_ids = self.data['node_id']
-        for nodeID in node_ids:
-            translation = self.translations[nodeID]
-            rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
+        T1 = self.data['T1']
+        T2 = self.data['T2']
+        T3 = self.data['T3']
+        R1 = self.data['R1']
+        R2 = self.data['R2']
+        R3 = self.data['R3']
+        for i in xrange(nnodes):
+            nodeID = node_ids[i]
+            dx = T1[i]
+            dy = T2[i]
+            dz = T3[i]
+            rx = R1[i]
+            ry = R2[i]
+            rz = R3[i]
+            gridType = 'G' #self.gridTypes[nodeID]
 
-            (dx, dy, dz) = translation
-            (rx, ry, rz) = rotation
             vals = [dx, dy, dz, rx, ry, rz]
             (vals2, isAllZeros) = writeFloats13E(vals)
             if not isAllZeros:

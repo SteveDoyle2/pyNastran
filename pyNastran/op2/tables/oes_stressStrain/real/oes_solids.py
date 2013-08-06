@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from numpy import array, sqrt, ones, zeros
 from numpy.linalg import eigh
 import pandas as pd
+from itertools import izip
 
 from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
@@ -135,6 +136,10 @@ class RealSolidResults(object):
         del self._inode_start
         del self._inode_end
 
+    def get_element_types(self):
+        etypes = self.element_data['element_type']
+        return list(set(etypes))
+
     def get_stats(self):
         ndt, nelements, nnodes, dts = self._get_shape()
 
@@ -150,8 +155,8 @@ class RealSolidResults(object):
             msg.append('  real type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
 
-        etypes = self.element_data['element_type']
         headers = self._get_headers()
+        etypes = self.get_element_types()
         (oxx, oyy, ozz, txy, txz, tyz, o1, o2, o3, ovm) = headers
 
         msg.append('  element_data: index        : element_id\n')
@@ -160,7 +165,7 @@ class RealSolidResults(object):
         msg.append('                results      : %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n' % (oxx, oyy, ozz,
                                                                                                 txy, tyz, txz,
                                                                                                 o1, o2, o3, ovm))
-        msg.append('                element_types: %s' %(', '.join(set(etypes))))
+        msg.append('                element_types: %s' %(', '.join(etypes)))
 
         #print("self.element_data\n", self.element_data.to_string())
         #print("self.data\n", self.data.to_string())
@@ -336,7 +341,9 @@ class SolidStressObject(StressObject, RealSolidResults):
         tetraEids = []
         hexaEids = []
         pentaEids = []
-        for eid, eType in sorted(self.eType.iteritems()):
+        eids = self.element_data['element_id']
+        etypes = self.element_data['element_type']
+        for eid, eType in izip(eids, etypes):
             if eType == 'CTETRA' or eType == 'TETRA':
                 tetraEids.append(eid)
             elif eType == 'CPENTA' or eType == 'PENTA':
@@ -350,8 +357,8 @@ class SolidStressObject(StressObject, RealSolidResults):
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, f, pageNum)
-        msg = []
 
+        msg = []
         (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
             pentaEids) = self.getF06_Header()
         #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
@@ -367,8 +374,8 @@ class SolidStressObject(StressObject, RealSolidResults):
             self.writeElement('CPENTA', 6, pentaEids, header, pentaMsg, f)
             msg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
-
-        return (''.join(msg), pageNum - 1)
+        f.write(''.join(msg))
+        return pageNum - 1
 
     def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         msg = []
@@ -691,8 +698,8 @@ class SolidStrainObject(StrainObject, RealSolidResults):
             msg += self.writeElement('CPENTA', 6, pentaEids, header, pentaMsg, f)
             msg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
-
-        return (''.join(msg), pageNum - 1)
+        f.write(''.join(msg))
+        return pageNum - 1
 
     def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         msg = []
@@ -715,8 +722,8 @@ class SolidStrainObject(StrainObject, RealSolidResults):
                                            6, pentaEids, dt, header, pentaMsg, f)
                 msg.append(pageStamp + str(pageNum) + '\n')
                 pageNum += 1
-
-        return (''.join(msg), pageNum - 1)
+        f.write(''.join(msg))
+        return pageNum - 1
 
     def writeElement(self, eType, nNodes, eids, header, tetraMsg, f):
         msg = header + tetraMsg
@@ -794,6 +801,6 @@ class SolidStrainObject(StrainObject, RealSolidResults):
                 msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' % (nid, exx, exy, e1, v[0, 1], v[0, 2], v[0, 0], p, evm.strip())
                 msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n' % ('', eyy, eyz, e2, v[1, 1], v[1, 2], v[1, 0])
                 msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n' % ('', ezz, exz, e3, v[2, 1], v[2, 2], v[2, 0])
-
+            msg.append(msgA)
         f.write(''.join(msg))
         return

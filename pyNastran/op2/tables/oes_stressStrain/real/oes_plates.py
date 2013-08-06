@@ -490,6 +490,7 @@ class PlateStressObject(StressObject, RealPlateResults):
         quad8Msg = None
         quadrMsg = None
         eTypes = self.get_element_types()
+        element_types = list(self.element_data['element_type'])
         if 'CQUAD4' in eTypes:
             qkey = eTypes.index('CQUAD4')
             kkey = self.eType.keys()[qkey]
@@ -504,9 +505,9 @@ class PlateStressObject(StressObject, RealPlateResults):
             quad8Msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + triMsgTemp
 
         if 'CQUADR' in eTypes:
-            qkey = eTypes.index('CQUADR')
+            qkey = element_types .index('CQUADR')
             kkey = self.eType.keys()[qkey]
-            ekey = self.oxx[kkey].keys()
+            ekey = self.data['oxx'][kkey]
             isBilinear = True
             quadrMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quadMsgTemp
             if len(ekey) == 1:
@@ -706,7 +707,6 @@ class PlateStressObject(StressObject, RealPlateResults):
                 f.write(''.join(msg))
                 msg = ['']
                 pageNum += 1
-
         return pageNum - 1
 
     def writeF06_Quad4_Bilinear(self, eid, n):
