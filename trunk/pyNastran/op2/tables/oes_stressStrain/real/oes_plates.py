@@ -152,6 +152,10 @@ class RealPlateResults(object):
         #print('---PlateStressObject---')
         #print(self.data.to_string())
 
+    def get_element_types(self):
+        etypes = self.element_data['element_type']
+        return list(set(etypes))
+
     def get_stats(self):
         ndt, nelements, nnodes, dts = self._get_shape()
         msg = self.get_data_code()
@@ -167,14 +171,14 @@ class RealPlateResults(object):
         headers = self._get_headers()
         (fd, oxx, oyy, txy, omax, omin, ovm) = headers
 
-        etypes = self.element_data['element_type']
+        etypes = self.get_element_types()
         msg.append('  element data: index :  element_id\n')
         msg.append('              : result:  element_type\n')
         msg.append('  data        : index :  %selement_id, node_id, layer\n' % dt_string)
         msg.append('              : result:  %s, %s, %s, %s, '
                                             '%s, %s, %s, angle\n' % (fd, oxx, oyy, txy,
                                                               omax, omin, ovm) )
-        msg.append('                element_types: %s' %(', '.join(set(etypes))))
+        msg.append('                element_types: %s' %(', '.join(etypes)))
         return msg
 
     def __repr__(self):
@@ -355,7 +359,7 @@ class PlateStressObject(StressObject, RealPlateResults):
         quadMsg = None
         quad8Msg = None
         quadrMsg = None
-        eTypes = self.eType.values()
+        eTypes = self.get_element_types()
         if 'CQUAD4' in eTypes:
             qkey = eTypes.index('CQUAD4')
             kkey = self.eType.keys()[qkey]
@@ -485,7 +489,7 @@ class PlateStressObject(StressObject, RealPlateResults):
         quadMsg = None
         quad8Msg = None
         quadrMsg = None
-        eTypes = self.eType.values()
+        eTypes = self.get_element_types()
         if 'CQUAD4' in eTypes:
             qkey = eTypes.index('CQUAD4')
             kkey = self.eType.keys()[qkey]
@@ -594,7 +598,7 @@ class PlateStressObject(StressObject, RealPlateResults):
         quad8Msg = None
         quadrMsg = None
 
-        eTypes = self.eType.values()
+        eTypes = self.get_element_types()
         dts = self.oxx.keys()
         dt = dts[0]
         if 'CQUAD4' in eTypes:
@@ -950,7 +954,7 @@ class PlateStrainObject(StrainObject, RealPlateResults):
         tri6Msg = None
         trirMsg = None
 
-        eTypes = self.eType.values()
+        eTypes = self.get_element_types()
         if 'CQUAD4' in eTypes:
             qkey = eTypes.index('CQUAD4')
             kkey = self.eType.keys()[qkey]
@@ -1060,7 +1064,7 @@ class PlateStrainObject(StrainObject, RealPlateResults):
         tri6Msg = None
         trirMsg = None
 
-        eTypes = self.eType.values()
+        eTypes = self.get_element_types()
         if 'CQUAD4' in eTypes:
             ElemKey = eTypes.index('CQUAD4')
             #print qkey
