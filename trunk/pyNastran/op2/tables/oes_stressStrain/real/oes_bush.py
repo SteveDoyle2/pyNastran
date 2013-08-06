@@ -107,11 +107,11 @@ class RealBushResults(object):
             #grid_type_str.append('C' if grid_type==0 else grid_type)
         #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
 
-        if dts[0] is not None:
-            name = self.data_code['name'] # dt
-            self.data = self.data.set_index([name, 'element_id'])
-        else:
-            self.data = self.data.set_index(['element_id'])
+        #if dts[0] is not None:
+            #name = self.data_code['name'] # dt
+            #self.data = self.data.set_index([name, 'element_id'])
+        #else:
+            #self.data = self.data.set_index(['element_id'])
         #print("final\n", self.data.to_string())
         print('---BushStressObject---')
         #print(self.data.to_string())
@@ -132,6 +132,67 @@ class RealBushResults(object):
         msg.append('  data        : index :  %selement_id\n' % dt_string)
         msg.append('              : result:  element_type, T1, T2, T3, R1, R2, R3\n')
         return msg
+
+    def __repr__(self):
+        return ''.join(self.get_stats())
+
+    def _write_f06_helper(self, words, pageStamp, f, pageNum, is_mag_phase):
+        ndt, nelements, dts = self._get_shape()
+
+        eids = self.data['element_id']
+        T1 = self.data['T1']
+        T2 = self.data['T2']
+        T3 = self.data['T3']
+
+        R1 = self.data['R1']
+        R2 = self.data['R2']
+        R3 = self.data['R3']
+
+        msg = words
+        for i in xrange(nelements):
+            #eType = self.eType[eid]
+            eid = eids[i]
+            vals = [T1[i], T2[i], T3[i],
+                    R1[i], R2[i], R3[i], ]
+            (vals2, isAllZeros) = writeFloats13E(vals)
+            [t1, t2, t3, r1, r2, r3] = vals2
+            msg.append('0%27i     %13s %13s %13s %13s %13s %-s\n' % (eid, t1, t2, t3, r1, r2, r3.rstrip()))
+        msg.append(pageStamp + str(pageNum) + '\n')
+        f.write(''.join(msg))
+        return pageNum
+
+    def _write_f06_transient_helper(self, words, header, pageStamp, f, pageNum, is_mag_phase):
+        ndt, nelements, dts = self._get_shape()
+        ntotal = ndt * nelements
+
+        eids = self.data['element_id']
+        T1 = self.data['T1']
+        T2 = self.data['T2']
+        T3 = self.data['T3']
+
+        R1 = self.data['R1']
+        R2 = self.data['R2']
+        R3 = self.data['R3']
+
+        msg = []
+        for n in xrange(ntotal):
+            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+            msg += header + words
+            for ii in xrange(nelements):
+                i = ii + n * nelements
+                #eType = self.eType[eid]
+                eid = eids[i]
+                vals = [T1[i], T2[i], T3[i],
+                        R1[i], R2[i], R3[i], ]
+                (vals2, isAllZeros) = writeFloats13E(vals)
+                [t1, t2, t3, r1, r2, r3] = vals2
+                msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %-s\n' % (eid, t1, t2, t3, r1, r2, r3.rstrip()))
+            msg.append(pageStamp + str(pageNum) + '\n')
+            f.write(''.join(msg))
+            msg = ['']
+            pageNum += 1
+        return pageNum - 1
+
 
 class BushStressObject(RealBushResults, StressObject):
 
@@ -164,131 +225,18 @@ class BushStressObject(RealBushResults, StressObject):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, f, pageNum, is_mag_phase)
 
-        msg = header + [
+        words = header + [
             '                                  S T R E S S E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n\n',
             '                  ELEMENT-ID        STRESS-TX     STRESS-TY     STRESS-TZ    STRESS-RX     STRESS-RY     STRESS-RZ \n',
         ]
-
-        for eid, (tx, ty, tz) in sorted(self.translations.iteritems()):
-            eType = self.eType[eid]
-            (rx, ry, rz) = self.rotations[eid]
-
-            vals = [tx, ty, tz, rx, ry, rz]
-            (vals2, isAllZeros) = writeFloats13E(vals)
-            [tx, ty, tz, rx, ry, rz] = vals2
-            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %-s\n' %
-                       (eid, tx, ty, tz, rx, ry, rz.rstrip()))
-
-        msg.append(pageStamp + str(pageNum) + '\n')
-        f.write(''.join(msg))
-        return pageNum
+        return self._write_f06_helper(words, pageStamp, f, pageNum, is_mag_phase)
 
     def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         words = [
             '                                  S T R E S S E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n\n',
             '                  ELEMENT-ID        STRESS-TX     STRESS-TY     STRESS-TZ    STRESS-RX     STRESS-RY     STRESS-RZ \n',
         ]
-        msg = []
-        for dt, translations in sorted(self.translations.iteritems()):
-            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            msg += header + words
-            for eid, (tx, ty, tz) in sorted(translations.iteritems()):
-                eType = self.eType[eid]
-                (rx, ry, rz) = self.rotations[dt][eid]
-
-                vals = [tx, ty, tz, rx, ry, rz]
-                (vals2, isAllZeros) = writeFloats13E(vals)
-                [tx, ty, tz, rx, ry, rz] = vals2
-                msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %-s\n' %
-                           (eid, tx, ty, tz, rx, ry, rz.rstrip()))
-
-            msg.append(pageStamp + str(pageNum) + '\n')
-            f.write(''.join(msg))
-            msg = ['']
-            pageNum += 1
-        return pageNum - 1
-
-    def __repr__(self):
-        raise NotImplementedError('CBUSH')
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---BUSH STRESS---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['s1', 's2', 's3', 's4', 'Axial']
-        for header in headers:
-            msg += '%8s ' % header
-        msg += '\n'
-
-        for eid, S1s in sorted(self.s1.iteritems()):
-            eType = self.eType[eid]
-            axial = self.axial[eid]
-
-            s1 = self.s1[eid]
-            s2 = self.s2[eid]
-            s3 = self.s3[eid]
-            s4 = self.s4[eid]
-            msg += '%-6i %6s ' % (eid, eType)
-            vals = [s1[0], s2[0], s3[0], s4[0], axial]
-            for val in vals:
-                if abs(val) < 1e-6:
-                    msg += '%8s ' % '0'
-                else:
-                    msg += '%8i ' % val
-            msg += '\n'
-
-            msg += '%s ' % (' ' * 13)
-            vals = [s1[1], s2[1], s3[1], s4[1]]
-            for val in vals:
-                if isinstance(val, str):
-                    msg += '%8s ' % val
-                elif abs(val) < 1e-6:
-                    msg += '%8s ' % '0'
-                else:
-                    msg += '%8i ' % val
-            msg += '\n'
-
-            #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial)
-            #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s\n"         %(' '*4,    s1[1],s2[1],s3[1],s4[1])
-        return msg
-
-    def __reprTransient__(self):
-        raise NotImplementedError('CBUSH')
-        msg = '---BUSH STRESS---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['s1', 's2', 's3', 's4', 'Axial', 'sMax', 'sMin']
-        for header in headers:
-            msg += '%8s ' % header
-        msg += '\n'
-
-        for dt, S1ss in sorted(self.s1.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid, S1s in sorted(S1ss.iteritems()):
-                eType = self.eType[eid]
-                axial = self.axial[dt][eid]
-
-                s1 = self.s1[dt][eid]
-                s2 = self.s2[dt][eid]
-                s3 = self.s3[dt][eid]
-                s4 = self.s4[dt][eid]
-                msg += '%-6i %6s ' % (eid, eType)
-                vals = [s1[0], s2[0], s3[0], s4[0], axial]
-                for val in vals:
-                    msg += '%8s %8s' % (val.real, val.imag)
-                msg += '\n'
-
-                msg += '%s ' % (' ' * 13)
-                vals = [s1[1], s2[1], s3[1], s4[1]]
-                for val in vals:
-                    if isinstance(val, str):
-                        msg += '%8s ' % val
-                    elif abs(val) < 1e-6:
-                        msg += '%8s %8s' % (val.real, val.imag)
-                msg += '\n'
-
-                #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial)
-                #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s\n"         %(' '*4,    s1[1],s2[1],s3[1],s4[1])
-        return msg
+        return self._write_f06_transient_helper(words, header, pageStamp, f, pageNum, is_mag_phase)
 
 
 class BushStrainObject(RealBushResults, StrainObject):
@@ -319,151 +267,18 @@ class BushStrainObject(RealBushResults, StrainObject):
             self.rotations[dt][eid] = [rx, ry, rz]
 
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
-        raise NotImplementedError('CBUSH')
-        return 'BushStress write_f06 not implemented...', pageNum
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
 
-        msg = header + [
-            '                                  S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )\n',
-            '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
-            '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
+        words = header + [
+            '                                  S T R A I N S   I N   B U S H   E L E M E N T S        ( C B U S H )\n\n',
+            '                  ELEMENT-ID        STRESS-TX     STRESS-TY     STRESS-TZ    STRESS-RX     STRESS-RY     STRESS-RZ \n',
         ]
-        for eid, E1s in sorted(self.e1.iteritems()):
-            eType = self.eType[eid]
-            axial = self.axial[eid]
-
-            e1 = self.e1[eid]
-            e2 = self.e2[eid]
-            e3 = self.e3[eid]
-            e4 = self.e4[eid]
-            vals = [e1[0], e2[0], e3[0], e4[0], axial,
-                    e1[1], e2[1], e3[1], e4[1]]
-            (vals2, isAllZeros) = writeFloats13E(vals)
-            [e10, e20, e30, e40, axial,
-             e11, e21, e31, e41] = vals2
-
-            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, e10, e20, e30, e40, axial.rstrip()))
-            msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', e11, e21, e31, e41.rstrip()))
-        msg.append(pageStamp + str(pageNum) + '\n')
-        return (''.join(msg), pageNum)
+        return self._write_f06_helper(words, pageStamp, f, pageNum, is_mag_phase)
 
     def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
-        raise NotImplementedError('CBUSH')
         words = [
-            '                                  S T R A I N S    I N   B A R   E L E M E N T S           ( C B A R )\n',
-            '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
-            '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
+            '                                  S T R A I N S   I N   B U S H   E L E M E N T S        ( C B U S H )\n\n',
+            '                  ELEMENT-ID        STRESS-TX     STRESS-TY     STRESS-TZ    STRESS-RX     STRESS-RY     STRESS-RZ \n',
         ]
-        msg = []
-        for dt, E1s in sorted(self.e1.iteritems()):
-            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            msg += header + words
-            for eid, e1s in sorted(E1s.iteritems()):
-                eType = self.eType[eid]
-                axial = self.axial[eid]
-
-                e1 = self.e1[eid]
-                e2 = self.e2[eid]
-                e3 = self.e3[eid]
-                e4 = self.e4[eid]
-                vals = [e1[0], e2[0], e3[0], e4[0], axial,
-                        e1[1], e2[1], e3[1], e4[1]]
-                (vals2, isAllZeros) = writeFloats13E(vals)
-                [e10, e20, e30, e40,
-                 e11, e21, e31, e41] = vals2
-
-                msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, e10, e20, e30, e40, axial.rstrip()))
-                msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', e11, e21, e31, e41.rstrip()))
-            msg.append(pageStamp + str(pageNum) + '\n')
-            pageNum += 1
-            f.write(''.join(msg))
-            msg = ['']
-        return pageNum - 1
-
-    def __repr__(self):
-        raise NotImplementedError('CBUSH')
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---BUSH STRAIN---\n'
-        msg += '%-8s %6s ' % ('EID', 'eType')
-        headers = ['e1', 'e2', 'e3', 'e4', 'Axial', 'eMax', 'eMin']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for eid, E1s in sorted(self.e1.iteritems()):
-            eType = self.eType[eid]
-            axial = self.axial[eid]
-            e1 = self.e1[eid]
-            e2 = self.e2[eid]
-            e3 = self.e3[eid]
-            e4 = self.e4[eid]
-            msg += '%-8i %6s ' % (eid, eType)
-            vals = [e1[0], e2[0], e3[0], e4[0], axial]
-            for val in vals:
-                if abs(val) < 1e-6:
-                    msg += '%10s ' % '0'
-                else:
-                    msg += '%10.3g ' % val
-            msg += '\n'
-
-            msg += '%s ' % (' ' * 17)
-            vals = [e1[1], e2[1], e3[1], e4[1]]
-            for val in vals:
-                if isinstance(val, str):
-                    msg += '%10s ' % val
-                elif abs(val) < 1e-6:
-                    msg += '%10s ' % '0'
-                else:
-                    msg += '%10.3g ' % val
-            msg += '\n'
-
-            #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial)
-            #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s\n"         %(' '*4,    s1[1],s2[1],s3[1],s4[1])
-
-        return msg
-
-    def __reprTransient__(self):
-        raise NotImplementedError('CBUSH')
-        msg = '---BUSH STRAIN---\n'
-        msg += '%-8s %6s ' % ('EID', 'eType')
-        headers = ['e1', 'e2', 'e3', 'e4', 'Axial', 'eMax', 'eMin']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, E1s in sorted(self.e1.iteritems()):
-            msg += "%s = %g\n" % (self.data_code['name'], dt)
-            for eid, e1s in sorted(Els.iteritems()):
-                eType = self.eType[eid]
-                axial = self.axial[dt][eid]
-                e1 = self.e1[dt][eid]
-                e2 = self.e2[dt][eid]
-                e3 = self.e3[dt][eid]
-                e4 = self.e4[dt][eid]
-                msg += '%-8i %6s ' % (eid, eType)
-                vals = [e1[0], e2[0], e3[0], e4[0], axial]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10.3g ' % val
-                msg += '\n'
-
-                msg += '%s ' % (' ' * 17)
-                vals = [e1[1], e2[1], e3[1], e4[1]]
-                for val in vals:
-                    if isinstance(val, str):
-                        msg += '%10s ' % val
-                    elif abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10.3g ' % val
-                msg += '\n'
-
-                #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial)
-                #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s\n"         %(' '*4,    s1[1],s2[1],s3[1],s4[1])
-
-        return msg
+        return self._write_f06_helper(words, header, pageStamp, f, pageNum, is_mag_phase)

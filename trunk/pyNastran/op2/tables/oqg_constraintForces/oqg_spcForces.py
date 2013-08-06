@@ -17,24 +17,11 @@ class SPCForcesObject(TableObject):
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, f, pageNum)
-        msg = header + ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
-                        ' \n',
-                        '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        for nodeID, translation in sorted(self.translations.iteritems()):
-            rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
 
-            (dx, dy, dz) = translation
-            (rx, ry, rz) = rotation
-            vals = [dx, dy, dz, rx, ry, rz]
-            (vals2, isAllZeros) = writeFloats13E(vals)
-            if not isAllZeros:
-                [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
-
-        msg.append(pageStamp + str(pageNum) + '\n')
-        f.write(''.join(msg))
-        return pageNum
+        words = header + ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
+                          ' \n',
+                          '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        return self._write_f06_block(words, header, pageStamp, f, pageNum)
 
     def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         words = ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
