@@ -169,7 +169,7 @@ class PARAM(BaseCard):
 
         else:
             if not (isinstance(value1, int) or isinstance(value1, float) or 
-                    isinstance(value1, str):
+                    isinstance(value1, str)):
                 msg = 'key=%s value1=%r must be an integer, float, or string.' % (key, value1)
                 raise TypeError(msg)
 
