@@ -5,7 +5,7 @@ import numpy
 import pandas as pd
 from numpy import array, sqrt, abs, angle, zeros, ones  # dot,
 
-from pyNastran import as_array
+from pyNastran import update_index
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
@@ -174,11 +174,13 @@ class TableObject(ScalarObject):  # displacement style table
             #grid_type_str.append(mapper[grid_type])
         #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
 
-        #if dts[0] is not None:
-            #name = self.data_code['name']
-            #self.data = self.data.set_index([name, 'node_id'])
-        #else:
-            #self.data = self.data.set_index('node_id')
+        if update_index:
+            if dts[0] is not None:
+                name = self.data_code['name']
+                self.data = self.data.set_index([name, 'node_id'])
+            else:
+                self.data = self.data.set_index('node_id')
+
         #print "final\n", self.data
         del self._inode_start
         del self._inode_end
@@ -356,13 +358,13 @@ class TableObject(ScalarObject):  # displacement style table
         R3 = self.data['R3']
         for i in xrange(nnodes):
             nodeID = node_ids[i]
+            gridType = 'G' #self.gridTypes[nodeID]
             dx = T1[i]
             dy = T2[i]
             dz = T3[i]
             rx = R1[i]
             ry = R2[i]
             rz = R3[i]
-            gridType = 'G' #self.gridTypes[nodeID]
 
             vals = [dx, dy, dz, rx, ry, rz]
             (vals2, isAllZeros) = writeFloats13E(vals)
