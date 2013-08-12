@@ -419,7 +419,7 @@ class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
                  ' \n',
                  '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
         msg = []
-        for dt, Force in sorted(self.force.items()):
+        for dt, Force in sorted(self.force.iteritems()):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
 
@@ -427,7 +427,7 @@ class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
             forces = []
             elements = []
             line = '   '
-            for eid, force in sorted(Force.items()):
+            for eid, force in sorted(Force.iteritems()):
                 elements.append(eid)
                 forces.append(force)
                 #pack.append(eid)
@@ -455,7 +455,7 @@ class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
         forces = []
         elements = []
         line = '   '
-        for eid, force in sorted(self.force.items()):
+        for eid, force in sorted(self.force.iteritems()):
             elements.append(eid)
             forces.append(force)
             #pack.append(eid)
@@ -535,7 +535,7 @@ class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
                  ' \n',
                  '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
         msg = []
-        for dt, Force in sorted(self.force.items()):
+        for dt, Force in sorted(self.force.iteritems()):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
 
@@ -543,7 +543,7 @@ class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
             forces = []
             elements = []
             line = '   '
-            for eid, force in sorted(Force.items()):
+            for eid, force in sorted(Force.iteritems()):
                 elements.append(eid)
                 forces.append(force)
                 #pack.append(eid)
@@ -571,7 +571,7 @@ class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
         forces = []
         elements = []
         line = '   '
-        for eid, force in sorted(self.force.items()):
+        for eid, force in sorted(self.force.iteritems()):
             elements.append(eid)
             forces.append(force)
             #pack.append(eid)
@@ -1453,7 +1453,7 @@ class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
                  ' \n',
                  '    TIME         EL-TYPE             X-ACCELERATION            Y-ACCELERATION            Z-ACCELERATION            PRESSURE (DB)\n']
         msg = []
-        for dt, acc in sorted(self.acceleration.items()):
+        for dt, acc in sorted(self.acceleration.iteritems()):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for eid in sorted(acc):

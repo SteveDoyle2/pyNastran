@@ -54,7 +54,7 @@ class OES_Object(ScalarObject):
         #validTypes = ['CTRIA3','CTRIA6','CQUAD4','CQUAD8']
         for eType in validTypes:
             orderedETypes[eType] = []
-        for eid, eType in sorted(self.eType.items()):
+        for eid, eType in sorted(self.eType.iteritems()):
             #print "eType = ",eType
             assert eType in validTypes, 'unsupported eType=%s' % (eType)
             orderedETypes[eType].append(eid)

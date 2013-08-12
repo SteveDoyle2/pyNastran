@@ -20,7 +20,7 @@ class OP4Deprecated(object):
     def __init__(self):
         pass
 
-    
+
 #class OP4(FortranFile):
 class OP4(OP4Deprecated):
     """
@@ -100,14 +100,14 @@ class OP4(OP4Deprecated):
             wildcard_qt = "Nastran OP4 (*.op4);;All files (*)"
             title = 'Please select a OP4 to load'
             op4_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
-        
+
         if isinstance(matrix_names, str):
             matrix_names = [matrix_names]
         #assert isinstance(matrix_names, list), 'type(matrix_names)=%s' % type(matrix_names)
 
         if not os.path.exists(op4_filename):
             raise IOError('cannot find op4_filename=|%s|' % op4_filename)
-        
+
         if is_binary(op4_filename):
             return self.read_op4_binary(op4_filename, matrix_names, precision)
         else:
@@ -359,7 +359,7 @@ class OP4(OP4Deprecated):
     def read_op4_binary(self, op4_filename, matrix_names=None, precision='default'):
         """matrix_names must be a list or None, but basically the same"""
         self.op4 = io.open(op4_filename, mode = 'rb')
-        
+
         # these variables are set so FortranFile will work
         self.op2 = self.op4
         self.make_op2_debug = False
@@ -918,7 +918,7 @@ class OP4(OP4Deprecated):
                        3=complex,single precision;
                        4=complex,double precision
         :returns: NWV Number of Words per Value
-        
+
         .. note:: A word is 4 bytes
                   nwords(float32)=1;   single precison
                   nwords(complex32)=2; single precison
@@ -963,7 +963,7 @@ class OP4(OP4Deprecated):
         :param name: the name of the matrix
         :param matrix: a two-dimensional NUMPY.NDARRAY
         :param form: Form is defined as one of the following:
-        
+
         ==== ===============
         Form Definition
         ==== ===============
@@ -976,7 +976,7 @@ class OP4(OP4Deprecated):
         ==== ===============
 
         Not Supported by all OP4s:
-        
+
         ==== ===============================
         Form Definition
         ==== ===============================
@@ -1332,7 +1332,7 @@ if __name__ == '__main__':  ## pragma: no cover
             precision='default')
         print("keys = %s" % (matrices.keys()))
         print("fname=%s" % fname)
-        for name, (form, matrix) in sorted(matrices.items()):
+        for name, (form, matrix) in sorted(matrices.iteritems()):
             print("-----------------------------------")
             print("name = |%s|" % name)
             if isinstance(matrix, coo_matrix):
