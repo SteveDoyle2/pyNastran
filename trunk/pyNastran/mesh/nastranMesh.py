@@ -130,7 +130,7 @@ class NastranMesh(BDF):
             if 0:
                 belowElements = set()
                 partialElements = set()
-                for eid, nodeIDs in sorted(elementNodeIDs.items()):
+                for eid, nodeIDs in sorted(elementNodeIDs.iteritems()):
                     elem = self.elements[eid]
 
                     isAboveBelow = set()  # True=Above False=Below

@@ -44,7 +44,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         self.xref = 0.
         self.yref = 0.
         self.zref = 0.
-        
+
         self.isings = 0.0
         self.isingp = 0.0
         self.igeomp = 0.0
@@ -56,12 +56,12 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         self.ioutpr = 0.0
         self.ifmcpr = 0.0
         self.icostp = 0.0
-        
+
         self.isEnd = None
-        
+
         self.peaSection = ''
-        
-        
+
+
         self.mach = 0.0
         self.dataCheck = 2
         self.titleSection = ''
@@ -143,7 +143,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
 
         #outfile.write(self.alphaSection)
         #outfile.write(self.caseSection)
-        for patchName, patch in sorted(self.patches.items()):
+        for patchName, patch in sorted(self.patches.iteritems()):
             outfile.write(str(patch))
 
         outfile.write(self.xyzSection)
@@ -262,7 +262,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
 
     def findPatchByName(self, netName):
         names = []
-        for patchID, patch in self.patches.items():
+        for patchID, patch in self.patches.iteritems():
             #self.log.debug("patchID=%s" % (patchID))
             #self.log.debug("*patch = %s" %(patch))
             #self.log.debug("patch.netName=%s" % (patch.netName))

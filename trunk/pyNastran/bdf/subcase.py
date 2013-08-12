@@ -649,7 +649,7 @@ class Subcase(object):
         else:
             msg = 'SUBCASE %s\n' % (self.id)
             nparams = 0
-            for (key, param) in self.subcase_sorted(self.params.items()):
+            for (key, param) in self.subcase_sorted(self.params.iteritems()):
                 if key in subcase0.params and subcase0.params[key] == param:
                     pass  # dont write global subcase parameters
                 else:
@@ -661,7 +661,7 @@ class Subcase(object):
                     nparams += 1
                     #print ""
             if nparams == 0:
-                for (key, param) in self.subcase_sorted(self.params.items()):
+                for (key, param) in self.subcase_sorted(self.params.iteritems()):
                     #print("key=%s param=%s" %(key, param))
                     (value, options, paramType) = param
                     #print("  *key=|%s| value=|%s| options=%s "
@@ -683,7 +683,7 @@ class Subcase(object):
         """
         # presort the list to put all the SET cards next to each other
         # instead of listA.sort() as it allows lst to be any iterable
-        lst = sorted(lst) 
+        lst = sorted(lst)
 
         i = 0  # needed in case the loop doesn't execute
         iSet = None  # index of first SET card in the deck
@@ -728,7 +728,7 @@ class Subcase(object):
         """
         Prints out EVERY entry in the subcase.  Skips parameters already in
         the global subcase.
-        
+
         .. note:: this function is only used for debugging.
         """
         #msg = "-------SUBCASE %s-------\n" %(self.id)
@@ -737,7 +737,7 @@ class Subcase(object):
             msg += 'SUBCASE %s\n' % (self.id)
 
         nparams = 0
-        for (key, param) in self.subcase_sorted(self.params.items()):
+        for (key, param) in self.subcase_sorted(self.params.iteritems()):
             #print("key=%s param=%s" %(key,param))
             (value, options, paramType) = param
             #print("  ?*key=|%s| value=|%s| options=%s paramType=|%s|"

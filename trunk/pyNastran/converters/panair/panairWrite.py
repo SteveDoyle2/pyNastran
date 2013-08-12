@@ -12,7 +12,7 @@ class PanairWrite(object):
         msg += '        9   1st p-o-s   0    -1.0       bodyl      12     3.4+\n'
         msg += '            bodyl      12     3.4-      1st p-o-s   0    -1.0\n'
 
-        for patchID, patch in self.patches.items():
+        for patchID, patch in self.patches.iteritems():
             (p1, x1, y1, z1) = patch.get_edges()
             self.log.debug("p[%s] = %s" % (patchID, p1))
             #print "x = ",x1

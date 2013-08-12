@@ -62,7 +62,7 @@ class Cart3DAsciiReader(object):
         isInnerNode = {}
 
         #nodeTypes  = {}
-        for (iNode, node) in sorted(nodes.items()):
+        for (iNode, node) in sorted(nodes.iteritems()):
             if node[1] == 0:
                 yZeroNodes[iNode] = node
                 isInnerNode[iNode] = True
@@ -83,7 +83,7 @@ class Cart3DAsciiReader(object):
         #nodes2={}
         nodes2Map = {}
         iNode2 = 1
-        for (iNode, node) in sorted(nodes.items()):
+        for (iNode, node) in sorted(nodes.iteritems()):
             if isInnerNode[iNode]:
                 #pass
                 #nodes2[iNode] = node  # dont need to set this...
@@ -107,7 +107,7 @@ class Cart3DAsciiReader(object):
         #print "missingKeys = ",missingKeys
         #print "nMissing = ",len(missingKeys)
         iMissing = 0
-        for (iElement, element) in sorted(elements.items()):
+        for (iElement, element) in sorted(elements.iteritems()):
             #(n1,n2,n3) = element
             region = regions[iElement]
             element2 = []
@@ -132,10 +132,13 @@ class Cart3DAsciiReader(object):
         return (nodes, elements, regions, loads)
 
     def make_half_model(self, nodes, elements, regions, Cp):
+        """
+        Makes a half model from a full model
+        """
         nNodesStart = len(nodes)
 
         self.log.info('---starting makeHalfModel---')
-        for (iNode, node) in sorted(nodes.items()):
+        for (iNode, node) in sorted(nodes.iteritems()):
             if node[1] < 0:
                 #print iNode,'...',node
                 del nodes[iNode]
@@ -146,7 +149,7 @@ class Cart3DAsciiReader(object):
 
         sys.stdout.flush()
 
-        for (iElement, element) in elements.items():
+        for (iElement, element) in elements.iteritems():
             #print "iElement = |%s|" %(iElement),type(iElement)
             inNodeList = [True, True, True]
             for (i, node) in enumerate(element):
@@ -163,17 +166,20 @@ class Cart3DAsciiReader(object):
         return (nodes, elements, regions, Cp)
 
     def make_mirror_model(self, nodes, elements, regions, loads):
+        """
+        Mirrors about the y=0 line
+        """
         #nNodesStart = len(nodes)
 
         self.log.info('---starting makeMirrorModel---')
-        for (iNode, node) in sorted(nodes.items()):
+        for (iNode, node) in sorted(nodes.iteritems()):
             if node[1] < 0:
                 #print iNode,'...',node
                 del nodes[iNode]
                 #del Cp[iNode]  # assume loads=0
         sys.stdout.flush()
 
-        for (iElement, element) in elements.items():
+        for (iElement, element) in elements.iteritems():
             #print "iElement = |%s|" %(iElement),type(iElement)
             inNodeList = [True, True, True]
             for (i, node) in enumerate(element):
@@ -200,12 +206,12 @@ class Cart3DAsciiReader(object):
         nodes2 = {}
         elements2 = {}
         regions2 = {}
-        for (iNode, node) in sorted(nodes.items()):
+        for (iNode, node) in sorted(nodes.iteritems()):
             NodeOldToNew[iNode] = iNodeCounter
             nodes2[iNodeCounter] = node
             iNodeCounter += 1
 
-        for (iElement, element) in sorted(elements.items()):
+        for (iElement, element) in sorted(elements.iteritems()):
             element2 = []
             for nID in element:
                 nID2 = NodeOldToNew[nID]
@@ -229,7 +235,7 @@ class Cart3DAsciiReader(object):
 
     def write_regions(self, f, regions):
         msg = ''
-        for (iElement, region) in sorted(regions.items()):
+        for (iElement, region) in sorted(regions.iteritems()):
             msg += "%s\n" % (region)
         f.write(msg)
 
@@ -242,12 +248,12 @@ class Cart3DAsciiReader(object):
         #print "Format = ",Format
 
         maxNodes = []
-        for (iElement, element) in sorted(elements.items()):
+        for (iElement, element) in sorted(elements.iteritems()):
             #self.log.info("element = %s" %(element))
             #msg += Format %(iElement,element[0],element[1],element[2])
             msg += "%s  %s  %s\n" % (element[0], element[1], element[2])
             for nid in element:
-                assert nid in nodes, 'nid=%s is missing' % (nid)
+                assert nid in nodes, 'nid=%s is missing' % nid
 
             maxNode = max(element)
             maxNodes.append(maxNode)
@@ -256,7 +262,7 @@ class Cart3DAsciiReader(object):
 
     def write_points(self, f, points):
         msg = ''
-        for (iPoint, point) in sorted(points.items()):
+        for (iPoint, point) in sorted(points.iteritems()):
             #msg += "%-10s %-15s %-15s %-15s\n" %(iPoint,point[0],point[1],point[2])
             msg += "%6.6f  %6.6f  %6.6f\n" % (point[0], point[1], point[2])
             if iPoint % 1000:
@@ -277,8 +283,9 @@ class Cart3DAsciiReader(object):
             self.nPoints, self.nElements = int(sline[0]), int(sline[1])
             self.cartType = 'grid'
         elif len(sline) == 3:
-            self.nPoints, self.nElements, self.nResults = int(
-                sline[0]), int(sline[1]), int(sline[2])
+            self.nPoints = int(sline[0])
+            self.nElements = int(sline[1])
+            self.nResults = int(sline[2])
             self.cartType = 'result'
         else:
             raise ValueError('invalid result type')
@@ -321,13 +328,13 @@ class Cart3DAsciiReader(object):
 
     def get_min(self, points, i):
         minX = points[1][i]
-        for key, point in points.items():
+        for key, point in points.iteritems():
             minX = min(minX, point[i])
         return minX
 
     def get_max(self, points, i):
         maxX = points[1][i]
-        for key, point in points.items():
+        for key, point in points.iteritems():
             maxX = max(maxX, point[i])
         return maxX
 
@@ -431,8 +438,8 @@ class Cart3DAsciiReader(object):
                     rhoV = float(sline[3])
                     rhoW = float(sline[4])
                     #rhoE = float(sline[5])
-                    VV = (rhoU) ** 2 + (rhoV) ** 2 + (rhoW) ** 2 / rho ** 2
-                    mach = sqrt(VV)
+                    mach2 = (rhoU) ** 2 + (rhoV) ** 2 + (rhoW) ** 2 / rho ** 2
+                    mach = sqrt(mach2)
                     if mach > 10:
                         print("nid=%s Cp=%s mach=%s rho=%s rhoU=%s rhoV=%s rhoW=%s" % (pointNum, cp, mach, rho, rhoU, rhoV, rhoW))
 
@@ -562,18 +569,17 @@ class Cart3DAsciiReader(object):
         asdf
 
     def check_quad(self, nodes, eid, eidA, e, e2, a, b, c, i):
-        """
-        @code
-        A----B
-        | \ e|
-        |e2 \|
-        C----D
-        
+        r"""
+        ::
+          A----B
+          | \ e|
+          |e2 \|
+          C----D
+
         two tests
            1.  folding angle A-B x A-C
            2a. abs(A-C) - abs(B-D)  = 0  (abs to prevent 2L)
            2b. abs(A-B) - abs(C-D)  = 0
-        @endcode
         """
 
         iplus1 = i + 1
@@ -644,7 +650,6 @@ class Cart3DBinaryReader(FortranFile, Cart3DAsciiReader):
 
         self.make_op2_debug = False
         self.n = 0
-
         self.log = get_logger(log, 'debug' if debug else 'info')
 
     def read_cart3d(self, infileName):
@@ -688,7 +693,6 @@ class Cart3DBinaryReader(FortranFile, Cart3DAsciiReader):
         Format = '>' + 'f' * 3000  # 3000 floats; 1000 points
 
         nodes = {}
-
         np = 1
         while size > 12000:  # 12k = 4 bytes/float*3 floats/point*1000 points
             #print "size = ",size
@@ -909,7 +913,7 @@ if 0:
     #cart = Cart3DAsciiReader(cart3dGeom)  # bJet.a.tri
     #(cartPoints,elements,regions,loads) = cart.read()
     #points2 = {}
-    #for (iPoint,point) in sorted(points.items()):
+    #for (iPoint,point) in sorted(points.iteritems()):
         #(x,y,z) = point
         #print "p=%s x=%s y=%s z=%s  z2=%s" %(iPoint,x,y,z,z+x/10.)
         #points2[iPoint] = [x,y,z+x/10.]

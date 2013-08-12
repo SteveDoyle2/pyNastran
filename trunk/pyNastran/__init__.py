@@ -6,7 +6,7 @@ if dev:
 
     print(inspect.getfile(inspect.currentframe())) # script filename (usually with path)
     curDir = os.path.dirname(inspect.getfile(inspect.currentframe())) # script directory
-    
+
     client = pysvn.Client()
     #print(dir(client))
     client.update(curDir)
@@ -32,4 +32,4 @@ isRelease = True  ## turns on skipping of tables that aren't supported
 
 # converts the OP2 objects to array from instead of dictionary form
 # breaks F06 writing, but is faster
-as_array = False
+update_index = False

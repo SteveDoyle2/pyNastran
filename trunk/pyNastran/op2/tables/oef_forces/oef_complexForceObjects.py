@@ -367,7 +367,7 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
         forces = []
         elements = []
         line = '   '
-        for eid, force in sorted(self.force.items()):
+        for eid, force in sorted(self.force.iteritems()):
             elements.append(eid)
             forces.append(force)
             #pack.append(eid)
@@ -389,14 +389,14 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
                  '                ELEMENT                                                   ELEMENT\n',
                  '                  ID.                    FORCE                              ID.                    FORCE\n']
         msg = []
-        for dt, Force in sorted(self.force.items()):
+        for dt, Force in sorted(self.force.iteritems()):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             #packs = []
             forces = []
             elements = []
             line = ''
-            for eid, force in sorted(Force.items()):
+            for eid, force in sorted(Force.iteritems()):
                 elements.append(eid)
                 forces.append(force)
                 #pack.append(eid)

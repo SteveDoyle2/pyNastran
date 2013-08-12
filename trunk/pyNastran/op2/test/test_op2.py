@@ -23,7 +23,7 @@ def get_failed_files(filename):
     infile = open(filename, 'r')
     lines = infile.readlines()
     infile.close()
-    
+
     files = []
     for line in lines:
         files.append(line.strip())
@@ -67,14 +67,14 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
         for op2file in failedCases:
             f.write('%s\n' % op2file)
         f.close()
-    
+
     seconds = time.time()-t0
     minutes = seconds/60.
     print("dt = %s seconds = %s minutes" % (seconds, minutes))
-    
+
     #op2 = OP2('test_tet10_subcase_1.op2')
     #op2.read_op2()
-    
+
     msg = '-----done with all models %s/%s=%.2f%%  nFailed=%s-----' %(nPassed,nTotal,100.*nPassed/float(nTotal),nTotal-nPassed)
     print(msg)
     sys.exit(msg)
@@ -93,7 +93,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
         #op2.read_bdf(op2.bdfFileName,includeDir=None,xref=False)
         #op2.write_bdf_as_patran()
         op2.read_op2()
-        
+
         #from pympler import muppy, summary
         #all_objects = muppy.get_objects()
         #sum1 = summary.summarize(all_objects)
@@ -180,13 +180,13 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
         raise
     except SyntaxError: #Param Parse
         isPassed = True
-    except:
-        #print e
-        print_exc(file=sys.stdout)
-        if stopOnFailure:
-            raise
-        else:
-            isPassed = False
+    #except:
+        ##print e
+        #print_exc(file=sys.stdout)
+        #if stopOnFailure:
+            #raise
+        #else:
+            #isPassed = False
 
     return isPassed
 
@@ -209,7 +209,7 @@ def run_arg_parse():
     parser.add_argument('-m','--matlab',       dest='write_matlab',   action='store_true', help='Matlab Writer is enabled (fails for transient; limited support)')
     parser.add_argument('-p','--print_results',dest='print_results',  action='store_true', help='Prints objects to screen which can require lots of memory')
     parser.add_argument('-v','--version',action='version',version=ver)
-    
+
     if len(sys.argv)==1:
         parser.print_help()
         sys.exit()
@@ -229,7 +229,17 @@ def run_arg_parse():
     return (op2FileName,make_geom,write_bdf,write_f06,write_matlab,is_mag_phase,print_results,debug)
 
 def main():
-    (op2FileName,make_geom,write_bdf,write_f06,write_matlab,is_mag_phase,print_results,debug) = run_arg_parse()
+    #op2FileName = r'C:\NASA\m4\formats\pynastran_v0.7\models\beam_modes\beam_modes_m1.op2'
+    op2FileName = r'C:\NASA\m4\formats\pynastran_v0.7\models\plate\plate.op2'
+    make_geom = False
+    write_bdf = False
+    write_f06 = True
+    write_matlab = False
+    is_mag_phase = False
+    print_results = False
+    debug = False
+    #(op2FileName,make_geom,write_bdf,write_f06,write_matlab,is_mag_phase,print_results,debug) = run_arg_parse()
+
 
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
