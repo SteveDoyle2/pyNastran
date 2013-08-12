@@ -31,7 +31,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         self.patches = {}
 
         self.alphas = [0.]
-        self.ncases = 0.
+        self.ncases = None
         self.betas = [0.]
         self.alphaC = 0.
         self.betaC = 0.
@@ -44,7 +44,27 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         self.xref = 0.
         self.yref = 0.
         self.zref = 0.
-
+        
+        self.isings = 0.0
+        self.isingp = 0.0
+        self.igeomp = 0.0
+        self.icontp = 0.0
+        self.ibconp = 0.0
+        self.iedgep = 0.0
+        self.ipraic = 0.0
+        self.nexdgn = 0.0
+        self.ioutpr = 0.0
+        self.ifmcpr = 0.0
+        self.icostp = 0.0
+        
+        self.isEnd = None
+        
+        self.peaSection = ''
+        
+        
+        self.mach = 0.0
+        self.dataCheck = 2
+        self.titleSection = ''
         self.xyzSection = ''
         self.streamlineSection = ''
         self.flowSection = ''
@@ -104,6 +124,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         reduces confusion by only printing cases that will run
         """
         if len(self.alphas) > self.ncases:
+            print("self.ncases =", self.ncases)
             self.alphas = self.alphas[:self.ncases]
         if len(self.betas) > self.ncases:
             self.betas = self.alphas[:self.ncases]
@@ -164,7 +185,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
 
     def getDataCheck(self, section):
         self.dataCheck = int(float(section[1][0:10]))
-        self.dataCheck = 2
+        #self.dataCheck = 2
         return True
 
     def getSymmetry(self, section):
@@ -180,6 +201,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         """
         # doesnt consider antisymmetric
         self.XZsymmetry = int(float(section[1][0:10]))
+        self.XYsymmetry = int(float(section[1][10:20]))   # ???
 
         # doesnt consider antisymmetric        self.XYsymmetry = int(float(section[1][10:20]))
         self.nSymmetryPlanes = self.XZsymmetry + self.XYsymmetry
@@ -862,8 +884,8 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         return points, elements
 
 if __name__ == '__main__':
-    infileName = 'SWB.INP'
-    outfileName = 'SWB_new.INP'
+    infileName = 'HSCT.INP'
+    outfileName = 'HSCT_new.INP'
     #infileName = 'ELLIP.INP'
     grid = PanairGrid(infileName)
     grid.readGrid()

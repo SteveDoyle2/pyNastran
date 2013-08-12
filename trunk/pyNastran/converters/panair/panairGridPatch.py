@@ -6,7 +6,7 @@ def sInt(value):
     """
     int represented as a short float
     """
-    value = "%f" % (value)
+    value = "%f" % value
     return value.rstrip('0')
 
 
@@ -190,40 +190,38 @@ class PanairPatch(object):
         return self.get_point(iRow, iCol)
 
     def get_edge(self, edgeNumber):
-        """
+        r"""
         gets all the points associated with a given edge
-        @code
-                edge1
-              0  1  2   -> i (row)
-        edge4 3  4  5
-              6  7  8  edge2
-              9  10 11
-            |   edge3
-            j
-        @endcode
+        ::
+                 edge1
+               0  1  2   -> i (row)
+         edge4 3  4  5
+               6  7  8  edge2
+               9  10 11
+             |   edge3
+             j
         """
         edgeNumber = 2
         #edgeNumber = 4
-        #print "edgeNumber=%s" %(edgeNumber)
+        print("edgeNumber=%s" % edgeNumber)
         if edgeNumber == 1:
             x = self.x[0][:]
             y = self.y[0][:]
             z = self.z[0][:]  # pretty sure edge 1 is the 0th row
             p = [iCol for iCol in xrange(self.nCols)]  # good
         elif edgeNumber == 2:
-            #self.log.debug("x.shape = %s" % (str(self.x.shape)))
+            self.log.debug("x.shape = %s" % (str(self.x.shape)))
+            print("self.x[:]" ,self.x[:])
             x = self.x[:][self.nCols - 1]
             y = self.y[:][self.nCols - 1]
             z = self.z[:][self.nCols - 1]  # pretty sure edge 2 is the 0th row
-            p = [iCol * (self.nRows) + (
-                self.nRows - 1) for iCol in xrange(self.nCols)]
+            p = [iCol * (self.nRows) + (self.nRows - 1) for iCol in xrange(self.nCols)]
             #p = [iRow*(self.nCols)+(self.nCols-1) for iRow in xrange(self.nRows)]  #
         elif edgeNumber == 3:
             x = self.x[self.nRows - 1][:]
             y = self.y[self.nRows - 1][:]
             z = self.z[self.nRows - 1][:]  # pretty sure edge3 is the last row
-            p = [iCol + self.nRows * iCol for iCol in xrange(
-                self.nCols)]  # good
+            p = [iCol + self.nRows * iCol for iCol in xrange(self.nCols)]  # good
             #p = [(self.nCols-1)*(self.nRows)+iRow for iRow in xrange(self.nRows)]
         elif edgeNumber == 4:
             x = self.x[:][0]
@@ -231,7 +229,7 @@ class PanairPatch(object):
             z = self.z[:][0]  # pretty sure edge 2 is the 0th row
             p = [self.nRows * iCol for iCol in xrange(self.nCols)]  # good
         else:
-            raise ValueError('invalid edge; edgeNumber=%s' % (edgeNumber))
+            raise ValueError('invalid edge; edgeNumber=%s' % edgeNumber)
         #self.log.debug("nRows=%s nCols=%s edgeNumber=%s" % (
             #self.nRows, self.nCols, edgeNumber))
         #print "nx = ",len(x)
@@ -340,7 +338,7 @@ class PanairPatch(object):
         points = ''
 
         header += '%-10s%-10s\n' % ('1.', self.cpNorm)  # nNetworks is 1
-        header += '%-10s\n' % (sInt(self.kt))
+        header += '%-10s\n' % sInt(self.kt)
         header += '%-10s%-10s%50s%-10s\n' % (
             sInt(self.nRows), sInt(self.nCols), '', self.netName)
 
@@ -458,8 +456,10 @@ class PanairGridHelper(object):
         return out
 
     def write_cases(self):
-        out = '$cases - number of solutions\n'
-        out += '%-10s' % (sInt(self.ncases)) + '\n'
+        out = ''
+        if self.ncases is not None:
+            out = '$cases - number of solutions\n'
+            out += '%-10s' % sInt(self.ncases) + '\n'
         return out
 
     def get_alphas(self, section):
@@ -558,3 +558,4 @@ class PanairGridHelper(object):
     def write_end(self):
         if self.isEnd:
             return '$end of panair inputs\n '
+        return ''
