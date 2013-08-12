@@ -37,6 +37,42 @@ class NastranIO(object):
     def __init__(self):
         pass
 
+    def onLoadBDF(self, event):
+        """ Open a file"""
+        #print "OnOpen..."
+
+        wildcard = "Nastran BDF (*.bdf; *.dat; *.nas)|*.bdf;*.dat;*.nas|" \
+            "All files (*.*)|*.*"
+
+        Title = 'Choose a Nastran Input Deck to Load'
+        loadFunction = self.parent.frmPanel.loadNastranGeometry
+        self.createLoadFileDialog(wildcard, Title, loadFunction,
+                                  updateWindowName=True)
+
+    def onLoadOP2(self, event):
+        """ Open a file"""
+        #print "OnOpen..."
+
+        if 0:
+            bdf = self.parent.bdfFileName
+            bdfBase = os.path.basename(bdf)
+            #dirname = os.path.dirname(bdf)
+            (op2name, op2) = os.path.splitext(bdfBase)
+            op2 = os.path.join(self.parent.dirname, op2name + '.op2')
+
+            self.parent.op2FileName = op2
+            if os.path.exists(op2):
+                self.parent.frmPanel.loadNastranResults(op2)
+                self.parent.frmPanel.Update()
+            return
+
+        wildcard = "Nastran OP2 (*.op2)|*.op2|" \
+            "All files (*.*)|*.*"
+
+        Title = 'Choose a Nastran Output File to Load (OP2 only)'
+        loadFunction = self.parent.frmPanel.loadNastranResults
+        self.createLoadFileDialog(wildcard, Title, loadFunction)
+
     def loadNastranGeometry(self, bdfFileName, dirname, isNodal, isCentroidal):
         self.isNodal = isNodal
         self.isCentroidal = isCentroidal

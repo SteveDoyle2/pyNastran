@@ -11,7 +11,18 @@ version = pyNastran.__version__
 
 #from pyNastran.gui.mouseStyle import MouseStyle
 from pyNastran.gui.actionsControl import pyWidget
-from pyNastran.gui.nastranIO import NastranIO
+try:
+    from pyNastran.gui.nastranIO import NastranIO
+    is_nastran = True
+except ImportError:
+    class NastranIO(object):
+        def __init__(self):
+            self.grid = vtk.vtkUnstructuredGrid()
+            self.grid2 = vtk.vtkUnstructuredGrid()
+        def loadNastranGeometry(self, *args, **kwargs):
+            pass
+    is_nastran = False
+
 from pyNastran.converters.cart3d.cart3dIO import Cart3dIO
 from pyNastran.converters.LaWGS.wgsIO import LaWGS_IO
 from pyNastran.converters.panair.panairIO import PanairIO

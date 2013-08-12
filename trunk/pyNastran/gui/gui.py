@@ -10,7 +10,7 @@ import sys
 
 #import pyNastran
 import pyNastran.gui
-from pyNastran.gui.guiPanel import Pan
+from pyNastran.gui.guiPanel import Pan, is_nastran
 ID_SAVEAS = 803
 ID_ABOUT = 3
 
@@ -173,12 +173,9 @@ class AppFrame(wx.Frame):
         #self.Bind(wx.EVT_RIGHT_DOWN, events.OnRightDown)
 
         # Bind View Menu
-        self.Bind(wx.EVT_MENU, self.frmPanel.widget.onTakePicture,
-                  id=ID_CAMERA)
-        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToWireframe,
-                  id=ID_WIREFRAME)
-        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToSurface,
-                  id=ID_SURFACE)
+        self.Bind(wx.EVT_MENU, self.frmPanel.widget.onTakePicture, id=ID_CAMERA)
+        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToWireframe, id=ID_WIREFRAME)
+        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToSurface, id=ID_SURFACE)
 
         #self.Bind(wx.EVT_MENU, self.frmPanel.onSetToFlatShading,    self.flatShading)
         #self.Bind(wx.EVT_MENU, self.frmPanel.onSetToGouraudShading, self.gouraudShading)
@@ -256,6 +253,8 @@ class AppFrame(wx.Frame):
 
         topen = os.path.join(iconPath, 'topen.png')
         assert os.path.exists(topen), 'topen=%r' % topen
+        
+        #if is_nastran:
         topen = wx.Image(topen, wx.BITMAP_TYPE_ANY)
         topen = toolbar1.AddLabelTool(ID_BDF, '', wx.BitmapFromImage(topen), longHelp='Loads a BDF')
 
@@ -276,15 +275,16 @@ class AppFrame(wx.Frame):
         self.toolbar1 = toolbar1
 
         # Bind File Menu
-        self.Bind(wx.EVT_TOOL, events.onLoadBDF, id=ID_BDF)
-        self.Bind(wx.EVT_TOOL, events.onLoadOP2, id=ID_OP2)
+        if is_nastran:
+            self.Bind(wx.EVT_TOOL, events.onLoadBDF, id=ID_BDF)
+            self.Bind(wx.EVT_TOOL, events.onLoadOP2, id=ID_OP2)
         self.Bind(wx.EVT_TOOL, events.onLoadCart3d, id=ID_CART3D)
         self.Bind(wx.EVT_TOOL, events.onLoadLaWGS, id=ID_LAWGS)
         self.Bind(wx.EVT_TOOL, events.onLoadPanair, id=ID_PANAIR)
-        #self.Bind(wx.EVT_TOOL, events.onExport,     id=ID_EXPORT)
+        #self.Bind(wx.EVT_TOOL, events.onExport, id=ID_EXPORT)
 
         self.Bind(wx.EVT_MENU, events.onExit, id=wx.ID_EXIT)
-       #self.Bind(wx.EVT_TOOL, events.onExit,     id=wx.ID_EXIT)
+       #self.Bind(wx.EVT_TOOL, events.onExit, id=wx.ID_EXIT)
 
         self.Bind(wx.EVT_MENU, self.frmPanel.onSetToWireframe, id=ID_WIREFRAME)
         self.Bind(wx.EVT_MENU, self.frmPanel.onSetToSurface, id=ID_SURFACE)
@@ -293,6 +293,7 @@ class AppFrame(wx.Frame):
         #self.Bind(wx.EVT_TOOL, events.onSaveAsFile, id=ID_SAVEAS)
         #self.Bind(wx.EVT_TOOL, events.onUndo, tundo)
         #self.Bind(wx.EVT_TOOL, events.onRedo, tredo)
+
     def buildMenuBar(self):
         events = self.eventsHandler
 
@@ -300,27 +301,25 @@ class AppFrame(wx.Frame):
         # --------- File Menu -------------------------------------------------
         fileMenu = wx.Menu()
         #fileMenu.Append(wx.ID_NEW,  '&New','does nothing')
-        loadBDF = fileMenu.Append(ID_BDF,
-                                  'Load &BDF',
-                                  'Loads a BDF Input File')
-        loadOP2 = fileMenu.Append(ID_OP2,
-                                  'Load O&P2',
-                                  'Loads an OP2 Results File')
-        loadCart3d = fileMenu.Append(ID_CART3D,
-                                     'Load &Cart3D',
+        if is_nastran:
+            loadBDF = fileMenu.Append(ID_BDF, 'Load &BDF',
+                                      'Loads a BDF Input File')
+            loadOP2 = fileMenu.Append(ID_OP2, 'Load O&P2',
+                                      'Loads an OP2 Results File')
+        loadCart3d = fileMenu.Append(ID_CART3D, 'Load &Cart3D',
                                      'Loads a Cart3D Input/Results File')
-        loadLaWGS = fileMenu.Append(ID_LAWGS,
-                                    'Load &LaWGS',
+        loadLaWGS = fileMenu.Append(ID_LAWGS, 'Load &LaWGS',
                                     'Loads an LaWGS File')
-        loadPanair = fileMenu.Append(ID_PANAIR,
-                                     'Load &Panair',
+        loadPanair = fileMenu.Append(ID_PANAIR, 'Load &Panair',
                                      'Loads a Panair Input File')
         #export     = fileMenu.Append(ID_EXPORT,'Export to...', 'Export the Model to Another Format')
         #print "topen = ",os.path.join(iconPath,'topen.png')
         sys.stdout.flush()
         assert os.path.exists(os.path.join(iconPath, 'topen.png'))
-        loadBDF.SetBitmap(wx.Image(os.path.join(iconPath,
-                                                'topen.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+        
+        if is_nastran:
+            png = wx.Image(os.path.join(iconPath, 'topen.png'), wx.BITMAP_TYPE_PNG)
+            loadBDF.SetBitmap(png.ConvertToBitmap())
 
         #fileMenu.Append(wx.ID_RES, 'Load OP2 &Results','Loads a OP2 - does nothing')
         #fileMenu.Append(wx.ID_SAVE, '&Save','does nothing')
@@ -341,15 +340,12 @@ class AppFrame(wx.Frame):
         # --------- View Menu -------------------------------------------------
         # status bar at bottom - toggles
         viewMenu = wx.Menu()
-        camera = viewMenu.Append(ID_CAMERA,
-                                 'Take a Screenshot',
+        camera = viewMenu.Append(ID_CAMERA, 'Take a Screenshot',
                                  'Take a Screenshot')
         viewMenu.AppendSeparator()
-        wireframe = viewMenu.Append(ID_WIREFRAME,
-                                    'Wireframe Model',
+        wireframe = viewMenu.Append(ID_WIREFRAME, 'Wireframe Model',
                                     'Show Model as a Wireframe Model')
-        surface = viewMenu.Append(ID_SURFACE,
-                                  'Surface Model',
+        surface = viewMenu.Append(ID_SURFACE, 'Surface Model',
                                   'Show Model as a Surface Model')
         #viewMenu.AppendSeparator()
 
@@ -462,42 +458,6 @@ class EventsHandler(object):
         self.isCentroidal = isCentroidal
 
     # File Menu
-    def onLoadBDF(self, event):
-        """ Open a file"""
-        #print "OnOpen..."
-
-        wildcard = "Nastran BDF (*.bdf; *.dat; *.nas)|*.bdf;*.dat;*.nas|" \
-            "All files (*.*)|*.*"
-
-        Title = 'Choose a Nastran Input Deck to Load'
-        loadFunction = self.parent.frmPanel.loadNastranGeometry
-        self.createLoadFileDialog(wildcard, Title, loadFunction,
-                                  updateWindowName=True)
-
-    def onLoadOP2(self, event):
-        """ Open a file"""
-        #print "OnOpen..."
-
-        if 0:
-            bdf = self.parent.bdfFileName
-            bdfBase = os.path.basename(bdf)
-            #dirname = os.path.dirname(bdf)
-            (op2name, op2) = os.path.splitext(bdfBase)
-            op2 = os.path.join(self.parent.dirname, op2name + '.op2')
-
-            self.parent.op2FileName = op2
-            if os.path.exists(op2):
-                self.parent.frmPanel.loadNastranResults(op2)
-                self.parent.frmPanel.Update()
-            return
-
-        wildcard = "Nastran OP2 (*.op2)|*.op2|" \
-            "All files (*.*)|*.*"
-
-        Title = 'Choose a Nastran Output File to Load (OP2 only)'
-        loadFunction = self.parent.frmPanel.loadNastranResults
-        self.createLoadFileDialog(wildcard, Title, loadFunction)
-
     def onLoadCart3d(self, event):
         """ Open a file"""
         #print "OnOpen..."
