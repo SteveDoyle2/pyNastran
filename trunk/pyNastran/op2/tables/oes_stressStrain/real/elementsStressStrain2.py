@@ -12,7 +12,7 @@
    CDAMP2 (???) linear (centroid)
    CDAMP3 (???) linear (centroid)
    CDAMP4 (???) linear (centroid)
-   
+
  OES_CBEAM_2 - beamStress / beamStrain
    CBEAM (2) linear
 
@@ -573,7 +573,7 @@ class RealElementsStressStrain2(object):
         else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
             #print("nelements =",nelements)
             pass
-        
+
         (ielement_start, ielement_end) = self.obj._preallocate(dt, nelements)
 
         istart = 0
@@ -588,7 +588,7 @@ class RealElementsStressStrain2(object):
 
             (eid, tx, ty, tz, rx, ry, rz) = out
             eid = extract(eid, dt)
-            
+
             eids.append(eid)
             T1.append(tx)
             T2.append(ty)
@@ -706,7 +706,7 @@ class RealElementsStressStrain2(object):
 
             #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
             #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-            
+
             #self.obj.add_new_eid('CTRIA3', dt, eid, 'C', fd1, sx1, sy1,
             #                   txy1, angle1, major1, minor1, vm1)
             #self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2,
@@ -736,7 +736,7 @@ class RealElementsStressStrain2(object):
         istart = 0
         iend = 68
         ntotal = 68 # 4*17
-        
+
         nelements = len(self.data) // 68
         for i in xrange(nelements):
             #print self.print_block(self.data[0:100])
@@ -757,10 +757,10 @@ class RealElementsStressStrain2(object):
             #                   txy1, angle1, major1, minor1, maxShear1)
             #self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2,
             #             angle2, major2, minor2, maxShear2)
-            
+
             istart = iend
             iend += ntotal
-            
+
         self.data = self.data[istart:]
 
     def OES_CQUAD4_144(self, name):
@@ -830,12 +830,13 @@ class RealElementsStressStrain2(object):
             ) = self.obj._preallocate(dt, nnodes, nelements)
 
 
-        eids=[]; eTypes=[]; eids2=[]; nids=[]; layer=[]
+        eids=[]; eTypes=[]; eids2=[]; nids=[]; layer=[]; nnodes_list=[]
         fd=[]; sx=[]; sy=[]; sxy=[]; angle=[]; major=[]; minor=[]; vm=[]
         #['fd1', 'sx1', 'sy1', 'txy1', 'angle1', 'major1', 'minor1', 'vm1',
         # 'fd2', 'sx2', 'sy2', 'txy2', 'angle2', 'major2', 'minor2', 'vm2',]
 
         ibase = 0
+        nnodes_temp = 1 + nNodes
         for i in xrange(nelements):
             eData = self.data[ibase:ibase + 76]  # 8 + 68
 
@@ -844,6 +845,7 @@ class RealElementsStressStrain2(object):
             #gridC = 'C'
             eid = extract(eid, dt)
             eTypes.append(eType)
+            nnodes_list.append(nnodes_temp)
             eids.append(eid)
 
             eids2.append(eid)
@@ -929,6 +931,7 @@ class RealElementsStressStrain2(object):
 
         self.obj.element_data['element_id'][ielement_start:ielement_end] = eids
         self.obj.element_data['element_type'][ielement_start:ielement_end] = eTypes
+        self.obj.element_data['nnodes'][ielement_start:ielement_end] = nnodes_list
 
         #print('nids',nids)
         self.obj.data['element_id'][inode_start:inode_end] = eids2
@@ -937,7 +940,7 @@ class RealElementsStressStrain2(object):
 
         headers = self.obj._get_headers()
         (fd, oxx, oyy, txy, omax, omin, ovm) = headers
-        
+
         self.obj.data[oxx][inode_start:inode_end] = sx
         self.obj.data[oyy][inode_start:inode_end] = sy
         self.obj.data[txy][inode_start:inode_end] = sxy

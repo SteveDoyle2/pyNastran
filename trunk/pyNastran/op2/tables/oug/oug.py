@@ -4,7 +4,7 @@ from struct import unpack
 from numpy import zeros, ones, array
 import pandas as pd
 
-from pyNastran import as_array
+
 from pyNastran.op2.tables.oug.oug_displacements import (
     DisplacementObject,              # table_code=1     format_code=1 sort_code=0
     ComplexDisplacementObject)       # analysis_code=5  format_code=3 sort_code=1

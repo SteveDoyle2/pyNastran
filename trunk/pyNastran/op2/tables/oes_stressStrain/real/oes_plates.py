@@ -4,7 +4,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from numpy import zeros, array
 import pandas as pd
 
-from pyNastran import as_array
+from pyNastran import update_index
+
 from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats8p4F
 
@@ -91,6 +92,7 @@ class RealPlateResults(object):
 
         element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
         element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
+        element_data['nlayers'] = pd.Series(zeros(nelements_size, dtype='int32'))
 
         data['element_id'] = pd.Series(zeros((n), dtype='int32'))
         data['node_id'] = pd.Series(zeros((n), dtype='float32'))
@@ -126,7 +128,7 @@ class RealPlateResults(object):
         columns += ['element_id', 'node_id', 'layer', oxx, oyy, txy, 'angle', omax, omin, key]
 
         self.data = pd.DataFrame(data, columns=columns)
-        self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type'])
+        self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type', 'nnodes'])
         return (self._inode_start, self._inode_end, self._ielement_start, self._ielement_end)
 
     def _finalize(self, dt):
@@ -141,11 +143,13 @@ class RealPlateResults(object):
             #grid_type_str.append('C' if grid_type==0 else grid_type)
         #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
 
-        if dts[0] is not None:
-            name = self.data_code['name']
-            self.data = self.data.set_index([name, 'element_id', 'element_id', 'node_id', 'layer'])
-        else:
-            self.data = self.data.set_index(['element_id', 'node_id', 'layer'])
+        if update_index:
+            if dts[0] is not None:
+                name = self.data_code['name']
+                self.data = self.data.set_index([name, 'element_id', 'element_id', 'node_id', 'layer'])
+            else:
+                self.data = self.data.set_index(['element_id', 'node_id', 'layer'])
+        self.element_data = self.element_data.set_index(['element_id'])
         #print("final\n", self.data.to_string())
         del self._inode_start
         del self._inode_end
@@ -173,7 +177,7 @@ class RealPlateResults(object):
 
         etypes = self.get_element_types()
         msg.append('  element data: index :  element_id\n')
-        msg.append('              : result:  element_type\n')
+        msg.append('              : result:  element_type, nnodes\n')
         msg.append('  data        : index :  %selement_id, node_id, layer\n' % dt_string)
         msg.append('              : result:  %s, %s, %s, %s, '
                                             '%s, %s, %s, angle\n' % (fd, oxx, oyy, txy,
@@ -361,7 +365,7 @@ class PlateStressObject(StressObject, RealPlateResults):
         quadrMsg = None
         eTypes = self.get_element_types()
         if 'CQUAD4' in eTypes:
-            qkey = eTypes.index('CQUAD4')
+            qkey = etypes.index('CQUAD4')
             kkey = self.eType.keys()[qkey]
             ekey = self.oxx[kkey].keys()
             isBilinear = True
@@ -491,13 +495,18 @@ class PlateStressObject(StressObject, RealPlateResults):
         quadrMsg = None
         eTypes = self.get_element_types()
         element_types = list(self.element_data['element_type'])
+
+        #self.element_data.set_index(['element_id'])
         if 'CQUAD4' in eTypes:
-            qkey = eTypes.index('CQUAD4')
-            kkey = self.eType.keys()[qkey]
-            ekey = self.oxx[kkey].keys()
+            print('self.data =', self.data)
+            print('self.element_data =\n', self.element_data)
+            i_first_quad = element_types.index('CQUAD4')
+            eid = self.data['element_id'][i_first_quad]
+            nnodes = self.element_data['nnodes'][eid]
+            print('nnodes =', nnodes)
             isBilinear = True
             quadMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quadMsgTemp
-            if len(ekey) == 1:
+            if nnodes == 1:
                 isBilinear = False
                 quadMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + triMsgTemp
 
