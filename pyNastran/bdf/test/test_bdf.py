@@ -355,46 +355,35 @@ def print_points(fem1, fem2):
 
 
 def main():
-    import argparse
-
-    ver = str(pyNastran.__version__)
-    parser = argparse.ArgumentParser(description='Tests to see if a BDF will '
-                                     'work with pyNastran.', add_help=True)
-    parser.add_argument('bdfFileName', metavar='bdfFileName', type=str,
-                        nargs=1, help='path to BDF/DAT file')
-
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('-q', '--quiet', dest='quiet', action='store_true',
-                       help='Prints   debug messages (default=False)')
-    parser.add_argument('-x', '--xref', dest='xref', action='store_false',
-                       help='Disables cross-referencing and checks of the BDF')
-    parser.add_argument('-p', '--punch', dest='punch', action='store_true',
-                       help='Disables reading the executive and case control decks in the BDF')
-    parser.add_argument('-c', '--checks', dest='check', action='store_false',
-                       help='Disables BDF checks.  Checks run the methods on '
-                       'every element/property to test them.  May fails if a '
-                       'card is fully not supported.')
-    parser.add_argument('-v', '--version', action='version', version=ver,
-                       help="Shows pyNastran's version number and exits")
-
-    if len(sys.argv) == 1:
-        parser.print_help()
-        sys.exit()
-    args = parser.parse_args()
-
-    print("bdfFile     = %s" % args.bdfFileName[0])
-    print("punch       = %s" % args.punch)
-    print("xref        = %s" % args.xref)
-    print("check       = %s" % args.check)
-    print("debug       = %s" % (not(args.quiet)))
-
-    xref = args.xref
-    punch = args.punch
-    check = args.check
+    #print('sys.argv', sys.argv)
+    msg =  'Tests to see if a BDF will work with pyNastran.\n'
+    msg += '<bdf_filename> is the path to the BDF/DAT file\n'
+    msg += '\n'
+    msg += 'Usage:\n'
+    msg += '  test_bdf.py [-q] [-x] [-p] [-c] <bdf_filename>\n'
+    msg += '  test_bdf.py -h | --help\n'
+    msg += '  test_bdf.py -v | --version\n'
+    msg += '\n'
+    msg += 'Options:\n'
+    msg += '  -h, --help     Show this help message and exits\n'
+    msg += '  -q, --quiet    Prints debug messages (default=False)\n'
+    msg += '  -c, --checks   Disables BDF checks.  Checks run the methods on \n'
+    msg += '                 every element/property to test them.  May fails if a \n'
+    msg += '                 card is fully not supported.\n'
+    msg += '  -p, --punch    Disables reading the executive and case control decks in the BDF\n'
+    msg += '  -x, --xref     Disables cross-referencing and checks of the BDF\n'
+    msg += '  -v, --version  Shows pyNastran\'s version number and exits\n'
     
-    debug = not(args.quiet)
-    bdf_filename = args.bdfFileName[0]
+    from docopt import docopt
+    ver = str(pyNastran.__version__)
+    data = docopt(msg, version=ver)
 
+    debug = not(data['--quiet'])
+    xref = data['--xref']
+    check = data['--checks']
+    punch = data['--punch']
+    bdf_filename = data['<bdf_filename>']
+    
     run_bdf('.', bdf_filename, debug=debug, xref=xref, check=check, punch=punch)
 
 if __name__ == '__main__':
