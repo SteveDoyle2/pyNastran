@@ -201,17 +201,24 @@ class PanairPatch(object):
              |   edge3
              j
         """
-        edgeNumber = 2
+        self.log.debug('---get_edge---')
+        #edgeNumber = 2
         #edgeNumber = 4
         print("edgeNumber=%s" % edgeNumber)
+        self.log.debug("x.shape = %s" % (str(self.x.shape)))
+        
+        if edgeNumber == 1:
+            self.log.debug("self.x[:]\n%54s%s" % ('', self.x[:]))
+            self.log.debug("self.y[:]\n%54s%s" % ('', self.y[:]))
+            self.log.debug("self.z[:]\n%54s%s" % ('', self.z[:]))
+            #edgeNumber = 2
+
         if edgeNumber == 1:
             x = self.x[0][:]
             y = self.y[0][:]
             z = self.z[0][:]  # pretty sure edge 1 is the 0th row
             p = [iCol for iCol in xrange(self.nCols)]  # good
         elif edgeNumber == 2:
-            self.log.debug("x.shape = %s" % (str(self.x.shape)))
-            print("self.x[:]" ,self.x[:])
             x = self.x[:][self.nCols - 1]
             y = self.y[:][self.nCols - 1]
             z = self.z[:][self.nCols - 1]  # pretty sure edge 2 is the 0th row
@@ -230,6 +237,9 @@ class PanairPatch(object):
             p = [self.nRows * iCol for iCol in xrange(self.nCols)]  # good
         else:
             raise ValueError('invalid edge; edgeNumber=%s' % edgeNumber)
+
+        #print "x", x
+
         #self.log.debug("nRows=%s nCols=%s edgeNumber=%s" % (
             #self.nRows, self.nCols, edgeNumber))
         #print "nx = ",len(x)
@@ -246,6 +256,7 @@ class PanairPatch(object):
         return (p, x, y, z)
 
     def get_edges(self):
+        self.log.debug('get_edges')
         nx = 2 * (self.nRows + self.nCols) - 2
         p = zeros(nx)
         x = zeros(nx)
@@ -280,7 +291,7 @@ class PanairPatch(object):
         points = []
         #self.log.debug("size(X) = %s" %( str( self.x.shape ) ))
         #print "size(X) = %s" %( str(X.size())
-
+        self.log.debug('self.iNetwork=%s self.netName=%r' % (self.iNetwork, self.netName))
         for j in xrange(self.nCols):
             for i in xrange(self.nRows):
                 point = [self.x[i][j], self.y[i][j], self.z[i][j]]

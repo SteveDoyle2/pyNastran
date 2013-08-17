@@ -47,7 +47,7 @@ class Cart3dIO(object):
         self.scalarBar.Modified()
         return skipReading
 
-    def loadCart3dGeometry(self, cart3dFileName, dirname, isNodal, isCentroidal):
+    def load_cart3d_geometry(self, cart3dFileName, dirname, isNodal, isCentroidal):
         self.isNodal = isNodal
         self.isCentroidal = isCentroidal
         #key = self.caseKeys[self.iCase]

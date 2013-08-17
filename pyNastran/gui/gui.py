@@ -35,6 +35,30 @@ ID_EXPORT = 930
 pkgPath = pyNastran.gui.__path__[0]
 print "pkgPath = |%r|" %(pkgPath)
 
+try:
+    import pyNastran.converters.panair.panairIO
+    is_panair = True
+except ImportError:
+    is_panair = False
+
+try:
+    import pyNastran.converters.cart3d.cart3dIO
+    is_cart3d = True
+except ImportError:
+    is_cart3d = False
+
+try:
+    import pyNastran.converters.LaWGS.wgsIO
+    is_lawgs = True
+except ImportError:
+    is_lawgs = False
+
+try:
+    from pyNastran.gui.nastranIO import NastranIO
+    is_nastran = True
+except ImportError:
+    is_nastran = False
+
 if '?' in pkgPath:
     iconPath = 'icons'
 else:
@@ -47,7 +71,7 @@ print "iconPath = |%r|" %(iconPath)
 class AppFrame(wx.Frame):
 
     def __init__(self, isEdges=False, isNodal=False, isCentroidal=False,
-                 debug=False):
+                 format=None, input=None, output=None, debug=False):
 
         wx.Frame.__init__(self, None, -1, size=wx.Size(800, 600),
                           title='pyNastran')
@@ -57,6 +81,30 @@ class AppFrame(wx.Frame):
         self.isCentroidal = isCentroidal
         self.dirname = ''
         self.setupFrame()
+        
+        print('format=%r input=%r output=%r' % (format[0], input, output))
+        if format[0] not in ['panair', 'cart3d', 'lawgs', 'nastran', None]:
+            sys.exit('\n---invalid format=%r' % format[0])
+        elif (format is not None) and (input is not None):
+            dirname = os.path.dirname(input[0])
+            inputbase = input[0]
+
+            if format[0]=='panair' and is_panair:
+                print("loading panair")
+                self.frmPanel.load_panair_geometry(inputbase, dirname, self.isNodal, self.isCentroidal)
+            elif format[0]=='nastran' and is_nastran:
+                print("loading nastran")
+                self.frmPanel.load_nastran_geometry(inputbase, dirname, self.isNodal, self.isCentroidal)
+            elif format[0]=='cart3d' and is_cart3d:
+                print("loading cart3d")
+                self.frmPanel.load_cart3d_geometry(inputbase, dirname, self.isNodal, self.isCentroidal)
+            elif format[0]=='lawgs' and is_lawgs:
+                print("loading lawgs")
+                self.frmPanel.load_LaWGS_geometry(inputbase, dirname, self.isNodal, self.isCentroidal)
+            else:
+                sys.exit('\n---unsupported format=%r' % format[0])
+            self.UpdateWindowName(input[0])
+            self.frmPanel.Update()
 
     def setupFrame(self):
         """
@@ -632,8 +680,12 @@ def run_arg_parse():
 
     ver = str(pyNastran.__version__)
     parser = argparse.ArgumentParser(description='Tests to see if an OP2 will work with pyNastran.', add_help=True)  # version=ver)
-    #parser.add_argument('op2FileName', metavar='op2FileName', type=str, nargs=1,
-    #                   help='path to OP2 file')
+    parser.add_argument('-f', '--format', metavar='format', type=str, nargs=1,
+                       help='format type (panair, cart3d, nastran, lawgs)')
+    parser.add_argument('-i', '--input', metavar='input', type=str, nargs=1,
+                       help='path to input file')
+    parser.add_argument('-o', '--output', metavar='output', type=str, nargs=1,
+                       help='path to output file')
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-q', '--quiet', dest='quiet', action='store_true',
@@ -659,32 +711,38 @@ def run_arg_parse():
     #print "op2FileName = ", args.op2FileName[0]
     #print "debug       = ", not(args.quiet)
 
+    format = args.format
+    input= args.input
+    output= args.output
     debug = not(args.quiet)
     edges = args.edges
     isNodal = args.isNodal
     #writeBDF    = args.writeBDF
     #op2FileName = args.op2FileName[0]
 
-    return (edges, isNodal, debug)
+    return (edges, isNodal, format, input, output, debug)
 
 
 def main():
     isEdges = False
     isNodal = True
+    format = None
+    input = None
+    output = None
     #isCentroidal = True
     debug = True
     if sys.version_info < (2, 6):
         print("requires Python 2.6+ to use command line arguments...")
     else:
         if len(sys.argv) > 1:
-            (isEdges, isNodal, debug) = run_arg_parse()
+            (edges, isNodal, format, input, output, debug) = run_arg_parse()
     isCentroidal = not(isNodal)
 
     isNodal = True
     isCentroidal = True
 
     app = wx.App(redirect=False)
-    appFrm = AppFrame(isEdges, isNodal, isCentroidal, debug)
+    appFrm = AppFrame(isEdges, isNodal, isCentroidal, format, input, output, debug)
     #appFrm.Show()
     print("launching gui")
     app.MainLoop()
