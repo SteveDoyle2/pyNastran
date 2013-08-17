@@ -33,7 +33,7 @@ ID_EXPORT = 930
 
 
 pkgPath = pyNastran.gui.__path__[0]
-print "pkgPath = |%r|" %(pkgPath)
+#print "pkgPath = %r" % pkgPath
 
 try:
     import pyNastran.converters.panair.panairIO
@@ -63,7 +63,7 @@ if '?' in pkgPath:
     iconPath = 'icons'
 else:
     iconPath = os.path.join(pkgPath, 'icons')
-print "iconPath = |%r|" %(iconPath)
+#print "iconPath = %r" % iconPath
 
 #------------------------------------------------------------------------------
 
@@ -82,29 +82,32 @@ class AppFrame(wx.Frame):
         self.dirname = ''
         self.setupFrame()
         
-        print('format=%r input=%r output=%r' % (format[0], input, output))
-        if format[0] not in ['panair', 'cart3d', 'lawgs', 'nastran', None]:
-            sys.exit('\n---invalid format=%r' % format[0])
-        elif (format is not None) and (input is not None):
-            dirname = os.path.dirname(input[0])
-            inputbase = input[0]
+        print('format=%r input=%r output=%r' % (format, input, output))
+        if format is not None and format not in ['panair', 'cart3d', 'lawgs', 'nastran']:
+            sys.exit('\n---invalid format=%r' % format)
+        elif input is not None:
+            dirname = os.path.dirname(input)
+            inputbase = input
 
-            if format[0]=='panair' and is_panair:
+            if format=='panair' and is_panair:
                 print("loading panair")
                 self.frmPanel.load_panair_geometry(inputbase, dirname, self.isNodal, self.isCentroidal)
-            elif format[0]=='nastran' and is_nastran:
+            elif format=='nastran' and is_nastran:
                 print("loading nastran")
                 self.frmPanel.load_nastran_geometry(inputbase, dirname, self.isNodal, self.isCentroidal)
-            elif format[0]=='cart3d' and is_cart3d:
+            elif format=='cart3d' and is_cart3d:
                 print("loading cart3d")
                 self.frmPanel.load_cart3d_geometry(inputbase, dirname, self.isNodal, self.isCentroidal)
-            elif format[0]=='lawgs' and is_lawgs:
+            elif format=='lawgs' and is_lawgs:
                 print("loading lawgs")
-                self.frmPanel.load_LaWGS_geometry(inputbase, dirname, self.isNodal, self.isCentroidal)
+                self.frmPanel.load_LaWGS_geometry(inputbase, dirname, self.isnodal, self.isCentroidal)
             else:
-                sys.exit('\n---unsupported format=%r' % format[0])
-            self.UpdateWindowName(input[0])
+                sys.exit('\n---unsupported format=%r' % format)
+            self.UpdateWindowName(input)
             self.frmPanel.Update()
+        else:
+            self.frmPanel.scalarBar.VisibilityOff()
+            self.frmPanel.scalarBar.Modified()
 
     def setupFrame(self):
         """
@@ -519,7 +522,7 @@ class EventsHandler(object):
         # "All files (*.*)|*.*"
 
         Title = 'Choose a Cart3d Input File to Load'
-        loadFunction = self.parent.frmPanel.loadCart3dGeometry
+        loadFunction = self.parent.frmPanel.load_cart3d_geometry
         #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
         #dirname = ''
         #loadFunction(fname,dirname)
@@ -532,7 +535,7 @@ class EventsHandler(object):
             "All files (*.*)|*.*"
 
         Title = 'Choose a LaWGS File to Load'
-        loadFunction = self.parent.frmPanel.loadLaWGSGeometry
+        loadFunction = self.parent.frmPanel.load_LaWGS_geometry
         #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
         #dirname = ''
         #loadFunction(fname,dirname)
@@ -676,49 +679,38 @@ class EventsHandler(object):
 
 
 def run_arg_parse():
-    import argparse
-
+    #print "sys.argv[0] =", sys.argv[0]
+    msg  = "Usage:\n"
+    msg += "  pyNastranGUI.py [-f FORMAT] [-i INPUT] [-o OUTPUT]\n"
+    msg += "                         [-q] [-e] [-n | -c]\n"
+    msg += '  pyNastranGUI.py -h | --help\n'
+    msg += '  pyNastranGUI.py -v | --version\n'
+    msg += "\n"
+    msg += "Options:\n"
+    msg += "  -h, --help                  show this help message and exit\n"
+    msg += "  -f FORMAT, --format FORMAT  format type (panair, cart3d,\n"
+    msg += "                                           nastran, lawgs)\n"
+    msg += "  -i INPUT, --input INPUT     path to input file\n"
+    msg += "  -o OUTPUT, --output OUTPUT  path to output file\n"
+    msg += "  -q, --quiet                 prints debug messages (default=True)\n"
+    msg += "  -e, --edges                 shows element edges as black lines (default=False)\n"
+    msg += "  -n, --nodalResults          plots nodal results\n"
+    msg += "  -c, --centroidalResults     plots centroidal results\n"
+    msg += "  -v, --version               show program's version number and exit\n"
+    
+    from docopt import docopt
     ver = str(pyNastran.__version__)
-    parser = argparse.ArgumentParser(description='Tests to see if an OP2 will work with pyNastran.', add_help=True)  # version=ver)
-    parser.add_argument('-f', '--format', metavar='format', type=str, nargs=1,
-                       help='format type (panair, cart3d, nastran, lawgs)')
-    parser.add_argument('-i', '--input', metavar='input', type=str, nargs=1,
-                       help='path to input file')
-    parser.add_argument('-o', '--output', metavar='output', type=str, nargs=1,
-                       help='path to output file')
+    data = docopt(msg, version=ver)
+    #print data
 
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('-q', '--quiet', dest='quiet', action='store_true',
-                       help='prints debug messages (default=True)')
 
-    group2 = parser.add_mutually_exclusive_group()
-    group2.add_argument('-e', '--edges', dest='edges', action='store_true',
-                        help='shows element edges as black lines')
-    #group2.add_argument('-w','--writeBDF', dest='writeBDF', action='store_true', help='Writes the bdf to fem.bdf.out')
-
-    group3 = parser.add_mutually_exclusive_group()
-    group3.add_argument('-n', '--nodalResults', dest='isNodal',
-                        action='store_true', help='plots nodal results')
-    group3.add_argument('-c', '--centroidalResults', dest='isNodal',
-                        action='store_false', help='plots centroidal results')
-
-    parser.add_argument('-v', '--version', action='version', version=ver)
-
-    if len(sys.argv) == 1:
-        parser.print_help()
-        sys.exit()
-    args = parser.parse_args()
-    #print "op2FileName = ", args.op2FileName[0]
-    #print "debug       = ", not(args.quiet)
-
-    format = args.format
-    input= args.input
-    output= args.output
-    debug = not(args.quiet)
-    edges = args.edges
-    isNodal = args.isNodal
+    format  = data['--format']
+    input   = data['--input']
+    output  = data['--output']
+    debug   = not(data['--quiet'])
+    edges   = data['--edges']
+    isNodal = data['--nodalResults']
     #writeBDF    = args.writeBDF
-    #op2FileName = args.op2FileName[0]
 
     return (edges, isNodal, format, input, output, debug)
 
