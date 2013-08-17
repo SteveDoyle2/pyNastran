@@ -10,7 +10,7 @@ class LaWGS_IO(object):
 #    lawgs = LaWGS('tmx1242.wgs')
 #    lawgs.run()
 
-    def loadLaWGSGeometry(self, lawgsFileName, dirname, isNodal, isCentroidal):
+    def load_LaWGS_geometry(self, lawgsFileName, dirname, isNodal, isCentroidal):
         self.isNodal = isNodal
         self.isCentroidal = isCentroidal
         #key = self.caseKeys[self.iCase]

@@ -73,7 +73,7 @@ class NastranIO(object):
         loadFunction = self.parent.frmPanel.loadNastranResults
         self.createLoadFileDialog(wildcard, Title, loadFunction)
 
-    def loadNastranGeometry(self, bdfFileName, dirname, isNodal, isCentroidal):
+    def load_nastran_geometry(self, bdfFileName, dirname, isNodal, isCentroidal):
         self.isNodal = isNodal
         self.isCentroidal = isCentroidal
         #key = self.caseKeys[self.iCase]
