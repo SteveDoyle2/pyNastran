@@ -41,6 +41,7 @@ setup(name='pyNastran',
           # -*- Extra requirements: -*-
           'numpy >= 1.3.0',
           'scipy >= 0.6.0',
+          'docopt == 0.6.1',
 #          'matplotlib >= 1.1.0',
 #          'vtk >= 5.8.0',
 #          'wx >= 2.8.12.0',
