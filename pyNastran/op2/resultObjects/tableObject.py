@@ -349,29 +349,23 @@ class TableObject(ScalarObject):  # displacement style table
         ndt, nnodes, dts = self._get_shape()
 
         #print self.data.to_string()
-        node_ids = self.data['node_id']
-        T1 = self.data['T1']
-        T2 = self.data['T2']
-        T3 = self.data['T3']
-        R1 = self.data['R1']
-        R2 = self.data['R2']
-        R3 = self.data['R3']
-        for i in xrange(nnodes):
-            nodeID = node_ids[i]
-            gridType = 'G' #self.gridTypes[nodeID]
-            dx = T1[i]
-            dy = T2[i]
-            dz = T3[i]
-            rx = R1[i]
-            ry = R2[i]
-            rz = R3[i]
+        for i in xrange(len(self.data)):
+            node_id = self.data.index[i]
+            gridType = 'G' #self.gridTypes[node_id]
+            data = self.data.ix[node_id]
+            dx = data['T1']
+            dy = data['T2']
+            dz = data['T3']
+            rx = data['R1']
+            ry = data['R2']
+            rz = data['R3']
 
             vals = [dx, dy, dz, rx, ry, rz]
             (vals2, isAllZeros) = writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n'
-                        % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                        % (node_id, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
         msg.append(pageStamp + str(pageNum) + '\n')
         f.write(''.join(msg))
@@ -380,7 +374,10 @@ class TableObject(ScalarObject):  # displacement style table
     def _write_f06_transient_block(self, words, header, pageStamp, f, pageNum=1):
         msg = []
         #assert f is not None # remove
-        for dt, translations in sorted(self.translations.iteritems()):
+        for i in xrange(len(self.data)):
+            index = self.data.index[i]
+            (dt, node_id) = index
+            dt_old = dt
             if isinstance(dt, float):  # fix
                 header[1] = ' %s = %10.4E float %s\n' % (self.data_code[
                     'name'], dt, self.analysis_code)
@@ -388,17 +385,30 @@ class TableObject(ScalarObject):  # displacement style table
                 header[1] = ' %s = %10i integer %s\n' % (self.data_code[
                     'name'], dt, self.analysis_code)
             msg += header + words
-            for nodeID, translation in sorted(translations.iteritems()):
-                rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
 
-                (dx, dy, dz) = translation
-                (rx, ry, rz) = rotation
+            while dt == dt_old:
+                index = self.data.index[i]
+                (dt, node_id) = index
+
+                data = self.data.ix[index]
+                gridType = 'G' #self.gridTypes[node_id]
+                dx = data['T1']
+                dy = data['T2']
+                dz = data['T3']
+                rx = data['R1']
+                ry = data['R2']
+                rz = data['R3']
+
                 vals = [dx, dy, dz, rx, ry, rz]
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 if not isAllZeros:
                     [dx, dy, dz, rx, ry, rz] = vals2
-                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (node_id, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                i += 1
+                try:
+                    dt = self.data.index[i+1][0]
+                except IndexError:
+                    break
 
             msg.append(pageStamp + str(pageNum) + '\n')
             f.write(''.join(msg))
