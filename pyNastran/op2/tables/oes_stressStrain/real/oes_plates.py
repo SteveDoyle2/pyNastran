@@ -95,8 +95,8 @@ class RealPlateResults(object):
         element_data['nlayers'] = pd.Series(zeros(nelements_size, dtype='int32'))
 
         data['element_id'] = pd.Series(zeros((n), dtype='int32'))
-        data['node_id'] = pd.Series(zeros((n), dtype='float32'))
-        data['layer'] = pd.Series(zeros((n), dtype='float32'))
+        data['node_id'] = pd.Series(zeros((n), dtype='int32'))
+        data['layer'] = pd.Series(zeros((n), dtype='int32'))
 
         #columns.append('element_type')
 
@@ -105,11 +105,11 @@ class RealPlateResults(object):
         #print('n =', n)
 
 
-        #data['fiber_distance'] = pd.Series(zeros((n), dtype='float32'))
-        #data['fiber_curvature'] = pd.Series(zeros((n), dtype='float32'))
-
         headers = self._get_headers()
         (fd, oxx, oyy, txy, omax, omin, ovm) = headers
+
+        # fiber_distance / fiber_curvature
+        data[fd] = pd.Series(zeros((n), dtype='float32'))
 
         data[oxx] = pd.Series(zeros((n), dtype='float32'))
         data[oyy] = pd.Series(zeros((n), dtype='float32'))
@@ -118,14 +118,9 @@ class RealPlateResults(object):
         data['angle'] = pd.Series(zeros((n), dtype='float32'))
         data[omax] = pd.Series(zeros((n), dtype='float32'))
         data[omin] = pd.Series(zeros((n), dtype='float32'))
+        data[ovm] = pd.Series(zeros((n), dtype='float32'))
 
-        if self.isVonMises():
-            key = ovm
-        else:
-            key = 'max_shear'
-        data[key] = pd.Series(zeros((n), dtype='float32'))
-
-        columns += ['element_id', 'node_id', 'layer', oxx, oyy, txy, 'angle', omax, omin, key]
+        columns += ['element_id', 'node_id', 'layer', fd, oxx, oyy, txy, 'angle', omax, omin, ovm]
 
         self.data = pd.DataFrame(data, columns=columns)
         self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type', 'nnodes'])
@@ -143,6 +138,7 @@ class RealPlateResults(object):
             #grid_type_str.append('C' if grid_type==0 else grid_type)
         #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
 
+        update_index = True
         if update_index:
             if dts[0] is not None:
                 name = self.data_code['name']
@@ -170,8 +166,7 @@ class RealPlateResults(object):
                        % (self.__class__.__name__, name, ndt, nelements))
         else:
             dt_string = ''
-            msg.append('  real type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                          nelements))
+            msg.append('  real type=%s nelements=%s\n' % (self.__class__.__name__, nelements))
         headers = self._get_headers()
         (fd, oxx, oyy, txy, omax, omin, ovm) = headers
 
@@ -208,6 +203,39 @@ class PlateStressObject(StressObject, RealPlateResults):
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         RealPlateResults.__init__(self)
         StressObject.__init__(self, data_code, isubcase, read_mode)
+
+    def getOrderedETypes(self, valid_types):
+        """
+        :param validTypes: list of valid element types
+                           e.g. ['CTRIA3', 'CTRIA6', 'CQUAD4', 'CQUAD8']
+        :returns TypesOut:      the ordered list of types
+        :returns orderedETypes: dictionary of key=Type; value=list of IDs; to write
+        """
+        ordered_etypes = {}
+        types_out = []
+        ordered_etypes = {}
+
+        print("valid_types =", valid_types)
+        #validTypes = ['CTRIA3','CTRIA6','CQUAD4','CQUAD8']
+        for etype in valid_types:
+            ordered_etypes[etype] = []
+
+        #eids = self.element_data['element_id']
+        #print(self.element_data)
+        eids = list(self.element_data.index)
+        etypes = list(self.element_data['element_type'])
+        #print("eids =", eids)
+        for i in xrange(len(self.element_data)):
+            #print("i =", i)
+            etype = etypes[i]
+            eid = eids[i]
+            #print("eid =", eid, etype)
+            assert etype in valid_types, 'unsupported eType=%s' % etype
+            ordered_etypes[etype].append(eid)
+            if etype not in types_out:
+                types_out.append(etype)
+        #print('ordered_etypes', ordered_etypes)
+        return types_out, ordered_etypes
 
     def add_f06_data(self, data, transient):
         if transient is None:
@@ -326,22 +354,10 @@ class PlateStressObject(StressObject, RealPlateResults):
 
     def _get_headers(self):
         if self.isFiberDistance():
-            fd = 'fiber_distance'
+            fd = 'fd'  # 'fiber_distance'
         else:
             fd = 'fiber_curvature'
         return(fd, 'oxx', 'oyy', 'txy', 'omax', 'omin', 'ovm')
-
-    def getHeaders(self):
-        if self.isFiberDistance():
-            headers = ['fiberDist']
-        else:
-            headers = ['curvature']
-        headers += ['oxx', 'oyy', 'txy', 'majorP', 'minorP']
-        if self.isVonMises():
-            headers.append('oVonMises')
-        else:
-            headers.append('maxShear')
-        return headers
 
     def write_matlab(self, name, isubcase, f, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -478,14 +494,14 @@ class PlateStressObject(StressObject, RealPlateResults):
 
         if self.isFiberDistance():
             quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % (vonMises)]
+                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % vonMises]
             triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % (vonMises)]
+                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % vonMises]
         else:
             quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % (vonMises)]
+                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % vonMises]
             triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % (vonMises)]
+                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % vonMises]
 
         triMsg = None
         tri6Msg = None
@@ -493,27 +509,42 @@ class PlateStressObject(StressObject, RealPlateResults):
         quadMsg = None
         quad8Msg = None
         quadrMsg = None
-        eTypes = self.get_element_types()
-        element_types = list(self.element_data['element_type'])
+
+        #eTypes = []
+        #eTypes = self.get_element_types()
+        #print(self.element_data)
+
+        first_type_index = {}
+        for i in xrange(len(self.element_data)):
+            eid = self.element_data.index[i]
+            etype = self.element_data['element_type'][eid]
+            if etype not in first_type_index:
+                first_type_index[etype] = eid
+            #print("i=%s eid=%s" % (i, eid))
+        print("first_type_index", first_type_index)
+        #element_types = self.element_data.ix['element_type']
 
         #self.element_data.set_index(['element_id'])
-        if 'CQUAD4' in eTypes:
-            print('self.data =', self.data)
-            print('self.element_data =\n', self.element_data)
-            i_first_quad = element_types.index('CQUAD4')
-            eid = self.data['element_id'][i_first_quad]
+        if 'CQUAD4' in first_type_index:
+            #print(self.data)
+            #print('self.element_data =\n', self.element_data)
+            #i_first_quad = element_types.index('CQUAD4')
+            i_first_quad = eid
+            #eid = self.data['element_id'][i_first_quad]
             nnodes = self.element_data['nnodes'][eid]
-            print('nnodes =', nnodes)
+            #print('nnodes =', nnodes)
             isBilinear = True
             quadMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quadMsgTemp
             if nnodes == 1:
                 isBilinear = False
                 quadMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + triMsgTemp
 
-        if 'CQUAD8' in eTypes:
+        assert isBilinear == True
+
+        if 'CQUAD8' in first_type_index:
             quad8Msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + triMsgTemp
 
-        if 'CQUADR' in eTypes:
+        if 'CQUADR' in first_type_index:
             qkey = element_types .index('CQUADR')
             kkey = self.eType.keys()[qkey]
             ekey = self.data['oxx'][kkey]
@@ -523,13 +554,13 @@ class PlateStressObject(StressObject, RealPlateResults):
                 isBilinear = False
                 quadMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + triMsgTemp
 
-        if 'CTRIA3' in eTypes:
+        if 'CTRIA3' in first_type_index:
             triMsg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + triMsgTemp
 
-        if 'CTRIA6' in eTypes:
+        if 'CTRIA6' in first_type_index:
             tri6Msg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + triMsgTemp
 
-        if 'CTRIAR' in eTypes:
+        if 'CTRIAR' in first_type_index:
             trirMsg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + triMsgTemp
 
         msgPacks = {'CTRIA3': triMsg,
@@ -541,11 +572,86 @@ class PlateStressObject(StressObject, RealPlateResults):
 
         validTypes = ['CTRIA3', 'CTRIA6', 'CTRIAR', 'CQUAD4',
                       'CQUAD8', 'CQUADR']
-        (typesOut, orderedETypes) = self.getOrderedETypes(validTypes)
 
         msg = []
+        isBilinear = True
+
+        (kfd, koxx, koyy, ktxy, komax, komin, kovm) = self._get_headers()
+        i = 0
+        j = 0
+        (eid, nid, ilayer) = self.data.index[i]
+        etype_old = self.element_data.ix[eid]['element_type']
+
+        ndata = len(self.data)
+        while i < ndata:
+            (eid, nid, ilayer) = self.data.index[i]
+            etype = self.element_data.ix[eid]['element_type']
+            msg = msgPacks[etype]
+            if etype in ['CQUAD4']:
+                if isBilinear:
+                    n = 4
+                    cen4 = 'CEN/' + str(n)
+                    eid2 = eid
+                    while eid2 == eid and i < ndata:
+                        (eid, nid, ilayer) = self.data.index[i]
+                        index = self.data.index[i]
+                        data = self.data.ix[index]
+
+                        fd = data[kfd]
+                        angle = data['angle']
+                        oxx = data[koxx]
+                        oyy = data[koyy]
+                        txy = data[ktxy]
+                        major = data[komax]
+                        minor = data[komin]
+                        ovm = data[kovm]
+
+                        ([fd, oxx, oyy, txy, major, minor, ovm], isAllZeros) = writeFloats13E([fd, oxx, oyy, txy,
+                                                                                               major, minor, ovm])
+                        ([angle], isAllZeros) = writeFloats8p4F([angle])
+
+                        # ..note:: nid==0 is the center of the CQUAD4
+                        if nid == 0 and ilayer == 1:
+                            msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, cen4, fd, oxx, oyy, txy, angle, major, minor, ovm))
+                        elif ilayer == 1:
+                            msg.append('   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, oxx, oyy, txy, angle, major, minor, ovm))
+                        elif ilayer == 2:
+                            msg.append('   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, oxx, oyy, txy, angle, major, minor, ovm))
+                        else:
+                            raise Exception('Invalid option for cquad4; nid=%r ilayer=%r' % (nid, ilayer))
+                        i += 1
+                        try:
+                            eid2 = self.data.index[i][0]
+                        except:
+                            #print('breaking')
+                            break
+                    #print("eid=%s eid2=%s" % (eid, eid2))
+                    #assert eid != eid2, 'i=%s eid=%s eid2=%s msg=\n%s' % (i, eid, eid2,''.join(msg))
+                else:
+                    raise NotImplemented('CQUAD4 not-billinear')
+            else:
+                raise NotImplemented(etype)
+
+            j += 1
+            if etype != etype_old:
+                etype_old = etype
+                msg.append(pageStamp + str(pageNum) + '\n')
+                f.write(''.join(msg))
+                msg = ['']
+                pageNum += 1
+
+        if etype == etype_old:
+            msg.append(pageStamp + str(pageNum) + '\n')
+            f.write(''.join(msg))
+            pageNum += 1
+        return pageNum - 1
+
+
+        #sys.exit('asdf')
+        typesOut = []
         for eType in typesOut:
             eids = orderedETypes[eType]
+            print("*eids[%s] = %s" % (eType, eids))
             if eids:
                 eids.sort()
                 #print "eType = ",eType
@@ -576,8 +682,7 @@ class PlateStressObject(StressObject, RealPlateResults):
                         out = self.writeF06_Quad4_Bilinear(eid, 3)
                         msg.append(out)
                 else:
-                    raise NotImplementedError('eType = |%r|' %
-                                              (eType))  # CQUAD8, CTRIA6
+                    raise NotImplementedError('eType = %r' % eType)  # CQUAD8, CTRIA6
                 msg.append(pageStamp + str(pageNum) + '\n')
                 f.write(''.join(msg))
                 msg = ['']
@@ -653,7 +758,7 @@ class PlateStressObject(StressObject, RealPlateResults):
 
         validTypes = ['CTRIA3', 'CTRIA6', 'CTRIAR', 'CQUAD4',
                       'CQUAD8', 'CQUADR']
-        (typesOut, orderedETypes) = self.getOrderedETypes(validTypes)
+        #(typesOut, orderedETypes) = self.getOrderedETypes(validTypes)
 
         msg = []
         dts = self.oxx.keys()
@@ -720,9 +825,16 @@ class PlateStressObject(StressObject, RealPlateResults):
 
     def writeF06_Quad4_Bilinear(self, eid, n):
         msg = ''
+        (kfd, koxx, koyy, ktxy, komax, komin, kovm) = self._get_headers()
+        oxx = self.data['oxx']
+        print(oxx)
+        #nids = self.data['element_id'=eid]
+
+
         k = self.oxx[eid].keys()
         k.remove('C')
         k.sort()
+
         for nid in ['C'] + k:
             for iLayer in xrange(len(self.oxx[eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
@@ -922,19 +1034,6 @@ class PlateStrainObject(StrainObject, RealPlateResults):
         else:
             fd = 'fiber_curvature'
         return(fd, 'exx', 'eyy', 'exy', 'emax' , 'emin', 'evm')
-
-    def getHeaders(self):
-        if self.isFiberDistance():
-            headers = ['fiberDist']
-        else:
-            headers = ['curvature']
-
-        headers += ['exx', 'eyy', 'exy', 'eMajor', 'eMinor']
-        if self.isVonMises():
-            headers.append('eVonMises')
-        else:
-            headers.append('maxShear')
-        return headers
 
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:

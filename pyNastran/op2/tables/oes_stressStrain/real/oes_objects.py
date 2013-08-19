@@ -18,7 +18,7 @@ class OES_Object(ScalarObject):
         return False
 
     def isCurvature(self):
-        print('scode', self.s_code)
+        #print('scode', self.s_code)
         if self.s_code in [0, 1, 14, 15, 16, 17, 27, 30, 31]:  # fiber distance
             return False
         elif self.s_code in [10, 11, 26]:  # fiber curvature
@@ -56,7 +56,7 @@ class OES_Object(ScalarObject):
             orderedETypes[eType] = []
         for eid, eType in sorted(self.eType.iteritems()):
             #print "eType = ",eType
-            assert eType in validTypes, 'unsupported eType=%s' % (eType)
+            assert eType in validTypes, 'unsupported eType=%s' % eType
             orderedETypes[eType].append(eid)
 
         minVals = []

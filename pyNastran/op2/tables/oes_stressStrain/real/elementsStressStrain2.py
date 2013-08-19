@@ -939,8 +939,9 @@ class RealElementsStressStrain2(object):
         self.obj.data['layer'][inode_start:inode_end] = layer
 
         headers = self.obj._get_headers()
-        (fd, oxx, oyy, txy, omax, omin, ovm) = headers
+        (kfd, oxx, oyy, txy, omax, omin, ovm) = headers
 
+        self.obj.data[kfd][inode_start:inode_end] = fd
         self.obj.data[oxx][inode_start:inode_end] = sx
         self.obj.data[oyy][inode_start:inode_end] = sy
         self.obj.data[txy][inode_start:inode_end] = sxy
