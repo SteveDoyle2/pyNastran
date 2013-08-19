@@ -196,8 +196,8 @@ class RealBarResults(object):
         MSt = data['MS_tension']
         MSc = data['MS_compression']
 
-        for j in range(nelements):
-            jj = j + idt * nelements
+        for jj in range(nelements):
+            #jj = j + idt * nelements
 
             #eType = self.eType[eid]
             eid = element_ids[jj]
@@ -212,8 +212,8 @@ class RealBarResults(object):
             (vals2, isAllZeros) = writeFloats13E(vals)
             [s1a, s2a, s3a, s4a, axiali, smaxa, smina,
              s1b, s2b, s3b, s4b, smaxb, sminb] = vals2
-            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, s1a, s2a, s3a, s4a, axiali, smaxa, smina, MSt.rstrip()))
-            msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('',  s1b, s2b, s3b, s4b, '',     smaxb, sminb, MSc.rstrip()))
+            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, s1a, s2a, s3a, s4a, axiali, smaxa, smina, MSti.rstrip()))
+            msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('',  s1b, s2b, s3b, s4b, '',     smaxb, sminb, MSci.rstrip()))
 
         msg.append(pageStamp + str(pageNum) + '\n')
         f.write(''.join(msg))
@@ -422,7 +422,7 @@ class BarStrainObject(StrainObject, RealBarResults):
         if self.isTransient:
             return self._write_f06_transient(header, pageStamp, f, pageNum)
 
-        msg = header + [
+        words = header + [
                 '                                  S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )\n',
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
                 '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',

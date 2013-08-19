@@ -319,7 +319,7 @@ class SolidStressObject(StressObject, RealSolidResults):
         (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
         return v
 
-    def getF06_Header(self):
+    def get_f06_header(self):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:
@@ -343,15 +343,15 @@ class SolidStressObject(StressObject, RealSolidResults):
         pentaEids = []
         eids = self.element_data['element_id']
         etypes = self.element_data['element_type']
-        for eid, eType in izip(eids, etypes):
-            if eType == 'CTETRA' or eType == 'TETRA':
+        for eid, etype in izip(eids, etypes):
+            if etype == 'CTETRA' or etype == 'TETRA':
                 tetraEids.append(eid)
-            elif eType == 'CPENTA' or eType == 'PENTA':
+            elif etype == 'CPENTA' or etype == 'PENTA':
                 pentaEids.append(eid)
-            elif eType == 'CHEXA' or eType == 'HEXA':
+            elif etype == 'CHEXA' or etype == 'HEXA':
                 hexaEids.append(eid)
             else:
-                raise NotImplementedError('eType=|%r|' % (eType))
+                raise NotImplementedError('eType=%r' % etype)
         return (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids)
 
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
@@ -359,8 +359,7 @@ class SolidStressObject(StressObject, RealSolidResults):
             return self._write_f06_transient(header, pageStamp, f, pageNum)
 
         msg = []
-        (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
-            pentaEids) = self.getF06_Header()
+        (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids) = self.get_f06_header()
         #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
         if tetraEids:
             self.writeElement('CTETRA', 4, tetraEids, header, tetraMsg, f)
@@ -379,23 +378,19 @@ class SolidStressObject(StressObject, RealSolidResults):
 
     def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         msg = []
-        (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
-            pentaEids) = self.getF06_Header()
+        (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids) = self.get_f06_header()
         dts = self.oxx.keys()
         for dt in dts:
             if tetraEids:
-                self.writeElementTransient('CTETRA',
-                                           4, tetraEids, dt, header, tetraMsg, f)
+                self.writeElementTransient('CTETRA', 4, tetraEids, dt, header, tetraMsg, f)
                 msg.append(pageStamp + str(pageNum) + '\n')
                 pageNum += 1
             if hexaEids:
-                self.writeElementTransient('CHEXA',
-                                           8, hexaEids, dt, header, hexaMsg, f)
+                self.writeElementTransient('CHEXA', 8, hexaEids, dt, header, hexaMsg, f)
                 msg.append(pageStamp + str(pageNum) + '\n')
                 pageNum += 1
             if pentaEids:
-                self.writeElementTransient('CPENTA',
-                                           6, pentaEids, dt, header, pentaMsg, f)
+                self.writeElementTransient('CPENTA', 6, pentaEids, dt, header, pentaMsg, f)
                 msg.append(pageStamp + str(pageNum) + '\n')
                 pageNum += 1
         f.write(''.join(msg))
@@ -666,7 +661,9 @@ class SolidStrainObject(StrainObject, RealSolidResults):
         tetraEids = []
         hexaEids = []
         pentaEids = []
-        for eid, eType in sorted(self.eType.iteritems()):
+        eids = self.element_data['element_id']
+        etypes = self.element_data['element_type']
+        for eid, eType in izip(eids, etypes):
             if eType == 'CTETRA' or eType == 'TETRA':
                 tetraEids.append(eid)
             elif eType == 'CPENTA' or eType == 'PENTA':
@@ -675,16 +672,17 @@ class SolidStrainObject(StrainObject, RealSolidResults):
                 hexaEids.append(eid)
             else:
                 raise NotImplementedError('eType=|%r|' % (eType))
-
         return (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids)
 
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
+        return pageNum
+
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, f, pageNum)
         msg = []
 
         (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
-            pentaEids) = self.getF06_Header()
+            pentaEids) = self.get_f06_header()
         #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
         if tetraEids:
             self.writeElement('CTETRA', 4, tetraEids, header, tetraMsg, f)
@@ -704,7 +702,7 @@ class SolidStrainObject(StrainObject, RealSolidResults):
     def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         msg = []
         (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
-            pentaEids) = self.getF06_Header()
+            pentaEids) = self.get_f06_header()
         dts = self.exx.keys()
         for dt in dts:
             if tetraEids:

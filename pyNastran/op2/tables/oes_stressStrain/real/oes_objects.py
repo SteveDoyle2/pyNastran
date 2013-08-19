@@ -18,12 +18,17 @@ class OES_Object(ScalarObject):
         return False
 
     def isCurvature(self):
-        #print('scode', self.s_code)
+        #return False
+        #print('type=%r' % type(self.s_code))
+        #print('scode=%r' % self.s_code)
+        #assert self.s_code == 1
+        #if self.s_code == 1:
+            #return False
         if self.s_code in [0, 1, 14, 15, 16, 17, 27, 30, 31]:  # fiber distance
             return False
         elif self.s_code in [10, 11, 26]:  # fiber curvature
             return True
-        raise NotImplementedError('add s_code=%s' % (self.s_code))
+        raise NotImplementedError('add s_code=%s' % self.s_code)
 
     def isFiberDistance(self):
         return not(self.isCurvature())
