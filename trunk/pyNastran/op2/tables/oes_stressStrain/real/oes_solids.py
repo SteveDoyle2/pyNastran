@@ -422,9 +422,6 @@ class SolidStressObject(RealSolidResults, StressObject):
         tetraEids = []
         hexaEids = []
         pentaEids = []
-        #eids = self.element_data['element_id']
-        #etypes = self.element_data['element_type']
-        #print(self.element_data)
         for i in xrange(len(self.element_data)):
             eid = self.element_data.index[i]
 

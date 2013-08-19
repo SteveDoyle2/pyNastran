@@ -154,6 +154,7 @@ class RealPlateResults(object):
                 self.data = self.data.set_index(['element_id', 'node_id', 'layer'])
         self.element_data = self.element_data.set_index(['element_id'])
         #print("final\n", self.data.to_string())
+        #print(self.element_data.to_string())
         del self._inode_start
         del self._inode_end
         #print('---PlateStressObject---')
@@ -306,7 +307,7 @@ class RealPlateResults(object):
         typesOut = []
         for eType in typesOut:
             eids = orderedETypes[eType]
-            print("*eids[%s] = %s" % (eType, eids))
+            #print("*eids[%s] = %s" % (eType, eids))
             if eids:
                 eids.sort()
                 #print "eType = ",eType
@@ -372,11 +373,12 @@ class PlateStressObject(StressObject, RealPlateResults):
         :returns TypesOut:      the ordered list of types
         :returns orderedETypes: dictionary of key=Type; value=list of IDs; to write
         """
+        raise RuntimeError('removed...')
         ordered_etypes = {}
         types_out = []
         ordered_etypes = {}
 
-        print("valid_types =", valid_types)
+        #print("valid_types =", valid_types)
         #validTypes = ['CTRIA3','CTRIA6','CQUAD4','CQUAD8']
         for etype in valid_types:
             ordered_etypes[etype] = []
@@ -676,7 +678,7 @@ class PlateStressObject(StressObject, RealPlateResults):
         #print(self.element_data)
 
         first_type_index = self._get_first_type_index()
-        print("first_type_index", first_type_index)
+        #print("first_type_index", first_type_index)
         #element_types = self.element_data.ix['element_type']
 
         #self.element_data.set_index(['element_id'])
@@ -694,7 +696,7 @@ class PlateStressObject(StressObject, RealPlateResults):
                 if nnodes == 1:
                     isBilinear = False
                     quadMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + triMsgTemp
-            elif 'CTRIA3' in first_type_index:
+            elif 'CTRIA3' == element_type:
                 triMsg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + triMsgTemp
             else:
                 raise NotImplementedError(element_type)
@@ -752,14 +754,23 @@ class PlateStressObject(StressObject, RealPlateResults):
         quadrMsg = None
 
         first_type_index = self._get_first_type_index()
-        print("first_type_index", first_type_index)
+        #print("first_type_index", first_type_index)
         #element_types = self.element_data.ix['element_type']
 
         #self.element_data.set_index(['element_id'])
-        if 'CQUAD4' in first_type_index:
-            #print('self.element_data =\n', self.element_data)
-            i_first_quad = eid
-            nnodes = self.element_data['nnodes'][eid]
+        for element_type, eid in first_type_index.iteritems():
+            if 'CQUAD4' == element_type:
+                #print('self.element_data =\n', self.element_data)
+                i_first_quad = eid
+                nnodes = self.element_data['nnodes'][eid]
+            elif 'CTRIA3' == element_type:
+                triMsg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + triMsgTemp
+            elif 'CTRIA6' == element_type:
+                tri6Msg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + triMsgTemp
+            elif 'CTRIAR' == element_type:
+                trirMsg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + triMsgTemp
+            else:
+                raise NotImplementedError(msg)
 
         eTypes = self.get_element_types()
         dts = self.oxx.keys()
@@ -777,15 +788,6 @@ class PlateStressObject(StressObject, RealPlateResults):
             if len(ekey) == 1:
                 isBilinear = False
                 quadMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + triMsgTemp
-
-        if 'CTRIA3' in eTypes:
-            triMsg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + triMsgTemp
-
-        if 'CTRIA6' in eTypes:
-            tri6Msg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + triMsgTemp
-
-        if 'CTRIAR' in eTypes:
-            trirMsg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + triMsgTemp
 
         msgPacks = {'CTRIA3': triMsg,
                     'CTRIA6': tri6Msg,
@@ -1010,7 +1012,7 @@ class PlateStrainObject(StrainObject, RealPlateResults):
         eTypes = self.get_element_types()
 
         first_type_index = self._get_first_type_index()
-        print("first_type_index", first_type_index)
+        #print("first_type_index", first_type_index)
         #element_types = self.element_data.ix['element_type']
 
         #self.element_data.set_index(['element_id'])
@@ -1184,35 +1186,6 @@ class PlateStrainObject(StrainObject, RealPlateResults):
                 f.write(''.join(msg))
                 msg = ['']
         return pageNum - 1
-
-    def writeF06_Quad4_BilinearTransient(self, dt, eid, n):
-        msg = ''
-        k = self.exx[dt][eid].keys()
-        k.remove('C')
-        k.sort()
-        for nid in ['C'] + k:
-            for iLayer in xrange(len(self.exx[dt][eid][nid])):
-                fd = self.fiberCurvature[eid][nid][iLayer]
-                exx = self.exx[dt][eid][nid][iLayer]
-                eyy = self.eyy[dt][eid][nid][iLayer]
-                exy = self.exy[dt][eid][nid][iLayer]
-                angle = self.angle[dt][eid][nid][iLayer]
-                major = self.majorP[dt][eid][nid][iLayer]
-                minor = self.minorP[dt][eid][nid][iLayer]
-                evm = self.evmShear[dt][eid][nid][iLayer]
-
-                ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
-                ([angle], isAllZeros) = writeFloats8p4F([angle])
-
-                if nid == 'C' and iLayer == 0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, 'CEN/' + str(n), fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
-                elif iLayer == 0:
-                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
-                elif iLayer == 1:
-                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
-                else:
-                    raise RuntimeError('Invalid option for cquad4')
-        return msg
 
     def writeF06_Tri3Transient(self, dt, eid):
         msg = ''

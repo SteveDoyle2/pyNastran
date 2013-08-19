@@ -772,8 +772,33 @@ class RealElementsStressStrain2(object):
         istart = 0
         iend = 68
         ntotal = 68 # 4*17
-
         nelements = len(self.data) // 68
+
+        nrows = nelements * 2 # 2 layers
+        nnodes = nrows #nelements * nNodes
+        if self.read_mode == 0 or name not in self._selected_names:
+            if name not in self._result_names:
+                self._result_names.append(name)
+
+            # figure out the shape
+            self.obj._increase_size(dt, nelements, nnodes)
+            iend = ntotal * nelements
+            self.data = self.data[iend:]
+            return
+        else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
+            #print("nelements =", nelements)
+            pass
+
+        (inode_start, inode_end, ielement_start, ielement_end
+            ) = self.obj._preallocate(dt, nnodes, nelements)
+
+
+        eids=[]; eTypes=[]; eids2=[]; nids=[]; layer=[]; nnodes_list=[]
+        fd=[]; sx=[]; sy=[]; sxy=[]; angle=[]; major=[]; minor=[]; svm=[]
+
+        layer += [1, 2] * nelements
+        eTypes = ['CQUAD4'] * nelements
+
         for i in xrange(nelements):
             #print self.print_block(self.data[0:100])
             #(eid,) = unpack(b'i',self.data[0:4])
@@ -781,8 +806,8 @@ class RealElementsStressStrain2(object):
             eData = self.data[istart:iend]
             #print("len(eData) = ", len(eData))
             out = unpack(format1, eData)  # 17
-            (eid, fd1, sx1, sy1, txy1, angle1, major1, minor1, maxShear1,
-                  fd2, sx2, sy2, txy2, angle2, major2, minor2, maxShear2) = out
+            (eid, fd1, sx1, sy1, txy1, angle1, major1, minor1, ovm1,
+                  fd2, sx2, sy2, txy2, angle2, major2, minor2, ovm2) = out
 
             eid = extract(eid, dt)
 
@@ -796,8 +821,69 @@ class RealElementsStressStrain2(object):
 
             istart = iend
             iend += ntotal
+            eids2.append(eid)
+
+            eids.append(eid)
+            eids.append(eid)
+            fd.append(fd1)
+            fd.append(fd2)
+            sx.append(sx1)
+            sx.append(sx2)
+            sy.append(sy1)
+            sy.append(sy2)
+            angle.append(angle1)
+            angle.append(angle2)
+            minor.append(minor1)
+            minor.append(minor2)
+            major.append(major1)
+            major.append(major2)
+            svm.append(ovm1)
+            svm.append(ovm2)
 
         self.data = self.data[istart:]
+        #-----------------------------------------------------------------------
+        #print('delta', inode_end - inode_start, len(eids))
+        if dt:
+            name = self.obj.data_code['name']
+            self.obj.data[name][inode_start:inode_end] = ones(inode_end - inode_start) * dt
+
+        #print("inode_start=%r inode_end=%r delta=%r" % (inode_start, inode_end, inode_end-inode_start))
+        #print('len(s1) =', len(s1))
+        assert len(eids2) == ielement_end - ielement_start, 'ielement_start=%s ielement_end=%s len(eids)=%s' % (ielement_start, ielement_end, len(eids2))
+        self.obj.element_data['element_id'][ielement_start:ielement_end] = eids2
+        #print(self.obj.element_data)
+        self.obj.element_data['element_type'][ielement_start:ielement_end] = eTypes
+        self.obj.element_data['nnodes'][ielement_start:ielement_end] = ones(nelements)
+
+        #print('nids',nids)
+        assert len(eids) == inode_end - inode_start, 'inode_start=%s inode_end=%s len(eids)=%s' % (inode_start, inode_end, len(eids))
+        self.obj.data['element_id'][inode_start:inode_end] = eids
+        self.obj.data['element_id'][inode_start:inode_end] = eids
+        self.obj.data['node_id'][inode_start:inode_end] = nids
+        self.obj.data['layer'][inode_start:inode_end] = layer
+        #print(self.obj.element_data)
+
+        headers = self.obj._get_headers()
+        (kfd, koxx, koyy, ktxy, komax, komin, kovm) = headers
+
+        self.obj.data[kfd][inode_start:inode_end] = fd
+        self.obj.data[koxx][inode_start:inode_end] = sx
+        self.obj.data[koyy][inode_start:inode_end] = sy
+        self.obj.data[ktxy][inode_start:inode_end] = sxy
+        self.obj.data[komax][inode_start:inode_end] = major
+        self.obj.data[komin][inode_start:inode_end] = minor
+        self.obj.data['angle'][inode_start:inode_end] = angle
+        self.obj.data[kovm][inode_start:inode_end] = svm
+
+        #self.obj.data['element_id'][ielement_start:ielement_end] = eids
+        #self.obj.data['element_type'][ielement_start:ielement_end] = etypes
+
+        #print('len(eids) = ', len(self.obj.data['element_id']))
+        #print('inode_end // ntotal = ', inode_end)
+        if len(self.obj.data['element_id']) == inode_end: # [nodes, elements]
+            self.obj._finalize(dt)
+        else:
+            self.obj._increment(nnodes, nelements)
 
     def OES_CQUAD4_144(self, name):
         """
