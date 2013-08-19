@@ -646,12 +646,14 @@ class RealElementsStressStrain2(object):
         nelements = len(self.data) // ntotal
         nrows = nelements * 2 # 2 layers at the centroid
         nnodes = 1
+        #nrows = nelements * 2 # 2 layers
         if self.read_mode == 0 or name not in self._selected_names:
             if name not in self._result_names:
                 self._result_names.append(name)
 
             # figure out the shape
-            self.obj._increase_size(dt, nelements, nnodes)
+            print("nelements=%s nrows=%s" % (nelements, nrows))
+            self.obj._increase_size(dt, nelements, nrows)
             iend = ntotal * nelements
             self.data = self.data[iend:]
             return
@@ -660,12 +662,13 @@ class RealElementsStressStrain2(object):
             pass
 
         (inode_start, inode_end, ielement_start, ielement_end
-            ) = self.obj._preallocate(dt, nnodes, nelements)
-
+            ) = self.obj._preallocate(dt, nrows, nelements)
+        print("inode_start=%s inode_end=%s ielement_start=%s ielement_end=%s" % (inode_start, inode_end, ielement_start, ielement_end))
 
         eids=[]; eTypes=[]; eids2=[]; nids=[]; layer=[]
         fd=[]; sx=[]; sy=[]; txy=[]; angle=[]; major=[]; minor=[]; vm=[]
         eTypes = ['CTRIA3'] * nelements
+        nnodes_list = ones(nelements)
         for i in xrange(nelements):
             eData = self.data[n:n + ntotal]
             out = unpack(format1, eData)
@@ -704,15 +707,60 @@ class RealElementsStressStrain2(object):
             minor.append(minor2i)
             vm.append(vm2i)
 
-            #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-            #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-
-            #self.obj.add_new_eid('CTRIA3', dt, eid, 'C', fd1, sx1, sy1,
-            #                   txy1, angle1, major1, minor1, vm1)
-            #self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2,
-            #             angle2, major2, minor2, vm2)
+            #print("eid=%2i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,fd1i,sx1i,sy1i,txy1i,angle1i,major1i,minor1i,vm1i))
+            #print("        fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   % (fd2i,sx2i,sy2i,txy2i,angle2i,major2i,minor2i,vm2i))
             n += ntotal
         self.data = self.data[n:]
+        #-----------------------------------------------------------------------
+        #print('delta', inode_end - inode_start, len(eids))
+        #istart = self.obj._size_start
+        #iend = istart + nnodes
+
+        if dt:
+            name = self.obj.data_code['name']
+            self.obj.data[name][inode_start:inode_end] = ones(inode_end - inode_start) * dt
+
+        self.obj.data['element_id'][inode_start:inode_end] = eids
+
+        #print("inode_start=%r inode_end=%r delta=%r" % (inode_start, inode_end, inode_end-inode_start))
+        #print('len(s1) =', len(s1))
+
+        self.obj.element_data['element_id'][ielement_start:ielement_end] = eids
+        #print('self.obj.element_data\n', self.obj.element_data)
+        self.obj.element_data['element_type'][ielement_start:ielement_end] = eTypes
+        self.obj.element_data['nnodes'][ielement_start:ielement_end] = nnodes_list
+        #print('self.obj.element_data\n', self.obj.element_data)
+        #print('nids',nids)
+        assert  inode_end - inode_start == len(eids2), 'inode_start=%s inode_end=%s len(eids2)=%s' % (inode_start, inode_end, len(eids2))
+        self.obj.data['element_id'][inode_start:inode_end] = eids2
+        self.obj.data['node_id'][inode_start:inode_end] = nids
+        self.obj.data['layer'][inode_start:inode_end] = layer
+
+        headers = self.obj._get_headers()
+        (kfd, koxx, koyy, ktxy, komax, komin, kovm) = headers
+
+        assert  inode_end - inode_start == len(fd)
+        self.obj.data[kfd][inode_start:inode_end] = fd
+        #print(self.obj.data.keys())
+        #print('self.obj.data\n', self.obj.data)
+        self.obj.data[koxx][inode_start:inode_end] = sx
+        self.obj.data[koyy][inode_start:inode_end] = sy
+        self.obj.data[ktxy][inode_start:inode_end] = txy
+        self.obj.data[komax][inode_start:inode_end] = major
+        self.obj.data[komin][inode_start:inode_end] = minor
+        self.obj.data['angle'][inode_start:inode_end] = angle
+        self.obj.data[kovm][inode_start:inode_end] = vm
+
+        #self.obj.data['element_id'][ielement_start:ielement_end] = eids
+        #self.obj.data['element_type'][ielement_start:ielement_end] = etypes
+
+        #print('len(eids) = ', len(self.obj.data['element_id']))
+        #print('inode_end // ntotal = ', inode_end)
+        #if self.obj._is_full(nnodes):
+        if len(self.obj.data['element_id']) == inode_end: # [nodes, elements]
+            self.obj._finalize(dt)
+        else:
+            self.obj._increment(nnodes, nelements)
 
     def OES_CQUAD4_33(self, name):
         """
@@ -731,7 +779,7 @@ class RealElementsStressStrain2(object):
         #self.print_block(self.data)
 
         assert self.num_wide == 17, ('invalid num_wide...num_wide=%s'
-                                    % (self.num_wide))
+                                    % self.num_wide)
 
         istart = 0
         iend = 68
@@ -919,6 +967,7 @@ class RealElementsStressStrain2(object):
                 ibase += 68
         self.data = self.data[ibase:]
 
+        #-----------------------------------------------------------------------
         #print('delta', inode_end - inode_start, len(eids))
         if dt:
             name = self.obj.data_code['name']
