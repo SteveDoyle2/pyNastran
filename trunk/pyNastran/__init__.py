@@ -32,4 +32,4 @@ isRelease = True  ## turns on skipping of tables that aren't supported
 
 # converts the OP2 objects to array from instead of dictionary form
 # breaks F06 writing, but is faster
-update_index = False
+update_index = True

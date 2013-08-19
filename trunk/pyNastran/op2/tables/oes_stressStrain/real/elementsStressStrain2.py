@@ -279,6 +279,7 @@ class RealElementsStressStrain2(object):
 
         ntotal = 16 + 84 * nnodes_expected
         nelements = len(self.data) // ntotal
+        overflow = len(self.data) % ntotal
 
         nnodes = nelements * nnodes_expected
         if self.read_mode == 0 or name not in self._selected_names:
@@ -327,7 +328,7 @@ class RealElementsStressStrain2(object):
                 (grid_device, sxx, sxy, s1, a1, a2, a3, pressure, svm,
                               syy, syz, s2, b1, b2, b3,
                               szz, sxz, s3, c1, c2, c3) = out
-
+                #print("grid_device=%s" % grid_device)
                 if grid_device == 0:
                     grid = 'C'
                 else:
@@ -373,52 +374,39 @@ class RealElementsStressStrain2(object):
         #print("inode_start=%r inode_end=%r delta=%r" % (inode_start, inode_end, inode_end-inode_start))
         #print('len(oxx) =', len(oxx))
 
-        if self.obj.isStress():
-            self.obj.data['oxx'][inode_start:inode_end] = oxx
-            self.obj.data['oyy'][inode_start:inode_end] = oyy
-            self.obj.data['ozz'][inode_start:inode_end] = ozz
+        [koxx, koyy, kozz, ktxy, ktxz, ktyz, ko1, ko2, ko3,  kovm] = self.obj._get_headers()
+        assert len(oxx) == inode_end - inode_start, 'inode_start=%s inode_end=%s len(oxx)=%s' % (inode_start, inode_end, len(oxx))
+        self.obj.data[koxx][inode_start:inode_end] = oxx
+        self.obj.data[koyy][inode_start:inode_end] = oyy
+        self.obj.data[kozz][inode_start:inode_end] = ozz
 
-            self.obj.data['txy'][inode_start:inode_end] = txy
-            self.obj.data['txz'][inode_start:inode_end] = txz
-            self.obj.data['tyz'][inode_start:inode_end] = tyz
+        self.obj.data[ktxy][inode_start:inode_end] = txy
+        self.obj.data[ktxz][inode_start:inode_end] = txz
+        self.obj.data[ktyz][inode_start:inode_end] = tyz
 
-            self.obj.data['o1'][inode_start:inode_end] = o1
-            self.obj.data['o2'][inode_start:inode_end] = o2
-            self.obj.data['o3'][inode_start:inode_end] = o3
-            if self.obj.isVonMises():
-                self.obj.data['ovm'][inode_start:inode_end] = ovmShear
-            else:
-                self.obj.data['max_shear'][inode_start:inode_end] = ovmShear
-        else:
-            #print('type', self.obj.__class__.__name__)
-            self.obj.data['exx'][inode_start:inode_end] = oxx
-            self.obj.data['eyy'][inode_start:inode_end] = oyy
-            self.obj.data['ezz'][inode_start:inode_end] = ozz
+        self.obj.data[ko1][inode_start:inode_end] = o1
+        self.obj.data[ko2][inode_start:inode_end] = o2
+        self.obj.data[ko3][inode_start:inode_end] = o3
+        self.obj.data[kovm][inode_start:inode_end] = ovmShear
 
-            self.obj.data['exy'][inode_start:inode_end] = txy
-            self.obj.data['exz'][inode_start:inode_end] = txz
-            self.obj.data['eyz'][inode_start:inode_end] = tyz
-
-            self.obj.data['e1'][inode_start:inode_end] = o1
-            self.obj.data['e2'][inode_start:inode_end] = o2
-            self.obj.data['e3'][inode_start:inode_end] = o3
-            if self.obj.isVonMises():
-                self.obj.data['evm'][inode_start:inode_end] = ovmShear
-            else:
-                self.obj.data['max_shear'][inode_start:inode_end] = ovmShear
-
+        assert len(oxx) == inode_end - inode_start, 'ielement_start=%s ielement_end=%s len(eids)=%s' % (ielement_start, ielement_end, len(eids))
         self.obj.element_data['element_id'][ielement_start:ielement_end] = eids
         self.obj.element_data['element_type'][ielement_start:ielement_end] = etypes
         self.obj.element_data['cid'][ielement_start:ielement_end] = cids
+        self.obj.element_data['nnodes'][ielement_start:ielement_end] = ones(nelements) * nnodes_expected
+
         # pressure
         # aCos
         # bCos
         # cCos
         #self.obj.data[''][inode_start:inode_end] = translations[:, 5]
 
-        if len(self.obj.data['element_id']) == inode_end // ntotal: # [nodes, elements]
+        if len(self.obj.data['element_id']) == inode_end: # [nodes, elements]
+            #print("self.element_data =\n", self.obj.element_data)
             self.obj._finalize(dt)
+            #print("self.element_data =\n", self.obj.element_data)
         else:
+            #print('increment...', overflow, ntotal)
             self.obj._increment(nnodes, nelements)
 
     #-------------------------------------------------------------------------
