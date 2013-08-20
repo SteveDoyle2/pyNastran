@@ -34,7 +34,7 @@ class NonlinearGapStressObject(StressObject):
     def get_stats(self):
         nelements = len(self.eType)
         eTypes = list(set(self.eType.values()))
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.compX)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
@@ -69,7 +69,7 @@ class NonlinearGapStressObject(StressObject):
 
 
     def add_new_eid(self, dt, eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2):
-        (stress,) = out
+        #(stress,) = out
         self.eType[eid] = self.element_name
         self.compX[eid] = cpx
         self.shearY[eid] = shy

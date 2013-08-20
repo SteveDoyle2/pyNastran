@@ -143,7 +143,7 @@ class RealBarResults(object):
 
     def get_stats(self):
         nelements = len(self.data['axial'])
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.shape)
             msg.append('  real type=%s ntimes=%s nelements=%s\n'
@@ -170,7 +170,7 @@ class RealBarResults(object):
     def _write_f06_helper(self, words, header, pageStamp, f, pageNum):
         msg = words
         ndt, nelements, nnodes, dts = self._get_shape()
-        ntotal = 1 * nnodes
+        ntotal = nnodes
         data = self.data
 
         headers = self._get_headers()

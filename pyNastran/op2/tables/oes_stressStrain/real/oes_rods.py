@@ -17,7 +17,7 @@ class RodDamperObject(RealSpringResults, StressObject):
         self.torsion = {}
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         eTypes = list(set(self.eType.values()))
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.axial)
@@ -73,7 +73,7 @@ class RodStressObject(RealSpringResults, StressObject):
             self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.axial)
             a0 = self.axial.keys()[0]
@@ -285,7 +285,7 @@ class RodStrainObject(RealSpringResults, StrainObject):
             self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.axial)
             a0 = self.axial.keys()[0]

@@ -32,9 +32,6 @@ class OGF(object):
     #        self.data_code['nonlinear_factor'] = value
     #        self.data_code['name'] = Name
 
-    def apply_data_code_value(self, Name, value):
-        self.data_code[Name] = value
-
     def readTable_OGF_3(self, iTable):  # iTable=-3
         buffer_words = self.get_marker()
         if self.make_op2_debug:
@@ -46,29 +43,29 @@ class OGF(object):
         data = self.get_data(4 * 50)
         #print self.print_block(data)
 
-        (three) = self.parse_approach_code(data)
+        (three) = self._parse_approach_code(data)
         ## format code
-        self.add_data_parameter(data,'format_code', 'i', 9, False)
+        self._add_data_parameter(data,'format_code', 'i', 9, False)
         ## approach code ???
-        self.add_data_parameter(data,'appCode', 'i', 9, False)
+        self._add_data_parameter(data,'appCode', 'i', 9, False)
         ## number of words per entry in record
         ## .. note:: is this needed for this table ???
-        self.add_data_parameter(data,'num_wide', 'i', 10, False)
+        self._add_data_parameter(data,'num_wide', 'i', 10, False)
         ## Data Value 1
-        self.add_data_parameter(data,'value1', 'i', 11, False)
+        self._add_data_parameter(data,'value1', 'i', 11, False)
         ## Data Value 2
-        self.add_data_parameter(data,'value2', 'f', 12, False)
+        self._add_data_parameter(data,'value2', 'f', 12, False)
         
         #self.print_block(data) # on
         ## assuming tCode=1
         if self.analysis_code == 1:   # statics / displacement / heat flux
             #self.extractDt = self.extractInt
-            self.apply_data_code_value('dataNames', ['lsdvmn'])
-            self.setNullNonlinearFactor()
+            self._apply_data_code_value('dataNames', ['lsdvmn'])
+            self._set_null_nonlinear_factor()
         elif self.analysis_code == 2:  # real eigenvalues
             ## mode number
-            self.add_data_parameter(data, 'mode', 'i', 5)
-            self.apply_data_code_value('dataNames', ['mode'])
+            self._add_data_parameter(data, 'mode', 'i', 5)
+            self._apply_data_code_value('dataNames', ['mode'])
         #elif self.analysis_code==3: # differential stiffness
             ## load set number
             #self.lsdvmn = self.get_values(data,'i',5)
@@ -77,12 +74,12 @@ class OGF(object):
             #self.extractDt = self.extractInt
         elif self.analysis_code == 5:   # frequency
             ## frequency
-            self.add_data_parameter(data, 'freq', 'f', 5)
-            self.apply_data_code_value('dataNames', ['freq'])
+            self._add_data_parameter(data, 'freq', 'f', 5)
+            self._apply_data_code_value('dataNames', ['freq'])
         elif self.analysis_code == 6:  # transient
             ## time step
-            self.add_data_parameter(data, 'time', 'f', 5)
-            self.apply_data_code_value('dataNames', ['time'])
+            self._add_data_parameter(data, 'time', 'f', 5)
+            self._apply_data_code_value('dataNames', ['time'])
         #elif self.analysis_code==7: # pre-buckling
             #self.extractDt = self.extractInt
             #self.apply_data_code_value('dataNames',['lsdvmn'])
@@ -91,25 +88,25 @@ class OGF(object):
             #self.apply_data_code_value('dataNames',['lsdvmn','eigr'])
         elif self.analysis_code == 9:  # complex eigenvalues
             ## mode number
-            self.add_data_parameter(data, 'mode', 'i', 5)
+            self._add_data_parameter(data, 'mode', 'i', 5)
             ## real eigenvalue
             #self.add_data_parameter(data,'eigr','f',6,False)
-            self.apply_data_code_value('dataNames', ['mode', 'eigr', 'eigi'])
+            self._apply_data_code_value('dataNames', ['mode', 'eigr', 'eigi'])
         elif self.analysis_code == 10:  # nonlinear statics
             ## load factor
-            self.add_data_parameter(data, 'loadFactor', 'f', 5)
-            self.apply_data_code_value('dataNames', ['loadFactor'])
+            self._add_data_parameter(data, 'loadFactor', 'f', 5)
+            self._apply_data_code_value('dataNames', ['loadFactor'])
         #elif self.analysis_code==11: # old geometric nonlinear statics
             #self.extractDt = self.extractInt
             #self.apply_data_code_value('dataNames',['lsdvmn'])
         elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             ## time step
-            self.add_data_parameter(data, 'time', 'f', 5)
-            self.apply_data_code_value('dataNames', ['time'])
+            self._add_data_parameter(data, 'time', 'f', 5)
+            self._apply_data_code_value('dataNames', ['time'])
             #self.extractDt = self.extractInt
             #self.apply_data_code_value('dataNames',['lsdvmn'])
         else:
-            msg = 'invalid analysis_code...analysis_code=%s' % (self.analysis_code)
+            msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
             raise RuntimeError(msg)
 
         if not self.is_sort1():

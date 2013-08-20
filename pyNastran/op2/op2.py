@@ -6,7 +6,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
-import warnings
+#import warnings
 from numpy import array
 from struct import unpack
 
@@ -21,8 +21,12 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.f06.f06Writer import F06Writer
 from pyNastran.f06.matlabWriter import MatlabWriter
 from pyNastran.utils.gui_io import load_file_dialog
-from pyNastran.utils.gui_choices import get_choices
 
+try:
+    from pyNastran.utils.gui_choices import get_choices
+    is_choice_dialog = True
+except ImportError:
+    is_choice_dialog = False
 
 class OP2Deprecated(object):
     def __init__(self):
@@ -92,6 +96,10 @@ class OP2(BDF,
         :param log: a logging object to write debug messages to
          (.. seealso:: import logging)
         """
+        FortranFile.__init__(self)
+        Op2Codes.__init__(self)
+        GeometryTables.__init__(self)
+        ResultTable.__init__(self)
         BDF.__init__(self, debug=debug, log=log)
         self.set_subcases()  # initializes the variables
 
@@ -558,6 +566,8 @@ class OP2(BDF,
         #         - selected = ['not a result: Subcase 1']
         #        -> ERROR
         #if self._selected_names is None:
+            #if not is_choice_dialog:
+                #raise RuntimeError('Either selected_names must be set or wxPython/PyQt4 must be installed')
             #self._selected_names = get_choices(self._result_names)
 
         self._selected_names = []
@@ -642,7 +652,7 @@ class OP2(BDF,
         if len(block) == 12:  # post = -1
             form = -1
             (month, day, year) = unpack(b'iii', block)
-            print("date = %s/%s/%s" %(month, day, 2000+year))
+            print("date = %s/%s/%s" % (month, day, 2000+year))
 
             block = self.read_new_block()
             #print("len(block) = %s" % len(block))
@@ -1058,7 +1068,7 @@ class OP2(BDF,
         #print(self.print_section(200))
         #sys.exit()
 
-    def parse_sort_code(self):
+    def _parse_sort_code(self):
         """
         sort_code = 0 -> sort_bits = [0,0,0]
         sort_code = 1 -> sort_bits = [0,0,1]
@@ -1089,7 +1099,7 @@ class OP2(BDF,
 
         self.data_code['sort_bits'] = self.sort_bits
 
-    def parse_approach_code(self, data):
+    def _parse_approach_code(self, data):
         """
         int3 is the 3rd word in table=-3 and may be
         element_type or something else depending on the table type
@@ -1130,7 +1140,7 @@ class OP2(BDF,
                          'dt': None,
                          }
         #print("isubcase = ",self.isubcase)
-        self.parse_sort_code()
+        self._parse_sort_code()
 
         #print('aCode(1)=%s analysis_code=%s device_code=%s '
         #      'tCode(2)=%s table_code=%s sort_code=%s isubcase(4)=%s'
@@ -1259,10 +1269,9 @@ class OP2(BDF,
         self.data_code['subtitle'] = self.subtitle
         self.data_code['label'] = self.label
 
-        if hasattr(self,'isubcase'):
+        if hasattr(self, 'isubcase'):
             if self.isubcase not in self.iSubcaseNameMap:
-                self.iSubcaseNameMap[self.isubcase] = [self.subtitle,
-                                                       self.label]
+                self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.label]
         else:
             pass
 
@@ -1325,10 +1334,10 @@ class OP2(BDF,
         msg = '---ALL RESULTS---\n'
         for result in results:
             for (isubcase, res) in sorted(result.iteritems()):
-                msg += 'isubcase = %s\n' % (isubcase)
+                msg += 'isubcase = %s\n' % isubcase
                 try:
                     msg += str(res) + '\n'
                 except:
-                    print('failed on %s' % (res.__class__.__name__))
+                    print('failed on %s' % res.__class__.__name__)
                     raise
         return msg

@@ -27,7 +27,7 @@ class GridPointStressesObject(ScalarObject):
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.nx)
             times0 = self.nx.keys()[0]
@@ -228,7 +228,7 @@ class GridPointStressesVolumeObject(ScalarObject):
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.nx)
             times0 = self.nx.keys()[0]

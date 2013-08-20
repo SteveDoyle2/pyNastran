@@ -22,6 +22,9 @@ class GeomObj(object):
 class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
                      DYNAMICS):
 
+    def __init__(self):
+        pass
+
     def readRecordTable(self, expectedTableName):
         """
         .. note:: assumes self.iTableMap has already been set

@@ -6,6 +6,7 @@ from numpy import zeros
 from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
+
 class BeamResultsObject(object):
     def __init__(self):
         self.eType = 'CBEAM'
@@ -162,25 +163,6 @@ class BeamResultsObject(object):
         #msg.append('  eType, xxb, grids, smax, smin, MS_tension, '
         #           'MS_compression, sxc, sxd, sxe, sxf\n')
         return msg
-
-    #def get_stats(self):
-        #nelements = len(self.eType)
-
-        #msg = self.get_data_code()
-        #if self.dt is not None:  # transient
-            #ntimes = len(self.smax)
-            #s0 = self.smax.keys()[0]
-            #nelements = len(self.smax[s0])
-            #msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       #% (self.__class__.__name__, ntimes, nelements))
-        #else:
-            #nelements = len(self.smax)
-            #msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     #nelements))
-        #msg.append('  eType, xxb, grids, smax, smin, MS_tension, '
-                   #'MS_compression, sxc, sxd, sxe, sxf\n')
-        #return msg
-
     def __repr__(self):
         return self.get_stats()
 
@@ -271,65 +253,7 @@ class BeamStrainObject(BeamResultsObject, StrainObject):
     def _get_headers(self):
         return ['sxc', 'sxd', 'sxe', 'sxf', 'smax', 'smin', 'MS_tension', 'MS_compression',]
 
-    def __preallocate(self, dt, nnodes, nelements):
-        ndt, nelements_size, nnodes_size, dts = self._get_shape()
-        #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
 
-        if self._inode_start is not None:
-            return (self._inode_start, self._inode_start + nnodes,
-                    self._ielement_start, self._ielement_start + nelements)
-        #print('----definition----')
-        n = ndt * nnodes_size
-        if self._ncount != 0:
-            asfd
-        self._ncount += 1
-        self._inode_start = 0
-        self._inode_end = nnodes
-
-        self._ielement_start = 0
-        self._ielement_end = nelements
-
-        data = {}
-        element_data = {}
-        columns = []
-        if dts[0] is not None:
-            name = self.data_code['name']
-            if isinstance(dt, int):
-                data[name] = pd.Series(zeros((n), dtype='int32'))
-            else:
-                data[name] = pd.Series(zeros((n), dtype='float32'))
-            columns.append(name)
-
-        element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
-        element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
-
-        data['element_id'] = pd.Series(zeros((n), dtype='int32'))
-        data['grid'] = pd.Series(zeros((n), dtype='float32'))
-        data['xxb'] = pd.Series(zeros((n), dtype='float32'))
-
-        #columns.append('element_type')
-
-        #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
-        #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
-        #print('n =', n)
-
-        data['exc'] = pd.Series(zeros((n), dtype='float32'))
-        data['exd'] = pd.Series(zeros((n), dtype='float32'))
-        data['exe'] = pd.Series(zeros((n), dtype='float32'))
-        data['exf'] = pd.Series(zeros((n), dtype='float32'))
-
-        data['emax'] = pd.Series(zeros((n), dtype='float32'))
-        data['emin'] = pd.Series(zeros((n), dtype='float32'))
-        data['MS_tension'] = pd.Series(zeros((n), dtype='float32'))
-        data['MS_compression'] = pd.Series(zeros((n), dtype='float32'))
-        # element_type
-
-        headers = self._get_headers()
-        columns += ['element_id', 'grid', 'xxb'] + headers
-
-        self.data = pd.DataFrame(data, columns=columns)
-        self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type'])
-        return (self._inode_start, self._inode_end, self._ielement_start, self._ielement_end)
 
     def _get_headers(self):
         return ['exc', 'exd', 'exe', 'exf', 'emax', 'emin', 'MS_tension', 'MS_compression',]

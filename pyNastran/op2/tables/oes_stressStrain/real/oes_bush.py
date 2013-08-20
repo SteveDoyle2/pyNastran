@@ -117,7 +117,7 @@ class RealBushResults(object):
         #print(self.data.to_string())
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         ndt, nelements, dts = self._get_shape()
 
         if self.nonlinear_factor is not None:  # transient

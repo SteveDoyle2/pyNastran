@@ -42,7 +42,7 @@ class ShearStressObject(StressObject):
             self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.maxShear)
             s0 = self.maxShear.keys()[0]
@@ -120,7 +120,7 @@ class ShearStrainObject(StrainObject):
             self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.maxShear)
             s0 = self.maxShear.keys()[0]

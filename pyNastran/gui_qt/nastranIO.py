@@ -104,7 +104,7 @@ class NastranIO(object):
             for i, j in map(_mk2, ids):
                 elem.GetPointIds().SetId(i, nidMap[nodeIDs[j]])
             return elem
-        # conditional new vtk object creating and initialisation
+        # conditional new vtk object creating and initialization
         def _complex_set(nids, obj1, obj2, ids, sec_ids): 
             if None not in nids:
                 elem = obj1()
@@ -126,35 +126,27 @@ class NastranIO(object):
             if isinstance(element, CTRIA3) or isinstance(element, CTRIAR):
                 elem = _simple_set(vtkTriangle, [0, 1, 2])
             elif isinstance(element, CTRIA6):
-                elem = _complex_set(nodeIDs, vtkQuadraticTriangle, vtkTriangle,
-                                    [3, 4, 5], [0, 1, 2])
+                elem = _complex_set(nodeIDs, vtkQuadraticTriangle, vtkTriangle, [3, 4, 5], [0, 1, 2])
             elif isinstance(element, CTRIAX6):
                 # midside nodes are required, nodes out of order
-                elem = _complex_set(nodeIDs, vtkQuadraticTriangle, vtkTriangle,
-                                    [(3, 1), (4, 3), 5], [0, (1, 2), (2, 4)])
-            elif (isinstance(element, CQUAD4) or isinstance(element, CSHEAR) or
-                  isinstance(element, CQUADR)):
+                elem = _complex_set(nodeIDs, vtkQuadraticTriangle, vtkTriangle, [(3, 1), (4, 3), 5], [0, (1, 2), (2, 4)])
+            elif (isinstance(element, CQUAD4) or isinstance(element, CSHEAR) or isinstance(element, CQUADR)):
                 elem = _simple_set(vtkQuad, range(4))
             elif isinstance(element, CQUAD8):
-                elem = _complex_set(nodeIDs, vtkQuadraticQuad, vtkQuad,
-                                    range(4, 8), range(4))
+                elem = _complex_set(nodeIDs, vtkQuadraticQuad, vtkQuad, range(4, 8), range(4))
             elif isinstance(element, CTETRA4):
                 elem = _simple_set(vtkTetra, range(4))
             elif isinstance(element, CTETRA10):
-                elem = _complex_set(nodeIDs, vtkQuadraticTetra, vtkTetra,
-                                    range(4, 10), range(4))
+                elem = _complex_set(nodeIDs, vtkQuadraticTetra, vtkTetra, range(4, 10), range(4))
             elif isinstance(element, CPENTA6):
                 elem = _simple_set(vtkWedge, range(6))
             elif isinstance(element, CPENTA15):
-                elem = _complex_set(nodeIDs, vtkQuadraticWedge, vtkWedge,
-                                    range(6, 15), range(6))
+                elem = _complex_set(nodeIDs, vtkQuadraticWedge, vtkWedge, range(6, 15), range(6))
             elif isinstance(element, CHEXA8):
                 elem = _simple_set(vtkHexahedron, range(8))
             elif isinstance(element, CHEXA20):
-                elem = _complex_set(nodeIDs, vtkQuadraticHexahedron, vtkHexahedron,
-                                    range(8, 20), range(8))
-            elif (isinstance(element, LineElement) or
-                  isinstance(element, SpringElement)):
+                elem = _complex_set(nodeIDs, vtkQuadraticHexahedron, vtkHexahedron, range(8, 20), range(8))
+            elif (isinstance(element, LineElement) or isinstance(element, SpringElement)):
                 elem = _simple_set(vtk.vtkLine, [0, 1])
             elif isinstance(element, CONM2):  # not perfectly located
                 del self.eidMap[eid]

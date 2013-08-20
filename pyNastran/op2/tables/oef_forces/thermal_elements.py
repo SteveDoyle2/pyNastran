@@ -9,7 +9,7 @@ from .oef_thermalObjects import (HeatFlux_CHBDYx, HeatFlux_2D_3D, HeatFlux_1D,
 
 class ThermalElements(object):
 
-    def readOEF_Thermal(self):
+    def read_OEF_thermal(self):
         assert self.format_code == 1, self.code_information()
         #print "self.element_type = ",self.element_type
         if self.element_type in [107, 108, 109]:  # CHBDYE, CHBDYG, CHBDYP

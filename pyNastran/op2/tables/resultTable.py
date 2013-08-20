@@ -22,6 +22,9 @@ from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 
 class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OESNLXR,OESNLXD,
 
+    def __init__(self):
+        pass
+
     def readTableA_DUMMY(self):
         """reads a dummy geometry table"""
         self.iTableMap = {}
@@ -65,7 +68,10 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         #grid_device, = unpack(b'i', data)
         return timeFreq
 
-    def add_data_parameter(self, data, name, Type, field_num, applyNonlinearFactor=True,
+    def _apply_data_code_value(self, Name, value):
+        self.data_code[Name] = value
+
+    def _add_data_parameter(self, data, name, Type, field_num, applyNonlinearFactor=True,
                            fixDeviceCode=False):
         """
         Extracts the binary value and adds it to the self.data_code dictionary.
@@ -97,7 +103,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             self.data_code['nonlinear_factor'] = value
             self.data_code['name'] = name
 
-    def setNullNonlinearFactor(self):
+    def _set_null_nonlinear_factor(self):
         self.nonlinear_factor = None
         self.data_code['nonlinear_factor'] = None
 

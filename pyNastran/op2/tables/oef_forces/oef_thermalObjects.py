@@ -22,7 +22,7 @@ class HeatFlux_VU_3D(ScalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         nelements = len(self. parent)
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.grad)
@@ -106,7 +106,7 @@ class HeatFlux_VU(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         nelements = len(self. parent)
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.grad)
@@ -195,7 +195,7 @@ class HeatFlux_VUBEAM(ScalarObject):  # 191-VUBEAM
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         nelements = len(self. parent)
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.grad)
@@ -277,7 +277,7 @@ class HeatFlux_1D(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         nelements = len(self.eType)
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.grad)
@@ -333,7 +333,7 @@ class HeatFlux_2D_3D(ScalarObject):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 6
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         nelements = len(self.eType)
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.grad)
@@ -385,7 +385,7 @@ class HeatFlux_CONV(ScalarObject):  # 110-CONV
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.cntlNode)
             times0 = self.cntlNode.keys()[0]
@@ -454,7 +454,7 @@ class HeatFlux_CHBDYx(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         nelements = len(self.eType)
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.fApplied)

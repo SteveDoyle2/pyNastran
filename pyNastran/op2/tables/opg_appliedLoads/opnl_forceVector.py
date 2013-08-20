@@ -65,56 +65,6 @@ class ForceVectorObject(TableObject):  # table_code=12, sort_code=0, thermal=0
             pageNum += 1
         return pageNum - 1
 
-    def __reprTransient__(self):
-        msg = '---TRANSIENT FORCE VECTOR---\n'
-        #msg += '%s = %g\n' %(self.data_code['name'],self.dt)
-        msg += self.write_header()
-
-        for dt, translations in sorted(self.translations.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for nodeID, translation in sorted(translations.iteritems()):
-                rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
-                (dx, dy, dz) = translation
-                (rx, ry, rz) = rotation
-
-                msg += '%-10i %8s ' % (nodeID, gridType)
-                vals = [dx, dy, dz, rx, ry, rz]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % 0
-                    else:
-                        msg += '%10.3e ' % val
-                msg += '\n'
-        return msg
-
-    def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---FORCE VECTOR---\n'
-        msg += self.write_header()
-
-        for nodeID, translation in sorted(self.translations.iteritems()):
-            rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
-
-            (dx, dy, dz) = translation
-            (rx, ry, rz) = rotation
-
-            msg += '%-10i %-8s ' % (nodeID, gridType)
-            vals = [dx, dy, dz, rx, ry, rz]
-            for val in vals:
-                if abs(val) < 1e-6:
-                    msg += '%10s ' % 0
-                else:
-                    msg += '%10.3e ' % val
-            msg += '\n'
-        return msg
-
-    def __reprTransient__(self):
-        return self._write_f06_transient(['', ''], 'PAGE ', 1)[0]
-
 
 class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_code=???
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -206,31 +156,3 @@ class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_c
             msg = ['']
             pageNum += 1
         return pageNum - 1
-
-    def __repr__(self):
-        return self.write_f06(['', '', ''], 'PAGE ', 1)[0]
-
-        msg = '---COMPLEX FORCE VECTOR---\n'
-        #if self.dt is not None:
-        #    msg += '%s = %g\n' %(self.data_code['name'],self.dt)
-        headers = ['DxReal', 'DxImag', 'DyReal', 'DyImag', 'DzReal', 'DyImag', 'RxReal', 'RxImag', 'RyReal', 'RyImag', 'RzReal', 'RzImag']
-        msg += '%-10s ' % 'nodeID'
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for freq, translations in sorted(self.translations.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-
-            for nodeID, translation in sorted(translations.iteritems()):
-                rotation = self.rotations[freq][nodeID]
-
-                msg += '%-10i ' % nodeID
-                vals = translation + rotation
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % 0
-                    else:
-                        msg += '%10.3e ' % val
-                msg += '\n'
-        return msg

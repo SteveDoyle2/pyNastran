@@ -47,7 +47,7 @@ class ComplexBarStressObject(StressObject):
     def get_stats(self):
         nelements = len(self.eType)
 
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.axial)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
@@ -354,7 +354,7 @@ class ComplexBarStrainObject(StrainObject):
     def get_stats(self):
         nelements = len(self.eType)
 
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.axial)
             msg.append('  type=%s ntimes=%s nelements=%s\n'

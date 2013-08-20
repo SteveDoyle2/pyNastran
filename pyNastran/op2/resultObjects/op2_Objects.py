@@ -19,12 +19,15 @@ class BaseScalarObject(Op2Codes):
         f.write(msg)
         return pageNum
 
-    def _write_f06_transient(self, header, pageStamp, f,
-                          pageNum=1, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, f, pageNum=1,
+                             is_mag_phase=False):
         msg = '_write_f06_transient is not implemented in %s\n' % (
             self.__class__.__name__)
         f.write(msg)
         return pageNum
+
+    def __repr__(self):
+        return ''.join(self.get_stats())
 
 
 class ScalarObject(BaseScalarObject):
@@ -35,41 +38,20 @@ class ScalarObject(BaseScalarObject):
         self.isTransient = False
         self.dt = None
         self.data_code = {}
-        if read_mode == 0:
-            return
-        #self.data_code = data_code
-        #self.apply_data_code()
-        #print(self.code_information())
 
-    def isImaginary(self):
+    def is_imaginary(self):
         return bool(self.sort_bits[1])
 
-    def _write_matlab_args(self, name, isubcase, f):
-        for key, value, in sorted(self.data_code.iteritems()):
-            if key is not 'log':
-                if isinstance(value, str):
-                    value = "'%s'" % value
-                    msg = 'fem.%s(%i).%s = %s;\n' % (
-                        name, isubcase, key, value)
-                elif isinstance(value, list) and isinstance(value[0], str):
-                    msgTemp = "','".join(value)
-                    msg = "fem.%s(%i).%s = {'%s'};\n" % (
-                        name, isubcase, key, msgTemp)
+    def is_real(self):
+        return not self.is_imaginary()
 
-                elif value is None:
-                    value = "'%s'" % value
-                else:
-                    msg = 'fem.%s(%i).%s = %s;\n' % (
-                        name, isubcase, key, value)
-                f.write(msg)
-
-    def apply_data_code(self):
+    def _apply_data_code(self):
         for key, value in sorted(self.data_code.iteritems()):
             self.__setattr__(key, value)
             #print("  *key=%s value=%s" % (key, value))
         #print("")
 
-    def get_data_code(self):
+    def _get_data_code(self):
         msg = []
         if 'dataNames' not in self.data_code:
             return []
@@ -86,34 +68,34 @@ class ScalarObject(BaseScalarObject):
                 pass
         return msg
 
-    def getUnsteadyValue(self):
+    def get_unsteady_value(self):
         name = self.data_code['name']
-        return self.getVar(name)
+        return self.get_var(name)
 
-    def getVar(self, name):
+    def get_var(self, name):
         return getattr(self, name)
 
     def set_var(self, name, value):
         return self.__setattr__(name, value)
 
-    def start_data_member(self, varName, valueName):
-        if hasattr(self, varName):
+    def _start_data_member(self, var_name, value_name):
+        if hasattr(self, var_name):
             return True
-        elif hasattr(self, valueName):
-            self.set_var(varName, [])
+        elif hasattr(self, value_name):
+            self.set_var(var_name, [])
             return True
         return False
 
-    def append_data_member(self, varName, valueName):
+    def _append_data_member(self, varName, valueName):
         """
         this appends a data member to a variable that may or may not exist
         """
-        hasList = self.start_data_member(varName, valueName)
+        hasList = self._start_data_member(varName, valueName)
         if hasList:
-            listA = self.getVar(varName)
+            listA = self.get_var(varName)
             if listA is not None:
-                #print "has %s" %(varName)
-                value = self.getVar(valueName)
+                #print "has %s" % varName
+                value = self.get_var(valueName)
                 try:
                     n = len(listA)
                 except:
@@ -122,21 +104,21 @@ class ScalarObject(BaseScalarObject):
                 listA.append(value)
                 assert len(listA) == n + 1
 
-    def set_data_members(self):
+    def _set_data_members(self):
         if 'dataNames' not in self.data_code:
-            msg = 'No "transient" variable was set for %s\n' % (self.table_name)
+            msg = 'No "transient" variable was set for %s\n' % self.table_name
             raise NotImplementedError(msg + self.code_information())
 
         for name in self.data_code['dataNames']:
-            #print("name = ",name)
-            self.append_data_member(name + 's', name)
+            #print("name = ", name)
+            self._append_data_member(name + 's', name)
 
     def update_data_code(self, data_code):
         #print("self.data_code =", self.data_code)
         if not self.data_code or (data_code['nonlinear_factor'] != self.data_code['nonlinear_factor']):
             self.data_code = data_code
-            self.apply_data_code()
-            self.set_data_members()
+            self._apply_data_code()
+            self._set_data_members()
         #else:
             #print('skipping update...')
 
@@ -157,11 +139,11 @@ class ScalarObject(BaseScalarObject):
         for name in self.data_code['dataNames']:
             vals = getattr(self, name + 's')
             keyVals.append(vals)
-            #print("%ss = %s" %(name, vals))
+            #print("%ss = %s" % (name, vals))
 
         msg = ''
         for name in self.data_code['dataNames']:
-            msg += '%-10s ' % (name)
+            msg += '%-10s ' % name
         msg += '\n'
 
         nModes = len(keyVals[0])
@@ -171,18 +153,18 @@ class ScalarObject(BaseScalarObject):
             msg += '\n'
         return msg + '\n'
 
-    def recastGridType(self, gridType):
-        """converts a gridType integer to a string"""
-        if gridType == 1:
+    def _recast_grid_type(self, grid_type):
+        """converts a grid_type integer to a string"""
+        if grid_type == 1:
             Type = 'G'  # GRID
-        elif gridType == 2:
+        elif grid_type == 2:
             Type = 'S'  # SPOINT
-        elif gridType == 7:
+        elif grid_type == 7:
             Type = 'L'  # RIGID POINT (e.g. RBE3)
-        elif gridType == 0:
+        elif grid_type == 0:
             Type = 'H'      # SECTOR/HARMONIC/RING POINT
         else:
-            raise RuntimeError('gridType=%s' % (gridType))
+            raise RuntimeError('grid_type=%s' % grid_type)
         return Type
 
     def update_dt(self, data_code, dt):
@@ -193,7 +175,7 @@ class ScalarObject(BaseScalarObject):
         self.data_code = data_code
         self.apply_data_code()
         raise RuntimeError('update_dt not implemented in the %s class'
-                           % (self.__class__.__name__))
+                           % self.__class__.__name__)
         #assert dt>=0.
         #print "updating dt...dt=%s" %(dt)
         if dt is not None:

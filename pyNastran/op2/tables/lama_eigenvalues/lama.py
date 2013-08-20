@@ -75,13 +75,13 @@ class LAMA(object):
         data = self.get_data(4 * 50)
         #print self.print_block(data)
 
-        (three) = self.parse_approach_code(data)
+        (three) = self._parse_approach_code(data)
 
-        self.add_data_parameter(data, 'seven', 'i', 10, False)  # seven
+        self._add_data_parameter(data, 'seven', 'i', 10, False)  # seven
         ## residual vector augmentation flag
-        self.add_data_parameter(data, 'resFlag', 'i', 11, False)
+        self._add_data_parameter(data, 'resFlag', 'i', 11, False)
         ## fluid modes Flag
-        self.add_data_parameter(data, 'fldFlag', 'i', 12, False)
+        self._add_data_parameter(data, 'fldFlag', 'i', 12, False)
 
         #print self.data_code
         #self.add_data_parameter(data,'format_code',  'i',9,False)   ## format code

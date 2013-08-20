@@ -205,8 +205,8 @@ class FortranFile(object):
         nFloats = n // 4
         iFormat = str(nFloats) + 'f'
         iFormat = bytes(iFormat)
-        ints = unpack(iFormat, data[:nFloats * 4])
-        return ints
+        floats = unpack(iFormat, data[:nFloats * 4])
+        return floats
 
     def get_floats2(self, data, endian):
         """
@@ -216,8 +216,8 @@ class FortranFile(object):
         nFloats = n // 4
         iFormat = endian + str(nFloats) + 'f'
         iFormat = bytes(iFormat)
-        ints = unpack(iFormat, data[:nFloats * 4])
-        return ints
+        floats = unpack(iFormat, data[:nFloats * 4])
+        return floats
 
     def get_doubles(self, data):
         """
@@ -249,14 +249,14 @@ class FortranFile(object):
         floats = self.get_floats(data2)
         #doubles = self.getDoubles(data2)
         strings = self.get_strings(data2)
-        msg += "n       = %s\n" % (self.n)
-        msg += "ints    = %s\n" % (str(ints))
-        #msg += "longs  = %s\n" % (longs)
-        msg += "floats  = %s\n" % (str(floats))
-        #msg += "doubles = %s\n" % (str(doubles))
-        msg += "strings = |%r|\n" % (strings)
+        msg += "n       = %s\n" % self.n
+        msg += "ints    = %s\n" % str(ints)
+        #msg += "longs  = %s\n" % longs
+        msg += "floats  = %s\n" % str(floats)
+        #msg += "doubles = %s\n" % str(doubles)
+        msg += "strings = |%r|\n" % strings
         msg += "nWords  = %s\n" % (len(data) // 4)
-        #msg += "tell    = %s\n" % (self.op2.tell())
+        #msg += "tell    = %s\n" % self.op2.tell()
         return msg
 
     def print_block2(self, data, endian):
@@ -272,13 +272,13 @@ class FortranFile(object):
         floats = self.get_floats2(data, endian)
         #doubles = self.getDoubles(data)
         strings = self.get_strings2(data, endian)
-        msg += "ints    = %s\n" % (str(ints))
-        #msg += "longs  = %s\n" % (longs)
-        msg += "floats  = %s\n" % (str(floats))
-        #msg += "doubles = %s\n" % (doubles)
+        msg += "ints    = %s\n" % str(ints)
+        #msg += "longs  = %s\n" % longs
+        msg += "floats  = %s\n" % str(floats)
+        #msg += "doubles = %s\n" % doubles
         msg += "strings = |b%r|\n" % (''.join(strings))
         msg += "nWords  = %s\n" % (len(data) // 4)
-        #msg += "tell    = %s\n" % (self.op2.tell())
+        #msg += "tell    = %s\n" % self.op2.tell()
         return msg
 
     def get_data(self, n):
@@ -520,9 +520,9 @@ class FortranFile(object):
         word, = unpack(iFormat, data)
 
         #print "word = |%s|" % (word)
-        #print "nLetters=%s word=|%s|" % (nLetters,word)
+        #print "nLetters=%s word=|%s|" % (nLetters, word)
         if debug and self.make_op2_debug:
-            self.op2Debug.write('|%s|\n' % (str(word)))
+            self.op2Debug.write('%r\n' % str(word))
         return word
 
     def read_int_block(self):

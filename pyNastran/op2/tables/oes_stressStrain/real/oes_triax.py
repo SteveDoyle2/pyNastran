@@ -40,7 +40,7 @@ class TriaxStressObject(StressObject):
             self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.radial)
             r0 = self.radial.keys()[0]
@@ -254,7 +254,7 @@ class TriaxStrainObject(StrainObject):
             self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.radial)
             r0 = self.radial.keys()[0]
