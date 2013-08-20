@@ -39,7 +39,7 @@ class StrainEnergyObject(ScalarObject):
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.energy)
             time0 = self.energy.keys()[0]

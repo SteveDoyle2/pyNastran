@@ -3,6 +3,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 
 class Op2Codes(object):
+    def __init__(self):
+        pass
+
     def get_element_type(self, eCode):
         elements = {
             None: '',

@@ -1,19 +1,12 @@
 #from struct import pack
-import numpy as np
 import numpy
 
 import pandas as pd
-from numpy import array, sqrt, abs, angle, zeros, ones  # dot,
+from numpy import array, zeros
 
 from pyNastran import update_index
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
-
-try:
-    from pylab import xlabel, ylabel, show, grid, legend, plot, title
-    import matplotlib.pyplot as plt
-except ImportError:
-    pass
 
 
 class TableObject(ScalarObject):  # displacement style table
@@ -36,7 +29,7 @@ class TableObject(ScalarObject):  # displacement style table
     def get_stats(self):
         ndt, nnodes, dts = self._get_shape()
 
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if dts[0] is not None:
             name = self.data_code['name']
             dtstring = name + ', '
@@ -59,7 +52,7 @@ class TableObject(ScalarObject):  # displacement style table
 
     def add_array_f06_data(self, data, transient):
         nnodes = len(data)
-
+        read_mode = 1
         nodeIDs_to_index = zeros(nnodes, dtype='int32')
         gridTypes = zeros(nnodes, dtype='string')
         translations = zeros((nnodes, 6), dtype='float32')
@@ -104,14 +97,6 @@ class TableObject(ScalarObject):  # displacement style table
             self.gridTypes[nodeID] = gridType
             self.translations[dt][nodeID] = array([t1, t2, t3])
             self.rotations[dt][nodeID] = array([r1, r2, r3])
-
-    def get_transients(self):
-        if as_array:
-            k = self.translations.keys()
-        else:
-            k = self.translations[:, 0, 0]  # itime, inode, icomponent
-        k.sort()
-        return k
 
     def _preallocate(self, dt, nnodes):
         if self.shape is None:
@@ -201,164 +186,27 @@ class TableObject(ScalarObject):  # displacement style table
         #print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
         return ndt, nnodes, dts
 
-    def get_as_sort1(self):
-        return (self.translations, self.rotations)
-
-    def get_as_sort2(self):
-        """returns translations and rotations in sort2 format"""
-        translations2 = {}
-        rotations2 = {}
-        if self.dt is not None:
-            #return self.__reprTransient__()
-
-            for dt, translations in sorted(self.translations.iteritems()):
-                nodeIDs = translations.keys()
-                for nodeID in nodeIDs:
-                    translations2[nodeID] = {}
-                    rotations2[nodeID] = {}
-
-            for dt, translations in sorted(self.translations.iteritems()):
-                for nodeID, translation in sorted(translations.iteritems()):
-                    rotation = self.rotations[dt][nodeID]
-                    translations2[nodeID][dt] = translation
-                    rotations2[nodeID][dt] = rotation
-        else:
-            return (self.translations, self.rotations)
-            #for nodeID,translation in sorted(self.translations.iteritems()):
-            #    rotation = self.rotations[nodeID]
-            #    translations2[nodeID] = translation
-            #    rotations2[nodeID]    = rotation
-        return (translations2, rotations2)
-
-    def _write_matlab(self, name, isubcase, f, is_mag_phase=False):
-        """
-        name = displacements
-        """
-        if self.nonlinear_factor is not None:
-            self._write_matlab_transient(name, isubcase, f, is_mag_phase)
-        #print "static!!!!"
-        #msg = []
-        #magPhase = 0
-        #if is_mag_phase:
-        #    magPhase = 1
-        #msg.append('fem.%s.is_mag_phase = %s' %(name,magPhase))
-
-        nodes = self.translations.keys()
-
-        nodes.sort()
-        #nNodes = len(nodes)
-        self._write_matlab_args(name, isubcase, f)
-        f.write('fem.%s(%i).nodes = %s;\n' % (name, isubcase, nodes))
-
-        msgG = "fem.%s(%i).gridTypes    = ['" % (name, isubcase)
-        msgT = 'fem.%s(%i).translations = [' % (name, isubcase)
-        msgR = 'fem.%s(%i).rotations    = [' % (name, isubcase)
-        spaceT = ' ' * len(msgT)
-        spaceR = ' ' * len(msgR)
-        i = 0
-        for nodeID, translation in sorted(self.translations.iteritems()):
-            rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
-            msgG += '%s' % gridType
-
-            (dx, dy, dz) = translation
-            (rx, ry, rz) = rotation
-            vals = [dx, dy, dz, rx, ry, rz]
-            (vals2, isAllZeros) = writeFloats13E(vals)
-            msgT += '[%s,%s,%s];' % (dx, dy, dz)
-            msgR += '[%s,%s,%s];' % (rx, ry, rz)
-            i += 1
-            if i == 100:
-                msgT += '\n%s' % (spaceT)
-                msgR += '\n%s' % (spaceR)
-                i = 0
-
-        msgG += "'];\n"
-        msgT += '];\n'
-        msgR += '];\n'
-        f.write(msgG)
-        f.write(msgT)
-        f.write(msgR)
-
-    def _write_matlab_transient(self, name, isubcase, f, is_mag_phase=False):
-        """
-        name = displacements
-        """
-        times = self.translations.keys()
-        nodes = self.translations[times[0]].keys()
-        times.sort()
-        nodes.sort()
-        #nNodes = len(nodes)
-        self._write_matlab_args(name, isubcase, f)
-        dtName = '%s' % (self.data_code['name'])
-        f.write('fem.%s(%i).nodes = %s;\n' % (name, isubcase, nodes))
-        f.write('fem.%s(%i).%s = %s;\n' % (name, isubcase, dtName, times))
-
-        msgG = "fem.%s(%i).gridTypes = ['" % (name, isubcase)
-
-        for nodeID, gridType in sorted(self.gridTypes.iteritems()):
-            msgG += '%s' % gridType
-        msgG += "'];\n"
-        f.write(msgG)
-        del msgG
-
-        nDt = len(self.translations)
-        msgT = 'fem.%s(%i).translations.%s = cell(1,%i);\n' % (
-            name, isubcase, dtName, nDt)
-        msgR = 'fem.%s(%i).rotations.%s    = cell(1,%i);\n' % (
-            name, isubcase, dtName, nDt)
-        #msgT = 'fem.%s(%i).translations.%s = zeros(%i,3);\n' %(name,isubcase,dtName,n+1,nNodes)
-        #msgR = 'fem.%s(%i).rotations.%s    = zeros(%i,3);\n' %(name,isubcase,dtName,n+1,nNodes)
-
-        node_ids = self.data['node_id']
-        for n, (dt, translations) in enumerate(sorted(self.translations.iteritems())):
-            #msgT = 'fem.%s(%i).translations.%s(%i) = zeros(%i,3);\n' %(name,isubcase,dtName,n+1,nNodes)
-            #msgR = 'fem.%s(%i).rotations.%s(%i)    = zeros(%i,3);\n' %(name,isubcase,dtName,n+1,nNodes)
-
-            msgT += 'fem.%s(%i).translations.%s(%i) = [' % (
-                name, isubcase, dtName, n + 1)
-            msgR += 'fem.%s(%i).rotations.%s(%i)    = [' % (
-                name, isubcase, dtName, n + 1)
-
-            i = 0
-            for nodeID in node_ids:
-                translation = self.translations[dt][nodeID]
-                rotation = self.rotations[dt][nodeID]
-                #gridType = self.gridTypes[nodeID]
-
-                (dx, dy, dz) = translation
-                (rx, ry, rz) = rotation
-                #vals = [dx,dy,dz,rx,ry,rz]
-                msgT += '[%s,%s,%s];' % (dx, dy, dz)
-                msgR += '[%s,%s,%s];' % (rx, ry, rz)
-                i += 1
-                if i == 100:
-                    msgT += '\n'
-                    msgR += '\n'
-                    i = 0
-
-            msgT += '];\n'
-            msgR += '];\n'
-            f.write(msgT)
-            f.write(msgR)
-            msgT = ''
-            msgR = ''
-
     def _write_f06_block(self, words, header, pageStamp, f, pageNum=1):
         msg = words
         ndt, nnodes, dts = self._get_shape()
 
         #print self.data.to_string()
-        for i in xrange(len(self.data)):
-            node_id = self.data.index[i]
-            gridType = 'G' #self.gridTypes[node_id]
-            data = self.data.ix[node_id]
-            dx = data['T1']
-            dy = data['T2']
-            dz = data['T3']
-            rx = data['R1']
-            ry = data['R2']
-            rz = data['R3']
+        node_ids = self.data['node_id']
+        T1 = self.data['T1']
+        T2 = self.data['T2']
+        T3 = self.data['T3']
+        R1 = self.data['R1']
+        R2 = self.data['R2']
+        R3 = self.data['R3']
+        for i in xrange(nnodes):
+            nodeID = node_ids[i]
+            gridType = 'G' #self.gridTypes[nodeID]
+            dx = T1[i]
+            dy = T2[i]
+            dz = T3[i]
+            rx = R1[i]
+            ry = R2[i]
+            rz = R3[i]
 
             vals = [dx, dy, dz, rx, ry, rz]
             (vals2, isAllZeros) = writeFloats13E(vals)
@@ -366,19 +214,23 @@ class TableObject(ScalarObject):  # displacement style table
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n'
                         % (node_id, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+            if i % 500:
+                f.write(''.join(msg))
+                msg = ['']
 
         msg.append(pageStamp + str(pageNum) + '\n')
         f.write(''.join(msg))
         return pageNum
 
-    def _write_f06_transient_block(self, words, header, pageStamp, f, pageNum=1):
+    def _write_f06_transient_block(self, words, header, pageStamp, f,
+                                   pageNum=1):
         msg = []
         #assert f is not None # remove
         for i in xrange(len(self.data)):
             index = self.data.index[i]
             (dt, node_id) = index
             dt_old = dt
-            if isinstance(dt, float):  # fix
+            if isinstance(dt, float):  # @todo: fix
                 header[1] = ' %s = %10.4E float %s\n' % (self.data_code[
                     'name'], dt, self.analysis_code)
             else:
@@ -409,7 +261,6 @@ class TableObject(ScalarObject):  # displacement style table
                     dt = self.data.index[i+1][0]
                 except IndexError:
                     break
-
             msg.append(pageStamp + str(pageNum) + '\n')
             f.write(''.join(msg))
             msg = ['']
@@ -481,71 +332,6 @@ class TableObject(ScalarObject):  # displacement style table
         words = ['                                                 ( NUMBER OF ZERO CROSSINGS )\n', ' \n']
         return words
 
-    def plot(self, nodeList=None, resultType='Translation', coord=3, markers=None,
-             Title=None, hasLegend=True, Legend=None, xLabel=None, yLabel=None, alphaLegend=0.5):
-        """
-        :param nodeList: a list of the node IDs to plot vs the
-               independent variable (default=None; all nodes)
-        :param resultType: the variable to plot ('Translation','Rotation')
-        :param coord: the coordinate to plot (for <x,y,z>, x=0,y=1,z=2,Mag=3);
-               default=Magnitude
-        :param markers:  a list of colors/marker shapes for each line
-        :param Title: title of the plot (default=the object name)
-        :param hasLegend: should a legend be shown (default=False)
-        :param Legend: the list of the legend titles (default=No Legend)
-        :param xLabel: the name of the xAxis (default=the name of
-               the independent variable; string)
-        :param yLabel: the name of the xAxis (default=the name of
-               the dependent variable; string)
-        :param alphaLegend: the transparency of the legend;
-               (0.0=solid; 1.0=transparent; default=0.5)
-
-        .. todo:: fix alphaLegend; test options more...
-        """
-        (results, nodeList, markers, Title, xLabel, yLabel) = getPlotData(
-            self, nodeList, resultType, coord, markers, Title, hasLegend,
-            Legend, xLabel, yLabel)
-
-        i = 0
-        Labels = []
-        #print "nodeList = ",nodeList
-        node0 = nodeList[0]
-        Xs = sorted(results[node0].keys())
-
-        (fig, ax) = plt.subplots(1)
-        #leg = plt.legend(loc='best', fancybox=True,alpha=0.5)
-        for nodeID in nodeList:  # translation/rotation
-            result = results[nodeID]
-            Ys = []
-            for dt, res in sorted(result.iteritems()):
-                if coord == 3:
-                    val = sqrt(res.dot(res))
-                else:
-                    val = res[coord]
-                Ys.append(val)
-            Label = 'Node %s' % (nodeID)
-            Labels.append(Label)
-            #ax.plot(Xs,Ys,markers[i],label=Label)
-            #plot(Xs,Ys,Label)
-            plot(Xs, Ys)
-            i += 1
-        plt.legend(Labels, loc='best', fancybox=True)
-        #print dir(leg)
-        #leg.get_frame().set_alpha(0.5)
-        ax.set_title(Title)
-        #ax.set_legend(Labels)
-        #if hasLegend and Legend is None:
-        #    plt.legend(Labels)
-        #elif hasLegend:
-        #    plt.legend(Legend)
-        #plt.axes
-        #print dir(plt)
-        ax.grid(True)
-        ax.set_ylabel(yLabel)
-        ax.set_xlabel(xLabel)
-        #alpha(alphaLegend)
-        show()
-
 
 class ComplexTableObject(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -558,19 +344,11 @@ class ComplexTableObject(ScalarObject):
         self.rotations = {}
         self._inode_start = None
         self._inode_end = None
-
         self.dt = dt
-        #if is_sort1:
-            #pass
-            #if dt is not None:
-                #self.add = self.add_sort1
-        #else:
-            #assert dt is not None
-            #self.add = self.addSort2
 
     def get_stats(self):
         ndt, ngrids, dts = self._get_shape()
-        msg = self.get_data_code()
+        msg = self._get_data_code()
 
         if self.nonlinear_factor is not None:  # transient
             name = self.data_code['name']
@@ -594,6 +372,7 @@ class ComplexTableObject(ScalarObject):
         return False
 
     def add_f06_data(self, data, transient):
+        read_mode = 1
         if transient is None:
             for line in data:
                 try:
@@ -620,9 +399,6 @@ class ComplexTableObject(ScalarObject):
             self.gridTypes[nodeID] = gridType
             self.translations[self.dt][nodeID] = [v1, v2, v3]  # dx,dy,dz
             self.rotations[self.dt][nodeID] = [v4, v5, v6]  # rx,ry,rz
-
-    def add_complex_f06_data(self, data, transient):
-        raise NotImplementedError()
 
     def update_dt(self, data_code, dt, read_mode):
         self.data_code = data_code
@@ -652,12 +428,13 @@ class ComplexTableObject(ScalarObject):
 
             #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
             #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
-            data['T1'] = pd.Series(zeros((ndt * nnodes), dtype='complex64'))
-            data['T2'] = pd.Series(zeros((ndt * nnodes), dtype='complex64'))
-            data['T3'] = pd.Series(zeros((ndt * nnodes), dtype='complex64'))
-            data['R1'] = pd.Series(zeros((ndt * nnodes), dtype='complex64'))
-            data['R2'] = pd.Series(zeros((ndt * nnodes), dtype='complex64'))
-            data['R3'] = pd.Series(zeros((ndt * nnodes), dtype='complex64'))
+            n = ndt * nnodes
+            data['T1'] = pd.Series(zeros((n), dtype='complex64'))
+            data['T2'] = pd.Series(zeros((n), dtype='complex64'))
+            data['T3'] = pd.Series(zeros((n), dtype='complex64'))
+            data['R1'] = pd.Series(zeros((n), dtype='complex64'))
+            data['R2'] = pd.Series(zeros((n), dtype='complex64'))
+            data['R3'] = pd.Series(zeros((n), dtype='complex64'))
             columns += ['node_id', 'T1', 'T2', 'T3', 'R1', 'R2', 'R3']
 
             self.data = pd.DataFrame(data, columns=columns)
@@ -700,58 +477,6 @@ class ComplexTableObject(ScalarObject):
         #print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
         return ndt, nnodes, dts
 
-    def _write_matlab_transient(self, name, isubcase, f, is_mag_phase=False):
-        """
-        name = displacements
-        """
-        #msg = []
-        times = self.translations.keys()
-        nodes = self.translations[times[0]].keys()
-        times.sort()
-        nodes.sort()
-        #nNodes = len(nodes)
-        self._write_matlab_args(name, isubcase, f)
-        dtName = '%s' % (self.data_code['name'])
-        f.write('fem.%s(%i).nodes = %s;\n' % (name, isubcase, nodes))
-        f.write('fem.%s(%i).%s = %s;\n' % (name, isubcase, dtName, times))
-
-        msgG = "fem.%s(%i).gridTypes = ['" % (name, isubcase)
-        for nodeID, gridType in sorted(self.gridTypes.iteritems()):
-            msgG += '%s' % gridType
-        msgG += "'];\n"
-        f.write(msgG)
-        del msgG
-
-        for n, (dt, translations) in enumerate(sorted(self.translations.iteritems())):
-            #msgT = 'fem.%s(%i).translations.%s(%i) = zeros(%i,3);\n' %(name,isubcase,dtName,n+1,nNodes)
-            #msgR = 'fem.%s(%i).rotations.%s(%i)    = zeros(%i,3);\n' %(name,isubcase,dtName,n+1,nNodes)
-
-            msgT = 'fem.%s(%i).translations.%s(%i) = [' % (
-                name, isubcase, dtName, n + 1)
-            msgR = 'fem.%s(%i).rotations.%s(%i)    = [' % (
-                name, isubcase, dtName, n + 1)
-
-            i = 0
-            for nodeID, translation in sorted(translations.iteritems()):
-                rotation = self.rotations[dt][nodeID]
-                (dx, dy, dz) = translation
-                (rx, ry, rz) = rotation
-
-                msgT += '[%s+%sj,%s+%sj,%s+%sj];' % (dx.real, dx.imag,
-                                                     dy.real, dy.imag, dz.real, dz.imag)
-                msgR += '[%s+%sj,%s+%sj,%s+%sj];' % (rx.real, rx.imag,
-                                                     ry.real, ry.imag, rz.real, rz.imag)
-                i += 1
-                if i == 100:
-                    msgT += '\n'
-                    msgR += '\n'
-                    i = 0
-
-            msgT += '];\n'
-            msgR += '];\n'
-            f.write(msgT)
-            f.write(msgR)
-
     def _write_f06_block(self, words, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         #words += self.getTableMarker()
         if is_mag_phase:
@@ -765,7 +490,6 @@ class ComplexTableObject(ScalarObject):
         for nodeID, translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
-
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
 
@@ -806,129 +530,14 @@ class ComplexTableObject(ScalarObject):
 
                 vals = [dx, dy, dz, rx, ry, rz]
                 (vals2, isAllZeros) = writeImagFloats13E(vals, is_mag_phase)
-                [dxr, dyr, dzr, rxr, ryr, rzr, dxi, dyi,
-                    dzi, rxi, ryi, rzi] = vals2
+                [dxr, dyr, dzr, rxr, ryr, rzr,
+                 dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 if not isAllZeros:
                     msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
-                    msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
+                    msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '',           dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
             msg.append(pageStamp + str(pageNum) + '\n')
             f.write(''.join(msg))
             msg = ['']
             pageNum += 1
         return pageNum - 1
-
-    def plot(self, nodeList=None, resultType='Translation', displayType='Real Imag', coord=3, markers=None,
-             Title=None, hasLegend=True, Legend=None, xLabel=None, yLabel=None, alphaLegend=0.5):
-        """
-        :param nodeList: a list of the node IDs to plot vs the
-               independent variable (default=None; all nodes)
-        :param resultType: the variable to plot ('Translation','Rotation')
-        :param displayType: 'Real Imag' or 'Mag Phase'
-        :param coord: the coordinate to plot (for <x,y,z>, x=0,y=1,z=2,Mag=3);
-               default=Magnitude
-        :param markers: a list of colors/marker shapes for each line
-        :param Title: title of the plot (default=the object name)
-        :param hasLegend: should a legend be shown (default=False)
-        :param Legend: the list of the legend titles (default=No Legend)
-        :param xLabel: the name of the xAxis (default=the name of
-               the independent variable; string)
-        :param yLabel: the name of the xAxis (default=the name of
-               the dependent variable; string)
-        :param alphaLegend: the transparency of the legend;
-               (0.0=solid; 1.0=transparent; default=0.5)
-
-        .. todo:: fix alphaLegend; test options more...
-        """
-        displayType = displayType.title()
-        (results, nodeList, markers, Title, xLabel, yLabel) = getPlotData(
-            self, nodeList, resultType, coord, markers, Title, hasLegend, Legend, xLabel, yLabel)
-
-        i = 0
-        Labels = []
-        node0 = nodeList[0]
-        Xs = sorted(results[node0].keys())
-
-        (fig, ax) = plt.subplots(1)
-        leg = plt.legend(loc='best', fancybox=True, alpha=0.5)
-        for nodeID in nodeList:  # translation/rotation
-            result = results[nodeID]
-            Ys = []
-            for dt, res in sorted(result.iteritems()):
-                if coord == 3:
-                    val = sqrt(res.dot(res))
-                else:
-                    val = res[coord]
-
-                mag = abs(val)
-                phase = angle(val, deg=True)
-                Ys.append(val)
-            Label = 'Node %s' % (nodeID)
-            Labels.append(Label)
-            ax.plot(Xs, Ys, markers[i])
-            #plot(Xs,Ys,Label)
-            i += 1
-        #print dir(leg)
-        #leg.get_frame().set_alpha(0.5)
-        ax.set_title(Title)
-        #ax.set_legend(Labels)
-        if hasLegend and Legend is None:
-            plt.legend(Labels)
-        elif hasLegend:
-            plt.legend(Legend)
-        #plt.axes
-        #print dir(plt)
-        ax.grid(True)
-        ax.set_ylabel(yLabel)
-        ax.set_xlabel(xLabel)
-        #alpha(alphaLegend)
-        show()
-
-
-def getPlotData(obj, nodeList, resultType, coord, markers, Title, hasLegend, Legend, xLabel, yLabel):
-    if Title is None:
-        label = ''
-        subtitle = ''
-        if obj.label:
-            label = ' - %s' % (obj.label)
-        if obj.subtitle:
-            subtitle = ' - %s' % (obj.subtitle)
-        Title = '%s%s%s - Subcase %s' % (
-            obj.__class__.__name__, label, subtitle, obj.isubcase)
-
-    resultType = resultType.title()
-    assert coord in [0, 1, 2,
-                     3], 'invalid coord...options=[0,1,2,3].  coord=%s' % (coord)
-    assert resultType in ['Translation', 'Rotation'], "invalid resultType...options=['Translation','Rotation']."
-
-    if xLabel is None:
-        xLabel = obj.data_code['name'].title()
-    if yLabel is None:
-        if   coord == 0:
-            yLabel = 'X %s' % (resultType)
-        elif coord == 1:
-            yLabel = 'Y %s' % (resultType)
-        elif coord == 2:
-            yLabel = 'Z %s' % (resultType)
-        elif coord == 3:
-            yLabel = '%s (Magnitude)' % (resultType)
-        else:
-            raise RuntimeError('invalid coord...options=[0,1,2,3].  choice=%s' % (coord))
-
-    (translations, rotations) = obj.getAsSort2()
-
-    if resultType == 'Translation':
-        results = translations
-    else:
-        results = rotations
-
-    nodeListAll = results.keys()
-    if nodeList is None:
-        nodeList = nodeListAll
-
-    if hasLegend and Legend is not None:
-        assert len(nodeList) == len(Legend), 'len(nodeList)=%s len(legend)=%s' % (len(nodeList), len(legend))
-    if markers is None:
-        markers = ['-'] * len(nodeList)
-    #print "subcase = ",obj.isubcase
-    return (results, nodeList, markers, Title, xLabel, yLabel)

@@ -65,7 +65,7 @@ class CelasStressObject(RealSpringResults, StressObject):
     def get_stats(self):
         nelements = len(self.eType)
 
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         eTypes = list(set(self.eType.values()))
         if self.dt is not None:  # transient
             ntimes = len(self.stress)
@@ -141,7 +141,7 @@ class CelasStrainObject(RealSpringResults, StrainObject):
         nelements = len(self.eType)
         eTypes = list(set(self.eType.values()))
 
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.stress)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
@@ -208,7 +208,7 @@ class NonlinearSpringStressObject(StressObject):
         nelements = len(self.eType)
         eTypes = list(set(self.eType.values()))
 
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.stress)
             msg.append('  type=%s ntimes=%s nelements=%s\n'

@@ -25,8 +25,8 @@ class ComplexForces(object):
             (eid, axialReal, torqueReal, axialImag, torqueImag) = out
 
             if is_magnitude_phase:
-                (axial) = polar_to_real_imag(axialReal, axialImag)
-                (torque) = polar_to_real_imag(torqueReal, torqueImag)
+                axial = polar_to_real_imag(axialReal, axialImag)
+                torque = polar_to_real_imag(torqueReal, torqueImag)
             else:
                 axial = complex(axialReal, axialImag)
                 torque = complex(torqueReal, torqueImag)
@@ -119,39 +119,23 @@ class ComplexForces(object):
             (eid, f41r, f21r, f12r, f32r, f23r, f43r, f34r, f14r, kf1r, s12r, kf2r, s23r, kf3r, s34r, kf4r, s41r,
                   f41i, f21i, f12i, f32i, f23i, f43i, f34i, f14i, kf1i, s12i, kf2i, s23i, kf3i, s34i, kf4i, s41i) = out
             if is_magnitude_phase:
-                f41r = polar_to_real_imag(f41r, f41i)
-                kf1 = polar_to_real_imag(kf1r, kf1i)
-                f21r = polar_to_real_imag(f21r, f21i)
-                kf2 = polar_to_real_imag(kf2r, kf2i)
-                f12r = polar_to_real_imag(f12r, f12i)
-                kf3 = polar_to_real_imag(kf3r, kf3i)
-                f23r = polar_to_real_imag(f23r, f23i)
-                kf4 = polar_to_real_imag(kf4r, kf4i)
-                f32r = polar_to_real_imag(f32r, f32i)
-                s12 = polar_to_real_imag(s12r, s12i)
-                f43r = polar_to_real_imag(f43r, f43i)
-                s23 = polar_to_real_imag(s23r, s23i)
-                f34r = polar_to_real_imag(f34r, f34i)
-                s34 = polar_to_real_imag(s34r, s34i)
-                f14r = polar_to_real_imag(f14r, f14i)
-                s41 = polar_to_real_imag(s41r, s41i)
+                f41r = polar_to_real_imag(f41r, f41i); kf1 = polar_to_real_imag(kf1r, kf1i)
+                f21r = polar_to_real_imag(f21r, f21i); kf2 = polar_to_real_imag(kf2r, kf2i)
+                f12r = polar_to_real_imag(f12r, f12i); kf3 = polar_to_real_imag(kf3r, kf3i)
+                f23r = polar_to_real_imag(f23r, f23i); kf4 = polar_to_real_imag(kf4r, kf4i)
+                f32r = polar_to_real_imag(f32r, f32i); s12 = polar_to_real_imag(s12r, s12i)
+                f43r = polar_to_real_imag(f43r, f43i); s23 = polar_to_real_imag(s23r, s23i)
+                f34r = polar_to_real_imag(f34r, f34i); s34 = polar_to_real_imag(s34r, s34i)
+                f14r = polar_to_real_imag(f14r, f14i); s41 = polar_to_real_imag(s41r, s41i)
             else:
-                f41 = complex(f41r, f41i)
-                kf1 = complex(kf1r, kf1i)
-                f21 = complex(f21r, f21i)
-                kf2 = complex(kf2r, kf2i)
-                f12 = complex(f12r, f12i)
-                kf3 = complex(kf3r, kf3i)
-                f23 = complex(f23r, f23i)
-                kf4 = complex(kf4r, kf4i)
-                f32 = complex(f32r, f32i)
-                s12 = complex(s12r, s12i)
-                f43 = complex(f43r, f43i)
-                s23 = complex(s23r, s23i)
-                f34 = complex(f34r, f34i)
-                s34 = complex(s34r, s34i)
-                f14 = complex(f14r, f14i)
-                s41 = complex(s41r, s41i)
+                f41 = complex(f41r, f41i); kf1 = complex(kf1r, kf1i)
+                f21 = complex(f21r, f21i); kf2 = complex(kf2r, kf2i)
+                f12 = complex(f12r, f12i); kf3 = complex(kf3r, kf3i)
+                f23 = complex(f23r, f23i); kf4 = complex(kf4r, kf4i)
+                f32 = complex(f32r, f32i); s12 = complex(s12r, s12i)
+                f43 = complex(f43r, f43i); s23 = complex(s23r, s23i)
+                f34 = complex(f34r, f34i); s34 = complex(s34r, s34i)
+                f14 = complex(f14r, f14i); s41 = complex(s41r, s41i)
 
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
@@ -208,7 +192,7 @@ class ComplexForces(object):
             out = unpack(format1, eData)
             (eid, axialReal, torqueReal, axialImag, torqueImag) = out
             eid2 = extract(eid, dt)
-            #print "eType=%s" %(eType)
+            #print "eType=%s" % eType
 
             if is_magnitude_phase:
                 axial = polar_to_real_imag(axialReal, axialImag)
@@ -218,10 +202,10 @@ class ComplexForces(object):
                 torque = complex(torqueReal, torqueImag)
 
             dataIn = [eid2, axial, torque]
-            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #print "%s" %(self.get_element_type(self.element_type)), dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+            #print "len(data) = ", len(self.data)
         #print self.viscForces
 
     def OEF_CBar_alt(self):  # 34-CBAR

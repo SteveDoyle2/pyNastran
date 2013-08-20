@@ -166,7 +166,7 @@ class RealPlateResults(object):
 
     def get_stats(self):
         ndt, nelements, nnodes, dts = self._get_shape()
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.nonlinear_factor is not None:  # transient
             name = self.data_code['name']
             dt_string = '%s, ' % name

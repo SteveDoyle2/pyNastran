@@ -37,7 +37,7 @@ class ComplexBushStressObject(StressObject):
     def get_stats(self):
         nelements = len(self.eType)
 
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.translations)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
@@ -289,7 +289,7 @@ class ComplexBushStrainObject(StrainObject):
     def get_stats(self):
         nelements = len(self.eType)
 
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.translations)
             msg.append('  type=%s ntimes=%s nelements=%s\n'

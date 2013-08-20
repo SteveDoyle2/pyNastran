@@ -25,7 +25,7 @@ class ComplexRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
         self.torque[dt] = {}
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
             time0 = self.torque.keys()[0]
@@ -89,7 +89,7 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.shear)
             time0 = self.shear.keys()[0]
@@ -207,7 +207,7 @@ class ComplexCShearForce(ScalarObject):  # 4-CSHEAR
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.shear12)
             time0 = self.shear12.keys()[0]
@@ -316,7 +316,7 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.force)
             time0 = self.force.keys()[0]
@@ -437,7 +437,7 @@ class ComplexDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAM
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.force)
             time0 = self.force.keys()[0]
@@ -497,7 +497,7 @@ class ComplexViscForce(ScalarObject):  # 24-CVISC
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
             time0 = self.torque.keys()[0]
@@ -567,7 +567,7 @@ class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.mx)
             time0 = self.mx.keys()[0]
@@ -665,7 +665,7 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.mx)
             time0 = self.mx.keys()[0]
@@ -824,7 +824,7 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
             time0 = self.torque.keys()[0]
@@ -955,7 +955,7 @@ class ComplexBendForce(ScalarObject):  # 69-CBEND
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
             time0 = self.torque.keys()[0]
@@ -1042,7 +1042,7 @@ class ComplexPentaPressureForce(ScalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TET
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.acceleration)
             time0 = self.acceleration.keys()[0]
@@ -1110,7 +1110,7 @@ class ComplexCBushForce(ScalarObject):  # 102-CBUSH
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.force)
             time0 = self.force.keys()[0]
@@ -1183,7 +1183,7 @@ class ComplexForce_VU(ScalarObject):  # 191-VUBEAM
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         nelements = len(self.coord)
         if self.dt is not None:  # transient
             ntimes = len(self.forceX)
@@ -1312,7 +1312,7 @@ class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         nelements = len(self.coord)
         if self.dt is not None:  # transient
             ntimes = len(self.membraneX)

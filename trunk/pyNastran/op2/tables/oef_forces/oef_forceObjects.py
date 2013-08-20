@@ -25,7 +25,7 @@ class RealRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
         self.torque[dt] = {}
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
             time0 = self.torque.keys()[0]
@@ -90,7 +90,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.shear)
             time0 = self.shear.keys()[0]
@@ -264,7 +264,7 @@ class RealCShearForce(ScalarObject):  # 4-CSHEAR
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.shear12)
             time0 = self.shear12.keys()[0]
@@ -374,7 +374,7 @@ class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.force)
             time0 = self.force.keys()[0]
@@ -490,7 +490,7 @@ class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.force)
             time0 = self.force.keys()[0]
@@ -607,7 +607,7 @@ class RealViscForce(ScalarObject):  # 24-CVISC
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
             time0 = self.torque.keys()[0]
@@ -677,7 +677,7 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.mx)
             time0 = self.mx.keys()[0]
@@ -775,7 +775,7 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.mx)
             if ntimes == 0:
@@ -943,7 +943,7 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
         return ndt, nelements, dts
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         ndt, nelements, dts = self._get_shape()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
@@ -1051,7 +1051,7 @@ class RealCBar100Force(ScalarObject):  # 100-CBAR
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
             time0 = self.torque.keys()[0]
@@ -1127,7 +1127,7 @@ class RealConeAxForce(ScalarObject):  # 35-CCONEAX
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.hopa)
             time0 = self.hopa.keys()[0]
@@ -1213,7 +1213,7 @@ class RealCGapForce(ScalarObject):  # 38-CGAP
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.fx)
             time0 = self.fx.keys()[0]
@@ -1306,7 +1306,7 @@ class RealBendForce(ScalarObject):  # 69-CBEND
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
             time0 = self.torque.keys()[0]
@@ -1391,7 +1391,7 @@ class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.acceleration)
             time0 = self.acceleration.keys()[0]
@@ -1491,7 +1491,7 @@ class RealCBushForce(ScalarObject):  # 102-CBUSH
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.force)
             time0 = self.force.keys()[0]
@@ -1564,7 +1564,7 @@ class RealForce_VU(ScalarObject):  # 191-VUBEAM
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         nelements = len(self.coord)
         if self.dt is not None:  # transient
             ntimes = len(self.forceX)
@@ -1693,7 +1693,7 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         nelements = len(self.coord)
         if self.dt is not None:  # transient
             ntimes = len(self.membraneX)

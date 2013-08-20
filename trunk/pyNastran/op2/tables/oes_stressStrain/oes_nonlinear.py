@@ -2,7 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import isnan
 
-from .real.oes_objects import StressObject, StrainObject
+from .real.oes_objects import StressObject #, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
@@ -42,7 +42,7 @@ class NonlinearQuadObject(StressObject):
     def get_stats(self):
         nelements = len(self.eType)
 
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.oxx)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
@@ -215,7 +215,7 @@ class HyperelasticQuadObject(StressObject):
     def get_stats(self):
         nelements = len(self.eType)
 
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.oxx)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
@@ -329,7 +329,7 @@ class NonlinearRodObject(StressObject):
 
     def get_stats(self):
         nelements = len(self.eType)
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.axialStress)
             msg.append('  type=%s ntimes=%s nelements=%s\n'

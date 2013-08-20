@@ -23,7 +23,7 @@ class GridPointForcesObject(ScalarObject):
     def get_stats(self):
         nelements = len(self.eids)
 
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.forces)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
@@ -171,7 +171,7 @@ class ComplexGridPointForcesObject(ScalarObject):
     def get_stats(self):
         nelements = len(self.eids)
 
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.forces)
             msg.append('  type=%s ntimes=%s nelements=%s\n'

@@ -3,9 +3,8 @@ from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 
 class MPCForcesObject(TableObject):
-
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
+        TableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
     def write_matlab(self, isubcase, f, is_mag_phase=False):
         name = 'mpcForces'
@@ -62,68 +61,10 @@ class MPCForcesObject(TableObject):
             pageNum += 1
         return pageNum - 1
 
-    def __reprTransient__(self):
-        msg = '---MPC FORCES---\n'
-        if self.nonlinear_factor is not None:
-            msg += 'dt = %g\n' % (self.dt)
-
-        headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
-        msg += '%-8s ' % ('GRID')
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, translations in sorted(self.translations.iteritems()):
-            msg += 'dt = %s' % (dt)
-            for nodeID, translation in sorted(translations.iteritems()):
-                rotation = self.rotations[dt][nodeID]
-                (Fx, Fy, Fz) = translation
-                (Mx, My, Mz) = rotation
-
-                msg += '%-8i ' % nodeID
-                vals = [Fx, Fy, Fz, Mx, My, Mx]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % 0
-                    else:
-                        msg += '%10.2f ' % val
-                msg += '\n'
-        return msg
-
-    def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---MPC FORCES---\n'
-        if self.dt is not None:
-            msg += 'dt = %g\n' % (self.dt)
-
-        headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
-        msg += '%-8s ' % ('GRID')
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for nodeID, translation in sorted(self.translations.iteritems()):
-            rotation = self.rotations[nodeID]
-            (Fx, Fy, Fz) = translation
-            (Mx, My, Mz) = rotation
-
-            msg += '%-8i ' % (nodeID)
-            vals = [Fx, Fy, Fz, Mx, My, Mx]
-            for val in vals:
-                if abs(val) < 1e-6:
-                    msg += '%10s ' % 0
-                else:
-                    msg += '%10.2f ' % val
-
-            msg += '\n'
-        return msg
-
 
 class ComplexMPCForcesObject(ComplexTableObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
+        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
     def write_matlab(self, isubcase, f, is_mag_phase=False):
         name = 'mpcForces'
@@ -190,59 +131,3 @@ class ComplexMPCForcesObject(ComplexTableObject):
             msg = ['']
             pageNum += 1
         return pageNum - 1
-
-    def __reprTransient__(self):
-        msg = '---COMPLEX MPC FORCES---\n'
-        if self.nonlinear_factor is not None:
-            msg += 'dt = %g\n' % self.dt
-
-        raise RuntimeError('is this valid...')
-        headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
-        msg += '%-8s ' % 'GRID'
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, translations in sorted(self.translations.iteritems()):
-            msg += 'dt = %s' % (dt)
-            for nodeID, translation in sorted(translations.iteritems()):
-                rotation = self.rotations[dt][nodeID]
-                msg += '%-8i ' % nodeID
-                vals = translation + rotation
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % 0
-                    else:
-                        msg += '%10.2f ' % val
-                msg += '\n'
-        return msg
-
-    def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---COMPLEX MPC FORCES---\n'
-        if self.dt is not None:
-            msg += 'dt = %g\n' % self.dt
-
-        raise RuntimeError('is this valid...')
-        headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
-        msg += '%-8s ' % ('GRID')
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for nodeID, translation in sorted(self.translations.iteritems()):
-            rotation = self.rotations[nodeID]
-            (Fx, Fy, Fz) = translation
-            (Mx, My, Mz) = rotation
-
-            msg += '%-8i ' % (nodeID)
-            vals = [Fx, Fy, Fz, Mx, My, Mx]
-            for val in vals:
-                if abs(val) < 1e-6:
-                    msg += '%10s ' % 0
-                else:
-                    msg += '%10.2f ' % val
-            msg += '\n'
-        return msg

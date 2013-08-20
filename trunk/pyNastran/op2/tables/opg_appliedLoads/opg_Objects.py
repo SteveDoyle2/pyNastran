@@ -5,7 +5,7 @@ from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 class AppliedLoadsObject(ScalarObject):  # approach_code=1, sort_code=0
 
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         self.dt = dt
 
         self.eids = {}

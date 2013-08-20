@@ -21,7 +21,7 @@ class TemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, thermal=
     def get_stats(self):
         ngrids = len(self.gridTypes)
 
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.temperatures)
             msg.append('  type=%s ntimes=%s ngrids=%s\n'
@@ -73,31 +73,6 @@ class TemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, thermal=
         k.sort()
         return k
 
-    def add_new_transient(self, dt):
-        """initializes the transient variables"""
-        self.temperatures[dt] = {}
-
-    def add(self, dt, out):
-        (nodeID, gridType, v1, v2, v3, v4, v5, v6) = out  # v2-v6 are 0
-        assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
-        #assert nodeID not in self.temperatures
-
-        gridType = self.recastGridType(gridType)
-        self.gridTypes[nodeID] = gridType
-        self.temperatures[nodeID] = v1
-
-    def add_sort1(self, dt, out):
-        if dt not in self.temperatures:
-            self.add_new_transient(dt)
-
-        (nodeID, gridType, v1, v2, v3, v4, v5, v6) = out  # v2-v6 are 0
-        assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
-        #assert nodeID not in self.temperatures[self.dt]
-
-        gridType = self.recastGridType(gridType)
-        self.gridTypes[nodeID] = gridType
-        self.temperatures[dt][nodeID] = v1
-
    # def write_op2(self,block3,device_code=1):
    #     """
    #     creates the binary data for writing the table
@@ -130,26 +105,10 @@ class TemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, thermal=
         mainHeaders = ('nodeID', 'GridType')
         headers = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6']
 
-        msg = '%-10s %-8s ' % (mainHeaders)
+        msg = '%-10s %-8s ' % mainHeaders
         for header in headers:
             msg += '%10s ' % header
         msg += '\n'
-        return msg
-
-    def __reprTransient__(self):
-        msg = '---TRANSIENT TEMPERATURE---\n'
-        msg += self.write_header()
-
-        for dt, temperatures in sorted(self.temperatures.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for nodeID, T in sorted(temperatures.iteritems()):
-                gridType = self.gridTypes[nodeID]
-                msg += '%10s %8s ' % (nodeID, gridType)
-
-                if abs(T) < 1e-6:
-                    msg += '%10s\n' % 0
-                else:
-                    msg += '%10g\n' % T
         return msg
 
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
@@ -209,21 +168,4 @@ class TemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, thermal=
             fmt = '      %8i   %4s   ' + '   %10.6E' * (len(ipack) - 2) + '\n'
             out = fmt % (tuple(ipack))
             msg.append(out)
-        return msg
-
-    def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---TEMPERATURE---\n'
-        msg += self.write_header()
-        #print "self.data_code=",self.data_code
-        for nodeID, T in sorted(self.temperatures.iteritems()):
-            gridType = self.gridTypes[nodeID]
-            msg += '%10s %8s ' % (nodeID, gridType)
-            #print "nodeID=%s T=%s" % (nodeID, T)
-            if abs(T) < 1e-6:
-                msg += '%10s\n' % 0
-            else:
-                msg += '%10g\n' % T
         return msg

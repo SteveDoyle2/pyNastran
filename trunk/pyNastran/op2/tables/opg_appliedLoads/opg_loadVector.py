@@ -1,3 +1,4 @@
+from numpy import abs, angle
 from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
@@ -18,26 +19,10 @@ class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, f, pageNum)
 
-        words = header + ['                                                     L O A D   V E C T O R\n',
-                          ' \n',
-                          '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        msg = header + ['                                                     L O A D   V E C T O R\n',
+                        ' \n',
+                        '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         return self._write_f06_block(words, header, pageStamp, f, pageNum)
-
-        #for nodeID, translation in sorted(self.translations.iteritems()):
-            #rotation = self.rotations[nodeID]
-            #gridType = self.gridTypes[nodeID]
-
-            #(dx, dy, dz) = translation
-            #(rx, ry, rz) = rotation
-            #vals = [dx, dy, dz, rx, ry, rz]
-            #(vals2, isAllZeros) = writeFloats13E(vals)
-            #if not isAllZeros:
-                #[dx, dy, dz, rx, ry, rz] = vals2
-                #msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
-
-        msg.append(pageStamp + str(pageNum) + '\n')
-        f.write(''.join(msg))
-        return pageNum
 
     def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         msg = []
@@ -66,8 +51,6 @@ class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
             msg = ['']
             pageNum += 1
         return pageNum - 1
-
-
 
 
 class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_code=???
@@ -197,7 +180,6 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
         return pageNum - 1
 
 
-
 class ThermalVector(TableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -254,13 +236,11 @@ class ThermalVector(TableObject):
         return pageNum - 1
 
 
-
-
 class ThermalLoadVectorObject(ThermalVector):     # table_code=2, thermal=1
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        ThermalVector.__init__(self, data_code, is_sort1, isubcase, dt)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
+        ThermalVector.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
 
 class ThermalVelocityVectorObject(ThermalVector):  # table_code=10, thermal=1
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        ThermalVector.__init__(self, data_code, is_sort1, isubcase, dt)
+    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
+        ThermalVector.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)

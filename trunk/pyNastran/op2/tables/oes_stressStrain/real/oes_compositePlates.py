@@ -50,7 +50,7 @@ class CompositePlateStressObject(StressObject):
     def get_stats(self):
         nelements = len(self.eType)
 
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.o11)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
@@ -404,8 +404,7 @@ class CompositePlateStrainObject(StrainObject):
 
     def get_stats(self):
         nelements = len(self.eType)
-
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.e11)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
