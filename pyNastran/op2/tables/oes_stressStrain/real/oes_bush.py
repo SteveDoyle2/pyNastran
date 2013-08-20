@@ -98,22 +98,22 @@ class RealBushResults(object):
     def _finalize(self, dt):
         ndt, nelements, dts = self._get_shape()
 
-        if dt != max(dts):
+        if dt is not None and dt != max(dts):
             return
-        print("----finalize----")
+        #print("----finalize----")
 
         #grid_type_str = []
         #for grid_type in self.grid_type:
             #grid_type_str.append('C' if grid_type==0 else grid_type)
         #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
 
-        #if dts[0] is not None:
-            #name = self.data_code['name'] # dt
-            #self.data = self.data.set_index([name, 'element_id'])
-        #else:
-            #self.data = self.data.set_index(['element_id'])
+        if dts[0] is not None:
+            name = self.data_code['name'] # dt
+            self.data = self.data.set_index([name, 'element_id'])
+        else:
+            self.data = self.data.set_index(['element_id'])
         #print("final\n", self.data.to_string())
-        print('---BushStressObject---')
+        #print('---BushStressObject---')
         #print(self.data.to_string())
 
     def get_stats(self):
