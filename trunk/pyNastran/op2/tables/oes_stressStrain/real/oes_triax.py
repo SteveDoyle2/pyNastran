@@ -215,10 +215,6 @@ class TriaxStressObject(StressObject):
             pageNum += 1
         return pageNum - 1
 
-    def __repr__(self):
-        return self.get_stats()
-
-
 class TriaxStrainObject(StrainObject):
     """
     ::
@@ -399,6 +395,3 @@ class TriaxStrainObject(StrainObject):
             msg = ['']
             pageNum += 1
         return pageNum - 1
-
-    def __repr__(self):
-        return self.get_stats()

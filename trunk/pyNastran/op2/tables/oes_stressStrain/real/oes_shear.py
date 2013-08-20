@@ -94,9 +94,6 @@ class ShearStressObject(StressObject):
         self.avgShear[dt][eid] = avgShear
         self.margin[dt][eid] = margin
 
-    def __repr__(self):
-        return self.get_stats()
-
 
 class ShearStrainObject(StrainObject):
 
@@ -182,6 +179,3 @@ class ShearStrainObject(StrainObject):
         self.maxShear[dt][eid] = maxShear
         self.avgShear[dt][eid] = avgShear
         self.margin[dt][eid] = margin
-
-    def __repr__(self):
-        return self.get_stats()

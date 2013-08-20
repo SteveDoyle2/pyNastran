@@ -106,6 +106,3 @@ class NonlinearGapStressObject(StressObject):
         self.shearW[dt][eid] = shw
         self.slipV[dt][eid] = slv
         self.slipW[dt][eid] = slp
-
-    def __repr__(self):
-        return self.get_stats()

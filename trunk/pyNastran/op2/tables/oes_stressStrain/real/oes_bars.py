@@ -164,9 +164,6 @@ class RealBarResults(object):
         msg.append('                         axial, MS_tension, MS_compression\n')
         return msg
 
-    def __repr__(self):
-        return self.get_stats()
-
     def _write_f06_helper(self, words, header, pageStamp, f, pageNum):
         msg = words
         ndt, nelements, nnodes, dts = self._get_shape()

@@ -163,8 +163,6 @@ class BeamResultsObject(object):
         #msg.append('  eType, xxb, grids, smax, smin, MS_tension, '
         #           'MS_compression, sxc, sxd, sxe, sxf\n')
         return msg
-    def __repr__(self):
-        return self.get_stats()
 
 
 class BeamStressObject(BeamResultsObject, StressObject):
@@ -244,16 +242,14 @@ class BeamStressObject(BeamResultsObject, StressObject):
             pageNum += 1
         return pageNum - 1
 
+    def _get_headers(self):
+        return ['sxc', 'sxd', 'sxe', 'sxf', 'smax', 'smin', 'MS_tension', 'MS_compression',]
+
 
 class BeamStrainObject(BeamResultsObject, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         BeamResultsObject.__init__(self)
         StrainObject.__init__(self, data_code, isubcase, read_mode)
-
-    def _get_headers(self):
-        return ['sxc', 'sxd', 'sxe', 'sxf', 'smax', 'smin', 'MS_tension', 'MS_compression',]
-
-
 
     def _get_headers(self):
         return ['exc', 'exd', 'exe', 'exf', 'emax', 'emin', 'MS_tension', 'MS_compression',]

@@ -163,9 +163,6 @@ class RealSolidResults(object):
         msg.append('                element_types: %s\n' %(', '.join(etypes)))
         return msg
 
-    def __repr__(self):
-        return self.get_stats()
-
     def evm(self, e11, e22, e33, e12, e13, e23):
         """http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
         evm = 0.5 * ((e11 - e22) ** 2 +
@@ -187,7 +184,7 @@ class RealSolidResults(object):
     def pressure(self, o1, o2, o3):
         r"""
         returns the hydrostatic pressure
-        o_{pressure} = (o_1+o_2+o_3)/-3.
+        .. math:: o_{pressure} = \frac{o_1+o_2+o_3}{-3.0}
 
         http://en.wikipedia.org/wiki/Stress_%28mechanics%29
         """

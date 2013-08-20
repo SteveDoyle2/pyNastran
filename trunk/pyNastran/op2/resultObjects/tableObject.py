@@ -191,22 +191,17 @@ class TableObject(ScalarObject):  # displacement style table
         ndt, nnodes, dts = self._get_shape()
 
         #print self.data.to_string()
-        node_ids = self.data['node_id']
-        T1 = self.data['T1']
-        T2 = self.data['T2']
-        T3 = self.data['T3']
-        R1 = self.data['R1']
-        R2 = self.data['R2']
-        R3 = self.data['R3']
-        for i in xrange(nnodes):
-            nodeID = node_ids[i]
+        ndata = len(self.data)
+        for i in xrange(ndata):
+            index = self.data.index[i]
+            node_id = index
             gridType = 'G' #self.gridTypes[nodeID]
-            dx = T1[i]
-            dy = T2[i]
-            dz = T3[i]
-            rx = R1[i]
-            ry = R2[i]
-            rz = R3[i]
+            dx = self.data['T1'][index]
+            dy = self.data['T2'][index]
+            dz = self.data['T3'][index]
+            rx = self.data['R1'][index]
+            ry = self.data['R2'][index]
+            rz = self.data['R3'][index]
 
             vals = [dx, dy, dz, rx, ry, rz]
             (vals2, isAllZeros) = writeFloats13E(vals)

@@ -316,7 +316,7 @@ class RealElementsStressStrain2(object):
             #print "abcd = |%s|" % (abcd)
             #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" % (eid,cid,nNodes,nNodesExpected)
 
-            assert nNodes < 21, self.print_block(eData)
+            assert nNodes < 21, 'nNodes=%s' % nNodes #, self.print_block(eData)
 
             etypes.append(element_type)
             cids.append(cid)
