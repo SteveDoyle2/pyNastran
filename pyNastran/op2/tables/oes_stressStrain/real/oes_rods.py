@@ -241,9 +241,6 @@ class RodStressObject(RealSpringResults, StressObject):
             pageNum += 1
         return pageNum - 1
 
-    def __repr__(self):
-        return self.get_stats()
-
 
 class RodStrainObject(RealSpringResults, StrainObject):
     """
@@ -448,6 +445,3 @@ class RodStrainObject(RealSpringResults, StrainObject):
             msg = ['']
             pageNum += 1
         return pageNum - 1
-
-    def __repr__(self):
-        return self.get_stats()

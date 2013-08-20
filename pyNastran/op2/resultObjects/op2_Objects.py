@@ -29,6 +29,9 @@ class BaseScalarObject(Op2Codes):
     def __repr__(self):
         return ''.join(self.get_stats())
 
+    def __str__(self):
+        return self.__repr__()
+
 
 class ScalarObject(BaseScalarObject):
     def __init__(self, data_code, isubcase, read_mode):

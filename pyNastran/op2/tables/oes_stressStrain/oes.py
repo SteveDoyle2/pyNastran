@@ -958,7 +958,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain, RealElementsStr
         #    msg = '%s-OES format1_sort0 element_type=%-3s -> %s is not supported - fname=%s\n' % (self.table_name,self.element_type,self.get_element_type(self.element_type),self.op2FileName)
         #    raise AddNewElementError(msg)
         else:
-            msg = '%s-OES format%s element_type=%-3s -> %s is not supported - fname=%s\n' % (self.table_name, self.format_code, self.element_type, self.get_element_type(self.element_type), self.op2FileName.strip())
+            msg = '%s-OES format%s element_type=%-3s -> %s is not supported - fname=%s\n' % (self.table_name, self.format_code, self.element_type, self.get_element_type(self.element_type), self.op2_filename.strip())
             self.log.debug(msg)
             self.skippedCardsFile.write(msg)
             self.not_implemented_or_skip()

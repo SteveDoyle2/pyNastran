@@ -111,9 +111,6 @@ class CelasStressObject(RealSpringResults, StressObject):
         self.eType[eid] = self.element_name
         self.stress[dt][eid] = stress
 
-    def __repr__(self):
-        return self.get_stats()
-
 
 class CelasStrainObject(RealSpringResults, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -179,9 +176,6 @@ class CelasStrainObject(RealSpringResults, StrainObject):
 
         self.eType[eid] = self.element_type
         self.strain[dt][eid] = strain
-
-    def __repr__(self):
-        return self.get_stats()
 
 
 class NonlinearSpringStressObject(StressObject):
@@ -249,6 +243,3 @@ class NonlinearSpringStressObject(StressObject):
         self.eType[eid] = eType
         self.force[dt][eid] = force
         self.stress[dt][eid] = stress
-
-    def __repr__(self):
-        return self.get_stats()

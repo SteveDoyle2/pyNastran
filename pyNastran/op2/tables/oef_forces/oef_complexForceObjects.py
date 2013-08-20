@@ -5,8 +5,8 @@ from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 
 class ComplexRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.axialForce = {}
         self.torque = {}
@@ -69,8 +69,8 @@ class ComplexRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
 
 
 class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.bendingMoment = {}
         self.shear = {}
@@ -178,8 +178,8 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
 
 
 class ComplexCShearForce(ScalarObject):  # 4-CSHEAR
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.force41 = {}
         self.force14 = {}
@@ -302,8 +302,8 @@ class ComplexCShearForce(ScalarObject):  # 4-CSHEAR
 
 
 class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.force = {}
 
@@ -423,8 +423,8 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
 
 
 class ComplexDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.force = {}
 
@@ -482,8 +482,8 @@ class ComplexDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAM
 
 
 class ComplexViscForce(ScalarObject):  # 24-CVISC
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.axialForce = {}
         self.torque = {}
@@ -546,8 +546,8 @@ class ComplexViscForce(ScalarObject):  # 24-CVISC
 
 
 class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.mx = {}
         self.my = {}
@@ -640,8 +640,8 @@ class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
 
 
 class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.term = {}
         self.ngrids = {}
@@ -806,8 +806,8 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
 
 
 class ComplexCBarForce(ScalarObject):  # 34-CBAR
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        scalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.bendingMomentA = {}
         self.bendingMomentB = {}
@@ -935,8 +935,8 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
 
 
 class ComplexBendForce(ScalarObject):  # 69-CBEND
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.nodeIDs = {}
         self.bendingMoment1 = {}
@@ -1026,8 +1026,8 @@ class ComplexBendForce(ScalarObject):  # 69-CBEND
 
 
 class ComplexPentaPressureForce(ScalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TETRA_PR
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.acceleration = {}
         self.velocity = {}
@@ -1095,8 +1095,8 @@ class ComplexPentaPressureForce(ScalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TET
 
 
 class ComplexCBushForce(ScalarObject):  # 102-CBUSH
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.force = {}
         self.moment = {}
@@ -1159,8 +1159,8 @@ class ComplexCBushForce(ScalarObject):  # 102-CBUSH
 
 
 class ComplexForce_VU(ScalarObject):  # 191-VUBEAM
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.parent = {}
         self.coord = {}
@@ -1285,8 +1285,8 @@ class ComplexForce_VU(ScalarObject):  # 191-VUBEAM
 
 
 class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.parent = {}
         self.coord = {}

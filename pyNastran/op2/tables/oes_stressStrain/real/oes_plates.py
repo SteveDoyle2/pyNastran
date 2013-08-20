@@ -188,9 +188,6 @@ class RealPlateResults(object):
         msg.append('                element_types: %s\n' %(', '.join(etypes)))
         return msg
 
-    def __repr__(self):
-        return self.get_stats()
-
     def _get_first_type_index(self):
         first_type_index = {}
         for i in xrange(len(self.element_data)):
@@ -346,7 +343,7 @@ class RealPlateResults(object):
         return pageNum - 1
 
 
-class PlateStressObject(StressObject, RealPlateResults):
+class PlateStressObject(RealPlateResults, StressObject):
     """
     ::
 
@@ -879,7 +876,7 @@ class PlateStressObject(StressObject, RealPlateResults):
         return msg
 
 
-class PlateStrainObject(StrainObject, RealPlateResults):
+class PlateStrainObject(RealPlateResults, StrainObject):
     """
     ::
 

@@ -62,7 +62,12 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
         data = self.data
         #mode0 = modes[0]
         #data.ix[mode0]
-        for imode in xrange(nmodes):
+        ndata = len(self.data)
+        i = 0
+        while i < ndata:
+            index = self.data.index[i]
+            (mode, node_id) = index
+            imode = modes.index(mode)
             msg += header
             freq = self.eigrs[imode]
             msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
@@ -75,22 +80,30 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
 
             gridType = 'G'
-            for j in range(nnodes):
-                jj = j + imode * nnodes
-                #gridType = self.gridTypes[nodeID]
-                #ix = data.index[]
-                nodeID = data['node_id'][jj]
-                dx = data['T1'][jj]
-                dy = data['T2'][jj]
-                dz = data['T3'][jj]
-                rx = data['R1'][jj]
-                ry = data['R2'][jj]
-                rz = data['R3'][jj]
+            #gridType = self.gridTypes[nodeID]
+            #ix = data.index[]
+            mode_old = mode
+            while mode == mode_old:
+                index = self.data.index[i]
+                (mode, node_id) = index
+                #nodeID = data[index]['node_id']
+                dx = data['T1'][index]
+                dy = data['T2'][index]
+                dz = data['T3'][index]
+                rx = data['R1'][index]
+                ry = data['R2'][index]
+                rz = data['R3'][index]
 
                 vals = [dx, dy, dz, rx, ry, rz]
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (node_id, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                i += 1
+                try:
+                    index = self.data.index[i]
+                except:
+                    break
+                (mode, node_id) = index
             msg.append(pageStamp + str(pageNum) + '\n')
             f.write(''.join(msg))
             msg = ['']

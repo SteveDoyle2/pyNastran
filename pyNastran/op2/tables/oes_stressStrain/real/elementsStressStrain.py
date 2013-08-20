@@ -23,7 +23,7 @@ class RealElementsStressStrain(object):
                        self.table_name))
         #print(self.code_information())
         #print("**************skipping**************")
-        self.handle_results_buffer(self.dummyPass, None, debug=True)
+        self.handle_results_buffer(self.dummyPass, None, None, debug=True)
 
     def dummyPass(self):
         self.data = b''

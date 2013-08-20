@@ -68,8 +68,8 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         #grid_device, = unpack(b'i', data)
         return timeFreq
 
-    def _apply_data_code_value(self, Name, value):
-        self.data_code[Name] = value
+    def _apply_data_code_value(self, name, value):
+        self.data_code[name] = value
 
     def _add_data_parameter(self, data, name, Type, field_num, applyNonlinearFactor=True,
                            fixDeviceCode=False):
