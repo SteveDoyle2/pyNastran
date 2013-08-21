@@ -124,7 +124,8 @@ class RealSolidResults(object):
         #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
 
         if dts[0] is not None:
-            self.data = self.data.set_index(['dt', 'element_id', 'node_id'])
+            name = self.data_code['name']
+            self.data = self.data.set_index([name, 'element_id', 'node_id'])
         else:
             self.data = self.data.set_index(['element_id', 'node_id'])
         self.element_data = self.element_data.set_index(['element_id'])
@@ -194,6 +195,97 @@ class RealSolidResults(object):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, f, pageNum)
         return self._write_f06(header, pageStamp, f, pageNum)
+
+    def _write_f06_transient(self, header, pageStamp, f, pageNum):
+        msg = ['']
+        (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids) = self._get_f06_header()
+        #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
+
+        [koxx, koyy, kozz, ktxy, ktxz, ktyz, ko1, ko2, ko3,  kovm] = self._get_headers()
+        ndata = len(self.data)
+
+        i = 0
+        idt = 0
+        ndt, nelements_size, nnodes_size, dts = self._get_shape()
+        
+        delta = len(self.data) // ndt
+        assert len(self.data) % ndt == 0
+        max_size = 0
+        while idt < ndt:
+            #print('*****idt=%s i=%s' % (idt, i))
+            idt += 1
+            etype_old = None
+
+            index = self.data.index[i]
+            (dt, element_id, node_id) = index
+
+            f.write(''.join(msg))
+            dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
+            header[1] = dtLine
+            msg = header # implicitly resetting msg to ['']
+            max_size += delta
+
+            while i < max_size:
+                index = self.data.index[i]
+                (dt, element_id, node_id) = index
+                etype = self.element_data['element_type'][element_id]
+                nnodes = self.element_data['nnodes'][element_id]
+
+                if etype != etype_old:
+                    if i > 0:
+                        msg.append(pageStamp + str(pageNum) + '\n')
+                    etype_old = etype
+                    if etype == 'TETRA':
+                        msg += tetraMsg
+                    elif etype == 'PENTA':
+                        msg += pentaMsg
+                    elif etype == 'HEXA':
+                        msg += hexaMsg
+                    else:
+                        raise NotImplementedError(etype)
+                    pageNum += 1
+
+                msg.append('0  %8s           0GRID CS  %i GP\n' % (element_id, nnodes))
+                for ni in range(nnodes):
+                    index = self.data.index[i]
+                    (dt, element_id2, node_id) = index
+                    assert element_id == element_id2, 'i=%s element_id=%s element_id2=%s' % (i, element_id, element_id2)
+
+                    oxx = self.data.ix[index][koxx]
+                    oyy = self.data.ix[index][koyy]
+                    ozz = self.data.ix[index][kozz]
+                    txy = self.data.ix[index][ktxy]
+                    tyz = self.data.ix[index][ktyz]
+                    txz = self.data.ix[index][ktxz]
+
+                    o1 = self.data.ix[index][ko1]
+                    o2 = self.data.ix[index][ko2]
+                    o3 = self.data.ix[index][ko3]
+                    ovm = self.data.ix[index][kovm]
+                    p = (o1 + o2 + o3) / -3.
+
+                    if node_id == 0:  # or 'C'
+                        node_id = 'CENTER'
+
+                    A = [[oxx, txy, txz],
+                         [txy, oyy, tyz],
+                         [txz, tyz, ozz]]
+                    (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
+
+                    ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], isAllZeros) = writeFloats13E([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm])
+                    msg.append('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' % (node_id, oxx, txy, o1, v[0, 1], v[0, 2], v[0, 0], p, ovm.strip()))
+                    msg.append('               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n' % ('', oyy, tyz, o2, v[1, 1], v[1, 2], v[1, 0]))
+                    msg.append('               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n' % ('', ozz, txz, o3, v[2, 1], v[2, 2], v[2, 0]))
+                    i += 1
+                if i % 1000 == 0:
+                    #print('idt=%s ndt=%s i=%s max_size=%s eid=%s etype=%s' % (idt, ndt, i, max_size, element_id, etype))
+                    f.write(''.join(msg))
+                    msg = ['']
+
+        msg.append(pageStamp + str(pageNum) + '\n')
+        f.write(''.join(msg))
+        pageNum += 1
+        return pageNum # - 1
 
     def _write_f06(self, header, pageStamp, f, pageNum):
         msg = []
@@ -433,67 +525,6 @@ class SolidStressObject(RealSolidResults, StressObject):
                 raise NotImplementedError('eType=%r' % etype)
         return (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids)
 
-    def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
-        msg = []
-        (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids) = self._get_f06_header()
-        dts = self.oxx.keys()
-        for dt in dts:
-            if tetraEids:
-                self.writeElementTransient('CTETRA', 4, tetraEids, dt, header, tetraMsg, f)
-                msg.append(pageStamp + str(pageNum) + '\n')
-                pageNum += 1
-            if hexaEids:
-                self.writeElementTransient('CHEXA', 8, hexaEids, dt, header, hexaMsg, f)
-                msg.append(pageStamp + str(pageNum) + '\n')
-                pageNum += 1
-            if pentaEids:
-                self.writeElementTransient('CPENTA', 6, pentaEids, dt, header, pentaMsg, f)
-                msg.append(pageStamp + str(pageNum) + '\n')
-                pageNum += 1
-        f.write(''.join(msg))
-        return pageNum - 1
-
-    def writeElementTransient(self, eType, nNodes, eids, dt, header, tetraMsg, f):
-        dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
-        header[1] = dtLine
-        msg = header + tetraMsg
-        for eid in eids:
-            #eType = self.eType[eid]
-
-            k = self.oxx[dt][eid].keys()
-            k.remove('C')
-            k.sort()
-            msg.append('0  %8s           0GRID CS  %i GP\n' % (eid, nNodes))
-            for nid in ['C'] + k:
-                oxx = self.oxx[dt][eid][nid]
-                oyy = self.oyy[dt][eid][nid]
-                ozz = self.ozz[dt][eid][nid]
-                txy = self.txy[dt][eid][nid]
-                tyz = self.tyz[dt][eid][nid]
-                txz = self.txz[dt][eid][nid]
-
-                o1 = self.o1[dt][eid][nid]
-                o2 = self.o2[dt][eid][nid]
-                o3 = self.o3[dt][eid][nid]
-                ovm = self.ovmShear[dt][eid][nid]
-                p = (o1 + o2 + o3) / -3.
-
-                if nid == 'C':
-                    nid = 'CENTER'
-                #print "nid = |%r|" %(nid)
-                A = [[oxx, txy, txz],
-                     [txy, oyy, tyz],
-                     [txz, tyz, ozz]]
-                (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
-
-                ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], isAllZeros) = writeFloats13E([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm])
-                msg.append('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' % (nid, oxx, txy, o1, v[0, 1], v[0, 2], v[0, 0], p, ovm.strip()))
-                msg.append('               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n' % ('', oyy, tyz, o2, v[1, 1], v[1, 2], v[1, 0]))
-                msg.append('               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n' % ('', ozz, txz, o3, v[2, 1], v[2, 2], v[2, 0]))
-
-        f.write(''.join(msg))
-        return
-
 
 class SolidStrainObject(RealSolidResults, StrainObject):
     """
@@ -659,6 +690,3 @@ class SolidStrainObject(RealSolidResults, StrainObject):
             else:
                 raise NotImplementedError('eType=%r' % eType)
         return (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids)
-
-    def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
-        raise NotImplementedError()
