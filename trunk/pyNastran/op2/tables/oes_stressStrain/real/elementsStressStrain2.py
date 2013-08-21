@@ -683,11 +683,25 @@ class RealElementsStressStrain2(object):
         format1 = bytes(format1)
 
         ibase = 0
+        eids = []
+        eids_elements = []
+        ilayers = []
+        etypes = [eType] * nloops
+        o1s = []
+        o2s = []
+        
         for i in xrange(nloops):
         #while len(self.data) <= 44:
             eData = self.data[ibase:ibase+44]  # 4*11
-            (eid, iLayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = unpack(format1, eData)
+            (eid, ilayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = unpack(format1, eData)
             eid = extract(eid, dt)
+            
+            #eids_elements.append(eid)
+
+            eids.append(eid)
+            ilayers.append(ilayer)
+            o1s.append(o1)
+            o2s.append(o2)
 
             if eid != self.eid2:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
                 #print "1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
@@ -700,6 +714,46 @@ class RealElementsStressStrain2(object):
             #self.dn += 348
         self.data = self.data[ibase:]
         #print "3 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
+        #----------------------------------------------------------------------
+        self.obj.element_data['element_id'][ielement_start:ielement_end] = eids_elements
+        #print('self.obj.element_data\n', self.obj.element_data)
+        self.obj.element_data['element_type'][ielement_start:ielement_end] = etypes
+        #self.obj.element_data['nlayer'][ielement_start:ielement_end] = nnodes_list
+        #print('self.obj.element_data\n', self.obj.element_data)
+
+        self.obj.data['element_id'][inode_start:inode_end] = eids
+        self.obj.data['layer'][inode_start:inode_end] = layers
+        self.obj.data['o1'][inode_start:inode_end] = o1s
+        self.obj.data['o2'][inode_start:inode_end] = o2s
+
+        #headers = self.obj._get_headers()
+        #(kfd, koxx, koyy, ktxy, komax, komin, kovm) = headers
+
+        assert  inode_end - inode_start == len(fd)
+        if dt:
+            name = self.obj.data_code['name']
+            self.obj.data[name][inode_start:inode_end] = ones(inode_end - inode_start) * dt
+        self.obj.data['element_id'][inode_start:inode_end] = eids
+
+        self.obj.data[kfd][inode_start:inode_end] = fd
+        #print(self.obj.data.keys())
+        #print('self.obj.data\n', self.obj.data)
+        self.obj.data[koxx][inode_start:inode_end] = sx
+        self.obj.data[koyy][inode_start:inode_end] = sy
+        self.obj.data[ktxy][inode_start:inode_end] = txy
+        self.obj.data[komax][inode_start:inode_end] = major
+        self.obj.data[komin][inode_start:inode_end] = minor
+        self.obj.data['angle'][inode_start:inode_end] = angle
+        self.obj.data[kovm][inode_start:inode_end] = vm
+
+        #self.obj.data['element_id'][ielement_start:ielement_end] = eids
+        #self.obj.data['element_type'][ielement_start:ielement_end] = etypes
+
+        #print('len(eids) = ', len(self.obj.data['element_id']))
+        #print('inode_end // ntotal = ', inode_end)
+        if self.obj._is_full(nnodes, nelements):
+        #if len(self.obj.data['element_id']) == inode_end: # [nodes, elements]
+            self.obj._finalize(dt)
 
     #-------------------------------------------------------------------------
     # plateStress / plateStrain
