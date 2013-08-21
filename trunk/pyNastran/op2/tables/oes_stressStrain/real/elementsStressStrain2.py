@@ -614,6 +614,94 @@ class RealElementsStressStrain2(object):
             self.obj._increment(nelements)
 
     #-------------------------------------------------------------------------
+    # compositePlateStress / compositePlateStrain
+    #-------------------------------------------------------------------------
+    def OES_CQUAD4_95(self, name):  # works (doesnt handle all stress/strain cases tho)
+        """
+        GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
+        composite quad
+
+         95 - CQUAD4
+         96 - CQUAD8
+         97 - CTRIA3
+         98 - CTRIA6 (composite)
+        """
+        dt = self.nonlinear_factor
+        nloops = len(self.data) // 44  # 2+17*5 = 87 -> 87*4 = 348
+        #print("nloops = ", nloops)
+        ntotal = 44
+        if self.read_mode == 0 or name not in self._selected_names:
+
+            if name not in self._result_names:
+                self._result_names.append(name)
+                
+                ibase = 0
+                #nlayers = 0
+                eid_nlayer = {}
+                (format1, extract) = self.getOUG_FormatStart()
+                format1 += 'i'
+                format1 = bytes(format1)
+                #print('format1 = %r' % format1)
+                for i in xrange(nloops):
+                    eData = self.data[ibase:ibase+8]  # 4*11
+                    (eid, iLayer) = unpack(format1, eData)
+                    eid = extract(eid, dt)
+                    if eid != self.eid2:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
+                        eid_nlayer[eid] = 1
+                    else:
+                        eid_nlayer[eid] += 1
+                    #nlayers += 1
+                    #self.eid2 = eid
+                    #ibase += 44
+                #print('eid_layer =', eid_layer)
+                #print('nlayers =', nlayers)
+                #self.data = self.data[ibase:]
+
+                # figure out the shape
+                #print("nloops=%s" % nloops)
+                self.obj._increase_size(dt, nloops, eid_nlayer)
+                iend = ntotal * nloops
+                self.data = self.data[iend:]
+                return
+            else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
+                #print("nelements =", nelements)
+                pass
+
+        (inode_start, inode_end, ielement_start, ielement_end
+            ) = self.obj._preallocate(dt, nloops)
+
+        eType = self.get_element_type(self.element_type)
+
+        #self.print_section(20)
+        #term = data[0:4] CEN/
+        #data = data[4:]
+        if self.num_wide != 11:
+            raise RuntimeError('invalid num_wide; num_wide=%s' % self.num_wide)
+
+        (format1, extract) = self.getOUG_FormatStart()
+        format1 += 'i9f'
+        format1 = bytes(format1)
+
+        ibase = 0
+        for i in xrange(nloops):
+        #while len(self.data) <= 44:
+            eData = self.data[ibase:ibase+44]  # 4*11
+            (eid, iLayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = unpack(format1, eData)
+            eid = extract(eid, dt)
+
+            if eid != self.eid2:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
+                #print "1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
+                self.obj.add_new_eid(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+            else:
+                #print "2 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
+                self.obj.add(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+            self.eid2 = eid
+            ibase += 44
+            #self.dn += 348
+        self.data = self.data[ibase:]
+        #print "3 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
+
+    #-------------------------------------------------------------------------
     # plateStress / plateStrain
     #-------------------------------------------------------------------------
     def OES_CTRIA3_74(self, name):
@@ -635,6 +723,7 @@ class RealElementsStressStrain2(object):
         nnodes = nelements * 2 # 2 layers at the centroid
         #nnodes = 1
         #nrows = nelements * 2 # 2 layers
+        
         if self.read_mode == 0 or name not in self._selected_names:
             if name not in self._result_names:
                 self._result_names.append(name)

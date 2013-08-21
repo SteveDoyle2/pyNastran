@@ -378,50 +378,6 @@ class RealElementsStressStrain(object):
                     #print "loc=%s nsx=%s nse=%s te=%s epe=%s ece=%s" % (loc,nsx,nse,te,epe,ece)
                 #self.obj.add(eid,out)
 
-    def OES_CQUAD4_95(self, name):  # works (doesnt handle all stress/strain cases tho)
-        """
-        GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
-        composite quad
-
-         95 - CQUAD4
-         96 - CQUAD8
-         97 - CTRIA3
-         98 - CTRIA6 (composite)
-        """
-        CQUAD495
-        eType = self.get_element_type(self.element_type)
-
-        #self.print_section(20)
-        #term = data[0:4] CEN/
-        #data = data[4:]
-        if self.num_wide != 11:
-            raise RuntimeError('invalid num_wide; num_wide=%s' % self.num_wide)
-
-        dt = self.nonlinear_factor
-        (format1, extract) = self.getOUG_FormatStart()
-        format1 += 'i9f'
-        format1 = bytes(format1)
-
-        nelements = len(self.data) // 44  # 2+17*5 = 87 -> 87*4 = 348
-        ibase = 0
-        for i in xrange(nelements):
-        #while len(self.data) <= 44:
-            eData = self.data[ibase:ibase+44]  # 4*11
-            (eid, iLayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = unpack(format1, eData)
-            eid = extract(eid, dt)
-
-            if eid != self.eid2:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
-                #print "1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
-                self.obj.add_new_eid(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
-            else:
-                #print "2 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
-                self.obj.add(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
-            self.eid2 = eid
-            ibase += 44
-            #self.dn += 348
-        self.data = self.data[ibase:]
-        #print "3 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
-
     def OES_QUAD4FD_139(self, name):  # hyperelastic
         """
         Hyperelastic Quad

@@ -5,7 +5,33 @@ from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats12E
 
 
-class CompositePlateStressObject(StressObject):
+class RealCompositePlate(object):
+    def __init__(self):
+        self.data = None
+        self.eid_nlayer = {}
+        self._dti = None
+        self._dts = []
+
+    def _increase_size(self, dt, nloops, eid_nlayer):
+        if dt not in _dts:
+            self._dts.append(dt)
+
+        if self._dti is None or dt == self._dti:
+            for eid, nlayers in eid_nlayer.iteritems():
+                if eid in self.eid_nlayer:
+                    self.eid_nlayer[eid] += nlayers
+                else:
+                    self.eid_nlayer[eid] = nlayers
+
+    def _preallocate(self, dt, nloops):
+        if dt is None:
+            asdf
+        else:
+            self.
+        return (inode_start, inode_end, ielement_start, ielement_end)
+
+
+class CompositePlateStressObject(RealCompositePlate, StressObject):
     """
     ::
 
@@ -15,10 +41,11 @@ class CompositePlateStressObject(StressObject):
         ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
     """
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        RealCompositePlate.__init__(self)
         StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
         self.o11 = {}
         self.o22 = {}
         self.t12 = {}
@@ -362,18 +389,19 @@ class CompositePlateStressObject(StressObject):
         return pageNum - 1
 
 
-class CompositePlateStrainObject(StrainObject):
+class CompositePlateStrainObject(RealCompositePlate, StrainObject):
     """
     ::
       ???
       ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
         ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StrainObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        RealCompositePlate.__init__(self)
+        StrainObject.__init__(self, data_code, isubcase, read_mode)
 
         self.eType = {}
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
         self.e11 = {}
         self.e22 = {}
         self.e12 = {}
@@ -383,11 +411,11 @@ class CompositePlateStrainObject(StrainObject):
         self.majorP = {}
         self.minorP = {}
 
-        if self.code == [1, 0, 14]:
-            self.evmShear = {}
-            assert self.isVonMises() == False
-        else:
-            raise RuntimeError("Invalid Code: compositePlateStrain - get the format/sort/stressCode=%s" % (self.code))
+        #if self.code == [1, 0, 14]:
+        self.evmShear = {}
+            #assert self.isVonMises() == False
+        #else:
+            #raise RuntimeError("Invalid Code: compositePlateStrain - get the format/sort/stressCode=%s" % (self.code))
 
         self.dt = dt
         if is_sort1:
