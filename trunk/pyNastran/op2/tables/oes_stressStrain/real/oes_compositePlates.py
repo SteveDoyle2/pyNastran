@@ -4,62 +4,102 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats12E
 from numpy import zeros
-
+import pandas as pd
 
 class RealCompositePlate(object):
     def __init__(self):
         self.data = None
         self.element_data = None
 
-        self.eid_nlayer = {}
+        self.eid_nlayers = {}
         self._nlayers = 0
         self._dti = None
         self._dts = []
-        self.iloop_start = 0
+        self._iloop_start = 0
 
-    def _increase_size(self, dt, nloops, eid_nlayer):
-        if dt not in _dts:
+    def isVonMises(self):
+        return True
+
+    def _increase_size(self, dt, nloops, eid_nlayers):
+        if dt not in self._dts:
             self._dts.append(dt)
 
         if self._dti is None or dt == self._dti:
             self._nlayers += nloops
-            for eid, nlayers in eid_nlayer.iteritems():
-                if eid in self.eid_nlayer:
-                    self.eid_nlayer[eid] += nlayers
+            for eid, nlayers in eid_nlayers.iteritems():
+                if eid in self.eid_nlayers:
+                    self.eid_nlayers[eid] += nlayers
                 else:
-                    self.eid_nlayer[eid] = nlayers
+                    self.eid_nlayers[eid] = nlayers
 
     def _preallocate(self, dt, nloops):
-        iloop_end = self.iloop_start + nloops
+        iloop_end = self._iloop_start + nloops
         
-        inode_start = iloop_start
-        inode_end = iloop_end
+        inode_start = self._iloop_start
+        inode_end = self._iloop_start + nloops#iloop_end
         
-        ielement_start = iloop_start
+        ielement_start = self._iloop_start
         ielement_end = iloop_end
         
         if self.data is None:
             if not(dt is None or dt == self._dts[0]):
                 idt = self._dts.index(dt)
                 offset = idt * self._nlayers
-                ielement_start -= offset
-                ielement_end -= offset
-                assert ielement_start >= 0
-                assert ielement_end >= nloops
+                #ielement_start -= offset
+                #ielement_end -= offset
+            assert ielement_start >= 0
+            assert ielement_end >= nloops
 
-            nelements = len(self.eid_layer)
+            nelements = len(self.eid_nlayers)
             ndt = len(self._dts)
-            eids_elements = zeros(nelements, 'int32')
-            nlayers       = zeros(nelements, 'int32')
+            print("nelements=%s ndt=%s" % (nelements, ndt))
+
+            data = {}
+            data['element_id'] = pd.Series(zeros((nelements), dtype='int32'))
+            data['nlayer'] = pd.Series(zeros((nelements), dtype='int32'))
+            data['element_type'] = pd.Series(zeros((nelements), dtype='int32'))
+            columns = ['element_id', 'nlayer', 'element_type']
+            self.element_data = pd.DataFrame(data, columns=columns)
+
+            #eids_elements = zeros(nelements, 'int32')
+            #nlayers       = zeros(nelements, 'int32')
             #etype         = zeros(nelements, 'int32')
 
-            nnodes = ndt * nelements
-            eids = zeros(nnodes, 'int32')
-            o1 = zeros(nnodes, 'float32')
-            o2 = zeros(nnodes, 'float32')
+            ko1 = 'o1'
+            ko2 = 'o2'
+
+            nnodes = ndt * self._nlayers
+            print("nnodes=%s nloops=%s" % (nnodes, nloops))
+            data2 = {}
+            data2['element_id'] = pd.Series(zeros((nnodes), dtype='int32'))
+            data2['layer'] = pd.Series(zeros((nnodes), dtype='int32'))
+            data2[ko1] = pd.Series(zeros((nnodes), dtype='float32'))
+            data2[ko2] = pd.Series(zeros((nnodes), dtype='float32'))
+            columns = ['element_id', 'layer', ko1, ko2]
+            self.data = pd.DataFrame(data2, columns=columns)
+            
+            self._size_loop_end = nnodes
         
-        asdf
+        #asdf
         return (inode_start, inode_end, ielement_start, ielement_end)
+
+    def _get_shape(self):
+        ndt = len(self._dts)
+        #dts = self.shape.keys()
+        #shape0 = dts[0]
+        #nnodes = self.shape[shape0][0]
+        nelements = len(self.eid_nlayers)
+        #print("ndt=%s nnodes=%s dts=%s" % (str(ndt), str(nnodes), str(dts)))
+        return ndt, nelements, dts
+
+    def _is_full(self, nloops):
+        self._iloop_start += nloops
+        if self._iloop_start == self._size_loop_end:
+            return True
+        return False
+    
+    def _finalize(self, dt):
+        return
 
 
 class CompositePlateStressObject(RealCompositePlate, StressObject):
@@ -104,6 +144,13 @@ class CompositePlateStressObject(RealCompositePlate, StressObject):
             assert dt is not None
             self.add = self.addSort2
             self.add_new_eid = self.add_new_eid_sort2
+
+    def _get_headers(self):
+        if self.isVonMises():
+            ovm = 'evm'
+        else:
+            oon = 'max_shear'
+        return ('o1', 'o2', 't12', 't1z', 't2z', 'major', 'minor', ovm)
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -457,6 +504,13 @@ class CompositePlateStrainObject(RealCompositePlate, StrainObject):
             assert dt is not None
             self.add = self.addSort2
             self.add_new_eid = self.add_new_eid_sort2
+
+    def _get_headers(self):
+        if self.isVonMises():
+            ovm = 'evm'
+        else:
+            oon = 'max_shear'
+        return ('e11', 'e22', 'e12', 'e1z', 'e2z', 'majorP', 'minorP', ovm)
 
     def get_stats(self):
         nelements = len(self.eType)
