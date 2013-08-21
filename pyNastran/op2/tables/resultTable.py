@@ -147,7 +147,11 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 #else:
                 #print("data_code =", self.data_code)
                 #print('class_name =', classObj.__name__)
-                self.obj = classObj(self.data_code, self.is_sort1(), self.isubcase, self.nonlinear_factor, self.read_mode)
+                try:
+                    self.obj = classObj(self.data_code, self.is_sort1(), self.isubcase, self.nonlinear_factor, self.read_mode)
+                except:
+                    print("classObj may have an invalid number of arguments", classObj.__name__)
+                    raise
                 #print "obj2 = ",self.obj.__class__.__name__
             storageObj[self.isubcase] = self.obj
         else:
