@@ -209,7 +209,7 @@ class TableObject(ScalarObject):  # displacement style table
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n'
                         % (node_id, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
-            if i % 500:
+            if i % 1000 == 0:
                 f.write(''.join(msg))
                 msg = ['']
 
@@ -221,16 +221,19 @@ class TableObject(ScalarObject):  # displacement style table
                                    pageNum=1):
         msg = []
         #assert f is not None # remove
-        for i in xrange(len(self.data)):
+        ndata = len(self.data)
+        classname = self.__class__.__name__
+        i = 0
+        while i < ndata:
             index = self.data.index[i]
             (dt, node_id) = index
             dt_old = dt
             if isinstance(dt, float):  # @todo: fix
-                header[1] = ' %s = %10.4E float %s\n' % (self.data_code[
-                    'name'], dt, self.analysis_code)
+                #header[1] = ' %s = %10.4E float %s\n' % (self.data_code['name'], dt, self.analysis_code)
+                header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             else:
-                header[1] = ' %s = %10i integer %s\n' % (self.data_code[
-                    'name'], dt, self.analysis_code)
+                #header[1] = ' %s = %10i integer %s\n' % (self.data_code['name'], dt, self.analysis_code)
+                header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
             msg += header + words
 
             while dt == dt_old:
@@ -256,10 +259,16 @@ class TableObject(ScalarObject):  # displacement style table
                     dt = self.data.index[i+1][0]
                 except IndexError:
                     break
+                
+                if i % 1000 == 0:
+                    #print("class=%s i=%s ndata=%s" % (classname, i, ndata))
+                    f.write(''.join(msg))
+                    msg = ['']
             msg.append(pageStamp + str(pageNum) + '\n')
             f.write(''.join(msg))
             msg = ['']
             pageNum += 1
+        #print('returning...')
         return pageNum - 1
 
     def get_table_marker(self):
@@ -501,6 +510,7 @@ class ComplexTableObject(ScalarObject):
         return pageNum
 
     def _write_f06_transient_block(self, words, header, pageStamp, f, pageNum=1, is_mag_phase=False):
+        asdf
         if is_mag_phase:
             words += ['                                                         (MAGNITUDE/PHASE)\n', ]
         else:

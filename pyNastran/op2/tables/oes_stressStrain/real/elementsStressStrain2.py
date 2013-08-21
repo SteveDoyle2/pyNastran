@@ -632,16 +632,16 @@ class RealElementsStressStrain2(object):
         ntotal = 68  # 4*17
         n = 0
         nelements = len(self.data) // ntotal
-        nrows = nelements * 2 # 2 layers at the centroid
-        nnodes = 1
+        nnodes = nelements * 2 # 2 layers at the centroid
+        #nnodes = 1
         #nrows = nelements * 2 # 2 layers
         if self.read_mode == 0 or name not in self._selected_names:
             if name not in self._result_names:
                 self._result_names.append(name)
 
             # figure out the shape
-            print("nelements=%s nrows=%s" % (nelements, nrows))
-            self.obj._increase_size(dt, nelements, nrows)
+            #print("nnodes=%s nelements=%s" % (nnodes, nelements))
+            self.obj._increase_size(dt, nnodes, nelements)
             iend = ntotal * nelements
             self.data = self.data[iend:]
             return
@@ -650,8 +650,8 @@ class RealElementsStressStrain2(object):
             pass
 
         (inode_start, inode_end, ielement_start, ielement_end
-            ) = self.obj._preallocate(dt, nrows, nelements)
-        print("inode_start=%s inode_end=%s ielement_start=%s ielement_end=%s" % (inode_start, inode_end, ielement_start, ielement_end))
+            ) = self.obj._preallocate(dt, nnodes, nelements)
+        #print("inode_start=%s inode_end=%s ielement_start=%s ielement_end=%s" % (inode_start, inode_end, ielement_start, ielement_end))
 
         eids=[]; eTypes=[]; eids2=[]; nids=[]; layer=[]
         fd=[]; sx=[]; sy=[]; txy=[]; angle=[]; major=[]; minor=[]; vm=[]
@@ -704,12 +704,7 @@ class RealElementsStressStrain2(object):
         #istart = self.obj._size_start
         #iend = istart + nnodes
 
-        if dt:
-            name = self.obj.data_code['name']
-            self.obj.data[name][inode_start:inode_end] = ones(inode_end - inode_start) * dt
-
-        self.obj.data['element_id'][inode_start:inode_end] = eids
-
+        #print('---------------------------------------------------------')
         #print("inode_start=%r inode_end=%r delta=%r" % (inode_start, inode_end, inode_end-inode_start))
         #print('len(s1) =', len(s1))
 
@@ -728,6 +723,11 @@ class RealElementsStressStrain2(object):
         (kfd, koxx, koyy, ktxy, komax, komin, kovm) = headers
 
         assert  inode_end - inode_start == len(fd)
+        if dt:
+            name = self.obj.data_code['name']
+            self.obj.data[name][inode_start:inode_end] = ones(inode_end - inode_start) * dt
+        self.obj.data['element_id'][inode_start:inode_end] = eids
+
         self.obj.data[kfd][inode_start:inode_end] = fd
         #print(self.obj.data.keys())
         #print('self.obj.data\n', self.obj.data)
@@ -744,11 +744,11 @@ class RealElementsStressStrain2(object):
 
         #print('len(eids) = ', len(self.obj.data['element_id']))
         #print('inode_end // ntotal = ', inode_end)
-        #if self.obj._is_full(nnodes):
-        if len(self.obj.data['element_id']) == inode_end: # [nodes, elements]
+        if self.obj._is_full(nnodes, nelements):
+        #if len(self.obj.data['element_id']) == inode_end: # [nodes, elements]
             self.obj._finalize(dt)
-        else:
-            self.obj._increment(nnodes, nelements)
+        #else:
+            #self.obj._increment(nnodes, nelements)
 
     def OES_CQUAD4_33(self, name):
         """
@@ -774,30 +774,31 @@ class RealElementsStressStrain2(object):
         ntotal = 68 # 4*17
         nelements = len(self.data) // 68
 
-        nrows = nelements * 2 # 2 layers
-        nnodes = nrows #nelements * nNodes
+        nnodes = nelements * 2 # 2 layers
+        #nnodes = nrows #nelements * nNodes
         if self.read_mode == 0 or name not in self._selected_names:
             if name not in self._result_names:
                 self._result_names.append(name)
 
             # figure out the shape
-            self.obj._increase_size(dt, nelements, nnodes)
+            self.obj._increase_size(dt, nnodes, nelements)
             iend = ntotal * nelements
             self.data = self.data[iend:]
             return
         else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
             #print("nelements =", nelements)
             pass
-
+        
         (inode_start, inode_end, ielement_start, ielement_end
             ) = self.obj._preallocate(dt, nnodes, nelements)
-
+        #print('***dt=%s nnodes=%s nelements=%s' % (dt, nnodes, nelements))
 
         eids=[]; eTypes=[]; eids2=[]; nids=[]; layer=[]; nnodes_list=[]
         fd=[]; sx=[]; sy=[]; sxy=[]; angle=[]; major=[]; minor=[]; svm=[]
 
         layer += [1, 2] * nelements
-        eTypes = ['CQUAD4'] * nelements
+        #eTypes = ['CQUAD4'] * nelements
+        eTypes = []
 
         for i in xrange(nelements):
             #print self.print_block(self.data[0:100])
@@ -839,26 +840,48 @@ class RealElementsStressStrain2(object):
             major.append(major2)
             svm.append(ovm1)
             svm.append(ovm2)
-
+            eTypes.append('CQUAD4_33')
+        
+        from numpy import array
+        eTypes = array(eTypes)
         self.data = self.data[istart:]
         #-----------------------------------------------------------------------
+        #print('---------------------------------------------------------')
+        inode_start = self.obj._inode_start
+        inode_end = inode_start + nnodes
+
+        ielement_start = self.obj._ielement_start
+        ielement_end = ielement_start + nelements
+
         #print('delta', inode_end - inode_start, len(eids))
-        if dt:
-            name = self.obj.data_code['name']
-            self.obj.data[name][inode_start:inode_end] = ones(inode_end - inode_start) * dt
+        
+        #nnodes = inode_end - inode_start
+        #nnodes = inode_end - inode_start
+
+        ndt, nelements_size, nnodes_size, dts = self.obj._get_shape()
+        #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
 
         #print("inode_start=%r inode_end=%r delta=%r" % (inode_start, inode_end, inode_end-inode_start))
-        #print('len(s1) =', len(s1))
+        #print("ielement_start=%r ielement_end=%r delta=%r" % (ielement_start, ielement_end, ielement_end-ielement_start))
+        #print('len(svm) =', len(svm))
+        assert nelements == len(eids2), 'nelements=%s len(eids)=%s' % (nelements, len(eids2))
         assert len(eids2) == ielement_end - ielement_start, 'ielement_start=%s ielement_end=%s len(eids)=%s' % (ielement_start, ielement_end, len(eids2))
+        #print('len(element_data)=', len(self.obj.element_data))
         self.obj.element_data['element_id'][ielement_start:ielement_end] = eids2
         #print(self.obj.element_data)
         self.obj.element_data['element_type'][ielement_start:ielement_end] = eTypes
         self.obj.element_data['nnodes'][ielement_start:ielement_end] = ones(nelements)
 
         #print('nids',nids)
-        assert len(eids) == inode_end - inode_start, 'inode_start=%s inode_end=%s len(eids)=%s' % (inode_start, inode_end, len(eids))
+        assert len(eids) == 2*nelements, '2*nelements=%s len(eids)=%s' % (2*nelements, len(eids))
+        assert len(eids) == inode_end - inode_start, 'inode_start=%s inode_end=%s delta=%s len(eids)=%s' % (inode_start, inode_end,
+            inode_end - inode_start, len(eids))
+
+        if dt:
+            name = self.obj.data_code['name']
+            self.obj.data[name][inode_start:inode_end] = ones(nnodes) * dt
         self.obj.data['element_id'][inode_start:inode_end] = eids
-        self.obj.data['element_id'][inode_start:inode_end] = eids
+        #self.obj.data['element_id'][inode_start:inode_end] = eids
         self.obj.data['node_id'][inode_start:inode_end] = nids
         self.obj.data['layer'][inode_start:inode_end] = layer
         #print(self.obj.element_data)
@@ -880,10 +903,14 @@ class RealElementsStressStrain2(object):
 
         #print('len(eids) = ', len(self.obj.data['element_id']))
         #print('inode_end // ntotal = ', inode_end)
-        if len(self.obj.data['element_id']) == inode_end: # [nodes, elements]
+        #if len(self.obj.data['element_id']) == inode_end: # [nodes, elements]
+        if self.obj._is_full(nnodes, nelements):
+            #print('finalize')
+            #sys.exit('finalize')
             self.obj._finalize(dt)
-        else:
-            self.obj._increment(nnodes, nelements)
+        #else:
+            #print('increment')
+            #self.obj._increment(nnodes, nelements)
 
     def OES_CQUAD4_144(self, name):
         """
@@ -927,20 +954,20 @@ class RealElementsStressStrain2(object):
         format1 = bytes(format1)
 
         nelements = len(self.data) // ntotal
-        nrows = (1 + nNodes) * nelements * 2 # 2 layers
+        nnodes = (1 + nNodes) * nelements * 2 # 2 layers
         #print('nrows = %i' % nrows)
 
         gridC = 'C'
         cformat = b'i4s'+format1  # center format
         nformat = b'i16f'         # node format
 
-        nnodes = nrows #nelements * nNodes
+        #nnodes = nrows #nelements * nNodes
         if self.read_mode == 0 or name not in self._selected_names:
             if name not in self._result_names:
                 self._result_names.append(name)
 
             # figure out the shape
-            self.obj._increase_size(dt, nelements, nnodes)
+            self.obj._increase_size(dt, nnodes, nelements)
             iend = ntotal * nelements
             self.data = self.data[iend:]
             return
@@ -952,13 +979,17 @@ class RealElementsStressStrain2(object):
             ) = self.obj._preallocate(dt, nnodes, nelements)
 
 
-        eids=[]; eTypes=[]; eids2=[]; nids=[]; layer=[]; nnodes_list=[]
+        eids=[]; eTypes=[]; eids2=[]; nids=[]; layer=[] #; nnodes_list=[]
         fd=[]; sx=[]; sy=[]; sxy=[]; angle=[]; major=[]; minor=[]; vm=[]
         #['fd1', 'sx1', 'sy1', 'txy1', 'angle1', 'major1', 'minor1', 'vm1',
         # 'fd2', 'sx2', 'sy2', 'txy2', 'angle2', 'major2', 'minor2', 'vm2',]
 
         ibase = 0
         nnodes_temp = 1 + nNodes
+        
+        nnodes_list = ones(nelements) * nnodes_temp
+        layer = [1, 2] * (nelements * nnodes_temp)
+
         for i in xrange(nelements):
             eData = self.data[ibase:ibase + 76]  # 8 + 68
 
@@ -967,7 +998,6 @@ class RealElementsStressStrain2(object):
             #gridC = 'C'
             eid = extract(eid, dt)
             eTypes.append(eType)
-            nnodes_list.append(nnodes_temp)
             eids.append(eid)
 
             eids2.append(eid)
@@ -975,9 +1005,6 @@ class RealElementsStressStrain2(object):
 
             nids.append(0)
             nids.append(0)
-
-            layer.append(1)
-            layer.append(2)
 
             fd.append(fd1i)
             sx.append(sx1i)
@@ -1014,8 +1041,8 @@ class RealElementsStressStrain2(object):
                 nids.append(grid)
                 nids.append(grid)
 
-                layer.append(1)
-                layer.append(2)
+                #layer.append(1)
+                #layer.append(2)
 
                 fd.append(fd1i)
                 sx.append(sx1i)
@@ -1078,7 +1105,8 @@ class RealElementsStressStrain2(object):
 
         #print('len(eids) = ', len(self.obj.data['element_id']))
         #print('inode_end // ntotal = ', inode_end)
-        if len(self.obj.data['element_id']) == inode_end: # [nodes, elements]
+        #if len(self.obj.data['element_id']) == inode_end: # [nodes, elements]
+        if self.obj._is_full(nnodes, nelements):
             self.obj._finalize(dt)
-        else:
-            self.obj._increment(nnodes, nelements)
+        #else:
+            #self.obj._increment(nnodes, nelements)

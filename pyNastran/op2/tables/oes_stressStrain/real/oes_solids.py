@@ -639,7 +639,7 @@ class SolidStrainObject(RealSolidResults, StrainObject):
         tetraEids = []
         hexaEids = []
         pentaEids = []
-        print("self.element_data =\n", self.element_data)
+        #print("self.element_data =\n", self.element_data)
         #try:
         #    eids = self.element_data['element_id']
         #except:
