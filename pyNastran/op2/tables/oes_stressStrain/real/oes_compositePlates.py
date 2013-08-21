@@ -3,20 +3,26 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats12E
+from numpy import zeros
 
 
 class RealCompositePlate(object):
     def __init__(self):
         self.data = None
+        self.element_data = None
+
         self.eid_nlayer = {}
+        self._nlayers = 0
         self._dti = None
         self._dts = []
+        self.iloop_start = 0
 
     def _increase_size(self, dt, nloops, eid_nlayer):
         if dt not in _dts:
             self._dts.append(dt)
 
         if self._dti is None or dt == self._dti:
+            self._nlayers += nloops
             for eid, nlayers in eid_nlayer.iteritems():
                 if eid in self.eid_nlayer:
                     self.eid_nlayer[eid] += nlayers
@@ -24,10 +30,35 @@ class RealCompositePlate(object):
                     self.eid_nlayer[eid] = nlayers
 
     def _preallocate(self, dt, nloops):
-        if dt is None:
-            asdf
-        else:
-            self.
+        iloop_end = self.iloop_start + nloops
+        
+        inode_start = iloop_start
+        inode_end = iloop_end
+        
+        ielement_start = iloop_start
+        ielement_end = iloop_end
+        
+        if self.data is None:
+            if not(dt is None or dt == self._dts[0]):
+                idt = self._dts.index(dt)
+                offset = idt * self._nlayers
+                ielement_start -= offset
+                ielement_end -= offset
+                assert ielement_start >= 0
+                assert ielement_end >= nloops
+
+            nelements = len(self.eid_layer)
+            ndt = len(self._dts)
+            eids_elements = zeros(nelements, 'int32')
+            nlayers       = zeros(nelements, 'int32')
+            #etype         = zeros(nelements, 'int32')
+
+            nnodes = ndt * nelements
+            eids = zeros(nnodes, 'int32')
+            o1 = zeros(nnodes, 'float32')
+            o2 = zeros(nnodes, 'float32')
+        
+        asdf
         return (inode_start, inode_end, ielement_start, ielement_end)
 
 
