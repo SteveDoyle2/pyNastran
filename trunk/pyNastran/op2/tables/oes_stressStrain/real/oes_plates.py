@@ -36,106 +36,145 @@ class RealPlateResults(object):
         # >>> ovm[elements2]
         # [5678.8, 5678.8]
 
-    #def _is_full(self, nnodes):
-        #self._size_start += nnodes
-        #if self._size_start == self._size_end:
-        #    return True
-        #return False
+    def _is_full(self, nnodes, nelements):
+        self._inode_start += nnodes
+        self._ielement_start += nelements
+        
+        #print('check....inode_start=%s size_node_end=%s' %(self._inode_start, self._size_node_end))
+        #print('check...._ielement_start=%s size_element_end=%s' %(self._ielement_start, self._size_element_end))
+        if self._inode_start == self._size_node_end:
+            return True
+        elif self._ielement_start == self._size_element_end:
+            self._ielement_start = 0
+        return False
 
-    def _increase_size(self, dt, nelements, nnodes):
+    def _increase_size(self, dt, nnodes, nelements):
         if dt in self.shape:  # default dictionary
-            self.shape[dt][0] += nelements
-            self.shape[dt][1] += nnodes
+            self.shape[dt][0] += nnodes
+            self.shape[dt][1] += nelements
         else:
-            self.shape[dt] = [nelements, nnodes]
+            self.shape[dt] = [nnodes, nelements]
         #print("shape =", self.shape)
 
     def _get_shape(self):
         ndt = len(self.shape)
         dts = self.shape.keys()
         shape0 = dts[0]
-        nelements = self.shape[shape0][0]
-        nnodes = self.shape[shape0][1]
+        nnodes = self.shape[shape0][0]
+        nelements = self.shape[shape0][1]
         #print("ndt=%s nnodes=%s dts=%s" % (str(ndt), str(nnodes), str(dts)))
-        return ndt, nelements, nnodes, dts
+        return ndt, nnodes, nelements, dts
 
-    def _increment(self, nnodes, nelements):
-        self._inode_start += nnodes
-        self._inode_end += nnodes
-        self._ielement_start += nelements
-        self._ielement_end += nelements
-        return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
+    #def _increment(self, nnodes, nelements):
+        #self._inode_start += nnodes
+        #self._inode_end += nnodes
+        #self._ielement_start += nelements
+        #self._ielement_end += nelements
+        #return self._inode_start, self._inode_end, self._ielement_start, self._ielement_end
 
     def _preallocate(self, dt, nnodes, nelements):
-        ndt, nelements_size, nnodes_size, dts = self._get_shape()
-        #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
+        """
+        nodes will create self.data
+        elements will create self.element_data
+        
+        data is primary, so nodes are input first
+        """
+        #print('---preallocate nnodes=%s nelements=%s' % (nnodes, nelements))
+        if self.shape is None:
+            self._inode_start += nnodes
+            self._inode_end += nnodes
+            self._ielement_start += nelements
+            self._ielement_end += nelements
+        #elif self.data is not None:
+            #ndt, nnodes_size, nelements_size, dts = self._get_shape()
+            #inode_end = min(self._inode_end, nnodes_size)
+            #ielement_end = min(self._ielement_end, nelements_size)
+            #return (self._inode_start, inode_end, self._ielement_start, ielement_end)
+            #print "data =", self.data
+            #pass
+        else:
+            ndt, nnodes_size, nelements_size, dts = self._get_shape()
+            #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
 
-        if self._inode_start is not None:
-            return (self._inode_start, self._inode_start + nnodes,
-                    self._ielement_start, self._ielement_start + nelements)
+            if self._inode_start is not None:
+                return (self._inode_start, self._inode_start + nnodes,
+                        self._ielement_start, self._ielement_start + nelements)
 
-        n = ndt * nnodes_size
-        if self._ncount != 0:
-            asfd
-        self._ncount += 1
-        self._inode_start = 0
-        self._inode_end = nnodes
+            n = ndt * nnodes_size
+            if self._ncount != 0:
+                asfd
+            self._ncount += 1
+            self._inode_start = 0
+            self._inode_end = nnodes
 
-        self._ielement_start = 0
-        self._ielement_end = nelements
+            self._ielement_start = 0
+            self._ielement_end = nelements
 
-        data = {}
-        element_data = {}
-        columns = []
-        if dts[0] is not None:
-            name = self.data_code['name']
-            #print('***name=%r***' % name)
-            if isinstance(dt, int):
-                data[name] = pd.Series(zeros((n), dtype='int32'))
-            else:
-                data[name] = pd.Series(zeros((n), dtype='float32'))
-            columns.append(name)
+            data = {}
+            element_data = {}
+            columns = []
+            if dts[0] is not None:
+                name = self.data_code['name']
+                #print('***name=%r***' % name)
+                if isinstance(dt, int):
+                    data[name] = pd.Series(zeros((n), dtype='int32'))
+                else:
+                    data[name] = pd.Series(zeros((n), dtype='float32'))
+                columns.append(name)
 
-        element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
-        element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
-        element_data['nlayers'] = pd.Series(zeros(nelements_size, dtype='int32'))
+            element_data['element_id'] = pd.Series(zeros((nelements_size), dtype='int32'))
+            element_data['element_type'] = pd.Series(zeros(nelements_size, dtype='str'))
+            element_data['nlayers'] = pd.Series(zeros(nelements_size, dtype='int32'))
 
-        data['element_id'] = pd.Series(zeros((n), dtype='int32'))
-        data['node_id'] = pd.Series(zeros((n), dtype='int32'))
-        data['layer'] = pd.Series(zeros((n), dtype='int32'))
+            data['element_id'] = pd.Series(zeros((n), dtype='int32'))
+            data['node_id'] = pd.Series(zeros((n), dtype='int32'))
+            data['layer'] = pd.Series(zeros((n), dtype='int32'))
 
-        #columns.append('element_type')
+            #columns.append('element_type')
 
-        #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
-        #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
-        #print('n =', n)
+            #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
+            #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
+            #print('n =', n)
 
 
-        headers = self._get_headers()
-        (fd, oxx, oyy, txy, omax, omin, ovm) = headers
+            headers = self._get_headers()
+            (fd, oxx, oyy, txy, omax, omin, ovm) = headers
 
-        # fiber_distance / fiber_curvature
-        data[fd] = pd.Series(zeros((n), dtype='float32'))
+            # fiber_distance / fiber_curvature
+            data[fd] = pd.Series(zeros((n), dtype='float32'))
 
-        data[oxx] = pd.Series(zeros((n), dtype='float32'))
-        data[oyy] = pd.Series(zeros((n), dtype='float32'))
-        data[txy] = pd.Series(zeros((n), dtype='float32'))
+            data[oxx] = pd.Series(zeros((n), dtype='float32'))
+            data[oyy] = pd.Series(zeros((n), dtype='float32'))
+            data[txy] = pd.Series(zeros((n), dtype='float32'))
 
-        data['angle'] = pd.Series(zeros((n), dtype='float32'))
-        data[omax] = pd.Series(zeros((n), dtype='float32'))
-        data[omin] = pd.Series(zeros((n), dtype='float32'))
-        data[ovm] = pd.Series(zeros((n), dtype='float32'))
+            data['angle'] = pd.Series(zeros((n), dtype='float32'))
+            data[omax] = pd.Series(zeros((n), dtype='float32'))
+            data[omin] = pd.Series(zeros((n), dtype='float32'))
+            data[ovm] = pd.Series(zeros((n), dtype='float32'))
 
-        columns += ['element_id', 'node_id', 'layer', fd, oxx, oyy, txy, 'angle', omax, omin, ovm]
+            columns += ['element_id', 'node_id', 'layer', fd, oxx, oyy, txy, 'angle', omax, omin, ovm]
 
-        self.data = pd.DataFrame(data, columns=columns)
-        self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type', 'nnodes'])
+            self.data = pd.DataFrame(data, columns=columns)
+            self.element_data = pd.DataFrame(element_data, columns=['element_id', 'element_type', 'nnodes'])
+            size_end = n
+
+            # max sizes
+            self._size_node_start = 0
+            self._size_node_end = n
+            self._size_element_start = 0
+            self._size_element_end = nelements_size
+
+            self._inode_start = 0
+            self._inode_end = nnodes
+            self._ielement_start = 0
+            self._ielement_end = nelements
+            #print('_inode=%s _ielement=%s' %(nnodes, nelements))
         return (self._inode_start, self._inode_end, self._ielement_start, self._ielement_end)
 
     def _finalize(self, dt):
-        ndt, nelements, nnodes, dts = self._get_shape()
+        ndt, nnodes, nelements, dts = self._get_shape()
 
-        if dt is not None and dt != max(dts):
+        if dt is not None and dt != dts[-1]:
             return
         #print("----finalize----")
 
@@ -145,14 +184,16 @@ class RealPlateResults(object):
         #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
 
         update_index = True
-        #print("final\n", self.data)
+        #print("final A\n", self.data.to_string())
         if update_index:
             if dts[0] is not None:
                 name = self.data_code['name']
-                self.data = self.data.set_index([name, 'element_id', 'element_id', 'node_id', 'layer'])
+                self.data = self.data.set_index([name, 'element_id', 'node_id', 'layer'])
             else:
                 self.data = self.data.set_index(['element_id', 'node_id', 'layer'])
-        self.element_data = self.element_data.set_index(['element_id'])
+            self.element_data = self.element_data.set_index(['element_id'])
+
+        #print(self.element_data.to_string())
         #print("final\n", self.data.to_string())
         #print(self.element_data.to_string())
         del self._inode_start
@@ -165,7 +206,7 @@ class RealPlateResults(object):
         return list(set(etypes))
 
     def get_stats(self):
-        ndt, nelements, nnodes, dts = self._get_shape()
+        ndt, nnodes, nelements, dts = self._get_shape()
         msg = self._get_data_code()
         if self.nonlinear_factor is not None:  # transient
             name = self.data_code['name']
@@ -190,6 +231,7 @@ class RealPlateResults(object):
 
     def _get_first_type_index(self):
         first_type_index = {}
+        #print(self.element_data.to_string())
         for i in xrange(len(self.element_data)):
             eid = self.element_data.index[i]
             etype = self.element_data['element_type'][eid]
@@ -198,7 +240,7 @@ class RealPlateResults(object):
             #print("i=%s eid=%s" % (i, eid))
         return first_type_index
 
-    def _write_f06(self, msgPacks, pageStamp, f, pageNum):
+    def _write_f06_helper(self, msgPacks, pageStamp, f, pageNum):
         msg = []
         isBilinear = True
 
@@ -300,46 +342,42 @@ class RealPlateResults(object):
         return pageNum - 1
 
 
-        #sys.exit('asdf')
-        typesOut = []
-        for eType in typesOut:
-            eids = orderedETypes[eType]
-            #print("*eids[%s] = %s" % (eType, eids))
-            if eids:
-                eids.sort()
-                #print "eType = ",eType
-                #print "eids = ",eids
-                #print "eType = ",eType
-                msgPack = msgPacks[eType]
+    def _write_f06_transient_helper(self, msgPacks, header, pageStamp, f, pageNum=1, is_mag_phase=False):
 
-                msg += header + msgPack
-                if eType in ['CQUAD4']:
-                    if isBilinear:
-                        for eid in eids:
-                            out = self.writeF06_Quad4_Bilinear(eid, 4)
-                            msg.append(out)
-                    else:
-                        for eid in eids:
-                            out = self.writeF06_Tri3(eid)
-                            msg.append(out)
-                elif eType in ['CTRIA3']:
-                    for eid in eids:
-                        out = self.writeF06_Tri3(eid)
-                        msg.append(out)
-                elif eType in ['CQUAD8']:
-                    for eid in eids:
-                        out = self.writeF06_Quad4_Bilinear(eid, 5)
-                        msg.append(out)
-                elif eType in ['CTRIAR', 'CTRIA6']:
-                    for eid in eids:
-                        out = self.writeF06_Quad4_Bilinear(eid, 3)
-                        msg.append(out)
-                else:
-                    raise NotImplementedError('eType = %r' % eType)  # CQUAD8, CTRIA6
-                msg.append(pageStamp + str(pageNum) + '\n')
-                f.write(''.join(msg))
-                msg = ['']
-                pageNum += 1
+        validTypes = ['CTRIA3', 'CTRIA6', 'CTRIAR', 'CQUAD4',
+                      'CQUAD8', 'CQUADR']
+        #(typesOut, orderedETypes) = self.getOrderedETypes(validTypes)
+
+        msg = []
+        return pageNum - 1
+
+        if eType in ['CQUAD4']:
+            if isBilinear:
+                for eid in eids:
+                    out = self.writeF06_Quad4_Bilinear(eid, 4)
+                    msg.append(out)
+            else:
+                for eid in eids:
+                    out = self.writeF06_Tri3(eid)
+                    msg.append(out)
+        elif eType in ['CTRIA3']:
+            for eid in eids:
+                out = self.writeF06_Tri3(eid)
+                msg.append(out)
+        elif eType in ['CQUAD8']:
+            for eid in eids:
+                out = self.writeF06_Quad4_Bilinear(eid, 5)
+                msg.append(out)
+        elif eType in ['CTRIAR', 'CTRIA6']:
+            for eid in eids:
+                out = self.writeF06_Quad4_Bilinear(eid, 3)
+                msg.append(out)
+        else:
+            raise NotImplementedError('eType = %r' % eType)  # CQUAD8, CTRIA6
+        msg.append(pageStamp + str(pageNum) + '\n')
+        f.write(''.join(msg))
+        msg = ['']
+        pageNum += 1
         return pageNum - 1
 
 
@@ -724,7 +762,7 @@ class PlateStressObject(RealPlateResults, StressObject):
                     'CQUAD8': quad8Msg,
                     'CQUADR': quadrMsg, }
 
-        return self._write_f06(msgPacks, pageStamp, f, pageNum)
+        return self._write_f06_helper(msgPacks, pageStamp, f, pageNum)
 
     def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.isVonMises():
@@ -792,66 +830,9 @@ class PlateStressObject(RealPlateResults, StressObject):
                     'CQUAD4': quadMsg,
                     'CQUAD8': quad8Msg,
                     'CQUADR': quadrMsg, }
+        
+        return self._write_f06_transient_helper(msgPacks, header, pageStamp, f, pageNum, is_mag_phase)
 
-        validTypes = ['CTRIA3', 'CTRIA6', 'CTRIAR', 'CQUAD4',
-                      'CQUAD8', 'CQUADR']
-        #(typesOut, orderedETypes) = self.getOrderedETypes(validTypes)
-
-        msg = []
-        dts = self.oxx.keys()
-        dts.sort()
-        for eType in typesOut:
-            #print "eType = ",eType
-            eids = orderedETypes[eType]
-            #print "eids = ",eids
-            if eids:
-                msgPack = msgPacks[eType]
-                eids.sort()
-                if eType in ['CQUAD4']:
-                    if isBilinear:
-                        for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-                            msg += header + msgPack
-                            for eid in eids:
-                                out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4)
-                                msg.append(out)
-                    else:
-                        for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-                            msg += header + msgPack
-                            for eid in eids:
-                                out = self.writeF06_Tri3Transient(dt, eid)
-                                msg.append(out)
-                elif eType in ['CTRIA3']:
-                    for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-                        msg += header + msgPack
-                        for eid in eids:
-                            out = self.writeF06_Tri3Transient(dt, eid)
-                            msg.append(out)
-                elif eType in ['CTRIA6', 'CTRIAR']:
-                    for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-                        msg += header + msgPack
-                        for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(
-                                dt, eid, 3)
-                            msg.append(out)
-                elif eType in ['CQUAD8']:
-                    for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-                        msg += header + msgPack
-                        for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 5)
-                            msg.append(out)
-                else:
-                    raise NotImplementedError('eType = |%r|' % eType)  # CQUAD8, CTRIA6
-
-                msg.append(pageStamp + str(pageNum) + '\n')
-                f.write(''.join(msg))
-                msg = ['']
-                pageNum += 1
-        return pageNum - 1
 
     def writeF06_Tri3Transient(self, dt, eid):
         msg = ''
@@ -1026,9 +1007,13 @@ class PlateStrainObject(RealPlateResults, StrainObject):
 
             elif 'CTRIA3' == element_type:
                 triMsg = header + ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + triMsgTemp
+            elif 'CTRIA6' in eTypes:
+                tri6Msg = header + ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + triMsgTemp
+            elif 'CTRIAR' in eTypes:
+                trirMsg = header + ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + triMsgTemp
+
             else:
                 raise NotImplementedError('element_type = %r' % element_type)
-
 
         if 'CQUAD8' in eTypes:
             qkey = eTypes.index('CQUAD8')
@@ -1050,12 +1035,6 @@ class PlateStrainObject(RealPlateResults, StrainObject):
                 isBilinear = False
                 quadrMsg = header + ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + triMsgTemp
 
-        if 'CTRIA6' in eTypes:
-            tri6Msg = header + ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + triMsgTemp
-
-        if 'CTRIAR' in eTypes:
-            trirMsg = header + ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + triMsgTemp
-
         msgPacks = {'CTRIA3': triMsg,
                     'CTRIA6': tri6Msg,
                     'CTRIAR': trirMsg,
@@ -1063,7 +1042,7 @@ class PlateStrainObject(RealPlateResults, StrainObject):
                     'CQUAD8': quad8Msg,
                     'CQUADR': quadrMsg, }
 
-        return self._write_f06(msgPacks, pageStamp, f, pageNum)
+        return self._write_f06_helper(msgPacks, pageStamp, f, pageNum)
 
     def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.isVonMises():
@@ -1089,33 +1068,27 @@ class PlateStrainObject(RealPlateResults, StrainObject):
         tri6Msg = None
         trirMsg = None
 
-        eTypes = self.get_element_types()
-        if 'CQUAD4' in eTypes:
-            ElemKey = eTypes.index('CQUAD4')
-            #print qkey
-            eid = self.eType.keys()[ElemKey]
-            #print "self.oxx = ",self.oxx
-            #print "eid=%s" %(eid)
-            dt = self.exx.keys()[0]
-            #print "dt=%s" %(dt)
-            nLayers = len(self.exx[dt][eid])
-            #print "elementKeys = ",elementKeys
-            isBilinear = True
-            quadMsg = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quadMsgTemp
-            if nLayers == 1:
-                isBilinear = False
-                quadMsg = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + triMsgTemp
 
-        if 'CTRIA3' in eTypes:
-            triMsg = ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + triMsgTemp
+        first_type_index = self._get_first_type_index()
+        #print('first_type_index =', first_type_index)
+        for element_type, eid in first_type_index.iteritems():
+            if element_type == 'CQUAD4':
+                #print('self.element_data =\n', self.element_data)
+                i_first_quad = eid
+                nnodes = self.element_data['nnodes'][eid]
+                quadMsg = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quadMsgTemp
+                if nnodes == 1:
+                    isBilinear = False
+                    quadMsg = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + triMsgTemp
+            elif element_type == 'CTRIA3':
+                triMsg = header + ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + triMsgTemp
+            elif element_type == 'CTRIA6':
+                tri6Msg = header + ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + triMsgTemp
+            elif element_type == 'CTRIAR':
+                trirMsg = header + ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + triMsgTemp
+            else:
+                raise NotImplementedError('element_type = %r' % element_type)
 
-        if 'CTRIA6' in eTypes:
-            tri6Msg = header + ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + triMsgTemp
-
-        if 'CTRIAR' in eTypes:
-            trirMsg = header + ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + triMsgTemp
-
-        msg = []
         msgPacks = {'CTRIA3': triMsg,
                     'CTRIA6': tri6Msg,
                     'CTRIAR': trirMsg,
@@ -1123,66 +1096,8 @@ class PlateStrainObject(RealPlateResults, StrainObject):
                     'CQUAD8': quad8Msg,
                     'CQUADR': quadrMsg, }
 
-        validTypes = ['CTRIA3', 'CTRIA6', 'CTRIAR', 'CQUAD4',
-                      'CQUAD8', 'CQUADR']
-        (typesOut, orderedETypes) = self.getOrderedETypes(validTypes)
+        return self._write_f06_transient_helper(msgPacks, header, pageStamp, f, pageNum, is_mag_phase)
 
-        msg = []
-        dts = self.exx.keys()
-        dts.sort()
-        for eType in typesOut:
-            eids = orderedETypes[eType]
-            if eids:
-                eids.sort()
-                eType = self.eType[eid]
-                if eType in ['CQUAD4']:
-                    if isBilinear:
-                        for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (
-                                self.data_code['name'], dt)
-                            for eid in eids:
-                                out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4)
-                                msg.append(out)
-                            msg.append(pageStamp + str(pageNum) + '\n')
-                            pageNum += 1
-                    else:
-                        for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (
-                                self.data_code['name'], dt)
-                            for eid in eids:
-                                out = self.writeF06_Tri3Transient(dt, eid)
-                                msg.append(out)
-                            msg.append(pageStamp + str(pageNum) + '\n')
-                            pageNum += 1
-                elif eType in ['CTRIA3']:
-                    for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-                        for eid in eids:
-                            out = self.writeF06_Tri3Transient(dt, eid)
-                            msg.append(out)
-                        msg.append(pageStamp + str(pageNum) + '\n')
-                        pageNum += 1
-                elif eType in ['CQUAD8']:
-                    for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-                        for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 5)
-                            msg.append(out)
-                        msg.append(pageStamp + str(pageNum) + '\n')
-                        pageNum += 1
-                elif eType in ['CTRIA6', 'CTRIAR']:
-                    for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-                        for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3)
-                            msg.append(out)
-                        msg.append(pageStamp + str(pageNum) + '\n')
-                        pageNum += 1
-                else:
-                    raise NotImplementedError('eType = %r' % eType)  # CQUAD8, CTRIA6
-                f.write(''.join(msg))
-                msg = ['']
-        return pageNum - 1
 
     def writeF06_Tri3Transient(self, dt, eid):
         msg = ''
