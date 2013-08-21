@@ -959,7 +959,7 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
             msg.append('  real type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
         msg.append('  data: index  : %selement_id\n' % dt_string)
-        msg.append('  data: results: bendingMomentA, bendingMomentB, shear, axial, torque\n')
+        msg.append('        results: bendingMomentA, bendingMomentB, shear, axial, torque\n')
         return msg
 
     def add_new_transient(self, dt):
