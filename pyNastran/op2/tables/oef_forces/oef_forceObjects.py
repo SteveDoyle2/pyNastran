@@ -431,10 +431,12 @@ class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
                 elements.append(eid)
                 forces.append(force)
                 #pack.append(eid)
-                #pack.append(f)
-                line += '%13s  %13s     ' % (eid, f)
+                #pack.append(force)
+                line += '%13s  %13s     ' % (eid, force)
                 if len(forces) == 3:
                     msg.append(line.rstrip() + '\n')
+                    forces = []
+                    line = ''
 
             if forces:
                 msg.append(line.rstrip() + '\n')
@@ -459,7 +461,7 @@ class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
             elements.append(eid)
             forces.append(force)
             #pack.append(eid)
-            #pack.append(f)
+            #pack.append(force)
             line += '%13s  %13s     ' % (eid, force)
             if len(forces) == 3:
                 msg.append(line.rstrip() + '\n')

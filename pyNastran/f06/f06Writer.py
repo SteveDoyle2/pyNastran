@@ -178,6 +178,8 @@ class F06Writer(object):
             header[0] = '     %s\n' % (subtitle)
             header[1] = '0                                                                                                            SUBCASE %i\n \n' % (isubcase)
             print(result.__class__.__name__)
+            if pyNastran.isRelease:
+                f.write(result.__class__.__name__ + '\n')
             pageNum = result.write_f06(header, pageStamp, f,
                                        pageNum=pageNum, is_mag_phase=is_mag_phase)
             pageNum += 1
@@ -191,6 +193,8 @@ class F06Writer(object):
             header[0] = '     %s\n' % subtitle
             header[1] = '0                                                                                                            SUBCASE %i\n' % (isubcase)
             print(result.__class__.__name__)
+            if pyNastran.isRelease:
+                f.write(result.__class__.__name__ + '\n')
             pageNum = result.write_f06(header, pageStamp,
                                        pageNum=pageNum, f=f, is_mag_phase=is_mag_phase)
             pageNum += 1
@@ -279,6 +283,8 @@ class F06Writer(object):
                         result = resType[isubcase]
                         try:
                             print(result.__class__.__name__)
+                            if pyNastran.isRelease:
+                                f.write(result.__class__.__name__ + '\n')
                             pageNum = result.write_f06(header, pageStamp, f, pageNum=pageNum, is_mag_phase=False)
                         except:
                             #print "result name = %s" %(result.name())

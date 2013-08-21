@@ -117,8 +117,8 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
             op2.write_matlab(model+'.m', is_mag_phase=is_mag_phase)
 
         #print op2.print_results()
-        if print_results:
-            op2.print_results()
+        #if print_results:
+            #op2.print_results()
         #print "subcases = ",op2.subcases
 
         #assert tableNamesF06==tableNamesOP2,'tableNamesF06=%s tableNamesOP2=%s' %(tableNamesF06,tableNamesOP2)
@@ -230,7 +230,9 @@ def run_arg_parse():
 
 def main():
     #op2FileName = r'C:\NASA\m4\formats\pynastran_v0.7\models\beam_modes\beam_modes_m1.op2'
-    op2FileName = r'C:\NASA\m4\formats\pynastran_v0.7\models\plate\plate.op2'
+    #op2FileName = r'C:\NASA\m4\formats\pynastran_v0.7\models\plate\plate.op2'
+    op2FileName = r'C:\Users\sdoyle\Desktop\move\solid_shell_bar\solid_shell_bar.op2'
+    #op2FileName = r'C:\Users\sdoyle\Desktop\move\tria_test_singles.op2'
     make_geom = False
     write_bdf = False
     write_f06 = True
@@ -238,7 +240,7 @@ def main():
     is_mag_phase = False
     print_results = False
     debug = False
-    #(op2FileName,make_geom,write_bdf,write_f06,write_matlab,is_mag_phase,print_results,debug) = run_arg_parse()
+    (op2FileName,make_geom,write_bdf,write_f06,write_matlab,is_mag_phase,print_results,debug) = run_arg_parse()
 
 
     if os.path.exists('skippedCards.out'):
