@@ -626,51 +626,58 @@ class RealElementsStressStrain2(object):
          97 - CTRIA3
          98 - CTRIA6 (composite)
         """
+        etype = self.get_element_type(self.element_type)
+        print("--OES_CQUAD4_95 etype=%s--" % etype)
         dt = self.nonlinear_factor
+
         nloops = len(self.data) // 44  # 2+17*5 = 87 -> 87*4 = 348
         #print("nloops = ", nloops)
         ntotal = 44
+        #print('read_mode =', self.read_mode)
         if self.read_mode == 0 or name not in self._selected_names:
-
             if name not in self._result_names:
                 self._result_names.append(name)
                 
-                ibase = 0
-                #nlayers = 0
-                eid_nlayer = {}
-                (format1, extract) = self.getOUG_FormatStart()
-                format1 += 'i'
-                format1 = bytes(format1)
-                #print('format1 = %r' % format1)
-                for i in xrange(nloops):
-                    eData = self.data[ibase:ibase+8]  # 4*11
-                    (eid, iLayer) = unpack(format1, eData)
-                    eid = extract(eid, dt)
-                    if eid != self.eid2:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
-                        eid_nlayer[eid] = 1
-                    else:
-                        eid_nlayer[eid] += 1
-                    #nlayers += 1
-                    #self.eid2 = eid
-                    #ibase += 44
-                #print('eid_layer =', eid_layer)
-                #print('nlayers =', nlayers)
-                #self.data = self.data[ibase:]
+            ibase = 0
+            #nlayers = 0
+            eid_nlayer = {}
+            (format1, extract) = self.getOUG_FormatStart()
+            format1 += 'i'
+            format1 = bytes(format1)
+            #print('format1 = %r' % format1)
+            for i in xrange(nloops):
+                #print("ibase=%s" % ibase)
+                eData = self.data[ibase:ibase+8]  # 4*11
 
-                # figure out the shape
-                #print("nloops=%s" % nloops)
-                self.obj._increase_size(dt, nloops, eid_nlayer)
-                iend = ntotal * nloops
-                self.data = self.data[iend:]
-                return
-            else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
-                #print("nelements =", nelements)
-                pass
+                (eid, ilayer) = unpack(format1, eData)
+                print('**eid=%s ilayer=%s' % (eid, ilayer))
+                eid = extract(eid, dt)
+                
+                try:
+                    eid_nlayer[eid] += 1
+                except KeyError:
+                    eid_nlayer[eid] = 1
+                #nlayers += 1
+                #self.eid2 = eid
+                ibase += 44
+            print('**************eid_nlayer =', eid_nlayer)
+            #print('nlayers =', nlayers)
+            #self.data = self.data[ibase:]
+
+            # figure out the shape
+            #print("nloops=%s" % nloops)
+            self.obj._increase_size(dt, nloops, eid_nlayer, etype)
+            iend = ntotal * nloops
+            self.data = self.data[iend:]
+            #print('returning...')
+            self.eid2 = eid
+            return
+        else:  # read_mode = 1; # we know the shape so we can make a pandas matrix
+            #print("nelements =", nelements)
+            pass
 
         (inode_start, inode_end, ielement_start, ielement_end
             ) = self.obj._preallocate(dt, nloops)
-
-        eType = self.get_element_type(self.element_type)
 
         #self.print_section(20)
         #term = data[0:4] CEN/
@@ -686,15 +693,17 @@ class RealElementsStressStrain2(object):
         eids = []
         eids_elements = []
         layers = []
-        etypes = [eType] * nloops
+        etypes = [etype] * nloops
         o1s = []
         o2s = []
         
         for i in xrange(nloops):
-        #while len(self.data) <= 44:
+            #print("ibase=%s" % ibase)
             eData = self.data[ibase:ibase+44]  # 4*11
             (eid, ilayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = unpack(format1, eData)
+            #print('A eid=%s' % eid)
             eid = extract(eid, dt)
+            #print('B eid=%s' % eid)
             
             #eids_elements.append(eid)
 
@@ -704,32 +713,46 @@ class RealElementsStressStrain2(object):
             o2s.append(o2)
 
             if eid != self.eid2:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
-                #print "1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
-                self.obj.add_new_eid(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                print("1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,ilayer,o1,o2,ovm))
+                self.obj.add_new_eid(etype, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                eids_elements.append(eid)
             else:
-                #print "2 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
+                print("2 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,ilayer,o1,o2,ovm))
                 self.obj.add(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
             self.eid2 = eid
             ibase += 44
             #self.dn += 348
+        #sys.exit('asf')
 
         self.data = self.data[ibase:]
-
+        print('eids =', eids)
+        print('eids_elements =', eids_elements)
         #print "3 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
         #----------------------------------------------------------------------
         #print('self.obj.element_data\n', self.obj.element_data)
+        #print("ielement_start=%s ielement_end=%s" % (ielement_start, ielement_end))
         #self.obj.element_data['element_id'][ielement_start:ielement_end] = eids_elements
-        #print('self.obj.element_data\n', self.obj.element_data)
+        #self.obj.element_data['element_type'][ielement_start:ielement_end] = etypes
+        print('self.obj.element_data\n', self.obj.element_data)
         #print('eids =', eids)
         #return
         #self.obj.element_data['element_type'][ielement_start:ielement_end] = etypes
         #print('self.obj.element_data\n', self.obj.element_data)
         
         (ko1, ko2, kt12, kt1z, kt2z, kmajor, kminor, kovm) = self.obj._get_headers()
-        print('self.obj.data\n', self.obj.data)
+        #print('self.obj.data\n', self.obj.data)
+        nnodes = inode_end - inode_start
+        
+        msg = "nnodes=%s len(eids)=%s" % (nnodes, len(eids))
+        print(msg)
+
+        msg = "inode_start=%s inode_end=%s" % (inode_start, inode_end)
+        print(msg)
+        assert nnodes == len(eids), msg
         self.obj.data['element_id'][inode_start:inode_end] = eids
-        print('self.obj.data\n', self.obj.data)
+        #print('A bad self.obj.data\n', self.obj.data)
         self.obj.data['layer'][inode_start:inode_end] = layers
+        #print('B bad self.obj.data\n', self.obj.data)
         self.obj.data['o1'][inode_start:inode_end] = o1s
         self.obj.data['o2'][inode_start:inode_end] = o2s
 
@@ -740,8 +763,9 @@ class RealElementsStressStrain2(object):
         if dt:
             name = self.obj.data_code['name']
             self.obj.data[name][inode_start:inode_end] = ones(inode_end - inode_start) * dt
+        #print('C bad self.obj.data\n', self.obj.data)
         self.obj.data['element_id'][inode_start:inode_end] = eids
-        return
+        #return
 
         #self.obj.data[kfd][inode_start:inode_end] = fd
         #print(self.obj.data.keys())
@@ -751,10 +775,13 @@ class RealElementsStressStrain2(object):
 
         #print('len(eids) = ', len(self.obj.data['element_id']))
         #print('inode_end // ntotal = ', inode_end)
-        if self.obj._is_full(nloops):  # broken...
+        #print('bad last self.obj.data\n', self.obj.data)
+        if self.obj._is_full(nloops):
             self.obj._finalize(dt)
+            pass
         else:
             print('increment...')
+        #sys.exit('asdf')
 
     #-------------------------------------------------------------------------
     # plateStress / plateStrain
