@@ -152,7 +152,9 @@ class TemperatureObject(TableObject):  # approach_code=1, sort_code=0, thermal=1
                 pack = []
                 f.write(msg)
                 msg = ''
+            msg += pageStamp + str(pageNum) + '\n'
             pageNum += 1
+        f.write(msg)
         return pageNum -  1
 
     def _write_f06_transient(self, header, pageStamp, f, pageNum=1):
@@ -178,7 +180,7 @@ class TemperatureObject(TableObject):  # approach_code=1, sort_code=0, thermal=1
 
 
 def write_pack(node, grid_type, pack):
-    msg = '      %8i   %4s' % (node, grid_type)
+    msg = '      %8i   %4s    ' % (node, grid_type)
     for p in pack:
         msg += '  %10.6e' % p
     return msg + '\n'
