@@ -627,7 +627,7 @@ class RealElementsStressStrain2(object):
          98 - CTRIA6 (composite)
         """
         etype = self.get_element_type(self.element_type)
-        print("--OES_CQUAD4_95 etype=%s--" % etype)
+        #print("--OES_CQUAD4_95 etype=%s--" % etype)
         dt = self.nonlinear_factor
 
         nloops = len(self.data) // 44  # 2+17*5 = 87 -> 87*4 = 348
@@ -782,6 +782,132 @@ class RealElementsStressStrain2(object):
         else:
             print('increment...')
         #sys.exit('asdf')
+
+    #-------------------------------------------------------------------------
+    # ctriaxStress / ???
+    #-------------------------------------------------------------------------
+    def OES_CTRIAX6_53(self, name):
+        """
+        @todo not done...
+        """
+        dt = self.nonlinear_factor
+        
+        ntotal = 132
+        nelements = len(self.data) // ntotal  # (1+8*4)*4 = 33*4 = 132
+        nnodes = 4 * nelements
+
+        if self.read_mode == 0 or name not in self._selected_names:
+            if name not in self._result_names:
+                self._result_names.append(name)
+            # figure out the shape
+            self.obj._increase_size(dt, nnodes, nelements)
+            iend = ntotal * nelements
+            self.data = self.data[iend:]
+            return
+
+        (inode_start, inode_end, ielement_start, ielement_end
+            ) = self.obj._preallocate(dt, nnodes, nelements)
+        #print('***dt=%s nnodes=%s nelements=%s' % (dt, nnodes, nelements))
+
+        (format1, extract) = self.getOUG_FormatStart()
+        format1 += 'i7f'
+        format1 = bytes(format1)
+
+        ibase = 0
+        #eids_eleemnts=[]; nlayers=[]
+        
+        # one for each node
+        element_ids=[]; node_ids=[]; rss=[]; azss=[]; Ass=[]; sss=[]; maxps=[]; tmaxs=[]; octss=[]
+        
+        for ni in xrange(nelements):
+            (eid, loc, rs, azs, As, ss, maxp, tmax, octs) = unpack(format1, self.data[ibase:ibase + 36])
+            eid = extract(eid, dt)
+            #print("eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs))
+            self.obj.add_new_eid(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
+
+            element_ids += [eid] * 4
+            node_ids.append(0)
+            rss.append(rs)
+            azss.append(azs)
+            Ass.append(As)
+            sss.append(ss)
+            maxps.append(maxp)
+            tmaxs.append(tmax)
+            octss.append(octs)
+
+            ibase += 36  # 4*9
+            for i in xrange(3):
+                (loc, rs, azs, As, ss, maxp, tmax, octs) = unpack(b'i7f', self.data[ibase:ibase + 32])
+                #print("eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs))
+                self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
+
+                node_ids.append(loc)
+                rss.append(rs)
+                azss.append(azs)
+                Ass.append(As)
+                sss.append(ss)
+                maxps.append(maxp)
+                tmaxs.append(tmax)
+                octss.append(octs)
+                ibase += 32  # 4*8
+        self.data = self.data[ibase:]
+        #----------------------------------------------------------------------
+        inode_start = self.obj._inode_start
+        inode_end = inode_start + nnodes
+
+        ielement_start = self.obj._ielement_start
+        ielement_end = ielement_start + nelements
+
+        #print('delta', inode_end - inode_start, len(eids))
+        
+        #nnodes = inode_end - inode_start
+        #nnodes = inode_end - inode_start
+
+        ndt, nelements_size, nnodes_size, dts = self.obj._get_shape()
+        #print("ndt=%s nelements_size=%s nnodes_size=%s dts=%s" % (ndt, nelements_size, nnodes_size, str(dts)))
+
+        if 0:
+            pass
+            #print("inode_start=%r inode_end=%r delta=%r" % (inode_start, inode_end, inode_end-inode_start))
+            #print("ielement_start=%r ielement_end=%r delta=%r" % (ielement_start, ielement_end, ielement_end-ielement_start))
+            #print('len(svm) =', len(svm))
+            #assert nelements == len(eids2), 'nelements=%s len(eids)=%s' % (nelements, len(eids2))
+            #assert len(eids2) == ielement_end - ielement_start, 'ielement_start=%s ielement_end=%s len(eids)=%s' % (ielement_start, ielement_end, len(eids2))
+            #print('len(element_data)=', len(self.obj.element_data))
+            #self.obj.element_data['element_id'][ielement_start:ielement_end] = eids2
+            #print(self.obj.element_data)
+            #self.obj.element_data['element_type'][ielement_start:ielement_end] = eTypes
+            #self.obj.element_data['nnodes'][ielement_start:ielement_end] = ones(nelements)
+
+        #print('nids',nids)
+        #assert len(eids) == 2*nelements, '2*nelements=%s len(eids)=%s' % (2*nelements, len(eids))
+        #assert len(eids) == inode_end - inode_start, 'inode_start=%s inode_end=%s delta=%s len(eids)=%s' % (inode_start, inode_end,
+        #    inode_end - inode_start, len(eids))
+
+        if dt:
+            name = self.obj.data_code['name']
+            nnodes = inode_end - inode_start
+            self.obj.data[name][inode_start:inode_end] = ones(nnodes) * dt
+
+        self.obj.data['element_id'][inode_start:inode_end] = element_ids
+        self.obj.data['node_id'][inode_start:inode_end] = node_ids
+        #print(self.obj.data)
+
+        headers = self.obj._get_headers()
+        #(kfd, koxx, koyy, ktxy, komax, komin, kovm) = headers
+        #(kradial, kazimuthal, kaxial, kshear, komax, koms, kovm) = headers
+        
+        self.obj.data['element_id'][inode_start:inode_end] = element_ids
+        self.obj.data['node_id'][inode_start:inode_end] = node_ids
+        self.obj.data['azs'][inode_start:inode_end] = azss
+        self.obj.data['As'][inode_start:inode_end] = Ass
+        self.obj.data['ss'][inode_start:inode_end] = sss
+        self.obj.data['maxp'][inode_start:inode_end] = maxps
+        self.obj.data['tmax'][inode_start:inode_end] = tmaxs
+        self.obj.data['octs'][inode_start:inode_end] = octss
+
+        if self.obj._is_full(nnodes, nelements):
+            self.obj._finalize(dt)
 
     #-------------------------------------------------------------------------
     # plateStress / plateStrain
