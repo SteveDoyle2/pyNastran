@@ -650,7 +650,7 @@ class RealElementsStressStrain2(object):
                 eData = self.data[ibase:ibase+8]  # 4*11
 
                 (eid, ilayer) = unpack(format1, eData)
-                print('**eid=%s ilayer=%s' % (eid, ilayer))
+                #print('**eid=%s ilayer=%s' % (eid, ilayer))
                 eid = extract(eid, dt)
                 
                 try:
@@ -660,7 +660,7 @@ class RealElementsStressStrain2(object):
                 #nlayers += 1
                 #self.eid2 = eid
                 ibase += 44
-            print('**************eid_nlayer =', eid_nlayer)
+            #print('**************eid_nlayer =', eid_nlayer)
             #print('nlayers =', nlayers)
             #self.data = self.data[ibase:]
 
@@ -713,27 +713,28 @@ class RealElementsStressStrain2(object):
             o2s.append(o2)
 
             if eid != self.eid2:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
-                print("1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,ilayer,o1,o2,ovm))
-                self.obj.add_new_eid(etype, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                #print("1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,ilayer,o1,o2,ovm))
+                #self.obj.add_new_eid(etype, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
                 eids_elements.append(eid)
             else:
-                print("2 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,ilayer,o1,o2,ovm))
-                self.obj.add(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                #print("2 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,ilayer,o1,o2,ovm))
+                #self.obj.add(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                pass
             self.eid2 = eid
             ibase += 44
             #self.dn += 348
         #sys.exit('asf')
 
         self.data = self.data[ibase:]
-        print('eids =', eids)
-        print('eids_elements =', eids_elements)
+        #print('eids =', eids)
+        #print('eids_elements =', eids_elements)
         #print "3 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
         #----------------------------------------------------------------------
         #print('self.obj.element_data\n', self.obj.element_data)
         #print("ielement_start=%s ielement_end=%s" % (ielement_start, ielement_end))
         #self.obj.element_data['element_id'][ielement_start:ielement_end] = eids_elements
         #self.obj.element_data['element_type'][ielement_start:ielement_end] = etypes
-        print('self.obj.element_data\n', self.obj.element_data)
+        #print('self.obj.element_data\n', self.obj.element_data)
         #print('eids =', eids)
         #return
         #self.obj.element_data['element_type'][ielement_start:ielement_end] = etypes
@@ -744,10 +745,10 @@ class RealElementsStressStrain2(object):
         nnodes = inode_end - inode_start
         
         msg = "nnodes=%s len(eids)=%s" % (nnodes, len(eids))
-        print(msg)
+        #print(msg)
 
         msg = "inode_start=%s inode_end=%s" % (inode_start, inode_end)
-        print(msg)
+        #print(msg)
         assert nnodes == len(eids), msg
         self.obj.data['element_id'][inode_start:inode_end] = eids
         #print('A bad self.obj.data\n', self.obj.data)
@@ -778,9 +779,8 @@ class RealElementsStressStrain2(object):
         #print('bad last self.obj.data\n', self.obj.data)
         if self.obj._is_full(nloops):
             self.obj._finalize(dt)
-            pass
-        else:
-            print('increment...')
+        #else:
+            #print('increment...')
         #sys.exit('asdf')
 
     #-------------------------------------------------------------------------

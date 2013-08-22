@@ -33,9 +33,9 @@ class RealCompositePlate(object):
                 self.eid_nlayers[eid][0] += nlayers
             else:
                 self.eid_nlayers[eid] = [nlayers, etype]
-        print("_nlayers =", self._nlayers)
-        for eid, nlayers_etype in eid_nlayers.iteritems():
-            print("**eid=%s alt=%s" % (eid, nlayers_etype))
+        #print("_nlayers =", self._nlayers)
+        #for eid, nlayers_etype in eid_nlayers.iteritems():
+            #print("**eid=%s alt=%s" % (eid, nlayers_etype))
 
     def _preallocate(self, dt, nloops):
         #sys.exit('asdf')
@@ -58,7 +58,7 @@ class RealCompositePlate(object):
 
             nelements = len(self.eid_nlayers)
             ndt = len(self._dts)
-            print("nelements=%s ndt=%s" % (nelements, ndt))
+            #print("nelements=%s ndt=%s" % (nelements, ndt))
             #sys.exit('asdf')
 
             data = {}
@@ -84,7 +84,7 @@ class RealCompositePlate(object):
             ko2 = 'o2'
 
             nnodes = ndt * self._nlayers
-            print("nnodes=%s nloops=%s" % (nnodes, nloops))
+            #print("nnodes=%s nloops=%s" % (nnodes, nloops))
             data2 = {}
             data2['element_id'] = pd.Series(zeros((nnodes), dtype='int32'))
             data2['layer'] = pd.Series(zeros((nnodes), dtype='int32'))
@@ -110,8 +110,8 @@ class RealCompositePlate(object):
     def _is_full(self, nloops):
         #return False
         self._iloop_start += nloops
-        print("_iloop_start=%s _size_loop_end=%s" %(self._iloop_start, self._size_loop_end))
-        print("is_equal=%s" %(self._iloop_start == self._size_loop_end))
+        #print("_iloop_start=%s _size_loop_end=%s" %(self._iloop_start, self._size_loop_end))
+        #print("is_equal=%s" %(self._iloop_start == self._size_loop_end))
         if self._iloop_start == self._size_loop_end:
             return True
         return False
