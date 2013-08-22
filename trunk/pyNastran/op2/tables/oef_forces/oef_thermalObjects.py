@@ -5,8 +5,8 @@ from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
 
 class HeatFlux_VU_3D(ScalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.parent = {}
 
@@ -86,8 +86,8 @@ class HeatFlux_VU_3D(ScalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
 
 
 class HeatFlux_VU(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.parent = {}
         self.coord = {}
@@ -176,8 +176,8 @@ class HeatFlux_VU(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
 
 
 class HeatFlux_VUBEAM(ScalarObject):  # 191-VUBEAM
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.parent = {}
         self.coord = {}
@@ -262,8 +262,8 @@ class HeatFlux_VUBEAM(ScalarObject):  # 191-VUBEAM
 
 
 class HeatFlux_1D(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
         self.grad = {}
         self.flux = {}
@@ -320,8 +320,8 @@ class HeatFlux_1D(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69
 
 
 class HeatFlux_2D_3D(ScalarObject):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 67-HEXA, 68-PENTA, 74-TRIA3, 75-TRIA6
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
         self.grad = {}
         self.flux = {}
@@ -370,8 +370,8 @@ class HeatFlux_2D_3D(ScalarObject):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 6
 
 
 class HeatFlux_CONV(ScalarObject):  # 110-CONV
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         self.cntlNode = {}
         self.freeConv = {}
         self.freeConvK = {}
@@ -436,8 +436,8 @@ class HeatFlux_CONV(ScalarObject):  # 110-CONV
 
 
 class HeatFlux_CHBDYx(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
         self.fApplied = {}
         self.freeConv = {}

@@ -16,21 +16,26 @@ class ThermalElements(object):
             assert self.num_wide == 8, self.code_information()
             self.create_transient_object(self.thermalLoad_CHBDY, HeatFlux_CHBDYx)
             self.handle_results_buffer(self.OEF_CHBDYx,
-                                       resultName='thermalLoad_CHBDY')
+                                       'thermalLoad_CHBDY',
+                                       'thermalLoad_CHBDY')
         elif self.element_type in [33, 39, 67, 68]:  # QUAD4,TETRA,HEXA,PENTA
             assert self.num_wide in [9, 10], self.code_information()
             self.create_transient_object(self.thermalLoad_2D_3D, HeatFlux_2D_3D)
             self.handle_results_buffer(self.OEF_2D_3D,
-                                       resultName='thermalLoad_2D_3D')
+                                       'thermalLoad_2D_3D',
+                                       'thermalLoad_2D_3D')
         elif self.element_type in [53, 64, 74, 75]:  # TRIAX6,QUAD8,TRIA3,TRIA6
             assert self.num_wide == 9, self.code_information()
             self.create_transient_object(self.thermalLoad_2D_3D, HeatFlux_2D_3D)
             self.handle_results_buffer(self.OEF_2D_3D,
-                                       resultName='thermalLoad_2D_3D')
+                                       'thermalLoad_2D_3D',
+                                       'thermalLoad_2D_3D',)
         elif self.element_type in [1, 2, 3, 10, 34, 69]:  # ROD,BEAM,TUBE,CONROD,BAR,BEND
             assert self.num_wide == 9, self.code_information()
             self.create_transient_object(self.thermalLoad_1D, HeatFlux_1D)
-            self.handle_results_buffer(self.OEF_1D, resultName='thermalLoad_1D')
+            self.handle_results_buffer(self.OEF_1D,
+                                       'thermalLoad_1D',
+                                       'thermalLoad_1D')
         elif self.element_type in [189, 190]:  # VUQUAD,VUTRIA
             #assert self.num_wide==27,self.code_information()
             self.create_transient_object(self.thermalLoad_VU, HeatFlux_VU)
@@ -53,7 +58,7 @@ class ThermalElements(object):
         else:
             self.not_implemented_or_skip()
 
-    def OEF_CHBDYx(self):  # [107,108,109]  CHBDYE, CHBDYG, CHBDYP
+    def OEF_CHBDYx(self, name):  # [107,108,109]  CHBDYE, CHBDYG, CHBDYP
         if self.make_op2_debug:
             self.op2Debug.write('---OEF_CHBDYx---\n')
         #device_code = self.device_code
@@ -91,7 +96,7 @@ class ThermalElements(object):
             print("done with OEF_CHBDYx")
         #print(self.thermalLoad_CHBDY)
 
-    def OEF_CONV(self):  # [110]  CONV
+    def OEF_CONV(self, name):  # [110]  CONV
         if self.make_op2_debug:
             self.op2Debug.write('---OEF_CONV---\n')
         #device_code = self.device_code
@@ -128,7 +133,7 @@ class ThermalElements(object):
             print("done with OEF_CONV")
         #print(self.thermalLoad_CHBDY)
 
-    def OEF_VU_Element(self):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
+    def OEF_VU_Element(self, name):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         dt = self.nonlinear_factor
         is_sort1 = self.is_sort1()
         #print "num_wide = ",self.num_wide
@@ -189,7 +194,7 @@ class ThermalElements(object):
             print("done with OEF_1D")
         #print self.thermalLoad_VU
 
-    def OEF_VUBeam_Element(self):  # 191-VUBEAM
+    def OEF_VUBeam_Element(self, name):  # 191-VUBEAM
         dt = self.nonlinear_factor
         is_sort1 = self.is_sort1()
         #print "num_wide = ",self.num_wide
@@ -245,7 +250,7 @@ class ThermalElements(object):
             print("done with OEF_1D")
         #print self.thermalLoad_VUBeam
 
-    def OEF_VU_3D_Element(self):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
+    def OEF_VU_3D_Element(self, name):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
         dt = self.nonlinear_factor
         is_sort1 = self.is_sort1()
         #print "num_wide = ",self.num_wide
@@ -301,7 +306,7 @@ class ThermalElements(object):
             print("done with OEF_VU_3D_Element")
         #print self.thermalLoad_VU_3D
 
-    def OEF_1D(self):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
+    def OEF_1D(self, name):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
         dt = self.nonlinear_factor
         is_sort1 = self.is_sort1()
         #print "num_wide = ",self.num_wide
@@ -338,7 +343,7 @@ class ThermalElements(object):
             print("done with OEF_1D")
         #print self.thermalLoad_1D
 
-    def OEF_2D_3D(self):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 67-HEXA, 68-PENTA, 74-TRIA3, 75-TRIA6
+    def OEF_2D_3D(self, name):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 67-HEXA, 68-PENTA, 74-TRIA3, 75-TRIA6
         """num_wide==10"""
         dt = self.nonlinear_factor
         is_sort1 = self.is_sort1()

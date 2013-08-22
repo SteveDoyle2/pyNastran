@@ -38,10 +38,12 @@ class TableObject(ScalarObject):  # displacement style table
         else:
             dtstring = ''
             msg.append('  real type=%s nnodes=%s\n' % (self.__class__.__name__, nnodes))
+        
+        headers = self._get_headers()
         msg.append('  element_data: index  : node_id\n')
         msg.append('              : results: node_type\n')
         msg.append('  data        : index  : %snode_id\n' % dtstring)
-        msg.append('              : results: T1, T2, T3, R1, R2, R3\n')
+        msg.append('              : results: %s\n' % ', '.join(headers))
         return msg
 
     def is_imaginary(self):
@@ -126,16 +128,15 @@ class TableObject(ScalarObject):  # displacement style table
 
             #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
             #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
-            data['T1'] = pd.Series(zeros((size_end), dtype='float32'))
-            data['T2'] = pd.Series(zeros((size_end), dtype='float32'))
-            data['T3'] = pd.Series(zeros((size_end), dtype='float32'))
-            data['R1'] = pd.Series(zeros((size_end), dtype='float32'))
-            data['R2'] = pd.Series(zeros((size_end), dtype='float32'))
-            data['R3'] = pd.Series(zeros((size_end), dtype='float32'))
+            
+            #['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
+            headers = self._get_headers()
+            for header in headers:
+                data[header] = pd.Series(zeros((size_end), dtype='float32'))
 
             self._size_start = 0
             self._size_end = size_end
-            columns += ['node_id', 'T1', 'T2', 'T3', 'R1', 'R2', 'R3']
+            columns += ['node_id'] + headers
 
             self.data = pd.DataFrame(data, columns=columns)
             self._inode_start = 0
@@ -191,6 +192,9 @@ class TableObject(ScalarObject):  # displacement style table
         ndt, nnodes, dts = self._get_shape()
 
         #print self.data.to_string()
+        headers = self._get_headers()
+        assert headers == ['T1', 'T2', 'T3', 'R1', 'R2', 'R3'], headers
+
         ndata = len(self.data)
         for i in xrange(ndata):
             index = self.data.index[i]
@@ -217,12 +221,19 @@ class TableObject(ScalarObject):  # displacement style table
         f.write(''.join(msg))
         return pageNum
 
+    def _get_headers(self):
+        return ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
+
     def _write_f06_transient_block(self, words, header, pageStamp, f,
                                    pageNum=1):
         msg = []
         #assert f is not None # remove
         ndata = len(self.data)
         classname = self.__class__.__name__
+
+        headers = self._get_headers()
+        assert headers == ['T1', 'T2', 'T3', 'R1', 'R2', 'R3'], headers
+
         i = 0
         while i < ndata:
             index = self.data.index[i]
