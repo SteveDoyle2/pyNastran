@@ -17,26 +17,32 @@ class RealCompositePlate(object):
         self._dts = []
         self._iloop_start = 0
 
-    def isVonMises(self):
-        return True
+    #def isVonMises(self):
+        #return True
 
-    def _increase_size(self, dt, nloops, eid_nlayers):
+    def _increase_size(self, dt, nloops, eid_nlayers, etype):
+        #print('****etype =', etype)
         if dt not in self._dts:
             self._dts.append(dt)
 
-        if self._dti is None or dt == self._dti:
-            self._nlayers += nloops
-            for eid, nlayers in eid_nlayers.iteritems():
-                if eid in self.eid_nlayers:
-                    self.eid_nlayers[eid] += nlayers
-                else:
-                    self.eid_nlayers[eid] = nlayers
+        #if self._dti is None or dt == self._dti:
+        self._nlayers += nloops
+        
+        for eid, nlayers in eid_nlayers.iteritems():
+            if eid in self.eid_nlayers:
+                self.eid_nlayers[eid][0] += nlayers
+            else:
+                self.eid_nlayers[eid] = [nlayers, etype]
+        print("_nlayers =", self._nlayers)
+        for eid, nlayers_etype in eid_nlayers.iteritems():
+            print("**eid=%s alt=%s" % (eid, nlayers_etype))
 
     def _preallocate(self, dt, nloops):
+        #sys.exit('asdf')
         iloop_end = self._iloop_start + nloops
         
         inode_start = self._iloop_start
-        inode_end = self._iloop_start + nloops#iloop_end
+        inode_end = self._iloop_start + nloops #iloop_end
         
         ielement_start = self._iloop_start
         ielement_end = iloop_end
@@ -53,17 +59,26 @@ class RealCompositePlate(object):
             nelements = len(self.eid_nlayers)
             ndt = len(self._dts)
             print("nelements=%s ndt=%s" % (nelements, ndt))
+            #sys.exit('asdf')
 
             data = {}
-            data['element_id'] = pd.Series(zeros((nelements), dtype='int32'))
-            data['nlayer'] = pd.Series(zeros((nelements), dtype='int32'))
-            data['element_type'] = pd.Series(zeros((nelements), dtype='int32'))
+            element_ids = zeros(nelements, dtype='int32')
+            nlayers = zeros(nelements, dtype='int32')
+            etypes = []
+            
+            i = 0
+            for eid, nlayers_etype in sorted(self.eid_nlayers.iteritems()):
+                nlayersi, etype = nlayers_etype
+                element_ids[i] = eid
+                nlayers[i] = nlayersi
+                etypes.append(etype)
+                i += 1
+            
+            data['element_id'] = pd.Series(element_ids)
+            data['nlayer'] = pd.Series(nlayers)
+            data['element_type'] = pd.Series(etypes, dtype='str')
             columns = ['element_id', 'nlayer', 'element_type']
             self.element_data = pd.DataFrame(data, columns=columns)
-
-            #eids_elements = zeros(nelements, 'int32')
-            #nlayers       = zeros(nelements, 'int32')
-            #etype         = zeros(nelements, 'int32')
 
             ko1 = 'o1'
             ko2 = 'o2'
@@ -93,11 +108,50 @@ class RealCompositePlate(object):
         return ndt, nelements, dts
 
     def _is_full(self, nloops):
+        #return False
         self._iloop_start += nloops
+        print("_iloop_start=%s _size_loop_end=%s" %(self._iloop_start, self._size_loop_end))
+        print("is_equal=%s" %(self._iloop_start == self._size_loop_end))
         if self._iloop_start == self._size_loop_end:
             return True
         return False
     
+    def get_element_types(self):
+        output = set([])
+        for eid, nlayer_etype in self.eid_nlayers.iteritems():
+            output.add(nlayer_etype[1])
+        return list(output)
+
+    def get_stats(self):
+        #print("eid_nlayers =", self.eid_nlayers)
+        nelements = len(self.eid_nlayers)
+
+        msg = self._get_data_code()
+        if self.nonlinear_factor is not None:  # transient
+            ntimes = len(self._dts)
+            name = self.data_code['name']
+            dt_string = name + ', '
+            msg.append('  real type=%s n%ss=%s nelements=%s\n'
+                       % (self.__class__.__name__, name, ntimes, nelements))
+        else:
+            dt_string = ''
+            msg.append('  real type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+
+        etypes = self.get_element_types()
+        (o1, o2, t12, t1z, t2z, major, minor, ovm) = self._get_headers()
+        #msg.append('  eType, fiberCurvature, o11, o22, t12, t1z, t2z, angle, '
+                   #'majorP, minorP, ovmShear\n')
+        msg.append('  element_data:index  : element_id\n'
+                   '              :results: nlayer, element_type\n'
+                   '  data        :index  : %selement_id, layer\n' % dt_string)
+
+        msg.append('              :results: %s, %s, %s, %s, %s, angle, %s, %s, %s\n' % (o1, o2,
+                                                                                 t12, t1z, t2z,
+                                                                                 major, minor, ovm))
+        msg.append('  element_types = %s\n' % ', '.join(etypes))
+        return msg
+
     def _finalize(self, dt):
         return
 
@@ -149,23 +203,8 @@ class CompositePlateStressObject(RealCompositePlate, StressObject):
         if self.isVonMises():
             ovm = 'evm'
         else:
-            oon = 'max_shear'
+            ovm = 'max_shear'
         return ('o1', 'o2', 't12', 't1z', 't2z', 'major', 'minor', ovm)
-
-    def get_stats(self):
-        nelements = len(self.eType)
-
-        msg = self._get_data_code()
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.o11)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, fiberCurvature, o11, o22, t12, t1z, t2z, angle, '
-                   'majorP, minorP, ovmShear\n')
-        return msg
 
     def add_f06_data(self, data, transient, eType):
         """
@@ -509,21 +548,8 @@ class CompositePlateStrainObject(RealCompositePlate, StrainObject):
         if self.isVonMises():
             ovm = 'evm'
         else:
-            oon = 'max_shear'
+            ovm = 'max_shear'
         return ('e11', 'e22', 'e12', 'e1z', 'e2z', 'majorP', 'minorP', ovm)
-
-    def get_stats(self):
-        nelements = len(self.eType)
-        msg = self._get_data_code()
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.e11)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, e11, e22, e12, e1z, e2z, angle, majorP, minorP\n')
-        return msg
 
     def get_transients(self):
         k = self.e11.keys()
