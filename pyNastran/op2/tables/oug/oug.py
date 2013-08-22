@@ -545,12 +545,9 @@ class OUG(object):
             obj_data[name][istart : iend] = ones(iend - istart) * dt
         #self.obj.grid_type[istart : iend] = gridTypes
 
-        obj_data['T1'][istart : iend] = translations[:, 0]
-        obj_data['T2'][istart : iend] = translations[:, 1]
-        obj_data['T3'][istart : iend] = translations[:, 2]
-        obj_data['R1'][istart : iend] = translations[:, 3]
-        obj_data['R2'][istart : iend] = translations[:, 4]
-        obj_data['R3'][istart : iend] = translations[:, 5]
+        headers = self.obj._get_headers()
+        for iheader, header in enumerate(headers):
+            obj_data[header][istart : iend] = translations[:, iheader]
 
         #print self.obj.data['dt'].to_string()
         if self.obj._is_full(nnodes):
@@ -620,12 +617,11 @@ class OUG(object):
         if dt:
             self.obj.data['dt'][istart : iend] = ones(inode_end - inode_start) * dt
         #self.obj.grid_type[istart : iend] = gridTypes
-        self.obj.data['T1'][istart : iend] = translations[:, 0]
-        self.obj.data['T2'][istart : iend] = translations[:, 1]
-        self.obj.data['T3'][istart : iend] = translations[:, 2]
-        self.obj.data['R1'][istart : iend] = translations[:, 3]
-        self.obj.data['R2'][istart : iend] = translations[:, 4]
-        self.obj.data['R3'][istart : iend] = translations[:, 5]
+
+
+        headers = self.obj._get_headers()
+        for iheader, header in enumerate(headers):
+            self.obj_data[header][istart : iend] = translations[:, iheader]
 
         #print self.obj.data['dt'].to_string()
         if self.obj._is_full(nnodes):

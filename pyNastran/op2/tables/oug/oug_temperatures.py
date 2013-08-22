@@ -2,23 +2,18 @@
 #import sys
 #from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
+from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
 
 
-class TemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, thermal=1
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.gridTypes = {}
-        self.temperatures = {}
+class TemperatureObject(TableObject):  # approach_code=1, sort_code=0, thermal=1
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        TableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
+        #ScalarObject.__init__(self, data_code, isubcase, read_mode)
+        #self.gridTypes = {}
+        #self.temperatures = {}
+        #self.dt = dt
 
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.addSort2
-
-    def get_stats(self):
+    def _get_stats(self):
         ngrids = len(self.gridTypes)
 
         msg = self._get_data_code()
@@ -101,15 +96,72 @@ class TemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, thermal=
    #             msg += pack('iffffff',grid,T,0,0,0,0,0)
    #     return msg
 
-    def write_header(self):
-        mainHeaders = ('nodeID', 'GridType')
-        headers = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6']
+    def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, pageStamp, f, pageNum)
+        words = ['                                              T E M P E R A T U R E   V E C T O R\n',
+                 ' \n',
+                 '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
+        words += self.get_table_marker()
+        return self._write_f06_block(words, header, pageStamp, f, pageNum)
 
-        msg = '%-10s %-8s ' % mainHeaders
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-        return msg
+    def _get_headers(self):
+        return ['Temperature']
+
+    def _write_f06_transient_block(self, words, header, pageStamp, f, pageNum):
+        ndata = len(self.data)
+        ndt, nnodes, dts = self._get_shape()
+        msg = ''
+        i = 0
+        for dt in dts:
+            index = self.data.index[i]
+            (dt, node_id_start) = index
+            if isinstance(dt, float):  # @todo: fix
+                header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+            else:
+                header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
+            msg += ''.join(header + words)
+
+            pack = []
+            for inode in xrange(nnodes):
+                index = self.data.index[i]
+                (dt, node_id) = index
+                grid_type = 'S'  # TODO: incorrect grid_type
+                T = self.data['Temperature'][index]  # TODO: wrong label
+                pack.append(T)
+                
+                try:
+                    _next_dt, next_node_id = self.data.index[i+1]
+                    next_grid_type = 'S'  # TODO: incorrect grid_type
+                except IndexError:
+                    break # done with writing f06
+                
+                # TODO doesn't check grid type
+                if len(pack) == 6 or (next_node_id != (node_id + 1)): # 6*2 # 6 spots, 2 values
+                    #print pack
+                    msg += write_pack(node_id_start, grid_type, pack)
+                    pack = []
+                    node_id_start = next_node_id
+                if i % 1000:
+                    f.write(msg)
+                    msg = ''
+                i += 1
+
+            if len(pack): # 6*2 # 6 spots, 2 values
+                msg += write_pack(node_id_start, grid_type, pack)
+                pack = []
+                f.write(msg)
+                msg = ''
+            pageNum += 1
+        return pageNum -  1
+
+    def _write_f06_transient(self, header, pageStamp, f, pageNum=1):
+        words = ['                                              T E M P E R A T U R E   V E C T O R\n',
+                 ' \n',
+                 '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
+        words += self.get_table_marker()
+        return self._write_f06_transient_block(words, header, pageStamp, f, pageNum)
+
 
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         words = ['                                              T E M P E R A T U R E   V E C T O R\n',
@@ -117,55 +169,16 @@ class TemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, thermal=
                  '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
         msg = []
         if self.nonlinear_factor is not None:
-            for dt, temperatures in sorted(self.temperatures.iteritems()):
-                dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
-                header[2] = dtLine
-                msg += header + words
-                msg += self.print_temp_lines(temperatures)
-                msg.append(pageStamp + str(pageNum) + '\n')
-                f.write(''.join(msg))
-                msg = ['']
-                pageNum += 1
-            return pageNum - 1  # transient
+            return self._write_f06_transient(header, pageStamp, f, pageNum)
 
         msg += self.print_temp_lines(self.temperatures)
         msg.append(pageStamp + str(pageNum) + '\n')
         f.write(''.join(msg))
         return pageNum  # static
 
-    def print_temp_lines(self, temperatures):
-        msg = []
-        ipack = []
-        oldNodeID = -1
-        oldGridType = None
-        for nodeID, T in sorted(temperatures.iteritems()):
-            gridType = self.gridTypes[nodeID]
 
-            if oldNodeID + 1 == nodeID and gridType == oldGridType:
-                oldNodeID = nodeID
-                ipack.append(T)
-            else:
-                if oldNodeID > 0:
-                    msg += self.print_pack(ipack)
-                oldGridType = gridType
-                oldNodeID = nodeID
-                ipack = [nodeID, gridType, T]
-        if ipack:
-            msg += self.print_pack(ipack)
-        return msg
-
-    def print_pack(self, ipack):
-        msg = []
-        nID = ipack[0]
-        gType = ipack[1]
-        while len(ipack) > 8:
-            nID = ipack[0]
-            packOut = ipack[:8]
-            ipack = [nID + 6, gType] + ipack[8:]
-            msg.append('      %8i   %4s      %10.6E   %10.6E   %10.6E   %10.6E   %10.6E   %10.6E\n' % (tuple(packOut)))
-
-        if ipack:
-            fmt = '      %8i   %4s   ' + '   %10.6E' * (len(ipack) - 2) + '\n'
-            out = fmt % (tuple(ipack))
-            msg.append(out)
-        return msg
+def write_pack(node, grid_type, pack):
+    msg = '      %8i   %4s' % (node, grid_type)
+    for p in pack:
+        msg += '  %10.6e' % p
+    return msg + '\n'
