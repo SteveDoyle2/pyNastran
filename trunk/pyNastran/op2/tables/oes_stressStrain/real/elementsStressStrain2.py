@@ -1137,7 +1137,7 @@ class RealElementsStressStrain2(object):
             major.append(major2)
             svm.append(ovm1)
             svm.append(ovm2)
-            eTypes.append('CQUAD4_33')
+            eTypes.append('CQUAD4')
         
         from numpy import array
         eTypes = array(eTypes)

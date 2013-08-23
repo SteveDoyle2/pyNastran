@@ -180,13 +180,13 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
         raise
     except SyntaxError: #Param Parse
         isPassed = True
-    #except:
-        ##print e
-        #print_exc(file=sys.stdout)
-        #if stopOnFailure:
-            #raise
-        #else:
-            #isPassed = False
+    except:
+        #print e
+        print_exc(file=sys.stdout)
+        if stopOnFailure:
+            raise
+        else:
+            isPassed = False
 
     return isPassed
 
@@ -231,8 +231,6 @@ def run_arg_parse():
 def main():
     #op2FileName = r'C:\NASA\m4\formats\pynastran_v0.7\models\beam_modes\beam_modes_m1.op2'
     #op2FileName = r'C:\NASA\m4\formats\pynastran_v0.7\models\plate\plate.op2'
-    op2FileName = r'C:\Users\sdoyle\Desktop\move\solid_shell_bar\solid_shell_bar.op2'
-    #op2FileName = r'C:\Users\sdoyle\Desktop\move\tria_test_singles.op2'
     make_geom = False
     write_bdf = False
     write_f06 = True

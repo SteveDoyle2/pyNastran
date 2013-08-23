@@ -11,7 +11,7 @@ class NonlinearGapStressObject(StressObject):
         self.eType = {}
         self.element_name = self.data_code['element_name']
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
         self.compX = {}
         self.shearY = {}
         self.shearZ = {}

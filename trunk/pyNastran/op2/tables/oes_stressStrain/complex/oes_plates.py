@@ -17,14 +17,14 @@ class ComplexPlateStressObject(StressObject):
   0       100    CEN/8  -2.500000E-02    0.0          /  0.0             0.0          /  0.0             0.0          /  0.0
                          2.500000E-02    0.0          /  0.0             0.0          /  0.0             0.0          /  0.0
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         #print "making complex plate stress obj"
-        StressObject.__init__(self, data_code, isubcase)
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
 
         #self.append_data_member('sCodes','s_code')
         #print "self.s_code = ",self.s_code
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.fiberCurvature = {}
         self.oxx = {}
@@ -49,10 +49,11 @@ class ComplexPlateStressObject(StressObject):
         msg = self._get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.oxx)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            name = self.data_code['name']
+            msg.append('  imaginary type=%s n%ss=%s nelements=%s\n'
+                       % (self.__class__.__name__, name, ntimes, nelements))
         else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+            msg.append('  imaginary type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
         msg.append('  eType, fiberCurvature, oxx, oyy, txy\n')
         return msg
@@ -682,11 +683,11 @@ class ComplexPlateStrainObject(StrainObject):
       ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)          MAX
         ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR         SHEAR
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StrainObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StrainObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #print self.data_code
         self.fiberCurvature = {}

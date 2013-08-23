@@ -12,7 +12,7 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 
 class ComplexElementsStressStrain(object):
 
-    def OES_Rod1_alt(self):
+    def OES_Rod1_alt(self, name):
         """
         genericStressReader - works on CROD_1, CELAS2_12
         stress & strain
@@ -45,7 +45,7 @@ class ComplexElementsStressStrain(object):
             n += nTotal
         self.data = self.data[n:]
 
-    def OES_Elas1_alt(self):
+    def OES_Elas1_alt(self, name):
         """
         genericStressReader - works on CROD_1, CELAS2_12
         stress & strain
@@ -75,7 +75,7 @@ class ComplexElementsStressStrain(object):
             n += nTotal
         self.data = self.data[n:]
 
-    def OES_CBAR_34_alt(self):
+    def OES_CBAR_34_alt(self, name):
         dt = self.nonlinear_factor
         #print "len(data) = ",len(self.data)
         assert self.num_wide == 19, 'invalid num_wide...num_wide=%s' % (
@@ -127,7 +127,7 @@ class ComplexElementsStressStrain(object):
             #print "         s1=%i s2=%i s3=%i s4=%i"          %(s1b,s2b,s3b,s4b)
             #print "len(data) = ",len(self.data)
 
-    def OES_CQUAD4_33_alt(self):
+    def OES_CQUAD4_33_alt(self, name):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY
         """
@@ -222,7 +222,7 @@ class ComplexElementsStressStrain(object):
             #self.print_section(100)
             #self.dn += 348
 
-    def OES_CQUAD4NL_90_alt(self):
+    def OES_CQUAD4NL_90_alt(self, name):
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
 
@@ -252,7 +252,7 @@ class ComplexElementsStressStrain(object):
             if self.make_op2_debug:
                 self.op2Debug.write('%s\n' % (str(out)))
 
-    def OES_CBUSH1D_40_alt(self):
+    def OES_CBUSH1D_40_alt(self, name):
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
         is_magnitude_phase = self.is_magnitude_phase()
@@ -284,7 +284,7 @@ class ComplexElementsStressStrain(object):
 
             self.obj.add_new_eid(self.element_type, dt, eid, fe, ue, ao, ae)
 
-    def OES_CBUSH_102_alt(self):
+    def OES_CBUSH_102_alt(self, name):
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
         is_magnitude_phase = self.is_magnitude_phase()
@@ -321,7 +321,7 @@ class ComplexElementsStressStrain(object):
             #data = (eid, tx, ty, tz, rx, ry, rz)
             self.obj.add_new_eid(self.element_type, dt, eid, tx, ty, tz, rx, ry, rz)
 
-    def OES_CQUAD4_144_alt(self):
+    def OES_CQUAD4_144_alt(self, name):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
@@ -437,7 +437,7 @@ class ComplexElementsStressStrain(object):
             #print "len(data) = ",len(self.data)
             #self.dn += 348
 
-    def OES_CTRIA3_74_alt(self):  # in progress
+    def OES_CTRIA3_74_alt(self, name):  # in progress
         """
         DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR,MINOR,VONMISES
         stress is extracted at the centroid

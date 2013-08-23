@@ -817,7 +817,7 @@ class OP2(BDF,
                       "      ASSIGN OUTPUT2 = '%s', UNIT = 12, FORM = FORMATTED\n"
                       '  3.  Run the problem on a different Operating System\n'
                       '  4.  Are you running an OP2? :)  \n'
-                      'fname=%s' % (self.op2FileName, self.op2FileName))
+                      'fname=%s' % (self.op2_filename, self.op2_filename))
                 raise RuntimeError("Tape Code Error: %s" % msg)
 
             isAnotherTable = True

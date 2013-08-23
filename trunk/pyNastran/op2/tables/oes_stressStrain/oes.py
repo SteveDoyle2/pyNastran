@@ -798,6 +798,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain, RealElementsStr
             if self.num_wide == numWideReal:
                 resultName = self.makeOES_Object(self.bush1dStressStrain, Bush1DStressObject, 'bush1dStressStrain',
                                                  self.bush1dStressStrain, Bush1DStressObject, 'bush1dStressStrain')
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.handle_results_buffer(self.OES_CBUSH1D_40, resultName, name)
             elif self.num_wide==numWideImag:
                 resultName = self.makeOES_Object(self.bush1dStressStrain, ComplexBush1DStressObject, 'bush1dStressStrain',
@@ -960,7 +961,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain, RealElementsStr
         else:
             msg = '%s-OES format%s element_type=%-3s -> %s is not supported - fname=%s\n' % (self.table_name, self.format_code, self.element_type, self.get_element_type(self.element_type), self.op2_filename.strip())
             self.log.debug(msg)
-            self.skippedCardsFile.write(msg)
+            #self.skippedCardsFile.write(msg)
             self.not_implemented_or_skip()
 
         #elif self.element_type == 1:    # crod     (done)

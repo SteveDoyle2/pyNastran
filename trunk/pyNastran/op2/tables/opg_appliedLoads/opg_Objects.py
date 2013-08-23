@@ -4,8 +4,8 @@ from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
 class AppliedLoadsObject(ScalarObject):  # approach_code=1, sort_code=0
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         self.dt = dt
 
         self.eids = {}

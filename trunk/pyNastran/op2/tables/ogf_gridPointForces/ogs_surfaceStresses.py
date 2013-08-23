@@ -4,8 +4,8 @@ from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats10E
 
 class GridPointStressesObject(ScalarObject):
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        ScalarObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         self.nx = {}
         self.ny = {}
         self.txy = {}

@@ -138,7 +138,7 @@ class BeamResultsObject(object):
         #print(self.data.to_string())
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = self._get_data_code()
         if None not in self.shape:  # transient
             name = self.data_code['name']
             dt_string = name + ', '
@@ -155,11 +155,11 @@ class BeamResultsObject(object):
             nelements = len(self.data['smax'])
             msg.append('  real type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
-        #headers = self._get_headers()
-        #(ksxc, ksxd, ksxe, ksxf, ksmax, ksmin, mst, msc) = headers
+        headers = self._get_headers()
+        (ksxc, ksxd, ksxe, ksxf, ksmax, ksmin, mst, msc) = headers
         msg.append('  data        : index :  %selement_id\n' % dt_string)
         msg.append('              : result:  xxb, %s, %s, %s, %s, %s, %s, %s, %s\n' %(ksxc, ksxd, ksxe, ksxf,
-                                                                                      ksxmax, ksxmin, mst, msc))
+                                                                                      ksmax, ksmin, mst, msc))
         #msg.append('  eType, xxb, grids, smax, smin, MS_tension, '
         #           'MS_compression, sxc, sxd, sxe, sxf\n')
         return msg

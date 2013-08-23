@@ -8,7 +8,7 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 
 class ComplexForces(object):
 
-    def OEF_Rod_alt(self):  # 1-CROD, 3-CTUBE, 10-CONROD
+    def OEF_Rod_alt(self, name):  # 1-CROD, 3-CTUBE, 10-CONROD
         #device_code = self.device_code
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
@@ -40,7 +40,7 @@ class ComplexForces(object):
             #print "len(data) = ",len(self.data)
         #print self.rodForces
 
-    def OEF_Beam_alt(self):  # 2-CBEAM
+    def OEF_Beam_alt(self, name):  # 2-CBEAM
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         is_magnitude_phase = self.is_magnitude_phase()
@@ -103,7 +103,7 @@ class ComplexForces(object):
             #print "len(data) = ",len(self.data)
         #print self.beamForces
 
-    def OEF_Shear_alt(self):  # 4-CSHEAR
+    def OEF_Shear_alt(self, name):  # 4-CSHEAR
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '32f'
@@ -148,7 +148,7 @@ class ComplexForces(object):
             #print "len(data) = ",len(self.data)
         #print self.shearForces
 
-    def OEF_Spring_alt(self):  # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
+    def OEF_Spring_alt(self, name):  # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ff'
@@ -177,7 +177,7 @@ class ComplexForces(object):
             #print "len(data) = ",len(self.data)
         #print self.springForces
 
-    def OEF_CVisc_alt(self):  # 24-CVISC
+    def OEF_CVisc_alt(self, name):  # 24-CVISC
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '4f'
@@ -208,7 +208,7 @@ class ComplexForces(object):
             #print "len(data) = ", len(self.data)
         #print self.viscForces
 
-    def OEF_CBar_alt(self):  # 34-CBAR
+    def OEF_CBar_alt(self, name):  # 34-CBAR
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '16f'
@@ -252,7 +252,7 @@ class ComplexForces(object):
             #print "len(data) = ",len(self.data)
         #print self.barForces
 
-    def OEF_Plate_alt(self):  # 33-CQUAD4,74-CTRIA3
+    def OEF_Plate_alt(self, name):  # 33-CQUAD4,74-CTRIA3
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '16f'
@@ -296,7 +296,7 @@ class ComplexForces(object):
             #print "len(data) = ",len(self.data)
         #print self.plateForces
 
-    def OEF_Plate2_alt(self):  # 64-CQUAD8,70-CTRIAR,75-CTRIA6,82-CQUAD8,144-CQUAD4-bilinear
+    def OEF_Plate2_alt(self, name):  # 64-CQUAD8,70-CTRIAR,75-CTRIA6,82-CQUAD8,144-CQUAD4-bilinear
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '4s'
@@ -382,7 +382,7 @@ class ComplexForces(object):
                 #print "len(data) = ",len(self.data)
         #print self.plateForces2
 
-    def OEF_Bend_alt(self):  # 69-CBEND
+    def OEF_Bend_alt(self, name):  # 69-CBEND
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'i25f'
@@ -443,7 +443,7 @@ class ComplexForces(object):
             #print "len(data) = ",len(self.data)
         #print self.bendForces
 
-    def OEF_PentaPressure_alt(self):  # 76-CHEXA_PR,77-CPENTA_PR,78-CTETRA_PR
+    def OEF_PentaPressure_alt(self, name):  # 76-CHEXA_PR,77-CPENTA_PR,78-CTETRA_PR
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '8s13f'
@@ -484,7 +484,7 @@ class ComplexForces(object):
             #print "len(data) = ",len(self.data)
         #print self.bendForces
 
-    def OEF_CBush_alt(self):  # 102-CBUSH
+    def OEF_CBush_alt(self, name):  # 102-CBUSH
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '12f'
@@ -524,7 +524,7 @@ class ComplexForces(object):
             #print "len(data) = ",len(self.data)
         #print self.bushForces
 
-    def OEF_Force_VU_alt(self):  # 191-VUBEAM
+    def OEF_Force_VU_alt(self, name):  # 191-VUBEAM
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '2i4s'
@@ -587,7 +587,7 @@ class ComplexForces(object):
             self.obj.add(nNodes, dt, dataIn)
             #print "len(data) = ",len(self.data)
 
-    def OEF_Force_VUTRIA_alt(self):  # 189-VUQUAD,190-VUTRIA
+    def OEF_Force_VUTRIA_alt(self, name):  # 189-VUQUAD,190-VUTRIA
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ii4sii'

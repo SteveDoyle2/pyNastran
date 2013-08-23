@@ -807,7 +807,7 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
 
 class ComplexCBarForce(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
-        scalarObject.__init__(self, data_code, isubcase, read_mode)
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = {}
         self.bendingMomentA = {}
         self.bendingMomentB = {}
