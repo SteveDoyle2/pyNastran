@@ -324,8 +324,7 @@ class OEF(ThermalElements, RealForces, ComplexForces):
                 self.create_transient_object(self.shearForces, RealCShearForce)
                 self.handle_results_buffer(self.OEF_Shear, resultName, name)
             elif self.num_wide == numWideImag:
-                self.create_transient_object(
-                    self.shearForces, ComplexCShearForce)
+                self.create_transient_object(self.shearForces, ComplexCShearForce)
                 self.handle_results_buffer(self.OEF_Shear_alt, resultName, name)
             else:
                 self.not_implemented_or_skip()
@@ -337,8 +336,7 @@ class OEF(ThermalElements, RealForces, ComplexForces):
                 self.create_transient_object(self.springForces, RealSpringForce)
                 self.handle_results_buffer(self.OEF_Spring, resultName, name)
             elif self.num_wide == numWideImag:
-                self.create_transient_object(
-                    self.springForces, ComplexSpringForce)
+                self.create_transient_object(self.springForces, ComplexSpringForce)
                 self.handle_results_buffer(self.OEF_Spring_alt, resultName, name)
             else:
                 self.not_implemented_or_skip()
@@ -457,12 +455,13 @@ class OEF(ThermalElements, RealForces, ComplexForces):
             if self.num_wide == numWideReal:
                 self.create_transient_object(self.solidPressureForces,
                                            RealPentaPressureForce)
-                self.handle_results_buffer(self.OEF_PentaPressure, resultName, name)
+                self.handle_results_buffer(self.OEF_PentaPressure,
+                                           resultName, name)
             elif self.num_wide == numWideImag:
                 self.create_transient_object(self.solidPressureForces,
                                            ComplexPentaPressureForce, name)
-                self.handle_results_buffer(
-                    self.OEF_PentaPressure_alt, resultName)
+                self.handle_results_buffer(self.OEF_PentaPressure_alt,
+                                           resultName, name)
             else:
                 self.not_implemented_or_skip()
         #elif self.element_type in [95,96,97,98]: # composite CQUAD4,CQUAD8,CTRIA3,CTRIA6
@@ -493,8 +492,7 @@ class OEF(ThermalElements, RealForces, ComplexForces):
             elif self.num_wide == numWideImag:
                 self.create_transient_object(
                     self.force_VU_2D, ComplexForce_VU_2D)
-                self.handle_results_buffer(
-                    self.OEF_Force_VUTRIA_alt, resultName)
+                self.handle_results_buffer(self.OEF_Force_VUTRIA_alt, resultName, name)
             else:
                 self.not_implemented_or_skip()
         elif self.element_type in [191]:  # VUBEAM

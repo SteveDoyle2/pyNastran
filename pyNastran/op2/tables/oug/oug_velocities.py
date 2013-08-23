@@ -2,7 +2,7 @@ from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObj
 
 
 class VelocityObject(TableObject):  # approach_code=10, thermal=0
-    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
     def write_matlab(self, isubcase, f, is_mag_phase=False):
@@ -26,12 +26,12 @@ class VelocityObject(TableObject):  # approach_code=10, thermal=0
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         words += self.get_table_marker()
-        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f)
+        return self._write_f06_transient_block(words, header, pageStamp, f, pageNum)
 
 
 class ComplexVelocityObject(ComplexTableObject):  # table_code=10, approach_code=???
-    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
-        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_modes)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
     def write_matlab(self, isubcase, f, is_mag_phase=False):
         name = 'velocities'

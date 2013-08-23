@@ -16,11 +16,11 @@ class ComplexBush1DStressObject(StressObject):
                   1     ENDA          9.331276E+04   9.331276E+04   9.331276E+04   9.331276E+04        0.0
                                       180.0000         0.0            0.0          180.0000              0.0
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.element_force = {}
         self.axial_displacement = {}

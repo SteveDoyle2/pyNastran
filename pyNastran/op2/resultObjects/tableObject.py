@@ -8,17 +8,132 @@ from pyNastran import update_index
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
-
-class TableObject(ScalarObject):  # displacement style table
-    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
-        ScalarObject.__init__(self, data_code, isubcase, read_mode)
-        self.nonlinear_factor = None
-        self.table_name = None
-        self.analysis_code = None
+class BaseTable(object):
+    def __init__(self):
         self.shape = {}
         self._inode_start = None
         self._inode_end = None
         self.data = None
+
+    def _preallocate(self, dt, nnodes):
+        if self.shape is None:
+            self._inode_start += nnodes
+            self._inode_end += nnodes
+        elif self.data is not None:
+            #print "data =", self.data
+            return self._inode_start, self._inode_end
+        else:
+            ndt, nnodes, dts = self._get_shape()
+            #print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
+
+            data = {}
+            columns = []
+            indexs = []
+            size_end = ndt * nnodes
+            if dts[0] is not None:
+                name = self.data_code['name']
+                if isinstance(dt, int):
+                    data[name] = pd.Series(zeros((size_end), dtype='int32'))
+                else:
+                    data[name] = pd.Series(zeros((size_end), dtype='float32'))
+                columns.append(name)
+                indexs = [name]
+            data['node_id'] = pd.Series(zeros((size_end), dtype='int32'))
+            indexs.append('node_id')
+
+            #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
+            #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
+            float_complex = self._get_float_complex()
+
+            #['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
+            headers = self._get_headers()
+            for header in headers:
+                data[header] = pd.Series(zeros((size_end), dtype=float_complex))
+
+            self._size_start = 0
+            self._size_end = size_end
+            columns += ['node_id'] + headers
+
+            self.data = pd.DataFrame(data, columns=columns)
+            self._inode_start = 0
+            self._inode_end = nnodes
+        return self._inode_start, self._inode_end
+
+    def _is_full(self, nnodes):
+        self._size_start += nnodes
+        if self._size_start == self._size_end:
+            return True
+        return False
+
+    def _get_headers(self):
+        return ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
+
+    def _finalize(self):
+        ndt, nnodes, dts = self._get_shape()
+
+        mapper = {
+            1 : 'G',
+        }
+        #grid_type_str = []
+        #for grid_type in self.grid_type:
+            #grid_type_str.append(mapper[grid_type])
+        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
+
+        if update_index:
+            if dts[0] is not None:
+                name = self.data_code['name']
+                self.data = self.data.set_index([name, 'node_id'])
+            else:
+                self.data = self.data.set_index('node_id')
+
+        #print "final\n", self.data
+        del self._inode_start
+        del self._inode_end
+
+    def _increase_size(self, dt, nnodes):
+        #self.shape += 1
+        if dt in self.shape:  # default dictionary
+            self.shape[dt] += nnodes
+        else:
+            self.shape[dt] = nnodes
+            #self.n_nonlinear += 1
+
+    def _get_shape(self):
+        ndt = len(self.shape)
+        dts = self.shape.keys()
+        shape0 = dts[0]
+        nnodes = self.shape[shape0]
+        #print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
+        return ndt, nnodes, dts
+
+    def get_stats(self):
+        ndt, nnodes, dts = self._get_shape()
+        msg = self._get_data_code()
+        
+        real_imag = 'real' if self.is_real() else 'imaginary'
+        if dts[0] is not None:
+            name = self.data_code['name']
+            dtstring = name + ', '
+            msg.append('  %s type=%s n%ss=%s nnodes=%s\n'
+                       % (real_imag, self.__class__.__name__, name, ndt, nnodes))
+        else:
+            dtstring = ''
+            msg.append('  %s type=%s nnodes=%s\n' % (real_imag, self.__class__.__name__, nnodes))
+        headers = self._get_headers()
+        msg.append('  element_data: index  : node_id\n')
+        msg.append('              : results: node_type\n')
+        msg.append('  data        : index  : %snode_id\n' % dtstring)
+        msg.append('              : results: %s\n' % ', '.join(headers))
+        return msg
+
+
+class TableObject(BaseTable, ScalarObject):  # displacement style table
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        BaseTable.__init__(self)
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
+        self.nonlinear_factor = None
+        self.table_name = None
+        self.analysis_code = None
         self.nnonlinear = 0
 
         # new method, not finished
@@ -26,25 +141,8 @@ class TableObject(ScalarObject):  # displacement style table
         self.gridTypes2 = {}
         self.dt = dt
 
-    def get_stats(self):
-        ndt, nnodes, dts = self._get_shape()
-
-        msg = self._get_data_code()
-        if dts[0] is not None:
-            name = self.data_code['name']
-            dtstring = name + ', '
-            msg.append('  real type=%s n%ss=%s nnodes=%s\n'
-                       % (self.__class__.__name__, name, ndt, nnodes))
-        else:
-            dtstring = ''
-            msg.append('  real type=%s nnodes=%s\n' % (self.__class__.__name__, nnodes))
-        
-        headers = self._get_headers()
-        msg.append('  element_data: index  : node_id\n')
-        msg.append('              : results: node_type\n')
-        msg.append('  data        : index  : %snode_id\n' % dtstring)
-        msg.append('              : results: %s\n' % ', '.join(headers))
-        return msg
+    def _get_float_complex(self):
+        return 'float32'
 
     def is_imaginary(self):
         return False
@@ -100,93 +198,6 @@ class TableObject(ScalarObject):  # displacement style table
             self.translations[dt][nodeID] = array([t1, t2, t3])
             self.rotations[dt][nodeID] = array([r1, r2, r3])
 
-    def _preallocate(self, dt, nnodes):
-        if self.shape is None:
-            self._inode_start += nnodes
-            self._inode_end += nnodes
-        elif self.data is not None:
-            #print "data =", self.data
-            return self._inode_start, self._inode_end
-        else:
-            ndt, nnodes, dts = self._get_shape()
-            #print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
-
-            data = {}
-            columns = []
-            indexs = []
-            size_end = ndt * nnodes
-            if dts[0] is not None:
-                name = self.data_code['name']
-                if isinstance(dt, int):
-                    data[name] = pd.Series(zeros((size_end), dtype='int32'))
-                else:
-                    data[name] = pd.Series(zeros((size_end), dtype='float32'))
-                columns.append(name)
-                indexs = [name]
-            data['node_id'] = pd.Series(zeros((size_end), dtype='int32'))
-            indexs.append('node_id')
-
-            #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
-            #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
-            
-            #['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
-            headers = self._get_headers()
-            for header in headers:
-                data[header] = pd.Series(zeros((size_end), dtype='float32'))
-
-            self._size_start = 0
-            self._size_end = size_end
-            columns += ['node_id'] + headers
-
-            self.data = pd.DataFrame(data, columns=columns)
-            self._inode_start = 0
-            self._inode_end = nnodes
-        return self._inode_start, self._inode_end
-
-    def _is_full(self, nnodes):
-        self._size_start += nnodes
-        if self._size_start == self._size_end:
-            return True
-        return False
-
-    def _finalize(self):
-        ndt, nnodes, dts = self._get_shape()
-
-        mapper = {
-            1 : 'G',
-        }
-        #grid_type_str = []
-        #for grid_type in self.grid_type:
-            #grid_type_str.append(mapper[grid_type])
-        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
-
-        if update_index:
-            if dts[0] is not None:
-                name = self.data_code['name']
-                self.data = self.data.set_index([name, 'node_id'])
-            else:
-                self.data = self.data.set_index('node_id')
-
-        #print "final\n", self.data
-        del self._inode_start
-        del self._inode_end
-
-    def _increase_size(self, dt, nnodes):
-        #self.shape += 1
-        if dt in self.shape:  # default dictionary
-            self.shape[dt] += nnodes
-        else:
-            self.shape[dt] = nnodes
-            #self.n_nonlinear += 1
-
-    def _get_shape(self):
-        ndt = len(self.shape)
-        dts = self.shape.keys()
-        shape0 = dts[0]
-        nnodes = self.shape[shape0]
-        #print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
-        return ndt, nnodes, dts
-
     def _write_f06_block(self, words, header, pageStamp, f, pageNum=1):
         msg = words
         ndt, nnodes, dts = self._get_shape()
@@ -221,16 +232,12 @@ class TableObject(ScalarObject):  # displacement style table
         f.write(''.join(msg))
         return pageNum
 
-    def _get_headers(self):
-        return ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
-
     def _write_f06_transient_block(self, words, header, pageStamp, f,
                                    pageNum=1):
         msg = []
         #assert f is not None # remove
         ndata = len(self.data)
         classname = self.__class__.__name__
-
         headers = self._get_headers()
         assert headers == ['T1', 'T2', 'T3', 'R1', 'R2', 'R3'], headers
 
@@ -348,37 +355,22 @@ class TableObject(ScalarObject):  # displacement style table
         return words
 
 
-class ComplexTableObject(ScalarObject):
+class ComplexTableObject(BaseTable, ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        BaseTable.__init__(self)
+        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         self.nonlinear_factor = None
         self.table_name = None
         self.analysis_code = None
-        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         self.gridTypes = {}
         self.translations = {}
         self.rotations = {}
-        self._inode_start = None
-        self._inode_end = None
+        #self._inode_start = None
+        #self._inode_end = None
         self.dt = dt
 
-    def get_stats(self):
-        ndt, ngrids, dts = self._get_shape()
-        msg = self._get_data_code()
-
-        if self.nonlinear_factor is not None:  # transient
-            name = self.data_code['name']
-            dt_string = name + ', '
-            msg.append('  imaginary type=%s n%ss=%s nnodes=%s\n'
-                       % (self.__class__.__name__, name, ndt, ngrids))
-        else:
-            dt_string = ''
-            msg.append('  imaginary type=%s ngrids=%s\n'
-                       % (self.__class__.__name__, ngrids))
-        msg.append('  element_data: index  : node_id\n')
-        msg.append('              : results: node_type\n')
-        msg.append('  data        : index  : %snode_id\n' % dt_string)
-        msg.append('              : results: T1, T2, T3, R1, R2, R3\n')
-        return msg
+    def _get_float_complex(self):
+        return 'complex64'
 
     def is_imaginary(self):
         return True
@@ -419,79 +411,6 @@ class ComplexTableObject(ScalarObject):
         self.data_code = data_code
         self.apply_data_code()
 
-    def _preallocate(self, dt, nnodes):
-        if self.shape is None:
-            self._inode_start += nnodes
-            self._inode_end += nnodes
-        else:
-            ndt, nnodes, dts = self._get_shape()
-            #print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
-
-            data = {}
-            columns = []
-            indexs = []
-            if dts[0] is not None:
-                name = self.data_code['name']
-                if isinstance(dt, int):
-                    data[name] = pd.Series(zeros((ndt * nnodes), dtype='int32'))
-                else:
-                    data[name] = pd.Series(zeros((ndt * nnodes), dtype='float32'))
-                columns.append(name)
-                indexs = [name]
-            data['node_id'] = pd.Series(zeros((ndt * nnodes), dtype='int32'))
-            indexs.append('node_id')
-
-            #data['grid_type'] = pd.Series(zeros(ndt), dtype='int32'))
-            #data['grid_type_str'] = pd.Series(zeros(nnodes), dtype='str'))
-            n = ndt * nnodes
-            data['T1'] = pd.Series(zeros((n), dtype='complex64'))
-            data['T2'] = pd.Series(zeros((n), dtype='complex64'))
-            data['T3'] = pd.Series(zeros((n), dtype='complex64'))
-            data['R1'] = pd.Series(zeros((n), dtype='complex64'))
-            data['R2'] = pd.Series(zeros((n), dtype='complex64'))
-            data['R3'] = pd.Series(zeros((n), dtype='complex64'))
-            columns += ['node_id', 'T1', 'T2', 'T3', 'R1', 'R2', 'R3']
-
-            self.data = pd.DataFrame(data, columns=columns)
-            self._inode_start = 0
-            self._inode_end = nnodes
-        return self._inode_start, self._inode_end
-
-    def _finalize(self):
-        ndt, nnodes, dts = self._get_shape()
-
-        mapper = {
-            1 : 'G',
-        }
-        #grid_type_str = []
-        #for grid_type in self.grid_type:
-            #grid_type_str.append(mapper[grid_type])
-        #self.grid_type_str = pd.Series(grid_type_str, dtype='str')
-
-        if dts[0] is not None:
-            name = self.data_code['name']
-            self.data = self.data.set_index([name, 'node_id'])
-        else:
-            self.data = self.data.set_index('node_id')
-        #print "final\n", self.data
-        del self._inode_start
-        del self._inode_end
-
-    def _increase_size(self, dt, nnodes):
-        #self.shape += 1
-        if dt in self.shape:  # default dictionary
-            self.shape[dt] += nnodes
-        else:
-            self.shape[dt] = nnodes
-
-    def _get_shape(self):
-        ndt = len(self.shape)
-        dts = self.shape.keys()
-        shape0 = dts[0]
-        nnodes = self.shape[shape0]
-        #print "ndt=%s nnodes=%s dts=%s" % (ndt, nnodes, str(dts))
-        return ndt, nnodes, dts
-
     def _write_f06_block(self, words, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         #words += self.getTableMarker()
         if is_mag_phase:
@@ -520,40 +439,66 @@ class ComplexTableObject(ScalarObject):
         f.write(''.join(msg))
         return pageNum
 
-    def _write_f06_transient_block(self, words, header, pageStamp, f, pageNum=1, is_mag_phase=False):
-        asdf
+    def _write_f06_transient_block(self, words, header, pageStamp, f,
+                                   pageNum=1, is_mag_phase=False):
         if is_mag_phase:
             words += ['                                                         (MAGNITUDE/PHASE)\n', ]
         else:
             words += ['                                                          (REAL/IMAGINARY)\n', ]
 
         words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        #words += self.getTableMarker()
 
         msg = []
-        #assert f is not None
-        for dt, translations in sorted(self.translations.iteritems()):
-            #print "dt = ",dt
-            #sys.stdout.flush()
-            header[2] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+        #assert f is not None # remove
+        ndata = len(self.data)
+        classname = self.__class__.__name__
+        i = 0
+        while i < ndata:
+            index = self.data.index[i]
+            (dt, node_id) = index
+            dt_old = dt
+            if isinstance(dt, float):  # @todo: fix
+                #header[1] = ' %s = %10.4E float %s\n' % (self.data_code['name'], dt, self.analysis_code)
+                header[2] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+            else:
+                #header[1] = ' %s = %10i integer %s\n' % (self.data_code['name'], dt, self.analysis_code)
+                header[2] = ' %s = %10i\n' % (self.data_code['name'], dt)
             msg += header + words
-            for nodeID, translation in sorted(translations.iteritems()):
-                rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
 
-                (dx, dy, dz) = translation
-                (rx, ry, rz) = rotation
+            while dt == dt_old:
+                index = self.data.index[i]
+                (dt, node_id) = index
+
+                data = self.data.ix[index]
+                gridType = 'G' #self.gridTypes[node_id]
+                dx = data['T1']
+                dy = data['T2']
+                dz = data['T3']
+                rx = data['R1']
+                ry = data['R2']
+                rz = data['R3']
 
                 vals = [dx, dy, dz, rx, ry, rz]
                 (vals2, isAllZeros) = writeImagFloats13E(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 if not isAllZeros:
-                    msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
-                    msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '',           dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
+                    msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (node_id, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
+                    msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '',            dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
+                i += 1
+                try:
+                    dt = self.data.index[i+1][0]
+                except IndexError:
+                    break
+                
+                if i % 1000 == 0:
+                    #print("class=%s i=%s ndata=%s" % (classname, i, ndata))
+                    f.write(''.join(msg))
+                    msg = ['']
             msg.append(pageStamp + str(pageNum) + '\n')
             f.write(''.join(msg))
             msg = ['']
             pageNum += 1
+        #print('returning...')
         return pageNum - 1

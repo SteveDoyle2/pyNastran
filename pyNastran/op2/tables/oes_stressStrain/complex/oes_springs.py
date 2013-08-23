@@ -17,8 +17,8 @@ class ComplexCelasStressObject(complexStressObject):
       0.0            0.0               5.000000E-02   0.0               1.000000E-01   0.0               1.500000E-01   0.0
       2.000000E-01   0.0               2.500000E-01   0.0               3.000000E-01   0.0               3.500000E-01   0.0
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
         self.element_name = self.data_code['element_name']
 
@@ -186,8 +186,8 @@ class ComplexCelasStressObject(complexStressObject):
 
 
 class ComplexCelasStrainObject(complexStrainObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StrainObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StrainObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
         self.element_name = self.data_code['element_name']
 

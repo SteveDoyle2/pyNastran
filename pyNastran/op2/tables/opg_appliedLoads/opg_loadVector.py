@@ -25,12 +25,12 @@ class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
             '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         return self._write_f06_block(words, header, pageStamp, f, pageNum)
 
-    def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, f, pageNum=1):
         msg = []
         words = ['                                                     L O A D   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        return self._write_f06_transient_block(words, header, pageStamp, f, pageNum, is_mag_phase)
+        return self._write_f06_transient_block(words, header, pageStamp, f, pageNum)
 
 class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_code=???
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -63,8 +63,8 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
 
 
 class ThermalVector(TableObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        TableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -80,14 +80,14 @@ class ThermalVector(TableObject):
         words = ['                                              T E M P E R A T U R E   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
-        return self._write_f06_transient_block(words, header, pageStamp, f, pageNum, is_mag_phase)
+        return self._write_f06_transient_block(words, header, pageStamp, f, pageNum)
 
 
 class ThermalLoadVectorObject(ThermalVector):     # table_code=2, thermal=1
-    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         ThermalVector.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
 
 class ThermalVelocityVectorObject(ThermalVector):  # table_code=10, thermal=1
-    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         ThermalVector.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)

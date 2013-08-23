@@ -3,7 +3,7 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class TemperatureGradientAndFluxObject(TableObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
     def write_matlab(self, isubcase, f, is_mag_phase=False):
@@ -43,7 +43,7 @@ class TemperatureGradientAndFluxObject(TableObject):
 
 
 class ComplexTemperatureGradientAndFluxObject(ComplexTableObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
     def write_matlab(self, isubcase, f, is_mag_phase=False):

@@ -25,7 +25,7 @@ class RealElementsStressStrain(object):
         #print("**************skipping**************")
         self.handle_results_buffer(self.dummyPass, None, None, debug=True)
 
-    def dummyPass(self):
+    def dummyPass(self, name):
         self.data = b''
 
     def OES_field1(self):

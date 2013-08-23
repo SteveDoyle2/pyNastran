@@ -12,24 +12,26 @@ class TestOP2(Tester):
     def test_op2_01(self):
         op2Filename = os.path.join('solid_bending', 'solid_bending.op2')
         folder = os.path.abspath(os.path.join(testPath, '..', 'models'))
-        make_geom = True
-        write_bdf = True
+        make_geom = False
+        write_bdf = False
         write_f06 = True
+        write_matlab = False
         debug = False
         op2file = os.path.join(folder, op2Filename)
         run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
-                write_f06=write_f06, debug=debug, stopOnFailure=True)
+                write_f06=write_f06, write_matlab=write_matlab, debug=debug, stopOnFailure=True)
 
     def test_op2_02(self):
         op2Filename = os.path.join('plate_py', 'plate_py.op2')
         folder = os.path.abspath(os.path.join(testPath, '..', 'models'))
-        make_geom = True
-        write_bdf = True
+        make_geom = False
+        write_bdf = False
         write_f06 = True
+        write_matlab = False
         debug = False
         op2file = os.path.join(folder, op2Filename)
         run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
-                write_f06=write_f06, debug=debug, stopOnFailure=True)
+                write_f06=write_f06, write_matlab=write_matlab, debug=debug, stopOnFailure=True)
 
 if __name__ == '__main__':
     unittest.main()

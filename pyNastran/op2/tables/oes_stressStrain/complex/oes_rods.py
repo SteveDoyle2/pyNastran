@@ -6,8 +6,8 @@ from ..real.oes_objects import StressObject, StrainObject
 
 
 class ComplexRodDamperObject(StressObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CBUSH'
 
         self.code = [self.format_code, self.sort_code, self.s_code]
@@ -18,8 +18,8 @@ class ComplexRodDamperObject(StressObject):
 class ComplexRodStressObject(StressObject):
     """
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CROD'
 
         self.code = [self.format_code, self.sort_code, self.s_code]
@@ -222,8 +222,8 @@ class ComplexRodStressObject(StressObject):
 class ComplexRodStrainObject(StrainObject):
     """
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StrainObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StrainObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CROD'  # {} # 'CROD/CONROD/CTUBE'
 
         self.code = [self.format_code, self.sort_code, self.s_code]

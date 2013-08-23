@@ -197,6 +197,7 @@ class OPG(object):
                 self.handle_results_buffer(self.OUG_RealTable, resultName, name)
             elif self.thermal == 1:
                 resultName = 'thermalLoadVectors'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(self.thermalLoadVectors,
                                            ThermalLoadVectorObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName, name)
@@ -275,7 +276,7 @@ class OPG(object):
             msg = 'only num_wide=11 is allowed  num_wide=%s' % self.num_wide
             raise RuntimeError(msg)
 
-    def readOGS1_table26_numWide11(self):  # surface stresses
+    def readOGS1_table26_numWide11(self, name):  # surface stresses
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'i4s8f'
@@ -307,13 +308,14 @@ class OPG(object):
             msg = 'only num_wide=9 is allowed  num_wide=%s' % (self.num_wide)
             raise RuntimeError(msg)
 
-    def readOGS1_table27_numWide9(self):  # surface stresses
+    def readOGS1_table27_numWide9(self, name):  # surface stresses
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'i7f'
         format1 = bytes(format1)
-
-        while len(self.data) >= 36:
+        
+        nelements = len(self.data) // 36
+        for i in xrange(nelements):
             eData = self.data[0:36]
             self.data = self.data[36:]  # 9*4
             out = unpack(format1, eData)
@@ -323,7 +325,7 @@ class OPG(object):
             self.obj.add(dt, eKey, nx, ny, nz, txy, tyz, txz, pressure, ovm)
         #print len(self.data)
 
-    def readOPGForces(self):
+    def readOPGForces(self, name):
         """
         .. todo:: needs some work...
         """

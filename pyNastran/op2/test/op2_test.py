@@ -57,7 +57,7 @@ if __name__=='__main__':
     make_geom  = False
     write_bdf  = False
     write_f06  = True
-    write_matlab = True
+    write_matlab = False
     print_results = False
 
     delete_f06 = True

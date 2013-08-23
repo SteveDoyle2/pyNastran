@@ -615,13 +615,14 @@ class OUG(object):
         iend = istart + nnodes
         self.obj.data['node_id'][istart : iend] = nodeIDs_to_index
         if dt:
-            self.obj.data['dt'][istart : iend] = ones(inode_end - inode_start) * dt
+            name = self.data_code['name']
+            self.obj.data[name][istart : iend] = ones(inode_end - inode_start) * dt
         #self.obj.grid_type[istart : iend] = gridTypes
 
 
         headers = self.obj._get_headers()
         for iheader, header in enumerate(headers):
-            self.obj_data[header][istart : iend] = translations[:, iheader]
+            self.obj.data[header][istart : iend] = translations[:, iheader]
 
         #print self.obj.data['dt'].to_string()
         if self.obj._is_full(nnodes):

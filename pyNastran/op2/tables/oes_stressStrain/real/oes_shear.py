@@ -18,7 +18,7 @@ class ShearStressObject(StressObject):
         StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'CSHEAR'
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
         self.maxShear = {}
         self.avgShear = {}
         self.margin = {}
@@ -101,7 +101,7 @@ class ShearStrainObject(StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = 'CSHEAR'
         raise Exception('not supported...CSHEAR strain')
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
         self.maxShear = {}
         self.avgShear = {}
         self.margin = {}

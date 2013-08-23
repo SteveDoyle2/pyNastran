@@ -4,8 +4,8 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 class ForceVectorObject(TableObject):  # table_code=12, sort_code=0, thermal=0
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        TableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
     def write_matlab(self, isubcase, f, is_mag_phase=False):
         name = 'forceVector'
@@ -67,8 +67,8 @@ class ForceVectorObject(TableObject):  # table_code=12, sort_code=0, thermal=0
 
 
 class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_code=???
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
     def write_matlab(self, isubcase, f, is_mag_phase=False):
         name = 'forceVector'

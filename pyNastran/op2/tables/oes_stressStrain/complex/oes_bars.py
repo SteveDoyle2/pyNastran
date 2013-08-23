@@ -17,11 +17,11 @@ class ComplexBarStressObject(StressObject):
                   1     ENDA          9.331276E+04   9.331276E+04   9.331276E+04   9.331276E+04        0.0
                                       180.0000         0.0            0.0          180.0000              0.0
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.s1 = {}
         self.s2 = {}
@@ -331,11 +331,11 @@ class ComplexBarStrainObject(StrainObject):
       ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C
 
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StrainObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StrainObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = {}
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
         self.e1 = {}
         self.e2 = {}
         self.e3 = {}

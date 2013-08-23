@@ -8,11 +8,11 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 class NonlinearQuadObject(StressObject):
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = 'QUAD4FD' # or CTRIA3
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
         self.eType = {}
         self.fiberDistance = {}
         self.oxx = {}
@@ -188,11 +188,11 @@ class NonlinearQuadObject(StressObject):
 
 
 class HyperelasticQuadObject(StressObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         self.eType = 'QUAD4FD'
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
         self.Type = {}
         self.IDs = {}
         self.oxx = {}
@@ -303,11 +303,11 @@ class HyperelasticQuadObject(StressObject):
 
 
 class NonlinearRodObject(StressObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        StressObject.__init__(self, data_code, isubcase)
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
+        StressObject.__init__(self, data_code, isubcase, read_mode)
         #self.eType = 'CROD'
         self.eTypeMap = {89: 'CRODNL', 92: 'CONRODNL'}
-        self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.eType = {}
         self.axialStress = {}
