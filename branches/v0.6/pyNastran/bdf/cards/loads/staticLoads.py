@@ -1094,8 +1094,8 @@ class PLOAD4(Load):
                 integer_or_blank(card, 8, 'eid2')):  # plates
                 eid2 = integer(card, 8, 'eid2')
                 if eid2:
-                    self.eids = expand_thru([self.eid, 'THRU', eid2])
-
+                    self.eids = expand_thru([self.eid, 'THRU', eid2],
+                                            set_fields=False, sort_fields=False)
                 self.g1 = None
                 self.g34 = None
             else:
@@ -1143,9 +1143,15 @@ class PLOAD4(Load):
         .. warning:: sorl=SURF is supported (not LINE)
         .. warning:: ldir=NORM is supported (not X,Y,Z)
         """
-        assert self.sorl == 'SURF', 'only surface loads are supported.  required_sorl=SURF.  actual=%s' % (self.sorl)
-        assert self.ldir == 'NORM', 'only normal loads are supported.   required_ldir=NORM.  actual=%s' % (self.ldir)
-        assert len(self.eids) == 1, 'only one load may be defined on each PLOAD4.  nLoads=%s\n%s' % (len(self.eids), str(self))
+        if  self.sorl != 'SURF':
+            msg = 'Only surface loads are supported.  required_sorl=SURF.  actual=%s' % self.sorl
+            raise RuntimeError(msg)
+        if self.ldir != 'NORM':
+            msg = 'Only normal loads are supported.   required_ldir=NORM.  actual=%s' % self.ldir
+            raise RuntimeError(msg)
+        if len(self.eids) != 1:
+            msg = 'Only one load may be defined on each PLOAD4.  nLoads=%s\n%s' % (len(self.eids), str(self))
+            raise RuntimeError(msg)
 
         if self.g1 and self.g34:  # solid elements
             nid = self.g1.nid

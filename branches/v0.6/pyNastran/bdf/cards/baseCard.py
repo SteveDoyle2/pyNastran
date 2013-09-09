@@ -351,10 +351,15 @@ class Element(BaseCard):
                                    % nids)
 
 
-def expand_thru(fields):
+def expand_thru(fields, set_fields=True, sort_fields=False):
     """
     Expands a list of values of the form [1,5,THRU,9,13]
     to be [1,5,6,7,8,9,13]
+    
+    :param fields:      the fields to expand
+    :param set_fields:  should the fields be converted to a set and then back
+                        to a list? This is useful for [2, 'THRU' 5, 1] (default=True)
+    :param sort_fields: should the fields be sorted at the end? (default=False)
     """
     if isinstance(fields, int):
         return [fields]
@@ -371,13 +376,23 @@ def expand_thru(fields):
         else:
             out.append(fields[i])
             i += 1
-    return list(set(out))
+
+    if set_fields:
+        out = list(set(out))
+    if sort_fields:
+        out.sort()
+    return out
 
 
-def expand_thru_by(fields):
+def expand_thru_by(fields, set_fields=True, sort_fields=False):
     """
     Expands a list of values of the form [1,5,THRU,9,BY,2,13]
     to be [1,5,7,9,13]
+
+    :param fields:      the fields to expand
+    :param set_fields:  should the fields be converted to a set and then back
+                        to a list? This is useful for [2, 'THRU' 5, 1] (default=True)
+    :param sort_fields: should the fields be sorted at the end? (default=False)
 
     .. todo:: not tested
     .. note:: used for QBDY3, ???
@@ -412,7 +427,12 @@ def expand_thru_by(fields):
         else:
             out.append(fields[i])
             i += 1
-    return list(set(out))
+
+    if set_fields:
+        out = list(set(out))
+    if sort_fields:
+        out.sort()
+    return out
 
 
 def expand_thru_exclude(self, fields):

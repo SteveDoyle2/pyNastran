@@ -50,7 +50,7 @@ class BSURF(BaseCard):
             self.sid = integer(card, 1, 'sid')
             #: Number (float)
             n = card.nFields()
-            i = 1
+            i = 2
             eid_data = []
             while i < n:
                 d = integer_string_or_blank(card, i, 'field_%s' % i)
@@ -70,7 +70,10 @@ class BSURF(BaseCard):
         pack = packs[0]
         if len(pack) == 3:
             minv, maxv, dv = pack
-            fields[2:7] = [minv, 'THRU', maxv, 'BY', dv]
+            if dv == 1:
+                fields[2:5] = [minv, 'THRU', maxv]
+            else:
+                fields[2:7] = [minv, 'THRU', maxv, 'BY', dv]
         else:
             fields[3:3+len(pack)] = pack
 
