@@ -132,8 +132,9 @@ class GetMethods(GetMethodsDeprecated):
             for pid in pids:
                 eids2[pid] = []
             for eid, element in self.elements.iteritems():
-                if element.Pid() in pids:
-                    eids2[pid].append(eid)            
+                pid = element.Pid()
+                if pid in pids:
+                    eids2[pid].append(eid)
         return eids2
 
     def getNodeIDToElementIDsMap(self):

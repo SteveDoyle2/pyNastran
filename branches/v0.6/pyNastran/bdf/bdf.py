@@ -107,7 +107,7 @@ from .cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
 from .cards.tables import (TABLED1, TABLED2, TABLED3,
                            TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                            TABLES1, TABLEST, TABRND1, TABRNDG, TIC)
-
+from .cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS
 from .caseControlDeck import CaseControlDeck
 from .bdf_Methods import BDFMethods
 from .bdfInterface.getCard import GetMethods
@@ -358,6 +358,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             #: cMethods - .. todo:: EIGC not done???
             'EIGC', 'EIGP',
 
+            #: contact
+            'BCRPARA', 'BCTADD', 'BCTSET', 'BSURF', 'BSURFS',
+            
             # other
             'INCLUDE',  # '='
             'ENDDATA',
@@ -647,7 +650,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         self.phbdys = {}
         #: stores convection properties - PCONV, PCONVM ???
         self.convectionProperties = {}
-        # ----------------------------------------------------------------
+
+        # -------------------------contact cards-------------------------------
+        self.bcrparas = {}
+        self.bctadds = {}
+        self.bctparas = {}
+        self.bctsets = {}
+        self.bsurf = {}
+        self.bsurfs = {}
 
     def _verify_bdf(self):
         xref = self._xref
@@ -1607,6 +1617,25 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 bc = RADBC(card_obj, comment=comment)
                 self.add_thermal_BC(bc, bc.nodamb)
 
+            elif card_name == 'BCRPARA':
+                card = BCRPARA(card_obj, comment=comment)
+                self.add_BCRPARA(card)
+            elif card_name == 'BCTADD':
+                card = BCTADD(card_obj, comment=comment)
+                self.add_BCTADD(card)
+            elif card_name == 'BCTPARA':
+                card = BCTPARA(card_obj, comment=comment)
+                self.add_BCTPARA(card)
+            elif card_name == 'BCTSET':
+                card = BCTSET(card_obj, comment=comment, sol=self.sol)
+                self.add_BCTSET(card)
+            elif card_name == 'BSURF':
+                card = BSURF(card_obj, comment=comment)
+                self.add_BSURF(card)
+            elif card_name == 'BSURFS':
+                card = BSURFS(card_obj, comment=comment)
+                self.add_BSURFS(card)
+
             elif card_name == 'SPOINT':
                 self.add_SPOINT(SPOINTs(card_obj, comment=comment))
             elif card_name == 'PBEAML':
@@ -1807,7 +1836,7 @@ def _clean_comment(comment, end=-1):
                    '$LOADS', '$AERO', '$AERO CONTROL SURFACES',
                    '$FLUTTER', '$DYNAMIC', '$OPTIMIZATION',
                    '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
-                   '$SETS', '$REJECTS', '$REJECT_LINES']:
+                   '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES']:
         comment = ''
     #print('comment = %r' % comment)
     return comment

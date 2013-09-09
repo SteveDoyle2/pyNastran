@@ -442,10 +442,20 @@ def expand_thru_exclude(self, fields):
     return fieldsOut
 
 
-def collapse_thru_by(fields):
+def collapse_thru_by(fields, get_packs=False):
+    """
+    :param fields:    the list of fields to collapse
+    :param get_packs: get the list of packs so "special" formatting can be done
+    
+    fields              packs
+    [1, 2, 3...150]  -> [1, 150, 1]
+    [1, 3, 5...150]  -> [1, 150, 2]
+    """
     assert 'THRU' not in fields, fields
     fields.sort()
     packs = condense(fields)
+    if get_packs:
+        return packs
     fields2 = build_thru(packs)
     #assert fields == expand_thru_by(fields2)  # why doesn't this work?
     return fields2

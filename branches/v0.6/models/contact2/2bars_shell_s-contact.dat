@@ -76,12 +76,7 @@ $*
 $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $*
 BEGIN BULK
-$*
-$* SOLUTION CARDS
-$*
-BCTADD       100     101
-$*  NX Load and Constraint: Face Contact(1)
-BCTSET       101       1       2  0.0000  0.00002.000000
+$PARAMS
 $*
 $* PARAM CARDS
 $*
@@ -90,6 +85,7 @@ PARAM    OMACHPR     YES
 PARAM       POST      -2
 PARAM    POSTEXT     YES
 PARAM    UNITSYS   MN-MM
+$NODES
 $*
 $* GRID CARDS
 $*
@@ -1042,6 +1038,11 @@ GRID*              49768               01.8037513733E+022.0000000000E+01+
 GRID*              49769               01.8037513733E+022.0000000000E+01+
 *       1.1000000000E+01               0
 $*
+$* PROPERTY CARDS
+$*
+$*  NX Property: PSOLID1
+PSOLID         1       1       0                           SMECH
+$*
 $* ELEMENT CARDS
 $*
 $*  NX mesh: 3d_mesh(1)
@@ -1249,6 +1250,8 @@ CHEXA        101       1   26321   49336   26338   26337   49452   49401+
 +          49403   49473
 CHEXA        102       1   49452   49401   49403   49473   49505   49451+
 +          49471   49510
+$*  NX Property: PSHELL1
+PSHELL         2       12.000000       11.000000       10.833333  0.0000
 $*  NX mesh: 2d_mesh(1)
 CQUAD4       103       2   49512   49513   49515   49675
 CQUAD4       104       2   49513   49514   49676   49515
@@ -1506,18 +1509,16 @@ CQUAD4       355       2   49672   49763   49769   49760
 CQUAD4       356       2   49671   49672   49760   49761
 CQUAD4       357       2   49670   49671   49761   49762
 CQUAD4       358       2   49756   49670   49762   49767
-$*
-$* PROPERTY CARDS
-$*
-$*  NX Property: PSOLID1
-PSOLID         1       1       0                           SMECH
-$*  NX Property: PSHELL1
-PSHELL         2       12.000000       11.000000       10.833333  0.0000
+$MATERIALS
 $*
 $* MATERIAL CARDS
 $*
 $*  NX Material: Aluminum_6061
 MAT1           16.8980+7        0.3300002.7110-62.2095-5
+$LOADS
+$*  NX Load and Constraint: Pressure(1)
+PLOAD4         3     231-500.000                            THRU     310
+$SPCs
 $*
 $* LOAD AND CONSTRAINT CARDS
 $*
@@ -1549,9 +1550,17 @@ SPC            1   49766  123456  0.0000
 SPC            1   49767  123456  0.0000
 SPC            1   49768  123456  0.0000
 SPC            1   49769  123456  0.0000
+$CONTACT
+BCRPARA        1     TOP  0.0000    FLEX
+BCRPARA        2          0.0000    FLEX
+$*
+$* SOLUTION CARDS
+$*
+BCTADD       100     101
+$*  NX Load and Constraint: Face Contact(1)
+BCTSET       101       1       2  0.0000  0.00002.000000
 $*  NX Region: Region1
 BSURF          1     151    THRU     230
-BCRPARA        1     TOP  0.0000    FLEX
 $*  NX Region: Region2
 BSURFS         2                               1   26364   49367   26334+
 +              3   26365   49366   49367       5   26367   26304   49366+
@@ -1579,7 +1588,4 @@ BSURFS         2                               1   26364   49367   26334+
 +             91   49339   49337   26325      93   49338   49336   49337+
 +             95   26318   26321   49336      97   49337   26339   49335+
 +             99   49336   26338   26339     101   26321   26337   26338
-BCRPARA        2          0.0000    FLEX
-$*  NX Load and Constraint: Pressure(1)
-PLOAD4         3     231-500.000                            THRU     310
 ENDDATA

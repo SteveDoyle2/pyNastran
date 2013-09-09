@@ -196,6 +196,24 @@ class AddMethods(object):
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
             self.pbusht[key] = prop
 
+    def add_BCRPARA(self, card, allowOverwrites=False):
+        self.bcrparas[card.crid] = card
+
+    def add_BCTADD(self, card, allowOverwrites=False):
+        self.bctadds[card.csid] = card
+
+    def add_BCTPARA(self, card, allowOverwrites=False):
+        self.bctparas[card.csid] = card
+
+    def add_BCTSET(self, card, allowOverwrites=False):
+        self.bctsets[card.csid] = card
+
+    def add_BSURF(self, card, allowOverwrites=False):
+        self.bsurf[card.sid] = card
+
+    def add_BSURFS(self, card, allowOverwrites=False):
+        self.bsurfs[card.id] = card
+
     def add_PDAMPT(self, prop, allowOverwrites=False):
         key = prop.pid
 

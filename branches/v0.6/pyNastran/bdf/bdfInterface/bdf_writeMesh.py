@@ -142,6 +142,7 @@ class WriteMesh(WriteMeshDeprecated):
         msg += self._write_optimization(size)
         msg += self._write_tables(size)
         msg += self._write_sets(size)
+        msg += self._write_contact(size)
         msg += self._write_rejects(size)
         msg += self._write_coords(size)
         return msg
@@ -497,6 +498,27 @@ class WriteMesh(WriteMeshDeprecated):
                         print('failed printing load...type=%s key=%s'
                               % (load.type, key))
                         raise
+        return ''.join(msg)
+
+    def _write_contact(self, size):
+        """Writes the contact cards sorted by ID"""
+        msg = []
+        if (self.bcrparas or self.bctadds or self.bctparas or self.bctsets
+            or self.bsurf or self.bsurfs):
+            msg.append('$CONTACT\n')
+            for (ID, bcrpara) in sorted(self.bcrparas.iteritems()):
+                msg.append(bcrpara.print_card(size))
+            for (ID, bctadds) in sorted(self.bctadds.iteritems()):
+                msg.append(bctadds.print_card(size))
+            for (ID, bctpara) in sorted(self.bctparas.iteritems()):
+                msg.append(bctpara.print_card(size))
+
+            for (ID, bctset) in sorted(self.bctsets.iteritems()):
+                msg.append(bctset.print_card(size))
+            for (ID, bsurfi) in sorted(self.bsurf.iteritems()):
+                msg.append(bsurfi.print_card(size))
+            for (ID, bsurfsi) in sorted(self.bsurfs.iteritems()):
+                msg.append(bsurfsi.print_card(size))
         return ''.join(msg)
 
     def _write_optimization(self, size):
