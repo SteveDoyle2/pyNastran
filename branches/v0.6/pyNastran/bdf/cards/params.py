@@ -61,8 +61,19 @@ class PARAM(BaseCard):
             value = string_or_blank(card, 2, 'value', 'YES')
         elif self.key == 'ADJMETH':
             value = integer_or_blank(card, 2, 'value', 0)
+        elif self.key == 'ADPCON':
+            value = float_or_blank(card, 2, 'value', 1.0)
         #elif self.key == 'ADMPOST':
             #value = string_or_blank(card, 2, 'value', 0) ## TODO: 0 is not a string
+        elif self.key == 'ADSDISC':
+            value = float_or_blank(card, 2, 'value', 1e-8)
+        elif self.key == 'AESMAXIT':
+            value = integer_or_blank(card, 2, 'value', 15)
+        elif self.key == 'AESMETH':
+            value = string_or_blank(card, 2, 'value', 'SELECT')
+            assert value in ['SELECT', 'AUTO', 'DIRECT', 'RITZ', 'ITER'], 'value=%s' % value
+        elif self.key == 'AESTOL':
+            value = ifloat_or_blank(card, 2, 'value', 1e-10)
         elif self.key == 'ADSTAT':
             value = string_or_blank(card, 2, 'value', 'YES')
         elif self.key in ['ALPHA1', 'ALPHA2', 'ALPHA1FL', 'ALPHA2FL']:  # check alpha1/alpha1FL
@@ -73,6 +84,8 @@ class PARAM(BaseCard):
             value1 = double_or_blank(card, 2, 'value1', 1.0)
             value2 = double_or_blank(card, 3, 'value2', 0.0)
             n = 2
+        elif self.key == 'POST':
+            value = integer_or_blank(card, 2, 'value', 1)
         else:
             value = integer_double_or_string(card, 2, 'value')
 
