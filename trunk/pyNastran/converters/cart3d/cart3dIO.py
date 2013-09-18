@@ -149,7 +149,9 @@ class Cart3dIO(object):
         #rhoU = zeros(nNodes)
         #rhoV = zeros(nNodes)
         #rhoW = zeros(nNodes)
-
+        
+        print "plotCentroidal=%s plotNodal=%s" % (plotCentroidal, plotNodal)
+        assert plotCentroidal != plotNodal
         if plotCentroidal:
             for eid, regioni in sorted(regions.iteritems()):
                 Eids[eid - 1] = eid
