@@ -35,7 +35,7 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element #, Mid
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_double_or_blank, double, double_or_blank,
-    string_or_blank, integer_double_string_or_blank)
+    string_or_blank, integer_double_string_or_blank, integer_or_double)
 
 
 class RodElement(Element):  # CROD, CONROD, CTUBE
@@ -762,6 +762,10 @@ class CBAR(LineElement):
             raise SyntaxError('invalid offt expected a string of length 3 '
                               'offt=|%r|; Type=%s' % (self.offt, type(self.offt)))
 
+        if self.g0 in [self.ga, self.gb]:
+            msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
+            raise RuntimeError(msg)
+
         msg = 'invalid offt parameter of %s...offt=%s' % (self.type, self.offt)
         # B,G,O
         assert self.offt[0] in ['G', 'B'], msg
@@ -817,7 +821,7 @@ class CBAR(LineElement):
         return (self.ga.Position() + self.gb.Position()) / 2.
 
     def initX_G0(self, card):
-        field5 = integer_double_or_blank(card, 5, 'g0_x1')
+        field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
         if isinstance(field5, int):
             self.g0 = field5
             self.x1 = None
@@ -825,13 +829,20 @@ class CBAR(LineElement):
             self.x3 = None
         elif isinstance(field5, float):
             self.g0 = None
-            self.x1 = field5
+            self.x1 = double_or_blank(card, 5, 'x1', 0.0)
             self.x2 = double_or_blank(card, 6, 'x2', 0.0)
             self.x3 = double_or_blank(card, 7, 'x3', 0.0)
+            if norm([self.x1, self.x2, self.x3]) == 0.0:
+                msg = 'G0 vector defining plane 1 is not defined.\n'
+                msg += 'G0 = %s\n' % self.g0
+                msg += 'X1 = %s\n' % self.x1
+                msg += 'X2 = %s\n' % self.x2
+                msg += 'X3 = %s\n' % self.x3
+                raise RuntimeError(msg)
         else:
-            #msg = 'field5 on %s is the wrong type...id=%s field5=%s '
-            #      'type=%s' %(self.type,self.eid,field5,type(field5))
-            #raise InvalidFieldError(msg)
+            msg = ('field5 on %s (G0/X1) is the wrong type...id=%s field5=%s '
+                   'type=%s' %(self.type, self.eid, field5, type(field5)))
+            raise RuntimeError(msg)
             self.g0 = None
             self.x1 = 0.
             self.x2 = 0.
@@ -1232,6 +1243,10 @@ class CBEAM(CBAR):
             self.w2b = main[12]
             self.w3b = main[13]
 
+        if self.g0 in [self.ga, self.gb]:
+            msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
+            raise RuntimeError(msg)
+
     def initOfftBit(self, card):
         field8 = integer_double_string_or_blank(card, 8, 'field8')
         if isinstance(field8, float):
@@ -1379,7 +1394,7 @@ class CBEND(LineElement):
             self.pid = integer_or_blank(card, 2, 'pid', self.eid)
             self.ga = integer(card, 3, 'ga')
             self.gb = integer(card, 4, 'gb')
-            x1Go = integer_double_or_blank(card, 5, 'x1_g0')
+            x1Go = integer_double_or_blank(card, 5, 'x1_g0', 0.0)
             if isinstance(x1Go, int):
                 self.g0 = x1Go
                 self.x1 = None
@@ -1387,16 +1402,28 @@ class CBEND(LineElement):
                 self.x3 = None
             elif isinstance(x1Go, float):
                 self.g0 = None
-                self.x1 = x1Go
-                self.x2 = double(card, 6, 'x2')
-                self.x3 = double(card, 7, 'x3')
+                self.x1 = double_or_blank(card, 5, 'x1', 0.0)
+                self.x2 = double_or_blank(card, 6, 'x2', 0.0)
+                self.x3 = double_or_blank(card, 7, 'x3', 0.0)
+                if norm([self.x1, self.x2, self.x3]) == 0.0:
+                    msg = 'G0 vector defining plane 1 is not defined.\n'
+                    msg += 'G0 = %s\n' % self.g0
+                    msg += 'X1 = %s\n' % self.x1
+                    msg += 'X2 = %s\n' % self.x2
+                    msg += 'X3 = %s\n' % self.x3
+                    raise RuntimeError(msg)
             else:
                 raise ValueError('invalid x1Go=|%s| on CBEND' % x1Go)
             self.geom = integer(card, 8, 'geom')
+
             assert len(card) == 9, 'len(CBEND card) = %i' % len(card)
             assert self.geom in [1, 2, 3, 4], 'geom is invalid geom=|%s|' % self.geom
         else:
             raise NotImplementedError(data)
+
+        if self.g0 in [self.ga, self.gb]:
+            msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
+            raise RuntimeError(msg)
 
     def Area(self):
         return self.pid.Area()

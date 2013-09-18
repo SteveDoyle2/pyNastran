@@ -46,16 +46,10 @@ ID,NASTRAN,2bars_shell_s-contact
 SOL 101
 TIME 999
 CEND
-$*
-$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-$*
-$* CASE CONTROL
-$*
-$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-$*
+$CASE CONTROL DECK
+BCSET = 100
 ECHO = NONE
 SPC = 1
-BCSET = 100
 OUTPUT
 BCRESULTS(TRACTION,FORCE,PLOT) = ALL
 DISPLACEMENT(PLOT,REAL) = ALL
@@ -64,17 +58,9 @@ BGRESULTS(TRACTION,FORCE,PLOT) = ALL
 SHELLTHK(PRINT) = ALL
 SPCFORCES(PLOT,REAL) = ALL
 STRESS(PLOT,REAL,VONMISES,CENTER) = ALL
-$*  NX Step: Subcase - Static Loads 1
 SUBCASE 1
 LABEL = Subcase - Static Loads 1
 LOAD = 3
-$*
-$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-$*
-$* BULK DATA
-$*
-$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-$*
 BEGIN BULK
 $PARAMS
 $*
@@ -1055,6 +1041,7 @@ GRID*              49768               01.8037513733E+022.0000000000E+01+
 *       6.0000000000E+00               0
 GRID*              49769               01.8037513733E+022.0000000000E+01+
 *       1.1000000000E+01               0
+$ELEMENTS_WITH_PROPERTIES
 $*
 $* PROPERTY CARDS
 $*
