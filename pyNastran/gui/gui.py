@@ -4,7 +4,11 @@
 import os
 import wx
 #import vtk
-from PIL import Image
+try:
+    from PIL import Image
+except ImportError:
+    from Image import Image
+
 import sys
 #from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
 
@@ -79,6 +83,7 @@ class AppFrame(wx.Frame):
         self.isEdges = isEdges
         self.isNodal = isNodal
         self.isCentroidal = isCentroidal
+        assert isCentroidal != isNodal, "isCentroidal and isNodal can't be the same and are set to \"%s\"" % isNodal
         self.dirname = ''
         self.setupFrame()
         
@@ -694,7 +699,7 @@ def run_arg_parse():
     msg += "  -o OUTPUT, --output OUTPUT  path to output file\n"
     msg += "  -q, --quiet                 prints debug messages (default=True)\n"
     msg += "  -e, --edges                 shows element edges as black lines (default=False)\n"
-    msg += "  -n, --nodalResults          plots nodal results\n"
+    msg += "  -n, --nodalResults          plots nodal results (default)\n"
     msg += "  -c, --centroidalResults     plots centroidal results\n"
     msg += "  -v, --version               show program's version number and exit\n"
     
@@ -710,28 +715,30 @@ def run_arg_parse():
     debug   = not(data['--quiet'])
     edges   = data['--edges']
     isNodal = data['--nodalResults']
+    isCentroidal = data['--centroidalResults']
     #writeBDF    = args.writeBDF
 
-    return (edges, isNodal, format, input, output, debug)
+    return (edges, isNodal, isCentroidal, format, input, output, debug)
 
 
 def main():
     isEdges = False
-    isNodal = True
     format = None
     input = None
     output = None
-    #isCentroidal = True
     debug = True
+
+    isNodal = True
+    isCentroidal = not(isNodal)
+
     if sys.version_info < (2, 6):
         print("requires Python 2.6+ to use command line arguments...")
     else:
         if len(sys.argv) > 1:
-            (edges, isNodal, format, input, output, debug) = run_arg_parse()
-    isCentroidal = not(isNodal)
+            (edges, isNodal, isCentroidal, format, input, output, debug) = run_arg_parse()
 
-    isNodal = True
-    isCentroidal = True
+    #isNodal = True
+    #isCentroidal = True
 
     app = wx.App(redirect=False)
     appFrm = AppFrame(isEdges, isNodal, isCentroidal, format, input, output, debug)
