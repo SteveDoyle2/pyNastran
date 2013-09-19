@@ -909,7 +909,7 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
 
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
+            return self._write_f06_transient(header, pageStamp, f, pageNum, is_mag_phase)
         msg = header + ['                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
                         '                                                          (REAL/IMAGINARY)\n',
                         '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',

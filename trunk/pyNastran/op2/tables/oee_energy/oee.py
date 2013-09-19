@@ -137,11 +137,9 @@ class OEE(object):
         name = resultName + ': Subcase %s' % self.isubcase
 
         if self.num_wide == 4:
-            self.handle_results_buffer(
-                self.OEE_Strain4, resultName, name)
+            self.handle_results_buffer(self.OEE_Strain4, resultName, name)
         elif self.num_wide == 5:
-            self.handle_results_buffer(
-                self.OEE_Strain5, resultName, name)
+            self.handle_results_buffer(self.OEE_Strain5, resultName, name)
         else:
             self.not_implemented_or_skip()
         #self.readMappedScalarsOut(debug=False) # handles dtMap, not correct...
@@ -188,7 +186,7 @@ class OEE(object):
         #print('n0=%s n1=%s' % (n0, n1))
         #print self.strainEnergy
 
-    def OEE_Strain5(self):
+    def OEE_Strain5(self, name):
         #device_code = self.device_code
         dt = self.nonlinear_factor
 

@@ -55,7 +55,7 @@ class RealElementsStressStrain(object):
             raise NotImplementedError('invalid SORTx code')
 
     def OES_Thermal(self, debug=False):
-        OES_Thermal
+        #OES_Thermal
         #assert self.num_wide==5,'invalid num_wide...num_wide=%s' % (self.num_wide)
 
         dt = self.nonlinear_factor
@@ -82,7 +82,7 @@ class RealElementsStressStrain(object):
         #print self.rodStress[self.isubcase]
 
     def OES_CBUSH1D_40(self, name):
-        OES_CBUSH1D_40
+        #OES_CBUSH1D_40
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
 
@@ -120,7 +120,7 @@ class RealElementsStressStrain(object):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
-        OES_CQUADR_82
+        #OES_CQUADR_82
         if self.element_type == 82:  # CQUADR
             ntotal = 348  # 2+17*5 = 87 -> 87*4 = 348
             nNodes = 4    # centroid + 4 corner points
@@ -166,7 +166,7 @@ class RealElementsStressStrain(object):
                              txy2, angle2, major2, minor2, vm2)
 
     def OES_CGAPNL_86(self, name):
-        OES_CGAPNL_86
+        #OES_CGAPNL_86
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
 
@@ -189,7 +189,7 @@ class RealElementsStressStrain(object):
         self.data = self.data[n:]
 
     def OES_RODNL_89_92(self, name):
-        OES_RODNL_89_92
+        #OES_RODNL_89_92
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '6f'  # 1+6=7
@@ -212,7 +212,7 @@ class RealElementsStressStrain(object):
         #self.data = self.data[ibase:]
 
     def OES_CQUAD4NL_90(self, name):
-        OES_CQUAD4NL_90
+        #OES_CQUAD4NL_90
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
 
@@ -248,7 +248,7 @@ class RealElementsStressStrain(object):
         CPENTANL_91 - 7 nodes
         CHEXANL_93 - 9 nodes
         """
-        OES_TETRANL_85_PENTANL_91_CHEXANL_93
+        #OES_TETRANL_85_PENTANL_91_CHEXANL_93
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '4s'
@@ -294,7 +294,7 @@ class RealElementsStressStrain(object):
         VUPENTA 146 - 6 nodes
         VUHEXA 145 - 8 nodes
         """
-        OES_VUHEXA_145_VUPENTA_146_VUTETRA_147
+        #OES_VUHEXA_145_VUPENTA_146_VUTETRA_147
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += 'i'
@@ -335,7 +335,7 @@ class RealElementsStressStrain(object):
                 #print("grid =",grid)
 
     def OES_CBEAM_94(self, name):
-        OES_CBEAM_94
+        #OES_CBEAM_94
         #nNodes = 10  # 11-1
 
         #ntotal       = self.obj.getLengthTotal()
@@ -369,7 +369,7 @@ class RealElementsStressStrain(object):
         Hyperelastic Quad
         36+4*7*4 = 148
         """
-        OES_QUAD4FD_139
+        #OES_QUAD4FD_139
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '4si6f'  # 1 + 4+1+6 = 12
@@ -397,7 +397,7 @@ class RealElementsStressStrain(object):
             #x+=1
 
     def OES_VUQUAD_189(self, name):
-        OES_VUQUAD_189
+        #OES_VUQUAD_189
         if self.element_type == 144:  # CQUAD4
             ntotal = 440  # 6+(33-7)*4 =  -> 110*4 = 440
             nNodes = 4    # 4 corner points
@@ -452,7 +452,7 @@ class RealElementsStressStrain(object):
         #self.data = self.data[ibase:]
 
     def OES_CELAS_224_225(self, name):
-        OES_CELAS_224_225
+        #OES_CELAS_224_225
         dt = self.nonlinear_factor
         element_name = self.data_code['element_name']
         (format1, extract) = self.getOUG_FormatStart()
@@ -473,7 +473,7 @@ class RealElementsStressStrain(object):
             self.obj.add_new_eid(element_name, dt, eid, force, stress)
 
     def OESRT_CQUAD4_95(self, name):
-        OESRT_CQUAD4_95
+        #OESRT_CQUAD4_95
         #dt = self.nonlinear_factor
         #element_name = self.data_code['element_name']
         (format1, extract) = self.getOUG_FormatStart()
