@@ -21,6 +21,9 @@ class ForceVectorObject(TableObject):  # table_code=12, sort_code=0, thermal=0
         msg = header + ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n'
                         ' \n',
                         '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        words += self.get_table_marker()
+        return self._write_f06_block(words, header, pageStamp, f, pageNum)
+
         for nodeID, translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
@@ -42,28 +45,8 @@ class ForceVectorObject(TableObject):  # table_code=12, sort_code=0, thermal=0
         words = ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n'
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-
-        for dt, translations in sorted(self.translations.iteritems()):
-            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            msg += header + words
-            for nodeID, translation in sorted(translations.iteritems()):
-                rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
-
-                (dx, dy, dz) = translation
-                (rx, ry, rz) = rotation
-
-                vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, isAllZeros) = writeFloats13E(vals)
-                if not isAllZeros:
-                    [dx, dy, dz, rx, ry, rz] = vals2
-                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
-
-            msg.append(pageStamp + str(pageNum) + '\n')
-            f.write(''.join(msg))
-            msg = ['']
-            pageNum += 1
-        return pageNum - 1
+        words += self.get_table_marker()
+        return self._write_f06_transient_block(words, header, pageStamp, f, pageNum)
 
 
 class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_code=???

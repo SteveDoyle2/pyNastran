@@ -12,49 +12,54 @@ class ThermalElements(object):
     def read_OEF_thermal(self):
         assert self.format_code == 1, self.code_information()
         #print "self.element_type = ",self.element_type
+
+        name = ': Subcase %s' % self.isubcase
         if self.element_type in [107, 108, 109]:  # CHBDYE, CHBDYG, CHBDYP
             assert self.num_wide == 8, self.code_information()
             self.create_transient_object(self.thermalLoad_CHBDY, HeatFlux_CHBDYx)
-            self.handle_results_buffer(self.OEF_CHBDYx,
-                                       'thermalLoad_CHBDY',
-                                       'thermalLoad_CHBDY')
+            result_name = 'thermalLoad_CHBDY'
+            name = result_name + name
+            self.handle_results_buffer(self.OEF_CHBDYx, result_name, name)
         elif self.element_type in [33, 39, 67, 68]:  # QUAD4,TETRA,HEXA,PENTA
             assert self.num_wide in [9, 10], self.code_information()
             self.create_transient_object(self.thermalLoad_2D_3D, HeatFlux_2D_3D)
-            self.handle_results_buffer(self.OEF_2D_3D,
-                                       'thermalLoad_2D_3D',
-                                       'thermalLoad_2D_3D')
+            result_name = 'thermalLoad_2D_3D'
+            name = result_name + name
+            self.handle_results_buffer(self.OEF_2D_3D, result_name, name)
         elif self.element_type in [53, 64, 74, 75]:  # TRIAX6,QUAD8,TRIA3,TRIA6
             assert self.num_wide == 9, self.code_information()
             self.create_transient_object(self.thermalLoad_2D_3D, HeatFlux_2D_3D)
-            self.handle_results_buffer(self.OEF_2D_3D,
-                                       'thermalLoad_2D_3D',
-                                       'thermalLoad_2D_3D',)
+            result_name = 'thermalLoad_2D_3D'
+            name = result_name + name
+            self.handle_results_buffer(self.OEF_2D_3D, result_name, name)
         elif self.element_type in [1, 2, 3, 10, 34, 69]:  # ROD,BEAM,TUBE,CONROD,BAR,BEND
             assert self.num_wide == 9, self.code_information()
             self.create_transient_object(self.thermalLoad_1D, HeatFlux_1D)
-            self.handle_results_buffer(self.OEF_1D,
-                                       'thermalLoad_1D',
-                                       'thermalLoad_1D')
+            result_name = 'thermalLoad_1D'
+            name = result_name + name
+            self.handle_results_buffer(self.OEF_1D, result_name, name)
         elif self.element_type in [189, 190]:  # VUQUAD,VUTRIA
             #assert self.num_wide==27,self.code_information()
             self.create_transient_object(self.thermalLoad_VU, HeatFlux_VU)
-            self.handle_results_buffer(
-                self.OEF_VU_Element, resultName='thermalLoad_VU')
+            result_name = 'thermalLoad_VU'
+            name = result_name + name
+            self.handle_results_buffer(self.OEF_VU_Element, result_name, name)
         elif self.element_type in [191]:  # VUBEAM
             #assert self.num_wide==27,self.code_information()
-            self.create_transient_object(
-                self.thermalLoad_VUBeam, HeatFlux_VUBEAM)
-            self.handle_results_buffer(self.OEF_VUBeam_Element,
-                                      resultName='thermalLoad_VUBeam')
+            self.create_transient_object(self.thermalLoad_VUBeam, HeatFlux_VUBEAM)
+            result_name = 'thermalLoad_VUBeam'
+            name = result_name + name
+            self.handle_results_buffer(self.OEF_VUBeam_Element, result_name, name)
         elif self.element_type in [145, 146, 147]:  # VUHEXA,VUPENTA,VUTETRA
             self.create_transient_object(self.thermalLoad_VU_3D, HeatFlux_VU_3D)
-            self.handle_results_buffer(self.OEF_VU_3D_Element,
-                                      resultName='thermalLoad_VU_3D')
+            result_name = 'thermalLoad_VU_3D'
+            name = result_name + name
+            self.handle_results_buffer(self.OEF_VU_3D_Element, result_name, name)
         elif self.element_type in [110]:
             self.create_transient_object(self.thermalLoad_CONV, HeatFlux_CONV)
-            self.handle_results_buffer(self.OEF_CONV,
-                                       resultName='thermalLoad_CONV')
+            result_name = 'thermalLoad_VU_3D'
+            name = result_name + name
+            self.handle_results_buffer(self.OEF_CONV, result_name, name)
         else:
             self.not_implemented_or_skip()
 

@@ -70,9 +70,9 @@ class ThermalVector(TableObject):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, f, pageNum)
 
-        msg = header + ['                                              T E M P E R A T U R E   V E C T O R\n',
-                        ' \n',
-                        '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
+        words = header + ['                                              T E M P E R A T U R E   V E C T O R\n',
+                          ' \n',
+                          '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
         return self._write_f06_block(words, header, pageStamp, f, pageNum)
 
     def _write_f06_transient(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):

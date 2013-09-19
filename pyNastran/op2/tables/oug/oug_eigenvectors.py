@@ -111,7 +111,7 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
         return pageNum - 1
 
 
-class RealEigenVectorObject(ScalarObject):  # approach_code=2, sort_code=0, thermal=0
+class RealEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_code=0, thermal=0
     """
     ::
 
@@ -121,8 +121,8 @@ class RealEigenVectorObject(ScalarObject):  # approach_code=2, sort_code=0, ther
                7      G      9.999849E-01   0.0            6.728968E-03   0.0            8.021386E-03   0.0
     """
     def __init__(self, data_code, isubcase, imode, read_mode):
+        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, imode, read_mode)
         self.shape = {}
-        ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.caseVal = mode
         #print "mode = %s" % imode
         self.caseVal = self.getUnsteadyValue()
