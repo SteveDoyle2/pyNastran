@@ -1,83 +1,62 @@
 import os
 import sys
-from numpy import pi,zeros,array,matrix #,float64,memmap
+from numpy import pi, zeros, array, matrix #, float64, memmap
 from numpy import log as naturalLog
 from numpy.linalg import inv
-from mapping.FEM_Mesh import FEM_Mesh
-from grom.py2matlab import MatPrint
 
-from mapping.logger import dummyLogger
-loggerObj = dummyLogger()
-log = loggerObj.startLog('debug') # or info
+from pyNastran.bdf.bdf import BDF
+from pyNastran.op2.op2 import OP2
+from pyNastran.converters.cart3d.cart3d_reader import generic_cart3d_reader
 
+#from mapping.f06 import F06Reader
+#from grom.py2matlab import MatPrint
 
-def readF06(infile):
-    from mapping.f06 import F06Reader
-    reader = F06Reader(infile)
-    displacements = reader.readDisplacement()
-    return displacements
+from pyNastran.utils.log import get_logger
+debug = True
+log = get_logger(None, 'debug' if debug else 'info')
 
 def readOP2(infilename):
-    from mapping.op2Reader.Op2Reader import OP2Reader
-    log().info('---starting deflectionReader.init of %s---' %(infilename) )
-    op2 = OP2Reader(infilename)
+    log.info('---starting deflectionReader.init of %s---' % infilename)
+    op2 = OP2(infilename)
     terms = ['force','stress','stress_comp','strain','strain_comp','displacement','grid_point_forces']
-    op2.read(terms)
-    displacements = op2.nastranModel.displacement
+    op2.read_op2()
+    
+    subcase0 = op2.displacements.keys()[0]  # get the 0th subcase
+    displacment_obj= op2.displacements[subcase0]
+    
     #op2.nastranModel.printDisplacement()
-    displacements = convertDisplacements(displacements)
-    log().info('---finished deflectionReader.init of %s---' %(infilename))
-    return displacements
+    #displacements = convertDisplacements(displacements)
+    log.info('---finished deflectionReader.init of %s---' % infilename)
+    return displacment_obj.translations
 
-def convertDisplacements(displacements):
-    """
-    converts the deflecions from the op2reader to the format used for mapping
-    """
-    case = '_SUBCASE 1'
-    log().info("displacement.keys() = %s" %(displacements.keys()))
-    results = displacements[case]
-
-    deflections = {}
-    for gridID,result in results.items():
-        #print "gridID = %s" %(gridID)
-        layers = result.getLayers()
-
-        for layer in layers:
-            #print "layer = ",layer
-            #print "  disp.mag = ",layer.mag
-            deflections[gridID] = array(layer.mag)
-    return deflections
 
 def readCart3dPoints(cfdGridFile):
     """return half model points to shrink xK matrix"""
-    from mapping.cart3d_reader import Cart3DReader
-    cart = Cart3DReader(cfdGridFile)
-    (points,elements,regions,loads) = cart.read()
-    (points,elements,regions,loads) = cart.makeHalfModel(points,elements,regions,loads)
+    cart = generic_cart3d_reader(cfdGridFile)
+    (points, elements, regions, loads) = cart.read_cart3d(cfdGridFile)
+    (points, elements, regions, loads) = cart.make_half_model(points, elements, regions, loads)
     return points
 
-def writeNewCart3dMesh(cfdGridFile,cfdGridFile2,wA):
+def writeNewCart3dMesh(cfdGridFile, cfdGridFile2, wA):
     """takes in half model wA, and baseline cart3d model, updates full model grids"""
-    log().info("---starting writeNewCart3dMesh---")
-    from mapping.cart3d_reader import Cart3DReader
+    log.info("---starting writeNewCart3dMesh---")
 
     # make half model
-    cart = Cart3DReader(cfdGridFile)
-    (points,elements,regions,loads) = cart.read() # reading full model
-    (points,elements,regions,loads) = cart.makeHalfModel(points,elements,regions,loads)
+    cart = generic_cart3d_reader(cfdGridFile)
+    (points, elements, regions, loads) = cart.read_cart3d(cfdGridFile) # reading full model
+    (points, elements, regions, loads) = cart.make_half_model(points, elements, regions, loads)
 
     # adjusting points
     points2 = {}
-    for (iPoint,point) in sorted(points.items()):
+    for (iPoint, point) in sorted(points.iteritems()):
         wai = wA[iPoint]
-        (x,y,z) = point
-        points2[iPoint] = [x,y,z+wai]
-    ###
+        (x, y, z) = point
+        points2[iPoint] = [x, y, z + wai]
 
-    (points,elements,regions,loads) = cart.makeMirrorModel(points2,elements,regions,loads)  # mirroring model
-    cart.writeOutfile(cfdGridFile2,points,elements,regions) # writing half model  (cleans up leftover parameters)
+    (points, elements, regions, loads) = cart.make_mirror_model(points2, elements, regions, loads)  # mirroring model
+    cart.writeOutfile(cfdGridFile2, points, elements, regions) # writing half model  (cleans up leftover parameters)
 
-    log().info("---finished writeNewCart3dMesh---")
+    log.info("---finished writeNewCart3dMesh---")
     sys.stdout.flush()
 
 
@@ -88,14 +67,14 @@ def removeDuplicateNodes(nodeList,mesh):
     This is intentional.   splineSurface = f(x,y)
     """
     nodeList.sort()
-    log().info("nodeListA = %s" %(nodeList))
+    log.info("nodeListA = %s" %(nodeList))
     nodeDict = {}
     for iNode in nodeList:
         (x,y,z) = mesh.Node(iNode).Position()
         nodeDict[(x,y)] = iNode
     nodeList = nodeDict.values()
     nodeList.sort()
-    log().info("nodeListB = %s" %(nodeList))
+    log.info("nodeListB = %s" %(nodeList))
     sys.stdout.flush()
     return nodeList
 
@@ -105,8 +84,7 @@ def run(nodeList,bdf,f06,cart3d,cart3d2):
     
     nodeList    = removeDuplicateNodes(nodeList,mesh)
     C           = getCmatrix(nodeList,mesh)
-    #deflections = readOP2(op2)
-    deflections = readF06(f06)
+    deflections = readOP2(op2)
     wS          = getWS(nodeList,deflections)
     del deflections
     
@@ -119,8 +97,8 @@ def run(nodeList,bdf,f06,cart3d,cart3d2):
     writeNewCart3dMesh(cart3d,cart3d2,wA)
     return (wA,wS)
 
-def getWA(nodeList,C,wS,mesh,aPoints):
-    log().info('---starting getWA---')
+def getWA(nodeList, C, wS, mesh, aPoints):
+    log.info('---starting getWA---')
     MatPrint(sys.stdout,C)
 
     C  = inv(C)*wS  # Cws matrix, P matrix
@@ -130,12 +108,12 @@ def getWA(nodeList,C,wS,mesh,aPoints):
 
     wA = getXK_Matrix(C,nodeList,mesh,aPoints)
     #wA = xK*C*wS
-    log().info('---finished getWA---')
+    log.info('---finished getWA---')
     sys.stdout.flush()
     return wA
 
-def getXK_Matrix(Cws,nodeList,mesh,aPoints):
-    log().info('---starting getXK_matrix---')
+def getXK_Matrix(Cws, nodeList, mesh, aPoints):
+    log.info('---starting getXK_matrix---')
     D = 1.
     piD16 = pi*D*16.
 
@@ -143,8 +121,8 @@ def getXK_Matrix(Cws,nodeList,mesh,aPoints):
     nPoints = len(aPoints.keys())
     wa = {}
     i = 0
-    for (iAero,aNode) in sorted(aPoints.items()):
-        xK = zeros(nNodes+3,'d')
+    for (iAero, aNode) in sorted(aPoints.iteritems()):
+        xK = zeros(nNodes+3, 'd')
         #nodeI = mesh.Node(iNode)
         
         xa,ya,za = aNode
@@ -165,32 +143,29 @@ def getXK_Matrix(Cws,nodeList,mesh,aPoints):
                 Kij = Rij2*naturalLog(Rij2)/piD16
                 xK[j] = Kij
             j += 1
-            ###
-        ###
+
         wai = xK*Cws
         wa[iAero] = wai[0,0]
         #print "w[%s]=%s" %(iAero,wi[0,0])
         i += 1
-    ###
     #print '---wa---'
     #print 'wa = ',wa
-    log().info('---finished getXK_matrix---')
+    log.info('---finished getXK_matrix---')
     sys.stdout.flush()
     return wa
 
 def getWS(nodeList,deflections):
-    log().info('---staring WS---')
+    log.info('---staring WS---')
     nNodes = len(nodeList)
-    Wcolumn = matrix(zeros((3+nNodes,1),'d'))
+    Wcolumn = matrix(zeros((3+nNodes,1), 'd'))
     i = 3
     for iNode in nodeList:
         (dx,dy,dz) = deflections[iNode]
         Wcolumn[i]=dz
-        log().info("wS[%s=%s]=%s" %(iNode,i,dz))
+        log.info("wS[%s=%s]=%s" %(iNode,i,dz))
         i+=1
-    ###
     print max(Wcolumn)
-    log().info('---finished getWS---')
+    log.info('---finished getWS---')
     sys.stdout.flush()
 
     wSmax = max(Wcolumn)
@@ -198,14 +173,14 @@ def getWS(nodeList,deflections):
     return Wcolumn
     
 def getCmatrix(nodeList,mesh):
-    log().info('---starting getCmatrix---')
+    log.info('---starting getCmatrix---')
     D = 1.
     piD16 = pi*D*16.
 
     nNodes = len(nodeList)
     i = 3
     #C = memmap('Cmatrix.map',dtype='float64',mode='write',shape=(3+nNodes,3+nNodes) )
-    log().info('nNodes=%s' %(nNodes))
+    log.info('nNodes=%s' %(nNodes))
     sys.stdout.flush()
     C = matrix(zeros((3+nNodes,3+nNodes),'d'))
     for iNode in nodeList:
@@ -238,15 +213,11 @@ def getCmatrix(nodeList,mesh):
                     C[i,j] = Kij
                     #msg = "i=%s j=%s xi=%s xj=%s yi=%s yj=%s Rij2=%s Kij=%s" %(i,j,xi,xj,yi,yj,Rij2,Kij)
                     #assert isinstance(Kij,float64),msg
-            ###
             j += 1
-        ###
         i += 1
-    ###
-    log().info('---finished getCmatrix---')
+    log.info('---finished getCmatrix---')
     sys.stdout.flush()
     return C
-###
 
 
 if __name__=='__main__':

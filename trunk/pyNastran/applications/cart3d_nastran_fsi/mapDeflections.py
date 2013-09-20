@@ -11,28 +11,29 @@ from numpy.linalg import det,solve,norm
 
 # Steve's code
 from delauney.premorph   import runPremorph
-from cart3d_reader       import Cart3DReader
-from op2Reader.Op2Reader import OP2Reader
 from delauneyReader      import Tet4, DelauneyReader
 from mathFunctions       import ListPrint
 #from f06Reader import f06Reader
 
-from logger import dummyLogger
-loggerObj = dummyLogger()
-log = loggerObj.startLog('debug') # or info
+from pyNastran.op2.op2 import OP2
+from pyNastran.converters.cart3d.cart3d_reader import generic_cart3d_reader
+
+from pyNastran.utils.log import get_logger
+debug = True
+log = get_logger(None, 'debug' if debug else 'info')
 
 #------------------------------------------------------------------
 
-class deflectionReader(object):
-    def __init__(self,infilename='fem.op2'):
-        log().info('---starting deflectionReader.init of %s---' %(infilename))
+class DeflectionReader(object):
+    def __init__(self, infilename='fem.op2'):
+        log.info('---starting deflectionReader.init of %s---' %(infilename))
         op2 = OP2Reader(infilename)
         terms = ['force','stress','stress_comp','strain','strain_comp','displacement','grid_point_forces']
         op2.read(terms)
         self.displacement = op2.nastranModel.displacement
         #op2.nastranModel.printDisplacement()
         self.convertDisplacements()
-        log().info('---finished deflectionReader.init of %s---' %(infilename))
+        log.info('---finished deflectionReader.init of %s---' %(infilename))
 
     def getDeflections(self,ID,n0,n1,n2,n3):
         defs = [
@@ -56,7 +57,7 @@ class deflectionReader(object):
         converts the deflecions from the op2reader to the format used for mapping
         """
         case = '_SUBCASE 1'
-        log().info("self.displacement.keys() = %s" %(self.displacement.keys()))
+        log.info("self.displacement.keys() = %s" %(self.displacement.keys()))
         results = self.displacement[case]
         #sys.exit('stopping...')
         self.deflections = {}
@@ -71,20 +72,17 @@ class deflectionReader(object):
         return self.deflections
 
     def printDisplacement(self):
-        log().info("printing Displacement")
+        log.info("printing Displacement")
         for case,results in self.displacement.items():
-            log().info("case = |%s|" %(case))
+            log.info("case = |%s|" %(case))
             for gid,result in results.items():
-                log().info("gid = %s" %(gid))
+                log.info("gid = %s" %(gid))
                 layers = result.getLayers()
                 
                 for layer in layers:
                     #print "layer = ",layer
-                    log().info("  disp.mag = %s" %(layer.mag))
-                ###
-            ###
-        ###
-        log().info("")
+                    log.info("  disp.mag = %s" %(layer.mag))
+        log.info("")
 
 #------------------------------------------------------------------
 
@@ -127,19 +125,19 @@ class DeflectionMapper(object):
         
         #tet,tetID = self.bruteForce(m,tets)
         #return tet
-        log().info("starting tet = %s" %(closestTet))
+        log.info("starting tet = %s" %(closestTet))
         tetID = closestTet.ID
         excluded = []
-        log().info("working on point = %s" %(ListPrint(m)))
+        log.info("working on point = %s" %(ListPrint(m)))
         counter = 0
         counterMax = 100
         broken = False
         
         isInternal,localVol = closestTet.isInternalNode(m)
         if isInternal:
-            log().info("***already Internal")
+            log.info("***already Internal")
         while isInternal==False:
-            log().info("excluding ID=%s" %(tetID))
+            log.info("excluding ID=%s" %(tetID))
             excluded.append(tetID)
             (newTet,minValue) = self.findCloserTet(m,closestTet,tets,excluded)
             closestTet = copy.deepcopy(newTet)
@@ -151,7 +149,7 @@ class DeflectionMapper(object):
                 break
 
             if tetID in excluded:
-                log().info("ERROR***ID=%s was already excluded...excluded=%s" %(tetID,excluded))
+                log.info("ERROR***ID=%s was already excluded...excluded=%s" %(tetID,excluded))
                 broken = True
                 break
             else:
@@ -159,13 +157,11 @@ class DeflectionMapper(object):
                #print "ID=%s dist=%s" %(tetID,minValue)
 
             (isInternal,localVol) = closestTet.isInternalNode(m)
-            ###
-        ###
         
         if broken:
             (closestTet,tetID) = self.bruteForce(m,tets,excluded)
         else:
-            log().info("*findClosestTet worked!!!")
+            log.info("*findClosestTet worked!!!")
 
         #print "*tet[%s]=%s" %(tetID,closestTet)
         #print "nodes = ",closestTet.nodes
@@ -189,7 +185,7 @@ class DeflectionMapper(object):
         If a point isnt found, the least bad point is taken (the one with the lowest
         optValue (optimization value) and a 'test' is performed to check how bad it is.
         """
-        log().info("brute Forcing...")
+        log.info("brute Forcing...")
         
         localVols = []
         counter = []
@@ -205,27 +201,25 @@ class DeflectionMapper(object):
             #print "tet[%4s].internal=%s" %(i,foundInternalNode)
             if foundInternalNode:
                 foundID = tet.ID
-                log().info("*foundID = %s" %(foundID))
+                log.info("*foundID = %s" %(foundID))
                 #print self.findCloserTet(m,tets[excluded[-1]],tets)
                 #print self.findCloserTet(m,tets[foundID],tets)
                 
                 return tet,foundID
                 #raise Exception('unhandled success!')
                 #break
-            ###
-        ###
         maxI = localVols.index(max(localVols))
         
         localI = argsort(localVols)
         localVols.sort()
         #for i,localVol in zip(localI,localVols):
-        #    log().info("localVol[%s]=%s" %(i,localVol))
-        log().info("guessing...closeID = %s" %(tet.ID))
+        #    log.info("localVol[%s]=%s" %(i,localVol))
+        log.info("guessing...closeID = %s" %(tet.ID))
         
         tetOut = tets[maxI]
-        log().info('tetOut = %s' %(tetOut))
+        log.info('tetOut = %s' %(tetOut))
         (isInternal,optValue) = tetOut.isInternalNode(m)
-        log().info("isInternalNode=%s optVal=%g" %(isInternal,optValue))
+        log.info("isInternalNode=%s optVal=%g" %(isInternal,optValue))
         return (tetOut,tetOut.ID)
 
 
@@ -248,8 +242,6 @@ class DeflectionMapper(object):
             #print "i=%s neighbor=%s centroid=%s" %(i,neighbor,tets[neighbor].centroid())
             if neighbor>0:
                 dists[i] = self.distance(m,tets[neighbor].centroid())
-            ###
-        ###
         #dists[0] = 9.e9
         #print "dists = ",dists
         
@@ -269,7 +261,7 @@ class DeflectionMapper(object):
     def distance(self,p1,p2):
         return norm(p1-p2)
 
-    def mapDeflections(self,properTets={}):
+    def mapDeflections(self, properTets={}):
         """
         Loops thru all the aero nodes, finds the tet it's in, interpolates
         on the deflections at the nodes and maps the deflection to the aero node
@@ -287,14 +279,14 @@ class DeflectionMapper(object):
         #aeroNodes = [array([0.0,0.,0.])]
         aeroNodes2 = []
         tet = tets[1]
-        log().info("-"*80)
+        log.info("-"*80)
         #print "type(aeroNodes)=%s" %(type(aeroNodes))
 
-        for i,aeroNode in aeroNodes.items():
+        for i,aeroNode in aeroNodes.iteritems():
             if aeroNode[1]<0:
-                log().info('skipping aeroNode=%s bc y<0.' %(i))
+                log.info('skipping aeroNode=%s bc y<0.' % i)
                 continue
-            log().info("aeroNode[%s]  = %s" %(i,ListPrint(aeroNode)))
+            log.info("aeroNode[%s]  = %s" % (i, ListPrint(aeroNode)))
             
             #print "aeroNode  = ",aeroNode
             #continue
@@ -313,7 +305,7 @@ class DeflectionMapper(object):
             ID = tet.ID
             deflectionsTet = d.getDeflections(ID,n0,n1,n2,n3)
             aeroNode2 = tet.mapDeflections(deflectionsTet,aeroNode)
-            log().info("aeroNode2 = %s" %(ListPrint(aeroNode2)))
+            log.info("aeroNode2 = %s" %(ListPrint(aeroNode2)))
             properTets[i] = ID
             aeroNodes2.append(aeroNode2)
 
@@ -323,12 +315,9 @@ class DeflectionMapper(object):
             #        
             #        deflectionsTet = [ d[n0],d[n1],d[n2],d[n3] ]
             #        aeroNode2 = tet.mapDeflections(deflectionsTet,aeroNode)
-            #   ###
-            ###
             #break # uncomment to run one aeroNode
-            log().info("-"*80)
+            log.info("-"*80)
             sys.stdout.flush()
-        ###
         #return aeroNode2
         #for key,value in properTets.items():
         #    print "pointID=%s  -> tetID=%s" %(key,value)
@@ -336,8 +325,8 @@ class DeflectionMapper(object):
         return (aeroNodes2,properTets)
         
     #def writeAeroInfile(self):
-    #    self.aeroModel.updateNodes(nodes)
-    #    self.aeroModel.write(self.aeroFile)
+        #self.aeroModel.updateNodes(nodes)
+        #self.aeroModel.write(self.aeroFile)
 
 #------------------------------------------------------------------
 
@@ -345,23 +334,21 @@ def loadProperTets(properTetFilename='properTets.in'):
     properTets = {}
     
     if os.path.exists(properTetFilename):
-        log().info("loading tets from |%s|..." %(properTetFilename))
+        log.info("loading tets from |%s|..." %(properTetFilename))
         infile = open(properTetFilename,'r')
         lines = infile.readlines()
         for line in lines[1:]:
             #print 
             (pointID,properTet) = line.strip().split()
             properTets[int(pointID)] = int(properTet)
-        ###
     else:
-        log().info("couldnt find tetFile |%s|..." %(properTetFilename))
-    ###
+        log.info("couldnt find tetFile |%s|..." %(properTetFilename))
     return properTets
 
 def writeProperTets(workpath,properTets):
     outfilename = os.path.join(workpath,'properTets.in')
     if not(os.path.exists(outfilename)):
-        log().info("writing tets...")
+        log.info("writing tets...")
         msg = '#PointID    tetID\n'
         for key,value in properTets.items():
             msg += "%5s  %5s\n" %(key,value)
@@ -378,8 +365,8 @@ def test_Tet():
     m2 = [ 2., 2., 2.]
     tet = Tet4(a,b,c,d)
     #print "volume = ",tet.volume()
-    log().info("isInternal = \n%s\n" %(tet.isInternalNode(m1)))
-    log().info("isInternal = \n%s"   %(tet.isInternalNode(m2)))
+    log.info("isInternal = \n%s\n" %(tet.isInternalNode(m1)))
+    log.info("isInternal = \n%s"   %(tet.isInternalNode(m2)))
 
 def test_deflections():
     infilename = os.path.join('op2reader','solid_shell_bar.op2')
@@ -438,7 +425,7 @@ def mapDeflectionsStructures_Aero(bdfModel='test_tet10.bdf',op2Filename='test_te
     # deflect the aero nodes
     dmap = DeflectionMapper(cartPoints,tets,defreader)
     t1 = time()
-    log().info("setup time = %g sec" %(t1-t0))
+    log.info("setup time = %g sec" %(t1-t0))
     
     (aeroNodes2,properTets) = dmap.mapDeflections(properTets)
     writeProperTets(workpath,properTets)
@@ -446,12 +433,12 @@ def mapDeflectionsStructures_Aero(bdfModel='test_tet10.bdf',op2Filename='test_te
 
     # write out the deflected aero nodes
     cart.writeInfile(cart3dOut,aeroNodes2,elements,regions) #bJet.a.tri_new
-    log().info("done with deflection mapping!")
+    log.info("done with deflection mapping!")
 
     #for aeroNode in aeroNodes2:
     #    print "aeroNode = ",aeroNode
     t2 = time()
-    log().info("total mapDeflections.py time = %g sec" %(t2-t0))
+    log.info("total mapDeflections.py time = %g sec" %(t2-t0))
 
 #------------------------------------------------------------------
 
@@ -463,7 +450,7 @@ if __name__=='__main__':
     assert os.path.exists(bdfModel),'|%s| doesnt exist' %(bdfModel)
 
     os.chdir(workpath)
-    log().info("basepath = %s" %(basepath))
+    log.info("basepath = %s" %(basepath))
     tetFilename = os.path.join(configpath,'geometry.morph.in')
     op2Filename = os.path.join(configpath,'fem3.op2')
     cart3dGeom  = os.path.join(configpath,'Cart3d_bwb.i.tri')
