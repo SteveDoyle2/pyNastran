@@ -10,8 +10,6 @@ def isListRanged(a,List,b):
     for x in List:
         if not isFloatRanged(a,x,b):
             return False
-        ###
-    ###
     return True
 
 def isFloatRanged(a,x,b):
@@ -22,13 +20,10 @@ def isFloatRanged(a,x,b):
     if not a<x:
         if not allclose(x,a):
            return False 
-        ###
-    ###
+
     if not x<b:
         if not allclose(x,b):
             return False
-        ###
-    ###
     return True
 
 #------------------------------------------------------------------
@@ -36,14 +31,11 @@ def printMatrix(A):
     msg = ''
     for row in A:
         msg += ListPrint(row)+'\n'
-    ###
     return msg
-###
 
 def ListPrint(listA):
     if len(listA)==0:
         return '[]'
-    ###
 
     msg = '['
     for a in listA:
@@ -59,9 +51,7 @@ def ListPrint(listA):
             except TypeError:
                 print "a = |%s|" %(a)
                 raise
-            ###
-        ###
-    ###
+
     msg = msg[:-1]
     msg += ' ]'
     return msg
@@ -142,36 +132,36 @@ def shepardWeight(n,nodes):
     d = 0.
     for nodei in nodes:
         hi = distance(n,nodei)
-        d +=hi
-        if allclose(di,0.):
+        d += hi
+        if allclose(hi, 0.):
             hi = 0.000001  # make this the dominating node
         
-        invDist = 1/hi
+        invDist = 1.0 / hi
         invDists.append(invDist)
         invDistSum += invDist
     
     invDists = array(invDists)
-    weights = invDists/invDistSum
+    weights = invDists / invDistSum
     return weights
 
-def areaWeight(n,n1,n2,n3):
+def areaWeight(n, n1, n2, n3):
     """
     Finds the weightings based on the barycentric coordinates weighted average method
     http://www.ems-i.com/smshelp/Data_Module/Interpolation/Inverse_Distance_Weighted.htm
     """
-    #a = area(n1,n2,n3)
-    a1 = area(a,a2,a3)
-    a2 = area(a,a1,a3)
-    a3 = area(a,a1,a2)
-    a = a1+a2+a3
-    b1 = a1/a
-    b2 = a2/a
-    b3 = a3/a
+    #a = area(n1, n2, n3)
+    a1 = area(a, a2, a3)
+    a2 = area(a, a1, a3)
+    a3 = area(a, a1, a2)
+    a = a1 + a2 + a3
+    b1 = a1 / a
+    b2 = a2 / a
+    b3 = a3 / a
 
     x = b1*x1+b2*x2+b3*x3
     return(w1,w2,w3)
 
-def getTriangleWeights(n,n1,n2,n3):
+def getTriangleWeights(n, n1, n2, n3):
     """
     Returns the weighting for each node such that:
         <F1,F2,F3> = F*<w1,w2,w3>
@@ -182,8 +172,8 @@ def getTriangleWeights(n,n1,n2,n3):
     #(w1,w2,w3) = areaWeight(n,n1,n2,n3)
     return(w1,w2,w3)
 
-def Area(a,b):
-    return 0.5*norm(cross(a,b))
+def Area(a, b):
+    return 0.5 * norm(cross(a, b))
 
 def AreaNormal(nodes):
     """
@@ -199,11 +189,11 @@ def AreaNormal(nodes):
     (n0,n1,n2) = nodes
     a = n0-n1
     b = n0-n2
-    vector = cross(a,b)
+    vector = cross(a, b)
     length = norm(vector)
-    normal = vector/length
-    area = 0.5*length
-    if allclose(norm(normal),1.)==False:
+    normal = vector / length
+    area = 0.5 * length
+    if allclose(norm(normal), 1.)==False:
         print "a = ",a
         print "b = ",b
         print "normal = ",normal
@@ -217,7 +207,7 @@ def Triangle_AreaCentroidNormal(nodes):
     centroid = Centroid(*nodes)
     return (area,centroid,normal)
 
-def Normal(a,b):
+def Normal(a, b):
     """finds the unit normal vector of 2 vectors"""
     vector = cross(a,b)
     length = norm(vector)
@@ -225,10 +215,10 @@ def Normal(a,b):
     assert allclose(norm(normal),1.)
     return normal
 
-def Centroid(A,B,C):
+def Centroid(A, B, C):
     """returns the centroid of a triangle"""
     #print "type(A,B,C) = ",type(A),type(C),type(B)
-    centroid = (A+B+C)/3.
+    centroid = (A + B + C)/3.
     return centroid
     
 #------------------------------------------------------------------

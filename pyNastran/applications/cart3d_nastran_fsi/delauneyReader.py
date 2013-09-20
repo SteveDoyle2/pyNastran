@@ -1,8 +1,8 @@
 import os
-from numpy import array,cross,dot,abs,transpose
-from numpy.linalg import norm,solve,cond
+from numpy import array, cross, dot, abs, transpose
+from numpy.linalg import norm, solve, cond
 
-from mathFunctions import printMatrix,isListRanged,ListPrint,shepardWeight
+from mathFunctions import printMatrix, isListRanged, ListPrint, shepardWeight
 from matTest import fIsNatural
 
 from logger import dummyLogger
@@ -45,7 +45,7 @@ class Tet4(object):
         #assert vol==vol2
         #msg = "volume[%s]=%s" %(ID,vol)
         #assert vol>0,msg
-        #log().info(msg)
+        #log.info(msg)
 
 
     def __repr__(self):
@@ -70,7 +70,7 @@ class Tet4(object):
         return abs(self.volume())
 
     def testVol(self,a,b,c,d):
-        vol = dot(a-d,cross(b-d,c-d))/6.
+        vol = dot(a-d,cross(b-d,c-d)) / 6.
         return vol
     
     def volume(self):
@@ -79,7 +79,7 @@ class Tet4(object):
         based on http://en.wikipedia.org/wiki/Tetrahedron
         """
         if self._volume is None:
-            self._volume = dot(self.p0-self.p3,cross(self.p1-self.p3,self.p2-self.p3))/6.
+            self._volume = dot(self.p0-self.p3, cross(self.p1-self.p3,self.p2-self.p3))/6.
         else:
             return self._volume
         return self._volume
@@ -105,13 +105,13 @@ class Tet4(object):
                    [1.]+list(self.p3)])
         #print "m1 = ",m
         (d1,d2,d3,d4) = deflections
-        log().info('d1=%s' %(d1))
-        log().info('d2=%s' %(d2))
-        log().info('d3=%s' %(d3))
-        log().info('d4=%s' %(d4))
-        #log().info("A = \n%s" %(A))
+        log.info('d1=%s' %(d1))
+        log.info('d2=%s' %(d2))
+        log.info('d3=%s' %(d3))
+        log.info('d4=%s' %(d4))
+        #log.info("A = \n%s" %(A))
         #condA = cond(A,2)
-        #log().info("A cond=%g;  A=\n%s" %(condA,printMatrix(A)))
+        #log.info("A cond=%g;  A=\n%s" %(condA,printMatrix(A)))
         #print "ID  = ",self.ID
         
         #condMax = 1E6  # max allowable condition number before alternate approach
@@ -121,15 +121,13 @@ class Tet4(object):
             du = array([0.,0.,0.])
             for (node,weight) in zip(nodes,weights):
                 du += weight*node
-            ###
-        ###
         else:
             ux = self.mapDeflection(A,d1,d2,d3,d4,0,aeroNode,'x')
             uy = self.mapDeflection(A,d1,d2,d3,d4,1,aeroNode,'y')
             uz = self.mapDeflection(A,d1,d2,d3,d4,2,aeroNode,'z')
             du = array([ux,uy,uz])
-        log().info("vol       = %s" %(self.volume()))
-        log().info("du        = %s" %(du))
+        log.info("vol       = %s" %(self.volume()))
+        log.info("du        = %s" %(du))
         return aeroNode + du
 
     def mapDeflection(self,A,d1,d2,d3,d4,i,aeroNode,dType='x'):
@@ -141,7 +139,7 @@ class Tet4(object):
         """
         di = array([d1[i],d2[i],d3[i],d4[i]])
         diMax = max(abs(di)) # L1 norm
-        log().info("d%s = %s" %(dType,ListPrint(di)))
+        log.info("d%s = %s" %(dType,ListPrint(di)))
 
         abcd = solve(A,di)
 
@@ -149,7 +147,7 @@ class Tet4(object):
         (a,b,c,d) = abcd
         ui = a+b*aeroNode[0]+c*aeroNode[1]+d*aeroNode[2]
         isRanged = isListRanged(0.,abcd,1.)
-        log().info('isRanged=%s  u%sRatio=%g - a=%g b=%g c=%g d=%g' %(isRanged,dType,abs(ui/diMax),a,b,c,d))
+        log.info('isRanged=%s  u%sRatio=%g - a=%g b=%g c=%g d=%g' %(isRanged,dType,abs(ui/diMax),a,b,c,d))
         return ui
 
     def isInternalNode(self,pAero):
@@ -302,7 +300,7 @@ class DelauneyReader(object):
         reads all the node points, neighbors, and the IDs tet nodes,
         determines the volume for testing.
         """
-        log().info("---reading Delauney Tetrahedralization file...|%s|" %(self.infilename))
+        log.info("---reading Delauney Tetrahedralization file...|%s|" %(self.infilename))
         infile = open(self.infilename,'r')
         lines = infile.readlines()
         infile.close()
@@ -314,9 +312,9 @@ class DelauneyReader(object):
                 slines.append(sline)
         infile.close()
         
-        #log().info('slines[0] = %s' %(slines[0]))
+        #log.info('slines[0] = %s' %(slines[0]))
         ngrids,nelements = self.ints(slines[0])
-        log().info("ngrid=%s  nelements=%s" %(ngrids,nelements))
+        log.info("ngrid=%s  nelements=%s" %(ngrids,nelements))
         
         grids = {}
         for sline in slines[1:ngrids+1]:
@@ -357,14 +355,14 @@ class DelauneyReader(object):
             
             #print "e[%s]=%s" %(e[0],e[1:])
         
-        log().info("maxX=%s minX=%s" %(maxX,minX))
-        log().info("maxY=%s minY=%s" %(maxY,minY))
-        log().info("maxZ=%s minZ=%s" %(maxZ,minZ))
+        log.info("maxX=%s minX=%s" %(maxX,minX))
+        log.info("maxY=%s minY=%s" %(maxY,minY))
+        log.info("maxZ=%s minZ=%s" %(maxZ,minZ))
         dx = maxX-minX
         dy = maxY-minY
         dz = maxZ-minZ
         volume = dx*dy*dz
-        log().info("volume = %s" %(volume))
+        log.info("volume = %s" %(volume))
         
         return grids,elements,volume
     
@@ -391,16 +389,7 @@ class DelauneyReader(object):
         outfile.write(msg)
 
         outfile.close()
-        log().info("finished writing %s" %(tetFilename))
-
-    def oneCard(self,card):
-        msg = ''
-        for i,spot in enumerate(card):
-            msg += "%-8s" %(spot)
-            if i%8==7:
-                msg += '\n'+' '*8
-        msg = msg.strip() + '\n'
-        return msg
+        log.info("finished writing %s" %(tetFilename))
 
     def ints(self,values):
         return [int(value) for value in values]

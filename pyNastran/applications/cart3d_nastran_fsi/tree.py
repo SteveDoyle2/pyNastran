@@ -75,7 +75,7 @@ class badTree(object):
                 dFT.append(dist)
                 #print "dFT = ",dFT
             dFT = array(dFT)
-            ###
+
             #print "dFT = ",dFT
             sortList = argsort(dFT)
             #print "sortList = ",sortList
@@ -89,11 +89,9 @@ class badTree(object):
             #print "node[%s]=%s" %(nIDshort[1],toNodes[nIDshort[1]])
             self.tree[fromKey] = [nIDshort,dFTshort]
             n+=1
-        ###
         print "finished constructing distance tree"
         return self.tree
-    ###
-### tree class
+
 
 if __name__=='__main__':
     n1 = array([0.,0.,0.])
