@@ -74,7 +74,7 @@ class Cart3DAsciiReader(object):
 
     def make_full_model(self, nodes, elements, regions, loads):
         """assumes a y=0 line of nodes"""
-        self.log.info('---starting makeFullModel---')
+        self.log.info('---starting make_full_model---')
 
         maxNode = len(nodes.keys())
         maxElements = len(elements.keys())
@@ -126,38 +126,50 @@ class Cart3DAsciiReader(object):
         for i in xrange(1, len(elements)):
             assert i in elements, 'i=%s is not in elements...' % (i)
             #assert i in regions ,'i=%s is not in regions...' %(i)
-        self.log.info('---finished makeFullModel---')
+        self.log.info('---finished make_full_model---')
         sys.stdout.flush()
 
         return (nodes, elements, regions, loads)
 
-    def make_half_model(self, nodes, elements, regions, Cp):
+    def make_half_model(self, nodes, elements, regions, Cp, axis='y'):
         """
         Makes a half model from a full model
+        
+        ...note:: Cp is really loads['Cp'] and was meant for loads analysis only
         """
-        nNodesStart = len(nodes)
+        assert axis.lower() in ['y', 'z'], 'axis must be "y" or "z"; axis=%r' % axis
+        axis = axis.lower()
 
-        self.log.info('---starting makeHalfModel---')
-        inodes_remove = []
-        for inode, node in sorted(nodes.iteritems():
-            if node[1] < 0:
-                #print iNode,'...',node
-                #del nodes[inode]
-                inodes_remove.append(iNode)
-                #try:
-                #    del Cp[iNode]  # assume loads=0
-                #except:
-                #    pass
+        nNodesStart = len(nodes)
+        inodes_remove = set([])
+        self.log.info('---starting make_half_model---')
+        if axis == 'y':
+            for (inode, node) in nodes.iteritems():
+                if node[1] < 0:
+                    inodes_remove.add(inode)
+                    #del nodes[inode]
+                    #try:
+                    #    del Cp[inode]  # assume loads=0
+                    #except:
+                        #pass
+        elif axis == 'z':
+            for (inode, node) in nodes.iteritems():
+                if node[2] < 0:
+                    inodes_remove.add(inode)
+                    #try:
+                        #del Cp[inode]  # assume loads=0
+                    #except:
+                        #pass
+        else:
+            raise NotImplementedError('axis=%r' % axis)
+        
         for inode in inodes_remove:
             del nodes[inode]
-            del Cp[inode]
-        del inodes_remove
-        sys.stdout.flush()
+        #sys.stdout.flush()
 
-        ielements_remove = []
+        ielements_remove = set([])
         for (ielement, element) in elements.iteritems():
-            print "iElement = %r %s" % (ielement, type(ielement))
-            #ielements_remove.append(ielement)
+            #print "ielement = %r %s" % (ielement, type(ielement))
             inNodeList = [True, True, True]
             for (i, node) in enumerate(element):
                 if node not in nodes:
@@ -165,45 +177,25 @@ class Cart3DAsciiReader(object):
                     break
 
             if False in inNodeList:
-                ielements_remove.append(ielement)
+                ielements_remove.add(ielement)
 
-        for ielment in ielements_remove:
-            #print iElement,element,inNodeList,type(iElement)
+        for ielement in ielements_remove:
             del elements[ielement]
             del regions[ielement]
 
         assert len(nodes) != nNodesStart
-        self.log.info('---finished makeHalfModel---')
+        self.log.info('---finished make_half_model---')
         return (nodes, elements, regions, Cp)
 
-    def make_mirror_model(self, nodes, elements, regions, loads):
+    def make_mirror_model(self, nodes, elements, regions, loads, axis='y'):
         """
         Mirrors about the y=0 line
         """
         #nNodesStart = len(nodes)
 
-        self.log.info('---starting makeMirrorModel---')
-        for (iNode, node) in sorted(nodes.iteritems()):
-            if node[1] < 0:
-                #print iNode,'...',node
-                del nodes[iNode]
-                #del Cp[iNode]  # assume loads=0
-        sys.stdout.flush()
-
-        for (iElement, element) in elements.iteritems():
-            #print "iElement = |%s|" %(iElement),type(iElement)
-            inNodeList = [True, True, True]
-            for (i, node) in enumerate(element):
-                if node not in nodes:
-                    inNodeList[i] = False
-
-            if False in inNodeList:
-                #print iElement,element,inNodeList,type(iElement)
-                del elements[iElement]
-                del regions[iElement]
-
-        #assert len(nodes)!=nNodesStart
-        self.log.info('---finished makeMirrorModel---')
+        self.log.info('---starting make_mirror_model---')
+        nodes, elements, regions, loads = self.make_half_model(nodes, elements, regions, loads, axis)
+        self.log.info('---finished make_mirror_model---')
 
         return self.make_full_model(nodes, elements, regions, loads)
         #return self.renumber_mesh(nodes,elements,regions,loads)
@@ -885,13 +877,18 @@ def generic_cart3d_reader(infileName, log=None, debug=False):
 
 if __name__ == '__main__':
     # binary
-    cart3dGeom = os.path.join('models', 'spike.a.tri')
-    #outfilename = os.path.join('models','threePlugs2.tri')
+    cart3dGeom = os.path.join('.', 'Cart3d_bwb.i.tri')
+    outfilename = os.path.join('.','Cart3d_bwb.i.tri2')
+    outfilename2 = os.path.join('.','Cart3d_bwb_half.tri')
     cart = generic_cart3d_reader(cart3dGeom)
     (points, elements, regions, loads) = cart.read_cart3d(cart3dGeom)
-    #cart.makeQuads(points,elements)
+
+    (points2, elements2, regions2, loads2) = cart.make_half_model(points, elements, regions, loads)
 
     cart.write_outfile(outfilename, points, elements, regions)
+    cart.write_outfile(outfilename2, points2, elements2, regions2)
+    
+    sys.exit('made half model')
 
     # ascii
     cart3dGeom = os.path.join('models', 'threePlugs.a.tri')
@@ -917,8 +914,7 @@ if 0:
 
     cart = Cart3DAsciiReader()
     (points, elements, regions, loads) = cart.read_cart3d(cart3dGeom)
-    (points, elements, regions, loads) = cart.make_half_model(points,
-                                                            elements, regions, loads)
+    (points, elements, regions, loads) = cart.make_half_model(points, elements, regions, loads)
     cart.write_outfile(cart3dGeom2, points, elements, regions)
 
     #cart = Cart3DAsciiReader(cart3dGeom)  # bJet.a.tri
