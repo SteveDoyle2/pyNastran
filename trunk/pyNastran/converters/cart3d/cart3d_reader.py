@@ -96,8 +96,8 @@ class Cart3DAsciiReader(object):
 
         # based on the conversion (nodes2map) object, renumber each element
         # stick the result in the location for the new element
-        #elementsB={}
-        #regionsB={}
+        #elementsB = {}
+        #regionsB = {}
 
         nThree = 147120 + 10  # len(elements)*2   ## todo why is there +10???
         allSet = set([i + 1 for i in xrange(nThree)])
@@ -138,28 +138,39 @@ class Cart3DAsciiReader(object):
         nNodesStart = len(nodes)
 
         self.log.info('---starting makeHalfModel---')
-        for (iNode, node) in sorted(nodes.iteritems()):
+        inodes_remove = []
+        for inode, node in sorted(nodes.iteritems():
             if node[1] < 0:
                 #print iNode,'...',node
-                del nodes[iNode]
-                try:
-                    del Cp[iNode]  # assume loads=0
-                except:
-                    pass
-
+                #del nodes[inode]
+                inodes_remove.append(iNode)
+                #try:
+                #    del Cp[iNode]  # assume loads=0
+                #except:
+                #    pass
+        for inode in inodes_remove:
+            del nodes[inode]
+            del Cp[inode]
+        del inodes_remove
         sys.stdout.flush()
 
-        for (iElement, element) in elements.iteritems():
-            #print "iElement = |%s|" %(iElement),type(iElement)
+        ielements_remove = []
+        for (ielement, element) in elements.iteritems():
+            print "iElement = %r %s" % (ielement, type(ielement))
+            #ielements_remove.append(ielement)
             inNodeList = [True, True, True]
             for (i, node) in enumerate(element):
                 if node not in nodes:
                     inNodeList[i] = False
+                    break
 
             if False in inNodeList:
-                #print iElement,element,inNodeList,type(iElement)
-                del elements[iElement]
-                del regions[iElement]
+                ielements_remove.append(ielement)
+
+        for ielment in ielements_remove:
+            #print iElement,element,inNodeList,type(iElement)
+            del elements[ielement]
+            del regions[ielement]
 
         assert len(nodes) != nNodesStart
         self.log.info('---finished makeHalfModel---')
@@ -257,7 +268,7 @@ class Cart3DAsciiReader(object):
 
             maxNode = max(element)
             maxNodes.append(maxNode)
-        self.log.info("maxNodeID = %s" % (max(maxNodes)))
+        self.log.info("maxNodeID = %s" % max(maxNodes))
         f.write(msg)
 
     def write_points(self, f, points):
