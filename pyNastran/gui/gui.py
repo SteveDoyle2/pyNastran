@@ -737,9 +737,6 @@ def main():
         if len(sys.argv) > 1:
             (edges, isNodal, isCentroidal, format, input, output, debug) = run_arg_parse()
 
-    #isNodal = True
-    #isCentroidal = True
-
     app = wx.App(redirect=False)
     appFrm = AppFrame(isEdges, isNodal, isCentroidal, format, input, output, debug)
     #appFrm.Show()
