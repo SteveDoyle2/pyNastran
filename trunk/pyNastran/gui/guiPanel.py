@@ -432,6 +432,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
             self.iCase = 0
 
         if len(self.caseKeys) > 0:
+            #print('caseKeys =', self.caseKeys)
             key = self.caseKeys[self.iCase]
             print("key = %s" % (str(key)))
             if key[2] == 3:  # vector size=3 -> vector, skipping ???
@@ -453,8 +454,8 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
             return
 
         foundCases = self.incrementCycle()
-        #if foundCases:
-        if 1:
+        if foundCases:
+        #if 1:
             print("incremented case")
             #self.gridResult.Reset()
             gridResult = vtk.vtkFloatArray()
@@ -462,7 +463,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
 
             key = self.caseKeys[self.iCase]
             case = self.resultCases[key]
-            print("len(case) = %i" % (len(case)))
+            print("len(case) = %i" % len(case))
             (subcaseID, resultType, vectorSize, location, dataFormat) = key
 
             if location == 'centroid' and plotCentroidal:
@@ -473,7 +474,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
                 gridResult.Allocate(self.nNodes * vectorSize, 1000)
                 gridResult.SetNumberOfComponents(vectorSize)
             else:
-                print("***%s skipping" % (location))
+                print("***%s skipping" % location)
 
             #self.iSubcaseNameMap[self.isubcase] = [Subtitle,Label]
             caseName = self.iSubcaseNameMap[subcaseID]
