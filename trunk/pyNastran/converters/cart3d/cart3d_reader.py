@@ -1,9 +1,9 @@
 #pylint:  disable=C0103,C0111
 import os
 import sys
-from math import ceil, sqrt
+from math import ceil#, sqrt
 from itertools import izip
-from numpy import array
+from numpy import array, zeros, where, savetxt, sqrt, abs
 
 from struct import unpack
 from pyNastran.bdf.fieldWriter import print_card
@@ -43,9 +43,9 @@ class Cart3DAsciiReader(object):
                       (self.infilename))
         self.infile = open(self.infilename, 'r')
         self.read_header()
-        points = self.get_points()
-        elements = self.get_elements(bypass=False)
-        regions = self.get_regions(bypass=False)
+        points = self.read_points()
+        elements = self.read_elements(bypass=False)
+        regions = self.read_regions(bypass=False)
         loads = self.read_results(0, self.infile)
         #if self.cartType=='results':
 
@@ -140,59 +140,72 @@ class Cart3DAsciiReader(object):
         assert axis.lower() in ['y', 'z'], 'axis must be "y" or "z"; axis=%r' % axis
         axis = axis.lower()
 
-        nNodesStart = len(nodes)
+        nnodes, three = nodes.shape
         inodes_remove = set([])
         self.log.info('---starting make_half_model---')
         if axis == 'y':
-            for (inode, node) in nodes.iteritems():
-                if node[1] < 0:
-                    inodes_remove.add(inode)
-                    #del nodes[inode]
-                    #try:
-                    #    del Cp[inode]  # assume loads=0
-                    #except:
-                        #pass
+            ax = 1
         elif axis == 'z':
-            for (inode, node) in nodes.iteritems():
-                if node[2] < 0:
-                    inodes_remove.add(inode)
-                    #try:
-                        #del Cp[inode]  # assume loads=0
-                    #except:
-                        #pass
+            ax = 2
         else:
             raise NotImplementedError('axis=%r' % axis)
-        
-        for inode in inodes_remove:
-            del nodes[inode]
-        #sys.stdout.flush()
 
+        inodes_save = where(nodes[:, ax] >= 0.0)[0] + 1
+        print "found inodes"
+        assert 0 < len(inodes_save) < nnodes, 'len(inodes_save)=%s nnodes=%s'  % (len(inodes_save), nnodes)
+        nodes2 = nodes[inodes_save, :]
+        print "found nodes"
+        
+        #from numpy import searchsorted
+        from numpy import arange, searchsorted
+        
+        
+        ielements_save = set([])
         ielements_remove = set([])
-        for (ielement, element) in elements.iteritems():
-            #print "ielement = %r %s" % (ielement, type(ielement))
-            inNodeList = [True, True, True]
-            for (i, node) in enumerate(element):
-                if node not in nodes:
-                    inNodeList[i] = False
+        nelements, three = elements.shape
+        #print inodes_save
+        for ielement in xrange(nelements):
+            save_element = True
+            element = elements[ielement,:]
+            
+            for (i, inode) in enumerate(element):
+                if searchsorted(inodes_save, inode-1):
+                    save_element = False
                     break
 
-            if False in inNodeList:
-                ielements_remove.add(ielement)
+            #if not save_element:
+            #    ielements_remove.add(ielement)
+            #else:
+            if save_element:
+                ielements_save.add(ielement)
+        print "found ielements_remove"
 
-        for ielement in ielements_remove:
-            del elements[ielement]
-            del regions[ielement]
+        ielements_save = list(ielements_save)
+        ielements_save.sort()
+        
+        if 0:
+            #nelements2 = nelements - len(ielements_remove)
+            ielements_save = set(arange(0, nelements)) - ielements_remove
+            ielements_save = array(ielements_save)
+            ielements_save.sort()
+            print "found ielements_remove2"
 
-        assert len(nodes) != nNodesStart
+        elements2 = elements[ielements_save]
+        print "found elements"
+        regions2 = regions[ielements_save]
+        print "found regions"
+
+
+        nnodes2, three = nodes2.shape
+        assert nnodes2 != nnodes, 'nnodes=%s nnodes2=%s'  % (nnodes, nnodes2)
         self.log.info('---finished make_half_model---')
-        return (nodes, elements, regions, Cp)
+        return (nodes2, elements2, regions2, Cp)
 
     def make_mirror_model(self, nodes, elements, regions, loads, axis='y'):
         """
         Mirrors about the y=0 line
         """
         #nNodesStart = len(nodes)
-
         self.log.info('---starting make_mirror_model---')
         nodes, elements, regions, loads = self.make_half_model(nodes, elements, regions, loads, axis)
         self.log.info('---finished make_mirror_model---')
@@ -209,74 +222,49 @@ class Cart3DAsciiReader(object):
         nodes2 = {}
         elements2 = {}
         regions2 = {}
-        for (iNode, node) in sorted(nodes.iteritems()):
-            NodeOldToNew[iNode] = iNodeCounter
+        for (inode, node) in sorted(nodes.iteritems()):
+            NodeOldToNew[inode] = iNodeCounter
             nodes2[iNodeCounter] = node
             iNodeCounter += 1
 
-        for (iElement, element) in sorted(elements.iteritems()):
+        for (ielement, element) in sorted(elements.iteritems()):
             element2 = []
             for nID in element:
                 nID2 = NodeOldToNew[nID]
                 element2.append(nID2)
             elements2[iElementCounter] = element2
-            regions2[iElementCounter] = regions[iElement]
+            regions2[iElementCounter] = regions[ielement]
             iElementCounter += 1
 
         return (nodes, elements, regions, loads)
 
     def write_outfile(self, outfilename, points, elements, regions):
         assert len(points) > 0
-        self.log.info("---writing cart3d file...|%s|---" % outfilename)
+        self.log.info("---writing cart3d file...%r---" % outfilename)
         f = open(outfilename, 'wb')
 
         self.write_header(f, points, elements)
-        self.write_points(f, points)
-        self.write_elements(f, points, elements)
+        
+        int_fmt = '%6i'
+        float_fmt = '%6.6f'
+        self.write_points(f, points, float_fmt)
+        self.write_elements(f, points, elements, int_fmt)
         self.write_regions(f, regions)
         f.close()
 
     def write_regions(self, f, regions):
-        msg = ''
-        for (iElement, region) in sorted(regions.iteritems()):
-            msg += "%s\n" % (region)
-        f.write(msg)
+        savetxt(f, regions, '%i')
 
-    def write_elements(self, f, nodes, elements):
-        msg = ''
-        strElements = len(str(len(elements)))
-        Format = " %%%ss " % (strElements)
-        #Format = '%-10s '+Format*3 + '\n'
-        #Format = Format*3 + '\n'
-        #print "Format = ",Format
+    def write_elements(self, f, nodes, elements, int_fmt='%6i'):
+        savetxt(f, elements, int_fmt)
 
-        maxNodes = []
-        for (iElement, element) in sorted(elements.iteritems()):
-            #self.log.info("element = %s" %(element))
-            #msg += Format %(iElement,element[0],element[1],element[2])
-            msg += "%s  %s  %s\n" % (element[0], element[1], element[2])
-            for nid in element:
-                assert nid in nodes, 'nid=%s is missing' % nid
+    def write_points(self, f, points, float_fmt='%6.6f'):
+        savetxt(f, points, float_fmt)
 
-            maxNode = max(element)
-            maxNodes.append(maxNode)
-        self.log.info("maxNodeID = %s" % max(maxNodes))
-        f.write(msg)
-
-    def write_points(self, f, points):
-        msg = ''
-        for (iPoint, point) in sorted(points.iteritems()):
-            #msg += "%-10s %-15s %-15s %-15s\n" %(iPoint,point[0],point[1],point[2])
-            msg += "%6.6f  %6.6f  %6.6f\n" % (point[0], point[1], point[2])
-            if iPoint % 1000:
-                f.write(msg)
-                msg = ''
-        f.write(msg)
-
-    def write_header(self, f, points, elements):
-        nPoints = len(points)
-        nElements = len(elements)
-        msg = "%s %s\n" % (nPoints, nElements)
+    def write_header(self, f, points, elements, n=None):
+        npoints, three = points.shape
+        nelements, three = elements.shape
+        msg = "%s %s\n" % (npoints, nelements)
         f.write(msg)
 
     def read_header(self):
@@ -300,20 +288,22 @@ class Cart3DAsciiReader(object):
             self.nElementsRead = self.nElements
             self.nElementsSkip = 0
 
-    def get_points(self):
+    def read_points(self):
         """
         A point is defined by x,y,z and the ID is the location in points.
         """
-        points = {}
+        #points = {}
         p = 0
         data = []
+
+        points = zeros((self.nPoints, 3), 'float64')
         while p < self.nPoints:
             data += self.infile.readline().strip().split()
             while len(data) > 2:
                 x = data.pop(0)
                 y = data.pop(0)
                 z = data.pop(0)
-                points[p + 1] = array([float(x), float(y), float(z)])
+                points[p] = [x, y, z]
                 p += 1
 
         maxX = self.get_max(points, 0)
@@ -330,26 +320,19 @@ class Cart3DAsciiReader(object):
         return points
 
     def get_min(self, points, i):
-        minX = points[1][i]
-        for key, point in points.iteritems():
-            minX = min(minX, point[i])
-        return minX
+        return min(points[:, i])
 
     def get_max(self, points, i):
-        maxX = points[1][i]
-        for key, point in points.iteritems():
-            maxX = max(maxX, point[i])
-        return maxX
+        return max(points[:, i])
 
-    def get_elements(self, bypass=False):
+    def read_elements(self, bypass=False):
         """
         An element is defined by n1,n2,n3 and the ID is the location in elements.
         """
         assert bypass == False
-        elements = {}
+        elements = zeros((self.nElementsRead, 3), 'int64')
 
-        print("nElementsRead=%s nElementsSkip=%s" % (
-            self.nElementsRead, self.nElementsSkip))
+        print("nElementsRead=%s nElementsSkip=%s" % (self.nElementsRead, self.nElementsSkip))
 
         e = 0
         data = []
@@ -359,7 +342,7 @@ class Cart3DAsciiReader(object):
                 n1 = int(data.pop(0))
                 n2 = int(data.pop(0))
                 n3 = int(data.pop(0))
-                elements[e + 1] = [n1, n2, n3]
+                elements[e] = [n1, n2, n3]
                 e += 1
 
         e = 0
@@ -373,8 +356,8 @@ class Cart3DAsciiReader(object):
 
         return elements
 
-    def get_regions(self, bypass=True):
-        regions = {}
+    def read_regions(self, bypass=True):
+        regions = zeros(self.nElementsRead, 'int32')
         if bypass:
             for i in xrange(self.nElements):
                 self.infile.readline()
@@ -384,7 +367,7 @@ class Cart3DAsciiReader(object):
             while r < self.nElementsRead:
                 data += self.infile.readline().strip().split()
                 while len(data) > 0:
-                    regions[r + 1] = int(data.pop(0))
+                    regions[r] = int(data.pop(0))
                     r += 1
 
             r = 0
@@ -393,10 +376,9 @@ class Cart3DAsciiReader(object):
                 while len(data) > 0:
                     data.pop()
                     r += 1
-
         return regions
 
-    def read_results(self, i, infile):
+    def read_results(self, i, infile, result_names=None):
         """
         Reads the Cp results.
         Cp = (p - 1/gamma) / (0.5*M_inf*M_inf)
@@ -408,63 +390,139 @@ class Cart3DAsciiReader(object):
 
         # ???
         rho,rhoU,rhoV,rhoW,rhoE
+        
+        :param result_names: the results to read; default=None -> All
+            result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'rhoE',
+                            'Mach', 'U', 'V', 'W', 'E']
         """
-        Cp = {}
-        Mach = {}
-        U = {}
-        V = {}
-        W = {}
-        if(self.cartType == 'result'):
-            nResultLines = int(ceil(self.nResults / 5.)) - 1
-            #print "nResultLines = ",nResultLines
-            for pointNum in xrange(self.nPoints):
-                #print "pointNum = ", pointNum
-                # rho rhoU,rhoV,rhoW,pressure/rhoE/E
-                sline = infile.readline().strip().split()
-                i += 1
-                for n in xrange(nResultLines):
-                    #print "nResultLines = ",n
-                    sline += infile.readline().strip().split()  # Cp
-                    #infile.readline()
-                    i += 1
-                    #print "sline = ",sline
-                    #gamma = 1.4
-                    #else:
-                    #    p=0.
-                sline = self.get_list(sline)
-
-                #p=0
-                cp = sline[0]
-                rho = float(sline[1])
-                if(rho > abs(0.000001)):
-                    rhoU = float(sline[2])
-                    rhoV = float(sline[3])
-                    rhoW = float(sline[4])
-                    #rhoE = float(sline[5])
-                    mach2 = (rhoU) ** 2 + (rhoV) ** 2 + (rhoW) ** 2 / rho ** 2
-                    mach = sqrt(mach2)
-                    if mach > 10:
-                        print("nid=%s Cp=%s mach=%s rho=%s rhoU=%s rhoV=%s rhoW=%s" % (pointNum, cp, mach, rho, rhoU, rhoV, rhoW))
-
-                Cp[pointNum + 1] = cp
-                Mach[pointNum + 1] = mach
-                U[pointNum + 1] = rhoU / rho
-                V[pointNum + 1] = rhoV / rho
-                W[pointNum + 1] = rhoW / rho
-                #print "pt=%s i=%s Cp=%s p=%s" %(pointNum,i,sline[0],p)
-
         loads = {}
-        if Cp:
+        if self.cartType == 'grid':
+            return loads
+
+        if result_names is None:
+            result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'rhoE',
+                            'Mach', 'U', 'V', 'W', 'E']
+        self.log.info('---starting read_results---')
+
+        results = zeros((self.nPoints, 6), 'float64')
+
+        nResultLines = int(ceil(self.nResults / 5.)) - 1
+        #print "nResultLines = ",nResultLines
+        for ipoint in xrange(self.nPoints):
+            #print "pointNum = ", pointNum
+            # rho rhoU,rhoV,rhoW,pressure/rhoE/E
+            sline = infile.readline().strip().split()
+            i += 1
+            for n in xrange(nResultLines):
+                sline += infile.readline().strip().split()  # Cp
+                i += 1
+                #gamma = 1.4
+                #else:
+                #    p=0.
+            sline = self._get_list(sline)
+            
+            # Cp
+            # rho       rhoU      rhoV      rhoW      rhoE
+            # 0.416594 
+            # 1.095611  0.435676  0.003920  0.011579  0.856058  
+            results[ipoint, :] = sline
+
+            #p=0
+            #cp = sline[0]
+            #rho = float(sline[1])
+            #if(rho > abs(0.000001)):
+                #rhoU = float(sline[2])
+                #rhoV = float(sline[3])
+                #rhoW = float(sline[4])
+                #rhoE = float(sline[5])
+                #mach2 = (rhoU) ** 2 + (rhoV) ** 2 + (rhoW) ** 2 / rho ** 2
+                #mach = sqrt(mach2)
+                #if mach > 10:
+                    #print("nid=%s Cp=%s mach=%s rho=%s rhoU=%s rhoV=%s rhoW=%s" % (pointNum, cp, mach, rho, rhoU, rhoV, rhoW))
+            #print "pt=%s i=%s Cp=%s p=%s" %(pointNum,i,sline[0],p)
+        del sline
+        
+        print "shpae =", results.shape
+        Cp = results[:, 0]
+        rho = results[:, 1]
+        rhoU = results[:, 2]
+        rhoV = results[:, 3]
+        rhoW = results[:, 4]
+        rhoE = results[:, 5]
+
+        ibad = where(rho <= 0.000001)[0]
+        if len(ibad) > 0:
+        
+            if 'Mach' in result_names:
+                rho2V2 = (rhoU) ** 2 + (rhoV) ** 2 + (rhoW) ** 2
+                M2 =   rho2V2 / rho ** 2
+                Mach = sqrt(M2)
+                Mach[ibad] = 0.0
+            if 'U' in result_names:
+                U = rhoU / rho
+                U[ibad] = 0.0
+            if 'U' in result_names:
+                V = rhoV / rho
+                V[ibad] = 0.0
+            if 'W' in result_names:
+                W = rhoW / rho
+                W[ibad] = 0.0
+            if 'E' in result_names:
+                E = rhoE / rho
+                e[ibad] = 0.0
+            
+            is_bad = True
+            n = 0
+            for i in ibad:
+                #print("nid=%s Cp=%s mach=%s rho=%s rhoU=%s rhoV=%s rhoW=%s" % (i, Cp[i], Mach[i], rho[i],
+                #                                                                  rhoU[i], rhoV[i], rhoW[i]))
+                Mach[i] = 0.0
+                n += 1
+                #if n > 10:
+                #    break
+        else:
+            is_bad = False
+        
+        loc = locals()
+        if 'Cp' in result_names:
             loads['Cp'] = Cp
-        if Mach:
+        if 'rhoU' in result_names:
+            loads['rhoU'] = rhoU
+        if 'rhoV' in result_names:
+            loads['rhoV'] = rhoV
+        if 'rhoW' in result_names:
+            loads['rhoW'] = rhoW
+        if 'rho' in result_names:
+            loads['rho'] = rho
+
+        if 'Mach' in result_names:
+            if not is_bad:
+                #Mach = sqrt(  ((rhoU) ** 2 + (rhoV) ** 2 + (rhoW) ** 2) / rho ** 2 )
+                rho2V2 = (rhoU) ** 2 + (rhoV) ** 2 + (rhoW) ** 2
+                M2 =   rho2V2 / rho ** 2
+                Mach = sqrt(M2)
+                
             loads['Mach'] = Mach
-        if U:
+        if 'U' in result_names:
+            if not is_bad:
+                U = rhoU / rho
             loads['U'] = U
+        if 'V' in result_names:
+            if not is_bad:
+                V = rhoV / rho
             loads['V'] = V
+        if 'W' in result_names:
+            if not is_bad:
+                W = rhoW / rho
             loads['W'] = W
+        if 'E' in result_names:
+            if not is_bad:
+                E = rhoE / rho
+            loads['E'] = E
+        self.log.info('---finished read_results---')
         return loads
 
-    def get_list(self, sline):
+    def _get_list(self, sline):
         """Takes a list of strings and converts them to floats."""
         try:
             sline2 = convert_to_float(sline)
@@ -472,11 +530,6 @@ class Cart3DAsciiReader(object):
             print("sline = %s" % (sline))
             raise SyntaxError('cannot parse %s' % (sline))
         return sline2
-
-    def get_value(self, sline):
-        """Converts a string to a float."""
-        value = float(sline[1])
-        return value
 
     def export_to_nastran(self, fname, points, elements, regions):
         f = open(fname, 'wb')
@@ -883,10 +936,10 @@ if __name__ == '__main__':
     cart = generic_cart3d_reader(cart3dGeom)
     (points, elements, regions, loads) = cart.read_cart3d(cart3dGeom)
 
-    (points2, elements2, regions2, loads2) = cart.make_half_model(points, elements, regions, loads)
+    #(points2, elements2, regions2, loads2) = cart.make_half_model(points, elements, regions, loads)
 
     cart.write_outfile(outfilename, points, elements, regions)
-    cart.write_outfile(outfilename2, points2, elements2, regions2)
+    #cart.write_outfile(outfilename2, points2, elements2, regions2)
     
     sys.exit('made half model')
 
