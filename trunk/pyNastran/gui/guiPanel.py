@@ -47,6 +47,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         del kwargs['isNodal']
         del kwargs['isCentroidal']
         del kwargs['magnify']
+        #del kwargs['rotation']
         wx.Panel.__init__(self, *args, **kwargs)
         NastranIO.__init__(self)
         Cart3dIO.__init__(self)
@@ -364,7 +365,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         #self.startWireframeLight()
         self.createTriAxes()
 
-        textSize = 15
+        textSize = 14 * self.magnify
         self.createText([5, 50], 'Max  ', textSize)  # text actor 0
         self.createText([5, 35], 'Min  ', textSize)  # text actor 1
         self.createText([5, 20], 'Word1', textSize)  # text actor 2

@@ -15,6 +15,7 @@ class pyWidget(wxVTKRenderWindow):
         self.Reset()
 
     def GetCamera(self):
+        #print "getting camera..."
         return self._CurrentCamera
 
     def onChar2(self, event):
