@@ -5,6 +5,7 @@ import platform
 import wx
 import vtk
 #from numpy import zeros, ones
+from numpy import ndarray, amax, amin
 
 import pyNastran
 version = pyNastran.__version__
@@ -41,9 +42,11 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         isEdges = kwargs['isEdges']
         self.isNodal = kwargs['isNodal']
         self.isCentroidal = kwargs['isCentroidal']
+        self.magnify = kwargs['magnify']
         del kwargs['isEdges']
         del kwargs['isNodal']
         del kwargs['isCentroidal']
+        del kwargs['magnify']
         wx.Panel.__init__(self, *args, **kwargs)
         NastranIO.__init__(self)
         Cart3dIO.__init__(self)
@@ -61,6 +64,9 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         self.iText = 0
         self.textActors = {}
         self.gridResult = vtk.vtkFloatArray()
+
+    def get_renderer(self):
+        return self.rend
 
     def createTriAxes(self):
         pass
@@ -480,17 +486,19 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
             caseName = self.iSubcaseNameMap[subcaseID]
             (subtitle, label) = caseName
 
-            print("subcaseID=%s resultType=%s subtitle=%s label=%s"
+            print("subcaseID=%s resultType=%s subtitle=%r label=%r"
                 % (subcaseID, resultType, subtitle, label))
 
-            for value in case:
-                maxValue = value
-                minValue = value
-                break
-
-            for value in case:
-                maxValue = max(value, maxValue)
-                minValue = min(value, minValue)
+            if isinstance(case, ndarray):
+                maxValue = amax(case)
+                minValue = amin(case)
+            else:                
+                maxValue = case[0]
+                minValue = case[0]
+                for value in case:
+                    #print(value)
+                    maxValue = max(value, maxValue)
+                    minValue = min(value, minValue)
 
             # flips sign to make colors go from blue -> red
             normValue = maxValue - minValue
@@ -514,12 +522,16 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
 
             nValueSet = len(valueSet)
 
-            self.textActors[0].SetInput('Max:  %g' % (maxValue))  # max
-            self.textActors[1].SetInput('Min:  %g' % (minValue))  # min
-            self.textActors[2].SetInput('Subcase=%s Subtitle: %s' %
-                (subcaseID, subtitle))  # info
-            self.textActors[3].SetInput(
-                'Label: %s' % (label))  # info
+            self.textActors[0].SetInput('Max:  %g' % maxValue)  # max
+            self.textActors[1].SetInput('Min:  %g' % minValue)  # min
+            self.textActors[2].SetInput('Subcase=%s Subtitle: %s' % (subcaseID, subtitle))  # info
+            
+            if label:
+                self.textActors[3].SetInput('Label: %s' % label)  # info
+                self.textActors[3].VisibilityOn()
+            else:
+                self.textActors[3].VisibilityOff()
+
             self.UpdateScalarBar(resultType, minValue, maxValue, dataFormat)
             #self.scalarBar.SetNumberOfLabels(nValueSet)
             #self.scalarBar.SetMaximumNumberOfColors(nValueSet)

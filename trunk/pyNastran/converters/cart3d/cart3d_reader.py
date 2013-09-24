@@ -413,8 +413,6 @@ class Cart3DAsciiReader(Cart3DReader):
                 data.pop()
                 data.pop()
                 e += 1
-        
-        #print "elements", elements
         return elements
 
     def read_regions(self, bypass=True):
@@ -483,7 +481,7 @@ class Cart3DAsciiReader(Cart3DReader):
             sline = self._get_list(sline)
             
             # Cp
-            # rho       rhoU      rhoV      rhoW      rhoE
+            # rho       rhoU      rhoV      rhoW      E
             # 0.416594 
             # 1.095611  0.435676  0.003920  0.011579  0.856058  
             results[ipoint, :] = sline
@@ -509,15 +507,13 @@ class Cart3DAsciiReader(Cart3DReader):
         rhoU = results[:, 2]
         rhoV = results[:, 3]
         rhoW = results[:, 4]
-        rhoE = results[:, 5]
+        E = results[:, 5]
 
         ibad = where(rho <= 0.000001)[0]
         if len(ibad) > 0:
         
             if 'Mach' in result_names:
-                rho2V2 = (rhoU) ** 2 + (rhoV) ** 2 + (rhoW) ** 2
-                M2 =   rho2V2 / rho ** 2
-                Mach = sqrt(M2)
+                Mach = sqrt(rhoU**2 + rhoV**2 + rhoW**2)# / rho
                 Mach[ibad] = 0.0
             if 'U' in result_names:
                 U = rhoU / rho
@@ -528,9 +524,9 @@ class Cart3DAsciiReader(Cart3DReader):
             if 'W' in result_names:
                 W = rhoW / rho
                 W[ibad] = 0.0
-            if 'E' in result_names:
-                E = rhoE / rho
-                e[ibad] = 0.0
+            #if 'rhoE' in result_names:
+                #rhoE = rhoE / rho
+                #e[ibad] = 0.0
             
             is_bad = True
             n = 0
@@ -553,15 +549,16 @@ class Cart3DAsciiReader(Cart3DReader):
             loads['rhoV'] = rhoV
         if 'rhoW' in result_names:
             loads['rhoW'] = rhoW
+        #if 'rhoE' in result_names:
+            #loads['rhoE'] = rhoE
+
         if 'rho' in result_names:
             loads['rho'] = rho
 
         if 'Mach' in result_names:
             if not is_bad:
-                #Mach = sqrt(  ((rhoU) ** 2 + (rhoV) ** 2 + (rhoW) ** 2) / rho ** 2 )
-                rho2V2 = (rhoU) ** 2 + (rhoV) ** 2 + (rhoW) ** 2
-                M2 =   rho2V2 / rho ** 2
-                Mach = sqrt(M2)
+                #Mach = sqrt(rhoU**2 + rhoV**2 + rhoW**2) / rho
+                Mach = sqrt(rhoU**2 + rhoV**2 + rhoW**2)
                 
             loads['Mach'] = Mach
         if 'U' in result_names:
@@ -577,9 +574,13 @@ class Cart3DAsciiReader(Cart3DReader):
                 W = rhoW / rho
             loads['W'] = W
         if 'E' in result_names:
-            if not is_bad:
-                E = rhoE / rho
+            #if not is_bad:
+                #E = rhoE / rho
             loads['E'] = E
+        
+        #i = where(Mach == max(Mach))[0][0]
+        #self.log.info("i=%s Cp=%s rho=%s rhoU=%s rhoV=%s rhoW=%s Mach=%s" % (i, Cp[i], rho[i], rhoU[i],
+        #              rhoV[i], rhoW[i], Mach[i]))
         self.log.info('---finished read_results---')
         return loads
 

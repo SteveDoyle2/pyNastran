@@ -75,7 +75,11 @@ else:
 class AppFrame(wx.Frame):
 
     def __init__(self, isEdges=False, isNodal=False, isCentroidal=False,
-                 format=None, input=None, output=None, debug=False):
+                 format=None, input=None, output=None, shots=None, magnify=1.0, debug=False):
+
+        assert debug in [True, False], 'debug=%s' % debug
+        if shots is None:
+            shots = []
 
         wx.Frame.__init__(self, None, -1, size=wx.Size(800, 600),
                           title='pyNastran')
@@ -83,10 +87,12 @@ class AppFrame(wx.Frame):
         self.isEdges = isEdges
         self.isNodal = isNodal
         self.isCentroidal = isCentroidal
+        self.magnify = magnify
         assert isCentroidal != isNodal, "isCentroidal and isNodal can't be the same and are set to \"%s\"" % isNodal
         self.dirname = ''
         self.setupFrame()
         
+        format = format.lower()
         print('format=%r input=%r output=%r' % (format, input, output))
         if format is not None and format not in ['panair', 'cart3d', 'lawgs', 'nastran']:
             sys.exit('\n---invalid format=%r' % format)
@@ -113,6 +119,12 @@ class AppFrame(wx.Frame):
         else:
             self.frmPanel.scalarBar.VisibilityOff()
             self.frmPanel.scalarBar.Modified()
+
+        print 'shots = %r' % shots
+        if shots:
+        #for shot in shots:
+            self.frmPanel.widget.onTakePicture(ID_CAMERA, shots)
+            sys.exit('took screenshot %r' % shots)
 
     def setupFrame(self):
         """
@@ -142,8 +154,11 @@ class AppFrame(wx.Frame):
         self.eventsHandler = EventsHandler(self, isNodal=self.isNodal,
                                            isCentroidal=self.isCentroidal)
 
-        self.frmPanel = Pan(self, isEdges=self.isEdges, isNodal=self.isNodal,
-                            isCentroidal=self.isCentroidal, size=(100, 200))
+        self.frmPanel = Pan(self, isEdges=self.isEdges,
+                            isNodal=self.isNodal,
+                            isCentroidal=self.isCentroidal,
+                            magnify=self.magnify,
+                            size=(100, 200))
 
         self.buildMenuBar()
         self.buildToolBar()
@@ -687,7 +702,8 @@ def run_arg_parse():
     #print "sys.argv[0] =", sys.argv[0]
     msg  = "Usage:\n"
     msg += "  pyNastranGUI.py [-f FORMAT] [-i INPUT] [-o OUTPUT]\n"
-    msg += "                         [-q] [-e] [-n | -c]\n"
+    msg += '                  [-s SHOT] [-m MAGNIFY]\n'
+    msg += '                  [-q] [-e] [-n | -c]\n'
     msg += '  pyNastranGUI.py -h | --help\n'
     msg += '  pyNastranGUI.py -v | --version\n'
     msg += "\n"
@@ -697,6 +713,9 @@ def run_arg_parse():
     msg += "                                           nastran, lawgs)\n"
     msg += "  -i INPUT, --input INPUT     path to input file\n"
     msg += "  -o OUTPUT, --output OUTPUT  path to output file\n"
+    msg += "  -s SHOT, --shots SHOT       path to screenshot (only 1 for now)\n"
+    msg += "  -m MAGNIFY, --magnify MAGNIFY how much should the resolution on a picture be magnified (default=1)\n"
+
     msg += "  -q, --quiet                 prints debug messages (default=True)\n"
     msg += "  -e, --edges                 shows element edges as black lines (default=False)\n"
     msg += "  -n, --nodalResults          plots nodal results (default)\n"
@@ -708,7 +727,6 @@ def run_arg_parse():
     data = docopt(msg, version=ver)
     #print data
 
-
     format  = data['--format']
     input   = data['--input']
     output  = data['--output']
@@ -716,9 +734,19 @@ def run_arg_parse():
     edges   = data['--edges']
     isNodal = data['--nodalResults']
     isCentroidal = data['--centroidalResults']
-    #writeBDF    = args.writeBDF
 
-    return (edges, isNodal, isCentroidal, format, input, output, debug)
+
+    shots   = data['--shots']
+    magnify = int(data['--magnify'])
+    
+    #print("isNodal=%s isCentroidal=%s" % (isNodal, isCentroidal))
+    print("shots", shots)
+    #writeBDF    = args.writeBDF
+    if shots:
+        #shots = shots[1]
+        #print "shots2 = %r" % shots, type(shots)
+        shots = shots.split(';')[0]
+    return (edges, isNodal, isCentroidal, format, input, output, shots, magnify, debug)
 
 
 def main():
@@ -730,15 +758,19 @@ def main():
 
     isNodal = True
     isCentroidal = not(isNodal)
+    magnify = 1.0
 
     if sys.version_info < (2, 6):
         print("requires Python 2.6+ to use command line arguments...")
     else:
         if len(sys.argv) > 1:
-            (edges, isNodal, isCentroidal, format, input, output, debug) = run_arg_parse()
+            (edges, isNodal, isCentroidal, format, input, output, shots, magnify, debug) = run_arg_parse()
+
+    if isCentroidal == isNodal:
+        isCentroidal = not(isNodal)
 
     app = wx.App(redirect=False)
-    appFrm = AppFrame(isEdges, isNodal, isCentroidal, format, input, output, debug)
+    appFrm = AppFrame(isEdges, isNodal, isCentroidal, format, input, output, shots, magnify, debug)
     #appFrm.Show()
     print("launching gui")
     app.MainLoop()
