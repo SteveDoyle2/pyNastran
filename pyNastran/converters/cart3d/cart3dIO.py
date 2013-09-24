@@ -124,7 +124,9 @@ class Cart3dIO(object):
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        self.iSubcaseNameMap = {1: ['Cart3d', '']}
+        from numpy import mean
+        avgMach = mean(loads['Mach'])
+        self.iSubcaseNameMap = {1: ['Cart3d:  avg(Mach)=%g' % avgMach, '']}
         cases = {}
         ID = 1
 
@@ -141,24 +143,35 @@ class Cart3dIO(object):
 
     def fillCart3dCase(self, cases, ID, elements, regions, loads):
         #print "regions**** = ",regions
-        plotNodal = self.isNodal
-        plotCentroidal = self.isCentroidal
+        isNodal = self.isNodal
+        isCentroidal = self.isCentroidal
 
-        nNodes = self.nNodes
-        nElements = self.nElements
+        #nNodes = self.nNodes
+        #nElements = self.nElements
 
-        print "plotCentroidal=%s plotNodal=%s" % (plotCentroidal, plotNodal)
-        assert plotCentroidal != plotNodal
-        if plotCentroidal:
+        print "isCentroidal=%s isNodal=%s" % (isCentroidal, isNodal)
+        assert isCentroidal != isNodal
+        
+        result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
+                                      'rhoU', 'rhoV', 'rhoW', 'rhoE']
+        if isCentroidal:
             nelements, three = elements.shape
             cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
             cases[(ID, 'Eids', 1, 'centroid', '%.0f')] = arange(1, nelements+1)
-
-        if self.isNodal:
-            print("load.keys() = ", loads.keys())
-            for key in ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
-                                      'rhoU', 'rhoV', 'rhoW', 'rhoE']:
+            
+            for key in result_names:
                 if key in loads:
-                    data = loads[key]
-                    cases[(ID, key, 1, 'nodal', '%.3f')] = data
+                    nodal_data = loads[key]
+                    n1 = elements[:, 0]
+                    n2 = elements[:, 1]
+                    n3 = elements[:, 2]
+                    elemental_result = (nodal_data[n1] + nodal_data[n2] + nodal_data[n3])/3.0
+                    cases[(ID, key, 1, 'centroid', '%.3f')] = elemental_result
+
+        elif isNodal:
+            print("load.keys() = ", loads.keys())
+            for key in result_names:
+                if key in loads:
+                    nodal_data = loads[key]
+                    cases[(ID, key, 1, 'nodal', '%.3f')] = nodal_data
         return cases
