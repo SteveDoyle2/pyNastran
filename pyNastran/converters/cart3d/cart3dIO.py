@@ -1,6 +1,6 @@
 #VTK_TRIANGLE = 5
 
-from numpy import zeros, arange
+from numpy import zeros, arange, mean
 
 import vtk
 from vtk import vtkTriangle
@@ -124,7 +124,6 @@ class Cart3dIO(object):
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        from numpy import mean
         avgMach = mean(loads['Mach'])
         self.iSubcaseNameMap = {1: ['Cart3d:  avg(Mach)=%g' % avgMach, '']}
         cases = {}
@@ -169,7 +168,7 @@ class Cart3dIO(object):
                     cases[(ID, key, 1, 'centroid', '%.3f')] = elemental_result
 
         elif isNodal:
-            print("load.keys() = ", loads.keys())
+            #print("load.keys() = ", loads.keys())
             for key in result_names:
                 if key in loads:
                     nodal_data = loads[key]
