@@ -75,7 +75,7 @@ else:
 class AppFrame(wx.Frame):
 
     def __init__(self, isEdges=False, isNodal=False, isCentroidal=False,
-                 format=None, input=None, output=None, shots=None, magnify=1.0, debug=False):
+                 format=None, input=None, output=None, shots=None, magnify=1.0, rotation=None, debug=False):
 
         assert debug in [True, False], 'debug=%s' % debug
         if shots is None:
@@ -119,6 +119,10 @@ class AppFrame(wx.Frame):
         else:
             self.frmPanel.scalarBar.VisibilityOff()
             self.frmPanel.scalarBar.Modified()
+
+        if rotation:
+            self.set_rotation(rotation)
+            #if rotation == '-x':
 
         print 'shots = %r' % shots
         if shots:
@@ -259,6 +263,48 @@ class AppFrame(wx.Frame):
         # Bind Help Menu
         self.Bind(wx.EVT_MENU, events.onAbout, id=ID_ABOUT)
     #end __init__
+
+    def set_rotation(self, rotation):
+        # self - AppFrame
+        # self.frmPanel - Pan
+        
+        camera = self.frmPanel.widget.GetCamera()
+        assert camera is not None
+
+        if rotation == 'x':  # set x-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., 1.)
+            camera.SetPosition(1., 0., 0.)
+            self.ResetCamera()
+        elif rotation == '-x':  # set x-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., -1.)
+            camera.SetPosition(-1., 0., 0.)
+            self.ResetCamera()
+
+        elif rotation == 'y':  # set y-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., 1.)
+            camera.SetPosition(0., 1., 0.)
+            self.ResetCamera()
+        elif rotation == '-y':  # set y-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., -1.)
+            camera.SetPosition(0., -1., 0.)
+            self.ResetCamera()
+
+        elif rotation == 'z':  # set z-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 1., 0.)
+            camera.SetPosition(0., 0., 1.)
+            self.ResetCamera()
+        elif rotation == '-z':  # set z-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., -1., 0.)
+            camera.SetPosition(0., 0., -1.)
+            self.ResetCamera()
+        else:
+            raise NotImplementedError(rotation)
 
     def buildTree(self, panel1):
         tree = wx.TreeCtrl(self, 1, wx.DefaultPosition, (-1, -1),
@@ -702,7 +748,7 @@ def run_arg_parse():
     #print "sys.argv[0] =", sys.argv[0]
     msg  = "Usage:\n"
     msg += "  pyNastranGUI.py [-f FORMAT] [-i INPUT] [-o OUTPUT]\n"
-    msg += '                  [-s SHOT] [-m MAGNIFY]\n'
+    msg += '                  [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '                  [-q] [-e] [-n | -c]\n'
     msg += '  pyNastranGUI.py -h | --help\n'
     msg += '  pyNastranGUI.py -v | --version\n'
@@ -714,6 +760,7 @@ def run_arg_parse():
     msg += "  -i INPUT, --input INPUT     path to input file\n"
     msg += "  -o OUTPUT, --output OUTPUT  path to output file\n"
     msg += "  -s SHOT, --shots SHOT       path to screenshot (only 1 for now)\n"
+    #msg += "  -r XYZ, --rotation XYZ      [x, y, z, -x, -y, -z] default is ???\n"
     msg += "  -m MAGNIFY, --magnify MAGNIFY how much should the resolution on a picture be magnified (default=1)\n"
 
     msg += "  -q, --quiet                 prints debug messages (default=True)\n"
@@ -736,17 +783,24 @@ def run_arg_parse():
     isCentroidal = data['--centroidalResults']
 
 
-    shots   = data['--shots']
-    magnify = int(data['--magnify'])
-    
+    shots = data['--shots']
+    if data['--magnify']:
+        magnify = int(data['--magnify'])
+    else:
+        magnify = 1
+
+    if '--rotation' in data:
+        rotation = data['--rotation']
+    else:
+        rotation = None
     #print("isNodal=%s isCentroidal=%s" % (isNodal, isCentroidal))
-    print("shots", shots)
+    #print("shots", shots)
     #writeBDF    = args.writeBDF
     if shots:
         #shots = shots[1]
         #print "shots2 = %r" % shots, type(shots)
         shots = shots.split(';')[0]
-    return (edges, isNodal, isCentroidal, format, input, output, shots, magnify, debug)
+    return (edges, isNodal, isCentroidal, format, input, output, shots, magnify, rotation, debug)
 
 
 def main():
@@ -759,18 +813,19 @@ def main():
     isNodal = True
     isCentroidal = not(isNodal)
     magnify = 1.0
+    rotation = None
 
     if sys.version_info < (2, 6):
         print("requires Python 2.6+ to use command line arguments...")
     else:
         if len(sys.argv) > 1:
-            (edges, isNodal, isCentroidal, format, input, output, shots, magnify, debug) = run_arg_parse()
+            (edges, isNodal, isCentroidal, format, input, output, shots, magnify, rotation, debug) = run_arg_parse()
 
     if isCentroidal == isNodal:
         isCentroidal = not(isNodal)
 
     app = wx.App(redirect=False)
-    appFrm = AppFrame(isEdges, isNodal, isCentroidal, format, input, output, shots, magnify, debug)
+    appFrm = AppFrame(isEdges, isNodal, isCentroidal, format, input, output, shots, magnify, rotation, debug)
     #appFrm.Show()
     print("launching gui")
     app.MainLoop()
