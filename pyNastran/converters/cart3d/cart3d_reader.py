@@ -1,11 +1,12 @@
 #pylint:  disable=C0103,C0111
 import os
 import sys
+from struct import pack
 from math import ceil#, sqrt
 from itertools import izip
-from numpy import array, zeros, where, savetxt, sqrt, abs, amax, amin
 
-from numpy import arange, searchsorted, vstack, unique, hstack
+from numpy import array, zeros, where, savetxt, sqrt, abs, amax, amin
+from numpy import arange, searchsorted, vstack, unique, hstack, ravel
 
 from struct import unpack
 from pyNastran.bdf.fieldWriter import print_card
@@ -263,12 +264,12 @@ class Cart3DReader(object):
         return (nodes, elements, regions, loads)
 
     def write_cart3d(self, outfilename, points, elements, regions, loads=None, is_binary=False):
-        assert is_binary is False, 'is_binary=%r is not supported' % is_binary
         assert len(points) > 0
 
         if loads is None or loads == {}:
             loads = {}
             is_loads = False
+            print "no loads"
         else:
             is_loads = True
 
@@ -276,50 +277,94 @@ class Cart3DReader(object):
         f = open(outfilename, 'wb')
 
         float_fmt = '%6.6f'
-        int_fmt = self.write_header(f, points, elements, is_loads)
+        int_fmt = self.write_header(f, points, elements, is_loads, is_binary)
         #print "int_fmt =", int_fmt
-        self.write_points(f, points, float_fmt)
-        self.write_elements(f, points, elements, int_fmt)
-        self.write_regions(f, regions)
+        self.write_points(f, points, is_binary, float_fmt)
+        self.write_elements(f, elements, is_binary, int_fmt)
+        self.write_regions(f, regions, is_binary)
         
         if is_loads:
-            self.write_loads(f, loads, float_fmt)
+            assert is_binary is False, 'is_binary=%r is not supported for loads' % is_binary
+            self.write_loads(f, loads, is_binary, float_fmt)
         f.close()
 
-    def write_header(self, f, points, elements, nloads):
+    def write_header(self, f, points, elements, nloads, is_binary=False):
         npoints, three = points.shape
         nelements, three = elements.shape
-        if nloads == 6:
-            msg = "%s %s 6\n" % (npoints, nelements)
-        else:
-            msg = "%s %s\n" % (npoints, nelements)
-        f.write(msg)
         
-        # take the max value, string it, and length it
-        # so 123,456 is length 6
-        int_fmt = '%%%si' % len(str(nelements))
+        if is_binary:
+            if nloads == 6:
+                msg = pack('>iiii', 3*4, npoints, nelements, 6)
+            else:
+                msg = pack('>iii', 2*4, npoints, nelements)
+            
+            int_fmt = None
+        else:
+            if nloads == 6:
+                msg = "%s %s 6\n" % (npoints, nelements)
+            else:
+                msg = "%s %s\n" % (npoints, nelements)
+
+            # take the max value, string it, and length it
+            # so 123,456 is length 6
+            int_fmt = '%%%si' % len(str(nelements))
+        f.write(msg)
         return int_fmt
 
-    def write_points(self, f, points, float_fmt='%6.6f'):
-        savetxt(f, points, float_fmt)
+    def write_points(self, f, points, is_binary, float_fmt='%6.6f'):
+        if is_binary:
+            four = pack('>i', 4)
+            #f.write(four)
 
-    def write_elements(self, f, nodes, elements, int_fmt='%6i'):
-        savetxt(f, elements, int_fmt)
+            npoints, three = points.shape
+            #points2 = ravel(points)
+            #print points2
+            floats = pack('>' + 'f'*npoints*3, *ravel(points) )
 
-    def write_regions(self, f, regions):
-        savetxt(f, regions, '%i')
+            f.write(floats)
+            f.write(four)
+        else:
+            savetxt(f, points, float_fmt)
 
-    def write_loads(self, f, loads, float_fmt='%6.6f'):
-        Cp = loads['Cp']
-        rho = loads['rho']
-        rhoU = loads['rhoU']
-        rhoV = loads['rhoV']
-        rhoW = loads['rhoV']
-        E = loads['E']
-        
-        nrows = len(Cp)
-        fmt = '%s\n%s%s%s%s%s'
-        savetxt(f, hstack([Cp, rho, rhoU, rhoV, rhowW, E]), fmt)
+    def write_elements(self, f, elements, is_binary, int_fmt='%6i'):
+        if is_binary:
+            four = pack('>i', 4)
+            f.write(four)
+            nelements, three = elements.shape
+            ints = pack('>' + 'i'*nelements*3, *ravel(elements) )
+
+            f.write(ints)
+            f.write(four)
+        else:
+            savetxt(f, elements, int_fmt)
+
+    def write_regions(self, f, regions, is_binary):
+        if is_binary:
+            four = pack('>i', 4)
+            f.write(four)
+
+            nregions = len(regions)
+            ints = pack('>' + 'i'*nregions, *regions)
+            f.write(ints)
+
+            f.write(four)
+        else:
+            savetxt(f, regions, '%i')
+
+    def write_loads(self, f, loads, is_binary, float_fmt='%6.6f'):
+        if is_binary:
+            raise NotImplementedError('is_binary=%s' % is_binary)
+        else:
+            Cp = loads['Cp']
+            rho = loads['rho']
+            rhoU = loads['rhoU']
+            rhoV = loads['rhoV']
+            rhoW = loads['rhoV']
+            E = loads['E']
+
+            nrows = len(Cp)
+            fmt = '%s\n%s%s%s%s%s' % (float_fmt, float_fmt, float_fmt, float_fmt, float_fmt, float_fmt)
+            savetxt(f, hstack([Cp, rho, rhoU, rhoV, rhowW, E]), fmt)
 
 
 class Cart3DAsciiReader(Cart3DReader):
@@ -812,7 +857,7 @@ class Cart3DBinaryReader(FortranFile, Cart3DAsciiReader):
     def read_header(self):
         data = self.op2.read(4)
         size, = unpack('>i', data)
-        #print "size = ",size
+        print "size = ",size
 
         data = self.op2.read(size)
         so4 = size // 4  # size over 4
@@ -828,16 +873,15 @@ class Cart3DBinaryReader(FortranFile, Cart3DAsciiReader):
 
         return (nPoints, nElements)
 
-    def read_points(self, nPoints):
+    def read_points(self, npoints):
         #print "starting Nodes"
         #isBuffered = True
-        size = nPoints * 12  # 12=3*4 all the points
+        size = npoints * 12  # 12=3*4 all the points
         Format = '>' + 'f' * 3000  # 3000 floats; 1000 points
 
         #nodes = {}
-        np = 1
-
-        points = zeros((self.nPoints, 3), 'float64')
+        np = 0
+        points = zeros((npoints, 3), 'float64')
         while size > 12000:  # 12k = 4 bytes/float*3 floats/point*1000 points
             #print "size = ",size
             n = np + 999
@@ -848,6 +892,7 @@ class Cart3DBinaryReader(FortranFile, Cart3DAsciiReader):
                 z = nodeXYZs.pop()
                 y = nodeXYZs.pop()
                 x = nodeXYZs.pop()
+                print x, y, z
                 #assert n not in nodes, 'nid=%s in nodes' % n
                 points[n, :] = [x, y, z]
                 n -= 1
@@ -857,7 +902,7 @@ class Cart3DBinaryReader(FortranFile, Cart3DAsciiReader):
         assert size >= 0
         #print "size = ",size
         #while size>0: # 4k is 1000 points
-        n = nPoints
+        n = npoints-1
 
         if size > 0:
             #leftover = size-(nPoints-np)*12
@@ -866,13 +911,18 @@ class Cart3DBinaryReader(FortranFile, Cart3DAsciiReader):
             Format = '>' + 'f' * (size // 4)
 
             #print "len(data) = ",len(data)
-            nodeXYZs = list(unpack(Format, data))
+            try:
+                nodeXYZs = list(unpack(Format, data))
+            except:
+                print "len(data)=%s" % len(data)
+                raise
+
             while nodeXYZs:
                 z = nodeXYZs.pop()
                 y = nodeXYZs.pop()
                 x = nodeXYZs.pop()
                 #assert n not in nodes, 'nid=%s in nodes' % n
-                nodes[n, :] = [x, y, z]
+                points[n, :] = [x, y, z]
                 n -= 1
                 np += 1
             size = 0
@@ -885,10 +935,11 @@ class Cart3DBinaryReader(FortranFile, Cart3DAsciiReader):
         #else:
             #raise RuntimeError('unBuffered')
 
-        for nid in xrange(1, nPoints + 1):
-            assert nid in nodes, 'nid=%s not in nodes' % (nid)
+        #for nid in xrange(nPoints):
+            #assert nid in points, 'nid=%s not in points' % nid
         self.op2.read(8)  # end of second block, start of third block
-        return nodes
+        print points
+        return points
 
     def read_elements(self, nElements):
         self.nElementsRead = nElements
@@ -926,14 +977,19 @@ class Cart3DBinaryReader(FortranFile, Cart3DAsciiReader):
             Format = '>' + 'i' * (size // 4)
 
             #print "len(data) = ",len(data)
-            nodes = list(unpack(Format, data))
-            e = nElements
+            try:
+                nodes = list(unpack(Format, data))
+            except:
+                print "len(data)=%s" % len(data)
+                raise
+
+            e = nElements-1
             while nodes:
                 n3 = nodes.pop()
                 n2 = nodes.pop()
                 n1 = nodes.pop()
-                element = [n1, n2, n3]
-                elements[e] = element
+                print elements
+                elements[e, :] = [n1, n2, n3]
                 e -= 1
                 ne += 1
             size = 0
@@ -983,7 +1039,12 @@ class Cart3DBinaryReader(FortranFile, Cart3DAsciiReader):
             Format = '>' + 'i' * (size // 4)
 
             #print "len(data) = ",len(data)
-            regionData = list(unpack(Format, data))
+
+            try:
+                regionData = list(unpack(Format, data))
+            except:
+                print "len(data)=%s" % len(data)
+                raise
             r = nElements
             while regionData:
                 regions[r] = regionData.pop()

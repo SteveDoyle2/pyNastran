@@ -75,7 +75,11 @@ def test_2():
     assert len(loads) == 10, 'nloads=%s' % len(loads)
     assert len(loads['Cp']) == 5, 'nCp=%s' % len(loads['Cp'])
 
+    outfileName = 'flat.bin.tri'
+    cart3d.write_cart3d(outfileName, points, elements, regions, loads=None, is_binary=True)
+    
+
 
 if __name__ == '__main__':
-    test_1()
+    #test_1()
     test_2()
