@@ -5,7 +5,7 @@ from numpy import zeros, arange, mean
 import vtk
 from vtk import vtkTriangle
 
-from pyNastran.converters.cart3d.cart3d_reader import generic_cart3d_reader
+from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
 
 
 class Cart3dIO(object):
@@ -57,7 +57,7 @@ class Cart3dIO(object):
         if skipReading:
             return
 
-        model = generic_cart3d_reader(cart3dFileName)
+        model = Cart3DReader(log=None, debug=False)
         self.modelType = model.modelType
         (nodes, elements, regions, loads) = model.read_cart3d(cart3dFileName)
         self.nNodes = model.nPoints
@@ -124,8 +124,13 @@ class Cart3dIO(object):
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        avgMach = mean(loads['Mach'])
-        self.iSubcaseNameMap = {1: ['Cart3d:  avg(Mach)=%g' % avgMach, '']}
+        assert loads is not None
+        if 'Mach' in loads:
+            avgMach = mean(loads['Mach'])
+            note = ':  avg(Mach)=%g' % avgMach
+        else:
+            note = ''
+        self.iSubcaseNameMap = {1: ['Cart3d%s' % note, '']}
         cases = {}
         ID = 1
 
@@ -158,6 +163,8 @@ class Cart3dIO(object):
             cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
             cases[(ID, 'Eids', 1, 'centroid', '%.0f')] = arange(1, nelements+1)
             
+            #print("load.keys() = ", loads.keys())
+            #print("type(loads)", type(loads))
             for key in result_names:
                 if key in loads:
                     nodal_data = loads[key]
