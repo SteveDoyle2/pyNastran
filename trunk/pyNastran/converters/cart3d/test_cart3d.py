@@ -1,5 +1,6 @@
 #from pyNastran.converters.cart3d.cart3d_reader import generic_cart3d_reader
-from cart3d_reader import generic_cart3d_reader
+from cart3d_reader import Cart3DReader
+from numpy import array_equal, allclose
 
 def test_1():
     lines = """7 6
@@ -28,7 +29,7 @@ def test_1():
     f.write(lines)
     f.close()
     
-    cart3d = generic_cart3d_reader(infileName, log=None, debug=False)
+    cart3d = Cart3DReader(log=None, debug=False)
     (points, elements, regions, loads) = cart3d.read_cart3d(infileName)
     assert len(points) == 7, 'npoints=%s' % len(points)
     assert len(elements) == 6, 'nelements=%s' % len(elements)
@@ -78,8 +79,40 @@ def test_2():
     outfileName = 'flat.bin.tri'
     cart3d.write_cart3d(outfileName, points, elements, regions, loads=None, is_binary=True)
     
+def test_3():
+    infileName = 'threePlugs.tri'
+    outfileName = 'threePlugs_out.tri'
+    outfileName_bin = 'threePlugs_bin.tri'
+    outfileName_bin_out = 'threePlugs_bin_out.tri'
+    cart3d = Cart3DReader(log=None, debug=False)
 
+    (points, elements, regions, loads) = cart3d.read_cart3d(infileName)
+    cart3d.write_cart3d(outfileName, points, elements, regions, loads=None, is_binary=False)
+    cart3d.write_cart3d(outfileName_bin, points, elements, regions, loads=None, is_binary=True)
+
+    (points2, elements2, regions2, loads2) = cart3d.read_cart3d(outfileName)
+    check(points, points2)
+
+    (points2, elements2, regions2, loads2) = cart3d.read_cart3d(outfileName_bin)
+    check(points, points2)
+
+    cart3d.write_cart3d(outfileName_bin_out, points2, elements2, regions2, loads2, is_binary=False)
+    
+
+def check(points, points2):
+    nnodes, three = points.shape
+    if not array_equal(points, points2):
+        for nid in xrange(nnodes):
+            p1 = points[nid]
+            p2 = points2[nid]
+            abs_sum_delta = sum(abs(p1-p2))
+            assert allclose(abs_sum_delta, 0.0, atol=1e-6), 'n=%s p1=%s p2=%s diff=%s\nsum(abs(p1-p2))=%s' % (nid, str(p1), str(p2), str(p1-p2), abs_sum_delta)
+    
 
 if __name__ == '__main__':
+    import time
+    t0 = time.time()
     #test_1()
-    test_2()
+    #test_2()
+    test_3()
+    print "dt =", time.time()-t0
