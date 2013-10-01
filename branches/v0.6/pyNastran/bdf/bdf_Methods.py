@@ -107,6 +107,20 @@ class BDFMethods(BDFMethodsDeprecated):
         I = array([0., 0., 0., 0., 0., 0., ])
         cg = array([0., 0., 0.])
         mass = 0.
+        # precompute the CG location and make it the reference point
+        if reference_point == 'cg':
+            for element in self.elements.itervalues():
+                try:
+                    p = element.Centroid()
+                    m = element.Mass()
+                    mass += m
+                    cg += m * p
+                except:
+                    pass
+            reference_point = cg / mass
+
+        cg = array([0., 0., 0.])
+        mass = 0.
         for element in self.elements.itervalues():
             try:
                 p = element.Centroid()
