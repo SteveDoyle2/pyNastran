@@ -79,7 +79,7 @@ class BDFMethods(BDFMethodsDeprecated):
     def __init__(self):
         pass
 
-    def mass_properties(self, reference_point=None):
+    def mass_properties(self, reference_point=None, sym_axis=None):
         """
         Caclulates mass properties in the global system about the reference point.
         :param self: the BDF object
@@ -126,6 +126,30 @@ class BDFMethods(BDFMethodsDeprecated):
             except:
                 self.log().warning("could not get inertia for element"
                                    "...\n%s" % element)
+        if sym_axis == 'x':
+            I[0] *= 2.0
+            I[1] *= 2.0
+            I[2] *= 2.0
+            I[3] *= 0.0  # Ixy
+            I[4] *= 0.0  # Ixz
+            I[5] *= 2.0  # Iyz
+            cg[0] = 0.0
+        elif sym_axis == 'y':
+            I[0] *= 2.0
+            I[1] *= 2.0
+            I[2] *= 2.0
+            I[3] *= 0.0  # Ixy
+            I[4] *= 2.0  # Ixz
+            I[5] *= 0.0  # Iyz
+            cg[1] = 0.0
+        elif sym_axis == 'z':
+            I[0] *= 2.0
+            I[1] *= 2.0
+            I[2] *= 2.0
+            I[3] *= 2.0  # Ixy
+            I[4] *= 0.0  # Ixz
+            I[5] *= 0.0  # Iyz
+            cg[2] = 0.0
         cg = cg / mass
         return (mass, cg, I)
 
