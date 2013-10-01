@@ -71,7 +71,7 @@ print "iconPath = |%r|" %(iconPath)
 class AppFrame(wx.Frame):
 
     def __init__(self, isEdges=False, isNodal=False, isCentroidal=False,
-                 debug=False):
+                 magnify=4, debug=False):
 
         wx.Frame.__init__(self, None, -1, size=wx.Size(800, 600),
                           title='pyNastran')
@@ -485,7 +485,7 @@ class EventsHandler(object):
             "All files (*.*)|*.*"
 
         Title = 'Choose a Nastran Input Deck to Load'
-        loadFunction = self.parent.frmPanel.loadNastranGeometry
+        loadFunction = self.parent.frmPanel.load_nastran_geometry
         self.createLoadFileDialog(wildcard, Title, loadFunction,
                                   updateWindowName=True)
 
@@ -502,7 +502,7 @@ class EventsHandler(object):
 
             self.parent.op2FileName = op2
             if os.path.exists(op2):
-                self.parent.frmPanel.loadNastranResults(op2)
+                self.parent.frmPanel.load_nastran_results(op2)
                 self.parent.frmPanel.Update()
             return
 
@@ -510,7 +510,7 @@ class EventsHandler(object):
             "All files (*.*)|*.*"
 
         Title = 'Choose a Nastran Output File to Load (OP2 only)'
-        loadFunction = self.parent.frmPanel.loadNastranResults
+        loadFunction = self.parent.frmPanel.load_nastran_results
         self.createLoadFileDialog(wildcard, Title, loadFunction)
 
     def onLoadCart3d(self, event):
@@ -571,8 +571,7 @@ class EventsHandler(object):
             if updateWindowName:
                 self.parent.UpdateWindowName(fileName)
             #self.parent.frmPanel.loadCart3dGeometry(fname,self.parent.dirname)
-            loadFunction(fname, self.parent.dirname,
-                         self.isNodal, self.isCentroidal)
+            loadFunction(fname, self.parent.dirname)
             self.parent.frmPanel.Update()
         dlg.Destroy()
 
@@ -587,7 +586,7 @@ class EventsHandler(object):
                     "All files (*.*)|*.*")
 
         Title = 'Choose a Nastran Output File to Load (OP2 only)'
-        loadFunction = self.parent.frmPanel.loadNastranResults
+        loadFunction = self.parent.frmPanel.load_nastran_results
         self.createLoadFileDialog(wildcard, Title, loadFunction)
 
     def onExit(self, event):
@@ -739,6 +738,7 @@ def main():
     isCentroidal = True
 
     app = wx.App(redirect=False)
+    magnify = 1
     appFrm = AppFrame(isEdges, isNodal, isCentroidal, debug)
     #appFrm.Show()
     print("launching gui")

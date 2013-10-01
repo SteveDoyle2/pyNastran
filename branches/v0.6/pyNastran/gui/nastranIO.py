@@ -61,9 +61,7 @@ class NastranIO(object):
     def __init__(self):
         pass
 
-    def loadNastranGeometry(self, bdfFileName, dirname, isNodal, isCentroidal):
-        self.isNodal = isNodal
-        self.isCentroidal = isCentroidal
+    def load_nastran_geometry(self, bdfFileName, dirname):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
@@ -424,7 +422,7 @@ class NastranIO(object):
         self.grid2.Update()
         print("updated grid")
 
-    def loadNastranResults(self, op2FileName, dirname, isNodal, isCentroidal):
+    def load_nastran_results(self, op2FileName, dirname):
         #self.gridResult.SetNumberOfComponents(self.nElements)
         self.TurnTextOn()
         self.scalarBar.VisibilityOn()

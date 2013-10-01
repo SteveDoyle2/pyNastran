@@ -55,6 +55,8 @@ class Pan(wx.Panel, NastranIO):
         del kwargs['isCentroidal']
         wx.Panel.__init__(self, *args, **kwargs)
         NastranIO.__init__(self)
+        
+        self.nCases = 0
         #isEdges = False
         print("isEdges = %s" % (isEdges))
         self.isEdges = isEdges  # surface wireframe
@@ -568,8 +570,7 @@ class Pan(wx.Panel, NastranIO):
 
         self.rend = vtk.vtkRenderer()
         self.scalarBar = vtk.vtkScalarBarActor()
-        self.loadNastranGeometry(self.bdfFileName, dirname,
-            self.isNodal, self.isCentroidal)
+        self.load_nastran_geometry(self.bdfFileName, dirname)
         self.main()
 
         #self.renWin = vtk.vtkRenderWindow()
