@@ -118,9 +118,9 @@ class BDFMethods(BDFMethodsDeprecated):
                 I[0] += m * (y2 + z2)  # Ixx
                 I[1] += m * (x2 + z2)  # Iyy
                 I[2] += m * (x2 + y2)  # Izz
-                I[3] -= m * x * y      # Ixy
-                I[4] -= m * x * z      # Ixz
-                I[5] -= m * y * z      # Iyz
+                I[3] += m * x * y      # Ixy
+                I[4] += m * x * z      # Ixz
+                I[5] += m * y * z      # Iyz
                 mass += m
                 cg += m * p
             except:
