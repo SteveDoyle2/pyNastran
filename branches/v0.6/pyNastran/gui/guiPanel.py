@@ -175,6 +175,21 @@ class Pan(wx.Panel, NastranIO):
         #Filter.SetInput(aQuadGrid)
         #Filter.Update()
 
+    def onFlipEdges(self, event):
+        prop = self.edgeActor.GetProperty()
+        #prop.SetLineWidth(0.0)
+        self.isEdges = not(self.isEdges)
+
+        if self.isEdges:
+            prop.EdgeVisibilityOn()
+        else:
+            prop.EdgeVisibilityOff()
+        self.edgeActor.Modified()
+        self.rend.Modified()
+        #self.widget.Render()
+        self.widget.Update()
+        print("visible = %s" % (prop.GetEdgeVisibility()))
+    
     def get_edges(self):
         edges = vtk.vtkExtractEdges()
 
@@ -187,16 +202,17 @@ class Pan(wx.Panel, NastranIO):
         self.edgeActor = vtk.vtkActor()
         self.edgeActor.SetMapper(self.edgeMapper)
         self.edgeActor.GetProperty().SetColor(0, 0, 0)
+        
         prop = self.edgeActor.GetProperty()
         #prop.SetLineWidth(0.0)
         if self.isEdges:
             prop.EdgeVisibilityOn()
         else:
             prop.EdgeVisibilityOff()
+        print("visible = %s" % (prop.GetEdgeVisibility()))
 
         self.rend.AddActor(self.edgeActor)
 
-        print("visible = %s" % (prop.GetEdgeVisibility()))
         #self.edgeActor.Update()
 
     def addGeometry(self):
@@ -376,8 +392,9 @@ class Pan(wx.Panel, NastranIO):
         #self.createText([5,35],'Yet Again',  textSize)
 
         # Create the usual rendering stuff.
+        self.get_edges()
         if self.isEdges:
-            self.get_edges()
+            self.onFlipEdges()
         self.rend.GetActiveCamera().ParallelProjectionOn()
         self.rend.SetBackground(.1, .2, .4)
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()

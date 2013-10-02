@@ -43,6 +43,7 @@ ID_PLOT = 200
 ID_SURFACE = 901
 ID_WIREFRAME = 902
 ID_HIDDEN = 903
+ID_EDGES = 904
 
 ID_CAMERA = 910
 
@@ -203,6 +204,8 @@ class AppFrame(wx.Frame):
                   id=ID_WIREFRAME)
         self.Bind(wx.EVT_MENU, self.frmPanel.onSetToSurface,
                   id=ID_SURFACE)
+        self.Bind(wx.EVT_MENU, self.frmPanel.onFlipEdges,
+                  id=ID_EDGES)
 
         #self.Bind(wx.EVT_MENU, self.frmPanel.onSetToFlatShading,    self.flatShading)
         #self.Bind(wx.EVT_MENU, self.frmPanel.onSetToGouraudShading, self.gouraudShading)
@@ -288,6 +291,9 @@ class AppFrame(wx.Frame):
 
         tsolid = wx.Image(os.path.join(iconPath, 'tsolid.png'), wx.BITMAP_TYPE_ANY)
         surface = toolbar1.AddLabelTool(ID_SURFACE, '', wx.BitmapFromImage(tsolid), longHelp='Set to Surface/Solid Model')
+
+        tedges = wx.Image(os.path.join(iconPath, 'tedges.png'), wx.BITMAP_TYPE_ANY)
+        edges = toolbar1.AddLabelTool(ID_EDGES, '', wx.BitmapFromImage(tedges), longHelp='Show/Hide the edges')
 
         tcamera = wx.Image(os.path.join(iconPath, 'tcamera.png'), wx.BITMAP_TYPE_ANY)
         camera = toolbar1.AddLabelTool(ID_CAMERA, '', wx.BitmapFromImage(tcamera), longHelp='Take a Screenshot')
