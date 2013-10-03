@@ -180,6 +180,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         :param debug: used to set the logger if no logger is passed in
         :param log:   a python logging module object
         """
+        assert debug in [True, False], 'debug=%r' % debug
+
         # file management parameters
         self._ifile = -1
         self.include_dir = ''
@@ -1678,7 +1680,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             return os.path.relpath(filename)
         return filename
 
-    def card_stats(self):
+    def card_stats(self, return_type='string'):
         """
         Print statistics for the BDF
 
@@ -1815,7 +1817,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 if name not in self.cardsToRead:
                     msg.append('  %-8s %s' % (name + ':', counter))
         msg.append('')
-        return '\n'.join(msg)
+        if return_type == 'string':
+            return '\n'.join(msg)
+        else:
+            return msg
 
 
 def _clean_comment(comment, end=-1):

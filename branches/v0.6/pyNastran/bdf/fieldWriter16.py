@@ -90,7 +90,7 @@ def print_float_16(value, tol=0.):
             elif value < 10.:
                 field = "%16.14f" % value
             elif value < 100.:
-                field = "%16.13f" % value
+                field = "%16.13f" % value   # 10 < x < 100
             elif value < 1000.:
                 field = "%16.12f" % value
             elif value < 10000.:
@@ -144,34 +144,34 @@ def print_float_16(value, tol=0.):
             elif value > -1.:
                 field = "%16.14f" % value   # -0.1  >x>-1.....should be 6, but the baseline 0 is kept...
                 field = field.replace('-0.', '-.')
+
+            # good
             elif value > -10.:
-                field = "%16.14f" % value   # -1    >x>-10
+                field = "%16.13f" % value  #       -1 > x >      -10
             elif value > -100.:
-                field = "%16.13f" % value   # -10   >x>-100
+                field = "%16.12f" % value  #      -10 > x >     -100
             elif value > -1000.:
-                field = "%16.12f" % value   # -100  >x>-1000
+                field = "%16.11f" % value  #     -100 > x >    -1000
             elif value > -10000.:
-                field = "%16.11f" % value   # -1000 >x>-10000
+                field = "%16.10f" % value  #    -1000 > x >   -10000
             elif value > -100000.:
-                field = "%16.10f" % value   # -10000>x>-100000
+                field = "%16.9f" % value   #  -10,000 > x > -100,000
             elif value > -1000000.:
-                field = "%16.9f" % value
+                field = "%16.8f" % value   #           -100,000 > x >          -1,000,000
             elif value > -10000000.:
-                field = "%16.8f" % value
+                field = "%16.7f" % value   #         -1,000,000 > x >         -10,000,000
             elif value > -100000000.:
-                field = "%16.7f" % value
+                field = "%16.6f" % value   #        -10,000,000 > x >        -100,000,000
             elif value > -1000000000.:
-                field = "%16.6f" % value
+                field = "%16.5f" % value   #       -100,000,000 > x >      -1,000,000,000
             elif value > -10000000000.:
-                field = "%16.5f" % value
+                field = "%16.4f" % value   #     -1,000,000,000 > x >     -10,000,000,000
             elif value > -100000000000.:
-                field = "%16.4f" % value
+                field = "%16.3f" % value   #    -10,000,000,000 > x >    -100,000,000,000
             elif value > -1000000000000.:
-                field = "%16.3f" % value
+                field = "%16.2f" % value   #   -100,000,000,000 > x >  -1,000,000,000,000
             elif value > -10000000000000.:
-                field = "%16.2f" % value
-            elif value > -100000000000000.:
-                field = "%16.1f" % value
+                field = "%16.1f" % value   # -1,000,000,000,000 > x > -10,000,000,000,000
             else:
                 field = "%16.1f" % value
                 if field.index('.') < 16:
@@ -183,7 +183,7 @@ def print_float_16(value, tol=0.):
         field = field.strip(' 0')
         field = '%16s' % (field)
 
-    assert len(field) == 16, ('value=|%s| field=|%s| is not 16 characters '
+    assert len(field) == 16, ('value=%r field=%r is not 16 characters '
                               'long, its %s' % (value, field, len(field)))
     return field
 
@@ -251,3 +251,9 @@ def print_card_16(fields):
             out += '\n*       '
     out = out.rstrip(' \n*') + '\n'  # removes blank lines at the end of cards
     return out
+
+if __name__ == '__main__':
+    field = print_float_16(-55.1040257079)
+    field = print_float_16(-55.1040257078872)
+    field = print_float_16(-3.76948125497534)
+    

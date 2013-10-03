@@ -107,7 +107,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
 
 
 def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False,
-            cid=None, meshForm='combined', isFolder=False):
+            cid=None, meshForm='combined', isFolder=False, print_stats=False):
     bdfModel = str(bdfFilename)
     print("bdfModel = %s" % (bdfModel))
     if isFolder:
@@ -124,7 +124,7 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
         #print("xref = ", xref)
         (outModel) = run_fem1(fem1, bdfModel, meshForm, xref, punch, cid)
         (fem2) = run_fem2(bdfModel, outModel, xref, punch, debug=debug, log=None)
-        (diffCards) = compare(fem1, fem2, xref=xref, check=check)
+        (diffCards) = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
@@ -353,8 +353,8 @@ def get_matrix_stats(fem1, fem2):
             raise
 
 
-def compare(fem1, fem2, xref=True, check=True):
-    diffCards = compare_card_count(fem1, fem2)
+def compare(fem1, fem2, xref=True, check=True, print_stats=True):
+    diffCards = compare_card_count(fem1, fem2, print_stats=print_stats)
     if xref and check:
         get_element_stats(fem1, fem2)
         get_matrix_stats(fem1, fem2)

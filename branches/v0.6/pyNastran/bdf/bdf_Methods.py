@@ -138,9 +138,21 @@ class BDFMethods(BDFMethodsDeprecated):
                 mass += m
                 cg += m * p
             except:
-                self.log().warning("could not get inertia for element"
-                                   "...\n%s" % element)
-        if sym_axis == 'x':
+                self.log.warning("could not get the inertia for element"
+                                 "...\n%s" % element)
+        if sym_axis == None:
+            for key, aero in self.aero.iteritems():
+                sym_axis = ''
+                if aero.IsSymmetricalXY():
+                    sym_axis += 'y'
+                if aero.IsSymmetricalXZ():
+                    sym_axis += 'z'
+                if IsAntiSymmetricalXY():
+                    raise NotImplementedError('%s is antisymmetric about the XY plane' % str(aero))
+                if IsAntiSymmetricalXZ():
+                    raise NotImplementedError('%s is antisymmetric about the XZ plane' % str(aero))
+
+        if 'x' in sym_axis:
             I[0] *= 2.0
             I[1] *= 2.0
             I[2] *= 2.0
@@ -148,7 +160,7 @@ class BDFMethods(BDFMethodsDeprecated):
             I[4] *= 0.0  # Ixz
             I[5] *= 2.0  # Iyz
             cg[0] = 0.0
-        elif sym_axis == 'y':
+        if 'y' in sym_axis:
             I[0] *= 2.0
             I[1] *= 2.0
             I[2] *= 2.0
@@ -156,7 +168,7 @@ class BDFMethods(BDFMethodsDeprecated):
             I[4] *= 2.0  # Ixz
             I[5] *= 0.0  # Iyz
             cg[1] = 0.0
-        elif sym_axis == 'z':
+        if 'z' in sym_axis:
             I[0] *= 2.0
             I[1] *= 2.0
             I[2] *= 2.0
@@ -171,8 +183,12 @@ class BDFMethods(BDFMethodsDeprecated):
         """Calculates mass in the global coordinate system"""
         mass = 0.
         for element in self.elements.itervalues():
-            m = element.Mass()
-            mass += m
+            try:
+                m = element.Mass()
+                mass += m
+            except:
+                self.log.warning("could not get the mass for element"
+                                 "...\n%s" % element)
         return mass
 
     # def flip_normals(self, starterEid, eids=None, flipStarter=False):

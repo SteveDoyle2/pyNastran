@@ -86,6 +86,7 @@ class GetMethods(GetMethodsDeprecated):
         elif self.spoints and nid in self.spoints.spoints:
             return SPOINT(nid)
         else:
+            assert isinstance(nid, int), 'nid should be an integer; not %s' % type(nid)
             raise RuntimeError('nid=%s is not a GRID or SPOINT%s' % (nid, msg))
 
     def Nodes(self, nids, allowEmptyNodes=False, msg=''):
