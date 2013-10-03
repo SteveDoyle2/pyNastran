@@ -75,6 +75,39 @@ class BDFMethodsDeprecated(object):
         return self.sum_moments(p0)
 
 
+def _mass_properties_mass_mp_func(element):
+    try:
+        p = element.Centroid()
+        m = element.Mass()
+        mass = m
+        cg = m * p
+    except:
+        mass = 0.
+        cg = array([0., 0., 0.])
+    return mass, cg
+
+
+def _inertia_mp_func(m, element):
+    try:
+        p = element.Centroid()
+        #m = mass[i]
+        (x, y, z) = p - reference_point
+        x2 = x * x
+        y2 = y * y
+        z2 = z * z
+        I[0] += m * (y2 + z2)  # Ixx
+        I[1] += m * (x2 + z2)  # Iyy
+        I[2] += m * (x2 + y2)  # Izz
+        I[3] += m * x * y      # Ixy
+        I[4] += m * x * z      # Ixz
+        I[5] += m * y * z      # Iyz
+        #mass += m
+        #cg += m * p
+    except:
+        mass = 0.
+        I = array([0., 0., 0., 0., 0.])
+    return I
+
 class BDFMethods(BDFMethodsDeprecated):
     def __init__(self):
         pass
@@ -177,6 +210,86 @@ class BDFMethods(BDFMethodsDeprecated):
             I[5] *= 0.0  # Iyz
             cg[2] = 0.0
         cg = cg / mass
+        return (mass, cg, I)
+
+
+    def mass_properties_mp_broken(self, reference_point=None, sym_axis=None):
+        """
+        Caclulates mass properties in the global system about the reference point.
+        :param self: the BDF object
+        :param reference_point: an array that defines the origin of the frame.
+            default = <0,0,0>.
+        :returns mass: the mass of the model
+        :returns cg: the cg of the model as an array.
+        :returns I: moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
+        
+        I = mass * centroid * centroid
+
+        .. math:: I_{xx} = m (dy^2 + dz^2)
+
+        .. math:: I_{yz} = -m * dy * dz
+
+        where:
+        .. math:: dx = x_{element} - x_{ref}
+
+        .. seealso:: http://en.wikipedia.org/wiki/Moment_of_inertia#Moment_of_inertia_tensor
+        """
+        if reference_point is None:
+            reference_point = array([0., 0., 0.])
+
+                 #Ixx Iyy Izz, Ixy, Ixz Iyz
+        I = array([0., 0., 0., 0., 0., 0., ])
+        cg = array([0., 0., 0.])
+        mass = 0.
+        # precompute the CG location and make it the reference point
+        if reference_point == 'cg':
+            for element in self.elements.itervalues():
+                try:
+                    p = element.Centroid()
+                    m = element.Mass()
+                    mass += m
+                    cg += m * p
+                except:
+                    pass
+            reference_point = cg / mass
+
+        cg = array([0., 0., 0.])
+
+        nelements = len(self.elements)
+        #-----------------------------------------------------------
+        #import multiprocessing as mp
+        from numpy import zeros
+        import numpy
+        
+        num_cpus = 4
+        #mp.freeze_support()
+        self.log.info("Creating %d-process pool!" % num_cpus)
+
+        #pool = mp.Pool(num_cpus)
+        #result = pool.imap(_mass_properties_mass_mp_func, [(element) for element in self.elements.itervalues()])
+        result = [_mass_properties_mass_mp_func(element) for element in self.elements.itervalues()]
+
+        mass = zeros((nelements), 'float64')
+        cg = zeros((nelements, 3), 'float64')
+        for j, return_values in enumerate(result):
+            self.log.info("%.3f %% Processed"% (j*100./nelements))
+            mass[j] = return_values[0]
+            cg[j, :] = return_values[1]
+        self.log.info("Shutting down process pool!")
+        #pool.close()
+        #pool.join()
+
+        massi = numpy.sum(mass)
+        cgi = numpy.sum(cg, axis=0)
+        del cg #, mass
+        self.log.info("massi = %s" % massi)
+        #------------------------------------------------------------
+
+        #mass = 0.
+        cg = array([0., 0., 0.])
+        I = zeros((nelements, 5), 'float64')
+        result = [_inertia_mp_func(mass[i], element) for element in xrange(self.elements.iterkeys()]
+        for j, return_values in enumerate(result):
         return (mass, cg, I)
 
     def mass(self):
