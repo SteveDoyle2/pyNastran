@@ -136,12 +136,58 @@ class pyWidget(wxVTKRenderWindow):
         else:
             self.write_picture(magnify, fname)
             
+    def set_rotation(self, rotation):
+        # self - AppFrame
+        # self.frmPanel - Pan
+        
+        #camera = self.frmPanel.widget.GetCamera()
+        camera = self.GetCamera()
+        assert camera is not None
+
+        if rotation == 'x':  # set x-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., 1.)
+            camera.SetPosition(1., 0., 0.)
+            self.ResetCamera()
+        elif rotation == '-x':  # set x-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., -1.)
+            camera.SetPosition(-1., 0., 0.)
+            self.ResetCamera()
+
+        elif rotation == 'y':  # set y-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., 1.)
+            camera.SetPosition(0., 1., 0.)
+            self.ResetCamera()
+        elif rotation == '-y':  # set y-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., -1.)
+            camera.SetPosition(0., -1., 0.)
+            self.ResetCamera()
+
+        elif rotation == 'z':  # set z-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 1., 0.)
+            camera.SetPosition(0., 0., 1.)
+            self.ResetCamera()
+        elif rotation == '-z':  # set z-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., -1., 0.)
+            camera.SetPosition(0., 0., -1.)
+            self.ResetCamera()
+        else:
+            raise NotImplementedError(rotation)
+
     def write_picture(self, magnify, fname):
         ren = self.getRenderer()
         assert ren is not None
         renderLarge = vtk.vtkRenderLargeImage()
         renderLarge.SetInput(ren)
         renderLarge.SetMagnification(magnify)
+
+        rotation = 'x'
+        self.set_rotation(rotation)
 
         lfname = fname.lower()
         if lfname.endswith('.png'):
