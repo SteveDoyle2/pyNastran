@@ -1,13 +1,74 @@
 from __future__ import division
 import os
+import copy
 
-from numpy import zeros, ones, array, where
+from numpy import zeros, ones, array, where, allclose
 
+from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.fieldWriter import print_card
-from pyNastran.bdf.writePath import write_include
+#from pyNastran.bdf.writePath import write_include
 
 
 max_deflection_error = 0.01
+
+def split_model(model, nids, func=None):
+    if func is None:
+        def func(element):
+            return True
+    nidi = max(model.nodes) + 1
+    old_nids = set(model.nodes.keys())
+
+    nodes_map = {}
+    for nid in nids:
+        node = model.nodes[nid]
+        node2 = copy.deepcopy(node)
+        node2.nid = nidi
+        model.nodes[nidi] = node2
+        nodes_map[nid] = nidi
+        nidi += 1
+    
+    for eid, element in model.elements.iteritems():
+        #print dir(element)
+        e_nids = element.nodeIDs()
+        e_nids2 = [nid for nid in e_nids if nid in nids]
+        #e_nids2 = [nid if nid in nids else False for nid in e_nids]
+
+        if element.type in ['CTRIA3', 'CQUAD4']:
+            print "e_nids2 =", e_nids2
+            if func(element):
+                for nid in e_nids2:
+                    i = e_nids.index(nid)
+
+                    nidi = nodes_map[nid]
+                    print "    nid=%s -> nidi=%s" % (nid, nidi)
+                    node2 = model.nodes[nidi]
+                    #print node2
+                    element.nodes[i] = node2
+            else:
+                continue
+                    
+        else:
+            raise NotImplementedError(element.type)
+
+    all_nids = set([])
+    for eid, element in model.elements.iteritems():
+        e_nids = element.nodeIDs()
+        for nid in e_nids:
+            all_nids.add(nid)
+    lost_nids = set(model.nodes.keys()) - all_nids
+    #all_nids = list(all_nids)
+    
+    for nid in lost_nids:
+        del model.nodes[nid]
+    
+    print "all_nids", all_nids
+    print "old_nids", old_nids
+    #new_nids = all_nids.remove(old_nids.intersection(lost_nids) )
+    #print "new_nids", new_nids
+    #nid0 = min(new_nids)
+    #model.nodes[nid]._comment = 'updated...\n'
+    
+
 def run():
 
     group1_nodes = [1, 2, 3]
@@ -115,7 +176,7 @@ def setup_contact(main_bdf, contact_bdf, contact_surfaces):
         # left  # right
             1 : [2, 4, 5],
             2 : [10, 3],
-        ]
+        }
 
         c1 = c2 = dof
         neids_start = eid
@@ -212,3 +273,29 @@ def parse_op2(contact_bdf, op2_name, subcase_id, contact_surfaces, eid_groups, n
     ierrrors = where(errors == 1)[0]
     nerrors = len(ierrors)
     return nerrors
+
+if __name__ == '__main__':
+    model = BDF()
+    model.read_bdf('plate.bdf')
+    model.write_bdf('plate2.bdf')
+
+    nids = [19, 20, 21, 22, 23, 24,]
+    nids = model.nodes.keys()
+    nids.sort()
+
+    def centroid_at_7(element):
+        c = element.Centroid()
+        if c[1] == 7.0:  # update if the element centroid > 6
+            print c
+            return True  # upper group
+        return False     # lower group
+    func = centroid_at_7
+    nnodes = len(model.nodes)
+
+    split_model(model, nids, func)
+    model.write_bdf('plate_split.bdf')
+
+    model2 = BDF()
+    model2.read_bdf('plate_split.bdf')
+    assert nnodes + 12 == len(model2.nodes), 'nnodes+12=%s nnodes2=%s' % (nnodes + 12, len(model2.nodes))
+    #assert nnodes + 6 == len(model2.nodes), 'nnodes+6=%s nnodes2=%s' % (nnodes + 6, len(model2.nodes))
