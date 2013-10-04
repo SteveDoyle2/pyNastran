@@ -12,21 +12,9 @@ version = pyNastran.__version__
 
 #from pyNastran.gui.mouseStyle import MouseStyle
 from pyNastran.gui.actionsControl import pyWidget
-try:
-    from pyNastran.gui.nastranIO import NastranIO
-    is_nastran = True
-except ImportError:
-    class NastranIO(object):
-        def __init__(self):
-            self.grid = vtk.vtkUnstructuredGrid()
-            self.grid2 = vtk.vtkUnstructuredGrid()
-        def loadNastranGeometry(self, *args, **kwargs):
-            pass
-    is_nastran = False
 
-from pyNastran.converters.cart3d.cart3dIO import Cart3dIO
-from pyNastran.converters.LaWGS.wgsIO import LaWGS_IO
-from pyNastran.converters.panair.panairIO import PanairIO
+from pyNastran.gui.formats import (NastranIO, Cart3dIO, LaWGS_IO, PanairIO,
+    is_nastran, is_cart3d, is_panair, is_lawgs)
 
 
 def getScreenCorner(x, y):
@@ -246,6 +234,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         scalarBar.SetLookupTable(mapper.GetLookupTable())
         scalarBar.SetTitle("Title")
         scalarBar.SetNumberOfLabels(4)
+        #scalarBar.GetLabelTextProperty().SetFontSize(8)
 
         # Create a lookup table to share between the mapper and the scalarbar
         hueLut = vtkLookupTable()
@@ -273,6 +262,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         self.scalarBar.SetTitle("Title1")
         self.scalarBar.SetLookupTable(self.colorFunction)
         self.scalarBar.SetOrientationToVertical()
+        #self.scalarBar.GetLabelTextProperty().SetFontSize(8)
 
         self.scalarBar.SetHeight(0.9)
         self.scalarBar.SetWidth(0.20)  # the width is set first
@@ -290,6 +280,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         propLabel = vtk.vtkTextProperty()
         propLabel.BoldOff()
         propLabel.ShadowOn()
+        propLabel.SetFontSize(8)
 
         scalar_range = self.grid.GetScalarRange()
         self.aQuadMapper.SetScalarRange(scalar_range)
@@ -325,15 +316,25 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         self.scalarBar.SetTitle(Title)
         self.scalarBar.SetLabelFormat(dataFormat)
 
-        nValues = 11
-        if (Title in ['Element_ID', 'Eids', 'Region'] and
-           (maxValue - minValue + 1) < 11):
-            nValues = int(maxValue - minValue) + 1
+        nvalues = 11
+        if (Title in ['Element_ID', 'Eids', 'Region'] and (maxValue - minValue + 1) < 11):
+            nvalues = int(maxValue - minValue) + 1
+            #ncolors = nvalues
+            #if nvalues < 5:
+                #ncolors = 5
             #print "need to adjust axes...maxValue=%s" %(maxValue)
         #if dataFormat=='%.0f' and maxValue>
 
-        self.scalarBar.SetNumberOfLabels(nValues)
-        self.scalarBar.SetMaximumNumberOfColors(nValues)
+        print("Title =", Title)
+        print("nvalues =", nvalues)
+        self.scalarBar.SetNumberOfLabels(nvalues)
+        self.scalarBar.SetMaximumNumberOfColors(nvalues)
+        #if nvalues < 5:
+            #self.scalarBar.SetWidth(0.15)
+        #else:
+        #self.scalarBar.SetWidth(0.20)
+        #fs = self.scalarBar.GetLabelTextProperty().GetFontSize()  # 12
+        #print("fs =", fs)
         self.scalarBar.Modified()
 
     def Update(self):

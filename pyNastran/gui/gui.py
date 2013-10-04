@@ -39,29 +39,9 @@ ID_EXPORT = 930
 pkgPath = pyNastran.gui.__path__[0]
 #print "pkgPath = %r" % pkgPath
 
-try:
-    import pyNastran.converters.panair.panairIO
-    is_panair = True
-except ImportError:
-    is_panair = False
+from pyNastran.gui.formats import (NastranIO, Cart3dIO, LaWGS_IO, PanairIO,
+    is_nastran, is_cart3d, is_panair, is_lawgs)
 
-try:
-    import pyNastran.converters.cart3d.cart3dIO
-    is_cart3d = True
-except ImportError:
-    is_cart3d = False
-
-try:
-    import pyNastran.converters.LaWGS.wgsIO
-    is_lawgs = True
-except ImportError:
-    is_lawgs = False
-
-try:
-    from pyNastran.gui.nastranIO import NastranIO
-    is_nastran = True
-except ImportError:
-    is_nastran = False
 
 if '?' in pkgPath:
     iconPath = 'icons'
@@ -92,11 +72,12 @@ class AppFrame(wx.Frame):
         self.dirname = ''
         self.setupFrame()
         
-        format = format.lower()
+        
         print('format=%r input=%r output=%r' % (format, input, output))
-        if format is not None and format not in ['panair', 'cart3d', 'lawgs', 'nastran']:
+        if format is not None and format.lower() not in ['panair', 'cart3d', 'lawgs', 'nastran']:
             sys.exit('\n---invalid format=%r' % format)
-        elif input is not None:
+        elif format and input is not None: 
+            format = format.lower()
             dirname = os.path.dirname(input)
             inputbase = input
 
@@ -120,8 +101,8 @@ class AppFrame(wx.Frame):
             self.frmPanel.scalarBar.VisibilityOff()
             self.frmPanel.scalarBar.Modified()
 
-        if rotation:
-            self.set_rotation(rotation)
+        #self.frmPanel.Update()
+        #if rotation:
             #if rotation == '-x':
 
         print 'shots = %r' % shots
@@ -814,6 +795,7 @@ def main():
     isCentroidal = not(isNodal)
     magnify = 1.0
     rotation = None
+    shots = None
 
     if sys.version_info < (2, 6):
         print("requires Python 2.6+ to use command line arguments...")
