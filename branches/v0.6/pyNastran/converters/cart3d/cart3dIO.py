@@ -1,11 +1,11 @@
 #VTK_TRIANGLE = 5
 
-from numpy import zeros
+from numpy import zeros, arange, mean
 
 import vtk
 from vtk import vtkTriangle
 
-from pyNastran.converters.cart3d.cart3d_reader import generic_cart3d_reader
+from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
 
 
 class Cart3dIO(object):
@@ -13,23 +13,19 @@ class Cart3dIO(object):
         pass
 
     def removeOldGeometry(self, fileName):
+        self.eidMap = {}
+        self.nidMap = {}
         if fileName is None:
-            self.grid = vtk.vtkUnstructuredGrid()
-            self.gridResult = vtk.vtkFloatArray()
             #self.emptyResult = vtk.vtkFloatArray()
             #self.vectorResult = vtk.vtkFloatArray()
-            self.grid2 = vtk.vtkUnstructuredGrid()
             self.scalarBar.VisibilityOff()
             skipReading = True
         else:
             self.TurnTextOff()
             self.grid.Reset()
             self.grid2.Reset()
-            self.gridResult = vtk.vtkFloatArray()
             self.gridResult.Reset()
             self.gridResult.Modified()
-            self.eidMap = {}
-            self.nidMap = {}
 
             self.resultCases = {}
             self.nCases = 0
@@ -55,7 +51,7 @@ class Cart3dIO(object):
         if skipReading:
             return
 
-        model = generic_cart3d_reader(cart3dFileName)
+        model = Cart3DReader(log=self.log, debug=False)
         self.modelType = model.modelType
         (nodes, elements, regions, loads) = model.read_cart3d(cart3dFileName)
         self.nNodes = model.nPoints
@@ -87,16 +83,23 @@ class Cart3dIO(object):
                 #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
         assert nodes is not None
-        for nid, node in sorted(nodes.iteritems()):
-            points.InsertPoint(nid - 1, *node)
+        nnodes, three = nodes.shape
+        
+        nid = 0
+        print "nnodes=%s" % nnodes
+        for i in xrange(nnodes):
+            points.InsertPoint(nid, nodes[i, :])
+            nid += 1
 
-        for eid, nodeIDs in sorted(elements.iteritems()):
-            #print "ctria3"
+        nelements, three = elements.shape
+        elements -= 1
+        for eid in xrange(nelements):
             elem = vtkTriangle()
-            elem.GetPointIds().SetId(0, nodeIDs[0] - 1)
-            elem.GetPointIds().SetId(1, nodeIDs[1] - 1)
-            elem.GetPointIds().SetId(2, nodeIDs[2] - 1)
-            self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            node_ids = elements[eid, :]
+            elem.GetPointIds().SetId(0, node_ids[0])
+            elem.GetPointIds().SetId(1, node_ids[1])
+            elem.GetPointIds().SetId(2, node_ids[2])
+            self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
 
         self.grid.SetPoints(points)
         #self.grid2.SetPoints(points2)
@@ -115,12 +118,18 @@ class Cart3dIO(object):
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        self.iSubcaseNameMap = {1: ['Cart3d', '']}
+        assert loads is not None
+        if 'Mach' in loads:
+            avgMach = mean(loads['Mach'])
+            note = ':  avg(Mach)=%g' % avgMach
+        else:
+            note = ''
+        self.iSubcaseNameMap = {1: ['Cart3d%s' % note, '']}
         cases = {}
         ID = 1
 
         #print "nElements = ",nElements
-        cases = self.fillCart3dCase(cases, ID, regions, loads)
+        cases = self.fillCart3dCase(cases, ID, elements, regions, loads)
 
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
@@ -130,77 +139,39 @@ class Cart3dIO(object):
         self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
         self.cycleResults()  # start at nCase=0
 
-    def fillCart3dCase(self, cases, ID, regions, loads):
+    def fillCart3dCase(self, cases, ID, elements, regions, loads):
         #print "regions**** = ",regions
-        plotNodal = self.isNodal
-        plotCentroidal = self.isCentroidal
+        isNodal = self.is_nodal
+        isCentroidal = self.is_centroidal
 
-        nNodes = self.nNodes
-        nElements = self.nElements
-        Regions = zeros(nElements)
-        Eids = zeros(nElements)
+        #nNodes = self.nNodes
+        #nElements = self.nElements
 
-        #u    = zeros(nNodes)
-        #v    = zeros(nNodes)
-        #w    = zeros(nNodes)
-        #Mach = zeros(nNodes)
-        #rhoU = zeros(nNodes)
-        #rhoV = zeros(nNodes)
-        #rhoW = zeros(nNodes)
+        print "isCentroidal=%s isNodal=%s" % (isCentroidal, isNodal)
+        assert isCentroidal != isNodal
         
-        print "plotCentroidal=%s plotNodal=%s" % (plotCentroidal, plotNodal)
-        assert plotCentroidal != plotNodal
-        if plotCentroidal:
-            for eid, regioni in sorted(regions.iteritems()):
-                Eids[eid - 1] = eid
-                Regions[eid - 1] = regioni
+        result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
+                                      'rhoU', 'rhoV', 'rhoW', 'rhoE']
+        if isCentroidal:
+            nelements, three = elements.shape
+            cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
+            cases[(ID, 'Eids', 1, 'centroid', '%.0f')] = arange(1, nelements+1)
+            
+            #print("load.keys() = ", loads.keys())
+            #print("type(loads)", type(loads))
+            for key in result_names:
+                if key in loads:
+                    nodal_data = loads[key]
+                    n1 = elements[:, 0]
+                    n2 = elements[:, 1]
+                    n3 = elements[:, 2]
+                    elemental_result = (nodal_data[n1] + nodal_data[n2] + nodal_data[n3])/3.0
+                    cases[(ID, key, 1, 'centroid', '%.3f')] = elemental_result
 
-            del regions
-            cases[(ID, 'Region', 1, 'centroid', '%.0f')] = Regions
-            cases[(ID, 'Eids', 1, 'centroid', '%.0f')] = Eids
-
-        print("load.keys() = ", loads.keys())
-
-        if 'Cp' in loads and plotNodal:
-            cp = loads['Cp']
-            Cp = zeros(nNodes)
-            for nid, cpi in sorted(cp.iteritems()):
-                Cp[nid - 1] = cpi
-
-            #del loads['Cp']
-            #del cp
-            cases[(ID, 'Cp', 1, 'nodal', '%.3f')] = Cp
-
-        if 'Mach' in loads and plotNodal:
-            mach = loads['Mach']
-            Mach = zeros(nNodes)
-            for nid, machi in sorted(mach.iteritems()):
-                Mach[nid - 1] = machi
-
-            cases[(ID, 'Mach', 1, 'nodal', '%.3f')] = Mach
-
-        if 'U' in loads and plotNodal:
-            u = loads['U']
-            U = zeros(nNodes)
-            for nid, ui in sorted(u.iteritems()):
-                U[nid - 1] = ui
-            cases[(ID, 'U', 1, 'nodal', '%.3f')] = U
-
-        if 'V' in loads and plotNodal:
-            v = loads['V']
-            V = zeros(nNodes)
-            for nid, vi in sorted(v.iteritems()):
-                V[nid - 1] = vi
-            cases[(ID, 'V', 1, 'nodal', '%.3f')] = V
-
-        if 'W' in loads and plotNodal:
-            w = loads['W']
-            W = zeros(nNodes)
-            for nid, wi in sorted(w.iteritems()):
-                W[nid - 1] = wi
-            cases[(ID, 'W', 1, 'nodal', '%.3f')] = W
-
-        #cases[(ID,'rhoU',   1,'nodal','%.3f')] = rhoU
-        #cases[(ID,'rhoV',   1,'nodal','%.3f')] = rhoV
-        #cases[(ID,'rhoW',   1,'nodal','%.3f')] = rhoW
+        elif isNodal:
+            #print("load.keys() = ", loads.keys())
+            for key in result_names:
+                if key in loads:
+                    nodal_data = loads[key]
+                    cases[(ID, key, 1, 'nodal', '%.3f')] = nodal_data
         return cases

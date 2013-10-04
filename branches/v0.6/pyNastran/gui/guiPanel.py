@@ -35,8 +35,9 @@ version = pyNastran.__version__
 
 #from pyNastran.gui.mouseStyle import MouseStyle
 from pyNastran.gui.actionsControl import pyWidget
-from pyNastran.gui.nastranIO import NastranIO
 
+from pyNastran.gui.formats import (NastranIO, Cart3dIO, LaWGS_IO, PanairIO,
+    is_nastran, is_cart3d, is_panair, is_lawgs)
 
 def getScreenCorner(x, y):
     #print "wx.GetDisplaySize() = ",wx.GetDisplaySize()
@@ -45,21 +46,33 @@ def getScreenCorner(x, y):
     yCorner = (yScreen - y) // 2
     return(xCorner, yCorner)
 
-class Pan(wx.Panel, NastranIO):
+class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
     def __init__(self, *args, **kwargs):
-        isEdges = kwargs['isEdges']
+        self.grid = vtk.vtkUnstructuredGrid()
+        self.gridResult = vtk.vtkFloatArray()
+        #self.emptyResult = vtk.vtkFloatArray()
+        #self.vectorResult = vtk.vtkFloatArray()
+        self.grid2 = vtk.vtkUnstructuredGrid()
+
+        self.isEdges = kwargs['isEdges']
         self.isNodal = kwargs['isNodal']
         self.isCentroidal = kwargs['isCentroidal']
+        gui_parent = kwargs['gui_parent']
+        if 'log' in kwargs:
+            self.log = kwargs['log']
+            del kwargs['log']
+        del kwargs['gui_parent']
         del kwargs['isEdges']
         del kwargs['isNodal']
         del kwargs['isCentroidal']
+
         wx.Panel.__init__(self, *args, **kwargs)
         NastranIO.__init__(self)
-        
+        Cart3dIO.__init__(self)
+        LaWGS_IO.__init__(self)
+        PanairIO.__init__(self)
+
         self.nCases = 0
-        #isEdges = False
-        print("isEdges = %s" % (isEdges))
-        self.isEdges = isEdges  # surface wireframe
         self.widget = pyWidget(self, -1)
 
         window = self.widget.GetRenderWindow()
@@ -88,7 +101,7 @@ class Pan(wx.Panel, NastranIO):
         if hasEdgeActor:
             prop = self.edgeActor.GetProperty()
             #print "dir(prop) = ",dir(prop)
-            print("visible = %s" % (prop.GetEdgeVisibility()))
+            print("visible = %s" % prop.GetEdgeVisibility())
             if self.isEdges:
                 prop.EdgeVisibilityOn()
                 print("edges are now on\n")
@@ -100,7 +113,7 @@ class Pan(wx.Panel, NastranIO):
             self.edgeActor.Modified()
             #self.edgeActor.Update()
         if 0:
-            print("dir(widget) = %s" % (dir(self.widget)))
+            print("dir(widget) = %s" % dir(self.widget))
 
             actors = self.widget._CurrentRenderer.GetActors()
             numActors = actors.GetNumberOfItems()
@@ -124,17 +137,17 @@ class Pan(wx.Panel, NastranIO):
         self.widget.Update()
 
     def onSetToWireframe(self, event):
-        if self.bdfFileName is not None:
+        if self.infile_name is not None:
             self.widget.Wireframe()
             self.widget.Update()
 
     def onSetToSurface(self, event):
-        if self.bdfFileName is not None:
+        if self.infile_name is not None:
             self.widget.Surface()
             self.widget.Update()
 
     def onSetToFlatShading(self, event):  # Flat
-        if self.bdfFileName is not None:
+        if self.infile_name is not None:
             actors = self.widget._CurrentRenderer.GetActors()
             numActors = actors.GetNumberOfItems()
             actors.InitTraversal()
@@ -144,7 +157,7 @@ class Pan(wx.Panel, NastranIO):
             self.widget.Render()
 
     def onSetToGouraudShading(self, event):  # Gouraud
-        if self.bdfFileName is not None:
+        if self.infile_name is not None:
             actors = self.widget._CurrentRenderer.GetActors()
             numActors = actors.GetNumberOfItems()
             actors.InitTraversal()
@@ -154,7 +167,7 @@ class Pan(wx.Panel, NastranIO):
             self.widget.Render()
 
     def onSetToPhongShading(self, event):  # Phong
-        if self.bdfFileName is not None:
+        if self.infile_name is not None:
             actors = self.widget._CurrentRenderer.GetActors()
             numActors = actors.GetNumberOfItems()
             actors.InitTraversal()
@@ -189,7 +202,7 @@ class Pan(wx.Panel, NastranIO):
         #self.widget.Render()
         self.widget.Update()
         print("visible = %s" % (prop.GetEdgeVisibility()))
-    
+
     def get_edges(self):
         edges = vtk.vtkExtractEdges()
 
@@ -202,14 +215,14 @@ class Pan(wx.Panel, NastranIO):
         self.edgeActor = vtk.vtkActor()
         self.edgeActor.SetMapper(self.edgeMapper)
         self.edgeActor.GetProperty().SetColor(0, 0, 0)
-        
+
         prop = self.edgeActor.GetProperty()
         #prop.SetLineWidth(0.0)
         if self.isEdges:
             prop.EdgeVisibilityOn()
         else:
             prop.EdgeVisibilityOff()
-        print("visible = %s" % (prop.GetEdgeVisibility()))
+        print("visible = %s" % prop.GetEdgeVisibility())
 
         self.rend.AddActor(self.edgeActor)
 
@@ -438,19 +451,18 @@ class Pan(wx.Panel, NastranIO):
         return self.widget.GetRenderWindow()
 
     def getWindowName(self, winName=''):
-        return "pyNastran v%s - %s" % (version, self.bdfFileName)
+        return "pyNastran v%s - %s" % (version, self.infile_name)
 
     def setWindowName(self, winName=''):
         window = self.getWindow()
         window.SetWindowName(
-            "pyNastran v%s - %s" % (version, self.bdfFileName))
+            "pyNastran v%s - %s" % (version, self.infile_name))
 
-    def isStress(self, op2, ID):
-        if (ID in op2.solidStress or ID in op2.plateStress or
-            ID in op2.compositePlateStress or ID in op2.barStress or
-            ID in op2.beamStress or ID in op2.rodStress):
-            return True
-        return False
+    def log_info(self, msg):
+        print(msg)
+
+    def log_debug(self, msg):
+        print(msg)
 
     def incrementCycle(self):
         if self.iCase is not self.nCases:
@@ -506,8 +518,7 @@ class Pan(wx.Panel, NastranIO):
             caseName = self.iSubcaseNameMap[subcaseID]
             (subtitle, label) = caseName
 
-            print("subcaseID=%s resultType=%s subtitle=%s label=%s"
-                % (subcaseID, resultType, subtitle, label))
+            print("subcaseID=%s resultType=%s subtitle=%s label=%s" % (subcaseID, resultType, subtitle, label))
 
             for value in case:
                 maxValue = value
@@ -582,12 +593,13 @@ class Pan(wx.Panel, NastranIO):
         key = rwi.GetKeySym()
         #print "*Pressed %s" %(key)
 
-    def buildVTK(self, bdfFileName=None, dirname=None):
-        self.bdfFileName = bdfFileName
+    def buildVTK(self, infile_name, dirname=None):
+        dirname = ''
+        self.infile_name = infile_name
 
         self.rend = vtk.vtkRenderer()
         self.scalarBar = vtk.vtkScalarBarActor()
-        self.load_nastran_geometry(self.bdfFileName, dirname)
+        self.load_nastran_geometry(self.infile_name, dirname)
         self.main()
 
         #self.renWin = vtk.vtkRenderWindow()

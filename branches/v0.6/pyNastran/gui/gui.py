@@ -35,6 +35,8 @@ import sys
 #import pyNastran
 import pyNastran.gui
 from pyNastran.gui.guiPanel import Pan
+from pyNastran.utils.log import SimpleLogger
+
 ID_SAVEAS = 803
 ID_ABOUT = 3
 
@@ -67,6 +69,10 @@ else:
 print "iconPath = |%r|" %(iconPath)
 
 #------------------------------------------------------------------------------
+# kills the program when you hit Cntl+C from the command line
+import signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
+#------------------------------------------------------------------------------
 
 
 class AppFrame(wx.Frame):
@@ -76,7 +82,8 @@ class AppFrame(wx.Frame):
 
         wx.Frame.__init__(self, None, -1, size=wx.Size(800, 600),
                           title='pyNastran')
-        self.bdfFileName = None
+        self.log = SimpleLogger('debug')
+        self.infile_name = None
         self.isEdges = isEdges
         self.isNodal = isNodal
         self.isCentroidal = isCentroidal
@@ -112,7 +119,7 @@ class AppFrame(wx.Frame):
                                            isCentroidal=self.isCentroidal)
 
         self.frmPanel = Pan(self, isEdges=self.isEdges, isNodal=self.isNodal,
-                            isCentroidal=self.isCentroidal, size=(100, 200))
+                            isCentroidal=self.isCentroidal, log=self.log, gui_parent=self, size=(100, 200))
 
         self.buildMenuBar()
         self.buildToolBar()
@@ -120,8 +127,8 @@ class AppFrame(wx.Frame):
 
         self.SetMenuBar(self.menubar)
 
-        self.frmPanel.bdfFileName = self.bdfFileName
-        self.frmPanel.buildVTK(self.bdfFileName)
+        self.frmPanel.infile_name = self.infile_name 
+        self.frmPanel.buildVTK(self.infile_name )
 
         windowName = self.frmPanel.getWindowName()
         self.SetTitle(windowName)
@@ -131,6 +138,7 @@ class AppFrame(wx.Frame):
         # Add them to sizer.
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(self.frmPanel.widget, 1, wx.EXPAND | wx.ALL, 1)
+        self.frmPanel.scalarBar.VisibilityOff()
 
         # Add buttons in their own sizer
         if 0:
@@ -219,6 +227,12 @@ class AppFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, events.onAbout, id=ID_ABOUT)
     #end __init__
 
+    def log_info(self, msg):
+        print msg
+
+    def log_debug(self, msg):
+        print msg
+
     def buildTree(self, panel1):
         tree = wx.TreeCtrl(self, 1, wx.DefaultPosition, (-1, -1),
                            wx.TR_HIDE_ROOT | wx.TR_HAS_BUTTONS)
@@ -255,9 +269,9 @@ class AppFrame(wx.Frame):
         item = event.GetItem()
         self.display.SetLabel(tree.GetItemText(item))
 
-    def UpdateWindowName(self, bdfFileName):
-        self.bdfFileName = bdfFileName
-        self.frmPanel.bdfFileName = bdfFileName
+    def UpdateWindowName(self, infile_name):
+        self.infile_name = infile_name
+        self.frmPanel.infile_name = infile_name
         windowName = self.frmPanel.getWindowName()
         self.SetTitle(windowName)
 
@@ -500,7 +514,7 @@ class EventsHandler(object):
         #print "OnOpen..."
 
         if 0:
-            bdf = self.parent.bdfFileName
+            bdf = self.parent.infile_name
             bdfBase = os.path.basename(bdf)
             #dirname = os.path.dirname(bdf)
             (op2name, op2) = os.path.splitext(bdfBase)

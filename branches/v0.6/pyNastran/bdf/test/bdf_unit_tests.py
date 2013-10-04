@@ -26,6 +26,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import unittest
+from numpy import allclose, array
+from numpy.linalg import norm
+
 import pyNastran
 from pyNastran.bdf.cards.baseCard import collapse_thru_by
 from pyNastran.bdf.bdf import BDF
@@ -65,6 +68,25 @@ class TestBDF(Tester):
             assert len(fem.elements) == 186, 'len(elements) = %i' % len(fem.elements)
             assert len(fem.methods) == 0, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)
+        mass, cg, I = fem1.mass_properties()
+        
+        assert allclose(mass, 6.0), 'mass = %s' % mass
+        cg_exact = array([0.5, 1., 1.5])
+        for i, (cgi, cgie) in enumerate(zip(cg, cg_exact)):
+            assert allclose(cgi, cgie), 'i=%s cg=%s' % (i, str(cg))
+
+        self._compare_mass_cg_I(fem1)
+        self._compare_mass_cg_I(fem1, reference_point=u'cg')
+        mass, cg, I = fem1.mass_properties(reference_point='cg')
+
+    def _compare_mass_cg_I(self, fem1, reference_point=None, sym_axis=None):
+        num_cpus = 4
+        mass1, cg1, I1 = fem1.mass_properties(reference_point=reference_point, sym_axis=sym_axis)
+        mass2, cg2, I2 = fem1.mass_properties(reference_point=reference_point, sym_axis=sym_axis, num_cpus=num_cpus)
+
+        assert mass1 == mass2, 'mass1=%s mass2=%s' % (mass1, mass2)
+        assert allclose(norm((cg1 - cg2)**2), 0.0), 'cg1-cg2=%s' % (cg1 - cg2)
+        assert allclose(norm((I1  -  I2)**2), 0.0), 'I1-I2=%s' % (I1 - I2)
 
     def test_bdf_02(self):
         bdfFilename = os.path.join('plate_py', 'plate_py.dat')
@@ -80,6 +102,9 @@ class TestBDF(Tester):
             assert len(fem.elements) == 200, 'len(elements) = %i' % len(fem.elements)
             assert len(fem.methods) == 1, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)
+        self._compare_mass_cg_I(fem1)
+        self._compare_mass_cg_I(fem1, reference_point=u'cg')
+
 
     def test_bdf_04(self):
         bdfFilename = os.path.join('cbush', 'cbush.dat')
@@ -94,6 +119,10 @@ class TestBDF(Tester):
             assert len(fem.elements) == 1, 'len(elements) = %i' % len(fem.elements)
             assert len(fem.methods) == 0, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)  # PBEAML issue
+
+        self._compare_mass_cg_I(fem1)
+        self._compare_mass_cg_I(fem1, reference_point=u'cg')
+
         self.run_bdf(folder, bdfFilename, xref=True)
 
     def test_bdf_03(self):
@@ -109,6 +138,9 @@ class TestBDF(Tester):
             assert len(fem.elements) == 11, 'len(elements) = %i' % len(fem.elements)
             assert len(fem.methods) == 1, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 3, 'len(properties) = %i' % len(fem.properties)  # PBEAML issue
+        self._compare_mass_cg_I(fem1)
+        #self._compare_mass_cg_I(fem1, reference_point=u'cg')
+
         #self.run_bdf(folder, bdfFilename, xref=True) # PBEAML is not supported
 
     def test_bdf_05(self):

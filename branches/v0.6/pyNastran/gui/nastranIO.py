@@ -39,7 +39,7 @@
 #VTK_HEXAHEDRON = 12
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
-
+import os
 from numpy import zeros
 
 import vtk
@@ -61,48 +61,51 @@ class NastranIO(object):
     def __init__(self):
         pass
 
-    def load_nastran_geometry(self, bdfFileName, dirname):
+    def load_nastran_geometry(self, bdf_filename, dirname):
+        self.eidMap = {}
+        self.nidMap = {}
+        #print('bdf_filename=%r' % bdf_filename)
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
         #skipReading = self.removeOldGeometry(bdfFileName)
         #if skipReading:
             #return
-        if bdfFileName is None:
-            self.grid = vtk.vtkUnstructuredGrid()
-            self.gridResult = vtk.vtkFloatArray()
+        if bdf_filename is None or bdf_filename is '':
+            #self.grid = vtk.vtkUnstructuredGrid()
+            #self.gridResult = vtk.vtkFloatArray()
             #self.emptyResult = vtk.vtkFloatArray()
             #self.vectorResult = vtk.vtkFloatArray()
-            self.grid2 = vtk.vtkUnstructuredGrid()
-            self.scalarBar.VisibilityOff()
+            #self.grid2 = vtk.vtkUnstructuredGrid()
+            #self.scalarBar.VisibilityOff()
             return
         else:
             self.TurnTextOff()
             self.grid.Reset()
             self.grid2.Reset()
-            self.gridResult = vtk.vtkFloatArray()
-            self.gridResult.Reset()
-            self.gridResult.Modified()
+            #self.gridResult = vtk.vtkFloatArray()
+            #self.gridResult.Reset()
+            #self.gridResult.Modified()
             self.eidMap = {}
             self.nidMap = {}
 
             self.resultCases = {}
             self.nCases = 0
-            try:
-                if hasattr(self, caseKeys):
-                    del self.caseKeys
-                del self.iCase
-                del self.iSubcaseNameMap
-            except NameError:
-                print("cant delete geo")
-                #pass
-            #print dir(self)
-        self.scalarBar.VisibilityOff()
-        self.scalarBar.Modified()
+        for i in ('caseKeys', 'iCase', 'iSubcaseNameMap'):
+            if hasattr(self, i):
+                del i
 
-        model = BDF()
+            #print dir(self)
+        #self.scalarBar.VisibilityOff()
+        #self.scalarBar.Modified()
+
+        fname_base, ext = os.path.splitext(bdf_filename)
+        punch = False
+        if ext.lower() in '.pch':
+            punch = True
+        model = BDF(log=self.log, debug=True)
         self.modelType = model.modelType
-        model.readBDF(bdfFileName, includeDir=dirname)
+        model.readBDF(bdf_filename, includeDir=dirname, punch=punch)
 
         nNodes = model.nNodes()
         nElements = model.nElements()
@@ -110,8 +113,11 @@ class NastranIO(object):
         self.nNodes = nNodes
         self.nElements = nElements
 
-        #print "nNodes = ",self.nNodes
-        print("nElements = %i" % (self.nElements))
+        self.log_info("nElements = %i" % self.nElements)
+        msg = model.card_stats(return_type='list')
+        self.log_info(msg)
+        #for msgi in msg:
+        #    model.log.debug(msgi)
 
         #self.aQuadGrid.Allocate(nElements+nNodes, 1000)
 
@@ -121,15 +127,11 @@ class NastranIO(object):
             nCONM2 = 0
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
-        #self.gridResult.SetNumberOfComponents(0)
-        self.gridResult.SetNumberOfComponents(self.nElements)
-        #self.gridResult.Allocate(self.nNodes,1000)
-
         self.grid2.Allocate(nCAeros + nCONM2, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
-        self.gridResult.Allocate(self.nNodes, 1000)
+        #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         self.nidMap = {}
         #elem.SetNumberOfPoints(nNodes)
@@ -152,14 +154,11 @@ class NastranIO(object):
 
                 self.nidMap[nid] = i
                 i += 1
-        if 1:
-            i = 0
-            for (nid, node) in sorted(model.nodes.iteritems()):
-                point = node.Position()
-                points.InsertPoint(i, *point)
-                self.nidMap[nid] = i
-                i += 1
-            #print "nidMap = ",self.nidMap
+
+        for i, (nid, node) in enumerate(sorted(model.nodes.iteritems())):
+            point = node.Position()
+            points.InsertPoint(i, *point)
+            self.nidMap[nid] = i
 
         j = 0
         points2 = vtk.vtkPoints()
@@ -177,14 +176,12 @@ class NastranIO(object):
                 points2.InsertPoint(j + 1, *cpoints[1])
                 points2.InsertPoint(j + 2, *cpoints[2])
                 points2.InsertPoint(j + 3, *cpoints[3])
-                self.grid2.InsertNextCell(elem.GetCellType(),
-                                          elem.GetPointIds())
+                self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 j += 4
             #elif isinstance(element,CAERO2): # cylinder
                 #pass
             else:
-                print("skipping %s" % element.type)
-
+                self.log_info("skipping %s" % element.type)
         self.mapElements(points, points2, self.nidMap, model, j)
 
     def mapElements(self, points, points2, nidMap, model, j):
@@ -390,7 +387,7 @@ class NastranIO(object):
                 del self.eidMap[eid]
                 i -= 1
 
-                nid = element.Nid()
+                #nid = element.Nid()
                 c = element.Centroid()
                 elem = vtk.vtkVertex()
                 #elem = vtk.vtkSphere()
@@ -400,14 +397,12 @@ class NastranIO(object):
                 points2.InsertPoint(j, *c)
                 elem.GetPointIds().SetId(0, j)
                 #elem.SetCenter(points.GetPoint(nidMap[nid]))
-                self.grid2.InsertNextCell(elem.GetCellType(),
-                                          elem.GetPointIds())
+                self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 j += 1
             else:
                 del self.eidMap[eid]
-                i -= 1
-
-                print("skipping %s" % element.type)
+                self.log_info("skipping %s" % element.type)
+                continue
             i += 1
 
         self.grid.SetPoints(points)
@@ -420,7 +415,7 @@ class NastranIO(object):
         self.grid2.Modified()
         self.grid.Update()
         self.grid2.Update()
-        print("updated grid")
+        self.log_info("updated grid")
 
     def load_nastran_results(self, op2FileName, dirname):
         #self.gridResult.SetNumberOfComponents(self.nElements)
@@ -428,7 +423,7 @@ class NastranIO(object):
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        op2 = OP2(op2FileName, debug=True)
+        op2 = OP2(op2FileName, log=self.log, debug=True)
         op2.readOP2()
         #print op2.print_results()
 
@@ -481,9 +476,7 @@ class NastranIO(object):
                         temps[nid2] = T
                     #cases[key] = temps
 
-            if self.isStress(op2, subcaseID):
-                cases = self.fillStressCase(cases, op2, subcaseID,
-                                            eKey, nElements)
+            cases = self.fillStressCase(cases, op2, subcaseID, eKey, nElements)
 
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
@@ -589,16 +582,15 @@ class NastranIO(object):
                 eid2 = self.eidMap[eid]
                 cases[eKey][eid2] = 1.
 
-                #print "solid eid=%s" %(eid)
                 oxxi = case.oxx[eid]['C']
                 oyyi = case.oyy[eid]['C']
                 ozzi = case.ozz[eid]['C']
+
                 o1i = case.o1[eid]['C']
                 o2i = case.o2[eid]['C']
                 o3i = case.o3[eid]['C']
                 ovmi = case.ovmShear[eid]['C']
-                #if subcaseID==1:
-                    #print "ovm[%s] = %s" %(eid,ovmi)
+
                 oxx[eid2] = oxxi
                 oyy[eid2] = oyyi
                 ozz[eid2] = ozzi
