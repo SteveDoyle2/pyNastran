@@ -34,13 +34,13 @@ def split_model(model, nids, func=None):
         #e_nids2 = [nid if nid in nids else False for nid in e_nids]
 
         if element.type in ['CTRIA3', 'CQUAD4']:
-            print "e_nids2 =", e_nids2
+            #print "e_nids2 =", e_nids2
             if func(element):
                 for nid in e_nids2:
                     i = e_nids.index(nid)
 
                     nidi = nodes_map[nid]
-                    print "    nid=%s -> nidi=%s" % (nid, nidi)
+                    #print "    nid=%s -> nidi=%s" % (nid, nidi)
                     node2 = model.nodes[nidi]
                     #print node2
                     element.nodes[i] = node2
@@ -61,32 +61,16 @@ def split_model(model, nids, func=None):
     for nid in lost_nids:
         del model.nodes[nid]
     
-    print "all_nids", all_nids
-    print "old_nids", old_nids
+    #print "all_nids", all_nids
+    #print "old_nids", old_nids
     #new_nids = all_nids.remove(old_nids.intersection(lost_nids) )
     #print "new_nids", new_nids
     #nid0 = min(new_nids)
     #model.nodes[nid]._comment = 'updated...\n'
     
 
-def run():
-
-    group1_nodes = [1, 2, 3]
-    group2_nodes = [4, 5, 6]
-    surface1 = {
-        'group1_nodes' : group1_nodes,
-        'group2_nodes' : group2_nodes,
-        'dof'          : 1,     # dof in contact (1, 2, 3, 4, 5, 6) - nodes in group1/2
-        'K'            : 1.e8,  # stiffness of contact interface
-        'cid'          : 1,     # direction of contact
-        'glue'         : False, # 
-        'initial_gap'  : 0.0,
-        'max_deflection_error' : max_deflection_error,
-    }
-    contact_surfaces = [surface1]
+def run(contact_surfaces, main_bdf, main_op2):
     contact_bdf = 'spring.bdf'
-    main_bdf = 'main.bdf'
-    op2_name = 'main.op2'
     subcase_id = 1
 
     eid_groups, nodes_groups, stiffnesses, errors = setup_contact(main_bdf, contact_bdf, contact_surfaces)
@@ -135,11 +119,24 @@ def setup_contact(main_bdf, contact_bdf, contact_surfaces):
     # ------------------------------------------------------------------------
     # update the case control deck
 
-    subcases = model.case_control_deck.get_subcases()
-    assert len(subcases) == 1, len(subcases)
-    subcase0_id = subcases.keys()[0]
-    subcase = subcases[subcase0_id]
-    subcase['FORCE'] = ['FORCE', 'ALL']
+    cc = model.caseControlDeck
+    subcase_ids = cc.get_subcase_list()
+    subcase0_id = subcase_ids[0]
+    #subcases = model.caseControlDeck.get_subcases()
+    #assert len(subcases) == 1, len(subcases)
+    #subcase0_id = subcases.keys()[0]
+    #subcase = subcases[subcase0_id]
+    #subcase['FORCE'] = ['FORCE', 'ALL']
+    
+    #cc.get_subcase_parameter(subcase0_id, 'FORCE')
+    
+    #cc.add_parameter_to_local_subcase(subcase0_id, 'FORCE = ALL')
+    cc.add_parameter_to_local_subcase(1, 'LOCAL_VAR = ALL')
+    cc.add_parameter_to_local_subcase(1, 'LOCAL_VAR_B = ALL')
+    #cc.add_parameter_to_global_subcase('GLOBAL_VAR = ALL')
+    
+    model_main.write_bdf('junk.bdf')
+    sys.exit()
 
     # ------------------------------------------------------------------------
     # update the main bdf with the INCLUDE fiel
@@ -286,16 +283,46 @@ if __name__ == '__main__':
     def centroid_at_7(element):
         c = element.Centroid()
         if c[1] == 7.0:  # update if the element centroid > 6
-            print c
+            #print c
             return True  # upper group
         return False     # lower group
     func = centroid_at_7
     nnodes = len(model.nodes)
 
-    split_model(model, nids, func)
-    model.write_bdf('plate_split.bdf')
+    if 0:
+        split_model(model, nids, func)
+        model.write_bdf('plate_split.bdf')
 
-    model2 = BDF()
-    model2.read_bdf('plate_split.bdf')
-    assert nnodes + 12 == len(model2.nodes), 'nnodes+12=%s nnodes2=%s' % (nnodes + 12, len(model2.nodes))
-    #assert nnodes + 6 == len(model2.nodes), 'nnodes+6=%s nnodes2=%s' % (nnodes + 6, len(model2.nodes))
+        model2 = BDF()
+        model2.read_bdf('plate_split.bdf')
+        assert nnodes + 12 == len(model2.nodes), 'nnodes+12=%s nnodes2=%s' % (nnodes + 12, len(model2.nodes))
+        #assert nnodes + 6 == len(model2.nodes), 'nnodes+6=%s nnodes2=%s' % (nnodes + 6, len(model2.nodes))
+    
+    group1_nodes = set([])
+    group2_nodes = set([])
+    for eid, element in model.elements.iteritems():
+        nids = element.nodeIDs()
+        if func(element):
+            for nid in nids:
+                group1_nodes.add(nid)
+        else:
+            for nid in nids:
+                group2_nodes.add(nid)
+
+    group1_nodes = list(group1_nodes)
+    group2_nodes = list(group2_nodes)
+    surface1 = {
+        'group1_nodes' : group1_nodes,
+        'group2_nodes' : group2_nodes,
+        'dof'          : 1,     # dof in contact (1, 2, 3, 4, 5, 6) - nodes in group1/2
+        'K'            : 1.e8,  # stiffness of contact interface
+        'cid'          : 1,     # direction of contact
+        'glue'         : False, # 
+        'initial_gap'  : 0.0,
+        'max_deflection_error' : max_deflection_error,
+    }
+    contact_surfaces = [surface1]
+    main_bdf = 'plate_split.bdf'
+    main_op2 = 'plate_split.op2'
+
+    run(contact_surfaces, main_bdf, main_op2)
