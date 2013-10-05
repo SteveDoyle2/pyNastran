@@ -27,6 +27,11 @@ except ImportError:
             pass
     is_panair = False
 
-
-from pyNastran.converters.cart3d.cart3dIO import Cart3dIO
-is_cart3d = True
+try:
+    from pyNastran.converters.cart3d.cart3dIO import Cart3dIO
+    is_cart3d = True
+except ImportError:
+    class PanairIO(object):
+        def __init__(self):
+            pass
+    is_cart3d = False
