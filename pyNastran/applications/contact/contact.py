@@ -6,7 +6,7 @@ from numpy import zeros, ones, array, where, allclose
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.fieldWriter import print_card
-#from pyNastran.bdf.writePath import write_include
+from pyNastran.bdf.writePath import write_include
 
 
 max_deflection_error = 0.01
@@ -74,32 +74,36 @@ def run(contact_surfaces, main_bdf, main_op2):
     subcase_id = 1
 
     eid_groups, nodes_groups, stiffnesses, errors = setup_contact(main_bdf, contact_bdf, contact_surfaces)
-    run_nastran(main_bdf)
+    run_nastran(main_bdf, main_op2)
     nerrors = []
     ierrrors = None
-    ierrors_old = parse_op2(contact_bdf, op2_name, subcase_id, eid_groups, nodes_groups, stiffnesses, errors)
+    ierrors_old = parse_op2(contact_bdf, main_op2, subcase_id, contact_surfaces, eid_groups, nodes_groups, stiffnesses, errors)
 
     while 1:
-        error = parse_op2(contact_bdf, op2_name, subcase_id, eid_groups, nodes_groups, stiffnesses, errors)
+        error = parse_op2(contact_bdf, main_op2, subcase_id, contact_surfaces, eid_groups, nodes_groups, stiffnesses, errors)
         errors.append(error)
         if error == 0 or error > error_old:
             break
         error_old = error
 
 
-def run_nastran(main_bdf):
-    os.system("nastran " + main_bdf + " scr=yes")
+def run_nastran(main_bdf, main_op2):
+    os.system("nastran " + main_bdf + " scr=yes bat=no old=yes")
+    assert os.path.exists(main_op2), '%s doesnt exist' % main_op2
 
 
 def update_nodes_cid(model, nids_group, cid):
     nnodes = len(nids_group)
-    nodes_left = zeros((nnodes, 3), 'float64')
+    nodes = zeros((nnodes, 3), 'float64')
 
     for i, nid in enumerate(nids_group):
+        #print i, nid
         node = model.nodes[nid]
-        if node.cid != 0:
-            xyz = node.PositionWRT(cid=cid)
-            node.UpdateCoord(xyz, cid)
+        #print dir(node)
+        if node.Cp() != 0:
+            print "cp =", node.Cp()
+            xyz = node.PositionWRT(model, cid=cid)
+            node.UpdatePosition(model, xyz, cid)
         nodes[i, :] = node.Position()
     return nodes
 
@@ -107,7 +111,7 @@ def get_max_eid(model):
     """
     assumes no RBE2/3
     """
-    ielement_max = max(model_main.elements)
+    ielement_max = max(model.elements)
     return max([ielement_max])
 
 def setup_contact(main_bdf, contact_bdf, contact_surfaces):
@@ -119,33 +123,25 @@ def setup_contact(main_bdf, contact_bdf, contact_surfaces):
     # ------------------------------------------------------------------------
     # update the case control deck
 
-    cc = model.caseControlDeck
+    cc = model_main.caseControlDeck
     subcase_ids = cc.get_subcase_list()
+    subcase_ids.pop(0)
     subcase0_id = subcase_ids[0]
-    #subcases = model.caseControlDeck.get_subcases()
-    #assert len(subcases) == 1, len(subcases)
-    #subcase0_id = subcases.keys()[0]
-    #subcase = subcases[subcase0_id]
-    #subcase['FORCE'] = ['FORCE', 'ALL']
     
-    #cc.get_subcase_parameter(subcase0_id, 'FORCE')
-    
-    #cc.add_parameter_to_local_subcase(subcase0_id, 'FORCE = ALL')
-    cc.add_parameter_to_local_subcase(1, 'LOCAL_VAR = ALL')
-    cc.add_parameter_to_local_subcase(1, 'LOCAL_VAR_B = ALL')
-    #cc.add_parameter_to_global_subcase('GLOBAL_VAR = ALL')
+    cc.add_parameter_to_local_subcase(subcase0_id, 'FORCE(SORT1, REAL) = ALL')
+    print cc
     
     model_main.write_bdf('junk.bdf')
-    sys.exit()
+    #sys.exit()
 
     # ------------------------------------------------------------------------
     # update the main bdf with the INCLUDE fiel
     
-    contact_include = write_include_path(contact_bdf)
-    model_main.rejects.append(contact_include)
+    contact_include = write_include(contact_bdf)
+    model_main.rejects.append([contact_include])
     # ------------------------------------------------------------------------
 
-    eid_start = self.get_max_eid() + 1 # elements + 1 -> starting ID
+    eid_start = get_max_eid(model) + 1 # elements + 1 -> starting ID
     eid = eid_start
 
     # ------------------------------------------------------------------------
@@ -155,9 +151,26 @@ def setup_contact(main_bdf, contact_bdf, contact_surfaces):
     eid_groups = []
     nodes_groups = []
     neids = []
+    i = 0
     for contact_surface in contact_surfaces:
-        (nids_group1, nids_group2, dof, stiffness, cid, glue, initial_gap, max_deflection_error) = contact_surface
+        nids_group1 = contact_surface['group1_nodes']
+        nids_group2 = contact_surface['group2_nodes']
+        stiffness   = contact_surface['stiffness']
+        dof = contact_surface['dof']
+        cid = contact_surface['cid']
+        
+        #(nids_group1, nids_group2, dof, stiffness, cid, glue, initial_gap, max_deflection_error) = 
+        
+                #'group1_nodes' : group1_nodes,
+                #'group2_nodes' : group2_nodes,
+                #'dof'          : 1,     # dof in contact (1, 2, 3, 4, 5, 6) - nodes in group1/2
+                #'K'            : 1.e8,  # stiffness of contact interface
+                #'cid'          : 1,     # direction of contact
+                #'glue'         : False, # 
+                #'initial_gap'  : 0.0,
+                #'max_deflection_error' : max_deflection_error,
 
+        print "nids_group1 =", nids_group1
         #model_left = BDF()
         #model_left.read_bdf(left_bdf)
 
@@ -177,21 +190,25 @@ def setup_contact(main_bdf, contact_bdf, contact_surfaces):
 
         c1 = c2 = dof
         neids_start = eid
-        i = 0
+        #i = 0
+        if i > 0:
+            f.write('$-------------------------------------------------------\n')            
+        f.write('$ contact set %i\n' % i)
         for g1, spring_nodes in sorted(spring_sets.iteritems()):
-            f.write('$ contact set %i' % i)
+            f.write('$ g1=%i, dof=%i\n' % (g1, dof))
             for g2 in spring_nodes:
                 celas = ['CELAS2', eid, stiffness, g1, c1, g2, c2]
                 f.write(print_card(celas))
-            eid += 1
-            i += 1
+                eid += 1
+            #i += 1
         neid = eid - neids_start
         
-        eid_group = (spring_eids_min, spring_eids_max)
+        eid_group = (neids_start, neid)
         eid_groups.append(eid_group)
         nodes_group = (nodes_left, nodes_right)
         nodes_groups.append(nodes_group)
         neids.append(neid)
+        i += 1
     f.close()
 
     # ------------------------------------------------------------------------
@@ -205,22 +222,40 @@ def setup_contact(main_bdf, contact_bdf, contact_surfaces):
     errors = ones(sum(neids), 'float64')
     ieid = 0
     for neid, contact_surface in zip(neids, contact_surfaces):
-        left_bdf, right_bdf, dof, stiffness, cid, glue, initial_gap = contact_surface
+        nids_group1 = contact_surface['group1_nodes']
+        #nids_group2 = contact_surface['group2_nodes']
+        stiffness   = contact_surface['stiffness']
+        #dof = contact_surface['dof']
+        #cid = contact_surface['cid']
+        
+        #(nids_group1, nids_group2, dof, stiffness, cid, glue, initial_gap, max_deflection_error) = 
+        
+                #'group1_nodes' : group1_nodes,
+                #'group2_nodes' : group2_nodes,
+                #'dof'          : 1,     # dof in contact (1, 2, 3, 4, 5, 6) - nodes in group1/2
+                #'K'            : 1.e8,  # stiffness of contact interface
+                #'cid'          : 1,     # direction of contact
+                #'glue'         : False, # 
+                #'initial_gap'  : 0.0,
+                #'max_deflection_error' : max_deflection_error,
+        #left_bdf, right_bdf, dof, stiffness, cid, glue, initial_gap = contact_surface
         stiffnesses[ieid : ieid + neid] = stiffness
         ieid += neid
     return eid_groups, nodes_groups, stiffnesses, errors
 
-def parse_op2(contact_bdf, op2_name, subcase_id, contact_surfaces, eid_groups, nodes_groups, stiffnesses, errors):
+def parse_op2(contact_bdf, main_op2, subcase_id, contact_surfaces, eid_groups, nodes_groups, stiffnesses, errors):
     """
     assumes static analysis
     """
-    op2 = OP2()
-    op2.read_op2(op2_name)
-    spring_forces = op2.spring_forces[subcase_id]
+    from pyNastran.op2.op2 import OP2
+    
+    op2 = OP2(op2FileName=main_op2)
+    op2.read_op2()
+    spring_forces = op2.springForces[subcase_id]
     
     #force_name = 'forces.bdf'
 
-    contact_bdf = 'spring.bdf'
+    #contact_bdf = 'spring.bdf'
     f = open(contact_bdf, 'wb')
 
     errorsi = 0
@@ -274,7 +309,7 @@ def parse_op2(contact_bdf, op2_name, subcase_id, contact_surfaces, eid_groups, n
 if __name__ == '__main__':
     model = BDF()
     model.read_bdf('plate.bdf')
-    model.write_bdf('plate2.bdf')
+    #model.write_bdf('plate2.bdf')
 
     nids = [19, 20, 21, 22, 23, 24,]
     nids = model.nodes.keys()
@@ -315,14 +350,15 @@ if __name__ == '__main__':
         'group1_nodes' : group1_nodes,
         'group2_nodes' : group2_nodes,
         'dof'          : 1,     # dof in contact (1, 2, 3, 4, 5, 6) - nodes in group1/2
-        'K'            : 1.e8,  # stiffness of contact interface
-        'cid'          : 1,     # direction of contact
+        'stiffness'    : 1.e8,  # stiffness of contact interface
+        'cid'          : 0,     # coordinate system defining contact direction
         'glue'         : False, # 
         'initial_gap'  : 0.0,
         'max_deflection_error' : max_deflection_error,
     }
-    contact_surfaces = [surface1]
+    contact_surfaces = [surface1, surface1]
     main_bdf = 'plate_split.bdf'
     main_op2 = 'plate_split.op2'
+    main_op2 = 'plate.op2'
 
     run(contact_surfaces, main_bdf, main_op2)
