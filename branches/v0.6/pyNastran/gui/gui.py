@@ -28,13 +28,18 @@
 import os
 import wx
 #import vtk
-from PIL import Image
+try:
+    from PIL import Image
+except ImportError:
+    from Image import Image
+
 import sys
 #from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
 
 #import pyNastran
 import pyNastran.gui
 from pyNastran.gui.guiPanel import Pan
+from pyNastran.gui.gui_inputs import get_inputs
 from pyNastran.utils.log import SimpleLogger
 
 ID_SAVEAS = 803
@@ -60,13 +65,17 @@ ID_EXPORT = 930
 
 
 pkgPath = pyNastran.gui.__path__[0]
-print "pkgPath = |%r|" %(pkgPath)
+#print "pkgPath = %r" % pkgPath
+
+from pyNastran.gui.formats import (NastranIO, Cart3dIO, LaWGS_IO, PanairIO,
+    is_nastran, is_cart3d, is_panair, is_lawgs)
+
 
 if '?' in pkgPath:
     iconPath = 'icons'
 else:
     iconPath = os.path.join(pkgPath, 'icons')
-print "iconPath = |%r|" %(iconPath)
+#print "iconPath = %r" % iconPath
 
 #------------------------------------------------------------------------------
 # kills the program when you hit Cntl+C from the command line
@@ -77,18 +86,63 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 class AppFrame(wx.Frame):
 
-    def __init__(self, isEdges=False, isNodal=False, isCentroidal=False,
-                 magnify=4, debug=False):
+    def __init__(self, is_edges=False, is_nodal=False, is_centroidal=False,
+                 format=None, input=None, output=None, shots=None, magnify=4, rotation=None, debug=False):
+
+        assert debug in [True, False], 'debug=%s' % debug
+        if shots is None:
+            shots = []
 
         wx.Frame.__init__(self, None, -1, size=wx.Size(800, 600),
                           title='pyNastran')
         self.log = SimpleLogger('debug')
         self.infile_name = None
-        self.isEdges = isEdges
-        self.isNodal = isNodal
-        self.isCentroidal = isCentroidal
+        self.is_edges = is_edges
+        self.is_nodal = is_nodal
+        self.is_centroidal = is_centroidal
+        self.magnify = magnify
+        assert is_centroidal != is_nodal, "is_centroidal and is_nodal can't be the same and are set to \"%s\"" % is_nodal
         self.dirname = ''
         self.setupFrame()
+
+        print('format=%r input=%r output=%r' % (format, input, output))
+        if format is not None and format.lower() not in ['panair', 'cart3d', 'lawgs', 'nastran']:
+            sys.exit('\n---invalid format=%r' % format)
+        elif format and input is not None: 
+            format = format.lower()
+            dirname = os.path.dirname(input)
+            inputbase = input
+
+            if format=='panair' and is_panair:
+                print("loading panair")
+                self.frmPanel.load_panair_geometry(inputbase, dirname)
+            elif format=='nastran' and is_nastran:
+                print("loading nastran")
+                self.frmPanel.load_nastran_geometry(inputbase, dirname)
+            elif format=='cart3d' and is_cart3d:
+                print("loading cart3d")
+                self.frmPanel.load_cart3d_geometry(inputbase, dirname)
+            elif format=='lawgs' and is_lawgs:
+                print("loading lawgs")
+                self.frmPanel.load_LaWGS_geometry(inputbase, dirname)
+            else:
+                pass
+                sys.exit('\n---unsupported format=%r' % format)
+            self.UpdateWindowName(input)
+            self.frmPanel.Update()
+        else:
+            self.frmPanel.scalarBar.VisibilityOff()
+            self.frmPanel.scalarBar.Modified()
+
+        #self.frmPanel.Update()
+        #if rotation:
+            #if rotation == '-x':
+
+        print 'shots = %r' % shots
+        if shots:
+        #for shot in shots:
+            self.frmPanel.widget.onTakePicture(ID_CAMERA, shots)
+            sys.exit('took screenshot %r' % shots)
 
     def setupFrame(self):
         """
@@ -115,11 +169,16 @@ class AppFrame(wx.Frame):
         --------------------------------
         """
         # Must call before any event handler is referenced.
-        self.eventsHandler = EventsHandler(self, isNodal=self.isNodal,
-                                           isCentroidal=self.isCentroidal)
+        self.eventsHandler = EventsHandler(self, is_nodal=self.is_nodal,
+                                           is_centroidal=self.is_centroidal)
 
-        self.frmPanel = Pan(self, isEdges=self.isEdges, isNodal=self.isNodal,
-                            isCentroidal=self.isCentroidal, log=self.log, gui_parent=self, size=(100, 200))
+        self.frmPanel = Pan(self, is_edges=self.is_edges,
+                            is_nodal=self.is_nodal,
+                            is_centroidal=self.is_centroidal,
+                            magnify=self.magnify,
+                            log=self.log,
+                            gui_parent=self,
+                            size=(100, 200))
 
         self.buildMenuBar()
         self.buildToolBar()
@@ -128,7 +187,7 @@ class AppFrame(wx.Frame):
         self.SetMenuBar(self.menubar)
 
         self.frmPanel.infile_name = self.infile_name 
-        self.frmPanel.buildVTK(self.infile_name )
+        self.frmPanel.buildVTK(self.infile_name)
 
         windowName = self.frmPanel.getWindowName()
         self.SetTitle(windowName)
@@ -138,7 +197,6 @@ class AppFrame(wx.Frame):
         # Add them to sizer.
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(self.frmPanel.widget, 1, wx.EXPAND | wx.ALL, 1)
-        self.frmPanel.scalarBar.VisibilityOff()
 
         # Add buttons in their own sizer
         if 0:
@@ -206,14 +264,10 @@ class AppFrame(wx.Frame):
         #self.Bind(wx.EVT_RIGHT_DOWN, events.OnRightDown)
 
         # Bind View Menu
-        self.Bind(wx.EVT_MENU, self.frmPanel.widget.onTakePicture,
-                  id=ID_CAMERA)
-        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToWireframe,
-                  id=ID_WIREFRAME)
-        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToSurface,
-                  id=ID_SURFACE)
-        self.Bind(wx.EVT_MENU, self.frmPanel.onFlipEdges,
-                  id=ID_EDGES)
+        self.Bind(wx.EVT_MENU, self.frmPanel.widget.onTakePicture, id=ID_CAMERA)
+        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToWireframe, id=ID_WIREFRAME)
+        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToSurface, id=ID_SURFACE)
+        self.Bind(wx.EVT_MENU, self.frmPanel.onFlipEdges, id=ID_EDGES)
 
         #self.Bind(wx.EVT_MENU, self.frmPanel.onSetToFlatShading,    self.flatShading)
         #self.Bind(wx.EVT_MENU, self.frmPanel.onSetToGouraudShading, self.gouraudShading)
@@ -297,6 +351,7 @@ class AppFrame(wx.Frame):
 
         topen = os.path.join(iconPath, 'topen.png')
         assert os.path.exists(topen), 'topen=%r' % topen
+
         topen = wx.Image(topen, wx.BITMAP_TYPE_ANY)
         topen = toolbar1.AddLabelTool(ID_BDF, '', wx.BitmapFromImage(topen), longHelp='Loads a BDF')
 
@@ -320,15 +375,16 @@ class AppFrame(wx.Frame):
         self.toolbar1 = toolbar1
 
         # Bind File Menu
-        self.Bind(wx.EVT_TOOL, events.onLoadBDF, id=ID_BDF)
-        self.Bind(wx.EVT_TOOL, events.onLoadOP2, id=ID_OP2)
+        if is_nastran:
+            self.Bind(wx.EVT_TOOL, events.onLoadBDF, id=ID_BDF)
+            self.Bind(wx.EVT_TOOL, events.onLoadOP2, id=ID_OP2)
         self.Bind(wx.EVT_TOOL, events.onLoadCart3d, id=ID_CART3D)
         self.Bind(wx.EVT_TOOL, events.onLoadLaWGS, id=ID_LAWGS)
         self.Bind(wx.EVT_TOOL, events.onLoadPanair, id=ID_PANAIR)
-        #self.Bind(wx.EVT_TOOL, events.onExport,     id=ID_EXPORT)
+        #self.Bind(wx.EVT_TOOL, events.onExport, id=ID_EXPORT)
 
         self.Bind(wx.EVT_MENU, events.onExit, id=wx.ID_EXIT)
-       #self.Bind(wx.EVT_TOOL, events.onExit,     id=wx.ID_EXIT)
+       #self.Bind(wx.EVT_TOOL, events.onExit, id=wx.ID_EXIT)
 
         self.Bind(wx.EVT_MENU, self.frmPanel.onSetToWireframe, id=ID_WIREFRAME)
         self.Bind(wx.EVT_MENU, self.frmPanel.onSetToSurface, id=ID_SURFACE)
@@ -337,25 +393,31 @@ class AppFrame(wx.Frame):
         #self.Bind(wx.EVT_TOOL, events.onSaveAsFile, id=ID_SAVEAS)
         #self.Bind(wx.EVT_TOOL, events.onUndo, tundo)
         #self.Bind(wx.EVT_TOOL, events.onRedo, tredo)
+
     def buildMenuBar(self):
         events = self.eventsHandler
 
         menubar = wx.MenuBar()
         # --------- File Menu -------------------------------------------------
+        assert os.path.exists(os.path.join(iconPath, 'topen.png'))
+
         fileMenu = wx.Menu()
         #fileMenu.Append(wx.ID_NEW,  '&New','does nothing')
-        loadBDF = fileMenu.Append(ID_BDF,
-                                  'Load &BDF',
-                                  'Loads a BDF Input File')
-        loadOP2 = fileMenu.Append(ID_OP2,
-                                  'Load O&P2',
-                                  'Loads an OP2 Results File')
+        if is_nastran:
+            loadBDF = fileMenu.Append(ID_BDF, 'Load &BDF', 'Loads a BDF Input File')
+            loadOP2 = fileMenu.Append(ID_OP2, 'Load O&P2', 'Loads an OP2 Results File')
+            png = wx.Image(os.path.join(iconPath, 'topen.png'), wx.BITMAP_TYPE_PNG)
+            loadBDF.SetBitmap(png.ConvertToBitmap())
+
+        if is_cart3d:
+            loadCart3d = fileMenu.Append(ID_CART3D, 'Load &Cart3D', 'Loads a Cart3D Input/Results File')
+        if is_lawgs:
+            loadLaWGS = fileMenu.Append(ID_LAWGS, 'Load &LaWGS', 'Loads an LaWGS File')
+        if is_panair:
+            loadPanair = fileMenu.Append(ID_PANAIR, 'Load &Panair', 'Loads a Panair Input File')
         #export     = fileMenu.Append(ID_EXPORT,'Export to...', 'Export the Model to Another Format')
         #print "topen = ",os.path.join(iconPath,'topen.png')
         sys.stdout.flush()
-        assert os.path.exists(os.path.join(iconPath, 'topen.png'))
-        loadBDF.SetBitmap(wx.Image(os.path.join(iconPath,
-                                                'topen.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap())
 
         #fileMenu.Append(wx.ID_RES, 'Load OP2 &Results','Loads a OP2 - does nothing')
         #fileMenu.Append(wx.ID_SAVE, '&Save','does nothing')
@@ -376,16 +438,10 @@ class AppFrame(wx.Frame):
         # --------- View Menu -------------------------------------------------
         # status bar at bottom - toggles
         viewMenu = wx.Menu()
-        camera = viewMenu.Append(ID_CAMERA,
-                                 'Take a Screenshot',
-                                 'Take a Screenshot')
+        camera = viewMenu.Append(ID_CAMERA, 'Take a Screenshot', 'Take a Screenshot')
         viewMenu.AppendSeparator()
-        wireframe = viewMenu.Append(ID_WIREFRAME,
-                                    'Wireframe Model',
-                                    'Show Model as a Wireframe Model')
-        surface = viewMenu.Append(ID_SURFACE,
-                                  'Surface Model',
-                                  'Show Model as a Surface Model')
+        wireframe = viewMenu.Append(ID_WIREFRAME, 'Wireframe Model', 'Show Model as a Wireframe Model')
+        surface = viewMenu.Append(ID_SURFACE, 'Surface Model', 'Show Model as a Surface Model')
         #viewMenu.AppendSeparator()
 
         #self.flatShading    = viewMenu.Append(wx.ID_ANY, 'Flat Shading',           'Flat Shading')
@@ -491,12 +547,13 @@ class Example(wx.Frame):
 
 class EventsHandler(object):
 
-    def __init__(self, parent, isNodal=False, isCentroidal=True):
+    def __init__(self, parent, is_nodal=False, is_centroidal=True):
         self.parent = parent
-        self.isNodal = isNodal
-        self.isCentroidal = isCentroidal
+        self.is_nodal = is_nodal
+        self.is_centroidal = is_centroidal
 
     # File Menu
+
     def onLoadBDF(self, event):
         """ Open a file"""
         #print "OnOpen..."
@@ -506,8 +563,7 @@ class EventsHandler(object):
 
         Title = 'Choose a Nastran Input Deck to Load'
         loadFunction = self.parent.frmPanel.load_nastran_geometry
-        self.createLoadFileDialog(wildcard, Title, loadFunction,
-                                  updateWindowName=True)
+        self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
 
     def onLoadOP2(self, event):
         """ Open a file"""
@@ -546,12 +602,11 @@ class EventsHandler(object):
         # "All files (*.*)|*.*"
 
         Title = 'Choose a Cart3d Input File to Load'
-        loadFunction = self.parent.frmPanel.loadCart3dGeometry
+        loadFunction = self.parent.frmPanel.load_cart3d_geometry
         #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
         #dirname = ''
         #loadFunction(fname,dirname)
-        self.createLoadFileDialog(wildcard, Title, loadFunction,
-                                  updateWindowName=True)
+        self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
 
     def onLoadLaWGS(self, event):
         """ Open a file"""
@@ -559,12 +614,11 @@ class EventsHandler(object):
             "All files (*.*)|*.*"
 
         Title = 'Choose a LaWGS File to Load'
-        loadFunction = self.parent.frmPanel.loadLaWGSGeometry
+        loadFunction = self.parent.frmPanel.load_LaWGS_geometry
         #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
         #dirname = ''
         #loadFunction(fname,dirname)
-        self.createLoadFileDialog(wildcard, Title, loadFunction,
-                                  updateWindowName=True)
+        self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
 
     def onLoadPanair(self, event):
         """ Open a file"""
@@ -576,11 +630,9 @@ class EventsHandler(object):
         #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
         #dirname = ''
         #loadFunction(fname,dirname)
-        self.createLoadFileDialog(wildcard, Title, loadFunction,
-                                  updateWindowName=True)
+        self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
 
-    def createLoadFileDialog(self, wildcard, Title, loadFunction,
-                             updateWindowName=False):
+    def createLoadFileDialog(self, wildcard, Title, loadFunction, updateWindowName=False):
         dlg = wx.FileDialog(None, Title, self.parent.dirname, "",
                             wildcard, wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
@@ -700,66 +752,10 @@ class EventsHandler(object):
 
 #------------------------------------------------------------------------------
 
-
-def run_arg_parse():
-    import argparse
-
-    ver = str(pyNastran.__version__)
-    parser = argparse.ArgumentParser(description='Tests to see if an OP2 will work with pyNastran.', add_help=True)  # version=ver)
-    #parser.add_argument('op2FileName', metavar='op2FileName', type=str, nargs=1,
-    #                   help='path to OP2 file')
-
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('-q', '--quiet', dest='quiet', action='store_true',
-                       help='prints debug messages (default=True)')
-
-    group2 = parser.add_mutually_exclusive_group()
-    group2.add_argument('-e', '--edges', dest='edges', action='store_true',
-                        help='shows element edges as black lines')
-    #group2.add_argument('-w','--writeBDF', dest='writeBDF', action='store_true', help='Writes the bdf to fem.bdf.out')
-
-    group3 = parser.add_mutually_exclusive_group()
-    group3.add_argument('-n', '--nodalResults', dest='isNodal',
-                        action='store_true', help='plots nodal results')
-    group3.add_argument('-c', '--centroidalResults', dest='isNodal',
-                        action='store_false', help='plots centroidal results')
-
-    parser.add_argument('-v', '--version', action='version', version=ver)
-
-    if len(sys.argv) == 1:
-        parser.print_help()
-        sys.exit()
-    args = parser.parse_args()
-    #print "op2FileName = ", args.op2FileName[0]
-    #print "debug       = ", not(args.quiet)
-
-    debug = not(args.quiet)
-    edges = args.edges
-    isNodal = args.isNodal
-    #writeBDF    = args.writeBDF
-    #op2FileName = args.op2FileName[0]
-
-    return (edges, isNodal, debug)
-
-
 def main():
-    isEdges = False
-    isNodal = True
-    #isCentroidal = True
-    debug = True
-    if sys.version_info < (2, 6):
-        print("requires Python 2.6+ to use command line arguments...")
-    else:
-        if len(sys.argv) > 1:
-            (isEdges, isNodal, debug) = run_arg_parse()
-    isCentroidal = not(isNodal)
-
-    isNodal = True
-    isCentroidal = True
-
+    inputs = get_inputs()
     app = wx.App(redirect=False)
-    magnify = 1
-    appFrm = AppFrame(isEdges, isNodal, isCentroidal, debug)
+    appFrm = AppFrame(*inputs)
     #appFrm.Show()
     print("launching gui")
     app.MainLoop()

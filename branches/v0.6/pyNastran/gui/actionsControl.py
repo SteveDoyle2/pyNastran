@@ -133,10 +133,8 @@ class pyWidget(wxVTKRenderWindow):
             self.parent.TurnTextOn()
         self.parent.scalarBar.Modified()
 
-    def onTakePicture(self, event):
-        renderLarge = vtk.vtkRenderLargeImage()
-        renderLarge.SetInput(self.getRenderer())
-        renderLarge.SetMagnification(4)
+    def onTakePicture(self, event, fname=None):
+        magnify = self.parent.magnify
 
         wildcard = "PNG (*.png)|*.png|" \
             "JPEG (*.jpeg; *.jpeg; *.jpg; *.jfif)|*.jpg;*.jpeg;*.jpg;*.jfif|" \
@@ -145,34 +143,90 @@ class pyWidget(wxVTKRenderWindow):
             "PostScript (*.ps)|*.ps|" \
             "All files (*.*)|*.*"
 
-        dlg = wx.FileDialog(None, "Choose a file", self.dirname,
-                            "", wildcard, wx.SAVE | wx.OVERWRITE_PROMPT)
-        if dlg.ShowModal() == wx.ID_OK:
-            fname = dlg.GetFilename()
-            self.dirname = dlg.GetDirectory()
-            fname = os.path.join(self.dirname, fname)
+        if fname is None:
+            dlg = wx.FileDialog(None, "Choose a file", self.dirname,
+                                "", wildcard, wx.SAVE | wx.OVERWRITE_PROMPT)
+            if dlg.ShowModal() == wx.ID_OK:
+                fname = dlg.GetFilename()
+                self.dirname = dlg.GetDirectory()
+                fname = os.path.join(self.dirname, fname)
 
-            print "fname = ", fname
+                # We write out the image which causes the rendering to occur. If you
+                # watch your screen you might see the pieces being rendered right
+                # after one another.
+                writer = self.get_writer(magnify, fname)
+            dlg.Destroy()
+        else:
+            self.write_picture(magnify, fname)
+            
+    def set_rotation(self, rotation):
+        # self - AppFrame
+        # self.frmPanel - Pan
+        
+        #camera = self.frmPanel.widget.GetCamera()
+        camera = self.GetCamera()
+        assert camera is not None
 
-            # We write out the image which causes the rendering to occur. If you
-            # watch your screen you might see the pieces being rendered right
-            # after one another.
-            lfname = fname.lower()
-            if lfname.endswith('.png'):
-                writer = vtk.vtkPNGWriter()
-            elif lfname.endswith('.jpeg'):
-                writer = vtk.vtkJPEGWriter()
-            elif lfname.endswith('.tiff'):
-                writer = vtk.vtkTIFFWriter()
-            elif lfname.endswith('.ps'):
-                writer = vtk.vtkPostScriptWriter()
-            else:
-                writer = vtk.vtkPNGWriter()
+        if rotation == 'x':  # set x-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., 1.)
+            camera.SetPosition(1., 0., 0.)
+            self.ResetCamera()
+        elif rotation == '-x':  # set x-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., -1.)
+            camera.SetPosition(-1., 0., 0.)
+            self.ResetCamera()
 
-            writer.SetInputConnection(renderLarge.GetOutputPort())
-            writer.SetFileName(fname)
-            writer.Write()
-        dlg.Destroy()
+        elif rotation == 'y':  # set y-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., 1.)
+            camera.SetPosition(0., 1., 0.)
+            self.ResetCamera()
+        elif rotation == '-y':  # set y-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., -1.)
+            camera.SetPosition(0., -1., 0.)
+            self.ResetCamera()
+
+        elif rotation == 'z':  # set z-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 1., 0.)
+            camera.SetPosition(0., 0., 1.)
+            self.ResetCamera()
+        elif rotation == '-z':  # set z-axis
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., -1., 0.)
+            camera.SetPosition(0., 0., -1.)
+            self.ResetCamera()
+        else:
+            raise NotImplementedError(rotation)
+
+    def write_picture(self, magnify, fname):
+        ren = self.getRenderer()
+        assert ren is not None
+        renderLarge = vtk.vtkRenderLargeImage()
+        renderLarge.SetInput(ren)
+        renderLarge.SetMagnification(magnify)
+
+        rotation = 'x'
+        self.set_rotation(rotation)
+
+        lfname = fname.lower()
+        if lfname.endswith('.png'):
+            writer = vtk.vtkPNGWriter()
+        elif lfname.endswith('.jpeg'):
+            writer = vtk.vtkJPEGWriter()
+        elif lfname.endswith('.tiff'):
+            writer = vtk.vtkTIFFWriter()
+        elif lfname.endswith('.ps'):
+            writer = vtk.vtkPostScriptWriter()
+        else:
+            writer = vtk.vtkPNGWriter()
+
+        writer.SetInput(renderLarge.GetOutput())
+        writer.SetFileName(fname)
+        writer.Write()
 
     def getRenderer(self):
-        return self.GetCurrentRenderer()
+        return self.parent.get_renderer() #GetCurrentRenderer()

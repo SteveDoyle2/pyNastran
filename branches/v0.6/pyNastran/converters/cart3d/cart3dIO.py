@@ -24,6 +24,8 @@ class Cart3dIO(object):
             self.TurnTextOff()
             self.grid.Reset()
             self.grid2.Reset()
+            #print(dir(self.grid2))
+            #self.grid2.VisibilityOff()
             self.gridResult.Reset()
             self.gridResult.Modified()
 
@@ -39,7 +41,7 @@ class Cart3dIO(object):
 
             #print(dir(self))
             skipReading = False
-        self.scalarBar.VisibilityOff()
+        #self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
         return skipReading
 
@@ -141,18 +143,15 @@ class Cart3dIO(object):
 
     def fillCart3dCase(self, cases, ID, elements, regions, loads):
         #print "regions**** = ",regions
-        isNodal = self.is_nodal
-        isCentroidal = self.is_centroidal
-
         #nNodes = self.nNodes
         #nElements = self.nElements
 
-        print "isCentroidal=%s isNodal=%s" % (isCentroidal, isNodal)
-        assert isCentroidal != isNodal
+        print "is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal)
+        assert self.is_centroidal!= self.is_nodal
         
         result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
                                       'rhoU', 'rhoV', 'rhoW', 'rhoE']
-        if isCentroidal:
+        if self.is_centroidal:
             nelements, three = elements.shape
             cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
             cases[(ID, 'Eids', 1, 'centroid', '%.0f')] = arange(1, nelements+1)
@@ -168,7 +167,7 @@ class Cart3dIO(object):
                     elemental_result = (nodal_data[n1] + nodal_data[n2] + nodal_data[n3])/3.0
                     cases[(ID, key, 1, 'centroid', '%.3f')] = elemental_result
 
-        elif isNodal:
+        elif self.is_nodal:
             #print("load.keys() = ", loads.keys())
             for key in result_names:
                 if key in loads:

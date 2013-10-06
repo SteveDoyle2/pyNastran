@@ -96,8 +96,8 @@ class NastranIO(object):
                 del i
 
             #print dir(self)
-        #self.scalarBar.VisibilityOff()
-        #self.scalarBar.Modified()
+        self.scalarBar.VisibilityOff()
+        self.scalarBar.Modified()
 
         fname_base, ext = os.path.splitext(bdf_filename)
         punch = False
@@ -113,11 +113,12 @@ class NastranIO(object):
         self.nNodes = nNodes
         self.nElements = nElements
 
+        #print "nNodes = ",self.nNodes
         self.log_info("nElements = %i" % self.nElements)
         msg = model.card_stats(return_type='list')
-        self.log_info(msg)
-        #for msgi in msg:
-        #    model.log.debug(msgi)
+        #self.log_info(msg)
+        for msgi in msg:
+            model.log.debug(msgi)
 
         #self.aQuadGrid.Allocate(nElements+nNodes, 1000)
 
@@ -126,7 +127,7 @@ class NastranIO(object):
         else:
             nCONM2 = 0
         self.grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        self.gridResult.SetNumberOfComponents(self.nElements)
         self.grid2.Allocate(nCAeros + nCONM2, 1000)
 
         points = vtk.vtkPoints()
@@ -381,8 +382,7 @@ class NastranIO(object):
                         elem = vtk.vtkLine()
                         elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                         elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
-                        self.grid.InsertNextCell(elem.GetCellType(),
-                                                 elem.GetPointIds())
+                        self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CONM2):  # not perfectly located
                 del self.eidMap[eid]
                 i -= 1

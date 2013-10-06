@@ -29,6 +29,7 @@ import platform
 import wx
 import vtk
 #from numpy import zeros, ones
+from numpy import ndarray, amax, amin
 
 import pyNastran
 version = pyNastran.__version__
@@ -39,12 +40,14 @@ from pyNastran.gui.actionsControl import pyWidget
 from pyNastran.gui.formats import (NastranIO, Cart3dIO, LaWGS_IO, PanairIO,
     is_nastran, is_cart3d, is_panair, is_lawgs)
 
+
 def getScreenCorner(x, y):
     #print "wx.GetDisplaySize() = ",wx.GetDisplaySize()
     (xScreen, yScreen) = wx.GetDisplaySize()
     xCorner = (xScreen - x) // 2
     yCorner = (yScreen - y) // 2
     return(xCorner, yCorner)
+
 
 class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
     def __init__(self, *args, **kwargs):
@@ -54,18 +57,24 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         #self.vectorResult = vtk.vtkFloatArray()
         self.grid2 = vtk.vtkUnstructuredGrid()
 
-        self.isEdges = kwargs['isEdges']
-        self.isNodal = kwargs['isNodal']
-        self.isCentroidal = kwargs['isCentroidal']
+        # edges
+        self.edgeActor = vtk.vtkActor()
+        self.edgeMapper = vtk.vtkPolyDataMapper()
+
+        self.is_edges = kwargs['is_edges']
+        self.is_nodal = kwargs['is_nodal']
+        self.is_centroidal = kwargs['is_centroidal']
+        self.magnify = kwargs['magnify']
         gui_parent = kwargs['gui_parent']
         if 'log' in kwargs:
             self.log = kwargs['log']
             del kwargs['log']
         del kwargs['gui_parent']
-        del kwargs['isEdges']
-        del kwargs['isNodal']
-        del kwargs['isCentroidal']
-
+        del kwargs['is_edges']
+        del kwargs['is_nodal']
+        del kwargs['is_centroidal']
+        del kwargs['magnify']
+        #del kwargs['rotation']
         wx.Panel.__init__(self, *args, **kwargs)
         NastranIO.__init__(self)
         Cart3dIO.__init__(self)
@@ -73,6 +82,8 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         PanairIO.__init__(self)
 
         self.nCases = 0
+
+        #print("is_edges = %r" % self.is_edges)
         self.widget = pyWidget(self, -1)
 
         window = self.widget.GetRenderWindow()
@@ -83,58 +94,12 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
 
         self.iText = 0
         self.textActors = {}
-        self.gridResult = vtk.vtkFloatArray()
+
+    def get_renderer(self):
+        return self.rend
 
     def createTriAxes(self):
         pass
-
-    def DisplayEdges(self, event):
-        self.isEdges = not(self.isEdges)
-        if 0:
-            self.get_edges()
-
-        try:
-            hasEdgeActor = hasattr(self, edgeActor)
-        except:
-            return
-
-        if hasEdgeActor:
-            prop = self.edgeActor.GetProperty()
-            #print "dir(prop) = ",dir(prop)
-            print("visible = %s" % prop.GetEdgeVisibility())
-            if self.isEdges:
-                prop.EdgeVisibilityOn()
-                print("edges are now on\n")
-            else:
-                prop.EdgeVisibilityOff()
-                print("edges are now off\n")
-            prop.Modified()
-            #prop.Update()
-            self.edgeActor.Modified()
-            #self.edgeActor.Update()
-        if 0:
-            print("dir(widget) = %s" % dir(self.widget))
-
-            actors = self.widget._CurrentRenderer.GetActors()
-            numActors = actors.GetNumberOfItems()
-            actors.InitTraversal()
-            for i in xrange(0, numActors):
-                print("iactor = %i" % (i))
-                actor = actors.GetNextItem()
-
-                try:
-                    if self.isEdges:
-                        actor.getProperty().EdgeVisibilityOn()
-                    else:
-                        actor.getProperty().EdgeVisibilityOff()
-                    print("set the edges...")
-                except:
-                    raise
-                #actor.GetProperty().SetLineWidth(0.0)
-        window = self.widget.GetRenderWindow()
-        window.Render()
-        self.widget.Render()
-        self.widget.Update()
 
     def onSetToWireframe(self, event):
         if self.infile_name is not None:
@@ -189,44 +154,24 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         #Filter.Update()
 
     def onFlipEdges(self, event):
-        prop = self.edgeActor.GetProperty()
-        #prop.SetLineWidth(0.0)
-        self.isEdges = not(self.isEdges)
-
-        if self.isEdges:
-            prop.EdgeVisibilityOn()
-        else:
-            prop.EdgeVisibilityOff()
+        self.is_edges = not(self.is_edges)
+        self.edgeActor.SetVisibility(self.is_edges)
+        #self.edgeActor.GetProperty().SetColor(0, 0, 0)  # cart3d edge color isn't black...
         self.edgeActor.Modified()
-        self.rend.Modified()
-        #self.widget.Render()
         self.widget.Update()
-        print("visible = %s" % (prop.GetEdgeVisibility()))
+        self.Refresh()
 
     def get_edges(self):
         edges = vtk.vtkExtractEdges()
-
         edges.SetInput(self.grid)
-        self.edgeMapper = vtk.vtkPolyDataMapper()
         self.edgeMapper.SetInput(edges.GetOutput())
-        #edges.GetOutput().ReleaseDataFlagOn()
-        #self.edgeMapper.EdgeVisibilityOff()
 
-        self.edgeActor = vtk.vtkActor()
         self.edgeActor.SetMapper(self.edgeMapper)
         self.edgeActor.GetProperty().SetColor(0, 0, 0)
 
         prop = self.edgeActor.GetProperty()
-        #prop.SetLineWidth(0.0)
-        if self.isEdges:
-            prop.EdgeVisibilityOn()
-        else:
-            prop.EdgeVisibilityOff()
-        print("visible = %s" % prop.GetEdgeVisibility())
-
+        self.edgeActor.SetVisibility(self.is_edges)
         self.rend.AddActor(self.edgeActor)
-
-        #self.edgeActor.Update()
 
     def addGeometry(self):
         print("addGeometry")
@@ -278,6 +223,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         scalarBar.SetLookupTable(mapper.GetLookupTable())
         scalarBar.SetTitle("Title")
         scalarBar.SetNumberOfLabels(4)
+        #scalarBar.GetLabelTextProperty().SetFontSize(8)
 
         # Create a lookup table to share between the mapper and the scalarbar
         hueLut = vtkLookupTable()
@@ -305,6 +251,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         self.scalarBar.SetTitle("Title1")
         self.scalarBar.SetLookupTable(self.colorFunction)
         self.scalarBar.SetOrientationToVertical()
+        #self.scalarBar.GetLabelTextProperty().SetFontSize(8)
 
         self.scalarBar.SetHeight(0.9)
         self.scalarBar.SetWidth(0.20)  # the width is set first
@@ -322,6 +269,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         propLabel = vtk.vtkTextProperty()
         propLabel.BoldOff()
         propLabel.ShadowOn()
+        #propLabel.SetFontSize(8)
 
         scalar_range = self.grid.GetScalarRange()
         self.aQuadMapper.SetScalarRange(scalar_range)
@@ -341,31 +289,35 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         self.rend.AddActor(self.scalarBar)
         #return scalarBar
 
-    def UpdateScalarBar(self, Title, minValue, maxValue, dataFormat):
+    def UpdateScalarBar(self, Title, min_value, max_value, dataFormat):
         """
         @param Title the scalar bar title
-        @param minValue the blue value
-        @param maxValue the red value
+        @param min_value the blue value
+        @param max_value the red value
         @param dataFormat '%g','%f','%i',etc.
         """
         #drange = [10.,20.]
         self.colorFunction.RemoveAllPoints()
-        self.colorFunction.AddRGBPoint(minValue, 0.0, 0.0, 1.0)
-        self.colorFunction.AddRGBPoint(maxValue, 1.0, 0.0, 0.0)
+        self.colorFunction.AddRGBPoint(min_value, 0.0, 0.0, 1.0)
+        self.colorFunction.AddRGBPoint(max_value, 1.0, 0.0, 0.0)
         #self.scalarBar.SetLookupTable(self.colorFunction)
 
         self.scalarBar.SetTitle(Title)
         self.scalarBar.SetLabelFormat(dataFormat)
 
-        nValues = 11
-        if (Title in ['Element_ID', 'Eids', 'Region'] and
-           (maxValue - minValue + 1) < 11):
-            nValues = int(maxValue - minValue) + 1
-            #print "need to adjust axes...maxValue=%s" %(maxValue)
+        nvalues = 11
+        if (Title in ['Element_ID', 'Eids', 'Region'] and (max_value - min_value + 1) < 11):
+            nvalues = int(max_value - min_value) + 1
+            #ncolors = nvalues
+            #if nvalues < 5:
+                #ncolors = 5
+            #print "need to adjust axes...max_value=%s" %(max_value)
         #if dataFormat=='%.0f' and maxValue>
 
-        self.scalarBar.SetNumberOfLabels(nValues)
-        self.scalarBar.SetMaximumNumberOfColors(nValues)
+        #print("Title =", Title)
+        #print("nvalues =", nvalues)
+        self.scalarBar.SetNumberOfLabels(nvalues)
+        self.scalarBar.SetMaximumNumberOfColors(nvalues)
         self.scalarBar.Modified()
 
     def Update(self):
@@ -397,7 +349,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         #self.startWireframeLight()
         self.createTriAxes()
 
-        textSize = 15
+        textSize = 14 * self.magnify
         self.createText([5, 50], 'Max  ', textSize)  # text actor 0
         self.createText([5, 35], 'Min  ', textSize)  # text actor 1
         self.createText([5, 20], 'Word1', textSize)  # text actor 2
@@ -406,8 +358,13 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
 
         # Create the usual rendering stuff.
         self.get_edges()
-        if self.isEdges:
-            self.onFlipEdges()
+        if self.is_edges:
+            prop = self.edgeActor.GetProperty()
+            prop.EdgeVisibilityOn()
+        else:
+            prop = self.edgeActor.GetProperty()
+            prop.EdgeVisibilityOff()
+
         self.rend.GetActiveCamera().ParallelProjectionOn()
         self.rend.SetBackground(.1, .2, .4)
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
@@ -451,7 +408,10 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         return self.widget.GetRenderWindow()
 
     def getWindowName(self, winName=''):
-        return "pyNastran v%s - %s" % (version, self.infile_name)
+        if self.infile_name:
+            return "pyNastran v%s - %s" % (version, self.infile_name)
+        else:
+            return "pyNastran v%s" % (version)
 
     def setWindowName(self, winName=''):
         window = self.getWindow()
@@ -479,21 +439,22 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         else:
             print("No Results found.  Many results are not supported "
                   "in the GUI.\n")
+            self.scalarBar.SetVisibility(False)
             foundCases = False
         #print "next key = ",key
         return foundCases
 
     def cycleResults(self):
-        plotNodal = self.isNodal
-        plotCentroidal = self.isCentroidal
+        plotNodal = self.is_nodal
+        plotCentroidal = self.is_centroidal
         #print("plotNodal=%s plotCentroidal=%s" %(plotNodal,plotCentroidal))
         #print("nCases = %i" %(self.nCases+1))
         if self.nCases == 0:
             return
 
         foundCases = self.incrementCycle()
-        #if foundCases:
-        if 1:
+        if foundCases:
+        #if 1:
             print("incremented case")
             #self.gridResult.Reset()
             gridResult = vtk.vtkFloatArray()
@@ -501,7 +462,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
 
             key = self.caseKeys[self.iCase]
             case = self.resultCases[key]
-            print("len(case) = %i" % (len(case)))
+            print("len(case) = %i" % len(case))
             (subcaseID, resultType, vectorSize, location, dataFormat) = key
 
             if location == 'centroid' and plotCentroidal:
@@ -512,22 +473,23 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
                 gridResult.Allocate(self.nNodes * vectorSize, 1000)
                 gridResult.SetNumberOfComponents(vectorSize)
             else:
-                print("***%s skipping" % (location))
+                print("***%s skipping" % location)
 
             #self.iSubcaseNameMap[self.isubcase] = [Subtitle,Label]
             caseName = self.iSubcaseNameMap[subcaseID]
             (subtitle, label) = caseName
 
-            print("subcaseID=%s resultType=%s subtitle=%s label=%s" % (subcaseID, resultType, subtitle, label))
+            print("subcaseID=%s resultType=%s subtitle=%r label=%r" % (subcaseID, resultType, subtitle, label))
 
-            for value in case:
-                maxValue = value
-                minValue = value
-                break
-
-            for value in case:
-                maxValue = max(value, maxValue)
-                minValue = min(value, minValue)
+            if isinstance(case, ndarray):
+                maxValue = amax(case)
+                minValue = amin(case)
+            else:
+                maxValue = case[0]
+                minValue = case[0]
+                for value in case:
+                    maxValue = max(value, maxValue)
+                    minValue = min(value, minValue)
 
             # flips sign to make colors go from blue -> red
             normValue = maxValue - minValue
@@ -551,12 +513,16 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
 
             nValueSet = len(valueSet)
 
-            self.textActors[0].SetInput('Max:  %g' % (maxValue))  # max
-            self.textActors[1].SetInput('Min:  %g' % (minValue))  # min
-            self.textActors[2].SetInput('Subcase=%s Subtitle: %s' %
-                (subcaseID, subtitle))  # info
-            self.textActors[3].SetInput(
-                'Label: %s' % (label))  # info
+            self.textActors[0].SetInput('Max:  %g' % maxValue)  # max
+            self.textActors[1].SetInput('Min:  %g' % minValue)  # min
+            self.textActors[2].SetInput('Subcase=%s Subtitle: %s' % (subcaseID, subtitle))  # info
+
+            if label:
+                self.textActors[3].SetInput('Label: %s' % label)  # info
+                self.textActors[3].VisibilityOn()
+            else:
+                self.textActors[3].VisibilityOff()
+
             self.UpdateScalarBar(resultType, minValue, maxValue, dataFormat)
             #self.scalarBar.SetNumberOfLabels(nValueSet)
             #self.scalarBar.SetMaximumNumberOfColors(nValueSet)
@@ -594,7 +560,6 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         #print "*Pressed %s" %(key)
 
     def buildVTK(self, infile_name, dirname=None):
-        dirname = ''
         self.infile_name = infile_name
 
         self.rend = vtk.vtkRenderer()
