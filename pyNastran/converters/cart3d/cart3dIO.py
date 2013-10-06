@@ -13,23 +13,21 @@ class Cart3dIO(object):
         pass
 
     def removeOldGeometry(self, fileName):
+        self.eidMap = {}
+        self.nidMap = {}
         if fileName is None:
-            self.grid = vtk.vtkUnstructuredGrid()
-            self.gridResult = vtk.vtkFloatArray()
             #self.emptyResult = vtk.vtkFloatArray()
             #self.vectorResult = vtk.vtkFloatArray()
-            self.grid2 = vtk.vtkUnstructuredGrid()
             self.scalarBar.VisibilityOff()
             skipReading = True
         else:
             self.TurnTextOff()
             self.grid.Reset()
             self.grid2.Reset()
-            self.gridResult = vtk.vtkFloatArray()
+            #print(dir(self.grid2))
+            #self.grid2.VisibilityOff()
             self.gridResult.Reset()
             self.gridResult.Modified()
-            self.eidMap = {}
-            self.nidMap = {}
 
             self.resultCases = {}
             self.nCases = 0
@@ -43,13 +41,11 @@ class Cart3dIO(object):
 
             #print(dir(self))
             skipReading = False
-        self.scalarBar.VisibilityOff()
+        #self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
         return skipReading
 
-    def load_cart3d_geometry(self, cart3dFileName, dirname, isNodal, isCentroidal):
-        self.isNodal = isNodal
-        self.isCentroidal = isCentroidal
+    def load_cart3d_geometry(self, cart3dFileName, dirname):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
@@ -57,7 +53,7 @@ class Cart3dIO(object):
         if skipReading:
             return
 
-        model = Cart3DReader(log=None, debug=False)
+        model = Cart3DReader(log=self.log, debug=False)
         self.modelType = model.modelType
         (nodes, elements, regions, loads) = model.read_cart3d(cart3dFileName)
         self.nNodes = model.nPoints
@@ -147,18 +143,15 @@ class Cart3dIO(object):
 
     def fillCart3dCase(self, cases, ID, elements, regions, loads):
         #print "regions**** = ",regions
-        isNodal = self.isNodal
-        isCentroidal = self.isCentroidal
-
         #nNodes = self.nNodes
         #nElements = self.nElements
 
-        print "isCentroidal=%s isNodal=%s" % (isCentroidal, isNodal)
-        assert isCentroidal != isNodal
+        print "is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal)
+        assert self.is_centroidal!= self.is_nodal
         
         result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
                                       'rhoU', 'rhoV', 'rhoW', 'rhoE']
-        if isCentroidal:
+        if self.is_centroidal:
             nelements, three = elements.shape
             cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
             cases[(ID, 'Eids', 1, 'centroid', '%.0f')] = arange(1, nelements+1)
@@ -174,7 +167,7 @@ class Cart3dIO(object):
                     elemental_result = (nodal_data[n1] + nodal_data[n2] + nodal_data[n3])/3.0
                     cases[(ID, key, 1, 'centroid', '%.3f')] = elemental_result
 
-        elif isNodal:
+        elif self.is_nodal:
             #print("load.keys() = ", loads.keys())
             for key in result_names:
                 if key in loads:

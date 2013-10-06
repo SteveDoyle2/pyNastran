@@ -5,6 +5,8 @@ except ImportError:
     class NastranIO(object):
         def __init__(self):
             pass
+        def load_nastran_geometry(self, infile_name, dirname):
+            pass
     is_nastran = False
 
 
