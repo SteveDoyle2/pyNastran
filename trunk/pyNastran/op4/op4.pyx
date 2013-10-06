@@ -22,6 +22,8 @@
 """ 
 Load and save matrices from/to NASTRAN Output 4 (.op4) files.
 
+  >>> from pyNastran.op4 import cop4
+
     Examining OP4 File Contents
     ===========================
 
@@ -29,7 +31,7 @@ Load and save matrices from/to NASTRAN Output 4 (.op4) files.
 
     Prints detailed information on the matrices stored in the file sol103.op4.
 
-  >>> header = op4.Scan('sol103.op4')
+  >>> header = cop4.Scan('sol103.op4')
 
     Store the OP4 header information in the Python variable 'header'.
 
