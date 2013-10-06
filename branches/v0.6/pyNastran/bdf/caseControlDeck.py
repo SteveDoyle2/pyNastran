@@ -107,7 +107,8 @@ class CaseControlDeck(object):
         """
         if self.has_subcase(isubcase):
             return self.subcases[isubcase].get_parameter(param_name.upper())
-        raise RuntimeError('isubcase=%s does not exist...' % isubcase)
+        msg = 'isubcase=%r does not exist...subcases=%s' % (isubcase, str(sorted(self.subcases.keys())))
+        raise RuntimeError(msg)
 
     def has_subcase(self, isubcase):
         """
@@ -164,7 +165,7 @@ class CaseControlDeck(object):
         """
         #print("copying subcase from=%s to=%s overwrite=%s" % (i_from_subcase, i_to_subcase, overwrite_subcase))
         if not self.has_subcase(i_from_subcase):
-            msg = 'iFromSubcase=|%s| does not exist' % i_from_subcase
+            msg = 'i_from_subcase=%r does not exist...subcases=%s' % (i_from_subcase, str(sorted(self.subcases.keys())))
             raise RuntimeError(msg)
         if overwrite_subcase:
             subcase_from = self.subcases[i_from_subcase]
@@ -175,7 +176,7 @@ class CaseControlDeck(object):
             self.subcases[i_to_subcase] = subcase_to
         else:
             if not self.has_subcase(i_to_subcase):
-                msg = 'i_to_subcase=|%s| does not exist' % i_to_subcase
+                msg = 'i_from_subcase=%r does not exist...subcases=%s' % (i_to_subcase, str(sorted(self.subcases.keys())))
                 raise RuntimeError(msg)
             subcase_to = self.subcases[i_to_subcase]
 
@@ -275,7 +276,7 @@ class CaseControlDeck(object):
         """
         if '\n' in param or '\r' in param or '\t' in param:
             msg = 'doesnt support embedded endline/tab characters\n'
-            msg += '  param = |%r|' % (param)
+            msg += '  param = %r' % param
             raise SyntaxError(msg)
         #self.read([param])
         lines = _clean_lines(self, [param])
@@ -389,10 +390,10 @@ class CaseControlDeck(object):
             line2 = line.replace('=', '')
             sline = line2.split()
             if len(sline) != 2:
-                msg = "trying to parse |%s|..." % line
+                msg = "trying to parse %r..." % line
                 raise RuntimeError(msg)
             (key, param_type) = sline
-            #print("key=|%s| isubcase=|%s|" % (key,isubcase))
+            #print("key=%r isubcase=%r" % (key, isubcase))
             value = int(param_type)
             #self.isubcase = int(isubcase)
             param_type = 'SUBCASE-type'
@@ -403,7 +404,7 @@ class CaseControlDeck(object):
                 eIndex = line.index('=')
             except:
                 msg = "cannot find an = sign in LABEL/SUBTITLE/TITLE line\n"
-                msg += "line = |%s|" % (line_upper.strip())
+                msg += "line = %r" % line_upper.strip()
                 raise RuntimeError(msg)
 
             key = line[0:eIndex].strip()
@@ -414,14 +415,13 @@ class CaseControlDeck(object):
             if '=' in line:
                 (key, value) = line.strip().split('=')
             else:
-                msg = 'expected item of form "name = value"   line=|%r|' % (
-                    line.strip())
+                msg = 'expected item of form "name = value"   line=%r' % line.strip()
                 raise RuntimeError(msg)
 
             key = key.strip()
             value = value.strip()
             if self.debug:
-                self.log.debug("key=|%s| value=|%s|" % (key, value))
+                self.log.debug("key=%r value=%r" % (key, value))
             param_type = 'STRESS-type'
 
             if '(' in key:  # comma may be in line - STRESS-type
@@ -441,7 +441,7 @@ class CaseControlDeck(object):
                 key = key + ' ' + ID
 
                 if self.debug:
-                    self.log.debug('SET-type key=%s ID=%s' % (key, ID))
+                    self.log.debug('SET-type key=%r ID=%r' % (key, ID))
                 fivalues = value.rstrip(' ,').split(',')  # float/int values
 
                 #: .. todo:: should be more efficient multiline reader...
@@ -454,7 +454,7 @@ class CaseControlDeck(object):
                             fivalues += lines[i][:-1].split(',')
                         else:  # last case
                             fivalues += lines[i].split(',')
-                            #print "fivalues last = i=%s |%r|" %(i,lines[i])
+                            #print "fivalues last = i=%s %r" % (i, lines[i])
                             i += 1
                             break
                         i += 1
@@ -478,13 +478,13 @@ class CaseControlDeck(object):
             try:
                 (key, value) = line_upper.split(' ')
             except:
-                msg = 'excepted "BEGIN BULK" found=|%r|' % line
+                msg = 'excepted "BEGIN BULK" found=%r' % line
                 raise RuntimeError(msg)
             param_type = 'BEGIN_BULK-type'
         elif 'PARAM' in line_upper:  # param
             sline = line.split(',')
             if len(sline) != 3:
-                raise SyntaxError("trying to parse |%s|..." % line)
+                raise SyntaxError("trying to parse %r..." % line)
             (key, value, options) = sline
             param_type = 'CSV-type'
         elif ' ' not in line:
@@ -525,18 +525,17 @@ class CaseControlDeck(object):
         subcase.add_parameter_to_global_subcase('ANALYSIS', analysis)
         #subcase.add_parameter_to_global_subcase('DESSUB', dessub)
 
-    def _add_parameter_to_subcase(self, key, value, options, param_type,
-                                  isubcase):
+    def _add_parameter_to_subcase(self, key, value, options, param_type, isubcase):
         """
         Internal method
 
         self:  the CaseControlDeck object
         """
         if self.debug:
-            a = 'key=|%s|' % (key)
-            b = 'value=|%s|' % (value)
-            c = 'options=|%s|' % (options)
-            d = 'param_type=|%s|' % (param_type)
+            a = 'key=%r' % key
+            b = 'value=%r' % value
+            c = 'options=%r' % options
+            d = 'param_type=%r' % param_type
             msg = "_adding isubcase=%s %-12s %-12s %-12s %-12s" % (isubcase, a,
                                                                    b, c, d)
             self.log.debug(msg)
@@ -549,12 +548,11 @@ class CaseControlDeck(object):
             self.copy_subcase(i_from_subcase=0, i_to_subcase=isubcase,
                               overwrite_subcase=True)
             if self.debug:
-                msg = "copied subcase iFromSubcase=%s to iToSubcase=%s" % (
-                    0, isubcase)
+                msg = "copied subcase i_from_subcase=%r to i_to_subcase=%r" % (0, isubcase)
                 self.log.debug(msg)
         elif isubcase not in self.subcases:  # initialize new subcase
             #self.isubcase += 1 # is handled in the read code
-            msg = 'isubcase=%s is not a valid subcase...' % (isubcase)
+            msg = 'isubcase=%r is not a valid subcase...subcases=%s' % (isubcase, str(sorted(self.subcases.keys())))
             raise RuntimeError(msg)
 
         subcase = self.subcases[isubcase]
@@ -577,8 +575,7 @@ class CaseControlDeck(object):
         cases = {}
         for (isubcase, subcase) in sorted(self.subcases.iteritems()):
             if isubcase:
-                cases[isubcase] = subcase.getOp2Data(self.sol,
-                                                     subcase.solmap_toValue)
+                cases[isubcase] = subcase.getOp2Data(self.sol, subcase.solmap_toValue)
         return cases
 
     def __repr__(self):

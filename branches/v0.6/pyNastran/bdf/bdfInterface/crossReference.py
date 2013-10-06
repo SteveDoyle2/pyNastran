@@ -145,7 +145,7 @@ class XrefMesh(object):
             try:
                 elem.cross_reference(self)
             except:
-                msg = "Couldn't cross reference Element.\n%s" % (str(elem))
+                msg = "Couldn't cross reference Element.\n%s" % str(elem)
                 self.log.error(msg)
                 raise
 
