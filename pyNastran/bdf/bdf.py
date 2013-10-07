@@ -156,6 +156,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         :param debug: used to set the logger if no logger is passed in
         :param log:   a python logging module object
         """
+        assert debug in [True, False], 'debug=%r' % debug
+
         # file management parameters
         self._ifile = -1
         self.include_dir = ''

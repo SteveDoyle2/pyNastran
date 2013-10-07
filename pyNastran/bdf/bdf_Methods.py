@@ -100,8 +100,8 @@ class BDFMethods(BDFMethodsDeprecated):
                 mass += m
                 cg += m * p
             except:
-                self.log().warning("could not get inertia for element"
-                                   "...\n%s" % element)
+                self.log.warning("could not get the inertia for element"
+                                 "...\n%s" % element)
         cg = cg / mass
         return (mass, cg, I)
 
@@ -109,8 +109,12 @@ class BDFMethods(BDFMethodsDeprecated):
         """Calculates mass in the global coordinate system"""
         mass = 0.
         for element in self.elements.itervalues():
-            m = element.Mass()
-            mass += m
+            try:
+                m = element.Mass()
+                mass += m
+            except:
+                self.log.warning("could not get the mass for element"
+                                 "...\n%s" % element)
         return mass
 
     # def flip_normals(self, starterEid, eids=None, flipStarter=False):
