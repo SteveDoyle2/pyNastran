@@ -397,8 +397,7 @@ class Subcase(object):
         if is_string(value) and value.isdigit():
             value = int(value)
 
-        (key, value, options) = self._simplify_data(key, value, options,
-                                                    param_type)
+        (key, value, options) = self._simplify_data(key, value, options, param_type)
         self.params[key] = [value, options, param_type]
 
     def _simplify_data(self, key, value, options, param_type):
@@ -670,7 +669,7 @@ class Subcase(object):
         if self.id == 0:
             msg = str(self)
         else:
-            msg = 'SUBCASE %s\n' % (self.id)
+            msg = 'SUBCASE %s\n' % self.id
             nparams = 0
             for (key, param) in self.subcase_sorted(self.params.items()):
                 if key in subcase0.params and subcase0.params[key] == param:
@@ -706,7 +705,7 @@ class Subcase(object):
         """
         # presort the list to put all the SET cards next to each other
         # instead of listA.sort() as it allows lst to be any iterable
-        lst = sorted(lst) 
+        lst = sorted(lst)
 
         i = 0  # needed in case the loop doesn't execute
         iSet = None  # index of first SET card in the deck
@@ -757,7 +756,7 @@ class Subcase(object):
         #msg = "-------SUBCASE %s-------\n" %(self.id)
         msg = ''
         if self.id > 0:
-            msg += 'SUBCASE %s\n' % (self.id)
+            msg += 'SUBCASE %s\n' % self.id
 
         nparams = 0
         for (key, param) in self.subcase_sorted(self.params.items()):
