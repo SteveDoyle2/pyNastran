@@ -118,7 +118,7 @@ class PanairIO(object):
                                       #'rhoU', 'rhoV', 'rhoW', 'rhoE']
         #if self.is_centroidal:
         #nelements, three = elements.shape
-        print regions
+        #print regions
         cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
         #cases[(ID, 'Eids', 1, 'centroid', '%.0f')] = elements # arange(1, nelements+1)
 

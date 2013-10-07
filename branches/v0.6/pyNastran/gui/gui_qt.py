@@ -43,7 +43,7 @@ import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
- 
+
     def __init__(self, inputs):
         QtGui.QMainWindow.__init__(self)
 
@@ -51,7 +51,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         Cart3dIO.__init__(self)
         PanairIO.__init__(self)
         LaWGS_IO.__init__(self)
-        
+
         settings = QtCore.QSettings()
 
         #-------------
@@ -67,7 +67,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         input = inputs['input']
         output = inputs['output']
 
-        #self.format = '' 
+        #self.format = ''
         debug = inputs['debug']
         assert debug in [True, False], 'debug=%s' % debug
         shots = inputs['shots']
@@ -83,10 +83,10 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         self.iCase = 0
         self.nNodes = 0
         self.nElements = 0
-        
+
         #-------
         # vtk actors
-        
+
         self.grid = vtk.vtkUnstructuredGrid()
         #gridResult = vtk.vtkFloatArray()
 
@@ -100,14 +100,14 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
 
         # scalar bar
         self.scalarBar = vtk.vtkScalarBarActor()
-        
+
         #-------------
         # logging
-        
+
         self.log =  SimpleLogger('debug', lambda x, y: self.logg_msg(x, y))
         # logging needs synchronizing, so the messages from different threads
         # would not be interleave
-        self.log_mutex = QtCore.QReadWriteLock() 
+        self.log_mutex = QtCore.QReadWriteLock()
 
         #-------------
         # build GUI and restore saved application state
@@ -116,18 +116,18 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
 
         self.init_ui()
         self.restoreState(settings.value("mainWindowState").toByteArray())
-        
+
         #-------------
         # loading
         self.show()
-        
+
         #inputs['format'] = 'nastran'
         #inputs['input'] = 'solid_bending.bdf'
         self.load_batch_inputs(inputs)
         #self.on_load_geometry('solid_bending.bdf', 'nastran')
         #self.on_load_results('solid_bending.op2')
         #self.vtk_interactor.Modified()
-    
+
     def load_batch_inputs(self, inputs):
         if not inputs['format']:
             return
@@ -137,11 +137,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         print('format=%r input=%r output=%r' % (format, input, output))
         if format is not None and format not in ['panair', 'cart3d', 'lawgs', 'nastran']:
             self.log_error('---invalid format=%r' % format)
-        elif format and input is not None: 
+        elif format and input is not None:
             format = format.lower()
             dirname = os.path.dirname(input)
             inputbase = input
-            
+
             if not os.path.exists(input):
                 msg = 'input file=%r does not exist' % input
                 self.log_error(msg)
@@ -192,7 +192,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         msg = tim + ' ' + (typ + ': ' + msg) if typ else msg
         if typ in cols:
             msg = '<font color="%s"> %s </font>' % (cols[typ], msg)
-        
+
         self.log_mutex.lockForWrite()
         self.log_widget.textCursor().insertHtml(msg + r"<br />")
         self.log_widget.ensureCursorVisible() # new message will be visible
@@ -264,7 +264,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         self.statusBar().showMessage('Ready')
 
         # windows title and aplication icon
-        self.setWindowTitle('Statusbar')    
+        self.setWindowTitle('Statusbar')
         self.setWindowIcon(QtGui.QIcon(os.path.join(icon_path, 'logo.png')))
         self.set_window_title()
 
@@ -283,7 +283,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         self.log_dock.setWidget(self.log_widget)
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
         ################################################
-        
+
         # right sidebar
 
         ## menubar
@@ -302,7 +302,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         #pth = os.path.join(icon_path, 'tbdf.png')
         pth = os.path.join(icon_path, 'tbdf.png')
         #print print_bad_path(pth)
-        
+
         # http://docs.python.org/2/library/sys.html#sys.platform
         #System  platform value
         #Linux (2.x and 3.x) 'linux2'
@@ -311,7 +311,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         #Mac OS X    'darwin'
         #print sys.platform
         #quit_key = 'Alt+F4' if sys.platform in ['win32', 'cygwin'] else 'Ctrl+Q'
-        
+
         for nam, txt, icon, shortcut, tip, func in [
           ('exit', '&Exit', os.path.join(icon_path, 'texit.png'), 'Ctrl+Q', 'Exit application', QtGui.qApp.quit),
           ('open_bdf', '&Open BDF', os.path.join(icon_path, 'tbdf.png'), 'Ctrl+O', 'Loads a Geometry input file', self.on_load_geometry),
@@ -339,7 +339,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
           ('x', 'Flips to +X Axis', os.path.join(icon_path, '+x.png'), 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
           ('y', 'Flips to +Y Axis', os.path.join(icon_path, '+y.png'), 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
           ('z', 'Flips to +Z Axis', os.path.join(icon_path, '+z.png'), 'z', 'Flips to +Z Axis', lambda: self.update_camera('+z')),
-          
+
           ('X', 'Flips to -X Axis', os.path.join(icon_path, '-x.png'), 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
           ('Y', 'Flips to -Y Axis', os.path.join(icon_path, '-y.png'), 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
           ('Z', 'Flips to -Z Axis', os.path.join(icon_path, '-z.png'), 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')), ]:
@@ -347,7 +347,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
             #if icon is None:
                 #print "missing_icon = %r!!!" % nam
                 #icon = os.path.join(icon_path, 'no.png')
-            
+
             if icon is None:
                 print "missing_icon = %r!!!" % nam
                 #print print_bad_path(icon)
@@ -391,7 +391,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                     menu.addAction(actions[i] if isinstance(i, basestring) else i())
         self.res_dock.hide()
 
-        #Frame that VTK will render on 
+        #Frame that VTK will render on
         vtk_frame = QtGui.QFrame()
         vtk_hbox  = QtGui.QHBoxLayout()
         vtk_hbox.setContentsMargins(2, 2, 2, 2)
@@ -561,7 +561,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
 
     def on_load_geometry(self, infile_name=None, geometry_format=None):
         wildcard = ''
-        
+
         if infile_name:
             geometry_format = geometry_format.lower()
             if geometry_format == 'nastran':
@@ -684,7 +684,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                 msg ='on_load_results failed:  You need to load a file first...'
                 self.log_error(msg)
                 raise RuntimeError(msg)
-            
+
             if out_filename is None:
                 Title = 'Select a Results File for %s' % self.format
                 if geometry_format == 'nastran':
@@ -743,10 +743,10 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         @todo not done...
         """
         return self.on_load_results()
-        
+
         # getOpenFileName return QString and we want Python string
         fname = str(QtGui.QFileDialog.getOpenFileName(self, 'Open OP2 file', self.last_dir, 'Nastran OP2 (*.op2)'))
-        
+
         if fname:
             self.last_dir = os.path.split(fname)[0]
             self.load_nastran_results(fname, self.last_dir)
@@ -771,7 +771,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         renderLarge.SetInput(self.rend)
         renderLarge.SetMagnification(4)
 
-        filt = QtCore.QString() 
+        filt = QtCore.QString()
         fname = str(QtGui.QFileDialog.getSaveFileName(self, ('Choose a file name'
                     'and type'), '', ('PNG Image *.png (*.png);; JPEG Image '
                     '*.jpg *.jpeg (*.jpg, *.jpeg);; TIFF Image *.tif *.tiff '
@@ -801,7 +801,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
 
     def closeEvent(self, event):
         """
-        Handling saving state before application when application is being closed.  
+        Handling saving state before application when application is being closed.
         """
         settings = QtCore.QSettings()
         settings.setValue("main_WindowGeometry", self.saveGeometry())
@@ -811,18 +811,18 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
     def _simulate_key_press(self, key):
         """
         A little hack method that simulates pressing the key for the VTK
-        interactor. There is no easy way to instruct VTK to e.g. change mouse 
+        interactor. There is no easy way to instruct VTK to e.g. change mouse
         style to 'trackball' (as by pressing 't' key),
         (see http://public.kitware.com/pipermail/vtkusers/2011-November/119996.html)
         therefore we trick VTK to think that a key has been pressed.
-        
+
         :param key: a key that VTK should be informed about, e.g. 't'
         """
         print "key = ", key
         self.vtk_interactor._Iren.SetEventInformation(0, 0, 0, 0, key, 0, None)
         self.vtk_interactor._Iren.KeyPressEvent()
         self.vtk_interactor._Iren.CharEvent()
-        
+
         #if key in ['y', 'z', 'X', 'Y', 'Z']:
             #self.update_camera(key)
 
@@ -891,12 +891,16 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
             if isinstance(case, ndarray):
                 max_value = amax(case)
                 min_value = amin(case)
-            else:                
+            else:
                 min_value = case[0]
                 max_value = case[0]
+                for value in case:
+                    max_value = max(value, max_value)
+                    min_value = min(value, min_value)
 
             # flips sign to make colors go from blue -> red
             norm_value = max_value - min_value
+            print('max_value=%s min_value=%r norm_value=%r' % (max_value, min_value, norm_value))
             #print "case = ",case
             #if norm_value==0.: # avoids division by 0.
             #    norm_value = 1.
@@ -907,7 +911,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                     #print "min_value = ",min(case)
                     for i, value in enumerate(case):
                         #gridResult.InsertValue(i, value)
-                        gridResult.InsertNextValue((value - min_value)/norm_value)
+                        gridResult.InsertNextValue(1.0-(value - min_value)/norm_value)
                         #if len(valueSet) < 20:
                             #valueSet.add(value)
                 else:  # vectorSize=3
@@ -917,7 +921,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                 print "value_range", gridResult.GetValueRange()
 
             print("max=%g min=%g norm=%g\n" % (max_value, min_value, norm_value))
-            
+
             nValueSet = len(valueSet)
             if 1:
                 self.textActors[0].SetInput('Max:  %g' % max_value)  # max
@@ -987,15 +991,15 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
 
     def UpdateScalarBar(self, Title, min_value, max_value, norm_value, data_format):
         """
-        @param Title the scalar bar title
-        @param min_value the blue value
-        @param max_value the red value
-        @param data_format '%g','%f','%i', etc.
+        :param Title the:   scalar bar title
+        :param min_value:   the blue value
+        :param max_value:   the red value
+        :param data_format: '%g','%f','%i', etc.
         """
         print "UpdateScalarBar min=%s max=%s norm=%s" % (min_value, max_value, norm_value)
         self.colorFunction.RemoveAllPoints()
-        self.colorFunction.AddRGBPoint(min_value, 0.0, 0.0, 1.0)
-        self.colorFunction.AddRGBPoint(max_value, 1.0, 0.0, 0.0)
+        self.colorFunction.AddRGBPoint(min_value, 0.0, 0.0, 1.0)  # blue
+        self.colorFunction.AddRGBPoint(max_value, 1.0, 0.0, 0.0)  # red
         #self.scalarBar.SetLookupTable(self.colorFunction)
 
         self.scalarBar.SetTitle(Title)
@@ -1064,7 +1068,7 @@ if __name__ == "__main__":
     QtGui.QApplication.setOrganizationDomain(pyNastran.__website__)
     QtGui.QApplication.setApplicationName("pyNastran")
     QtGui.QApplication.setApplicationVersion(pyNastran.__version__)
-    
+
     inputs = get_inputs('qt')
     window = MainWindow(inputs)
     sys.exit(app.exec_())
