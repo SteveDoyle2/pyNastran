@@ -9,6 +9,7 @@
 #    except ImportError:
 #        fmode = None
 
+from __future__ import division
 from PyQt4 import QtGui, QtCore
 import sys
 import os.path
@@ -21,13 +22,10 @@ from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 
 import pyNastran
-from pyNastran import __version__ as version
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import SimpleLogger
-from nastranIO import NastranIO
 pkg_path = pyNastran.__path__[0]
 icon_path = os.path.join(pkg_path, 'gui', 'icons')
-#image_path = os.path.join(pkg_path, 'gui_qt', 'images')
 
 #### tcolorpick.png and tabout.png trefresh.png icons on LGPL license, see
 #### http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/color-picker-grey.png
@@ -88,7 +86,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         # vtk actors
         
         self.grid = vtk.vtkUnstructuredGrid()
-        self.gridResult = vtk.vtkFloatArray()
+        #gridResult = vtk.vtkFloatArray()
 
         self.grid2 = vtk.vtkUnstructuredGrid()
         #self.emptyResult = vtk.vtkFloatArray()
@@ -102,20 +100,20 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         self.scalarBar = vtk.vtkScalarBarActor()
         
         #-------------
-        # build GUI and restore saved application state
-        self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
-        self.background_col = settings.value("backgroundColor", (0.1, 0.2, 0.4)).toPyObject()
-
-        self.init_ui()
-        self.restoreState(settings.value("mainWindowState").toByteArray())
-        
-        #-------------
         # logging
         
         self.log =  SimpleLogger('debug', lambda x, y: self.logg_msg(x, y))
         # logging needs synchronizing, so the messages from different threads
         # would not be interleave
         self.log_mutex = QtCore.QReadWriteLock() 
+
+        #-------------
+        # build GUI and restore saved application state
+        self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
+        self.background_col = settings.value("backgroundColor", (0.1, 0.2, 0.4)).toPyObject()
+
+        self.init_ui()
+        self.restoreState(settings.value("mainWindowState").toByteArray())
         
         #-------------
         # loading
@@ -129,6 +127,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         #self.vtk_interactor.Modified()
     
     def load_batch_inputs(self, inputs):
+        if not inputs['format']:
+            return
         format = inputs['format'].lower()
         input = inputs['input']
         output = inputs['output']
@@ -168,8 +168,9 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                 print "format=%r" % format
                 print "output=%r" % output
                 self.on_load_results(output)
-
             #self.Update()
+            #self._update_camera()
+            self._simulate_key_press('r')
             self.vtk_interactor.Modified()
         #else:
             #self.scalarBar.VisibilityOff()
@@ -250,7 +251,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         QtGui.QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
 
     def set_window_title(self, fname=None):
-        msg = "pyNastran v%s"  % version
+        msg = "pyNastran v%s"  % pyNastran.__version__
         if fname:
             msg += ' - %s' % fname
         self.setWindowTitle(msg)
@@ -320,8 +321,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
           ('surface', 'Surface Model', os.path.join(icon_path, 'tsolid.png'), 's', 'Show Model as a Surface Model', self.on_surface),
           ('edges', 'Show/Hide Edges', os.path.join(icon_path, 'tedges.png'), 'e', 'Show/Hide Model Edges', lambda: self.onFlipEdges),
 
-          ('magnify', 'Magnify', os.path.join(icon_path, 'tmag+.png'), 'M', 'Increase Magnfication', self.on_increase_magnification),
-          ('shrink', 'Shrink', os.path.join(icon_path, 'tmag-.png'), 'm', 'Decrease Magnfication', self.on_decrease_magnification),
+          ('magnify', 'Magnify', os.path.join(icon_path, '+zoom.png'), 'M', 'Increase Magnfication', self.on_increase_magnification),
+          ('shrink', 'Shrink', os.path.join(icon_path, '-zoom.png'), 'm', 'Decrease Magnfication', self.on_decrease_magnification),
 
           ('rotate_clockwise', 'Rotate Clockwise', os.path.join(icon_path, 'tclock.png'), 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
           ('rotate_cclockwise', 'Rotate Counter-Clockwise', os.path.join(icon_path, 'tcclock.png'), 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
@@ -331,7 +332,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
           ('about', 'About pyNastran GUI', os.path.join(icon_path, 'tabout.png'), 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
           ('creset', 'Reset camera view', os.path.join(icon_path, 'trefresh.png'), 'r', 'Reset the camera view to default', self.on_reset_camera),
 
-          ('cycle_res', 'Cycle Results', os.path.join(icon_path, 'cycle_results.png'), 'CTRL+L', 'Changes the result case', self.cycleResults()),
+          ('cycle_res', 'Cycle Results', os.path.join(icon_path, 'cycle_results.png'), 'CTRL+L', 'Changes the result case', self.cycleResults),
 
           ('x', 'Flips to +X Axis', os.path.join(icon_path, '+x.png'), 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
           ('y', 'Flips to +Y Axis', os.path.join(icon_path, '+y.png'), 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
@@ -405,7 +406,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         self.rend = vtk.vtkRenderer()
         self.vtk_interactor.GetRenderWindow().AddRenderer(self.rend)
         self.vtk_interactor.GetRenderWindow().Render()
-        self.load_nastran_geometry(None, None)
+        #self.load_nastran_geometry(None, None)
         self.textActors = {}
 
         self.addGeometry()
@@ -436,7 +437,9 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         self.log_command('on_wireframe()')
         self._simulate_key_press('w')
 
-    def _update_camera(self, camera):
+    def _update_camera(self, camera=None):
+        if camera is None:
+            camera = self.GetCamera()
         camera.Modified()
         self.vtk_interactor.Render()
 
@@ -511,6 +514,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         self.colorFunction.HSVWrapOff()
 
         drange = [10., 20.]
+        # blue - low
+        # red - high
         self.colorFunction.AddRGBPoint(drange[0], 0.0, 0.0, 1.0)
         self.colorFunction.AddRGBPoint(drange[1], 1.0, 0.0, 0.0)
 
@@ -624,8 +629,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
             self.grid.Modified()
             #self.grid2.Reset()
             self.grid2.Modified()
-            #self.gridResult.Reset()
-            #self.gridResult.Modified()
+            #gridResult.Reset()
+            #gridResult.Modified()
 
             if not os.path.exists(infile_name):
                 msg = 'input file=%r does not exist' % infile_name
@@ -638,7 +643,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
             self.rend.ResetCamera()
 
         if filter_index >= 0:
-            self.format = formats[filter_index]
+            self.format = formats[filter_index].lower()
             if has_results:
                 enable = True
             else:
@@ -843,6 +848,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
 
     def cycleResults(self):
+        self.log_info('cycling...')
         print("is_nodal=%s is_centroidal=%s" % (self.is_nodal,self.is_centroidal))
         #print("nCases = %i" %(self.nCases+1))
         if self.nCases == 0:
@@ -851,22 +857,26 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         foundCases = self.incrementCycle()
         if foundCases:
             print("incremented case")
-            #self.gridResult.Reset()
+            #gridResult.Reset()
             gridResult = vtk.vtkFloatArray()
+            #gridResult.Reset()
+            #gridResult.Modified()
+            self.rend.Modified()
             #emptyResult = vtk.vtkFloatArray()
 
             key = self.caseKeys[self.iCase]
             case = self.resultCases[key]
             print("len(case) = %i" % len(case))
-            (subcaseID, resultType, vectorSize, location, dataFormat) = key
+            (subcaseID, resultType, vectorSize, location, data_format) = key
 
+            gridResult.SetNumberOfComponents(vectorSize)
             if location == 'centroid' and self.is_centroidal:
                 #allocationSize = vectorSize*location (where location='centroid'-> self.nElements)
                 gridResult.Allocate(self.nElements, 1000)
             elif location == 'nodal' and self.is_nodal:
                 #allocationSize = vectorSize*self.nNodes # (where location='node'-> self.nNodes)
                 gridResult.Allocate(self.nNodes * vectorSize, 1000)
-                gridResult.SetNumberOfComponents(vectorSize)
+                #gridResult.SetNumberOfComponents(vectorSize)
             else:
                 print("***%s skipping" % location)
 
@@ -874,44 +884,42 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
             caseName = self.iSubcaseNameMap[subcaseID]
             (subtitle, label) = caseName
 
-            print("subcaseID=%s resultType=%s subtitle=%r label=%r"
-                % (subcaseID, resultType, subtitle, label))
+            print("subcaseID=%s resultType=%s subtitle=%r label=%r" % (subcaseID, resultType, subtitle, label))
 
             if isinstance(case, ndarray):
-                maxValue = amax(case)
-                minValue = amin(case)
+                max_value = amax(case)
+                min_value = amin(case)
             else:                
-                maxValue = case[0]
-                minValue = case[0]
-                for value in case:
-                    maxValue = max(value, maxValue)
-                    minValue = min(value, minValue)
+                min_value = case[0]
+                max_value = case[0]
 
             # flips sign to make colors go from blue -> red
-            normValue = maxValue - minValue
+            norm_value = max_value - min_value
             #print "case = ",case
-            #if normValue==0.: # avoids division by 0.
-            #    normValue = 1.
+            #if norm_value==0.: # avoids division by 0.
+            #    norm_value = 1.
 
-            valueSet = set()
-            if vectorSize == 1:
-                #print "minValue = ",min(case)
-                for value in case:
-                    #print "value", value
-                    gridResult.InsertNextValue(value)
-                    #if len(valueSet) < 20:
-                        #valueSet.add(value)
-            else:  # vectorSize=3
-                pass
-                #for value in case:
-                #    self.gridResult.InsertNextTuple3(value)  # x,y,z
+            if 1:
+                valueSet = set()
+                if vectorSize == 1:
+                    #print "min_value = ",min(case)
+                    for i, value in enumerate(case):
+                        #gridResult.InsertValue(i, value)
+                        gridResult.InsertNextValue((value - min_value)/norm_value)
+                        #if len(valueSet) < 20:
+                            #valueSet.add(value)
+                else:  # vectorSize=3
+                    pass
+                    #for value in case:
+                    #    .gridResult.InsertNextTuple3(value)  # x,y,z
+                print "value_range", gridResult.GetValueRange()
 
-            print("max=%g min=%g norm=%g\n" % (maxValue, minValue, normValue))
-
+            print("max=%g min=%g norm=%g\n" % (max_value, min_value, norm_value))
+            
             nValueSet = len(valueSet)
             if 1:
-                self.textActors[0].SetInput('Max:  %g' % maxValue)  # max
-                self.textActors[1].SetInput('Min:  %g' % minValue)  # min
+                self.textActors[0].SetInput('Max:  %g' % max_value)  # max
+                self.textActors[1].SetInput('Min:  %g' % min_value)  # min
                 self.textActors[2].SetInput('Subcase=%s Subtitle: %s' % (subcaseID, subtitle))  # info
 
                 if label:
@@ -920,7 +928,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                 else:
                     self.textActors[3].VisibilityOff()
 
-            self.UpdateScalarBar(resultType, minValue, maxValue, dataFormat)
+            self.UpdateScalarBar(resultType, min_value, max_value, norm_value, data_format)
             #self.scalarBar.SetNumberOfLabels(nValueSet)
             #self.scalarBar.SetMaximumNumberOfColors(nValueSet)
             #prop = self.scalarBar.GetLabelTextProperty()
@@ -932,25 +940,28 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
             ## centroid
             #print dir(self.grid)
             #self.grid.Reset()
-            print('gr', gridResult)
+            #print('gridResult', dir(gridResult))
+            #print('gridResult', gridResult)
+            print("location =", location)
             if location == 'centroid' and self.is_centroidal:
                 #self.grid.GetPointData().Reset()
                 self.grid.GetCellData().SetScalars(gridResult)
-                self.log_info("***plotting vector=%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
-                self.grid.Modified()
+                self.log_info("***centroidal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
             elif location == 'nodal' and self.is_nodal:
                 self.grid.GetCellData().Reset()
                 if vectorSize == 1:
-                    self.log_info("***plotting vector=%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+                    self.log_info("***nodal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                     self.grid.GetPointData().SetScalars(gridResult)
-                    self.grid.Modified()
+                    #self.grid.Modified()
                 else:
-                    self.log_info("***nodal vector=%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+                    self.log_info("***nodal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                     #pass
                     self.grid.GetPointData().SetScalars(gridResult)
                 #print "***nodal skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label)
             else:
-                self.log_info("***%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
+                self.log_info("***D%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
+            self.grid.Modified()
+            self.vtk_interactor.Render()
 
 
     def incrementCycle(self):
@@ -972,29 +983,30 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         #print "next key = ",key
         return foundCases
 
-    def UpdateScalarBar(self, Title, minValue, maxValue, dataFormat):
+    def UpdateScalarBar(self, Title, min_value, max_value, norm_value, data_format):
         """
         @param Title the scalar bar title
-        @param minValue the blue value
-        @param maxValue the red value
-        @param dataFormat '%g','%f','%i', etc.
+        @param min_value the blue value
+        @param max_value the red value
+        @param data_format '%g','%f','%i', etc.
         """
+        print "UpdateScalarBar min=%s max=%s norm=%s" % (min_value, max_value, norm_value)
         self.colorFunction.RemoveAllPoints()
-        self.colorFunction.AddRGBPoint(minValue, 0.0, 0.0, 1.0)
-        self.colorFunction.AddRGBPoint(maxValue, 1.0, 0.0, 0.0)
+        self.colorFunction.AddRGBPoint(min_value, 0.0, 0.0, 1.0)
+        self.colorFunction.AddRGBPoint(max_value, 1.0, 0.0, 0.0)
         #self.scalarBar.SetLookupTable(self.colorFunction)
 
         self.scalarBar.SetTitle(Title)
-        self.scalarBar.SetLabelFormat(dataFormat)
+        self.scalarBar.SetLabelFormat(data_format)
 
-        nValues = 11
-        if (Title in ['Element_ID', 'Eids', 'Region'] and (maxValue - minValue + 1) < 11):
-            nValues = int(maxValue - minValue) + 1
-            #print "need to adjust axes...maxValue=%s" % maxValue
-        #if dataFormat=='%.0f' and maxValue>
+        nvalues = 11
+        if (Title in ['Element_ID', 'Eids', 'Region'] and norm_value < 11):
+            nvalues = int(max_value - min_value) + 1
+            #print "need to adjust axes...max_value=%s" % max_value
+        #if data_format=='%.0f' and maxValue>
 
-        self.scalarBar.SetNumberOfLabels(nValues)
-        self.scalarBar.SetMaximumNumberOfColors(nValues)
+        self.scalarBar.SetNumberOfLabels(nvalues)
+        self.scalarBar.SetMaximumNumberOfColors(nvalues)
         self.scalarBar.Modified()
 
     def ResetCamera(self):
@@ -1049,7 +1061,7 @@ if __name__ == "__main__":
     QtGui.QApplication.setOrganizationName("pyNastran")
     QtGui.QApplication.setOrganizationDomain(pyNastran.__website__)
     QtGui.QApplication.setApplicationName("pyNastran")
-    QtGui.QApplication.setApplicationVersion(version)
+    QtGui.QApplication.setApplicationVersion(pyNastran.__version__)
     
     inputs = get_inputs('qt')
     window = MainWindow(inputs)

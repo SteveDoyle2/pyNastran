@@ -105,38 +105,7 @@ class AppFrame(wx.Frame):
         assert self.is_centroidal != self.is_nodal, "is_centroidal and is_nodal can't be the same and are set to \"%s\"" % self.is_nodal
         self.dirname = ''
         self.setupFrame()
-
-        format = inputs['format']
-        input = inputs['input']
-        output = inputs['output']
-        print('format=%r input=%r output=%r' % (format, input, output))
-        if format is not None and format.lower() not in ['panair', 'cart3d', 'lawgs', 'nastran']:
-            sys.exit('\n---invalid format=%r' % format)
-        elif format and input is not None:
-            format = format.lower()
-            dirname = os.path.dirname(input)
-            inputbase = input
-
-            if format=='panair' and is_panair:
-                print("loading panair")
-                self.frmPanel.load_panair_geometry(inputbase, dirname)
-            elif format=='nastran' and is_nastran:
-                print("loading nastran")
-                self.frmPanel.load_nastran_geometry(inputbase, dirname)
-            elif format=='cart3d' and is_cart3d:
-                print("loading cart3d")
-                self.frmPanel.load_cart3d_geometry(inputbase, dirname)
-            elif format=='lawgs' and is_lawgs:
-                print("loading lawgs")
-                self.frmPanel.load_LaWGS_geometry(inputbase, dirname)
-            else:
-                pass
-                sys.exit('\n---unsupported format=%r' % format)
-            self.UpdateWindowName(input)
-            self.frmPanel.Update()
-        else:
-            self.frmPanel.scalarBar.VisibilityOff()
-            self.frmPanel.scalarBar.Modified()
+        self.load_batch_inputs(inputs)
 
         #self.frmPanel.Update()
         #if rotation:
@@ -147,6 +116,72 @@ class AppFrame(wx.Frame):
         #for shot in shots:
             self.frmPanel.widget.onTakePicture(ID_CAMERA, shots)
             sys.exit('took screenshot %r' % shots)
+
+    def load_batch_inputs(self, inputs):
+        format = inputs['format']
+        input = inputs['input']
+        output = inputs['output']
+        print('format=%r input=%r output=%r' % (format, input, output))
+        if format is not None and format.lower() not in ['panair', 'cart3d', 'lawgs', 'nastran']:
+            msg = '\n---invalid format=%r' % format
+            print msg
+            self.frmPanel.scalarBar.VisibilityOff()
+            self.frmPanel.scalarBar.Modified()
+            return
+            #raise IOError(msg)
+            #sys.exit(msg)
+        elif format and input is not None:
+            format = format.lower()
+            dirname = os.path.dirname(input)
+            inputbase = input
+
+            if not os.path.exists(input):
+                msg = 'input=%r does not exist' % input
+                print msg
+                self.frmPanel.scalarBar.VisibilityOff()
+                self.frmPanel.scalarBar.Modified()
+                return
+                #raise IOError(msg)
+
+            if format=='panair' and is_panair:
+                print("loading panair")
+                self.frmPanel.load_panair_geometry(inputbase, dirname)
+            elif format=='nastran' and is_nastran:
+                print("loading nastran")
+                self.frmPanel.load_nastran_geometry(inputbase, dirname)
+                load_results = self.frmPanel.load_nastran_results
+            elif format=='cart3d' and is_cart3d:
+                print("loading cart3d")
+                self.frmPanel.load_cart3d_geometry(inputbase, dirname)
+            elif format=='lawgs' and is_lawgs:
+                print("loading lawgs")
+                self.frmPanel.load_LaWGS_geometry(inputbase, dirname)
+            else:
+                msg = '\n---unsupported format=%r' % format
+                print msg
+                return
+                #raise IOError(msg)
+                #sys.exit(msg)
+
+            self.UpdateWindowName(input)
+
+            if output:
+                if os.path.exists(output):
+                    print "format=%r" % format
+                    print "output=%r" % output
+                    load_results(output, dirname)
+                else:
+                    msg = 'output=%r does not exist' % output
+                    #break
+                    #self.frmPanel.Update()
+                    #raise IOError(msg)
+                    #return
+
+            self.frmPanel.Update()
+        else:
+            self.frmPanel.scalarBar.VisibilityOff()
+            self.frmPanel.scalarBar.Modified()
+
 
     def setupFrame(self):
         """

@@ -26,8 +26,8 @@ class Cart3dIO(object):
             self.grid2.Reset()
             #print(dir(self.grid2))
             #self.grid2.VisibilityOff()
-            self.gridResult.Reset()
-            self.gridResult.Modified()
+            #self.gridResult.Reset()
+            #self.gridResult.Modified()
 
             self.resultCases = {}
             self.nCases = 0
@@ -63,12 +63,12 @@ class Cart3dIO(object):
         print("nElements = ", self.nElements)
 
         self.grid.Allocate(self.nElements, 1000)
-        self.gridResult.SetNumberOfComponents(self.nElements)
+        #self.gridResult.SetNumberOfComponents(self.nElements)
         self.grid2.Allocate(1, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
-        self.gridResult.Allocate(self.nNodes, 1000)
+        #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         self.nidMap = {}
         #elem.SetNumberOfPoints(nNodes)
@@ -86,7 +86,7 @@ class Cart3dIO(object):
 
         assert nodes is not None
         nnodes, three = nodes.shape
-        
+
         nid = 0
         print "nnodes=%s" % nnodes
         for i in xrange(nnodes):
@@ -148,14 +148,14 @@ class Cart3dIO(object):
 
         print "is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal)
         assert self.is_centroidal!= self.is_nodal
-        
+
         result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
                                       'rhoU', 'rhoV', 'rhoW', 'rhoE']
         if self.is_centroidal:
             nelements, three = elements.shape
             cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
             cases[(ID, 'Eids', 1, 'centroid', '%.0f')] = arange(1, nelements+1)
-            
+
             #print("load.keys() = ", loads.keys())
             #print("type(loads)", type(loads))
             for key in result_names:

@@ -86,8 +86,8 @@ class NastranIO(object):
             #self.gridResult = vtk.vtkFloatArray()
             #self.gridResult.Reset()
             #self.gridResult.Modified()
-            self.eidMap = {}
-            self.nidMap = {}
+            #self.eidMap = {}
+            #self.nidMap = {}
 
             self.resultCases = {}
             self.nCases = 0
@@ -127,14 +127,13 @@ class NastranIO(object):
         else:
             nCONM2 = 0
         self.grid.Allocate(self.nElements, 1000)
-        self.gridResult.SetNumberOfComponents(self.nElements)
+        #self.gridResult.SetNumberOfComponents(self.nElements)
         self.grid2.Allocate(nCAeros + nCONM2, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
-        self.nidMap = {}
         #elem.SetNumberOfPoints(nNodes)
         if 0:
             i = 0
@@ -144,7 +143,7 @@ class NastranIO(object):
                 point = node.Position()
                 #print "point = ",point
                 points.InsertPoint(i, *point)
-                self.gridResult.InsertNextValue(i * fraction)
+                #self.gridResult.InsertNextValue(i * fraction)
                 #print str(element)
 
                 #elem = vtk.vtkVertex()
@@ -156,11 +155,13 @@ class NastranIO(object):
                 self.nidMap[nid] = i
                 i += 1
 
+        # add the nodes
         for i, (nid, node) in enumerate(sorted(model.nodes.iteritems())):
             point = node.Position()
             points.InsertPoint(i, *point)
             self.nidMap[nid] = i
 
+        # add the CAERO/CONM2 elements
         j = 0
         points2 = vtk.vtkPoints()
         points2.SetNumberOfPoints(nCAeros * 4 + nCONM2)
@@ -186,7 +187,7 @@ class NastranIO(object):
         self.mapElements(points, points2, self.nidMap, model, j)
 
     def mapElements(self, points, points2, nidMap, model, j):
-        self.eidMap = {}
+        #self.eidMap = {}
         i = 0
         for (eid, element) in sorted(model.elements.iteritems()):
             self.eidMap[eid] = i
@@ -418,7 +419,7 @@ class NastranIO(object):
         self.log_info("updated grid")
 
     def load_nastran_results(self, op2FileName, dirname):
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        #gridResult.SetNumberOfComponents(self.nElements)
         self.TurnTextOn()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
@@ -438,28 +439,32 @@ class NastranIO(object):
         self.iSubcaseNameMap = op2.iSubcaseNameMap
 
         nElements = len(self.eidMap)
-        #print "nElements = ",nElements
-        nidsSet = False  # set to False to disable nodeIDs
+        print "nElements = ", nElements
+
+        # set to True to enable nodeIDs as an result
+        nidsSet = False
+        subcaseID = subcaseIDs[0]
+        if nidsSet:
+            nids = zeros(self.nNodes, 'd')
+            for (nid, nid2) in self.nidMap.iteritems():
+                nids[nid2] = nid
+            cases[(0, 'Node_ID', 1, 'node', '%.0f')] = nids
+            nidsSet = True
+
+        # set to True to enable elementIDs as a result
         eidsSet = True
+        if eidsSet:
+            eids = zeros(nElements, 'd')
+            for (eid, eid2) in self.eidMap.iteritems():
+                eids[eid2] = eid
+
+            eKey = (subcaseID, 'isElementOn', 1, 'centroid', '%.0g')
+            cases[(subcaseID, 'Element_ID', 1, 'centroid', '%.0f')] = eids
+            cases[eKey] = zeros(nElements)  # is the element supported
+            eidsSet = True
+
         for subcaseID in subcaseIDs:
-            if nidsSet:
-                nids = zeros(self.nNodes, 'd')
-                for (nid, nid2) in self.nidMap.iteritems():
-                    nids[nid2] = nid
-                cases[(subcaseID, 'Node_ID', 1, 'node', '%.0f')] = nids
-                nidsSet = True
-
-            if eidsSet:
-                eids = zeros(nElements, 'd')
-                for (eid, eid2) in self.eidMap.iteritems():
-                    eids[eid2] = eid
-
-                eKey = (subcaseID, 'isElementOn', 1, 'centroid', '%.0g')
-                cases[(subcaseID, 'Element_ID', 1, 'centroid', '%.0f')] = eids
-                cases[eKey] = zeros(nElements)  # is the element supported
-                eidsSet = True
-
-            if False:
+            if False: # nodal results don't work
                 if subcaseID in op2.displacements:  # not correct?
                     case = op2.displacements[subcaseID]
                     key = (subcaseID, 'DisplacementX', 3, 'node', '%g')
@@ -476,7 +481,7 @@ class NastranIO(object):
                         temps[nid2] = T
                     #cases[key] = temps
 
-            cases = self.fillStressCase(cases, op2, subcaseID, eKey, nElements)
+            cases = self.fill_stress_case(cases, op2, subcaseID, eKey, nElements)
 
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
@@ -486,7 +491,8 @@ class NastranIO(object):
         self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
         self.cycleResults()  # start at nCase=0
 
-    def fillStressCase(self, cases, op2, subcaseID, eKey, nElements):
+    def fill_stress_case(self, cases, op2, subcaseID, eKey, nElements):
+        print "fill_stress_case"
         oxx = zeros(nElements)
         oyy = zeros(nElements)
         ozz = zeros(nElements)

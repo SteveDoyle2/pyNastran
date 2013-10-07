@@ -52,7 +52,7 @@ def getScreenCorner(x, y):
 class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
     def __init__(self, *args, **kwargs):
         self.grid = vtk.vtkUnstructuredGrid()
-        self.gridResult = vtk.vtkFloatArray()
+        #gridResult = vtk.vtkFloatArray()
         #self.emptyResult = vtk.vtkFloatArray()
         #self.vectorResult = vtk.vtkFloatArray()
         self.grid2 = vtk.vtkUnstructuredGrid()
@@ -456,7 +456,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         if foundCases:
         #if 1:
             print("incremented case")
-            #self.gridResult.Reset()
+            #gridResult.Reset()
             gridResult = vtk.vtkFloatArray()
             emptyResult = vtk.vtkFloatArray()
 
@@ -497,21 +497,21 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
             #if normValue==0.: # avoids division by 0.
             #    normValue = 1.
 
-            valueSet = set()
+            #valueSet = set()
             if vectorSize == 1:
                 #print "minValue = ",min(case)
                 for value in case:
                     gridResult.InsertNextValue(value)
-                    if len(valueSet) < 20:
-                        valueSet.add(value)
+                    #if len(valueSet) < 20:
+                        #valueSet.add(value)
             else:  # vectorSize=3
                 pass
                 #for value in case:
-                #    self.gridResult.InsertNextTuple3(value)  # x,y,z
+                #    gridResult.InsertNextTuple3(value)  # x,y,z
 
             print("max=%g min=%g norm=%g\n" % (maxValue, minValue, normValue))
 
-            nValueSet = len(valueSet)
+            #nValueSet = len(valueSet)
 
             self.textActors[0].SetInput('Max:  %g' % maxValue)  # max
             self.textActors[1].SetInput('Min:  %g' % minValue)  # min
@@ -549,7 +549,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
                 else:
                     print("***nodal vector=%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                     #pass
-                #    self.grid.GetPointData().SetScalars(self.gridResult)
+                #    self.grid.GetPointData().SetScalars(gridResult)
                 #print "***nodal skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label)
             else:
                 print("***%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
