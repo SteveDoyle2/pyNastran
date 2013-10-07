@@ -44,24 +44,48 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
  
-    def __init__(self, is_edges=False, is_nodal=False, is_centroidal=False,
-                 format=None, input=None, output=None, shots=None, magnify=4, rotation=None, debug=False):
-        assert debug in [True, False], 'debug=%s' % debug
-
-        is_centroidal = not(is_nodal)
+    def __init__(self, inputs):
         QtGui.QMainWindow.__init__(self)
+
         NastranIO.__init__(self)
         Cart3dIO.__init__(self)
         PanairIO.__init__(self)
         LaWGS_IO.__init__(self)
         
         settings = QtCore.QSettings()
-        self.is_nodal = is_nodal
-        self.is_centroidal = is_centroidal
+
+        #-------------
+        # inputs dict
+
+        #self.log = SimpleLogger('debug')
+        self.is_edges = inputs['is_edges']
+        self.is_nodal = inputs['is_nodal']
+        self.is_centroidal = inputs['is_centroidal']
+        self.magnify = inputs['magnify']
+        assert self.is_centroidal != self.is_nodal, "is_centroidal and is_nodal can't be the same and are set to \"%s\"" % self.is_nodal
+        format = inputs['format']  # the active format loaded into the gui
+        input = inputs['input']
+        output = inputs['output']
+
+        #self.format = '' 
+        debug = inputs['debug']
+        assert debug in [True, False], 'debug=%s' % debug
+        shots = inputs['shots']
+        if shots is None:
+            shots = []
+
+        #-------------
+        self.infile_name = None
+        self.dirname = ''
+        self.last_dir = '' # last visited directory while opening file
+
         self.nCases = 0
         self.iCase = 0
         self.nNodes = 0
         self.nElements = 0
+        
+        #-------
+        # vtk actors
         
         self.grid = vtk.vtkUnstructuredGrid()
         self.gridResult = vtk.vtkFloatArray()
@@ -74,26 +98,82 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         self.edgeActor = vtk.vtkActor()
         self.edgeMapper = vtk.vtkPolyDataMapper()
 
+        # scalar bar
         self.scalarBar = vtk.vtkScalarBarActor()
         
-        self.format = '' # the active format loaded into the gui
-        self.last_dir = '' # last visited directory while opening file
-
+        #-------------
         # build GUI and restore saved application state
         self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
         self.background_col = settings.value("backgroundColor", (0.1, 0.2, 0.4)).toPyObject()
 
         self.init_ui()
         self.restoreState(settings.value("mainWindowState").toByteArray())
-
+        
+        #-------------
+        # logging
+        
         self.log =  SimpleLogger('debug', lambda x, y: self.logg_msg(x, y))
         # logging needs synchronizing, so the messages from different threads
         # would not be interleave
         self.log_mutex = QtCore.QReadWriteLock() 
+        
+        #-------------
+        # loading
         self.show()
-        self.on_load_geometry('solid_bending.bdf', 'Nastran')
-        self.on_load_results('solid_bending.op2')
-        self.vtk_interactor.Modified()
+        
+        #inputs['format'] = 'nastran'
+        #inputs['input'] = 'solid_bending.bdf'
+        self.load_batch_inputs(inputs)
+        #self.on_load_geometry('solid_bending.bdf', 'nastran')
+        #self.on_load_results('solid_bending.op2')
+        #self.vtk_interactor.Modified()
+    
+    def load_batch_inputs(self, inputs):
+        format = inputs['format'].lower()
+        input = inputs['input']
+        output = inputs['output']
+        print('format=%r input=%r output=%r' % (format, input, output))
+        if format is not None and format not in ['panair', 'cart3d', 'lawgs', 'nastran']:
+            self.log_error('---invalid format=%r' % format)
+        elif format and input is not None: 
+            format = format.lower()
+            dirname = os.path.dirname(input)
+            inputbase = input
+            
+            if not os.path.exists(input):
+                msg = 'input file=%r does not exist' % input
+                self.log_error(msg)
+                return
+
+            if format=='panair' and is_panair:
+                print("loading panair")
+                self.load_panair_geometry(inputbase, dirname)
+            elif format=='nastran' and is_nastran:
+                print("loading nastran")
+                self.on_load_geometry(input, 'nastran')
+                print "output", output
+            elif format=='cart3d' and is_cart3d:
+                print("loading cart3d")
+                self.load_cart3d_geometry(inputbase, dirname)
+            elif format=='lawgs' and is_lawgs:
+                print("loading lawgs")
+                self.load_LaWGS_geometry(inputbase, dirname)
+            else:
+                pass
+                sys.exit('\n---unsupported format=%r' % format)
+            #self.UpdateWindowName(input)
+            self.set_window_title(input)
+            self.format = format
+            if output:
+                print "format=%r" % format
+                print "output=%r" % output
+                self.on_load_results(output)
+
+            #self.Update()
+            self.vtk_interactor.Modified()
+        #else:
+            #self.scalarBar.VisibilityOff()
+            #self.scalarBar.Modified()
 
     def logg_msg(self, typ, msg):
         """
@@ -103,7 +183,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         tim = datetime.datetime.now().strftime('[%d-%m-%Y %H:%M:%S]')
         msg = cgi.escape(msg)
         #message colors
-        cols = {"GUI": "blue", "GUI ERROR":"Crimson", "DEBUG" : "Orange"}
+        dark_orange = '#EB9100'
+        cols = {"GUI": "blue", "COMMAND":"green", "GUI ERROR":"Crimson", "DEBUG" : dark_orange}
         msg = msg.rstrip().replace('\n', '<br>')
         msg = tim + ' ' + (typ + ': ' + msg) if typ else msg
         if typ in cols:
@@ -118,7 +199,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         """ Helper funtion: log a messaage msg with a 'GUI:' prefix """
         self.log.simple_msg(msg, 'GUI')
 
-    def log_debug(self, msg):
+    def log_command(self, msg):
+        """ Helper funtion: log a messaage msg with a 'GUI:' prefix """
+        self.log.simple_msg(msg, 'COMMAND')
+
+    def log_error(self, msg):
         """ Helper funtion: log a messaage msg with a 'GUI:' prefix """
         self.log.simple_msg(msg, 'GUI ERROR')
 
@@ -137,7 +222,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
             '',
             'pyNastran v%s' % (pyNastran.__version__),
             'Copyright '+ pyNastran.__license__,
-            '  Steven Doyle 2011-2012',
+            '  Steven Doyle 2011-2013',
             '  Marcin Gasiorek 2012',
             '',
             '%s' % (pyNastran.__website__),
@@ -172,7 +257,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
 
     def init_ui(self):
         """ Initialize user iterface"""
-        self.resize(800,600)
+        self.resize(800, 600)
         self.statusBar().showMessage('Ready')
 
         # windows title and aplication icon
@@ -231,23 +316,35 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
           ('open_f06', '&Open F06', None, None, 'Loads a F06 results file', self.load_f06),  ## @todo no picture...
           ('back_col', 'Change background color', os.path.join(icon_path, 'tcolorpick.png'), None, 'Choose a background color', self.change_background_col),
 
-          ('wireframe', 'Wireframe Model', os.path.join(icon_path, 'twireframe.png'), 'w', 'Show Model as a Wireframe Model', lambda: self._simulate_key_press('w')),
-          ('surface', 'Surface Model', os.path.join(icon_path, 'tsolid.png'), 's', 'Show Model as a Surface Model', lambda: self._simulate_key_press('s')),
+          ('wireframe', 'Wireframe Model', os.path.join(icon_path, 'twireframe.png'), 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
+          ('surface', 'Surface Model', os.path.join(icon_path, 'tsolid.png'), 's', 'Show Model as a Surface Model', self.on_surface),
           ('edges', 'Show/Hide Edges', os.path.join(icon_path, 'tedges.png'), 'e', 'Show/Hide Model Edges', lambda: self.onFlipEdges),
+
+          ('magnify', 'Magnify', os.path.join(icon_path, 'tmag+.png'), 'M', 'Increase Magnfication', self.on_increase_magnification),
+          ('shrink', 'Shrink', os.path.join(icon_path, 'tmag-.png'), 'm', 'Decrease Magnfication', self.on_decrease_magnification),
+
+          ('rotate_clockwise', 'Rotate Clockwise', os.path.join(icon_path, 'tclock.png'), 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
+          ('rotate_cclockwise', 'Rotate Counter-Clockwise', os.path.join(icon_path, 'tcclock.png'), 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
+
+
           ('scshot', 'Take a Screenshot', os.path.join(icon_path, 'tcamera.png'), 'CTRL+I', 'Take a Screenshot of current view', self.take_screenshot),
           ('about', 'About pyNastran GUI', os.path.join(icon_path, 'tabout.png'), 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
-          ('creset', 'Reset camera view', os.path.join(icon_path, 'trefresh.png'), 'r', 'Reset the camera view to default', lambda: self._simulate_key_press('r')),
+          ('creset', 'Reset camera view', os.path.join(icon_path, 'trefresh.png'), 'r', 'Reset the camera view to default', self.on_reset_camera),
 
           ('cycle_res', 'Cycle Results', os.path.join(icon_path, 'cycle_results.png'), 'CTRL+L', 'Changes the result case', self.cycleResults()),
 
-          ('x', 'Flips to +X Axis', os.path.join(icon_path, '+x.png'), 'x', 'Flips to +X Axis', lambda: self.update_camera('x')),
-          ('y', 'Flips to +Y Axis', os.path.join(icon_path, '+x.png'), 'y', 'Flips to +Y Axis', lambda: self.update_camera('y')),
-          ('z', 'Flips to +Z Axis', os.path.join(icon_path, '+x.png'), 'z', 'Flips to +Z Axis', lambda: self.update_camera('z')),
+          ('x', 'Flips to +X Axis', os.path.join(icon_path, '+x.png'), 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
+          ('y', 'Flips to +Y Axis', os.path.join(icon_path, '+y.png'), 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
+          ('z', 'Flips to +Z Axis', os.path.join(icon_path, '+z.png'), 'z', 'Flips to +Z Axis', lambda: self.update_camera('+z')),
           
-          ('X', 'Flips to -X Axis', os.path.join(icon_path, '-z.png'), 'X', 'Flips to -X Axis', lambda: self.update_camera('X')),
-          ('Y', 'Flips to -Y Axis', os.path.join(icon_path, '-z.png'), 'Y', 'Flips to -Y Axis', lambda: self.update_camera('Y')),
-          ('Z', 'Flips to -Z Axis', os.path.join(icon_path, '-z.png'), 'Z', 'Flips to -Z Axis', lambda: self.update_camera('Z')), ]:
+          ('X', 'Flips to -X Axis', os.path.join(icon_path, '-x.png'), 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
+          ('Y', 'Flips to -Y Axis', os.path.join(icon_path, '-y.png'), 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
+          ('Z', 'Flips to -Z Axis', os.path.join(icon_path, '-z.png'), 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')), ]:
             #print "name=%s txt=%s icon=%s short=%s tip=%s func=%s" % (nam, txt, icon, short, tip, func)
+            #if icon is None:
+                #print "missing_icon = %r!!!" % nam
+                #icon = os.path.join(icon_path, 'no.png')
+            
             if icon is None:
                 print "missing_icon = %r!!!" % nam
                 #print print_bad_path(icon)
@@ -280,7 +377,10 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                            (self.menu_view,  ('scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col')),
                            (self.menu_window,('toolbar', 'reswidget', 'logwidget')),
                            (self.menu_help,  ('about',)),
-                           (self.toolbar, ('open_bdf', 'open_op2', 'cycle_res', 'x', 'wireframe', 'surface', 'edges', 'creset', 'scshot', '', 'exit'))]:
+                           (self.toolbar, ('open_bdf', 'open_op2', 'cycle_res',
+                                           'x', 'y', 'z', 'X', 'Y', 'Z',
+                                           'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
+                                           'wireframe', 'surface', 'edges', 'creset', 'scshot', '', 'exit'))]:
             for i in items:
                 if not i:
                     menu.addSeparator()
@@ -323,6 +423,50 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         self.createText([5, 35], 'Min  ', textSize)  # text actor 1
         self.createText([5, 20], 'Word1', textSize)  # text actor 2
         self.createText([5, 5], 'Word2', textSize)  # text actor 3
+
+    def on_reset_camera(self):
+        self.log_command('on_reset_camera()')
+        self._simulate_key_press('r')
+
+    def on_surface(self):
+        self.log_command('on_surface()')
+        self._simulate_key_press('s')
+
+    def on_wireframe(self):
+        self.log_command('on_wireframe()')
+        self._simulate_key_press('w')
+
+    def _update_camera(self, camera):
+        camera.Modified()
+        self.vtk_interactor.Render()
+
+    def zoom(self, value):
+        camera = self.GetCamera()
+        camera.Zoom(value)
+        camera.Modified()
+        self.vtk_interactor.Render()
+        self.log_command('zoom(%s)' % value)
+        #except Exception as e:
+            #self.log_error(str(e))
+
+    def rotate(self, rotate_deg):
+        camera = self.GetCamera()
+        camera.Roll(-rotate_deg)
+        camera.Modified()
+        self.vtk_interactor.Render()
+        self.log_command('rotate(%s)' % rotate_deg)
+
+    def on_rotate_clockwise(self):
+        self.rotate(15.0)
+
+    def on_rotate_cclockwise(self):
+        self.rotate(-15.0)
+
+    def on_increase_magnification(self):
+        self.zoom(1.1)
+
+    def on_decrease_magnification(self):
+        self.zoom(1.0/1.1)
 
     def onFlipEdges(self):
         self.is_edges = not(self.is_edges)
@@ -412,16 +556,17 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         wildcard = ''
         
         if infile_name:
-            if geometry_format == 'Nastran':
+            geometry_format = geometry_format.lower()
+            if geometry_format == 'nastran':
                 has_results = True
                 load_function = self.load_nastran_geometry
-            elif geometry_format == 'Cart3d':
+            elif geometry_format == 'cart3d':
                 has_results = True
                 load_function = self.load_cart3d_geometry
-            elif geometry_format == 'Panair':
+            elif geometry_format == 'panair':
                 has_results = False
                 load_function = None
-            elif geometry_format == 'LaWGS':
+            elif geometry_format == 'lawgs':
                 has_results = False
                 load_function = None
             else:
@@ -474,14 +619,19 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
 
         if load_function is not None:
             self.last_dir = os.path.split(infile_name)[0]
-            
+
             #self.grid.Reset()
             self.grid.Modified()
             #self.grid2.Reset()
             self.grid2.Modified()
             #self.gridResult.Reset()
             #self.gridResult.Modified()
-            
+
+            if not os.path.exists(infile_name):
+                msg = 'input file=%r does not exist' % infile_name
+                self.log_error(msg)
+                return
+
             self.log_info("reading %s file %r" % (geometry_format, infile_name))
             has_results = load_function(infile_name, self.last_dir)
             #self.vtk_panel.Update()
@@ -497,7 +647,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
             self.set_window_title(infile_name)
         else: # no file specified
             return
-        print "on_load_results(%r)" % infile_name
+        print "on_load_geometry(%r)" % infile_name
+        self.log_command("on_load_geometry(%r, %r)" % (infile_name, self.format))
 
     def _create_load_file_dialog(self, qt_wildcard, Title):
         # getOpenFileName return QString and we want Python string
@@ -513,66 +664,71 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         # getOpenFileName return QString and we want Python string
         fname = str(QtGui.QFileDialog.getOpenFileName(self, 'Open BDF file', self.last_dir,
         'Nastran BDF (*.bdf *.dat *.nas)'))
-        
+
         if fname:
             self.last_dir = os.path.split(fname)[0]
             self.load_nastran_geometry(fname, self.last_dir)
             self.rend.ResetCamera()
             self.set_window_title(fname)
 
-    def on_load_results(self, infile_name=None):
+    def on_load_results(self, out_filename=None):
             geometry_format = self.format
             if self.format is None:
                 msg ='on_load_results failed:  You need to load a file first...'
-                self.log_debug(msg)
+                self.log_error(msg)
                 raise RuntimeError(msg)
             
-            if infile_name is None:
+            if out_filename is None:
                 Title = 'Select a Results File for %s' % self.format
-                if geometry_format == 'Nastran':
+                if geometry_format == 'nastran':
                     has_results = True
                     #wildcard = "Nastran OP2 (*.op2);;Nastran PCH (*.pch);;Nastran F06 (*.f06)"
                     wildcard = "Nastran OP2 (*.op2)"
                     load_functions = [self.load_nastran_results]
-                elif geometry_format == 'Cart3d':
+                elif geometry_format == 'cart3d':
                     has_results = True
                     wildcard = "Cart3d (*.triq)"
                     load_functions = [self.load_cart3d_results]
-                elif geometry_format == 'Panair':
+                elif geometry_format == 'panair':
                     has_results = False
                     wildcard = "Panair (*.agps);;Panair (*.out)"
                     load_functions = [None]
-                elif geometry_format == 'LaWGS':
+                elif geometry_format == 'lawgs':
                     has_results = False
                     load_functions = [None]
                 else:
                     msg = 'format=%r is not supported' % geometry_format
-                    self.log_debug(msg)
+                    self.log_error(msg)
                     raise RuntimeError(msg)
                 #scard = wildcard.split(';;')
                 #n = len(load_functions)
                 #wildcard = ';;'.join(scard[:n])
                 load_function = load_functions[0]
 
-                wildcard_index, infile_name = self._create_load_file_dialog(wildcard, Title)
+                wildcard_index, out_filename = self._create_load_file_dialog(wildcard, Title)
             else:
-                if geometry_format == 'Nastran':
+                if geometry_format == 'nastran':
                     load_function = self.load_nastran_results
-                elif geometry_format == 'Cart3d':
+                elif geometry_format == 'cart3d':
                     load_function = self.load_cart3d_results
-                #elif geometry_format == 'Panair':
+                #elif geometry_format == 'panair':
                     #load_function = None
-                #elif geometry_format == 'LaWGS':
+                #elif geometry_format == 'lawgs':
                     #load_function = None
                 else:
                     msg = 'format=%r is not supported.  Did you load a geometry model?' % geometry_format
-                    self.log_debug(msg)
+                    self.log_error(msg)
                     raise RuntimeError(msg)
 
-            self.last_dir = os.path.split(infile_name)[0]
-            load_function(infile_name, self.last_dir)
-            print "on_load_results(%r)" % infile_name
-
+            if not os.path.exists(out_filename):
+                msg = 'result file=%r does not exist' % out_filename
+                self.log_error(msg)
+                return
+                #raise IOError(msg)
+            self.last_dir = os.path.split(out_filename)[0]
+            load_function(out_filename, self.last_dir)
+            print "on_load_results(%r)" % out_filename
+            self.log_command("on_load_results(%r)" % out_filename)
 
     def load_op2(self):
         """
@@ -596,7 +752,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         """
         # getOpenFileName return QString and we want Python string
         fname = str(QtGui.QFileDialog.getOpenFileName(self, 'Open F06 file', self.last_dir, 'Nastran F06 (*.f06)'))
-        
+
         if fname:
             self.last_dir = os.path.split(fname)[0]
             self.load_nastran_results(fname, self.last_dir)
@@ -659,6 +815,9 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         self.vtk_interactor._Iren.SetEventInformation(0, 0, 0, 0, key, 0, None)
         self.vtk_interactor._Iren.KeyPressEvent()
         self.vtk_interactor._Iren.CharEvent()
+        
+        #if key in ['y', 'z', 'X', 'Y', 'Z']:
+            #self.update_camera(key)
 
     def addGeometry(self):
         self.aQuadMapper = vtk.vtkDataSetMapper()
@@ -808,7 +967,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                 self.incrementCycle()
             foundCases = True
         else:
-            self.log_debug("No Results found.  Many results are not supported in the GUI.\n")
+            self.log_error("No Results found.  Many results are not supported in the GUI.\n")
             foundCases = False
         #print "next key = ",key
         return foundCases
@@ -846,35 +1005,44 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         return self.rend.GetActiveCamera()
 
     def update_camera(self, code):
-        return
         camera = self.GetCamera()
-        if code == 'x':  # set x-axis
+        print "code =", code
+        if code == '+x':  # set x-axis
             camera.SetFocalPoint(0., 0., 0.)
             camera.SetViewUp(0., 0., 1.)
             camera.SetPosition(1., 0., 0.)
-        elif code == 'X':  # set x-axis
+        elif code == '-x':  # set x-axis
             camera.SetFocalPoint(0., 0., 0.)
             camera.SetViewUp(0., 0., -1.)
             camera.SetPosition(-1., 0., 0.)
 
-        elif code == 'y':  # set y-axis
+        elif code == '+y':  # set y-axis
             camera.SetFocalPoint(0., 0., 0.)
             camera.SetViewUp(0., 0., 1.)
             camera.SetPosition(0., 1., 0.)
-        elif code == 'Y':  # set y-axis
+        elif code == '-y':  # set y-axis
             camera.SetFocalPoint(0., 0., 0.)
             camera.SetViewUp(0., 0., -1.)
             camera.SetPosition(0., -1., 0.)
 
-        elif code == 'z':  # set z-axis
+        elif code == '+z':  # set z-axis
             camera.SetFocalPoint(0., 0., 0.)
             camera.SetViewUp(0., 1., 0.)
             camera.SetPosition(0., 0., 1.)
-        elif code == 'Z':  # set z-axis
+        elif code == '-z':  # set z-axis
             camera.SetFocalPoint(0., 0., 0.)
             camera.SetViewUp(0., -1., 0.)
             camera.SetPosition(0., 0., -1.)
-        #self.rend.Reset()
+        else:
+            self.log_error('invalid camera code...%r' % code)
+            return
+        self._update_camera(camera)
+        #print dir(camera)
+        #print dir(self.vtk_interactor)
+        #print dir(self.rend)
+        self.rend.ResetCamera()
+        #self.vtk_interactor.ResetCamera()
+        self.log_command('update_camera(%r)' % code)
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
@@ -883,6 +1051,6 @@ if __name__ == "__main__":
     QtGui.QApplication.setApplicationName("pyNastran")
     QtGui.QApplication.setApplicationVersion(version)
     
-    inputs = get_inputs
+    inputs = get_inputs('qt')
     window = MainWindow(inputs)
     sys.exit(app.exec_())

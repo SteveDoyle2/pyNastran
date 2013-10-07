@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 #!/usr/bin/python
 # pylint: disable=C0103,C0111,W0612,R0904
 
@@ -86,29 +86,33 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 class AppFrame(wx.Frame):
 
-    def __init__(self, is_edges=False, is_nodal=False, is_centroidal=False,
-                 format=None, input=None, output=None, shots=None, magnify=4, rotation=None, debug=False):
+    def __init__(self, inputs):
+        wx.Frame.__init__(self, None, -1, size=wx.Size(800, 600),
+                          title='pyNastran')
 
+        debug = inputs['debug']
         assert debug in [True, False], 'debug=%s' % debug
+        shots = inputs['shots']
         if shots is None:
             shots = []
 
-        wx.Frame.__init__(self, None, -1, size=wx.Size(800, 600),
-                          title='pyNastran')
         self.log = SimpleLogger('debug')
         self.infile_name = None
-        self.is_edges = is_edges
-        self.is_nodal = is_nodal
-        self.is_centroidal = is_centroidal
-        self.magnify = magnify
-        assert is_centroidal != is_nodal, "is_centroidal and is_nodal can't be the same and are set to \"%s\"" % is_nodal
+        self.is_edges = inputs['is_edges']
+        self.is_nodal = inputs['is_nodal']
+        self.is_centroidal = inputs['is_centroidal']
+        self.magnify = inputs['magnify']
+        assert self.is_centroidal != self.is_nodal, "is_centroidal and is_nodal can't be the same and are set to \"%s\"" % self.is_nodal
         self.dirname = ''
         self.setupFrame()
 
+        format = inputs['format']
+        input = inputs['input']
+        output = inputs['output']
         print('format=%r input=%r output=%r' % (format, input, output))
         if format is not None and format.lower() not in ['panair', 'cart3d', 'lawgs', 'nastran']:
             sys.exit('\n---invalid format=%r' % format)
-        elif format and input is not None: 
+        elif format and input is not None:
             format = format.lower()
             dirname = os.path.dirname(input)
             inputbase = input
@@ -186,7 +190,7 @@ class AppFrame(wx.Frame):
 
         self.SetMenuBar(self.menubar)
 
-        self.frmPanel.infile_name = self.infile_name 
+        self.frmPanel.infile_name = self.infile_name
         self.frmPanel.buildVTK(self.infile_name)
 
         windowName = self.frmPanel.getWindowName()
@@ -753,9 +757,9 @@ class EventsHandler(object):
 #------------------------------------------------------------------------------
 
 def main():
-    inputs = get_inputs()
+    inputs = get_inputs('wx')
     app = wx.App(redirect=False)
-    appFrm = AppFrame(*inputs)
+    appFrm = AppFrame(inputs)
     #appFrm.Show()
     print("launching gui")
     app.MainLoop()

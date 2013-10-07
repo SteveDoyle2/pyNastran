@@ -3,8 +3,7 @@ import sys
 import pyNastran
 from docopt import docopt
 
-def run_arg_parse():
-    #print "sys.argv[0] =", sys.argv[0]
+def run_arg_parse(mode):
     msg  = "Usage:\n"
     msg += "  pyNastranGUI.py [-f FORMAT] [-i INPUT] [-o OUTPUT]\n"
     msg += '                  [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
@@ -18,16 +17,19 @@ def run_arg_parse():
     msg += "                                           nastran, lawgs)\n"
     msg += "  -i INPUT, --input INPUT     path to input file\n"
     msg += "  -o OUTPUT, --output OUTPUT  path to output file\n"
-    msg += "  -s SHOT, --shots SHOT       path to screenshot (only 1 for now)\n"
     #msg += "  -r XYZ, --rotation XYZ      [x, y, z, -x, -y, -z] default is ???\n"
-    msg += "  -m MAGNIFY, --magnify MAGNIFY how much should the resolution on a picture be magnified (default=1)\n"
+
+    if mode != 'qt':
+        msg += "  -s SHOT, --shots SHOT       path to screenshot (only 1 for now)\n"
+        msg += "  -m MAGNIFY, --magnify MAGNIFY how much should the resolution on a picture be magnified (default=1)\n"
 
     msg += "  -q, --quiet                 prints debug messages (default=True)\n"
-    msg += "  -e, --edges                 shows element edges as black lines (default=False)\n"
+    if mode != 'qt':
+        msg += "  -e, --edges                 shows element edges as black lines (default=False)\n"
     msg += "  -n, --nodalResults          plots nodal results (default)\n"
     msg += "  -c, --centroidalResults     plots centroidal results\n"
     msg += "  -v, --version               show program's version number and exit\n"
-    
+
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
     #print data
@@ -61,7 +63,8 @@ def run_arg_parse():
     return (edges, is_nodal, is_centroidal, format, input, output, shots, magnify, rotation, debug)
 
 
-def get_inputs():
+def get_inputs(mode='wx'):
+    assert mode in ['wx', 'qt']
     is_edges = False
     format = None
     input = None
@@ -78,10 +81,22 @@ def get_inputs():
         print("requires Python 2.6+ to use command line arguments...")
     else:
         if len(sys.argv) > 1:
-            (is_edges, is_nodal, is_centroidal, format, input, output, shots, magnify, rotation, debug) = run_arg_parse()
+            (is_edges, is_nodal, is_centroidal, format, input, output, shots, magnify, rotation, debug) = run_arg_parse(mode)
 
     if is_centroidal == is_nodal:
         is_nodal = not(is_centroidal)
 
     print "is_centroidal =", is_centroidal
-    return is_edges, is_nodal, is_centroidal, format, input, output, shots, magnify, rotation, debug
+    inputs = {
+        'is_edges' : is_edges,
+        'is_nodal' : is_nodal,
+        'is_centroidal' : is_centroidal,
+        'format' : format,
+        'input' : input,
+        'output' : output,
+        'shots' : shots,
+        'magnify' : magnify,
+        'rotation' : rotation,
+        'debug' : debug,
+        }
+    return inputs
