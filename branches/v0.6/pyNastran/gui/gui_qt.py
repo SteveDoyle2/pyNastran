@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
-#try:
-#    from PySide import QtCore, QtGui
-#    fmode = 1
-#except ImportError:
-#    try:
-#        from PyQt4 import QtCore, QtGui
-#        fmode = 2
-#    except ImportError:
-#        fmode = None
-
 from __future__ import division
-from PyQt4 import QtGui, QtCore
+try:
+    from PySide import QtCore, QtGui
+    fmode = 1
+except ImportError:
+    try:
+        from PyQt4 import QtCore, QtGui
+        fmode = 2
+    except ImportError:
+        msg = 'Failed to import PySide or PyQt4'
+        raise ImportError(msg)
+
+assert fmode in [1, 2]
+#from PyQt4 import QtGui, QtCore
 import sys
 import os.path
 import cgi #  html lib

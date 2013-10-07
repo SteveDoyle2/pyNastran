@@ -492,7 +492,10 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
                     minValue = min(value, minValue)
 
             # flips sign to make colors go from blue -> red
-            normValue = maxValue - minValue
+            try:
+                normValue = maxValue - minValue
+            except:
+                raise RuntimeError(resultType)
             #print "case = ",case
             #if normValue==0.: # avoids division by 0.
             #    normValue = 1.
