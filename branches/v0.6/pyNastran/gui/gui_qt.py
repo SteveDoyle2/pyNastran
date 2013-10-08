@@ -96,6 +96,10 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         # edges
         self.edgeActor = vtk.vtkActor()
         self.edgeMapper = vtk.vtkPolyDataMapper()
+        
+        # cell picker
+        self.cell_picker = vtk.vtkCellPicker()
+        self.cell_picker.SetTolerance(0.0005)
 
         # scalar bar
         self.scalarBar = vtk.vtkScalarBarActor()
@@ -114,6 +118,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         self.background_col = settings.value("backgroundColor", (0.1, 0.2, 0.4)).toPyObject()
 
         self.init_ui()
+        self.vtk_interactor.SetPicker(self.cell_picker)
+
         self.restoreState(settings.value("mainWindowState").toByteArray())
 
         #-------------
@@ -126,6 +132,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         #self.on_load_geometry('solid_bending.bdf', 'nastran')
         #self.on_load_results('solid_bending.op2')
         #self.vtk_interactor.Modified()
+
+    def on_cell_picker(self):
+        worldPosition = self.cell_picker.GetPickPosition()
+        self.log_command("on_cell_picker")
+        self.log_info("worldPosition = %s" % str(worldPosition))
 
     def load_batch_inputs(self, inputs):
         if not inputs['format']:
@@ -325,6 +336,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
           ('magnify', 'Magnify', os.path.join(icon_path, '+zoom.png'), 'M', 'Increase Magnfication', self.on_increase_magnification),
           ('shrink', 'Shrink', os.path.join(icon_path, '-zoom.png'), 'm', 'Decrease Magnfication', self.on_decrease_magnification),
 
+          #('cell_pick', 'Cell Pick', '', 'CTRL+K', 'PickTip', self.on_cell_picker),
+
           ('rotate_clockwise', 'Rotate Clockwise', os.path.join(icon_path, 'tclock.png'), 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
           ('rotate_cclockwise', 'Rotate Counter-Clockwise', os.path.join(icon_path, 'tcclock.png'), 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
 
@@ -379,7 +392,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                            (self.menu_view,  ('scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col')),
                            (self.menu_window,('toolbar', 'reswidget', 'logwidget')),
                            (self.menu_help,  ('about',)),
-                           (self.toolbar, ('open_bdf', 'open_op2', 'cycle_res',
+                           (self.toolbar, ('cell_pick', 'open_bdf', 'open_op2', 'cycle_res',
                                            'x', 'y', 'z', 'X', 'Y', 'Z',
                                            'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
                                            'wireframe', 'surface', 'edges', 'creset', 'scshot', '', 'exit'))]:
