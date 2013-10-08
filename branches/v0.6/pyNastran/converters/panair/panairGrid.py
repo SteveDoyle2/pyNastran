@@ -885,7 +885,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
             #panel = self.patches[2]
             (pointsI, pointi) = panel.get_points()
             (elementsI) = panel.get_elements(pointI)
-            print 'panel.iNetwork=%r' % (panel.iNetwork + 1)
+            #print 'panel.iNetwork=%r' % (panel.iNetwork + 1)
             #regions += panel.iNetwork * ones(len((elementsI)), 'int32')
             regions += [panel.iNetwork + 1] * len(elementsI)
 
@@ -894,8 +894,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
             elements += elementsI
             pointI += pointi
             #break
-            print "name=%r pointi=%s len(AllElements)=%s len(allPoints)=%s" %(name,
-                pointi, len(elements),len(points))
+            #print "name=%r pointi=%s len(AllElements)=%s len(allPoints)=%s" %(name, pointi, len(elements),len(points))
 
             if pointI != 0 and False:
                 if panel.netName in ['bodylwk', 'awbw']:

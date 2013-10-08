@@ -24,8 +24,8 @@ def run_arg_parse(mode):
         msg += "  -m MAGNIFY, --magnify MAGNIFY how much should the resolution on a picture be magnified (default=1)\n"
 
     msg += "  -q, --quiet                 prints debug messages (default=True)\n"
-    if mode != 'qt':
-        msg += "  -e, --edges                 shows element edges as black lines (default=False)\n"
+    #if mode != 'qt':
+    msg += "  -e, --edges                 shows element edges as black lines (default=False)\n"
     msg += "  -n, --nodalResults          plots nodal results (default)\n"
     msg += "  -c, --centroidalResults     plots centroidal results\n"
     msg += "  -v, --version               show program's version number and exit\n"
@@ -94,6 +94,9 @@ def get_inputs(mode='wx'):
             is_nodal = False
             is_centroidal = True
         elif format.lower() == 'cart3d':
+            is_nodal = False
+            is_centroidal = True
+        elif format.lower() == 'panair':
             is_nodal = False
             is_centroidal = True
     if is_centroidal == is_nodal:

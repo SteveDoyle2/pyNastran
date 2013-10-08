@@ -57,7 +57,6 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         #-------------
         # inputs dict
 
-        #self.log = SimpleLogger('debug')
         self.is_edges = inputs['is_edges']
         self.is_nodal = inputs['is_nodal']
         self.is_centroidal = inputs['is_centroidal']
@@ -104,7 +103,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         #-------------
         # logging
 
-        self.log =  SimpleLogger('debug', lambda x, y: self.logg_msg(x, y))
+        self.log = SimpleLogger('debug', lambda x, y: self.logg_msg(x, y))
         # logging needs synchronizing, so the messages from different threads
         # would not be interleave
         self.log_mutex = QtCore.QReadWriteLock()
@@ -321,7 +320,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
 
           ('wireframe', 'Wireframe Model', os.path.join(icon_path, 'twireframe.png'), 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
           ('surface', 'Surface Model', os.path.join(icon_path, 'tsolid.png'), 's', 'Show Model as a Surface Model', self.on_surface),
-          ('edges', 'Show/Hide Edges', os.path.join(icon_path, 'tedges.png'), 'e', 'Show/Hide Model Edges', lambda: self.onFlipEdges),
+          ('edges', 'Show/Hide Edges', os.path.join(icon_path, 'tedges.png'), 'e', 'Show/Hide Model Edges', self.onFlipEdges),
 
           ('magnify', 'Magnify', os.path.join(icon_path, '+zoom.png'), 'M', 'Increase Magnfication', self.on_increase_magnification),
           ('shrink', 'Shrink', os.path.join(icon_path, '-zoom.png'), 'm', 'Decrease Magnfication', self.on_decrease_magnification),
@@ -427,6 +426,14 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         self.createText([5, 20], 'Word1', textSize)  # text actor 2
         self.createText([5, 5], 'Word2', textSize)  # text actor 3
 
+        self.get_edges()
+        if self.is_edges:
+            prop = self.edgeActor.GetProperty()
+            prop.EdgeVisibilityOn()
+        else:
+            prop = self.edgeActor.GetProperty()
+            prop.EdgeVisibilityOff()
+
     def on_reset_camera(self):
         self.log_command('on_reset_camera()')
         self._simulate_key_press('r')
@@ -479,7 +486,26 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         #self.edgeActor.GetProperty().SetColor(0, 0, 0)  # cart3d edge color isn't black...
         self.edgeActor.Modified()
         #self.widget.Update()
-        self.Refresh()
+        self._update_camera()
+        #self.refresh()
+        self.log_command('onFlipEdges()')
+
+    def get_edges(self):
+        """
+        ..todo:: For some reason, the edge color is set to the parent
+        surface's color instead of black
+        """
+        edges = vtk.vtkExtractEdges()
+        edges.SetInput(self.grid)
+        self.edgeMapper.SetInput(edges.GetOutput())
+
+        self.edgeActor.SetMapper(self.edgeMapper)
+        self.edgeActor.GetProperty().SetColor(0, 0, 0)
+
+        prop = self.edgeActor.GetProperty()
+        prop.SetColor(0, 0, 0)
+        self.edgeActor.SetVisibility(self.is_edges)
+        self.rend.AddActor(self.edgeActor)
 
     def createText(self, position, label, textSize=18, movable=False):
         txt = vtk.vtkTextActor()
@@ -981,7 +1007,12 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
 
         if len(self.caseKeys) > 0:
             #print('caseKeys =', self.caseKeys)
-            key = self.caseKeys[self.iCase]
+            try:
+                key = self.caseKeys[self.iCase]
+            except IndexError:
+                foundCases = False
+                return foundCases
+
             print("key = %s" % str(key))
             if key[2] == 3:  # vector size=3 -> vector, skipping ???
                 self.incrementCycle()

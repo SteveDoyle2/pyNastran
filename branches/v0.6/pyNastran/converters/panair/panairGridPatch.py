@@ -208,9 +208,10 @@ class PanairPatch(object):
         self.log.debug("x.shape = %s" % (str(self.x.shape)))
         
         if edgeNumber == 1:
-            self.log.debug("self.x[:]\n%54s%s" % ('', self.x[:]))
-            self.log.debug("self.y[:]\n%54s%s" % ('', self.y[:]))
-            self.log.debug("self.z[:]\n%54s%s" % ('', self.z[:]))
+            pass
+            #self.log.debug("self.x[:]\n%54s%s" % ('', self.x[:]))
+            #self.log.debug("self.y[:]\n%54s%s" % ('', self.y[:]))
+            #self.log.debug("self.z[:]\n%54s%s" % ('', self.z[:]))
             #edgeNumber = 2
 
         if edgeNumber == 1:
