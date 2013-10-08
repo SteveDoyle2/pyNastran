@@ -103,7 +103,7 @@ class PanairIO(object):
         print "caseKeys = ",self.caseKeys
         #print "type(caseKeys) = ",type(self.caseKeys)
         self.iCase = -1
-        self.nCases = 1 #len(self.resultCases) - 1  # number of keys in dictionary
+        self.nCases = len(self.resultCases) #- 1  # number of keys in dictionary
         self.cycleResults()  # start at nCase=0
 
     def fillPanairCase(self, cases, ID, elements, regions, loads):
@@ -116,13 +116,14 @@ class PanairIO(object):
 
         #result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
                                       #'rhoU', 'rhoV', 'rhoW', 'rhoE']
-        #if self.is_centroidal:
+        if self.is_centroidal:
         #nelements, three = elements.shape
         #print regions
-        cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
+            cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
         #cases[(ID, 'Eids', 1, 'centroid', '%.0f')] = elements # arange(1, nelements+1)
 
-        #elif self.is_nodal:
+        elif self.is_nodal:
+            pass
             #print("load.keys() = ", loads.keys())
             #break
             #for key in result_names:

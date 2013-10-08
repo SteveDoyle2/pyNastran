@@ -850,11 +850,13 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
 
     def cycleResults(self):
-        self.log_info('cycling...')
-        print("is_nodal=%s is_centroidal=%s" % (self.is_nodal,self.is_centroidal))
         #print("nCases = %i" %(self.nCases+1))
         if self.nCases == 0:
+            self.scalarBar.SetVisibility(False)
             return
+
+        self.log_info('cycling...')
+        print("is_nodal=%s is_centroidal=%s" % (self.is_nodal,self.is_centroidal))
 
         foundCases = self.incrementCycle()
         if foundCases:
@@ -966,6 +968,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                 #print "***nodal skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label)
             else:
                 self.log_info("***D%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
+                self.scalarBar.SetVisibility(False)
             self.grid.Modified()
             self.vtk_interactor.Render()
 
@@ -979,7 +982,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         if len(self.caseKeys) > 0:
             #print('caseKeys =', self.caseKeys)
             key = self.caseKeys[self.iCase]
-            print("key = %s" % (str(key)))
+            print("key = %s" % str(key))
             if key[2] == 3:  # vector size=3 -> vector, skipping ???
                 self.incrementCycle()
             foundCases = True

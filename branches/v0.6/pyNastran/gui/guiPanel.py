@@ -431,8 +431,16 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
             self.iCase = 0
 
         if len(self.caseKeys) > 0:
-            key = self.caseKeys[self.iCase]
-            print("key = %s" % (str(key)))
+            try:
+                key = self.caseKeys[self.iCase]
+            except IndexError:
+                #print("No Results found.  Many results are not supported "
+                #      "in the GUI.\n")
+                #self.scalarBar.SetVisibility(False)
+                foundCases = False
+                return foundCases
+                
+            print("key = %s" % str(key))
             if key[2] == 3:  # vector size=3 -> vector, skipping ???
                 self.incrementCycle()
             foundCases = True
@@ -450,6 +458,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         #print("plotNodal=%s plotCentroidal=%s" %(plotNodal,plotCentroidal))
         #print("nCases = %i" %(self.nCases+1))
         if self.nCases == 0:
+            self.scalarBar.SetVisibility(False)
             return
 
         foundCases = self.incrementCycle()
@@ -556,6 +565,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
                 #print "***nodal skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label)
             else:
                 print("***%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
+                self.scalarBar.SetVisibility(False)
 
     def onKeyPress(self, obj, event):
         rwi = obj
