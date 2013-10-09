@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 import sys
 import copy
 from datetime import date
@@ -95,12 +95,68 @@ def make_f06_header():
     return ''.join(lines1 + lines2)
 
 
-def make_end():
-    lines = [' \n'
-             '1                                        * * * END OF JOB * * *\n'
-             ' \n'
-             ' \n']
-    return ''.join(lines)
+def make_end(end_flag=False):
+    lines = []
+    lines2 = []
+    if end_flag:
+        lines = ['','',
+        '0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *',
+        '0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY',
+        ' --------------------------------------------------------------------------------------------------------------------------']
+    #     0     0    1    1 '        '    T    T    T    T    T     F      F      T      0     F     -1            0           F
+
+        seid = 0
+        peid = 0
+        proj = 1
+        vers = 1
+        approach = '        '
+
+        SELG = 'T'
+        SEMG = 'T'
+        SEMR = 'T'
+        SEKR = 'T'
+        SELR = 'T'
+        MODES = 'F'
+        DYNRED = 'F'
+
+        SOLLIN = 'T'
+        PVALID = 0
+        SOLNL = 'F'
+        LOOPID = -1
+        CYCLE = 0
+        SENSITIVITY = 'F'
+
+        msg = '     %s     %s    %s    %s %8r    %s    %s    %s    %s    %s     %s      %s      %s      %s     %s     %s            %s           %s' % (
+            seid, peid, proj, vers, approach, SEMG, SEMR, SEKR, SELG, SELR, MODES, DYNRED, SOLLIN, PVALID, SOLNL,
+            LOOPID, CYCLE, SENSITIVITY)
+        lines.append(msg)
+
+        lines2 = ['0SEID = SUPERELEMENT ID.',
+        ' PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.',
+        ' PROJ = PROJECT ID NUMBER.',
+        ' VERS = VERSION ID.',
+        ' APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.',
+        ' SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.',
+        ' SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).',
+        ' SEKR = STIFFNESS MATRIX REDUCTION STEP.',
+        ' SELG = LOAD MATRIX GENERATION STEP.',
+        ' SELR = LOAD MATRIX REDUCTION STEP. ',
+        ' MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.',
+        ' DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.',
+        ' SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.',
+        ' PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS',
+        ' LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.',
+        ' SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.',
+        ' DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).',
+        ' SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.',
+        ' ',
+        ' No PARAM values were set in the Control File.']
+
+    lines3 = [' ',
+             '1                                        * * * END OF JOB * * *',
+             ' ',
+             ' ']
+    return '\n'.join(lines+lines2+lines3)
 
 
 class F06WriterDeprecated(object):
@@ -168,7 +224,7 @@ class F06Writer(object):
                  delete_objects=deleteObjects)
 
     def write_f06(self, f06OutName, is_mag_phase=False, make_file=True,
-                 delete_objects=True):
+                 delete_objects=True, end_flag=False):
         """
         Writes an F06 file based on the data we have stored in the object
 
@@ -187,7 +243,7 @@ class F06Writer(object):
             from StringIO import StringIO
             f = StringIO()
 
-        #f.write(self.make_f06_header())
+        f.write(self.make_f06_header())
         pageStamp = self.make_stamp(self.Title)
         #print "pageStamp = |%r|" %(pageStamp)
         #print "stamp     = |%r|" %(stamp)
@@ -244,37 +300,37 @@ class F06Writer(object):
                     # OES - strain
 
                     # rods
-                    self.rodStrain, self.nonlinearRodStress, 
-                    
-                    
+                    self.rodStrain, self.nonlinearRodStress,
+
+
                     # bars/beams
-                    self.barStrain, self.beamStrain, 
-                    
+                    self.barStrain, self.beamStrain,
+
                     # bush
                     self.bushStrain,
-                    
+
                     # plates
                     self.plateStrain, self.compositePlateStrain,
                     self.nonlinearPlateStrain,
                     self.ctriaxStrain, self.hyperelasticPlateStress,
-                    
+
                     # solids
                     self.solidStrain,
 
                     #------------------------------------------
                     # OES - stress
-                    
+
                     # rods
-                    self.rodStress, self.nonlinearRodStrain, 
-                    
+                    self.rodStress, self.nonlinearRodStrain,
+
                     # bars/beams
                     self.barStress, self.beamStress,
-                    
+
                     # bush
                     self.bushStress, self.bush1dStressStrain,
-                    
+
                     # plates
-                    self.plateStress, self.compositePlateStress, 
+                    self.plateStress, self.compositePlateStress,
                     self.nonlinearPlateStress,
                     self.ctriaxStress, self.hyperelasticPlateStrain,
                     #self.shearStrain, self.shearStress,
@@ -321,7 +377,7 @@ class F06Writer(object):
                         del result
                     f.write(msg)
                     pageNum += 1
-        f.write(make_end())
+        f.write(make_end(end_flag))
         if not make_file:
             print(f.getvalue())
         f.close()

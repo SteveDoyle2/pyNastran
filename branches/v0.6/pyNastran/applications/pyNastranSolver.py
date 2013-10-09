@@ -10,10 +10,13 @@ from pyNastran.bdf.bdf import BDF, SPC, SPC1
 from pyNastran.f06.f06 import F06
 from pyNastran.op2.op2 import OP2
 
+# Tables
 from pyNastran.op2.tables.oug.oug_displacements import DisplacementObject
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject
 from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import MPCForcesObject
 
+# Stress objects
+from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RodStressObject, RodStrainObject
 
 def partition_sparse(Is, Js, Vs):
     I2 = []
@@ -243,8 +246,8 @@ class Solver(F06, OP2):
         Kgg = zeros((i, i), 'float64')
         #Mgg = zeros((i, i))
 
-        Fg = self.assembleForces(model, case, Fg, nidComponentToID)
-        Kgg = self.assembleGlobalStiffness(model, Kgg, nidComponentToID, Fg)
+        Fg = self.assemble_forces(model, case, Fg, nidComponentToID)
+        Kgg = self.assemble_global_stiffness(model, Kgg, nidComponentToID, Fg)
         return(Kgg, Fg, isSPC, isMPC)
 
     def runSOL101(self, model, case):
@@ -275,13 +278,85 @@ class Solver(F06, OP2):
         print("*U = ", U)
         print("dofsA = ", dofsA)
 
-        self.storeDisplacements(model, U, case)
-        self.writeDisplacements(case)
+        self.store_displacements(model, U, case)
+        self.write_displacements(case)
         q = U
-        for eid, elem in model.elements.iteritems():
-            elem.displacementStress(model, q, self.nidComponentToID)
 
-    def storeDisplacements(self, model, U, case):
+        rods = []
+        type_map = {
+            'CONROD' : rods,
+            'CROD'   : rods,
+        }
+        elements = model.elements
+        for eid, element in elements.iteritems():
+            try:
+                a = type_map[element.type]
+            except KeyError:
+                raise NotImplementedError(element.type)
+            a.append(eid)
+
+        #=========================
+        # RODS
+        rods = array(rods)
+        nrods = len(rods)
+        ox = zeros(nrods, 'float64')
+        ex = zeros(nrods, 'float64')
+        for i, eid in enumerate(rods):
+            element = elements[eid]
+            (exi, oxi) = element.displacementStress(model, q, self.nidComponentToID)
+            ox[i] = oxi
+            ex[i] = exi
+        self.store_rod_oes(model, rods, ex, case, Type='strain')
+        self.store_rod_oes(model, rods, ox, case, Type='stress')
+
+        #=========================
+        self.write_f06('2dTruss.f06')
+
+    def store_rod_oes(self, model, eids, axial, case, Type='stress'):
+        """
+        fills the displacement object
+        """
+        self.iSubcases = []
+        #self.log = None
+        analysis_code = 1
+        transient = False
+        isubcase = case.id
+        is_sort1 = False
+        dt = None
+        format_code = 1  # ???
+        s_code = None
+
+        data_code = {'log': self.log, 'analysis_code': analysis_code,
+                    'device_code': 1, 'table_code': 1, 'sort_code': 0,
+                    'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
+                    'element_name': 'CONROD', 'format_code':format_code,
+                    's_code': s_code,
+                    'nonlinear_factor': None}
+        if Type == 'stress':
+            stress = RodStressObject(data_code, is_sort1, isubcase, dt=False)
+        elif Type == 'strain':
+            stress = RodStrainObject(data_code, is_sort1, isubcase, dt=False)
+        else:
+            raise NotImplementedError(Type)
+
+        data = []
+        i = 0
+        #(elementID, axial, torsion, margin_axial, margin_torsion) = line
+        for (eid, axiali) in zip(eids, axial):
+            line = [eid, axiali, 0., 0., 0.]
+            data.append(line)
+        stress.add_f06_data(data, dt)
+
+        if Type == 'stress':
+            self.rodStress[isubcase] = stress
+        elif Type == 'strain':
+            self.rodStrain[isubcase] = stress
+            stress.dt = None
+        else:
+            raise NotImplementedError(Type)
+        self.iSubcases.append(isubcase)
+
+    def store_displacements(self, model, U, case):
         """
         fills the displacement object
         """
@@ -323,8 +398,8 @@ class Solver(F06, OP2):
         self.displacements[isubcase] = disp
         self.iSubcases.append(isubcase)
 
-    def writeDisplacements(self, case):
-        self.write_f06('2dTruss.f06')
+    def write_displacements(self, case):
+        pass
 
     def setupSOL101(self, model, case):
         # the (GridID,componentID) -> internalID
@@ -396,7 +471,7 @@ class Solver(F06, OP2):
 
         return(Ua, i)
 
-    def assembleGlobalStiffness(self, model, Kgg, Dofs, F):
+    def assemble_global_stiffness(self, model, Kgg, Dofs, F):
         for (eid, elem) in sorted(model.elements.iteritems()):  # CROD, CONROD
 
             # nIJV is the position of the values of K in the dof
@@ -526,7 +601,7 @@ class Solver(F06, OP2):
             raise NotImplementedError(msg)
         return (isMPC)
 
-    def assembleForces(self, model, case, Fg, Dofs):
+    def assemble_forces(self, model, case, Fg, Dofs):
         """very similar to writeCodeAster loads"""
         #print(model.loads)
         (loadID, junk) = model.caseControlDeck.get_subcase_parameter(case.id, 'LOAD')
@@ -576,7 +651,7 @@ class Solver(F06, OP2):
         print("Fg  = ", Fg)
         return Fg
 
-    def writeResults(self, case):
+    def write_results(self, case):
         Us = self.Us
         Um = self.Um
         Ua = self.Ua

@@ -1,33 +1,33 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 
-from numpy import matrix, zeros, array, transpose, dot # ones, 
+from numpy import matrix, zeros, array, transpose, dot # ones,
 from numpy.linalg import norm
 
 from pyNastran.utils import is_string
@@ -68,7 +68,7 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
     def Mass(self):
         r"""
         get the mass of the element.
-        
+
         .. math:: m = \left( \rho A + nsm \right) L
         """
         L = self.Length()
@@ -78,7 +78,7 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
     def Rmatrix(self, model, is3D):
         r"""
         where   :math:`[R]_{ij}` is the tranformation matrix
-        
+
         .. math::
           [R]_{ij} = \left[
           \begin{array}{ccc}
@@ -196,23 +196,27 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         n12 = dofs[(n1, 2)]
         n21 = dofs[(n2, 1)]
         n22 = dofs[(n2, 2)]
-        print("type=%s n1=%s n2=%s" % (self.type, n1, n2))
+        #print("type=%s n1=%s n2=%s" % (self.type, n1, n2))
         #print("n11=%s n12=%s n21=%s n22=%s" %(n11,n12,n21,n22))
 
         q2 = array([q[n11], q[n12], q[n21], q[n22]])
-        print("q[%s] = %s" % (self.eid, q2))
+        #print("q[%s] = %s" % (self.eid, q2))
         #print("Lambda = \n"+str(Lambda))
 
         #print "Lsize = ",Lambda.shape
         #print "qsize = ",q.shape
         u = dot(array(Lambda), q2)
-        #L = self.Length()
-        EL = self.E() / self.Length()
+        du = -u[0] + u[1]
+
+        L = self.Length()
+        E = self.E()
 
         #stressX = -EL*u[0]+EL*u[1]
-        stressX = EL * (-u[0] + u[1])
-        print("stressX = %s [psi]\n" % (stressX))
-        return stressX
+        strainX = du / L
+        stressX = E * strainX
+        #print("strainX = %s [psi]"   % strainX)
+        #print("stressX = %s [psi]\n" % stressX)
+        return strainX, stressX
 
     def Stiffness1D(self, model):  # CROD/CONROD
         """
@@ -236,16 +240,16 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         A = self.Area()
         #mat = self.mid
         E = self.E()
-        print("A = ", A)
-        print("E = ", E)
-        print("L = ", L)
+        #print("A = ", A)
+        #print("E = ", E)
+        #print("L = ", L)
         #ki = 1.
         ki = A * E / L
         #ki = 250000.
         #knorm = 250000.
         K = ki * matrix([[1., -1.], [-1., 1.]])  # rod
 
-        print("A=%g E=%g L=%g  AE/L=%g" % (A, E, L, A * E / L))
+        #print("A=%g E=%g L=%g  AE/L=%g" % (A, E, L, A * E / L))
         #print "K = \n",K
         return K
 
@@ -459,7 +463,7 @@ class CROD(RodElement):
         assert isinstance(nsm, float), 'nsm=%r' % nsm
         assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
         assert isinstance(mass, float), 'mass=%r' % mass
-        
+
         c = self.Centroid()
         for i in range(3):
             assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
@@ -527,7 +531,7 @@ class CTUBE(RodElement):
                 pass
             else:
                 raise NotImplementedError('_verify does not support self.pid.mid.type=%s' % self.pid.mid.type)
-        
+
         c = self.Centroid()
         for i in range(3):
             assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
@@ -597,7 +601,7 @@ class CONROD(RodElement):
         assert isinstance(nsm, float), 'nsm=%r' % nsm
         assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
         assert isinstance(mass, float), 'mass=%r' % mass
-        
+
         c = self.Centroid()
         for i in range(3):
             assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
@@ -687,7 +691,7 @@ class CBAR(LineElement):
       PA PB W1A W2A W3A W1B W2B W3B
 
     or::
-    
+
       CBAR EID PID GA GB G0 OFFT
       PA PB W1A W2A W3A W1B W2B W3B
 
@@ -920,7 +924,7 @@ class CBAR(LineElement):
 
         n0, n1 = self.nodeIDs()
                  # u1          v1          theta1         u2,v2,w2
-                 
+
         nIJV = [
                  (n0, 1), (n0, 2), (n0, 5),  (n1, 1), (n1, 2), (n1, 5),  # X1
                  (n0, 1), (n0, 2), (n0, 5),  (n1, 1), (n1, 2), (n1, 5),  # Y1
