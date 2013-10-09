@@ -223,8 +223,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
             #print "x1=%s y1=%s z1=%s" %(x1,y1,z1)
             line = lines[n]
             (x1, y1, z1) = float(line[0:10]), float(line[10:20]), float(line[20:30])
-            (x2, y2, z2) = float(line[30:40]), float(lines[
-                n][40:50]), float(line[50:60])
+            (x2, y2, z2) = float(line[30:40]), float(lines[n][40:50]), float(line[50:60])
             point1 = array([x1, y1, z1])
             point2 = array([x2, y2, z2])
             #point1 = [x1,y1,z1]
