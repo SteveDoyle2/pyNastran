@@ -1,0 +1,40 @@
+DONE...
+
+both
+ - nastran input/output
+ - panair input
+ - cart3d input/output
+ - lawgs input (broken???)
+ - edges
+ - nodal or centroidal
+ - window title
+ - auto-importing
+ - loading of geometry/results from command line
+
+wx
+ - hotkeys
+
+qt
+ - logger
+ - reload button
+ - zoom/rotate/snap buttons
+
+--------------------------------------------
+NOT DONE...
+
+both
+ - make both nodal/centroidal work regardless of flag
+ - make vector results work
+ - cell picker to get element info
+ - panair results
+
+--------------------------------------------
+wx
+ - zoom/rotate/snap buttons
+ - reload button
+ - logging
+
+--------------------------------------------
+qt
+ - zoom/rotate/snap hotkeys
+ - unbreak hotkeys (p, ???)

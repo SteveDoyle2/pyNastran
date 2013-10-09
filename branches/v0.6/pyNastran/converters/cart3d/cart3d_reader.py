@@ -30,7 +30,7 @@ class Cart3DReader(object):
         self.isHalfModel = True
         self.readHalf = False
 
-        self.cartType = None  # grid, result
+        self.cartType = None  # grid, results
         self.nPoints = None
         self.nElements = None
         self.infile = None
@@ -158,7 +158,7 @@ class Cart3DReader(object):
     def make_mirror_model(self, nodes, elements, regions, loads, axis='y', tol=0.000001):
         """
         Makes a full cart3d model about the given axis.
-        
+
         :param nodes:    the nodes;     (nnodes,    3) ndarray
         :param elements: the elmements; (nelements, 3) ndarray
         :param regions:  the regions;   (nelements)    ndarray
@@ -196,29 +196,29 @@ class Cart3DReader(object):
         nnodes_upper, three = nodes_upper.shape
         elements_upper = elements.copy()
         nelements, three = elements.shape
-        
+
         # remap the mirrored nodes with the new node ids
         for eid in xrange(nelements):
             element = elements_upper[eid, :]
             for i, eidi in enumerate(element):
                 if eidi in iy0:
                     elements_upper[eid][i] = nnodes_upper + eidi
-                
+
                 # we need to reverse the element in order to get
                 # the proper normal vector
                 elements_upper[eid] = elements_upper[eid, ::-1]
-            
+
         elements2 = vstack([elements, elements_upper])
         nelements2, three = elements2.shape
         assert nelements2 > nelements
-        
+
         nregions = len(unique(regions))
         regions_upper = regions.copy() + nregions
         regions2 = hstack([regions, regions_upper])
 
         loads2 = {}
         for key, data in loads.iteritems():
-        
+
             # flip the sign on the flipping axis terms
             if ((key in ['U', 'rhoU'] and ax2==0) or
                 (key in ['V', 'rhoV'] and ax2==1) or
@@ -254,7 +254,7 @@ class Cart3DReader(object):
     def make_half_model(self, nodes, elements, regions, loads=None, axis='y', remap_nodes=True):
         """
         Makes a half model from a full model
-        
+
         ...note:: Cp is really loads['Cp'] and was meant for loads analysis only
         """
         if loads is None:
@@ -286,7 +286,7 @@ class Cart3DReader(object):
         assert 0 < nnodes2 < nnodes, 'nnodes=%s nnodes2=%s'  % (nnodes, nnodes2)
         #print 'nnodes=%s nnodes2=%s'  % (nnodes, nnodes2)
         #print 'inodes_save=%s'  % (inodes_save), len(inodes_save)
-        
+
         inodes_save += 1  # +1 is so we don't have to shift inode
         # ..todo:: still need to handle element's node id renumbering
         ielements_save = set([])
@@ -309,7 +309,7 @@ class Cart3DReader(object):
                 #print "saving %s" % ielement
                 ielements_save.add(ielement)
             #if ielement == 73560:
-                #print element                
+                #print element
                 #aaa
 
         ielements_save = list(ielements_save)
@@ -321,7 +321,7 @@ class Cart3DReader(object):
         # renumbers mesh
         nelements2, three = elements2.shape
         assert 0 < nelements2 < nelements, 'nelements=%s nelements2=%s'  % (nelements, nelements2)
-        
+
         remap_nodes = False
         if amax(elements2) > len(inodes_save):
             aa
@@ -353,7 +353,7 @@ class Cart3DReader(object):
         nodes2 = {}
         elements2 = {}
         regions2 = {}
-        
+
         nnodes, three = nodes.shape
         for inode in xrange(nnodes):
             node = nodes[inode]
@@ -390,7 +390,7 @@ class Cart3DReader(object):
         self.write_points(f, points, is_binary, float_fmt)
         self.write_elements(f, elements, is_binary, int_fmt)
         self.write_regions(f, regions, is_binary)
-        
+
         if is_loads:
             assert is_binary is False, 'is_binary=%r is not supported for loads' % is_binary
             self.write_loads(f, loads, is_binary, float_fmt)
@@ -399,13 +399,13 @@ class Cart3DReader(object):
     def write_header(self, f, points, elements, nloads, is_binary=False):
         npoints, three = points.shape
         nelements, three = elements.shape
-        
+
         if is_binary:
             if nloads == 6:
                 msg = pack('>iiiii', 3*4, npoints, nelements, 6, 4)
             else:
                 msg = pack('>iiii', 2*4, npoints, nelements, 4)
-            
+
             int_fmt = None
         else:
             if nloads == 6:
@@ -518,7 +518,7 @@ class Cart3DReader(object):
             self.nPoints = int(sline[0])
             self.nElements = int(sline[1])
             self.nResults = int(sline[2])
-            self.cartType = 'result'
+            self.cartType = 'results'
         else:
             raise ValueError('invalid result type')
 
@@ -630,7 +630,7 @@ class Cart3DReader(object):
 
         # ???
         rho,rhoU,rhoV,rhoW,rhoE
-        
+
         :param result_names: the results to read; default=None -> All
             result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'rhoE',
                             'Mach', 'U', 'V', 'W', 'E']
@@ -660,11 +660,11 @@ class Cart3DReader(object):
                 #else:
                 #    p=0.
             sline = self._get_list(sline)
-            
+
             # Cp
             # rho       rhoU      rhoV      rhoW      E
-            # 0.416594 
-            # 1.095611  0.435676  0.003920  0.011579  0.856058  
+            # 0.416594
+            # 1.095611  0.435676  0.003920  0.011579  0.856058
             results[ipoint, :] = sline
 
             #p=0
@@ -681,11 +681,11 @@ class Cart3DReader(object):
                     #print("nid=%s Cp=%s mach=%s rho=%s rhoU=%s rhoV=%s rhoW=%s" % (pointNum, cp, mach, rho, rhoU, rhoV, rhoW))
             #print "pt=%s i=%s Cp=%s p=%s" %(pointNum,i,sline[0],p)
         del sline
-        
+
         #print "shpae =", results.shape
         return self._calculate_results(result_names, results)
 
-    def _calculate_results(result_names, results):
+    def _calculate_results(self, result_names, results):
         Cp = results[:, 0]
         rho = results[:, 1]
         rhoU = results[:, 2]
@@ -695,7 +695,7 @@ class Cart3DReader(object):
 
         ibad = where(rho <= 0.000001)[0]
         if len(ibad) > 0:
-        
+
             if 'Mach' in result_names:
                 Mach = sqrt(rhoU**2 + rhoV**2 + rhoW**2)# / rho
                 Mach[ibad] = 0.0
@@ -711,7 +711,7 @@ class Cart3DReader(object):
             #if 'rhoE' in result_names:
                 #rhoE = rhoE / rho
                 #e[ibad] = 0.0
-            
+
             is_bad = True
             n = 0
             #for i in ibad:
@@ -723,8 +723,9 @@ class Cart3DReader(object):
                 #    break
         else:
             is_bad = False
-        
+
         loc = locals()
+        loads = {}
         if 'Cp' in result_names:
             loads['Cp'] = Cp
         if 'rhoU' in result_names:
@@ -743,7 +744,7 @@ class Cart3DReader(object):
             if not is_bad:
                 #Mach = sqrt(rhoU**2 + rhoV**2 + rhoW**2) / rho
                 Mach = sqrt(rhoU**2 + rhoV**2 + rhoW**2)
-                
+
             loads['Mach'] = Mach
         if 'U' in result_names:
             if not is_bad:
@@ -761,7 +762,7 @@ class Cart3DReader(object):
             #if not is_bad:
                 #E = rhoE / rho
             loads['E'] = E
-        
+
         #i = where(Mach == max(Mach))[0][0]
         #self.log.info("i=%s Cp=%s rho=%s rhoU=%s rhoV=%s rhoW=%s Mach=%s" % (i, Cp[i], rho[i], rhoU[i],
         #              rhoV[i], rhoW[i], Mach[i]))
@@ -863,7 +864,7 @@ class Cart3DReader(object):
         points = zeros(npoints*3, 'float64')
         while size > 12000:  # 12k = 4 bytes/float*3 floats/point*1000 points
             data = self.infile.read(4 * 3000)
-            
+
             nodeXYZs = unpack(Format, data)
             points[n:n+3000] = nodeXYZs
             n += 3000
@@ -962,7 +963,7 @@ class Cart3DReader(object):
             except:
                 print "len =", len(data)
                 raise
-                
+
             r = nelements
             assert len(regions[nr:]) == len(region_data), 'len(regions[nr:]=%s len(region_data)=%s' % ( len(regions[nr:]), len(region_data) )
             regions[nr:] = region_data
@@ -979,16 +980,16 @@ class Cart3DReader(object):
 if __name__ == '__main__':
     import time
     t0 = time.time()
-    
+
     # binary
     #cart3dGeom = os.path.join('flat.tri')  # half
     #full_model = os.path.join('flat_full.tri')
-    
+
     cart3dGeom = 'Cart3d_bwb.i.tri'
     rewrite    = 'Cart3d_bwb_rewrite.tri'
     half_model = 'Cart3d_bwb_half.tri'
     full_model = 'Cart3d_bwb_full.tri'
-    
+
     log = None
     debug = False
     cart = Cart3DReader(log, debug)  # ascii/binary
@@ -1001,7 +1002,7 @@ if __name__ == '__main__':
 
     (points2, elements2, regions2, loads2) = cart.make_mirror_model(points, elements, regions, loads)
     cart.write_cart3d(full_model, points2, elements2, regions2)
-    
+
     print "dt = ", time.time() - t0
     sys.exit('made half model')
 

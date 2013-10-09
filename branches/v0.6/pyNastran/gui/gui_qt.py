@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
+
+# Qt
 try:
     from PySide import QtCore, QtGui
     fmode = 1
@@ -10,22 +12,27 @@ except ImportError:
     except ImportError:
         msg = 'Failed to import PySide or PyQt4'
         raise ImportError(msg)
-
 assert fmode in [1, 2]
-#from PyQt4 import QtGui, QtCore
+
+# standard library
 import sys
 import os.path
 import cgi #  html lib
 import datetime
+import traceback
 
+# 3rd party
 from numpy import ndarray, amax, amin
-
-from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
+from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
+# pyNastran
 import pyNastran
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import SimpleLogger
+from pyNastran.gui.formats import NastranIO, Cart3dIO, PanairIO, LaWGS_IO, is_nastran, is_cart3d, is_panair, is_lawgs
+from pyNastran.gui.gui_inputs import get_inputs
+
 pkg_path = pyNastran.__path__[0]
 icon_path = os.path.join(pkg_path, 'gui', 'icons')
 
@@ -34,16 +41,12 @@ icon_path = os.path.join(pkg_path, 'gui', 'icons')
 #### http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/help-hint.png
 #### http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/view-refresh-8.png
 
-
-from pyNastran.gui.formats import NastranIO, Cart3dIO, PanairIO, LaWGS_IO, is_nastran, is_cart3d, is_panair, is_lawgs
-from pyNastran.gui.gui_inputs import get_inputs
-
 # kills the program when you hit Cntl+C from the command line
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
 
+class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
     def __init__(self, inputs):
         QtGui.QMainWindow.__init__(self)
 
@@ -56,7 +59,6 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
 
         #-------------
         # inputs dict
-
         self.is_edges = inputs['is_edges']
         self.is_nodal = inputs['is_nodal']
         self.is_centroidal = inputs['is_centroidal']
@@ -68,13 +70,16 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
 
         #self.format = ''
         debug = inputs['debug']
+        self.debug = debug
         assert debug in [True, False], 'debug=%s' % debug
         shots = inputs['shots']
         if shots is None:
             shots = []
 
         #-------------
+        self.format = None
         self.infile_name = None
+        self.out_filename = None
         self.dirname = ''
         self.last_dir = '' # last visited directory while opening file
 
@@ -96,7 +101,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         # edges
         self.edgeActor = vtk.vtkActor()
         self.edgeMapper = vtk.vtkPolyDataMapper()
-        
+
         # cell picker
         self.cell_picker = vtk.vtkCellPicker()
         self.cell_picker.SetTolerance(0.0005)
@@ -135,64 +140,40 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
 
     def on_cell_picker(self):
         worldPosition = self.cell_picker.GetPickPosition()
-        self.log_command("on_cell_picker")
+        cell_id = self.cell_picker.GetCellId()
+        ds = self.cell_picker.GetDataSet()
+        self.log_command("on_cell_picker()")
         self.log_info("worldPosition = %s" % str(worldPosition))
+        self.log_info("cell_id = %s" % cell_id)
+        self.log_info("data_set = %s" % ds)
 
     def load_batch_inputs(self, inputs):
         if not inputs['format']:
             return
-        format = inputs['format'].lower()
+        form = inputs['format'].lower()
         input = inputs['input']
         output = inputs['output']
-        print('format=%r input=%r output=%r' % (format, input, output))
-        if format is not None and format not in ['panair', 'cart3d', 'lawgs', 'nastran']:
-            self.log_error('---invalid format=%r' % format)
-        elif format and input is not None:
-            format = format.lower()
-            dirname = os.path.dirname(input)
-            inputbase = input
-
-            if not os.path.exists(input):
-                msg = 'input file=%r does not exist' % input
-                self.log_error(msg)
-                return
-
-            if format=='panair' and is_panair:
-                print("loading panair")
-                self.load_panair_geometry(inputbase, dirname)
-            elif format=='nastran' and is_nastran:
-                print("loading nastran")
-                self.on_load_geometry(input, 'nastran')
-                print "output", output
-            elif format=='cart3d' and is_cart3d:
-                print("loading cart3d")
-                self.load_cart3d_geometry(inputbase, dirname)
-            elif format=='lawgs' and is_lawgs:
-                print("loading lawgs")
-                self.load_LaWGS_geometry(inputbase, dirname)
-            else:
-                pass
-                sys.exit('\n---unsupported format=%r' % format)
-            #self.UpdateWindowName(input)
-            self.set_window_title(input)
-            self.format = format
-            if output:
-                print "format=%r" % format
-                print "output=%r" % output
-                self.on_load_results(output)
-            #self.Update()
-            #self._update_camera()
-            self._simulate_key_press('r')
-            self.vtk_interactor.Modified()
-        #else:
-            #self.scalarBar.VisibilityOff()
-            #self.scalarBar.Modified()
+        is_failed = self.on_load_geometry(input, form)
+        if is_failed:
+            return
+        if output:
+            print "format=%r" % format
+            print "output=%r" % output
+            self.on_load_results(output)
+        self._simulate_key_press('r')
+        self.vtk_interactor.Modified()
 
     def logg_msg(self, typ, msg):
         """
         Add message to log widget trying to choose right color for it.
         @param msg message to be displayed
         """
+        _fr =  sys._getframe(4)  # jump to get out of the logger code
+        n = _fr.f_lineno
+        fn = os.path.basename(_fr.f_globals['__file__'])
+
+        msg = '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg)
+
         tim = datetime.datetime.now().strftime('[%d-%m-%Y %H:%M:%S]')
         msg = cgi.escape(msg)
         #message colors
@@ -265,7 +246,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
     def set_window_title(self, fname=None):
         msg = "pyNastran v%s"  % pyNastran.__version__
         if fname:
-            msg += ' - %s' % fname
+            msg += ' - %s' % os.path.abspath(fname)
         self.setWindowTitle(msg)
 
     def init_ui(self):
@@ -336,7 +317,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
           ('magnify', 'Magnify', os.path.join(icon_path, '+zoom.png'), 'M', 'Increase Magnfication', self.on_increase_magnification),
           ('shrink', 'Shrink', os.path.join(icon_path, '-zoom.png'), 'm', 'Decrease Magnfication', self.on_decrease_magnification),
 
-          #('cell_pick', 'Cell Pick', '', 'CTRL+K', 'PickTip', self.on_cell_picker),
+          ('cell_pick', 'Cell Pick', '', 'CTRL+K', 'PickTip', self.on_cell_picker),
 
           ('rotate_clockwise', 'Rotate Clockwise', os.path.join(icon_path, 'tclock.png'), 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
           ('rotate_cclockwise', 'Rotate Counter-Clockwise', os.path.join(icon_path, 'tcclock.png'), 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
@@ -345,6 +326,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
           ('scshot', 'Take a Screenshot', os.path.join(icon_path, 'tcamera.png'), 'CTRL+I', 'Take a Screenshot of current view', self.take_screenshot),
           ('about', 'About pyNastran GUI', os.path.join(icon_path, 'tabout.png'), 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
           ('creset', 'Reset camera view', os.path.join(icon_path, 'trefresh.png'), 'r', 'Reset the camera view to default', self.on_reset_camera),
+          ('reload', 'Reload model', os.path.join(icon_path, 'treload.png'), 'r', 'Reload the model', self.on_reload),
 
           ('cycle_res', 'Cycle Results', os.path.join(icon_path, 'cycle_results.png'), 'CTRL+L', 'Changes the result case', self.cycleResults),
 
@@ -392,7 +374,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                            (self.menu_view,  ('scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col')),
                            (self.menu_window,('toolbar', 'reswidget', 'logwidget')),
                            (self.menu_help,  ('about',)),
-                           (self.toolbar, ('cell_pick', 'open_bdf', 'open_op2', 'cycle_res',
+                           (self.toolbar, ('cell_pick', 'reload', 'open_bdf', 'open_op2', 'cycle_res',
                                            'x', 'y', 'z', 'X', 'Y', 'Z',
                                            'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
                                            'wireframe', 'surface', 'edges', 'creset', 'scshot', '', 'exit'))]:
@@ -598,8 +580,13 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         self.scalarBar.VisibilityOff()
         #return scalarBar
 
+    def on_reload(self):
+        print "self.infile_name =", self.infile_name
+        self.on_load_geometry(self.infile_name, self.format)
+
     def on_load_geometry(self, infile_name=None, geometry_format=None):
         wildcard = ''
+        is_failed = False
 
         if infile_name:
             geometry_format = geometry_format.lower()
@@ -611,11 +598,14 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                 load_function = self.load_cart3d_geometry
             elif geometry_format == 'panair':
                 has_results = False
-                load_function = None
+                load_function = self.load_panair_geometry
             elif geometry_format == 'lawgs':
                 has_results = False
                 load_function = None
             else:
+                self.log_error('---invalid format=%r' % geometry_format)
+                is_failed = True
+                return is_failed
                 raise NotImplementedError('on_load_geometry; infile_name=%r format=%r' % (infile_name, geometry_format))
             formats = [geometry_format]
             filter_index = 0
@@ -638,7 +628,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
             if is_panair:
                 wildcard_list.append("Panair (*.inp)")
                 formats.append('Panair')
-                has_results_list.append(False)
+                has_results_list.append(True)
                 load_functions.append(self.load_panair_geometry)
             if is_lawgs:
                 wildcard_list.append("LaWGS (*.inp)")
@@ -656,19 +646,21 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                 #print "infile_name = %r" % infile_name
                 #print "wildcard_index = %r" % wildcard_index
                 if not infile_name:
-                    return # user clicked cancel
+                    is_failed = True
+                    return is_failed # user clicked cancel
                 filter_index = wildcard_list.index(wildcard_index)
 
             geometry_format = formats[filter_index]
             load_function = load_functions[filter_index]
             has_results = has_results_list[filter_index]
+            return is_failed
 
         if load_function is not None:
             self.last_dir = os.path.split(infile_name)[0]
 
-            #self.grid.Reset()
+            self.grid.Reset()
             self.grid.Modified()
-            #self.grid2.Reset()
+            self.grid2.Reset()
             self.grid2.Modified()
             #gridResult.Reset()
             #gridResult.Modified()
@@ -679,7 +671,12 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                 return
 
             self.log_info("reading %s file %r" % (geometry_format, infile_name))
-            has_results = load_function(infile_name, self.last_dir)
+            try:
+                has_results = load_function(infile_name, self.last_dir)
+            except Exception as e:
+                msg = traceback.format_exc()
+                self.log_error(msg)
+                return
             #self.vtk_panel.Update()
             self.rend.ResetCamera()
 
@@ -690,10 +687,12 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
             else:
                 enable = False
             #self.load_results.Enable(enable)
+
             self.set_window_title(infile_name)
         else: # no file specified
             return
         print "on_load_geometry(%r)" % infile_name
+        self.infile_name = infile_name
         self.log_command("on_load_geometry(%r, %r)" % (infile_name, self.format))
 
     def _create_load_file_dialog(self, qt_wildcard, Title):
@@ -738,7 +737,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                 elif geometry_format == 'panair':
                     has_results = False
                     wildcard = "Panair (*.agps);;Panair (*.out)"
-                    load_functions = [None]
+                    load_functions = [self.load_panair_results]
                 elif geometry_format == 'lawgs':
                     has_results = False
                     load_functions = [None]
@@ -758,7 +757,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                 elif geometry_format == 'cart3d':
                     load_function = self.load_cart3d_results
                 #elif geometry_format == 'panair':
-                    #load_function = None
+                    #load_function = self.load_panair_results
                 #elif geometry_format == 'lawgs':
                     #load_function = None
                 else:
@@ -774,6 +773,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
             self.last_dir = os.path.split(out_filename)[0]
             load_function(out_filename, self.last_dir)
             print "on_load_results(%r)" % out_filename
+            self.out_filename = out_filename
             self.log_command("on_load_results(%r)" % out_filename)
 
     def load_op2(self):
@@ -913,10 +913,12 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
             (subcaseID, resultType, vectorSize, location, data_format) = key
 
             gridResult.SetNumberOfComponents(vectorSize)
-            if location == 'centroid' and self.is_centroidal:
+            if location == 'centroid':
+            #if location == 'centroid' and self.is_centroidal:
                 #allocationSize = vectorSize*location (where location='centroid'-> self.nElements)
                 gridResult.Allocate(self.nElements, 1000)
-            elif location == 'nodal' and self.is_nodal:
+            #elif location == 'nodal' and self.is_nodal:
+            elif location == 'nodal':
                 #allocationSize = vectorSize*self.nNodes # (where location='node'-> self.nNodes)
                 gridResult.Allocate(self.nNodes * vectorSize, 1000)
                 #gridResult.SetNumberOfComponents(vectorSize)
@@ -990,19 +992,28 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
             #print('gridResult', dir(gridResult))
             #print('gridResult', gridResult)
             print("location =", location)
-            if location == 'centroid' and self.is_centroidal:
-                #self.grid.GetPointData().Reset()
+
+            npoints = self.nPoints()
+            ncells = self.nCells()
+
+            if location == 'centroid':
+            #if location == 'centroid' and self.is_centroidal:
+                if npoints:
+                    point_data = self.grid.GetPointData()
+                    point_data.Reset()
                 self.grid.GetCellData().SetScalars(gridResult)
                 self.log_info("***centroidal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
-            elif location == 'nodal' and self.is_nodal:
-                self.grid.GetCellData().Reset()
+            elif location == 'nodal':
+            #elif location == 'nodal' and self.is_nodal:
+                if ncells:
+                    cell_data = self.grid.GetCellData()
+                    print dir(cell_data)
+                    cell_data.Reset()
                 if vectorSize == 1:
                     self.log_info("***nodal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                     self.grid.GetPointData().SetScalars(gridResult)
-                    #self.grid.Modified()
                 else:
                     self.log_info("***nodal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
-                    #pass
                     self.grid.GetPointData().SetScalars(gridResult)
                 #print "***nodal skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label)
             else:
@@ -1011,6 +1022,19 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
             self.grid.Modified()
             self.vtk_interactor.Render()
 
+    def nCells(self):
+        try:
+            cell_data = self.grid.GetCellData()
+            return cell_data.GetNumberOfCells()
+        except AttributeError:
+            return 0
+
+    def nPoints(self):
+        try:
+            point_data = self.grid.GetPointData()
+            return point_data.GetNumberOfPoints()
+        except AttributeError:
+            return 0
 
     def incrementCycle(self):
         if self.iCase is not self.nCases:
