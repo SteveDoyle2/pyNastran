@@ -122,7 +122,7 @@ class Solver(F06, OP2):
     """
     def __init__(self):
         F06.__initAlt__(self)
-        OP2.__objectsInit__(self)
+        OP2.__init__(self, '')
         self.nU = 0
         self.nUs = 0
         self.nUm = 0
@@ -156,7 +156,7 @@ class Solver(F06, OP2):
         #print cc.subcases
         analysisCases = []
         for (isub, subcase) in sorted(cc.subcases.iteritems()):
-            if subcase.hasParameter('LOAD'):
+            if subcase.has_parameter('LOAD'):
                 analysisCases.append(subcase)
 
         #print analysisCases
@@ -166,7 +166,7 @@ class Solver(F06, OP2):
             print("STRESS value   = %s" % (value))
             print("STRESS options = %s" % (options))
 
-            if case.hasParameter('TEMPERATURE(INITIAL)'):
+            if case.has_parameter('TEMPERATURE(INITIAL)'):
                 (value, options) = case.get_parameter('TEMPERATURE(INITIAL)')
                 print('value   = %s' % (value))
                 print('options = %s' % (options))
@@ -180,11 +180,11 @@ class Solver(F06, OP2):
 
         isubcase = case.id
         if model.sol in sols:
-            if case.hasParameter('TITLE'):
+            if case.has_parameter('TITLE'):
                 (self.Title, options) = case.get_parameter('TITLE')
             else:
                 self.Title = 'pyNastran Default Title'
-            if case.hasParameter('SUBTITLE'):
+            if case.has_parameter('SUBTITLE'):
                 (self.Subtitle, options) = case.get_parameter('SUBTITLE')
             else:
                 self.Subtitle = 'DEFAULT'
@@ -442,7 +442,7 @@ class Solver(F06, OP2):
         return Kgg
 
     def applySPCs2(self, model, case, nidComponentToID):
-        if case.hasParameter('SPC'):
+        if case.has_parameter('SPC'):
             # get the value, 1 is the options (SPC has no options)
             spcID = case.get_parameter('SPC')[0]
             SpcSet = model.SPC(spcID)
@@ -456,7 +456,7 @@ class Solver(F06, OP2):
         isSPC = False
         print('*Us', self.Us)
         print('*iUs', self.iUs)
-        if case.hasParameter('SPC'):
+        if case.has_parameter('SPC'):
             isSPC = True
             spcs = model.spcObject2.constraints
             # get the value, 1 is the options (SPC has no options)
@@ -509,7 +509,7 @@ class Solver(F06, OP2):
 
     def applyMPCs(self, model, case, nidComponentToID):
         isMPC = False
-        if case.hasParameter('MPC'):
+        if case.has_parameter('MPC'):
             isMPC = True
             mpcs = model.mpcObject2.constraints
             # get the value, 1 is the options (MPC has no options)
@@ -529,10 +529,9 @@ class Solver(F06, OP2):
     def assembleForces(self, model, case, Fg, Dofs):
         """very similar to writeCodeAster loads"""
         #print(model.loads)
-        (loadID, junk) = model.caseControlDeck.get_subcase_parameter(case.id,
-                                                                   'LOAD')
+        (loadID, junk) = model.caseControlDeck.get_subcase_parameter(case.id, 'LOAD')
         print("loadID = ", loadID)
-        LoadSet = model.Load(loadID)
+        LoadSet = model.Load(loadID, 'loadID=%s' % loadID)
 
         self.gravLoad = array([0., 0., 0.])
         for load_set in LoadSet:
@@ -587,7 +586,7 @@ class Solver(F06, OP2):
         iUa = self.iUa
         pageNum = 1
 
-        if case.hasParameter('DISPLACEMENT'):
+        if case.has_parameter('DISPLACEMENT'):
             (value, options) = case.get_parameter('DISPLACEMENT')
             if options is not []:
                 UgSeparate = [[Ua, iUa], [Us, iUs], [Um, iUm]]
@@ -601,7 +600,7 @@ class Solver(F06, OP2):
                 if 'PLOT' in options:
                     op2.write(result.writeOP2(self.Title, self.Subtitle))
 
-        if case.hasParameter('SPCFORCES'):
+        if case.has_parameter('SPCFORCES'):
             (value, options) = case.get_parameter('SPCFORCES')
             if options is not []:
                 SPCForces = Ksa * Ua + Kss * Us
@@ -615,7 +614,7 @@ class Solver(F06, OP2):
                 if 'PLOT' in options:
                     op2.write(result.writeOP2(Title, Subtitle))
 
-        if case.hasParameter('MPCFORCES'):
+        if case.has_parameter('MPCFORCES'):
             if options is not []:
                 (value, options) = case.get_parameter('MPCFORCES')
                 MPCForces = Kma * Ua + Kmm * Um
@@ -629,7 +628,7 @@ class Solver(F06, OP2):
                 if 'PLOT' in options:
                     f06.write(result.writeOP2(Title, Subtitle))
 
-        if case.hasParameter('GPFORCE'):
+        if case.has_parameter('GPFORCE'):
             if options is not []:
                 (value, options) = case.get_parameter('GPFORCE')
                 AppliedLoads = Kaa * Ua
@@ -645,7 +644,7 @@ class Solver(F06, OP2):
                 if 'PLOT' in options:
                     op2.write(result.writeOP2(Title, Subtitle))
 
-        if case.hasParameter('STRAIN'):
+        if case.has_parameter('STRAIN'):
             if options is not []:
                 (value, options) = case.get_parameter('STRAIN')
 
