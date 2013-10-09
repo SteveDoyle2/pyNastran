@@ -22,7 +22,7 @@ class PanairIO(object):
 
         model = PanairGrid(panairFileName, log=self.log, debug=self.debug)
         self.modelType = model.modelType
-        model.readGrid()
+        model.read_panair()
 
         nodes, elements, regions = model.getPointsElementsRegions()
         #for nid,node in enumerate(nodes):

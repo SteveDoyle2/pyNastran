@@ -7,7 +7,7 @@ from math import ceil, sin, cos, radians
 from numpy import array, zeros, ones
 
 
-from panairGridPatch import PanairPatch, PanairWakePatch, PanairGridHelper
+from panairGridPatch import PanairPatch, PanairWakePatch
 from panairWrite import PanairWrite
 from pyNastran.utils.log import get_logger
 from pyNastran.utils import print_bad_path
@@ -20,10 +20,10 @@ from pyNastran.utils import print_bad_path
 
 
 def fortran_value(value):
-    return "%8.4E" % (value)
+    return "%8.4E" % value
 
 
-class PanairGrid(PanairGridHelper, PanairWrite):
+class PanairGrid(object):
     modelType = 'panair'
 
     def __init__(self, infileName, log=None, debug=True):
@@ -32,6 +32,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         self.infileName = infileName
         self.nNetworks = 0
         self.patches = {}
+        self.lines = []
 
         self.alphas = [0.]
         self.ncases = None
@@ -78,7 +79,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
 
         self.log = get_logger(log, 'debug' if debug else 'info')
 
-    def printFile(self):
+    def print_file(self):
         msg = ''
         for i, line in enumerate(self.lines):
             msg += "%6s %s" % (i + 1, line)
@@ -110,7 +111,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
     def nPanels(self):
         totalNPanels = 0
         for patchID in xrange(self.nPatches()):
-            patch = self.patch(patchID)
+            patch = self.get_patch(patchID)
             if patch.kt == 1:
                 totalNPanels += patch.nPanels()
                 #self.log.debug("nPanels = %s" % (totalNPanels))
@@ -119,10 +120,10 @@ class PanairGrid(PanairGridHelper, PanairWrite):
     def nPatches(self):
         return len(self.patches)
 
-    def patch(self, ID):
+    def get_patch(self, ID):
         return self.patches[ID]
 
-    def updateCases(self):
+    def update_cases(self):
         """
         reduces confusion by only printing cases that will run
         """
@@ -132,8 +133,8 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         if len(self.betas) > self.ncases:
             self.betas = self.alphas[:self.ncases]
 
-    def writeGrid(self, outfileName):
-        self.updateCases()
+    def write_panair(self, outfileName):
+        self.update_cases()
         outfile = open(outfileName, 'wb')
         outfile.write(self.titleSection)
         outfile.write(self.write_data_check())
@@ -157,12 +158,12 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         outfile.write(self.write_printout())
 
         outfile.write(self.peaSection)
-        outfile.write(self.writeLiberalizedAbutments())
+        outfile.write(self.write_liberalized_abutments())
         outfile.write(self.write_end())
 
         outfile.close()
 
-    def removeComments(self, lines):
+    def remove_comments(self, lines):
         lines2 = []
         for line in lines:
             line = line.rstrip().lower()
@@ -171,7 +172,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
                 if '=' is not line[0]:
                     self.log.debug("line[0] -> %s" % (line[0]))
                     line = line.split('=')[0]
-                    self.log.debug("******")
+                    #self.log.debug("******")
                     lines2.append(line)
                 # else: skip
             else:
@@ -179,19 +180,19 @@ class PanairGrid(PanairGridHelper, PanairWrite):
 
         return lines2
 
-    def getTitle(self, section):
+    def _read_title(self, section):
         #print "hi"
         #self.title = section[1:]
         self.titleSection = '\n'.join(section) + '\n'
         self.titleLines = section[1:]
         return True
 
-    def getDataCheck(self, section):
+    def _read_data_check(self, section):
         self.dataCheck = int(float(section[1][0:10]))
         #self.dataCheck = 2
         return True
 
-    def getSymmetry(self, section):
+    def _read_symmetry(self, section):
         """
         @code
         $symmetry - xz plane of symmetry
@@ -213,7 +214,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
             self.XZsymmetry, self.XYsymmetry))
         return True
 
-    def splitPoints(self, lines, nActual, nRemainder):
+    def split_points(self, lines, nActual, nRemainder):
         """
         reads the points
         """
@@ -244,35 +245,35 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         #print "points = ",list_print(points)
         return points
 
-    def addWakePatch(self, netName, options, x, y, z):
+    def add_wake_patch(self, netName, options, x, y, z):
         #print "self.nNetworks = ",self.nNetworks
         patch = PanairWakePatch(self.nNetworks, netName, options, x, y, z, self.log)
         self.msg += patch.process()
-        #print "patch = ",patch
+        #print "get_patch = ",get_patch
         self.patches[patch.iNetwork] = patch  # deepcopy?
         self.nNetworks += 1
 
-    def addPatch(self, netName, kt, cpNorm, x, y, z):
+    def add_patch(self, netName, kt, cpNorm, x, y, z):
         #print "self.nNetworks = ",self.nNetworks
         patch = PanairPatch(self.nNetworks, netName, kt, cpNorm, x, y, z, self.log)
         self.msg += patch.process()
-        #print "patch = ",patch
+        #print "get_patch = ",get_patch
         self.patches[patch.iNetwork] = patch  # deepcopy?
         self.nNetworks += 1
 
-    def findPatchByName(self, netName):
+    def find_patch_by_name(self, netName):
         names = []
         for patchID, patch in self.patches.iteritems():
             #self.log.debug("patchID=%s" % (patchID))
-            #self.log.debug("*patch = %s" %(patch))
-            #self.log.debug("patch.netName=%s" % (patch.netName))
+            #self.log.debug("*get_patch = %s" %(get_patch))
+            #self.log.debug("get_patch.netName=%s" % (get_patch.netName))
             if patch.netName == netName:
                 return patch
             names.append(patch.netName)
-        raise KeyError('couldnt findPatchbyName name=|%s| names=%s' %
-                       (netName, names))
+        msg = 'couldnt findPatchbyName name=|%s| names=%s' % (netName, names)
+        raise KeyError(msg)
 
-    def get_points(self, section):
+    def _read_points(self, section):
         """
         @code
         $points - wing-body  with composite panels
@@ -318,7 +319,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
                 lines = section[n:n + nLines]
                 n += nLines
                 #print '\n'.join(lines)
-                points = self.splitPoints(lines, nFullLines, nPartialLines)
+                points = self.split_points(lines, nFullLines, nPartialLines)
 
                 for i, point in enumerate(points):
                     x[i][j] = point[0]
@@ -327,11 +328,11 @@ class PanairGrid(PanairGridHelper, PanairWrite):
 
             #print "--X--"
             #print x
-            self.addPatch(netName, kt, cpNorm, x, y, z)
+            self.add_patch(netName, kt, cpNorm, x, y, z)
             n += 1
         return True
 
-    def getCircularSection(self, section):
+    def _read_circular_section(self, section):
         """
         @code
         $circular sections - nacelle with composite panels
@@ -498,22 +499,22 @@ class PanairGrid(PanairGridHelper, PanairWrite):
 
             #print "--X--"
             #print x
-            self.addPatch(netName, kt, cpNorm, X, Y, Z)
+            self.add_patch(netName, kt, cpNorm, X, Y, Z)
         return True
 
-    def getGrid(self, section):
+    def _read_grid(self, section):
         self.gridSection = '\n'.join(section) + '\n'
         return True
 
-    def getXYZ(self, section):
+    def _read_xyz(self, section):
         self.xyzSection = '\n'.join(section) + '\n'
         return True
 
-    def getStreamlines(self, section):
+    def _read_streamlines(self, section):
         self.streamlineSection = '\n'.join(section) + '\n'
         return True
 
-    def getPrintout(self, section):
+    def _read_printout(self, section):
         """
         @code
         isings  igeomp  isingp  icontp  ibconp  iedgep
@@ -591,7 +592,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         #.0        .0        1.        0.                  3.
         return True
 
-    def getTrailingWakes(self, section):
+    def _read_trailing_wakes(self, section):
         """
         @code
         $trailing wakes from body
@@ -638,7 +639,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
             netName = section[n][70:80].strip()
             self.log.debug('trailedPanel=%s edgeNumber=%s xWake=%s tWake=%s netName=%s' % (trailedPanel, edgeNumber, xWake, tWake, netName))
             try:
-                patch = self.findPatchByName(trailedPanel)
+                patch = self.find_patch_by_name(trailedPanel)
             except KeyError:
                 self.log.debug('trailedPanel isnt defined...trailedPanel=|%s|' % (trailedPanel))
                 raise
@@ -675,22 +676,22 @@ class PanairGrid(PanairGridHelper, PanairWrite):
             #nn = int(float(section[n-1][10:20]))
             options = [kt, cpNorm, matchw, trailedPanel, edgeNumber, xWake,
                        tWake]
-            patch = self.addWakePatch(netName, options, X, Y, Z)
+            patch = self.add_wake_patch(netName, options, X, Y, Z)
             print('----------------------------')
             n += 1
         return True
 
-    def getPartialEdgeAbutments(self, section):
+    def _read_partial_edge_abutments(self, section):
         self.peaSection = '\n'.join(section) + '\n'
         return True
 
-    def writeLiberalizedAbutments(self):
+    def write_liberalized_abutments(self):
         msg = '$eat - liberalized abutments\n'
         msg += '%10s' * 6 % (self.epsgeo, self.igeoin, self.igeout,
                              self.nwxref, self.triint, self.iabsum) + '\n'
         return msg
 
-    def getLiberalizedAbutments(self, section):
+    def _read_liberalized_abutments(self, section):
         #self.log.debug("section[1] = %s" % (section[1]))
         self.epsgeo = section[1][0:10].strip()
         if self.epsgeo:
@@ -749,11 +750,11 @@ class PanairGrid(PanairGridHelper, PanairWrite):
             self.iabsum = -0.0
         return True
 
-    def getSectionalProperties(self, section):
+    def _read_sectional_properties(self, section):
         self.sectionalPropSection = '\n'.join(section) + '\n'
         return True
 
-    def getFlowfieldProperties(self, section):
+    def _read_flowfield_properties(self, section):
         self.flowSection = '\n'.join(section) + '\n'
         return True
 
@@ -766,7 +767,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
     #def get(self,section):
     #    pass
 
-    def groupSections(self, sections, sectionNames):
+    def group_sections(self, sections, sectionNames):
         #self.Points = []
         #self.Streamlines = []
         #self.Trailing = []
@@ -787,27 +788,27 @@ class PanairGrid(PanairGridHelper, PanairWrite):
         #self.Grid = []
 
         sectionMap = {
-            'tit': self.getTitle,
-            'ref': self.get_reference_quantities,
-            'dat': self.getDataCheck,
-            'sym': self.getSymmetry,
-            'mac': self.get_mach,
-            'cas': self.getCases,
+            'tit': self._read_title,
+            'ref': self._read_reference_quantities,
+            'dat': self._read_data_check,
+            'sym': self._read_symmetry,
+            'mac': self._read_mach,
+            'cas': self._read_cases,
 
-            'ang': self.get_alphas,
-            'yaw': self.get_betas,
-            'pri': self.getPrintout,
-            'poi': self.get_points,
-            'cir': self.getCircularSection,
-            'tra': self.getTrailingWakes,
-            'pea': self.getPartialEdgeAbutments,
-            'eat': self.getLiberalizedAbutments,
-            'sec': self.getSectionalProperties,
-            'flo': self.getFlowfieldProperties,
-            'xyz': self.getXYZ,
-            'gri': self.getGrid,
-            'str': self.getStreamlines,
-            'end': self.get_end,
+            'ang': self._read_alphas,
+            'yaw': self._read_betas,
+            'pri': self._read_printout,
+            'poi': self._read_points,
+            'cir': self._read_circular_section,
+            'tra': self._read_trailing_wakes,
+            'pea': self._read_partial_edge_abutments,
+            'eat': self._read_liberalized_abutments,
+            'sec': self._read_sectional_properties,
+            'flo': self._read_flowfield_properties,
+            'xyz': self._read_xyz,
+            'gri': self._read_grid,
+            'str': self._read_streamlines,
+            'end': self._read_end,
         }
         #validMaps = ['tit','ref','dat','sym','mac','cas','ang','poi','tra','end']
         #validMaps += ['xyz','str','flo','sec','pri','pea','eat','gri']
@@ -828,7 +829,7 @@ class PanairGrid(PanairGridHelper, PanairWrite):
                 break
         return sections
 
-    def splitIntoSections(self, lines):
+    def split_into_sections(self, lines):
         sections = []
         sectionNames = []
         section = None
@@ -861,14 +862,14 @@ class PanairGrid(PanairGridHelper, PanairWrite):
             #print "section[0] = ",section[0]
         return (sections, sectionNames)
 
-    def readGrid(self):
+    def read_panair(self):
         infile = open(self.infileName, 'r')
         self.lines = infile.readlines()
         infile.close()
 
-        lines = self.removeComments(self.lines)
-        (sections, sectionNames) = self.splitIntoSections(lines)
-        groups = self.groupSections(sections, sectionNames)
+        lines = self.remove_comments(self.lines)
+        (sections, sectionNames) = self.split_into_sections(lines)
+        groups = self.group_sections(sections, sectionNames)
         #self.log.debug("nPatches = %s" % (self.nPatches()))
         # split into headings
         #for panel in panels:
@@ -906,13 +907,160 @@ class PanairGrid(PanairGridHelper, PanairWrite):
                         print("")
         return points, elements, regions
 
+    def _read_cases(self, section):
+        """
+        $cases - no. of solutions
+        =nacase
+        1.
+        """
+        self.ncases = int(float(section[1][0:10]))
+        #self.log.debug("ncases = %s" % (self.ncases))
+        return True
+
+    def _read_mach(self, section):
+        """
+        $mach number
+        =amach
+        .6
+        """
+        self.mach = float(section[1][0:10])
+        #self.log.debug("mach = %s" % (self.mach))
+        return True
+
+    def set_mach(self, mach):
+        self.mach = mach
+
+    def write_mach(self):
+        out = '$mach number\n'
+        out += '%-10s\n' % self.mach
+        return out
+
+    def write_cases(self):
+        out = ''
+        if self.ncases is not None:
+            out = '$cases - number of solutions\n'
+            out += '%-10s' % sInt(self.ncases) + '\n'
+        return out
+
+    def _read_alphas(self, section):
+        """
+        $angles-of-attack
+        =alpc
+        4.
+        =alpha(1) alpha(2)  alpha(3)
+        4.        10.       0.
+        """
+        self.alphas = []
+        self.alphaC = float(section[1][0:10])  # alphaCompressibility
+        sline = section[2].split()
+        self.alphas = [float(slot) for slot in sline]
+        #self.log.debug("alphaC=%s alphas=%s" % (self.alphaC, self.alphas))
+        return True
+
+    def set_alphas(self, alphas, alphaC):
+        self.alphaC = alphaC
+        self.alphas = alphas
+        self.ncases = len(alphas)
+
+    def write_title(self):
+        out = '$title\n'
+        out += '%s\n' % self.title.strip()
+        return out
+
+    def write_alphas(self):
+        out = '$angles-of-attack\n'
+        out += '%-s\n' % self.alphaC
+        out += '%-10s' * len(self.alphas) % (tuple(self.alphas)) + '\n'
+        return out
+
+    def _read_betas(self, section):
+        """
+        $angles-of-attack
+        =alpc
+        4.
+        =alpha(1) alpha(2)  alpha(3)
+        4.        10.       0.
+        """
+        self.betas = []
+        self.betaC = float(section[1][0:10])  # betaCompressibility
+        sline = section[2].split()
+        self.betas = [float(slot) for slot in sline]
+        #self.log.debug("betaC=%s betas=%s" % (self.betaC, self.betas))
+        return True
+
+    def set_betas(self, betas, betaC):
+        self.betaC = betaC
+        self.betas = betas
+        self.ncases = len(betas)
+
+    def write_betas(self):
+        out = '$yaw\n'
+        out += '%s\n' % self.betaC
+        out += '%-10s' * len(self.betas) % (tuple(self.betas)) + '\n'
+        return out
+
+    def _read_reference_quantities(self, section):
+        """
+        $references for accumulated forces and moments
+        =xref     yref      zref      nref
+        46.       0.        0.
+        =sref     bref      cref      dref
+        2400.     60.       40.       90.
+        """
+        self.xref = float(section[1][0:10])  # 0
+        self.yref = float(section[1][10:20])
+        self.zref = float(section[1][20:30])
+       #self.nref = float(section[1][30:40])
+        self.sref = float(section[2][0:10])  # 0
+        self.bref = float(section[2][10:20])
+        self.cref = float(section[2][20:30])
+        self.dref = float(section[2][30:40])
+        #self.log.debug("xref=%s yref=%s zref=%s" % (self.xref,
+        #                                            self.yref, self.zref))
+        #self.log.debug("sref=%s bref=%s cref=%s dref=%s " % (
+        #    self.sref, self.bref, self.cref, self.dref))
+        return True
+
+    def write_reference_quantities(self):
+        out = '$references for accumulated forces and moments\n'
+        out += '=%-10s%-10s%s\n' % ('Xref', 'Yref', 'Zref')
+        out += '%-10s%-10s%-s\n' % (self.xref, self.yref, self.zref)
+        out += '=%-10s%-10s%-10s%s\n' % ('Sref', 'Bref', 'Cref', 'Dref')
+        out += '%-10s%-10s%-10s%s\n' % (self.sref, self.bref, self.cref,
+                                        self.dref)
+        return out
+
+    def _read_end(self, section):
+        self.isEnd = True
+        #self.log.debug("end...")
+        return True
+
+    def write_end(self):
+        if self.isEnd:
+            return '$end of panair inputs\n '
+        return ''
+
+    def write_data_check(self):
+        msg = '$datacheck\n'
+        msg += '%s.\n' % (self.dataCheck)
+        return msg
+
+    def write_printout(self):
+        msg = '$printout options\n'
+        msg += "%-10s%-10s%-10s%-10s%-10s%-10s\n" % (self.isings, self.igeomp,
+                                                     self.isingp, self.icontp, self.ibconp, self.iedgep)
+        msg += "%-10s%-10s%-10s%-10s%-10s\n" % (self.ipraic,
+                                                self.nexdgn, self.ioutpr, self.ifmcpr, self.icostp)
+        return msg
+
+
 if __name__ == '__main__':
     import sys
     infileName = sys.argv[1]
     outfileName = infileName[:-4] + '_new.inp'
     print "outfile_name = ", outfileName
     grid = PanairGrid(infileName)
-    grid.readGrid()
-    grid.writeGrid(outfileName)
-    (points, elements) = grid.getPointsElements()
-    print("\ninfileName=%s" % (infileName))
+    grid.read_panair()
+    grid.write_panair(outfileName)
+    (points, elements, regions) = grid.getPointsElementsRegions()
+    print("\ninfileName=%s" % infileName)
