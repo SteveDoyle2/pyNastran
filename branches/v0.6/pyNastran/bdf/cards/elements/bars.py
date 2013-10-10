@@ -1303,20 +1303,35 @@ class CBEAM(CBAR):
     def Stiffness(self, model, grav, is3D=False):  # CBEAM
         """
         from makeTruss???
+        http://www.engr.sjsu.edu/ragarwal/ME273/pdf/Chapter%204%20-%20Beam%20Element.pdf
         """
         L = self.Length()
         A = self.Area()
         E = self.E()
-        I = self.I11()
-        Ke = self._stiffness(L, A, E, I)
+        I11 = self.I11()
+        I22 = self.I22()
+        J = self.J()
+        Ke = self._stiffness(L, A, E, I11)
 
         node = self.nodeIDs()
+        nodes = node
         print('nodes =', node)
-        nIJV = [  (node[0], 1), (node[0], 2), (node[0], 3), (node[0], 4), (node[0], 5), (node[0], 6),
-                  (node[1], 1), (node[1], 2), (node[1], 3), (node[1], 4), (node[1], 5), (node[1], 6),
+        nIJV = [
+            (node[0], 1), (node[0], 2), (node[0], 3), (node[0], 4), (node[0], 5), (node[0], 6),
+            (node[1], 1), (node[1], 2), (node[1], 3), (node[1], 4), (node[1], 5), (node[1], 6),
         ]
-        Fg = []
-        nGrav = []
+
+        m = self.Mass()
+        mg = m * grav
+        if is3D:
+            Fg = [mg[0], mg[1], mg[2], mg[0], mg[1], mg[2]]
+        else:
+            Fg = [mg[0], mg[1], mg[0], mg[1]]
+
+        #nIJV = [(nodes[0], 1), (nodes[0], 2),
+        #        (nodes[1], 1), (nodes[1], 2), ]
+        nGrav = [(nodes[0], 1), (nodes[0], 2), (nodes[0], 3),
+                 (nodes[1], 1), (nodes[1], 2), (nodes[1], 3)]
         return Ke, nIJV, Fg, nGrav
 
     def _stiffness(self, L, A, E, I):  # CBEAM
