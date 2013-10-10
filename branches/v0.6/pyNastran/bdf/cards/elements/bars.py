@@ -333,6 +333,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        #self.g0 = model.nodes[self.g0]
 
     def Length(self):
         r"""
@@ -1297,16 +1298,31 @@ class CBEAM(CBAR):
         self.ga = model.Node(self.ga, msg=msg)
         self.gb = model.Node(self.gb, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.g0 = model.nodes[self.g0]
 
-    def Stiffness(self, model, r, A, E, I):  # CBEAM
+    def Stiffness(self, model, grav, is3D=False):  # CBEAM
         """
         from makeTruss???
         """
+        L = self.Length()
+        A = self.Area()
+        E = self.E()
+        I = self.I11()
+        Ke = self._stiffness(L, A, E, I)
+
+        node = self.nodeIDs()
+        print('nodes =', node)
+        nIJV = [  (node[0], 1), (node[0], 2), (node[0], 3), (node[0], 4), (node[0], 5), (node[0], 6),
+                  (node[1], 1), (node[1], 2), (node[1], 3), (node[1], 4), (node[1], 5), (node[1], 6),
+        ]
+        Fg = []
+        nGrav = []
+        return Ke, nIJV, Fg, nGrav
+
+    def _stiffness(self, L, A, E, I):  # CBEAM
         Ke = zeros((6, 6), 'd')
-        L = r
         AE = A * E
         EI = E * I
-
         if 1:
             Ke[0, 0] = AE / L
             Ke[3, 0] = -AE / L

@@ -1,10 +1,14 @@
 # pylint: disable=E0602,C0103
 from __future__ import print_function
+import os
 import sys
 from itertools import izip
+
+# 3rd party
 from numpy import array, zeros, ones
 from numpy.linalg import solve
 
+# pyNastran
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 from pyNastran.bdf.bdf import BDF, SPC, SPC1
 from pyNastran.f06.f06 import F06
@@ -152,6 +156,10 @@ class Solver(F06, OP2):
         return solve(K, F)
 
     def run(self, bdfName):
+        bdf_base, ext = os.path.splitext(bdfName)
+        self.f06_name = bdf_base + '.f06'
+        self.op2_name = bdf_base + '.op2'
+
         model = BDF()
         model.cardsToRead = get_cards()
         model.readBDF(bdfName)
@@ -310,7 +318,7 @@ class Solver(F06, OP2):
         self.store_rod_oes(model, rods, ox, case, Type='stress')
 
         #=========================
-        self.write_f06('2dTruss.f06')
+        self.write_f06(self.f06_name)
 
     def store_rod_oes(self, model, eids, axial, case, Type='stress'):
         """
@@ -475,8 +483,12 @@ class Solver(F06, OP2):
         for (eid, elem) in sorted(model.elements.iteritems()):  # CROD, CONROD
 
             # nIJV is the position of the values of K in the dof
-            (K, nIJV, Fg, nGrav) = elem.Stiffness(model, self.gravLoad,
-                                                  self.is3D)
+            try:
+                (K, nIJV, Fg, nGrav) = elem.Stiffness(model, self.gravLoad, self.is3D)
+            except TypeError as e:
+                msg = 'elem %s must take:\n>>>Stiffness(model, self.gravLoad, self.is3D)' % elem.type
+                print(msg)
+                raise
             print("K[%s] = \n%s" % (eid, K))
             (Ki, Kj) = K.shape
             ij = 0
@@ -522,6 +534,7 @@ class Solver(F06, OP2):
             spcID = case.get_parameter('SPC')[0]
             SpcSet = model.SPC(spcID)
 
+            print(SpcSet)
             for spcSet in SpcSet:
                 (typesFound, positionSPCs) = spcSet.organizeConstraints(model)
         return
@@ -610,7 +623,8 @@ class Solver(F06, OP2):
 
         self.gravLoad = array([0., 0., 0.])
         for load_set in LoadSet:
-            print(load_set)
+            print("load_set = %r" % str(load_set))
+            #print("type", type(load_set))
             (typesFound, forceLoads, momentLoads,
              forceConstraints, momentConstraints,
              gravityLoad) = load_set.organizeLoads(model)

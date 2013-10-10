@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 # pylint: disable=C0103,R0902,R0904,R0914
 """
 All static loads are defined in this file.  This includes:
@@ -294,7 +294,7 @@ class LOAD(LoadCombination):
 class GRAV(BaseCard):
     """
     Defines acceleration vectors for gravity or other acceleration loading.::
-    
+
       GRAV SID CID A     N1  N2 N3    MB
       GRAV 1   3   32.2 0.0 0.0 -1.0
     """
@@ -844,7 +844,7 @@ class MOMENT1(Moment):
         self.node = model.Node(self.node)
         self.xyz = model.Node(self.g2).Position() - model.Node(self.g1).Position()
         self.normalize()
-    
+
     def get_node_id(self):
         if isinstance(self.node, int):
             return self.node
@@ -916,7 +916,7 @@ class MOMENT2(Moment):
         self.g2 = model.Node(self.g2)
         self.g3 = model.Node(self.g3)
         self.g4 = model.Node(self.g4)
-        
+
         v12 = self.g2.Position() - self.g1.Position()
         v34 = self.g4.Position() - self.g3.Position()
         v12 = v12 / norm(v12)
@@ -1010,17 +1010,98 @@ class PLOAD1(Load):
             raise RuntimeError(msg)
         assert self.scale in self.validScales, '%s is an invalid scale on the PLOAD1 card' % (self.scale)
 
+
     def cross_reference(self, model):
         """
         .. todo:: cross reference and fix repr function
         """
-        pass
+        self.eid = model.elements[self.eid]
+
+    def transformLoad(self):
+        p1 = self.eid.ga.Position()
+        p2 = self.eid.gb.Position()
+        g0 = self.eid.g0.Position()
+        x = p2 - p1
+        y = p1 - g0
+        z = cross(x, y)
+        A = [x, y, z]
+        print("x =", x)
+        print("y =", y)
+        print("z =", z)
+        #g = self.GravityVector()
+        return A
+        #(g2, matrix) = self.cid.transformToGlobal(A)
+        #return (g2)
+
+    def getReducedLoads(self):
+        """
+        Get all load objects in a simplified form, which means all
+        scale factors are already applied and only base objects
+        (no LOAD cards) will be returned.
+
+        .. todo:: lots more object types to support
+        """
+        scale_factors = [1.0]
+        loads = [self]
+        return scale_factors, loads
+
+    def organizeLoads(self, model):
+        """
+        Figures out magnitudes of the loads to be applied to the various nodes.
+        This includes figuring out scale factors.
+        """
+        forceLoads = {}  # spc enforced displacement (e.g. FORCE=0)
+        momentLoads = {}
+        forceConstraints = {}
+        momentConstraints = {}
+        gravityLoads = []
+        #print("self.loadIDs = ",self.loadIDs)
+
+        typesFound = set()
+        (scaleFactors, loads) = self.getReducedLoads()
+
+        for (scaleFactor, load) in izip(scaleFactors, loads):
+            #print("*load = ",load)
+            out = load.transformLoad()
+            typesFound.add(load.__class__.__name__)
+            if isinstance(load, Force):
+                (isLoad, node, vector) = out
+                if isLoad:  # load
+                    if node not in forceLoads:
+                        forceLoads[node] = vector * scaleFactor
+                    else:
+                        forceLoads[node] += vector * scaleFactor
+                else:  # constraint
+                    if node not in forceLoads:
+                        forceConstraints[node] = vector * scaleFactor
+                    else:
+                        forceConstraints[node] += vector * scaleFactor
+
+            elif isinstance(load, Moment):
+                pass
+            elif isinstance(load, PLOAD1):
+                pass
+            elif isinstance(load, PLOAD4):
+                pass
+            elif isinstance(load, GRAV):
+                (grav) = out
+                gravityLoads.append(out * scaleFactor)  # grav
+            else:
+                msg = '%s not supported' % (load.__class__.__name__)
+                raise NotImplementedError(msg)
+        return (typesFound, forceLoads, momentLoads, forceConstraints,
+                momentConstraints, gravityLoads)
 
     def getLoads(self):
         return [self]
 
+    def Eid(self):
+        if isinstance(self.eid, int):
+            return self.eid
+        return self.eid.eid
+
     def rawFields(self):
-        list_fields = ['PLOAD1', self.sid, self.eid, self.Type, self.scale,
+        list_fields = ['PLOAD1', self.sid, self.Eid(), self.Type, self.scale,
                   self.x1, self.p1, self.x2, self.p2]
         return list_fields
 
