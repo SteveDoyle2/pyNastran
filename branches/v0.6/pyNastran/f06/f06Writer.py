@@ -223,6 +223,83 @@ class F06Writer(object):
         self.write_f06(self, f06OutName, is_mag_phase=is_mag_phase, make_file=makeFile,
                  delete_objects=deleteObjects)
 
+    def write_summary(self, f):
+
+
+        summary = '                                        M O D E L   S U M M A R Y\n\n'
+
+
+        self.cardsToRead = set([
+
+            # rigid elements
+            'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3',
+
+            # spc/mpc constraints
+            'SPC', 'SPCADD', 'SPC1', 'SPCD', 'SPCAX',
+            'MPC', 'MPCADD',
+            'SUPORT', 'SUPORT1',
+
+            # aero cards
+            'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
+
+            # temperature cards
+            'CHBDYE', 'CHBDYG', 'CHBDYP',
+            'CONV',
+        ])
+
+
+
+        blocks = [
+            ['POINTS', ['GRID', 'GRDSET', ]],
+            ['ENTRIES', ['SPOINT']],
+
+            ['ELEMENTS', [# these are sorted
+                        # elements
+                        'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
+
+                        # springs
+                        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'CELAS5',
+
+                        # bushings
+                        'CBUSH', 'CBUSH1D', 'CBUSH2D',
+
+                        # dampers
+                        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+
+                        # bar flags
+                        'BAROR', 'CBARAO',
+                        # bars
+                        'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
+
+                        # shells
+                        'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
+                        'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
+
+                        # solids
+                        'CTETRA', 'CPENTA', 'CHEXA',
+
+                        # other
+                        'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
+                        'CGAP', 'CFAST',
+
+                        # thermal
+                        'CHBDYP', 'CHBDYG', 'CONV',
+                          ]],
+            ['ELEMENTS', ['RBE2', 'RBE3']],
+        ]
+        #print("self.card_count", self.card_count)
+        for block in blocks:
+            block_name, keys = block
+            for key in sorted(keys):
+                try:
+                    value = self.card_count[key]
+                    summary += '                                   NUMBER OF %-8s %-8s = %8s\n' % (key, block_name, value)
+                except KeyError:
+                    pass
+            summary += ' \n'
+        #sys.exit(summary)
+        f.write(summary)
+
     def write_f06(self, f06OutName, is_mag_phase=False, make_file=True,
                  delete_objects=True, end_flag=False):
         """
@@ -244,6 +321,7 @@ class F06Writer(object):
             f = StringIO()
 
         f.write(self.make_f06_header())
+        self.write_summary(f)
         pageStamp = self.make_stamp(self.Title)
         #print "pageStamp = |%r|" %(pageStamp)
         #print "stamp     = |%r|" %(stamp)
@@ -255,7 +333,7 @@ class F06Writer(object):
         for isubcase, result in sorted(self.eigenvalues.iteritems()):  # goes first
             (subtitle, label) = self.iSubcaseNameMap[isubcase]
             subtitle = subtitle.strip()
-            header[0] = '     %s\n' % (subtitle)
+            header[0] = '     %s\n' % subtitle
             header[1] = '0                                                                                                            SUBCASE %i\n \n' % (isubcase)
             print(result.__class__.__name__)
             (msg, pageNum) = result.write_f06(header, pageStamp,
