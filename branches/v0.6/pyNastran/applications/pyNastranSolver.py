@@ -14,6 +14,8 @@ from pyNastran.bdf.bdf import BDF, SPC, SPC1
 from pyNastran.f06.f06 import F06
 from pyNastran.op2.op2 import OP2
 
+from pyNastran.f06.f06Writer import make_grid_point_singularity_table
+
 # Tables
 from pyNastran.op2.tables.oug.oug_displacements import DisplacementObject
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject
@@ -318,7 +320,13 @@ class Solver(F06, OP2):
         self.store_rod_oes(model, rods, ox, case, Type='stress')
 
         #=========================
-        self.write_f06(self.f06_name)
+        f = open(self.f06_name, 'wb')
+        f.write(self.make_f06_header())
+        failed = []
+        f.write(make_grid_point_singularity_table(failed))
+
+        self.write_f06(f)
+
 
     def store_rod_oes(self, model, eids, axial, case, Type='stress'):
         """
@@ -434,50 +442,54 @@ class Solver(F06, OP2):
 
         print("Fg = ", Fg)
         print("Fa = ", Fa)
-        print("Us = ", self.Us)
+        #print("Us = ", self.Us)
 
-        self.Us = array(self.Us, 'float64')
-        self.Um = array(self.Um, 'float64')
+        #self.Us = array(self.Us, 'float64')
+        #self.Um = array(self.Um, 'float64')
+        Ua = self.solve_sol_101(Kaa, Fa)
+        return Ua, i
 
-        zero = array([])
-        MPCgg = zero
-        Ksa = Kas = Kss = Cam = Cma = Kma = Kam = Kmm = Kms = Ksm = zero
-        Kaa1 = Kaa2 = zero
-        Fm = Fs = zero
+    def solve_sol_101(self, Kaa, Fa):
+        if 0:
+            zero = array([])
+            MPCgg = zero
+            Ksa = Kas = Kss = Cam = Cma = Kma = Kam = Kmm = Kms = Ksm = zero
+            Kaa1 = Kaa2 = zero
+            Fm = Fs = zero
 
-        #Kaa = partition_dense_matrix(Kgg,iFree)
-        Kaa0 = Kaa
-        Fa0 = Fa
+            #Kaa = partition_dense_matrix(Kgg,iFree)
+            Kaa0 = Kaa
+            Fa0 = Fa
 
-        if isSPC:
-           #Fs  = partition_dense_vector(Fg,self.iUs)
-            Ksa = partition_dense_matrix(Kgg, self.iUs, iFree)
-            Kas = Ksa.transpose()
-            Kss = partition_dense_matrix(Kgg, self.iUs)
-
-        if isMPC:
-            Fm = partition_dense_vector(Fg, self.iUm)
-            Cam = partition_dense_matrix(MPCgg, iFree)
-            Cma = partition_dense_matrix(MPCgg, self.iUm)
-
-            Kaa1 = Cam * Kmm * Cma
-            Kaa2 = Cam * Kma + Kam * Cma
-            assert Cam.transpose() == Cma
-
-            Kma = partition_dense_matrix(Kgg, self.iUm, iFree)
-            Kam = Kma.transpose()
-            Kmm = partition_dense_matrix(Kgg, self.iUm)
             if isSPC:
-                Kms = partition_dense_matrix(Kgg, self.iUm, self.iUs)
-                Ksm = Kms.transpose()
+               #Fs  = partition_dense_vector(Fg,self.iUs)
+                Ksa = partition_dense_matrix(Kgg, self.iUs, iFree)
+                Kas = Ksa.transpose()
+                Kss = partition_dense_matrix(Kgg, self.iUs)
 
-        Fa = Fa0  # + Cam*Fm
-        Kaa = Kaa0  # +Kaa1+Kaa2
+            if isMPC:
+                Fm = partition_dense_vector(Fg, self.iUm)
+                Cam = partition_dense_matrix(MPCgg, iFree)
+                Cma = partition_dense_matrix(MPCgg, self.iUm)
+
+                Kaa1 = Cam * Kmm * Cma
+                Kaa2 = Cam * Kma + Kam * Cma
+                assert Cam.transpose() == Cma
+
+                Kma = partition_dense_matrix(Kgg, self.iUm, iFree)
+                Kam = Kma.transpose()
+                Kmm = partition_dense_matrix(Kgg, self.iUm)
+                if isSPC:
+                    Kms = partition_dense_matrix(Kgg, self.iUm, self.iUs)
+                    Ksm = Kms.transpose()
+
+            Fa = Fa0  # + Cam*Fm
+            Kaa = Kaa0  # +Kaa1+Kaa2
 
         Ua = self.solve(Kaa, Fa)
         #self.Um = Kma*Ua
 
-        return(Ua, i)
+        return Ua
 
     def assemble_global_stiffness(self, model, Kgg, Dofs, F):
         for (eid, elem) in sorted(model.elements.iteritems()):  # CROD, CONROD
@@ -628,6 +640,14 @@ class Solver(F06, OP2):
             (typesFound, forceLoads, momentLoads,
              forceConstraints, momentConstraints,
              gravityLoad) = load_set.organizeLoads(model)
+
+            print('typesFound', typesFound)
+            assert isinstance(typesFound, list), type(typesFound)
+            assert isinstance(forceLoads, dict), type(forceLoads)
+            assert isinstance(momentLoads, dict), type(momentLoads)
+            assert isinstance(forceConstraints, dict), type(forceConstraints)
+            assert isinstance(momentConstraints, dict), type(momentConstraints)
+            assert isinstance(gravityLoad, list), type(gravityLoad)
 
             nids = []
             for nid in forceLoads:

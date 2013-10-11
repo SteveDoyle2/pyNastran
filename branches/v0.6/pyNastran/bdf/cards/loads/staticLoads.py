@@ -531,7 +531,8 @@ class Moment(Load):
 
     def getReducedLoads(self):
         scaleFactors = [1.]
-        loads = self.F()
+        loads = { self.node: self.M() }
+        print(loads)
         return(scaleFactors, loads)
 
     def organizeLoads(self, model):

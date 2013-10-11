@@ -95,6 +95,16 @@ def make_f06_header():
     return ''.join(lines1 + lines2)
 
 
+def make_grid_point_singularity_table(failed):
+    msg = ''
+    if failed:
+        msg += '0                                         G R I D   P O I N T   S I N G U L A R I T Y   T A B L E\n'
+        msg += '0                             POINT    TYPE   FAILED      STIFFNESS       OLD USET           NEW USET\n'
+        msg += '                               ID            DIRECTION      RATIO     EXCLUSIVE  UNION   EXCLUSIVE  UNION\n'
+        for (nid, dof) in failed:
+            msg += '                                %s        G      %s         0.00E+00          B        F         SB       SB   *\n' % (nid, dof)
+    return msg
+
 def make_end(end_flag=False):
     lines = []
     lines2 = []
@@ -314,13 +324,14 @@ class F06Writer(object):
            * True  -> makes a file
            * False -> makes a StringIO object for testing (default=True)
         """
-        if make_file:
+        if isinstance(f06OutName, str):
             f = open(f06OutName, 'wb')
         else:
-            from StringIO import StringIO
-            f = StringIO()
+            assert isinstance(f06OutName, file), 'type(f06OutName)= %s' % f06OutName
+            f = f06OutName
+            f06OutName = f.name
+            print 'f06OutName =', f06OutName
 
-        f.write(self.make_f06_header())
         self.write_summary(f)
         pageStamp = self.make_stamp(self.Title)
         #print "pageStamp = |%r|" %(pageStamp)

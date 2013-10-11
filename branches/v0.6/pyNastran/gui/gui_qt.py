@@ -20,6 +20,8 @@ import os.path
 import cgi #  html lib
 import datetime
 import traceback
+#import webbrowser
+#webbrowser.open("http://xkcd.com/353/")
 
 # 3rd party
 from numpy import ndarray, amax, amin
