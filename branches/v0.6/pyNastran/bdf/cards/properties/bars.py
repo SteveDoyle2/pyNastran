@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 """
 All beam properties are defined in this file.  This includes:
@@ -80,12 +80,12 @@ def IBeamOffset(b, h, y, z):
 def getInertiaRectangular(sections):
     """
     Calculates the moment of inertia for a section about the CG.
-    
+
     :param sections: [[b,h,y,z]_1,...] y,z is the centroid
                      (x in the direction of the beam,
                       y right, z up)
     :returns: interiaParameters list of [Area, Iyy, Izz, Iyz]
-    
+
     .. seealso:: http://www.webs1.uidaho.edu/mindworks/Machine_Design/Posters/PDF/Moment%20of%20Inertia.pdf
     """
     As = []
@@ -173,15 +173,15 @@ class LineProperty(Property):
     def CA_Section(self, iFace, iStart, dims):
         """
         ::
-          
+
           ---msg1---
           H1=0.1
           W1=0.05
-          
+
           ---msg2---
           Face_1 = geompy.MakeFaceHW(H1, W1, 1)
           geompy.addToStudy( Face_1, 'Face_1' )
-          
+
           ---msg---
           H1=0.1
           W1=0.05
@@ -229,16 +229,16 @@ class LineProperty(Property):
             # |   ----------
             sections = []
             h1 = dim[5]  # d2
-            w1 = dim[2]                         
-            y1 = dim[0] / 2. - h1               
-            sections.append([w1, h1, 0., y1])   
-                                                
-            h3 = dim[4]                         
-            w3 = dim[1]                         
-            y3 = -dim[0] / 2. + h3              
-            sections.append([w3, h3, 0., y1])   
-                                                
-            h2 = dim[0] - h1 - h3               
+            w1 = dim[2]
+            y1 = dim[0] / 2. - h1
+            sections.append([w1, h1, 0., y1])
+
+            h3 = dim[4]
+            w3 = dim[1]
+            y3 = -dim[0] / 2. + h3
+            sections.append([w3, h3, 0., y1])
+
+            h2 = dim[0] - h1 - h3
             w2 = dim[3]  # d1
             sections.append([w2, h2, 0., 0.])
 
@@ -254,9 +254,9 @@ class LineProperty(Property):
             #:    w1
             #: I_{xx}=\frac{bh^3}{12}
             #: I_{yy}=\frac{hb^3}{12}
-            h1 = dim[1]  
-            w1 = dim[0]  
-            A = h1 * w1  
+            h1 = dim[1]
+            w1 = dim[0]
+            A = h1 * w1
             Iyy = 1 / 12. * w1 * h1 ** 3
             Izz = 1 / 12. * h1 * w1 ** 3
             Iyz = 0.  #: .. todo:: is the Ixy of a bar 0 ???
@@ -298,7 +298,7 @@ class LineProperty(Property):
           |      |
           |   b  |
           *------*
-        
+
         .. math:: I_1 = \frac{1}{12} b h^3
 
         .. math:: I_2 = \frac{1}{12} h b^3
@@ -328,7 +328,7 @@ class LineProperty(Property):
         :param dim:    a list of the dimensions associated with **self.Type**
         :returns Area: Area of the given cross section defined
                        by **self.Type**
-        
+
         .. note:: internal method
         """
         try:
@@ -690,7 +690,7 @@ class PTUBE(LineProperty):
     def MassPerLength(self):
         r"""
         Gets the mass per length :math:`\frac{m}{L}` of the CTUBE.
-        
+
         .. math:: \frac{m}{L} = (A \rho) nsm
         """
         return self.Area() * self.Rho() + self.nsm
@@ -698,11 +698,11 @@ class PTUBE(LineProperty):
     def Area(self):
         r"""
         Gets the area :math:`A` of the CTUBE.
-         
+
         .. math:: A_1 = \pi \frac{d_1^2}{4} - \pi {(D_1-2t)^2}{4}
-        
+
         .. math:: A_2 = \pi \frac{d_2^2}{4} - \pi {(D_2-2t)^2}{4}
-        
+
         .. math:: A = A_1 + A_2
         """
         A = (self._area1() + self._area2()) / 2.
@@ -850,7 +850,7 @@ class PBAR(LineProperty):
     def MassPerLength(self):
         r"""
         Gets the mass per length :math:`\frac{m}{L}` of the CBAR.
-        
+
         .. math:: \frac{m}{L} = \rho A + nsm
         """
         A = self.Area()
@@ -1052,7 +1052,7 @@ class PBARL(LineProperty):
     def MassPerLength(self):
         r"""
         Gets the mass per length :math:`\frac{m}{L}` of the CBAR.
-        
+
         .. math:: \frac{m}{L} = A \rho + nsm
         """
         rho = self.Rho()
@@ -1068,7 +1068,7 @@ class PBARL(LineProperty):
             #Ix = pi*r**4/4.
             #J = pi*r**4/2.
             (Ix, Iy, Ixy) = self.I1_I2_I12()
-            
+
         elif self.Type in ['BAR']:
             assert len(self.dim) == 2, 'dim=%r' % self.dim
             b, h = self.dim
@@ -1085,7 +1085,7 @@ class PBARL(LineProperty):
 
     #def I12(self):
         #return self.I12()
-    
+
     def _points(self, Type, dim):
         if Type in ['BAR']:  # origin ar center
             (d1, d2) = dim
@@ -1220,7 +1220,7 @@ class PBARL(LineProperty):
             yip1 = points[0,1:]
             xi = points[1,:-1]
             xip1 = points[1,1:]
-            
+
             #: .. seealso:: http://en.wikipedia.org/wiki/Area_moment_of_inertia
             ai = xi*yip1 - xip1*yi
             Ixx1 = 1/12*sum((yi**2 + yi*yip1+yip1**2)*ai)
@@ -1232,13 +1232,13 @@ class PBARL(LineProperty):
             yip1 = points[0,1:]
             xi = points[1,:-1]
             xip1 = points[1,1:]
-            
+
             #: .. seealso:: http://en.wikipedia.org/wiki/Area_moment_of_inertia
             ai = xi*yip1 - xip1*yi
             Ixx2 = 1/12*sum((yi**2 + yi*yip1+yip1**2)*ai)
             Iyy2 = 1/12*sum((xi**2 + xi*xip1+xip1**2)*ai)
             #Ixy2 = 1/24*sum((xi*yip1 + 2*xi*yi + 2*xip1*yip1 + xip1*yi)*ai)
-            
+
             Ixx = Ixx1 - Ixx2
             Iyy = Iyy1 - Iyy2
             #Ixy = Ixy1 - Ixy2
@@ -1255,7 +1255,7 @@ class PBARL(LineProperty):
 
             xi = points[1,:-1]
             xip1 = points[1,1:]
-            
+
             #: .. seealso:: http://en.wikipedia.org/wiki/Area_moment_of_inertia
             ai = xi*yip1 - xip1*yi
             Ixx = 1/12*sum((yi**2 + yi*yip1+yip1**2)*ai)
@@ -1427,7 +1427,7 @@ class PBEAM(IntegratedLineProperty):
             self.j = [double_or_blank(card, 7, 'J', 0.0)]
             #: Non-structural mass :math:`nsm`
             self.nsm = [double_or_blank(card, 8, 'nsm', 0.0)]
-            
+
             isCDEF = False
             field9 = double_string_or_blank(card, 9, 'field9')
             field17 = double_string_or_blank(card, 17, 'field17')
@@ -1455,7 +1455,7 @@ class PBEAM(IntegratedLineProperty):
                 #elif nlines == 3:
                 #    isCDEF = Tru
                 #else:
-                    
+
 
             #print("isCDEF=%s isContinue=%s" % (isCDEF, isContinue))
             #if isCDEF:
@@ -1584,19 +1584,19 @@ class PBEAM(IntegratedLineProperty):
             if len(self.xxb) > 1:
                 assert min(self.xxb) == 0.0, 'min=%s, but should be 0.0\nxxb=%s' % (min(self.xxb), self.xxb)
                 assert max(self.xxb) == 1.0, 'max=%s, but should be 1.0\nxxb=%s' % (max(self.xxb), self.xxb)
-            
+
 
             # footer fields
             #: Shear stiffness factor K in K*A*G for plane 1.
             self.k1 = double_or_blank(card, x, 'k1', 1.0)
             #: Shear stiffness factor K in K*A*G for plane 2.
             self.k2 = double_or_blank(card, x + 1, 'k2', 1.0)
-            
+
             #: Shear relief coefficient due to taper for plane 1.
             self.s1 = double_or_blank(card, x + 2, 's1', 0.0)
             #: Shear relief coefficient due to taper for plane 2.
             self.s2 = double_or_blank(card, x + 3, 's2', 0.0)
-            
+
             #: non structural mass moment of inertia per unit length
             #: about nsm center of gravity at Point A.
             self.nsia = double_or_blank(card, x + 4, 'nsia', 0.0)
@@ -1644,6 +1644,12 @@ class PBEAM(IntegratedLineProperty):
     #    """.. warning:: nsm field not supported fully on PBEAM card"""
     #    #raise RuntimeError(self.nsm[0])
     #    return self.nsm[0]
+
+    def I1_I2_I12(self):
+        assert self.i1  is not None, 'I1=%r' % self.i1
+        assert self.i2  is not None, 'I2=%r' % self.i2
+        assert self.i12 is not None, 'I12=%r' % self.i12
+        return self.i1[0], self.i2[0], self.i12[0]
 
     def MassPerLength(self):
         """
@@ -1897,9 +1903,9 @@ class PBEAML(IntegratedLineProperty):
     def MassPerLength(self):
         r"""
         Gets the mass per length :math:`\frac{m}{L}` of the PBEAML.
-        
+
         .. math:: \frac{m}{L} = A(x) \rho + nsm
-        
+
         .. math:: \frac{m}{L} = nsm L + \rho \int \, A(x) dx
         """
         rho = self.Rho()
@@ -1917,9 +1923,9 @@ class PBEAML(IntegratedLineProperty):
     def Area(self):
         r"""
         Gets the Area :math:`A` of the PBEAML.
-        
+
         .. math:: A = \int \, A(x) dx
-        
+
         .. note:: a spline is fit to :math:`A(x)` and then integrated.
         """
         Areas = []

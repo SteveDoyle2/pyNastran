@@ -43,7 +43,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import izip
 
-from numpy import array, cross, allclose
+from numpy import array, cross, allclose, ndarray
 from numpy.linalg import norm
 
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
@@ -1021,7 +1021,11 @@ class PLOAD1(Load):
     def transformLoad(self):
         p1 = self.eid.ga.Position()
         p2 = self.eid.gb.Position()
-        g0 = self.eid.g0.Position()
+
+        g0 = self.eid.g0_vector
+        #if not isinstance(g0, ndarray):
+        #    g0 = g0.Position()
+
         x = p2 - p1
         y = p1 - g0
         z = cross(x, y)

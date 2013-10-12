@@ -300,13 +300,16 @@ class F06Writer(object):
         #print("self.card_count", self.card_count)
         for block in blocks:
             block_name, keys = block
+            key_count = 0
             for key in sorted(keys):
                 try:
                     value = self.card_count[key]
                     summary += '                                   NUMBER OF %-8s %-8s = %8s\n' % (key, block_name, value)
+                    key_count += 1
                 except KeyError:
                     pass
-            summary += ' \n'
+            if key_count:
+                summary += ' \n'
         #sys.exit(summary)
         f.write(summary)
 
@@ -385,6 +388,9 @@ class F06Writer(object):
                     self.barForces, self.beamForces, self.springForces, self.damperForces,
                     self.solidPressureForces,
 
+                    #------------------------------------------
+                    # OEF - forces
+                    self.rodForces,
                     #------------------------------------------
                     # OES - strain
 

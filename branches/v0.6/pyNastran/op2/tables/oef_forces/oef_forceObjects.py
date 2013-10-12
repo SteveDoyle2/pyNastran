@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
@@ -41,7 +41,7 @@ class RealRodForce(scalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def add_new_transient(self, dt):
         self.dt = dt
@@ -79,7 +79,7 @@ class RealRodForce(scalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, axialForce, torque] = data
         if dt not in self.axialForce:
             self.add_new_transient(dt)
@@ -87,6 +87,59 @@ class RealRodForce(scalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
         #self.eType[eid] = eType
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
+
+    def add_f06_data(self, data, transient):
+        if transient is None:
+            for line in data:
+                (eid, axial, torque) = line
+                self.axialForce[eid] = axial
+                self.torque[eid] = torque
+            return
+
+        (dtName, dt) = transient
+        self.dt = dt
+        self.data_code['name'] = dtName
+        if dt not in self.axial:
+            self.update_dt(self.data_code, dt)
+
+        for line in data:
+            (eid, axial, torsion) = line
+            self.axialForce[dt][eid] = axial
+            self.torque[dt][eid] = torsion
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
+        msg = header + ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
+                        '       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
+                        '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n']
+        out = []
+        for eid in sorted(self.axialForce):
+            axial = self.axialForce[eid]
+            torsion = self.torque[eid]
+            (vals2, isAllZeros) = writeFloats13E([axial, torsion])
+            (axial, torsion) = vals2
+            out.append([eid, axial, torsion])
+
+        nOut = len(out)
+        nWrite = nOut
+        if nOut % 2 == 1:
+            nWrite = nOut - 1
+        for i in xrange(0, nWrite, 2):
+            #print i,out[i:]
+            #print(tuple(out[i] + out[i + 1]))
+            outLine = '      %8i   %13s  %13s  %8i   %13s  %13s\n' % (tuple(out[i] + out[i + 1]))
+            msg.append(outLine)
+
+        if nOut % 2 == 1:
+            outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (
+                tuple(out[-1]))
+            msg.append(outLine)
+        msg.append(pageStamp + str(pageNum) + '\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
+        return(''.join(msg), pageNum)
 
     def __repr__(self):
         return str(self.axialForce)
@@ -111,7 +164,7 @@ class RealCBeamForce(scalarObject):  # 2-CBEAM
         else:
             assert dt is not None
             self.addNewElement = self.addNewElementSort2
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -174,7 +227,7 @@ class RealCBeamForce(scalarObject):  # 2-CBEAM
         self._fillObjectNew(
             dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
         self._fillObject(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
@@ -288,7 +341,7 @@ class RealCShearForce(scalarObject):  # 4-CSHEAR
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -353,7 +406,7 @@ class RealCShearForce(scalarObject):  # 4-CSHEAR
         self._fillObject(dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
                          kf1, s12, kf2, s23, kf3, s34, kf4, s41)
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, f41, f21, f12, f32, f23, f43, f34, f14,
             kf1, s12, kf2, s23, kf3, s34, kf4, s41] = data
 
@@ -398,7 +451,7 @@ class RealSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -433,7 +486,7 @@ class RealSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
         #self.eType[eid] = eType
         self.force[dt][eid] = force
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, force] = data
         if dt not in self.force:
             self.add_new_transient(dt)
@@ -517,7 +570,7 @@ class RealDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -552,7 +605,7 @@ class RealDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
         #self.eType[eid] = eType
         self.force[dt][eid] = force
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, force] = data
         if dt not in self.force:
             self.add_new_transient(dt)
@@ -637,7 +690,7 @@ class RealViscForce(scalarObject):  # 24-CVISC
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -675,7 +728,7 @@ class RealViscForce(scalarObject):  # 24-CVISC
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, axialForce, torque] = data
         if dt not in self.axialForce:
             self.add_new_transient(dt)
@@ -707,7 +760,7 @@ class RealPlateForce(scalarObject):  # 33-CQUAD4, 74-CTRIA3
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -763,7 +816,7 @@ class RealPlateForce(scalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.tx[dt][eid] = tx
         self.ty[dt][eid] = ty
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
         if dt not in self.mx:
             self.add_new_transient(dt)
@@ -805,7 +858,7 @@ class RealPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         else:
             assert dt is not None
             self.addNewElement = self.addNewElementSort2
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -917,7 +970,7 @@ class RealPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx[dt][eid] = [tx]
         self.ty[dt][eid] = [ty]
 
-    def addSort2(self, dt, eid, data):
+    def add_sort2(self, dt, eid, data):
         [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
         if dt not in self.mx:
             self.add_new_transient(dt)
@@ -952,7 +1005,7 @@ class RealCBarForce(scalarObject):  # 34-CBAR
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -999,7 +1052,7 @@ class RealCBarForce(scalarObject):  # 34-CBAR
         self.axial[dt][eid] = af
         self.torque[dt][eid] = trq
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
         if dt not in self.axial:
             self.add_new_transient(dt)
@@ -1056,7 +1109,7 @@ class RealCBar100Force(scalarObject):  # 100-CBAR
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -1100,7 +1153,7 @@ class RealCBar100Force(scalarObject):  # 100-CBAR
         self.axial[dt][eid] = af
         self.torque[dt][eid] = trq
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, sd, bm1, bm2, ts1, ts2, af, trq] = data
         if dt not in self.axial:
             self.add_new_transient(dt)
@@ -1132,7 +1185,7 @@ class RealConeAxForce(scalarObject):  # 35-CCONEAX
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -1182,7 +1235,7 @@ class RealConeAxForce(scalarObject):  # 35-CCONEAX
         self.su[dt][eid] = su
         self.sv[dt][eid] = sv
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, hopa, bmu, bmv, tm, su, sv] = data
         if dt not in self.hopa:
             self.add_new_transient(dt)
@@ -1218,7 +1271,7 @@ class RealCGapForce(scalarObject):  # 38-CGAP
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -1274,7 +1327,7 @@ class RealCGapForce(scalarObject):  # 38-CGAP
         self.sv[dt][eid] = sv
         self.sw[dt][eid] = sw
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, fx, sfy, sfz, u, v, w, sv, sw] = data
         if dt not in self.fx:
             self.add_new_transient(dt)
@@ -1311,7 +1364,7 @@ class RealBendForce(scalarObject):  # 69-CBEND
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -1358,7 +1411,7 @@ class RealBendForce(scalarObject):  # 69-CBEND
             dt, eid, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
             nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB)
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
             nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB] = data
         self._fillObject(dt, eid, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
@@ -1396,7 +1449,7 @@ class RealPentaPressureForce(scalarObject):  # 77-PENTA_PR,78-TETRA_PR
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -1437,7 +1490,7 @@ class RealPentaPressureForce(scalarObject):  # 77-PENTA_PR,78-TETRA_PR
         self.velocity[dt][eid] = [vx, vy, vz]
         self.pressure[dt][eid] = pressure
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, eName, ax, ay, az, vx, vy, vz, pressure] = data
         if dt not in self.acceleration:
             self.add_new_transient(dt)
@@ -1497,7 +1550,7 @@ class RealCBushForce(scalarObject):  # 102-CBUSH
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -1535,7 +1588,7 @@ class RealCBushForce(scalarObject):  # 102-CBUSH
         self.force[dt][eid] = [fx, fy, fz]
         self.moment[dt][eid] = [mx, my, mz]
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, fx, fy, fz, mx, my, mz] = data
         if dt not in self.force:
             self.add_new_transient(dt)
@@ -1570,7 +1623,7 @@ class RealForce_VU(scalarObject):  # 191-VUBEAM
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -1645,7 +1698,7 @@ class RealForce_VU(scalarObject):  # 191-VUBEAM
             self.bendingY[dt][eid][nid] = bendingY
             self.bendingZ[dt][eid][nid] = bendingZ
 
-    def addSort2(self, nNodes, eid, data):
+    def add_sort2(self, nNodes, eid, data):
         [dt, parent, coord, icord, forces] = data
         if dt not in self.forceX:
             self.add_new_transient(dt)
@@ -1699,7 +1752,7 @@ class RealForce_VU_2D(scalarObject):  # 190-VUTRIA # 189-VUQUAD
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -1759,7 +1812,7 @@ class RealForce_VU_2D(scalarObject):  # 190-VUTRIA # 189-VUQUAD
         [eid, parent, coord, icord, theta, forces] = data
         self._fillObject(dt, eid, parent, coord, icord, theta, forces)
 
-    def addSort2(self, nNodes, eid, data):
+    def add_sort2(self, nNodes, eid, data):
         [dt, parent, coord, icord, theta, forces] = data
         self._fillObject(dt, eid, parent, coord, icord, theta, forces)
 

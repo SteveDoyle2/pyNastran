@@ -27,7 +27,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 
-from numpy import matrix, zeros, array, transpose, dot # ones,
+from numpy import matrix, zeros, array, transpose, dot, ones
+from numpy import eye, allclose
 from numpy.linalg import norm
 
 from pyNastran.utils import is_string
@@ -37,6 +38,46 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_double_or_blank, double, double_or_blank,
     string_or_blank, integer_double_string_or_blank, integer_or_double)
 
+
+def _Lambda(model, n1, n2, is3D=False, debug=True):
+    """
+    ::
+
+      2d  [l,m,0,0]
+          [0,0,l,m]
+
+    ::
+
+      3d  [l,m,n,0,0,0]
+          [0,0,0,l,m,n]
+    """
+    #R = self.Rmatrix(model,is3D)
+
+    p1 = model.Node(n1).Position()
+    p2 = model.Node(n2).Position()
+    v1 = p2 - p1
+    if debug:
+        print("v1=%s" % (v1))
+    v1 = v1 / norm(v1)
+    (l, m, n) = v1
+    #l = 1
+    #m = 2
+    #n = 3
+    if is3D:
+        Lambda = matrix(zeros((2, 6), 'd'))  # 3D
+        Lambda[0, 0] = Lambda[1, 3] = l
+        Lambda[0, 1] = Lambda[1, 4] = m
+        Lambda[0, 2] = Lambda[1, 5] = n  # 3D
+    else:
+        Lambda = matrix(zeros((2, 4), 'd'))
+        Lambda[0, 0] = Lambda[1, 2] = l
+        Lambda[0, 1] = Lambda[1, 3] = m
+
+    #print("R = \n",R)
+    #print("is3D = \n",is3D)
+    if debug:
+        print("Lambda = \n" + str(Lambda))
+    return Lambda
 
 class RodElement(Element):  # CROD, CONROD, CTUBE
 
@@ -111,53 +152,19 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
                         [dot(v1x, g1y), dot(v1y, g1y)],
                       ])  # rod
 
-    def Lambda(self, model, debug=True):
-        """
-        ::
-
-          2d  [l,m,0,0]
-              [0,0,l,m]
-
-        ::
-
-          3d  [l,m,n,0,0,0]
-              [0,0,0,l,m,n]
-        """
-        is3D = False
-        #R = self.Rmatrix(model,is3D)
-
+    def Lambda(self, model, is3D=False, debug=True):
         (n1, n2) = self.nodeIDs()
-        p1 = model.Node(n1).Position()
-        p2 = model.Node(n2).Position()
-        v1 = p2 - p1
-        if debug:
-            print("v1=%s" % (v1))
-        v1 = v1 / norm(v1)
-        (l, m, n) = v1
-        if is3D:
-            Lambda = matrix(zeros((2, 6), 'd'))  # 3D
-        else:
-            Lambda = matrix(zeros((2, 4), 'd'))
-
-        #print("R = \n",R)
-        Lambda[0, 0] = Lambda[1, 2] = l
-        Lambda[0, 1] = Lambda[1, 3] = m
-
-        if is3D:
-            Lambda[0, 2] = Lambda[1, 5] = n  # 3D
-        if debug:
-            print("Lambda = \n" + str(Lambda))
-        return Lambda
+        return _Lambda(model, n1, n2, is3D=is3D, debug=debug)
 
     #def Stiffness1(self,model):
         #nIJV = [(nodes[0],1),(nodes[0],2),(nodes[1],1),]
 
-    def Stiffness(self, model, grav, is3D):  # CROD/CONROD
-        print("----------------")
-        Lambda = self.Lambda(model)
+    def Stiffness(self, model, node_ids, index0s, grav, is3D=False, fnorm=1.0):  # CROD/CONROD
+        #print("----------------")
+        Lambda = self.Lambda(model, is3D=is3D)
         #print("Lambda = \n"+str(Lambda))
 
-        k = self.Stiffness1D(model)  # /250000.
+        k, ki = self.Stiffness1D(model)
         #print R
         #print(k)
         #print("Lambda.shape = ",Lambda.shape)
@@ -173,34 +180,87 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
             Fg = [mg[0], mg[1], mg[0], mg[1]]
         #print("Fg = ",Fg)
         print("mass = ", mass)
-        print("Fg   = ", Fg)
-        #print(K)
-        print("K[%s] = \n%s\n" % (self.eid, K))
+        print("Fg =\n", Fg)
+        #print(K/fnorm)
+        #print("K[%s] = \n%s\n" % (self.eid, K/fnorm))
         #print("Fg[%s] = %s\n" %(self.eid,Fg))
 
-        nodes = self.nodeIDs()
-        nIJV = [(nodes[0], 1), (nodes[0], 2),
-                (nodes[1], 1), (nodes[1], 2), ]
-        nGrav = [(nodes[0], 1), (nodes[0], 2), (nodes[0], 3),
-                 (nodes[1], 1), (nodes[1], 2), (nodes[1], 3)]
+        n0, n1 = self.nodeIDs()
 
-        return(K, nIJV, Fg, nGrav)
+        i0, i1 = index0s
+        T = ones(6, dtype='float64')
+        n0, n1 = self.nodeIDs()
+        node0 = self.nodes[0]
+        node1 = self.nodes[1]
+        make_T = False
 
-    def displacementStressF06(self, model, q, dofs):
-        pass
+        gx = array([1., 0., 0.])
+        gy = array([0., 1., 0.])
+        gz = array([0., 0., 1.])
 
-    def displacementStress(self, model, q, dofs):
+        if node0.cp.cid != 0:
+            cp = node0.cp
+            T[0, :3] = dot(gx, cp.i  )
+            T[1, :3] = dot(gy, cp.j  )
+            T[2, :3] = dot(gz, cp.k  )
+            make_T = True
+        if node1.cp.cid != 0:
+            cp = node1.cp
+            T[3, 3:] = dot(gx, cp.i  )
+            T[4, 3:] = dot(gy, cp.j  )
+            T[5, 3:] = dot(gz, cp.k  )
+            make_T = True
+        print(T)
+
+        make_T = False
+        if is3D:
+        #if make_T:
+            k2 = zeros((6,6), 'float64')
+            #Ti =
+            k2[0,0] = ki
+            k2[3,0] = -ki
+            k2[0,3] = -ki
+            k2[3,3] = ki
+            #k2 = dot(dot(transpose(Lambda), k), Lambda)
+            #print("k2\n", k2)
+            Ke = k2
+            #Ke = T.T * k2 * T
+
+            #Ke = k2
+            dofs = array([ i0, i0+1, i0+2,
+                           i1, i1+1, i1+2], 'int32')
+        else:
+            Ke = k
+            dofs = array([ i0, i0+1,
+                           i1, i1+1], 'int32')
+        print('dofs =', dofs)
+        nIJV = [(n0, 1), (n0, 2), (n0, 3),
+                (n1, 1), (n1, 2), (n1, 3), ]
+        nGrav = [(n0, 1), (n0, 2), (n0, 3),
+                 (n1, 1), (n1, 2), (n1, 3)]
+
+        return(K, Ke, dofs, nIJV, Fg, nGrav)
+
+    def displacement_stress(self, model, q, dofs, is3D=False): # CROD/CONROD
         (n1, n2) = self.nodeIDs()
-        Lambda = self.Lambda(model, debug=False)
+        Lambda = self.Lambda(model, debug=False, is3D=is3D)
+
+        #print("**dofs =", dofs)
         n11 = dofs[(n1, 1)]
         n12 = dofs[(n1, 2)]
         n21 = dofs[(n2, 1)]
         n22 = dofs[(n2, 2)]
+
+        if is3D:
+            n13 = dofs[(n1, 3)]
+            n23 = dofs[(n2, 3)]
+            q2 = array([q[n11], q[n12], q[n13], q[n21], q[n22], q[n23]])
+        else:
+            q2 = array([q[n11], q[n12], q[n21], q[n22]])
         #print("type=%s n1=%s n2=%s" % (self.type, n1, n2))
         #print("n11=%s n12=%s n21=%s n22=%s" %(n11,n12,n21,n22))
 
-        q2 = array([q[n11], q[n12], q[n21], q[n22]])
-        #print("q[%s] = %s" % (self.eid, q2))
+        #print("q2[%s] = %s" % (self.eid, q2))
         #print("Lambda = \n"+str(Lambda))
 
         #print "Lsize = ",Lambda.shape
@@ -210,13 +270,27 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
 
         L = self.Length()
         E = self.E()
+        A = self.Area()
 
         #stressX = -EL*u[0]+EL*u[1]
-        strainX = du / L
-        stressX = E * strainX
-        #print("strainX = %s [psi]"   % strainX)
-        #print("stressX = %s [psi]\n" % stressX)
-        return strainX, stressX
+        axial_strain = du / L
+        torsional_strain = 0.0
+
+
+        C = self.C()
+        J = self.J()
+        axial_stress = E * axial_strain
+        if J==0.0 or C==0.0: # allclose(J, 0.0) or allclose(C, 0.0)
+            torsion_stress = 0.0
+        else:
+            print('C=%g J=%g'  % (C, J))
+            torsion_stress = C / J * torsional_strain
+
+        axial_force = axial_stress * A
+        #print("axial_strain = %s [psi]" % axial_strain)
+        #print("axial_stress = %s [psi]" % axial_stress)
+        #print("axial_force  = %s [lb]\n" % axial_force)
+        return axial_strain, axial_stress, axial_force
 
     def Stiffness1D(self, model):  # CROD/CONROD
         """
@@ -243,20 +317,23 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         #print("A = ", A)
         #print("E = ", E)
         #print("L = ", L)
+        print("AE = ", A*E)
         #ki = 1.
         ki = A * E / L
-        #ki = 250000.
-        #knorm = 250000.
         K = ki * matrix([[1., -1.], [-1., 1.]])  # rod
 
         #print("A=%g E=%g L=%g  AE/L=%g" % (A, E, L, A * E / L))
         #print "K = \n",K
-        return K
+        return K, ki
 
 
 class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
     def __init__(self, card, data):
         Element.__init__(self, card, data)
+
+    def Lambda(self, model, is3D=False, debug=True):
+        (n1, n2) = self.nodeIDs()
+        return _Lambda(model, n1, n2, is3D=is3D, debug=debug)
 
     def C(self):
         """torsional constant"""
@@ -897,15 +974,15 @@ class CBAR(LineElement):
     def nodeIDs(self):
         return [self.Ga(), self.Gb()]
 
-    def Stiffness(self, model, grav, is3D):  # CBAR
-        print("----------------")
-        Lambda = self.Lambda(model)
+    def Stiffness(self, model, grav, is3D=False):  # CBAR
+        #print("----------------")
+        Lambda = self.Lambda(model, is3D=is3D)
         #print("Lambda = \n"+str(Lambda))
 
-        k = self.Stiffness1D(model)  # /250000.
+        k, ki = self.Stiffness1D(model)
         #print R
         #print(k)
-        print("Lambda.shape = ", Lambda.shape)
+        #print("Lambda.shape = ", Lambda.shape)
         K = dot(dot(transpose(Lambda), k), Lambda)
         #Fg = dot(dot(transpose(Lambda),grav),Lambda)
 
@@ -917,10 +994,10 @@ class CBAR(LineElement):
         else:
             Fg = [mg[0], mg[1], mg[0], mg[1]]
         #print("Fg = ",Fg)
-        print("mass = ", mass)
-        print("Fg   = ", Fg)
+        #print("mass = ", mass)
+        #print("Fg = \n", Fg)
         #print(K)
-        print("K[%s] = \n%s\n" % (self.eid, K))
+        #print("K[%s] = \n%s\n" % (self.eid, K/10*6))
         #print("Fg[%s] = %s\n" %(self.eid,Fg))
 
         n0, n1 = self.nodeIDs()
@@ -962,22 +1039,20 @@ class CBAR(LineElement):
         E = self.E()
         I1 = self.I1()
         I2 = self.I2()
-        print("A  = ", A)
-        print("E  = ", E)
-        print("L  = ", L)
-        print("I1 = ", I1)
-        print("I2 = ", I2)
+        #print("A  = ", A)
+        #print("E  = ", E)
+        #print("L  = ", L)
+        #print("I1 = ", I1)
+        #print("I2 = ", I2)
         #ki = 1.
         #ki = A*E/L
-        #ki = 250000.
-        #knorm = 250000.
         #K = ki*matrix([[1.,-1.],[-1.,1.]]) # rod
         #P = 10.416666667
         P = 1.
         k1 = A * E / L
         k2 = P * L ** 3 / (E * I1)
-        print("A=%g E=%g L=%g I1=%g I2=%G AE/L=%g L^3/E*Iz=%g" % (
-            A, E, L, I1, I2, k1, k2))
+        #print("A=%g E=%g L=%g I1=%g I2=%G AE/L=%g L^3/E*Iz=%g" % (
+        #    A, E, L, I1, I2, k1, k2))
         #print "K = \n",K
         #return K
 
@@ -1000,10 +1075,10 @@ class CBAR(LineElement):
                    [0., sL, tLL, 0., -sL, fLL],
                    [0., 0, 0, 0., 0, 0],
                    ])
-        print("k =\n" + str(K))
-        return K
+        #print("k =\n" + str(K))
+        return K, None
 
-    def Lambda(self, model, debug=True):  # CBAR from CROD/CONROD
+    def Lambda(self, model, debug=True):  # CBAR
         """
         2d  [l,m,0,0,  l,m,0,0]
             [0,0,l,m,  0,0,l,m] L*k = 2x4*W4x4
@@ -1019,7 +1094,7 @@ class CBAR(LineElement):
         p2 = model.Node(n2).Position()
         v1 = p2 - p1
         if debug:
-            print("v1=%s" % (v1))
+            print("v1=%s" % v1)
         v1 = v1 / norm(v1)
         #v2 = v2/norm(v2)
         #v3 = v3/norm(v3)
@@ -1298,9 +1373,106 @@ class CBEAM(CBAR):
         self.ga = model.Node(self.ga, msg=msg)
         self.gb = model.Node(self.gb, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
-        self.g0 = model.nodes[self.g0]
+        if self.g0:
+            self.g0_vector = model.nodes[self.g0].Position()
+        else:
+            self.g0_vector = array([self.x1, self.x2, self.x3])
 
-    def Stiffness(self, model, grav, is3D=False):  # CBEAM
+    def Lambda(self, model, is3D=False, debug=True):  # CBAR from CROD/CONROD
+        """
+        2d  [l,m,0,0,  l,m,0,0]
+            [0,0,l,m,  0,0,l,m] L*k = 2x4*W4x4
+
+        3d  [l,m,n,0,0,0,  l,m,n,0,0,0]
+            [0,0,0,l,m,n,  0,0,0,l,m,n]
+        """
+        #R = self.Rmatrix(model,is3D)
+
+        (n1, n2) = self.nodeIDs()
+        p1 = model.Node(n1).Position()
+        p2 = model.Node(n2).Position()
+        v1 = p2 - p1
+        if debug:
+            print("v1=%s" % (v1))
+        v1 = v1 / norm(v1)
+        #v2 = v2/norm(v2)
+        #v3 = v3/norm(v3)
+        (l, m, n) = v1
+        #(o,p,q) = v2
+        #(r,s,t) = v3
+        print("l=%s m=%s n=%s" % (l, m, n))
+        if is3D:
+            Lambda = matrix([[l, m, n, 0, 0, 0, ],
+                             [m, l, n, 0, 0, 0, ],
+                             [0, 0, 1, 0, 0, 0, ],
+                             [0, 0, 0, l, m, n, ],
+                             [0, 0, 0, m, l, n, ],
+                             [0, 0, 0, 0, 0, 1, ],
+                             ])
+        else:
+            Lambda = matrix([[l, m, n, 0, 0, 0, ],
+                             [m, l, n, 0, 0, 0, ],
+                             [0, 0, 1, 0, 0, 0, ],
+                             [0, 0, 0, l, m, n, ],
+                             [0, 0, 0, m, l, n, ],
+                             [0, 0, 0, 0, 0, 1, ],
+                             ])
+        if debug:
+            print("Lambda* = \n" + str(Lambda))
+        return Lambda
+
+    def displacement_stress(self, model, q, dofs, is3D=False):  # CBEAM
+        (n1, n2) = self.nodeIDs()
+        Lambda = self.Lambda(model, debug=False, is3D=is3D)
+
+        #print("**dofs =", dofs)
+        n11 = dofs[(n1, 1)]
+        n12 = dofs[(n1, 2)]
+        n21 = dofs[(n2, 1)]
+        n22 = dofs[(n2, 2)]
+
+        if is3D:
+            n13 = dofs[(n1, 3)]
+            n23 = dofs[(n2, 3)]
+            q2 = array([q[n11], q[n12], q[n13], q[n21], q[n22], q[n23]])
+        else:
+            q2 = array([q[n11], q[n12], q[n21], q[n22]])
+        #print("type=%s n1=%s n2=%s" % (self.type, n1, n2))
+        #print("n11=%s n12=%s n21=%s n22=%s" %(n11,n12,n21,n22))
+
+        #print("q2[%s] = %s" % (self.eid, q2))
+        #print("Lambda = \n"+str(Lambda))
+
+        #print "Lsize = ",Lambda.shape
+        #print "qsize = ",q.shape
+        u = dot(array(Lambda), q2)
+        du = -u[0] + u[1]
+
+        L = self.Length()
+        E = self.E()
+        A = self.Area()
+
+        #stressX = -EL*u[0]+EL*u[1]
+        axial_strain = du / L
+        torsional_strain = 0.0
+
+        I1_I2_I12 = self.pid.I1_I2_I12()
+        J = self.J()
+        C = 0.0
+        axial_stress = E * axial_strain
+        if J==0.0 or C==0.0: # allclose(J, 0.0) or allclose(C, 0.0)
+            torsion_stress = 0.0
+        else:
+            print('C=%g J=%g'  % (C, J))
+            torsion_stress = C / J * torsional_strain
+
+        axial_force = axial_stress * A
+        #print("axial_strain = %s [psi]" % axial_strain)
+        #print("axial_stress = %s [psi]" % axial_stress)
+        #print("axial_force  = %s [lb]\n" % axial_force)
+        return axial_strain, axial_stress, axial_force
+
+    def Stiffness(self, model, node_ids, index0s, grav, is3D=False, fnorm=1.0):  # CBEAM
         """
         from makeTruss???
         http://www.engr.sjsu.edu/ragarwal/ME273/pdf/Chapter%204%20-%20Beam%20Element.pdf
@@ -1310,16 +1482,78 @@ class CBEAM(CBAR):
         E = self.E()
         I11 = self.I11()
         I22 = self.I22()
+        G = self.G()
         J = self.J()
-        Ke = self._stiffness(L, A, E, I11)
+        print("A=%s E=%s L=%s G=%s J=%s" % (A, E, L, G, J))
+        G = J = A = E = 1.0
+        A = J = G = 0.0
 
-        node = self.nodeIDs()
-        nodes = node
-        print('nodes =', node)
-        nIJV = [
-            (node[0], 1), (node[0], 2), (node[0], 3), (node[0], 4), (node[0], 5), (node[0], 6),
-            (node[1], 1), (node[1], 2), (node[1], 3), (node[1], 4), (node[1], 5), (node[1], 6),
-        ]
+        Ke = self._stiffness(L, A, E, I11, I22, G, J, is3D=is3D)
+
+        Lambda = self.Lambda(model, is3D=is3D)
+        #print("Lambda = \n"+str(Lambda))
+
+        k, ki = self.Stiffness1D(model)
+        #print R
+        #print(k)
+        print("Lambda.shape = ", Lambda.shape)
+        K = dot(dot(transpose(Lambda), k), Lambda)
+
+        nodes = self.nodeIDs()
+        if 0:
+            ga = self.ga.Position()
+            gb = self.gb.Position()
+            ga_cid = self.ga.cp
+            gb_cid = self.ga.cp
+            v = gb - ga
+
+            T = eye(6, dtype='float64')
+            make_T = False
+            if ga_cid.cid != 0:
+                I[0,:3] = ga_cid.i
+                I[1,:3] = ga_cid.j
+                I[2,:3] = ga_cid.k
+                make_T = True
+            if gb_cid.cid != 0:
+                I[3,3:] = gb_cid.i
+                I[4,3:] = gb_cid.j
+                I[5,3:] = gb_cid.k
+                make_T = True
+
+            nrows, ncols = Ke.shape
+            Ke_msg = ''
+            for i in xrange(nrows):
+                for j in xrange(ncols):
+                    Ke_msg += '%8i ' % (Ke[i,j]/fnorm)
+                Ke_msg += '\n'
+            print("Ke = \n", Ke/fnorm)
+            print(T)
+            if make_T:
+                K = T.T * Ke * T
+            else:
+                K = Ke
+
+            print('nodes =', node)
+
+            # n is (nid,componentID), IJV is the (ith,jth,value) in K
+            #(n,IJV) = elem.nIJV()
+
+        i0, i1 = index0s
+        if is3D:
+            dofs = array([ i0, i0+1, i0+2, i0+3, i0+4, i0+5,
+                           i1, i1+1, i1+2, i1+3, i1+4, i1+5], 'int32')
+            nIJV = [
+                (nodes[0], 1), (nodes[0], 2), (nodes[0], 3), (nodes[0], 4), (nodes[0], 5), (nodes[0], 6),
+                (nodes[1], 1), (nodes[1], 2), (nodes[1], 3), (nodes[1], 4), (nodes[1], 5), (nodes[1], 6),
+            ]
+        else:
+                         # Fx  # Fy  # My
+            dofs = array([ i0, i0+1, i0+2,
+                           i1, i1+1, i1+2], 'int32')
+            nIJV = [
+                (nodes[0], 1), (nodes[0], 2), (nodes[0], 5),
+                (nodes[1], 1), (nodes[1], 2), (nodes[1], 5),
+            ]
 
         m = self.Mass()
         mg = m * grav
@@ -1332,65 +1566,106 @@ class CBEAM(CBAR):
         #        (nodes[1], 1), (nodes[1], 2), ]
         nGrav = [(nodes[0], 1), (nodes[0], 2), (nodes[0], 3),
                  (nodes[1], 1), (nodes[1], 2), (nodes[1], 3)]
-        return Ke, nIJV, Fg, nGrav
+        return Ke, Ke, dofs, nIJV, Fg, nGrav
 
-    def _stiffness(self, L, A, E, I):  # CBEAM
-        Ke = zeros((6, 6), 'd')
+    def _stiffness(self, L, A, E, Iz, Iy, G, J, is3D=False):  # CBEAM
         AE = A * E
-        EI = E * I
-        if 1:
-            Ke[0, 0] = AE / L
-            Ke[3, 0] = -AE / L
-            Ke[0, 3] = -AE / L
-            Ke[3, 3] = AE / L
+        #EI = E * I
 
-            Ke[1, 1] = 12 * EI / L ** 3
-            Ke[1, 2] = 6 * EI / L ** 2
-            Ke[2, 1] = Ke[1, 2]  # 6*EI/L**2
-            Ke[2, 2] = 4 * EI / L
+        AE_L = AE / L
+        #EI = E * I
+        L2 = L * L
+        L3 = L2 * L
+        #EIz_L3 = EIz / L3
+        if is3D:
+            K = zeros((12, 12), 'd')
+            # top-left diagonal going right
+            K[0,0] =  A * E / L
+            K[1,1] = 12 * E * Iz / L3
+            K[2,2] = 12 * E * Iy / L3
+            K[3,3] = G * J / L
+            K[4,4] = 4 * E * Iy / L
+            K[5,5] = 4 * E * Iz / L
+            K[6,6] = K[0,0] # A * E / L
+            K[7,7] = K[1,1] # 12 * E * Iz / L3
+            K[8,8] = K[2,2] # 12 * E * Iy / L3
+            K[9,9] = K[3,3] # G * J / L
+            K[10,10]= K[4,4]# 4 * E * Iy / L
+            K[11,11]= K[5,5]# 4 * E * Iz / L
 
-            Ke[1, 4] = -Ke[1, 1]  # -12*EI/L**3
-            Ke[1, 5] = Ke[1, 2]  # 6*EI/L**2
-            Ke[2, 4] = -Ke[1, 2]  # -6*EI/L**2
-            Ke[2, 5] = 2 * EI / L
+            # top-center diagonal going right
+            #K[0,6] = -A * E / L
+            K[1,7]  = -12 * E * Iz / L3
+            K[2,8]  = -12 * E * Iy / L3
+            K[3,9]  = -G * J / L
+            K[4,10] = 2 * E * Iy / L
+            K[5,11] = 2 * E * Iz / L
 
-            Ke[4, 1] = -Ke[1, 4]  # -12*EI/L**3
-            Ke[4, 2] = Ke[2, 4]  # -6*EI/L**2
-            Ke[5, 1] = Ke[1, 2]  # 6*EI/L**2
-            Ke[5, 2] = Ke[2, 5]  # 2*EI/L
+            # top-center diagonal going left
+            K[0,6] = -K[0,0] # -A * E / L
+            K[1,5] =  6 * E * Iz / L2
+            K[2,4] = -6 * E * Iy / L2
+            #K[3,3]
+            K[4,2] = -6 * E * Iy / L2
+            K[5,1] =  6 * E * Iz / L2
+            K[6,0] = K[0,6] # -A * E / L
 
-            Ke[4, 4] = Ke[1, 1]  # 12*EI/L**3
-            Ke[4, 5] = Ke[2, 4]  # -6*EI/L**2
-            Ke[5, 4] = Ke[2, 4]  # -6*EI/L**2
-            Ke[5, 5] = Ke[2, 2]  # 4*EI/L
+            # top-right diagnoal going left
+            K[1,11] =  6 * E * Iz / L2
+            K[2,10] = -6 * E * Iy / L2
+            #K[3,9] = - G * J / L
+            K[4,8] =  6 * E * Iy / L2
+            K[5,7] = -6 * E * Iz / L2
+            #K[6,6] = A * E / L
+            K[7,5] = -6 * E * Iz / L2
+            K[8,4] =  6 * E * Iy / L2
+            #K[9,3] = -G * J / L
+            K[10,2] = -6 *E * Iy / L2
+            K[11,1] = 6 * E * Iz / L2
+
+            # center-left diagonal going right
+            #K[6,0] = -A * E / L
+            K[7,1] = -12 * E * Iz / L3
+            K[8,2] = -12 * E * Iy / L3
+            K[9,3] = -G * J / L
+            K[10,4] = 2 * E * Iy / L
+            K[11,5] = 2 * E * Iz / L
+
+            # center-right diagnoal going left
+            K[7,11] = -6 * E * Iz / L2
+            K[8,10] =  6 * E * Iy / L2
+            #K[9, 9]= G * J / L
+            K[10,8] =  6 * E * Iy / L2
+            K[11,7] = -6 * E * Iz / L2
         else:
-            Ke[0, 0] = AE
-            Ke[3, 0] = -AE
-            Ke[0, 3] = -AE
-            Ke[3, 3] = AE
+            K = zeros((4, 4), 'd')
 
-            Ke[1, 1] = 12 * EI / L ** 2
-            Ke[1, 2] = 6 * EI / L
-            Ke[2, 1] = Ke[1, 2]  # 6*EI/L**2
-            Ke[2, 2] = 4 * EI
+            # row 1
+            K[0,0] = 12 * E * Iz / L3
+            print("K0,0 = ", K[0,0])
+            K[0,1] = 6 * E * Iz / L2
+            K[0,2] = -K[0,0]
+            K[0,3] = K[0,1]
 
-            Ke[1, 4] = -Ke[1, 1]  # -12*EI/L**3
-            Ke[1, 5] = Ke[1, 2]  # 6*EI/L**2
-            Ke[2, 4] = -Ke[1, 2]  # -6*EI/L**2
-            Ke[2, 5] = 2 * EI
+            # row 2
+            K[1,0] = K[0,1]
+            K[1,1] = 4 * E * Iz / L
+            K[1,2] = -K[1,0]
+            K[1,3] = 2 ** E * Iz / L
 
-            Ke[4, 1] = -Ke[1, 4]  # -12*EI/L**3
-            Ke[4, 2] = Ke[2, 4]  # -6*EI/L**2
-            Ke[5, 1] = Ke[1, 2]  # 6*EI/L**2
-            Ke[5, 2] = Ke[2, 5]  # 2*EI/L
+            # row 3
+            K[2,0] = K[0,2]
+            K[2,1] = -K[0,1]
+            K[2,2] = K[0,0]
+            K[2,3] = K[2,1] #
 
-            Ke[4, 4] = Ke[1, 1]  # 12*EI/L**3
-            Ke[4, 5] = Ke[2, 4]  # -6*EI/L**2
-            Ke[5, 4] = Ke[2, 4]  # -6*EI/L**2
-            Ke[5, 5] = Ke[2, 2]  # 4*EI/L
-
-            Ke = Ke / L
-        return Ke
+            # row 4
+            K[3,0] = K[0,3] #
+            K[3,1] = K[1,3] #
+            K[3,2] = K[2,3] #
+            K[3,3] = K[1,1]
+            #print(K)
+        return K
 
     def rawFields(self):
         (x1, x2, x3) = self.getX_G0_defaults()
