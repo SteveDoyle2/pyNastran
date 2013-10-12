@@ -170,6 +170,7 @@ class Solver(F06, OP2):
         return solve(K, F)
 
     def run_solver(self, bdfName):
+        bdfName = os.path.abspath(bdfName)
         bdf_base, ext = os.path.splitext(bdfName)
         self.f06_name = bdf_base + '.f06'
         self.op2_name = bdf_base + '.op2'
