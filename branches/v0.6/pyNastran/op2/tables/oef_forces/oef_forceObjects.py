@@ -28,10 +28,11 @@ from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class RealRodForce(scalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
+class RealRodForce(scalarObject):  # 1-ROD
     def __init__(self, data_code, is_sort1, isubcase, dt):
         scalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
+
+        self.elementType = 'CROD'
         self.axialForce = {}
         self.torque = {}
 
@@ -65,8 +66,6 @@ class RealRodForce(scalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
 
     def add(self, dt, data):
         [eid, axialForce, torque] = data
-
-        #self.eType[eid] = eType
         self.axialForce[eid] = axialForce
         self.torque[eid] = torque
 
@@ -74,8 +73,6 @@ class RealRodForce(scalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
         [eid, axialForce, torque] = data
         if dt not in self.axialForce:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
 
@@ -84,7 +81,6 @@ class RealRodForce(scalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
         if dt not in self.axialForce:
             self.add_new_transient(dt)
 
-        #self.eType[eid] = eType
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
 
@@ -113,6 +109,9 @@ class RealRodForce(scalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
         msg = header + ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
                         '       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
                         '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n']
+        return self._write_f06(msg, pageStamp, pageNum, f)
+
+    def _write_f06(self, msg, pageStamp, pageNum, f):
         out = []
         for eid in sorted(self.axialForce):
             axial = self.axialForce[eid]
@@ -126,8 +125,6 @@ class RealRodForce(scalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
         if nOut % 2 == 1:
             nWrite = nOut - 1
         for i in xrange(0, nWrite, 2):
-            #print i,out[i:]
-            #print(tuple(out[i] + out[i + 1]))
             outLine = '      %8i   %13s  %13s  %8i   %13s  %13s\n' % (tuple(out[i] + out[i + 1]))
             msg.append(outLine)
 
@@ -141,8 +138,33 @@ class RealRodForce(scalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
             msg = ['']
         return(''.join(msg), pageNum)
 
-    def __repr__(self):
-        return str(self.axialForce)
+
+class RealCtubeForce(RealRodForce):  # 3-TUBE
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealRodForce.__init__(self, data_code, is_sort1, isubcase, dt)
+        self.elementType = 'CTUBE'
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
+        words = header + ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C T U B E )\n',
+                        '       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
+                        '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n']
+        return self._write_f06(words, pageStamp, pageNum, f)
+
+
+class RealConrodForce(RealRodForce):  # 10-CONROD
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealRodForce.__init__(self, data_code, is_sort1, isubcase, dt)
+        self.elementType = 'CONROD'
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
+        words = header + ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C O N R O D )\n',
+                        '       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
+                        '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n']
+        return self._write_f06(words, pageStamp, pageNum, f)
 
 
 class RealCBeamForce(scalarObject):  # 2-CBEAM

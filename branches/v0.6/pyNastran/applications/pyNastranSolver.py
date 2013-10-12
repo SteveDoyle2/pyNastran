@@ -19,13 +19,13 @@ from pyNastran.f06.f06Writer import make_grid_point_singularity_table
 
 # Tables
 from pyNastran.op2.tables.oug.oug_displacements import DisplacementObject
-from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject
-from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import MPCForcesObject
+#from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject
+#from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import MPCForcesObject
 
 # rods
-from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RodStressObject, RodStrainObject
-from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealRodForce
-RealRodForce
+from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RodStressObject, RodStrainObject, ConrodStressObject, ConrodStrainObject, CtubeStressObject, CtubeStrainObject
+from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealRodForce, RealConrodForce, RealCtubeForce
+
 
 def partition_sparse(Is, Js, Vs):
     I2 = []
@@ -381,16 +381,24 @@ class Solver(F06, OP2):
             q = ones(n, 'float64')
 
         # results
-        rods = []
-        beams = []
-        bars = []
-        quads = []
-        tris = []
+        # bars
+        crods = []
+        conrods = []
+        ctubes = []
+
+        # bars
+        cbeams = []
+        cbars = []
+
+        # shells
+        cquads = []
+        ctris = []
         type_map = {
-            'CONROD' : rods,
-            'CROD'   : rods,
-            'CBEAM'  : beams,
-            'CBAR'  : bars,
+            'CONROD' : conrods,
+            'CROD'   : crods,
+            'CTUBE'  : ctubes,
+            'CBEAM'  : cbeams,
+            'CBAR'   : cbars,
         }
         elements = model.elements
         for eid, element in elements.iteritems():
@@ -402,49 +410,72 @@ class Solver(F06, OP2):
 
         #=========================
         nnodes = len(model.nodes)
-        nrods = len(rods)
-        nbars = len(bars)
-        nbeams = len(beams) # half implemented
 
-        # not implemented
-        nbars = len(bars)
-        nquads = len(quads)
-        ntris = len(tris)
+        # rods
+        ncrods = len(crods)
+        nconrods = len(conrods)
+        nctubes = len(ctubes)
 
+        # bars
+        ncbars = len(cbars)
+        ncbeams = len(cbeams) # half implemented
+
+        # not implemented - shells
+        ncquads = len(cquads)
+        nctris = len(ctris)
+
+        self.card_count = model.card_count
         #=========================
-        rods = array(rods)
+        # rods
+        crods = array(crods)
+        conrods = array(conrods)
+        ctubes = array(ctubes)
         #=========================
-        # RODS
         if self.is_stress or self.is_strain or self.is_force:
-            if nrods:
-                ox = zeros(nrods, 'float64')
-                ex = zeros(nrods, 'float64')
-                fx = zeros(nrods, 'float64')
-                for i, eid in enumerate(rods):
-                    element = elements[eid]
-                    (exi, oxi, fxi) = element.displacement_stress(model, q, self.nidComponentToID, is3D=self.is3D)
-                    ox[i] = oxi
-                    ex[i] = exi
-                    fx[i] = fxi
+            # RODS
+            elementTypes = ['CROD', 'CONROD', 'CTUBE']
+            for elementType in elementTypes:
+                if elementType == 'CROD':
+                    n = ncrods
+                    eids = crods
+                elif elementType == 'CONROD':
+                    n = nconrods
+                    eids = conrods
+                elif elementType == 'CTUBE':
+                    n = nctubes
+                    eids = ctubes
+                else:
+                    raise NotImplementedError(elementType)
 
-                if self.is_strain:
-                    self.store_rod_oes(model, rods, ex, case, Type='strain')
-                if self.is_stress:
-                    self.store_rod_oes(model, rods, ox, case, Type='stress')
-                if self.is_force:
-                    self.store_rod_oef(model, rods, fx, case)
+                if n:
+                    ox = zeros(n, 'float64')
+                    ex = zeros(n, 'float64')
+                    fx = zeros(n, 'float64')
+                    for i, eid in enumerate(eids):
+                        element = elements[eid]
+                        (exi, oxi, fxi) = element.displacement_stress(model, q, self.nidComponentToID, is3D=self.is3D)
+                        ox[i] = oxi
+                        ex[i] = exi
+                        fx[i] = fxi
+                    if self.is_strain:
+                        self.store_rod_oes(model, eids, ex, case, elementType, Type='strain')
+                    if self.is_stress:
+                        self.store_rod_oes(model, eids, ox, case, elementType, Type='stress')
+                    if self.is_force:
+                        self.store_rod_oef(model, eids, fx, case, elementType)
 
-            if nbeams:
-                ox = zeros(nbeams, 'float64')
-                ex = zeros(nbeams, 'float64')
-                fx = zeros(nbeams, 'float64')
+            #=========================
+            # BARS / BEAMS
+            if ncbeams:
+                ox = zeros(ncbeams, 'float64')
+                ex = zeros(ncbeams, 'float64')
+                fx = zeros(ncbeams, 'float64')
                 for i, eid in enumerate(beams):
                     element = elements[eid]
                     (exi, oxi, fxi) = element.displacement_stress(model, q, self.nidComponentToID, is3D=self.is3D)
                     ox[i] = oxi
                     ex[i] = exi
                     fx[i] = fxi
-
                 if self.is_strain:
                     self.store_beam_oes(model, beams, ex, case, Type='strain')
                 if self.is_stress:
@@ -452,8 +483,10 @@ class Solver(F06, OP2):
                 if self.is_force:
                     self.store_beam_oef(model, beams, fx, case)
 
+            #=========================
+            # SHELLS
+            # SOLIDS
         #=========================
-        self.card_count = model.card_count
         self.write_f06(self.f06_name, end_flag=True)
 
 
@@ -469,7 +502,7 @@ class Solver(F06, OP2):
     def store_beam_oef(self, model, beams, fx, case):
         pass
 
-    def store_rod_oef(self, model, eids, axial, case):
+    def store_rod_oef(self, model, eids, axial, case, elementType):
         """
         fills the displacement object
         """
@@ -487,10 +520,18 @@ class Solver(F06, OP2):
         data_code = {'log': self.log, 'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 1, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OEF',
-                    'element_name': 'CONROD', 'format_code':format_code,
+                    'element_name': elementType, 'format_code':format_code,
                     #'s_code': s_code,
                     'nonlinear_factor': None}
-        forces = RealRodForce(data_code, is_sort1, isubcase, dt=False)
+
+        if elementType == 'CROD':
+            forces = RealRodForce(data_code, is_sort1, isubcase, dt=False)
+        elif elementType == 'CONROD':
+            forces = RealConrodForce(data_code, is_sort1, isubcase, dt=False)
+        elif elementType == 'CTUBE':
+            forces = RealCtubeForce(data_code, is_sort1, isubcase, dt=False)
+        else:
+            raise NotImplementedError(elementType)
 
         data = []
         i = 0
@@ -500,11 +541,17 @@ class Solver(F06, OP2):
             data.append(line)
         forces.add_f06_data(data, dt)
 
-        self.rodForces[isubcase] = forces
+        if elementType == 'CROD':
+            self.rodForces[isubcase] = forces
+        elif elementType == 'CONROD':
+            self.conrodForces[isubcase] = forces
+        elif elementType == 'CTUBE':
+            self.ctubeForces[isubcase] = forces
+        else:
+            raise NotImplementedError(elementType)
         #stress.dt = None
-        self.iSubcases.append(isubcase)
 
-    def store_rod_oes(self, model, eids, axial, case, Type='stress'):
+    def store_rod_oes(self, model, eids, axial, case, elementType, Type='stress'):
         """
         fills the displacement object
         """
@@ -522,13 +569,23 @@ class Solver(F06, OP2):
         data_code = {'log': self.log, 'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 1, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
-                    'element_name': 'CONROD', 'format_code':format_code,
+                    'element_name': elementType, 'format_code':format_code,
                     's_code': s_code,
                     'nonlinear_factor': None}
         if Type == 'stress':
-            stress = RodStressObject(data_code, is_sort1, isubcase, dt=False)
+            if elementType == 'CROD':
+                stress = RodStressObject(data_code, is_sort1, isubcase, dt=False)
+            elif elementType == 'CONROD':
+                stress = ConrodStressObject(data_code, is_sort1, isubcase, dt=False)
+            elif elementType == 'CTUBE':
+                stress = CtubeStressObject(data_code, is_sort1, isubcase, dt=False)
         elif Type == 'strain':
-            stress = RodStrainObject(data_code, is_sort1, isubcase, dt=False)
+            if elementType == 'CROD':
+                stress = RodStrainObject(data_code, is_sort1, isubcase, dt=False)
+            elif elementType == 'CONROD':
+                stress = ConrodStrainObject(data_code, is_sort1, isubcase, dt=False)
+            elif elementType == 'CTUBE':
+                stress = CtubeStrainObject(data_code, is_sort1, isubcase, dt=False)
         else:
             raise NotImplementedError(Type)
 
@@ -540,14 +597,21 @@ class Solver(F06, OP2):
             data.append(line)
         stress.add_f06_data(data, dt)
 
-        if Type == 'stress':
+        if elementType == 'CROD' and Type == 'stress':
             self.rodStress[isubcase] = stress
-        elif Type == 'strain':
+        elif elementType == 'CROD' and Type == 'strain':
             self.rodStrain[isubcase] = stress
-            stress.dt = None
+        elif elementType == 'CONROD' and Type == 'stress':
+            self.conrodStress[isubcase] = stress
+        elif elementType == 'CONROD' and Type == 'strain':
+            self.conrodStrain[isubcase] = stress
+        elif elementType == 'CTUBE' and Type == 'stress':
+            self.ctubeStress[isubcase] = stress
+        elif elementType == 'CTUBE' and Type == 'strain':
+            self.ctubeStrain[isubcase] = stress
         else:
-            raise NotImplementedError(Type)
-        self.iSubcases.append(isubcase)
+            raise NotImplementedError('elementType=%r Type=%r' % (elementType, Type))
+        stress.dt = None
 
     def store_displacements(self, model, U, case):
         """
@@ -601,9 +665,9 @@ class Solver(F06, OP2):
         #(Kaa,Fa) = self.Partition(Kgg)
         #sys.exit('verify Kgg')
 
-        print("Kgg = \n%s" % (print_matrix(Kgg)))
+        print("Kgg = \n%s" % (print_matrix(Kgg/self.fnorm)))
         Kaa = partition_dense_symmetric(Kgg, self.iUs)
-        print("Kaa = \n%s" % (print_matrix(Kaa)))
+        print("Kaa = \n%s" % (print_matrix(Kaa/self.fnorm)))
         #print("Kaa.shape = ",Kaa.shape)
 
         #sys.exit('verify Kaa')

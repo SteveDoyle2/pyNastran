@@ -390,12 +390,12 @@ class F06Writer(object):
 
                     #------------------------------------------
                     # OEF - forces
-                    self.rodForces,
+                    self.rodForces, self.conrodForces, self.ctubeForces,
                     #------------------------------------------
                     # OES - strain
 
                     # rods
-                    self.rodStrain, self.nonlinearRodStress,
+                    self.rodStrain, self.conrodStrain, self.ctubeStrain, self.nonlinearRodStress,
 
 
                     # bars/beams
@@ -416,7 +416,7 @@ class F06Writer(object):
                     # OES - stress
 
                     # rods
-                    self.rodStress, self.nonlinearRodStrain,
+                    self.rodStress, self.conrodStress, self.ctubeStress, self.nonlinearRodStrain,
 
                     # bars/beams
                     self.barStress, self.beamStress,

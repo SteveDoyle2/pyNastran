@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 import os
 import sys
 from itertools import izip
@@ -56,7 +56,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         :makeGeom:    reads the BDF tables (default=False)
         :debug:       prints data about how the F06 was parsed (default=False)
         :log:         a logging object to write debug messages to
-        
+
         .. seealso:: import logging
         """
         self.f06FileName = f06FileName
@@ -161,19 +161,27 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         self.solidPressureForces = {}
 
         #-----------------------------------
-        # OES - stress
-        
+        # OEF - loads
+        self.rodForces = {}
+        self.conrodForces = {}
+        self.ctubeForces = {}
+
+        #-----------------------------------
+        # OES - strain
+
         # rods
         self.rodStrain = {}
+        self.conrodStrain = {}
+        self.ctubeStrain = {}
         self.nonlinearRodStress = {}
-        
+
         # bush
         self.bushStrain = {}
 
         # bars/beams
         self.barStrain = {}
         self.beamStrain = {}
-        
+
         # plates
         self.plateStrain = {}
         self.nonlinearPlateStrain = {}
@@ -183,21 +191,23 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
         # solids
         self.solidStrain = {}
-        
+
         #-----------------------------------
         # OES - stress
-        
+
         # rods
         self.rodStress = {}
+        self.conrodStress = {}
+        self.ctubeStress = {}
         self.nonlinearRodStrain = {}
-        
+
         # bush
         self.bushStress = {}
-        
+
         # bars/beams
         self.barStress = {}
         self.beamStress = {}
-        
+
         # plates
         self.plateStress = {}
         self.nonlinearPlateStress = {}
@@ -225,7 +235,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         self.iSubcaseNameMap = {}
         self.loadVectors = {}
         self.gridPointForces = {}
-        
+
         self.bush1dStressStrain = {}
 
         OES.__init__(self)
@@ -393,7 +403,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                                                                                                                  SUBCASE 1
           EIGENVALUE =  6.158494E+07
               CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
-  
+
           POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
                  1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
               2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
@@ -456,10 +466,10 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
           EIGENVALUE = -3.741384E-04
           CYCLES =  3.078479E-03
                                              E L E M E N T   S T R A I N   E N E R G I E S
-  
+
                   ELEMENT-TYPE = QUAD4               * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =  -1.188367E-05
                      MODE               1            * TOTAL ENERGY OF ALL ELEMENTS IN SET      -1 =  -1.188367E-05
-  
+
                                       ELEMENT-ID          STRAIN-ENERGY           PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY
                                                1         -5.410134E-08                -0.0929             -4.328107E-05
                                                2         -3.301516E-09                -0.0057             -2.641213E-06
@@ -594,7 +604,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
     def parseLineBlanks(self, sline, Format):
         """allows blanks"""
         out = []
-        
+
         for entry, iFormat in izip(sline, Format):
             if entry.strip():
                 try:
@@ -683,6 +693,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         data = [self.displacements, self.spcForces, self.mpcForces, self.temperatures,
                 self.eigenvalues, self.eigenvectors,
                 self.rodStress, self.rodStrain,
+                self.conrodStress, self.conrodStrain,
                 self.barStress, self.barStrain,
                 self.plateStress, self.plateStrain,
                 self.compositePlateStress, self.compositePlateStrain,

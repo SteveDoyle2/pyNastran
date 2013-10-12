@@ -284,7 +284,11 @@ class OP2(BDF,
         self.accelerations = {}           # tCode=11 thermal=0
 
         # OEF - Forces - tCode=4 thermal=0
+        # rods
         self.rodForces = {}
+        self.conrodForces = {}
+        self.ctubeForces = {}
+
         self.barForces = {}
         self.bar100Forces = {}
         self.beamForces = {}
@@ -325,8 +329,14 @@ class OP2(BDF,
 
         #: OES - isotropic CROD/CONROD/CTUBE stress
         self.rodStress = {}
+        self.conrodStress = {}
+        self.ctubeStress = {}
+
         #: OES - isotropic CROD/CONROD/CTUBE strain
         self.rodStrain = {}
+        self.conrodStrain = {}
+        self.ctubeStrain = {}
+
         #: OES - nonlinear CROD/CONROD/CTUBE stress
         self.nonlinearRodStress = {}
         #: OES - nonlinear CROD/CONROD/CTUBE strain
@@ -450,8 +460,14 @@ class OP2(BDF,
 
             ## OES - isotropic CROD/CONROD/CTUBE stress
             'rodStress',
+            'conrodStress',
+            'ctubeStress',
+
             ## OES - isotropic CROD/CONROD/CTUBE strain
             'rodStrain',
+            'conrodStrain',
+            'ctubeStrain',
+
             ## OES - isotropic CBAR stress
             'barStress',
             ## OES - isotropic CBAR strain
@@ -489,6 +505,9 @@ class OP2(BDF,
 
             # OEF - Forces - tCode=4 thermal=0
             'rodForces',
+            'conrodForces',
+            'ctubeForces',
+
             'barForces',
             'bar100Forces',
             'beamForces',
@@ -1273,6 +1292,7 @@ class OP2(BDF,
             # OES - Stress/Strain
             self.celasStress, self.celasStrain,
             self.rodStress, self.rodStrain,
+            self.conrodStress, self.conrodStrain,
             self.nonlinearRodStress, self.nonlinearRodStrain,
 
             self.barStress, self.barStrain,
