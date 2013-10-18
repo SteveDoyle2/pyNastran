@@ -570,15 +570,14 @@ def run_map_loads(cart3dGeom='Components.i.triq', bdfModel='fem.bdf', bdfModelOu
     mesh = Cart3DReader()
     half_model = cart3dGeom+'_half'
 
-    result_names = ['Cp']
+    result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'E']
     (nodes, elements, regions, loads) = mesh.read_cart3d(cart3dGeom, result_names=result_names)
     #Cp = loads['Cp']
-    #half_model_file =
-    (nodes, elements, regions, Cp) = mesh.make_half_model(nodes, elements, regions, loads)
-    #, os.path.basename(half_model)
+    (nodes, elements, regions, loads) = mesh.make_half_model(nodes, elements, regions, loads, axis='y')
 
+    Cp = loads['Cp']
     #(nodes, elements, regions, Cp) = mesh.renumber_mesh(nodes, elements, regions, Cp)
-    mesh.write_cart3d(half_model, nodes, elements, regions)
+    mesh.write_cart3d(half_model, nodes, elements, regions, loads)
 
     Mach = 0.825
     pInf = 499.3        # psf, alt=35k (per Schaufele p. 11)

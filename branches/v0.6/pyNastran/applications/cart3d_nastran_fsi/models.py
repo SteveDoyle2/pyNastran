@@ -1,4 +1,4 @@
-from numpy import array,cross
+from numpy import array, cross, ndarray
 
 # my code
 from mathFunctions import Centroid, Triangle_AreaCentroidNormal, AreaNormal, ListPrint
@@ -224,12 +224,13 @@ class AeroModel(Model):
             self.centroids[eidi] = centroid
             self.normals[eidi] = normal
 
-    def prepare_Cps(self, loads):
+    def prepare_Cps(self, Cp):
         """
         converts Cp applied to the node -> Cp applied on the element centroid
         """
         #self.Cps = Cp
-        Cp = loads['Cp']
+        #Cp = loads['Cp']
+        assert isinstance(Cp, ndarray)
 
         CpDict = {}
         for eid, element in enumerate(self.elements):
@@ -237,10 +238,11 @@ class AeroModel(Model):
             #print "eid = ", eidi
             (n1, n2, n3) = element #self.get_element_node_ids(eid)
             #print "n1=%s n2=%s n3=%s" % (n1, n2, n3)
-            cp1 = Cp[n1-1]
-            cp2 = Cp[n2-1]
-            cp3 = Cp[n3-1]
-            cp = (cp1 + cp2 + cp3) / 3.
+            cp = Cp[element-1].sum() / 3.
+            #cp1 = Cp[n1 - 1]
+            #cp2 = Cp[n2 - 1]
+            #cp3 = Cp[n3 - 1]
+            #cp = (cp1 + cp2 + cp3) / 3.
             CpDict[eidi] = cp
         self.Cps = CpDict
         return CpDict

@@ -270,9 +270,9 @@ class Cart3DReader(object):
         self.log.info('---starting make_half_model---')
         ax = self._get_ax(axis)
 
-        if ax in [0, 1, 2]:
+        if ax in [0, 1, 2]:  # remove values > 0
             inodes_save = where(nodes[:, ax] >= 0.0)[0]
-        elif ax in [3, 4, 5]:
+        elif ax in [3, 4, 5]:  # remove values < 0
             inodes_save = where(nodes[:, ax-3] <= 0.0)[0]
         else:
             raise NotImplementedError('axis=%r ax=%s' % (axis, ax))
@@ -371,7 +371,7 @@ class Cart3DReader(object):
             iElementCounter += 1
         return (nodes, elements, regions, loads)
 
-    def write_cart3d(self, outfilename, points, elements, regions, loads=None, is_binary=False):
+    def write_cart3d(self, outfilename, points, elements, regions, loads=None, is_binary=False, float_fmt='%6.7f'):
         assert len(points) > 0
 
         if loads is None or loads == {}:
@@ -384,7 +384,6 @@ class Cart3DReader(object):
         self.log.info("---writing cart3d file...%r---" % outfilename)
         f = open(outfilename, 'wb')
 
-        float_fmt = '%6.7f'
         int_fmt = self.write_header(f, points, elements, is_loads, is_binary)
         #print "int_fmt =", int_fmt
         self.write_points(f, points, is_binary, float_fmt)
@@ -396,19 +395,19 @@ class Cart3DReader(object):
             self.write_loads(f, loads, is_binary, float_fmt)
         f.close()
 
-    def write_header(self, f, points, elements, nloads, is_binary=False):
+    def write_header(self, f, points, elements, is_loads, is_binary=False):
         npoints, three = points.shape
         nelements, three = elements.shape
 
         if is_binary:
-            if nloads == 6:
+            if is_loads:
                 msg = pack('>iiiii', 3*4, npoints, nelements, 6, 4)
             else:
                 msg = pack('>iiii', 2*4, npoints, nelements, 4)
 
             int_fmt = None
         else:
-            if nloads == 6:
+            if is_loads:
                 msg = "%s %s 6\n" % (npoints, nelements)
             else:
                 msg = "%s %s\n" % (npoints, nelements)
@@ -475,8 +474,11 @@ class Cart3DReader(object):
             E = loads['E']
 
             nrows = len(Cp)
-            fmt = '%s\n%s%s%s%s%s' % (float_fmt, float_fmt, float_fmt, float_fmt, float_fmt, float_fmt)
-            savetxt(f, hstack([Cp, rho, rhoU, rhoV, rhowW, E]), fmt)
+            fmt = '%s\n%s %s %s %s %s\n' % (float_fmt, float_fmt, float_fmt, float_fmt, float_fmt, float_fmt)
+            for (cpi, rhoi, rhou, rhov, rhoe, e) in izip(Cp, rho, rhoU, rhoV, rhoW, E):
+                f.write(fmt % (cpi, rhoi, rhou, rhov, rhoe, e))
+            #fmt2 = '%s\n%s %s %s %s %s' % (float_fmt, float_fmt, float_fmt, float_fmt, float_fmt, float_fmt)
+            #savetxt(f, hstack([Cp, rho, rhoU, rhoV, rhoW, E], fmt2)
 
 
     def read_cart3d(self, infilename, result_names=None):
