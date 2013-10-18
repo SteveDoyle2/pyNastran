@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 # -*- coding: utf-8 -*-
 from types import MethodType
 import os
@@ -38,7 +38,7 @@ def is_string(value):
 def is_binary(filename):
     """
     Return true if the given filename is binary.
-    
+
     :raises:  IOError if the file cannot be opened.
     :returns: True if filename is a binary file (contains null byte)
               and False otherwise.
@@ -47,6 +47,7 @@ def is_binary(filename):
     that file is binary if it contains null.
 
     .. warning:: this may not work for unicode."""
+    assert os.path.exists(filename), '%r does not exist' % filename
     with io.open(filename, mode='rb') as fil:
         for chunk in iter(lambda: fil.read(1024), bytes()):
             if b"\0" in chunk:  # found null byte
@@ -109,7 +110,7 @@ def de_obscure(num, debug=False):
 
 def get_files_of_type(dirname, extension='.txt', maxSize=100.):
     """
-    Gets the list of all the files with a given extension in the specified directory 
+    Gets the list of all the files with a given extension in the specified directory
 
     :param dirname:   the directory name
     :param extension: list of filetypes to get (default='.txt')
@@ -191,7 +192,7 @@ def __object_attr(obj, mode, attr_type):
             out.append(k)
     out.sort()
     return out
-    #return sorted([k for k in dir(obj) if (check(k) and  
+    #return sorted([k for k in dir(obj) if (check(k) and
     #                                           attr_type(getattr(obj, k)))])
 
 
@@ -199,13 +200,13 @@ def object_methods(obj, mode = "public"):
     """
     List the names of methods of a class as strings. Returns public methods
     as default.
-    
+
     :param obj:  the object for checking
     :param mode: defines what kind of methods will be listed
        * "public" - names that do not begin with underscore
        * "private" - names that begin with single underscore
        * "both" - private and public
-       * "all" - all methods that are defined for the object 
+       * "all" - all methods that are defined for the object
     :returns:  sorted list of the names of methods of a given type
                or None if the mode is wrong
     """
@@ -216,13 +217,13 @@ def object_attributes(obj, mode = "public"):
     """
     List the names of attributes of a class as strings. Returns public attributes
     as default.
-    
+
     :param obj:  the object for checking
     :param mode: defines what kind of attributes will be listed
        * "public" - names that do not begin with underscore
        * "private" - names that begin with single underscore
        * "both" - private and public
-       * "all" - all attributes that are defined for the object 
+       * "all" - all attributes that are defined for the object
     :returns: sorted list of the names of attributes of a given type or None
               if the mode is wrong
     """

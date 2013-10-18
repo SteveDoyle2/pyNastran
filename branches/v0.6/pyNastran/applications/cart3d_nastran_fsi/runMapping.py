@@ -5,13 +5,13 @@ import shutil
 from numpy import allclose
 
 from mapLoads import run_map_loads
-from runSpline import run as runMapDeflections
+from runSpline import runMapDeflections
 
 from pyNastran.utils.log import get_logger
 debug = True
 log = get_logger(None, 'debug' if debug else 'info')
 
-def run():
+def run_mapping():
     basepath    = os.path.normpath(os.getcwd())
     configpath  = os.path.join(basepath, 'inputs')
     workpath    = os.path.join(basepath, 'outputsFinal')
@@ -39,7 +39,7 @@ def run():
 
     nodeList = [20037, 21140, 21787, 21028, 1151, 1886, 2018, 1477, 1023, 1116, 1201, 1116, 1201, 1828, 2589, 1373, 1315, 1571, 1507, 1532, 1317, 1327, 2011, 1445, 2352, 1564, 1878, 1402, 1196, 1234, 1252, 1679, 1926, 1274, 2060, 2365, 21486, 20018, 20890, 20035, 1393, 2350, 1487, 1530, 1698, 1782]
     outfile = open('convergeDeflections.out', 'ab')
-    
+
     maxADeflectionOld = 0.
     nIterations = 30
     iCart = 1
@@ -74,13 +74,13 @@ def run():
         copyFile('fem3.op2', 'fem3.op2' + strI)
         copyFile('fem3.f06', 'fem3.f06' + strI)
         os.remove(bdfModelOut) # cleans up fem_loads.bdf
-        
+
         # map deflections
-        (wA, wS) = runMapDeflections(nodeList, bdf, f06, cart3dGeom, cart3dGeom2)
+        (wA, wS) = runMapDeflections(nodeList, bdf, op2, cart3dGeom, cart3dGeom2, log=log)
         assert os.path.exists('Components.i.tri')
         os.remove(op2) # verifies new fem3.op2 was created
         os.remove(f06) # verifies new fem3.f06 was created
-        
+
         # post-processing
         (maxAID, maxADeflection) = maxDict(wA)
         maxSID = '???'
@@ -130,5 +130,5 @@ def copyFile(a, b):
     assert os.path.exists(b), 'fileB=%r was not copied...' % b
 
 if __name__=='__main__':
-    run()
+    run_mapping()
 

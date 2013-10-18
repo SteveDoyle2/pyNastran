@@ -2,7 +2,6 @@ from numpy import array,cross
 
 # my code
 from mathFunctions import Centroid, Triangle_AreaCentroidNormal, AreaNormal, ListPrint
-#from pyNastran.converters.cart3d.cart3d_reader import generic_cart3d_reader
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.fieldWriter import print_card
 
@@ -15,7 +14,7 @@ log = get_logger(None, 'debug' if debug else 'info')
 class Model(object):
     def __init__(self):
         pass
-    
+
     def getNodeIDLocations(self,nIDs):
         nodes = []
         for nid in nIDs:
@@ -24,13 +23,13 @@ class Model(object):
         return nodes
 
     def get_element_properties(self, eid):
-        raise Exception('overwrite this method...')
+        raise NotImplementedError('overwrite this method...')
 
     def NodeIDs(self):
-        raise Exception('overwrite this method...')
-        
+        raise NotImplementedError('overwrite this method...')
+
     def Node(self,nid):
-        raise Exception('overwrite this method...')
+        raise NotImplementedError('overwrite this method...')
 
 class StructuralModel(Model):
     """
@@ -67,10 +66,10 @@ class StructuralModel(Model):
         return (area, centroid, normal)
 
     def ElementIDs(self):
-        #(elements,eids) = getElementsWithPIDs(self,properties)
+        #(elements, eids) = getElementsWithPIDs(self,properties)
         eids = self.fem.elementIDs()
         return eids
-    
+
     def get_element_node_ids(self, eid):
         e = self.fem.Element(eid)
         return e.nodeIDs()
@@ -81,25 +80,25 @@ class StructuralModel(Model):
 
     def Element(self, eid):
         return self.fem.Element(eid)
-    
+
     def etype(self, eid):
         return self.fem.Element(eid).type
 
     def getElementIDsWithPIDs(self):
         return self.fem.getElementIDsWithPIDs(self.pids)
-        
+
     def get_element_nodes(self, eid):
         e = self.fem.Element(eid)
         nodes = []
         for n in e.nodes:
-             nodes.append(n.xyz)
+             nodes.append(n.Position())
         return nodes
 
     def Centroid(self, eid):
         e = self.fem.Element(eid)
         nodes = self.get_element_nodes(eid)
         centroid = e.Centroid()
-        
+
         if isinstance(centroid, float):
             print "nodes = ",nodes
             print "*centroid[%s] = %s" %(eid, centroid)
@@ -110,7 +109,7 @@ class StructuralModel(Model):
     def Centroid_Area(self, eid, nodes):
         e = self.fem.Element(eid)
         raise Exception('not implemented')
-        return (centroid,area)
+        return (centroid, area)
 
     def Area(self, eid):
         nodes = self.fem.nodes
@@ -196,7 +195,7 @@ class AeroModel(Model):
             sumMoments += cross(r, F)
             #break
         log.info("pInf=%s [psi]; qInf= %s [psi]" % (pInf, qInf))
-        
+
         log.info("sumForcesCFD  [lb]    = %s" % ListPrint(sumForces))
         log.info("sumMomentsCFD [ft-lb] = %s" % ListPrint(sumMoments/12.))
         Cf = sumForces  / (self.Sref * qInf)
@@ -209,20 +208,21 @@ class AeroModel(Model):
         self.centroids = {}
         self.areas = {}
         self.normals = {}
-        for key,element in sorted(self.elements.iteritems()):
+        for eid, element in enumerate(self.elements):
+            eidi = eid + 1
             n1, n2, n3 = element
-            n1 = self.nodes[n1]
-            n2 = self.nodes[n2]
-            n3 = self.nodes[n3]
+            n1 = self.nodes[n1-1]
+            n2 = self.nodes[n2-1]
+            n3 = self.nodes[n3-1]
             out = Triangle_AreaCentroidNormal([n1, n2, n3])
             #print "out = ",out
             (area,centroid,normal) = out
             if centroid is not None:
-                assert len(centroid)==3,"eid=%s centroid=%s n1=%s n2=%s n3=%s" %(key,centroid,n1,n2,n3)
-            
-            self.areas[key] = area
-            self.centroids[key] = centroid
-            self.normals[key] = normal
+                assert len(centroid)==3, "eid=%s centroid=%s n1=%s n2=%s n3=%s" %(eidi, centroid, n1, n2, n3)
+
+            self.areas[eidi] = area
+            self.centroids[eidi] = centroid
+            self.normals[eidi] = normal
 
     def prepare_Cps(self, loads):
         """
@@ -232,39 +232,39 @@ class AeroModel(Model):
         Cp = loads['Cp']
 
         CpDict = {}
-        for eid in self.ElementIDs():
-            #print "eid = ",eid
-            (n1, n2, n3) = self.get_element_node_ids(eid)
+        for eid, element in enumerate(self.elements):
+            eidi = eid + 1
+            #print "eid = ", eidi
+            (n1, n2, n3) = element #self.get_element_node_ids(eid)
             #print "n1=%s n2=%s n3=%s" % (n1, n2, n3)
-            cp1 = Cp[n1]
-            cp2 = Cp[n2]
-            cp3 = Cp[n3]
+            cp1 = Cp[n1-1]
+            cp2 = Cp[n2-1]
+            cp3 = Cp[n3-1]
             cp = (cp1 + cp2 + cp3) / 3.
-            CpDict[eid] = cp
+            CpDict[eidi] = cp
         self.Cps = CpDict
         return CpDict
 
     def nNodes(self):
         return self._nNodes
 
-    def Centroid(self,eid):
+    def Centroid(self, eid):
         return self.centroids[eid]
-
-        nodes = self.get_element_nodes(eid)
-        return Centroid(*nodes)
+        #nodes = self.get_element_nodes(eid)
+        #return Centroid(*nodes)
 
     def nElements(self):
         return self._nElements
-    
+
     def nCps(self):
         return self._nElements
 
-    def Node(self,nid):
-        return self.nodes[nid]
+    def Node(self, nid):
+        return self.nodes[nid-1]
 
-    def Element(self,eid):
+    def Element(self, eid):
         try:
-            element = self.elements[eid]
+            element = self.elements[eid-1]
         except IndexError:
             print "eid=%s len(elements)=%s" % (eid, len(self.elements))
             raise
@@ -303,7 +303,7 @@ class AeroModel(Model):
     def NodeIDs(self):
         nNodes = self.nNodes()
         #print "nNodes = ",nNodes
-        return range(nNodes)
+        return xrange(1, nNodes + 1)
 
     #def getElementIDsWithPIDs(self):
         #return self.ElementIDs()
@@ -311,8 +311,8 @@ class AeroModel(Model):
     def ElementIDs(self):
         nElements = self.nElements()
         #print "nElements = ",nElements
-        return self.elements.keys()
-        
+        return xrange(1, nElements + 1)
+
     def Cp(self, eid):
         #print "Cp eid=%s" %eid
         #cp1 = self.Cps[n1]
@@ -320,10 +320,10 @@ class AeroModel(Model):
         #cp3 = self.Cps[n3]
         #cp = (cp1 + cp2 + cp3) / 3.
         cp = self.Cps[eid]
-        #print "eid=%s Cp=%s" %(eid, cp)
-        return (cp)
-        
-        
+        #print "eid=%s Cp=%s" % (eid, cp)
+        return cp
+
+
         #try:
             #cp = self.Cps[eid-1]
         #except:
@@ -352,7 +352,7 @@ class AeroModel(Model):
         #print "nids[%s] = %s %s %s" %(eid, nid1, nid2, nid3)
         #print "n[%s]=%s n[%s]=%s n[%s]=%s\n" %(nid1, n1, nid2, n2, nid3, n3)
         return (n1, n2, n3)
-     
+
     def get_element_properties(self, eid):
         """
         Returns area, centroid, normal

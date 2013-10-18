@@ -479,7 +479,7 @@ class Cart3DReader(object):
             savetxt(f, hstack([Cp, rho, rhoU, rhoV, rhowW, E]), fmt)
 
 
-    def read_cart3d(self, infilename):
+    def read_cart3d(self, infilename, result_names=None):
         """extracts the points, elements, and Cp"""
         self.infilename = infilename
         self.log.info("---starting reading cart3d file...%r---" % self.infilename)
@@ -499,7 +499,7 @@ class Cart3DReader(object):
             points = self.read_points_ascii()
             elements = self.read_elements_ascii(bypass=False)
             regions = self.read_regions_ascii(bypass=False)
-            loads = self.read_results_ascii(0, self.infile)
+            loads = self.read_results_ascii(0, self.infile, result_names=result_names)
 
         self.infile.close()
         self.log.info("nPoints=%s  nElements=%s" % (self.nPoints, self.nElements))

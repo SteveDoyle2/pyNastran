@@ -10,7 +10,7 @@ from numpy import argsort, mean, array, cross
 from mathFunctions import piercePlaneVector, shepardWeight, Normal, ListPrint # used to be *
 #from mathFunctions import getTriangleWeights
 from models import StructuralModel, AeroModel
-from pyNastran.converters.cart3d.cart3d_reader import generic_cart3d_reader
+from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
 from pyNastran.bdf.bdf import BDF
 from kdtree import KdTree
 
@@ -23,7 +23,7 @@ log = get_logger(None, 'debug' if debug else 'info')
 class LoadMapping(object):
     def __init__(self, aeroModel, structuralModel, configpath='', workpath=''):
         self.nCloseElements = 30
-    
+
         self.configpath = configpath
         self.workpath = workpath
         self.aeroModel = aeroModel
@@ -64,7 +64,7 @@ class LoadMapping(object):
         p = Cp * self.qInf + self.pInf
         #p = Cp*self.qInf # TODO:  for surface with atmospheric pressure inside
         return p
-        
+
     def mapLoads(self):
         """
         Loops thru the unitLoad mappingMatrix and multiplies by the
@@ -108,7 +108,7 @@ class LoadMapping(object):
 
                 #print "Fxyz = ",Fxyz
                 #print "type(structuralModel) = ", type(self.structuralModel)
-                
+
                 #comment = 'percentLoad=%.2f' % percentLoad
                 #self.structuralModel.writeLoad(self.bdf, self.loadCase, sNID,
                 #                               Fxyz[0], Fxyz[1], Fxyz[2], comment)
@@ -153,7 +153,7 @@ class LoadMapping(object):
 
     def buildCentroids(self, model, eids=None):
         centroids = {}
-        
+
         if eids==None:
             eids = model.ElementIDs()
         for eid in eids:
@@ -187,12 +187,12 @@ class LoadMapping(object):
         log.info("---start buildCentroidTree---")
         sys.stdout.flush()
         #print "type(aCentroids)=%s type(sCentroids)=%s" %(type(aCentroids), type(sCentroids))
-        
+
         msg = 'Element '
         for (id,sCentroid) in sorted(sCentroids.items()):
             msg += "%s " %(id)
         log.info(msg + '\n')
-        
+
         self.centroidTree = KdTree('element',sCentroids,nClose=self.nCloseElements)
         log.info("---finish buildCentroidTree---")
         sys.stdout.flush()
@@ -204,19 +204,19 @@ class LoadMapping(object):
         """
         log.info("---starting parseMapFile---")
         mappingMatrix = {}
-        
+
         log.info('loading mapFile=%r' % mapFilename)
         mapFile = open(mapFilename,'r')
         lines = mapFile.readlines()
         mapFile.close()
-        
+
         for (i, line) in enumerate(lines[1:]):  # dont read the first line, thats a header line
             line = line.strip()
             #print "line = %r" % line
             (aEID, dictLine) = line.split('{') # splits the dictionary from the aEID
             aEID = int(aEID)
             #assert i == int(aEID)
-            
+
             # time to parse a dictionary with no leading brace
             distribution = {}
             mapSline = dictLine.strip('{}, ').split(',')
@@ -280,11 +280,11 @@ class LoadMapping(object):
         #sNodes = sModel.getNodes()
         #treeObj = Tree(nClose=5)
         #tree    = treeObj.buildTree(aNodes,sNodes) # fromNodes,toNodes
-        
+
         aElementIDs  = aModel.ElementIDs() # list
         sElementIDs  = sModel.getElementIDsWithPIDs() # list
         sElementIDs2 = sModel.ElementIDs() # list
-        
+
         msg = "there are no internal elements in the structural model?\n   ...len(sElementIDs)=%s len(sElementIDs2)=%s" % (len(sElementIDs), len(sElementIDs2))
         assert sElementIDs != sElementIDs2, msg
         log.info("maxAeroID=%s maxStructuralID=%s sElements=%s" % (max(aElementIDs), max(sElementIDs),len(sElementIDs2)))
@@ -343,7 +343,7 @@ class LoadMapping(object):
         log.info("aCentroid = %s" % aCentroid)
         log.info("sElements = %s" % sElements)
         log.info("sDists    = %s" % ListPrint(sDists))
-        
+
         setNodes = set([])
         sModel = self.structuralModel
         for sEID in sElements:
@@ -361,14 +361,14 @@ class LoadMapping(object):
         """
         Pierces *1* element with a ray casted from the centroid/pSource
         in the direction of the normal vector of an aerodynamic triangle
-        
+
          A  1
           \/ \
           / * \
          2---\-3
                \
                 B
-                
+
         *P = A+(B-A)*t
         """
         #direction = -1. # TODO: direction of normal...?
@@ -403,7 +403,7 @@ class LoadMapping(object):
 
             t1, u1, v1 = tuv
             #t2, u2, v2 = tuv2
-            
+
             isInside = False
             #if self.isInside(u1, v1) or self.isInside(u2, v2):
             if self.isInside(u1, v1):
@@ -415,7 +415,7 @@ class LoadMapping(object):
                 #print "t,u,v=", tuv
 
                 piercedElements.append([sEID, pIntersect, u1, v1, sDist])
-            
+
             #t = min(t1, t2)
             #print "t1=%6.3g t2=%6.3g" % (t1, t2)
             #if isInside:
@@ -449,12 +449,12 @@ class LoadMapping(object):
                 dists.append(dist)
             iSort = argsort(dists)
             #print "iSort = ", iSort
-            
+
             piercedElements2 = []
             for iElement in iSort:
                 piercedElements2.append(piercedElements[iElement])
             #piercedElements = piercedElements[iSort]
-            
+
             #for element in piercedElements:
                 #print "element = ",element
                 #print "dist = ",dist, '\n'
@@ -529,7 +529,7 @@ class LoadMapping(object):
             log.info("mapping load to actual element...")
             nClose = 3  # number of elements to map to
             closeElements = piercedElements[:nClose]
-            
+
             setCloseNodes = set([])
             for closeElement in reversed(closeElements):
                 log.info("closeElement = %s" % closeElement)
@@ -567,15 +567,19 @@ def run_map_loads(cart3dGeom='Components.i.triq', bdfModel='fem.bdf', bdfModelOu
     assert os.path.exists(bdfModel), '%r doesnt exist' % bdfModel
 
     t0 = time()
-    mesh = generic_cart3d_reader(cart3dGeom)
+    mesh = Cart3DReader()
     half_model = cart3dGeom+'_half'
 
-    (nodes, elements, regions, Cp) = mesh.read_cart3d(cart3dGeom)
-    (nodes, elements, regions, Cp) = mesh.make_half_model(nodes, elements, regions, Cp, os.path.basename(half_model))
+    result_names = ['Cp']
+    (nodes, elements, regions, loads) = mesh.read_cart3d(cart3dGeom, result_names=result_names)
+    #Cp = loads['Cp']
+    #half_model_file =
+    (nodes, elements, regions, Cp) = mesh.make_half_model(nodes, elements, regions, loads)
+    #, os.path.basename(half_model)
 
     #(nodes, elements, regions, Cp) = mesh.renumber_mesh(nodes, elements, regions, Cp)
     mesh.write_cart3d(half_model, nodes, elements, regions)
-    
+
     Mach = 0.825
     pInf = 499.3        # psf, alt=35k (per Schaufele p. 11)
     pInf = pInf / 144.  # convert to psi
