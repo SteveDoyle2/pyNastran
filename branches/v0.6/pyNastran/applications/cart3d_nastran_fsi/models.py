@@ -128,7 +128,7 @@ class StructuralModel(Model):
         (area,centroid,normal) = e.getAreaCentroidNormal()
         return (normal, centroid)
 
-    def writeLoad(self, bdf, loadCase, nid, Fx, Fy, Fz, comment=''):
+    def write_load(self, bdf, loadCase, nid, Fx, Fy, Fz, comment=''):
         """
         This function takes a:
            load case
