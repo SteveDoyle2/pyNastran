@@ -9,13 +9,13 @@ from numpy import array, zeros, ones
 from numpy import searchsorted
 from numpy.linalg import solve
 
+from scipy.sparse import coo_matrix
+
 # pyNastran
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 from pyNastran.bdf.bdf import BDF, SPC, SPC1
 from pyNastran.f06.f06 import F06
 from pyNastran.op2.op2 import OP2
-
-from pyNastran.f06.f06Writer import make_grid_point_singularity_table
 
 # Tables
 from pyNastran.op2.tables.oug.oug_displacements import DisplacementObject
@@ -45,9 +45,9 @@ def getDOF_Set(nAll, dofs):
     return dofs
 
 
-def partition_dense_symmetric(A, dofs):
+def partition_dense_symmetric(A, dofs_in):
     nAll = A.shape[0]
-    dofs = getDOF_Set(nAll, dofs)
+    dofs = getDOF_Set(nAll, dofs_in)
     dofs.sort()
     n = len(dofs)
     A2 = zeros((n, n), 'float64')
@@ -56,13 +56,13 @@ def partition_dense_symmetric(A, dofs):
             v = A[dofI, dofJ]
             if abs(v) >= 1e-8:
                 A2[i, j] = v
-    return(A2)
+    return (A2, dofs)
 
 
-def partition_dense_vector(F, dofs):
+def partition_dense_vector(F, dofs_in):
     nAll = F.shape[0]
     #print("dofs = ", dofs)
-    dofs = getDOF_Set(nAll, dofs)
+    dofs = getDOF_Set(nAll, dofs_in)
     dofs.sort()
     print("dofs = ", dofs)
     n = len(dofs)
@@ -71,7 +71,7 @@ def partition_dense_vector(F, dofs):
         v = F[dofI]
         if abs(v) >= 1e-8:
             F2[i] = v
-    return(F2)
+    return (F2, dofs)
 
 
 def partition_sparse_vector(F, dofs):
@@ -96,7 +96,7 @@ def departition_dense_vector(n, IsVs):
     return(V)
 
 
-def reverseDict(A):
+def reverse_dict(A):
     B = {}
     for (key, value) in A.iteritems():
         B[value] = key
@@ -137,6 +137,7 @@ class Solver(F06, OP2):
         OP2.__init__(self, '')
 
         self.is3D = True
+        self.pageNum = 1
 
         # normalization of stiffness matrix
         self.fnorm = 1.0
@@ -157,7 +158,7 @@ class Solver(F06, OP2):
 
         self.case_result_flags = {}
 
-    def solve(self, K, F):  # can be overwritten
+    def solve(self, K, F, dofs):  # can be overwritten
         r"""solves \f$ [K]{x} = {F}\f$ for \f${x}\f$"""
         print("--------------")
         print("Kaa_norm = \n" + str(K / self.fnorm))
@@ -167,40 +168,82 @@ class Solver(F06, OP2):
         print("--------------")
 
         #asdf
-        return solve(K, F)
+        try:
+            U = solve(K, F)
+        except:
+            failed = []
+            faileds = []
+            for i, iu in enumerate(dofs):
+                absF = abs(F)
+                nid, dof = self.IDtoNidComponents[iu]
+                #if absF[iu] == 0.0 and ??:
+                if K[i, i] == 0.0:
+                    faileds.append(i)
+                    failed.append([nid, dof])
+            msg = self.make_grid_point_singularity_table(failed)
+            self.f06_file.write(msg)
+
+            if 'AUTOSPC' in self.model.params:
+                autospc = self.model.params['AUTOSPC']
+                value = autospc.values[0]
+
+                if value in [1, 'YES']:
+                    # figure out what are the DOFs that are removed
+                    ilist = list(set(xrange(len(dofs))).difference(set(faileds)))
+                    ilist.sort()
+
+                    # remove the DOFs and solve
+                    K2 = K[ilist, :][:, ilist]
+                    F2 = F[ilist]
+                    U2 = solve(K2, F2)
+
+                    # put the removed DOFs back in and set their displacement to 0.0
+                    U = zeros(len(F), 'float64')
+                    U[failed] = U2
+            else:
+                self.f06_file.close()
+                raise
+
+        return U
 
     def run_solver(self, bdfName):
         bdfName = os.path.abspath(bdfName)
         bdf_base, ext = os.path.splitext(bdfName)
         self.f06_name = bdf_base + '.f06'
         self.op2_name = bdf_base + '.op2'
+
         print("**is3D =", self.is3D)
 
-        model = BDF()
-        model.cardsToRead = get_cards()
-        model.readBDF(bdfName)
-        cc = model.caseControlDeck
+        self.model = BDF()
+        self.model.cardsToRead = get_cards()
+        self.model.readBDF(bdfName)
+        cc = self.model.caseControlDeck
         #print cc.subcases
         analysisCases = []
         for (isub, subcase) in sorted(cc.subcases.iteritems()):
             if subcase.has_parameter('LOAD'):
                 analysisCases.append(subcase)
 
+        self.f06_file = open(self.f06_name, 'wb')
+        self.f06_file.write(self.make_f06_header())
+        pageStamp = self.make_stamp(self.Title)
+        self.write_summary(self.f06_file, card_count=self.model.card_count)
+
         #print analysisCases
         for case in analysisCases:
             print(case)
             (value, options) = case.get_parameter('STRESS')
-            print("STRESS value   = %s" % (value))
-            print("STRESS options = %s" % (options))
+            print("STRESS value   = %s" % value)
+            print("STRESS options = %s" % options)
 
             if case.has_parameter('TEMPERATURE(INITIAL)'):
                 (value, options) = case.get_parameter('TEMPERATURE(INITIAL)')
-                print('value   = %s' % (value))
-                print('options = %s' % (options))
+                print('value   = %s' % value)
+                print('options = %s' % options)
                 raise NotImplementedError('TEMPERATURE(INITIAL) not supported')
                 #integrate(B.T*E*alpha*dt*Ads)
             #sys.exit('starting case')
-            self.run_case(model, case)
+            self.run_case(self.model, case)
 
     def run_case(self, model, case):
         sols = {101: self.run_sol_101}
@@ -344,7 +387,7 @@ class Solver(F06, OP2):
         #Mgg = zeros((i, i))
 
         Fg = self.assemble_forces(model, case, Fg, nidComponentToID)
-        Kgg = self.assemble_global_stiffness(model, i, Kgg, nidComponentToID, Fg)
+        Kgg, Kgg_sparse = self.assemble_global_stiffness(model, i, Kgg, nidComponentToID, Fg)
         return(Kgg, Fg, isSPC, isMPC)
 
     def run_sol_101(self, model, case):
@@ -424,7 +467,6 @@ class Solver(F06, OP2):
         ncquads = len(cquads)
         nctris = len(ctris)
 
-        self.card_count = model.card_count
         #=========================
         # rods
         crods = array(crods)
@@ -448,21 +490,35 @@ class Solver(F06, OP2):
                     raise NotImplementedError(elementType)
 
                 if n:
-                    ox = zeros(n, 'float64')
-                    ex = zeros(n, 'float64')
-                    fx = zeros(n, 'float64')
+                    o1 = zeros(n, 'float64')
+                    e1 = zeros(n, 'float64')
+                    f1 = zeros(n, 'float64')
+
+                    o4 = zeros(n, 'float64')
+                    e4 = zeros(n, 'float64')
+                    f4 = zeros(n, 'float64')
+
+                    #margin_1 =
+                    #margin_2 =
+                    #margin_12 =
                     for i, eid in enumerate(eids):
                         element = elements[eid]
-                        (exi, oxi, fxi) = element.displacement_stress(model, q, self.nidComponentToID, is3D=self.is3D)
-                        ox[i] = oxi
-                        ex[i] = exi
-                        fx[i] = fxi
+                        (e1i, e4i,
+                         o1i, o4i,
+                         f1i, f4i) = element.displacement_stress(model, q, self.nidComponentToID, is3D=self.is3D)
+                        o1[i] = o1i
+                        e1[i] = e1i
+                        f1[i] = f1i
+
+                        o4[i] = o4i
+                        e4[i] = e4i
+                        f4[i] = f4i
                     if self.is_strain:
-                        self.store_rod_oes(model, eids, ex, case, elementType, Type='strain')
+                        self.store_rod_oes(model, eids, e1, e4, case, elementType, Type='strain')
                     if self.is_stress:
-                        self.store_rod_oes(model, eids, ox, case, elementType, Type='stress')
+                        self.store_rod_oes(model, eids, o1, o4, case, elementType, Type='stress')
                     if self.is_force:
-                        self.store_rod_oef(model, eids, fx, case, elementType)
+                        self.store_rod_oef(model, eids, f1, f4, case, elementType)
 
             #=========================
             # BARS / BEAMS
@@ -487,7 +543,7 @@ class Solver(F06, OP2):
             # SHELLS
             # SOLIDS
         #=========================
-        self.write_f06(self.f06_name, end_flag=True)
+        self.write_f06(self.f06_file, end_flag=True)
 
 
     def store_beam_oes(self, model, beams, ex, case, Type='strain'):
@@ -502,7 +558,7 @@ class Solver(F06, OP2):
     def store_beam_oef(self, model, beams, fx, case):
         pass
 
-    def store_rod_oef(self, model, eids, axial, case, elementType):
+    def store_rod_oef(self, model, eids, axial, torsion, case, elementType):
         """
         fills the displacement object
         """
@@ -536,8 +592,8 @@ class Solver(F06, OP2):
         data = []
         i = 0
         #(elementID, axial, torsion) = line
-        for (eid, axiali) in zip(eids, axial):
-            line = [eid, axiali, 0.]
+        for (eid, axiali, torsioni) in zip(eids, axial, torsion):
+            line = [eid, axiali, torsioni]
             data.append(line)
         forces.add_f06_data(data, dt)
 
@@ -551,7 +607,7 @@ class Solver(F06, OP2):
             raise NotImplementedError(elementType)
         #stress.dt = None
 
-    def store_rod_oes(self, model, eids, axial, case, elementType, Type='stress'):
+    def store_rod_oes(self, model, eids, axial, torsion, case, elementType, Type='stress'):
         """
         fills the displacement object
         """
@@ -592,8 +648,8 @@ class Solver(F06, OP2):
         data = []
         i = 0
         #(elementID, axial, torsion, margin_axial, margin_torsion) = line
-        for (eid, axiali) in zip(eids, axial):
-            line = [eid, axiali, 0., 0., 0.]
+        for (eid, axiali, torsioni) in zip(eids, axial, torsion):
+            line = [eid, axiali, 0., torsioni, 0.]
             data.append(line)
         stress.add_f06_data(data, dt)
 
@@ -656,7 +712,7 @@ class Solver(F06, OP2):
         (self.nidComponentToID, i) = self.build_nid_component_to_id(model)
         (Kgg, Fg, isSPC, isMPC) = self.build_Kgg_Fg(model, case, self.nidComponentToID, i)
 
-        (self.IDtoNidComponents) = reverseDict(self.nidComponentToID)
+        (self.IDtoNidComponents) = reverse_dict(self.nidComponentToID)
         print("IDtoNidComponents = ", self.IDtoNidComponents)
         #print("Kgg =\n" + print_annotated_matrix(Kgg, self.IDtoNidComponents))
         #print("Kgg = \n", Kgg)
@@ -665,13 +721,13 @@ class Solver(F06, OP2):
         #(Kaa,Fa) = self.Partition(Kgg)
         #sys.exit('verify Kgg')
 
-        print("Kgg = \n%s" % (print_matrix(Kgg/self.fnorm)))
-        Kaa = partition_dense_symmetric(Kgg, self.iUs)
-        print("Kaa = \n%s" % (print_matrix(Kaa/self.fnorm)))
+        #print("Kgg = \n%s" % (print_matrix(Kgg / self.fnorm)))
+        Kaa, dofs2 = partition_dense_symmetric(Kgg, self.iUs)
+        print("Kaa = \n%s" % (print_matrix(Kaa / self.fnorm)))
         #print("Kaa.shape = ",Kaa.shape)
 
         #sys.exit('verify Kaa')
-        Fa = partition_dense_vector(Fg, self.iUs)
+        Fa, _dofs2 = partition_dense_vector(Fg, self.iUs)
         #print("Kaa = \n%s" % (print_matrix(Kaa)))
 
         print("Fg = ", Fg)
@@ -680,10 +736,10 @@ class Solver(F06, OP2):
 
         #self.Us = array(self.Us, 'float64')  # SPC
         #self.Um = array(self.Um, 'float64')  # MPC
-        Ua = self.solve_sol_101(Kaa, Fa)
+        Ua = self.solve_sol_101(Kaa, Fa, dofs2)
         return Ua, i
 
-    def solve_sol_101(self, Kaa, Fa):
+    def solve_sol_101(self, Kaa, Fa, dofs2):
         if 0:
             zero = array([])
             MPCgg = zero
@@ -720,7 +776,7 @@ class Solver(F06, OP2):
             Fa = Fa0  # + Cam*Fm
             Kaa = Kaa0  # +Kaa1+Kaa2
 
-        Ua = self.solve(Kaa, Fa)
+        Ua = self.solve(Kaa, Fa, dofs2)
         #self.Um = Kma*Ua
 
         return Ua
@@ -763,13 +819,13 @@ class Solver(F06, OP2):
 
             # nIJV is the position of the values of K in the dof
             try:
-                (K, Ke, dofs, nIJV, Fg, nGrav) = elem.Stiffness(model, node_ids, index0s, self.gravLoad, self.is3D, self.fnorm)
+                (K, dofs, nIJV, Fg, nGrav) = elem.Stiffness(model, node_ids, index0s, self.gravLoad, self.is3D, self.fnorm)
             except TypeError as e:
-                msg = 'elem %s must take:\n>>>Stiffness(model, node_ids, index0s, self.gravLoad, self.is3D)' % elem.type
+                msg = 'elem %s must take:\n>>>Stiffness(model, node_ids, index0s, self.gravLoad, self.is3D, self.fnorm)' % elem.type
                 print(msg)
                 raise
-            print("K[%s] = \n%s" % (eid, K/self.fnorm))
-            print("Ke[%s] = \n%s" % (eid, Ke/self.fnorm))
+            print("K[%s] = \n%s" % (eid, K / self.fnorm))
+            #print("Ke[%s] = \n%s" % (eid, Ke / self.fnorm))
             #print("dofs = %s" % dofs)
 
             if 0:
@@ -822,7 +878,9 @@ class Solver(F06, OP2):
                 #KggJ.append(j)
                 #KggV.append(v)
 
-        return Kgg
+        #Kgg_sparse = coo_matrix((entries, (rows, cols)), shape=(i, i))
+        Kgg_sparse = None
+        return Kgg, Kgg_sparse
 
     def apply_SPCs2(self, model, case, nidComponentToID):
         if case.has_parameter('SPC'):
@@ -957,10 +1015,11 @@ class Solver(F06, OP2):
 
                 if nid in momentLoads:
                     moment = momentLoads[nid]
-                    if abs(moment[0]) > 0. and self.is3D:
-                        Fg[Dofs[(nid, 4)]] += moment[2]
+                    print(moment)
+                    if abs(moment[0]) > 0.:
+                        Fg[Dofs[(nid, 4)]] += moment[0]
                     if abs(moment[1]) > 0.:
-                        Fg[Dofs[(nid, 5)]] += moment[2]
+                        Fg[Dofs[(nid, 5)]] += moment[1]
                     if abs(moment[2]) > 0. and self.is3D:
                         Fg[Dofs[(nid, 6)]] += moment[2]
 

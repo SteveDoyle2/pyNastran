@@ -48,7 +48,7 @@ def _Lambda(model, n1, n2, is3D=False, debug=True):
 
     ::
 
-      3d  [l,m,n,0,0,0]
+      3d  [l,m,n,0,0,0]  2x6
           [0,0,0,l,m,n]
     """
     #R = self.Rmatrix(model,is3D)
@@ -75,8 +75,10 @@ def _Lambda(model, n1, n2, is3D=False, debug=True):
 
     #print("R = \n",R)
     #print("is3D = \n",is3D)
+    #debug = True
     if debug:
         print("Lambda = \n" + str(Lambda))
+        #sys.exit('asdf')
     return Lambda
 
 class RodElement(Element):  # CROD, CONROD, CTUBE
@@ -161,85 +163,137 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
 
     def Stiffness(self, model, node_ids, index0s, grav, is3D=False, fnorm=1.0):  # CROD/CONROD
         #print("----------------")
-        Lambda = self.Lambda(model, is3D=is3D)
-        #print("Lambda = \n"+str(Lambda))
+        A = self.Area()
+        E = self.E()
+        G = self.G()
+        J = self.J()
 
-        k, ki = self.Stiffness1D(model)
-        #print R
-        #print(k)
-        #print("Lambda.shape = ",Lambda.shape)
-        K = dot(dot(transpose(Lambda), k), Lambda)
-        #Fg = dot(dot(transpose(Lambda),grav),Lambda)
-
-        #print('size(grav) =',grav.shape)
-        mass = self.Mass()
-        mg = -grav * mass
-        if is3D:
-            Fg = [mg[0], mg[1], mg[2], mg[0], mg[1], mg[2]]
-        else:
-            Fg = [mg[0], mg[1], mg[0], mg[1]]
-        #print("Fg = ",Fg)
-        print("mass = ", mass)
-        print("Fg =\n", Fg)
-        #print(K/fnorm)
-        #print("K[%s] = \n%s\n" % (self.eid, K/fnorm))
-        #print("Fg[%s] = %s\n" %(self.eid,Fg))
-
+        #========================
+        #(n1, n2) = self.nodeIDs()
         n0, n1 = self.nodeIDs()
 
         i0, i1 = index0s
-        T = ones(6, dtype='float64')
-        n0, n1 = self.nodeIDs()
         node0 = self.nodes[0]
         node1 = self.nodes[1]
-        make_T = False
 
-        gx = array([1., 0., 0.])
-        gy = array([0., 1., 0.])
-        gz = array([0., 0., 1.])
 
-        if node0.cp.cid != 0:
-            cp = node0.cp
-            T[0, :3] = dot(gx, cp.i  )
-            T[1, :3] = dot(gy, cp.j  )
-            T[2, :3] = dot(gz, cp.k  )
-            make_T = True
-        if node1.cp.cid != 0:
-            cp = node1.cp
-            T[3, 3:] = dot(gx, cp.i  )
-            T[4, 3:] = dot(gy, cp.j  )
-            T[5, 3:] = dot(gz, cp.k  )
-            make_T = True
-        print(T)
+        p0 = model.Node(n0).xyz
+        p1 = model.Node(n1).xyz
+        L = norm(p0 - p1)
+        if L == 0.0:
+            msg = 'invalid CROD length=0.0\n%s' % (self.__repr__())
+            raise ZeroDivisionError(msg)
+        #========================
+        k_axial = A * E / L
+        k_torsion = G * J / L
+        #k_axial = 1.0
+        #k_torsion = 2.0
 
-        make_T = False
+        k = matrix([[1., -1.], [-1., 1.]])  # 1D rod
+
+        Lambda = self.Lambda(model, is3D=is3D)
+        K = dot(dot(transpose(Lambda), k), Lambda)
+        Ki, Kj = K.shape
+
+        # for testing
+        #K = ones((Ki, Ki), 'float64')
+
+        K2 = zeros((Ki*2, Kj*2), 'float64')
+        if k_axial == 0.0 and k_torsion == 0.0:
+            dofs = []
+            nIJV = []
+            K2 = []
+        elif k_torsion == 0.0: # axial; 2D or 3D
+            K2 = K * k_axial
+            if is3D:
+                dofs = array([
+                    i0, i0+1, i0+2,
+                    i1, i1+1, i1+2,
+                ], 'int32')
+                nIJV = [
+                    # axial
+                    (n0, 1), (n0, 2), (n0, 3),
+                    (n1, 1), (n1, 2), (n1, 3),
+                ]
+            else:
+                Ke = k
+                dofs = array([ i0, i0+1,
+                               i1, i1+1], 'int32')
+                nIJV = [
+                    # axial
+                    (n0, 1), (n0, 2),
+                    (n1, 1), (n1, 2),
+                ]
+        elif k_axial == 0.0: # torsion; assume 3D
+            K = K * k_torsion
+            dofs = array([
+                i0+3, i0+4, i0+5,
+                i1+3, i1+4, i1+5,
+            ], 'int32')
+            nIJV = [
+                # torsion
+                (n0, 4), (n0, 5), (n0, 6),
+                (n1, 4), (n1, 5), (n1, 6),
+            ]
+
+        else:  # axial + torsion; assume 3D
+            # u1fx, u1fy, u1fz, u2fx, u2fy, u2fz
+            K2[:Ki, :Ki] = K * k_axial
+
+            # u1mx, u1my, u1mz, u2mx, u2my, u2mz
+            K2[Ki:, Ki:] = K * k_torsion
+
+            dofs = array([
+                i0, i0+1, i0+2,
+                i1, i1+1, i1+2,
+
+                i0+3, i0+4, i0+5,
+                i1+3, i1+4, i1+5,
+            ], 'int32')
+            nIJV = [
+                # axial
+                (n0, 1), (n0, 2), (n0, 3),
+                (n1, 1), (n1, 2), (n1, 3),
+
+                # torsion
+                (n0, 4), (n0, 5), (n0, 6),
+                (n1, 4), (n1, 5), (n1, 6),
+            ]
+
+        #Fg = dot(dot(transpose(Lambda), grav), Lambda)
+        #print("K=\n", K / fnorm)
+        #print("K2=\n", K2 / fnorm)
+
+        #========================
+
+        mass = self.Mass()
+        mg = -grav * mass
         if is3D:
-        #if make_T:
-            k2 = zeros((6,6), 'float64')
-            #Ti =
-            k2[0,0] = ki
-            k2[3,0] = -ki
-            k2[0,3] = -ki
-            k2[3,3] = ki
-            #k2 = dot(dot(transpose(Lambda), k), Lambda)
-            #print("k2\n", k2)
-            Ke = k2
-            #Ke = T.T * k2 * T
-
-            #Ke = k2
-            dofs = array([ i0, i0+1, i0+2,
-                           i1, i1+1, i1+2], 'int32')
+            Fg = [mg[0], mg[1], mg[2],
+                  mg[0], mg[1], mg[2]]
         else:
-            Ke = k
-            dofs = array([ i0, i0+1,
-                           i1, i1+1], 'int32')
+            Fg = [mg[0], mg[1],
+                  mg[0], mg[1]]
+        #print("Fg = ",Fg)
+        #print("mass = ", mass)
+        #print("Fg =\n", Fg)
+        #print(K / fnorm)
+        #print("K[%s] = \n%s\n" % (self.eid, K/fnorm))
+        #print("Fg[%s] = %s\n" % (self.eid, Fg))
+
+
+        #gx = array([1., 0., 0.])
+        #gy = array([0., 1., 0.])
+        #gz = array([0., 0., 1.])
+
         print('dofs =', dofs)
-        nIJV = [(n0, 1), (n0, 2), (n0, 3),
-                (n1, 1), (n1, 2), (n1, 3), ]
+        print('K =\n', K / fnorm)
+
+        # bad
         nGrav = [(n0, 1), (n0, 2), (n0, 3),
                  (n1, 1), (n1, 2), (n1, 3)]
 
-        return(K, Ke, dofs, nIJV, Fg, nGrav)
+        return(K2, dofs, nIJV, Fg, nGrav)
 
     def displacement_stress(self, model, q, dofs, is3D=False): # CROD/CONROD
         (n1, n2) = self.nodeIDs()
@@ -247,16 +301,35 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
 
         #print("**dofs =", dofs)
         n11 = dofs[(n1, 1)]
-        n12 = dofs[(n1, 2)]
         n21 = dofs[(n2, 1)]
+
+        n12 = dofs[(n1, 2)]
         n22 = dofs[(n2, 2)]
 
         if is3D:
             n13 = dofs[(n1, 3)]
             n23 = dofs[(n2, 3)]
-            q2 = array([q[n11], q[n12], q[n13], q[n21], q[n22], q[n23]])
+
+            # moments
+            n14 = dofs[(n1, 4)]
+            n24 = dofs[(n2, 4)]
+
+            n15 = dofs[(n1, 5)]
+            n25 = dofs[(n2, 5)]
+
+            n16 = dofs[(n1, 6)]
+            n26 = dofs[(n2, 6)]
+            q_axial = array([
+                q[n11], q[n12], q[n13],
+                q[n21], q[n22], q[n23]
+            ])
+            q_torsion = array([
+                q[n14], q[n15], q[n16],
+                q[n24], q[n25], q[n26]
+            ])
         else:
-            q2 = array([q[n11], q[n12], q[n21], q[n22]])
+            q_axial = array([q[n11], q[n12],
+                             q[n21], q[n22]])
         #print("type=%s n1=%s n2=%s" % (self.type, n1, n2))
         #print("n11=%s n12=%s n21=%s n22=%s" %(n11,n12,n21,n22))
 
@@ -265,66 +338,36 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
 
         #print "Lsize = ",Lambda.shape
         #print "qsize = ",q.shape
-        u = dot(array(Lambda), q2)
-        du = -u[0] + u[1]
+        u_axial = dot(array(Lambda), q_axial)
+        du_axial = -u_axial[0] + u_axial[1]
+        if is3D:
+            u_torsion = dot(array(Lambda), q_torsion)
+            du_torsion = -u_torsion[0] + u_torsion[1]
+        else:
+            du_torsion = 0.0
 
         L = self.Length()
         E = self.E()
         A = self.Area()
 
-        #stressX = -EL*u[0]+EL*u[1]
-        axial_strain = du / L
-        torsional_strain = 0.0
-
-
         C = self.C()
         J = self.J()
+        G = self.G()
+
+        axial_strain = du_axial / L
+        torsional_strain = du_torsion * C / L
+
         axial_stress = E * axial_strain
-        if J==0.0 or C==0.0: # allclose(J, 0.0) or allclose(C, 0.0)
-            torsion_stress = 0.0
-        else:
-            print('C=%g J=%g'  % (C, J))
-            torsion_stress = C / J * torsional_strain
+        torsional_stress = G * torsional_strain
 
         axial_force = axial_stress * A
+        torsional_moment = du_torsion * G * J / L
         #print("axial_strain = %s [psi]" % axial_strain)
         #print("axial_stress = %s [psi]" % axial_stress)
         #print("axial_force  = %s [lb]\n" % axial_force)
-        return axial_strain, axial_stress, axial_force
-
-    def Stiffness1D(self, model):  # CROD/CONROD
-        """
-        .. todo:: remove this method after making sure it still works
-        """
-        #L = norm(r)
-        (n1, n2) = self.nodeIDs()
-        #node1 = model.Node(n1)
-        #node2 = model.Node(n2)
-
-        p1 = model.Node(n1).xyz
-        p2 = model.Node(n2).xyz
-        #print "node1 = ",node1
-        #print "node2 = ",node2
-        L = norm(p1 - p2)
-
-        if L == 0.0:
-            msg = 'invalid CROD length=0.0\n%s' % (self.__repr__())
-            raise ZeroDivisionError(msg)
-
-        A = self.Area()
-        #mat = self.mid
-        E = self.E()
-        #print("A = ", A)
-        #print("E = ", E)
-        #print("L = ", L)
-        print("AE = ", A*E)
-        #ki = 1.
-        ki = A * E / L
-        K = ki * matrix([[1., -1.], [-1., 1.]])  # rod
-
-        #print("A=%g E=%g L=%g  AE/L=%g" % (A, E, L, A * E / L))
-        #print "K = \n",K
-        return K, ki
+        return (axial_strain, torsional_strain,
+                axial_stress, torsional_stress,
+                axial_force, torsional_moment)
 
 
 class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
@@ -979,7 +1022,7 @@ class CBAR(LineElement):
         Lambda = self.Lambda(model, is3D=is3D)
         #print("Lambda = \n"+str(Lambda))
 
-        k, ki = self.Stiffness1D(model)
+        k = self.Stiffness1D(model)
         #print R
         #print(k)
         #print("Lambda.shape = ", Lambda.shape)
@@ -1493,7 +1536,7 @@ class CBEAM(CBAR):
         Lambda = self.Lambda(model, is3D=is3D)
         #print("Lambda = \n"+str(Lambda))
 
-        k, ki = self.Stiffness1D(model)
+        k, ki = self.Stiffness1D(model)  # CBEAM
         #print R
         #print(k)
         print("Lambda.shape = ", Lambda.shape)

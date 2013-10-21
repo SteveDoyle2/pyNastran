@@ -95,16 +95,6 @@ def make_f06_header():
     return ''.join(lines1 + lines2)
 
 
-def make_grid_point_singularity_table(failed):
-    msg = ''
-    if failed:
-        msg += '0                                         G R I D   P O I N T   S I N G U L A R I T Y   T A B L E\n'
-        msg += '0                             POINT    TYPE   FAILED      STIFFNESS       OLD USET           NEW USET\n'
-        msg += '                               ID            DIRECTION      RATIO     EXCLUSIVE  UNION   EXCLUSIVE  UNION\n'
-        for (nid, dof) in failed:
-            msg += '                                %s        G      %s         0.00E+00          B        F         SB       SB   *\n' % (nid, dof)
-    return msg
-
 def make_end(end_flag=False):
     lines = []
     lines2 = []
@@ -182,6 +172,7 @@ class F06WriterDeprecated(object):
 class F06Writer(object):
     def __init__(self, model='tria3'):
         self.Title = ''
+        self.pageNum = 1
         self.set_f06_name(model)
 
     def set_f06_name(self, model):
@@ -233,7 +224,50 @@ class F06Writer(object):
         self.write_f06(self, f06OutName, is_mag_phase=is_mag_phase, make_file=makeFile,
                  delete_objects=deleteObjects)
 
-    def write_summary(self, f):
+    def make_grid_point_singularity_table(self, failed):
+        msg = ''
+        if failed:
+            msg += '0                                         G R I D   P O I N T   S I N G U L A R I T Y   T A B L E\n'
+            msg += '0                             POINT    TYPE   FAILED      STIFFNESS       OLD USET           NEW USET\n'
+            msg += '                               ID            DIRECTION      RATIO     EXCLUSIVE  UNION   EXCLUSIVE  UNION\n'
+            for (nid, dof) in failed:
+                msg += '                                %s        G      %s         0.00E+00          B        F         SB       SB   *\n' % (nid, dof)
+
+        pageStamp = self.make_stamp(self.Title)
+        msg += pageStamp+'%i\n' % self.pageNum
+        self.pageNum += 1
+        return msg
+
+    def write_oload(self, model, Fg):
+        msg = ''
+        msg += '        *** USER INFORMATION MESSAGE 7310 (VECPRN)\n'
+        msg += '            ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM WILL BE USED AS REFERENCE LOCATION.\n'
+        msg += '            RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.\n'
+        msg += '       0                                                  OLOAD    RESULTANT       \n'
+
+        nnodes = len(model.nodes)
+
+        msg += '        SUBCASE/    LOAD\n'
+        msg += '        DAREA ID    TYPE       T1            T2            T3            R1            R2            R3\n'
+        msg += '      0        1     FX    3.000000E+03     ----          ----          ----       0.000000E+00 -6.000000E+04                             \n'
+        msg += '                     FY       ----       5.000000E+03     ----       0.000000E+00     ----       2.000000E+05                             \n'
+        msg += '                     FZ       ----          ----       0.000000E+00  0.000000E+00  0.000000E+00     ----                                  \n'
+        msg += '                     MX       ----          ----          ----       1.300000E+04     ----          ----                                  \n'
+        msg += '                     MY       ----          ----          ----          ----       0.000000E+00     ----                                  \n'
+        msg += '                     MZ       ----          ----          ----          ----          ----       0.000000E+00                             \n'
+        msg += '                   TOTALS  3.000000E+03  5.000000E+03  0.000000E+00  1.300000E+04  0.000000E+00  1.400000E+05\n'
+
+        pageStamp = self.make_stamp(self.Title)
+        msg += pageStamp+'%i\n' % self.pageNum
+        self.pageNum += 1
+
+        return msg
+
+
+
+
+
+    def write_summary(self, f, card_count=None):
 
 
         summary = '                                        M O D E L   S U M M A R Y\n\n'
@@ -298,12 +332,15 @@ class F06Writer(object):
             ['ELEMENTS', ['RBE2', 'RBE3']],
         ]
         #print("self.card_count", self.card_count)
+        if card_count is None:
+            card_count = self.card_count
+
         for block in blocks:
             block_name, keys = block
             key_count = 0
             for key in sorted(keys):
                 try:
-                    value = self.card_count[key]
+                    value = card_count[key]
                     summary += '                                   NUMBER OF %-8s %-8s = %8s\n' % (key, block_name, value)
                     key_count += 1
                 except KeyError:
@@ -312,6 +349,11 @@ class F06Writer(object):
                 summary += ' \n'
         #sys.exit(summary)
         f.write(summary)
+
+        pageStamp = self.make_stamp(self.Title)
+        f.write(pageStamp+'%i\n' % self.pageNum)
+        self.pageNum += 1
+        print(summary)
 
     def write_f06(self, f06OutName, is_mag_phase=False, make_file=True,
                  delete_objects=True, end_flag=False):
@@ -329,19 +371,19 @@ class F06Writer(object):
         """
         if isinstance(f06OutName, str):
             f = open(f06OutName, 'wb')
+            self.write_summary(f)
         else:
             assert isinstance(f06OutName, file), 'type(f06OutName)= %s' % f06OutName
             f = f06OutName
             f06OutName = f.name
             print 'f06OutName =', f06OutName
 
-        self.write_summary(f)
+
         pageStamp = self.make_stamp(self.Title)
         #print "pageStamp = |%r|" %(pageStamp)
         #print "stamp     = |%r|" %(stamp)
 
         #is_mag_phase = False
-        pageNum = 1
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n']
         for isubcase, result in sorted(self.eigenvalues.iteritems()):  # goes first
@@ -350,22 +392,22 @@ class F06Writer(object):
             header[0] = '     %s\n' % subtitle
             header[1] = '0                                                                                                            SUBCASE %i\n \n' % (isubcase)
             print(result.__class__.__name__)
-            (msg, pageNum) = result.write_f06(header, pageStamp,
-                                             pageNum=pageNum, f=f, is_mag_phase=is_mag_phase)
+            (msg, self.pageNum) = result.write_f06(header, pageStamp,
+                                                   pageNum=self.pageNum, f=f, is_mag_phase=is_mag_phase)
             if delete_objects:
                 del result
             f.write(msg)
-            pageNum += 1
+            self.pageNum += 1
 
         # has a special header
         for isubcase, result in sorted(self.eigenvectors.iteritems()):
             (subtitle, label) = self.iSubcaseNameMap[isubcase]
             subtitle = subtitle.strip()
             header[0] = '     %s\n' % subtitle
-            header[1] = '0                                                                                                            SUBCASE %i\n' % (isubcase)
+            header[1] = '0                                                                                                            SUBCASE %i\n' % isubcase
             print(result.__class__.__name__)
-            (msg, pageNum) = result.write_f06(header, pageStamp,
-                                             pageNum=pageNum, f=f, is_mag_phase=is_mag_phase)
+            (msg, self.pageNum) = result.write_f06(header, pageStamp,
+                                                   pageNum=self.pageNum, f=f, is_mag_phase=is_mag_phase)
             if delete_objects:
                 del result
             f.write(msg)
@@ -456,22 +498,22 @@ class F06Writer(object):
                         result = resType[isubcase]
                         try:
                             print(result.__class__.__name__)
-                            (msg, pageNum) = result.write_f06(header, pageStamp, pageNum=pageNum, f=f, is_mag_phase=False)
+                            (msg, self.pageNum) = result.write_f06(header, pageStamp, pageNum=self.pageNum, f=f, is_mag_phase=False)
                         except:
                             #print "result name = %s" %(result.name())
                             raise
                         if delete_objects:
                             del result
                         f.write(msg)
-                        pageNum += 1
+                        self.pageNum += 1
         if 0:
             for res in resTypes:
                 for isubcase, result in sorted(res.iteritems()):
-                    (msg, pageNum) = result.write_f06(header, pageStamp, pageNum=pageNum, f=f, is_mag_phase=False)
+                    (msg, self.pageNum) = result.write_f06(header, pageStamp, pageNum=self.pageNum, f=f, is_mag_phase=False)
                     if delete_objects:
                         del result
                     f.write(msg)
-                    pageNum += 1
+                    self.pageNum += 1
         f.write(make_end(end_flag))
         if not make_file:
             print(f.getvalue())

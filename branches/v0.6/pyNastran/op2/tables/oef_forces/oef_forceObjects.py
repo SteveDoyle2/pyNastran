@@ -125,12 +125,11 @@ class RealRodForce(scalarObject):  # 1-ROD
         if nOut % 2 == 1:
             nWrite = nOut - 1
         for i in xrange(0, nWrite, 2):
-            outLine = '      %8i   %13s  %13s  %8i   %13s  %13s\n' % (tuple(out[i] + out[i + 1]))
+            outLine = '      %8i   %13s  %13s  %8i   %13s  %13s\n' % tuple(out[i] + out[i + 1])
             msg.append(outLine)
 
         if nOut % 2 == 1:
-            outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (
-                tuple(out[-1]))
+            outLine = '      %8i   %13s  %13s\n' % tuple(out[-1])
             msg.append(outLine)
         msg.append(pageStamp + str(pageNum) + '\n')
         if f is not None:
@@ -161,9 +160,11 @@ class RealConrodForce(RealRodForce):  # 10-CONROD
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
-        words = header + ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C O N R O D )\n',
-                        '       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
-                        '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n']
+        words = header + ['                                           F O R C E S   I N   R O D   E L E M E N T S     ( C O N R O D )\n',
+                          '       ELEMENT           AXIAL                                     ELEMENT           AXIAL\n',
+                          '         ID.             FORCE          TORQUE                       ID.             FORCE          TORQUE\n']
+
+
         return self._write_f06(words, pageStamp, pageNum, f)
 
 

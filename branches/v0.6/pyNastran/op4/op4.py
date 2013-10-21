@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 #!/usr/bin/env python
 __all__ = ['OP4']
 
@@ -29,7 +29,7 @@ import os
 import io
 from struct import pack, unpack
 
-from numpy import (array, zeros, float32, float64, complex64, complex128, 
+from numpy import (array, zeros, float32, float64, complex64, complex128,
                   allclose)
 from scipy.sparse import coo_matrix
 
@@ -54,7 +54,7 @@ class OP4Deprecated(object):
         """..seealso:: :func: `read_op4_binary`"""
         return self.read_op4_binary(op4Name, matrixNames, precision)
 
-    
+
 #class OP4(FortranFile):
 class OP4(OP4Deprecated):
     """
@@ -126,14 +126,14 @@ class OP4(OP4Deprecated):
             wildcard_qt = "Nastran OP4 (*.op4);;All files (*)"
             title = 'Please select a OP4 to load'
             op4_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
-        
+
         if isinstance(matrix_names, str):
             matrix_names = [matrix_names]
         #assert isinstance(matrix_names, list), 'type(matrix_names)=%s' % type(matrix_names)
 
         if not os.path.exists(op4_filename):
             raise IOError('cannot find op4_filename=%r' % op4_filename)
-        
+
         if is_binary(op4_filename):
             return self.read_op4_binary(op4_filename, matrix_names, precision)
         else:
@@ -278,8 +278,7 @@ class OP4(OP4Deprecated):
         f.readline()
 
         if isSparse:  # Initialize a real matrix
-            A = coo_matrix((entries, (rows, cols)), shape=(
-                nrows, ncols), dtype=dType)
+            A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dType)
             #print("type = %s %s" % (type(A),type(A.todense())))
             #A = A.todense()
         return A
@@ -352,8 +351,7 @@ class OP4(OP4Deprecated):
                 nLoops += 1
 
         if isSparse:  # Initialize a complex matrix
-            A = coo_matrix((entries, (rows, cols)), shape=(
-                nrows, ncols), dtype=dType)
+            A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dType)
         f.readline()
         return A
 
@@ -385,7 +383,7 @@ class OP4(OP4Deprecated):
     def read_op4_binary(self, op4_filename, matrix_names=None, precision='default'):
         """matrix_names must be a list or None, but basically the same"""
         self.op4 = io.open(op4_filename, mode = 'rb')
-        
+
         # these variables are set so FortranFile will work
         self.op2 = self.op4
         self.make_op2_debug = False
@@ -758,8 +756,7 @@ class OP4(OP4Deprecated):
             #print "-------------------------------"
 
         if isSparse:  # Initialize a real matrix
-            A = coo_matrix((entries, (rows, cols)), shape=(
-                nrows, ncols), dtype=dType)
+            A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dType)
 
             if isBigMat:
                 #f.read(4); self.n+=4
@@ -944,7 +941,7 @@ class OP4(OP4Deprecated):
                        3 = complex,single precision;
                        4 = complex,double precision
         :returns: NWV Number of Words per Value
-        
+
         .. note:: a word is 4 bytes
                   nwords(float32)=1;    single precison
                   nwords(complex64)=2;  single precison
@@ -989,7 +986,7 @@ class OP4(OP4Deprecated):
         :param name: the name of the matrix
         :param matrix: a two-dimensional NUMPY.NDARRAY
         :param form: Form is defined as one of the following:
-        
+
         ==== ===============
         Form Definition
         ==== ===============
@@ -1002,7 +999,7 @@ class OP4(OP4Deprecated):
         ==== ===============
 
         Not Supported by all OP4s:
-        
+
         ==== ===============================
         Form Definition
         ==== ===============================
