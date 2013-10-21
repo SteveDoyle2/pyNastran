@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
@@ -65,10 +65,10 @@ class BeamStressObject(StressObject):
             if dt is not None:
                 self.add = self.add_sort1
                 self.add_new_eid = self.add_new_eid_sort1
-        else:
-            assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+        #else:
+            #assert dt is not None
+            #self.add = self.add_sort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -143,6 +143,34 @@ class BeamStressObject(StressObject):
         self.MS_tension[eid] = [mst]
         self.MS_compression[eid] = [msc]
         return eid
+
+    def add_f06_data(self, data, dt):
+        if dt is not None:
+            raise NotImplementedError(dt)
+        for datai in data:
+            (eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = datai
+            if eid in self.grids:
+                self.grids[eid].append(grid)
+                self.xxb[eid].append(sd)
+                self.sxc[eid].append(sxc)
+                self.sxd[eid].append(sxd)
+                self.sxe[eid].append(sxe)
+                self.sxf[eid].append(sxf)
+                self.smax[eid].append(smax)
+                self.smin[eid].append(smin)
+                self.MS_tension[eid].append(mst)
+                self.MS_compression[eid].append(msc)
+            else:
+                self.grids[eid] = [grid]
+                self.xxb[eid] = [sd]
+                self.sxc[eid] = [sxc]
+                self.sxd[eid] = [sxd]
+                self.sxe[eid] = [sxe]
+                self.sxf[eid] = [sxf]
+                self.smax[eid] = [smax]
+                self.smin[eid] = [smin]
+                self.MS_tension[eid] = [mst]
+                self.MS_compression[eid] = [msc]
 
     def add_new_eid_sort1(self, dt, eid, out):
         #print "Beam Transient Stress add_new_eid..."
@@ -342,21 +370,56 @@ class BeamStrainObject(StrainObject):
         self.MS_tension = {}
         self.MS_compression = {}
 
-        if self.code in [[1, 0, 10]]:
+        #if self.code in [[1, 0, 10]]:
             #self.isImaginary = False
+        if is_sort1:
             if dt is not None:
                 self.add_new_transient = self.add_new_transient
-                self.add_new_eid = self.addNewEidTransient
-                self.add = self.addTransient
-            else:
-                self.add_new_eid = self.add_new_eid
-                self.add = self.add
-        else:
-            raise  RuntimeError("Invalid Code: beamStress - get the format/sort/stressCode=%s" % (self.code))
+                self.add_new_eid = self.add_new_eid_sort1
+                self.add = self.add_transient
+                self.add_new_transient(dt)
+            #self.add_new_eid = self.add_new_eid
+            #self.add = self.add
+        #else:
+            #raise  RuntimeError("Invalid Code: beamStress - get the format/sort/stressCode=%s" % (self.code))
+        #if dt is not None:
+            #self.isTransient = True
+            #self.dt = self.nonlinear_factor
+            #self.add_new_transient(dt)
+
+    def add_f06_data(self, data, dt):
         if dt is not None:
-            self.isTransient = True
-            self.dt = self.nonlinear_factor
-            self.add_new_transient()
+            raise NotImplementedError(dt)
+        #print(data)
+        #print('*****************smax', self.smax)
+        for datai in data:
+            #print('smax', self.smax)
+            (eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = datai
+            #print('(*')
+            #print(datai)
+            if eid in self.grids:
+                self.grids[eid].append(grid)
+                self.xxb[eid].append(sd)
+                self.sxc[eid].append(sxc)
+                self.sxd[eid].append(sxd)
+                self.sxe[eid].append(sxe)
+                self.sxf[eid].append(sxf)
+                self.smax[eid].append(smax)
+                self.smin[eid].append(smin)
+                self.MS_tension[eid].append(mst)
+                self.MS_compression[eid].append(msc)
+            else:
+                self.grids[eid] = [grid]
+                self.xxb[eid] = [sd]
+                self.sxc[eid] = [sxc]
+                self.sxd[eid] = [sxd]
+                self.sxe[eid] = [sxe]
+                self.sxf[eid] = [sxf]
+                self.smax[eid] = [smax]
+                self.smin[eid] = [smin]
+                self.MS_tension[eid] = [mst]
+                self.MS_compression[eid] = [msc]
+        #print('smax', self.smax)
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -491,6 +554,8 @@ class BeamStrainObject(StrainObject):
         for eid in sorted(self.smax):
             msg.append('0  %8i\n' % (eid))
             #print self.xxb[eid]
+            #print("self.grids =", self.grids)
+            #print("eid =", eid)
             for i, nid in enumerate(self.grids[eid]):
                 xxb = self.xxb[eid][i]
                 sxc = self.sxc[eid][i]

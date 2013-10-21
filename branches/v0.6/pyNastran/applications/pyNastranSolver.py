@@ -26,6 +26,10 @@ from pyNastran.op2.tables.oug.oug_displacements import DisplacementObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RodStressObject, RodStrainObject, ConrodStressObject, ConrodStrainObject, CtubeStressObject, CtubeStrainObject
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealRodForce, RealConrodForce, RealCtubeForce
 
+# beams
+from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import BeamStressObject, BeamStrainObject
+from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealCBeamForce
+
 
 def partition_sparse(Is, Js, Vs):
     I2 = []
@@ -164,7 +168,8 @@ class Solver(F06, OP2):
         print("Kaa_norm = \n" + str(K / self.fnorm))
         print("--------------")
         print("Fa = ", F)
-        assert max(F) != min(F), 'no load is applied...'
+        if F[0] == 0.0:
+            assert max(F) != min(F), 'no load is applied...'
         print("--------------")
 
         #asdf
@@ -337,6 +342,9 @@ class Solver(F06, OP2):
                 save_results = True
                 is_bool = False
                 raise NotImplementedError('%s = %r is not supported' % (param_name, value))
+        else:
+            save_results = False
+            is_bool = False
         self.case_result_flags[param_name] = [save_results, is_bool]
 
     def build_nid_component_to_id(self, model):
@@ -434,14 +442,27 @@ class Solver(F06, OP2):
         cbars = []
 
         # shells
-        cquads = []
-        ctris = []
+        cquad4s = []
+        ctria3s = []
+
+        # solids
+        ctetra4s = []
+        cpenta5s = []
+        chexa8s = []
+
         type_map = {
             'CONROD' : conrods,
             'CROD'   : crods,
             'CTUBE'  : ctubes,
             'CBEAM'  : cbeams,
             'CBAR'   : cbars,
+
+            'CQUAD4'  : cquad4s,
+            'CTRIA3'  : ctria3s,
+
+            'CTETRA'  : ctetra4s,
+            'CPENTA'  : cpenta5s,
+            'CHEXA'  : chexa8s,
         }
         elements = model.elements
         for eid, element in elements.iteritems():
@@ -464,14 +485,24 @@ class Solver(F06, OP2):
         ncbeams = len(cbeams) # half implemented
 
         # not implemented - shells
-        ncquads = len(cquads)
-        nctris = len(ctris)
+        ncquad4s = len(cquad4s)
+        nctria3s = len(ctria3s)
+
+        # not implemented - shells
+        nctetra4s = len(ctetra4s)
+        ncpenta5s = len(cpenta5s)
+        nchexa8s = len(chexa8s)
 
         #=========================
         # rods
         crods = array(crods)
         conrods = array(conrods)
         ctubes = array(ctubes)
+
+        # shells
+        ctria3s = array(ctria3s)
+        cquad4s = array(cquad4s)
+
         #=========================
         if self.is_stress or self.is_strain or self.is_force:
             # RODS
@@ -515,48 +546,176 @@ class Solver(F06, OP2):
                         f4[i] = f4i
                     if self.is_strain:
                         self.store_rod_oes(model, eids, e1, e4, case, elementType, Type='strain')
+                    del e1, e4
                     if self.is_stress:
                         self.store_rod_oes(model, eids, o1, o4, case, elementType, Type='stress')
+                    del o1, o4
                     if self.is_force:
                         self.store_rod_oef(model, eids, f1, f4, case, elementType)
+                    del f1, f4
 
             #=========================
             # BARS / BEAMS
+            print("ncbeams", ncbeams)
+            print("cbeams", cbeams)
             if ncbeams:
-                ox = zeros(ncbeams, 'float64')
-                ex = zeros(ncbeams, 'float64')
-                fx = zeros(ncbeams, 'float64')
-                for i, eid in enumerate(beams):
+                o1 = zeros(ncbeams, 'float64')
+                e1 = zeros(ncbeams, 'float64')
+                f1 = zeros(ncbeams, 'float64')
+                for i, eid in enumerate(cbeams):
                     element = elements[eid]
                     (exi, oxi, fxi) = element.displacement_stress(model, q, self.nidComponentToID, is3D=self.is3D)
-                    ox[i] = oxi
-                    ex[i] = exi
-                    fx[i] = fxi
-                if self.is_strain:
-                    self.store_beam_oes(model, beams, ex, case, Type='strain')
-                if self.is_stress:
-                    self.store_beam_oes(model, beams, ox, case, Type='stress')
-                if self.is_force:
-                    self.store_beam_oef(model, beams, fx, case)
+                    o1[i] = oxi
+                    e1[i] = exi
+                    f1[i] = fxi
+                #if self.is_strain:
+                self.store_beam_oes(model, cbeams, e1, case, Type='strain')
+                #if self.is_stress:
+                self.store_beam_oes(model, cbeams, o1, case, Type='stress')
+                #if self.is_force:
+                self.store_beam_oef(model, cbeams, f1, case)
+                del e1
+                del o1
+                del f1
 
             #=========================
             # SHELLS
+            print("nctria3", nctria3s)
+            if nctria3s or ncquad4s:
+                stress = zeros((nctria3s+ncquad4s, 3), 'float64')
+                strain = zeros((nctria3s+ncquad4s, 3), 'float64')
+                force  = zeros((nctria3s+ncquad4s, 3), 'float64')
+
+            i0 = i
+            if nctria3s:
+                for i, eid in enumerate(ctria3s):
+                    element = elements[eid]
+                    (stressi, straini, forcei) = element.displacement_stress(model, q, self.nidComponentToID)
+                    stress[i, :] = stressi
+                    strain[i, :] = straini
+                    force[i, :] = forcei
+                i0 = i
+
+            if ncquad4s:
+                for i, eid in enumerate(ncquad4s):
+                    element = elements[eid]
+                    (stressi, straini, forcei) = element.displacement_stress(model, q, self.nidComponentToID)
+                    stress[i0+i, :] = stressi
+                    strain[i0+i, :] = straini
+                    force[i0+i, :] = forcei
+
+            if nctria3s or ncquad4s:
+                #if self.is_strain:
+                self.store_plate_oes(model, cbeams, stress, case, Type='strain')
+                #if self.is_stress:
+                self.store_plate_oes(model, cbeams, strain, case, Type='stress')
+                #if self.is_force:
+                self.store_plate_oef(model, cbeams, force, case)
+                del stress, strain, force
+
             # SOLIDS
         #=========================
         self.write_f06(self.f06_file, end_flag=True)
 
 
-    def store_beam_oes(self, model, beams, ex, case, Type='strain'):
-        return
+    def store_beam_oes(self, model, eids, axial, case, elementType='CBEAM', Type='strain'):
+        #print('eids =', eids)
+        if len(eids) == 0:
+            return
+        analysis_code = 1
+        transient = False
+        isubcase = case.id
+        is_sort1 = False
+        dt = None
+        format_code = 1  # ???
+        s_code = 1
+
+        data_code = {'log': self.log, 'analysis_code': analysis_code,
+                    'device_code': 1, 'table_code': 1, 'sort_code': 0,
+                    'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
+                    'element_name': elementType, 'format_code':format_code,
+                    's_code': s_code,
+                    'nonlinear_factor': None}
         if Type == 'stress':
-            stress = BeamStressObject(data_code, is_sort1, isubcase, dt=False)
+            if elementType == 'CBEAM':
+                stress = BeamStressObject(data_code, is_sort1, isubcase, dt=False)
         elif Type == 'strain':
-            stress = BeamStrainObject(data_code, is_sort1, isubcase, dt=False)
+            if elementType == 'CBEAM':
+                stress = BeamStrainObject(data_code, is_sort1, isubcase, dt=False)
         else:
             raise NotImplementedError(Type)
 
-    def store_beam_oef(self, model, beams, fx, case):
-        pass
+        data = []
+        i = 0
+
+        for (eid, axiali) in zip(eids, axial):
+            element = model.Element(eid)
+            n1, n2 = element.nodeIDs()
+            print(n1, n2)
+            #      (eid, grid, sd,  sxc,   sxd, sxe, sxf,  smax, smin, mst, msc) = out
+            line = [eid, n1,   0.0, axiali, 0., 0.0,  0.0, 0.0, 0.0,  0.0,  0.0]
+            data.append(line)
+
+            line = [eid, n2,   1.0, axiali, 0., 0.0,  0.0, 0.0, 0.0,  0.0,  0.0]
+            data.append(line)
+        stress.add_f06_data(data, dt)
+
+        if elementType == 'CBEAM' and Type == 'stress':
+            self.beamStress[isubcase] = stress
+        elif elementType == 'CBEAM' and Type == 'strain':
+            self.beamStrain[isubcase] = stress
+        else:
+            raise NotImplementedError('elementType=%r Type=%r' % (elementType, Type))
+        stress.dt = None
+
+
+    def store_beam_oef(self, model, eids, fx, case, elementType='CBEAM'):
+        #print('eids =', eids)
+        if len(eids) == 0:
+            return
+        analysis_code = 1
+        transient = False
+        isubcase = case.id
+        is_sort1 = False
+        dt = None
+        format_code = 1  # ???
+        s_code = None
+
+        data_code = {'log': self.log, 'analysis_code': analysis_code,
+                    'device_code': 1, 'table_code': 1, 'sort_code': 0,
+                    'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OEF',
+                    'element_name': elementType, 'format_code':format_code,
+                    #'s_code': s_code,
+                    'nonlinear_factor': None}
+
+        if elementType == 'CBEAM':
+            forces = RealCBeamForce(data_code, is_sort1, isubcase, dt=False)
+        else:
+            raise NotImplementedError(elementType)
+
+        data = []
+        i = 0
+        for (eid, fxi) in zip(eids, fx):
+            element = model.Element(eid)
+            n1, n2 = element.nodeIDs()
+            print('***(*', n1, n2)
+            #      [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
+            line = [eid, n1, 0.0, 0.,   0.,   0., 0., 0.,   0.,  0.0]
+            data.append(line)
+            line = [eid, n1, 1.0, 0.,   0.,   0., 0., 0.,   0.,  0.0]
+            data.append(line)
+            line = [eid, n2, 0.0, 0.,   0.,   0., 0., 0.,   0.,  0.0]
+            data.append(line)
+            line = [eid, n2, 1.0, 0.,   0.,   0., 0., 0.,   0.,  0.0]
+            #data.append(line)
+        print(data)
+        forces.add_f06_data(data, dt)
+
+        if elementType == 'CBEAM':
+            self.beamForces[isubcase] = forces
+        else:
+            raise NotImplementedError(elementType)
+        #stress.dt = None
 
     def store_rod_oef(self, model, eids, axial, torsion, case, elementType):
         """
@@ -984,7 +1143,8 @@ class Solver(F06, OP2):
              gravityLoad) = load_set.organizeLoads(model)
 
             print('typesFound', typesFound)
-            assert isinstance(typesFound, list), type(typesFound)
+            if not (isinstance(typesFound, list) or  isinstance(typesFound, set)):
+                raise RuntimeError(type(typesFound))
             assert isinstance(forceLoads, dict), type(forceLoads)
             assert isinstance(momentLoads, dict), type(momentLoads)
             assert isinstance(forceConstraints, dict), type(forceConstraints)

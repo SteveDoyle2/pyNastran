@@ -28,7 +28,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 
 from numpy import matrix, zeros, array, transpose, dot, ones
-from numpy import eye, allclose
+from numpy import eye, allclose, cross
 from numpy.linalg import norm
 
 from pyNastran.utils import is_string
@@ -1020,13 +1020,33 @@ class CBAR(LineElement):
     def Stiffness(self, model, grav, is3D=False):  # CBAR
         #print("----------------")
         Lambda = self.Lambda(model, is3D=is3D)
+        Lambda_beam = self.Lambda_beam(model)
         #print("Lambda = \n"+str(Lambda))
 
-        k = self.Stiffness1D(model)
+        k_beam = self.Stiffness1D(model)
+        k_unit = array([[1.0, -1.0],
+                        [-1.0, 1.0]], dtype='float64')
         #print R
         #print(k)
         #print("Lambda.shape = ", Lambda.shape)
-        K = dot(dot(transpose(Lambda), k), Lambda)
+        K_unit = dot(dot(transpose(Lambda), k_unit), Lambda)
+
+        A = self.Area()
+        E = self.E()
+        G = self.G()
+        J = self.J()
+        L = self.L()
+
+        I1 = self.I1()
+        I2 = self.I2()
+
+        k_axial = A * E / L
+        k_torsion = G * J / L
+        k_bend = A * E / L**3
+
+        K_axial = k_axial * K_unit
+        K_torsion = k_torsion * K_unit
+        K_beam = dot(dot(transpose(Lambda_beam), k_beam), Lambda)
         #Fg = dot(dot(transpose(Lambda),grav),Lambda)
 
         #print('size(grav) =',grav.shape)
@@ -1515,6 +1535,73 @@ class CBEAM(CBAR):
         #print("axial_force  = %s [lb]\n" % axial_force)
         return axial_strain, axial_stress, axial_force
 
+    def Rmatrix(self, model, n1, n2, debug=True):
+        p1 = model.Node(n1).Position()
+        p2 = model.Node(n2).Position()
+        v1 = p2 - p1
+        v1 = v1 / norm(v1)
+
+        #v2 = self.g0_vector
+        #v2 = p3 - p1
+
+        v3 = cross(v1, self.g0_vector)
+        v3 /= norm(v3)
+
+        v2 = cross(v1, v3)
+
+        R = array([ v1, v2, v3 ])
+        if debug:
+            print("v1 =", v1)
+            print("v2 =", v2)
+            print("v3 =", v3)
+            print('R =\n', R)
+            #print('R.shape =', R.shape)
+        return R
+        (l1, m1, n1) = v1
+        (l2, m2, n2) = v2
+        (l3, m3, n3) = v3
+
+    def Lambda_beam(self, model, n1, n2, debug=True):
+        """
+        ::
+
+          2d  [l,m,0,0]
+              [0,0,l,m]
+
+        ::
+
+          3d  [l,m,n,0,0,0]  2x6
+              [0,0,0,l,m,n]
+        """
+        R = self.Rmatrix(model, n1, n2)
+
+        p1 = model.Node(n1).Position()
+        p2 = model.Node(n2).Position()
+        v1 = p2 - p1
+        if debug:
+            print("v1=%s" % (v1))
+        v1 = v1 / norm(v1)
+        (l, m, n) = v1
+        #l = 1
+        #m = 2
+        #n = 3
+        Lambda = matrix(zeros((4, 12), 'd'))  # 3D
+        Lambda[0, 0] = Lambda[1, 3] = l
+        Lambda[0, 1] = Lambda[1, 4] = m
+        Lambda[0, 2] = Lambda[1, 5] = n
+
+        Lambda[2, 6] = Lambda[3, 9] = l
+        Lambda[2, 7] = Lambda[3, 10] = m
+        Lambda[2, 8] = Lambda[3, 11] = n
+
+        #print("R = \n",R)
+        #print("is3D = \n",is3D)
+        #debug = True
+        if debug:
+            print("Lambda = \n" + str(Lambda))
+            #sys.exit('asdf')
+        return Lambda
+
     def Stiffness(self, model, node_ids, index0s, grav, is3D=False, fnorm=1.0):  # CBEAM
         """
         from makeTruss???
@@ -1534,7 +1621,11 @@ class CBEAM(CBAR):
         Ke = self._stiffness(L, A, E, I11, I22, G, J, is3D=is3D)
 
         Lambda = self.Lambda(model, is3D=is3D)
+        (n1, n2) = self.nodeIDs()
+        Lambda_beam = self.Lambda_beam(model, n1, n2)
         #print("Lambda = \n"+str(Lambda))
+
+        k_rod = matrix([[1., -1.], [-1., 1.]])  # 1D rod
 
         k, ki = self.Stiffness1D(model)  # CBEAM
         #print R
@@ -1542,44 +1633,10 @@ class CBEAM(CBAR):
         print("Lambda.shape = ", Lambda.shape)
         K = dot(dot(transpose(Lambda), k), Lambda)
 
+        k_axial = A * E / L
+        k_torsion = G * J / L
+        k_bendiug = k_axial / L**2
         nodes = self.nodeIDs()
-        if 0:
-            ga = self.ga.Position()
-            gb = self.gb.Position()
-            ga_cid = self.ga.cp
-            gb_cid = self.ga.cp
-            v = gb - ga
-
-            T = eye(6, dtype='float64')
-            make_T = False
-            if ga_cid.cid != 0:
-                I[0,:3] = ga_cid.i
-                I[1,:3] = ga_cid.j
-                I[2,:3] = ga_cid.k
-                make_T = True
-            if gb_cid.cid != 0:
-                I[3,3:] = gb_cid.i
-                I[4,3:] = gb_cid.j
-                I[5,3:] = gb_cid.k
-                make_T = True
-
-            nrows, ncols = Ke.shape
-            Ke_msg = ''
-            for i in xrange(nrows):
-                for j in xrange(ncols):
-                    Ke_msg += '%8i ' % (Ke[i,j]/fnorm)
-                Ke_msg += '\n'
-            print("Ke = \n", Ke/fnorm)
-            print(T)
-            if make_T:
-                K = T.T * Ke * T
-            else:
-                K = Ke
-
-            print('nodes =', node)
-
-            # n is (nid,componentID), IJV is the (ith,jth,value) in K
-            #(n,IJV) = elem.nIJV()
 
         i0, i1 = index0s
         if is3D:
@@ -1609,7 +1666,7 @@ class CBEAM(CBAR):
         #        (nodes[1], 1), (nodes[1], 2), ]
         nGrav = [(nodes[0], 1), (nodes[0], 2), (nodes[0], 3),
                  (nodes[1], 1), (nodes[1], 2), (nodes[1], 3)]
-        return Ke, Ke, dofs, nIJV, Fg, nGrav
+        return Ke, dofs, nIJV, Fg, nGrav
 
     def _stiffness(self, L, A, E, Iz, Iy, G, J, is3D=False):  # CBEAM
         AE = A * E

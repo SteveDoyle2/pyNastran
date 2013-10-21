@@ -213,6 +213,30 @@ class RealCBeamForce(scalarObject):  # 2-CBEAM
         self.totalTorque[dt] = {}
         self.warpingTorque[dt] = {}
 
+    def add_f06_data(self, data, dt=None):
+        if dt:
+            raise NotImplementedError(dt)
+
+        for d in data:
+            (eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq,) = d
+            print('eid, nid, sd', eid, nid, sd)
+            if eid in self.nodes:
+                #if sd in self.nodes[eid]:
+                self.nodes[eid][sd] = nid
+                self.bendingMoment[eid][sd] = [bm1, bm2]
+                self.shear[eid][sd] = [ts1, ts2]
+                self.axial[eid][sd] = af
+                self.totalTorque[eid][sd] = ttrq
+                self.warpingTorque[eid][sd] = wtrq
+            else:
+                self.nodes[eid] = {sd: [nid]}
+                self.bendingMoment[eid] = {sd: [bm1, bm2]}
+                self.shear[eid] = {sd: [ts1, ts2]}
+                self.axial[eid] = {sd: af}
+                self.totalTorque[eid] = {sd: ttrq}
+                self.warpingTorque[eid] = {sd: wtrq}
+            print('nodes', self.nodes)
+
     def addNewElement(self, dt, data):
         [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
         #print "CBEAM addnew",data
@@ -314,6 +338,7 @@ class RealCBeamForce(scalarObject):  # 2-CBEAM
         msg = header + ['                                 F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                         '                    STAT DIST/   - BENDING MOMENTS -            - WEB  SHEARS -           AXIAL          TOTAL          WARPING\n',
                         '   ELEMENT-ID  GRID   LENGTH    PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE         TORQUE\n']
+        #print('BM', self.bendingMoment)
         for eid, bm in sorted(self.bendingMoment.iteritems()):
             for sd in sorted(bm):
                 bm1, bm2 = self.bendingMoment[eid][sd]

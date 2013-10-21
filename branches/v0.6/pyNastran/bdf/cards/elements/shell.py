@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 # pylint: disable=C0103,R0902,R0904,R0914,C0302
 """
 All shell elements are defined in this file.  This includes:
@@ -44,8 +44,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 
-from numpy import array, eye, cross, allclose  # zeros,dot
-from numpy.linalg import det  # inv
+from numpy import array, eye, cross, allclose, dot, transpose  # zeros,dot
+from numpy.linalg import det, norm  # inv
 
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
@@ -170,7 +170,7 @@ class TriShell(ShellElement):
     def Area(self):
         r"""
         Get the area, :math:`A`.
-        
+
         .. math:: A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)
         """
         (n0, n1, n2) = self.nodePositions()
@@ -269,6 +269,149 @@ class CTRIA3(TriShell):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 3
 
+    def displacement_stress(self, model, q, dofs):
+        n1, n2, n3 = self.nodes
+        p1 = n1.Position()
+        p2 = n2.Position()
+        p3 = n3.Position()
+        x1, y1, z1 = p1
+        x2, y2, z2 = p2
+        x3, y3, z3 = p3
+
+        v1 = p2 - p1
+        v13 = p3 - p1
+
+        v3 = cross(v1, v13)
+        A = 0.5 * norm(v3)
+
+        # constant strain triangle - PSHELL
+        a1 = x2*y3 - x3*y2
+        a2 = x3*y1 - x1*y3
+        a3 = x1*y2 - x2*y1
+
+        b1 = y2 - y3
+        b2 = y3 - y1
+        b3 = y1 - y2
+
+        g1 = -x2 + x3
+        g2 = -x3 + x1
+        g3 = -x1 + x2
+        B = array([
+            [b1,  0, b2,  0, b3,  0],
+            [0,  g1,  0, g2,  0, g3],
+            [g1, b1, g2, b2, g3, b3],
+        ])
+
+        mat = self.pid.mid1
+        nu = mat.Nu()
+        E = mat.E() / (1-nu**2)
+        G = mat.G()
+
+        Ep = array([
+            [E,      nu * E, 0.],
+            [nu * E, E,      0.],
+            [0.,     0.,      G],
+        ])
+        #===========
+        # new stuff
+
+        n1, n2, n3 = self.nodeIDs()
+        n11 = dofs[(n1, 1)]
+        n21 = dofs[(n2, 1)]
+        n31 = dofs[(n3, 1)]
+
+        n12 = dofs[(n1, 2)]
+        n22 = dofs[(n2, 2)]
+        n32 = dofs[(n3, 2)]
+
+        q2 = array([
+            q[n11], q[n12],  # 0, 1
+            q[n21], q[n22],  # 2, 3
+            q[n31], q[n32],  # 4, 5
+        ])
+        dx = q[2] - q[0]
+        dy = q[4] - q[0]
+
+        strain = dot(B, q2)
+        stress = dot(Ep, dot(B, q2))
+        F = stress * A
+
+        return stress, strain, F
+
+    def Stiffness(self, model, node_ids, index0s, gravLoad, is3D, fnorm):
+
+        assert is3D == True
+
+        print("node_ids =", node_ids)
+        n1, n2, n3 = self.nodes
+        p1 = n1.Position()
+        p2 = n2.Position()
+        p3 = n3.Position()
+
+        v1 = p2 - p1
+        v13 = p3 - p1
+
+        v3 = cross(v1, v13)
+        A = 0.5 * norm(v3)
+        #A = 0.5 * norm(cross(v1, v13))
+
+        mat = self.pid.mid1
+
+        nu = mat.Nu()
+        E = mat.E() / (1-nu**2)
+        G = mat.G()
+
+        x1, y1, z1 = p1
+        x2, y2, z2 = p2
+        x3, y3, z3 = p3
+
+        # constant strain triangle - PSHELL
+        a1 = x2*y3 - x3*y2
+        a2 = x3*y1 - x1*y3
+        a3 = x1*y2 - x2*y1
+
+        b1 = y2 - y3
+        b2 = y3 - y1
+        b3 = y1 - y2
+
+        g1 = -x2 + x3
+        g2 = -x3 + x1
+        g3 = -x1 + x2
+        B = array([
+            [b1,  0, b2,  0, b3,  0],
+            [0,  g1,  0, g2,  0, g3],
+            [g1, b1, g2, b2, g3, b3],
+        ])
+        Ep = array([
+            [E,      nu * E, 0.],
+            [nu * E, E,      0.],
+            [0.,     0.,      G],
+        ])
+
+        t = self.Thickness()
+        ki = t / (4 * A)
+        K = ki * dot(transpose(B), dot(Ep, B))
+
+        n1, n2, n3 = node_ids
+        dofs = [
+            (n1, 1), (n1, 2),
+            (n2, 1), (n2, 2),
+            (n3, 1), (n3, 2),
+        ]
+        nIJV = dofs
+        #nIJV = []
+
+        v1 /= norm(v1)
+        v3 /= norm(v3)
+
+        v2 = cross(v1, v3)
+        R = array([v1, v2, v3])
+        assert R.shape == (3,3), 'R=%s' % R
+
+        Fg = []
+        nGrav = []
+        return (K, dofs, nIJV, Fg, nGrav)
+
     def cross_reference(self, model):
         msg = ' which is required by CTRIA3 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, msg=msg)
@@ -316,7 +459,7 @@ class CTRIA3(TriShell):
     def flipNormal(self):
         """
         ::
-        
+
                1           1
               * *   -->   * *
              *   *       *   *
@@ -511,7 +654,7 @@ class CTRIA6(TriShell):
     def flipNormal(self):
         r"""
         ::
-        
+
                1                1
                **               **
               *  *             *  *
@@ -592,7 +735,7 @@ class CTRIAR(TriShell):
     def flipNormal(self):
         r"""
         ::
-        
+
                1           1
               * *   -->   * *
              *   *       *   *
@@ -748,7 +891,7 @@ class CTRIAX6(TriShell):
         """
         (n0, n1, n2, n3, n4, n5) = self.nodePositions()
         return _triangle_area_centroid_normal([n0, n2, n4])
-    
+
     def Area(self):
         r"""
         Get the normal vector.
@@ -784,7 +927,7 @@ class CTRIAX6(TriShell):
     def flipNormal(self):
         r"""
         ::
-        
+
                5               5
               / \             / \
              6   4   -->     6   4
@@ -910,7 +1053,7 @@ class QuadShell(ShellElement):
     def flipNormal(self):
         r"""
         ::
-        
+
           1---2       1---4
           |   |  -->  |   |
           |   |       |   |
@@ -1038,7 +1181,7 @@ class CSHEAR(QuadShell):
     def flipNormal(self):
         r"""
         ::
-        
+
           1---2       1---4
           |   |  -->  |   |
           |   |       |   |
@@ -1108,7 +1251,7 @@ class CQUAD4(QuadShell):
 
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4, 'CQUAD4'
-    
+
     def cross_reference(self, model):
         msg = ' which is required by CQUAD4 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, msg=msg)
@@ -1139,7 +1282,7 @@ class CQUAD4(QuadShell):
     def flipNormal(self):
         r"""
         ::
-        
+
           1---2       1---4
           |   |  -->  |   |
           |   |       |   |
@@ -1266,7 +1409,7 @@ class CQUADR(QuadShell):
     def flipNormal(self):
         r"""
         ::
-        
+
           1---2       1---4
           |   |  -->  |   |
           |   |       |   |
@@ -1350,7 +1493,7 @@ class CQUAD(QuadShell):
     def reprFields(self):
         list_fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
-        
+
 
 class CQUAD8(QuadShell):
     type = 'CQUAD8'
@@ -1532,7 +1675,7 @@ class CQUADX(QuadShell):
     def flipNormal(self):
         r"""
         ::
-        
+
           1--5--2       1--8--4
           |     |  -->  |     |
           8  9  6       5  9  7
