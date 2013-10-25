@@ -35,7 +35,7 @@ def make_stamp(Title):
     t = date.today()
     months = ['January', 'February', 'March', 'April', 'May', 'June',
               'July', 'August', 'September', 'October', 'November', 'December']
-    today = '%-9s %s, %s' % (months[t.month - 1], t.day, t.year)
+    today = '%-9s %s, %s' % (months[t.month - 1].upper(), t.day, t.year)
 
     release_date = '02/08/12'  # pyNastran.__releaseDate__
     release_date = ''
@@ -73,21 +73,28 @@ def make_f06_header():
         '\n']
 
     n = 46 * ' '
+    version = 'Version %8s' % pyNastran.__version__
     lines2 = [
         n + '* * * * * * * * * * * * * * * * * * * *\n',
         n + '* * * * * * * * * * * * * * * * * * * *\n',
         n + '* *                                 * *\n',
+
+        n + '* *                                 * *\n',
+        n + '* *                                 * *\n',
+        n + '* *                                 * *\n',
+
         n + '* *            pyNastran            * *\n',
         n + '* *                                 * *\n',
         n + '* *                                 * *\n',
         n + '* *                                 * *\n',
-        n + '* *        Version %8s       * *\n' % (pyNastran.__version__),
+        n + '* *%s* *\n' % version.center(33),
         n + '* *                                 * *\n',
         n + '* *                                 * *\n',
         n + '* *          %15s        * *\n' % (pyNastran.__releaseDate2__),
         n + '* *                                 * *\n',
         n + '* *            Questions            * *\n',
         n + '* *        mesheb82@gmail.com       * *\n',
+        n + '* *                                 * *\n',
         n + '* *                                 * *\n',
         n + '* *                                 * *\n',
         n + '* * * * * * * * * * * * * * * * * * * *\n',
@@ -232,6 +239,8 @@ class F06Writer(object):
             msg += '                               ID            DIRECTION      RATIO     EXCLUSIVE  UNION   EXCLUSIVE  UNION\n'
             for (nid, dof) in failed:
                 msg += '                                %s        G      %s         0.00E+00          B        F         SB       SB   *\n' % (nid, dof)
+        else:
+            msg += 'No constraints have been applied...\n'
 
         pageStamp = self.make_stamp(self.Title)
         msg += pageStamp+'%i\n' % self.pageNum
@@ -264,14 +273,8 @@ class F06Writer(object):
         return msg
 
 
-
-
-
     def write_summary(self, f, card_count=None):
-
-
         summary = '                                        M O D E L   S U M M A R Y\n\n'
-
 
         self.cardsToRead = set([
 
@@ -290,7 +293,6 @@ class F06Writer(object):
             'CHBDYE', 'CHBDYG', 'CHBDYP',
             'CONV',
         ])
-
 
 
         blocks = [
@@ -435,6 +437,9 @@ class F06Writer(object):
                     self.rodForces, self.conrodForces, self.ctubeForces,
                     #------------------------------------------
                     # OES - strain
+
+                    # springs,
+                    self.celasStrain, self.celasStress,
 
                     # rods
                     self.rodStrain, self.conrodStrain, self.ctubeStrain, self.nonlinearRodStress,

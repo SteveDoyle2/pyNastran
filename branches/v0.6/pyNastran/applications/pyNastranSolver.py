@@ -22,6 +22,10 @@ from pyNastran.op2.tables.oug.oug_displacements import DisplacementObject
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import MPCForcesObject
 
+# springs
+from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import CelasStressObject, CelasStrainObject
+from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealSpringForce
+
 # rods
 from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RodStressObject, RodStrainObject, ConrodStressObject, ConrodStrainObject, CtubeStressObject, CtubeStrainObject
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealRodForce, RealConrodForce, RealCtubeForce
@@ -183,14 +187,16 @@ class Solver(F06, OP2):
                 nid, dof = self.IDtoNidComponents[iu]
                 #if absF[iu] == 0.0 and ??:
                 if K[i, i] == 0.0:
-                    faileds.append(i)
                     failed.append([nid, dof])
+                    faileds.append(i)
             msg = self.make_grid_point_singularity_table(failed)
             self.f06_file.write(msg)
 
-            if 'AUTOSPC' in self.model.params:
-                autospc = self.model.params['AUTOSPC']
-                value = autospc.values[0]
+            #if 'AUTOSPC' in self.model.params:
+            if 1:
+                #autospc = self.model.params['AUTOSPC']
+                #value = autospc.values[0]
+                value = 1
 
                 if value in [1, 'YES']:
                     # figure out what are the DOFs that are removed
@@ -204,7 +210,7 @@ class Solver(F06, OP2):
 
                     # put the removed DOFs back in and set their displacement to 0.0
                     U = zeros(len(F), 'float64')
-                    U[failed] = U2
+                    U[ilist] = U2
             else:
                 self.f06_file.close()
                 raise
@@ -432,6 +438,13 @@ class Solver(F06, OP2):
             q = ones(n, 'float64')
 
         # results
+
+        # springs
+        celas1s = []
+        celas2s = []
+        celas3s = []
+        celas4s = []
+
         # bars
         crods = []
         conrods = []
@@ -451,6 +464,11 @@ class Solver(F06, OP2):
         chexa8s = []
 
         type_map = {
+            'CELAS1' : celas1s,
+            'CELAS2' : celas2s,
+            'CELAS3' : celas3s,
+            'CELAS4' : celas4s,
+
             'CONROD' : conrods,
             'CROD'   : crods,
             'CTUBE'  : ctubes,
@@ -474,6 +492,12 @@ class Solver(F06, OP2):
 
         #=========================
         nnodes = len(model.nodes)
+
+        # springs
+        ncelas1s = len(celas1s)  # not tested
+        ncelas2s = len(celas2s)  # doesn't support rotations or crosslinking
+        ncelas3s = len(celas3s)  # not tested
+        ncelas4s = len(celas4s)  # not tested
 
         # rods
         ncrods = len(crods)
@@ -505,6 +529,44 @@ class Solver(F06, OP2):
 
         #=========================
         if self.is_stress or self.is_strain or self.is_force:
+            # SPRINGS
+            elementTypes = ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4']
+            for elementType in elementTypes:
+                if elementType == 'CELAS1':
+                    n = ncelas1s
+                    eids = celas1s
+                elif elementType == 'CELAS2':
+                    n = ncelas2s
+                    eids = celas2s
+                elif elementType == 'CELAS3':
+                    n = ncelas3s
+                    eids = celas3s
+                elif elementType == 'CELAS4':
+                    n = ncelas4s
+                    eids = celas4s
+                else:
+                    raise NotImplementedError(elementType)
+                if n:
+                    o1 = zeros(n, 'float64')
+                    e1 = zeros(n, 'float64')
+                    f1 = zeros(n, 'float64')
+
+                    for i, eid in enumerate(eids):
+                        element = elements[eid]
+                        (e1i, o1i, f1i) = element.displacement_stress(model, q, self.nidComponentToID, is3D=self.is3D)
+                        o1[i] = o1i
+                        e1[i] = e1i
+                        f1[i] = f1i
+                    #if self.is_strain:
+                    self.store_spring_oes(model, eids, e1, case, elementType, Type='strain')
+                    #if self.is_stress:
+                    self.store_spring_oes(model, eids, o1, case, elementType, Type='stress')
+                    #if self.is_force:
+                    self.store_spring_oef(model, eids, f1, case, elementType)
+                    del e1
+                    del o1
+                    del f1
+
             # RODS
             elementTypes = ['CROD', 'CONROD', 'CTUBE']
             for elementType in elementTypes:
@@ -717,16 +779,9 @@ class Solver(F06, OP2):
             raise NotImplementedError(elementType)
         #stress.dt = None
 
-    def store_rod_oef(self, model, eids, axial, torsion, case, elementType):
-        """
-        fills the displacement object
-        """
-        #print('eids =', eids)
-        if len(eids) == 0:
-            return
+    def _OEF_f06_header(self, case, elementType):
         analysis_code = 1
         transient = False
-        isubcase = case.id
         is_sort1 = False
         dt = None
         format_code = 1  # ???
@@ -738,6 +793,96 @@ class Solver(F06, OP2):
                     'element_name': elementType, 'format_code':format_code,
                     #'s_code': s_code,
                     'nonlinear_factor': None}
+        return data_code
+
+    def store_spring_oes(self, model, eids, axial, case, elementType, Type='stress'):
+        """
+        fills the displacement object
+        """
+        #print('eids =', eids)
+        if len(eids) == 0:
+            return
+        analysis_code = 1
+        transient = False
+        isubcase = case.id
+        is_sort1 = True
+        dt = None
+        format_code = 1  # ???
+        s_code = None
+
+        data_code = {'log': self.log, 'analysis_code': analysis_code,
+                    'device_code': 1, 'table_code': 1, 'sort_code': 0,
+                    'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
+                    'element_name': elementType, 'format_code':format_code,
+                    's_code': s_code,
+                    'nonlinear_factor': None}
+
+        if Type == 'stress':
+            if elementType == 'CELAS2':
+                stress = CelasStressObject(data_code, is_sort1, isubcase, dt=None)
+            else:
+                raise NotImplementedError(elementType)
+        elif Type == 'strain':
+            if elementType == 'CELAS2':
+                stress = CelasStrainObject(data_code, is_sort1, isubcase, dt=None)
+            else:
+                raise NotImplementedError(elementType)
+        else:
+            raise NotImplementedError(Type)
+
+        data = []
+        i = 0
+        #(elementID, stress) = line
+        for (eid, axiali) in zip(eids, axial):
+            line = [eid, axiali]
+            data.append(line)
+        stress.add_f06_data(data, dt)
+
+        if elementType == 'CELAS2' and Type == 'stress':
+            self.celasStress[isubcase] = stress
+        elif elementType == 'CELAS2' and Type == 'strain':
+            self.celasStrain[isubcase] = stress
+        else:
+            raise NotImplementedError('elementType=%r Type=%r' % (elementType, Type))
+        #stress.dt = None
+
+    def store_spring_oef(self, model, eids, axial, case, elementType):
+        if len(eids) == 0:
+            return
+        data_code = self._OEF_f06_header(case, elementType)
+
+        is_sort1 = True
+        isubcase = case.id
+        dt = None
+        if elementType == 'CELAS2':
+            forces = RealSpringForce(data_code, is_sort1, isubcase, dt=None)
+        else:
+            raise NotImplementedError(elementType)
+
+        data = []
+        i = 0
+        #(elementID, axial) = line
+        for (eid, axiali) in zip(eids, axial):
+            line = [eid, axiali]
+            data.append(line)
+        forces.add_f06_data(data, dt)
+
+        if elementType == 'CELAS2':
+            self.springForces[isubcase] = forces
+        else:
+            raise NotImplementedError(elementType)
+        #stress.dt = None
+
+    def store_rod_oef(self, model, eids, axial, torsion, case, elementType):
+        """
+        fills the force object
+        """
+        #print('eids =', eids)
+        if len(eids) == 0:
+            return
+        data_code = self._OEF_f06_header(case, elementType)
+        is_sort1 = True
+        isubcase = case.id
 
         if elementType == 'CROD':
             forces = RealRodForce(data_code, is_sort1, isubcase, dt=False)
@@ -776,7 +921,7 @@ class Solver(F06, OP2):
         analysis_code = 1
         transient = False
         isubcase = case.id
-        is_sort1 = False
+        is_sort1 = True
         dt = None
         format_code = 1  # ???
         s_code = None
@@ -836,7 +981,7 @@ class Solver(F06, OP2):
         analysis_code = 1
         transient = False
         isubcase = case.id
-        is_sort1 = False
+        is_sort1 = True
         dt = None
 
         data_code = {'log': self.log, 'analysis_code': analysis_code,

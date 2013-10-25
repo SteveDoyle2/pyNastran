@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 # pylint: disable=C0103,R0902,R0904,R0914
 """
 All spring elements are defined in this file.  This includes:
@@ -36,7 +36,7 @@ All spring elements are SpringElement and Element objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
-from numpy import matrix, zeros, dot, transpose
+from numpy import array, zeros, dot, transpose
 from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -61,7 +61,7 @@ class SpringElement(Element):
         raise NotImplementedError('K not implemented in the %s class'
                                   % self.type)
 
-    def Lambda(self, model):
+    def Lambda(self, model, debug=False, is3D=True):
         """
         ::
           2d  [l,m,0,0]
@@ -70,7 +70,6 @@ class SpringElement(Element):
           3d  [l,m,n,0,0,0]
               [0,0,0,l,m,n]
         """
-        is3D = False
         #R = self.Rmatrix(model,is3D)
 
         (n1, n2) = self.nodeIDs()
@@ -81,40 +80,81 @@ class SpringElement(Element):
         v1 = v1 / norm(v1)
         (l, m, n) = v1
         if is3D:
-            Lambda = matrix(zeros((2, 6), 'd'))  # 3D
+            Lambda = array(zeros((2, 6), 'float64'))  # 3D
         else:
-            Lambda = matrix(zeros((2, 4), 'd'))
+            Lambda = array(zeros((2, 4), 'float64'))
 
         #print("R = \n",R)
-        Lambda[0, 0] = Lambda[1, 2] = l
-        Lambda[0, 1] = Lambda[1, 3] = m
-
         if is3D:
+            Lambda[0, 0] = Lambda[1, 3] = l
+            Lambda[0, 1] = Lambda[1, 4] = m
             Lambda[0, 2] = Lambda[1, 5] = n  # 3D
+        else:
+            Lambda[0, 0] = Lambda[1, 2] = l
+            Lambda[0, 1] = Lambda[1, 3] = m
         #print("Lambda = \n",Lambda)
         return Lambda
 
-    def Stiffness(self, model):
+    def Stiffness(self, model, node_ids, index0s, gravLoad, is3D, fnorm):
         ki = self.K()
-        k = ki * matrix([[1, -1, ]
-                         [-1, 1]])
-        Lambda = self.Lambda(model)
+        k = ki * array([[1, -1,],
+                        [-1, 1]])
+        Lambda = self.Lambda(model, is3D)
         K = dot(dot(transpose(Lambda), k), Lambda)
-        return K
 
-    def Length(self):
-        r"""
-        Returns the length, :math:`L`, of a bar/rod/beam element.
+        nGrav = []
+        Fg = []
 
-        .. math:: L = \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
+        c1 = self.c1
+        c2 = self.c2
+        n1, n2 = node_ids
 
-        :param self: the object pointer
-        :returns Length: the length of the element
+        nIJV = [
+            (n1, 1), (n1, 2), (n1, 3),
+            (n2, 1), (n2, 2), (n2, 3),
+        ]
+        dofs = nIJV
+        return (K, dofs, nIJV, Fg, nGrav)
 
-        .. note:: the model must be cross-referenced already
-        """
-        L = norm(self.nodes[1].Position() - self.nodes[0].Position())
-        return L
+    def displacement_stress(self, model, q, dofs, is3D=False):
+        (n1, n2) = self.nodeIDs()
+        Lambda = self.Lambda(model, debug=False, is3D=is3D)
+
+        #print("**dofs =", dofs)
+        n11 = dofs[(n1, 1)]
+        n21 = dofs[(n2, 1)]
+
+        n12 = dofs[(n1, 2)]
+        n22 = dofs[(n2, 2)]
+
+        n13 = dofs[(n1, 3)]
+        n23 = dofs[(n2, 3)]
+
+        q_axial = array([
+            q[n11], q[n12], q[n13],
+            q[n21], q[n22], q[n23]
+        ])
+        #print("type=%s n1=%s n2=%s" % (self.type, n1, n2))
+        #print("n11=%s n12=%s n21=%s n22=%s" %(n11,n12,n21,n22))
+
+        #print("q2[%s] = %s" % (self.eid, q2))
+        #print("Lambda = \n"+str(Lambda))
+
+        #print "Lsize = ",Lambda.shape
+        #print "qsize = ",q.shape
+        u_axial = dot(array(Lambda), q_axial)
+        du_axial = u_axial[0] - u_axial[1]
+
+        axial_strain = du_axial * self.s
+
+        ki = self.K()
+        axial_force = ki * du_axial
+        axial_stress = axial_force * self.s
+
+        #print("axial_strain = %s [psi]" % axial_strain)
+        #print("axial_stress = %s [psi]" % axial_stress)
+        #print("axial_force  = %s [lb]\n" % axial_force)
+        return (axial_strain, axial_stress, axial_force)
 
     def Mass(self):
         return 0.0
@@ -169,7 +209,7 @@ class CELAS1(SpringElement):
         c2 = self.c1
         #ge = self.ge
         #s = self.s
-        
+
         assert isinstance(eid, int), 'eid=%r' % eid
         assert isinstance(c1, int), 'c1=%r' % c1
         assert isinstance(c2, int), 'c2=%r' % c2
@@ -245,7 +285,7 @@ class CELAS2(SpringElement):
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
-        assert len(self.nodes) == 2
+        assert len(set(self.nodes)) == 2, 'There are duplicate nodes=%s on CELAS2 eid=%s' % (self.nodes, self.eid)
 
     def cross_reference(self, model):
         msg = ' which is required by CELAS2 eid=%s' % self.eid
@@ -259,7 +299,7 @@ class CELAS2(SpringElement):
         c2 = self.c1
         ge = self.ge
         s = self.s
-        
+
         assert isinstance(eid, int), 'eid=%r' % eid
         assert isinstance(c1, int), 'c1=%r' % c1
         assert isinstance(c2, int), 'c2=%r' % c2
@@ -270,7 +310,7 @@ class CELAS2(SpringElement):
             assert len(nodeIDs) == len(self.nodes)
             #for nodeID, node in zip(nodeIDs, self.nodes):
                 #assert node.node.nid
-    
+
     def isSameCard(self, elem, debug=False):
         if self.type != elem.type:
             return False

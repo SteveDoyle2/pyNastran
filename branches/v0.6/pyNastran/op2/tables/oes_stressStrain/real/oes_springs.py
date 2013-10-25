@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
@@ -106,6 +106,44 @@ class CelasStressObject(StressObject):
         (stress,) = out
         self.eType[eid] = self.element_name
         self.stress[dt][eid] = stress
+
+    def add_f06_data(self, data, dt):
+        if dt is not None:
+            for datai in data:
+                (eid, stressi) = datai
+                self.stress[dt][eid] = stressi
+            return
+
+        for datai in data:
+            (eid, stressi) = datai
+            self.stress[eid] = stressi
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
+        msg = header + ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
+                        '      ELEMENT         STRESS           ELEMENT         STRESS           ELEMENT         STRESS           ELEMENT         STRESS\n',
+                        '        ID.                              ID.                              ID.                              ID.\n',
+                        ]
+        stresses = []
+        #elements = []
+        line = '   '
+        for eid, stress in sorted(self.stress.iteritems()):
+            #elements.append(eid)
+            stresses.append(stress)
+            line += '%10s  %10.6E     ' % (eid, stress)
+            if len(stresses) == 3:
+                stresses = []
+                msg.append(line.rstrip() + '\n')
+
+        if stresses:
+            msg.append(line.rstrip() + '\n')
+        msg.append(pageStamp + str(pageNum) + '\n')
+
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
+        return (''.join(msg), pageNum)
 
     def __reprTransient__(self):
         msg = '---CELASx STRESSES---\n'
@@ -196,6 +234,45 @@ class CelasStrainObject(StrainObject):
         k = self.strain.keys()
         k.sort()
         return k
+
+    def add_f06_data(self, data, dt):
+        if dt is not None:
+            for datai in data:
+                (eid, straini) = datai
+                self.strain[dt][eid] = straini
+            return
+
+        for datai in data:
+            (eid, straini) = datai
+            self.strain[eid] = straini
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
+        msg = header + ['                              S T R A I N S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
+                        '      ELEMENT         STRAIN           ELEMENT         STRAIN           ELEMENT         STRAIN           ELEMENT         STRAIN\n',
+                        '        ID.                              ID.                              ID.                              ID.\n',
+                        ]
+        strains = []
+        #elements = []
+        line = '   '
+        for eid, strain in sorted(self.strain.iteritems()):
+            #elements.append(eid)
+            strains.append(strain)
+            line += '%10s  %10.6E     ' % (eid, strain)
+            if len(strains) == 3:
+                strains = []
+                msg.append(line.rstrip() + '\n')
+
+        if strains:
+            msg.append(line.rstrip() + '\n')
+        msg.append(pageStamp + str(pageNum) + '\n')
+
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
+        return (''.join(msg), pageNum)
+
 
     def add_new_transient(self, dt):
         """

@@ -516,6 +516,17 @@ class RealSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
         msg.append('  force\n')
         return msg
 
+    def add_f06_data(self, data, dt):
+        if dt is not None:
+            for datai in data:
+                (eid, forcei) = datai
+                self.force[dt][eid] = forcei
+            return
+
+        for datai in data:
+            (eid, forcei) = datai
+            self.force[eid] = forcei
+
     def add_new_transient(self, dt):
         self.dt = dt
         self.force[dt] = {}
@@ -544,24 +555,23 @@ class RealSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
-                 ' \n',
-                 '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
+                 '      ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE\n',
+                 '        ID.                              ID.                              ID.                              ID.\n',
+                 ]
         msg = []
-        for dt, Force in sorted(self.force.items()):
+        for dt, Force in sorted(self.force.iteritems()):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
 
-            #packs = []
             forces = []
-            elements = []
+            #elements = []
             line = '   '
-            for eid, force in sorted(Force.items()):
-                elements.append(eid)
+            for eid, force in sorted(Force.iteritems()):
+                #elements.append(eid)
                 forces.append(force)
-                #pack.append(eid)
-                #pack.append(f)
                 line += '%13s  %13s     ' % (eid, f)
                 if len(forces) == 3:
+                    forces = []
                     msg.append(line.rstrip() + '\n')
 
             if forces:
@@ -578,19 +588,18 @@ class RealSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
         msg = header + ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
-                        ' \n',
-                        '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
-        #packs = []
+                        '      ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE\n',
+                        '        ID.                              ID.                              ID.                              ID.\n',
+                        ]
         forces = []
-        elements = []
+        #elements = []
         line = '   '
-        for eid, force in sorted(self.force.items()):
-            elements.append(eid)
+        for eid, force in sorted(self.force.iteritems()):
+            #elements.append(eid)
             forces.append(force)
-            #pack.append(eid)
-            #pack.append(f)
-            line += '%13s  %13s     ' % (eid, force)
+            line += '%10s  %10.6E     ' % (eid, force)
             if len(forces) == 3:
+                forces = []
                 msg.append(line.rstrip() + '\n')
 
         if forces:
