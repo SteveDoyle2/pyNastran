@@ -172,6 +172,7 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
             msg = 'invalid CROD length=0.0\n%s' % (self.__repr__())
             raise ZeroDivisionError(msg)
         #========================
+        print("A=%g E=%g G=%g J=%g L=%g" % (A, E, G, J, L))
         k_axial = A * E / L
         k_torsion = G * J / L
         #k_axial = 1.0
@@ -203,7 +204,7 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
                 (n1, 1), (n1, 2), (n1, 3),
             ]
         elif k_axial == 0.0: # torsion; assume 3D
-            K = K * k_torsion
+            K2 = K * k_torsion
             dofs = array([
                 i0+3, i0+4, i0+5,
                 i1+3, i1+4, i1+5,
@@ -245,10 +246,10 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         #========================
 
         #print(K / fnorm)
-        #print("K[%s] = \n%s\n" % (self.eid, K/fnorm))
+        #print("K[%s] = \n%s\n" % (self.eid, list_print(K/fnorm)))
 
         print('dofs =', dofs)
-        print('K =\n', K / fnorm)
+        print('K =\n', list_print(K / fnorm))
 
         return(K2, dofs, nIJV)
 

@@ -1344,7 +1344,7 @@ class Solver(F06, OP2):
                 #if dof in Dofs:
                     #F[Dofs[dof]] += fg
 
-            print("K[%s] = \n%s" % (eid, K / self.fnorm))
+            print("K[%s] = \n%s" % (eid, list_print(K / self.fnorm)))
             #print("Ke[%s] = \n%s" % (eid, Ke / self.fnorm))
             #print("dofs = %s" % dofs)
 
@@ -1377,6 +1377,8 @@ class Solver(F06, OP2):
                     ii = nij2[i]
                     jj = nij2[j]
                     #dof = Dofs[n]
+                    if K[i, j] / fnorm > 1000.0:
+                        asdf
                     Kgg[ii, jj] += K[i, j]
 
                     #ij += 1

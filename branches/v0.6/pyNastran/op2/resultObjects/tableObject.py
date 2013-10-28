@@ -419,7 +419,7 @@ class TableObject(scalarObject):  # displacement style table
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n'
                         % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
-        msg.append(pageStamp + str(pageNum) + '\n')
+        msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum
 
@@ -446,8 +446,9 @@ class TableObject(scalarObject):  # displacement style table
                     [dx, dy, dz, rx, ry, rz] = vals2
                     msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
-            msg.append(pageStamp + str(pageNum) + '\n')
+            msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
         return pageNum - 1
 

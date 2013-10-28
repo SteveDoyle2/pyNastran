@@ -1208,49 +1208,49 @@ class CSHEAR(QuadShell):
         return self.pid.t
 
     def Stiffness(self, model, node_ids, index0s, fnorm):
-         n1, n2, n3, n4 = self.nodeIDs()
+        n1, n2, n3, n4 = self.nodeIDs()
 
-         (p1, p2, p3, p4) = self.nodePositions()
-         v1 = p2 - p1
-         v1b = p3 - p4
+        (p1, p2, p3, p4) = self.nodePositions()
+        v1 = p2 - p1
+        v1b = p3 - p4
 
-         v2 = p4 - p1
-         v2b = p3 - p2
-         # average of lengths & widths
-         a = (norm(v1) + norm(v1b)) / 2.
-         b = (norm(v2) + norm(v2b)) / 2.
-         v1 /= a
-         v2 /= b
-         assert a > 0
-         assert b > 0
-         Lambda = array([v1, v2])
-         assert Lambda.shape == (2, 3), 'shape=%s' % (Lambda.shape)
-         Lambda2 = LambdaN(Lambda, 4) # n=4 points
+        v2 = p4 - p1
+        v2b = p3 - p2
+        # average of lengths & widths
+        a = (norm(v1) + norm(v1b)) / 2.
+        b = (norm(v2) + norm(v2b)) / 2.
+        v1 /= a
+        v2 /= b
+        assert a > 0
+        assert b > 0
+        Lambda = array([v1, v2])
+        assert Lambda.shape == (2, 3), 'shape=%s' % (Lambda.shape)
+        Lambda2 = LambdaN(Lambda, 4) # n=4 points
 
-         G = self.G()
-         t = self.Thickness()
+        G = self.G()
+        t = self.Thickness()
 
-         ki = G * t / 4.0
-         K = ki * array([
-             [a/b, 1, a/b, -1, -a/b, -1, -a/b, 1],
-             [1, b/a, 1, -b/a, -1, -b/a, -1, b/a],
-             [a/b, 1, a/b, -1, -a/b, -1, -a/b, 1],  # row 0
-             [-1, -b/a, -1, b/a, 1, b/a, 1, -b/a],  # -row 1
-             [-a/b, -1, -a/b, 1, a/b, 1, a/b, -1],  # -row 0
-             [-1, -b/a, -1, b/a, 1, b/a, 1, -b/a],  # -row 1
-             [-a/b, -1, -a/b, 1, a/b, 1, a/b, -1],  # -row 0
-             [1, b/a, 1, -b/a, -1, -b/a, -1, b/a],  # row 1
-         ])
-         K2 = dot(transpose(Lambda2), dot(K, Lambda2))
+        ki = G * t / 4.0
+        K = ki * array([
+            [a/b, 1, a/b, -1, -a/b, -1, -a/b, 1],
+            [1, b/a, 1, -b/a, -1, -b/a, -1, b/a],
+            [a/b, 1, a/b, -1, -a/b, -1, -a/b, 1],  # row 0
+            [-1, -b/a, -1, b/a, 1, b/a, 1, -b/a],  # -row 1
+            [-a/b, -1, -a/b, 1, a/b, 1, a/b, -1],  # -row 0
+            [-1, -b/a, -1, b/a, 1, b/a, 1, -b/a],  # -row 1
+            [-a/b, -1, -a/b, 1, a/b, 1, a/b, -1],  # -row 0
+            [1, b/a, 1, -b/a, -1, -b/a, -1, b/a],  # row 1
+        ])
+        K2 = dot(transpose(Lambda2), dot(K, Lambda2))
 
-         dofs = []
-         nIJV = [
-             (n1, 1), (n1, 2), (n1, 3),
-             (n2, 1), (n2, 2), (n2, 3),
-             (n3, 1), (n3, 2), (n3, 3),
-             (n4, 1), (n4, 2), (n4, 3),
-         ]
-         return (K2, dofs, nIJV)
+        dofs = []
+        nIJV = [
+            (n1, 1), (n1, 2), (n1, 3),
+            (n2, 1), (n2, 2), (n2, 3),
+            (n3, 1), (n3, 2), (n3, 3),
+            (n4, 1), (n4, 2), (n4, 3),
+        ]
+        return (K2, dofs, nIJV)
 
     def displacement_stress(self, model, q, dofs):
         n1, n2, n3, n4 = self.nodeIDs()
