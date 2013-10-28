@@ -131,11 +131,9 @@ class RealRodForce(scalarObject):  # 1-ROD
         if nOut % 2 == 1:
             outLine = '      %8i   %13s  %13s\n' % tuple(out[-1])
             msg.append(outLine)
-        msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return(''.join(msg), pageNum)
+        msg.append(pageStamp % pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
 
 class RealCtubeForce(RealRodForce):  # 3-TUBE
@@ -325,12 +323,12 @@ class RealCBeamForce(scalarObject):  # 2-CBEAM
 
                     # TODO store grid ID
                     msg.append('           %8i   %.3f   %13s %13s  %13s %13s  %13s  %13s  %-s\n' % (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq))
-            msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+
+            msg.append(pageStamp % pageNum)
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return (pageNum - 1)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -338,7 +336,6 @@ class RealCBeamForce(scalarObject):  # 2-CBEAM
         msg = header + ['                                 F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                         '                    STAT DIST/   - BENDING MOMENTS -            - WEB  SHEARS -           AXIAL          TOTAL          WARPING\n',
                         '   ELEMENT-ID  GRID   LENGTH    PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE         TORQUE\n']
-        #print('BM', self.bendingMoment)
         for eid, bm in sorted(self.bendingMoment.iteritems()):
             for sd in sorted(bm):
                 bm1, bm2 = self.bendingMoment[eid][sd]
@@ -351,15 +348,9 @@ class RealCBeamForce(scalarObject):  # 2-CBEAM
                 msg.append('0  %8i\n' % (eid))
                 msg.append('           %8i   %.3f   %13s %13s  %13s %13s  %13s  %13s  %-s\n' % (eid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq))
 
-        msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
-
-    def __repr__(self):
-        #return str(self.axial)
-        return self.write_f06(['', ''], 'PAGE', 1)
+        msg.append(pageStamp % pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
 
 class RealCShearForce(scalarObject):  # 4-CSHEAR
@@ -483,9 +474,6 @@ class RealCShearForce(scalarObject):  # 4-CSHEAR
         self.shear34[dt][eid] = s34
         self.shear41[dt][eid] = s41
 
-    def __repr__(self):
-        return str(self.force41)
-
 
 class RealSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -576,13 +564,13 @@ class RealSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
 
             if forces:
                 msg.append(line.rstrip() + '\n')
-            msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+
+            msg.append(pageStamp % pageNum)
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
 
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -604,15 +592,9 @@ class RealSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
 
         if forces:
             msg.append(line.rstrip() + '\n')
-        msg.append(pageStamp + str(pageNum) + '\n')
-
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
-
-    def __repr__(self):
-        return str(self.force)
+        msg.append(pageStamp % pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
 
 class RealDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
@@ -694,13 +676,12 @@ class RealDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
 
             if forces:
                 msg.append(line.rstrip() + '\n')
-            msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            msg.append(pageStamp % pageNum)
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
 
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -723,15 +704,10 @@ class RealDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
 
         if forces:
             msg.append(line.rstrip() + '\n')
-        msg.append(pageStamp + str(pageNum) + '\n')
 
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
-
-    def __repr__(self):
-        return str(self.force)
+        msg.append(pageStamp % pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
 
 class RealViscForce(scalarObject):  # 24-CVISC
@@ -793,9 +769,6 @@ class RealViscForce(scalarObject):  # 24-CVISC
         #self.eType[eid] = eType
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
-
-    def __repr__(self):
-        return str(self.axialForce)
 
 
 class RealPlateForce(scalarObject):  # 33-CQUAD4, 74-CTRIA3
@@ -887,9 +860,6 @@ class RealPlateForce(scalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.bmxy[dt][eid] = bmxy
         self.tx[dt][eid] = tx
         self.ty[dt][eid] = ty
-
-    def __repr__(self):
-        return str(self.mx)
 
 
 class RealPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
@@ -1042,9 +1012,6 @@ class RealPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx[dt][eid].append(tx)
         self.ty[dt][eid].append(ty)
 
-    def __repr__(self):
-        return str(self.mx)
-
 
 class RealCBarForce(scalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1140,15 +1107,11 @@ class RealCBarForce(scalarObject):  # 34-CBAR
                 msg.append('      %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
 #            1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
 
-            msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            msg.append(pageStamp % pageNum)
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
-
-    def __repr__(self):
-        return str(self.axial)
+        return pageNum - 1
 
 
 class RealCBar100Force(scalarObject):  # 100-CBAR
@@ -1220,9 +1183,6 @@ class RealCBar100Force(scalarObject):  # 100-CBAR
         self.shear[dt][eid] = [ts1, ts2]
         self.axial[dt][eid] = af
         self.torque[dt][eid] = trq
-
-    def __repr__(self):
-        return str(self.axial)
 
 
 class RealConeAxForce(scalarObject):  # 35-CCONEAX
@@ -1304,9 +1264,6 @@ class RealConeAxForce(scalarObject):  # 35-CCONEAX
         self.tm[dt][eid] = tm
         self.su[dt][eid] = su
         self.sv[dt][eid] = sv
-
-    def __repr__(self):
-        return str(self.hopa)
 
 
 class RealCGapForce(scalarObject):  # 38-CGAP
@@ -1399,9 +1356,6 @@ class RealCGapForce(scalarObject):  # 38-CGAP
         self.sv[dt][eid] = sv
         self.sw[dt][eid] = sw
 
-    def __repr__(self):
-        return str(self.fx)
-
 
 class RealBendForce(scalarObject):  # 69-CBEND
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1487,9 +1441,6 @@ class RealBendForce(scalarObject):  # 69-CBEND
         self.shearPlane2[dt][eid] = [sp2A, sp2B]
         self.axial[dt][eid] = [axialA, axialB]
         self.torque[dt][eid] = [torqueA, torqueB]
-
-    def __repr__(self):
-        return str(self.axial)
 
 
 class RealPentaPressureForce(scalarObject):  # 77-PENTA_PR,78-TETRA_PR
@@ -1583,15 +1534,11 @@ class RealPentaPressureForce(scalarObject):  # 77-PENTA_PR,78-TETRA_PR
                 [ax, ay, az, pressure] = vals2
                 eType = 'PENPR'
                 msg.append('0%13s    %5s               %13s             %13s             %13s             %-s\n' % (eid, eType, ax, ay, az, pressure))
-            msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            msg.append(pageStamp % pageNum)
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
-
-    def __repr__(self):
-        return str(self.acceleration)
+        return pageNum - 1
 
 
 class RealCBushForce(scalarObject):  # 102-CBUSH
@@ -1653,9 +1600,6 @@ class RealCBushForce(scalarObject):  # 102-CBUSH
         #self.eType[eid] = eType
         self.force[dt][eid] = [fx, fy, fz]
         self.moment[dt][eid] = [mx, my, mz]
-
-    def __repr__(self):
-        return str(self.force)
 
 
 class RealForce_VU(scalarObject):  # 191-VUBEAM
@@ -1780,9 +1724,6 @@ class RealForce_VU(scalarObject):  # 191-VUBEAM
             self.bendingY[dt][eid][nid] = bendingY
             self.bendingZ[dt][eid][nid] = bendingZ
 
-    def __repr__(self):
-        return str(self.forceX)
-
 
 class RealForce_VU_2D(scalarObject):  # 190-VUTRIA # 189-VUQUAD
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1902,6 +1843,3 @@ class RealForce_VU_2D(scalarObject):  # 190-VUTRIA # 189-VUQUAD
             self.bendingXY[dt][eid][nid] = bendingXY
             self.shearYZ[dt][eid][nid] = shearYZ
             self.shearXZ[dt][eid][nid] = shearXZ
-
-    def __repr__(self):
-        return str(self.membraneX)

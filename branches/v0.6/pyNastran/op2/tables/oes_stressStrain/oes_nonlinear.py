@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import isnan
@@ -206,9 +206,6 @@ class NonlinearQuadObject(StressObject):
 
         return (''.join(msg), pageNum - 1)
 
-    def __repr__(self):
-        return self.write_f06([], 'PAGE ', 1)[0]
-
 
 class HyperelasticQuadObject(StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
@@ -319,9 +316,6 @@ class HyperelasticQuadObject(StressObject):
                         msg.append(' %8s %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' % ('', '', i + 1, oxx[i], oyy[i], txy[i], angle[i], majorP[i], minorP[i]))
 
         return (''.join(msg), pageNum)
-
-    def __repr__(self):
-        return self.write_f06([], 'PAGE ', 1)[0]
 
 
 class NonlinearRodObject(StressObject):
@@ -435,6 +429,3 @@ class NonlinearRodObject(StressObject):
             msg.append(pageStamp + str(pageNum))
 
         return (''.join(msg), pageNum)
-
-    def __repr__(self):
-        return self.write_f06([], 'PAGE ', 1)[0]

@@ -981,7 +981,7 @@ class PLOAD1(Load):
     type = 'PLOAD1'
     validTypes = ['FX', 'FY', 'FZ', 'FXE', 'FYE', 'FZE',
                   'MX', 'MY', 'MZ', 'MXE', 'MYE', 'MZE']
-    validScales = ['LE', 'FR', 'LEPR', 'FRPR']
+    validScales = ['LE', 'FR', 'LEPR', 'FRPR'] # LE: length-based; FR: fractional; PR:projected
 
     def __init__(self, card=None, data=None, comment=''):
         if comment:
@@ -989,13 +989,12 @@ class PLOAD1(Load):
         if card:
             self.sid = integer(card, 1, 'sid')
             self.eid = integer(card, 2, 'eid')
-            self.Type = string(card, 3, 'Type')
-            self.scale = string(card, 4, 'scale')
+            self.Type = string(card, 3,  'Type ("%s")' % '",  "'.join(self.validTypes) )
+            self.scale = string(card, 4, 'scale ("%s")' % '", "'.join(self.validScales) )
             self.x1 = double(card, 5, 'x1')
             self.p1 = double(card, 6, 'p1')
             self.x2 = double_or_blank(card, 7, 'x2', self.x1)
             self.p2 = double_or_blank(card, 8, 'p2', self.p1)
-            assert 0 <= self.x1 <= self.x2
             assert len(card) <= 9, 'len(PLOAD1 card) = %i' % len(card)
         else:
             self.sid = data[0]
@@ -1009,6 +1008,11 @@ class PLOAD1(Load):
         if self.Type not in self.validTypes:
             msg = '%s is an invalid type on the PLOAD1 card' % self.Type
             raise RuntimeError(msg)
+
+        assert 0.0 <= self.x1 <= self.x2
+        if self.scale in ['FR', 'FRPR']:
+            assert self.x1 <= 1.0, 'x1=%r' % self.x1
+            assert self.x2 <= 1.0, 'x2=%r' % self.x2
         assert self.scale in self.validScales, '%s is an invalid scale on the PLOAD1 card' % (self.scale)
 
 
@@ -1030,9 +1034,9 @@ class PLOAD1(Load):
         y = p1 - g0
         z = cross(x, y)
         A = [x, y, z]
-        print("x =", x)
-        print("y =", y)
-        print("z =", z)
+        #print("x =", x)
+        #print("y =", y)
+        #print("z =", z)
         #g = self.GravityVector()
         return A
         #(g2, matrix) = self.cid.transformToGlobal(A)
@@ -1069,28 +1073,93 @@ class PLOAD1(Load):
             #print("*load = ",load)
             out = load.transformLoad()
             typesFound.add(load.__class__.__name__)
-            if isinstance(load, Force):
-                (isLoad, node, vector) = out
-                if isLoad:  # load
-                    if node not in forceLoads:
-                        forceLoads[node] = vector * scaleFactor
-                    else:
-                        forceLoads[node] += vector * scaleFactor
-                else:  # constraint
-                    if node not in forceLoads:
-                        forceConstraints[node] = vector * scaleFactor
-                    else:
-                        forceConstraints[node] += vector * scaleFactor
 
-            elif isinstance(load, Moment):
-                pass
-            elif isinstance(load, PLOAD1):
-                pass
-            elif isinstance(load, PLOAD4):
-                pass
-            elif isinstance(load, GRAV):
-                (grav) = out
-                gravityLoads.append(out * scaleFactor)  # grav
+            if isinstance(load, PLOAD1): # CBAR/CBEAM
+                element = load.eid
+                (ga, gb) = element.nodeIDs()
+                load_type = load.Type
+
+                scale = load.scale
+                eType = element.type
+
+                if load_type in ['FX', 'FY', 'FZ']:
+                    p1 = element.ga.Position()
+                    p2 = element.gb.Position()
+                    r = p2 - p1
+
+                if load_type == 'FX':
+                    Fv = array([1., 0., 0.])
+                elif load_type == 'FY':
+                    Fv = array([0., 0., 1.])
+                elif load_type == 'FZ':
+                    Fv = array([0., 0., 1.])
+
+                elif load_type == 'MX':
+                    Fv = array([0., 0., 0.])
+                    Mv = array([1., 0., 0.])
+                elif load_type == 'MY':
+                    Fv = array([0., 0., 0.])
+                    Mv = array([0., 1., 0.])
+                elif load_type == 'MZ':
+                    Fv = array([0., 0., 0.])
+                    Mv = array([0., 0., 1.])
+                # FXE, FYE, FZE, MXE, MYE, MZE
+                else:
+                    raise NotImplementedError(load_type)
+
+                p1 = load.p1
+                p2 = load.p2
+                if scale == 'FR':
+                    x1 = load.x1
+                    x2 = load.x2
+                elif scale == 'LE':
+                    L = element.Length()
+                    x1 = load.x1 / L
+                    x2 = load.x2 / L
+                else:
+                    raise NotImplementedError('scale=%s is not supported.  Use "FR", "LE".')
+
+                assert x1 <= x2, '---load---\n%sx1=%r must be less than x2=%r' % (repr(self), self.x1, self.x2)
+                if  x1 == x2:
+                    msg = 'Point loads are not supported on...\n%sTry setting x1=%r very close to x2=%r and\n' % (repr(self), self.x1, self.x2)
+                    msg += 'scaling p1=%r and p2=%r by x2-x1 (for "FR") and (x2-x1)/L (for "LE").' % (self.p1, self.p2)
+                    raise NotImplementedError(msg)
+                    if p1 != p2:
+                        msg = 'p1=%r must be equal to p2=%r for x1=x2=%r'  %(self.p1, self.p2, self.x1)
+                        raise RuntimeError(msg)
+
+                dx = x2 - x1
+                m = (p2 - p1) / dx
+                #dx * (x2 + x1) = (x2^2-x1^2)
+                dx2 = x2**2 - x1**2
+                dx3 = x2**3 - x1**3
+                dx4 = x2**4 - x1**4
+                #F = (p1 - m * x1) * dx + m * dx2 / 2.
+                F = p1 * dx + m * (dx2 / 2. - x1 * dx)
+
+                F /= 2.
+
+                if eType in ['CBAR', 'CBEAM']:
+                    if load_type in ['FX', 'FY', 'FZ']:
+                        M = p1 * dx3 / 6. + m * (dx4 / 12. - x1 * dx3 / 6.)
+                        Mv = M * cross(r, Fv) / 2. # divide by 2 for 2 nodes
+
+                        Fv *= F
+                        #Mv = M
+                        forceLoads[ga] = Fv
+                        forceLoads[gb] = Fv
+                        momentLoads[ga] = Mv
+                        momentLoads[gb] = Mv
+                    elif load_type in ['MX', 'MY', 'MZ']:
+                        # these are really moments
+                        Mv *= F
+                        momentLoads[ga] = Mv
+                        momentLoads[gb] = Mv
+                    else:
+                        raise NotImplementedError(load_type)
+                else:
+                    raise NotImplementedError(eType)
+
             else:
                 msg = '%s not supported' % (load.__class__.__name__)
                 raise NotImplementedError(msg)

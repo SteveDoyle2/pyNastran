@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
@@ -215,33 +215,6 @@ class ComplexRodStressObject(StressObject):
             pageNum += 1
         return(''.join(msg), pageNum - 1)
 
-    def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        #print 'axial = ',self.axial
-        msg = '---ROD STRESSES---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['axial', 'torsion', 'MS_axial', 'MS_torsion']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-        #print "self.code = ",self.code
-        for eid in sorted(self.axial):
-            #print self.__dict__.keys()
-            axial = self.axial[eid]
-            torsion = self.torsion[eid]
-            msg += '%-6i %6s ' % (eid, self.eType)
-            vals = [axial, torsion]
-            for val in vals:
-                if abs(val) < 1e-6:
-                    msg += '%10s ' % '0'
-                else:
-                    msg += '%10i ' % val
-            msg += '\n'
-            #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
-        return msg
-
 
 class ComplexRodStrainObject(StrainObject):
     """
@@ -326,30 +299,6 @@ class ComplexRodStrainObject(StrainObject):
         self.axial[dt][eid] = axial
         self.torsion[dt][eid] = torsion
 
-    def __reprTransient__(self):
-        msg = '---ROD STRAINS---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['axial', 'torsion']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, axial in sorted(self.axial.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid in sorted(axial):
-                axial = self.axial[dt][eid]
-                torsion = self.torsion[dt][eid]
-                msg += '%-6i %6s ' % (eid, self.eType)
-                vals = [axial, torsion]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10g ' % val
-                msg += '\n'
-                #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
-        return msg
-
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         return 'ComplexRodStrain write_f06 not implemented...', pageNum
         raise NotImplementedError()
@@ -415,27 +364,3 @@ class ComplexRodStrainObject(StrainObject):
             msg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
         return(''.join(msg), pageNum - 1)
-
-    def __repr__(self):
-        if self.dt is not None:
-            return self.__reprTransient__()
-
-        msg = '---ROD STRAINS---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['axial', 'torsion']
-        for header in headers:
-            msg += '%8s ' % header
-        msg += '\n'
-
-        for eid in sorted(self.axial):
-            axial = self.axial[eid]
-            torsion = self.torsion[eid]
-            msg += '%-6i %6s ' % (eid, self.eType)
-            vals = [axial, torsion]
-            for val in vals:
-                if abs(val) < 1e-7:
-                    msg += '%8s ' % '0'
-                else:
-                    msg += '%8.3g ' % val
-            msg += '\n'
-        return msg

@@ -248,11 +248,9 @@ class BeamStressObject(StressObject):
                 (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
-        msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
+        msg.append(pageStamp % pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = ['                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
@@ -280,76 +278,11 @@ class BeamStressObject(StressObject):
                     (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                     msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
-            msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            msg.append(pageStamp % pageNum)
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
-
-    def __reprTransient__(self):
-        msg = '---BEAM STRESSES---\n'
-        msg += '%-6s %6s %6s %7s' % ('EID', 'eType', 'NID', 'xxb')
-        headers = ['sMax', 'sMin', 'MS_tension', 'MS_compression']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, smax in sorted(self.smax.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid in sorted(smax):
-                for i, nid in enumerate(self.grids[eid]):
-                    xxb = self.xxb[eid][i]
-                    sMax = self.smax[dt][eid][i]
-                    sMin = self.smin[dt][eid][i]
-                    SMt = self.MS_tension[dt][eid][i]
-                    SMc = self.MS_compression[dt][eid][i]
-                    xxb = round(xxb, 2)
-
-                    msg += '%-6i %6s %6i %7.2f ' % (eid, self.eType, nid, xxb)
-                    vals = [sMax, sMin, SMt, SMc]
-                    for val in vals:
-                        if abs(val) < 1e-6:
-                            msg += '%10s ' % '0'
-                        else:
-                            msg += '%10g ' % val
-                    msg += '\n'
-        #print msg
-        #sys.exit('beamT')
-        return msg
-
-    def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---BEAM STRESSES---\n'
-        msg += '%-6s %6s %6s %6s' % ('EID', 'eType', 'NID', 'xxb')
-        headers = ['sMax', 'sMin', 'MS_tension', 'MS_compression']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-        #print "self.code = ",self.code
-        for eid in sorted(self.smax):
-            #print self.xxb[eid]
-            for i, nid in enumerate(self.grids[eid]):
-                #print i,nid
-                xxb = self.xxb[eid][i]
-                sMax = self.smax[eid][i]
-                sMin = self.smin[eid][i]
-                SMt = self.MS_tension[eid][i]
-                SMc = self.MS_compression[eid][i]
-
-                xxb = round(xxb, 2)
-                msg += '%-6i %6s %6i %4.2f ' % (eid, self.eType, nid, xxb)
-
-                vals = [sMax, sMin, SMt, SMc]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10g ' % val
-                msg += '\n'
-        return msg
+        return pageNum - 1
 
 
 class BeamStrainObject(StrainObject):
@@ -571,11 +504,10 @@ class BeamStrainObject(StrainObject):
                 (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
-        msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
+        msg.append(pageStamp % pageNum)
+        f.write(''.join(msg))
+        return pageNum
+        return pageNum
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = ['                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
@@ -602,41 +534,8 @@ class BeamStrainObject(StrainObject):
                     (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                     msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
-            msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            msg.append(pageStamp % pageNum)
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
-
-    def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---BEAM STRAINS---\n'
-        msg += '%-6s %6s %6s %6s' % ('EID', 'eType', 'NID', 'xxb')
-        headers = ['sMax', 'sMin', 'MS_tension', 'MS_compression']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-        #print "self.code = ",self.code
-        for eid in sorted(self.smax):
-            #print self.xxb[eid]
-            for i, nid in enumerate(self.grids[eid]):
-                xxb = self.xxb[eid][i]
-                sMax = self.smax[eid][i]
-                sMin = self.smin[eid][i]
-                SMt = self.MS_tension[eid][i]
-                SMc = self.MS_compression[eid][i]
-
-                xxb = round(xxb, 2)
-                msg += '%-6i %6s %6i %4.2f ' % (eid, self.eType, nid, xxb)
-
-                vals = [sMax, sMin, SMt, SMc]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10.3e ' % val
-                msg += '\n'
-        return msg
+        return pageNum - 1

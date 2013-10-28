@@ -40,7 +40,7 @@ def make_stamp(Title):
     release_date = '02/08/12'  # pyNastran.__releaseDate__
     release_date = ''
     build = 'pyNastran v%s %s' % (pyNastran.__version__, release_date)
-    out = '1    %-67s %20s  %-22s PAGE ' % (Title, today, build)
+    out = '1    %-67s %20s  %-22s PAGE %%i\n' % (Title, today, build)
     return out
 
 
@@ -243,7 +243,7 @@ class F06Writer(object):
             msg += 'No constraints have been applied...\n'
 
         pageStamp = self.make_stamp(self.Title)
-        msg += pageStamp+'%i\n' % self.pageNum
+        msg += pageStamp % self.pageNum
         self.pageNum += 1
         return msg
 
@@ -267,7 +267,7 @@ class F06Writer(object):
         msg += '                   TOTALS  3.000000E+03  5.000000E+03  0.000000E+00  1.300000E+04  0.000000E+00  1.400000E+05\n'
 
         pageStamp = self.make_stamp(self.Title)
-        msg += pageStamp+'%i\n' % self.pageNum
+        msg += pageStamp % self.pageNum
         self.pageNum += 1
 
         return msg
@@ -353,7 +353,7 @@ class F06Writer(object):
         f.write(summary)
 
         pageStamp = self.make_stamp(self.Title)
-        f.write(pageStamp+'%i\n' % self.pageNum)
+        f.write(pageStamp % self.pageNum)
         self.pageNum += 1
         print(summary)
 
@@ -382,8 +382,8 @@ class F06Writer(object):
 
 
         pageStamp = self.make_stamp(self.Title)
-        #print "pageStamp = |%r|" %(pageStamp)
-        #print "stamp     = |%r|" %(stamp)
+        #print "pageStamp = %r" % pageStamp
+        #print "stamp     = %r" % stamp
 
         #is_mag_phase = False
         header = ['     DEFAULT                                                                                                                        \n',
@@ -392,13 +392,12 @@ class F06Writer(object):
             (subtitle, label) = self.iSubcaseNameMap[isubcase]
             subtitle = subtitle.strip()
             header[0] = '     %s\n' % subtitle
-            header[1] = '0                                                                                                            SUBCASE %i\n \n' % (isubcase)
+            header[1] = '0                                                                                                            SUBCASE %i\n \n' % isubcase
             print(result.__class__.__name__)
-            (msg, self.pageNum) = result.write_f06(header, pageStamp,
-                                                   pageNum=self.pageNum, f=f, is_mag_phase=is_mag_phase)
+            self.pageNum = result.write_f06(header, pageStamp,
+                                            pageNum=self.pageNum, f=f, is_mag_phase=is_mag_phase)
             if delete_objects:
                 del result
-            f.write(msg)
             self.pageNum += 1
 
         # has a special header
@@ -408,8 +407,8 @@ class F06Writer(object):
             header[0] = '     %s\n' % subtitle
             header[1] = '0                                                                                                            SUBCASE %i\n' % isubcase
             print(result.__class__.__name__)
-            (msg, self.pageNum) = result.write_f06(header, pageStamp,
-                                                   pageNum=self.pageNum, f=f, is_mag_phase=is_mag_phase)
+            self.pageNum = result.write_f06(header, pageStamp,
+                                            pageNum=self.pageNum, f=f, is_mag_phase=is_mag_phase)
             if delete_objects:
                 del result
             f.write(msg)
@@ -493,7 +492,7 @@ class F06Writer(object):
                 subtitle = subtitle.strip()
                 label = label.strip()
                 #print "label = ",label
-                header[0] = '     %-127s\n' % (subtitle)
+                header[0] = '     %-127s\n' % subtitle
                 header[1] = '0    %-72s                                SUBCASE %-15i\n' % (label, isubcase)
                 #header[1] = '0    %-72s                                SUBCASE %-15i\n' %('',isubcase)
                 for resType in resTypes:
@@ -503,21 +502,21 @@ class F06Writer(object):
                         result = resType[isubcase]
                         try:
                             print(result.__class__.__name__)
-                            (msg, self.pageNum) = result.write_f06(header, pageStamp, pageNum=self.pageNum, f=f, is_mag_phase=False)
+                            self.pageNum = result.write_f06(header, pageStamp, pageNum=self.pageNum, f=f, is_mag_phase=False)
+                            assert isinstance(self.pageNum, int)
                         except:
-                            #print "result name = %s" %(result.name())
+                            #print "result name = %r" % result.name()
                             raise
                         if delete_objects:
                             del result
-                        f.write(msg)
+                        #f.write('\n')
                         self.pageNum += 1
         if 0:
             for res in resTypes:
                 for isubcase, result in sorted(res.iteritems()):
-                    (msg, self.pageNum) = result.write_f06(header, pageStamp, pageNum=self.pageNum, f=f, is_mag_phase=False)
+                    self.pageNum = result.write_f06(header, pageStamp, pageNum=self.pageNum, f=f, is_mag_phase=False)
                     if delete_objects:
                         del result
-                    f.write(msg)
                     self.pageNum += 1
         f.write(make_end(end_flag))
         if not make_file:

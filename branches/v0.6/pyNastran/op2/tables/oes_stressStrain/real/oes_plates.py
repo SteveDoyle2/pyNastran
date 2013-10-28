@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
@@ -32,13 +32,13 @@ from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats8p4F
 class PlateStressObject(StressObject):
     """
     ::
-    
+
       ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)
         ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
             6    CEN/4  -1.250000E-01  -4.278394E+02  8.021165E+03 -1.550089E+02   -88.9493   8.024007E+03 -4.306823E+02  4.227345E+03
                          1.250000E-01   5.406062E+02  1.201854E+04 -4.174177E+01   -89.7916   1.201869E+04  5.404544E+02  5.739119E+03
-  
-  
+
+
                            S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
       ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)          MAX
         ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR         SHEAR
@@ -834,47 +834,6 @@ class PlateStressObject(StressObject):
                     msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm)
         return msg
 
-    def __repr__(self):
-        #print "sCodes = ",self.sCodes
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---ISOTROPIC PLATE STRESS---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        #print self.oxx.keys()
-        for eid, oxxNodes in sorted(self.oxx.iteritems()):
-            eType = self.eType[eid]
-            for nid in sorted(oxxNodes):
-                for iLayer in xrange(len(self.oxx[eid][nid])):
-                    fd = self.fiberCurvature[eid][nid][iLayer]
-                    oxx = self.oxx[eid][nid][iLayer]
-                    oyy = self.oyy[eid][nid][iLayer]
-                    txy = self.txy[eid][nid][iLayer]
-                   #angle = self.angle[eid][nid][iLayer]
-                    major = self.majorP[eid][nid][iLayer]
-                    minor = self.minorP[eid][nid][iLayer]
-                    ovm = self.ovmShear[eid][nid][iLayer]
-
-                    msg += '%-6i %6s %8s %7s %10g ' % (
-                        eid, eType, nid, iLayer + 1, fd)
-                    vals = [oxx, oyy, txy, major, minor, ovm]
-                    for val in vals:
-                        if abs(val) < 1e-6:
-                            msg += '%10s ' % '0'
-                        else:
-                            try:
-                                msg += '%10i ' % val
-                            except:
-                                print("bad val = %s" % val)
-                                raise
-                    msg += '\n'
-        return msg
-
 
 class PlateStrainObject(StrainObject):
     """
@@ -883,17 +842,17 @@ class PlateStrainObject(StrainObject):
       # ??? - is this just 11
       ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)
         ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
-  
+
       # s_code=11
                              S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
       ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)
         ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       VON MISES
-  
+
       # s_code=15
                              S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )
       ELEMENT      FIBER                STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)
         ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
-  
+
       # s_code=10
                              S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
       ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)          MAX
@@ -1503,79 +1462,4 @@ class PlateStrainObject(StrainObject):
                     msg += ('   %6s   %13s     %13s  %13s  %13s   %8s   '
                             '%13s   %13s  %-s\n' % ('', fd, exx, eyy, exy,
                                                     angle, major, minor, evm))
-        return msg
-
-    def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---ISOTROPIC PLATE STRAIN---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for eid, exxNodes in sorted(self.exx.iteritems()):
-            eType = self.eType[eid]
-            for nid in sorted(exxNodes):
-                for iLayer in xrange(len(self.exx[eid][nid])):
-                    fd = self.fiberCurvature[eid][nid][iLayer]
-                    exx = self.exx[eid][nid][iLayer]
-                    eyy = self.eyy[eid][nid][iLayer]
-                    exy = self.exy[eid][nid][iLayer]
-                   #angle = self.angle[eid][nid][iLayer]
-                    major = self.majorP[eid][nid][iLayer]
-                    minor = self.minorP[eid][nid][iLayer]
-                    evm = self.evmShear[eid][nid][iLayer]
-
-                    msg += '%-6i %6s %8s %7s %10g ' % (
-                        eid, eType, nid, iLayer + 1, fd)
-                    vals = [exx, eyy, exy, major, minor, evm]
-                    for val in vals:
-                        if abs(val) < 1e-6:
-                            msg += '%10s ' % '0.'
-                        else:
-                            msg += '%10.3g ' % val
-                    msg += '\n'
-
-                    #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy,evm)
-        return msg
-
-    def __reprTransient__(self):
-        msg = '---ISOTROPIC PLATE STRAIN---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, exx in sorted(self.exx.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid, exxNodes in sorted(exx.iteritems()):
-                eType = self.eType[eid]
-                for nid in sorted(exxNodes):
-                    for iLayer in xrange(len(self.exx[dt][eid][nid])):
-                        fd = self.fiberCurvature[eid][nid][iLayer]
-                        exx = self.exx[dt][eid][nid][iLayer]
-                        eyy = self.eyy[dt][eid][nid][iLayer]
-                        exy = self.exy[dt][eid][nid][iLayer]
-                       #angle = self.angle[ dt][eid][nid][iLayer]
-                        major = self.majorP[dt][eid][nid][iLayer]
-                        minor = self.minorP[dt][eid][nid][iLayer]
-                        evm = self.evmShear[dt][eid][nid][iLayer]
-
-                        msg += '%-6i %6s %8s %7s %10g ' % (eid, eType,
-                                                           nid, iLayer + 1, fd)
-                        vals = [exx, eyy, exy, major, minor, evm]
-                        for val in vals:
-                            if abs(val) < 1e-6:
-                                msg += '%10s ' % '0.'
-                            else:
-                                msg += '%10.3g ' % val
-                        msg += '\n'
-
-                        #msg += ('eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g '
-                        #        'eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n'
-                        #      % (eid, eType, nid, iLayer, exx, eyy, exy, evm))
         return msg

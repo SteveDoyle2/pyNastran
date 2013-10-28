@@ -725,7 +725,7 @@ class OP2(BDF,
 
         self.op2.seek(self.n)
         table_name, = unpack(b'8s', data)
-        print("table_name = |%s|\n" % table_name)
+        print("table_name = %r\n" % table_name)
 
         self.read_markers([-1])
         block = self.read_new_block()
@@ -753,7 +753,7 @@ class OP2(BDF,
     def read_new_block(self):
         data = self.op2.read(16)
         #print(self.print_block(data))
-        (four, n, four, fourN) = unpack(b'iiii', data)
+        (four, n, four, fourN) = unpack(b'4i', data)
         #print('n = %s' %(n))
         self.n += 16
 
@@ -791,7 +791,8 @@ class OP2(BDF,
                       '  3.  Run the problem on a different Operating System\n'
                       '  4.  Are you running an OP2? :)  \n'
                       'fname=%s' % (self.op2FileName, self.op2FileName))
-                raise RuntimeError("Tape Code Error: %s" % msg)
+                #raise RuntimeError("Tape Code Error: %s" % msg)
+                raise
 
             isAnotherTable = True
             while isAnotherTable:

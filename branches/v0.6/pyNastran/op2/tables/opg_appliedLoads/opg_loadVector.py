@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
@@ -91,53 +91,6 @@ class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
                 msg = ['']
             pageNum += 1
         return (''.join(msg), pageNum - 1)
-
-    def __reprTransient__(self):
-        msg = '---TRANSIENT LOAD VECTOR---\n'
-        #msg += '%s = %g\n' %(self.data_code['name'],self.dt)
-        msg += self.write_header()
-
-        for dt, translations in sorted(self.translations.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for nodeID, translation in sorted(translations.iteritems()):
-                rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
-                (dx, dy, dz) = translation
-                (rx, ry, rz) = rotation
-
-                msg += '%-10i %8s ' % (nodeID, gridType)
-                vals = [dx, dy, dz, rx, ry, rz]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % 0
-                    else:
-                        msg += '%10.3e ' % val
-                msg += '\n'
-        return msg
-
-    def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---LOAD VECTOR---\n'
-        msg += self.write_header()
-
-        for nodeID, translation in sorted(self.translations.iteritems()):
-            rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
-
-            (dx, dy, dz) = translation
-            (rx, ry, rz) = rotation
-
-            msg += '%-10i %-8s ' % (nodeID, gridType)
-            vals = [dx, dy, dz, rx, ry, rz]
-            for val in vals:
-                if abs(val) < 1e-6:
-                    msg += '%10s ' % 0
-                else:
-                    msg += '%10.3e ' % val
-            msg += '\n'
-        return msg
 
     def __reprTransient__(self):
         return self._write_f06_transient(['', ''], 'PAGE ', 1)[0]
@@ -272,34 +225,6 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
             pageNum += 1
         return (''.join(msg), pageNum - 1)
 
-    def __repr__(self):
-        return self.write_f06(['', '', ''], 'PAGE ', 1)[0]
-
-        msg = '---COMPLEX LOAD VECTOR---\n'
-        #if self.dt is not None:
-        #    msg += '%s = %g\n' %(self.data_code['name'],self.dt)
-        headers = ['DxReal', 'DxImag', 'DyReal', 'DyImag', 'DzReal', 'DyImag', 'RxReal', 'RxImag', 'RyReal', 'RyImag', 'RzReal', 'RzImag']
-        msg += '%-10s ' % 'nodeID'
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for freq, translations in sorted(self.translations.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-
-            for nodeID, translation in sorted(translations.iteritems()):
-                rotation = self.rotations[freq][nodeID]
-
-                msg += '%-10i ' % nodeID
-                vals = translation + rotation
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % 0
-                    else:
-                        msg += '%10.3e ' % val
-                msg += '\n'
-        return msg
-
 
 class ThermalVector(TableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
@@ -358,56 +283,6 @@ class ThermalVector(TableObject):
                 msg = ['']
             pageNum += 1
         return (''.join(msg), pageNum - 1)
-
-    def __reprTransient__(self):
-        msg = '---TRANSIENT LOAD VECTOR---\n'
-        #msg += '%s = %g\n' %(self.data_code['name'],self.dt)
-        msg += self.write_header()
-
-        for dt, translations in sorted(self.translations.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for nodeID, translation in sorted(translations.iteritems()):
-                rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
-                (dx, dy, dz) = translation
-                (rx, ry, rz) = rotation
-
-                msg += '%-10i %8s ' % (nodeID, gridType)
-                vals = [dx, dy, dz, rx, ry, rz]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % 0
-                    else:
-                        msg += '%10.3e ' % val
-                msg += '\n'
-        return msg
-
-    def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---LOAD VECTOR---\n'
-        msg += self.write_header()
-
-        for nodeID, translation in sorted(self.translations.iteritems()):
-            rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
-
-            (dx, dy, dz) = translation
-            (rx, ry, rz) = rotation
-
-            msg += '%-10i %-8s ' % (nodeID, gridType)
-            vals = [dx, dy, dz, rx, ry, rz]
-            for val in vals:
-                if abs(val) < 1e-6:
-                    msg += '%10s ' % 0
-                else:
-                    msg += '%10.3e ' % val
-            msg += '\n'
-        return msg
-
-    def __reprTransient__(self):
-        return self._write_f06_transient(['', ''], 'PAGE ', 1)[0]
 
 
 class ThermalLoadVectorObject(ThermalVector):     # table_code=2, thermal=1

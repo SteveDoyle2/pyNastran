@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
@@ -87,9 +87,6 @@ class ComplexRodForce(scalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
         #self.eType[eid] = eType
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
-
-    def __repr__(self):
-        return str(self.axialForce)
 
 
 class ComplexCBeamForce(scalarObject):  # 2-CBEAM
@@ -196,9 +193,6 @@ class ComplexCBeamForce(scalarObject):  # 2-CBEAM
         self.axial[dt][eid] = {sd: af}
         self.totalTorque[dt][eid] = {sd: ttrq}
         self.warpingTorque[dt][eid] = {sd: wtrq}
-
-    def __repr__(self):
-        return str(self.axial)
 
 
 class ComplexCShearForce(scalarObject):  # 4-CSHEAR
@@ -321,9 +315,6 @@ class ComplexCShearForce(scalarObject):  # 4-CSHEAR
         self.shear34[dt][eid] = s34
         self.shear41[dt][eid] = s41
 
-    def __repr__(self):
-        return str(self.force41)
-
 
 class ComplexSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -401,12 +392,10 @@ class ComplexSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
                 msg.append(line.rstrip() + '\n')
         if forces:
             msg.append(line.rstrip() + '\n')
-        msg.append(pageStamp + str(pageNum) + '\n')
+        msg.append(pageStamp % pageNum)
 
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
@@ -437,16 +426,12 @@ class ComplexSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
                     forces = []
             if forces:
                 msg.append(line.rstrip() + '\n')
-            msg.append(pageStamp + str(pageNum) + '\n')
+            msg.append(pageStamp % pageNum)
 
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
-
-    def __repr__(self):
-        return str(self.force)
+        return pageNum - 1
 
 
 class ComplexDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
@@ -503,9 +488,6 @@ class ComplexDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAM
 
         #self.eType[eid] = eType
         self.force[dt][eid] = force
-
-    def __repr__(self):
-        return str(self.force)
 
 
 class ComplexViscForce(scalarObject):  # 24-CVISC
@@ -567,9 +549,6 @@ class ComplexViscForce(scalarObject):  # 24-CVISC
         #self.eType[eid] = eType
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
-
-    def __repr__(self):
-        return str(self.axialForce)
 
 
 class ComplexPlateForce(scalarObject):  # 33-CQUAD4, 74-CTRIA3
@@ -661,9 +640,6 @@ class ComplexPlateForce(scalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.bmxy[dt][eid] = bmxy
         self.tx[dt][eid] = tx
         self.ty[dt][eid] = ty
-
-    def __repr__(self):
-        return str(self.mx)
 
 
 class ComplexPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
@@ -816,7 +792,7 @@ class ComplexPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
-        return 'ComplexPlate write_f06 not implemented...\n'
+        f.write('ComplexPlate write_f06 not implemented...\n')
         #raise NotImplementedError()
         #words = ['                                             A C C E L E R A T I O N   V E C T O R\n',
         #       ' \n',
@@ -825,11 +801,8 @@ class ComplexPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         #return self._writeF06Block(words,header,pageStamp,pageNum,f)
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
-        return 'ComplexPlate _write_f06_transient not implemented...\n'
+        f.write('ComplexPlate _write_f06_transient not implemented...\n')
         #raise NotImplementedError()
-
-    def __repr__(self):
-        return str(self.mx)
 
 
 class ComplexCBarForce(scalarObject):  # 34-CBAR
@@ -929,12 +902,11 @@ class ComplexCBarForce(scalarObject):  # 34-CBAR
                  bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi] = vals2
                 msg.append('     %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' % (eid, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr))
                 msg.append('     %8s    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' % ('', bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi))
-            msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            msg.append(pageStamp % pageNum)
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -955,14 +927,9 @@ class ComplexCBarForce(scalarObject):  # 34-CBAR
              bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi] = vals2
             msg.append('     %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' % (eid, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr))
             msg.append('     %8s    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' % ('', bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi))
-        msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
-
-    def __repr__(self):
-        return str(self.axial)
+        msg.append(pageStamp % pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
 
 class ComplexBendForce(scalarObject):  # 69-CBEND
@@ -1052,9 +1019,6 @@ class ComplexBendForce(scalarObject):  # 69-CBEND
         self.axial[dt][eid] = [axialA, axialB]
         self.torque[dt][eid] = [torqueA, torqueB]
 
-    def __repr__(self):
-        return str(self.axial)
-
 
 class ComplexPentaPressureForce(scalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TETRA_PR
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1121,9 +1085,6 @@ class ComplexPentaPressureForce(scalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TET
         self.velocity[dt][eid] = [vx, vy, vz]
         self.pressure[dt][eid] = pressure
 
-    def __repr__(self):
-        return str(self.acceleration)
-
 
 class ComplexCBushForce(scalarObject):  # 102-CBUSH
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1184,9 +1145,6 @@ class ComplexCBushForce(scalarObject):  # 102-CBUSH
         #self.eType[eid] = eType
         self.force[dt][eid] = [fx, fy, fz]
         self.moment[dt][eid] = [mx, my, mz]
-
-    def __repr__(self):
-        return str(self.force)
 
 
 class ComplexForce_VU(scalarObject):  # 191-VUBEAM
@@ -1311,9 +1269,6 @@ class ComplexForce_VU(scalarObject):  # 191-VUBEAM
             self.bendingY[dt][eid][nid] = bendingY
             self.bendingZ[dt][eid][nid] = bendingZ
 
-    def __repr__(self):
-        return str(self.forceX)
-
 
 class ComplexForce_VU_2D(scalarObject):  # 189-VUQUAD,190-VUTRIA
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1433,6 +1388,3 @@ class ComplexForce_VU_2D(scalarObject):  # 189-VUQUAD,190-VUTRIA
             self.bendingXY[dt][eid][nid] = bendingXY
             self.shearYZ[dt][eid][nid] = shearYZ
             self.shearXZ[dt][eid][nid] = shearXZ
-
-    def __repr__(self):
-        return str(self.membraneX)

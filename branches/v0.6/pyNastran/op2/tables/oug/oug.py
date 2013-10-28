@@ -197,32 +197,25 @@ class OUG(object):
                 self.add_data_parameter(data, 'dt', 'f', 5)  # time step
                 self.apply_data_code_value('dataNames', ['dt'])
             elif self.analysis_code == 7:  # pre-buckling
-                self.add_data_parameter(data, 'lsdvmn', 'i',
-                                      5)  # load set number
+                self.add_data_parameter(data, 'lsdvmn', 'i', 5)  # load set number
                 self.apply_data_code_value('dataNames', ['lsdvmn'])
             elif self.analysis_code == 8:  # post-buckling
-                self.add_data_parameter(data, 'lsdvmn', 'i',
-                                      5)  # load set number
-                self.add_data_parameter(data, 'eigr', 'f',
-                                      6, False)  # real eigenvalue
+                self.add_data_parameter(data, 'lsdvmn', 'i', 5)  # load set number
+                self.add_data_parameter(data, 'eigr', 'f', 6, False)  # real eigenvalue
                 self.apply_data_code_value('dataNames', ['lsdvmn', 'eigr'])
             elif self.analysis_code == 9:  # complex eigenvalues
                 self.add_data_parameter(data, 'mode', 'i', 5)  # mode number
-                self.add_data_parameter(data, 'eigr', 'f', 6,
-                                      False)  # real eigenvalue
-                self.add_data_parameter(data, 'eigi', 'f', 7,
-                                      False)  # imaginary eigenvalue
+                self.add_data_parameter(data, 'eigr', 'f', 6, False)  # real eigenvalue
+                self.add_data_parameter(data, 'eigi', 'f', 7, False)  # imaginary eigenvalue
                 self.apply_data_code_value('dataNames', ['mode', 'eigr', 'eigi'])
             elif self.analysis_code == 10:  # nonlinear statics
                 self.add_data_parameter(data, 'lftsfq', 'f', 5)  # load step
                 self.apply_data_code_value('dataNames', ['lftsfq'])
             elif self.analysis_code == 11:  # old geometric nonlinear statics
-                self.add_data_parameter(data, 'lsdvmn', 'i',
-                                      5)  # load set number
+                self.add_data_parameter(data, 'lsdvmn', 'i', 5)  # load set number
                 self.apply_data_code_value('dataNames', ['lsdvmn'])
             elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-                self.add_data_parameter(data, 'lsdvmn', 'i',
-                                      5)  # load set number
+                self.add_data_parameter(data, 'lsdvmn', 'i', 5)  # load set number
                 self.apply_data_code_value('dataNames', ['lsdvmn'])
             else:
                 raise RuntimeError('invalid analysis_code...analysis_code=%s' %
@@ -235,28 +228,24 @@ class OUG(object):
             #print("floatVal = %s" %(floatVal))
 
             if self.table_name == 'OUGRMS2' and self.analysis_code == 1:
-                self.add_data_parameter(data, 'nodeID', 'i',
-                                      5, fixDeviceCode=True)  # frequency
+                self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)  # frequency
                 self.apply_data_code_value('dataNames', ['nodeID'])
 
             #self.isRegular = False
             elif self.analysis_code in [1, 5]:  # 5 # freq
-                self.add_data_parameter(data, 'nodeID', 'i',
-                                      5, fixDeviceCode=True)  # frequency
+                self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)  # frequency
                 self.apply_data_code_value('dataNames', ['nodeID'])
                 #print("nodeID = %s" %(self.nodeID))
                 #sys.exit(self.nodeID)
             elif self.analysis_code == 6:  # transient dt
-                self.add_data_parameter(data, 'nodeID', 'i',
-                                      5, fixDeviceCode=True)  # time step
+                self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)  # time step
                 self.apply_data_code_value('dataNames', ['nodeID'])
             elif self.analysis_code == 10:  # freq/time step fqts
                 self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)  # frequency / time step
                 self.apply_data_code_value('dataNames', ['nodeID'])
             else:
                 self.isRegular = True
-                self.add_data_parameter(data, 'nodeID', 'i',
-                                      5, fixDeviceCode=True)  # node ID
+                self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)  # node ID
                 self.apply_data_code_value('dataNames', ['nodeID'])
         # tCode=2
         #if self.analysis_code==2: # sort2

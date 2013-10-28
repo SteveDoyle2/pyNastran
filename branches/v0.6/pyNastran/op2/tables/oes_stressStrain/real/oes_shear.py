@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
@@ -31,7 +31,7 @@ from .oes_objects import StressObject, StrainObject
 class ShearStressObject(StressObject):
     """
     ::
-    
+
       # format_code=1 sort_code=0 stressCode=0
                                      S T R E S S E S   I N   S H E A R   P A N E L S      ( C S H E A R )
       ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY
@@ -102,6 +102,25 @@ class ShearStressObject(StressObject):
         self.avgShear[dt] = {}
         self.margin[dt] = {}
 
+    def add_f06_data(self, data, dt):
+        if dt:
+            if dt not in self.maxShear:
+                self.maxShear[dt] = {}
+                self.avgShear[dt] = {}
+                self.margin[dt] = {}
+            for datai in data:
+                (eid, max_shear, avg_shear, margin) = datai
+                self.maxShear[dt][eid] = max_shear
+                self.avgShear[dt][eid] = avg_shear
+                self.margin[dt][eid] = margin
+                return
+
+        for datai in data:
+            (eid, max_shear, avg_shear, margin) = datai
+            self.maxShear[eid] = max_shear
+            self.avgShear[eid] = avg_shear
+            self.margin[eid] = margin
+
     def add_new_eid(self, dt, eid, out):
         #print "Rod Stress add..."
         (maxShear, avgShear, margin) = out
@@ -123,67 +142,13 @@ class ShearStressObject(StressObject):
         self.avgShear[dt][eid] = avgShear
         self.margin[dt][eid] = margin
 
-    def __reprTransient__(self):
-        msg = '---TRANSIENT CSHEAR STRESSES---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['maxShear', 'avgShear', 'Margin']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, maxShears in sorted(self.maxShear.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid in sorted(maxShears):
-                maxShear = self.maxShear[dt][eid]
-                avgShear = self.avgShear[dt][eid]
-                margin = self.margin[dt][eid]
-                msg += '%-6i %6s ' % (eid, self.eType)
-                vals = [maxShear, avgShear, margin]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10i ' % val
-                msg += '\n'
-                msg += ('eid=%-4s eType=%s axial=%-4i '
-                        'torsion=%-4i\n' %(eid, self.eType, axial, torsion))
-        return msg
-
-    def __repr__(self):
-        if self.dt is not None:
-            return self.__reprTransient__()
-
-        msg = '---CSHEAR STRESSES---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['maxShear', 'avgShear', 'margin']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-        #print "self.code = ",self.code
-        for eid in sorted(self.maxShear):
-            #print self.__dict__.keys()
-            maxShear = self.maxShear[eid]
-            avgShear = self.avgShear[eid]
-            margin = self.margin[eid]
-            msg += '%-6i %6s ' % (eid, self.eType)
-            vals = [maxShear, avgShear, margin]
-            for val in vals:
-                if abs(val) < 1e-6:
-                    msg += '%10s ' % '0'
-                else:
-                    msg += '%10i ' % val
-            msg += '\n'
-            #msg += ('eid=%-4s eType=%s axial=%-4i '
-            #        'torsion=%-4i\n' %(eid, self.eType, axial, torsion)
-        return msg
-
 
 class ShearStrainObject(StrainObject):
 
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = 'CSHEAR'
-        raise Exception('not supported...CSHEAR strain')
+        #raise Exception('not supported...CSHEAR strain')
         self.code = [self.format_code, self.sort_code, self.s_code]
         self.maxShear = {}
         self.avgShear = {}
@@ -237,7 +202,27 @@ class ShearStrainObject(StrainObject):
         self.avgShear[dt] = {}
         self.margin[dt] = {}
 
+    def add_f06_data(self, data, dt):
+        if dt:
+            if dt not in self.maxShear:
+                self.maxShear[dt] = {}
+                self.avgShear[dt] = {}
+                self.margin[dt] = {}
+            for datai in data:
+                (eid, max_shear, avg_shear, margin) = datai
+                self.maxShear[dt][eid] = max_shear
+                self.avgShear[dt][eid] = avg_shear
+                self.margin[dt][eid] = margin
+                return
+
+        for datai in data:
+            (eid, max_shear, avg_shear, margin) = datai
+            self.maxShear[eid] = max_shear
+            self.avgShear[eid] = avg_shear
+            self.margin[eid] = margin
+
     def add_new_eid(self, dt, eid, out):
+        raise NotImplementedError()
         (axial, SMa, torsion, SMt) = out
         #print "Rod Strain add..."
         assert eid >= 0
@@ -267,57 +252,3 @@ class ShearStrainObject(StrainObject):
         self.maxShear[dt][eid] = maxShear
         self.avgShear[dt][eid] = avgShear
         self.margin[dt][eid] = margin
-
-    def __reprTransient__(self):
-        msg = '---TRANSIENT CSHEAR STRAINS---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['maxShear', 'avgShear', 'Margin']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, maxShears in sorted(self.maxShear.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid in sorted(maxShears):
-                maxShear = self.maxShear[dt][eid]
-                avgShear = self.avgShear[dt][eid]
-                margin = self.margin[dt][eid]
-                msg += '%-6i %6s ' % (eid, self.eType)
-                vals = [maxShear, avgShear, margin]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10g ' % val
-                msg += '\n'
-                #msg += ('eid=%-4s eType=%s axial=%-4i '
-                #        'torsion=%-4i\n' %(eid, self.eType, axial, torsion))
-        return msg
-
-    def __repr__(self):
-        if self.dt is not None:
-            return self.__reprTransient__()
-
-        msg = '---CSHEAR STRAINS---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['maxShear', 'avgShear', 'margin']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        #print "self.code = ",self.code
-        for eid in sorted(self.maxShear):
-            #print self.__dict__.keys()
-            maxShear = self.maxShear[eid]
-            avgShear = self.avgShear[eid]
-            margin = self.margin[eid]
-            msg += '%-6i %6s ' % (eid, self.eType)
-            vals = [maxShear, avgShear, margin]
-
-            for val in vals:
-                if abs(val) < 1e-7:
-                    msg += '%8s ' % '0'
-                else:
-                    msg += '%8.3g ' % val
-            msg += '\n'
-        return msg

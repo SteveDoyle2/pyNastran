@@ -22,7 +22,7 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ##
-#from struct import pack
+from struct import pack
 from numpy import array, sqrt, abs, angle  # dot,
 
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
@@ -355,6 +355,54 @@ class TableObject(scalarObject):  # displacement style table
             msgT = ''
             msgR = ''
 
+    def _write_op2_block(self, f, header, device_code, packing=False):
+        form = '2i6f'  # node_id, grid_id (G=1, S=0, R=7, P=0, H=5 ???), dx, dy, dz, rx, ry, rz
+        nform = 8 * 4
+        nnodes = len(self.translations.keys())
+        fourN = nform * nnodes
+
+        i = -3
+        marker1 = [4,  0, 4]
+        marker2 = [4,  i, 4]
+        marker3 = [4,  0, 4]
+        marker = marker1 + marker2 + marker3 + [fourN]
+        if packing:
+            npack = len(marker)
+            p = pack('%ii' % npack, *marker)
+            f.write(p)
+        else:
+            f.write(str(marker)+'\n')
+
+        #[-3,1,0], (e.g. [4,2^16,4]
+        for node_id, translation in sorted(self.translations.iteritems()):
+            rotation = self.rotations[node_id]
+            gridType = self.gridTypes[node_id]
+            G = self.cast_grid_type(gridType)
+
+            (dx, dy, dz) = translation
+            (rx, ry, rz) = rotation
+            vals = [10*node_id + device_code, G, dx, dy, dz, rx, ry, rz]
+
+            if packing:
+                p = pack(form, *vals)
+                f.write(p)
+            else:
+                f.write(str(vals)+'\n')
+
+        i = -2
+        marker1 = [4,  0, 4]
+        marker2 = [4,  i, 4]
+        marker3 = [4,  0, 4]
+        marker = marker1 + marker2 + marker3 + [fourN]
+        if packing:
+            npack = len(marker)
+            p = pack('%ii' % npack, *marker)
+            f.write(p)
+        else:
+            f.write(str(marker)+'\n')
+
+
+
     def _write_f06_block(self, words, header, pageStamp, pageNum=1, f=None):
         msg = words
         #assert f is not None # remove
@@ -372,10 +420,8 @@ class TableObject(scalarObject):  # displacement style table
                         % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
         msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
     def _write_f06_transient_block(self, words, header, pageStamp, pageNum=1, f=None):
         msg = []
@@ -401,11 +447,9 @@ class TableObject(scalarObject):  # displacement style table
                     msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
             msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            f.write(''.join(msg))
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def get_table_marker(self):
         if self.isATO():

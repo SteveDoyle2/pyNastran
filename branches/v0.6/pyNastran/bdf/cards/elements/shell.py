@@ -44,12 +44,13 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 
-from numpy import array, eye, cross, allclose, dot, transpose  # zeros,dot
+from numpy import array, eye, cross, allclose, dot, transpose, zeros  # zeros,dot
 from numpy.linalg import det, norm  # inv
 
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
 from pyNastran.bdf.cards.baseCard import Element
+from pyNastran.utils import list_print
 from pyNastran.utils.mathematics import Area, norm, centroid_triangle
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
@@ -1200,6 +1201,142 @@ class CSHEAR(QuadShell):
     def reprFields(self):
         return self.rawFields()
 
+    def G(self):
+        return self.pid.mid.G()
+
+    def Thickness(self):
+        return self.pid.t
+
+    def Stiffness(self, model, node_ids, index0s, fnorm):
+         n1, n2, n3, n4 = self.nodeIDs()
+
+         (p1, p2, p3, p4) = self.nodePositions()
+         v1 = p2 - p1
+         v1b = p3 - p4
+
+         v2 = p4 - p1
+         v2b = p3 - p2
+         # average of lengths & widths
+         a = (norm(v1) + norm(v1b)) / 2.
+         b = (norm(v2) + norm(v2b)) / 2.
+         v1 /= a
+         v2 /= b
+         assert a > 0
+         assert b > 0
+         Lambda = array([v1, v2])
+         assert Lambda.shape == (2, 3), 'shape=%s' % (Lambda.shape)
+         Lambda2 = LambdaN(Lambda, 4) # n=4 points
+
+         G = self.G()
+         t = self.Thickness()
+
+         ki = G * t / 4.0
+         K = ki * array([
+             [a/b, 1, a/b, -1, -a/b, -1, -a/b, 1],
+             [1, b/a, 1, -b/a, -1, -b/a, -1, b/a],
+             [a/b, 1, a/b, -1, -a/b, -1, -a/b, 1],  # row 0
+             [-1, -b/a, -1, b/a, 1, b/a, 1, -b/a],  # -row 1
+             [-a/b, -1, -a/b, 1, a/b, 1, a/b, -1],  # -row 0
+             [-1, -b/a, -1, b/a, 1, b/a, 1, -b/a],  # -row 1
+             [-a/b, -1, -a/b, 1, a/b, 1, a/b, -1],  # -row 0
+             [1, b/a, 1, -b/a, -1, -b/a, -1, b/a],  # row 1
+         ])
+         K2 = dot(transpose(Lambda2), dot(K, Lambda2))
+
+         dofs = []
+         nIJV = [
+             (n1, 1), (n1, 2), (n1, 3),
+             (n2, 1), (n2, 2), (n2, 3),
+             (n3, 1), (n3, 2), (n3, 3),
+             (n4, 1), (n4, 2), (n4, 3),
+         ]
+         return (K2, dofs, nIJV)
+
+    def displacement_stress(self, model, q, dofs):
+        n1, n2, n3, n4 = self.nodeIDs()
+        n = array([
+           dofs[(n1, 1)],
+           dofs[(n1, 2)],
+           dofs[(n1, 3)],
+
+           dofs[(n2, 1)],
+           dofs[(n2, 2)],
+           dofs[(n2, 3)],
+
+           dofs[(n3, 1)],
+           dofs[(n3, 2)],
+           dofs[(n3, 3)],
+
+           dofs[(n4, 1)],
+           dofs[(n4, 2)],
+           dofs[(n4, 3)]
+        ])
+        u = q[n]
+
+        #=========
+        (p1, p2, p3, p4) = self.nodePositions()
+        v1 = p2 - p1
+        v1b = p3 - p4
+
+        v2 = p4 - p1
+        v2b = p3 - p2
+        # average of lengths & widths
+        a = (norm(v1) + norm(v1b)) / 2.
+        b = (norm(v2) + norm(v2b)) / 2.
+        v1 /= a
+        v2 /= b
+        assert a > 0
+        assert b > 0
+        Lambda = array([v1, v2])
+        assert Lambda.shape == (2, 3), 'shape=%s' % (Lambda.shape)
+        Lambda2 = LambdaN(Lambda, 4) # n=4 points
+        #=========
+        G = self.G()
+        t = self.Thickness()
+
+        u2 = dot(Lambda2, u)
+
+        ki = G * t / 4.
+        K = ki * array([
+            [a/b, 1, a/b, -1, -a/b, -1, -a/b, 1],
+            [1, b/a, 1, -b/a, -1, -b/a, -1, b/a],
+            [a/b, 1, a/b, -1, -a/b, -1, -a/b, 1],  # row 0
+            [-1, -b/a, -1, b/a, 1, b/a, 1, -b/a],  # -row 1
+            [-a/b, -1, -a/b, 1, a/b, 1, a/b, -1],  # -row 0
+            [-1, -b/a, -1, b/a, 1, b/a, 1, -b/a],  # -row 1
+            [-a/b, -1, -a/b, 1, a/b, 1, a/b, -1],  # -row 0
+            [1, b/a, 1, -b/a, -1, -b/a, -1, b/a],  # row 1
+        ])
+        K2 = dot(transpose(Lambda2), dot(K, Lambda2))
+        F = dot(K2, u)
+
+        kit = G / (a * b * t)
+        #Kt = kit * array([-a, -b, -a, b,  a, b,  a, -b])
+        #tau_xy = Kt * u2
+
+        txy = kit * F[0]
+        ss = self.pid.mid.Ss  # shear stress
+        exy = txy / G
+        if ss:
+            margin = txy / ss
+        else:
+            margin = 0.0
+        return ([txy, txy, margin], [exy, exy, margin/G], F)
+
+
+
+
+
+def LambdaN(L, n):
+    nx, ny = L.shape
+    N = zeros((nx*n, ny*n), 'float64')
+    for i in xrange(n):
+        ix0 = i * nx
+        iy0 = i * ny
+        ix = (i + 1) * nx
+        iy = (i + 1) * ny
+        N[ix0:ix, iy0:iy] = L
+    return N
 
 class CQUAD4(QuadShell):
     type = 'CQUAD4'

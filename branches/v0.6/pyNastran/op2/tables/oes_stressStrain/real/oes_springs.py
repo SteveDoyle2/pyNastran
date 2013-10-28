@@ -145,47 +145,6 @@ class CelasStressObject(StressObject):
             msg = ['']
         return (''.join(msg), pageNum)
 
-    def __reprTransient__(self):
-        msg = '---CELASx STRESSES---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['stress']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, stress in sorted(self.stress.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid, istress in sorted(stress.iteritems()):
-                msg += '%-6g %6s ' % (eid, self.eType[eid])
-                if abs(istress) < 1e-6:
-                    msg += '%10s ' % '0'
-                else:
-                    msg += '%10g ' % istress
-                msg += '\n'
-        return msg
-
-    def __repr__(self):
-        if self.dt is not None:
-            return self.__reprTransient__()
-
-        msg = '---CELASx STRESSES---\n'
-        msg += '%-8s %6s ' % ('EID', 'eType')
-        headers = ['stress']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-        #print "self.code = ",self.code
-        for eid, istress in sorted(self.stress.iteritems()):
-            #print "eType",self.eType
-            msg += '%-8i %6s ' % (eid, self.eType[eid])
-            if abs(istress) < 1e-6:
-                msg += '%10s ' % '0'
-            else:
-                msg += '%10i ' % istress
-            msg += '\n'
-            #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
-        return msg
-
 
 class CelasStrainObject(StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
@@ -249,7 +208,7 @@ class CelasStrainObject(StrainObject):
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
-        msg = header + ['                              S T R A I N S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
+        msg = header + ['                               S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                         '      ELEMENT         STRAIN           ELEMENT         STRAIN           ELEMENT         STRAIN           ELEMENT         STRAIN\n',
                         '        ID.                              ID.                              ID.                              ID.\n',
                         ]
@@ -292,28 +251,6 @@ class CelasStrainObject(StrainObject):
 
         self.eType[eid] = self.element_type
         self.strain[dt][eid] = strain
-
-    def __repr__(self):
-        if self.dt is not None:
-            return self.__reprTransient__()
-
-        msg = '---CELASx STRAINS---\n'
-        msg += '%-8s %6s ' % ('EID', 'eType')
-        headers = ['strain']
-        for header in headers:
-            msg += '%8s ' % header
-        msg += '\n'
-
-        for eid, strain in sorted(self.strain.iteritems()):
-            #strain = self.strain[eid]
-            msg += '%-8i %6s ' % (eid, self.eType[eid])
-
-            if abs(strain) < 1e-7:
-                msg += '%8s ' % '0'
-            else:
-                msg += '%8.3g ' % strain
-            msg += '\n'
-        return msg
 
 
 class NonlinearSpringStressObject(StressObject):
@@ -385,48 +322,3 @@ class NonlinearSpringStressObject(StressObject):
         self.eType[eid] = eType
         self.force[dt][eid] = force
         self.stress[dt][eid] = stress
-
-    def __reprTransient__(self):
-        raise NotImplementedError('CELASx')
-        msg = '---CELASx STRESSES---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['stress']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, stress in sorted(self.stress.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid, istress in sorted(stress.iteritems()):
-                msg += '%-6g %6s ' % (eid, self.eType[eid])
-                if abs(istress) < 1e-6:
-                    msg += '%10s ' % '0'
-                else:
-                    msg += '%10g ' % istress
-                msg += '\n'
-        return msg
-
-    def __repr__(self):
-        raise NotImplementedError('CELASx')
-        #print "spring dt=%s" %(self.dt)
-        if self.dt is not None:
-            return self.__reprTransient__()
-
-        msg = '---CELASx STRESSES---\n'
-        msg += '%-8s %6s ' % ('EID', 'eType')
-        headers = ['stress']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-        #print "self.code = ",self.code
-        for eid, istress in sorted(self.stress.iteritems()):
-            #print "eid=",eid
-            #print "eType",self.eType
-            msg += '%-8i %6s ' % (eid, self.eType[eid])
-            if abs(istress) < 1e-6:
-                msg += '%10s ' % '0'
-            else:
-                msg += '%10i ' % istress
-            msg += '\n'
-            #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
-        return msg

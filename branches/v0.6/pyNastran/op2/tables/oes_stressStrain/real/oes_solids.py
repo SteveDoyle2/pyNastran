@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import array, sqrt
@@ -523,81 +523,6 @@ class SolidStressObject(StressObject):
             msg = ['']
         return ''.join(msg)
 
-    def __repr__(self):
-        #print "self.dt = ",self.dt
-        #print "self.nf = ",self.nonlinear_factor
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---SOLID STRESS---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s ' % ('EID', 'eType', 'nodeID')
-        for header in headers:
-            msg += '%9s ' % header
-        msg += '\n'
-        for eid, oxxNodes in sorted(self.oxx.iteritems()):
-            eType = self.eType[eid]
-            for nid in sorted(oxxNodes):
-                oxx = self.oxx[eid][nid]
-                oyy = self.oyy[eid][nid]
-                ozz = self.ozz[eid][nid]
-                txy = self.txy[eid][nid]
-                tyz = self.tyz[eid][nid]
-                txz = self.txz[eid][nid]
-
-                #o1 = self.o1[eid][nid]
-                #o2 = self.o2[eid][nid]
-                #o3 = self.o3[eid][nid]
-                ovm = self.ovmShear[eid][nid]
-                msg += '%-6i %6s %8s ' % (eid, eType, nid)
-                vals = [oxx, oyy, ozz, txy, tyz, txz, ovm]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%9s ' % '0'
-                    else:
-                        msg += '%9i ' % val
-                msg += '\n'
-                #msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
-
-        return msg
-
-    def __reprTransient__(self):
-        msg = '---SOLID STRESS---\n'
-        msg += '%-6s %6s %8s ' % ('EID', 'eType', 'nodeID')
-        headers = self.getHeaders()
-        for header in headers:
-            msg += '%9s ' % header
-        msg += '\n'
-
-        for dt, oxxs in sorted(self.oxx.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid, oxxNodes in sorted(oxxs.iteritems()):
-                eType = self.eType[eid]
-                for nid in sorted(oxxNodes):
-                    oxx = self.oxx[dt][eid][nid]
-                    oyy = self.oyy[dt][eid][nid]
-                    ozz = self.ozz[dt][eid][nid]
-                    txy = self.txy[dt][eid][nid]
-                    tyz = self.tyz[dt][eid][nid]
-                    txz = self.txz[dt][eid][nid]
-
-                    #o1 = self.o1[dt][eid][nid]
-                    #o2 = self.o2[dt][eid][nid]
-                    #o3 = self.o3[dt][eid][nid]
-
-                    ovm = self.ovmShear[dt][eid][nid]
-                    msg += '%-6i %6s %8s ' % (eid, eType, nid)
-                    vals = [oxx, oyy, ozz, txy, tyz, txz, ovm]
-                    for val in vals:
-                        if abs(val) < 1e-6:
-                            msg += '%9s ' % '0'
-                        else:
-                            msg += '%9i ' % val
-                    msg += '\n'
-                    #msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
-
-        return msg
-
 
 class SolidStrainObject(StrainObject):
     """
@@ -611,7 +536,7 @@ class SolidStrainObject(StrainObject):
                      CENTER  X   4.499200E+02  XY  -5.544791E+02   A   1.000000E+04  LX 0.00 0.69-0.72  -3.619779E+03    9.618462E+03
                              Y   4.094179E+02  YZ   5.456968E-12   B  -1.251798E+02  LY 0.00 0.72 0.69
                              Z   1.000000E+04  ZX  -4.547474E-13   C   9.845177E+02  LZ 1.00 0.00 0.00
-  
+
       # code=[1,0,10]
                          S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )
                      CORNER        ------CENTER AND CORNER POINT  STRAINS---------       DIR.  COSINES       MEAN         OCTAHEDRAL
@@ -914,8 +839,8 @@ class SolidStrainObject(StrainObject):
 
     def ovm(self, o11, o22, o33, o12, o13, o23):
         """http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
-        ovm = 0.5 * ((o11 - o22) ** 2 + 
-                     (o22 - o33) ** 2 + 
+        ovm = 0.5 * ((o11 - o22) ** 2 +
+                     (o22 - o33) ** 2 +
                      (o11 - o33) ** 2 +
                      6 * (o23 ** 2 + o13 ** 2 + o12 ** 2))
         return ovm
@@ -1110,106 +1035,4 @@ class SolidStrainObject(StrainObject):
         if f is not None:
             f.write(''.join(msg))
             msg = ['']
-        return ''.join(msg)
-
-    def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---SOLID STRESS---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s ' % ('EID', 'eType', 'nodeID')
-        for header in headers:
-            msg += '%9s ' % header
-        msg += '\n'
-        for eid, oxxNodes in sorted(self.oxx.iteritems()):
-            eType = self.eType[eid]
-            for nid in sorted(oxxNodes):
-                oxx = self.oxx[eid][nid]
-                oyy = self.oyy[eid][nid]
-                ozz = self.ozz[eid][nid]
-                txy = self.txy[eid][nid]
-                tyz = self.tyz[eid][nid]
-                txz = self.txz[eid][nid]
-
-                #o1 = self.o1[eid][nid]
-                #o2 = self.o2[eid][nid]
-                #o3 = self.o3[eid][nid]
-                ovm = self.ovmShear[eid][nid]
-                msg += '%-6i %6s %8s ' % (eid, eType, nid)
-                vals = [oxx, oyy, ozz, txy, tyz, txz, ovm]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%9s ' % '0'
-                    else:
-                        msg += '%9i ' % val
-                msg += '\n'
-                #msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
-
-        return msg
-
-    def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---SOLID STRAIN---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s ' % ('EID', 'eType', 'nodeID')
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-        for eid, exxNodes in sorted(self.exx.iteritems()):
-            eType = self.eType[eid]
-            for nid in sorted(exxNodes):
-                exx = self.exx[eid][nid]
-                eyy = self.eyy[eid][nid]
-                ezz = self.ezz[eid][nid]
-                exy = self.exy[eid][nid]
-                eyz = self.eyz[eid][nid]
-                exz = self.exz[eid][nid]
-                evm = self.evmShear[eid][nid]
-                msg += '%-6i %6s %8s ' % (eid, eType, nid)
-                vals = [exx, eyy, ezz, exy, eyz, exz, evm]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10.3e ' % val
-                msg += '\n'
-                #msg += "eid=%-4s eType=%-6s nid=%-2i exx=%-5i eyy=%-5i ezz=%-5i exy=%-5i eyz=%-5i exz=%-5i evm=%-5i\n" %(eid,eType,nid,exx,eyy,ezz,exy,eyz,exz,evm)
-
-        return msg
-
-    def __reprTransient__(self):
-        #return ''
-        msg = ['---SOLID STRAIN---\n']
-        headers = self.getHeaders()
-        msg2 = '%-6s %6s %8s ' % ('EID', 'eType', 'nodeID')
-        for header in headers:
-            msg2 += '%10s ' % header
-        msg2 += '\n'
-        msg.append(msg2)
-        for dt, exxs in sorted(self.exx.iteritems()):
-            msg.append('%s = %g\n' % (self.data_code['name'], dt))
-            for eid, exxNodes in sorted(exxs.iteritems()):
-                eType = self.eType[eid]
-                msg2 = ''
-                for nid in sorted(exxNodes):
-                    exx = self.exx[dt][eid][nid]
-                    eyy = self.eyy[dt][eid][nid]
-                    ezz = self.ezz[dt][eid][nid]
-                    exy = self.exy[dt][eid][nid]
-                    eyz = self.eyz[dt][eid][nid]
-                    exz = self.exz[dt][eid][nid]
-                    evm = self.evmShear[dt][eid][nid]
-                    msg2 += '%-6i %6s %8s ' % (eid, eType, nid)
-                    vals = [exx, eyy, ezz, exy, eyz, exz, evm]
-                    for val in vals:
-                        if abs(val) < 1e-6:
-                            msg2 += '%10s ' % '0'
-                        else:
-                            msg2 += '%10.3e ' % val
-                    msg2 += '\n'
-                    msg.append(msg2)
-                    #msg += "eid=%-4s eType=%-6s nid=%-2i exx=%-5i eyy=%-5i ezz=%-5i exy=%-5i eyz=%-5i exz=%-5i evm=%-5i\n" % (eid, eType, nid, exx, eyy, ezz, exy, eyz, exz, evm)
         return ''.join(msg)

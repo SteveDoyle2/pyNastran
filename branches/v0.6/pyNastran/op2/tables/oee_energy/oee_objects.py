@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import isnan
@@ -32,12 +32,12 @@ from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 class StrainEnergyObject(scalarObject):
     """
     ::
-    
+
                                  E L E M E N T   S T R A I N   E N E R G I E S
-  
+
       ELEMENT-TYPE = QUAD4      * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =   9.817708E+08
       SUBCASE               1   * TOTAL ENERGY OF ALL ELEMENTS IN SET       1 =   4.192036E+08
-  
+
          ELEMENT-ID   STRAIN-ENERGY  PERCENT OF TOTAL  STRAIN-ENERGY-DENSITY
                  12   2.291087E+07        2.3336            2.291087E+02
                  13   1.582968E+07        1.6124            1.055312E+02
@@ -145,9 +145,9 @@ class StrainEnergyObject(scalarObject):
                 percent = self.percent[dt][eid]
                 density = self.density[dt][eid]
                 if isnan(density):
-                    density2 = '%-14s\n' % ('-----')
+                    density2 = '%-14s\n' % '-----'
                 else:
-                    density2 = '%-14g\n' % (density)
+                    density2 = '%-14g\n' % density
 
                 #print "eid = ",eid
                 #print "energy = ",energy
@@ -170,8 +170,8 @@ class StrainEnergyObject(scalarObject):
             percent = self.percent[eid]
             density = self.density[eid]
             if isnan(density):
-                density2 = '%-14s\n' % ('-----')
+                density2 = '%-14s\n' % '-----'
             else:
-                density2 = '%-14g\n' % (density)
+                density2 = '%-14g\n' % density
             msg += "%-10s %-14g %-14g %s" % (eid, energy, percent, density2)
         return msg

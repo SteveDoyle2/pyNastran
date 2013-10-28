@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from __future__ import print_function
 #from numpy import array
 from numpy import angle
@@ -39,13 +39,15 @@ class baseScalarObject(Op2Codes):
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         msg = ['write_f06 is not implemented in %s\n' % (
             self.__class__.__name__)]
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
     def _write_f06_transient(self, header, pageStamp,
                           pageNum=1, f=None, is_mag_phase=False):
         msg = '_write_f06_transient is not implemented in %s\n' % (
             self.__class__.__name__)
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
 
 class scalarObject(baseScalarObject):
@@ -197,7 +199,21 @@ class scalarObject(baseScalarObject):
         elif gridType == 0:
             Type = 'H'      # SECTOR/HARMONIC/RING POINT
         else:
-            raise RuntimeError('gridType=%s' % (gridType))
+            raise RuntimeError('gridType=%s' % gridType)
+        return Type
+
+    def cast_grid_type(self, gridType):
+        """converts a gridType integer to a string"""
+        if gridType == 'G':
+            Type = 1  # GRID
+        elif gridType == 'S':
+            Type = 2  # SPOINT
+        elif gridType == 'L':
+            Type = 7  # RIGID POINT (e.g. RBE3)
+        elif gridType == 'H':
+            Type = 0      # SECTOR/HARMONIC/RING POINT
+        else:
+            raise RuntimeError('gridType=%s' % gridType)
         return Type
 
     def update_dt(self, data_code, dt):

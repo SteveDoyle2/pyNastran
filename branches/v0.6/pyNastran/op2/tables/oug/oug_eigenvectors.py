@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from numpy import array
 
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
@@ -35,7 +35,7 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
 
       EIGENVALUE =  6.158494E+07
           CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
-  
+
       POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
              1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
           2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
@@ -96,7 +96,7 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
 
           EIGENVALUE =  6.158494E+07
               CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
-  
+
           POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
                  1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
               2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
@@ -104,7 +104,7 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
         """
         msg = []
         hasCycle = hasattr(self, 'mode_cycle')
-        
+
         #print "self.eigrs =", self.eigrs
         #print "dir",dir(self)
         for i, (iMode, eigVals) in enumerate(sorted(self.translations.iteritems())):
@@ -134,40 +134,6 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
                 msg = ['']
             pageNum += 1
         return (''.join(msg), pageNum - 1)
-
-    def __repr__(self):
-        msg = '---EIGENVECTORS---\n'
-        msg += self.print_data_members()
-        name = self.data_code['name']
-
-        headers = ['Tx', 'Ty', 'Tz', 'Rx', 'Ry', 'Rz']
-        headerLine = '%-8s %8s ' % ('nodeID', 'GridType')
-        for header in headers:
-            headerLine += '%10s ' % header
-        headerLine += '\n'
-
-        for i, (iMode, eigVals) in enumerate(sorted(self.translations.iteritems())):
-            freq = self.eigrs[i]
-            msg += '%s = %g\n' % (name, iMode)
-            msg += 'eigenvalueReal = %g\n' % freq
-            msg += headerLine
-            for nodeID, displacement in sorted(eigVals.iteritems()):
-                rotation = self.rotations[iMode][nodeID]
-                gridType = self.gridTypes[nodeID]
-                (dx, dy, dz) = displacement
-                (rx, ry, rz) = rotation
-
-                msg += '%-8i %8s ' % (nodeID, gridType)
-                vals = [dx, dy, dz, rx, ry, rz]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % 0
-                    else:
-                        msg += '%10.3g ' % val
-                msg += '\n'
-            msg += '\n'
-            #print msg
-        return msg
 
 
 class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, thermal=0
@@ -253,7 +219,7 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
 
           EIGENVALUE =  6.158494E+07
                                              R E A L   E I G E N V E C T O R   N O .          1
-  
+
           POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
                  1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
               2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
@@ -280,38 +246,6 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
             msg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
         return (''.join(msg), pageNum - 1)
-
-    def __repr__(self):
-        msg = '---REAL EIGENVECTORS---\n'
-        msg += self.print_data_members()
-        name = self.data_code['name']
-
-        headers = ['T']
-        headerLine = '%-8s %8s ' % ('nodeID', 'GridType',)
-        for header in headers:
-            headerLine += '%10s ' % header
-        headerLine += '\n'
-
-        for iMode, eigVals in sorted(self.translations.iteritems()):
-            msg += '%s = %s\n' % (name, iMode)
-            msg += headerLine
-            for nodeID, translation in sorted(eigVals.iteritems()):
-                Type = self.gridTypes[nodeID]
-
-                rotation = self.rotations[iMode][nodeID]
-                (dx, dy, dz) = translation
-                (rx, ry, rz) = rotation
-
-                vals = [dx, dy, dz, rx, ry, rz]
-                msg += '%-8i %8s ' % (nodeID, Type)
-                for v in vals:
-                    if abs(v) < 1e-6:
-                        msg += '%10s ' % 0
-                    else:
-                        msg += '%10.3f ' % v
-                msg += '\n'
-            msg += '\n'
-        return msg
 
 
 class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_code=0, thermal=0
@@ -386,35 +320,3 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
                 msg = ['']
             pageNum += 1
         return (''.join(msg), pageNum - 1)
-
-    def __repr__(self):
-        msg = '---EIGENVECTORS---\n'
-        msg += self.print_data_members()
-
-        headers = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
-        headerLine = '%-8s %8s ' % ('nodeID', 'GridType',)
-        for header in headers:
-            headerLine += '%10s ' % header
-        headerLine += '\n'
-        name = self.data_code['name']
-
-        for i, (iMode, eigVals) in enumerate(sorted(self.translations.iteritems())):
-            msg += '%s = %g\n' % (name, iMode)
-            msg += headerLine
-            for nodeID, translation in sorted(eigVals.iteritems()):
-                rotation = self.rotations[iMode][nodeID]
-                Type = self.gridTypes[nodeID]
-                #(dx,dy,dz) = displacement
-                #(rx,ry,rz) = rotation
-
-                msg += '%-8i %8s ' % (nodeID, Type)
-                vals = translation + rotation
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % 0
-                    else:
-                        msg += '%10s ' % str(val)
-                        #msg += '%10.3g ' % val
-                msg += '\n'
-            msg += '\n'
-        return msg

@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 # pylint: disable=E1101
 #import sys
 #from struct import pack
@@ -44,7 +44,7 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
 
     def get_stats(self):
         ngrids = len(self.gridTypes)
-        
+
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.temperatures)
@@ -236,21 +236,4 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
             fmt = '      %8i   %4s   ' + '   %10.6E' * (len(ipack) - 2) + '\n'
             out = fmt % (tuple(ipack))
             msg.append(out)
-        return msg
-
-    def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---TEMPERATURE---\n'
-        msg += self.write_header()
-        #print "self.data_code=",self.data_code
-        for nodeID, T in sorted(self.temperatures.iteritems()):
-            gridType = self.gridTypes[nodeID]
-            msg += '%10s %8s ' % (nodeID, gridType)
-            #print "nodeID=%s T=%s" % (nodeID, T)
-            if abs(T) < 1e-6:
-                msg += '%10s\n' % 0
-            else:
-                msg += '%10g\n' % T
         return msg

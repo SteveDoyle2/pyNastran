@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from numpy import array
 from pyNastran.op2.resultObjects.op2_Objects import baseScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E
@@ -107,8 +107,8 @@ class RealEigenvalues(baseScalarObject):
             ([eigen, omega, freq, mass, stiff], isAllZeros) = writeFloats13E([eigen, omega, freq, mass, stiff])
             msg.append(' %8s  %8s       %13s       %13s       %13s       %13s       %13s\n' % (iMode, order, eigen, omega, freq, mass, stiff))
 
-        msg.append(pageStamp + str(pageNum) + '\n')
-        return (''.join(msg), pageNum)
+        msg.append(pageStamp % pageNum)
+        return pageNum
 
     def __repr__(self):
         msg = '%-7s %15s %15s %10s %10s %10s %15s\n' % ('ModeNum', 'ExtractionOrder', 'Eigenvalue', 'Radians', 'Cycles', 'GenMass', 'GenStiffness')
@@ -170,8 +170,8 @@ class ComplexEigenvalues(baseScalarObject):
             ([eigen, freq, damping], isAllZeros) = writeFloats13E([eigen, freq, damping])
             msg.append(' %8s  %8s       %13s       %13s       %13s       %13s       %13s\n' % (iMode, order, eigen, freq, damping))
 
-        msg.append(pageStamp + str(pageNum) + '\n')
-        return (''.join(msg), pageNum)
+        msg.append(pageStamp % pageNum)
+        return pageNum
 
     def __repr__(self):
         msg = '%-7s %15s %15s %10s %10s %10s\n' % ('RootNum',

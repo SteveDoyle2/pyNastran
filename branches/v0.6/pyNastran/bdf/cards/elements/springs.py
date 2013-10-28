@@ -61,100 +61,23 @@ class SpringElement(Element):
         raise NotImplementedError('K not implemented in the %s class'
                                   % self.type)
 
-    def Lambda(self, model, debug=False, is3D=True):
+    def Lambda(self, model, debug=False):
         """
-        ::
-          2d  [l,m,0,0]
-              [0,0,l,m]
-
           3d  [l,m,n,0,0,0]
               [0,0,0,l,m,n]
         """
-        #R = self.Rmatrix(model,is3D)
-
         (n1, n2) = self.nodeIDs()
         p1 = model.Node(n1).Position()
         p2 = model.Node(n2).Position()
         v1 = p2 - p1
-        #print(v1)
         v1 = v1 / norm(v1)
         (l, m, n) = v1
-        if is3D:
-            Lambda = array(zeros((2, 6), 'float64'))  # 3D
-        else:
-            Lambda = array(zeros((2, 4), 'float64'))
+        Lambda = array(zeros((2, 6), 'float64'))
 
-        #print("R = \n",R)
-        if is3D:
-            Lambda[0, 0] = Lambda[1, 3] = l
-            Lambda[0, 1] = Lambda[1, 4] = m
-            Lambda[0, 2] = Lambda[1, 5] = n  # 3D
-        else:
-            Lambda[0, 0] = Lambda[1, 2] = l
-            Lambda[0, 1] = Lambda[1, 3] = m
-        #print("Lambda = \n",Lambda)
+        Lambda[0, 0] = Lambda[1, 3] = l
+        Lambda[0, 1] = Lambda[1, 4] = m
+        Lambda[0, 2] = Lambda[1, 5] = n
         return Lambda
-
-    def Stiffness(self, model, node_ids, index0s, gravLoad, is3D, fnorm):
-        ki = self.K()
-        k = ki * array([[1, -1,],
-                        [-1, 1]])
-        Lambda = self.Lambda(model, is3D)
-        K = dot(dot(transpose(Lambda), k), Lambda)
-
-        nGrav = []
-        Fg = []
-
-        c1 = self.c1
-        c2 = self.c2
-        n1, n2 = node_ids
-
-        nIJV = [
-            (n1, 1), (n1, 2), (n1, 3),
-            (n2, 1), (n2, 2), (n2, 3),
-        ]
-        dofs = nIJV
-        return (K, dofs, nIJV, Fg, nGrav)
-
-    def displacement_stress(self, model, q, dofs, is3D=False):
-        (n1, n2) = self.nodeIDs()
-        Lambda = self.Lambda(model, debug=False, is3D=is3D)
-
-        #print("**dofs =", dofs)
-        n11 = dofs[(n1, 1)]
-        n21 = dofs[(n2, 1)]
-
-        n12 = dofs[(n1, 2)]
-        n22 = dofs[(n2, 2)]
-
-        n13 = dofs[(n1, 3)]
-        n23 = dofs[(n2, 3)]
-
-        q_axial = array([
-            q[n11], q[n12], q[n13],
-            q[n21], q[n22], q[n23]
-        ])
-        #print("type=%s n1=%s n2=%s" % (self.type, n1, n2))
-        #print("n11=%s n12=%s n21=%s n22=%s" %(n11,n12,n21,n22))
-
-        #print("q2[%s] = %s" % (self.eid, q2))
-        #print("Lambda = \n"+str(Lambda))
-
-        #print "Lsize = ",Lambda.shape
-        #print "qsize = ",q.shape
-        u_axial = dot(array(Lambda), q_axial)
-        du_axial = u_axial[0] - u_axial[1]
-
-        axial_strain = du_axial * self.s
-
-        ki = self.K()
-        axial_force = ki * du_axial
-        axial_stress = axial_force * self.s
-
-        #print("axial_strain = %s [psi]" % axial_strain)
-        #print("axial_stress = %s [psi]" % axial_stress)
-        #print("axial_force  = %s [lb]\n" % axial_force)
-        return (axial_strain, axial_stress, axial_force)
 
     def Mass(self):
         return 0.0
@@ -243,6 +166,56 @@ class CELAS1(SpringElement):
         list_fields = ['CELAS1', self.eid, self.Pid(), nodes[0],
                   self.c1, nodes[1], self.c2]
         return list_fields
+
+
+    def Stiffness(self, model, node_ids, index0s, fnorm):
+        ki = self.K()
+        k = ki * array([[1, -1,],
+                        [-1, 1]])
+        Lambda = self.Lambda(model)
+        K = dot(dot(transpose(Lambda), k), Lambda)
+
+        c1 = self.c1
+        c2 = self.c2
+        n1, n2 = node_ids
+        delta1 = 0 if c1 in [1, 2, 3] else 3
+        delta2 = 0 if c2 in [1, 2, 3] else 3
+
+        nIJV = [
+            (n1, 1 + delta1), (n1, 2 + delta1), (n1, 3 + delta1),
+            (n2, 1 + delta2), (n2, 2 + delta2), (n2, 3 + delta2),
+        ]
+        dofs = nIJV
+        return (K, dofs, nIJV)
+
+    def displacement_stress(self, model, q, dofs, is3D=False):
+        (n1, n2) = self.nodeIDs()
+        Lambda = self.Lambda(model, debug=False)
+
+        n11 = dofs[(n1, 1)]
+        n21 = dofs[(n2, 1)]
+
+        n12 = dofs[(n1, 2)]
+        n22 = dofs[(n2, 2)]
+
+        n13 = dofs[(n1, 3)]
+        n23 = dofs[(n2, 3)]
+
+        q_axial = array([
+            q[n11], q[n12], q[n13],
+            q[n21], q[n22], q[n23]
+        ])
+        u_axial = dot(array(Lambda), q_axial)
+        du_axial = u_axial[0] - u_axial[1]
+
+        s = self.pid.s
+        ki = self.pid.k
+
+        axial_strain = du_axial * s
+        axial_force = ki * du_axial
+        axial_stress = axial_force * s
+
+        return (axial_strain, axial_stress, axial_force)
 
 
 class CELAS2(SpringElement):
@@ -367,6 +340,56 @@ class CELAS2(SpringElement):
         return list_fields
 
 
+    def Stiffness(self, model, node_ids, index0s, fnorm):
+        ki = self.k
+        k = ki * array([[1, -1,],
+                        [-1, 1]])
+        Lambda = self.Lambda(model)
+        K = dot(dot(transpose(Lambda), k), Lambda)
+
+        c1 = self.c1
+        c2 = self.c2
+        n1, n2 = node_ids
+        delta1 = 0 if c1 in [1, 2, 3] else 3
+        delta2 = 0 if c2 in [1, 2, 3] else 3
+
+        nIJV = [
+            (n1, 1 + delta1), (n1, 2 + delta1), (n1, 3 + delta1),
+            (n2, 1 + delta2), (n2, 2 + delta2), (n2, 3 + delta2),
+        ]
+        dofs = nIJV
+        return (K, dofs, nIJV)
+
+    def displacement_stress(self, model, q, dofs):
+        (n1, n2) = self.nodeIDs()
+        Lambda = self.Lambda(model, debug=False)
+
+        n11 = dofs[(n1, 1)]
+        n21 = dofs[(n2, 1)]
+
+        n12 = dofs[(n1, 2)]
+        n22 = dofs[(n2, 2)]
+
+        n13 = dofs[(n1, 3)]
+        n23 = dofs[(n2, 3)]
+
+        q_axial = array([
+            q[n11], q[n12], q[n13],
+            q[n21], q[n22], q[n23]
+        ])
+        u_axial = dot(Lambda, q_axial)
+        du_axial = u_axial[0] - u_axial[1]
+
+        s = self.s
+        ki = self.k
+
+        axial_strain = du_axial * s
+        axial_force = ki * du_axial
+        axial_stress = axial_force * s
+
+        return (axial_strain, axial_stress, axial_force)
+
+
 class CELAS3(SpringElement):
     type = 'CELAS3'
     asterType = 'CELAS3'
@@ -411,6 +434,43 @@ class CELAS3(SpringElement):
     def rawFields(self):
         list_fields = ['CELAS3', self.eid, self.Pid(), self.s1, self.s2]
         return list_fields
+
+    def Stiffness(self, model, node_ids, index0s, fnorm):
+        ki = self.pid.k
+        k = ki * array([[1, -1,],
+                        [-1, 1]])
+
+        c1 = self.c1
+        c2 = self.c2
+        n1, n2 = node_ids
+
+        nIJV = [
+            (n1, c1),
+            (n2, c2),
+        ]
+        dofs = nIJV
+        return (K, dofs, nIJV)
+
+    def displacement_stress(self, model, q, dofs):
+        (n1, n2) = self.nodeIDs()
+
+        #print("**dofs =", dofs)
+        n11 = dofs[(n1, self.c1)]
+        n21 = dofs[(n2, self.c2)]
+
+        u = array([
+            q[n11],
+            q[n21],
+        ])
+        du = u[0] - u[1]
+
+        s = self.s
+        axial_strain = du * s
+
+        ki = self.pid.k
+        axial_force = ki * du
+        axial_stress = axial_force * s
+        return (axial_strain, axial_stress, axial_force)
 
     #def reprFields(self):
         #s1 = set_blank_if_default(self.s1,0)
@@ -464,6 +524,43 @@ class CELAS4(SpringElement):
     def rawFields(self):
         list_fields = ['CELAS4', self.eid, self.k, self.s1, self.s2]
         return list_fields
+
+    def Stiffness(self, model, node_ids, index0s, fnorm):
+        ki = self.k
+        k = ki * array([[1, -1,],
+                        [-1, 1]])
+
+        c1 = self.c1
+        c2 = self.c2
+        n1, n2 = node_ids
+
+        nIJV = [
+            (n1, c1),
+            (n2, c2),
+        ]
+        dofs = nIJV
+        return (K, dofs, nIJV)
+
+    def displacement_stress(self, model, q, dofs):
+        (n1, n2) = self.nodeIDs()
+
+        #print("**dofs =", dofs)
+        n11 = dofs[(n1, self.c1)]
+        n21 = dofs[(n2, self.c2)]
+
+        u = array([
+            q[n11],
+            q[n21],
+        ])
+        du = u[0] - u[1]
+
+        s = 0.0
+        axial_strain = du * s
+
+        ki = self.k
+        axial_force = ki * du
+        axial_stress = axial_force * s
+        return (axial_strain, axial_stress, axial_force)
 
     #def reprFields(self):
         #s1 = set_blank_if_default(self.s1,0)

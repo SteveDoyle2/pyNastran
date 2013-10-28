@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
@@ -133,48 +133,3 @@ class NonlinearGapStressObject(StressObject):
         self.shearW[dt][eid] = shw
         self.slipV[dt][eid] = slv
         self.slipW[dt][eid] = slp
-
-    def __reprTransient__(self):
-        raise NotImplementedError('GAPNL')
-        msg = '---CELASx STRESSES---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['stress']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, stress in sorted(self.stress.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid, istress in sorted(stress.iteritems()):
-                msg += '%-6g %6s ' % (eid, self.eType[eid])
-                if abs(istress) < 1e-6:
-                    msg += '%10s ' % '0'
-                else:
-                    msg += '%10g ' % istress
-                msg += '\n'
-        return msg
-
-    def __repr__(self):
-        raise NotImplementedError('GAPNL')
-        #print "spring dt=%s" %(self.dt)
-        if self.dt is not None:
-            return self.__reprTransient__()
-
-        msg = '---CELASx STRESSES---\n'
-        msg += '%-8s %6s ' % ('EID', 'eType')
-        headers = ['stress']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-        #print "self.code = ",self.code
-        for eid, istress in sorted(self.stress.iteritems()):
-            #print "eid=",eid
-            #print "eType",self.eType
-            msg += '%-8i %6s ' % (eid, self.eType[eid])
-            if abs(istress) < 1e-6:
-                msg += '%10s ' % '0'
-            else:
-                msg += '%10i ' % istress
-            msg += '\n'
-            #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
-        return msg

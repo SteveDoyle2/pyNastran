@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
@@ -104,9 +104,6 @@ class HeatFlux_VU_3D(scalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
             [nid, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux] = gradFlux
             self.grad[dt][eid][nid] = [xGrad, yGrad, zGrad]
             self.flux[dt][eid][nid] = [xFlux, yFlux, zFlux]
-
-    def __repr__(self):
-        return str(self.grad)
 
 
 class HeatFlux_VU(scalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
@@ -195,9 +192,6 @@ class HeatFlux_VU(scalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             self.grad[dt][eid][nid] = [xGrad, yGrad, zGrad]
             self.flux[dt][eid][nid] = [xFlux, yFlux, zFlux]
 
-    def __repr__(self):
-        return str(self.grad)
-
 
 class HeatFlux_VUBEAM(scalarObject):  # 191-VUBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -281,9 +275,6 @@ class HeatFlux_VUBEAM(scalarObject):  # 191-VUBEAM
             self.grad[dt][eid][nid] = [xGrad, yGrad, zGrad]
             self.flux[dt][eid][nid] = [xFlux, yFlux, zFlux]
 
-    def __repr__(self):
-        return str(self.grad)
-
 
 class HeatFlux_1D(scalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -339,9 +330,6 @@ class HeatFlux_1D(scalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69
         self.grad[dt][eid] = [xGrad, yGrad, zGrad]
         self.flux[dt][eid] = [xFlux, yFlux, zFlux]
 
-    def __repr__(self):
-        return str(self.grad)
-
 
 class HeatFlux_2D_3D(scalarObject):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 67-HEXA, 68-PENTA, 74-TRIA3, 75-TRIA6
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -388,9 +376,6 @@ class HeatFlux_2D_3D(scalarObject):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 6
         self.eType[eid] = eType
         self.grad[dt][eid] = [xGrad, yGrad, zGrad]
         self.flux[dt][eid] = [xFlux, yFlux, zFlux]
-
-    def __repr__(self):
-        return str(self.grad)
 
 
 class HeatFlux_CONV(scalarObject):  # 110-CONV
@@ -454,9 +439,6 @@ class HeatFlux_CONV(scalarObject):  # 110-CONV
         self.forceConv[dt][eid] = forceConv
         self.fRad[dt][eid] = fRad
         self.fTotal[dt][eid] = fTotal
-
-    def __repr__(self):
-        return str(self.fApplied)
 
 
 class HeatFlux_CHBDYx(scalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
@@ -528,6 +510,3 @@ class HeatFlux_CHBDYx(scalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.forceConv[dt][eid] = forceConv
         self.fRad[dt][eid] = fRad
         self.fTotal[dt][eid] = fTotal
-
-    def __repr__(self):
-        return str(self.fApplied)
