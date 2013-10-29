@@ -349,7 +349,12 @@ class Solver(F06, OP2):
                 (self.Subtitle, options) = case.get_parameter('SUBTITLE')
             else:
                 self.Subtitle = 'DEFAULT'
-            self.iSubcaseNameMap[isubcase] = [self.Title, self.Subtitle]
+
+            if case.has_parameter('LABEL'):
+                (self.label, options) = case.get_parameter('LABEL')
+            else:
+                self.label = ''
+            self.iSubcaseNameMap[isubcase] = [self.Subtitle, self.label]
 
             # really should be is_f06_stress, is_op2_stress, etc.
             # also should have SET support
@@ -710,19 +715,19 @@ class Solver(F06, OP2):
                 print("cshears", cshears)
                 stress = zeros((ncshears, 3), 'float64')
                 strain = zeros((ncshears, 3), 'float64')
-                force  = zeros((ncshears, 1), 'float64')
+                force  = zeros((ncshears, 16), 'float64')
                 for i, eid in enumerate(cshears):
                     element = elements[eid]
                     (stressi, straini, forcei) = element.displacement_stress(model, q, self.nidComponentToID)
                     stress[i, :] = stressi
                     strain[i, :] = straini
-                    #force[i, :] = forcei
+                    force[i, :] = forcei
                 #if self.is_strain:
                 self._store_cshear_oes(model, cshears, strain, case, 'CSHEAR', Type='strain')
                 #if self.is_stress:
                 self._store_cshear_oes(model, cshears, stress, case, 'CSHEAR', Type='stress')
                 #if self.is_force:
-                #self._store_cshear_oef(model, cshears, force, case)
+                self._store_cshear_oef(model, cshears, force, case, 'CSHEAR')
                 del stress
                 del strain
                 del force
@@ -947,6 +952,36 @@ class Solver(F06, OP2):
                     #'s_code': s_code,
                     'nonlinear_factor': None}
         return data_code
+
+    def _store_cshear_oef(self, model, eids, force, case, elementType):
+        if len(eids) == 0:
+            return
+        data_code = self._OEF_f06_header(case, elementType)
+        is_sort1 = True
+        isubcase = case.id
+
+        if elementType == 'CSHEAR':
+            forces = RealCShearForce(data_code, is_sort1, isubcase, dt=False)
+        else:
+            raise NotImplementedError(elementType)
+
+        data = []
+        i = 0
+        #(elementID,
+        #   f12, f14, tau1,
+        #   ...) = line
+        for (eid, Fi) in zip(eids, force):
+            line = [eid] + list(Fi)
+            data.append(line)
+
+        dt = None
+        forces.add_f06_data(data, dt)
+
+        if elementType == 'CSHEAR':
+            self.shearForces[isubcase] = forces
+        else:
+            raise NotImplementedError(elementType)
+        #stress.dt = None
 
     def _store_cshear_oes(self, model, eids, results, case, elementType, Type='strain'):
         """
@@ -1377,8 +1412,8 @@ class Solver(F06, OP2):
                     ii = nij2[i]
                     jj = nij2[j]
                     #dof = Dofs[n]
-                    if K[i, j] / fnorm > 1000.0:
-                        asdf
+                    #if K[i, j] / fnorm > 1000.0:
+                        #asdf
                     Kgg[ii, jj] += K[i, j]
 
                     #ij += 1

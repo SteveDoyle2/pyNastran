@@ -1314,14 +1314,76 @@ class CSHEAR(QuadShell):
         #Kt = kit * array([-a, -b, -a, b,  a, b,  a, -b])
         #tau_xy = Kt * u2
 
-        txy = kit * F[0]
+        Fx = F[ [0, 3, 6, 9] ]
+        Fy = F[ [1, 4, 7, 10] ]
+
+        # ^ b
+        # |
+        # 4----3
+        # |    |
+        # |    |
+        # 1----2 ---> a
+        F1x = Fx[0] + Fx[1]  # 1-2
+        F2y = Fy[1] + Fy[2]  # 2-3
+        F3x = Fx[2] + Fx[3]  # 3-4
+        F4y = Fy[0] + Fy[3]  # 4-1
+
+        tau41 = F1x / a
+        tau12 = F2y / b
+        tau23 = F3x / a
+        tau34 = F4y / b
+
+        tau14 = tau41
+
         ss = self.pid.mid.Ss  # shear stress
-        exy = txy / G
+        exy = tau41 / G
         if ss:
-            margin = txy / ss
+            margin = tau41 / ss
         else:
             margin = 0.0
-        return ([txy, txy, margin], [exy, exy, margin/G], F)
+        shear12 = 0.0
+        shear23 = 0.0
+
+#        ====== POINT  1 ======      ====== POINT  2 ======      ====== POINT  3 ======      ====== POINT  4 ======
+#        ELEMENT        F-FROM-4      F-FROM-2      F-FROM-1      F-FROM-3      F-FROM-2      F-FROM-4      F-FROM-3      F-FROM-1
+#              ID       KICK-1       SHEAR-12       KICK-2       SHEAR-23       KICK-3       SHEAR-34       KICK-4       SHEAR-41
+        #f14 = Fy[3] - Fy[0] # F4 - F1
+        #f12 = Fx[1] - Fx[0] # F2 - F1
+
+        #f21 = -f12
+        #f23 = Fy[2] - Fy[1]  # F3 - F2
+
+        #f32 = -f23
+        #f34 = Fx[3] - Fx[2] # F4 - F3
+
+        #f41 = -f14
+        #f43 = Fx[2] - Fx[3] # F3 - F4
+
+        #==========================
+        f14 = Fy[0]
+        f12 = Fx[0]
+
+        f21 = Fx[1]
+        f23 = Fy[2]
+
+        f32 = Fy[2]
+        f34 = Fx[2]
+
+        f41 = Fy[3]
+        f43 = Fx[3]
+
+        kick1 = 0.0
+        kick2 = 0.0
+        kick3 = 0.0
+        kick4 = 0.0
+
+        F = [
+            f41, f21, tau12, kick1,
+            f12, f32, tau23, kick2,
+            f23, f43, tau34, kick3,
+            f14, f34, tau41, kick4,
+             ]
+        return ([tau14, tau14, margin], [exy, exy, margin/G], F)
 
 
 

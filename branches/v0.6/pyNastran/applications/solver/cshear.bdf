@@ -5,6 +5,7 @@ $CASE CONTROL DECK
 TITLE = pyNastran Test
 SUBCASE 1
     SUBTITLE = p.658 11.2.1 (Curtis)
+    LABEL = LABELING
     LOAD = 123
     OLOAD = ALL
     SPCFORCE(PLOT,PRINT)  = ALL

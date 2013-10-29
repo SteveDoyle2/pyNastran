@@ -35,12 +35,14 @@ def make_stamp(Title):
     t = date.today()
     months = ['January', 'February', 'March', 'April', 'May', 'June',
               'July', 'August', 'September', 'October', 'November', 'December']
-    today = '%-9s %s, %s' % (months[t.month - 1].upper(), t.day, t.year)
+    today = '%-8s %-2s, %4s' % (months[t.month - 1].upper(), t.day, t.year)
+    today = today.strip()
+    'September 14, 2013' # 18
 
     release_date = '02/08/12'  # pyNastran.__releaseDate__
     release_date = ''
     build = 'pyNastran v%s %s' % (pyNastran.__version__, release_date)
-    out = '1    %-67s %20s  %-22s PAGE %%i\n' % (Title, today, build)
+    out = '1    %-67s    %-18s %-22s PAGE %%5i\n' % (Title, today, build)
     return out
 
 
@@ -386,13 +388,13 @@ class F06Writer(object):
         #print "stamp     = %r" % stamp
 
         #is_mag_phase = False
-        header = ['     DEFAULT                                                                                                                        \n',
-                  '\n']
+        #header = ['     DEFAULT                                                                                                                        \n',
+        #          '\n']
         for isubcase, result in sorted(self.eigenvalues.iteritems()):  # goes first
             (subtitle, label) = self.iSubcaseNameMap[isubcase]
             subtitle = subtitle.strip()
-            header[0] = '     %s\n' % subtitle
-            header[1] = '0                                                                                                            SUBCASE %i\n \n' % isubcase
+            #header[0] = '     %s\n' % subtitle
+            #header[1] = '0 %-32s                                                                            SUBCASE %i\n \n' % (label, isubcase)
             print(result.__class__.__name__)
             self.pageNum = result.write_f06(header, pageStamp,
                                             pageNum=self.pageNum, f=f, is_mag_phase=is_mag_phase)
@@ -404,8 +406,8 @@ class F06Writer(object):
         for isubcase, result in sorted(self.eigenvectors.iteritems()):
             (subtitle, label) = self.iSubcaseNameMap[isubcase]
             subtitle = subtitle.strip()
-            header[0] = '     %s\n' % subtitle
-            header[1] = '0                                                                                                            SUBCASE %i\n' % isubcase
+            #header[0] = '     %s\n' % subtitle
+            #header[1] = '0                                                                                                            SUBCASE %i\n' % isubcase
             print(result.__class__.__name__)
             self.pageNum = result.write_f06(header, pageStamp,
                                             pageNum=self.pageNum, f=f, is_mag_phase=is_mag_phase)
@@ -415,9 +417,9 @@ class F06Writer(object):
             pageNum += 1
 
         # subcase name, subcase ID, transient word & value
-        headerOld = ['     DEFAULT                                                                                                                        \n',
-                     '\n', ' \n']
-        header = copy.deepcopy(headerOld)
+        #headerOld = ['     DEFAULT                                                                                                                        \n',
+        #             '\n', ' \n']
+        #header = copy.deepcopy(headerOld)
         resTypes = [
                     self.displacements, self.displacementsPSD, self.displacementsATO, self.displacementsRMS,
                     self.scaledDisplacements,  # ???
@@ -433,7 +435,12 @@ class F06Writer(object):
 
                     #------------------------------------------
                     # OEF - forces
+                    # rods
                     self.rodForces, self.conrodForces, self.ctubeForces,
+
+                    # cshear,
+                    self.shearForces,
+
                     #------------------------------------------
                     # OES - strain
 
@@ -442,7 +449,6 @@ class F06Writer(object):
 
                     # rods
                     self.rodStrain, self.conrodStrain, self.ctubeStrain, self.nonlinearRodStress,
-
 
                     # bars/beams
                     self.barStrain, self.beamStrain,
@@ -488,17 +494,27 @@ class F06Writer(object):
             iSubcases = self.iSubcaseNameMap.keys()
             #print("self.iSubcaseNameMap = %s" %(self.iSubcaseNameMap))
             for isubcase in sorted(iSubcases):
+                title = self.Title
                 (subtitle, label) = self.iSubcaseNameMap[isubcase]
                 subtitle = subtitle.strip()
                 label = label.strip()
                 #print "label = ",label
-                header[0] = '     %-127s\n' % subtitle
-                header[1] = '0    %-72s                                SUBCASE %-15i\n' % (label, isubcase)
+
+                (subtitle, label) = self.iSubcaseNameMap[isubcase]
+                label = label.strip()
+                subtitle = subtitle.strip()
+                header = ['','']
+                #header[0] = '     %s\n' % subtitle
+                header[0] = '      %-126s\n' % subtitle
+                header[1] = '0     %-32s                                                                       SUBCASE %-15i\n \n' % (label, isubcase)
+
+                #header[0] = '     %-127s\n' % subtitle
+                #header[1] = '0    %-72s                                SUBCASE %-15i\n' % (label, isubcase)
                 #header[1] = '0    %-72s                                SUBCASE %-15i\n' %('',isubcase)
                 for resType in resTypes:
                     #print "resType = ",resType
                     if isubcase in resType:
-                        header = copy.deepcopy(headerOld)  # fixes bug in case
+                        #header = copy.deepcopy(headerOld)  # fixes bug in case
                         result = resType[isubcase]
                         try:
                             print(result.__class__.__name__)

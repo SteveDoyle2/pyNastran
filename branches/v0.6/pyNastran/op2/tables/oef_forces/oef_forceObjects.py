@@ -25,7 +25,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
-from pyNastran.f06.f06_formatting import writeFloats13E
+from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E
 
 
 class RealRodForce(scalarObject):  # 1-ROD
@@ -452,6 +452,40 @@ class RealCShearForce(scalarObject):  # 4-CSHEAR
         self._fillObject(dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
                          kf1, s12, kf2, s23, kf3, s34, kf4, s41)
 
+    def add_f06_data(self, data, dt=None):
+        if dt:
+            raise NotImplementedError(dt)
+
+        for d in data:
+            [eid,
+                 f41, f21, tau12, kick1,
+                 f12, f32, tau23, kick2,
+                 f23, f43, tau34, kick3,
+                 f34, f14, tau41, kick4,
+            ] = d
+            #print('eid, nid, sd', eid, nid, sd)
+            self.force41[eid] = f41
+            self.force14[eid] = f14
+
+            self.force21[eid] = f21
+            self.force12[eid] = f12
+
+            self.force32[eid] = f32
+            self.force23[eid] = f23
+
+            self.force43[eid] = f43
+            self.force34[eid] = f34
+
+            self.kickForce1[eid] = kick1
+            self.kickForce2[eid] = kick2
+            self.kickForce3[eid] = kick3
+            self.kickForce4[eid] = kick4
+
+            self.shear12[eid] = tau12
+            self.shear23[eid] = tau23
+            self.shear34[eid] = tau34
+            self.shear41[eid] = tau41
+
     def _fillObject(self, dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
                     kf1, s12, kf2, s23, kf3, s34, kf4, s41):
         if dt not in self.force41:
@@ -473,6 +507,59 @@ class RealCShearForce(scalarObject):  # 4-CSHEAR
         self.shear23[dt][eid] = s23
         self.shear34[dt][eid] = s34
         self.shear41[dt][eid] = s41
+
+    #def self._write_f06_transient(header, pageStamp, pageNum, f):
+        #return pageNum - 1
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
+
+        words = [
+            '                           F O R C E S   A C T I N G   O N   S H E A R   P A N E L   E L E M E N T S   (CSHEAR)\n'
+            ' \n'
+            '                  ====== POINT  1 ======      ====== POINT  2 ======      ====== POINT  3 ======      ====== POINT  4 ======\n'
+            '   ELEMENT        F-FROM-4      F-FROM-2      F-FROM-1      F-FROM-3      F-FROM-2      F-FROM-4      F-FROM-3      F-FROM-1\n'
+            '         ID               KICK-1       SHEAR-12       KICK-2       SHEAR-23       KICK-3       SHEAR-34       KICK-4       SHEAR-41\n'
+        ]
+        msg = header + words
+        for eid, forcei in sorted(self.force14.iteritems()):
+            f41 = self.force41[eid]
+            f14 = self.force14[eid]
+            f21 = self.force21[eid]
+            f12 = self.force12[eid]
+            f32 = self.force32[eid]
+            f23 = self.force23[eid]
+            f43 = self.force43[eid]
+            f34 = self.force34[eid]
+            kick1 = self.kickForce1[eid]
+            kick2 = self.kickForce2[eid]
+            kick3 = self.kickForce3[eid]
+            kick4 = self.kickForce4[eid]
+            tau12 = self.shear12[eid]
+            tau23 = self.shear23[eid]
+            tau34 = self.shear34[eid]
+            tau41 = self.shear41[eid]
+
+            vals = [f14, f12,
+                    f21, f23,
+                    f32, f34,
+                    f43, f41,
+                    kick1, tau12,
+                    kick2, tau23,
+                    kick3, tau34,
+                    kick4, tau41,
+            ]
+            (vals2, isAllZeros) = writeFloats12E(vals)
+            [f14, f12,  f21, f23,  f32, f34,  f43, f41,
+             kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41,
+            ] = vals2
+            msg.append('0%13i%13s %13s %13s %13s %13s %13s %13s %13s\n' % (eid, f14, f12, f21, f23, f32, f34, f43, f41))
+            msg.append('                     %13s %13s %13s %13s %13s %13s %13s %13s\n' % ( kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41))
+
+        msg.append(pageStamp % pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
 
 class RealSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
