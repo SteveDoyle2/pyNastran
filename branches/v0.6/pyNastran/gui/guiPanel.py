@@ -65,6 +65,8 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
         self.is_nodal = kwargs['is_nodal']
         self.is_centroidal = kwargs['is_centroidal']
         self.magnify = kwargs['magnify']
+        self.debug = True
+
         gui_parent = kwargs['gui_parent']
         if 'log' in kwargs:
             self.log = kwargs['log']
@@ -439,7 +441,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
                 #self.scalarBar.SetVisibility(False)
                 foundCases = False
                 return foundCases
-                
+
             print("key = %s" % str(key))
             if key[2] == 3:  # vector size=3 -> vector, skipping ???
                 self.incrementCycle()

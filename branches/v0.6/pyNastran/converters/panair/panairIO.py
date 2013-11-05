@@ -1,6 +1,6 @@
 import vtk
 from vtk import vtkQuad
-from panairGrid import PanairGrid
+from pyNastran.converters.panair.panairGrid import PanairGrid
 
 
 class PanairIO(object):
