@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 # pylint: disable=R0904,R0902
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -101,7 +101,7 @@ class BDFMethods(BDFMethodsDeprecated):
         :returns mass: the mass of the model
         :returns cg: the cg of the model as an array.
         :returns I: moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
-        
+
         I = mass * centroid * centroid
 
         .. math:: I_{xx} = m (dy^2 + dz^2)
@@ -170,7 +170,7 @@ class BDFMethods(BDFMethodsDeprecated):
                                      "...\n%s" % element)
                     raise
             if mass:
-               cg = cg / mass
+                cg = cg / mass
 
         if sym_axis == None:
             for key, aero in self.aero.iteritems():
@@ -224,7 +224,7 @@ class BDFMethods(BDFMethodsDeprecated):
         :returns mass: the mass of the model
         :returns cg: the cg of the model as an array.
         :returns I: moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
-        
+
         I = mass * centroid * centroid
 
         .. math:: I_{xx} = m (dy^2 + dz^2)
@@ -260,17 +260,17 @@ class BDFMethods(BDFMethodsDeprecated):
 
         #print('xyz.shape =', xyz.shape)
         #print('mass.shape =', mass.shape)
-        
+
         #cg = (mass * xyz) / massi
         if massi == 0.0:
             cg = array([0., 0., 0.])
             I = array([0., 0., 0., 0., 0., 0., ])
             return massi, cg, I
-            
+
         cg = dot(mass, xyz) / massi
         #cg = numpy.multiply(mass, xyz) / massi
         #cg = numpy.multiply(xyz, mass) / massi
-        
+
         #cg = numpy.multiply(xyz, mass).sum(axis=0) / massi
         #cg = numpy.dot(xyz.T, mass).T / massi
 
@@ -289,11 +289,11 @@ class BDFMethods(BDFMethodsDeprecated):
             x = xyz[:, 0] - cg[0]
             y = xyz[:, 1] - cg[1]
             z = xyz[:, 2] - cg[2]
-            
+
         x2 = x**2
         y2 = y**2
         z2 = z**2
-        
+
         #A = y2 + z2
         #print('mass.shape', mass.shape)
         #print('A.shape', A.shape)
