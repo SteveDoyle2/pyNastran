@@ -1135,7 +1135,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         #self.vtk_interactor.ResetCamera()
         self.log_command('update_camera(%r)' % code)
 
-if __name__ == "__main__":
+def main():
     app = QtGui.QApplication(sys.argv)
     QtGui.QApplication.setOrganizationName("pyNastran")
     QtGui.QApplication.setOrganizationDomain(pyNastran.__website__)
@@ -1145,3 +1145,6 @@ if __name__ == "__main__":
     inputs = get_inputs('qt')
     window = MainWindow(inputs)
     sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    main()
