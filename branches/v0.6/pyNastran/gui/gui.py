@@ -38,8 +38,8 @@ import sys
 
 #import pyNastran
 import pyNastran.gui
-from pyNastran.gui.guiPanel import Pan
-from pyNastran.gui.gui_inputs import get_inputs
+from pyNastran.gui.pan import Pan
+from pyNastran.gui.arg_handling import get_inputs
 from pyNastran.utils.log import SimpleLogger
 
 ID_SAVEAS = 803

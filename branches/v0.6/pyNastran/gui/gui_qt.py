@@ -33,7 +33,7 @@ import pyNastran
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.gui.formats import NastranIO, Cart3dIO, PanairIO, LaWGS_IO, is_nastran, is_cart3d, is_panair, is_lawgs
-from pyNastran.gui.gui_inputs import get_inputs
+from pyNastran.gui.arg_handling import get_inputs
 
 pkg_path = pyNastran.__path__[0]
 icon_path = os.path.join(pkg_path, 'gui', 'icons')
