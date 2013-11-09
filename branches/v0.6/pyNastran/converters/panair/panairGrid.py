@@ -79,6 +79,34 @@ class PanairGrid(object):
 
         self.log = get_logger(log, 'debug' if debug else 'info')
 
+    def write_plot3d(self, p3dname, is_binary=False, is_iblank=False):
+        assert is_binary == False
+        assert is_iblank == False
+
+        f = open(p3dname, 'w')
+        npatches = len(self.patches)
+        npatches = 1
+        msg = '%i\n' % npatches
+        for patchID, patch in sorted(self.patches.iteritems()):
+            #if patchID == 1:
+            print "patchID =", patchID
+            ni, nj = patch.x.shape
+            #nr = patch.nRows
+            #nc = patch.nCols
+            #msg += '%i %i 1\n' % (nc, nr)
+            msg += '%i %i 1\n' % (ni, nj-1)
+            break
+
+        f.write(msg)
+        for patchID, patch in sorted(self.patches.iteritems()):
+            #if patchID == 1:
+            patch.write_plot3d(f, 1) # x
+            patch.write_plot3d(f, 2) # y
+            patch.write_plot3d(f, 3) # z
+            f.write('\n')
+            break
+        f.close()
+
     def print_file(self):
         msg = ''
         for i, line in enumerate(self.lines):

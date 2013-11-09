@@ -30,6 +30,29 @@ class PanairPatch(object):
 
         #self.log.debug("shape = %s" % (str(shape)))
 
+    def write_plot3d(self, f, dim):
+        """
+        ..todo: is the normal defined correctly?
+        ..todo: will this load into tecplot
+        """
+        print "x.shape=%s" % str(self.x.shape)
+        if dim == 1:
+            data = self.x
+        elif dim == 2:
+            data = self.y
+        elif dim == 3:
+            data = self.z
+        else:
+            raise RuntimeError('dim=1 -> x; dim=2 -> y; dim=3 -> z')
+        ni, nj = data.shape
+        for j in xrange(nj):
+            msg = ''
+            for i in xrange(ni):
+                msg += '%s ' % data[i, j]
+            f.write(msg)
+        msg += '\n'
+        f.write(msg)
+
     def process(self):
         msg = '     network # being processed %3i\n\n' % (self.iNetwork + 1)
         return msg
@@ -206,7 +229,7 @@ class PanairPatch(object):
         #edgeNumber = 4
         print("edgeNumber=%s" % edgeNumber)
         self.log.debug("x.shape = %s" % (str(self.x.shape)))
-        
+
         if edgeNumber == 1:
             pass
             #self.log.debug("self.x[:]\n%54s%s" % ('', self.x[:]))
