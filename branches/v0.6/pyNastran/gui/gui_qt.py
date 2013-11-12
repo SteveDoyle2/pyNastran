@@ -189,7 +189,12 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             msg = '<font color="%s"> %s </font>' % (cols[typ], msg)
 
         self.log_mutex.lockForWrite()
-        self.log_widget.textCursor().insertHtml(msg + r"<br />")
+        text_cursor = self.log_widget.textCursor()
+        end = text_cursor.End
+        #print("end", end)
+        text_cursor.movePosition(end)
+        #print dir(text_cursor)
+        text_cursor.insertHtml(msg + r"<br />")
         self.log_widget.ensureCursorVisible() # new message will be visible
         self.log_mutex.unlock()
 
