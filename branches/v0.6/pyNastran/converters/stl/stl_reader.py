@@ -87,6 +87,9 @@ class STLReader(object):
         return normals
 
     def project_mesh(self, nodes, elements):
+        """
+        create a boundary layer mesh
+        """
         print "project_mesh..."
 
         from collections import defaultdict
@@ -130,6 +133,7 @@ class STLReader(object):
         if not isinstance(deltaNs, ndarray):
             deltaNs = array([deltaNs])
         N = len(deltaNs)
+        print "N = ", N
 
         nid = 0
         print "deltaNs =", deltaNs
@@ -140,6 +144,8 @@ class STLReader(object):
         nelements, three = elements.shape
         elements2 = zeros((nelements * (N+1), 3), 'int32')
         elements2[:nelements, :] = elements
+        #print "nodes.shape =", nodes.shape
+        #print "nodes2.shape =", nodes2.shape
         print "elements2.shape =", elements2.shape
 
         ni = 1
@@ -150,7 +156,7 @@ class STLReader(object):
             print "  outer_points.shape", outer_points.shape
             nodes2[   ni*nnodes   :(ni+1)*nnodes, :] = outer_points
             print "  %s:%s" % (ni*nelements, (ni+1)*nelements)
-            elements2[ni*nelements:(ni+1)*nelements, :] = elements + nelements
+            elements2[ni*nelements:(ni+1)*nelements, :] = elements + nnodes * ni
             ni += 1
         print elements2
         #for node in nodes:
@@ -160,6 +166,7 @@ class STLReader(object):
 
         #----------- make far field---------------
         print "done projecting..."
+        return nodes2, elements2
 
 
     def _write_stl_ascii(self, out_filename, solid_name, nodes, elements):
@@ -173,15 +180,25 @@ class STLReader(object):
         endfacet
         """
         msg = ''
-        form = '%.6e'
+        form = '%.6f'
         nFormat = '  facet normal %s %s %s\n' % (form, form, form)
         vFormat = '    vertex %s %s %s\n' % (form, form, form)
         msg += 'solid %s\n' % solid_name
         out = open(out_filename, 'wb')
         out.write(msg)
+
+        nelements, three = elements.shape
+        #print "write nelements=%s" % (nelements)
         for element in elements:
             #msg = ''
-            p1, p2, p3 = nodes[element]
+            #p1 = nodes[element[0]]
+            #p2 = nodes[element[1]]
+            #p3 = nodes[element[2]]
+            try:
+                p1, p2, p3 = nodes[element]
+            except IndexError:
+                print element
+                raise
             v12 = p2 - p1
             v13 = p3 - p1
             v123 = cross(v12, v13)
@@ -212,7 +229,8 @@ class STLReader(object):
         nodes_dict = {}
         elements = []
         while line:
-            if 'solid ' in line[:6]:
+            print "**line = %r" % line
+            if 'solid' in line[:6]:
                 line = f.readline()  # facet
                 #print "line = %r" % line
                 while 'facet' in line.strip()[:5]:
@@ -273,16 +291,16 @@ class STLReader(object):
                     ielement += 1
                     line = f.readline()  # facet
                 #print "ielement =", ielement
-                nnodes = inode + 1 # accounting for indexing
                 #nelements = ielement
-                elements = array(elements, 'int32')
-                nodes = zeros((nnodes, 3), 'float64')
                 #print "end of solid..."
                 #print "*line = %r" % line
             else:
                 break
 
-
+        assert inode > 0
+        nnodes = inode + 1 # accounting for indexing
+        elements = array(elements, 'int32')
+        nodes = zeros((nnodes, 3), 'float64')
 
         print "end of while looop..."
         #print "nnodes = ", nnodes
@@ -299,17 +317,16 @@ if __name__ == '__main__':
     t0 = time.time()
 
     # binary
-    #cart3dGeom = os.path.join('flat.tri')  # half
-    #full_model = os.path.join('flat_full.tri')
+    #stl_geom = None
 
     # ascii
-    stl_geom = 'spw_half.STL'
+    stl_geom = 'sphere.STL'
 
     log = None
     debug = False
     model = STLReader(log, debug)  # ascii/binary
 
     (nodes, elements) = model.read_stl(stl_geom)
-    model.project_mesh(nodes, elements)
+    (nodes2, elements2) = model.project_mesh(nodes, elements)
 
-    model._write_stl_ascii('spw_half.out.STL', 'spw_half', nodes, elements)
+    model._write_stl_ascii('sphere.out.STL', 'sphere', nodes2, elements2)

@@ -5,16 +5,16 @@ from docopt import docopt
 
 def run_arg_parse(mode):
     msg  = "Usage:\n"
-    msg += "  pyNastranGUI.py [-f FORMAT] [-i INPUT] [-o OUTPUT]\n"
+    msg += "  pyNastranGUI_%s [-f FORMAT] [-i INPUT] [-o OUTPUT]\n" % mode
     msg += '                  [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '                  [-q] [-e] [-n | -c]\n'
-    msg += '  pyNastranGUI.py -h | --help\n'
-    msg += '  pyNastranGUI.py -v | --version\n'
+    msg += '  pyNastranGUI_%s -h | --help\n' % mode
+    msg += '  pyNastranGUI_%s -v | --version\n' % mode
     msg += "\n"
     msg += "Options:\n"
     msg += "  -h, --help                  show this help message and exit\n"
     msg += "  -f FORMAT, --format FORMAT  format type (panair, cart3d,\n"
-    msg += "                                           nastran, lawgs)\n"
+    msg += "                                           nastran, lawgs, stl)\n"
     msg += "  -i INPUT, --input INPUT     path to input file\n"
     msg += "  -o OUTPUT, --output OUTPUT  path to output file\n"
     #msg += "  -r XYZ, --rotation XYZ      [x, y, z, -x, -y, -z] default is ???\n"

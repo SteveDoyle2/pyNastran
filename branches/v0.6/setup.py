@@ -16,7 +16,9 @@ packages = find_packages()+['gui/icons/*.*']
 
 py2_scripts = []
 if sys.version_info <= (3,):
-    py2_scripts = ['pyNastranGUI = pyNastran.gui.gui:main',]
+    py2_scripts = ['pyNastranGUI = pyNastran.gui.gui:main',
+                   'pyNastranGUI_wx = pyNastran.gui.gui_wx:main',
+                   'pyNastranGUI_qt = pyNastran.gui.gui_qt:main',]
 
 setup(name='pyNastran',
       version=pyNastran.__version__,
@@ -49,7 +51,7 @@ setup(name='pyNastran',
       ],#{'': ['license.txt']}
       #package_data={'': ['*.png']},
       data_files=[('pyNastran/gui/icons',
-        [   
+        [
             'pyNastran/gui/icons/topen.png',
             'pyNastran/gui/icons/tbdf.png',
             'pyNastran/gui/icons/top2.png',
