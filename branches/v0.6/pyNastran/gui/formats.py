@@ -33,7 +33,16 @@ try:
     from pyNastran.converters.cart3d.cart3dIO import Cart3dIO
     is_cart3d = True
 except ImportError:
-    class PanairIO(object):
+    class Cart3dIO(object):
         def __init__(self):
             pass
     is_cart3d = False
+
+try:
+    from pyNastran.converters.stl.stl_io import STL_IO
+    is_stl = True
+except ImportError:
+    class STL_IO(object):
+        def __init__(self):
+            pass
+    is_stl = False

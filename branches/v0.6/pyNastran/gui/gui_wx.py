@@ -60,6 +60,7 @@ ID_F06 = 922
 ID_CART3D = 923
 ID_LAWGS = 924
 ID_PANAIR = 925
+ID_STL = 926
 
 ID_EXPORT = 930
 
@@ -67,8 +68,8 @@ ID_EXPORT = 930
 pkgPath = pyNastran.gui.__path__[0]
 #print "pkgPath = %r" % pkgPath
 
-from pyNastran.gui.formats import (NastranIO, Cart3dIO, LaWGS_IO, PanairIO,
-    is_nastran, is_cart3d, is_panair, is_lawgs)
+from pyNastran.gui.formats import (NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO,
+    is_nastran, is_cart3d, is_panair, is_lawgs, is_stl)
 
 
 if '?' in pkgPath:
@@ -122,7 +123,7 @@ class AppFrame(wx.Frame):
         input = inputs['input']
         output = inputs['output']
         print('format=%r input=%r output=%r' % (format, input, output))
-        if format is not None and format.lower() not in ['panair', 'cart3d', 'lawgs', 'nastran']:
+        if format is not None and format.lower() not in ['panair', 'cart3d', 'lawgs', 'nastran', 'stl']:
             msg = '\n---invalid format=%r' % format
             print msg
             self.frmPanel.scalarBar.VisibilityOff()
@@ -156,6 +157,9 @@ class AppFrame(wx.Frame):
             elif format=='lawgs' and is_lawgs:
                 print("loading lawgs")
                 self.frmPanel.load_LaWGS_geometry(inputbase, dirname)
+            elif format=='stl' and is_stl:
+                print("loading stl")
+                self.frmPanel.load_stl_geometry(inputbase, dirname)
             else:
                 msg = '\n---unsupported format=%r' % format
                 print msg
@@ -420,6 +424,7 @@ class AppFrame(wx.Frame):
         self.Bind(wx.EVT_TOOL, events.onLoadCart3d, id=ID_CART3D)
         self.Bind(wx.EVT_TOOL, events.onLoadLaWGS, id=ID_LAWGS)
         self.Bind(wx.EVT_TOOL, events.onLoadPanair, id=ID_PANAIR)
+        self.Bind(wx.EVT_TOOL, events.onLoadSTL, id=ID_STL)
         #self.Bind(wx.EVT_TOOL, events.onExport, id=ID_EXPORT)
 
         self.Bind(wx.EVT_MENU, events.onExit, id=wx.ID_EXIT)
@@ -454,6 +459,8 @@ class AppFrame(wx.Frame):
             loadLaWGS = fileMenu.Append(ID_LAWGS, 'Load &LaWGS', 'Loads an LaWGS File')
         if is_panair:
             loadPanair = fileMenu.Append(ID_PANAIR, 'Load &Panair', 'Loads a Panair Input File')
+        if is_stl:
+            loadSTL = fileMenu.Append(ID_STL, 'Load &STL', 'Loads a STL Input File')
         #export     = fileMenu.Append(ID_EXPORT,'Export to...', 'Export the Model to Another Format')
         #print "topen = ",os.path.join(iconPath,'topen.png')
         sys.stdout.flush()
@@ -654,6 +661,18 @@ class EventsHandler(object):
 
         Title = 'Choose a LaWGS File to Load'
         loadFunction = self.parent.frmPanel.load_LaWGS_geometry
+        #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
+        #dirname = ''
+        #loadFunction(fname,dirname)
+        self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
+
+    def onLoadSTL(self, event):
+        """ Open a file"""
+        wildcard = "STL (*.STL)|*.STL|" \
+            "All files (*.*)|*.*"
+
+        Title = 'Choose a STL File to Load'
+        loadFunction = self.parent.frmPanel.load_stl_geometry
         #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
         #dirname = ''
         #loadFunction(fname,dirname)

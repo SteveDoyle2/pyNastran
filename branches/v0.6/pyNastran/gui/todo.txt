@@ -37,4 +37,5 @@ wx
 --------------------------------------------
 qt
  - zoom/rotate/snap hotkeys
- - unbreak hotkeys (p, ???)
+ - unbreak hotkeys (p, r, ???)
+ - make sure message always gets appended to the end.  You can click in the log and more the insertion location.

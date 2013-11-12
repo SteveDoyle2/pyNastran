@@ -32,7 +32,8 @@ from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import pyNastran
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.gui.formats import NastranIO, Cart3dIO, PanairIO, LaWGS_IO, is_nastran, is_cart3d, is_panair, is_lawgs
+from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO,
+    is_nastran, is_cart3d, is_panair, is_lawgs, is_stl)
 from pyNastran.gui.arg_handling import get_inputs
 
 pkg_path = pyNastran.__path__[0]
@@ -48,7 +49,7 @@ import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
-class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
+class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO):
     def __init__(self, inputs):
         QtGui.QMainWindow.__init__(self)
 
@@ -56,6 +57,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
         Cart3dIO.__init__(self)
         PanairIO.__init__(self)
         LaWGS_IO.__init__(self)
+        STL_IO.__init__(self)
 
         settings = QtCore.QSettings()
 
@@ -589,9 +591,9 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
     def on_load_geometry(self, infile_name=None, geometry_format=None):
         wildcard = ''
         is_failed = False
-
         if infile_name:
             geometry_format = geometry_format.lower()
+            print "geometry_format = %r" % geometry_format
             if geometry_format == 'nastran':
                 has_results = True
                 load_function = self.load_nastran_geometry
@@ -604,6 +606,9 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
             elif geometry_format == 'lawgs':
                 has_results = False
                 load_function = None
+            elif geometry_format == 'stl':
+                has_results = False
+                load_function = self.load_stl_geometry
             else:
                 self.log_error('---invalid format=%r' % geometry_format)
                 is_failed = True
@@ -635,6 +640,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
             if is_lawgs:
                 wildcard_list.append("LaWGS (*.inp)")
                 formats.append('LaWGS')
+                has_results_list.append(False)
+                load_functions.append(None)
+            if is_stl:
+                wildcard_list.append("STereoLithography (*.STL)")
+                formats.append('STL')
                 has_results_list.append(False)
                 load_functions.append(None)
             wildcard = ';;'.join(wildcard_list)
@@ -743,6 +753,9 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                 elif geometry_format == 'lawgs':
                     has_results = False
                     load_functions = [None]
+                elif geometry_format == 'stl':
+                    has_results = False
+                    load_functions = [None]
                 else:
                     msg = 'format=%r is not supported' % geometry_format
                     self.log_error(msg)
@@ -761,6 +774,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO):
                 #elif geometry_format == 'panair':
                     #load_function = self.load_panair_results
                 #elif geometry_format == 'lawgs':
+                    #load_function = None
+                #elif geometry_format == 'stl':
                     #load_function = None
                 else:
                     msg = 'format=%r is not supported.  Did you load a geometry model?' % geometry_format

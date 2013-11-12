@@ -37,8 +37,8 @@ version = pyNastran.__version__
 #from pyNastran.gui.mouseStyle import MouseStyle
 from pyNastran.gui.actionsControl import pyWidget
 
-from pyNastran.gui.formats import (NastranIO, Cart3dIO, LaWGS_IO, PanairIO,
-    is_nastran, is_cart3d, is_panair, is_lawgs)
+from pyNastran.gui.formats import (NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO,
+    is_nastran, is_cart3d, is_panair, is_lawgs, is_stl)
 
 
 def getScreenCorner(x, y):
@@ -49,7 +49,7 @@ def getScreenCorner(x, y):
     return(xCorner, yCorner)
 
 
-class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
+class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO):
     def __init__(self, *args, **kwargs):
         self.grid = vtk.vtkUnstructuredGrid()
         #gridResult = vtk.vtkFloatArray()
