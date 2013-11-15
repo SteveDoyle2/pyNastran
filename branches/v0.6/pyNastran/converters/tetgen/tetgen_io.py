@@ -1,6 +1,8 @@
 import os
+
 import vtk
-from vtk import vtkTriangle
+from vtk import vtkTriangle, vtkTetra
+
 from pyNastran.converters.tetgen.tetgen_reader import TetgenReader
 
 
@@ -18,12 +20,28 @@ class TetgenIO(object):
 
         base_filename, ext = os.path.splitext(smesh_filename)
         node_filename = base_filename + '.node'
-        model.read_tetgen(node_filename, smesh_filename)
+        ele_filename = base_filename + '.ele'
+        if '.smesh' == ext:
+            dimension_flag = 2
+        elif '.ele' == ext:
+            dimension_flag = 3
+        else:
+            raise RuntimeError('unsupported extension.  Use "smesh" or "ele".')
+        model.read_tetgen(node_filename, smesh_filename, ele_filename, dimension_flag)
         nodes = model.nodes
         tris = model.tri
+        tets = model.tet
 
         self.nNodes, three = nodes.shape
-        self.nElements, three = tris.shape
+        ntris = 0
+        ntets = 0
+        if dimension_flag == 2:
+            ntris, three = tris.shape
+        elif dimension_flag == 3:
+            ntets, four = tets.shape
+        else:
+            raise RuntimeError()
+        self.nElements = ntris + ntets
 
         print("nNodes = ",self.nNodes)
         print("nElements = ", self.nElements)
@@ -60,13 +78,25 @@ class TetgenIO(object):
             nid += 1
 
         #elements -= 1
-        for (n0, n1, n2) in tris:
-            elem = vtkTriangle()
-            #node_ids = elements[eid, :]
-            elem.GetPointIds().SetId(0, n0)
-            elem.GetPointIds().SetId(1, n1)
-            elem.GetPointIds().SetId(2, n2)
-            self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+        if dimension_flag == 2:
+            for (n0, n1, n2) in tris:
+                elem = vtkTriangle()
+                #node_ids = elements[eid, :]
+                elem.GetPointIds().SetId(0, n0)
+                elem.GetPointIds().SetId(1, n1)
+                elem.GetPointIds().SetId(2, n2)
+                self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+        elif dimension_flag == 3:
+            for (n0, n1, n2, n3) in tets:
+                elem = vtkTetra()
+                assert elem.GetCellType() == 10, elem.GetCellType()
+                elem.GetPointIds().SetId(0, n0)
+                elem.GetPointIds().SetId(1, n1)
+                elem.GetPointIds().SetId(2, n2)
+                elem.GetPointIds().SetId(3, n3)
+                self.grid.InsertNextCell(10, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+        else:
+            raise RuntimeError()
 
         self.grid.SetPoints(points)
         self.grid.Modified()
@@ -81,7 +111,7 @@ class TetgenIO(object):
         cases = {}
         ID = 1
 
-        #cases = self._fill_stl_case(cases, ID, elements)
+        #cases = self._fill_tetgen_case(cases, ID, elements)
 
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
@@ -91,10 +121,6 @@ class TetgenIO(object):
         self.iCase = 0 if self.nCases == 0 else -1
         self.cycleResults()  # start at nCase=0
 
-    def _fill_stl_case(self, cases, ID, elements):
+    def _fill_tetgen_case(self, cases, ID, elements):
         return cases
-    def read_tetgen():
-        mesh = Tetgen_Reader()
-        mesh.read_tetgen(node_filename, smesh_filename)
-
 

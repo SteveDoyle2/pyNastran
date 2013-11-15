@@ -7,10 +7,16 @@ class TetgenReader(object):
         self.log = get_logger(log, 'debug' if debug else 'info')
         self.nodes = None
         self.tri = None
+        self.tet = None
 
-    def read_tetgen(self, node_filename, smesh_filename):
+    def read_tetgen(self, node_filename, smesh_filename, ele_filename, dimension_flag):
         self.nodes = self.read_nodes(node_filename)
-        self.tri = self.read_smesh(smesh_filename)
+        if dimension_flag == 2:
+            self.tri = self.read_smesh(smesh_filename)
+        elif dimension_flag == 3:
+            self.tet = self.read_ele(ele_filename)
+        else:
+            raise RuntimeError('dimension_flag = %r and must be 2 or 3.' % dimension_flag)
 
     def read_smesh(self, smesh_filename):
         f = open(smesh_filename, 'r')
@@ -50,6 +56,27 @@ class TetgenReader(object):
         f.close()
         print "nodes =", nodes
         return nodes
+
+    def read_ele(self, ele_filename):
+        print "ele_filename =", ele_filename
+        f = open(ele_filename, 'r')
+        nelements, four, one = f.readline().strip().split()
+
+        assert four == '4', four
+        assert one == '1', one
+        nelements = int(nelements)
+        print "nelements =", nelements
+
+        tets = zeros((nelements, 4), 'float64')
+        for ielement in xrange(nelements):
+            # eid n1    n2    n3    n4       flip_flag???
+            # 1   13260 15506 16059 16065    -1
+
+            tets[ielement] = f.readline().strip().split()[1:5]
+        f.close()
+        #print "nodes =", nodes
+        return tets - 1
+    #self.tet = self.read_ele(ele_filename)
 
 
 def main():
