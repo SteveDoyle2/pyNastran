@@ -4,11 +4,14 @@ import sys
 #from struct import pack
 from itertools import izip
 
+from docopt import docopt
+
 from numpy import array, zeros, ndarray, cross
 from numpy.linalg import norm
 
 #from struct import unpack
-#from pyNastran.bdf.fieldWriter import print_card
+import pyNastran
+from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.utils import is_binary
 from pyNastran.utils.log import get_logger
 
@@ -28,29 +31,13 @@ class STLReader(object):
         #self.infilename = None
         #self.log = get_logger(log, 'debug' if debug else 'info')
 
-    def write_stl(self, outfilename, points, elements, regions, loads=None, is_binary=False, float_fmt='%6.7f'):
+    def write_stl(self, out_filename, points, elements, is_binary=False, float_fmt='%6.7f'):
+        self.log.info("---writing STL file...%r---" % out_filename)
         assert len(points) > 0
-
-        if loads is None or loads == {}:
-            loads = {}
-            is_loads = False
-            print "no loads"
+        if is_binary:
+            raise NotImplementedError('binary writing is not supported')
         else:
-            is_loads = True
-
-        self.log.info("---writing STL file...%r---" % outfilename)
-        f = open(outfilename, 'wb')
-
-        int_fmt = self.write_header(f, points, elements, is_loads, is_binary)
-        #print "int_fmt =", int_fmt
-        self.write_points(f, points, is_binary, float_fmt)
-        self.write_elements(f, elements, is_binary, int_fmt)
-        self.write_regions(f, regions, is_binary)
-
-        if is_loads:
-            assert is_binary is False, 'is_binary=%r is not supported for loads' % is_binary
-            self.write_loads(f, loads, is_binary, float_fmt)
-        f.close()
+            self._write_stl_ascii(out_filename, solid_name, nodes, elements, float_fmt=float_fmt)
 
     def read_stl(self, stl_filename):
         self.infilename = stl_filename
@@ -77,6 +64,7 @@ class STLReader(object):
         return nodes, elements
 
     def get_normals(self, nodes, elements):
+        print "get_normals...elements.shape", elements.shape
         p1 = nodes[elements[:, 0]]
         p2 = nodes[elements[:, 1]]
         p3 = nodes[elements[:, 2]]
@@ -85,6 +73,15 @@ class STLReader(object):
         v123 = cross(v12, v13)
         normals = v123 / norm(v123)
         return normals
+
+    def flip_normals(self, elements):
+        self.log.info("---flip_normals...%r---" % self.infilename)
+        n0, n1, n2 = elements[:, 0], elements[:, 1], elements[:, 2]
+        elements2 = elements.copy()
+        elements2[:, 0] = n0
+        elements2[:, 1] = n2
+        elements2[:, 2] = n1
+        return elements2
 
     def project_mesh(self, nodes, elements):
         """
@@ -104,11 +101,11 @@ class STLReader(object):
             nid_to_eid[n3].append(eid)
             eid += 1
         del eid, n1, n2, n3
-        print "nid_to_eid[0] =", nid_to_eid[0]
+        #print "nid_to_eid[0] =", nid_to_eid[0]
 
         normals = self.get_normals(nodes, elements)
         normals_at_nodes = zeros(nodes.shape, 'float64')
-        print "normals_elements =", normals_at_nodes.shape
+        #print "normals_elements =", normals_at_nodes.shape
         eid = 0
         for nid, elementsi in nid_to_eid.iteritems():
             pe = normals[elementsi]
@@ -119,7 +116,7 @@ class STLReader(object):
             #print "pe =", pe
             #print "m =", m
 
-        print "normals_at_nodes[4]", normals_at_nodes[4]
+        #print "normals_at_nodes[4]", normals_at_nodes[4]
         #----------- make boundary layer---------------
         # deltaN = a^N * delta
         delta = 0.01
@@ -133,10 +130,10 @@ class STLReader(object):
         if not isinstance(deltaNs, ndarray):
             deltaNs = array([deltaNs])
         N = len(deltaNs)
-        print "N = ", N
+        #print "N = ", N
 
         nid = 0
-        print "deltaNs =", deltaNs
+        #print "deltaNs =", deltaNs
         nnodes, three = nodes.shape
         nodes2 = zeros((nnodes * (N+1), 3), 'float64')
         nodes2[:nnodes, :] = nodes
@@ -146,25 +143,46 @@ class STLReader(object):
         elements2[:nelements, :] = elements
         #print "nodes.shape =", nodes.shape
         #print "nodes2.shape =", nodes2.shape
-        print "elements2.shape =", elements2.shape
+        #print "elements2.shape =", elements2.shape
 
         ni = 1
-        print "nelements =", nelements
+        #print "nelements =", nelements
+        pid = 100
+        bdf = open('hex_projected_stl.bdf', 'wb')
         for deltaN in deltaNs:
-            print "  deltaNi =", deltaN
+            #print "  deltaNi =", deltaN
             outer_points = nodes + normals_at_nodes * deltaN
-            print "  outer_points.shape", outer_points.shape
+            #print "  outer_points.shape", outer_points.shape
             nodes2[   ni*nnodes   :(ni+1)*nnodes, :] = outer_points
-            print "  %s:%s" % (ni*nelements, (ni+1)*nelements)
-            elements2[ni*nelements:(ni+1)*nelements, :] = elements + nnodes * ni
+            #print "  %s:%s" % (ni*nelements, (ni+1)*nelements)
+
+            nnbase = ni * nnodes
+            nnshift = (ni+1) * nnodes
+
+            nebase = ni * nelements
+            neshift = (ni+1) * nelements
+            elements2[nebase : neshift, :] = elements + nnodes * ni
+
+            for eid in nelements:
+                eid2 = nbase + eid
+                (n1, n2, n3) = elements2[nebase  + eid]
+                (n4, n5, n6) = elements2[neshift + eid]
+                card = ['CPENTA', eid2, pid, n1, n2, n3, n4, n5, n6]
+                bdf.write(print_card(card))
             ni += 1
-        print elements2
+        bdf.close()
+        #print elements2
         #for node in nodes:
             #normal = normals_elements[nid]
             #nid += 1
-        print deltaN
+        #print deltaN
 
         #----------- make far field---------------
+        nodes3 = nodes2[nnbase : , :]
+        nodes3 = nodes2[nnbase : , :]
+
+        elements3 = elements2[nebase : , :]
+        elements3 = elements2[nebase : , :]
         print "done projecting..."
         return nodes2, elements2
 
@@ -179,6 +197,7 @@ class STLReader(object):
            endloop
         endfacet
         """
+        self.log.info("---_write_stl_ascii...%r---" % out_filename)
         msg = ''
         form = '%.6f'
         nFormat = '  facet normal %s %s %s\n' % (form, form, form)
@@ -199,6 +218,7 @@ class STLReader(object):
             except IndexError:
                 print element
                 raise
+            #print p1, p2, p3
             v12 = p2 - p1
             v13 = p3 - p1
             v123 = cross(v12, v13)
@@ -302,7 +322,7 @@ class STLReader(object):
         elements = array(elements, 'int32')
         nodes = zeros((nnodes, 3), 'float64')
 
-        print "end of while looop..."
+        #print "end of while loop..."
         #print "nnodes = ", nnodes
         #print "nodes =", nodes.shape
         #print "elements =", elements.shape
@@ -312,21 +332,88 @@ class STLReader(object):
         return nodes, elements
 
 
-if __name__ == '__main__':
+def run_arg_parse():
+    msg  = "Usage:\n"
+    msg += "  stl_reader INPUT [-o OUTPUT]\n"
+    msg += '             [-n] [-q]\n'
+    msg += '  stl_reader -h | --help\n'
+    msg += '  stl_reader -v | --version\n'
+    msg += "  INPUT      path to input file\n"
+    msg += "\n"
+    msg += "Options:\n"
+    msg += "  -h, --help                  show this help message and exit\n"
+    #msg += "  -f FORMAT, --format FORMAT  format type (panair, cart3d,\n"
+    #msg += "                                           nastran, lawgs, stl)\n"
+    msg += "  -o OUTPUT, --output OUTPUT  path to output file\n"
+    msg += "  -n, --normal                flip the element normals\n"
+    #msg += "  -r XYZ, --rotation XYZ      [x, y, z, -x, -y, -z] default is ???\n"
+
+    msg += "  -q, --quiet                 prints debug messages (default=True)\n"
+    msg += "  -v, --version               show program's version number and exit\n"
+
+    ver = str(pyNastran.__version__)
+    data = docopt(msg, version=ver)
+    #print data
+
+    #format  = data['--format']
+    input = data['INPUT']
+    print "input =", input
+    output = data['--output']
+    if output is None:
+        input_base, ext = os.path.splitext(input)
+        output = input_base + '_out.stl'
+
+    reverse_normals = data['--normal']
+    assert reverse_normals in [True, False]
+    quiet = data['--quiet']
+    return (input, output, reverse_normals, quiet)
+
+def main():
+    (stl_geom_in, stl_geom_out, reverse_normals, quiet) = run_arg_parse()
     import time
     t0 = time.time()
-
     # binary
     #stl_geom = None
 
     # ascii
-    stl_geom = 'sphere.STL'
+    #stl_geom = 'spw_half.STL'
 
     log = None
     debug = False
     model = STLReader(log, debug)  # ascii/binary
 
-    (nodes, elements) = model.read_stl(stl_geom)
-    (nodes2, elements2) = model.project_mesh(nodes, elements)
+    (nodes, elements) = model.read_stl(stl_geom_in)
+    if reverse_normals:
+        elements = model.flip_normals(elements)
 
-    model._write_stl_ascii('sphere.out.STL', 'sphere', nodes2, elements2)
+
+    if 0:
+        # rotate the model
+        from numpy import where, arctan2, cos, sin, hstack, vstack, concatenate, transpose, pi
+        x, y, z = nodes[:, 0], nodes[:, 1], nodes[:, 2]
+        #i = where(y > 0.0)[0]
+        R = x**2 + y**2
+        theta = arctan2(y, x)
+        iRz = where(R == 0)[0]
+        theta[iRz] = 0.0
+
+        min_theta = min(theta)
+        dtheta = max(theta) - pi/4
+        theta2 = theta + min_theta
+
+        x2 = R * cos(theta2)
+        y2 = R * sin(theta2)
+        #print "x.shape", x.shape, y2.shape
+        nodes_rotated = transpose(vstack([x2, y2, z]))
+        #print "nodes.shape", nodes_rotated.shape
+        #print nodes_rotated
+
+    if 0:
+        # project the volume
+        (nodes2, elements2) = model.project_mesh(nodes_rotated, elements)
+
+    # write the model
+    model._write_stl_ascii(stl_geom_out, 'sphere', nodes, elements)
+
+if __name__ == '__main__':
+    main()

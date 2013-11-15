@@ -32,8 +32,8 @@ from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import pyNastran
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO,
-    is_nastran, is_cart3d, is_panair, is_lawgs, is_stl)
+from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO,
+    is_nastran, is_cart3d, is_panair, is_lawgs, is_stl, is_tetgen)
 from pyNastran.gui.arg_handling import get_inputs
 
 pkg_path = pyNastran.__path__[0]
@@ -49,7 +49,7 @@ import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
-class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO):
+class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO):
     def __init__(self, inputs):
         QtGui.QMainWindow.__init__(self)
 
@@ -58,6 +58,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         PanairIO.__init__(self)
         LaWGS_IO.__init__(self)
         STL_IO.__init__(self)
+        TetgenIO.__init__(self)
 
         settings = QtCore.QSettings()
 
@@ -614,6 +615,9 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             elif geometry_format == 'stl':
                 has_results = False
                 load_function = self.load_stl_geometry
+            elif geometry_format == 'tetgen':
+                has_results = False
+                load_function = self.load_tetgen_geometry
             else:
                 self.log_error('---invalid format=%r' % geometry_format)
                 is_failed = True
@@ -652,6 +656,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 formats.append('STL')
                 has_results_list.append(False)
                 load_functions.append(None)
+            if is_tetgen:
+                wildcard_list.append("Tetgen (*.smesh)")
+                formats.append('STL')
+                has_results_list.append(False)
+                load_functions.append(self.load_tetgen_geometry)
             wildcard = ';;'.join(wildcard_list)
 
             # get the filter index and filename
@@ -682,7 +691,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             #gridResult.Reset()
             #gridResult.Modified()
 
-            if not os.path.exists(infile_name):
+            if not os.path.exists(infile_name) and geometry_format:
                 msg = 'input file=%r does not exist' % infile_name
                 self.log_error(msg)
                 return
@@ -761,6 +770,9 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 elif geometry_format == 'stl':
                     has_results = False
                     load_functions = [None]
+                elif geometry_format == 'tetgen':
+                    has_results = False
+                    load_functions = [None]
                 else:
                     msg = 'format=%r is not supported' % geometry_format
                     self.log_error(msg)
@@ -781,6 +793,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 #elif geometry_format == 'lawgs':
                     #load_function = None
                 #elif geometry_format == 'stl':
+                    #load_function = None
+                #elif geometry_format == 'tetgen':
                     #load_function = None
                 else:
                     msg = 'format=%r is not supported.  Did you load a geometry model?' % geometry_format

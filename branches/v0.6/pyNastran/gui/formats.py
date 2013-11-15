@@ -46,3 +46,13 @@ except ImportError:
         def __init__(self):
             pass
     is_stl = False
+
+
+try:
+    from pyNastran.converters.tetgen.tetgen_io import TetgenIO
+    is_tetgen = True
+except ImportError:
+    class TetgenIO(object):
+        def __init__(self):
+            pass
+    is_tetgen = False

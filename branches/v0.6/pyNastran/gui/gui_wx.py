@@ -61,6 +61,7 @@ ID_CART3D = 923
 ID_LAWGS = 924
 ID_PANAIR = 925
 ID_STL = 926
+ID_TETGEN = 927
 
 ID_EXPORT = 930
 
@@ -68,8 +69,8 @@ ID_EXPORT = 930
 pkgPath = pyNastran.gui.__path__[0]
 #print "pkgPath = %r" % pkgPath
 
-from pyNastran.gui.formats import (NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO,
-    is_nastran, is_cart3d, is_panair, is_lawgs, is_stl)
+from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO,
+    is_nastran, is_cart3d, is_panair, is_lawgs, is_stl, is_tetgen)
 
 
 if '?' in pkgPath:
@@ -123,7 +124,7 @@ class AppFrame(wx.Frame):
         input = inputs['input']
         output = inputs['output']
         print('format=%r input=%r output=%r' % (format, input, output))
-        if format is not None and format.lower() not in ['panair', 'cart3d', 'lawgs', 'nastran', 'stl']:
+        if format is not None and format.lower() not in ['panair', 'cart3d', 'lawgs', 'nastran', 'stl', 'tetgen']:
             msg = '\n---invalid format=%r' % format
             print msg
             self.frmPanel.scalarBar.VisibilityOff()
@@ -160,6 +161,9 @@ class AppFrame(wx.Frame):
             elif format=='stl' and is_stl:
                 print("loading stl")
                 self.frmPanel.load_stl_geometry(inputbase, dirname)
+            elif format=='tetgen' and is_tetgen:
+                print("loading tetgen")
+                self.frmPanel.load_tetgen_geometry(inputbase, dirname)
             else:
                 msg = '\n---unsupported format=%r' % format
                 print msg
@@ -425,6 +429,7 @@ class AppFrame(wx.Frame):
         self.Bind(wx.EVT_TOOL, events.onLoadLaWGS, id=ID_LAWGS)
         self.Bind(wx.EVT_TOOL, events.onLoadPanair, id=ID_PANAIR)
         self.Bind(wx.EVT_TOOL, events.onLoadSTL, id=ID_STL)
+        self.Bind(wx.EVT_TOOL, events.onLoadTetgen, id=ID_TETGEN)
         #self.Bind(wx.EVT_TOOL, events.onExport, id=ID_EXPORT)
 
         self.Bind(wx.EVT_MENU, events.onExit, id=wx.ID_EXIT)
@@ -666,6 +671,18 @@ class EventsHandler(object):
         #loadFunction(fname,dirname)
         self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
 
+    def onLoadPanair(self, event):
+        """ Open a file"""
+        wildcard = "Panair (*.inp)|*.inp|" \
+            "All files (*.*)|*.*"
+
+        Title = 'Choose a Panair Input File to Load'
+        loadFunction = self.parent.frmPanel.load_panair_geometry
+        #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
+        #dirname = ''
+        #loadFunction(fname,dirname)
+        self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
+
     def onLoadSTL(self, event):
         """ Open a file"""
         wildcard = "STL (*.STL)|*.STL|" \
@@ -678,13 +695,13 @@ class EventsHandler(object):
         #loadFunction(fname,dirname)
         self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
 
-    def onLoadPanair(self, event):
+    def onLoadTetgen(self, event):
         """ Open a file"""
-        wildcard = "Panair (*.inp)|*.inp|" \
+        wildcard = "Tetgen (*.smesh)|*.smesh|" \
             "All files (*.*)|*.*"
 
-        Title = 'Choose a Panair Input File to Load'
-        loadFunction = self.parent.frmPanel.load_panair_geometry
+        Title = 'Choose a Tetgen (smesh) File to Load'
+        loadFunction = self.parent.frmPanel.load_tetgen_geometry
         #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
         #dirname = ''
         #loadFunction(fname,dirname)
@@ -708,8 +725,7 @@ class EventsHandler(object):
     def onExport(self):
         if self.modelType == 'nastran':
             pass
-
-        if self.modelType == 'cart3d':
+        elif self.modelType == 'cart3d':
             exportToNastran(self, fname, points, elements, regions)
 
         wildcard = ("Nastran OP2 (*.op2)|*.op2|"
