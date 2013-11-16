@@ -48,7 +48,9 @@ class STL_IO(object):
 
         model = STLReader(log=self.log, debug=False)
         #self.modelType = model.modelType
-        (nodes, elements) = model.read_stl(stl_filename)
+        model.read_stl(stl_filename)
+        nodes = model.nodes
+        elements = model.elements
         self.nNodes, three = nodes.shape
         self.nElements, three = elements.shape
 

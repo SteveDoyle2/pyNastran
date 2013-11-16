@@ -31,13 +31,14 @@ class STLReader(object):
         #self.infilename = None
         #self.log = get_logger(log, 'debug' if debug else 'info')
 
-    def write_stl(self, out_filename, points, elements, is_binary=False, float_fmt='%6.7f'):
+    def write_stl(self, out_filename, is_binary=False, float_fmt='%6.7f'):
         self.log.info("---writing STL file...%r---" % out_filename)
-        assert len(points) > 0
+        assert len(self.nodes) > 0
+        solid_name = 'dummy_name'
         if is_binary:
             raise NotImplementedError('binary writing is not supported')
         else:
-            self._write_stl_ascii(out_filename, solid_name, nodes, elements, float_fmt=float_fmt)
+            self._write_stl_ascii(out_filename, solid_name, float_fmt=float_fmt)
 
     def read_stl(self, stl_filename):
         self.infilename = stl_filename
@@ -54,14 +55,13 @@ class STLReader(object):
             loads = {}
         else:
             self.infile = open(stl_filename, 'r')
-            nodes, elements = self.read_ascii()
+            self.read_ascii()
 
         self.infile.close()
         #self.log.info("nPoints=%s  nElements=%s" % (self.nPoints, self.nElements))
         self.log.info("---finished reading STL file...%r---" % self.infilename)
         #assert self.nPoints > 0, 'nPoints=%s' % self.nPoints
         #assert self.nElements > 0, 'nElements=%s' % self.nElements
-        return nodes, elements
 
     def get_normals(self, nodes, elements):
         print "get_normals...elements.shape", elements.shape
@@ -74,14 +74,15 @@ class STLReader(object):
         normals = v123 / norm(v123)
         return normals
 
-    def flip_normals(self, elements):
+    def flip_normals(self):
         self.log.info("---flip_normals...%r---" % self.infilename)
+        elements = self.elements
         n0, n1, n2 = elements[:, 0], elements[:, 1], elements[:, 2]
         elements2 = elements.copy()
         elements2[:, 0] = n0
         elements2[:, 1] = n2
         elements2[:, 2] = n1
-        return elements2
+        self.elements = elements
 
     def project_mesh(self, nodes, elements):
         """
@@ -187,7 +188,7 @@ class STLReader(object):
         return nodes2, elements2
 
 
-    def _write_stl_ascii(self, out_filename, solid_name, nodes, elements):
+    def _write_stl_ascii(self, out_filename, solid_name, float_fmt='%.6f'):
         """
         facet normal -6.601157e-001 6.730213e-001 3.336009e-001
            outer loop
@@ -197,11 +198,12 @@ class STLReader(object):
            endloop
         endfacet
         """
+        nodes = self.nodes
+        elements = self.elements
         self.log.info("---_write_stl_ascii...%r---" % out_filename)
         msg = ''
-        form = '%.6f'
-        nFormat = '  facet normal %s %s %s\n' % (form, form, form)
-        vFormat = '    vertex %s %s %s\n' % (form, form, form)
+        nFormat = '  facet normal %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
+        vFormat = '    vertex %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
         msg += 'solid %s\n' % solid_name
         out = open(out_filename, 'wb')
         out.write(msg)
@@ -319,7 +321,7 @@ class STLReader(object):
 
         assert inode > 0
         nnodes = inode + 1 # accounting for indexing
-        elements = array(elements, 'int32')
+        self.elements = array(elements, 'int32')
         nodes = zeros((nnodes, 3), 'float64')
 
         #print "end of while loop..."
@@ -328,8 +330,8 @@ class STLReader(object):
         #print "elements =", elements.shape
         for node, inode in nodes_dict.iteritems():
             nodes[inode] = node
+        self.nodes = nodes
         #print "***"
-        return nodes, elements
 
 
 def run_arg_parse():
