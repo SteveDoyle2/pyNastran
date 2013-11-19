@@ -56,3 +56,13 @@ except ImportError:
         def __init__(self):
             pass
     is_tetgen = False
+
+try:
+    from pyNastran.converters.usm3d.usm3d_io import Usm3dIO
+    is_usm3d = True
+except ImportError:
+    raise
+    class Usm3dIO(object):
+        def __init__(self):
+            pass
+    is_usm3d = False

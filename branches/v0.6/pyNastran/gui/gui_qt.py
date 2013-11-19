@@ -32,8 +32,8 @@ from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import pyNastran
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO,
-    is_nastran, is_cart3d, is_panair, is_lawgs, is_stl, is_tetgen)
+from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO,
+    is_nastran, is_cart3d, is_panair, is_lawgs, is_stl, is_tetgen, is_usm3d)
 from pyNastran.gui.arg_handling import get_inputs
 
 pkg_path = pyNastran.__path__[0]
@@ -49,7 +49,7 @@ import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
-class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO):
+class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO):
     def __init__(self, inputs):
         QtGui.QMainWindow.__init__(self)
 
@@ -59,6 +59,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         LaWGS_IO.__init__(self)
         STL_IO.__init__(self)
         TetgenIO.__init__(self)
+        Usm3dIO.__init__(self)
 
         settings = QtCore.QSettings()
 
@@ -225,9 +226,9 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             'pyNastran QT GUI',
             '',
             'pyNastran v%s' % (pyNastran.__version__),
-            'Copyright '+ pyNastran.__license__,
-            '  Steven Doyle 2011-2013',
-            '  Marcin Gasiorek 2012',
+            'Copyright ; 2011-2013'+ pyNastran.__license__,
+            '  Steven Doyle',
+            '  Marcin Gasiorek',
             '',
             '%s' % (pyNastran.__website__),
             '',
@@ -618,6 +619,9 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             elif geometry_format == 'tetgen':
                 has_results = False
                 load_function = self.load_tetgen_geometry
+            elif geometry_format == 'usm3d':
+                has_results = False
+                load_function = self.load_usm3d_geometry
             else:
                 self.log_error('---invalid format=%r' % geometry_format)
                 is_failed = True
@@ -661,6 +665,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 formats.append('STL')
                 has_results_list.append(False)
                 load_functions.append(self.load_tetgen_geometry)
+            if is_usm3d:
+                wildcard_list.append("USM3D (*.cogsg)")
+                formats.append('USM3D')
+                has_results_list.append(False)
+                load_functions.append(self.load_usm3d_geometry)
             wildcard = ';;'.join(wildcard_list)
 
             # get the filter index and filename
@@ -773,6 +782,9 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 elif geometry_format == 'tetgen':
                     has_results = False
                     load_functions = [None]
+                elif geometry_format == 'usm3d':
+                    has_results = False
+                    load_functions = [None]
                 else:
                     msg = 'format=%r is not supported' % geometry_format
                     self.log_error(msg)
@@ -795,6 +807,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 #elif geometry_format == 'stl':
                     #load_function = None
                 #elif geometry_format == 'tetgen':
+                    #load_function = None
+                #elif geometry_format == 'usm3d':
                     #load_function = None
                 else:
                     msg = 'format=%r is not supported.  Did you load a geometry model?' % geometry_format

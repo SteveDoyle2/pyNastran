@@ -62,6 +62,7 @@ ID_LAWGS = 924
 ID_PANAIR = 925
 ID_STL = 926
 ID_TETGEN = 927
+ID_USM3D = 928
 
 ID_EXPORT = 930
 
@@ -69,8 +70,9 @@ ID_EXPORT = 930
 pkgPath = pyNastran.gui.__path__[0]
 #print "pkgPath = %r" % pkgPath
 
-from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO,
-    is_nastran, is_cart3d, is_panair, is_lawgs, is_stl, is_tetgen)
+from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO,
+    is_nastran, is_cart3d, is_panair, is_lawgs, is_stl, is_tetgen, is_usm3d)
+valid_formats = ['panair', 'cart3d', 'lawgs', 'nastran', 'stl', 'tetgen', 'usm3d']
 
 
 if '?' in pkgPath:
@@ -124,7 +126,7 @@ class AppFrame(wx.Frame):
         input = inputs['input']
         output = inputs['output']
         print('format=%r input=%r output=%r' % (format, input, output))
-        if format is not None and format.lower() not in ['panair', 'cart3d', 'lawgs', 'nastran', 'stl', 'tetgen']:
+        if format is not None and format.lower() not in valid_formats:
             msg = '\n---invalid format=%r' % format
             print msg
             self.frmPanel.scalarBar.VisibilityOff()
@@ -164,6 +166,9 @@ class AppFrame(wx.Frame):
             elif format=='tetgen' and is_tetgen:
                 print("loading tetgen")
                 self.frmPanel.load_tetgen_geometry(inputbase, dirname)
+            elif format=='usm3d' and is_usm3d:
+                print("loading tetgen")
+                self.frmPanel.load_usm3d_geometry(inputbase, dirname)
             else:
                 msg = '\n---unsupported format=%r' % format
                 print msg
@@ -430,6 +435,7 @@ class AppFrame(wx.Frame):
         self.Bind(wx.EVT_TOOL, events.onLoadPanair, id=ID_PANAIR)
         self.Bind(wx.EVT_TOOL, events.onLoadSTL, id=ID_STL)
         self.Bind(wx.EVT_TOOL, events.onLoadTetgen, id=ID_TETGEN)
+        self.Bind(wx.EVT_TOOL, events.onLoadUsm3d, id=ID_USM3D)
         #self.Bind(wx.EVT_TOOL, events.onExport, id=ID_EXPORT)
 
         self.Bind(wx.EVT_MENU, events.onExit, id=wx.ID_EXIT)
@@ -707,6 +713,18 @@ class EventsHandler(object):
         #loadFunction(fname,dirname)
         self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
 
+    def onLoadUsm3d(self, event):
+        """ Open a file"""
+        wildcard = "Usm3D (*.cogsg)|*.cogsg|" \
+            "All files (*.*)|*.*"
+
+        Title = 'Choose a Usm3D (cogsg) File to Load'
+        loadFunction = self.parent.frmPanel.load_usm3d_geometry
+        #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
+        #dirname = ''
+        #loadFunction(fname,dirname)
+        self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
+
     def createLoadFileDialog(self, wildcard, Title, loadFunction, updateWindowName=False):
         dlg = wx.FileDialog(None, Title, self.parent.dirname, "",
                             wildcard, wx.OPEN)
@@ -782,9 +800,9 @@ class EventsHandler(object):
     # Help Menu
     def onAbout(self, event):
         about = [
-            'pyNastran v%s' % (pyNastran.__version__),
-            'Copyright %s; Steven Doyle 2011-2012\n' % (pyNastran.__license__),
-            '%s' % (pyNastran.__website__),
+            'pyNastran v%s' % pyNastran.__version__,
+            'Copyright %s; Steven Doyle 2011-2013\n' % pyNastran.__license__,
+            '%s' % pyNastran.__website__,
             '',
             'Mouse',
             'Left Click - Rotate',
