@@ -1,7 +1,8 @@
 try:
-    from pyNastran.gui.nastranIO import NastranIO
+    from pyNastran.converters.nastran.nastranIO import NastranIO
     is_nastran = True
 except ImportError:
+    raise
     class NastranIO(object):
         def __init__(self):
             pass

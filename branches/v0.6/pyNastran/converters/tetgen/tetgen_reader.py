@@ -10,8 +10,8 @@ class TetgenReader(object):
     def __init__(self, log=None, debug=False):
         self.log = get_logger(log, 'debug' if debug else 'info')
         self.nodes = None
-        self.tri = None
-        self.tet = None
+        self.tris = None
+        self.tets = None
 
     def write_nastran(self, bdf_filename):
         f = open(bdf_filename, 'wb')
@@ -28,13 +28,13 @@ class TetgenReader(object):
 
         eid = 1
         mid = 100
-        if self.tri is not None:
+        if self.tris is not None:
             pid = 1
             thickness = 0.1
             pshell = ['PSHELL', pid, mid, thickness]
             msg = print_card(pshell)
 
-            for (n0, n1, n2) in (self.tri + 1):
+            for (n0, n1, n2) in (self.tris + 1):
                 card = ['CTRIA3', eid, pid, n0, n1, n2]
                 msg += print_card(card)
                 eid += 1
@@ -43,11 +43,11 @@ class TetgenReader(object):
                     msg = ''
             f.write(msg)
 
-        if self.tet is not None:
+        if self.tets is not None:
             pid = 2
             psolid = ['PSOLID', pid, mid]
             msg = print_card(psolid)
-            for (n0, n1, n2, n3) in (self.tet + 1):
+            for (n0, n1, n2, n3) in (self.tets + 1):
                 card = ['CTETRA', eid, pid, n0, n1, n2, n3]
                 msg += print_card(card)
                 eid += 1
@@ -68,9 +68,9 @@ class TetgenReader(object):
     def read_tetgen(self, node_filename, smesh_filename, ele_filename, dimension_flag):
         self.nodes = self.read_nodes(node_filename)
         if dimension_flag == 2:
-            self.tri = self.read_smesh(smesh_filename)
+            self.tris = self.read_smesh(smesh_filename)
         elif dimension_flag == 3:
-            self.tet = self.read_ele(ele_filename)
+            self.tets = self.read_ele(ele_filename)
         else:
             raise RuntimeError('dimension_flag = %r and must be 2 or 3.' % dimension_flag)
 

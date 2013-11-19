@@ -63,7 +63,7 @@ class Usm3dReader(object):
             'tc'       : tc,  # dummy double
                               # nbc
         }
-        print self.header
+        self.log.info(self.header)
 
         # nbn nodes
         #
@@ -167,23 +167,23 @@ class Usm3dReader(object):
     def _read_cogsg_volume(self, f):
         # volume cells
 
-        print 'tell volume =', f.tell()
+        self.log.debug('tell volume = %s' % f.tell())
         # surface + volume cells ???
         nelements = self.header['nElements']
         Format = '>%si' % nelements
 
         elements = zeros((nelements, 4), 'int32')
 
-        print "fv.tell = ", f.tell()
+        self.log.debug("fv.tell = %s" % f.tell())
         for i in range(4): #  tets
             data = f.read(4 * nelements)
             elements[:, i] = unpack(Format, data)
-            print "elements[:, %s] =" %i, elements[:, i]
+            #print "elements[:, %s] =" %i, elements[:, i]
         elements -= 1
 
         #print 'tell volume2 =', f.tell()
         dummy2 = f.read(4)
-        print "dummy2 =", unpack('>i', dummy2), unpack('>f', dummy2)
+        self.log.debug("dummy2 = %s %s" % (unpack('>i', dummy2), unpack('>f', dummy2)))
         dummy_int2, = unpack('>i', dummy2)
 
         # 32 = dummy_int2 - 4 * nelements * 4
@@ -276,7 +276,7 @@ def write_cogsg_volume(model, cogsg_file):
     outfile.write( pack(Format, *n1) )
     outfile.write( pack(Format, *n2) )
     outfile.write( pack(Format, *n3) )
-    n += 4 * 8 * ntets
+    #n += 4 * 8 * ntets
     #print "outfile.tell 2 = ", outfile.tell(), n
 
     # tet footer
@@ -308,8 +308,8 @@ def write_cogsg_volume(model, cogsg_file):
 
 def main():
     model = Usm3dReader()
-    basename = 'HSCT_inviscid'
-    #basename = 'box'
+    #basename = 'HSCT_inviscid'
+    basename = 'box'
     model.read_usm3d(basename, 3)
     model.write_usm3d(basename + '_2')
 
