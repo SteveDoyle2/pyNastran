@@ -362,7 +362,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
             #: contact
             'BCRPARA', 'BCTADD', 'BCTSET', 'BSURF', 'BSURFS',
-            
+
             # other
             'INCLUDE',  # '='
             'ENDDATA',
@@ -1064,8 +1064,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         #while 1:
             #-----------------------------------------------------------------
             # get the first line of the card
-            #print "stored_lines = ", self._stored_lines
-            #print "new card...line =|%s|" % line
+            #self.log.debug("stored_lines = %s" % self._stored_lines)
+            #self.log.debug("new card...line =%r" % line)
             Is = []
             lines = []
             comments = []
@@ -1075,16 +1075,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             if comment:
                 #c=' comment=|%s|' % comment.strip()
                 comments.append(comment)
-            #print "lineA1 %s line=|%s|%s" % (i, line.strip(), c)
+            #self.log.debug("lineA1 %s line=|%s|%s" % (i, line.strip(), c))
 
             # If the first line is valid, continue.
             # Otherwise, keep getting lines until one isn't blank.
             if line:
-                #print "adding line..."
+                #self.log.debug("adding line...")
                 Is.append(i)
                 lines.append(line)
             else:
-                #print "while block..."
+                #self.log.debug("while block...")
                 while len(line)==0:
                     #print "lines while len(line)==0; ",lines
                     #print "you cant have an empty first line..."
@@ -1111,7 +1111,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
             #-----------------------------------------------------------------
             # get another line
-            #print "*lineC %s line=|%s|%s" % (i, line.strip(), c)
+            #self.log.debug("*lineC %s line=|%s|%s" % (i, line.strip(), c))
             try:
                 (i, line, comment) = self._get_line()
             except TypeError:
@@ -1120,7 +1120,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 lines2 = clean_empty_lines(lines)
                 yield lines2, ''.join(comments)
             if comment:  c=' comment=|%s|' % comment.strip()
-            #print "lineC %s line=|%s|%s" % (i, line.strip(), c)
+            #self.log.debug("lineC %s line=|%s|%s" % (i, line.strip(), c))
             #print "lines =",lines
             #print ""
 
@@ -1165,13 +1165,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                         comments2.append(comment)
 
                 if comment:  c=' comment=|%s|' % comment.strip()
-                #print "lineD %s line=|%s|%s" % (i, line.strip(), c)
+                #self.log.debug("lineD %s line=|%s|%s" % (i, line.strip(), c))
                 try:
                     (i, line, comment) = self._get_line()
                 except TypeError:
                     #raise
                     lines2 = clean_empty_lines(lines)
                     comment = ''.join(comments+comments2)
+                    #self.log.debug("*yieldingTYPE lines2=%r comments=%s" %(lines2, comments))
                     yield lines2, comment
 
                 #print "len(line)=%s line[0]=%r" % (len(line), line[0])
@@ -1181,7 +1182,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             # the extra lines we grabbed in the while loop should go on the
             # next card
             if Is2:
-                #print "storing lines2 %s" % lines2
+                #self.log.debug("storing lines2 %s" % lines2)
                 self._stored_Is[self._ifile] = Is2
                 self._stored_lines[self._ifile] = lines2
                 self._stored_comments[self._ifile] = comments2
@@ -1217,15 +1218,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                     self._stored_comments[self._ifile].append(comment)
             #if comment:
             #    self._stored_comments.append(comment)
-            #print "linesE = %s" % lines
+            #self.log.debug("linesE = %s" % lines)
 
             #print "lines =",lines
 
             lines2 = clean_empty_lines(lines)
             comment = ''.join(comments)
             #if 'PBARL' in lines[0]:
-            #print "*yielding lines2=%r" % lines2
-            #print "*yielding lines2=%r comments=%s" %(lines2, comments)
+            #self.log.debug("*yielding lines2=%r" % lines2)
+            #self.log.debug("*yielding lines2=%r comments=%s" %(lines2, comments))
             yield lines2, comment
             #print '--------------------------'
         return
@@ -1257,7 +1258,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         #isDone = False
         isEndData = False
         while self.active_filename: # or self._stored_lines:
-            #print "self._stored_lines = ", self._stored_lines
+            #self.log.debug("self._stored_lines = %s" % self._stored_lines)
             try:
                 (lines, comment) = self._card_streams[self._ifile].next()
             except StopIteration:
@@ -1359,9 +1360,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                     comment = line[i:] + '\n'
                     line = line[:i].rstrip('\t ')
 
-                #print "  stored lines =", self._stored_lines
-                #print "  yieldingB new line=|%s|" % line
-                #print "############################"
+                #self.log.debug("  stored lines = %s" % self._stored_lines)
+                #self.log.debug("  yieldingB new line=|%s|" % line)
+                #self.log.debug("############################")
                 yield n, line, comment
 
                 while self._stored_lines[self._ifile]:
@@ -1372,8 +1373,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                         comment = ''.join(self._stored_comments[self._ifile])
                         self._stored_comments[self._ifile] = []
 
-                    #print "  yieldingA line=|%s|" % line2
-                    #print "############################"
+                    #self.log.debug("  yieldingA line=|%s|" % line2)
+                    #self.log.debug("############################")
                     yield i2, line2, comment
         #file.close()
 
@@ -1413,8 +1414,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                   created.
         .. warning:: cardObject is not returned
         """
+        #self.log.info('card_lines = %s' % card_lines)
+        #self.log.info('-'*80)
         #comment = ''.join(comment)
-        #self.log.debug("card_name = |%r|" % (card_name))
+        #self.log.debug("card_name = |%r|" % card_name)
         #print("add_card; card_name=%r is_list=%s" % (card_name, is_list))
         if card_name in ['DEQATN']:
             card_obj = card_lines
@@ -2020,7 +2023,7 @@ if __name__ == '__main__':
     bdf = BDF()
     import pyNastran
     pkg_path = pyNastran.__path__[0]
-    bdfname = os.path.join(pkg_path, '..', 'models', 'solid_bending', 'solid_bending.bdf')
+    bdfname = sys.argv[1]
     #print "bdfname =", bdfname
     bdf.read_bdf(bdfname)
     bdf.write_bdf('fem.out.bdf')
