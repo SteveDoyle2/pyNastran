@@ -7,7 +7,7 @@ from itertools import izip
 from docopt import docopt
 
 from numpy import array, zeros, ndarray, cross, where
-from numpy.linalg import norm
+from pyNastran.utils.mathematics import norm_axis as norm
 
 #from struct import unpack
 import pyNastran
@@ -73,10 +73,13 @@ class STLReader(object):
         v12 = p2 - p1
         v13 = p3 - p1
         v123 = cross(v12, v13)
-
+        #print v123
         # verifies that y normals don't point down (into the model)
-        #if min(v123[1]) < 0.0:
-            #iy_zero = where(v123[1] < 0)[0]
+        if min(v123[1]) < 0.0:
+            # flip the normals
+            iy_zero = where(v123[1] < 0)[0]
+            self.flip_normals(iy_zero)
+            v123[iy_zero, :] *= -1.0
             #raise RuntimeError(iy_zero+1)
         #print "v123", v123
         n = norm(v123, axis=1)
@@ -93,17 +96,41 @@ class STLReader(object):
         #divide(v123, n)
         return normals
 
-    def flip_normals(self):
+    def flip_normals(self, i=None):
+        """
+        Flips the normals of the specified elements.
+        
+        :param self: The STL object
+        :param i:    NDARRAY of the indicies to flip (default=None -> all)
+        """
         self.log.info("---flip_normals...%r---" % self.infilename)
-        elements = self.elements
+        if i is None:
+            elements = self.elements
+        else:
+            elements = self.elements[i, :]
+
         n0, n1, n2 = elements[:, 0], elements[:, 1], elements[:, 2]
         elements2 = elements.copy()
         elements2[:, 0] = n0
         elements2[:, 1] = n2
         elements2[:, 2] = n1
-        self.elements = elements
+        if i is None:
+            self.elements = elements2
+        else:
+            self.elements[i, :] = elements2 #[i, :]
 
     def get_normals_at_nodes(self, elements, normals=None, nid_to_eid=None):
+        """
+        Calculates the normal vector of the nodes based on the average
+        element normal.
+
+        :param self: The STL object
+        :param elements: The elements...should be removed
+        :param normals: The elemental normals
+        :param nid_to_eid: dictionary of node_id -> list of element_ids
+
+        :returns normals_at_nodes: NDARRAY of the normals shape=(nnodes, 3)
+        """
         if normals is None:
             nodes = self.nodes
             normals = self.get_normals(elements, nodes=self.nodes)
@@ -113,8 +140,6 @@ class STLReader(object):
             nid_to_eid = defaultdict(list)
             eid = 0
             for (n1, n2, n3) in elements:
-                #n1, n2, n3 = element
-                #print n1, n2, n3
                 nid_to_eid[n1].append(eid)
                 nid_to_eid[n2].append(eid)
                 nid_to_eid[n3].append(eid)
@@ -128,14 +153,19 @@ class STLReader(object):
             m = pe.mean(axis=0)
             normals_at_nodes[nid] = m/norm(m)
             eid += 1
-            #print "elementsi", elementsi
-            #print "pe =", pe
-            #print "m =", m
         return normals_at_nodes
 
     def project_boundary_layer(self, nodes, elements, volume_bdfname):
         """
-        create a boundary layer mesh
+        Create a boundary layer mesh.
+
+        :param self: The STL object
+        :param nodes: The nodes on the surface.
+        :param elements: The elements on the surface.
+        :param volume_bdfname: The CPENTA bdf file to write.
+        
+        :returns nodes2: The boundary layer nodes
+        :returns elements2: The boundary layer elements
         """
         self.log.info("project_mesh...")
 
@@ -152,7 +182,7 @@ class STLReader(object):
         #r = 1100
 
         deltaNs = b * a**r * delta
-        print 'deltaNs =', deltaNs
+        self.log.info('deltaNs = %s' % deltaNs)
         if not isinstance(deltaNs, ndarray):
             deltaNs = array([deltaNs])
         N = len(deltaNs)
@@ -197,10 +227,10 @@ class STLReader(object):
             neshift = (ni + 1) * nelements
             elements2[neshift : neshift + nelements, :] = elements + nnodes * (ni + 1)
 
-            print('nodes = %s' % str(nodes))
-            print('deltaN = %s' % str(deltaN))
-            print('normals_at_nodes = %s' % str(normals_at_nodes))
-            print('outer_points = %s' % str(outer_points))
+            self.log.info('nodes = %s' % str(nodes))
+            self.log.info('deltaN = %s' % str(deltaN))
+            self.log.info('normals_at_nodes = %s' % str(normals_at_nodes))
+            self.log.info('outer_points = %s' % str(outer_points))
             bdf.write('$NODES in Layer=%i\n' % (ni + 1))
             for (x, y, z) in outer_points:
                 card = ['GRID', nid, cid, x, y, z]
@@ -267,28 +297,18 @@ class STLReader(object):
         out.write(msg)
 
         nelements, three = elements.shape
-        #print "write nelements=%s" % (nelements)
+        #print "write nelements=%s" % nelements
+        normals = self.get_normals(elements)
         for element in elements:
             #msg = ''
-            #p1 = nodes[element[0]]
-            #p2 = nodes[element[1]]
-            #p3 = nodes[element[2]]
             try:
                 p1, p2, p3 = nodes[element]
             except IndexError:
                 print element
                 raise
-            #print p1, p2, p3
-            v12 = p2 - p1
-            v13 = p3 - p1
-            v123 = cross(v12, v13)
-            normal = v123 / norm(v123)
 
             #msg  += '  facet normal -6.601157e-001 6.730213e-001 3.336009e-001\n'
             msg = nFormat % tuple(normal)
-            #print "p1 =", p1
-            #print "p2 =", p2
-            #print "p3 =", p3
             msg += '    outer loop\n'
             msg += vFormat % tuple(p1)
             msg += vFormat % tuple(p2)
@@ -297,7 +317,7 @@ class STLReader(object):
             msg += '  endfacet\n'
             #print msg
             out.write(msg)
-        msg = 'endsolid'
+        msg = 'endsolid\n'
         out.write(msg)
 
 
@@ -375,6 +395,7 @@ class STLReader(object):
                 #print "end of solid..."
                 #print "*line = %r" % line
             else:
+                raise NotImplementedError('multiple solids are not supported')
                 break
 
         assert inode > 0
@@ -446,7 +467,6 @@ def main():
     (nodes, elements) = model.read_stl(stl_geom_in)
     if reverse_normals:
         elements = model.flip_normals(elements)
-
 
     if 0:
         # rotate the model

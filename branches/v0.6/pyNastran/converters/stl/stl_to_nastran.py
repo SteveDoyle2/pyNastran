@@ -1,7 +1,7 @@
 from pyNastran.converters.stl.stl_reader import STLReader
 from pyNastran.bdf.fieldWriter import print_card
 
-def stl_to_nastran(stl_filename, bdf_filename, log=None):
+def stl_to_nastran_filename(stl_filename, bdf_filename, log=None):
     model = STLReader(log=log)
     model.read_stl(stl_filename)
 
@@ -48,4 +48,4 @@ def stl_to_nastran(stl_filename, bdf_filename, log=None):
 if __name__ == '__main__':
     bdf_filename = 'g278.bdf'
     stl_filename = 'g278.stl'
-    nastran_to_stl(bdf_filename, stl_filename)
+    nastran_to_stl_filename(bdf_filename, stl_filename)

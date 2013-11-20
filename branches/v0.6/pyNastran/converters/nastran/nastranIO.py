@@ -53,7 +53,7 @@ from pyNastran.bdf.bdf import (BDF, CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
                                CTETRA4, CTETRA10, CPENTA6, CPENTA15,
                                CHEXA8, CHEXA20,
                                CONM2,
-                               LineElement, SpringElement)
+                               ShellElement, LineElement, SpringElement)
 from pyNastran.op2.op2 import OP2
 
 
@@ -139,12 +139,9 @@ class NastranIO(object):
             i = 0
             fraction = 1. / nNodes  # so you can color the nodes by ID
             for (nid, node) in sorted(model.nodes.iteritems()):
-                #print "i = ",i
                 point = node.Position()
-                #print "point = ",point
                 points.InsertPoint(i, *point)
                 #self.gridResult.InsertNextValue(i * fraction)
-                #print str(element)
 
                 #elem = vtk.vtkVertex()
                 #elem.GetPointIds().SetId(0, i)
@@ -193,7 +190,6 @@ class NastranIO(object):
             self.eidMap[eid] = i
             #print element.type
             if isinstance(element, CTRIA3) or isinstance(element, CTRIAR):
-                #print "ctria3"
                 elem = vtkTriangle()
                 nodeIDs = element.nodeIDs()
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
@@ -424,22 +420,21 @@ class NastranIO(object):
         nys = []
         nzs = []
         for eid, element in sorted(model.elements.iteritems()):
-            #print eid
-            if isinstance(element, CTRIA3):
+            if isinstance(element, ShellElement):
                 (nx, ny, nz) = element.Normal()
             else:
-                aaa
                 nx = ny = nz = 0.0
             nxs.append(nx)
             nys.append(ny)
             nzs.append(nz)
 
-        # subcaseID, resultType, vectorSize, location, dataFormat
-        self.iSubcaseNameMap = {1: ['Nastran', '']}
+        if min(nxs) == max(nxs) and min(nxs) != 0.0:
+            self.iSubcaseNameMap = {1: ['Nastran', '']}
 
-        cases[(0, 'Normal_x', 1, 'element', '%.1f')] = nxs
-        cases[(0, 'Normal_y', 1, 'element', '%.1f')] = nys
-        cases[(0, 'Normal_z', 1, 'element', '%.1f')] = nzs
+            # subcaseID, resultType, vectorSize, location, dataFormat
+            cases[(0, 'Normal_x', 1, 'centroid', '%.1f')] = nxs
+            cases[(0, 'Normal_y', 1, 'centroid', '%.1f')] = nys
+            cases[(0, 'Normal_z', 1, 'centroid', '%.1f')] = nzs
         self.log.info(cases.keys())
         self.finish_io(cases)
 
@@ -450,7 +445,7 @@ class NastranIO(object):
         self.scalarBar.Modified()
 
         op2 = OP2(op2FileName, log=self.log, debug=True)
-        op2.readOP2()
+        op2.read_op2()
         #print op2.print_results()
 
         #case = op2.displacements[1]

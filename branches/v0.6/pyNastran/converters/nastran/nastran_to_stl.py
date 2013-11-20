@@ -1,7 +1,7 @@
 from pyNastran.bdf.bdf import BDF
 
 
-def nastran_to_stl(bdf_filename, stl_filename, log=None):
+def nastran_to_stl_filename(bdf_filename, stl_filename, log=None):
     model = BDF(log=log)
     model.read_bdf(bdf_filename)
     log.info('card_count = %s' % model.card_count)
