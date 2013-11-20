@@ -6,7 +6,7 @@ from itertools import izip
 
 from docopt import docopt
 
-from numpy import array, zeros, ndarray, cross
+from numpy import array, zeros, ndarray, cross, where
 from numpy.linalg import norm
 
 #from struct import unpack
@@ -17,7 +17,7 @@ from pyNastran.utils.log import get_logger
 
 
 class STLReader(object):
-    #modelType = 'cart3d'
+    #modelType = 'stl'
     #isStructured = False
     #isOutwardNormals = True
 
@@ -45,7 +45,7 @@ class STLReader(object):
         self.log.info("---starting reading STL file...%r---" % self.infilename)
 
         if is_binary(stl_filename):
-            print "***is_binary"
+            self.log.debug("***is_binary")
             aaa
             self.infile = open(stl_filename, 'rb')
             (self.nPoints, self.nElements) = self.read_header_binary()
@@ -63,15 +63,34 @@ class STLReader(object):
         #assert self.nPoints > 0, 'nPoints=%s' % self.nPoints
         #assert self.nElements > 0, 'nElements=%s' % self.nElements
 
-    def get_normals(self, nodes, elements):
-        print "get_normals...elements.shape", elements.shape
+    def get_normals(self, elements, nodes=None):
+        if nodes is None:
+            nodes = self.nodes
+        self.log.debug("get_normals...elements.shape %s" % str(elements.shape))
         p1 = nodes[elements[:, 0]]
         p2 = nodes[elements[:, 1]]
         p3 = nodes[elements[:, 2]]
         v12 = p2 - p1
         v13 = p3 - p1
         v123 = cross(v12, v13)
-        normals = v123 / norm(v123)
+
+        # verifies that y normals don't point down (into the model)
+        #if min(v123[1]) < 0.0:
+            #iy_zero = where(v123[1] < 0)[0]
+            #raise RuntimeError(iy_zero+1)
+        #print "v123", v123
+        n = norm(v123, axis=1)
+        inan = where(n==0)[0]
+        if len(inan) > 0:
+            raise RuntimeError(inan)
+        #from numpy import divide
+
+        # we need to divide our (n,3) array in 3 steps
+        normals = v123 # /n
+        normals[:, 0] /= n
+        normals[:, 1] /= n
+        normals[:, 2] /= n
+        #divide(v123, n)
         return normals
 
     def flip_normals(self):
@@ -84,29 +103,25 @@ class STLReader(object):
         elements2[:, 2] = n1
         self.elements = elements
 
-    def project_mesh(self, nodes, elements):
-        """
-        create a boundary layer mesh
-        """
-        print "project_mesh..."
+    def get_normals_at_nodes(self, elements, normals=None, nid_to_eid=None):
+        if normals is None:
+            nodes = self.nodes
+            normals = self.get_normals(elements, nodes=self.nodes)
 
-        from collections import defaultdict
-        nid_to_eid = defaultdict(list)
+        if nid_to_eid is None:
+            from collections import defaultdict
+            nid_to_eid = defaultdict(list)
+            eid = 0
+            for (n1, n2, n3) in elements:
+                #n1, n2, n3 = element
+                #print n1, n2, n3
+                nid_to_eid[n1].append(eid)
+                nid_to_eid[n2].append(eid)
+                nid_to_eid[n3].append(eid)
+                eid += 1
+            del eid, n1, n2, n3
 
-        eid = 0
-        for (n1, n2, n3) in elements:
-            #n1, n2, n3 = element
-            #print n1, n2, n3
-            nid_to_eid[n1].append(eid)
-            nid_to_eid[n2].append(eid)
-            nid_to_eid[n3].append(eid)
-            eid += 1
-        del eid, n1, n2, n3
-        #print "nid_to_eid[0] =", nid_to_eid[0]
-
-        normals = self.get_normals(nodes, elements)
         normals_at_nodes = zeros(nodes.shape, 'float64')
-        #print "normals_elements =", normals_at_nodes.shape
         eid = 0
         for nid, elementsi in nid_to_eid.iteritems():
             pe = normals[elementsi]
@@ -116,18 +131,28 @@ class STLReader(object):
             #print "elementsi", elementsi
             #print "pe =", pe
             #print "m =", m
+        return normals_at_nodes
+
+    def project_boundary_layer(self, nodes, elements, volume_bdfname):
+        """
+        create a boundary layer mesh
+        """
+        self.log.info("project_mesh...")
+
+        normals_at_nodes = self.get_normals_at_nodes(elements, normals=None, nid_to_eid=None)
 
         #print "normals_at_nodes[4]", normals_at_nodes[4]
         #----------- make boundary layer---------------
         # deltaN = a^N * delta
-        delta = 0.01
-        N = 5
+        delta = 0.1
         b = 1.0
-        a = 1.01
-        #r = array(range(N))
-        r = 1100
+        a = 1.1
+        N = 13
+        r = array(range(N))
+        #r = 1100
 
         deltaNs = b * a**r * delta
+        print 'deltaNs =', deltaNs
         if not isinstance(deltaNs, ndarray):
             deltaNs = array([deltaNs])
         N = len(deltaNs)
@@ -146,30 +171,63 @@ class STLReader(object):
         #print "nodes2.shape =", nodes2.shape
         #print "elements2.shape =", elements2.shape
 
-        ni = 1
+        ni = 0
         #print "nelements =", nelements
+        cid = None
+        nid = 1
+        eid2 = 1
         pid = 100
-        bdf = open('hex_projected_stl.bdf', 'wb')
+        mid = 100
+        bdf = open(volume_bdfname, 'wb')
+        bdf.write('CEND\nBEGIN BULK\n')
+        bdf.write('$NODES in Layer=0\n')
+        for (x, y, z) in nodes:
+            card = ['GRID', nid, cid, x, y, z]
+            bdf.write(print_card(card))
+            nid += 1
+
         for deltaN in deltaNs:
-            #print "  deltaNi =", deltaN
             outer_points = nodes + normals_at_nodes * deltaN
-            #print "  outer_points.shape", outer_points.shape
             nodes2[   ni*nnodes   :(ni+1)*nnodes, :] = outer_points
-            #print "  %s:%s" % (ni*nelements, (ni+1)*nelements)
 
             nnbase = ni * nnodes
             nnshift = (ni+1) * nnodes
 
-            nebase = ni * nelements
-            neshift = (ni+1) * nelements
-            elements2[nebase : neshift, :] = elements + nnodes * ni
+            nebase  = (ni) * nelements
+            neshift = (ni + 1) * nelements
+            elements2[neshift : neshift + nelements, :] = elements + nnodes * (ni + 1)
 
-            for eid in nelements:
-                eid2 = nbase + eid
-                (n1, n2, n3) = elements2[nebase  + eid]
-                (n4, n5, n6) = elements2[neshift + eid]
+            print('nodes = %s' % str(nodes))
+            print('deltaN = %s' % str(deltaN))
+            print('normals_at_nodes = %s' % str(normals_at_nodes))
+            print('outer_points = %s' % str(outer_points))
+            bdf.write('$NODES in Layer=%i\n' % (ni + 1))
+            for (x, y, z) in outer_points:
+                card = ['GRID', nid, cid, x, y, z]
+                bdf.write(print_card(card))
+                nid += 1
+
+            bdf.flush()
+            bdf.write('$SOLID ELEMENTS in Layer=%i\n' % (ni + 1))
+            for eid in xrange(nelements):
+                (n1, n2, n3) = elements2[nebase  + eid] + 1
+                (n4, n5, n6) = elements2[neshift + eid] + 1
                 card = ['CPENTA', eid2, pid, n1, n2, n3, n4, n5, n6]
                 bdf.write(print_card(card))
+                eid2 += 1
+                bdf.flush()
+
+            card = ['PSOLID', pid, mid]
+            bdf.write(print_card(card))
+
+            E = 1e7
+            G = None
+            nu = 0.3
+            card = ['MAT1', mid, E, G, nu]
+            bdf.write(print_card(card))
+
+            pid += 1
+            mid += 1
             ni += 1
         bdf.close()
         #print elements2
@@ -184,7 +242,7 @@ class STLReader(object):
 
         elements3 = elements2[nebase : , :]
         elements3 = elements2[nebase : , :]
-        print "done projecting..."
+        self.log.debug("done projecting...")
         return nodes2, elements2
 
 
@@ -335,8 +393,9 @@ class STLReader(object):
 
 
 def run_arg_parse():
-    msg  = "Usage:\n"
-    msg += "  stl_reader INPUT [-o OUTPUT]\n"
+    msg  = 'This program flips the normal of an STL model.\n'
+    msg += 'Usage:\n'
+    msg += '  stl_reader INPUT [-o OUTPUT]\n'
     msg += '             [-n] [-q]\n'
     msg += '  stl_reader -h | --help\n'
     msg += '  stl_reader -v | --version\n'

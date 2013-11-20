@@ -418,6 +418,31 @@ class NastranIO(object):
         self.grid2.Update()
         self.log_info("updated grid")
 
+        cases = {}
+        print "len(elements) =", len(model.elements)
+        nxs = []
+        nys = []
+        nzs = []
+        for eid, element in sorted(model.elements.iteritems()):
+            #print eid
+            if isinstance(element, CTRIA3):
+                (nx, ny, nz) = element.Normal()
+            else:
+                aaa
+                nx = ny = nz = 0.0
+            nxs.append(nx)
+            nys.append(ny)
+            nzs.append(nz)
+
+        # subcaseID, resultType, vectorSize, location, dataFormat
+        self.iSubcaseNameMap = {1: ['Nastran', '']}
+
+        cases[(0, 'Normal_x', 1, 'element', '%.1f')] = nxs
+        cases[(0, 'Normal_y', 1, 'element', '%.1f')] = nys
+        cases[(0, 'Normal_z', 1, 'element', '%.1f')] = nzs
+        self.log.info(cases.keys())
+        self.finish_io(cases)
+
     def load_nastran_results(self, op2FileName, dirname):
         #gridResult.SetNumberOfComponents(self.nElements)
         self.TurnTextOn()
@@ -483,13 +508,31 @@ class NastranIO(object):
 
             cases = self.fill_stress_case(cases, op2, subcaseID, eKey, nElements)
 
+        #self.resultCases = cases
+        #self.finish_io(cases)
+        #return
+        #self.caseKeys = sorted(cases.keys())
+        #print "caseKeys = ",self.caseKeys
+        #print "type(caseKeys) = ",type(self.caseKeys)
+        #self.iCase = -1
+        #self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
+        #self.cycleResults()  # start at nCase=0
+
+    def finish_io(self, cases):
+        #self.finish()
+        ncases = len(cases)
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
         #print "caseKeys = ",self.caseKeys
         #print "type(caseKeys) = ",type(self.caseKeys)
-        self.iCase = -1
-        self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
+        self.nCases = (ncases - 1) if (ncases - 1) > 0 else 0  # number of keys in dictionary
+        if self.nCases:
+            self.scalarBar.VisibilityOn()
+            self.scalarBar.Modified()
+
+        self.iCase = 0 if self.nCases == 0 else -1
         self.cycleResults()  # start at nCase=0
+        self.log.info('end of finish io')
 
     def fill_stress_case(self, cases, op2, subcaseID, eKey, nElements):
         print "fill_stress_case"

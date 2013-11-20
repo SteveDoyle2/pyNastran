@@ -1,7 +1,7 @@
 from pyNastran.bdf.bdf import BDF
 
 
-def to_cart3d(bdf_filename, cart3d_filename):
+def nastran_to_cart3d(bdf_filename, cart3d_filename):
     model = BDF()
     model.read_bdf(bdf_filename)
     nnodes = len(model.nodes)
@@ -22,8 +22,8 @@ def to_cart3d(bdf_filename, cart3d_filename):
         if element.type in ['CQUADR', 'CONM2']:
             continue
         assert element.type in ['CTRIA3', 'CTRIAR'], element.type
-        
-        
+
+
         out = element.nodeIDs()
         try:
             n1, n2, n3 = out
@@ -46,4 +46,4 @@ def to_cart3d(bdf_filename, cart3d_filename):
 if __name__ == '__main__':
     bdf_filename = 'g278.bdf'
     cart3d_filename = 'g278.tri'
-    to_cart3d(bdf_filename, cart3d_filename)
+    nastran_to_cart3d(bdf_filename, cart3d_filename)

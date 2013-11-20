@@ -976,7 +976,10 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 print("***%s skipping" % location)
 
             #self.iSubcaseNameMap[self.isubcase] = [Subtitle,Label]
-            caseName = self.iSubcaseNameMap[subcaseID]
+            try:
+                caseName = self.iSubcaseNameMap[subcaseID]
+            except KeyError:
+                caseName = ('case=NA', 'label=NA')
             (subtitle, label) = caseName
 
             print("subcaseID=%s resultType=%s subtitle=%r label=%r" % (subcaseID, resultType, subtitle, label))

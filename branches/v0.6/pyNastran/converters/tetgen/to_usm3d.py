@@ -33,7 +33,7 @@ def main():
         'nViscElem' : ntets,
         'tc'        : 0.0, # d
     }
-    write_usm3d_volume(m, base)three
+    write_usm3d_volume(m, base)
 
     #model = Usm3dReader()
     #basename = 'HSCT_inviscid'

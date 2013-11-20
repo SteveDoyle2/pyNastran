@@ -112,7 +112,7 @@ class STL_IO(object):
         ID = 1
 
         cases = self._fill_stl_case(cases, ID, elements)
-
+        #self.finish_io()
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
         #print "caseKeys = ",self.caseKeys

@@ -491,7 +491,10 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, TetgenIO, U
                 print("***%s skipping" % location)
 
             #self.iSubcaseNameMap[self.isubcase] = [Subtitle,Label]
-            caseName = self.iSubcaseNameMap[subcaseID]
+            try:
+                caseName = self.iSubcaseNameMap[subcaseID]
+            except KeyError:
+                caseName = ('case=NA', 'label=NA')
             (subtitle, label) = caseName
 
             print("subcaseID=%s resultType=%s subtitle=%r label=%r" % (subcaseID, resultType, subtitle, label))
