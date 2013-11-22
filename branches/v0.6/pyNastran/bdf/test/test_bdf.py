@@ -419,7 +419,11 @@ def main():
     debug = not(args.quiet)
     bdf_filename = args.bdfFileName[0]
 
+    import time
+    t0 = time.time()
     run_bdf('.', bdf_filename, debug=debug, xref=xref, check=check, punch=punch)
+    print("total time:  %.2f sec" % (time.time() - t0))
+
 
 if __name__ == '__main__':
     main()
