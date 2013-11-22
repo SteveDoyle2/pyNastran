@@ -6,8 +6,8 @@ def wipe_empty_fields(card):
     Removes an trailing Nones from the card.
     Also converts empty strings to None.
 
-    :param card:        the fields on the card as a list
-    :returns shortCard: the card with no trailing blank fields
+    :param card:         the fields on the card as a list
+    :returns short_card: the card with no trailing blank fields
     """
     cardB = []
     for field in card:

@@ -81,8 +81,8 @@ from .cards.coord import Coord
 #from .cards.constraints import (SPC, SPCADD, SPCD, SPCAX, SPC1,
 #                                MPC, MPCADD, SUPORT1, SUPORT,
 #                                ConstraintObject)
-#from .cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
-#                                      CORD2R, CORD2C, CORD2S, CORD3G)
+from .cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
+                                      CORD2R, CORD2C, CORD2S, CORD3G)
 #from .cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
 #from .cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM, NLPCI)
 #from .cards.loads.loads import (LSEQ, SLOAD, DLOAD, DAREA, TLOAD1, TLOAD2,
@@ -135,7 +135,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
     #__slots__ = ['_is_dynamic_syntax']
-    def __init__(self, debug=True, log=None):
+    def __init__(self, debug=True, log=None, precision='double'):
         """
         Initializes the BDF object
         :param self:  the BDF object
@@ -143,6 +143,13 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         :param log:   a python logging module object
         """
         assert debug in [True, False], 'debug=%r' % debug
+        
+        if precision == 'double':
+            self.float = 'float64'
+        elif precision == 'single':
+            self.float = 'float32'
+        else:
+            raise NotImplementedError('precision=%r' % precision)
 
         # file management parameters
         self._ifile = -1
@@ -456,8 +463,11 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.nodes = {}
         
         from .cards.grid import GRID
+        from .cards.spoint import SPOINT
         self.grid = GRID(self)
-        self.coords = {}
+        self.spoint = SPOINT(self)
+        
+        self.coords = {0 : CORD2R() }
         
         #: stores POINT cards
         self.points = {}
@@ -477,20 +487,28 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}
         
-        from .cards.pshell import PropertiesShell
+        from .cards.properties_shell import PropertiesShell
         #self.properties_spring = PropertiesSpring(self)
         #self.proeprties_rod = PropertiesRod(self)
         #self.properties_bar = PropertiesBar(self)
         self.properties_shell = PropertiesShell(self)
         #self.properties_solid = PropertiesSolid(self)
         
-        from .cards.ctria3 import ElementsShell
+        from .cards.elements_shell import ElementsShell
         #self.elements_spring = ElementsSpring(self)
         #self.elements_rod = ElementsRod(self)
         #self.elements_bar = ElementsBar(self)
         self.elements_shell = ElementsShell(self)
         #self.elements_solid = ElementsSolid(self)
-        
+
+        #from .cards.rods import CROD, CONROD, PROD
+        from .cards.crod import CROD
+        from .cards.conrod import CONROD
+        from .cards.prod import PROD
+        self.conrod = CONROD(self)
+        self.prod = PROD(self)
+        self.crod = CROD(self)
+
         #: stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
         #self.materials = {}
         from .cards.materials import Materials
@@ -1425,6 +1443,10 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         if name == 'PARAM':
             param = PARAM(card_obj, comment=comment)
             self.add_PARAM(param)
+
+        elif name == 'CTRIA3':
+            self.elements_shell.add_ctria3(card_obj, comment=comment)
+
         elif name == 'PSHELL':
             self.properties_shell.add_pshell(card_obj, comment=comment)
         elif name == 'PCOMP':
@@ -1432,248 +1454,35 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'PSHEAR':
             self.properties_shell.add_shear(card_obj, comment=comment)
 
-        elif name == 'CTRIA3':
-            self.elements_shell.add_ctria3(card_obj, comment=comment)
+        #========================
+        elif name == 'CROD':
+            self.crod.add(card_obj, comment=comment)
+        elif name == 'CONROD':
+            self.conrod.add(card_obj, comment=comment)
+        elif name == 'PROD':
+            self.prod.add(card_obj, comment=comment)
+        #========================
+        elif name == 'FORCE':
+            #self.force.add(card_obj, comment=comment)
+            pass
+        elif name == 'MOMENT':
+            #self.moment.add(card_obj, comment=comment)
+            pass
+        #========================
 
 
         elif name == 'MAT1':
             self.materials.add_mat1(card_obj, comment=comment)
+            #self.mat1.add(card_obj, comment=comment)
 
+        #========================
         elif name == 'GRID':
             self.grid.add(card_obj, comment=comment)
-            #self.mat1.add(card_obj, comment=comment)
+        elif name == 'SPOINT':
+            self.spoint.add(card_obj, comment=comment)
         else:
             raise NotImplementedError(name)
         return
-
-        try:
-            _get_cls = lambda name: globals()[name](card_obj, comment=comment)
-        except Exception as e:
-            if not e.args:
-                e.args=('',)
-            e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
-            raise
-        _cls = lambda name: globals()[name]
-
-        if self._auto_reject:
-            self.reject_cards.append(card)
-            print('rejecting processed auto=rejected %s' % card)
-            return card_obj
-        try:
-            # cards that have their own method add_CARDNAME to add them
-            if card_name in ['LSEQ', 'PHBDY', 'AERO', 'AEROS', 'AEFACT',
-              'AELINK', 'AELIST', 'AEPARM', 'AESTAT', 'AESURF', 'TRIM',
-              'FLUTTER', 'FLFACT', 'GUST', 'NLPARM','NLPCI',  'TSTEP', 'TSTEPNL',
-              'SESET', 'DCONSTR', 'DESVAR', 'DDVAL', 'DLINK', 'PARAM',
-              'PDAMPT', 'PELAST', 'PBUSHT']:
-                try:
-                    # PHBDY -> add_PHBDY
-                    getattr(self, 'add_' + card_name)(_get_cls(card_name))
-                except Exception as e:
-                    if not e.args:
-                        e.args = ('',)
-                    e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
-                    raise
-                return card_obj
-
-            # dictionary of cards. Key is the name of the function to add the
-            # card
-            # 'PCOMPG':  # hasnt been verified
-            # 'MAT8':  # note there is no MAT6 or MAT7
-            _cards = {
-             'add_node': ['GRID'],
-             'add_element': ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CQUADX',
-                             'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
-                             'CBAR', 'CBEAM', 'CBEAM3', 'CROD', 'CONROD',
-                             'CTUBE', 'CBEND', 'CELAS1', 'CELAS2', 'CELAS3',
-                             'CELAS4', 'CONM1',  'CONM2', 'CMASS1', 'CMASS2',
-                             'CMASS3', 'CMASS4', 'CVISC', 'CSHEAR', 'CGAP',
-                             'CRAC2D', 'CRAC3D'],
-             'add_damper_element': ['CBUSH', 'CBUSH1D', 'CFAST', 'CDAMP1',
-                                    'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5'],
-             'add_rigid_element': ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3'],
-             'add_property': ['PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PSOLID',
-                              'PBAR', 'PBARL', 'PBEAM', 'PBCOMP', #'PBEAML',
-                              'PROD', 'PTUBE', 'PLSOLID', 'PBUSH1D', 'PBUSH',
-                              'PFAST', 'PDAMP5', 'PGAP', 'PRAC2D', 'PRAC3D',
-                              'PLPLANE',],
-
-             # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
-             'add_creep_material': ['CREEP'],
-             'add_structural_material': ['MAT1', 'MAT2', 'MAT3', 'MAT8',
-                                         'MAT9', 'MAT10', 'MATHP', 'MATHE',
-                                         'EQUIV'],
-             'add_thermal_material': ['MAT4', 'MAT5'],
-             'add_material_dependence': ['MATS1'],
-             'add_load': ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1',
-                          'MOMENT2', 'GRAV', 'ACCEL1', 'LOAD', 'PLOAD',
-                              'PLOAD1', 'PLOAD2', 'PLOAD4', 'PLOADX1',
-                              'RFORCE', 'DLOAD', 'SLOAD', 'TLOAD1', 'TLOAD2',
-                              'RLOAD1', 'RLOAD2', 'RANDPS'],
-             'add_thermal_load': ['TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY'],
-             'add_thermal_element': ['CHBDYE', 'CHBDYG', 'CHBDYP'],
-             'add_convection_property': ['PCONV', 'PCONVM'],
-             'add_constraint_MPC': ['MPC', 'MPCADD'],
-             'add_constraint_SPC': ['SPC', 'SPC1', 'SPCAX', 'SPCD', 'SPCADD'],
-             'add_suport': ['SUPORT'],  # pseudo-constraint
-             'add_constraint': ['SUPORT1'],  # pseudo-constraint
-             'add_SPLINE': ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5'],
-             'add_CAERO': ['CAERO1', 'CAERO2', 'CAERO4'], # CAERO3, CAERO5
-             'add_PAERO': ['PAERO1', 'PAERO2'],
-             'add_MKAERO': ['MKAERO1', 'MKAERO2'],
-             'add_FREQ': ['FREQ', 'FREQ1', 'FREQ2'],
-             'add_ASET': ['ASET', 'ASET1'], 'add_BSET': ['BSET', 'BSET1'],
-             'add_CSET': ['CSET', 'CSET1'], 'add_QSET': ['QSET', 'QSET1'],
-             'add_SET': ['SET1', 'SET3'],
-             'add_DRESP': ['DRESP1', 'DRESP2'],
-             'add_DVPREL': ['DVPREL1', 'DVPREL2'],
-             'add_coord': ['CORD2R', 'CORD2C', 'CORD2S'],
-             'add_table': ['TABLED1', 'TABLED2', 'TABLED3', 'TABLEM1',
-                           'TABLEM2', 'TABLEM3', 'TABLEM4', 'TABLES1',
-                           'TABLEST'],
-             'add_random_table': ['TABRND1', 'TABRNDG'],
-             'add_method': ['EIGB', 'EIGR', 'EIGRL'],
-             'add_cmethod': ['EIGC', 'EIGP'],
-             'add_DVMREL': ['DVMREL1'],
-            }
-
-            for func, names in _cards.iteritems():
-                if card_name in names:
-                    try:
-                        getattr(self, func)(_get_cls(card_name))
-                    except Exception as e:
-                        if not e.args:
-                            e.args=('',)
-                        e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
-                        raise
-                    return card_obj
-
-            # card that requires more careful processing, elements
-            _dct = {'CTETRA': (7, CTETRA4, CTETRA10), 'CHEXA': (11, CHEXA8,
-                    CHEXA20), 'CPENTA': (9, CPENTA6, CPENTA15)}
-            if card_name in _dct:
-                d = _dct[card_name]
-                self.add_element((d[1] if card_obj.nFields() == d[0]
-                                       else d[2])(card_obj, comment=comment))
-                return card_obj
-
-            # dampers
-            _dct = {'PELAS': (5,), 'PVISC': (5,), 'PDAMP': (3, 5)}
-            if card_name in _dct:
-                try:
-                    self.add_property(_get_cls(card_name))
-                except Exception as e:
-                    if not e.args:
-                        e.args=('',)
-                    e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
-                    raise
-                for i in _dct[card_name]:
-                    if card_obj.field(i):
-                        self.add_property(_cls(card_name)(card_obj, 1,
-                                          comment=comment))
-                return card_obj
-
-            if card_name in ['DEQATN']:  # buggy for commas
-                if comment:
-                    self.rejects.append([comment])
-                #print 'DEQATN:  card_obj.card=%s' %(card_obj.card)
-                #self.add_DEQATN(DEQATN(card_obj)) # should be later moved to
-                self.rejects.append(card)          # for loop below
-            elif card_name == 'GRDSET':
-                self.gridSet = GRDSET(card_obj, comment=comment)
-            elif card_name == 'DOPTPRM':
-                self.doptprm = DOPTPRM(card_obj, comment=comment)
-
-            elif card_name == 'DMIG':  # not done...
-                if card_obj.field(2) == 'UACCEL':  # special DMIG card
-                    self.reject_cards.append(card)
-                elif card_obj.field(2) == 0:
-                    self.add_DMIG(DMIG(card_obj, comment=comment))
-                else:
-                    self.dmigs[card_obj.field(1)].addColumn(card_obj,
-                                                            comment=comment)
-
-            elif card_name in ['DMI', 'DMIJ', 'DMIJI', 'DMIK']:
-                if card_obj.field(2) == 0:
-                    getattr(self, 'add_' + card_name)(_get_cls(card_name))
-                else:
-                    getattr(self, card_name.lower() +
-                            's')[card_obj.field(1)].addColumn(card_obj)
-            # dynamic
-            elif card_name == 'DAREA':
-                self.add_DAREA(DAREA(card_obj, comment=comment))
-                if card_obj.field(5):
-                    self.add_DAREA(DAREA(card_obj, 1, comment=comment))
-
-            elif card_name in ['CORD1R', 'CORD1C', 'CORD1S']:
-                self.add_coord(_get_cls(card_name))
-                if card_obj.field(5):
-                    self.add_coord(_cls(card_name)(card_obj, nCoord=1,
-                                                   comment=comment))
-
-            elif card_name == 'PMASS':
-                self.add_property(PMASS(card_obj, nOffset=0, comment=comment))
-                for (i, j) in enumerate([3, 5, 7]):
-                    if card_obj.field(j) is not None:
-                        self.add_property(PMASS(card_obj, nOffset=i+1,
-                                                comment=comment))
-
-            elif card_name == 'CONV':
-                bc = CONV(card_obj, comment=comment)
-                self.add_thermal_BC(bc, bc.eid)
-            #elif card_name == 'RADM':
-            #    bc = RADM(card_obj, comment=comment)
-            #    self.add_thermal_BC(bc, bc.nodamb)
-            elif card_name == 'RADBC':
-                bc = RADBC(card_obj, comment=comment)
-                self.add_thermal_BC(bc, bc.nodamb)
-
-            elif card_name == 'BCRPARA':
-                card = BCRPARA(card_obj, comment=comment)
-                self.add_BCRPARA(card)
-            elif card_name == 'BCTADD':
-                card = BCTADD(card_obj, comment=comment)
-                self.add_BCTADD(card)
-            elif card_name == 'BCTPARA':
-                card = BCTPARA(card_obj, comment=comment)
-                self.add_BCTPARA(card)
-            elif card_name == 'BCTSET':
-                card = BCTSET(card_obj, comment=comment, sol=self.sol)
-                self.add_BCTSET(card)
-            elif card_name == 'BSURF':
-                card = BSURF(card_obj, comment=comment)
-                self.add_BSURF(card)
-            elif card_name == 'BSURFS':
-                card = BSURFS(card_obj, comment=comment)
-                self.add_BSURFS(card)
-
-            elif card_name == 'SPOINT':
-                self.add_SPOINT(SPOINTs(card_obj, comment=comment))
-            elif card_name == 'PBEAML':
-                try:
-                    prop = PBEAML(card_obj, comment=comment)
-                except Exception as e:
-                    #self.log.exception(traceback.format_exc())
-                    self.log.exception('rejecting processed PBEAML %s' % card)
-                    self.reject_cards.append(card)
-                    return card_obj
-                self.add_property(prop)
-
-            elif 'ENDDATA' in card_name:
-                self.foundEndData = True
-            else:
-                #: ..warning:: cards with = signs in them
-                #:             are not announced when they are rejected
-                if '=' not in card[0]:
-                    self.log.info('rejecting processed equal signed card %s' % card)
-                self.reject_cards.append(card)
-        except Exception as e:
-            print(str(e))
-            self.log.debug("card_name = |%r|" % (card_name))
-            self.log.debug("failed! Unreduced Card=%s\n" % list_print(card) )
-            self.log.debug("filename = %s\n" % self.bdf_filename)
-            raise
-        return card_obj
 
     def print_filename(self, filename):
         """

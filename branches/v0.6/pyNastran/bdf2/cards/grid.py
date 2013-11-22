@@ -5,11 +5,13 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string)
 
 
-class NODES(object):
+class Nodes(object):
     def __init__(self, model):
         self.model = model
+        self.spoint = SPOINT(model)
+        self.grid = GRID(model)
 
-    def build():
+    def build(self):
         self.spoint.build()
         self.grid.build()
 
@@ -18,36 +20,23 @@ class NODES(object):
         self.spoint.write_bdf(f)
         self.grid.write_bdf(f)
 
+    def ndofs(self, sol):
+        if self.model.sol in [101, 103, 144, 145]:
+            ndofs = (6 * self.grid.n) + self.spoint.n
+        elif self.model.sol in [159]:
+            ndofs = self.grid.n + self.spoint.n
+        else:
+            raise NotImplementedError('sol=%r' % sol)
+        return ndofs
+
     def get_stats(self):
         msg = []
         types = [self.spoint, self.grid]
         for node in types:
-            nnode = len(node.nid)
-            if nnode:
-                msg.append('  %-8s: %i' % (node.type, nnode))
+            if node.n:
+                msg.append('  %-8s: %i' % (node.type, node.n))
         return msg
 
-
-class SPOINT(object):
-    type = 'SPOINT'
-    def __init__(self, model):
-        self.model = model
-        self._spoint = []
-        self._spoint_comments = []
-
-    def add_spoint(self, card, comment):
-        self._spoint.append(card)
-        self._spoint_comment.append(comment)
-
-    def build(self):
-        self._spoint = []
-        self._spoint_comment = []
-        self.spoint = zeros(ncards, 'int32')
-
-    def write_bdf(self, f, size=8):
-        #..todo:: collapse the IDs
-        card = ['SPOINT'] + list(self.spoint)
-        f.write(print_card(card))
 
 class GRID(object):
     type = 'GRID'
@@ -76,40 +65,62 @@ class GRID(object):
         cards = self._grid
         ncards = len(cards)
 
-        self.nid = zeros(ncards, 'int32')
-        self.xyz = zeros((ncards, 3), 'float64')
-        self.cp = zeros(ncards, 'int32')
-        self.cd = zeros(ncards, 'int32')
-        self.seid = zeros(ncards, 'int32')
-        #self.ps = zeros(ncards, 'int32')
+        self.n = ncards
+        if ncards:
+            float_fmt = self.model.float
+            self.nid = zeros(ncards, 'int32')
+            self.xyz = zeros((ncards, 3), float_fmt)
+            self.cp = zeros(ncards, 'int32')
+            self.cd = zeros(ncards, 'int32')
+            self.seid = zeros(ncards, 'int32')
+            #self.ps = zeros(ncards, 'int32')
 
-        for i, card in enumerate(cards):
-            #: Node ID
-            self.nid[i] = integer(card, 1, 'nid')
+            for i, card in enumerate(cards):
+                #: Node ID
+                self.nid[i] = integer(card, 1, 'nid')
 
-            #: Grid point coordinate system
-            self.cp[i] = integer_or_blank(card, 2, 'cp', 0)
-            
-            x = double_or_blank(card, 3, 'x1', 0.)
-            y = double_or_blank(card, 4, 'x2', 0.)
-            z = double_or_blank(card, 5, 'x3', 0.)
-            #: node location in local frame
-            self.xyz[i] = [x, y, z]
+                #: Grid point coordinate system
+                self.cp[i] = integer_or_blank(card, 2, 'cp', 0)
 
-            #: Analysis coordinate system
-            self.cd[i] = integer_or_blank(card, 6, 'cd', 0)
+                x = double_or_blank(card, 3, 'x1', 0.)
+                y = double_or_blank(card, 4, 'x2', 0.)
+                z = double_or_blank(card, 5, 'x3', 0.)
+                #: node location in local frame
+                self.xyz[i] = [x, y, z]
 
-            #: SPC constraint
-            #self.ps[i] = str(integer_or_blank(card, 7, 'ps', ''))
+                #: Analysis coordinate system
+                self.cd[i] = integer_or_blank(card, 6, 'cd', 0)
 
-            #: Superelement ID
-            self.seid[i] = integer_or_blank(card, 8, 'seid', 0)
+                #: SPC constraint
+                #self.ps[i] = str(integer_or_blank(card, 7, 'ps', ''))
+
+                #: Superelement ID
+                self.seid[i] = integer_or_blank(card, 8, 'seid', 0)
+
+    def positions(self, nids=None):
+        if nids is None:
+            nids = self.nids
+        xyz = xyz.copy()
+        
+        n = arange(self.n)
+        i = where(self.cid != 0)[0]
+        if i:
+            n = n[i]
+            cids = set(list(unique(self.cid)))
+            for cid in cids:
+                i = where(self.cid != 0)[0]
+                T = self.model.coord.transform(cid)
+                xyzi = xyz[n[i], :]
+                xyzi = dot(transpose(T), dot(xyzi, T))
+        return xyz
+
+    def positions_wrt(self, nids=None, cids=None):
+        raise NotImplementedError()
 
     def get_stats(self):
         msg = []
-        ngrid = len(self.nid)
-        if ngrid:
-            msg.append('  %-8s: %i' % ('GRID', ngrid))
+        if self.n:
+            msg.append('  %-8s: %i' % ('GRID', self.n))
         return msg
 
     def write_bdf(self, f, size=8):

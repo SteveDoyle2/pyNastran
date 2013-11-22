@@ -69,67 +69,71 @@ class WriteMesh(object):
 
         ptypes = [self.properties_shell.pshell,
                   self.properties_shell.pcomp,
-                  self.properties_shell.pshear]
+                  self.properties_shell.pshear,
+                  self.prod,]
 
         n = 0
+        pids_all = None
+        pids_set = None
         for t in ptypes:
-            if len(t.pid) and n == 0:
+            if t.n and n == 0:
                 pids_all = t.pid
                 n = 1
-            elif len(t.pid):
+            elif t.n:
                 #print pids_all
-                #print t.pid
+                print t.pid
                 pids_all = concatenate(pids_all, t.pid)
-        pids_set = set(list(pids_all))
+        if pids_all is not None:
+            pids_set = set(list(pids_all))
 
-        n = 0
-        etypes = [self.elements_shell.ctria3]
-        for t in etypes:
-            if len(t.pid) and n == 0:
-                eids = t.eid
-                pids = t.pid
-                n = 1
-            elif len(t.pid):
-                eids = concatenate(eids, t.eid)
-                pids = concatenate(pids, t.pid)
-
-        elements_by_pid = {}
-        pids_unique = unique(pids)
-        pids_unique.sort()
-
-        f.write('$ELEMENTS_WITH_PROPERTIES\n')
-        for pid in pids_unique:
-            i = where(pid==pids)[0]
-            eids2 = eids[i]
-            
-            for t in ptypes:
-                if pid in t.pid:
-                    t.write_bdf(f, size=size, pids=[pid])
-                    pids_set.remove(pid)
             n = 0
+            etypes = [self.elements_shell.ctria3]
             for t in etypes:
-                eids3 = intersect1d(t.eid, eids2, assume_unique=False)
-                #print "eids3[pid=%s]" %(pid), eids3
-                if n == 0 and len(eids3):
-                    elements_by_pid[pid] = eids3
+                if t.n and n == 0:
+                    eids = t.eid
+                    pids = t.pid
                     n = 1
-                elif len(eids3):
-                    elements_by_pid[pid] = concatenate(elements_by_pid[pid], eids3)
-                else:
-                    continue
-                t.write_bdf(f, size=size, eids=eids3)
-                del eids3
-        #for pid, elements in elements_by_pid.items():
-            #print "pid=%s n=%s" % (pid, len(elements))
-        #print elements_by_pid
+                elif t.n:
+                    eids = concatenate(eids, t.eid)
+                    pids = concatenate(pids, t.pid)
+
+            elements_by_pid = {}
+            pids_unique = unique(pids)
+            pids_unique.sort()
+
+            f.write('$ELEMENTS_WITH_PROPERTIES\n')
+            for pid in pids_unique:
+                i = where(pid==pids)[0]
+                eids2 = eids[i]
+
+                for t in ptypes:
+                    if t.n and pid in t.pid:
+                        t.write_bdf(f, size=size, pids=[pid])
+                        pids_set.remove(pid)
+                n = 0
+                for t in etypes:
+                    eids3 = intersect1d(t.eid, eids2, assume_unique=False)
+                    #print "eids3[pid=%s]" %(pid), eids3
+                    if n == 0 and len(eids3):
+                        elements_by_pid[pid] = eids3
+                        n = 1
+                    elif len(eids3):
+                        elements_by_pid[pid] = concatenate(elements_by_pid[pid], eids3)
+                    else:
+                        continue
+                    t.write_bdf(f, size=size, eids=eids3)
+                    del eids3
+            #for pid, elements in elements_by_pid.items():
+                #print "pid=%s n=%s" % (pid, len(elements))
+            #print elements_by_pid
         
         # missing properties
-        pids_list = list(pids_set)
-        if pids_list:
+        if pids_set:
+            pids_list = list(pids_set)
             f.write('$UNASSOCIATED_PROPERTIES\n')
             for pid in pids_list:
                 for t in ptypes:
-                    if pid in t.pid:
+                    if t.n and pid in t.pid:
                         t.write_bdf(f, size=size, pids=[pid])
                     
         #..todo:: finish...
@@ -164,6 +168,7 @@ class WriteMesh(object):
 
             #self.elements_solids.write_bdf(f)
             #self.properties_solids.write_bdf(f)
+        self.conrod.write_bdf(f, size)
 
         self.materials.write_bdf(f, size)
         f.write(self._write_rejects(size))
