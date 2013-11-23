@@ -112,6 +112,12 @@ class CONROD(object):
         else:
             return mass
         
+    def get_stats(self):
+        msg = []
+        if self.n:
+            msg.append('  %-8s: %i' % ('CROD', self.n))
+        return msg
+
     def write_bdf(self, f, size=8, eids=None):
         if self.n:
             for (eid, n12, mid, A, J, c, nsm) in zip(

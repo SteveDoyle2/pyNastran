@@ -1,28 +1,3 @@
-## GNU Lesser General Public License
-##
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-##
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-##
-## This file is part of pyNastran.
-##
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-##
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-##
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-##
-# pylint: disable=C0103,C0302,R0901,R0902,R0904,R0912,R0914,R0915,W0201,W0611
 """
 Main BDF class
 """
@@ -508,6 +483,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.conrod = CONROD(self)
         self.prod = PROD(self)
         self.crod = CROD(self)
+        
+        from .cards.elements_solid import ElementsSolid
+        from .cards.properties_solid import PropertiesSolid
+        self.elements_solid = ElementsSolid(self)
+        self.properties_solid = PropertiesSolid(self)
+
 
         #: stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
         #self.materials = {}
@@ -1444,17 +1425,57 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             param = PARAM(card_obj, comment=comment)
             self.add_PARAM(param)
 
+        #========================
+        # elements_shell
         elif name == 'CTRIA3':
             self.elements_shell.add_ctria3(card_obj, comment=comment)
+        elif name == 'CTRIA6':
+            self.elements_shell.add_ctria6(card_obj, comment=comment)
+
+        elif name == 'CQUAD':
+            self.elements_shell.add_cquad(card_obj, comment=comment)
+        elif name == 'CQUAD4':
+            self.elements_shell.add_cquad4(card_obj, comment=comment)
+        elif name == 'CQUAD8':
+            self.elements_shell.add_cquad8(card_obj, comment=comment)
+        elif name == 'CQUAD9':
+            self.elements_shell.add_cquad9(card_obj, comment=comment)
 
         elif name == 'PSHELL':
             self.properties_shell.add_pshell(card_obj, comment=comment)
         elif name == 'PCOMP':
-            self.properties_shell.add_comp(card_obj, comment=comment)
+            self.properties_shell.add_pcomp(card_obj, comment=comment)
         elif name == 'PSHEAR':
-            self.properties_shell.add_shear(card_obj, comment=comment)
+            self.properties_shell.add_pshear(card_obj, comment=comment)
 
         #========================
+        # elements_solid
+        elif name == 'CTETRA':
+            if len(card) == 7:
+                self.elements_solid.add_ctetra4(card_obj, comment=comment)
+            else:
+                print('len(CTETRA) =', len(card_obj))
+                aaa
+                self.elements_solid.add_ctetra10(card_obj, comment=comment)
+        elif name == 'CPENTA':
+            if len(card) == 1:
+                self.elements_solid.add_cpenta6(card_obj, comment=comment)
+            else:
+                print('len(CPENTA) =', len(card_obj))
+                bbb
+                self.elements_solid.add_cpenta15(card_obj, comment=comment)
+        elif name == 'CHEXA':
+            if len(card) == 1:
+                self.elements_solid.add_chexa8(card_obj, comment=comment)
+            else:
+                print('len(CHEXA) =', len(card_obj))
+                ccc
+                self.elements_solid.add_chexa20(card_obj, comment=comment)
+
+        elif name == 'PSOLID':
+            self.properties_solid.add_psolid(card_obj, comment=comment)
+        #========================
+        # conrod/rod
         elif name == 'CROD':
             self.crod.add(card_obj, comment=comment)
         elif name == 'CONROD':
@@ -1462,6 +1483,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'PROD':
             self.prod.add(card_obj, comment=comment)
         #========================
+        elif name == 'LOAD':
+            #self.load.add(card_obj, comment=comment)
+            pass
         elif name == 'FORCE':
             #self.force.add(card_obj, comment=comment)
             pass
@@ -1469,11 +1493,23 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             #self.moment.add(card_obj, comment=comment)
             pass
         #========================
+        elif name == 'SPCADD':
+            #self.spcadd.add(card_obj, comment=comment)
+            pass
+        elif name == 'SPC':
+            #self.spc.add(card_obj, comment=comment)
+            pass
+        elif name == 'SPC1':
+            #self.spc1.add(card_obj, comment=comment)
+            pass
+        #========================
 
 
         elif name == 'MAT1':
             self.materials.add_mat1(card_obj, comment=comment)
             #self.mat1.add(card_obj, comment=comment)
+        elif name == 'MATS1':
+            self.materials.add_mats1(card_obj, comment=comment)
 
         #========================
         elif name == 'GRID':
@@ -1510,11 +1546,19 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # sol
         msg.append('SOL %s\n' % self.sol)
         msg += self.grid.get_stats()
+
+        msg += self.crod.get_stats()
+        msg += self.prod.get_stats()
+        msg += self.conrod.get_stats()
+
         msg += self.elements_shell.get_stats()
         msg += self.properties_shell.get_stats()
+
+        msg += self.elements_solid.get_stats()
+        msg += self.properties_solid.get_stats()
+
         msg += self.materials.get_stats()
         
-
         # rejects
         if self.rejects:
             msg.append('Rejected Cards')
@@ -1548,7 +1592,6 @@ def _clean_comment(comment, end=-1):
                    '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
                    '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES']:
         comment = ''
-    #print('comment = %r' % comment)
     return comment
 
 

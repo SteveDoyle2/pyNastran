@@ -1,3 +1,7 @@
+from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+    double_or_blank, integer_double_or_blank, blank)
+
 class CROD(object):
     type = 'CROD'
     def __init__(self, model):
@@ -71,6 +75,12 @@ class CROD(object):
         else:
             return mass
         
+    def get_stats(self):
+        msg = []
+        if self.n:
+            msg.append('  %-8s: %i' % ('CROD', self.n))
+        return msg
+
     def write_bdf(self, f, size=8, pids=None):
         for (eid, pid, n12) in (self.eid, self.pid, self.node_ids):
             card = ['CROD', eid, pid, self.n12[0], n12[1] ]

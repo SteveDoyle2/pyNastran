@@ -17,9 +17,9 @@ class CTRIA3(object):
         if ncards:
             float_fmt = self.model.float
             #: Element ID
-            self.eid = zeros(ncards, 'int32')
+            self.element_id = zeros(ncards, 'int32')
             #: Property ID
-            self.pid = zeros(ncards, 'int32')
+            self.property_id = zeros(ncards, 'int32')
             #: Node IDs
             self.node_ids = zeros((ncards, 3), 'int32')
 
@@ -28,9 +28,9 @@ class CTRIA3(object):
             self.thickness = zeros((ncards, 3), float_fmt)
 
             for i, card in enumerate(cards):
-                self.eid[i] = integer(card, 1, 'eid')
+                self.element_id[i] = integer(card, 1, 'eid')
 
-                self.pid[i] = integer(card, 2, 'pid')
+                self.property_id[i] = integer(card, 2, 'pid')
 
                 self.node_ids[i] = [integer(card, 3, 'n1'),
                         integer(card, 4, 'n2'),
@@ -45,24 +45,24 @@ class CTRIA3(object):
                 #self.T1 = double_or_blank(card, 11, 'T1', 1.0)
                 #self.T2 = double_or_blank(card, 12, 'T2', 1.0)
                 #self.T3 = double_or_blank(card, 13, 'T3', 1.0)
-            i = self.eid.argsort()
-            self.eid = self.eid[i]
-            self.pid = self.pid[i]
+            i = self.element_id.argsort()
+            self.element_id = self.eid[i]
+            self.property_id = self.pid[i]
             self.node_ids = self.node_ids[i, :]
 
     def write_bdf(self, f, size=8, eids=None):
         if eids is None:
-            for (eid, pid, n123) in zip(self.eid, self.pid, self.node_ids):
+            for (eid, pid, n123) in zip(self.element_id, self.property_id, self.node_ids):
                 card = ['CTRIA3', eid, pid, n123[0], n123[1], n123[2]]
                 f.write(print_card(card, size=size))
         else:
             #eids.sort()
             #ie = eids.argsort()
             assert len(unique(eids))==len(eids), unique(eids)
-            i = searchsorted(self.eid, eids)
+            i = searchsorted(self.element_id, eids)
             
             iis = []
-            for ii, eid in enumerate(self.eid):
+            for ii, eid in enumerate(self.element_id):
                 if eid in eids:
                     iis.append(ii)
                 #else:
@@ -76,7 +76,7 @@ class CTRIA3(object):
             #print "ictria3 =", i, len(i), len(unique(i))
             #assert len(unique(i))==len(i), unique(i)
             #print "-------"
-            for (eid, pid, n123) in zip(self.eid[i], self.pid[i], self.node_ids[i]):
+            for (eid, pid, n123) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CTRIA3', eid, pid, n123[0], n123[1], n123[2]]
                 f.write(print_card(card, size=size))
 

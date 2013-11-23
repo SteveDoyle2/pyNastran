@@ -6,42 +6,30 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
 
-def area_centroid(n1, n2, n3, n4):
+def area_centroid(n1, n2, n3):
     """
-    Gets the area, :math:`A`, and centroid of a quad.::
+    Gets the area, :math:`A`, and centroid of a triangle.::
     
       1-----2
-      |   / |
-      | /   |
-      4-----3
+      |   /
+      | /
+      3
     """
     a = n1 - n2
-    b = n2 - n4
-    area1 = 0.5 * norm(cross(a, b), axis=1)
-    c1 = (n1 + n2 + n4) / 3.
-
-    a = n2 - n4
     b = n2 - n3
-    area2 = 0.5 * norm(cross(a, b), axis=1)
-    c2 = (n2 + n3 + n4) / 3.
+    area = 0.5 * norm(cross(a, b), axis=1)
+    centroid = (n1 + n2 + n3) / 3.
 
-    area = area1 + area2
-    try:
-        centroid = (c1 * area1 + c2 * area2) / area
-    except FloatingPointError:
-        msg = '\nc1=%r\narea1=%r\n' % (c1, area1)
-        msg += 'c2=%r\narea2=%r' % (c2, area2)
-        raise FloatingPointError(msg)
     return(area, centroid)
 
 
-class CHEXA8(object):
-    type = 'CHEXA8'
+class CPENTA6(object):
+    type = 'CPENTA6'
     def __init__(self, model):
         """
-        Defines the CHEXA8 object.
+        Defines the CPENTA6 object.
 
-        :param self: the CHEXA8 object
+        :param self: the CPENTA6 object
         :param model: the BDF object
         """
         self.model = model
@@ -62,7 +50,7 @@ class CHEXA8(object):
             float_fmt = self.model.float
             self.element_id = zeros(ncards, 'int32')
             self.property_id = zeros(ncards, 'int32')
-            self.node_ids = zeros((ncards, 8), 'int32')
+            self.node_ids = zeros((ncards, 6), 'int32')
             
             comments = {}
             for i, card in enumerate(cards):
@@ -76,8 +64,8 @@ class CHEXA8(object):
                 #: Property ID
                 self.property_id[i] = integer(card, 2, 'pid')
                 #: Node IDs
-                nids = fields(integer, card, 'nid', i=3, j=11)
-                assert len(card) == 11, 'len(CHEXA8 card) = %i' % len(card)
+                nids = fields(integer, card, 'nid', i=3, j=9)
+                assert len(card) == 9, 'len(CPENTA6 card) = %i' % len(card)
                 
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
@@ -106,26 +94,25 @@ class CHEXA8(object):
         n1 = xyz_cid0[self.node_ids[:, 0], :]
         n2 = xyz_cid0[self.node_ids[:, 1], :]
         n3 = xyz_cid0[self.node_ids[:, 2], :]
+
         n4 = xyz_cid0[self.node_ids[:, 3], :]
         n5 = xyz_cid0[self.node_ids[:, 4], :]
         n6 = xyz_cid0[self.node_ids[:, 5], :]
-        n7 = xyz_cid0[self.node_ids[:, 6], :]
-        n8 = xyz_cid0[self.node_ids[:, 7], :]
 
-        (A1, c1) = area_centroid(n1, n2, n3, n4)
-        (A2, c2) = area_centroid(n5, n6, n7, n8)
+        (A1, c1) = area_centroid(n1, n2, n3)
+        (A2, c2) = area_centroid(n4, n5, n6)
         
         return (A1, A2, c1, c2)
 
     def volume(self, eids=None, xyz_cid0=None, total=False):
         """
-        Gets the volume for one or more CHEXA elements.
+        Gets the volume for one or more CPENTA elements.
         
         :param eids: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed (default=False)
         
-        ..note:: Volume for a CHEXA is the average area of two opposing faces
+        ..note:: Volume for a CPENTA is the average area of two opposing faces
         times the length between the centroids of those points
         """
         (A1, A2, c1, c2) = self._area_centroid(self, eids, xyz_cid0=xyz_cid0)
@@ -137,13 +124,13 @@ class CHEXA8(object):
 
     def centroid_volume(self, eids=None, xyz_cid0=None, total=False):
         """
-        Gets the centroid and volume for one or more CHEXA elements.
+        Gets the centroid and volume for one or more CPENTA elements.
         
         :param eids: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed (default=False)
         
-        ..see:: CHEXA.volume() and CHEXA.centroid for more information.
+        ..see:: CPENTA.volume() and CPENTA.centroid for more information.
         """
         if eids is None:
             eids = self.element_id
@@ -163,7 +150,7 @@ class CHEXA8(object):
 
     def centroid(self, eids=None, xyz_cid0=None, total=False):
         """
-        Gets the centroid for one or more CHEXA elements.
+        Gets the centroid for one or more CPENTA elements.
         
         :param eids: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
@@ -178,7 +165,7 @@ class CHEXA8(object):
 
     def mass(self, eids=None, xyz_cid0=None, total=False):
         """
-        Gets the mass for one or more CHEXA elements.
+        Gets the mass for one or more CPENTA elements.
         
         :param eids: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
@@ -239,11 +226,11 @@ class CHEXA8(object):
     def write_bdf(self, f, size=8, eids=None):
         if eids is None:
             for (eid, pid, n) in zip(self.element_id, self.property_id, self.node_ids):
-                card = ['CHEXA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7]]
+                card = ['CPENTA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5]]
                 f.write(print_card(card))
         else:
             i = searchsorted(self.element_id, eids)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
-                card = ['CHEXA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7]]
+                card = ['CPENTA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5]]
                 f.write(print_card(card))
             

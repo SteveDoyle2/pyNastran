@@ -12,36 +12,15 @@ class PropertiesShell(object):
         """
         self.model = model
 
-        #: the list of PSHELL cards
-        self._pshell = []
-
-        #: the list of PCOMP cards
-        self._pcomp = []
-
-        #: the list of PSHEAR cards
-        self._pshear = []
-
-        self._pshell_comment = []
-        self._pcomp_comment = []
-        self._pshear_comment = []
-
         self.pshell = PSHELL(self.model)
         self.pcomp = PCOMP(self.model)
         self.pshear = PSHEAR(self.model)
 
     def build(self):
-        self.pshell.build(self._pshell)
-        self.pcomp.build(self._pcomp)
-        self.pshear.build(self._pshear)
+        self.pshell.build()
+        self.pcomp.build()
+        self.pshear.build()
         
-        self._pshell = []
-        self._pcomp = []
-        self._pshear = []
-
-        self._pshell_comment = []
-        self._pcomp_comment = []
-        self._pshear_comment = []
-
         npcomp = self.pcomp.n
         npshell = self.pshell.n
         npshear = self.pshear.n
@@ -61,20 +40,20 @@ class PropertiesShell(object):
         raise NotImplementedError()
 
     def add_pshell(self, card, comment):
-        self._pshell.append(card)
-        self._pshell_comment.append(comment)
+        self.pshell.add(card, comment)
 
     def add_pcomp(self, card, comment):
-        self._pcomp.append(card)
-        self._pcomp_comment.append(comment)
+        self.pcomp.add(card, comment)
 
     def add_pshear(self, card, comment):
-        self._pshear.append(card)
-        self._pshear_comment.append(comment)
+        self.pshear.add(card, comment)
+
+    def _get_types(self):
+        return [self.pshell, self.pcomp, self.pshear]
 
     def get_stats(self):
         msg = []
-        types = [self.pshell, self.pcomp, self.pshear]
+        types = self._get_types()
         for prop in types:
             nprop = prop.n
             if nprop:
@@ -98,6 +77,7 @@ class PropertiesShell(object):
         return t2
 
     def write_bdf(self, f, size=8, pids=None):
-        f.write('$PROPERTIES\n')
-        self.pshell.write_bdf(f, size=size, pids=pids)
-        self.pcomp.write_bdf(f, size=size, pids=pids)
+        f.write('$PROPERTIES_SHELL\n')
+        types = self._get_types()
+        for prop in types:
+            prop.write_bdf(f, size=size, pids=pids)

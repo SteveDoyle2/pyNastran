@@ -59,6 +59,12 @@ class PROD(object):
             self._prods = []
             self._prod_comments = []
         
+    def get_stats(self):
+        msg = []
+        if self.n:
+            msg.append('  %-8s: %i' % ('PROD', self.n))
+        return msg
+
     def write_bdf(self, f, size=8, pids=None):
         for (pid, mid, A, J, c, nsm) in zip(
              self.pid, self.A, self.J, self.c, self.nsm):

@@ -11,12 +11,12 @@ class XRefMesh(object):
         self.conrod.build()
         #self.elements_bar.build()
         self.elements_shell.build()
-        #self.elements_solid.build()
+        self.elements_solid.build()
 
         #self.properties_rod.build()
         self.prod.build()
         #self.properties_bar.build()
         self.properties_shell.build()
-        #self.properties_solid.build()
+        self.properties_solid.build()
 
         self.materials.build()

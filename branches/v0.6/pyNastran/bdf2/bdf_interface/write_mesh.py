@@ -70,32 +70,36 @@ class WriteMesh(object):
         ptypes = [self.properties_shell.pshell,
                   self.properties_shell.pcomp,
                   self.properties_shell.pshear,
-                  self.prod,]
+                  self.prod,
+                  self.properties_solid.psolid]
 
         n = 0
         pids_all = None
         pids_set = None
         for t in ptypes:
             if t.n and n == 0:
-                pids_all = t.pid
+                pids_all = t.property_id
                 n = 1
             elif t.n:
                 #print pids_all
-                print t.pid
-                pids_all = concatenate(pids_all, t.pid)
+                print t.property_id
+                pids_all = concatenate(pids_all, t.property_id)
         if pids_all is not None:
             pids_set = set(list(pids_all))
 
             n = 0
-            etypes = [self.elements_shell.ctria3]
+            etypes = (self.elements_shell._get_types() +
+                      self.elements_solid._get_types() +
+                      [self.crod,])
+
             for t in etypes:
                 if t.n and n == 0:
-                    eids = t.eid
-                    pids = t.pid
+                    eids = t.element_id
+                    pids = t.property_id
                     n = 1
                 elif t.n:
-                    eids = concatenate(eids, t.eid)
-                    pids = concatenate(pids, t.pid)
+                    eids = concatenate(eids, t.element_id)
+                    pids = concatenate(pids, t.property_id)
 
             elements_by_pid = {}
             pids_unique = unique(pids)
@@ -107,12 +111,14 @@ class WriteMesh(object):
                 eids2 = eids[i]
 
                 for t in ptypes:
-                    if t.n and pid in t.pid:
+                    if t.n and pid in t.property_id:
                         t.write_bdf(f, size=size, pids=[pid])
                         pids_set.remove(pid)
                 n = 0
                 for t in etypes:
-                    eids3 = intersect1d(t.eid, eids2, assume_unique=False)
+                    if not t.n:
+                        continue
+                    eids3 = intersect1d(t.element_id, eids2, assume_unique=False)
                     #print "eids3[pid=%s]" %(pid), eids3
                     if n == 0 and len(eids3):
                         elements_by_pid[pid] = eids3
@@ -133,7 +139,7 @@ class WriteMesh(object):
             f.write('$UNASSOCIATED_PROPERTIES\n')
             for pid in pids_list:
                 for t in ptypes:
-                    if t.n and pid in t.pid:
+                    if t.n and pid in t.property_id:
                         t.write_bdf(f, size=size, pids=[pid])
                     
         #..todo:: finish...
@@ -163,11 +169,11 @@ class WriteMesh(object):
             #self.properties_bars.write_bdf(f)
             #self.elements_bars.write_bdf(f)
 
-            self.properties_shell.write_bdf(f)
+            self.properties_shell.write_bdf(f, size)
             self.elements_shell.write_bdf(f)
 
-            #self.elements_solids.write_bdf(f)
-            #self.properties_solids.write_bdf(f)
+            self.properties_solids.write_bdf(f, size)
+            self.elements_solids.write_bdf(f)
         self.conrod.write_bdf(f, size)
 
         self.materials.write_bdf(f, size)

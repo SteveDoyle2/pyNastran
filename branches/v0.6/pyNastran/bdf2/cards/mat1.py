@@ -78,10 +78,10 @@ class MAT1(object):
 
     def write_bdf(self, f, size=8, mids=None):
         assert mids is None
-        Rho  = ['' if rhoi  == 0.0 else rhoi for rhoi  in self.rho]
-        A    = ['' if ai    == 0.0 else ai   for ai    in self.a]
-        TRef = ['' if trefi == 0.0 else tefi for trefi in self.TRef]
-        ge   = ['' if gei   == 0.0 else gei  for gei   in self.ge]
+        Rho  = ['' if rhoi  == 0.0 else rhoi  for rhoi  in self.rho]
+        A    = ['' if ai    == 0.0 else ai    for ai    in self.a]
+        TRef = ['' if trefi == 0.0 else trefi for trefi in self.TRef]
+        ge   = ['' if gei   == 0.0 else gei   for gei   in self.ge]
         
         card = ['$MAT1', 'mid', 'E', 'G', 'nu', 'rho', 'a', 'TRef', 'ge']
         f.write(print_card(card, size=size))

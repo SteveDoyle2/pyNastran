@@ -10,8 +10,15 @@ class PCOMP(object):
         """
         self.model = model
         self.n = 0
+        self._cards = []
+        self._comments = []
 
-    def build(self, cards):
+    def add(self, card, comment):
+        self._cards.append(card)
+        self._comments.append(comment)
+
+    def build(self):
+        cards = self._cards
         ncards = len(cards)
         self.n = ncards
         if ncards:
@@ -27,6 +34,8 @@ class PCOMP(object):
 
             if len(unique_pids) != len(self.pid):
                 raise RuntimeError('There are duplicate PSHELL IDs...')
+            self._cards = []
+            self._comments = []
         
     def write_bdf(self, f, size=8, pids=None):
         pass
