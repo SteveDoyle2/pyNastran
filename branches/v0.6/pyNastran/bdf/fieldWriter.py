@@ -30,7 +30,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 import warnings
-from numpy import allclose, isinf
+from numpy import allclose, isinf, float32
 from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.utils import is_string
 
@@ -110,6 +110,7 @@ def print_float_8(value):
     Prints a float in nastran 8-character width syntax using the
     highest precision possbile.
     """
+    value = float(value)
     if value == 0.0:
         return '%8s' %('0.')
     elif value > 0.:  # positive, not perfect...
@@ -212,11 +213,12 @@ def print_field(value):
     """
     if isinstance(value, int):
         field = "%8s" % value
-    elif isinstance(value, float):
+    elif isinstance(value, float) or isinstance(value, float32):
         field = print_float_8(value)
     elif value is None:
         field = "        "
     else:
+        #print(type(value))
         field = "%8s" % value
     if len(field) != 8:
         msg = 'field=|%s| is not 8 characters long...rawValue=|%s|' % (field,
