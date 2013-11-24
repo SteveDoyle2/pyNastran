@@ -1,9 +1,9 @@
-from numpy import dot, cross, abs
+from numpy import zeros, unique, dot, cross, abs, searchsorted
 from pyNastran.utils.mathematics import norm_axis as norm
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank)
+    double_or_blank, integer_double_or_blank, blank, fields)
 
 
 def area_centroid(n1, n2, n3):

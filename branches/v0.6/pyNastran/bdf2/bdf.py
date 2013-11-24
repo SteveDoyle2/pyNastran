@@ -12,6 +12,7 @@ import os
 import sys
 import warnings
 import traceback
+from collections import defaultdict
 
 
 from pyNastran.utils import list_print, is_string, object_attributes
@@ -20,6 +21,9 @@ from pyNastran.utils.gui_io import load_file_dialog
 
 
 from .cards.coord import Coord
+from .cards.load import LOAD
+
+
 #from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 #from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
 #                                          PRAC2D, PRAC3D, PCONEAX)
@@ -437,17 +441,18 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: stores SPOINT, GRID cards
         self.nodes = {}
         
+        model = self
         from .cards.grid import GRID
         from .cards.spoint import SPOINT
-        self.grid = GRID(self)
-        self.spoint = SPOINT(self)
+        self.grid = GRID(model)
+        self.spoint = SPOINT(model)
         
         self.coords = {0 : CORD2R() }
         
         #: stores POINT cards
         self.points = {}
         #self.grids = {}
-        self.spoints = None
+        #self.spoints = None
         #self.epoints = None
         #: stores GRIDSET card
         self.gridSet = None
@@ -463,37 +468,55 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.properties = {}
         
         from .cards.properties_shell import PropertiesShell
-        #self.properties_spring = PropertiesSpring(self)
-        #self.proeprties_rod = PropertiesRod(self)
-        #self.properties_bar = PropertiesBar(self)
-        self.properties_shell = PropertiesShell(self)
-        #self.properties_solid = PropertiesSolid(self)
+        #self.properties_spring = PropertiesSpring(model)
+        #self.proeprties_rod = PropertiesRod(v)
+        #self.properties_bar = PropertiesBar(model)
+        self.properties_shell = PropertiesShell(model)
+        #self.properties_solid = PropertiesSolid(model)
         
         from .cards.elements_shell import ElementsShell
-        #self.elements_spring = ElementsSpring(self)
-        #self.elements_rod = ElementsRod(self)
-        #self.elements_bar = ElementsBar(self)
-        self.elements_shell = ElementsShell(self)
-        #self.elements_solid = ElementsSolid(self)
+        #self.elements_spring = ElementsSpring(model)
+        #self.elements_rod = ElementsRod(model)
+        #self.elements_bar = ElementsBar(model)
+        self.elements_shell = ElementsShell(model)
+        #self.elements_solid = ElementsSolid(model)
 
         #from .cards.rods import CROD, CONROD, PROD
         from .cards.crod import CROD
         from .cards.conrod import CONROD
         from .cards.prod import PROD
-        self.conrod = CONROD(self)
-        self.prod = PROD(self)
-        self.crod = CROD(self)
+        self.conrod = CONROD(model)
+        self.prod = PROD(model)
+        self.crod = CROD(model)
         
         from .cards.elements_solid import ElementsSolid
         from .cards.properties_solid import PropertiesSolid
         self.elements_solid = ElementsSolid(self)
         self.properties_solid = PropertiesSolid(self)
 
+        #===================================
+        # loads
+        #from .cards.loadcase import LoadCase
+        #from .cards.loadset import LOADSET
+        from .cards.force import FORCE
+        from .cards.moment import MOMENT
+        #self.loadcase = LoadCase(model)
+
+        self.load = defaultdict(list)
+        self.dload = defaultdict(list)
+        #self.loadset = LOADSET(model)
+        
+        self.force = FORCE(model)
+        #self.force1 = FORCE1(model)
+        #self.force2 = FORCE2(model)
+        self.moment = MOMENT(model)
+        #self.moment1 = MOMENT1(model)
+        #self.moment2 = MOMENT2(model)
 
         #: stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
         #self.materials = {}
         from .cards.materials import Materials
-        self.materials = Materials(self)
+        self.materials = Materials(model)
         
         #: stores MATS1
         self.materialDeps = {}
@@ -502,12 +525,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         # loads
         #: stores LOAD, FORCE, MOMENT, etc.
-        self.loads = {}
+        #self.loads = {}
         #self.gusts  = {} # Case Control GUST = 100
         #self.random = {} # Case Control RANDOM = 100
 
         #: stores coordinate systems
-        self.coord = Coord(self)
+        self.coord = Coord(model)
 
         # --------------------------- constraints ----------------------------
         #: stores SUPORT1s
@@ -662,18 +685,19 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(self.elements.iteritems()):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
-        for key, card in sorted(self.properties.iteritems()):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
+        if 0:
+            for key, card in sorted(self.elements.iteritems()):
+                try:
+                    card._verify(xref)
+                except:
+                    print(str(card))
+                    raise
+            for key, card in sorted(self.properties.iteritems()):
+                try:
+                    card._verify(xref)
+                except:
+                    print(str(card))
+                    raise
         self.materials._verify(xref)
 
     def read_bdf(self, bdf_filename=None, include_dir=None, xref=True, punch=False):
@@ -936,7 +960,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             if 'BEGIN' in lineUpper and (('BULK' in lineUpper) or ('SUPER' in lineUpper)):
                 self.log.debug('found the end of the Case Control Deck!')
                 break
-        self.log.info("finished with Case Control Deck..")
+        self.log.info("finished with Case Control Deck...")
 
         #for line in self.case_control_lines:
             #print "** line=|%r|" %(line)
@@ -1421,9 +1445,22 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # function that gets by name the initialized object (from global scope)
         
         name = card[0]
+        #========================
         if name == 'PARAM':
             param = PARAM(card_obj, comment=comment)
             self.add_PARAM(param)
+        #========================
+        elif name == 'BCRPARA':
+            pass
+        elif name == 'BCTADD':
+            pass
+        elif name == 'BCTSET':
+            pass
+        elif name == 'BSURFS':
+            pass
+        elif name == 'BSURF':
+            #self.bsurf.add(card_obj, comment=comment)
+            pass
 
         #========================
         # elements_shell
@@ -1445,27 +1482,39 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.properties_shell.add_pshell(card_obj, comment=comment)
         elif name == 'PCOMP':
             self.properties_shell.add_pcomp(card_obj, comment=comment)
+        elif name == 'PCOMPG':
+            #self.properties_shell.add_pcompg(card_obj, comment=comment)
+            pass
         elif name == 'PSHEAR':
             self.properties_shell.add_pshear(card_obj, comment=comment)
+
+
+        #========================
+        # rotation elements/loads
+        elif name == 'CTRIAX6':
+            #self.elements_shell.add_ctria6x(card_obj, comment=comment)
+            pass
+        elif name == 'PLOADX1':
+            #self.elements_shell.add_ctria6x(card_obj, comment=comment)
+            pass
 
         #========================
         # elements_solid
         elif name == 'CTETRA':
             if len(card) == 7:
                 self.elements_solid.add_ctetra4(card_obj, comment=comment)
-            else:
-                print('len(CTETRA) =', len(card_obj))
-                aaa
-                self.elements_solid.add_ctetra10(card_obj, comment=comment)
+            else: # 13
+                pass
+                #self.elements_solid.add_ctetra10(card_obj, comment=comment)
         elif name == 'CPENTA':
-            if len(card) == 1:
+            if len(card) == 9:
                 self.elements_solid.add_cpenta6(card_obj, comment=comment)
             else:
                 print('len(CPENTA) =', len(card_obj))
                 bbb
                 self.elements_solid.add_cpenta15(card_obj, comment=comment)
         elif name == 'CHEXA':
-            if len(card) == 1:
+            if len(card) == 11:
                 self.elements_solid.add_chexa8(card_obj, comment=comment)
             else:
                 print('len(CHEXA) =', len(card_obj))
@@ -1474,6 +1523,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         elif name == 'PSOLID':
             self.properties_solid.add_psolid(card_obj, comment=comment)
+        elif name == 'PLSOLID':
+            #self.properties_solid.add_plsolid(card_obj, comment=comment)
+            pass
         #========================
         # conrod/rod
         elif name == 'CROD':
@@ -1482,17 +1534,170 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.conrod.add(card_obj, comment=comment)
         elif name == 'PROD':
             self.prod.add(card_obj, comment=comment)
+
         #========================
+        # design_variables
+        elif name == 'DESVAR':
+            #self.prod.add(card_obj, comment=comment)
+            pass
+        elif name == 'DVPREL1':
+            pass
+        elif name == 'DRESP1':
+            pass
+        
+        #========================
+        #aero...
+        elif name == 'MONPNT1':
+            pass
+        elif name == 'AECOMP':
+            pass
+        elif name == 'AELINK':
+            pass
+        elif name == 'AESTAT':
+            pass
+        elif name == 'AESURF':
+            pass
+        #elif name == 'AESURFS':
+            #pass
+        elif name == 'AELIST':
+            pass
+        elif name == 'AERO':
+            #self.paero.add_paero1(card_obj, comment=comment)
+            pass
+        elif name == 'AEROS':
+            #self.paero.add_paero1(card_obj, comment=comment)
+            pass
+        #========================
+        elif name == 'SET1':
+            pass
+        #========================
+        elif name == 'SPLINE1':
+            pass
+        elif name == 'SPLINE2':
+            pass
+        #elif name == 'SPLINE3':
+            #pass
+        #elif name == 'SPLINE5':
+            #pass
+        #========================
+        # caero/paero
+        elif name == 'CAERO1':
+            #self.caero.add_aero1(card_obj, comment=comment)
+            pass
+        elif name == 'PAERO1':
+            #self.paero.add_paero1(card_obj, comment=comment)
+            pass
+        elif name == 'TRIM':
+            #self.trim.add(card_obj, comment=comment)
+            pass
+        #========================
+        # bush
+        elif name == 'CBUSH1D':
+            #self.cbush1d.add(card_obj, comment=comment)
+            pass
+        elif name == 'CBUSH':
+            #self.cbush.add(card_obj, comment=comment)
+            pass
+        elif name == 'PBUSH':
+            #self.pbush.add(card_obj, comment=comment)
+            pass
+
+        #========================
+        # fast
+        elif name == 'PFAST':
+            #self.pfast.add(card_obj, comment=comment)
+            pass
+        #========================
+        # springs
+        elif name == 'PELAS':
+            pass
+        elif name == 'CELAS1':
+            pass
+        elif name == 'CELAS2':
+            pass
+        elif name == 'CELAS3':
+            pass
+        elif name == 'CELAS4':
+            pass
+        #========================
+        # dampers
+        elif name == 'PDAMP':
+            pass
+        elif name == 'PDAMPT':
+            pass
+        #elif name == 'CDAMP':
+            #pass
+        
+        #========================
+        # bars/beams
+        elif name == 'CBAR':
+            #self.cbar.add(card_obj, comment=comment)
+            pass
+        elif name == 'CBEAM':
+            #self.cbeam.add(card_obj, comment=comment)
+            pass
+        elif name == 'PBAR':
+            #self.pbar.add(card_obj, comment=comment)
+            pass
+        elif name == 'PBARL':
+            #self.pbarl.add(card_obj, comment=comment)
+            pass
+        elif name == 'PBEAM':
+            #self.pbeam.add(card_obj, comment=comment)
+            pass
+        elif name == 'PBEAML':
+            #self.pbeaml.add(card_obj, comment=comment)
+            pass
+        #========================
+        # bars/beams
+        elif name == 'CONM2':
+            #self.conm2.add(card_obj, comment=comment)
+            pass
+        #========================
+        elif name == 'DLOAD':
+            load = DLOAD(self)
+            load.add_from_bdf(card_obj, comment=comment)
+            self.dload[load.load_id].append(load)
         elif name == 'LOAD':
+            load = LOAD(self)
+            load.add_from_bdf(card_obj, comment=comment)
+            self.load[load.load_id].append(load)
             #self.load.add(card_obj, comment=comment)
             pass
         elif name == 'FORCE':
-            #self.force.add(card_obj, comment=comment)
-            pass
+            self.force.add(card_obj, comment=comment)
+        elif name == 'FORCE1':
+            self.force1.add(card_obj, comment=comment)
+        elif name == 'FORCE2':
+            self.force2.add(card_obj, comment=comment)
         elif name == 'MOMENT':
-            #self.moment.add(card_obj, comment=comment)
+            self.moment.add(card_obj, comment=comment)
+        elif name == 'MOMENT1':
+            self.moment1.add(card_obj, comment=comment)
+        elif name == 'MOMENT2':
+            self.moment2.add(card_obj, comment=comment)
+        elif name == 'PLOAD':
+            #self.pload.add(card_obj, comment=comment)
+            pass
+        elif name == 'PLOAD4':
+            #self.pload4.add(card_obj, comment=comment)
+            pass
+        elif name == 'GRAV':
+            pass
+        elif name == 'RFORCE':
+            pass
+
+
+        #========================
+        # spc
+        elif name == 'MPCADD':
+            #self.mpcadd.add(card_obj, comment=comment)
+            pass
+        elif name == 'MPC':
+            #self.mpc.add(card_obj, comment=comment)
             pass
         #========================
+        # spc
         elif name == 'SPCADD':
             #self.spcadd.add(card_obj, comment=comment)
             pass
@@ -1503,19 +1708,77 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             #self.spc1.add(card_obj, comment=comment)
             pass
         #========================
+        elif name == 'SUPORT':
+            #self.suport.add(card_obj, comment=comment)
+            pass
+        elif name == 'SUPORT1':
+            #self.suport1.add(card_obj, comment=comment)
+            pass
+        #========================
+        # freq
+        elif name == 'EIGRL':
+            pass
+        elif name == 'EIGC':
+            pass
 
-
+        #========================
         elif name == 'MAT1':
             self.materials.add_mat1(card_obj, comment=comment)
             #self.mat1.add(card_obj, comment=comment)
         elif name == 'MATS1':
-            self.materials.add_mats1(card_obj, comment=comment)
+            #self.materials.add_mats1(card_obj, comment=comment)
+            pass
+        elif name == 'MAT4':
+            self.materials.add_mat4(card_obj, comment=comment)
+        elif name == 'MAT8':
+            #self.materials.add_mat8(card_obj, comment=comment)
+            pass
+        elif name == 'MAT10':
+            self.materials.add_mat10(card_obj, comment=comment)
 
+        #========================
+        elif name == 'TABLES1':
+            #self.materials.add_mats1(card_obj, comment=comment)
+            pass
+
+        #========================
+        elif name == 'RBAR':
+            pass
+        elif name == 'RBE2':
+            pass
+        elif name == 'RBE3':
+            pass
+        #========================
+        elif name == 'CORD1R':
+            pass
+        elif name == 'CORD1C':
+            pass
+        elif name == 'CORD1S':
+            pass
+
+        elif name == 'CORD2R':
+            pass
+        elif name == 'CORD2C':
+            pass
+        elif name == 'CORD2S':
+            pass
+
+        #========================
+        elif name == 'ACMODL':
+            pass
         #========================
         elif name == 'GRID':
             self.grid.add(card_obj, comment=comment)
         elif name == 'SPOINT':
             self.spoint.add(card_obj, comment=comment)
+        #========================
+        elif name == 'NLPARM':
+            #self.nlparm.add(card_obj, comment=comment)
+            pass
+        elif name == 'NLPCI':
+            #self.nlpci.add(card_obj, comment=comment)
+            pass
+        #========================
         else:
             raise NotImplementedError(name)
         return

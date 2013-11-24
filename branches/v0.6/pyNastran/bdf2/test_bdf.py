@@ -299,17 +299,18 @@ def compute(cards1, cards2):
 
 def get_element_stats(fem1, fem2):
     """verifies that the various element methods work"""
-    for (key, loads) in sorted(fem1.loads.iteritems()):
-        for load in loads:
-            try:
-                allLoads = load.getLoads()
-                if not isinstance(allLoads, list):
-                    raise TypeError('allLoads should return a list...%s'
-                                    % (type(allLoads)))
-            except:
-                print("load statistics not available - load.type=%s "
-                      "load.sid=%s" % (load.type, load.sid))
-                raise
+    if 0:
+        for (key, loads) in sorted(fem1.loads.iteritems()):
+            for load in loads:
+                try:
+                    allLoads = load.getLoads()
+                    if not isinstance(allLoads, list):
+                        raise TypeError('allLoads should return a list...%s'
+                                        % (type(allLoads)))
+                except:
+                    print("load statistics not available - load.type=%s "
+                          "load.sid=%s" % (load.type, load.sid))
+                    raise
 
     fem1._verify_bdf()
 

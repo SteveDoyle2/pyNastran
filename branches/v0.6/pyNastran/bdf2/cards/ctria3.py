@@ -10,8 +10,15 @@ class CTRIA3(object):
     def __init__(self, model):
         self.model = model
         self.n = 0
+        self._cards = []
+        self._comments = []
 
-    def build(self, cards):
+    def add(self, card, comment):
+        self._cards.append(card)
+        self._comments.append(comment)
+
+    def build(self):
+        cards = self._cards
         ncards = len(cards)
         self.n = ncards
         if ncards:
@@ -46,38 +53,22 @@ class CTRIA3(object):
                 #self.T2 = double_or_blank(card, 12, 'T2', 1.0)
                 #self.T3 = double_or_blank(card, 13, 'T3', 1.0)
             i = self.element_id.argsort()
-            self.element_id = self.eid[i]
-            self.property_id = self.pid[i]
+            self.element_id = self.element_id[i]
+            self.property_id = self.property_id[i]
             self.node_ids = self.node_ids[i, :]
+            self._cards = []
+            self._comments = []
 
     def write_bdf(self, f, size=8, eids=None):
         if eids is None:
-            for (eid, pid, n123) in zip(self.element_id, self.property_id, self.node_ids):
-                card = ['CTRIA3', eid, pid, n123[0], n123[1], n123[2]]
+            for (eid, pid, n) in zip(self.element_id, self.property_id, self.node_ids):
+                card = ['CTRIA3', eid, pid, n[0], n[1], n[2]]
                 f.write(print_card(card, size=size))
         else:
-            #eids.sort()
-            #ie = eids.argsort()
             assert len(unique(eids))==len(eids), unique(eids)
             i = searchsorted(self.element_id, eids)
-            
-            iis = []
-            for ii, eid in enumerate(self.element_id):
-                if eid in eids:
-                    iis.append(ii)
-                #else:
-                    #print 'eid', eid
-                    #asdf
-            #iis = array(iis)
-            #print "i =", i
-            #print "iis =", iis
-            assert sum(i - iis) == 0
-            #i = iis
-            #print "ictria3 =", i, len(i), len(unique(i))
-            #assert len(unique(i))==len(i), unique(i)
-            #print "-------"
-            for (eid, pid, n123) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
-                card = ['CTRIA3', eid, pid, n123[0], n123[1], n123[2]]
+            for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
+                card = ['CTRIA3', eid, pid, n[0], n[1], n[2]]
                 f.write(print_card(card, size=size))
 
 

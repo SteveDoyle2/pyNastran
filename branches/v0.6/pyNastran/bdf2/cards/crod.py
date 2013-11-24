@@ -1,3 +1,5 @@
+from numpy import zeros, unique, searchsorted
+
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
@@ -13,44 +15,45 @@ class CROD(object):
         """
         self.model = model
         self.n = 0
-        self._crod = []
-        self._crod_comments = []
+        self._cards = []
+        self._comments = []
 
     def add(self, card, comment=None):
-        self._crod.append(card)
-        self._crod_comment.append(comment)
+        self._cards.append(card)
+        self._comments.append(comment)
 
     def build(self):
         """
         :param self: the CROD object
         :param cards: the list of PCOMP cards
         """
-        cards = self._crod
+        cards = self._cards
         ncards = len(cards)
         self.n = ncards
         if ncards:
             #: Property ID
-            self.eid = zeros(ncards, 'int32')
-            self.pid = zeros(ncards, 'int32')
+            self.element_id = zeros(ncards, 'int32')
+            self.property_id = zeros(ncards, 'int32')
             self.node_ids = zeros((ncards, 2), 'int32')
 
             for i, card in enumerate(cards):
-                self.eid[i] = integer(card, 1, 'eid')
-                self.pid[i] = integer_or_blank(card, 2, 'pid', self.eid)
-                self.node_ids = [integer(card, 3, 'n1'),
+                self.element_id[i] = integer(card, 1, 'eid')
+                self.property_id[i] = integer_or_blank(card, 2, 'pid', self.element_id[i])
+                self.node_ids[i] = [integer(card, 3, 'n1'),
                                  integer(card, 4, 'n2')]
                 assert len(card) == 5, 'len(CROD card) = %i' % len(card)
 
-            i = self.eid.argsort()
-            self.eid = self.eid[i]
-            self.pid = self.pid[i]
+            i = self.element_id.argsort()
+            print "i", i, type(i)
+            self.element_id = self.element_id[i]
+            self.property_id = self.property_id[i]
             self.node_ids = self.node_ids[i, :]
 
-            unique_eids = unique(self.eid)
-            if len(unique_eids) != len(self.eid):
+            unique_eids = unique(self.element_id)
+            if len(unique_eids) != len(self.element_id):
                 raise RuntimeError('There are duplicate CROD IDs...')
-            self._crod = []
-            self._crod_comments = []
+            self._cards = []
+            self._comments = []
         
     def mass(self, total=False):
         """
@@ -81,7 +84,7 @@ class CROD(object):
             msg.append('  %-8s: %i' % ('CROD', self.n))
         return msg
 
-    def write_bdf(self, f, size=8, pids=None):
-        for (eid, pid, n12) in (self.eid, self.pid, self.node_ids):
-            card = ['CROD', eid, pid, self.n12[0], n12[1] ]
+    def write_bdf(self, f, size=8, eids=None):
+        for (eid, pid, n) in zip(self.element_id, self.property_id, self.node_ids):
+            card = ['CROD', eid, pid, n[0], n[1] ]
             f.write(print_card(card))

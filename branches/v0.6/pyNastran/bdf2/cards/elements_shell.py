@@ -1,4 +1,5 @@
 from .ctria3 import CTRIA3
+from .cquad4 import CQUAD4
 
 
 class ElementsShell(object):
@@ -12,14 +13,13 @@ class ElementsShell(object):
         self.model = model
 
         self.ctria3 = CTRIA3(self.model)
-        #self.cquad4 = CQUAD4(self.model)
+        self.cquad4 = CQUAD4(self.model)
         #self.cquad8 = CQUAD8(self.model)
 
     def build(self):
         types = self._get_types()
         for elems in types:
-            if elems.n:
-                elems.build()
+            elems.build()
             
         #eid = concatenate(pshell.pid, pcomp.pid)
         #unique_eids = unique(eid)
@@ -54,7 +54,7 @@ class ElementsShell(object):
             element.write_bdf(f, size=size, eids=eids)
 
     def _get_types(self):
-        types = [self.ctria3]  # cquad4, cquad8
+        types = [self.ctria3, self.cquad4] #, cquad8
         return types
 
     def get_stats(self):

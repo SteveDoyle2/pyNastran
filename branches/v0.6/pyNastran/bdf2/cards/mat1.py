@@ -22,13 +22,20 @@ class MAT1(object):
     type = 'MAT1'
     def __init__(self, model):
         self.model = model
+        self._cards = []
+        self._comments = []
 
-    def build(self, cards):
+    def add(self, card, comment):
+        self._cards.append(card)
+        self._comments.append(comment)
+        
+    def build(self):
+        cards = self._cards
         ncards = len(cards)
         self.n = ncards
         if ncards:
             float_fmt = self.model.float
-            self.mid = zeros(ncards, 'int32')
+            self.material_id = zeros(ncards, 'int32')
             self.rho = zeros(ncards, float_fmt)
             self.E = zeros(ncards, float_fmt)
             self.G = zeros(ncards, float_fmt)
@@ -44,7 +51,7 @@ class MAT1(object):
             for (i, card) in enumerate(cards):
                 #if comment:
                 #    self._comment = comment
-                self.mid[i] = integer(card, 1, 'mid')
+                self.material_id[i] = integer(card, 1, 'mid')
                 self.set_E_G_nu(i, card)
                 self.rho[i] = double_or_blank(card, 5, 'rho', 0.)
                 self.a[i] = double_or_blank(card, 6, 'a', 0.0)
@@ -56,8 +63,8 @@ class MAT1(object):
                 self.mcsid[i] = integer_or_blank(card, 12, 'Mcsid', 0)
                 assert len(card) <= 13, 'len(MAT1 card) = %i' % len(card)
 
-            i = self.mid.argsort()
-            self.mid = self.mid[i]
+            i = self.material_id.argsort()
+            self.material_id = self.material_id[i]
             self.E = self.E[i]
             self.G = self.G[i]
             self.rho = self.rho[i]
@@ -68,48 +75,52 @@ class MAT1(object):
             self.Sc = self.Sc[i]
             self.Ss = self.Ss[i]
             self.mcsid = self.mcsid[i]
+            self._cards = []
+            self._comments = []
     
     def _G_default(self, E, G, nu):
-        if G == 0.0 or self.nu == 0.0:
+        if G == 0.0 or nu == 0.0:
             pass
         else:
             G = E / 2. / (1 + nu)
         return G
 
     def write_bdf(self, f, size=8, mids=None):
-        assert mids is None
-        Rho  = ['' if rhoi  == 0.0 else rhoi  for rhoi  in self.rho]
-        A    = ['' if ai    == 0.0 else ai    for ai    in self.a]
-        TRef = ['' if trefi == 0.0 else trefi for trefi in self.TRef]
-        ge   = ['' if gei   == 0.0 else gei   for gei   in self.ge]
-        
-        card = ['$MAT1', 'mid', 'E', 'G', 'nu', 'rho', 'a', 'TRef', 'ge']
-        f.write(print_card(card, size=size))
-        card = ['$', 'st', 'sc', 'ss', 'mcsid']
-        f.write(print_card(card, size=size))
-        for (mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid) in zip(
-             self.mid, self.E, self.G, self.nu, Rho, A,
-             TRef, ge, self.St, self.Sc, self.Ss, self.mcsid):
+        if self.n:
+            assert mids is None
+            print "n = ", self.n
+            print "mids MAT1", self.material_id
+            Rho  = ['' if rhoi  == 0.0 else rhoi  for rhoi  in self.rho]
+            A    = ['' if ai    == 0.0 else ai    for ai    in self.a]
+            TRef = ['' if trefi == 0.0 else trefi for trefi in self.TRef]
+            ge   = ['' if gei   == 0.0 else gei   for gei   in self.ge]
 
-            #Gdefault = self.getG_default()
-            #G = set_blank_if_default(self.g, Gdefault)
-            G = self._G_default(E, G, nu)
-            #rho = set_blank_if_default(rho, 0.)
-            #a = set_blank_if_default(a, 0.)
-            #TRef = set_blank_if_default(TRef, 0.)
-            #ge = set_blank_if_default(ge, 0.)
-            st = set_blank_if_default(st, 0.)
-            sc = set_blank_if_default(sc, 0.)
-            ss = set_blank_if_default(ss, 0.)
-            mcsid = set_blank_if_default(mcsid, 0)
-            card = ['MAT1', mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid]
+            card = ['$MAT1', 'mid', 'E', 'G', 'nu', 'rho', 'a', 'TRef', 'ge']
             f.write(print_card(card, size=size))
+            card = ['$', 'st', 'sc', 'ss', 'mcsid']
+            f.write(print_card(card, size=size))
+            for (mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid) in zip(
+                 self.material_id, self.E, self.G, self.nu, Rho, A,
+                 TRef, ge, self.St, self.Sc, self.Ss, self.mcsid):
+
+                #Gdefault = self.getG_default()
+                #G = set_blank_if_default(self.g, Gdefault)
+                G = self._G_default(E, G, nu)
+                #rho = set_blank_if_default(rho, 0.)
+                #a = set_blank_if_default(a, 0.)
+                #TRef = set_blank_if_default(TRef, 0.)
+                #ge = set_blank_if_default(ge, 0.)
+                st = set_blank_if_default(st, 0.)
+                sc = set_blank_if_default(sc, 0.)
+                ss = set_blank_if_default(ss, 0.)
+                mcsid = set_blank_if_default(mcsid, 0)
+                card = ['MAT1', mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid]
+                f.write(print_card(card, size=size))
         
     def reprFields(self, mid):
-        i = where(self.mid == mid)[0]
-        assert len(i) == 1, i
+        i = where(self.material_id == mid)[0]
         i = i[0]
-        card = ['MAT1', self.mid[i], self.E[i], self.G[i], self.nu[i],
+        card = ['MAT1', self.material_id[i], self.E[i], self.G[i], self.nu[i],
                         self.rho[i], self.a[i], self.TRef[i], self.ge[i],
                         self.St[i], self.Sc[i], self.Ss[i], self.mcsid[i]]
         return card
