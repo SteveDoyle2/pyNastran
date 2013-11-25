@@ -1,3 +1,5 @@
+from numpy import array, unique, concatenate, intersect1d, where
+
 class WriteMesh(object):
     def __init__(self):
         pass
@@ -65,8 +67,6 @@ class WriteMesh(object):
         eids_written = []
         #pids = sorted(self.properties.keys())
         
-        from numpy import array, unique, concatenate, intersect1d, where
-
         ptypes = [self.properties_shell.pshell,
                   self.properties_shell.pcomp,
                   self.properties_shell.pshear,
@@ -94,15 +94,22 @@ class WriteMesh(object):
                 except ValueError:
                     pids_all = array(list(pids_all) + list(t.property_id))
 
-        if pids_all is not None:
+        etypes = (self.elements_shell._get_types() +
+                  self.elements_solid._get_types() +
+                  [self.crod,])
+        if pids_all is None:
+            f.write('$MISSING_ELEMENTS because there are no properties\n')
+            for t in etypes:
+                #print "t.type =", t.type
+                t.write_bdf(f, size=size)
+            #self.conrod.write_bdf(f, size=size)
+        else:
             pids_set = set(list(pids_all))
 
             n = 0
-            etypes = (self.elements_shell._get_types() +
-                      self.elements_solid._get_types() +
-                      [self.crod,])
             pids = None
             for t in etypes:
+                #print "t.type =", t.type
                 if t.n and n == 0:
                     eids = t.element_id
                     pids = t.property_id
@@ -184,8 +191,9 @@ class WriteMesh(object):
                 for t in ptypes:
                     if t.n and pid in t.property_id:
                         t.write_bdf(f, size=size, pids=[pid])
-                    
+            
         #..todo:: finish...
+        f.write('$MISSING_ELEMENTS...todo...finish\n')
         # missing elements...
 
     def write_bdf(self, bdf_filename, interspersed=True, size=8):
@@ -220,8 +228,34 @@ class WriteMesh(object):
         self.conrod.write_bdf(f, size)
         self._write_loads(f, size)
         self.materials.write_bdf(f, size)
+        self._write_constraints(f, size)
         f.write(self._write_rejects(size))
         f.write('ENDDATA\n')
+
+    def _write_constraints(self, f, size):
+        spcs = [self.spcadd, self.spc, self.spcd, self.spc1]
+        mpcs = [self.mpcadd, self.mpc]
+        self._write_constraints_spc_mpc(f, size, spcs)
+        self._write_constraints_spc_mpc(f, size, mpcs)
+
+    def _write_constraints_spc_mpc(self, f, size, types):
+        interspersed = False
+        if interspersed:
+            raise NotImplementedError()
+        else:
+            ids = []
+            for t in types:
+                ids += t.iterkeys()
+            ids = unique(ids)
+            ids.sort()
+            if len(ids) > 0:
+                f.write('$CONSTRAINTS\n')
+                for ID in ids:
+                    for t in types:
+                        for constraint_id, constraint in sorted(t.iteritems()):
+                            if ID == constraint_id:
+                                constraint.write_bdf(f, size=size)
+
 
     def _write_loads(self, f, size, interspersed=False):
         #self.loadcase.write_bdf(f, size)

@@ -26,6 +26,16 @@ class XRefMesh(object):
         self.materials.build()
         
         self._build_loads()
+        self._build_constraints()
+
+    def _build_constraints(self):
+        for t in [self.spcadd, self.spc, self.spc1, self.spcd]:
+            for constraint_id, constraint in t.iteritems():
+                constraint.build()
+
+        for t in [self.mpcadd, self.mpc]:
+            for constraint_id, constraint in t.iteritems():
+                constraint.build()
 
     def _build_loads(self):
         #self.loadcase.build()
@@ -53,5 +63,5 @@ class XRefMesh(object):
         
         #self.loadcase.add(self.moment)
         
-        self.loadcase.resolve(2)
-        self.loadcase.resolve(1)
+        #self.loadcase.resolve(2)
+        #self.loadcase.resolve(1)

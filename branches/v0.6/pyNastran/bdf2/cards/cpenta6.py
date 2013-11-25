@@ -1,4 +1,4 @@
-from numpy import zeros, unique, dot, cross, abs, searchsorted
+from numpy import zeros, arange, unique, dot, cross, abs, searchsorted
 from pyNastran.utils.mathematics import norm_axis as norm
 
 from pyNastran.bdf.fieldWriter import print_card
@@ -224,12 +224,11 @@ class CPENTA6(object):
         return mass, centroid, I
         
     def write_bdf(self, f, size=8, eids=None):
-        if eids is None:
-            for (eid, pid, n) in zip(self.element_id, self.property_id, self.node_ids):
-                card = ['CPENTA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5]]
-                f.write(print_card(card))
-        else:
-            i = searchsorted(self.element_id, eids)
+        if self.n:
+            if eids is None:
+                i = arange(self.n)
+            else:
+                i = searchsorted(self.element_id, eids)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
                 card = ['CPENTA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5]]
                 f.write(print_card(card))

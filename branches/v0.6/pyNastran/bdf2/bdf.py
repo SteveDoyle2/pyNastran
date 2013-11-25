@@ -21,8 +21,44 @@ from pyNastran.utils.gui_io import load_file_dialog
 
 
 from .cards.coord import Coord
-from .cards.load import LOAD
 
+# nodes
+from .cards.grid import GRID
+from .cards.spoint import SPOINT
+
+# properties
+from .cards.properties_shell import PropertiesShell
+from .cards.prod import PROD
+from .cards.properties_solid import PropertiesSolid
+
+# elements
+from .cards.elements_shell import ElementsShell
+from .cards.elements_solid import ElementsSolid
+from .cards.crod import CROD
+from .cards.conrod import CONROD
+
+# materials
+from .cards.materials import Materials
+
+
+# loads
+from .cards.load import LOAD
+from .cards.force import FORCE
+from .cards.moment import MOMENT
+
+#from .cards.rforce import RFORCE
+#from .cards.sload import SLOAD
+
+#from .cards.loadcase import LoadCase
+#from .cards.loadset import LOADSET
+
+# constraints
+from .cards.spc import SPC, get_spc_constraint
+from .cards.spcd import SPCD
+
+from .cards.spc1 import SPC1, get_spc1_constraint
+from .cards.spcadd import SPCADD, get_spcadd_constraint
+from .cards.mpcadd import MPCADD
 
 #from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 #from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
@@ -99,6 +135,34 @@ from .bdf_interface.cross_reference import XRefMesh
 
 # old
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
+
+
+def class_obj_defaultdict(class_obj, *args, **kwargs):
+
+    class ClassObjDefaultDict(dict):
+        def __init__(self):
+            dict.__init__(self)
+
+        def __getitem__(self, key):
+            #print('getting key=%r' % key)
+            #print('dir(d) =', dir(self))
+            try:
+                val = self[key]
+                return val
+            except KeyError:
+                val = class_obj(self.args) # , self.kwargs
+                self[key] = [val]
+                return self[key]
+
+        def __setitem__(self, key, value):
+            #print('setting key=%r' % key)
+            #print('dir(d) =', dir(self))
+            try:
+                val = self[key].append(value)
+            except KeyError:
+                self[key] = [class_obj(args)] # , self.kwargs
+
+    return ClassObjDefaultDict
 
 
 class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
@@ -442,8 +506,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.nodes = {}
         
         model = self
-        from .cards.grid import GRID
-        from .cards.spoint import SPOINT
         self.grid = GRID(model)
         self.spoint = SPOINT(model)
         
@@ -467,39 +529,27 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}
         
-        from .cards.properties_shell import PropertiesShell
         #self.properties_spring = PropertiesSpring(model)
         #self.proeprties_rod = PropertiesRod(v)
         #self.properties_bar = PropertiesBar(model)
         self.properties_shell = PropertiesShell(model)
         #self.properties_solid = PropertiesSolid(model)
         
-        from .cards.elements_shell import ElementsShell
         #self.elements_spring = ElementsSpring(model)
         #self.elements_rod = ElementsRod(model)
         #self.elements_bar = ElementsBar(model)
         self.elements_shell = ElementsShell(model)
         #self.elements_solid = ElementsSolid(model)
 
-        #from .cards.rods import CROD, CONROD, PROD
-        from .cards.crod import CROD
-        from .cards.conrod import CONROD
-        from .cards.prod import PROD
         self.conrod = CONROD(model)
         self.prod = PROD(model)
         self.crod = CROD(model)
         
-        from .cards.elements_solid import ElementsSolid
-        from .cards.properties_solid import PropertiesSolid
         self.elements_solid = ElementsSolid(self)
         self.properties_solid = PropertiesSolid(self)
 
         #===================================
         # loads
-        #from .cards.loadcase import LoadCase
-        #from .cards.loadset import LOADSET
-        from .cards.force import FORCE
-        from .cards.moment import MOMENT
         #self.loadcase = LoadCase(model)
 
         self.load = defaultdict(list)
@@ -515,7 +565,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         #: stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
         #self.materials = {}
-        from .cards.materials import Materials
         self.materials = Materials(model)
         
         #: stores MATS1
@@ -541,7 +590,17 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #self.spcObject = ConstraintObject()
         #: stores MPCADD,MPC
         #self.mpcObject = ConstraintObject()
+        
+        # these work
+        #self.spc = defaultdict(SPC)
+        self.spc = {} #class_obj_defaultdict(SPC, model)
+        self.spcd = {} #class_obj_defaultdict(SPCD, model)
+        self.spc1 = {} #class_obj_defaultdict(SPC1, model)
+        self.spcadd = {}
+        self.mpc = {}  # the new form, not added...
+        self.mpcadd = {}
 
+        # these don't...
         self.spcs = {}
         self.spcadds = {}
 
@@ -1691,22 +1750,32 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #========================
         # spc
         elif name == 'MPCADD':
-            #self.mpcadd.add(card_obj, comment=comment)
-            pass
+            constraint_id, node_ids = get_spcadd_constraint(card_obj)
+            mpcadd = self.mpcadd.setdefault(constraint_id, MPCADD(self))
+            mpcadd.add(constraint_id, node_ids, comment=comment)
         elif name == 'MPC':
             #self.mpc.add(card_obj, comment=comment)
             pass
         #========================
         # spc
         elif name == 'SPCADD':
-            #self.spcadd.add(card_obj, comment=comment)
-            pass
-        elif name == 'SPC':
-            #self.spc.add(card_obj, comment=comment)
-            pass
+            constraint_id, node_ids = get_spcadd_constraint(card_obj)
+            spcadd = self.spcadd.setdefault(constraint_id, SPCADD(self))
+            spcadd.add(constraint_id, node_ids, comment=comment)
+        elif name in ['SPC', 'SPCD']:
+            for i in [0, 1]:
+                constraint_id, node_id, dofs, enforced_motion = get_spc_constraint(card_obj, i)
+                if enforced_motion != 0.0:
+                    spcd = self.spcd.setdefault(constraint_id, SPCD(self))
+                    spcd.add(constraint_id, node_id, dofs, enforced_motion, comment=comment)
+                else:
+                    spc = self.spc.setdefault(constraint_id, SPC(self))
+                    spc.add(constraint_id, node_id, dofs, enforced_motion, comment=comment)
         elif name == 'SPC1':
-            #self.spc1.add(card_obj, comment=comment)
-            pass
+            constraint_id, dofs, node_ids = get_spc1_constraint(card_obj)
+            #print("type(spc1", type(self.spc1))
+            spc1 = self.spc1.setdefault(constraint_id, SPC1(self))
+            spc1.add(constraint_id, dofs, node_ids, comment=comment)
         #========================
         elif name == 'SUPORT':
             #self.suport.add(card_obj, comment=comment)

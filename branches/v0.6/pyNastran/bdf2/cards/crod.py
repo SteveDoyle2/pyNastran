@@ -85,6 +85,12 @@ class CROD(object):
         return msg
 
     def write_bdf(self, f, size=8, eids=None):
-        for (eid, pid, n) in zip(self.element_id, self.property_id, self.node_ids):
-            card = ['CROD', eid, pid, n[0], n[1] ]
-            f.write(print_card(card))
+        if self.n:
+            if eids is None:
+                i = arange(self.n)
+            else:
+                i = searchsorted(self.element_id, self.eid)
+
+            for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
+                card = ['CROD', eid, pid, n[0], n[1] ]
+                f.write(print_card(card))

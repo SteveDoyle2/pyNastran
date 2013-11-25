@@ -1,4 +1,4 @@
-from numpy import array, zeros, concatenate, searchsorted, where, unique
+from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -46,8 +46,8 @@ class CQUAD4(object):
 
                 #self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
                 #self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
-                blank(card, 8, 'blank')
-                blank(card, 9, 'blank')
+                #blank(card, 8, 'blank')
+                #blank(card, 9, 'blank')
 
                 #self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
                 #self.T1 = double_or_blank(card, 11, 'T1', 1.0)
@@ -62,16 +62,14 @@ class CQUAD4(object):
 
     def write_bdf(self, f, size=8, eids=None):
         if eids is None:
-            for (eid, pid, n) in zip(self.element_id, self.property_id, self.node_ids):
-                card = ['CQUAD4', eid, pid, n[0], n[1], n[2], n[3]]
-                f.write(print_card(card, size=size))
+            i = arange(self.n)
         else:
             assert len(unique(eids))==len(eids), unique(eids)
             i = searchsorted(self.element_id, eids)
             
-            for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
-                card = ['CQUAD4', eid, pid, n[0], n[1], n[2], n[3]]
-                f.write(print_card(card, size=size))
+        for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
+            card = ['CQUAD4', eid, pid, n[0], n[1], n[2], n[3]]
+            f.write(print_card(card, size=size))
 
 
     def _verify(self, xref=True):
@@ -80,7 +78,7 @@ class CQUAD4(object):
         self.normal()
 
     def rebuild(self):
-        pass
+        raise NotImplementedError()
 
     def mass(self, eids=None, total=False, node_ids=None, grids_cid0=None):
         """

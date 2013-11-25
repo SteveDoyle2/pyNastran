@@ -88,12 +88,16 @@ class MAT1(object):
     def write_bdf(self, f, size=8, mids=None):
         if self.n:
             assert mids is None
-            print "n = ", self.n
-            print "mids MAT1", self.material_id
+            #print "n = ", self.n
+            #print "mids MAT1", self.material_id
             Rho  = ['' if rhoi  == 0.0 else rhoi  for rhoi  in self.rho]
             A    = ['' if ai    == 0.0 else ai    for ai    in self.a]
             TRef = ['' if trefi == 0.0 else trefi for trefi in self.TRef]
             ge   = ['' if gei   == 0.0 else gei   for gei   in self.ge]
+            
+            St   = ['' if st    == 0.0 else st    for st    in self.St]
+            Sc   = ['' if sc    == 0.0 else sc    for sc    in self.Sc]
+            Ss   = ['' if ss    == 0.0 else ss    for ss    in self.Ss]
 
             card = ['$MAT1', 'mid', 'E', 'G', 'nu', 'rho', 'a', 'TRef', 'ge']
             f.write(print_card(card, size=size))
@@ -101,18 +105,18 @@ class MAT1(object):
             f.write(print_card(card, size=size))
             for (mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid) in zip(
                  self.material_id, self.E, self.G, self.nu, Rho, A,
-                 TRef, ge, self.St, self.Sc, self.Ss, self.mcsid):
+                 TRef, ge, St, Sc, Ss, self.mcsid):
 
                 #Gdefault = self.getG_default()
-                #G = set_blank_if_default(self.g, Gdefault)
-                G = self._G_default(E, G, nu)
+                Gdefault = self._G_default(E, G, nu)
+                G = set_blank_if_default(G, Gdefault)
                 #rho = set_blank_if_default(rho, 0.)
                 #a = set_blank_if_default(a, 0.)
                 #TRef = set_blank_if_default(TRef, 0.)
                 #ge = set_blank_if_default(ge, 0.)
-                st = set_blank_if_default(st, 0.)
-                sc = set_blank_if_default(sc, 0.)
-                ss = set_blank_if_default(ss, 0.)
+                #st = set_blank_if_default(st, 0.)
+                #sc = set_blank_if_default(sc, 0.)
+                #ss = set_blank_if_default(ss, 0.)
                 mcsid = set_blank_if_default(mcsid, 0)
                 card = ['MAT1', mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid]
                 f.write(print_card(card, size=size))
@@ -155,6 +159,7 @@ class MAT1(object):
         else:
             msg = 'G=%s E=%s nu=%s' % (G, E, nu)
             raise RuntimeError(msg)
+        #print 'G =', G
         self.E[i] = E
         self.G[i] = G
         self.nu[i] = nu

@@ -28,13 +28,13 @@ class LoadCase(object):
 
     def add_reference(self, load):
         for load_id, loads in load.iteritems():
-            print "ref", loads
+            #print "ref", loads
             for load in loads:
                 self.loads[load_id].append(load)
 
     def resolve(self, i):
         import StringIO
-        print "key", i
+        #print "key", i
         all_loads = self.loads[i]  # list of load objs
 
         print "**********"

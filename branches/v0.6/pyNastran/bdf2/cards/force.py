@@ -22,7 +22,7 @@ class FORCE(object):
 
     def __getitem__(self, i):
         unique_lid = unique(self.load_id)
-        print "force", unique_lid, i
+        #print "force", unique_lid, i
         if len(i):
             f = FORCE(self.model)
             f.load_id = self.load_id[i]
