@@ -27,38 +27,38 @@ from .cards.grid import GRID
 from .cards.spoint import SPOINT
 
 # properties
-from .cards.properties_shell import PropertiesShell
-from .cards.prod import PROD
-from .cards.properties_solid import PropertiesSolid
+from .cards.properties.properties_shell import PropertiesShell
+from .cards.properties.prod import PROD
+from .cards.properties.properties_solid import PropertiesSolid
 
 # elements
-from .cards.elements_shell import ElementsShell
-from .cards.elements_solid import ElementsSolid
-from .cards.crod import CROD
-from .cards.conrod import CONROD
+from .cards.elements.elements_shell import ElementsShell
+from .cards.elements.elements_solid import ElementsSolid
+from .cards.elements.crod import CROD
+from .cards.elements.conrod import CONROD
 
 # materials
-from .cards.materials import Materials
+from .cards.materials.materials import Materials
 
 
 # loads
-from .cards.load import LOAD
-from .cards.force import FORCE
-from .cards.moment import MOMENT
+from .cards.loads.load import LOAD
+from .cards.loads.force import FORCE
+from .cards.loads.moment import MOMENT
 
-#from .cards.rforce import RFORCE
-#from .cards.sload import SLOAD
+#from .cards.loads.rforce import RFORCE
+#from .cards.loads.sload import SLOAD
 
-#from .cards.loadcase import LoadCase
-#from .cards.loadset import LOADSET
+#from .cards.loads.loadcase import LoadCase
+#from .cards.loads.loadset import LOADSET
 
 # constraints
-from .cards.spc import SPC, get_spc_constraint
-from .cards.spcd import SPCD
+from .cards.constraints.spc import SPC, get_spc_constraint
+from .cards.constraints.spcd import SPCD
 
-from .cards.spc1 import SPC1, get_spc1_constraint
-from .cards.spcadd import SPCADD, get_spcadd_constraint
-from .cards.mpcadd import MPCADD
+from .cards.constraints.spc1 import SPC1, get_spc1_constraint
+from .cards.constraints.spcadd import SPCADD, get_spcadd_constraint
+from .cards.constraints.mpcadd import MPCADD
 
 #from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 #from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,

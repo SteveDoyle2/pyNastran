@@ -1,5 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from ..cards.loads.loadcase import LoadCase
 
 
 class XRefMesh(object):
@@ -54,7 +55,6 @@ class XRefMesh(object):
         #self.moment1.build()
         #self.moment2.build()
 
-        from ..cards.loadcase import LoadCase
         self.loadcase = LoadCase()
         self.loadcase.add_reference(self.load)
         self.loadcase.add_reference(self.dload)

@@ -124,16 +124,17 @@ class GRID(object):
         return msg
 
     def write_bdf(self, f, size=8):
-        f.write('$GRID\n')
-        cp = [cpi     if cpi   != 0 else '' for cpi in self.cp]
-        cd = [cdi     if cdi   != 0 else '' for cdi in self.cd]
-        seid = [seidi if seidi != 0 else '' for seidi in self.seid]
-        for (nid, cp, xyz, cd, seid) in zip(self.nid, cp, self.xyz,
-                cd, seid):
-            
-            ps = None
-            card = ['GRID', nid, cp, xyz[0], xyz[1], xyz[2], cd, seid]
-            f.write(print_card(card, size))
+        if self.n:
+            f.write('$GRID\n')
+            cp = [cpi     if cpi   != 0 else '' for cpi in self.cp]
+            cd = [cdi     if cdi   != 0 else '' for cdi in self.cd]
+            seid = [seidi if seidi != 0 else '' for seidi in self.seid]
+            for (nid, cp, xyz, cd, seid) in zip(self.nid, cp, self.xyz,
+                    cd, seid):
+
+                ps = None
+                card = ['GRID', nid, cp, xyz[0], xyz[1], xyz[2], cd, seid]
+                f.write(print_card(card, size))
 
     def __repr__(self):
         msg = "<GRID>\n"
