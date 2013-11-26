@@ -519,7 +519,7 @@ class F06Writer(object):
                         try:
                             print(result.__class__.__name__)
                             self.pageNum = result.write_f06(header, pageStamp, pageNum=self.pageNum, f=f, is_mag_phase=False)
-                            assert isinstance(self.pageNum, int)
+                            assert isinstance(self.pageNum, int), 'pageNum=%r' % str(self.pageNum)
                         except:
                             #print "result name = %r" % result.name()
                             raise
