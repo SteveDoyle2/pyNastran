@@ -54,7 +54,7 @@ class CROD(object):
                 raise RuntimeError('There are duplicate CROD IDs...')
             self._cards = []
             self._comments = []
-        
+
     def mass(self, total=False):
         """
         mass = rho * A * L + nsm
@@ -77,7 +77,7 @@ class CROD(object):
             return mass.sum()
         else:
             return mass
-        
+
     def get_stats(self):
         msg = []
         if self.n:
@@ -94,3 +94,108 @@ class CROD(object):
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CROD', eid, pid, n[0], n[1] ]
                 f.write(print_card(card))
+
+    def Stiffness(self, model, node_ids, index0s, fnorm=1.0):  # CROD/CONROD
+        from numpy import dot
+        #print("----------------")
+        A = self.Area()
+        E = self.E()
+        G = self.G()
+        J = self.J()
+
+        #========================
+        #(n1, n2) = self.nodeIDs()
+        n0, n1 = self.nodeIDs()
+
+        i0, i1 = index0s
+        node0 = self.nodes[0]
+        node1 = self.nodes[1]
+
+
+        p0 = model.Node(n0).xyz
+        p1 = model.Node(n1).xyz
+        L = norm(p0 - p1)
+        if L == 0.0:
+            msg = 'invalid CROD length=0.0\n%s' % (self.__repr__())
+            raise ZeroDivisionError(msg)
+        #========================
+        print("A=%g E=%g G=%g J=%g L=%g" % (A, E, G, J, L))
+        k_axial = A * E / L
+        k_torsion = G * J / L
+        #k_axial = 1.0
+        #k_torsion = 2.0
+
+        k = matrix([[1., -1.], [-1., 1.]])  # 1D rod
+
+        Lambda = self.Lambda(model)
+        K = dot(dot(transpose(Lambda), k), Lambda)
+        Ki, Kj = K.shape
+
+        # for testing
+        #K = ones((Ki, Ki), 'float64')
+
+        K2 = zeros((Ki*2, Kj*2), 'float64')
+        if k_axial == 0.0 and k_torsion == 0.0:
+            dofs = []
+            nIJV = []
+            K2 = []
+        elif k_torsion == 0.0: # axial; 2D or 3D
+            K2 = K * k_axial
+            dofs = array([
+                i0, i0+1, i0+2,
+                i1, i1+1, i1+2,
+            ], 'int32')
+            nIJV = [
+                # axial
+                (n0, 1), (n0, 2), (n0, 3),
+                (n1, 1), (n1, 2), (n1, 3),
+            ]
+        elif k_axial == 0.0: # torsion; assume 3D
+            K2 = K * k_torsion
+            dofs = array([
+                i0+3, i0+4, i0+5,
+                i1+3, i1+4, i1+5,
+            ], 'int32')
+            nIJV = [
+                # torsion
+                (n0, 4), (n0, 5), (n0, 6),
+                (n1, 4), (n1, 5), (n1, 6),
+            ]
+
+        else:  # axial + torsion; assume 3D
+            # u1fx, u1fy, u1fz, u2fx, u2fy, u2fz
+            K2[:Ki, :Ki] = K * k_axial
+
+            # u1mx, u1my, u1mz, u2mx, u2my, u2mz
+            K2[Ki:, Ki:] = K * k_torsion
+
+            dofs = array([
+                i0, i0+1, i0+2,
+                i1, i1+1, i1+2,
+
+                i0+3, i0+4, i0+5,
+                i1+3, i1+4, i1+5,
+            ], 'int32')
+            nIJV = [
+                # axial
+                (n0, 1), (n0, 2), (n0, 3),
+                (n1, 1), (n1, 2), (n1, 3),
+
+                # torsion
+                (n0, 4), (n0, 5), (n0, 6),
+                (n1, 4), (n1, 5), (n1, 6),
+            ]
+
+        #Fg = dot(dot(transpose(Lambda), grav), Lambda)
+        #print("K=\n", K / fnorm)
+        #print("K2=\n", K2 / fnorm)
+
+        #========================
+
+        #print(K / fnorm)
+        #print("K[%s] = \n%s\n" % (self.eid, list_print(K/fnorm)))
+
+        print('dofs =', dofs)
+        print('K =\n', list_print(K / fnorm))
+
+        return(K2, dofs, nIJV)

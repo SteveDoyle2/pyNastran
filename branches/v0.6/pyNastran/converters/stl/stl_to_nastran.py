@@ -48,4 +48,4 @@ def stl_to_nastran_filename(stl_filename, bdf_filename, log=None):
 if __name__ == '__main__':
     bdf_filename = 'g278.bdf'
     stl_filename = 'g278.stl'
-    nastran_to_stl_filename(bdf_filename, stl_filename)
+    stl_to_nastran_filename(stl_filename, bdf_filename)

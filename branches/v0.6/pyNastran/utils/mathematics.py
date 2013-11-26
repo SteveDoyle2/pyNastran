@@ -1,27 +1,27 @@
 ## GNU Lesser General Public License
-## 
+##
 ## Program pyNastran - a python interface to NASTRAN files
 ## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
+##
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
 ## Al Danial    <al.danial@gmail.com>
-## 
+##
 ## This file is part of pyNastran.
-## 
+##
 ## pyNastran is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## pyNastran is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
+##
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103
 from __future__ import print_function
@@ -36,6 +36,8 @@ from scipy.interpolate import splrep, splev
 from scipy.integrate import quad
 
 from math import sqrt
+
+from numpy.linalg import norm as norm_axis
 
 if sys.version_info < (3, 0):
     """
@@ -92,7 +94,7 @@ def integrate_positive_line(x, y, minValue=0.):
         assert len(x) == len(y), 'x=%s y=%s' % (x, y)
         # now integrate the area
         eval_posit_spline = lambda x, spl, min_val: max(splev([x], spl), min_val)
-        out = quad(eval_posit_spline, 0., 1., args=(build_spline(x, y), minValue))  
+        out = quad(eval_posit_spline, 0., 1., args=(build_spline(x, y), minValue))
     except:
         raise RuntimeError('spline Error x=%s y=%s' % (x, y))
     return out[0]
@@ -222,23 +224,23 @@ def gauss(n):
 
     * n = 2:
 
-     * \f$ \pm 1/\sqrt{3} \f$ --> \f$ 1 \f$ 
+     * \f$ \pm 1/\sqrt{3} \f$ --> \f$ 1 \f$
 
     * n = 3
 
      * \f$ 0 \f$   --> \f$ 8/9 \f$
-     * \f$ \pm\sqrt{3/5} \f$ --> \f$ 5/9 \f$ 
+     * \f$ \pm\sqrt{3/5} \f$ --> \f$ 5/9 \f$
 
     * n = 4:
 
      * \f$ \pm\sqrt{\left( 3 - 2\sqrt{6/5} \right)/7} \f$ --> \f$ (18+\sqrt{30})/36 \f$
-     * \f$ \pm\sqrt{\left( 3 + 2\sqrt{6/5} \right)/7} \f$ --> \f$ (18-\sqrt{30})/36 \f$ 
+     * \f$ \pm\sqrt{\left( 3 + 2\sqrt{6/5} \right)/7} \f$ --> \f$ (18-\sqrt{30})/36 \f$
 
     * n = 5:
 
-     - \f$ 0 \f$ --> \f$ 128/225 \f$     
-     - \f$ \pm\frac{1}{3}\sqrt{5-2\sqrt{10/7}} \f$ --> \f$ (322+13\sqrt{70})/900 \f$ 
-     - \f$ \pm\frac{1}{3}\sqrt{5+2\sqrt{10/7}} \f$ --> \f$ (322-13\sqrt{70})/900 \f$ 
+     - \f$ 0 \f$ --> \f$ 128/225 \f$
+     - \f$ \pm\frac{1}{3}\sqrt{5-2\sqrt{10/7}} \f$ --> \f$ (322+13\sqrt{70})/900 \f$
+     - \f$ \pm\frac{1}{3}\sqrt{5+2\sqrt{10/7}} \f$ --> \f$ (322-13\sqrt{70})/900 \f$
 
 
     :param n: Number of quadrature points

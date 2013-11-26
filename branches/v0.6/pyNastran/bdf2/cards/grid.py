@@ -54,15 +54,15 @@ class GRID(object):
         +------+-----+----+----+----+----+----+----+------+
         """
         self.model = model
-        self._grid = []
-        self._grid_comment = []
+        self._cards = []
+        self._comments = []
 
     def add(self, card, comment):
-        self._grid.append(card)
-        self._grid_comment.append(comment)
+        self._cards.append(card)
+        self._comments.append(comment)
 
     def build(self):
-        cards = self._grid
+        cards = self._cards
         ncards = len(cards)
 
         self.n = ncards
@@ -73,7 +73,7 @@ class GRID(object):
             self.cp = zeros(ncards, 'int32')
             self.cd = zeros(ncards, 'int32')
             self.seid = zeros(ncards, 'int32')
-            #self.ps = zeros(ncards, 'int32')
+            self.ps = zeros(ncards, 'int32')
 
             for i, card in enumerate(cards):
                 #: Node ID
@@ -92,7 +92,7 @@ class GRID(object):
                 self.cd[i] = integer_or_blank(card, 6, 'cd', 0)
 
                 #: SPC constraint
-                #self.ps[i] = str(integer_or_blank(card, 7, 'ps', ''))
+                self.ps[i] = integer_or_blank(card, 7, 'ps', -1)
 
                 #: Superelement ID
                 self.seid[i] = integer_or_blank(card, 8, 'seid', 0)
@@ -101,7 +101,7 @@ class GRID(object):
         if nids is None:
             nids = self.nids
         xyz = xyz.copy()
-        
+
         n = arange(self.n)
         i = where(self.cid != 0)[0]
         if i:

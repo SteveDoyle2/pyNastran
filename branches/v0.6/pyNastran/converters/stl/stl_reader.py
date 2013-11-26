@@ -99,7 +99,7 @@ class STLReader(object):
     def flip_normals(self, i=None):
         """
         Flips the normals of the specified elements.
-        
+
         :param self: The STL object
         :param i:    NDARRAY of the indicies to flip (default=None -> all)
         """
@@ -163,7 +163,7 @@ class STLReader(object):
         :param nodes: The nodes on the surface.
         :param elements: The elements on the surface.
         :param volume_bdfname: The CPENTA bdf file to write.
-        
+
         :returns nodes2: The boundary layer nodes
         :returns elements2: The boundary layer elements
         """
@@ -395,7 +395,7 @@ class STLReader(object):
                 #print "end of solid..."
                 #print "*line = %r" % line
             else:
-                raise NotImplementedError('multiple solids are not supported')
+                #raise NotImplementedError('multiple solids are not supported')
                 break
 
         assert inode > 0

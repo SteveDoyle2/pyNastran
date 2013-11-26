@@ -67,3 +67,13 @@ except ImportError:
         def __init__(self):
             pass
     is_usm3d = False
+
+try:
+    from pyNastran.converters.plot3d.plot3d_io import Plot3d_io
+    is_plot3d = True
+except ImportError:
+    class Plot3d_io(object):
+        def __init__(self):
+            pass
+    is_plot3d = False
+    raise

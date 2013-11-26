@@ -6,6 +6,7 @@ class SPOINT(object):
         self.model = model
         self._cards = []
         self._comments = []
+        self.n = 0
 
     def add(self, card, comment):
         self._cards.append(card)
