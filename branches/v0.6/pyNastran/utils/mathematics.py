@@ -48,16 +48,50 @@ if sys.version_info < (3, 0):
         >>> sys.exit(1)
 
     The program's return code is 0
+
     .. note:: Python v3.0+ doesn't have scipy.weave
+    .. note:: This is a 64-bit, Windows 7 specific bug as far as I know.
     """
     import scipy.weave
 
+import numpy
+numpy_version = tuple([int(i) for i in numpy.__version__ if i != '.'])
+if numpy.__version__ < (1, 8):
+    def norm_axis(x, ord=None, axis=None):
+        """A modified form of numpy.norm to work in numpy <= 1.8.0
+        
+        Only supports 1D and 2D x vectors (unlike 1.8.0).
+        -------------------------
+        %s""" % norm.__doc__
+        if axis is None:
+            n = norm(x, ord)
+        else:
+            assert isinstance(axis, int), 'axis=%r' % axis
+            assert not isinstance(x, list)
+            assert len(x.shape) == 2
+            if len(x.shape) == 2:
+                if axis == 0:
+                    n = array([norm(x[:, i], ord=ord) for i in xrange(x.shape[1])])
+                elif axis == 1:
+                    n = array([norm(x[i, :], ord=ord) for i in xrange(x.shape[0])])
+                else:
+                    raise RuntimeError('invalid axis=%r' % axis)
+            else:
+                raise RuntimeError('invalid shape...upgrade numpy >= 1.8.0')
+        if n is None:
+            raise RuntimeError('invalid axis=%r' % axis)
+        return n            
+else:
+    norm_axis = norm
 
 def integrate_line(x, y):
     """
     Integrates a line of length 1.0
-    :x: the independent variable
-    :y: the dependent variable
+
+    :param x: the independent variable
+    :param y: the dependent variable
+    
+    :returns integrated_value: the area under the curve
     """
     if len(set(y)) == 1:
         return y[0]  # (x1-x0 = 1., so yBar*1 = yBar)
@@ -76,6 +110,10 @@ def build_spline(x, y):
     Builds a cubic spline or 1st order spline if there are less than 3 terms
     :param x: the independent variable
     :param y: the dependent variable
+
+    :returns splrep: a splrep object (linear or cubic spline depending
+                     on the length of x)
+
     .. note:: a 1st order spline is the same as linear interpolation
     """
     # build a linearly interpolated representation or cubic one
@@ -85,8 +123,11 @@ def build_spline(x, y):
 def integrate_positive_line(x, y, minValue=0.):
     """
     Integrates a line of length 1.0
+
     :param x: the independent variable
     :param y: the dependent variable
+
+    :returns integrated_value: the area under the curve
     """
     if len(set(y)) == 1:
         return y[0]  # (x1-x0 = 1., so yBar*1 = yBar)
@@ -115,8 +156,13 @@ def reduce_matrix(matA, nids):
 
 def is_list_ranged(a, List, b):
     """
-    Returns true if a<= x <= b
-    or a-x < 0 < b-x
+    Returns true if a<= x <= b or a-x < 0 < b-x
+
+    :param a: the lower bound value (inclusive)
+    :param x: the search values
+    :param b: the upper bound value (inclusive)
+
+    :returns is_ranged: True/False
     """
     for x in List:
         if not is_float_ranged(a, x, b):
@@ -126,8 +172,13 @@ def is_list_ranged(a, List, b):
 
 def is_float_ranged(a, x, b):
     """
-    Returns true if a<= x <= b
-    or a-x < 0 < b-x
+    Returns true if a<= x <= b or a-x < 0 < b-x.
+
+    :param a: the lower bound value (inclusive)
+    :param x: the search value
+    :param b: the upper bound value (inclusive)
+    
+    :returns is_ranged: True/False
     """
     if (not a < x) and (not allclose(x, a)):
         return False
@@ -140,7 +191,7 @@ def is_float_ranged(a, x, b):
 
 def print_annotated_matrix(A, rowNames=None, tol=1e-8):
     """
-    takes a list/dictionary and annotates the row number with that value
+    Takes a list/dictionary and annotates the row number with that value
     indicies go from 0 to N
     """
     if rowNames is None:
@@ -184,6 +235,10 @@ def augmented_identity(A):
     """
     Creates an Identity Matrix augmented with zeros.
     The location of the extra zeros depends on A.
+    
+    [ 1, 0, 0, 0 ]
+    [ 0, 1, 0, 0 ]
+    [ 0, 0, 1, 0 ]
     """
     (nx, ny) = A.shape
     I = zeros([nx, ny], 'd')
@@ -196,6 +251,12 @@ def augmented_identity(A):
 
 
 def solve_tridag(A, D):
+    """
+    Solves a tridagonal matrix [A]{x}={b} for {x}
+    :param A: main diagonal (length=N)
+    :param D: off diagonal (length=N-1)
+    :returns x    
+    """
     # Find the diagonals
     ud = insert(diag(A, 1), 0, 0)  # upper diagonal
     d = diag(A)  # main diagonal
@@ -208,6 +269,13 @@ def solve_tridag(A, D):
 Area = lambda a, b: 0.5 * norm(cross(a, b))
 
 def centroid_triangle(n1, n2, n3):
+    """
+    Calculates the centroid of a triangle
+    
+    :param n1: NDARRAY of node 1
+    :param n2: NDARRAY of node 2
+    :param n3: NDARRAY of node 3
+    """
     centroid = (n1 + n2 + n3) / 3.
     return centroid
 
@@ -248,19 +316,19 @@ def gauss(n):
     .. seealso:: http://en.wikipedia.org/wiki/Gaussian_quadrature"""
     if n == 1:
         return ([0.], [2.])
-    if n == 2:
+    elif n == 2:
         p = 1. / sqrt(3)
         return ([-p, p], [1., 1.])
-    if n == 3:
+    elif n == 3:
         p = sqrt(3 / 5.)
         return ([-p, 0., p], [5 / 9., 8 / 9., 5 / 9.])
-    if n == 4:
+    elif n == 4:
         p1 = (3 - 2. * sqrt(6 / 5)) / 7.
         p2 = (3 + 2. * sqrt(6 / 5)) / 7.
         w1 = (18 + sqrt(30)) / 36.
         w2 = (18 - sqrt(30)) / 36.
         return ([-p2, -p1, p1, p2], [w2, w1, w1, w2])
-    if n == 5:
+    elif n == 5:
         p1 = 1 / 3. * sqrt(5 - 2 * sqrt(10. / 7.))
         p2 = 1 / 3. * sqrt(5 + 2 * sqrt(10. / 7.))
         w1 = (322 + 13 * sqrt(70)) / 900.
