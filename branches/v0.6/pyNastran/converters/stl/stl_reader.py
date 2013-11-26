@@ -394,9 +394,13 @@ class STLReader(object):
                 #nelements = ielement
                 #print "end of solid..."
                 #print "*line = %r" % line
+            elif 'endsolid' in line:
+                line = f.readline()
             else:
-                #raise NotImplementedError('multiple solids are not supported')
-                break
+                self.log.error(line)
+                #line = f.readline()
+                raise NotImplementedError('multiple solids are not supported')
+                #break
 
         assert inode > 0
         nnodes = inode + 1 # accounting for indexing
