@@ -37,8 +37,8 @@ version = pyNastran.__version__
 #from pyNastran.gui.mouseStyle import MouseStyle
 from pyNastran.gui.actionsControl import pyWidget
 
-from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO,
-    is_nastran, is_cart3d, is_panair, is_lawgs, is_stl, is_tetgen, is_usm3d)
+from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io,
+    is_nastran, is_cart3d, is_panair, is_lawgs, is_stl, is_tetgen, is_usm3d, is_plot3d)
 
 
 def getScreenCorner(x, y):
@@ -49,7 +49,7 @@ def getScreenCorner(x, y):
     return(xCorner, yCorner)
 
 
-class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, TetgenIO, Usm3dIO):
+class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io):
     def __init__(self, *args, **kwargs):
         self.grid = vtk.vtkUnstructuredGrid()
         #gridResult = vtk.vtkFloatArray()
@@ -490,10 +490,11 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, TetgenIO, U
             else:
                 print("***%s skipping" % location)
 
-            #self.iSubcaseNameMap[self.isubcase] = [Subtitle,Label]
             try:
+                #self.iSubcaseNameMap[self.isubcase] = [Subtitle, Label]
                 caseName = self.iSubcaseNameMap[subcaseID]
             except KeyError:
+                #print "cant find subcaseID=%s" % subcaseID
                 caseName = ('case=NA', 'label=NA')
             (subtitle, label) = caseName
 
@@ -533,7 +534,6 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, TetgenIO, U
             print("max=%g min=%g norm=%g\n" % (maxValue, minValue, normValue))
 
             #nValueSet = len(valueSet)
-
             self.textActors[0].SetInput('Max:  %g' % maxValue)  # max
             self.textActors[1].SetInput('Min:  %g' % minValue)  # min
             self.textActors[2].SetInput('Subcase=%s Subtitle: %s' % (subcaseID, subtitle))  # info
@@ -559,21 +559,21 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, TetgenIO, U
             if location == 'centroid' and plotCentroidal:
                 #self.grid.GetPointData().Reset()
                 self.grid.GetCellData().SetScalars(gridResult)
-                print("***plotting vector=%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+                print("***plotting vector=%s skipping (centroid/nodal) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                 self.grid.Modified()
             elif location == 'nodal' and plotNodal:
                 self.grid.GetCellData().Reset()
                 if vectorSize == 1:
-                    print("***plotting vector=%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+                    print("***plotting vector=%s skipping (centroid/nodal) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                     self.grid.GetPointData().SetScalars(gridResult)
                     self.grid.Modified()
                 else:
-                    print("***nodal vector=%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+                    print("***nodal vector=%s skipping (centroid/nodal) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                     #pass
                 #    self.grid.GetPointData().SetScalars(gridResult)
                 #print "***nodal skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label)
             else:
-                print("***%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
+                print("***%s skipping (centroid/nodal) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
                 self.scalarBar.SetVisibility(False)
 
     def onKeyPress(self, obj, event):

@@ -63,6 +63,7 @@ ID_PANAIR = 925
 ID_STL = 926
 ID_TETGEN = 927
 ID_USM3D = 928
+ID_PLOT3D = 929
 
 ID_EXPORT = 930
 
@@ -70,9 +71,9 @@ ID_EXPORT = 930
 pkgPath = pyNastran.gui.__path__[0]
 #print "pkgPath = %r" % pkgPath
 
-from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO,
-    is_nastran, is_cart3d, is_panair, is_lawgs, is_stl, is_tetgen, is_usm3d)
-valid_formats = ['panair', 'cart3d', 'lawgs', 'nastran', 'stl', 'tetgen', 'usm3d']
+from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io,
+    is_nastran, is_cart3d, is_panair, is_lawgs, is_stl, is_tetgen, is_usm3d, is_plot3d)
+valid_formats = ['panair', 'cart3d', 'lawgs', 'nastran', 'stl', 'tetgen', 'usm3d', 'plot3d']
 
 
 if '?' in pkgPath:
@@ -167,8 +168,11 @@ class AppFrame(wx.Frame):
                 print("loading tetgen")
                 self.frmPanel.load_tetgen_geometry(inputbase, dirname)
             elif format=='usm3d' and is_usm3d:
-                print("loading tetgen")
+                print("loading usm3d")
                 self.frmPanel.load_usm3d_geometry(inputbase, dirname)
+            elif format=='plot3d' and is_plot3d:
+                print("loading plot3d")
+                self.frmPanel.load_plot3d_geometry(inputbase, dirname)
             else:
                 msg = '\n---unsupported format=%r' % format
                 print msg
@@ -436,6 +440,7 @@ class AppFrame(wx.Frame):
         self.Bind(wx.EVT_TOOL, events.onLoadSTL, id=ID_STL)
         self.Bind(wx.EVT_TOOL, events.onLoadTetgen, id=ID_TETGEN)
         self.Bind(wx.EVT_TOOL, events.onLoadUsm3d, id=ID_USM3D)
+        self.Bind(wx.EVT_TOOL, events.onLoadPlot3D, id=ID_PLOT3D)
         #self.Bind(wx.EVT_TOOL, events.onExport, id=ID_EXPORT)
 
         self.Bind(wx.EVT_MENU, events.onExit, id=wx.ID_EXIT)
@@ -719,6 +724,18 @@ class EventsHandler(object):
             "All files (*.*)|*.*"
 
         Title = 'Choose a Usm3D (cogsg) File to Load'
+        loadFunction = self.parent.frmPanel.load_usm3d_geometry
+        #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
+        #dirname = ''
+        #loadFunction(fname,dirname)
+        self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
+
+    def onLoadPlot3d(self, event):
+        """ Open a file"""
+        wildcard = "Plot3d (*.p3d)|*.p3d|" \
+            "All files (*.*)|*.*"
+
+        Title = 'Choose a Plot3D File to Load'
         loadFunction = self.parent.frmPanel.load_usm3d_geometry
         #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
         #dirname = ''

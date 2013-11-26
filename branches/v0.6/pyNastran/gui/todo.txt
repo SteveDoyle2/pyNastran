@@ -1,17 +1,19 @@
 DONE...
 
 both
+ - cart3d input/output
  - nastran input/output
  - panair input
- - cart3d input/output
  - lawgs input (broken???)
+ - fun3d/usm3d volume (postgrid)
+ - tetgen input
  - edges
  - nodal or centroidal
  - window title
  - auto-importing
  - loading of geometry/results from command line
 
-wx
+wxun
  - hotkeys
 
 qt
@@ -28,12 +30,18 @@ both
  - make vector results work
  - cell picker to get element info
  - panair results
+ - plot3d input/output
+ - tecplot structured input/output
+ - tecplot unstructured input/output
+ - fun3d/usm3d surface/boundary layer/incomplete volume
+ - fun3d/usm3d output
 
 --------------------------------------------
 wx
  - zoom/rotate/snap buttons
  - reload button
  - logging
+ 0 plot3d hooks
 
 --------------------------------------------
 qt
