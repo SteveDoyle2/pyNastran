@@ -138,12 +138,10 @@ class CelasStressObject(StressObject):
 
         if stresses:
             msg.append(line.rstrip() + '\n')
-        msg.append(pageStamp + str(pageNum) + '\n')
+        msg.append(pageStamp % pageNum + '\n')
 
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
 
 class CelasStrainObject(StrainObject):
@@ -225,12 +223,10 @@ class CelasStrainObject(StrainObject):
 
         if strains:
             msg.append(line.rstrip() + '\n')
-        msg.append(pageStamp + str(pageNum) + '\n')
+        msg.append(pageStamp % pageNum + '\n')
 
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
 
     def add_new_transient(self, dt):
