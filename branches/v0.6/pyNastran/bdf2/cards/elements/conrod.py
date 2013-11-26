@@ -18,8 +18,11 @@ def _Lambda(v1, debug=True):
     #p2 = model.Node(n2).Position()
     #v1 = p2 - p1
     if debug:
-        print("v1=%s" % (v1))
-    v1 = v1 / norm(v1)
+        print("v1=%s" % v1)
+    n = norm(v1)
+    if n == 0:
+        raise ZeroDivisionError(v1)
+    v1 = v1 / n
     (l, m, n) = v1
     #l = 1
     #m = 2
@@ -66,8 +69,8 @@ class CONROD(object):
         if ncards:
             float_fmt = self.model.float
             #: Property ID
-            self.eid = zeros(ncards, 'int32')
-            self.mid = zeros(ncards, 'int32')
+            self.element_id = zeros(ncards, 'int32')
+            self.material_id = zeros(ncards, 'int32')
             self.node_ids = zeros((ncards, 2), 'int32')
             self.A = zeros(ncards, float_fmt)
             self.J = zeros(ncards, float_fmt)
@@ -75,31 +78,31 @@ class CONROD(object):
             self.nsm = zeros(ncards, float_fmt)
 
             for i, card in enumerate(cards):
-                self.eid[i] = integer(card, 1, 'eid')
+                self.element_id[i] = integer(card, 1, 'eid')
                 self.node_ids[i] = [integer(card, 2, 'n1'),
                                     integer(card, 3, 'n2')]
 
-                self.mid[i] = integer(card, 4, 'mid')
+                self.material_id[i] = integer(card, 4, 'mid')
                 self.A[i] = double(card, 5, 'A')
                 self.J[i] = double_or_blank(card, 6, 'j', 0.0)
                 self.c[i] = double_or_blank(card, 7, 'c', 0.0)
                 self.nsm[i] = double_or_blank(card, 8, 'nsm', 0.0)
                 assert len(card) <= 9, 'len(CONROD card) = %i' % len(card)
 
-            i = self.eid.argsort()
-            self.eid = self.eid[i]
+            i = self.element_id.argsort()
+            self.element_id = self.element_id[i]
             self.node_ids = self.node_ids[i, :]
-            self.mid = self.mid[i]
+            self.material_id = self.material_id[i]
             self.A = self.A[i]
             self.J = self.J[i]
             self.c = self.c[i]
             self.nsm = self.nsm[i]
 
-            unique_eids = unique(self.eid)
-            if len(unique_eids) != len(self.eid):
+            unique_eids = unique(self.element_id)
+            if len(unique_eids) != len(self.element_id):
                 raise RuntimeError('There are duplicate CROD IDs...')
 
-    def displacement_stress(self, q):
+    def _displacement_stress(self, q):
         grid_cid0 = self.grid.position()
         p1 = grid_cid0[self.node_ids[:, 0]]
         p2 = grid_cid0[self.node_ids[:, 1]]
@@ -115,7 +118,7 @@ class CONROD(object):
         c = self.c
         ki_torsion = G * J / L
         ki_axial   = A * E / L
-        E = self.Materials.get_E(self.mid)
+        E = self.Materials.get_E(self.material_id)
         k = array([[1, -1],
                    [-1, 1]])
         Kall = []
@@ -178,10 +181,12 @@ class CONROD(object):
     def get_stiffness(self, i, model, positions, index0s, fnorm=1.0):  # CROD/CONROD
         #print("----------------")
         A = self.get_area_from_index(i)
-        mat = self.get_material_from_index(i)
-        j = searchsorted(mat.material_id, self.mid[i])
-        E = mat.E[j]
-        G = mat.G[j]
+        #mat = self.get_material_from_index(i)
+        #print mat
+        #print mat.material_id[se]
+        mat = self.model.materials.mat1[self.material_id[i]]
+        E = mat.E()
+        G = mat.G()
         #G = self.G()
         J = self.J[i]
         #J = self.J()
@@ -207,7 +212,7 @@ class CONROD(object):
             msg = 'invalid CROD length=0.0\n%s' % (self.__repr__())
             raise ZeroDivisionError(msg)
         #========================
-        print("A=%g E=%g G=%g J=%g L=%g" % (A, E, G, J, L))
+        print("A=%r E=%r G=%r J=%r L=%r" % (A, E, G, J, L))
         k_axial = A * E / L
         k_torsion = G * J / L
         #k_axial = 1.0
@@ -312,9 +317,14 @@ class CONROD(object):
                 raise ZeroDivisionError(msg)
             #========================
             A = self.get_area_from_index(i)
-            mat = self.get_material_from_index(i)
-            j = searchsorted(mat.material_id, self.mid[i])
-            E = mat.E[j]
+
+            mat = self.model.materials.mat1[self.material_id[i]]
+            E = mat.E()
+            G = mat.G()
+            #mat = self.get_material_from_index(i)
+            #j = searchsorted(mat.material_id, self.material_id[i])
+
+            #E = mat.E[j]
             G = mat.G[j]
             #G = self.G()
             J = self.J[i]

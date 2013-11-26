@@ -85,27 +85,32 @@ class MAT1(object):
             G = E / 2. / (1 + nu)
         return G
 
-    def write_bdf(self, f, size=8, mids=None):
+    def write_bdf(self, f, size=8, material_ids=None):
         if self.n:
-            assert mids is None
+            if material_ids is None:
+                i = arange(self.n)
+            else:
+                i = searchsorted(self.material_id, material_ids)
+            
+            assert material_ids is None
             #print "n = ", self.n
             #print "mids MAT1", self.material_id
-            Rho  = ['' if rhoi  == 0.0 else rhoi  for rhoi  in self.rho]
-            A    = ['' if ai    == 0.0 else ai    for ai    in self.a]
-            TRef = ['' if trefi == 0.0 else trefi for trefi in self.TRef]
-            ge   = ['' if gei   == 0.0 else gei   for gei   in self.ge]
+            Rho  = ['' if rhoi  == 0.0 else rhoi  for rhoi  in self.rho[i]]
+            A    = ['' if ai    == 0.0 else ai    for ai    in self.a[i]]
+            TRef = ['' if trefi == 0.0 else trefi for trefi in self.TRef[i]]
+            ge   = ['' if gei   == 0.0 else gei   for gei   in self.ge[i]]
             
-            St   = ['' if st    == 0.0 else st    for st    in self.St]
-            Sc   = ['' if sc    == 0.0 else sc    for sc    in self.Sc]
-            Ss   = ['' if ss    == 0.0 else ss    for ss    in self.Ss]
+            St   = ['' if st    == 0.0 else st    for st    in self.St[i]]
+            Sc   = ['' if sc    == 0.0 else sc    for sc    in self.Sc[i]]
+            Ss   = ['' if ss    == 0.0 else ss    for ss    in self.Ss[i]]
 
             card = ['$MAT1', 'mid', 'E', 'G', 'nu', 'rho', 'a', 'TRef', 'ge']
             f.write(print_card(card, size=size))
             card = ['$', 'st', 'sc', 'ss', 'mcsid']
             f.write(print_card(card, size=size))
             for (mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid) in zip(
-                 self.material_id, self.E, self.G, self.nu, Rho, A,
-                 TRef, ge, St, Sc, Ss, self.mcsid):
+                 self.material_id[i], self.E[i], self.G[i], self.nu[i], Rho, A,
+                 TRef, ge, St, Sc, Ss, self.mcsid[i]):
 
                 #Gdefault = self.getG_default()
                 Gdefault = self._G_default(E, G, nu)
@@ -121,8 +126,8 @@ class MAT1(object):
                 card = ['MAT1', mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid]
                 f.write(print_card(card, size=size))
         
-    def reprFields(self, mid):
-        i = where(self.material_id == mid)[0]
+    def reprFields(self, material_id):
+        i = where(self.material_id == material_id)[0]
         i = i[0]
         card = ['MAT1', self.material_id[i], self.E[i], self.G[i], self.nu[i],
                         self.rho[i], self.a[i], self.TRef[i], self.ge[i],

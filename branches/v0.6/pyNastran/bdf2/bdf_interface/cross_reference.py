@@ -14,10 +14,13 @@ class XRefMesh(object):
         #self.elements_rod.build()
         self.crod.build()
         self.conrod.build()
+        
+        self.elements_spring.build()
         #self.elements_bar.build()
         self.elements_shell.build()
         self.elements_solid.build()
 
+        self.pelas.build()
         #self.properties_rod.build()
         self.prod.build()
         #self.properties_bar.build()

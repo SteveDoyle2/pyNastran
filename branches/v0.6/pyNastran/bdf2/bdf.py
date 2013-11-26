@@ -32,6 +32,9 @@ from .cards.properties.prod import PROD
 from .cards.properties.properties_solid import PropertiesSolid
 
 # elements
+from .cards.elements.elements_spring import ElementsSpring
+from .cards.properties.pelas import PELAS
+
 from .cards.elements.elements_shell import ElementsShell
 from .cards.elements.elements_solid import ElementsSolid
 from .cards.elements.crod import CROD
@@ -541,10 +544,16 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.elements_shell = ElementsShell(model)
         #self.elements_solid = ElementsSolid(model)
 
+        # spring
+        self.elements_spring = ElementsSpring(model)
+        self.pelas = PELAS(model)
+
+        # rods
         self.conrod = CONROD(model)
         self.prod = PROD(model)
         self.crod = CROD(model)
-        
+
+        # solids
         self.elements_solid = ElementsSolid(self)
         self.properties_solid = PropertiesSolid(self)
 
@@ -1669,15 +1678,16 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #========================
         # springs
         elif name == 'PELAS':
-            pass
+            self.pelas.add(card_obj, 0, comment)
+            self.pelas.add(card_obj, 1, comment)
         elif name == 'CELAS1':
-            pass
+            self.elements_spring.add_celas1(card_obj, comment)
         elif name == 'CELAS2':
-            pass
+            self.elements_spring.add_celas2(card_obj, comment)
         elif name == 'CELAS3':
-            pass
+            self.elements_spring.add_celas3(card_obj, comment)
         elif name == 'CELAS4':
-            pass
+            self.elements_spring.add_celas4(card_obj, comment)
         #========================
         # dampers
         elif name == 'PDAMP':
@@ -1795,7 +1805,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.materials.add_mat1(card_obj, comment=comment)
             #self.mat1.add(card_obj, comment=comment)
         elif name == 'MATS1':
-            #self.materials.add_mats1(card_obj, comment=comment)
+            self.materials.add_mats1(card_obj, comment=comment)
             pass
         elif name == 'MAT4':
             self.materials.add_mat4(card_obj, comment=comment)

@@ -523,8 +523,8 @@ class Solver(F06, OP2):
 
         # =====================================================================
         # springs
-        celas1s = []
-        celas2s = []
+        #celas1s = []
+        #celas2s = []
         celas3s = []
         celas4s = []
 
@@ -588,8 +588,8 @@ class Solver(F06, OP2):
         nnodes = model.grid.n
 
         # springs
-        ncelas1s = len(celas1s)  # doesn't support cid != 0
-        ncelas2s = len(celas2s)  # doesn't support cid != 0
+        ncelas1s = model.elements_spring.celas1.n  # doesn't support cid != 0
+        ncelas2s = model.elements_spring.celas2.n  # doesn't support cid != 0
         ncelas3s = len(celas3s)  # not tested
         ncelas4s = len(celas4s)  # not tested
 
@@ -631,14 +631,18 @@ class Solver(F06, OP2):
         #=========================
         if self.is_stress or self.is_strain or self.is_force:
             # SPRINGS
-            #elementTypes = [self.elements_springs.celas1, self.elements_springs.celas2,
-                            #self.elements_springs.celas3, self.elements_springs.celas4,]
-            elementTypes = []
+            elementTypes = [model.elements_spring.celas1, 
+                            #model.elements_spring.celas2,
+                            #model.elements_spring.celas3,
+                            #model.elements_spring.celas4
+                            ]
             for elementType in elementTypes:
                 n = elementType.n
+                print("n%s = %s" % (elementType.type, n))
                 if n:
-                    o1, e1, f1 = element.displacement_stress(model, self.positions, q, self.nidComponentToID)
-                    eids = elementType.eid
+                    o1, e1, f1 = elementType.displacement_stress(model, self.positions, q, self.nidComponentToID)
+                    eids = elementType.element_id
+                    print("eids =", eids)
                     #if self.is_strain:
                     self._store_spring_oes(model, eids, e1, case, elementType.type, Type='strain')
                     #if self.is_stress:
@@ -648,6 +652,8 @@ class Solver(F06, OP2):
                     del e1
                     del o1
                     del f1
+                else:
+                    asfd
             #del elementType model.elements_springs
 
             # RODS
@@ -663,7 +669,7 @@ class Solver(F06, OP2):
                     (e1, e4,
                      o1, o4,
                      f1, f4) = elementType.displacement_stress(model, self.positions, q, self.nidComponentToID)
-                    eids = elementType.eid
+                    eids = elementType.element_id
                     if self.is_strain:
                         self._store_rod_oes(model, eids, e1, e4, case, elementType.type, Type='strain')
                     del e1, e4
@@ -1200,6 +1206,7 @@ class Solver(F06, OP2):
             nid = model.grid.nid[ni]
             line = [nid, 'G']
             xyz = U[i:i + 6]  # 1,2,3,4,5,6
+            print("nid=%s xyz=%s" % ( nid, xyz))
             line += xyz
             i += 6
             data.append(line)
@@ -1335,8 +1342,17 @@ class Solver(F06, OP2):
             nid = model.grid.nid[i]
             self.positions[nid] = model.grid.xyz[i]
             index0s[nid] = 6 * i
+        
+        for i in xrange(model.elements_spring.celas1.n):
+            K, dofs, nijv = model.elements_spring.celas1.get_stiffness(i, model, self.positions, index0s)
+            self.add_stiffness(K, dofs, nijv)
 
+        for i in xrange(model.elements_spring.celas2.n):
+            K, dofs, nijv = model.elements_spring.celas2.get_stiffness(i, model, self.positions, index0s)
+            self.add_stiffness(K, dofs, nijv)
 
+        #celas3
+        #celas4
         for i in xrange(model.conrod.n):
             K, dofs, nijv = model.conrod.get_stiffness(i, model, self.positions, index0s)
             self.add_stiffness(K, dofs, nijv)

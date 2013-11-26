@@ -33,8 +33,8 @@ from pyNastran.bdf.fieldWriter import print_field, print_card
 
 def assert_fields(card1, card2, i):
     try:
-        fields1 = wipe_empty_fields(card1.reprFields(i))
-        fields2 = wipe_empty_fields(card2.reprFields(i))
+        fields1 = wipe_empty_fields(card1.reprFields())
+        fields2 = wipe_empty_fields(card2.reprFields())
     except:
         print("card1 = \n%s" % (card1))
         print("card2 = \n%s" % (card2))
@@ -115,10 +115,11 @@ def compare_card_content(fem1, fem2):
         card2 = fem2.properties[key]
         assert_fields(card1, card2, key)
 
-    for key in fem1.materials:
-        card1 = fem1.materials[key]
-        card2 = fem2.materials[key]
-        assert_fields(card1, card2, key)
+    for mat1, mat2 in zip(fem1.materials, fem2.materials):
+        #print("key =", key)
+        #card1 = fem1.materials[key]
+        #card2 = fem2.materials[key]
+        assert_fields(mat1, mat2, mat1.mid)
 
     for key in fem1.creepMaterials:
         card1 = fem1.creepMaterials[key]

@@ -57,10 +57,23 @@ class WriteMesh(object):
                 msg.append(param.print_card(size))
         return ''.join(msg)
 
+    def _write_elements_properties2(self, f, size):
+        ptypes = [self.properties_shell.pshell,
+                  self.properties_shell.pcomp,
+                  self.properties_shell.pshear,
+                  self.prod,
+                  self.properties_solid.psolid,]
+        
+        #pid_to_prop = defaultdict(list)
+        #for proptype in ptypes:
+            #for pid, prop in proptype.iteritems():
+                #pid_to_prop[pid]
+
     def _write_elements_properties(self, f, size):
         """
         Writes the elements and properties in and interspersed order
         """
+        return self._write_elements_properties2(f, size)
         msg = []
         missing_properties = []
 
@@ -80,8 +93,7 @@ class WriteMesh(object):
                   ]
 
         n = 0
-        pids_all = None
-        pids_set = None
+        pids_all = None  # the actual properties
         for t in ptypes:
             if t.n and n == 0:
                 pids_all = t.property_id
@@ -97,91 +109,95 @@ class WriteMesh(object):
         etypes = (self.elements_shell._get_types() +
                   self.elements_solid._get_types() +
                   [self.crod,])
+
+        #pids_set = None
         if pids_all is None:
             f.write('$MISSING_ELEMENTS because there are no properties\n')
             for t in etypes:
                 #print "t.type =", t.type
                 t.write_bdf(f, size=size)
-            #self.conrod.write_bdf(f, size=size)
-        else:
-            pids_set = set(list(pids_all))
+            return
 
-            n = 0
-            pids = None
-            for t in etypes:
-                #print "t.type =", t.type
-                if t.n and n == 0:
-                    eids = t.element_id
-                    pids = t.property_id
-                    n = 1
-                elif t.n:
-                    try:
-                        eids = concatenate(eids, t.element_id)
-                    #except AttributeError:
-                        #eids = array(list(eids) + list(t.element_id))
-                    except TypeError:
-                        #print eids
-                        #print t.element_id
-                        eids = array(list(eids) + list(t.element_id))
-                    except ValueError:
-                        #print eids
-                        #print t.element_id
-                        eids = array(list(eids) + list(t.element_id))
-                        #asdf
+        # there are properties 
+        pids_set = set(list(pids_all))
 
-                    try:
-                        pids = concatenate(pids, t.property_id)
-                    except AttributeError:
-                        pids = array(list(pids) + list(t.property_id))
-                    except TypeError:
-                        pids = array(list(pids) + list(t.property_id))
-                    except ValueError:
-                        pids = array(list(pids) + list(t.property_id))
-                #else:
-                    #print t.type
+        n = 0
+        pids = None
+        for t in etypes:
+            #print "t.type =", t.type
+            if t.n and n == 0:
+                eids = t.element_id
+                pids = t.property_id
+                n = 1
+            elif t.n:
+                try:
+                    eids = concatenate(eids, t.element_id)
+                #except AttributeError:
+                    #eids = array(list(eids) + list(t.element_id))
+                except TypeError:
+                    #print eids
+                    #print t.element_id
+                    eids = array(list(eids) + list(t.element_id))
+                except ValueError:
+                    #print eids
+                    #print t.element_id
+                    eids = array(list(eids) + list(t.element_id))
+                    #asdf
 
-            elements_by_pid = {}
-            if pids is not None:
-                pids_unique = unique(pids)
-                pids_unique.sort()
+                try:
+                    pids = concatenate(pids, t.property_id)
+                except AttributeError:
+                    pids = array(list(pids) + list(t.property_id))
+                except TypeError:
+                    pids = array(list(pids) + list(t.property_id))
+                except ValueError:
+                    pids = array(list(pids) + list(t.property_id))
+            #else:
+                #print t.type
 
+        elements_by_pid = {}
+        if pids is not None:
+            pids_unique = unique(pids)
+            pids_unique.sort()
+            if pids_unique:
                 f.write('$ELEMENTS_WITH_PROPERTIES\n')
-                for pid in pids_unique:
-                    i = where(pid==pids)[0]
-                    eids2 = eids[i]
 
-                    for t in ptypes:
-                        if t.n and pid in t.property_id:
-                            t.write_bdf(f, size=size, pids=[pid])
-                            pids_set.remove(pid)
-                    n = 0
-                    for t in etypes:
-                        if not t.n:
-                            continue
-                        eids3 = intersect1d(t.element_id, eids2, assume_unique=False)
-                        #print "eids3[pid=%s]" %(pid), eids3
-                        if n == 0 and len(eids3):
-                            elements_by_pid[pid] = eids3
-                            n = 1
-                        elif len(eids3):
-                            try:
-                                c = concatenate(elements_by_pid[pid], eids3)
-                            except TypeError:
-                                c = array(list(elements_by_pid[pid]) + list(eids3))
-                            except ValueError:
-                                c = array(list(elements_by_pid[pid]) + list(eids3))
-                            elements_by_pid[pid] = c
-                        else:
-                            continue
+            for pid in pids_all:
+                i = where(pid==pids)[0]
+                eids2 = eids[i]
+
+                for t in ptypes:
+                    if t.n and pid in t.property_id:
+                        t.write_bdf(f, size=size, pids=[pid])
+                        pids_set.remove(pid)
+                n = 0
+                for t in etypes:
+                    if not t.n:
+                        continue
+                    eids3 = intersect1d(t.element_id, eids2, assume_unique=False)
+                    #print "eids3[pid=%s]" %(pid), eids3
+                    if n == 0 and len(eids3):
+                        elements_by_pid[pid] = eids3
+                        n = 1
+                    elif len(eids3):
                         try:
-                            t.write_bdf(f, size=size, eids=eids3)
+                            c = concatenate(elements_by_pid[pid], eids3)
                         except TypeError:
-                            print "t.type =", t.type
-                            raise
-                        del eids3
-                #for pid, elements in elements_by_pid.items():
-                    #print "pid=%s n=%s" % (pid, len(elements))
-                #print elements_by_pid
+                            c = array(list(elements_by_pid[pid]) + list(eids3))
+                        except ValueError:
+                            c = array(list(elements_by_pid[pid]) + list(eids3))
+                        elements_by_pid[pid] = c
+                    else:
+                        continue
+                    try:
+                        t.write_bdf(f, size=size, eids=eids3)
+                    except TypeError:
+                        print "t.type =", t.type
+                        raise
+                    del eids3
+            #for pid, elements in elements_by_pid.items():
+                #print "pid=%s n=%s" % (pid, len(elements))
+            #print elements_by_pid
         
         # missing properties
         if pids_set:
@@ -193,7 +209,8 @@ class WriteMesh(object):
                         t.write_bdf(f, size=size, pids=[pid])
             
         #..todo:: finish...
-        f.write('$MISSING_ELEMENTS...todo...finish\n')
+        f.write('$UNASSOCIATED_ELEMENTS\n')
+        aaa
         # missing elements...
 
     def write_bdf(self, bdf_filename, interspersed=True, size=8):
@@ -206,13 +223,14 @@ class WriteMesh(object):
         #==========================
         self.grid.write_bdf(f, size)
 
-        #interspersed = False
+        interspersed = False
         if interspersed:
             #raise NotImplementedError('interspersed=False')
             self._write_elements_properties(f, size)
         else:
             #self.properties_springs.write_bdf(f)
-            #self.elements_springs.write_bdf(f)
+            self.elements_springs.write_bdf(f)
+            self.pelas.write_bdf(f, size)
 
             #self.properties_rods.write_bdf(f)
             #self.elements_rods.write_bdf(f)

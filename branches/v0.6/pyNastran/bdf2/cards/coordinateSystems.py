@@ -314,7 +314,7 @@ class Coord(BaseCard):
         t[3:5, 3:5] = matrix
         return t
 
-    def reprFields(self, i):
+    def reprFields(self):
         return self.rawFields()
 
     #def resolveCid(self):
