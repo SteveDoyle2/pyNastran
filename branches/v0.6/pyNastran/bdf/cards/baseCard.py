@@ -157,8 +157,8 @@ class BaseCard(object):
         try:
             return self.print_card()
         except:
-            fields = self.reprFields()
             print('problem printing %s card' % self.type)
+            fields = self.reprFields()
             print("fields = ", fields)
             raise
 
