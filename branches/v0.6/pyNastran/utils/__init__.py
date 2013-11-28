@@ -141,7 +141,7 @@ def print_bad_path(path):
     return "\n".join(["%s: %s" % (msg[os.path.exists(i)], i) for i in res])
 
 
-def list_print(lst):
+def list_print(lst, float_fmt='%-4.2f'):
     """
     Prints a list, numpy array, or numpy matrix in an abbreviated format.
     Supported element types: None, string, numbers. Useful for debugging.
@@ -153,11 +153,11 @@ def list_print(lst):
         if val is None or isinstance(val, basestring):
             return str(val)
         if isinstance(val, float):
-            return '%-4.2f' % val
+            return float_fmt % val
         try:
             return '%g' % val
         except TypeError:
-            print("parameter = |%s|" % val)
+            print("parameter = %r" % val)
             raise
 
     try: # TODO: remove try block and fix bug in OP2 code or add a warning message

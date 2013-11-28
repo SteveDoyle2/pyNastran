@@ -415,11 +415,15 @@ class NastranIO(object):
         self.log_info("updated grid")
 
         cases = {}
-        print "len(elements) =", len(model.elements)
+        nelements = len(model.elements)
+        print "len(elements) =", nelements
+        pids = [] # zeros(nelements, 'int32')
         nxs = []
         nys = []
         nzs = []
+        i = 0
         for eid, element in sorted(model.elements.iteritems()):
+            pids.append(element.Pid())
             if isinstance(element, ShellElement):
                 (nx, ny, nz) = element.Normal()
             else:
@@ -428,8 +432,11 @@ class NastranIO(object):
             nys.append(ny)
             nzs.append(nz)
 
+        self.iSubcaseNameMap = {1: ['Nastran', '']}
+
+        # subcaseID, resultType, vectorSize, location, dataFormat
+        cases[(0, 'Pid', 1, 'centroid', '%.0f')] = pids
         if min(nxs) == max(nxs) and min(nxs) != 0.0:
-            self.iSubcaseNameMap = {1: ['Nastran', '']}
 
             # subcaseID, resultType, vectorSize, location, dataFormat
             cases[(0, 'Normal_x', 1, 'centroid', '%.1f')] = nxs
@@ -520,7 +527,8 @@ class NastranIO(object):
         self.caseKeys = sorted(cases.keys())
         #print "caseKeys = ",self.caseKeys
         #print "type(caseKeys) = ",type(self.caseKeys)
-        self.nCases = (ncases - 1) if (ncases - 1) > 0 else 0  # number of keys in dictionary
+        #self.nCases = (ncases - 1) if (ncases - 1) > 0 else 0  # number of keys in dictionary
+        self.nCases = ncases #if self.ncases == 0
         if self.nCases:
             self.scalarBar.VisibilityOn()
             self.scalarBar.Modified()

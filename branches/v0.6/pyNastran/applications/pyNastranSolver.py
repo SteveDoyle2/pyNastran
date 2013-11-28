@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # pylint: disable=E0602,C0103
 from __future__ import print_function
 import os
@@ -132,11 +133,11 @@ class Solver(F06, OP2):
         - calculate SPC, MPC, Coord constraints
         - solve for eigenvectors
         - {F} = [K]{x} + [M]{xdd}
-        -       [K]{x} + [M]{λ^2}{x}
-        -       ([K] + [M]{λ^2}){x}
+        -       [K]{x} + [M]{?^2}{x}
+        -       ([K] + [M]{?^2}){x}
         - let F = 0 and assume {x} != 0
-          - [K] + [M]{λ^2} = {0}
-          - {λ^2} = -[K][M]^-1
+          - [K] + [M]{?^2} = {0}
+          - {?^2} = -[K][M]^-1
 
     Progress:
       - Solves a structural problem using matrix partitioning of the SPC set
@@ -215,7 +216,7 @@ class Solver(F06, OP2):
           - PLOAD1
         - @todo not done... but close
       CSHEAR
-        - FORCE/STRESS/STRAIn
+        - FORCE/STRESS/STRAIN
           - not calculated
           - no tables created
     """

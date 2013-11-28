@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-##
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-##
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-##
-## This file is part of pyNastran.
-##
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-##
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-##
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-##
 #!/usr/bin/python
 # pylint: disable=C0103,C0111,W0612,R0904
 
@@ -437,10 +413,10 @@ class AppFrame(wx.Frame):
         self.Bind(wx.EVT_TOOL, events.onLoadCart3d, id=ID_CART3D)
         self.Bind(wx.EVT_TOOL, events.onLoadLaWGS, id=ID_LAWGS)
         self.Bind(wx.EVT_TOOL, events.onLoadPanair, id=ID_PANAIR)
+        self.Bind(wx.EVT_TOOL, events.onLoadPlot3d, id=ID_PLOT3D)
         self.Bind(wx.EVT_TOOL, events.onLoadSTL, id=ID_STL)
         self.Bind(wx.EVT_TOOL, events.onLoadTetgen, id=ID_TETGEN)
         self.Bind(wx.EVT_TOOL, events.onLoadUsm3d, id=ID_USM3D)
-        self.Bind(wx.EVT_TOOL, events.onLoadPlot3D, id=ID_PLOT3D)
         #self.Bind(wx.EVT_TOOL, events.onExport, id=ID_EXPORT)
 
         self.Bind(wx.EVT_MENU, events.onExit, id=wx.ID_EXIT)
@@ -469,14 +445,13 @@ class AppFrame(wx.Frame):
             png = wx.Image(os.path.join(iconPath, 'topen.png'), wx.BITMAP_TYPE_PNG)
             loadBDF.SetBitmap(png.ConvertToBitmap())
 
-        if is_cart3d:
-            loadCart3d = fileMenu.Append(ID_CART3D, 'Load &Cart3D', 'Loads a Cart3D Input/Results File')
-        if is_lawgs:
-            loadLaWGS = fileMenu.Append(ID_LAWGS, 'Load &LaWGS', 'Loads an LaWGS File')
-        if is_panair:
-            loadPanair = fileMenu.Append(ID_PANAIR, 'Load &Panair', 'Loads a Panair Input File')
-        if is_stl:
-            loadSTL = fileMenu.Append(ID_STL, 'Load &STL', 'Loads a STL Input File')
+        if is_cart3d: loadCart3d = fileMenu.Append(ID_CART3D, 'Load &Cart3D', 'Loads a Cart3D Input/Results File')
+        if is_lawgs:  loadLaWGS  = fileMenu.Append(ID_LAWGS, 'Load &LaWGS', 'Loads an LaWGS File')
+        if is_panair: loadPanair = fileMenu.Append(ID_PANAIR, 'Load &Panair', 'Loads a Panair Input File')
+        if is_plot3d: loadPlot3d = fileMenu.Append(ID_PLOT3D, 'Load Pl&ot3d', 'Loads a Plot3d Input File')
+        if is_stl:    loadSTL    = fileMenu.Append(ID_STL, 'Load &STL', 'Loads a STL Input File')
+        if is_usm3d:  loadUsm3d  = fileMenu.Append(ID_USM3D, 'Load &Usm3d', 'Loads a Usm3d Input File')
+        if is_tetgen: loadTetgen = fileMenu.Append(ID_TETGEN, 'Load &Tetgen', 'Loads a Tetgen Input File')
         #export     = fileMenu.Append(ID_EXPORT,'Export to...', 'Export the Model to Another Format')
         #print "topen = ",os.path.join(iconPath,'topen.png')
         sys.stdout.flush()

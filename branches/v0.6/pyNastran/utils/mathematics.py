@@ -189,16 +189,32 @@ def is_float_ranged(a, x, b):
     return True
 
 
-def print_annotated_matrix(A, rowNames=None, tol=1e-8):
+def print_annotated_matrix(A, row_names=None, col_names=None, tol=1e-8):
     """
     Takes a list/dictionary and annotates the row number with that value
     indicies go from 0 to N
     """
-    if rowNames is None:
-        rowNames = [i for i in xrange(A.shape[0])]
     B = array(A)
-    return ''.join([ '%-2s' % (str(rowNames[i])) + ' ' + list_print(B[i, :], tol)
-                     + '\n' for i in xrange(B.shape[0])])
+    if row_names is None:
+        row_names = [i for i in xrange(B.shape[0])]
+
+    rwidth = max([len(str(row_names[i])) for i in range(len(row_names))])
+    row_fmt = '%%-%ss' % rwidth
+    
+    header = ''
+    if col_names is not None:
+        col_name_list = [str(col_names[i]) for i in col_names]
+        cwidth = max([len(name) for name in col_name_list])
+        
+        cwidth = 5
+        col_fmt = '%%-%ss ' % cwidth
+        #print("col_fmt = ", col_fmt)
+        header = row_fmt % '' + '   ' + col_fmt * len(col_names) % tuple(col_name_list) + '\n'
+        float_fmt = '%%-%i.2f' % cwidth
+        
+    c= header + ''.join([row_fmt % (str(row_names[i])) + ' ' + list_print(B[i, :], tol, float_fmt=float_fmt)
+                              + '\n' for i in xrange(B.shape[0])])
+    return c                          
 
 
 def print_matrix(A, tol=1e-8):
@@ -206,16 +222,18 @@ def print_matrix(A, tol=1e-8):
     return ''.join([list_print(B[i, :], tol) + '\n' for i in xrange(B.shape[0])])
 
 
-def list_print(listA, tol=1e-8):
+def list_print(listA, tol=1e-8, float_fmt='-%3.2g', zero_fmt='    0'):
     if len(listA) == 0:
         return '[]'
 
     def _print(a):
         if isinstance(a, str):
             return a
-        for i, j in ((float, '%-3.2g'), (float32, '%-3.2g'),
-                     (float64, '%-3.2g'), (int, '%3i') ):
+        for i, j in ((float, float_fmt), (float32, float_fmt),
+                     (float64, float_fmt), (int, '%3i') ):
             if isinstance(a, i):
+                if abs(a) < tol:
+                    return zero_fmt
                 return j % (0. if abs(a) < tol else a)
 
         if isinstance(a, complex) or isinstance(a, complex64) or isinstance(a, complex128):
@@ -225,7 +243,7 @@ def list_print(listA, tol=1e-8):
             print("list_print: type(a) is not supported... %s" % (type(a)))
             return ' %g' % a
         except TypeError:
-            print("a = |%s|" % a)
+            print("a = %r" % a)
             raise
 
     return '[ '+ ', '.join([_print(a) for a in listA])+ ']'
@@ -241,13 +259,8 @@ def augmented_identity(A):
     [ 0, 0, 1, 0 ]
     """
     (nx, ny) = A.shape
-    I = zeros([nx, ny], 'd')
-
-    for i in xrange(nx):
-        if i == nx or i == ny:
-            break
-        I[i][i] = 1.
-    return I
+    I = eye(max(nx, ny), 'float64')
+    return I[:nx, :ny]
 
 
 def solve_tridag(A, D):
