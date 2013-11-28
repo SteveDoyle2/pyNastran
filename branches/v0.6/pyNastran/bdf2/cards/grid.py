@@ -9,16 +9,18 @@ class Nodes(object):
     def __init__(self, model):
         self.model = model
         self.spoint = SPOINT(model)
+        self.grdset = GRDSET(model)
         self.grid = GRID(model)
 
     def build(self):
         self.spoint.build()
         self.grid.build()
 
-    def write_bdf(self, f, size=8):
+    def write_bdf(self, f, size=8, nids=None):
         f.write('$NODES\n')
-        self.spoint.write_bdf(f)
-        self.grid.write_bdf(f)
+        self.spoint.write_bdf(f, size, nids)
+        self.grdset.write_bdf(f, size, nids)
+        self.grid.write_bdf(f, size, nids)
 
     def ndofs(self, sol):
         if self.model.sol in [101, 103, 144, 145]:
@@ -31,11 +33,53 @@ class Nodes(object):
 
     def get_stats(self):
         msg = []
-        types = [self.spoint, self.grid]
+        types = [self.spoint, self.grdset, self.grid]
         for node in types:
             if node.n:
                 msg.append('  %-8s: %i' % (node.type, node.n))
         return msg
+
+
+class GRDSET(object):
+    type = 'GRDSET'
+    def __init__(self, model):
+        """
+        Defines the GRID object.
+
+        :param self: the GRID object
+        :param model: the BDF object
+
+        +--------+-----+----+----+----+----+----+----+------+
+        |    1   |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9   |
+        +========+=====+====+====+====+====+====+====+======+
+        | GRDSET |     | CP |    |    |    | CD | PS | SEID |
+        +--------+-----+----+----+----+----+----+----+------+
+        """
+        self.model = model
+        self._comment = ['']
+        #: card count
+        self.n = 0
+        #: Grid point coordinate system
+        self.cp = 0
+        #: Analysis coordinate system
+        self.cd = 0
+        #: SPC constraint
+        self.ps = -1
+        #: Superelement ID
+        self.seid = 0
+
+    def add(self, card, comment):
+        self._comment = comment
+        self.n = 1
+        self.cp = integer_or_blank(card, 2, 'cp', 0)
+        self.cd = integer_or_blank(card, 6, 'cd', 0)
+        self.ps = integer_or_blank(card, 7, 'ps', -1)
+        self.seid = integer_or_blank(card, 8, 'seid', 0)
+
+    def write_bdf(self, f, size=8):
+        if self.n:
+            card = ['GRDSET', None, self.cp, None, None, None, self.cd, self.seid]
+            f.write(print_card(card, size))
 
 
 class GRID(object):
@@ -75,12 +119,16 @@ class GRID(object):
             self.seid = zeros(ncards, 'int32')
             self.ps = zeros(ncards, 'int32')
 
+            cp0 = self.model.grdset.cp
+            cd0 = self.model.grdset.cd
+            ps0 = self.model.grdset.ps
+            seid0 = self.model.grdset.seid
             for i, card in enumerate(cards):
                 #: Node ID
                 self.nid[i] = integer(card, 1, 'nid')
 
                 #: Grid point coordinate system
-                self.cp[i] = integer_or_blank(card, 2, 'cp', 0)
+                self.cp[i] = integer_or_blank(card, 2, 'cp', cp0)
 
                 x = double_or_blank(card, 3, 'x1', 0.)
                 y = double_or_blank(card, 4, 'x2', 0.)
@@ -89,13 +137,13 @@ class GRID(object):
                 self.xyz[i] = [x, y, z]
 
                 #: Analysis coordinate system
-                self.cd[i] = integer_or_blank(card, 6, 'cd', 0)
+                self.cd[i] = integer_or_blank(card, 6, 'cd', cd0)
 
                 #: SPC constraint
-                self.ps[i] = integer_or_blank(card, 7, 'ps', -1)
+                self.ps[i] = integer_or_blank(card, 7, 'ps', ps0)
 
                 #: Superelement ID
-                self.seid[i] = integer_or_blank(card, 8, 'seid', 0)
+                self.seid[i] = integer_or_blank(card, 8, 'seid', seid0)
 
     def positions(self, nids=None):
         if nids is None:
@@ -126,14 +174,17 @@ class GRID(object):
     def write_bdf(self, f, size=8):
         if self.n:
             f.write('$GRID\n')
-            cp = [cpi     if cpi   != 0 else '' for cpi in self.cp]
-            cd = [cdi     if cdi   != 0 else '' for cdi in self.cd]
-            seid = [seidi if seidi != 0 else '' for seidi in self.seid]
-            for (nid, cp, xyz, cd, seid) in zip(self.nid, cp, self.xyz,
-                    cd, seid):
+            cp0 = self.model.grdset.cp
+            cd0 = self.model.grdset.cd
+            ps0 = self.model.grdset.ps
+            seid0 = self.model.grdset.seid
 
-                ps = None
-                card = ['GRID', nid, cp, xyz[0], xyz[1], xyz[2], cd, seid]
+            Cp   = [cpi   if cpi   != cp0   else '' for cpi   in self.cp]
+            Cd   = [cdi   if cdi   != cd0   else '' for cdi   in self.cd]
+            Ps   = [psi   if psi   != ps0   else '' for psi   in self.ps]
+            Seid = [seidi if seidi != seid0 else '' for seidi in self.seid]
+            for (nid, cp, xyz, cd, ps, seid) in zip(self.nid, Cp, self.xyz, Cd, Ps, Seid):
+                card = ['GRID', nid, cp, xyz[0], xyz[1], xyz[2], cd, ps, seid]
                 f.write(print_card(card, size))
 
     def __repr__(self):

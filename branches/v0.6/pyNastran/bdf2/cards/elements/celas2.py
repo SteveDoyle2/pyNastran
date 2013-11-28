@@ -1,6 +1,6 @@
 from .conrod import _Lambda
 
-from numpy import array, dot, zeros, unique, searchsorted
+from numpy import array, dot, zeros, unique, searchsorted, transpose
 from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import print_card
@@ -97,7 +97,6 @@ class CELAS2(object):
     def get_stiffness(self, i, model, positions, index0s, fnorm=1.0):  # CELAS2
         ki = self.K[i]
         
-        aa
         k = ki * array([[1, -1,],
                         [-1, 1]])
 
@@ -120,28 +119,25 @@ class CELAS2(object):
         #========================
         K = dot(dot(transpose(Lambda), k), Lambda)
 
-        c1, c2 = self.components[i, :]
-        n1, n2 = node_ids[i, :]
+        c0, c1 = self.components[i, :]
+        n0, n1 = self.node_ids[i, :]
+        delta0 = 0 if c0 in [1, 2, 3] else 3
         delta1 = 0 if c1 in [1, 2, 3] else 3
-        delta2 = 0 if c2 in [1, 2, 3] else 3
 
         nIJV = [
+            (n0, 1 + delta0), (n0, 2 + delta0), (n0, 3 + delta0),
             (n1, 1 + delta1), (n1, 2 + delta1), (n1, 3 + delta1),
-            (n2, 1 + delta2), (n2, 2 + delta2), (n2, 3 + delta2),
         ]
         dofs = nIJV
         return (K, dofs, nIJV)
 
-    def displacement_stress(self, model, positions, q, dofs):
+    def displacement_stress(self, model, positions, q, dofs,
+            ni, e1, f1, o1):
+
         n = self.n
-        o1 = zeros(n, 'float64')
-        e1 = zeros(n, 'float64')
-        f1 = zeros(n, 'float64')
-
-
         du_axial = zeros(n, 'float64')
         for i in xrange(self.n):
-            (n0, n1) = self.node_ids[i, :]
+            n0, n1 = self.node_ids[i, :]
             if n0 == n1:
                 raise RuntimeError('CELAS2 eid=%s n1=%s n2=%s' % (self.element_id[i], n0, n1))
             p0 = positions[n0]
@@ -173,8 +169,8 @@ class CELAS2(object):
         s = self.s
         ki = self.K
 
-        axial_strain = du_axial * s
-        axial_force = ki * du_axial
-        axial_stress = axial_force * s
+        e1[ni : ni+n] = du_axial * s
+        f1[ni : ni+n] = ki * du_axial
+        o1[ni : ni+n] = f1[ni: ni+n] * s
 
-        return (axial_strain, axial_stress, axial_force)
+        #return (axial_strain, axial_stress, axial_force)

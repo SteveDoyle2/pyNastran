@@ -322,10 +322,10 @@ class CONROD(object):
             E = mat.E()
             G = mat.G()
             #mat = self.get_material_from_index(i)
-            #j = searchsorted(mat.material_id, self.material_id[i])
+            #jmat = searchsorted(mat.material_id, self.material_id[i])
 
-            #E = mat.E[j]
-            G = mat.G[j]
+            #E = mat.E[jmat]
+            #G = mat.G[jmat]
             #G = self.G()
             J = self.J[i]
             C = self.c[i]

@@ -1,3 +1,4 @@
+from numpy import dot
 from numpy import zeros, unique, searchsorted
 
 from pyNastran.bdf.fieldWriter import print_card
@@ -25,7 +26,6 @@ class CROD(object):
     def build(self):
         """
         :param self: the CROD object
-        :param cards: the list of PCOMP cards
         """
         cards = self._cards
         ncards = len(cards)
@@ -95,8 +95,7 @@ class CROD(object):
                 card = ['CROD', eid, pid, n[0], n[1] ]
                 f.write(print_card(card))
 
-    def Stiffness(self, model, node_ids, index0s, fnorm=1.0):  # CROD/CONROD
-        from numpy import dot
+    def get_stiffness(self, model, node_ids, index0s, fnorm=1.0):
         #print("----------------")
         A = self.Area()
         E = self.E()

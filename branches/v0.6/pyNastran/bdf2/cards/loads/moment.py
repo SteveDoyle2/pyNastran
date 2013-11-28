@@ -1,4 +1,4 @@
-from numpy import zeros, searchsorted
+from numpy import zeros, searchsorted, unique
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.fieldWriter import print_card
@@ -19,6 +19,33 @@ class MOMENT(object):
         self.n = 0
         self._cards = []
         self._comments = []
+
+    def __getitem__(self, i):
+        unique_lid = unique(self.load_id)
+        #print "force", unique_lid, i
+        if len(i):
+            f = MOMENT(self.model)
+            f.load_id = self.load_id[i]
+            f.node_id = self.node_id[i]
+            f.coord_id = self.coord_id[i]
+            f.mag = self.mag[i]
+            f.xyz = self.xyz[i]
+            f.n = len(i)
+            return f
+        raise RuntimeError('len(i) = 0')
+
+    def __mul__(self, value):
+        f = MOMENT(self.model)
+        f.load_id = self.load_id
+        f.node_id = self.node_id
+        f.coord_id = self.coord_id
+        f.mag = self.mag * value
+        f.xyz = self.xyz * value
+        f.n = self.n
+        return f
+
+    def __rmul__(self, value):
+        return self.__mul__(value)
 
     def add(self, card, comment):
         self._cards.append(card)

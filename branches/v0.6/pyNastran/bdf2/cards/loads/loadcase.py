@@ -18,7 +18,8 @@ class LoadCase(object):
             load_ids = unique(load.load_id)
             for load_id in load_ids:
                 if load.type in ['FORCE', 'FORCE1', 'FORCE2',
-                                'MOMENT', 'MOMENT1', 'MOMENT2']:
+                                'MOMENT', 'MOMENT1', 'MOMENT2',
+                                'PLOAD1',]:
                     i = where(load_id == load.load_id)[0]
                     #print "i** =", i
                     if len(i):
@@ -58,11 +59,11 @@ class LoadCase(object):
                 if isinstance(loads, tuple):
                     (sf, loads2) = loads
                     for load in loads2:
-                        if load.type in ['FORCE']:
+                        if load.type in ['FORCE', 'MOMENT']:
                             all_loads_out.append(sf * load)
                         else:
                             asdfff
-                elif loads.type in ['FORCE']:
+                elif loads.type in ['FORCE', 'MOMENT', 'PLOAD1']:
                     all_loads_out.append(loads)
 
                 else:

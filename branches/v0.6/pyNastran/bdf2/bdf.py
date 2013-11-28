@@ -23,7 +23,7 @@ from pyNastran.utils.gui_io import load_file_dialog
 from .cards.coord import Coord
 
 # nodes
-from .cards.grid import GRID
+from .cards.grid import GRID, GRDSET
 from .cards.spoint import SPOINT
 
 # properties
@@ -48,6 +48,16 @@ from .cards.materials.materials import Materials
 from .cards.loads.load import LOAD
 from .cards.loads.force import FORCE
 from .cards.loads.moment import MOMENT
+
+#from .cards.loads.force1 import FORCE1
+#from .cards.loads.force2 import FORCE2
+#from .cards.loads.moment1 import MOMENT1
+#from .cards.loads.moment2 import MOMENT2
+
+#from .cards.loads.pload  import PLOAD
+from .cards.loads.pload1 import PLOAD1
+from .cards.loads.pload2 import PLOAD2
+#from .cards.loads.pload4 import PLOAD4
 
 #from .cards.loads.rforce import RFORCE
 #from .cards.loads.sload import SLOAD
@@ -249,6 +259,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.executive_control_lines = []
         #: list of case control deck lines
         self.case_control_lines = []
+        
+        self.echo = False
 
         self.__init_attributes()
 
@@ -510,6 +522,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         
         model = self
         self.grid = GRID(model)
+        self.grdset = GRDSET(model)
         self.spoint = SPOINT(model)
         
         self.coords = {0 : CORD2R() }
@@ -520,7 +533,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #self.spoints = None
         #self.epoints = None
         #: stores GRIDSET card
-        self.gridSet = None
 
         #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
         #: etc.)
@@ -571,6 +583,10 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.moment = MOMENT(model)
         #self.moment1 = MOMENT1(model)
         #self.moment2 = MOMENT2(model)
+        
+        self.pload1 = PLOAD1(model)
+        self.pload2 = PLOAD2(model)
+        #self.pload4 = PLOAD4(model)
 
         #: stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
         #self.materials = {}
@@ -1328,6 +1344,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         n = 1
         #isDone = False
         isEndData = False
+        icard = 1
         while self.active_filename: # or self._stored_lines:
             #self.log.debug("self._stored_lines = %s" % self._stored_lines)
             try:
@@ -1370,7 +1387,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self._increase_card_count(card_name)
             #print('card_count =', self.card_count.keys())
             if not self.is_reject(card_name):
-                self.add_card(lines, card_name, comment, is_list=False)
+                self.add_card(icard, lines, card_name, comment, is_list=False)
+                icard += 1
             else:
                 #print('card_count =', self.card_count.keys())
                 if comment:
@@ -1463,7 +1481,20 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         card[0] = card_name
         return card
 
-    def add_card(self, card_lines, card_name, comment='', is_list=True):
+    def write_sorted_card(self, card, n):
+        """
+        1-        CELAS2  1       3.      1       1       2       1               7.0
+        """
+        if self.echo:
+            msg = '%21s-%8s' % (n, '')
+            for field in card.fields():
+                if field is None:
+                    field = ''
+                msg += '%-8s' % field
+            self.f06.write('%-110s\n' % msg)
+        #return msg
+
+    def add_card(self, n, card_lines, card_name, comment='', is_list=True):
         """
         Adds a card object to the BDF object.
         :param self:       the BDF object
@@ -1513,6 +1544,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # function that gets by name the initialized object (from global scope)
         
         name = card[0]
+        self.write_sorted_card(card_obj, n)
+
+        
         #========================
         if name == 'PARAM':
             param = PARAM(card_obj, comment=comment)
@@ -1748,8 +1782,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'PLOAD':
             #self.pload.add(card_obj, comment=comment)
             pass
+        elif name == 'PLOAD1':
+            self.pload1.add(card_obj, comment=comment)
+        elif name == 'PLOAD2':
+            self.pload2.add(card_obj, comment=comment)
         elif name == 'PLOAD4':
-            #self.pload4.add(card_obj, comment=comment)
+            self.pload4.add(card_obj, comment=comment)
             pass
         elif name == 'GRAV':
             pass
@@ -1848,6 +1886,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #========================
         elif name == 'GRID':
             self.grid.add(card_obj, comment=comment)
+        elif name == 'GRDSET':
+            self.grdset.add(card_obj, comment=comment)
         elif name == 'SPOINT':
             self.spoint.add(card_obj, comment=comment)
         #========================

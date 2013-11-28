@@ -57,14 +57,27 @@ class XRefMesh(object):
         self.moment.build()
         #self.moment1.build()
         #self.moment2.build()
+        
+        #self.pload.build()
+        self.pload1.build()
+        self.pload2.build()
+        #self.pload4.build()
 
         self.loadcase = LoadCase()
         self.loadcase.add_reference(self.load)
         self.loadcase.add_reference(self.dload)
         self.loadcase.add(self.force)
+        #self.loadcase.add(self.force1)
+        #self.loadcase.add(self.force2)
+
         self.loadcase.add(self.moment)
+        #self.loadcase.add(self.moment1)
+        #self.loadcase.add(self.moment2)
         
-        #self.loadcase.add(self.moment)
+        #self.loadcase.add(self.pload)
+        #self.loadcase.add(self.pload1)
+        self.loadcase.add(self.pload2)
+        #self.loadcase.add(self.pload4)
         
         #self.loadcase.resolve(2)
         #self.loadcase.resolve(1)

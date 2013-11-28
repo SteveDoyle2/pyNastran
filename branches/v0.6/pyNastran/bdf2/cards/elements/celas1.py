@@ -120,12 +120,9 @@ class CELAS1(object):
         dofs = nIJV
         return (K, dofs, nIJV)
 
-    def displacement_stress(self, model, positions, q, dofs):
+    def displacement_stress(self, model, positions, q, dofs,
+            ni, e1, f1, o1):
         n = self.n
-        o1 = zeros(n, 'float64')
-        e1 = zeros(n, 'float64')
-        f1 = zeros(n, 'float64')
-
 
         du_axial = zeros(n, 'float64')
         for i in xrange(self.n):
@@ -164,8 +161,8 @@ class CELAS1(object):
         s = self.model.pelas.s[i]
         print "k=%s s=%s du_axial=%s" % (k, s, du_axial)
 
-        axial_strain = du_axial * s
-        axial_force = k * du_axial
-        axial_stress = axial_force * s
+        e1[ni: ni+n] = du_axial * s
+        f1[ni: ni+n] = k * du_axial
+        o1[ni: ni+n] = f1[ni: ni+n] * s
 
-        return (axial_strain, axial_stress, axial_force)
+        #return (axial_strain, axial_stress, axial_force)

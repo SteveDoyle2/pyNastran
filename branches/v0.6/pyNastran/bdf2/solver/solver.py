@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # pylint: disable=E0602,C0103
 from __future__ import print_function
 import os
@@ -13,6 +14,7 @@ from numpy.linalg import solve
 from scipy.sparse import coo_matrix
 
 # pyNastran
+from pyNastran.f06.f06Writer import sorted_bulk_data_header
 from pyNastran.utils import list_print
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 from pyNastran.bdf2.bdf import BDF, SPC, SPC1
@@ -215,18 +217,23 @@ class Solver(F06, OP2):
           - PLOAD1
         - @todo not done... but close
       CSHEAR
-        - FORCE/STRESS/STRAIn
+        - FORCE/STRESS/STRAIN
           - not calculated
           - no tables created
     """
-    def __init__(self):
+    def __init__(self, fargs):
         F06.__initAlt__(self)
         OP2.__init__(self, '')
 
         self.pageNum = 1
+        self.fargs = fargs
 
         # normalization of stiffness matrix
-        self.fnorm = 1.0
+        self.knorm = fargs['--k']
+        # normalization of load vector
+        self.fnorm = fargs['--f']
+        # normalization of mass matrix
+        self.mnorm = fargs['--m']
 
         self.iSubcases = []
         self.nU = 0
@@ -247,9 +254,9 @@ class Solver(F06, OP2):
     def _solve(self, K, F, dofs):  # can be overwritten
         r"""solves \f$ [K]{x} = {F}\f$ for \f${x}\f$"""
         print("--------------")
-        print("Kaa_norm / %s = \n" % self.fnorm + list_print(K / self.fnorm))
+        print("Kaa_norm / %s = \n" % self.knorm + list_print(K / self.knorm))
         print("--------------")
-        print("Fa = ", F)
+        print("Fa/%g = %s" % (self.fnorm, F / self.fnorm))
         if F[0] == 0.0:
             assert max(F) != min(F), 'no load is applied...'
         print("--------------")
@@ -295,16 +302,32 @@ class Solver(F06, OP2):
 
         return U
 
-    def run_solver(self, bdfName):
-        bdfName = os.path.abspath(bdfName)
-        bdf_base, ext = os.path.splitext(bdfName)
+    def run_solver(self):
+        fargs = self.fargs
+        bdf_filename = os.path.abspath(fargs['BDFNAME'])
+        bdf_base = os.path.abspath(fargs['BDFBASE'])
+
+        #bdf_base, ext = os.path.splitext(bdfName)
         self.f06_name = bdf_base + '.f06'
         self.op2_name = bdf_base + '.op2'
         self.op2_pack_name = bdf_base + '_pack.op2'
 
+        self.f06_file = open(self.f06_name, 'wb')
+        self.op2_file = open(self.op2_name, 'wb')
+        self.op2_pack_file = open(self.op2_pack_name, 'w')
+
+        self.f06_file.write(self.make_f06_header())
+        #self.f06_file.write(sorted_bulk_data_header())
+        pageStamp = self.make_stamp(self.Title)
+
+        #------------------------------------------
+        # start of analysis
+        
         self.model = BDF()
-        self.model.cardsToRead = get_cards()
-        self.model.read_bdf(bdfName)
+        self.model.cards_to_read = get_cards()
+        self.model.f06 = self.f06_file
+
+        self.model.read_bdf(bdf_filename)
         cc = self.model.caseControlDeck
         #print cc.subcases
         analysisCases = []
@@ -312,12 +335,6 @@ class Solver(F06, OP2):
             if subcase.has_parameter('LOAD'):
                 analysisCases.append(subcase)
 
-        self.f06_file = open(self.f06_name, 'wb')
-        self.op2_file = open(self.op2_name, 'wb')
-        self.op2_pack_file = open(self.op2_pack_name, 'w')
-
-        self.f06_file.write(self.make_f06_header())
-        pageStamp = self.make_stamp(self.Title)
         self.write_summary(self.f06_file, card_count=self.model.card_count)
 
         #print analysisCases
@@ -441,12 +458,16 @@ class Solver(F06, OP2):
     def build_nid_component_to_id(self, model):
         i = 0
         nidComponentToID = {}
+        if model.grid.n:
+            cd = set(model.grid.cd)
+            if cd == 0:
+                raise NotImplementedError('Set cd=0; cd=%s is not supported.')
+
         for ni in xrange(model.grid.n):  # GRIDs
             nid = model.grid.nid[ni]
             ps = model.grid.ps[ni]
 
             while ps > 0:
-            #for psi in ps:
                 psi = ps % 10
                 self.iUs.append(i + psi - 1)
                 self.Us.append(0.0)
@@ -522,142 +543,56 @@ class Solver(F06, OP2):
         del Fg, Kgg
 
         # =====================================================================
-        # springs
-        #celas1s = []
-        #celas2s = []
-        celas3s = []
-        celas4s = []
+        #nnodes = model.grid.n
+
 
         # bars
-        crods = []
-        conrods = []
-        ctubes = []
-
-        # bars
-        cbeams = []
-        cbars = []
-
-        # shears
-        cshears = []
-
-        # shells
-        cquad4s = []
-        ctria3s = []
-
-        # solids
-        ctetra4s = []
-        cpenta5s = []
-        chexa8s = []
-
-        #type_map = {
-            ## springs
-            #'CELAS1' : celas1s,
-            #'CELAS2' : celas2s,
-            #'CELAS3' : celas3s,
-            #'CELAS4' : celas4s,
-
-            ## rods
-            #'CONROD' : conrods,
-            #'CROD'   : crods,
-            #'CTUBE'  : ctubes,
-
-            ## bars
-            #'CBEAM'  : cbeams,
-            #'CBAR'   : cbars,
-
-            ## shear
-            #'CSHEAR'  : cshears,
-
-            ## shells
-            #'CQUAD4'  : cquad4s,
-            #'CTRIA3'  : ctria3s,
-
-            #'CTETRA'  : ctetra4s,
-            #'CPENTA'  : cpenta5s,
-            #'CHEXA'  : chexa8s,
-        #}
-        #elements = model.elements
-        #for eid, element in elements.iteritems():
-            #try:
-                #a = type_map[element.type]
-            #except KeyError:
-                #raise NotImplementedError(element.type)
-            #a.append(eid)
-
-        #=========================
-        nnodes = model.grid.n
-
-        # springs
-        ncelas1s = model.elements_spring.celas1.n  # doesn't support cid != 0
-        ncelas2s = model.elements_spring.celas2.n  # doesn't support cid != 0
-        ncelas3s = len(celas3s)  # not tested
-        ncelas4s = len(celas4s)  # not tested
-
-        # rods
-        ncrods = len(crods)    # not tested
-        nconrods = len(conrods)
-        nctubes = len(ctubes)  # not tested
-
-        # bars
-        ncbars = len(cbars)   # not tested
-        ncbeams = len(cbeams) # half implemented
-
-        # shear
-        #ncshears = model.elements_shell.cshear.n # half implemented
-        ncshears = 0
-
-        # not implemented - shells
-        ncquad4s = model.elements_shell.cquad4.n
-        nctria3s = model.elements_shell.ctria3.n
+        #ncbars = len(cbars)   # not tested
 
         # not implemented - solids
-        nctetra4s = model.elements_solid.ctetra4.n
-        ncpenta6s = model.elements_solid.cpenta6.n
-        nchexa8s  = model.elements_solid.chexa8.n
-
-        #=========================
-        ## rods
-        #crods = array(crods)
-        #conrods = array(conrods)
-        #ctubes = array(ctubes)
-
-        ## shears
-        #cshears = array(cshears)
-
-        ## shells
-        #ctria3s = array(ctria3s)
-        #cquad4s = array(cquad4s)
+        #nctetra4s = model.elements_solid.ctetra4.n
+        #ncpenta6s = model.elements_solid.cpenta6.n
+        #nchexa8s  = model.elements_solid.chexa8.n
 
         #=========================
         if self.is_stress or self.is_strain or self.is_force:
             # SPRINGS
+            nsprings = 0
             elementTypes = [model.elements_spring.celas1, 
-                            #model.elements_spring.celas2,
-                            #model.elements_spring.celas3,
-                            #model.elements_spring.celas4
+                            model.elements_spring.celas2,
+                            model.elements_spring.celas3,
+                            model.elements_spring.celas4
                             ]
             for elementType in elementTypes:
-                n = elementType.n
-                print("n%s = %s" % (elementType.type, n))
-                if n:
-                    o1, e1, f1 = elementType.displacement_stress(model, self.positions, q, self.nidComponentToID)
-                    eids = elementType.element_id
-                    print("eids =", eids)
-                    #if self.is_strain:
-                    self._store_spring_oes(model, eids, e1, case, elementType.type, Type='strain')
-                    #if self.is_stress:
-                    self._store_spring_oes(model, eids, o1, case, elementType.type, Type='stress')
-                    #if self.is_force:
-                    self._store_spring_oef(model, eids, f1, case, elementType.type)
-                    del e1
-                    del o1
-                    del f1
-                else:
-                    asfd
+                nsprings += elementType.n
+
+            if nsprings:
+                o1 = zeros(nsprings, 'float64')
+                e1 = zeros(nsprings, 'float64')
+                f1 = zeros(nsprings, 'float64')
+
+                ispring = 0
+                for elementType in elementTypes:
+                    n = elementType.n
+                    #print("n%s = %s" % (elementType.type, n))
+                    if n:
+                        elementType.displacement_stress(model, self.positions, q, self.nidComponentToID,
+                            ispring, o1, e1, f1)
+                        eids = elementType.element_id
+                        print("eids =", eids)
+                    ispring += n
+                #if self.is_strain:
+                self._store_spring_oes(model, eids, e1, case, elementType.type, Type='strain')
+                #if self.is_stress:
+                self._store_spring_oes(model, eids, o1, case, elementType.type, Type='stress')
+                #if self.is_force:
+                self._store_spring_oef(model, eids, f1, case, elementType.type)
+                del e1
+                del o1
+                del f1
             #del elementType model.elements_springs
 
             # RODS
-            #elementTypes = ['CROD', 'CONROD', 'CTUBE']
             elementTypes = [model.crod, model.conrod]  # model.ctube
 
             for elementType in elementTypes:
@@ -683,18 +618,14 @@ class Solver(F06, OP2):
 
             #=========================
             # CHSEAR
+            #ncshears = model.elements_shell.cshear.n # half implemented
+            ncshears = 0
             if ncshears:
-                print("ncshears", ncshears)
-                print("cshears", cshears)
-                stress = zeros((ncshears, 3), 'float64')
-                strain = zeros((ncshears, 3), 'float64')
-                force  = zeros((ncshears, 16), 'float64')
-                for i, eid in enumerate(cshears):
-                    element = elements[eid]
-                    (stressi, straini, forcei) = element.displacement_stress(model, q, self.nidComponentToID)
-                    stress[i, :] = stressi
-                    strain[i, :] = straini
-                    force[i, :] = forcei
+                #stress = zeros((ncshears, 3), 'float64')
+                #strain = zeros((ncshears, 3), 'float64')
+                #force  = zeros((ncshears, 16), 'float64')
+
+                stress, strain, force = elementType.displacement_stress(model, self.positions, q, self.nidComponentToID)
                 #if self.is_strain:
                 self._store_cshear_oes(model, cshears, strain, case, 'CSHEAR', Type='strain')
                 #if self.is_stress:
@@ -707,9 +638,9 @@ class Solver(F06, OP2):
 
             #=========================
             # BARS / BEAMS
+            ncbeams = 0
             if ncbeams:
                 print("ncbeams", ncbeams)
-                print("cbeams", cbeams)
                 o1 = zeros(ncbeams, 'float64')
                 e1 = zeros(ncbeams, 'float64')
                 f1 = zeros(ncbeams, 'float64')
@@ -731,6 +662,10 @@ class Solver(F06, OP2):
 
             #=========================
             # SHELLS
+            #ncquad4s = model.elements_shell.cquad4.n
+            #nctria3s = model.elements_shell.ctria3.n
+            nctria3s = 0
+            ncquad4s = 0
             if nctria3s or ncquad4s:
                 print("nctria3", nctria3s)
                 stress = zeros((nctria3s+ncquad4s, 3), 'float64')
@@ -1231,28 +1166,26 @@ class Solver(F06, OP2):
         return Kgg, Fg, i
 
     def solve_sol_101(self, Kgg, Fg):
-        #=====================
-
         (self.IDtoNidComponents) = reverse_dict(self.nidComponentToID)
         print("IDtoNidComponents = ", self.IDtoNidComponents)
-        #print("Kgg =\n" + print_annotated_matrix(Kgg, self.IDtoNidComponents))
+        print("Kgg =\n" + print_annotated_matrix(Kgg, self.IDtoNidComponents, self.IDtoNidComponents))
         #print("Kgg = \n", Kgg)
         #print("iSize = ", i)
 
-        #(Kaa,Fa) = self.Partition(Kgg)
+        #(Kaa, Fa) = self.Partition(Kgg)
         #sys.exit('verify Kgg')
 
-        #print("Kgg = \n%s" % (print_matrix(Kgg / self.fnorm)))
+        print("Kgg/%g = \n%s" % (self.knorm, print_matrix(Kgg / self.knorm)))
         Kaa, dofs2 = partition_dense_symmetric(Kgg, self.iUs)
-        print("Kaa = \n%s" % (print_matrix(Kaa / self.fnorm)))
+        print("Kaa/%g = \n%s" % (self.knorm, print_matrix(Kaa / self.knorm)))
         #print("Kaa.shape = ",Kaa.shape)
 
         #sys.exit('verify Kaa')
         Fa, _dofs2 = partition_dense_vector(Fg, self.iUs)
         #print("Kaa = \n%s" % (print_matrix(Kaa)))
 
-        print("Fg = ", Fg)
-        print("Fa = ", Fa)
+        print("Fg/%g = %s" % (self.fnorm, Fg/self.fnorm))
+        print("Fa/%g = %s" % (self.fnorm, Fa/self.fnorm))
         #print("Us = ", self.Us)
 
         #self.Us = array(self.Us, 'float64')  # SPC
@@ -1307,11 +1240,19 @@ class Solver(F06, OP2):
 
     def add_stiffness(self, K, dofs, nijv):
         Kgg = self.Kgg
+        #print(type(Kgg))
         for i, dof1 in enumerate(dofs):
+            #dof1i = self.nidComponentToID[dof1]
             for j, dof2 in enumerate(dofs):
                 if abs(K[i, j]) > 0.0:
-                    print('i=%s j=%s dof1=%s dof2=%s Ke[i,j]=%s' % (i,j,dof1,dof2, K[i,j]/self.fnorm))
+                    print('i=%s j=%s dof1=%s dof2=%s Ke[i,j]=%s' % (i, j, dof1, dof2, K[i,j]/self.knorm))
+                    #dof2i = self.nidComponentToID[dof2]
+                    #assert isinstance(dof1i, int), dof1i
+                    #assert isinstance(dof2i, int), dof2i
                     Kgg[dof1, dof2] += K[i, j]
+                    #Kgg[dof1i, dof2i] += K[i, j]
+                    #print('Kgg[%i,%i]=%d' % (dof1i, dof2i, Kgg[dof1i, dof2i]) )
+        print('Kggi =\n', Kgg)
 
     def assemble_global_stiffness(self, model, i, Dofs):
         self.Kgg = zeros((i, i), 'float64')
@@ -1345,10 +1286,19 @@ class Solver(F06, OP2):
         
         for i in xrange(model.elements_spring.celas1.n):
             K, dofs, nijv = model.elements_spring.celas1.get_stiffness(i, model, self.positions, index0s)
+            print("Kcelas1 =\n", K)
             self.add_stiffness(K, dofs, nijv)
 
         for i in xrange(model.elements_spring.celas2.n):
             K, dofs, nijv = model.elements_spring.celas2.get_stiffness(i, model, self.positions, index0s)
+            self.add_stiffness(K, dofs, nijv)
+
+        for i in xrange(model.elements_spring.celas3.n):
+            K, dofs, nijv = model.elements_spring.celas3.get_stiffness(i, model, self.positions, index0s)
+            self.add_stiffness(K, dofs, nijv)
+
+        for i in xrange(model.elements_spring.celas4.n):
+            K, dofs, nijv = model.elements_spring.celas4.get_stiffness(i, model, self.positions, index0s)
             self.add_stiffness(K, dofs, nijv)
 
         #celas3
@@ -1470,17 +1420,24 @@ class Solver(F06, OP2):
 
         for load in loads:
             print(load)
-            if load.type == 'FORCE':
+            if load.type in ['FORCE', 'MOMENT']:
+                if load.type in ['FORCE']:
+                    ni = 0
+                elif  load.type in ['MOMENT']:
+                    ni = 3
+                else:
+                    raise NotImplementedError(load.type)
+
                 for i in xrange(load.n):
                     nid = load.node_id[i]
                     x, y, z = load.mag[i] * load.xyz[i]
 
                     if abs(x) > 0.:
-                        Fg[Dofs[(nid, 1)]] += x
+                        Fg[Dofs[(nid, ni + 1)]] += x
                     if abs(y) > 0.:
-                        Fg[Dofs[(nid, 2)]] += y
+                        Fg[Dofs[(nid, ni + 2)]] += y
                     if abs(z) > 0.:
-                        Fg[Dofs[(nid, 3)]] += z
+                        Fg[Dofs[(nid, ni + 3)]] += z
             else:
                 raise NotImplementedError(load.type)
         return Fg
@@ -1684,23 +1641,17 @@ def get_cards():
     return cardsToRead
 
 if __name__ == '__main__':
-    if 1:
-        inputs = sys.argv[1:]
-        fnorm = 1.0
-        if len(inputs) == 1:
-            bdfName = inputs[0]
-        elif len(inputs) == 2:
-            bdfName, fnorm = inputs
-            fnorm = float(fnorm)
-        s = Solver()
-        s.fnorm = fnorm
-        s.run_solver(bdfName)
+    from pyNastran.bdf2.solver.solver_args import run_arg_parse
+    fargs = run_arg_parse()
 
-        #if os.path.exists(s.op2_name):
-            #op2_name = s.op2_name
-            #op2 = OP2(op2FileName=op2_name, make_geom=False, debug=True, log=None)
-    else:
-        op2_name = 'solid_bending.op2'
-        op2 = OP2(op2_name)
-        op2.make_op2_debug = True
-        op2.read_op2()
+    s = Solver(fargs)
+    s.run_solver()
+
+    #if os.path.exists(s.op2_name):
+        #op2_name = s.op2_name
+        #op2 = OP2(op2FileName=op2_name, make_geom=False, debug=True, log=None)
+    #else:
+        #op2_name = 'solid_bending.op2'
+        #op2 = OP2(op2_name)
+        #op2.make_op2_debug = True
+        #op2.read_op2()

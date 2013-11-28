@@ -221,6 +221,7 @@ class WriteMesh(object):
         f.write(self._write_params(size))
 
         #==========================
+        self.grdset.write_bdf(f, size)
         self.grid.write_bdf(f, size)
 
         interspersed = False
@@ -292,6 +293,11 @@ class WriteMesh(object):
         self.moment.write_bdf(f, size)
         #self.moment1.write_bdf(f, size)
         #self.moment2.write_bdf(f, size)
+
+        #self.pload.write_bdf(f, size)
+        self.pload1.write_bdf(f, size)
+        self.pload2.write_bdf(f, size)
+        #self.pload4.write_bdf(f, size)
 
     def _write_rejects(self, size):
         """
