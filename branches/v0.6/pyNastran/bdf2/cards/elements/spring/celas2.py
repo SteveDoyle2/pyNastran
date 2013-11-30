@@ -1,4 +1,4 @@
-from .conrod import _Lambda
+from ..conrod import _Lambda
 
 from numpy import array, dot, zeros, unique, searchsorted, transpose
 from numpy.linalg import norm

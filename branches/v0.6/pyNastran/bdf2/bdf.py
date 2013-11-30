@@ -32,11 +32,11 @@ from .cards.properties.prod import PROD
 from .cards.properties.properties_solid import PropertiesSolid
 
 # elements
-from .cards.elements.elements_spring import ElementsSpring
+from .cards.elements.spring.elements_spring import ElementsSpring
 from .cards.properties.pelas import PELAS
 
-from .cards.elements.elements_shell import ElementsShell
-from .cards.elements.elements_solid import ElementsSolid
+from .cards.elements.shell.elements_shell import ElementsShell
+from .cards.elements.solid.elements_solid import ElementsSolid
 
 # rods
 from .cards.elements.crod import CROD
@@ -54,7 +54,7 @@ from .cards.elements.cbar import CBAR #, CBAROR
 # beams
 
 # mass
-from .cards.elements.mass import Mass
+from .cards.elements.mass.mass import Mass
 
 #===========================
 # aero

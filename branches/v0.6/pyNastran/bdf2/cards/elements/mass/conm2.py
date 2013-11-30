@@ -60,11 +60,6 @@ class CONM2(object):
                                 double_or_blank(card, 14, 'I33', 0.0)]
                 assert len(card) <= 15, 'len(CONM2 card) = %i' % len(card)
 
-
-                self.node_ids[i] = [integer(card, 3, 'n1'),
-                                    integer(card, 4, 'n2')]
-                assert len(card) == 5, 'len(CONM2 card) = %i' % len(card)
-
             i = self.element_id.argsort()
             print "i", i, type(i)
             self.element_id = self.element_id[i]

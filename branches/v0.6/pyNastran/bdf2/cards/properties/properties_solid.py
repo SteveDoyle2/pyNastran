@@ -12,11 +12,12 @@ class PropertiesSolid(object):
         self.model = model
 
         self.psolid = PSOLID(self.model)
-        self.plsolid = PLSOLID(self.model)
+        #self.plsolid = PLSOLID(self.model)
 
     def build(self):
-        self.psolid.build()
-        self.plsolid.build()
+        types = self._get_types()
+        for prop in types:
+            prop.build()
         
         npsolid = self.psolid.n
         #nplsolid = self.plsolid.n

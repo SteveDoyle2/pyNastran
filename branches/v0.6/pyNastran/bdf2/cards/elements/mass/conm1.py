@@ -7,6 +7,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, d
 
 
 class CONM1(object):
+    type = 'CONM1'
     def __init__(self, model):
         self.model = model
         self._cards = []
