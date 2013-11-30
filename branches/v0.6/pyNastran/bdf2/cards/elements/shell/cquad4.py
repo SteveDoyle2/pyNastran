@@ -60,13 +60,13 @@ class CQUAD4(object):
             self._cards = []
             self._comments = []
 
-    def write_bdf(self, f, size=8, eids=None):
+    def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
-            if eids is None:
+            if element_ids is None:
                 i = arange(self.n)
             else:
-                assert len(unique(eids))==len(eids), unique(eids)
-                i = searchsorted(self.element_id, eids)
+                assert len(unique(element_ids))==len(element_ids), unique(element_ids)
+                i = searchsorted(self.element_id, element_ids)
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CQUAD4', eid, pid, n[0], n[1], n[2], n[3]]
@@ -81,12 +81,12 @@ class CQUAD4(object):
     def rebuild(self):
         raise NotImplementedError()
 
-    def mass(self, eids=None, total=False, node_ids=None, grids_cid0=None):
+    def mass(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
         """
         Gets the mass of the CQUAD4s on a total or per element basis.
         
         :param self: the CQUAD4 object
-        :param eids: the elements to consider (default=None -> all)
+        :param element_ids: the elements to consider (default=None -> all)
         :param total: should the mass be summed (default=False)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
@@ -95,7 +95,7 @@ class CQUAD4(object):
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
-        mass, _area, _normal = self._mass_area_normal(eids=eids,
+        mass, _area, _normal = self._mass_area_normal(element_ids=element_ids,
             node_ids=node_ids, grids_cid0=grids_cid0,
             calculate_mass=True, calculate_area=False,
             calculate_normal=False)
@@ -105,12 +105,12 @@ class CQUAD4(object):
         else:
             return mass
     
-    def area(self, eids=None, total=False, node_ids=None, grids_cid0=None):
+    def area(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
         """
         Gets the area of the CQUAD4s on a total or per element basis.
         
         :param self: the CQUAD4 object
-        :param eids: the elements to consider (default=None -> all)
+        :param element_ids: the elements to consider (default=None -> all)
         :param total: should the area be summed (default=False)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
@@ -119,7 +119,7 @@ class CQUAD4(object):
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
-        _mass, area, _normal = self._mass_area_normal(eids=eids,
+        _mass, area, _normal = self._mass_area_normal(element_ids=element_ids,
             node_ids=node_ids, grids_cid0=grids_cid0,
             calculate_mass=False, calculate_area=True,
             calculate_normal=False)
@@ -129,12 +129,12 @@ class CQUAD4(object):
         else:
             return area
 
-    def normal(self, eids=None, node_ids=None, grids_cid0=None):
+    def normal(self, element_ids=None, node_ids=None, grids_cid0=None):
         """
         Gets the normals of the CQUAD4s on per element basis.
         
         :param self: the CQUAD4 object
-        :param eids: the elements to consider (default=None -> all)
+        :param element_ids: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
@@ -142,7 +142,7 @@ class CQUAD4(object):
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
-        _mass, area, normal = self._mass_area_normal(eids=eids,
+        _mass, area, normal = self._mass_area_normal(element_ids=element_ids,
             node_ids=node_ids, grids_cid0=grids_cid0,
             calculate_mass=False, calculate_area=False,
             calculate_normal=True)
@@ -152,7 +152,7 @@ class CQUAD4(object):
         else:
             return area
 
-    def _mass_area_normal(self, eids=None, node_ids=None, grids_cid0=None,
+    def _mass_area_normal(self, element_ids=None, node_ids=None, grids_cid0=None,
                           calculate_mass=True, calculate_area=True,
                           calculate_normal=True):
         """
@@ -160,7 +160,7 @@ class CQUAD4(object):
         element basis.
         
         :param self: the CQUAD4 object
-        :param eids: the elements to consider (default=None -> all)
+        :param element_ids: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)

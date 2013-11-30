@@ -314,6 +314,8 @@ class WriteMesh(object):
         self.pload1.write_bdf(f, size)
         self.pload2.write_bdf(f, size)
         #self.pload4.write_bdf(f, size)
+        
+        self.ploadx1.write_bdf(f, size)
 
     def _write_rejects(self, size):
         """

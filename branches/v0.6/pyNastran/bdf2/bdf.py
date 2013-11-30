@@ -27,27 +27,30 @@ from .cards.grid import GRID, GRDSET
 from .cards.spoint import SPOINT
 
 # properties
-from .cards.properties.properties_shell import PropertiesShell
 from .cards.properties.prod import PROD
-from .cards.properties.properties_solid import PropertiesSolid
 
 # elements
 from .cards.elements.spring.elements_spring import ElementsSpring
-from .cards.properties.pelas import PELAS
+from .cards.elements.spring.pelas import PELAS
 
+# shell
 from .cards.elements.shell.elements_shell import ElementsShell
+from .cards.elements.shell.properties_shell import PropertiesShell
+
+# solid
 from .cards.elements.solid.elements_solid import ElementsSolid
+from .cards.elements.solid.properties_solid import PropertiesSolid
 
 # rods
-from .cards.elements.crod import CROD
-from .cards.elements.conrod import CONROD
+from .cards.elements.rod.crod import CROD
+from .cards.elements.rod.conrod import CONROD
 
 # shear
-from .cards.elements.cshear import CSHEAR
-from .cards.properties.pshear import PSHEAR
+from .cards.elements.shear.cshear import CSHEAR
+from .cards.elements.shear.pshear import PSHEAR
 
 # bar
-from .cards.elements.cbar import CBAR #, CBAROR
+from .cards.elements.bar.cbar import CBAR #, CBAROR
 #from .cards.properties.pbar import PBAR
 #from .cards.properties.pbarl import PBARL
 
@@ -85,6 +88,9 @@ from .cards.loads.pload  import PLOAD
 from .cards.loads.pload1 import PLOAD1
 from .cards.loads.pload2 import PLOAD2
 #from .cards.loads.pload4 import PLOAD4
+
+from .cards.loads.ploadx1 import PLOADX1
+#from .cards.loads.grav import GRAV
 
 #from .cards.loads.rforce import RFORCE
 #from .cards.loads.sload import SLOAD
@@ -139,15 +145,14 @@ from .cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
 #from .cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM, NLPCI)
 #from .cards.loads.loads import (LSEQ, SLOAD, DLOAD, DAREA, TLOAD1, TLOAD2,
 #                                RLOAD1, RLOAD2, RANDPS, RFORCE)
-#from .cards.loads.staticLoads import (LOAD, GRAV, ACCEL1, FORCE,
-#                                      FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
-#                                      PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1)
+#from .cards.loads.staticLoads import (LOAD, GRAV, ACCEL1,
+#                                      FORCE1, FORCE2, MOMENT1, MOMENT2,
+#                                      PLOAD4)
 #
-#from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
+#from .cards.materials import (MAT2, MAT3, MAT4, MAT5,
 #                              MAT8, MAT9, MAT10,
-#                              MATHP, CREEP, MATS1, EQUIV)
+#                              MATHP, CREEP, EQUIV)
 #from .cards.methods import (EIGB, EIGC, EIGR, EIGP, EIGRL)
-#from .cards.nodes import GRID, GRDSET, SPOINTs
 #from .cards.optimization import (DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
 #                                 DRESP1, DRESP2, DVMREL1, DVPREL1, DVPREL2)
 from .cards.params import PARAM
@@ -649,6 +654,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.pload1 = PLOAD1(model)
         self.pload2 = PLOAD2(model)
         #self.pload4 = PLOAD4(model)
+        
+        self.ploadx1 = PLOADX1(model)
 
         #: stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
         #self.materials = {}
@@ -1665,12 +1672,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         #========================
         # rotation elements/loads
+        #elif name == 'CTRIAX':
+            #self.elements_shell.add_ctriax(card_obj, comment=comment)
         elif name == 'CTRIAX6':
-            #self.elements_shell.add_ctria6x(card_obj, comment=comment)
-            pass
+            self.elements_shell.add_ctriax6(card_obj, comment=comment)
         elif name == 'PLOADX1':
-            #self.elements_shell.add_ctria6x(card_obj, comment=comment)
-            pass
+            self.ploadx1.add(card_obj, comment=comment)
 
         #========================
         # elements_solid

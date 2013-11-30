@@ -1,7 +1,7 @@
-from ..conrod import _Lambda
-
 from numpy import array, dot, zeros, unique, searchsorted, transpose
 from numpy.linalg import norm
+
+from ..rod.conrod import _Lambda
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,

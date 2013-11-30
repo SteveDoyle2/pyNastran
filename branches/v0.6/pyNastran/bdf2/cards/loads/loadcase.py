@@ -18,7 +18,7 @@ class LoadCase(object):
             for load_id in load_ids:
                 if load.type in ['FORCE', 'FORCE1', 'FORCE2',
                                 'MOMENT', 'MOMENT1', 'MOMENT2',
-                                'PLOAD', 'PLOAD1', 'PLOAD2']:  # PLOAD4, PLOADX1, RFORCE
+                                'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOADX1']:  # PLOAD4, RFORCE, GRAV
                     i = where(load_id == load.load_id)[0]
                     #print "i** =", i
                     if len(i):

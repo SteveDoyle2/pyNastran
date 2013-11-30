@@ -111,17 +111,7 @@ class PSHELL(object):
         :param property_ids:  the property_ids to write (default=None -> all)
         """
         if self.n:
-            if property_ids is None:
-                i = arange(len(self.property_id))
-                #for (pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4) in zip(
-                        #self.property_id, self.mid, self.thickness, self.mid2,
-                        #self.twelveIt3, self.mid3, self.tst, self.nsm, self.z1,
-                        #self.z2, self.mid4):
-                    #card = ['PSHELL', pid, mid, t]
-                    #f.write(print_card(card, size=size))
-            else:
-                i = searchsorted(self.property_id, property_ids)
-
+            i = get_index(property_ids)
             Mid2 = [midi if midi > 0 else '' for midi in self.material_id2[i]]
             Mid3 = [midi if midi > 0 else '' for midi in self.material_id3[i]]
             Mid4 = [midi if midi > 0 else '' for midi in self.material_id4[i]]
@@ -140,6 +130,11 @@ class PSHELL(object):
                         tst, nsm, z1, z2, mid4]
                 f.write(print_card(card, size=size))
 
+    def get_index(self, property_ids=None):
+        if property_ids is None:    
+            return arange(self.n)
+        return searchsorted(property_ids, self.property_id)
+
     def get_thickness(self, property_ids=None):
         """
         Gets the thickness of the PHSELLs.
@@ -150,18 +145,20 @@ class PSHELL(object):
         if property_ids is None:
             t = self.thickness
         else:
-            t = self.thickness[searchsorted(property_ids, self.property_id)]
+            i = get_index(property_ids)
+            t = self.thickness[i]
         return t
 
-    def get_mid(self, property_ids=None):
+    def get_material_id(self, property_ids=None):
         """
         Gets the material IDs of the PSHELLs.
         
         :param self: the PSHELL object
         :param property_ids: the property IDs to consider (default=None -> all)
         """
-        if pids is None:
-            mid = self.mid
+        if property_ids is None:
+            mid = self.material_id
         else:
-            mid = self.mid[searchsorted(property_ids, self.property_id)]
-        return t
+            i = get_index(property_ids)
+            mid = self.material_id[i]
+        return mid

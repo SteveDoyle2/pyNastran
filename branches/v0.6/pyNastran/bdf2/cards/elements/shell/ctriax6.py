@@ -1,14 +1,14 @@
 from itertools import izip
 
-from numpy import array, zeros, concatenate, searchsorted, where, unique
+from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
 
-class CTRIA3(object):
-    type = 'CTRIA3'
+class CTRIAX6(object):
+    type = 'CTRIAX6'
     def __init__(self, model):
         self.model = model
         self.n = 0
@@ -27,51 +27,57 @@ class CTRIA3(object):
             float_fmt = self.model.float
             #: Element ID
             self.element_id = zeros(ncards, 'int32')
-            #: Property ID
-            self.property_id = zeros(ncards, 'int32')
+            #: Material ID
+            self.material_id = zeros(ncards, 'int32')
             #: Node IDs
-            self.node_ids = zeros((ncards, 3), 'int32')
+            self.node_ids = zeros((ncards, 6), 'int32')
 
-            self.zoffset = zeros(ncards, 'int32')
-            self.t_flag = zeros(ncards, 'int32')
-            self.thickness = zeros((ncards, 3), float_fmt)
+            self.theta = zeros(ncards, float_fmt)
 
             for i, card in enumerate(cards):
-                self.element_id[i] = integer(card, 1, 'elemeent_id')
+                self.element_id[i] = integer(card, 1, 'element_id')
 
-                self.property_id[i] = integer(card, 2, 'property_id')
+                self.material_id[i] = integer(card, 2, 'material_id')
 
-                self.node_ids[i] = [integer(card, 3, 'n1'),
-                        integer(card, 4, 'n2'),
-                        integer(card, 5, 'n3')]
+                nids = [integer(card, 3, 'n1'),
+                        integer_or_blank(card, 4, 'n2'),
+                        integer(card, 5, 'n3'),
+                        integer_or_blank(card, 6, 'n4'),
+                        integer(card, 7, 'n5'),
+                        integer_or_blank(card, 8, 'n6')]
+                self.node_ids[i, :] = nids
 
-                #self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
-                #self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
-                blank(card, 8, 'blank')
-                blank(card, 9, 'blank')
+                #: theta
+                self.theta[i] = double_or_blank(card, 9, 'theta', 0.0)
 
-                #self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-                #self.T1 = double_or_blank(card, 11, 'T1', 1.0)
-                #self.T2 = double_or_blank(card, 12, 'T2', 1.0)
-                #self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+                assert len(card) <= 10, 'len(CTRIAX6 card) = %i' % len(card)
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
-            self.property_id = self.property_id[i]
+            self.material_id = self.material_id[i]
             self.node_ids = self.node_ids[i, :]
+            self.theta = self.theta[i]
             self._cards = []
             self._comments = []
 
+    def get_index(self, element_ids=None):
+        if element_ids is None:    
+            return arange(self.n)
+        return searchsorted(element_ids, self.element_id)
+
     def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
-            if element_ids is None:
-                i = arange(self.n)
-            else:
-                assert len(unique(element_ids))==len(element_ids), unique(element_ids)
-                i = searchsorted(self.element_id, element_ids)
-            for (eid, pid, n) in izip(self.element_id[i], self.property_id[i], self.node_ids[i]):
-                card = ['CTRIA3', eid, pid, n[0], n[1], n[2]]
+            i = self.get_index(element_ids)
+            Theta = [theta if theta != 0.0 else '' for theta in self.theta[i]]
+            N0 = [n if n != 0 else '' for n in self.node_ids[i, 0]]
+            N1 = [n if n != 0 else '' for n in self.node_ids[i, 1]]
+            N2 = [n if n != 0 else '' for n in self.node_ids[i, 2]]
+            N3 = [n if n != 0 else '' for n in self.node_ids[i, 3]]
+            N4 = [n if n != 0 else '' for n in self.node_ids[i, 4]]
+            N5 = [n if n != 0 else '' for n in self.node_ids[i, 5]]
+            for (eid, mid, n0, n1, n2, n3, n4, n5, theta) in izip(self.element_id[i], self.material_id[i],
+                    N0, N1, N2, N3, N4, N5, Theta):
+                card = ['CTRIAX6', eid, mid, n0, n1, n2, n3, n4, n5, theta]
                 f.write(print_card(card, size=size))
-
 
     def _verify(self):
         self.mass()
@@ -83,9 +89,9 @@ class CTRIA3(object):
 
     def mass(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
         """
-        Gets the mass of the CTRIA3s on a total or per element basis.
+        Gets the mass of the CTRIAX6s on a total or per element basis.
         
-        :param self: the CTRIA3 object
+        :param self: the CTRIAX6 object
         :param element_ids: the elements to consider (default=None -> all)
         :param total: should the mass be summed (default=False)
 
@@ -107,9 +113,9 @@ class CTRIA3(object):
     
     def area(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
         """
-        Gets the area of the CTRIA3s on a total or per element basis.
+        Gets the area of the CTRIAX6s on a total or per element basis.
         
-        :param self: the CTRIA3 object
+        :param self: the CTRIAX6 object
         :param element_ids: the elements to consider (default=None -> all)
         :param total: should the area be summed (default=False)
 
@@ -131,9 +137,9 @@ class CTRIA3(object):
 
     def normal(self, element_ids=None, node_ids=None, grids_cid0=None):
         """
-        Gets the normals of the CTRIA3s on per element basis.
+        Gets the normals of the CTRIAX6s on per element basis.
         
-        :param self: the CTRIA3 object
+        :param self: the CTRIAX6 object
         :param element_ids: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
@@ -156,10 +162,10 @@ class CTRIA3(object):
                           calculate_mass=True, calculate_area=True,
                           calculate_normal=True):
         """
-        Gets the mass, area, and normals of the CTRIA3s on a per
+        Gets the mass, area, and normals of the CTRIAX6s on a per
         element basis.
         
-        :param self: the CTRIA3 object
+        :param self: the CTRIAX6 object
         :param element_ids: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
@@ -183,14 +189,12 @@ class CTRIA3(object):
         v12 = p2 - p1
         v13 = p3 - p1
         v123 = cross(v12, v13)
-        
-        normal = v123 / n
-        A = None
-        massi = None
-        if calculate_area or calculate_mass:
+        if calculate_normal or calculate_area:
+            normal = v123 / n
+        if calculate_area:
             A = 0.5 * n
         if calculate_mass:
-            t = self.model.properties_shell.get_thickness(self.property_id)
+            t = self.model.pid.get_thickness(self.pid)
             massi = A * t
         return massi, A, normal
     

@@ -74,10 +74,13 @@ class XRefMesh(object):
         #self.moment1.build()
         #self.moment2.build()
         
+        
         self.pload.build()
         self.pload1.build()
         self.pload2.build()
         #self.pload4.build()
+
+        self.ploadx1.build()
         
         if 0:
             self.spc_object = SPCObject()
@@ -106,6 +109,8 @@ class XRefMesh(object):
         self.loadcase.add(self.pload1)
         self.loadcase.add(self.pload2)
         #self.loadcase.add(self.pload4)
+        
+        self.loadcase.add(self.ploadx1)
         
         #self.loadcase.resolve(2)
         #self.loadcase.resolve(1)

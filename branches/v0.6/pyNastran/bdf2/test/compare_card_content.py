@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import izip, count
@@ -326,7 +302,7 @@ def compare_aero_content(fem1, fem2):
     assert len(fem1.flutters) == len(fem2.flutters)
     assert len(fem1.mkaeros) == len(fem2.mkaeros)
     assert len(fem1.splines) == len(fem2.splines)
-    assert len(fem1.trims) == len(fem2.trims)
+    assert len(fem1.trim) == len(fem2.trim)
 
     for key in fem1.caeros:
         card1 = fem1.caeros[key]
@@ -399,7 +375,7 @@ def compare_aero_content(fem1, fem2):
         card2 = fem2.splines[key]
         assert_fields(card1, card2)
 
-    for key in fem1.trims:
-        card1 = fem1.trims[key]
-        card2 = fem2.trims[key]
+    for key in fem1.trim:
+        card1 = fem1.trim[key]
+        card2 = fem2.trim[key]
         assert_fields(card1, card2)
