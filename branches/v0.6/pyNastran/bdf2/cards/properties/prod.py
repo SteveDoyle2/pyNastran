@@ -73,14 +73,15 @@ class PROD(object):
         return msg
 
     def write_bdf(self, f, size=8, pids=None):
-        for (pid, mid, A, J, c, nsm) in zip(
-             self.property_id, self.material_id, self.A, self.J, self.c, self.nsm):
+        if self.n:
+            for (pid, mid, A, J, c, nsm) in zip(
+                 self.property_id, self.material_id, self.A, self.J, self.c, self.nsm):
 
-            #self.mid = integer(card, 4, 'mid')
-            #self.A = double(card, 5, 'A')
-            #self.j = double_or_blank(card, 6, 'j', 0.0)
-            #self.c = double_or_blank(card, 7, 'c', 0.0)
-            #self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
+                #self.mid = integer(card, 4, 'mid')
+                #self.A = double(card, 5, 'A')
+                #self.j = double_or_blank(card, 6, 'j', 0.0)
+                #self.c = double_or_blank(card, 7, 'c', 0.0)
+                #self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
 
-            card = ['PROD', pid, mid, A, J, c, nsm]
-            f.write(print_card(card))
+                card = ['PROD', pid, mid, A, J, c, nsm]
+                f.write(print_card(card))

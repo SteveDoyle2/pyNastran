@@ -90,7 +90,7 @@ class CPENTA6(object):
             for i in range(3):
                 assert isinstance(c[i], float)
 
-    def _area_centroid(self, eids, xyz_cid0):
+    def _area_centroid(self, element_ids, xyz_cid0):
         n1 = xyz_cid0[self.node_ids[:, 0], :]
         n2 = xyz_cid0[self.node_ids[:, 1], :]
         n3 = xyz_cid0[self.node_ids[:, 2], :]
@@ -104,40 +104,40 @@ class CPENTA6(object):
         
         return (A1, A2, c1, c2)
 
-    def volume(self, eids=None, xyz_cid0=None, total=False):
+    def volume(self, element_ids=None, xyz_cid0=None, total=False):
         """
         Gets the volume for one or more CPENTA elements.
         
-        :param eids: the elements to consider (default=None -> all)
+        :param element_ids: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed (default=False)
         
         ..note:: Volume for a CPENTA is the average area of two opposing faces
         times the length between the centroids of those points
         """
-        (A1, A2, c1, c2) = self._area_centroid(self, eids, xyz_cid0=xyz_cid0)
+        (A1, A2, c1, c2) = self._area_centroid(self, element_ids, xyz_cid0=xyz_cid0)
         if total:
             volume = abs(volume).sum()
         else:
             volume = abs(volume)
         return volume
 
-    def centroid_volume(self, eids=None, xyz_cid0=None, total=False):
+    def centroid_volume(self, element_ids=None, xyz_cid0=None, total=False):
         """
         Gets the centroid and volume for one or more CPENTA elements.
         
-        :param eids: the elements to consider (default=None -> all)
+        :param element_ids: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed (default=False)
         
         ..see:: CPENTA.volume() and CPENTA.centroid for more information.
         """
-        if eids is None:
-            eids = self.element_id
+        if element_ids is None:
+            element_ids = self.element_id
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.positions()
         
-        (A1, A2, c1, c2) = self._area_centroid(eids, xyz_cid0)
+        (A1, A2, c1, c2) = self._area_centroid(element_ids, xyz_cid0)
         centroid = (c1 * A1 + c2 * A2) / (A1 + A2)
         volume = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
         if total:
@@ -148,34 +148,34 @@ class CPENTA6(object):
         assert volume.min() > 0.0, 'volume.min() = %f' % volume.min()
         return centroid, volume
 
-    def centroid(self, eids=None, xyz_cid0=None, total=False):
+    def centroid(self, element_ids=None, xyz_cid0=None, total=False):
         """
         Gets the centroid for one or more CPENTA elements.
         
-        :param eids: the elements to consider (default=None -> all)
+        :param element_ids: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be summed (default=False)
         """
-        (A1, A2, c1, c2) = self._area_centroid(self, eids, xyz_cid0=xyz_cid0)
+        (A1, A2, c1, c2) = self._area_centroid(self, element_ids, xyz_cid0=xyz_cid0)
 
         centroid = (c1 * A1 + c2 * A2) / (A1 + A2)
         if total:
             centroid = centroid.mean()
         return centroid
 
-    def mass(self, eids=None, xyz_cid0=None, total=False):
+    def mass(self, element_ids=None, xyz_cid0=None, total=False):
         """
         Gets the mass for one or more CPENTA elements.
         
-        :param eids: the elements to consider (default=None -> all)
+        :param element_ids: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be summed (default=False)
         """
-        if eids is None:
-            eids = self.element_id
+        if element_ids is None:
+            element_ids = self.element_id
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.positions()
-        V = self.volume(eids, xyz_cid0)
+        V = self.volume(element_ids, xyz_cid0)
 
         mid = self.model.properties_solid.get_mid(self.pid)
         rho = self.model.materials.get_rho(mid)
@@ -194,7 +194,7 @@ class CPENTA6(object):
         nids.pop(indx)
         return nids
 
-    def mass_centroid_inertia(self, p=None, eids=None, xyz_cid0=None, total=False):
+    def mass_centroid_inertia(self, p=None, element_ids=None, xyz_cid0=None, total=False):
         """
         Calculates the mass, centroid, and (3, 3) moment of interia
         matrix.  Considers position, but not the (hopefully) small
@@ -223,12 +223,12 @@ class CPENTA6(object):
         I = mass * r**2 # column vector * 2D array
         return mass, centroid, I
         
-    def write_bdf(self, f, size=8, eids=None):
+    def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
-            if eids is None:
+            if element_ids is None:
                 i = arange(self.n)
             else:
-                i = searchsorted(self.element_id, eids)
+                i = searchsorted(self.element_id, element_ids)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
                 card = ['CPENTA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5]]
                 f.write(print_card(card))

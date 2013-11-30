@@ -37,8 +37,35 @@ from .cards.properties.pelas import PELAS
 
 from .cards.elements.elements_shell import ElementsShell
 from .cards.elements.elements_solid import ElementsSolid
+
+# rods
 from .cards.elements.crod import CROD
 from .cards.elements.conrod import CONROD
+
+# shear
+from .cards.elements.cshear import CSHEAR
+from .cards.properties.pshear import PSHEAR
+
+# bar
+from .cards.elements.cbar import CBAR #, CBAROR
+#from .cards.properties.pbar import PBAR
+#from .cards.properties.pbarl import PBARL
+
+# beams
+
+# mass
+from .cards.elements.mass import Mass
+
+#===========================
+# aero
+
+from .cards.aero.caero import CAero
+from .cards.aero.paero import PAero
+from .cards.aero.trim import TRIM
+#from .cards.aero.aero import AERO
+#from .cards.aero.aeros import AEROS
+
+#===========================
 
 # materials
 from .cards.materials.materials import Materials
@@ -54,7 +81,7 @@ from .cards.loads.moment import MOMENT
 #from .cards.loads.moment1 import MOMENT1
 #from .cards.loads.moment2 import MOMENT2
 
-#from .cards.loads.pload  import PLOAD
+from .cards.loads.pload  import PLOAD
 from .cards.loads.pload1 import PLOAD1
 from .cards.loads.pload2 import PLOAD2
 #from .cards.loads.pload4 import PLOAD4
@@ -77,8 +104,7 @@ from .cards.constraints.mpcadd import MPCADD
 #from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
 #                                          PRAC2D, PRAC3D, PCONEAX)
 
-#from .cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,
-#                                     SpringElement)
+#from .cards.elements.springs import (CELAS3, CELAS4)
 #from .cards.properties.springs import PELAS, PELAST
 
 #from .cards.elements.solid import (CTETRA4, CTETRA10, CPENTA6, CPENTA15,
@@ -94,12 +120,10 @@ from .cards.constraints.mpcadd import MPCADD
 #from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
 #                                    CDAMP5, DamperElement)
 #from .cards.properties.damper import (PVISC, PDAMP, PDAMP5, PDAMPT)
-#from .cards.elements.bars import (CROD, CONROD, CTUBE, CBAR, CBEAM, CBEAM3,
+#from .cards.elements.bars import (CTUBE, CBEAM, CBEAM3,
 #                                  CBEND, LineElement, RodElement)
-#from .cards.properties.bars import (PROD, PTUBE, PBAR, PBARL,
+#from .cards.properties.bars import (PTUBE, PBAR, PBARL,
 #                                    PBEAM, PBEAML, PBCOMP)  # PBEND
-#from .cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4,
-#                                  PointElement, PointMassElement)  # CMASS5
 #from .cards.properties.mass import (PMASS, NSM)
 #from .cards.aero import (AEFACT, AELINK, AELIST, AEPARM, AESTAT, AESURF,
 #                         AESURFS, AERO, AEROS, CSSCHD, CAERO1, CAERO2, CAERO3,
@@ -539,22 +563,29 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.elements = {}
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigidElements = {}
-        #: store CMASS1,CMASS2,CMASS3,CMASS4,CMASS5
-        #self.massElements = {}
         #: stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}
         
         #self.properties_spring = PropertiesSpring(model)
         #self.proeprties_rod = PropertiesRod(v)
         #self.properties_bar = PropertiesBar(model)
-        self.properties_shell = PropertiesShell(model)
         #self.properties_solid = PropertiesSolid(model)
         
         #self.elements_spring = ElementsSpring(model)
         #self.elements_rod = ElementsRod(model)
         #self.elements_bar = ElementsBar(model)
+
+        # shell
+        #: stores PSHELL, PCOMP, PCOMPG
+        self.properties_shell = PropertiesShell(model)
+        #: stores CTRIA3, CTRIA6, CQUAD4, CQUAD8
         self.elements_shell = ElementsShell(model)
-        #self.elements_solid = ElementsSolid(model)
+
+        # shear
+        #: stores CSHEAR
+        self.cshear = CSHEAR(model)
+        #: stores PSHEAR
+        self.pshear = PSHEAR(model)
 
         # spring
         self.elements_spring = ElementsSpring(model)
@@ -564,11 +595,41 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.conrod = CONROD(model)
         self.prod = PROD(model)
         self.crod = CROD(model)
+        
+        # mass
+        #: stores CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5, PMASS
+        self.mass = Mass(model)
+        
+        # bars
+        #: stores CBAR
+        self.cbar = CBAR(model)
+        #self.pbar = PBAR(model)
+        #self.pbarl = PBARL(model)
+        
 
         # solids
+
+        #: stores CTETRA4, CPENTA6, CHEXA8, CTETRA10, CPENTA15, CHEXA20
         self.elements_solid = ElementsSolid(self)
+        #: stores PSOLID, PLSOLID
         self.properties_solid = PropertiesSolid(self)
 
+        #===================================
+        # aero
+
+        #: stores CAERO1, CAERO2, CAERO3, CAERO4, CAERO5
+        self.caero = CAero(model)
+        #: stores PAERO1, PAERO2, PAERO3, PAERO4, PAERO5
+        self.paero = PAero(model)
+
+        #: stores TRIM
+        self.trim = {}
+        #self.aero = AERO(model)
+        #self.aeros = AEROS(model)
+        #===================================
+        # optimization
+        #self.dconstr = DCONSTR(model)
+        
         #===================================
         # loads
         #self.loadcase = LoadCase(model)
@@ -584,6 +645,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #self.moment1 = MOMENT1(model)
         #self.moment2 = MOMENT2(model)
         
+        self.pload = PLOAD(model)
         self.pload1 = PLOAD1(model)
         self.pload2 = PLOAD2(model)
         #self.pload4 = PLOAD4(model)
@@ -688,12 +750,16 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         # ------------------------- nonlinear defaults -----------------------
         #: stores NLPCI
+        self.nlpci = {}
         self.nlpcis = {}
         #: stores NLPARM
+        self.nlparm = {}
         self.nlparms = {}
         #: stores TSTEPs
+        self.tstep = {}
         self.tsteps = {}
         #: stores TSTEPNL
+        self.tstepnl = {}
         self.tstepnls = {}
         # --------------------------- aero defaults --------------------------
         # aero cards
@@ -729,8 +795,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.mkaeros = []
         #: store SPLINE1,SPLINE2,SPLINE4,SPLINE5
         self.splines = {}
-        #: stores TRIM
-        self.trims = {}
 
         # ------------------------- thermal defaults -------------------------
         # BCs
@@ -1494,7 +1558,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.f06.write('%-110s\n' % msg)
         #return msg
 
-    def add_card(self, n, card_lines, card_name, comment='', is_list=True):
+    def add_card(self, icard, card_lines, card_name, comment='', is_list=True):
         """
         Adds a card object to the BDF object.
         :param self:       the BDF object
@@ -1544,9 +1608,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # function that gets by name the initialized object (from global scope)
         
         name = card[0]
-        self.write_sorted_card(card_obj, n)
+        self.write_sorted_card(card_obj, icard)
 
         
+        if icard % 10000 == 0:
+            self.log.debug('icard = %i' % icard)
+        #print(card_obj)
         #========================
         if name == 'PARAM':
             param = PARAM(card_obj, comment=comment)
@@ -1565,6 +1632,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             pass
 
         #========================
+        # cshear / pshear
+        elif name == 'PSHEAR':
+            self.cshear.add(card_obj, comment=comment)
+        elif name == 'PSHEAR':
+            self.pshear.add(card_obj, comment=comment)
+        #========================
         # elements_shell
         elif name == 'CTRIA3':
             self.elements_shell.add_ctria3(card_obj, comment=comment)
@@ -1580,15 +1653,14 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'CQUAD9':
             self.elements_shell.add_cquad9(card_obj, comment=comment)
 
+        # properties shell
         elif name == 'PSHELL':
             self.properties_shell.add_pshell(card_obj, comment=comment)
         elif name == 'PCOMP':
             self.properties_shell.add_pcomp(card_obj, comment=comment)
         elif name == 'PCOMPG':
-            #self.properties_shell.add_pcompg(card_obj, comment=comment)
+            self.properties_shell.add_pcompg(card_obj, comment=comment)
             pass
-        elif name == 'PSHEAR':
-            self.properties_shell.add_pshear(card_obj, comment=comment)
 
 
         #========================
@@ -1606,8 +1678,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             if len(card) == 7:
                 self.elements_solid.add_ctetra4(card_obj, comment=comment)
             else: # 13
-                pass
-                #self.elements_solid.add_ctetra10(card_obj, comment=comment)
+                self.elements_solid.add_ctetra10(card_obj, comment=comment)
         elif name == 'CPENTA':
             if len(card) == 9:
                 self.elements_solid.add_cpenta6(card_obj, comment=comment)
@@ -1626,7 +1697,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'PSOLID':
             self.properties_solid.add_psolid(card_obj, comment=comment)
         elif name == 'PLSOLID':
-            #self.properties_solid.add_plsolid(card_obj, comment=comment)
+            self.properties_solid.add_plsolid(card_obj, comment=comment)
             pass
         #========================
         # conrod/rod
@@ -1640,7 +1711,13 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #========================
         # design_variables
         elif name == 'DESVAR':
-            #self.prod.add(card_obj, comment=comment)
+            #self.desvar.add(card_obj, comment=comment)
+            pass
+        elif name == 'DCONSTR':
+            #self.dconstr.add(card_obj, comment=comment)
+            pass
+        elif name == 'DOPTPRM':
+            #self.doptprm.add(card_obj, comment=comment)
             pass
         elif name == 'DVPREL1':
             pass
@@ -1664,10 +1741,21 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'AELIST':
             pass
         elif name == 'AERO':
-            #self.paero.add_paero1(card_obj, comment=comment)
+            #self.aero.add(card_obj, comment=comment)
             pass
         elif name == 'AEROS':
-            #self.paero.add_paero1(card_obj, comment=comment)
+            #self.aeros.add(card_obj, comment=comment)
+            pass
+
+        elif name == 'FLUTTER':
+            #self.flutter.add(card_obj, comment=comment)
+            pass
+        elif name == 'FLFACT':
+            #self.flfact.add(card_obj, comment=comment)
+            pass
+
+        elif name == 'MKAERO1':
+            #self.mkaero1.add(card_obj, comment=comment)
             pass
         #========================
         elif name == 'SET1':
@@ -1684,30 +1772,54 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #========================
         # caero/paero
         elif name == 'CAERO1':
-            #self.caero.add_aero1(card_obj, comment=comment)
-            pass
+            self.caero.add_caero1(card_obj, comment=comment)
+        elif name == 'CAERO2':
+            self.caero.add_caero2(card_obj, comment=comment)
+        elif name == 'CAERO3':
+            self.caero.add_caero3(card_obj, comment=comment)
+        elif name == 'CAERO4':
+            self.caero.add_caero4(card_obj, comment=comment)
+        elif name == 'CAERO5':
+            self.caero.add_caero5(card_obj, comment=comment)
+
         elif name == 'PAERO1':
-            #self.paero.add_paero1(card_obj, comment=comment)
-            pass
+            self.paero.add_paero1(card_obj, comment=comment)
+        elif name == 'PAERO2':
+            self.paero.add_paero2(card_obj, comment=comment)
+        elif name == 'PAERO3':
+            self.paero.add_paero3(card_obj, comment=comment)
+        elif name == 'PAERO4':
+            self.paero.add_paero4(card_obj, comment=comment)
+        elif name == 'PAERO5':
+            self.paero.add_paero5(card_obj, comment=comment)
+
+
         elif name == 'TRIM':
-            #self.trim.add(card_obj, comment=comment)
-            pass
+            trim = TRIM(self)
+            trim.add(card_obj, comment=comment)
+            self.trim[trim.trim_id] = trim
         #========================
-        # bush
+        # bushing
         elif name == 'CBUSH1D':
-            #self.cbush1d.add(card_obj, comment=comment)
+            self.cbush1d.add(card_obj, comment=comment)
+            pass
+        elif name == 'CBUSH2D':
+            self.cbush2d.add(card_obj, comment=comment)
             pass
         elif name == 'CBUSH':
-            #self.cbush.add(card_obj, comment=comment)
+            self.cbush.add(card_obj, comment=comment)
             pass
         elif name == 'PBUSH':
-            #self.pbush.add(card_obj, comment=comment)
+            self.pbush.add(card_obj, comment=comment)
+            pass
+        elif name == 'PBUSHT':
+            self.pbusht.add(card_obj, comment=comment)
             pass
 
         #========================
         # fast
         elif name == 'PFAST':
-            #self.pfast.add(card_obj, comment=comment)
+            self.pfast.add(card_obj, comment=comment)
             pass
         #========================
         # springs
@@ -1725,17 +1837,16 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #========================
         # dampers
         elif name == 'PDAMP':
-            pass
+            self.pdamp.add(card_obj, comment=comment)
         elif name == 'PDAMPT':
-            pass
-        #elif name == 'CDAMP':
-            #pass
+            self.pdampt.add(card_obj, comment=comment)
+        elif name == 'CDAMP':
+            self.cdampt.add(card_obj, comment=comment)
         
         #========================
         # bars/beams
         elif name == 'CBAR':
-            #self.cbar.add(card_obj, comment=comment)
-            pass
+            self.cbar.add(card_obj, comment=comment)
         elif name == 'CBEAM':
             #self.cbeam.add(card_obj, comment=comment)
             pass
@@ -1752,21 +1863,43 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             #self.pbeaml.add(card_obj, comment=comment)
             pass
         #========================
-        # bars/beams
+        # mass
+        elif name == 'PMASS':
+            self.mass.add_pmass(card_obj, comment=comment)
+
+        elif name == 'CONM1':
+            self.mass.add_conm1(card_obj, comment=comment)
         elif name == 'CONM2':
-            #self.conm2.add(card_obj, comment=comment)
-            pass
+            self.mass.add_conm2(card_obj, comment=comment)
+        elif name == 'CMASS1':
+            self.mass.add_cmass1(card_obj, comment=comment)
+        elif name == 'CMASS2':
+            self.mass.add_cmass2(card_obj, comment=comment)
+        elif name == 'CMASS3':
+            self.mass.add_cmass3(card_obj, comment=comment)
+        elif name == 'CMASS4':
+            self.mass.add_cmass4(card_obj, comment=comment)
+        elif name == 'CMASS5':
+            self.mass.add_cmass5(card_obj, comment=comment)
         #========================
+        
+        # load combinations
         elif name == 'DLOAD':
             load = DLOAD(self)
             load.add_from_bdf(card_obj, comment=comment)
             self.dload[load.load_id].append(load)
+        elif name == 'SLOAD':
+            load = SLOAD(self)
+            load.add_from_bdf(card_obj, comment=comment)
+            self.sload[load.load_id].append(load)
         elif name == 'LOAD':
             load = LOAD(self)
             load.add_from_bdf(card_obj, comment=comment)
             self.load[load.load_id].append(load)
             #self.load.add(card_obj, comment=comment)
             pass
+        
+        # applied loads
         elif name == 'FORCE':
             self.force.add(card_obj, comment=comment)
         elif name == 'FORCE1':
@@ -1779,9 +1912,10 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.moment1.add(card_obj, comment=comment)
         elif name == 'MOMENT2':
             self.moment2.add(card_obj, comment=comment)
+
+        # pressure loads
         elif name == 'PLOAD':
-            #self.pload.add(card_obj, comment=comment)
-            pass
+            self.pload.add(card_obj, comment=comment)
         elif name == 'PLOAD1':
             self.pload1.add(card_obj, comment=comment)
         elif name == 'PLOAD2':
@@ -1789,14 +1923,17 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'PLOAD4':
             self.pload4.add(card_obj, comment=comment)
             pass
+        #elif name == 'PLOADX1':
+            #self.ploadx1.add(card_obj, comment=comment)
+            pass
         elif name == 'GRAV':
-            pass
+            self.grav.add(card_obj, comment=comment)
         elif name == 'RFORCE':
-            pass
+            self.rforce.add(card_obj, comment=comment)
 
 
         #========================
-        # spc
+        # mpc
         elif name == 'MPCADD':
             constraint_id, node_ids = get_spcadd_constraint(card_obj)
             mpcadd = self.mpcadd.setdefault(constraint_id, MPCADD(self))
@@ -1833,12 +1970,17 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             pass
         #========================
         # freq
-        elif name == 'EIGRL':
+        elif name == 'EIGB':
             pass
         elif name == 'EIGC':
             pass
+        elif name == 'EIGR':
+            pass
+        elif name == 'EIGRL':
+            pass
 
         #========================
+        # materials
         elif name == 'MAT1':
             self.materials.add_mat1(card_obj, comment=comment)
             #self.mat1.add(card_obj, comment=comment)
@@ -1884,13 +2026,17 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'ACMODL':
             pass
         #========================
+        # nodes
         elif name == 'GRID':
             self.grid.add(card_obj, comment=comment)
         elif name == 'GRDSET':
             self.grdset.add(card_obj, comment=comment)
         elif name == 'SPOINT':
             self.spoint.add(card_obj, comment=comment)
+        elif name == 'RINGAX':
+            self.ringax.add(card_obj, comment=comment)
         #========================
+        # nonlinear
         elif name == 'NLPARM':
             #self.nlparm.add(card_obj, comment=comment)
             pass

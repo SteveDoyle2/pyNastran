@@ -494,12 +494,36 @@ class Solver(F06, OP2):
         #print("case = ", case)
         assert model.sol == 101, 'model.sol=%s is not 101' % (model.sol)
 
+        if 'WTMASS' in self.params:
+            wtmass = self.params['WTMASS'].value1
+        else:
+            wtmass = 1.0
+
+        if 'COUPMASS' in self.params:
+            coupmass = self.params['COUPMASS'].value1
+        else:
+            coupmass = -1
+
+        if self.subcase.has_parameter('FMETHOD'):
+            iflutter = self.subcase.get_parameter('FMETHOD')
+            self.flutter[iflutter]
+            self.flfact[iflutter]
+
+        if self.subcase.has_parameter('METHOD'):
+            imethod = self.subcase.get_parameter('METHOD')
+            self.eigb[imethod]
+            self.eigc[imethod]
+            self.eigr[imethod]
+            self.eigrl[imethod]
+
         if "GRDPNT" in model.params and model.params["GRDPNT"] >= 0:
             g0 = model.parameter["GRDPNT"]
             reference_point = None
             if g0 in model.nodes:
                 reference_point = model.nodes[g0].Position()
             (mass, cg, I) = model.mass_properties(reference_point, sym_axis=None, num_cpus=1)
+            mass *= wtmass
+            I *= wtmass
             # calculate mass - really should use the Mass matrix...
 
         ## define IDs of grid point components in matrices

@@ -99,7 +99,6 @@ class PLOAD2(object):
         return msg
 
     def write_bdf(self, f, size=8, load_ids=None):
-        aaa
         if self.n:
             if load_ids is None:
                 i = arange(self.n)

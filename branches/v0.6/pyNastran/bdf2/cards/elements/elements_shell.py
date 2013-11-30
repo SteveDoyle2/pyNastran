@@ -1,5 +1,10 @@
 from .ctria3 import CTRIA3
+#from .ctria6 import CTRIA6
+#from .cquad import CQUAD
+#from .cquadx import CQUADX
 from .cquad4 import CQUAD4
+#from .cquad8 import CQUAD8
+#from .cquad9 import CQUAD9
 
 
 class ElementsShell(object):

@@ -47,18 +47,18 @@ class PSHELL(object):
 
             # ..todo:: incomplete
             for i, card in enumerate(cards):
-                self.property_id[i] = integer(card, 1, 'pid')
-                self.material_id[i] = integer(card, 2, 'mid')
+                self.property_id[i] = integer(card, 1, 'property_id')
+                self.material_id[i] = integer(card, 2, 'material_id')
                 self.thickness[i] = double(card, 3, 'thickness')
 
                 #: Material identification number for bending
-                self.material_id2[i] = integer_or_blank(card, 4, 'mid2', -1)
+                self.material_id2[i] = integer_or_blank(card, 4, 'material_id2', -1)
                 #: Scales the moment of interia of the element based on the
                 #: moment of interia for a plate
                 #:
                 #: ..math:: I = \frac{12I}{t^3} I_{plate}
                 self.twelveIt3[i] = double_or_blank(card, 5, '12*I/t^3', 1.0)  # poor name
-                self.material_id3[i] = integer_or_blank(card, 6, 'mid3', -1)
+                self.material_id3[i] = integer_or_blank(card, 6, 'material_id3', -1)
                 self.tst[i] = double_or_blank(card, 7, 'ts/t', 0.833333)
                 #: Non-structural Mass
                 self.nsm[i] = double_or_blank(card, 8, 'nsm', 0.0)
@@ -66,21 +66,21 @@ class PSHELL(object):
                 tOver2 = self.thickness[i] / 2.
                 self.z1[i] = double_or_blank(card, 9,  'z1', -tOver2)
                 self.z2[i] = double_or_blank(card, 10, 'z2',  tOver2)
-                self.material_id4[i] = integer_or_blank(card, 11, 'mid4', -1)
+                self.material_id4[i] = integer_or_blank(card, 11, 'material_id4', -1)
 
-                #if self.mid2 is None:
-                #    assert self.mid3 is None
-                #else: # mid2 is defined
-                #    #print "self.mid2 = ",self.mid2
-                #    assert self.mid2 >= -1
-                #    #assert self.mid3 >   0
+                #if self.material_id2 is None:
+                #    assert self.material_id3 is None
+                #else: # material_id2 is defined
+                #    #print "self.material_id2 = ",self.material_id2
+                #    assert self.material_id2 >= -1
+                #    #assert self.material_id3 >   0
 
-                #if self.mid is not None and self.mid2 is not None:
-                #    assert self.mid4==None
+                #if self.material_id is not None and self.material_id2 is not None:
+                #    assert self.material_id4==None
                 assert len(card) <= 12, 'len(PSHELL card) = %i' % len(card)
 
             # nan is float specific
-            #self.mid[where(self.mid2 == -1)[0]] = nan
+            #self.material_id[where(self.material_id2 == -1)[0]] = nan
 
             # sort the NDARRAYs so we can use searchsorted
             i = self.property_id.argsort()
@@ -101,67 +101,67 @@ class PSHELL(object):
             self._cards = []
             self._comments = []
 
-    def write_bdf(self, f, size=8, pids=None):
+    def write_bdf(self, f, size=8, property_ids=None):
         """
         Writes the PSHELL properties.
         
         :param self:  the PSHELL object
         :param f:     file object
         :param size:  the bdf field size (8/16; default=8)
-        :param pids:  the pids to write (default=None -> all)
+        :param property_ids:  the property_ids to write (default=None -> all)
         """
-        if pids is None:
-            i = arange(len(self.mid))
-            #for (pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4) in zip(
-                    #self.property_id, self.mid, self.thickness, self.mid2,
-                    #self.twelveIt3, self.mid3, self.tst, self.nsm, self.z1,
-                    #self.z2, self.mid4):
-                #card = ['PSHELL', pid, mid, t]
-                #f.write(print_card(card, size=size))
-        else:
-            i = searchsorted(self.property_id, pids)
+        if self.n:
+            if property_ids is None:
+                i = arange(len(self.property_id))
+                #for (pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4) in zip(
+                        #self.property_id, self.mid, self.thickness, self.mid2,
+                        #self.twelveIt3, self.mid3, self.tst, self.nsm, self.z1,
+                        #self.z2, self.mid4):
+                    #card = ['PSHELL', pid, mid, t]
+                    #f.write(print_card(card, size=size))
+            else:
+                i = searchsorted(self.property_id, property_ids)
 
-        Mid2 = [midi if midi > 0 else '' for midi in self.material_id2[i]]
-        Mid3 = [midi if midi > 0 else '' for midi in self.material_id3[i]]
-        Mid4 = [midi if midi > 0 else '' for midi in self.material_id4[i]]
-        Nsm       = ['' if nsmi == 0.0      else nsmi for nsmi in self.nsm[i]]
-        Tst       = ['' if tsti == 0.833333 else tsti for tsti in self.tst[i]]
-        TwelveIt3 = ['' if tw   == 1.0      else tw   for tw   in self.twelveIt3[i]]
+            Mid2 = [midi if midi > 0 else '' for midi in self.material_id2[i]]
+            Mid3 = [midi if midi > 0 else '' for midi in self.material_id3[i]]
+            Mid4 = [midi if midi > 0 else '' for midi in self.material_id4[i]]
+            Nsm       = ['' if nsmi == 0.0      else nsmi for nsmi in self.nsm[i]]
+            Tst       = ['' if tsti == 0.833333 else tsti for tsti in self.tst[i]]
+            TwelveIt3 = ['' if tw   == 1.0      else tw   for tw   in self.twelveIt3[i]]
 
-        to2 = self.thickness[i] / 2
-        Z1 = ['' if z1i == -to2[j] else z1i for j, z1i in enumerate(self.z1[i])]
-        Z2 = ['' if z2i ==  to2[j] else z2i for j, z2i in enumerate(self.z2[i])]
+            to2 = self.thickness[i] / 2
+            Z1 = ['' if z1i == -to2[j] else z1i for j, z1i in enumerate(self.z1[i])]
+            Z2 = ['' if z2i ==  to2[j] else z2i for j, z2i in enumerate(self.z2[i])]
 
-        for (pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4) in zip(
-                self.property_id[i], self.material_id[i], self.thickness[i], Mid2,
-                TwelveIt3, Mid3, Tst, Nsm,  Z1, Z2, Mid4):
-            card = ['PSHELL', pid, mid, t, mid2, twelveIt3, mid3,
-                    tst, nsm, z1, z2, mid4]
-            f.write(print_card(card, size=size))
+            for (pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4) in zip(
+                    self.property_id[i], self.material_id[i], self.thickness[i], Mid2,
+                    TwelveIt3, Mid3, Tst, Nsm,  Z1, Z2, Mid4):
+                card = ['PSHELL', pid, mid, t, mid2, twelveIt3, mid3,
+                        tst, nsm, z1, z2, mid4]
+                f.write(print_card(card, size=size))
 
-
-    def get_thickness(self, pids=None):
+    def get_thickness(self, property_ids=None):
         """
         Gets the thickness of the PHSELLs.
         
         :param self: the PSHELL object
-        :param pids: the property IDs to consider (default=None -> all)
+        :param property_ids: the property IDs to consider (default=None -> all)
         """
-        if pids is None:
+        if property_ids is None:
             t = self.thickness
         else:
-            t = self.thickness[searchsorted(pids, self.property_id)]
+            t = self.thickness[searchsorted(property_ids, self.property_id)]
         return t
 
-    def get_mid(self, pids=None):
+    def get_mid(self, property_ids=None):
         """
         Gets the material IDs of the PSHELLs.
         
         :param self: the PSHELL object
-        :param pids: the property IDs to consider (default=None -> all)
+        :param property_ids: the property IDs to consider (default=None -> all)
         """
         if pids is None:
             mid = self.mid
         else:
-            mid = self.mid[searchsorted(pids, self.property_id)]
+            mid = self.mid[searchsorted(property_ids, self.property_id)]
         return t

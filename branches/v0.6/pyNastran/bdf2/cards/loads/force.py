@@ -14,6 +14,8 @@ class FORCE(object):
 
         :param self: the FORCE object
         :param model: the BDF object
+        
+        ..todo:: collapse loads
         """
         self.model = model
         self.n = 0

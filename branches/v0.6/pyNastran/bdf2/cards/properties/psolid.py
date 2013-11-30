@@ -71,19 +71,20 @@ class PSOLID(object):
             self._cards = []
             self._comments = []
         
-    def write_bdf(self, f, size=8, pids=None):
-        for (pid, mid, cordm, integ, stress, isop, fctn) in zip(
-             self.property_id, self.material_id, self.cordm,
-             self.integ, self.stress, self.isop, self.fctn):
+    def write_bdf(self, f, size=8, property_ids=None):
+        if self.n:
+            for (pid, mid, cordm, integ, stress, isop, fctn) in zip(
+                 self.property_id, self.material_id, self.cordm,
+                 self.integ, self.stress, self.isop, self.fctn):
 
-            #self.mid = integer(card, 4, 'mid')
-            #self.A = double(card, 5, 'A')
-            #self.j = double_or_blank(card, 6, 'j', 0.0)
-            #self.c = double_or_blank(card, 7, 'c', 0.0)
-            #self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
+                #self.mid = integer(card, 4, 'mid')
+                #self.A = double(card, 5, 'A')
+                #self.j = double_or_blank(card, 6, 'j', 0.0)
+                #self.c = double_or_blank(card, 7, 'c', 0.0)
+                #self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
 
-            cordm = set_blank_if_default(cordm, 0)
-            #fctn = set_blank_if_default(self.fctn, 'SMECH')
-            card = ['PSOLID', pid, mid, cordm, integ,
-                    stress, isop, fctn]
-            f.write(print_card(card))
+                cordm = set_blank_if_default(cordm, 0)
+                #fctn = set_blank_if_default(self.fctn, 'SMECH')
+                card = ['PSOLID', pid, mid, cordm, integ,
+                        stress, isop, fctn]
+                f.write(print_card(card))

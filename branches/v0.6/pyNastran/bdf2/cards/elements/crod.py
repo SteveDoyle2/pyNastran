@@ -1,9 +1,9 @@
-from numpy import dot
-from numpy import zeros, unique, searchsorted
+from numpy import dot, arange, zeros, unique, searchsorted
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
+
 
 class CROD(object):
     type = 'CROD'
@@ -37,10 +37,10 @@ class CROD(object):
             self.node_ids = zeros((ncards, 2), 'int32')
 
             for i, card in enumerate(cards):
-                self.element_id[i] = integer(card, 1, 'eid')
-                self.property_id[i] = integer_or_blank(card, 2, 'pid', self.element_id[i])
+                self.element_id[i] = integer(card, 1, 'element_id')
+                self.property_id[i] = integer_or_blank(card, 2, 'property_id', self.element_id[i])
                 self.node_ids[i] = [integer(card, 3, 'n1'),
-                                 integer(card, 4, 'n2')]
+                                    integer(card, 4, 'n2')]
                 assert len(card) == 5, 'len(CROD card) = %i' % len(card)
 
             i = self.element_id.argsort()
@@ -84,12 +84,12 @@ class CROD(object):
             msg.append('  %-8s: %i' % ('CROD', self.n))
         return msg
 
-    def write_bdf(self, f, size=8, eids=None):
+    def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
-            if eids is None:
+            if element_ids is None:
                 i = arange(self.n)
             else:
-                i = searchsorted(self.element_id, self.eid)
+                i = searchsorted(self.element_id, self.element_id)
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CROD', eid, pid, n[0], n[1] ]

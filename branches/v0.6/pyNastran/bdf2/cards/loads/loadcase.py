@@ -12,19 +12,19 @@ class LoadCase(object):
         return self.resolve(key)
 
     def add(self, load):
-        print "load.type", load.type
         if load.n:
             print "n = ", load.n
             load_ids = unique(load.load_id)
             for load_id in load_ids:
                 if load.type in ['FORCE', 'FORCE1', 'FORCE2',
                                 'MOMENT', 'MOMENT1', 'MOMENT2',
-                                'PLOAD1',]:
+                                'PLOAD', 'PLOAD1', 'PLOAD2']:  # PLOAD4, PLOADX1, RFORCE
                     i = where(load_id == load.load_id)[0]
                     #print "i** =", i
                     if len(i):
                         self.loads[load_id].append(load[i])
                 else:
+                    print "load.type", load.type
                     raise NotImplementedError(load.type)
 
     def add_reference(self, load):
@@ -83,8 +83,8 @@ class LoadCase(object):
             #print "len(all_loads_loop) =", len(all_loads_loop)
             all_loads = all_loads_loop
             i += 1
-            if i > 2:
-                asfd
+            if i > 100:
+                raise RuntimeError('i > 100')
         #print '------------------'
         #print "resolved LoadCase i=", i
         f = StringIO.StringIO()

@@ -1,6 +1,6 @@
 from .pshell import PSHELL
 from .pcomp import PCOMP
-from .pshear import PSHEAR
+from .pcomp import PCOMP as PCOMPG
 
 class PropertiesShell(object):
     def __init__(self, model):
@@ -14,20 +14,20 @@ class PropertiesShell(object):
 
         self.pshell = PSHELL(self.model)
         self.pcomp = PCOMP(self.model)
-        self.pshear = PSHEAR(self.model)
+        self.pcompg = PCOMPG(self.model)
 
     def build(self):
         self.pshell.build()
         self.pcomp.build()
-        self.pshear.build()
+        self.pcompg.build()
         
-        npcomp = self.pcomp.n
         npshell = self.pshell.n
-        npshear = self.pshear.n
+        npcomp  = self.pcomp.n
+        npcompg = self.pcompg.n
         
-        if npshell and npcomp and pshear:
-            asf
-        elif npshell and npcomp:
+        if npshell and npcomp and npcompg:
+            asdf
+        if npshell and npcomp:
             pid = concatenate(self.pshell.pid, self.pcomp.pid)
             unique_pids = unique(pid)
             print unique_pids
@@ -45,11 +45,12 @@ class PropertiesShell(object):
     def add_pcomp(self, card, comment):
         self.pcomp.add(card, comment)
 
-    def add_pshear(self, card, comment):
-        self.pshear.add(card, comment)
+    def add_pcompg(self, card, comment):
+        raise NotImplementedError(card)
+        self.pcompg.add(card, comment)
 
     def _get_types(self):
-        return [self.pshell, self.pcomp, self.pshear]
+        return [self.pshell, self.pcomp, self.pcompg]
 
     def get_stats(self):
         msg = []
@@ -60,15 +61,15 @@ class PropertiesShell(object):
                 msg.append('  %-8s: %i' % (prop.type, nprop))
         return msg
 
-    def get_thickness(self, pids):
+    def get_thickness(self, property_ids):
         """
         Gets the thickness of the PSHELLs/PCOMPs.
         
         :param self: the ShellProperties object
-        :param pids: the property IDs to consider (default=None -> all)
+        :param property_ids: the property IDs to consider (default=None -> all)
         """
-        _pids = concatenate(self.pshell.pid,
-                           self.pcomp.pid)
+        _pids = concatenate(self.pshell.property_id,
+                           self.pcomp.property_id)
         t = concatenate(self.pshell.get_thickness(),
                         self.pcomp.get_thickness() )
         i = argsort(_pids)
@@ -76,8 +77,9 @@ class PropertiesShell(object):
         t2 = t[searchsorted(pids, _pids)]
         return t2
 
-    def write_bdf(self, f, size=8, pids=None):
+    def write_bdf(self, f, size=8, property_ids=None):
         f.write('$PROPERTIES_SHELL\n')
         types = self._get_types()
         for prop in types:
-            prop.write_bdf(f, size=size, pids=pids)
+            #print('*SHELL', prop.type)
+            prop.write_bdf(f, size=size, property_ids=property_ids)

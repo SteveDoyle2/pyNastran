@@ -10,13 +10,32 @@ class XRefMesh(object):
     def cross_reference(self, xref=True):
         self.grid.build()
         self.coord.build()
+        
+        self._build_elements_properties()
+    
+        self.materials.build()
+        
+        self._build_loads()
+        self._build_constraints()
+        self._build_aero()
 
+    def _build_aero(self):
+        self.caero.build()
+        self.paero.build()
+        self.mass.build()
+        #self.trim.build()
+        #self.aero.build()
+        #self.aeros.build()
+
+    def _build_elements_properties(self):
         #self.elements_rod.build()
         self.crod.build()
         self.conrod.build()
         
         self.elements_spring.build()
         #self.elements_bar.build()
+        self.cbar.build()
+
         self.elements_shell.build()
         self.elements_solid.build()
 
@@ -26,11 +45,8 @@ class XRefMesh(object):
         #self.properties_bar.build()
         self.properties_shell.build()
         self.properties_solid.build()
-
-        self.materials.build()
         
-        self._build_loads()
-        self._build_constraints()
+        self.mass.build()
 
     def _build_constraints(self):
         for t in [self.spcadd, self.spc, self.spc1, self.spcd]:
@@ -58,11 +74,23 @@ class XRefMesh(object):
         #self.moment1.build()
         #self.moment2.build()
         
-        #self.pload.build()
+        self.pload.build()
         self.pload1.build()
         self.pload2.build()
         #self.pload4.build()
+        
+        if 0:
+            self.spc_object = SPCObject()
+            self.spc_object.add_reference(self.spcadd)
+            self.spc_object.add(self.spc)
+            self.spc_object.add(self.spcd)
+            self.spc_object.add(self.spc1)
+            self.spc_object.add(self.spcax)
 
+            self.mpc_object = MPCObject()
+            self.mpc_object.add_reference(self.mpcadd)
+            self.mpc_object.add(self.mpc)
+        
         self.loadcase = LoadCase()
         self.loadcase.add_reference(self.load)
         self.loadcase.add_reference(self.dload)
@@ -74,8 +102,8 @@ class XRefMesh(object):
         #self.loadcase.add(self.moment1)
         #self.loadcase.add(self.moment2)
         
-        #self.loadcase.add(self.pload)
-        #self.loadcase.add(self.pload1)
+        self.loadcase.add(self.pload)
+        self.loadcase.add(self.pload1)
         self.loadcase.add(self.pload2)
         #self.loadcase.add(self.pload4)
         

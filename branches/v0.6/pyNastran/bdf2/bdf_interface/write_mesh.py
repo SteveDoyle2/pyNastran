@@ -230,26 +230,42 @@ class WriteMesh(object):
             self._write_elements_properties(f, size)
         else:
             #self.properties_springs.write_bdf(f)
-            self.elements_springs.write_bdf(f)
+            self.elements_spring.write_bdf(f)
             self.pelas.write_bdf(f, size)
 
             #self.properties_rods.write_bdf(f)
             #self.elements_rods.write_bdf(f)
+            self.crod.write_bdf(f)
+            self.prod.write_bdf(f)
+            
+            self.mass.write_bdf(f, size)
 
             #self.properties_bars.write_bdf(f)
             #self.elements_bars.write_bdf(f)
+            self.cbar.write_bdf(f, size)
 
             self.properties_shell.write_bdf(f, size)
             self.elements_shell.write_bdf(f)
 
-            self.properties_solids.write_bdf(f, size)
-            self.elements_solids.write_bdf(f)
+            self.properties_solid.write_bdf(f, size)
+            self.elements_solid.write_bdf(f)
+            
         self.conrod.write_bdf(f, size)
+        self._write_aero(f, size)
         self._write_loads(f, size)
         self.materials.write_bdf(f, size)
         self._write_constraints(f, size)
         f.write(self._write_rejects(size))
         f.write('ENDDATA\n')
+            
+    def _write_aero(self, f, size):
+        self.paero.write_bdf(f, size)
+        self.caero.write_bdf(f, size)
+        for key, trim in sorted(self.trim.iteritems()):
+            trim.write_bdf(f, size)
+        #self.aero.write_bdf(f, size)
+        #self.aeros.write_bdf(f, size)
+
 
     def _write_constraints(self, f, size):
         spcs = [self.spcadd, self.spc, self.spcd, self.spc1]
@@ -294,7 +310,7 @@ class WriteMesh(object):
         #self.moment1.write_bdf(f, size)
         #self.moment2.write_bdf(f, size)
 
-        #self.pload.write_bdf(f, size)
+        self.pload.write_bdf(f, size)
         self.pload1.write_bdf(f, size)
         self.pload2.write_bdf(f, size)
         #self.pload4.write_bdf(f, size)

@@ -1,3 +1,10 @@
+from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
+
+from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+    double_or_blank, integer_double_or_blank, blank)
+
+
 class PCOMP(object):
     type = 'PCOMP'
     def __init__(self, model):
@@ -21,22 +28,22 @@ class PCOMP(object):
         cards = self._cards
         ncards = len(cards)
         self.n = ncards
+        #return
         if ncards:
             #: Property ID
             self.pid = zeros(ncards, 'int32')
 
             ncards = len(cards)
-            for card in cards:
+            for i, card in enumerate(cards):
                 self.pid[i] = integer(card, 1, 'pid')
             i = self.pid.argsort()
             self.pid = self.pid[i]
             unique_pids = unique(self.pid)
 
             if len(unique_pids) != len(self.pid):
-                raise RuntimeError('There are duplicate PSHELL IDs...')
+                raise RuntimeError('There are duplicate PCOMP IDs...')
             self._cards = []
             self._comments = []
         
-    def write_bdf(self, f, size=8, pids=None):
+    def write_bdf(self, f, size=8, property_ids=None):
         pass
-

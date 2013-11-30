@@ -1,4 +1,6 @@
-from numpy import array, dot, zeros, unique, searchsorted
+from itertools import izip
+
+from numpy import array, arange, dot, zeros, unique, searchsorted
 from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import print_card
@@ -62,11 +64,12 @@ class PELAS(object):
             self._s = []
 
     def write_bdf(self, f, size=8, pids=None):
-        if pids is None:
-            i = arange(self.n)
-        else:
-            i = pids
+        if self.n:
+            if pids is None:
+                i = arange(self.n)
+            else:
+                i = pids
 
-        for (pid, k, ge, s) in izip(self.property_id[i], self.K[i], self.ge[i], self.s[i]):
-            card = ['PELAS', pid, k, ge, s]
-            f.write(print_card(card, size=size))
+            for (pid, k, ge, s) in izip(self.property_id[i], self.K[i], self.ge[i], self.s[i]):
+                card = ['PELAS', pid, k, ge, s]
+                f.write(print_card(card, size=size))
