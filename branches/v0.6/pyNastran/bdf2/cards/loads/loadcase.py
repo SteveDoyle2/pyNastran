@@ -38,24 +38,24 @@ class LoadCase(object):
         #print "key", i
         all_loads = self.loads[i]  # list of load objs
 
-        print "**********"
+        #print "**********"
         f = StringIO.StringIO()
         for load in all_loads:
             load.write_bdf(f)
-        print f.getvalue()
-        print "**********"
+        #print f.getvalue()
+        #print "**********"
             
         all_loads_out = []
         all_loads_loop = all_loads
 
         i = 0
         while all_loads_loop:
-            print "--------------------------"
-            print "i = ", i
+            #print "--------------------------"
+            #print "i = ", i
             all_loads_loop = []
-            print "all_loads", all_loads
+            #print "all_loads", all_loads
             for loads in all_loads:
-                print "a-loads =", loads
+                #print "a-loads =", loads
                 if isinstance(loads, tuple):
                     (sf, loads2) = loads
                     for load in loads2:

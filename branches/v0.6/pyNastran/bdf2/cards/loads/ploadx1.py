@@ -64,6 +64,7 @@ class PLOADX1(object):
             float_fmt = self.model.float
             #: Property ID
             self.load_id = zeros(ncards, 'int32')
+            #: Element ID
             self.element_id = zeros(ncards, 'int32')
 
             # Surface traction at grid point GA. (Real)
@@ -73,6 +74,8 @@ class PLOADX1(object):
             #: element. (Integer > 0)
             self.node_ids = zeros((ncards, 2), 'int32')
 
+            #: Angle between surface traction and inward normal to the line segment.
+            #: (Real Default = 0.0)
             self.theta = zeros(ncards, float_fmt)
 
             for i, card in enumerate(cards):
@@ -89,8 +92,8 @@ class PLOADX1(object):
             i = self.load_id.argsort()
             self.load_id = self.load_id[i]
             self.element_id = self.element_id[i]
-            self.node_ids = self.node_ids[i]
-            self.p = self.p[i]
+            self.node_ids = self.node_ids[i, :]
+            self.p = self.p[i, :]
             self.theta = self.theta[i]
             self._cards = []
             self._comments = []

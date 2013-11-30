@@ -27,7 +27,7 @@ from .cards.grid import GRID, GRDSET
 from .cards.spoint import SPOINT
 
 # properties
-from .cards.properties.prod import PROD
+from .cards.elements.rod.prod import PROD
 
 # elements
 from .cards.elements.spring.elements_spring import ElementsSpring
