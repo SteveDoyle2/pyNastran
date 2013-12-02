@@ -59,7 +59,7 @@ numpy_version = tuple([int(i) for i in numpy.__version__ if i != '.'])
 if numpy.__version__ < (1, 8):
     def norm_axis(x, ord=None, axis=None):
         """A modified form of numpy.norm to work in numpy <= 1.8.0
-        
+
         Only supports 1D and 2D x vectors (unlike 1.8.0).
         -------------------------
         %s""" % norm.__doc__
@@ -80,7 +80,7 @@ if numpy.__version__ < (1, 8):
                 raise RuntimeError('invalid shape...upgrade numpy >= 1.8.0')
         if n is None:
             raise RuntimeError('invalid axis=%r' % axis)
-        return n            
+        return n
 else:
     norm_axis = norm
 
@@ -90,7 +90,7 @@ def integrate_line(x, y):
 
     :param x: the independent variable
     :param y: the dependent variable
-    
+
     :returns integrated_value: the area under the curve
     """
     if len(set(y)) == 1:
@@ -177,7 +177,7 @@ def is_float_ranged(a, x, b):
     :param a: the lower bound value (inclusive)
     :param x: the search value
     :param b: the upper bound value (inclusive)
-    
+
     :returns is_ranged: True/False
     """
     if (not a < x) and (not allclose(x, a)):
@@ -253,7 +253,7 @@ def augmented_identity(A):
     """
     Creates an Identity Matrix augmented with zeros.
     The location of the extra zeros depends on A.
-    
+
     [ 1, 0, 0, 0 ]
     [ 0, 1, 0, 0 ]
     [ 0, 0, 1, 0 ]
@@ -268,7 +268,7 @@ def solve_tridag(A, D):
     Solves a tridagonal matrix [A]{x}={b} for {x}
     :param A: main diagonal (length=N)
     :param D: off diagonal (length=N-1)
-    :returns x    
+    :returns x
     """
     # Find the diagonals
     ud = insert(diag(A, 1), 0, 0)  # upper diagonal
@@ -284,7 +284,7 @@ Area = lambda a, b: 0.5 * norm(cross(a, b))
 def centroid_triangle(n1, n2, n3):
     """
     Calculates the centroid of a triangle
-    
+
     :param n1: NDARRAY of node 1
     :param n2: NDARRAY of node 2
     :param n3: NDARRAY of node 3
