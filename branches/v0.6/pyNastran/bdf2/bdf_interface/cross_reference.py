@@ -9,11 +9,17 @@ class XRefMesh(object):
     
     def cross_reference(self, xref=True):
         self.grid.build()
+        self.point.build()
+        self.spoint.build()
+        self.epoint.build()
+        self.pointax.build()
+        #======================
         self.coord.build()
-        
+        #======================
         self._build_elements_properties()
-    
+        #======================
         self.materials.build()
+        #======================
         
         self._build_loads()
         self._build_constraints()
@@ -97,6 +103,9 @@ class XRefMesh(object):
         self.loadcase = LoadCase()
         self.loadcase.add_reference(self.load)
         self.loadcase.add_reference(self.dload)
+        #self.loadcase.add_reference(self.sload)
+        #self.loadcase.add_reference(self.lseq)
+        
         self.loadcase.add(self.force)
         #self.loadcase.add(self.force1)
         #self.loadcase.add(self.force2)
@@ -108,9 +117,24 @@ class XRefMesh(object):
         self.loadcase.add(self.pload)
         self.loadcase.add(self.pload1)
         self.loadcase.add(self.pload2)
+        #self.loadcase.add(self.pload3)
         #self.loadcase.add(self.pload4)
         
         self.loadcase.add(self.ploadx1)
+        self.loadcase.add(self.grav)
+        self.loadcase.add(self.rforce)
+        
+        #self.loadcase.add(self.tload1)
+        #self.loadcase.add(self.tload2)
+        #self.loadcase.add(self.rload1)
+        #self.loadcase.add(self.rload2)
+
+        #self.loadcase.add(self.accel1)
+        #self.loadcase.add(self.randps)
+        
         
         #self.loadcase.resolve(2)
         #self.loadcase.resolve(1)
+        
+        # DAREA
+        # RANDPS

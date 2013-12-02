@@ -111,7 +111,7 @@ class PSHELL(object):
         :param property_ids:  the property_ids to write (default=None -> all)
         """
         if self.n:
-            i = get_index(property_ids)
+            i = self.get_index(property_ids)
             Mid2 = [midi if midi > 0 else '' for midi in self.material_id2[i]]
             Mid3 = [midi if midi > 0 else '' for midi in self.material_id3[i]]
             Mid4 = [midi if midi > 0 else '' for midi in self.material_id4[i]]
@@ -145,7 +145,7 @@ class PSHELL(object):
         if property_ids is None:
             t = self.thickness
         else:
-            i = get_index(property_ids)
+            i = self.get_index(property_ids)
             t = self.thickness[i]
         return t
 
@@ -159,6 +159,6 @@ class PSHELL(object):
         if property_ids is None:
             mid = self.material_id
         else:
-            i = get_index(property_ids)
+            i = self.get_index(property_ids)
             mid = self.material_id[i]
         return mid

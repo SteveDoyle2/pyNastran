@@ -23,13 +23,14 @@ from pyNastran.utils.gui_io import load_file_dialog
 from .cards.coord import Coord
 
 # nodes
-from .cards.grid import GRID, GRDSET
-from .cards.spoint import SPOINT
+from .cards.nodes.grid import GRID, GRDSET
+from .cards.nodes.point import POINT
+from .cards.nodes.spoint import SPOINT
+from .cards.nodes.epoint import EPOINT
+from .cards.nodes.pointax import POINTAX
 
-# properties
-from .cards.elements.rod.prod import PROD
 
-# elements
+# spring
 from .cards.elements.spring.elements_spring import ElementsSpring
 from .cards.elements.spring.pelas import PELAS
 
@@ -42,6 +43,7 @@ from .cards.elements.solid.elements_solid import ElementsSolid
 from .cards.elements.solid.properties_solid import PropertiesSolid
 
 # rods
+from .cards.elements.rod.prod import PROD
 from .cards.elements.rod.crod import CROD
 from .cards.elements.rod.conrod import CONROD
 
@@ -76,6 +78,10 @@ from .cards.materials.materials import Materials
 
 # loads
 from .cards.loads.load import LOAD
+from .cards.loads.dload import DLOAD
+from .cards.loads.dload import DLOAD as LSEQ
+from .cards.loads.dload import DLOAD as SLOAD
+from .cards.loads.grav import GRAV
 from .cards.loads.force import FORCE
 from .cards.loads.moment import MOMENT
 
@@ -84,15 +90,26 @@ from .cards.loads.moment import MOMENT
 #from .cards.loads.moment1 import MOMENT1
 #from .cards.loads.moment2 import MOMENT2
 
+# ACCEL1
+# PLOAD3
+# DAREA
+# TLOAD1
+# TLOAD2
+# RLOAD1
+# RLOAD2
+# RANDPS
+
+
 from .cards.loads.pload  import PLOAD
 from .cards.loads.pload1 import PLOAD1
 from .cards.loads.pload2 import PLOAD2
+#from .cards.loads.pload3 import PLOAD3
 #from .cards.loads.pload4 import PLOAD4
 
 from .cards.loads.ploadx1 import PLOADX1
 #from .cards.loads.grav import GRAV
 
-#from .cards.loads.rforce import RFORCE
+from .cards.loads.rforce import RFORCE
 #from .cards.loads.sload import SLOAD
 
 #from .cards.loads.loadcase import LoadCase
@@ -117,9 +134,8 @@ from .cards.constraints.mpcadd import MPCADD
 #                                   CHEXA8, CHEXA20, SolidElement)
 #from .cards.elements.rigid import (RBAR, RBAR1, RBE1, RBE2, RBE3, RigidElement)
 #
-#from .cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
-#                                   CSHEAR, CTRIA3, CTRIA6, CTRIAX,
-#                                   CTRIAX6, CTRIAR, ShellElement)
+#from .cards.elements.shell import (CQUAD, CQUADR, CQUADX,
+#                                   CTRIAX, CTRIAR)
 #from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE
 #from .cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 #from .cards.properties.bush import PBUSH, PBUSH1D
@@ -135,7 +151,7 @@ from .cards.constraints.mpcadd import MPCADD
 #                         AESURFS, AERO, AEROS, CSSCHD, CAERO1, CAERO2, CAERO3,
 #                         CAERO4, CAERO5, FLFACT, FLUTTER, GUST, MKAERO1,
 #                         MKAERO2, PAERO1, PAERO2, SPLINE1, SPLINE2, SPLINE4,
-#                         SPLINE5, TRIM)
+#                         SPLINE5)
 #from .cards.constraints import (SPC, SPCADD, SPCD, SPCAX, SPC1,
 #                                MPC, MPCADD, SUPORT1, SUPORT,
 #                                ConstraintObject)
@@ -144,8 +160,8 @@ from .cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
 #from .cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
 #from .cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM, NLPCI)
 #from .cards.loads.loads import (LSEQ, SLOAD, DLOAD, DAREA, TLOAD1, TLOAD2,
-#                                RLOAD1, RLOAD2, RANDPS, RFORCE)
-#from .cards.loads.staticLoads import (LOAD, GRAV, ACCEL1,
+#                                RLOAD1, RLOAD2, RANDPS)
+#from .cards.loads.staticLoads import (LOAD, ACCEL1,
 #                                      FORCE1, FORCE2, MOMENT1, MOMENT2,
 #                                      PLOAD4)
 #
@@ -296,8 +312,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: the list of possible cards that will be parsed
         self.cards_to_read = set([
             'PARAM',
-            'GRID', 'GRDSET', 'SPOINT',  # 'RINGAX',
-            #'POINT',
+            'GRID', 'GRDSET', 'SPOINT', 'EPOINT', 'POINT', 'POINTAX', # 'RINGAX',
 
             # elements
             'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
@@ -551,18 +566,14 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         
         model = self
         self.grid = GRID(model)
+        self.point = POINT(model)
         self.grdset = GRDSET(model)
         self.spoint = SPOINT(model)
+        self.epoint = EPOINT(model)
+        self.pointax = POINTAX(model)
         
         self.coords = {0 : CORD2R() }
         
-        #: stores POINT cards
-        self.points = {}
-        #self.grids = {}
-        #self.spoints = None
-        #self.epoints = None
-        #: stores GRIDSET card
-
         #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
         #: etc.)
         self.elements = {}
@@ -649,10 +660,13 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.moment = MOMENT(model)
         #self.moment1 = MOMENT1(model)
         #self.moment2 = MOMENT2(model)
+        self.grav = GRAV(model)
+        self.rforce = RFORCE(model)
         
         self.pload = PLOAD(model)
         self.pload1 = PLOAD1(model)
         self.pload2 = PLOAD2(model)
+        #self.pload3 = PLOAD3(model)
         #self.pload4 = PLOAD4(model)
         
         self.ploadx1 = PLOADX1(model)
@@ -1640,7 +1654,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         #========================
         # cshear / pshear
-        elif name == 'PSHEAR':
+        elif name == 'CSHEAR':
             self.cshear.add(card_obj, comment=comment)
         elif name == 'PSHEAR':
             self.pshear.add(card_obj, comment=comment)
@@ -1653,6 +1667,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         elif name == 'CQUAD':
             self.elements_shell.add_cquad(card_obj, comment=comment)
+        elif name == 'CQUADX':
+            #self.elements_shell.add_cquadx(card_obj, comment=comment)
+            pass
+        elif name == 'CQUADR':
+            #self.elements_shell.add_cquadr(card_obj, comment=comment)
+            pass
         elif name == 'CQUAD4':
             self.elements_shell.add_cquad4(card_obj, comment=comment)
         elif name == 'CQUAD8':
@@ -1672,8 +1692,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         #========================
         # rotation elements/loads
-        #elif name == 'CTRIAX':
-            #self.elements_shell.add_ctriax(card_obj, comment=comment)
+        elif name == 'CTRIAX':
+            self.elements_shell.add_ctriax(card_obj, comment=comment)
         elif name == 'CTRIAX6':
             self.elements_shell.add_ctriax6(card_obj, comment=comment)
         elif name == 'PLOADX1':
@@ -1691,14 +1711,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                 self.elements_solid.add_cpenta6(card_obj, comment=comment)
             else:
                 print('len(CPENTA) =', len(card_obj))
-                bbb
                 self.elements_solid.add_cpenta15(card_obj, comment=comment)
         elif name == 'CHEXA':
             if len(card) == 11:
                 self.elements_solid.add_chexa8(card_obj, comment=comment)
             else:
                 print('len(CHEXA) =', len(card_obj))
-                ccc
                 self.elements_solid.add_chexa20(card_obj, comment=comment)
 
         elif name == 'PSOLID':
@@ -1716,6 +1734,55 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.prod.add(card_obj, comment=comment)
 
         #========================
+        # tube
+        elif name == 'CTUBE':
+            #self.ctube.add(card_obj, comment=comment)
+            pass
+        elif name == 'PROD':
+            #self.ptube.add(card_obj, comment=comment)
+            pass
+
+        #========================
+        # thermal boundary conditions
+        elif name == 'CHBDYE':
+            pass
+        elif name == 'CHBDYG':
+            pass
+        elif name == 'CHBDYP':
+            pass
+        elif name == 'PHBDY':
+            pass
+        #========================
+        # convection
+        elif name == 'CONV':
+            pass
+        elif name == 'CONVM':
+            pass
+        elif name == 'PCONV':
+            pass
+        elif name == 'PCOMVM':
+            pass
+        #========================
+        # radiation
+        elif name == 'RADM':
+            pass
+        elif name == 'RADBC':
+            pass
+        #========================
+        # thermal load
+        elif name == 'QBDY1':
+            pass
+        elif name == 'QBDY2':
+            pass
+        #========================
+        # applied temperature
+        elif name == 'TEMP':
+            #self.temp.add(card_obj, comment=comment)
+            pass
+        elif name == 'TEMPD':
+            #self.tempd.add(card_obj, comment=comment)
+            pass
+        #========================
         # design_variables
         elif name == 'DESVAR':
             #self.desvar.add(card_obj, comment=comment)
@@ -1729,6 +1796,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'DVPREL1':
             pass
         elif name == 'DRESP1':
+            pass
+        elif name == 'DRESP2':
             pass
         
         #========================
@@ -1767,15 +1836,21 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #========================
         elif name == 'SET1':
             pass
+        elif name == 'ASET1':
+            pass
+        elif name == 'QSET1':
+            pass
         #========================
         elif name == 'SPLINE1':
             pass
         elif name == 'SPLINE2':
             pass
-        #elif name == 'SPLINE3':
-            #pass
-        #elif name == 'SPLINE5':
-            #pass
+        elif name == 'SPLINE3':
+            pass
+        elif name == 'SPLINE4':
+            pass
+        elif name == 'SPLINE5':
+            pass
         #========================
         # caero/paero
         elif name == 'CAERO1':
@@ -1851,17 +1926,19 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.cdampt.add(card_obj, comment=comment)
         
         #========================
-        # bars/beams
+        # bars
         elif name == 'CBAR':
             self.cbar.add(card_obj, comment=comment)
-        elif name == 'CBEAM':
-            #self.cbeam.add(card_obj, comment=comment)
-            pass
         elif name == 'PBAR':
             #self.pbar.add(card_obj, comment=comment)
             pass
         elif name == 'PBARL':
             #self.pbarl.add(card_obj, comment=comment)
+            pass
+
+        # beams
+        elif name == 'CBEAM':
+            #self.cbeam.add(card_obj, comment=comment)
             pass
         elif name == 'PBEAM':
             #self.pbeam.add(card_obj, comment=comment)
@@ -1869,6 +1946,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'PBEAML':
             #self.pbeaml.add(card_obj, comment=comment)
             pass
+
+        # bend
         #========================
         # mass
         elif name == 'PMASS':
@@ -1895,10 +1974,16 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             load = DLOAD(self)
             load.add_from_bdf(card_obj, comment=comment)
             self.dload[load.load_id].append(load)
+        elif name == 'LSEQ':
+            #load = LSEQ(self)
+            #load.add_from_bdf(card_obj, comment=comment)
+            #self.lseq[load.load_id].append(load)
+            pass
         elif name == 'SLOAD':
             load = SLOAD(self)
             load.add_from_bdf(card_obj, comment=comment)
             self.sload[load.load_id].append(load)
+            #pass
         elif name == 'LOAD':
             load = LOAD(self)
             load.add_from_bdf(card_obj, comment=comment)
@@ -1906,6 +1991,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             #self.load.add(card_obj, comment=comment)
             pass
         
+        #========================
         # applied loads
         elif name == 'FORCE':
             self.force.add(card_obj, comment=comment)
@@ -1920,6 +2006,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'MOMENT2':
             self.moment2.add(card_obj, comment=comment)
 
+        elif name == 'GRAV':
+            self.grav.add(card_obj, comment=comment)
+        #========================
         # pressure loads
         elif name == 'PLOAD':
             self.pload.add(card_obj, comment=comment)
@@ -1933,12 +2022,41 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #elif name == 'PLOADX1':
             #self.ploadx1.add(card_obj, comment=comment)
             pass
-        elif name == 'GRAV':
-            self.grav.add(card_obj, comment=comment)
+
+        #========================
+        # time loads
+        elif name == 'TLOAD1':
+            #self.tload1.add(card_obj, comment=comment)
+            pass
+        elif name == 'TLOAD2':
+            #self.tload2.add(card_obj, comment=comment)
+            pass
+
+        # frequency loads
+        elif name == 'RLOAD1':
+            #self.rload1.add(card_obj, comment=comment)
+            pass
+        elif name == 'RLOAD2':
+            #self.rload2.add(card_obj, comment=comment)
+            pass
+
+        # other
         elif name == 'RFORCE':
             self.rforce.add(card_obj, comment=comment)
+        elif name == 'DAREA':
+            #self.darea.add(card_obj, comment=comment)
+            pass
 
 
+        #========================
+        # tables
+        elif name == 'TABLED1':
+            pass
+        #elif name == 'TABLED1':
+            #pass
+        elif name == 'TABLES1':
+            #self.materials.add_mats1(card_obj, comment=comment)
+            pass
         #========================
         # mpc
         elif name == 'MPCADD':
@@ -1986,6 +2104,13 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'EIGRL':
             pass
 
+        elif name == 'FREQ':
+            pass
+        elif name == 'FREQ1':
+            pass
+        elif name == 'FREQ2':
+            pass
+
         #========================
         # materials
         elif name == 'MAT1':
@@ -1995,17 +2120,13 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.materials.add_mats1(card_obj, comment=comment)
             pass
         elif name == 'MAT4':
-            self.materials.add_mat4(card_obj, comment=comment)
+            #self.materials.add_mat4(card_obj, comment=comment)
+            pass
         elif name == 'MAT8':
             #self.materials.add_mat8(card_obj, comment=comment)
             pass
         elif name == 'MAT10':
             self.materials.add_mat10(card_obj, comment=comment)
-
-        #========================
-        elif name == 'TABLES1':
-            #self.materials.add_mats1(card_obj, comment=comment)
-            pass
 
         #========================
         elif name == 'RBAR':
@@ -2038,12 +2159,21 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.grid.add(card_obj, comment=comment)
         elif name == 'GRDSET':
             self.grdset.add(card_obj, comment=comment)
+
+        elif name == 'POINT':
+            self.point.add(card_obj, comment=comment)
         elif name == 'SPOINT':
             self.spoint.add(card_obj, comment=comment)
+        elif name == 'EPOINT':
+            self.epoint.add(card_obj, comment=comment)
+        elif name == 'POINTAX':
+            self.pointax.add(card_obj, comment=comment)
         elif name == 'RINGAX':
             self.ringax.add(card_obj, comment=comment)
         #========================
         # nonlinear
+        elif name == 'TSTEP':
+            pass
         elif name == 'NLPARM':
             #self.nlparm.add(card_obj, comment=comment)
             pass

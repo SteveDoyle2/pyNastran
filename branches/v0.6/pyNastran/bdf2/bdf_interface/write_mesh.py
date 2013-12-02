@@ -60,7 +60,7 @@ class WriteMesh(object):
     def _write_elements_properties2(self, f, size):
         ptypes = [self.properties_shell.pshell,
                   self.properties_shell.pcomp,
-                  self.properties_shell.pshear,
+                  self.pshear,
                   self.prod,
                   self.properties_solid.psolid,]
         
@@ -82,7 +82,7 @@ class WriteMesh(object):
         
         ptypes = [self.properties_shell.pshell,
                   self.properties_shell.pcomp,
-                  self.properties_shell.pshear,
+                  self.pshear,
                   self.prod,
                   self.properties_solid.psolid,
 
@@ -108,7 +108,7 @@ class WriteMesh(object):
 
         etypes = (self.elements_shell._get_types() +
                   self.elements_solid._get_types() +
-                  [self.crod,])
+                  [self.crod, self.cshear])
 
         #pids_set = None
         if pids_all is None:
@@ -213,6 +213,14 @@ class WriteMesh(object):
         aaa
         # missing elements...
 
+    def _write_nodes(self, f, size):
+        self.grdset.write_bdf(f, size)
+        self.grid.write_bdf(f, size)
+        self.point.write_bdf(f, size)
+        self.epoint.write_bdf(f, size)
+        self.spoint.write_bdf(f, size)
+        self.pointax.write_bdf(f, size)
+
     def write_bdf(self, bdf_filename, interspersed=True, size=8):
         f = open(bdf_filename, 'wb')
 
@@ -221,9 +229,17 @@ class WriteMesh(object):
         f.write(self._write_params(size))
 
         #==========================
-        self.grdset.write_bdf(f, size)
-        self.grid.write_bdf(f, size)
+        self._write_nodes(f, size)
 
+        self.write_elements_properties(f, size)
+        self._write_aero(f, size)
+        self._write_loads(f, size)
+        self.materials.write_bdf(f, size)
+        self._write_constraints(f, size)
+        f.write(self._write_rejects(size))
+        f.write('ENDDATA\n')
+            
+    def write_elements_properties(self, f, size):
         interspersed = False
         if interspersed:
             #raise NotImplementedError('interspersed=False')
@@ -249,15 +265,8 @@ class WriteMesh(object):
 
             self.properties_solid.write_bdf(f, size)
             self.elements_solid.write_bdf(f)
-            
         self.conrod.write_bdf(f, size)
-        self._write_aero(f, size)
-        self._write_loads(f, size)
-        self.materials.write_bdf(f, size)
-        self._write_constraints(f, size)
-        f.write(self._write_rejects(size))
-        f.write('ENDDATA\n')
-            
+
     def _write_aero(self, f, size):
         self.paero.write_bdf(f, size)
         self.caero.write_bdf(f, size)
@@ -302,6 +311,14 @@ class WriteMesh(object):
             for load in loads:
                 load.write_bdf(f, size)
 
+        #for load_id, loads in sorted(self.sload.iteritems()):
+            #for load in loads:
+                #load.write_bdf(f, size)
+
+        #for load_id, loads in sorted(self.lseq.iteritems()):
+            #for load in loads:
+                #load.write_bdf(f, size)
+
         #self.loadset.write_bdf(f, size)
         self.force.write_bdf(f, size)
         #self.force1.write_bdf(f, size)
@@ -313,9 +330,22 @@ class WriteMesh(object):
         self.pload.write_bdf(f, size)
         self.pload1.write_bdf(f, size)
         self.pload2.write_bdf(f, size)
+        #self.pload3.write_bdf(f, size)
         #self.pload4.write_bdf(f, size)
         
         self.ploadx1.write_bdf(f, size)
+        self.grav.write_bdf(f, size)
+        self.rforce.write_bdf(f, size)
+
+        #self.accel1.write_bdf(f, size)
+
+        #self.tload1.write_bdf(f, size)
+        #self.tload2.write_bdf(f, size)
+        #self.rload1.write_bdf(f, size)
+        #self.rload2.write_bdf(f, size)
+        #self.randps.write_bdf(f, size)
+
+        # DAREA
 
     def _write_rejects(self, size):
         """

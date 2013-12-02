@@ -12,8 +12,8 @@ def assert_fields(card1, card2, i):
         fields1 = wipe_empty_fields(card1.reprFields())
         fields2 = wipe_empty_fields(card2.reprFields())
     except:
-        print("card1 = \n%s" % (card1))
-        print("card2 = \n%s" % (card2))
+        print("card1 = \n%s" % card1)
+        print("card2 = \n%s" % card2)
         raise
 
     if len(fields1) != len(fields2):
@@ -166,17 +166,17 @@ def compare_card_content(fem1, fem2):
     for key in fem1.sets:
         card1 = fem1.sets[key]
         card2 = fem2.sets[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for key in fem1.setsSuper:
         card1 = fem1.setsSuper[key]
         card2 = fem2.setsSuper[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for key in fem1.tables:
         card1 = fem1.tables[key]
         card2 = fem2.tables[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for key in fem1.randomTables:
         card1 = fem1.randomTables[key]
@@ -307,75 +307,75 @@ def compare_aero_content(fem1, fem2):
     for key in fem1.caeros:
         card1 = fem1.caeros[key]
         card2 = fem2.caeros[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for key in fem1.paeros:
         card1 = fem1.paeros[key]
         card2 = fem2.paeros[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for key in fem1.aero:
         card1 = fem1.aero[key]
         card2 = fem2.aero[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for key in fem1.aeros:
         card1 = fem1.aeros[key]
         card2 = fem2.aeros[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for key in fem1.aeparams:
         card1 = fem1.aeparams[key]
         card2 = fem2.aeparams[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for key in fem1.aelinks:
         aelinks1 = fem1.aelinks[key]
         aelinks2 = fem2.aelinks[key]
         for (card1, card2) in izip(aelinks1, aelinks2):
-            assert_fields(card1, card2)
+            assert_fields(card1, card2, key)
 
     for key in fem1.aelists:
         card1 = fem1.aelists[key]
         card2 = fem2.aelists[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for key in fem1.aesurfs:
         card1 = fem1.aesurfs[key]
         card2 = fem2.aesurfs[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for key in fem1.aestats:
         card1 = fem1.aestats[key]
         card2 = fem2.aestats[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for key in fem1.gusts:
         card1 = fem1.gusts[key]
         card2 = fem2.gusts[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for key in fem1.flfacts:
         card1 = fem1.flfacts[key]
         card2 = fem2.flfacts[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for key in fem1.flutters:
         card1 = fem1.flutters[key]
         card2 = fem2.flutters[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for i in xrange(len(fem1.mkaeros)):
         card1 = fem1.mkaeros[i]
         card2 = fem2.mkaeros[i]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for key in fem1.splines:
         card1 = fem1.splines[key]
         card2 = fem2.splines[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for key in fem1.trim:
         card1 = fem1.trim[key]
         card2 = fem2.trim[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)

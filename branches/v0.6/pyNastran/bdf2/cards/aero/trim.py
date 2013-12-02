@@ -62,10 +62,17 @@ class TRIM(object):
             self.uxs.append(ux)
             i += 2
 
-    def write_bdf(self, f, size=8):
+    def reprFields(self):
+        return self._repr_fields()
+
+    def _repr_fields(self):
         card = ['TRIM', self.trim_id, self.mach, self.q]
         for (i, label, ux) in izip(count(), self.labels, self.uxs):
             card += [label, ux]
             if i == 1:
                 card += [self.aeqr]
+        return card
+
+    def write_bdf(self, f, size=8):
+        card = self._repr_fields()
         f.write(print_card(card))

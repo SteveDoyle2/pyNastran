@@ -48,22 +48,27 @@ class ElementsShell(object):
         self.ctria3.add(card, comment)
 
     def add_ctria6(self, card, comment):
-        self.ctria6.add(card, comment)
+        #self.ctria6.add(card, comment)
+        pass
 
     def add_cquad(self, card, comment):
-        self.cquad.add(card, comment)
+        #self.cquad.add(card, comment)
+        pass
 
     def add_cquadx(self, card, comment):
-        self.cquadx.add(card, comment)
+        #self.cquadx.add(card, comment)
+        pass
 
     def add_cquad4(self, card, comment):
         self.cquad4.add(card, comment)
 
     def add_cquad8(self, card, comment):
-        self.cquad8.add(card, comment)
+        #self.cquad8.add(card, comment)
+        pass
 
     def add_cquad9(self, card, comment):
-        self.cquad9.add(card, comment)
+        #self.cquad9.add(card, comment)
+        pass
 
     def add_ctriax(self, card, comment):
         self.ctriax.add(card, comment)

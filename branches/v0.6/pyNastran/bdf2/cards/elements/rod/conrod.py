@@ -1,4 +1,4 @@
-from numpy import zeros, unique
+from numpy import arange, zeros, unique
 from numpy.linalg import norm
 from numpy import dot, searchsorted, array, transpose
 
@@ -141,7 +141,7 @@ class CONROD(object):
         p1 = grid_cid0[self.node_ids[:, 0]]
         p2 = grid_cid0[self.node_ids[:, 1]]
         L = p2 - p1
-        rho = self.model.Materials.get_rho(self.mid)
+        rho = self.model.Materials.get_rho(self.material_id)
         mass = norm(L, axis=1) * self.A * rho + self.nsm
         if total:
             return mass.sum()
@@ -156,8 +156,10 @@ class CONROD(object):
 
     def write_bdf(self, f, size=8, eids=None):
         if self.n:
+            if eids is None:
+                i = arange(self.n)
             for (eid, n12, mid, A, J, c, nsm) in zip(
-                 self.eid, self.node_ids, self.mid, self.A, self.J,
+                 self.element_id, self.node_ids, self.material_id, self.A, self.J,
                  self.c, self.nsm):
 
                 #self.mid = integer(card, 4, 'mid')

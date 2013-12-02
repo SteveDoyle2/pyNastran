@@ -11,16 +11,19 @@ class Nodes(object):
         self.spoint = SPOINT(model)
         self.grdset = GRDSET(model)
         self.grid = GRID(model)
+        self.point = POINT(model)
 
     def build(self):
         self.spoint.build()
         self.grid.build()
+        self.point.build()
 
     def write_bdf(self, f, size=8, nids=None):
         f.write('$NODES\n')
         self.spoint.write_bdf(f, size, nids)
         self.grdset.write_bdf(f, size, nids)
         self.grid.write_bdf(f, size, nids)
+        self.point.write_bdf(f, size, nids)
 
     def ndofs(self, sol):
         if self.model.sol in [101, 103, 144, 145]:
@@ -33,7 +36,7 @@ class Nodes(object):
 
     def get_stats(self):
         msg = []
-        types = [self.spoint, self.grdset, self.grid]
+        types = [self.spoint, self.grdset, self.grid, self.point]
         for node in types:
             if node.n:
                 msg.append('  %-8s: %i' % (node.type, node.n))
@@ -189,4 +192,4 @@ class GRID(object):
 
     def __repr__(self):
         msg = "<GRID>\n"
-        msg += '  nGRID = %i' % len(self.cp)
+        msg += '  nGRID = %i' % self.n

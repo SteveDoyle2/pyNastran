@@ -1,4 +1,6 @@
-from numpy import array, dot, zeros, unique, searchsorted, transpose
+from itertools import izip
+
+from numpy import arange, array, dot, zeros, unique, searchsorted, transpose
 from numpy.linalg import norm
 
 from ..rod.conrod import _Lambda
@@ -21,9 +23,39 @@ class CELAS2(object):
         self._cards = []
         self._comments = []
 
+        self.element_id = []
+        #: Property ID
+        self.property_id = []
+
+        # Node IDs
+        self.node_ids = []
+
+        #: stiffness of the scalar spring
+        self.K = []
+
+        #: component number
+        self.components = []
+
+        #: damping coefficient
+        self.ge = []
+
+        #: stress coefficient
+        self.s = []
+
+
     def add(self, card, comment=None):
         self._cards.append(card)
         self._comments.append(comment)
+
+        self.element_id.append(integer(card, 1, 'eid'))
+        self.K.append(double(card, 2, 'k'))
+        self.node_ids.append([integer(card, 3, 'G1'),
+                              integer_or_blank(card, 5, 'G2')])
+        self.components.append([integer_or_blank(card, 4, 'C1', 0),
+                              integer_or_blank(card, 6, 'C2', 0)])
+        self.ge.append(double_or_blank(card, 7, 'ge', 0.))
+        self.s.append(double_or_blank(card, 8, 's', 0.))
+        assert len(card) <= 9, 'len(CELAS2 card) = %i' % len(card) + str(card)
 
     def build(self):
         """
@@ -32,7 +64,17 @@ class CELAS2(object):
         cards = self._cards
         ncards = len(cards)
         self.n = ncards
+        
         if ncards:
+            float_fmt = self.model.float
+            self.element_id = array(self.element_id, 'int32')
+            self.node_ids = array(self.node_ids)
+            self.K = array(self.K, float_fmt)
+            self.components = array(self.components, 'int32')
+            self.ge = array(self.ge, float_fmt)
+            self.s = array(self.s, float_fmt)
+            return
+
             float_fmt = self.model.float
 
             self.element_id = zeros(ncards, 'int32')
@@ -67,9 +109,11 @@ class CELAS2(object):
 
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
-            self.property_id = self.property_id[i]
+            self.K = self.K[i]
             self.node_ids = self.node_ids[i, :]
             self.components = self.components[i, :]
+            self.ge = self.ge[i]
+            self.s = self.s[i]
 
             unique_eids = unique(self.element_id)
             if len(unique_eids) != len(self.element_id):
@@ -90,8 +134,13 @@ class CELAS2(object):
             else:
                 i = searchsorted(self.element_id, self.eid)
 
-            for (eid, pid, n, c) in zip(self.element_id[i], self.property_id[i], self.node_ids[i], self.components[i]):
-                card = ['CELAS2', eid, pid, n[0], n[1], c[0], c[1] ]
+            N0 = self.node_ids[i, 0]
+            N1 = self.node_ids[i, 1]
+            C0 = self.components[i, 0]
+            C1 = self.components[i, 1]
+            for (eid, k, n0, n1, c0, c1, ge, s) in izip(self.element_id[i],
+                    self.K[i], N0, N1, C0, C1, self.ge[i], self.s[i]):
+                card = ['CELAS2', eid, k, n0, c0, n1, c1, ge, s ]
                 f.write(print_card(card))
 
     def get_stiffness(self, i, model, positions, index0s, fnorm=1.0):  # CELAS2
