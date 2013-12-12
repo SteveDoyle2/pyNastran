@@ -1341,7 +1341,7 @@ if __name__ == '__main__':
             if isinstance(matrix, coo_matrix):
                 #op4.writeSparseMatrixAscii(f, name, matrix, form=form,
                 #                           precision='default', isBigMat=isBigMat)
-                write_DMIG(f, name, matrix, form, precision='default', isBigMat=isBigMat)
+                write_DMIG(f, name, matrix, form, precision='default')
             else:
                 f.write(op4.writeDenseMatrixAscii(name, matrix, 1, 'single'))
                 #f.write(op4.writeDenseMatrixBinary(name,matrix,1,'single'))

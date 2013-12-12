@@ -1,9 +1,12 @@
-from pyNastran.bdf.fieldWriter import print_card_8, print_card_16
+from pyNastran.bdf.fieldWriter import print_card_8 #, print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
 from itertools import izip
-from numpy import real, imag, ndarray
+from numpy import real, imag, ndarray, where, arange
+from numpy import matrix as Matrix
 from scipy.sparse import coo_matrix
 
-def write_DMIG(f, name, matrix, form, precision='default', isBigMat=False):
+
+def write_DMIG(f, name, matrix, form, precision='default'):
     """
     ==== ===============
     Form Definition
@@ -26,10 +29,10 @@ def write_DMIG(f, name, matrix, form, precision='default', isBigMat=False):
     ==== =========================
 
     :todo: collapse columns
+    :todo: support ndarray
     """
     assert isinstance(matrix, coo_matrix), 'type(matrix)=%s' % type(matrix)
-    #form = 6
-    #assert form == 'cat', 'form=%r' % form
+    matrix = matrix.todense()
     assert precision in ['default', 'single', 'double'], "precison=%r valid=['default','single','double']"
     ifo = form
 
@@ -38,71 +41,131 @@ def write_DMIG(f, name, matrix, form, precision='default', isBigMat=False):
 
     # get the matrix Type
     if dtype == 'float32':
-        Type = 1
+        precision_type = 1
         size = 8
         is_complex = False
         print_card = print_card_8
     elif dtype == 'float64':
-        Type = 2
+        precision_type = 2
         #size = 16
         is_complex = False
-        print_card = print_card_16
+        print_card = print_card_double
     elif dtype == 'complex64':
-        Type = 3
+        precision_type = 3
         #size = 8
         is_complex = True
         print_card = print_card_8
     elif dtype == 'complex128':
-        Type = 4
+        precision_type = 4
         #size = 16
         is_complex = True
-        print_card = print_card_16
+        print_card = print_card_double
     else:
         raise RuntimeError('dtype = %r' % dtype)
 
-    tin = Type
-    tout = Type
+    tin = precision_type
+    tout = precision_type
 
     # real/imaginary vs magnitude/phase
     polar = 0
 
     ncols = ''
+    form = ifo
     if ifo == 9: # Number of columns in a rectangular matrix. Used only for IFO = 9.
         nrows, ncols = A.shape
-    card = ['DMIG', name, 0, form, precision, ifo, tin, tout, polar, '', ncols]
-    f.write(print_card(card))
+    f.write('$ type = %s\n' % type(matrix))
+    card = ['DMIG', name, 0, ifo, tin, tout, polar, '', ncols]
+    f.write(print_card_8(card))
 
     index_to_node_id = {}
     index_to_component_id = {}
 
-    for i in matrix.row:
-        index_to_node_id[i] = i + 1
-    for i in matrix.col:
-        index_to_component_id[i] = 1 + i % 6
+    if isinstance(matrix, coo_matrix):
+        for i in matrix.row:
+            index_to_node_id[i] = i + 1
+        for i in matrix.col:
+            index_to_component_id[i] = 1 + i % 6
 
-    row_index_to_node_id = index_to_node_id
-    col_index_to_node_id = index_to_node_id
+        row_index_to_node_id = index_to_node_id
+        col_index_to_node_id = index_to_node_id
 
-    row_index_to_component_id = index_to_component_id
-    col_index_to_component_id = index_to_component_id
+        row_index_to_component_id = index_to_component_id
+        col_index_to_component_id = index_to_component_id
 
-    if is_complex:
-        reals = real(matrix.data)
-        imags = imag(matrix.data)
-        for i, j, reali, imagi in izip(matrix.row, matrix.col, reals, imags):
-            GJ = col_index_to_node_id[i]
-            CJ = col_index_to_node_id[i]
-            G1 = row_index_to_node_id[i]
-            C1 = row_index_to_node_id[i]
-            card = ['DMIG', name, GJ, CJ, G1, C1, reali, imagi]
-            f.write(print_card(card))
+        if is_complex:
+            reals = real(matrix.data)
+            imags = imag(matrix.data)
+            for i, j, reali, imagi in izip(matrix.row, matrix.col, reals, imags):
+                GJ = col_index_to_node_id[i]
+                CJ = col_index_to_node_id[i]
+                G1 = row_index_to_node_id[i]
+                C1 = row_index_to_node_id[i]
+                card = ['DMIG', name, GJ, CJ, G1, C1, reali, imagi]
+                f.write(print_card(card))
+        else:
+            for i, j, reali in izip(matrix.row, matrix.col, matrix.data):
+                GJ = col_index_to_node_id[i]
+                CJ = col_index_to_node_id[i]
+                G1 = row_index_to_node_id[i]
+                C1 = row_index_to_node_id[i]
+                card = ['DMIG', name, GJ, CJ, G1, C1, reali]
+                f.write(print_card(card))
+    elif isinstance(matrix, Matrix):
+        nrows, ncols = matrix.shape
+        if name == 'EYE5CD':
+            pass
+        if is_complex:
+            for icol in xrange(ncols):
+                ii = where(matrix[:, icol] != 0.0)[0]
+                reals = real(matrix[:, icol])
+                imags = imag(matrix[:, icol])
+                if ii.shape[1]: #len(ii) > 0:  # Matrix is 2D
+                    #index_range = [ii.min(), ii.max()]
+                    #GJ = col_index_to_node_id[icol]
+                    #CJ = col_index_to_node_id[icol]
+                    GJ = icol
+                    CJ = icol
+                    card = ['DMIG', name, GJ, CJ, '']
+                    ii_max = ii.max()
+                    ii_min = ii.min()
+                    if ii_max == ii_min:
+                        ii_max += 1
+                    for iirow, irow in enumerate(arange(ii_min, ii_max)):
+                        #G1 = row_index_to_node_id[irow]
+                        #C1 = row_index_to_node_id[irow]
+                        G1 = irow
+                        C1 = irow
+                        card.append(G1)
+                        card.append(C1)
+                        card.append(reals[iirow, 0])
+                        card.append(imags[iirow, 0])
+                    f.write(print_card(card))
+        else:
+            for icol in xrange(ncols):
+                ii = where(matrix[:, icol] != 0.0)[0]
+                if ii.shape[1]: #len(ii) > 0:  # Matrix is 2D
+                    #index_range = [ii.min(), ii.max()]
+                    #GJ = col_index_to_node_id[icol]
+                    #CJ = col_index_to_node_id[icol]
+                    GJ = icol
+                    CJ = icol
+                    card = ['DMIG', name, GJ, CJ, '']
+                    #for i, j, reali in izip(matrix.row, matrix.col, matrix.data):
+                    ii_max = ii.max()
+                    ii_min = ii.min()
+                    if ii_max == ii_min:
+                        ii_max += 1
+                    for iirow, irow in enumerate(arange(ii_min, ii_max)):
+                        #G1 = row_index_to_node_id[irow]
+                        #C1 = row_index_to_node_id[irow]
+                        G1 = irow
+                        C1 = irow
+                        card.append(G1)
+                        card.append(C1)
+                        card.append(matrix[irow, icol])  # real number
+                        card.append('')
+                    f.write(print_card(card))
     else:
-        for i, j, reali in izip(matrix.row, matrix.col, matrix.data):
-            GJ = col_index_to_node_id[i]
-            CJ = col_index_to_node_id[i]
-            G1 = row_index_to_node_id[i]
-            C1 = row_index_to_node_id[i]
-            card = ['DMIG', name, GJ, CJ, G1, C1, reali]
-            f.write(print_card(card))
+        raise NotImplementedError('type = %s' % type(matrix))
     f.write('$-----------------------------------------------------------------------\n')
         #I = id_to_node_idj]
