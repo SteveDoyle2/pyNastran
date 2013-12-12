@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 import sys
 
 def print_scientific_16(value):
@@ -144,33 +120,33 @@ def print_float_16(value, tol=0.):
             elif value > -1.:
                 field = "%16.14f" % value   # -0.1  >x>-1.....should be 6, but the baseline 0 is kept...
                 field = field.replace('-0.', '-.')
-
-            # good
             elif value > -10.:
-                field = "%16.13f" % value  #       -1 > x >      -10
+                field = "%16.14f" % value   # -1    >x>-10
             elif value > -100.:
-                field = "%16.12f" % value  #      -10 > x >     -100
+                field = "%16.13f" % value  #       -1 > x >      -10
             elif value > -1000.:
-                field = "%16.11f" % value  #     -100 > x >    -1000
+                field = "%16.12f" % value  #      -10 > x >     -100
             elif value > -10000.:
-                field = "%16.10f" % value  #    -1000 > x >   -10000
+                field = "%16.11f" % value  #     -100 > x >    -1000
             elif value > -100000.:
-                field = "%16.9f" % value   #  -10,000 > x > -100,000
+                field = "%16.10f" % value  #    -1000 > x >   -10000
             elif value > -1000000.:
-                field = "%16.8f" % value   #           -100,000 > x >          -1,000,000
+                field = "%16.9f" % value   #  -10,000 > x > -100,000
             elif value > -10000000.:
-                field = "%16.7f" % value   #         -1,000,000 > x >         -10,000,000
+                field = "%16.8f" % value   #           -100,000 > x >          -1,000,000
             elif value > -100000000.:
-                field = "%16.6f" % value   #        -10,000,000 > x >        -100,000,000
+                field = "%16.7f" % value   #         -1,000,000 > x >         -10,000,000
             elif value > -1000000000.:
-                field = "%16.5f" % value   #       -100,000,000 > x >      -1,000,000,000
+                field = "%16.6f" % value   #        -10,000,000 > x >        -100,000,000
             elif value > -10000000000.:
-                field = "%16.4f" % value   #     -1,000,000,000 > x >     -10,000,000,000
+                field = "%16.5f" % value   #       -100,000,000 > x >      -1,000,000,000
             elif value > -100000000000.:
-                field = "%16.3f" % value   #    -10,000,000,000 > x >    -100,000,000,000
+                field = "%16.4f" % value   #     -1,000,000,000 > x >     -10,000,000,000
             elif value > -1000000000000.:
-                field = "%16.2f" % value   #   -100,000,000,000 > x >  -1,000,000,000,000
+                field = "%16.3f" % value   #    -10,000,000,000 > x >    -100,000,000,000
             elif value > -10000000000000.:
+                field = "%16.2f" % value   #   -100,000,000,000 > x >  -1,000,000,000,000
+            elif value > -100000000000000.:
                 field = "%16.1f" % value   # -1,000,000,000,000 > x > -10,000,000,000,000
             else:
                 field = "%16.1f" % value
