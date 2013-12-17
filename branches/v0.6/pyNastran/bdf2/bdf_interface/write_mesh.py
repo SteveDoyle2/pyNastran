@@ -236,9 +236,17 @@ class WriteMesh(object):
         self._write_loads(f, size)
         self.materials.write_bdf(f, size)
         self._write_constraints(f, size)
+        self._write_nonlinear(f, size)
         f.write(self._write_rejects(size))
         f.write('ENDDATA\n')
-            
+
+    def _write_nonlinear(self, f, size):
+        for key, card in sorted(self.nlparm.iteritems()):
+            card.write_bdf(f, size)
+        for key, card in sorted(self.nlpci.iteritems()):
+            card.write_bdf(f, size)
+        #self.tables1.write_bdf(f, size)
+
     def write_elements_properties(self, f, size):
         interspersed = False
         if interspersed:

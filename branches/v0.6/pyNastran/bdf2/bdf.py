@@ -115,6 +115,14 @@ from .cards.loads.rforce import RFORCE
 #from .cards.loads.loadcase import LoadCase
 #from .cards.loads.loadset import LOADSET
 
+
+#=============================
+# dynamic
+from .cards.nonlinear.nlpci import NLPCI
+from .cards.nonlinear.nlparm import NLPARM
+
+#=============================
+
 # constraints
 from .cards.constraints.spc import SPC, get_spc_constraint
 from .cards.constraints.spcd import SPCD
@@ -772,7 +780,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # ------------------------- nonlinear defaults -----------------------
         #: stores NLPCI
         self.nlpci = {}
-        self.nlpcis = {}
         #: stores NLPARM
         self.nlparm = {}
         self.nlparms = {}
@@ -908,11 +915,16 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: the directory of the 1st BDF (include BDFs are relative to this one)
         self.include_dir = include_dir
 
+        #: will this model be cross referenced
+        self._xref = xref
+
         if not os.path.exists(bdf_filename):
             raise IOError('cannot find bdf_filename=%r' % bdf_filename)
         if bdf_filename.lower().endswith('.pch'):
             punch = True
-
+        
+        #: is this a punch file (no executive control deck)
+        self._punch = punch
         try:
             self._open_file(self.bdf_filename)
             self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
@@ -925,7 +937,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
             self._read_bulk_data_deck()
             self.cross_reference(xref=xref)
-            self._xref = xref
             self._cleanup_file_streams()
         except:
             self._cleanup_file_streams()
@@ -960,7 +971,21 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         lineUpper = ''
         while 'CEND' not in lineUpper[:4] and 'BEGIN' not in lineUpper and 'BULK' not in lineUpper:
             #lines = []
-            (i, line, comment) = self._get_line()
+            try:
+                (i, line, comment) = self._get_line()
+            except TypeError:
+                msg = 'Failed getting line.  If this file does not contain an executive control deck, \n'
+                if self.include_dir == '':
+                    include_dir = ''
+                else:
+                    include_dir = 'include_dir=%s, ' % self.include_dir
+                if self._xref:
+                    xref = ''
+                else:
+                    xref = 'xref=False, '
+                msg += 'call read_bdf(bdf_filename=%r, %s%spunch=%s)' % (self.bdf_filename, include_dir, xref, True)
+                msg += ' instead.\n'
+                raise RuntimeError(msg)
             line = line.rstrip('\n\r\t ')
             #print("line exec = %r" % line)
 
@@ -2052,10 +2077,28 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # tables
         elif name == 'TABLED1':
             pass
-        #elif name == 'TABLED1':
-            #pass
+        elif name == 'TABLED2':
+            pass
+        elif name == 'TABLED3':
+            pass
+        elif name == 'TABLED4':
+            pass
+        elif name == 'TABLED5':
+            pass
+
+        elif name == 'TABLEM1':
+            pass
+        elif name == 'TABLEM2':
+            pass
+        elif name == 'TABLEM3':
+            pass
+        elif name == 'TABLEM4':
+            pass
+
         elif name == 'TABLES1':
             #self.materials.add_mats1(card_obj, comment=comment)
+            pass
+        elif name == 'TABLEST':
             pass
         #========================
         # mpc
@@ -2175,11 +2218,13 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'TSTEP':
             pass
         elif name == 'NLPARM':
-            #self.nlparm.add(card_obj, comment=comment)
-            pass
+            card = NLPARM()
+            card.add(card_obj, comment=comment)
+            self.nlparm[card.nlparm_id] = card
         elif name == 'NLPCI':
-            #self.nlpci.add(card_obj, comment=comment)
-            pass
+            card = NLPCI()
+            card.add(card_obj, comment=comment)
+            self.nlpci[card.nlpci_id] = card
         #========================
         else:
             raise NotImplementedError(name)
