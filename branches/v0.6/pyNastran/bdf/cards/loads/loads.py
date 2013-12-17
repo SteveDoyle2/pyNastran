@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 # pylint: disable=C0103,R0902,R0904,R0914,W0231,R0201
 """
 All static loads are defined in this file.  This includes:
@@ -553,7 +529,7 @@ class RFORCE(Load):
             self.racc = double_or_blank(card, 9, 'racc', 0.)
             self.mb = integer_or_blank(card, 10, 'mb', 0)
             self.idrf = integer_or_blank(card, 11, 'idrf', 0)
-            assert len(card) <= 12, 'len(RFORCE2 card) = %i' % len(card)
+            assert len(card) <= 12, 'len(RFORCE card) = %i' % len(card)
         else:
             self.sid = data[0]
             print("RFORCE = %s" % data)
