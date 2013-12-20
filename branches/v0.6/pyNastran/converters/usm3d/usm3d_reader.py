@@ -22,6 +22,55 @@ class Usm3dReader(object):
         else:
             asdf
 
+    def read_bc_format(self, bc_filename):
+        """
+        0 - Supersonic Inflow
+        1 - Reflection plane
+        2 - Supersonic Outflow
+        3 - Subsonic Outer Boundaries
+        4 - Viscous Surfaces
+        5 - Inviscid aerodynamic surface
+        44 - Blunt base
+        55 - Thick Trailing Edges
+        n*100+3 - Engine-exhaust (Fan)
+        n*100+2 - Engine-exhaust (Jet Core)
+        n*100+1 - Engine-intake
+        1001 - Special inflow
+        1002 - Special Outflow (Fixed Pressure)
+
+        0 - Freestream - Supersonic Inflow (Bounding Box)
+        2 - Extrapolation - Supersonic Outflow (Bounding Box)
+
+        1 - Reflection Plane - Tangent Flow - (Symmetry Plane)
+        3 - Characteristic Inflow - Subsonic Inflow/Outflow/Sideflow (Bounding Box)
+
+        4 - Inviscid Surface (Physical)
+        5 - Viscous Surface (Physical)
+        #==============================
+
+        #Thu Dec 19 11:46:03 2013
+        #bc.map
+        Patch #        BC             Family   #surf   surfIDs         Family
+        #----------------------------------------------------------------------
+        1              44             44             0            0        Base  -> Blunt base
+        2              4              4              0            0        Bay   -> Viscous Surfaces
+        3              0              0              0            0        Inflow -> Supersonic Inflow
+        4              2              2              0            0        Outflow -> Supersonic Outflow
+        5              3              3              0            0        Sideflow -> Characteristic Inflow/Outflow
+        7              1              1              0            0        Symmetry -> Reflection plane
+        """
+        bc = open(bc_filename, 'r')
+        lines = bc.readlines()
+        lines2 = []
+        for line in lines:
+            if len(line.strip().split('#')[0]) > 0:
+                lines2.append(line)
+        lines = lines2
+
+        for line in lines:
+            patch_id, bc, family, surf, surf_ids,  = line.split()
+        bc.close()
+
     def read_usm3d(self, basename, dimension_flag):
         cogsg_file = basename + '.cogsg'
         face_file = basename + '.face'
@@ -166,7 +215,6 @@ class Usm3dReader(object):
 
     def _read_cogsg_volume(self, f):
         # volume cells
-
         self.log.debug('tell volume = %s' % f.tell())
         # surface + volume cells ???
         nelements = self.header['nElements']
