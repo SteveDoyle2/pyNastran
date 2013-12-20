@@ -210,7 +210,7 @@ class CTRIA3(TriShell):
         elif n == 5:
             self.nodes[2] = value
         else:
-            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type)
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         TriShell.__init__(self, card, data)
@@ -1403,7 +1403,7 @@ class CQUAD4(QuadShell):
         elif n == 6:
             self.nodes[3] = value
         else:
-            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type)
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         QuadShell.__init__(self, card, data)

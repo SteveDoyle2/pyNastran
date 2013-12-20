@@ -295,7 +295,7 @@ class GRID(Node):
         elif n == 5:
             xyz[2] = value
         else:
-            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type)
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         """
