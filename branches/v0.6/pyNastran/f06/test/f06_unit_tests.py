@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 import os
 import unittest
 from math import sqrt
@@ -60,7 +36,7 @@ class TestF06(unittest.TestCase):
             op2.read_op2()
             op2.write_f06(op2_name+'.out')
             outputs.append(op2)
-        
+
         if op4_name:
             op4 = OP4(op4_name)
             op4.read_op4(op4Name, matrixNames=None, precision='default')
@@ -68,13 +44,13 @@ class TestF06(unittest.TestCase):
         assert len(outputs) > 0
         if len(outputs) == 1: return outputs[0]
         return outputs
-    
+
     def test_plate_openmdao(self):
         bdfname2 = os.path.join(testpath, 'plate', 'plate_openmdao.bdf')
         dynamic_vars = {'t' : 42.}
         bdf2 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
         self.assertEquals(bdf2.properties[1].t, 42., 't=%s' % bdf2.properties[1].t)
-        
+
         dynamic_vars = {'t' : 42}
         with self.assertRaises(SyntaxError):
             bdf3 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
@@ -98,7 +74,7 @@ class TestF06(unittest.TestCase):
         self.assertEquals(len(bdf.loads), 2, bdf.loads)  # FORCE, LOAD
         self.assertEquals(len(bdf.params), 2, bdf.params)
         self.assertEquals(bdf.sol, 101, bdf.sol)
-        
+
         for (loadcase, stress) in f06.plateStress.iteritems():
             #print("%3s %3s %6s %8s" % ('EID', 'NID', 'iLayer', 'VM_Stress'))
 

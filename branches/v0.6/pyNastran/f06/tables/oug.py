@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 #pylint: disable=E1101,W0612,R0201
 from itertools import izip
 
@@ -38,7 +14,7 @@ class OUG(object):
         """
         ::
                                                D I S P L A C E M E N T   V E C T O R
-  
+
           POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
                  1      G      9.663032E-05   0.0           -2.199001E-04   0.0           -9.121119E-05   0.0
                  2      G      0.0            0.0            0.0            0.0            0.0            0.0
@@ -79,7 +55,7 @@ class OUG(object):
             POINT-ID =       101
                                              C O M P L E X   D I S P L A C E M E N T   V E C T O R
                                                                (MAGNITUDE/PHASE)
-  
+
             FREQUENCY   TYPE          T1             T2             T3             R1             R2             R3
           2.000000E+01     G      3.242295E-16   1.630439E-01   1.630439E-01   1.691497E-17   1.362718E-01   1.362718E-01
                                   196.0668        90.0000       180.0000        63.4349       180.0000       270.0000
@@ -112,7 +88,7 @@ class OUG(object):
             sline = line.strip().split()
             line2 = self.infile.readline()[1:].rstrip('\r\n ')
             sline += line2.strip().split()
-            
+
             dx = float(sline[2]) + float(sline[8])*1j
             dy = float(sline[3]) + float(sline[9])*1j
             dz = float(sline[4]) + float(sline[10])*1j

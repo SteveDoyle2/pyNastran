@@ -15,7 +15,7 @@ try:
     from pyNastran.converters.LaWGS.wgsIO import LaWGS_IO
     is_lawgs = True
 except ImportError:
-    raise
+    #raise
     class LaWGS_IO(object):
         def __init__(self):
             pass
