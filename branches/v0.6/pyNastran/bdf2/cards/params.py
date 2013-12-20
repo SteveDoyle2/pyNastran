@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -38,7 +14,7 @@ class PARAM(BaseCard):
     def __init__(self, card, data=None, comment=''):
         """
         Creates a PARAM card.
-        
+
         :param self: the object
         :param card: BDFCard object
         :param data: list of PARAM entries not including 'PARAM';
@@ -106,16 +82,16 @@ class PARAM(BaseCard):
         Updates value1 and value2.  Performs type checking based on the PARAM
         type after setting any default value(s).
 
-        :param self:   the PARAM object        
+        :param self:   the PARAM object
         :param value1: the main value (default=None)
         :param value2: optional value (default=None)
-        
+
         If you want to access the data directly, use:
         >>>  param = bdf.params['POST']
         >>> param.values[0] = -1  # value1
         >>> param.values[1] = 3   # value2
         >>>
-        
+
         .. note::  Most PARAM cards only have one value.  Some have two.
         """
         if self.key == 'ACOUT':
@@ -181,7 +157,7 @@ class PARAM(BaseCard):
                 raise TypeError(msg)
 
         else:
-            if not (isinstance(value1, int) or isinstance(value1, float) or 
+            if not (isinstance(value1, int) or isinstance(value1, float) or
                     isinstance(value1, str)):
                 msg = 'key=%s value1=%r must be an integer, float, or string.' % (key, value1)
                 raise TypeError(msg)
@@ -189,7 +165,7 @@ class PARAM(BaseCard):
         self.values = [value1]
         if value2 is not None:
             self.values.append(value2)
-            
+
     #def isSameCard(self, param, debug=False):
         #fields1 = [self.key] + self.values
         #fields2 = [param.key] + param.values

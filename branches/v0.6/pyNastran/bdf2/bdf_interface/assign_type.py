@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 from pyNastran.utils import is_string
 
 #old
@@ -41,28 +17,28 @@ def components(card, n, fieldname):
         pass
     elif svalue is None or '.' in svalue:
         Type = getType(svalue)
-        msg = '%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) 
+        msg = '%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card)
         raise SyntaxError(msg)
 
     try:
         value = int(svalue)
     except:
         Type = getType(svalue)
-        msg = '%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) 
+        msg = '%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card)
         raise SyntaxError(msg)
     if value > 0  and is_string(svalue):
         if '0' in svalue:
             value2 = str(svalue).replace('0', '')
-            msg = '%s = %r (field #%s) on card must contain 0 or %s (not both).\ncard=%s' % (fieldname, svalue, n, value2, card) 
+            msg = '%s = %r (field #%s) on card must contain 0 or %s (not both).\ncard=%s' % (fieldname, svalue, n, value2, card)
             raise SyntaxError(msg)
     svalue2 = str(value)
     svalue3 = ''.join(sorted(svalue2))
     for i,v in enumerate(svalue3):
         if v not in '0123456':
-            msg = '%s = %r (field #%s) on card contains an invalid component %r.\ncard=%s' % (fieldname, svalue, n, v, card) 
+            msg = '%s = %r (field #%s) on card contains an invalid component %r.\ncard=%s' % (fieldname, svalue, n, v, card)
             raise SyntaxError(msg)
         if v in svalue3[i + 1:]:
-            msg = '%s = %r (field #%s) on card must not contain duplicate entries.\ncard=%s' % (fieldname, svalue, n, card) 
+            msg = '%s = %r (field #%s) on card must not contain duplicate entries.\ncard=%s' % (fieldname, svalue, n, card)
             raise SyntaxError(msg)
     return svalue3
 
@@ -102,14 +78,14 @@ def blank(card, n, fieldname, default=None):
     svalue = card.field(n)
     if svalue is None:
         return default
-        
+
     if is_string(svalue):
         svalue = svalue.strip()
         if len(svalue) == 0:
            return default
     Type = getType(svalue)
     raise SyntaxError('%s = %r (field #%s) on card must be blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-    
+
 def field(card, n, fieldname):
     """
     :param card:      BDF card as a list
@@ -179,7 +155,7 @@ def fields_or_blank(f, card, fieldname, i, j=None, defaults=None):
     fs = []
     if j is None:
         j = len(card)
-    
+
     assert j - i == len(defaults), 'j=%s i=%s j-i=%s len(defaults)=%s\ncard=%s' % (j,i,j-i, len(defaults), card)
     for ii, default in enumerate(defaults):
         fs.append( f(card, ii + i, fieldname + str(ii), default) )
@@ -202,7 +178,7 @@ def integer(card, n, fieldname):
     if isinstance(svalue, float):
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-        
+
     try:
         return int(svalue)
     except:
@@ -244,7 +220,7 @@ def integer_or_blank(card, n, fieldname, default=None):
     Type = getType(svalue)
     raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     #return default
-    
+
 def double(card, n, fieldname):
     """
     :param card:      BDF card as a list
@@ -258,7 +234,7 @@ def double(card, n, fieldname):
         svalue = card.field(n)
     except IndexError:
         raise SyntaxError('%s (field #%s) on card must be a float.\ncard=%s' % (fieldname, n, card) )
-    
+
     if isinstance(svalue, float):
         return svalue
     elif isinstance(svalue, int):
@@ -267,11 +243,11 @@ def double(card, n, fieldname):
     elif svalue is None or len(svalue) == 0:  ## None
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-    
+
     if svalue.isdigit(): # if only int
         Type = getType(int(svalue))
         raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-    
+
     #svalue = svalue.strip()
     try:  # 1.0, 1.0E+3, 1.0E-3
         value = float(svalue)
@@ -284,7 +260,7 @@ def double(card, n, fieldname):
             if 'D' in svalue:  # 1.0D+3, 1.0D-3
                 svalue2 = svalue.replace('D','E')
                 return float(svalue2)
-            
+
             # 1.0+3, 1.0-3
             sign = ''
             if '+' in svalue[0] or '-' in svalue[0]:
@@ -315,7 +291,7 @@ def double_or_blank(card, n, fieldname, default=None):
     svalue = card.field(n)
     #except IndexError:
         #return default
-    
+
     if isinstance(svalue, float):
         return svalue
     elif isinstance(svalue, int):
@@ -331,7 +307,7 @@ def double_or_blank(card, n, fieldname, default=None):
             Type = getType(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     return default
-    
+
 def double_or_string(card, n, fieldname):
     """
     :param card:      BDF card as a list
@@ -470,7 +446,7 @@ def integer_double_or_blank(card, n, fieldname, default=None):
             Type = getType(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     return default
-    
+
 def integer_or_string(card, n, fieldname):
     """
     :param card:      BDF card as a list
@@ -575,7 +551,7 @@ def integer_double_or_string(card, n, fieldname):
         #raise SyntaxError('%s (field #%s) on card must be an integer, float, or string.\ncard=%s' % (fieldname, n, card) )
     if isinstance(svalue, int) or isinstance(svalue, float):
         return svalue
-    
+
     svalue = str(svalue.strip())
     if svalue:  # integer/float/string
         if '.' in svalue:  # float
@@ -607,7 +583,7 @@ def string(card, n, fieldname):
     else:
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-    
+
     if svalue.isdigit() or '.' in svalue:
         value = integer_or_double(card, n, fieldname)
         Type = getType(value)
@@ -643,7 +619,7 @@ def string_or_blank(card, n, fieldname, default=None):
     if svalue.isdigit() or '.' in svalue:
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an string or blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-        
+
     if svalue:  # string
         return str(svalue)
     return default
@@ -770,7 +746,7 @@ def interpret_value(valueRaw, card='', debug=False):
                "card=%s\nYou also might have mixed tabs/spaces/commas."
                % (valueRaw, valueLeft, card))
         raise SyntaxError(msg)
-    
+
     if 'D' == sline[0][-1]:
         sline[0] = sline[0][:-1]
 
