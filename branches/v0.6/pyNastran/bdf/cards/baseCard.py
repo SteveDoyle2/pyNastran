@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 # pylint: disable=R0904,R0902,C0111,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -42,6 +18,13 @@ class BaseCard(object):
             return '%s' % self._comment
         return ''
 
+    def update_field(n, value):
+        try:
+            key_name = self._field_map[n]
+            setattr(self, key_name, value)
+        except KeyError:
+            self._update_field_helper(n, value)
+
     def writeCodeAster(self):
         return ('# skipping %s  because writeCodeAster is not implemented\n'
                 % self.type)
@@ -56,7 +39,7 @@ class BaseCard(object):
         #that the PBEAML has a proper material type
         #"""
         #pass
-    
+
     def _verify(self, xref=False):
         """
         This method checks that all the card is various methods of the card
@@ -255,7 +238,7 @@ class Element(BaseCard):
         """returns the positions of multiple node objects"""
         if not nodes:
             nodes = self.nodes
-        
+
         positions = []
         for node in nodes:
             if node is not None:
@@ -320,7 +303,7 @@ class Element(BaseCard):
                             nodeIDs.append(node)
                         else:
                             nodeIDs.append(node.nid)
-                    
+
                     #if isinstance(nodes[0], int):
                         #nodeIDs = [node for node in nodes]
                     #else:
@@ -355,7 +338,7 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
     """
     Expands a list of values of the form [1,5,THRU,9,13]
     to be [1,5,6,7,8,9,13]
-    
+
     :param fields:      the fields to expand
     :param set_fields:  should the fields be converted to a set and then back
                         to a list? This is useful for [2, 'THRU' 5, 1] (default=True)
@@ -466,7 +449,7 @@ def collapse_thru_by(fields, get_packs=False):
     """
     :param fields:    the list of fields to collapse
     :param get_packs: get the list of packs so "special" formatting can be done
-    
+
     fields              packs
     [1, 2, 3...150]  -> [1, 150, 1]
     [1, 3, 5...150]  -> [1, 150, 2]

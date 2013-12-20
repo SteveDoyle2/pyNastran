@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 # pylint: disable=C0103,R0902,R0904,R0914
 """
 All dynamic control cards are defined in this file.  This includes:
@@ -183,7 +159,7 @@ class FREQ4(FREQ):
     response problems by specifying the amount of 'spread' around each natural
     frequency and the number of equally spaced excitation frequencies within
     the spread.
-    
+
     +------+-----+-----+-----+------+-----+-----+-----+-----+
     |  1   |  2  | 3   |  4  |  5   |  6  |  7  |  8  |  9  |
     +======+=====+=====+=====+======+=====+=====+=====+=====+
@@ -355,7 +331,7 @@ class TSTEPNL(BaseCard):
             self.maxR = double_or_blank(card, 21, 'maxR', 32.)
             self.uTol = double_or_blank(card, 22, 'uTol', 0.1)
             self.rTolB = double_or_blank(card, 23, 'rTolB', 20.)
-            
+
             # not listed in all QRGs
             self.minIter = integer_or_blank(card, 24, 'minIter')
             assert len(card) <= 25, 'len(TSTEPNL card) = %i' % len(card)

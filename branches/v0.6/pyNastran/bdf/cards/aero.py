@@ -31,7 +31,7 @@ from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru,
                                           wipe_empty_fields)
 from pyNastran.bdf.bdfInterface.assign_type import (fields,
     integer, integer_or_blank,
-    double, double_or_blank, 
+    double, double_or_blank,
     string, string_or_blank,
     integer_or_string, double_string_or_blank,
     blank)
@@ -77,13 +77,13 @@ class AELINK(BaseCard):
     r"""
     Defines relationships between or among AESTAT and AESURF entries, such
     that:
-    
+
     .. math:: u^D + \Sigma_{i=1}^n C_i u_i^I = 0.0
 
     +--------+-------+-------+--------+----+-------+----+-------+----+
     | AELINK | ID    | LABLD | LABL1  | C1 | LABL2 | C2 | LABL3 | C3 |
     +--------+-------+-------+--------+----+-------+----+-------+----+
-    |        | LABL4 | C4    | etc.   | 
+    |        | LABL4 | C4    | etc.   |
     +--------+-------+-------+--------+
 
     +--------+-------+-------+-------+------+
@@ -588,7 +588,7 @@ class CAERO1(BaseCard):
     def __init__(self, card=None, data=None, comment=''):
         r"""
         ::
-        
+
           1
           | \
           |   \
@@ -693,7 +693,7 @@ class CAERO2(BaseCard):
     def __init__(self, card=None, data=None, comment=''):
         """
         ::
-        
+
           1 \
           |   \
           |     \

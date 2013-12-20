@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -192,7 +168,7 @@ class Coord(BaseCard):
               g_y \cdot i  &  g_y \cdot j  &  g_y \cdot k    \\
               g_z \cdot i  &  g_z \cdot j  &  g_z \cdot k
           \end{array} \right]
-        
+
 
         * :math:`g` is the global directional vector (e.g. :math:`g_x = [1,0,0]`)
         * :math:`ijk` is the math:`i^{th}` direction in the local coordinate system
@@ -309,7 +285,7 @@ class Coord(BaseCard):
         :param v:    the vector to normalize
 
         :returns:  normalized v
-        
+
         .. math:: v_{norm} = \frac{v}{\lvert v \lvert}
         """
         normV = norm(v)
@@ -320,10 +296,10 @@ class Coord(BaseCard):
     def T(self):
         r"""
         Gets the 6x6 transformation
-        
+
         .. math:: [\lambda] = [B_{ij}]
-  
-        .. math:: 
+
+        .. math::
           [T] =
           \left[
             \begin{array}{cc}
@@ -375,7 +351,7 @@ class CylindricalCoord(object):
     .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
 
 
-    
+
     """
     def coordToXYZ(self, p):
         r"""
@@ -856,7 +832,7 @@ class CORD1C(Cord1x, CylindricalCoord):
 class CORD1S(Cord1x, SphericalCoord):
     """
     ::
-    
+
       CORD1S CIDA G1A G2A G3A CIDB G1B G2B G3B
     """
     type = 'CORD1S'

@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 # pylint: disable=R0904,R0902,C0103
 """
 CaseControlDeck parsing and extraction class
@@ -71,14 +47,14 @@ class CaseControlDeck(object):
         self.log = get_logger(log, "debug")
         self.debug = False
         #self.debug = True
-        
+
         #: stores a single copy of 'BEGIN BULK' or 'BEGIN SUPER'
         self.begin_bulk = ['BEGIN', 'BULK']
-        
+
         # allows BEGIN BULK to be turned off
         self.write_begin_bulk = True
         self._begin_count = 0
-        
+
         self.lines = lines
         self.subcases = {0: Subcase(id=0)}
         self._read(self.lines)
@@ -210,17 +186,17 @@ class CaseControlDeck(object):
         :param self:  the CaseControlDeck object
         :param isubcase: the subcase ID to update
         :param sol: the solution type to change the solution to
-        
+
         >>> print bdf.case_control
         SUBCASE 1
             DISP = ALL
-        
+
         >>> bdf.case_control.update_solution(1, 'FLUTTER')
         >>> print bdf.case_control
         SUBCASE 1
             ANALYSIS FLUTTER
             DISP = ALL
-        >>> 
+        >>>
         """
         self.add_parameter_to_local_subcase(isubcase, 'ANALYSIS %s' % sol)
 
@@ -231,7 +207,7 @@ class CaseControlDeck(object):
         :param self:  the CaseControlDeck object
         :param param: the variable to add
         .. note:: dont worry about overbounding the line
-        
+
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename)
         >>> bdf.case_control.add_parameter_to_global_subcase('DISP=ALL')
@@ -253,7 +229,7 @@ class CaseControlDeck(object):
         :param isubcase: the subcase ID to add
         :param param:    the variable to add
         .. note::  dont worry about overbounding the line
-        
+
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename)
         >>> bdf.case_control.add_parameter_to_local_subcase(1, 'DISP=ALL')
@@ -470,7 +446,7 @@ class CaseControlDeck(object):
             else:  # STRESS-type; TITLE = stuff
                 #print 'B ??? line = ',line
                 pass
-            
+
             key = update_param_name(key.strip())
             verify_card(key, value, options, line)
 
@@ -499,7 +475,7 @@ class CaseControlDeck(object):
             options = None
             param_type = 'KEY-type'
         i += 1
-        
+
         return (i, key, value, options, param_type)
 
     def finish_subcases(self):
@@ -589,7 +565,7 @@ class CaseControlDeck(object):
             msg += subcase.write_subcase(subcase0)
         #if len(self.subcases) == 1:
             #msg += 'BEGIN BULK\n'
-        
+
         if self.output_lines:
             msg += '\n'.join(self.output_lines) + '\n'
         if self.write_begin_bulk:
@@ -607,7 +583,7 @@ class CaseControlDeck(object):
 
 
 def verify_card(key, value, options, line):
-    if key in ['AUXMODEL', 'BC', 'BCHANGE', 'BCMOVE', 'CAMPBELL', 'CLOAD', 
+    if key in ['AUXMODEL', 'BC', 'BCHANGE', 'BCMOVE', 'CAMPBELL', 'CLOAD',
                'CMETHOD', 'CSSCHD', 'DEACTEL', 'DEFORM', 'DESGLB', 'DESSUB',
                'DIVERG', 'DLOAD', 'DRSPAN', 'FMETHOD', 'FREQUENCY', 'GUST',
                'HADAPART', 'LINE', 'LOAD', 'LOADSET', 'MAXLINES', 'MCHSTAT',
@@ -660,7 +636,7 @@ def verify_card2(key, value, options, line):
     # these may have a value of all/none/integer, nothing else
     # except commas are allowed
     # 'DISP=ALL', 'DISP=NONE', 'DISP=1', 'DISP=1,2'
-    elif key in ['STRESS', 'STRAIN', 'SPCFORCES', 'DISPLACEMENT', 'MPCFORCES', 'SVECTOR', 
+    elif key in ['STRESS', 'STRAIN', 'SPCFORCES', 'DISPLACEMENT', 'MPCFORCES', 'SVECTOR',
                  'VELOCITY', 'ACCELERATION', 'FORCE', 'ESE', 'OLOAD', 'SEALL', 'GPFORCE',
                  'GPSTRESS', 'GPSTRAIN', 'FLUX','AEROF', 'THERMAL', 'STRFIELD',
                  'NOUTPUT', 'SEDV', 'APRES', 'HTFLOW', 'NLSTRESS', 'GPKE',
@@ -695,26 +671,26 @@ def verify_card2(key, value, options, line):
     # weird cards
     elif key in ['SUBTITLE', 'TITLE',
         'A2GG',  'M2GG', 'K2GG',
-        'K2PP', 'M2PP', 
+        'K2PP', 'M2PP',
         'K42GG',
 
         'XMIN', 'XMAX', 'XTITLE','XPAPE', 'XPAPER', 'XAXIS', 'XGRID', 'XGRID LINES', 'XLOG',
         'YMIN', 'YMAX', 'YTITLE','YPAPE', 'YPAPER', 'YAXIS', 'YGRID', 'YGRID LINES', 'YLOG',
-        'XTMIN','XTMAX', 'XTGRID', 'XTTITLE', 'XTAXIS', 'XTGRID LINES', 'XTLOG', 
-        'YTMIN','YTMAX', 'YTGRID', 'YTTITLE', 'YTAXIS', 'YTGRID LINES', 'YTLOG', 
+        'XTMIN','XTMAX', 'XTGRID', 'XTTITLE', 'XTAXIS', 'XTGRID LINES', 'XTLOG',
+        'YTMIN','YTMAX', 'YTGRID', 'YTTITLE', 'YTAXIS', 'YTGRID LINES', 'YTLOG',
         'XBMIN', 'XBMAX', 'XBGRID', 'XBAXIS', 'XBGRID LINES', 'XBTITLE', 'XBLOG',
         'YBMIN', 'YBMAX', 'YBGRID', 'YBAXIS', 'YBGRID LINES', 'YBTITLE', 'YBLOG',
 
          'RIGHT TICS','UPPER TICS',
         'TRIGHT TICS',
-        'BRIGHT TICS', 
+        'BRIGHT TICS',
 
         'PLOTTER', 'XYPLOT',
 
         'PTITLE',
-        'HOUTPUT', 'PLOTID', '', '', '', '', '', 
+        'HOUTPUT', 'PLOTID', '', '', '', '', '',
         'AXISYMMETRIC', 'CURVELINESYMBOL', 'CURVELINESYMB', 'AECONFIG',
-        'B2GG', 'B2PP', 'AESYMXZ', 'TEMP', 'DSAPRT', 'MEFFMASS', 
+        'B2GG', 'B2PP', 'AESYMXZ', 'TEMP', 'DSAPRT', 'MEFFMASS',
         'MAXMIN', 'RESVEC',  'MODESELECT', 'RIGID', 'TCURVE',
         'SUPER',  'MAXI DEFO', 'P2G',
         'EXTSEOUT', 'FLSTCNT PREFDB', 'AESYMXY',

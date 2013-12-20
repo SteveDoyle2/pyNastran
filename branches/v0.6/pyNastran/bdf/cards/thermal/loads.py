@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -30,7 +6,7 @@ from ...bdfInterface.BDF_Card import wipe_empty_fields
 from .thermal import ThermalCard
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from ..baseCard import (expand_thru, expand_thru_by,
-    collapse_thru_by) # collapse_thru, 
+    collapse_thru_by) # collapse_thru,
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     integer_or_string, string, fields)
@@ -69,7 +45,7 @@ class QBDY1(ThermalLoad):
                 j += 1
             #: CHBDYj element identification numbers (Integer)
             assert len(eids) > 0
-            
+
             #: .. todo:: use expand_thru_by ???
             self.eids = expand_thru(eids)
         else:
@@ -179,7 +155,7 @@ class QBDY3(ThermalLoad):
             self.Q0 = double(card, 2, 'Q0')
             #: Control point for thermal flux load. (Integer > 0; Default = 0)
             self.cntrlnd = integer_or_blank(card, 3, 'cntrlnd', 0)
-            
+
             nfields = card.nFields()
             eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
             #: CHBDYj element identification numbers

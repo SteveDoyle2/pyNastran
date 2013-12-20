@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 #pylint: disable=C0103,C0111
 """
 All shell properties are defined in this file.  This includes:
@@ -45,7 +21,7 @@ from pyNastran.bdf.cards.baseCard import Property, Material
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, double,
     double_or_blank, string_or_blank)
 
-    
+
 class ShellProperty(Property):
     def __init__(self, card, data):
         Property.__init__(self, card, data)
@@ -86,7 +62,7 @@ class CompositeShellProperty(ShellProperty):
         :param self: the PCOMP object
         :param iply: the ply ID
         :raises: IndexError if iply is invalid
-        
+
         ::
 
           Case 1 (nplies=6, len(plies)=3, lam='SYM'):
@@ -248,7 +224,7 @@ class CompositeShellProperty(ShellProperty):
 
         :param self: the PCOMP/PCOMPG object
         :param iply: the ply ID (starts from 0)
-        
+
         Assume there are 2 plies, each of 1.0 thick, starting from :math:`z=0`.
 
         >>> pcomp.get_z_locations()
@@ -261,7 +237,7 @@ class CompositeShellProperty(ShellProperty):
             zi += t
             z.append(zi)
         return array(z)
-        
+
     def MassPerArea(self, iply='all', method='nplies'):
         r"""
         Gets the Mass/Area for the property.
@@ -332,7 +308,7 @@ class CompositeShellProperty(ShellProperty):
             assert isinstance(iply, int), 'iply must be an integer; iply=%r' % iply
             rho = self.Rho(iply)
             t = self.plies[iply][1]
-            
+
             if method == 'nplies':
                 # we divide by nplies b/c it's nsm per area and
                 # we're working on a per ply basis
@@ -381,7 +357,7 @@ class CompositeShellProperty(ShellProperty):
 class PCOMP(CompositeShellProperty):
     """
     ::
-    
+
       PCOMP     701512   0.0+0 1.549-2                   0.0+0   0.0+0     SYM
                 300704   3.7-2   0.0+0     YES  300704   3.7-2     45.     YES
                 300704   3.7-2    -45.     YES  300704   3.7-2     90.     YES
@@ -405,7 +381,7 @@ class PCOMP(CompositeShellProperty):
             #:   ['HILL', 'HOFF', 'TSAI', 'STRN', None]
             self.ft = string_or_blank(card, 5, 'ft')
             assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', None]
-            
+
             #: Reference Temperature (default=0.0)
             self.TRef = double_or_blank(card, 6, 'TRef', 0.0)
             self.ge = double_or_blank(card, 7, 'ge', 0.0)
@@ -430,7 +406,7 @@ class PCOMP(CompositeShellProperty):
             tLast = None
             ply = None
             iply = 1
-            
+
             # supports single ply per line
             for i in xrange(9, 9 + nplies * 4, 4):
                 actual = card.fields(i, i + 4)
@@ -522,7 +498,7 @@ class PCOMP(CompositeShellProperty):
             assert isinstance(t, float), 'thickness=%r' % t
             assert isinstance(rho, float), 'rho=%r' % rho
             assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
-            
+
     def rawFields(self):
         list_fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
                   self.TRef, self.ge, self.lam, ]
@@ -693,7 +669,7 @@ class PLPLANE(ShellProperty):
         str = self.str
         if xref:
             assert self.mid.type in ['MATHE', 'MATHP'], 'mid.type=%s' % self.mid.type
-        
+
     #def Pid(self):
         #return self.pid
 
@@ -783,7 +759,7 @@ class PSHELL(ShellProperty):
             self.mid1 = integer_or_blank(card, 2, 'mid1')
             #: thickness
             self.t = double(card, 3, 't')
-            
+
             #: Material identification number for bending
             self.mid2 = integer_or_blank(card, 4, 'mid2')
             #: Scales the moment of interia of the element based on the
@@ -835,7 +811,7 @@ class PSHELL(ShellProperty):
         mid2 = self.Mid2()
         mid3 = self.Mid3()
         mid4 = self.Mid4()
-        
+
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(mid, int), 'mid=%r' % mid
         assert mid1 is None or isinstance(mid1, int), 'mid1=%r' % mid1
@@ -848,7 +824,7 @@ class PSHELL(ShellProperty):
         assert len(mids) > 0
         if xref:
             assert isinstance(self.mid(), Material), 'mid=%r' % self.mid()
-            
+
             for mid in mids:
                 assert isinstance(mid, Material), 'mid=%r' % mid
                 assert mid.type in ['MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8'], 'pid.type=%s mid.type=%s' % (self.type, mid.type)
@@ -960,7 +936,7 @@ class PSHELL(ShellProperty):
         """
         * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/shell/static
         * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/platedynamics
-        
+
         The angle_rep is a direction angle, use either angle(a,b) or
         vecteur(x,y,z)
         coque_ncou is the number of gauss nodes along the thickness, for

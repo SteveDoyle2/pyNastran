@@ -206,7 +206,7 @@ class GRDSET(Node):
         assert isinstance(cp, int), 'cp=%r' % cp
         assert isinstance(cd, int), 'cd=%r' % cd
         assert isinstance(seid, int), 'seid=%r' % seid
-        
+
     def rawFields(self):
         list_fields = ['GRDSET', None, self.Cp(), None, None, None,
                   self.Cd(), self.ps, self.SEid()]
@@ -285,6 +285,17 @@ class GRID(Node):
     +------+-----+----+----+----+----+----+----+------+
     """
     type = 'GRID'
+    _field_map = {1: 'nid', 2:'cp', 6:'cd', 7:'ps', 8:'seid'}
+
+    def _update_field_helper(n, value):
+        if n == 3:
+            xyz[0] = value
+        elif n == 4:
+            xyz[1] = value
+        elif n == 5:
+            xyz[2] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type)
 
     def __init__(self, card=None, data=None, comment=''):
         """
@@ -301,7 +312,7 @@ class GRID(Node):
 
             #: Grid point coordinate system
             self.cp = integer_or_blank(card, 2, 'cp', 0)
-            
+
             x = double_or_blank(card, 3, 'x1', 0.)
             y = double_or_blank(card, 4, 'x2', 0.)
             z = double_or_blank(card, 5, 'x3', 0.)
@@ -372,7 +383,7 @@ class GRID(Node):
         assert isinstance(cd, int), 'cd=%r' % cd
         if xref:
             pos_xyz = self.Position()
-        
+
     def nDOF(self):
         return 6
 
@@ -453,7 +464,7 @@ class POINT(Node):
     +-------+-----+----+----+----+----+----+----+-----+
     |   1   |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9  |
     +=======+=====+====+====+====+====+====+====+=====+
-    | POINT | NID | CP | X1 | X2 | X3 |    |    |     | 
+    | POINT | NID | CP | X1 | X2 | X3 |    |    |     |
     +-------+-----+----+----+----+----+----+----+-----+
     """
     type = 'POINT'

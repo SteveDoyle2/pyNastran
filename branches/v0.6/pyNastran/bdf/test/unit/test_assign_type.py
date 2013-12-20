@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 import unittest
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -73,7 +49,7 @@ class Test(ExtendedTestCase):
                     #print msg
                     f(card, i, fieldname)
             else:
-            
+
                 value = f(card, i, fieldname)
                 self.assertEqual(value, exacti)
             i += 1
@@ -254,7 +230,7 @@ class Test(ExtendedTestCase):
         # blank
         double_or_blank(BDFCard(['   ']), 0, 'field')
         double_or_blank(BDFCard([None]), 0, 'field')
-        
+
     def test_integer_double_or_blank(self):
         """
         value = double_or_blank(card, n, fieldname, default=None)
@@ -267,7 +243,7 @@ class Test(ExtendedTestCase):
         integer_double_or_blank(BDFCard([3.0]  ), 0, 'field')
         integer_double_or_blank(BDFCard(['4.0']), 0, 'field')
         integer_double_or_blank(BDFCard(['5.'] ), 0, 'field')
-        
+
         # error - string
         with self.assertRaises(SyntaxError):
             integer_double_or_blank(BDFCard(['C']  ), 0, 'field')
@@ -275,7 +251,7 @@ class Test(ExtendedTestCase):
             integer_double_or_blank(BDFCard(['1C']  ), 0, 'field')
         with self.assertRaises(SyntaxError):
             integer_double_or_blank(BDFCard(['C1']  ), 0, 'field')
-        
+
         #card    = [1,    2.0, '3.0', '4.', 'C',        None, None,          '', None, 'cat']
         #exact   = [1,    2.0,  3.0,   4.0, SyntaxError,None, 2.0,  SyntaxError, 1.0, SyntaxError]
         #default = [None, None, None, None, None,       None, 2.0,         None, 1.0, 1.0]
@@ -313,7 +289,7 @@ class Test(ExtendedTestCase):
         # all numbers
         val = components(BDFCard(['123456']), 0, 'field')
         self.assertEquals(val, '123456')
-        
+
         # invalid 0's defined with numbers
         with self.assertRaises(SyntaxError):
             val = components(BDFCard(['0123456']), 0, 'field')
@@ -350,6 +326,6 @@ class Test(ExtendedTestCase):
         print "val = ", val
         val = interpret_value('1.000000000D+00')
         print "val = ", val
-        
+
 if __name__ == '__main__':
     unittest.main()

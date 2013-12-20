@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 # pylint: disable=C0103,R0902,R0904,R0914
 """
 All method cards are defined in this file.  This includes:
@@ -73,7 +49,7 @@ class EIGB(Method):
             #: Method of eigenvalue extraction. (Character: 'INV' for inverse
             #: power method or 'SINV' for enhanced inverse power method.)
             self.method = string(card, 2, 'method')
-            
+
             if self.method not in ['INV', 'SINV']:
                 msg = 'method must be INV or SINV.  method=|%s|' % self.method
                 raise RuntimeError(msg)
@@ -120,7 +96,7 @@ class EIGB(Method):
         nep = set_blank_if_default(self.nep, 0)
         ndp = set_blank_if_default(self.ndp, 3 * self.nep)
         ndn = set_blank_if_default(self.ndn, 3 * self.nep)
-        
+
         norm = set_blank_if_default(self.norm, 'MAX')
         list_fields = ['EIGB', self.sid, self.method, self.L1, self.L2, nep, ndp,
                   ndn, None, norm, self.G, self.C]
@@ -171,7 +147,7 @@ class EIGC(Method):
             else:
                 self.G = blank(card, 4, 'G')
                 self.C = blank(card, 5, 'C')
-            
+
             #: Convergence criterion. (Real > 0.0. Default values are:
             #: 10^-4 for METHOD = "INV",
             #: 10^-15 for METHOD = "HESS",
@@ -229,7 +205,7 @@ class EIGC(Method):
             NDJ_default = None
             if self.method == 'INV':
                 NDJ_default = 3 * NEj
-            
+
             i = 9 + 8 * iRow
             self.alphaAjs.append(
                 double_or_blank(card, i,     'alphaA' + str(iRow), alphaOmega_default))

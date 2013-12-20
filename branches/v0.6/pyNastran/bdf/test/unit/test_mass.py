@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 import unittest
 
 import os
@@ -35,7 +11,7 @@ testpath = os.path.join(rootpath, 'bdf', 'test', 'unit')
 
 
 class TestMass(unittest.TestCase):
-        
+
     def verify_pcomp_element(self, element, mass, area, centroid, normal):
         #print object_methods(element,'all')
         self.assertAlmostEqual(element.Mass(),mass, msg='mass=%s expected=%s' % (element.Mass(), mass))
@@ -74,7 +50,7 @@ class TestMass(unittest.TestCase):
         model = BDF(debug=True, log=None)
         bdfname = os.path.join(testpath, 'test_mass.dat')
         model.read_bdf(bdfname, include_dir=None, xref=True)
-        
+
         # quad - pcomp
         quad = model.elements[1]
         mass = 0.12
@@ -82,7 +58,7 @@ class TestMass(unittest.TestCase):
         centroid = array([.5, .5, 0.])
         normal = array([.0, .0, 1.])
         self.verify_pcomp_element(quad, mass, area, centroid, normal)
-        
+
         # quad - pshell, nsm=0
         quad = model.elements[3]
         mass = 0.0125
@@ -114,7 +90,7 @@ class TestMass(unittest.TestCase):
         mass = 0.50625 # mass w/o nsm + 0.5 b/c area=0.5
         nsm = 1.
         self.verify_pshell_element(tri, mass, area, centroid, normal, nsm)
-        
+
         # hexa - psolid - nsm = 0
         hexa = model.elements[7]
         mass = 0.2

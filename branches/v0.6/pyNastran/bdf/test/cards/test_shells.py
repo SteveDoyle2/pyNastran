@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import unittest
@@ -60,7 +36,7 @@ class TestShells(unittest.TestCase):
         T = [.1,.2,.3]
         Sout = [1, 1, 0]  # 0-NO, 1-YES
         data = [pid, z0, nsm, sb, ft, TRef, ge, lam, Mid, T, Theta, Sout]
-        
+
         p = PCOMP(data=data)
         self.assertFalse(p.isSymmetrical())
         self.assertEqual(p.nPlies(), 3)
@@ -77,7 +53,7 @@ class TestShells(unittest.TestCase):
         self.assertAlmostEqual(p.Theta(2), 20.)
         with self.assertRaises(IndexError):
             p.Theta(3)
-        
+
         self.assertEqual(p.Mid(0), 1)
         self.assertEqual(p.Mid(1), 2)
         self.assertEqual(p.Mid(2), 3)
@@ -121,7 +97,7 @@ class TestShells(unittest.TestCase):
             mid = p.plies[iply][0]
             p.plies[iply][0] = m # MAT1
             #p.mids = [m, m, m]
-        
+
         #Rho
         self.assertAlmostEqual(p.Rho(0), 1.0)
         self.assertAlmostEqual(p.Rho(1), 1.0)
@@ -157,13 +133,13 @@ class TestShells(unittest.TestCase):
         self.assertAlmostEqual(p.MassPerArea(2, method='t'), 0.3+3/6.)
         with self.assertRaises(IndexError):
             p.MassPerArea(3, method='nplies')
-        
+
         z = p.get_z_locations()
         z_expected = array([0., T[0], T[0]+T[1], T[0]+T[1]+T[2]])
         for za, ze in zip(z, z_expected):
             self.assertAlmostEqual(za, ze)
-        
-        #z0  = 
+
+        #z0  =
         p.z0 = 1.0
         z_expected = 1.0 + z_expected
         z = p.get_z_locations()
@@ -190,7 +166,7 @@ class TestShells(unittest.TestCase):
         p = PCOMP(data=data)
         self.assertTrue(p.isSymmetrical())
         self.assertEqual(p.nPlies(), 6)
-        
+
         self.assertAlmostEqual(p.Thickness(), 1.2)
         self.assertAlmostEqual(p.Thickness(0), 0.1)
         self.assertAlmostEqual(p.Thickness(1), 0.2)
@@ -209,7 +185,7 @@ class TestShells(unittest.TestCase):
         self.assertAlmostEqual(p.Theta(5), 20.)
         with self.assertRaises(IndexError):
             p.Theta(6)
-        
+
         self.assertEqual(p.Mid(0), 1)
         self.assertEqual(p.Mid(1), 2)
         self.assertEqual(p.Mid(2), 3)
@@ -267,7 +243,7 @@ class TestShells(unittest.TestCase):
         self.assertAlmostEqual(p.MassPerArea(5), 0.3)
         with self.assertRaises(IndexError):
             p.MassPerArea(6)
-        
+
         self.assertEqual(p.Nsm(), 0.0)
         #----------------------
         # change the nsm to 1.0
@@ -283,7 +259,7 @@ class TestShells(unittest.TestCase):
         self.assertAlmostEqual(p.MassPerArea(4, method='nplies'), 0.2+1/6.)
         self.assertAlmostEqual(p.MassPerArea(5, method='nplies'), 0.3+1/6.)
         with self.assertRaises(IndexError):
-            p.MassPerArea(6)        
+            p.MassPerArea(6)
 
 if __name__ == '__main__':
     unittest.main()

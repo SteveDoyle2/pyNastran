@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 # pylint: disable=C0103,C0111,C0302,R0902,R0904,R0914,E1101,W0612,E0602
 """
 All dynamic control cards are defined in this file.  This includes:
@@ -1012,7 +988,7 @@ class MAT10(Material):
         assert isinstance(rho, float), 'rho=%r' % rho
         assert isinstance(c, float), 'c=%r' % c
         assert isinstance(ge, float), 'ge=%r' % ge
-        
+
     def getBulkRhoC(self, card):
         r"""
         .. math:: bulk = c^2 \rho
@@ -1077,20 +1053,20 @@ class MAT11(Material):
             self.e1 = double(card, 2, 'E1')
             self.e2 = double(card, 3, 'E2')
             self.e3 = double(card, 4, 'E3')
-            
+
             self.nu12 = double(card, 5, 'nu12')
             self.nu13 = double(card, 6, 'nu13')
             self.nu23 = double(card, 7, 'nu23')
-            
+
             self.g12 = double(card, 8, 'g12')
             self.g13 = double(card, 9, 'g13')
             self.g23 = double(card, 10, 'g23')
-            
+
             self.rho = double_or_blank(card, 11, 'rho', 0.0)
             self.a1 = double_or_blank(card, 12, 'a1', 0.0)
             self.a2 = double_or_blank(card, 13, 'a2', 0.0)
             self.a3 = double_or_blank(card, 14, 'a3', 0.0)
-            
+
             self.TRef = double_or_blank(card, 15, 'TRef', 0.0)
             self.ge = double_or_blank(card, 16, 'ge', 0.0)
             assert len(card) <= 17, 'len(MAT11 card) = %i' % len(card)

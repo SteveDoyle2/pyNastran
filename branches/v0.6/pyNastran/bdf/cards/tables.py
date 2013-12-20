@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 """
 All table cards are defined in this file.  This includes:
@@ -50,7 +26,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.utils import list_print, is_string
-from pyNastran.bdf.bdfInterface.assign_type import (integer,  # fields, 
+from pyNastran.bdf.bdfInterface.assign_type import (integer,  # fields,
     double, components, string, string_or_blank)
 
 class Table(BaseCard):
@@ -125,7 +101,7 @@ class TableObj(object):
     def _cleanup_xy(self, xy, isData=False):
         """
         Removes the **ENDT** field.
-        
+
         :param xy:     the xy data as a table with alternating x, y entries
         :param isData: did this come from the OP2/BDF (True -> OP2)
         """

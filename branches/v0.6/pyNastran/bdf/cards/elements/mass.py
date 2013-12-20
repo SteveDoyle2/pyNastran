@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 """
 All mass elements are defined in this file.  This includes:
@@ -454,7 +430,7 @@ class CONM2(PointMassElement):
     :param cid:  coordinate frame of the offset (-1=absolute coordinates)
     :param X:    offset vector
     :param I:    mass moment of inertia matrix about the CG
-    
+
     ::
 
       CONM2    501274  11064          132.274
@@ -495,7 +471,7 @@ class CONM2(PointMassElement):
         cid = self.Cid()
         mass = self.Mass()
         c = self.Centroid()
-        
+
         assert isinstance(eid, int), 'eid=%r' % eid
         assert isinstance(nid, int), 'nid=%r' % nid
         assert isinstance(cid, int), 'cid=%r' % cid

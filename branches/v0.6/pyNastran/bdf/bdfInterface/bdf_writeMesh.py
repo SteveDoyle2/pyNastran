@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 # pylint: disable=C0103,C0111,W0612,R0912,R0914,R0904,W0613,E1101
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -39,7 +15,7 @@ class WriteMeshDeprecated(object):
         """
         warnings.warn('writeBDF has been deprecated; use '
                       'write_bdf', DeprecationWarning, stacklevel=2)
-        self.write_bdf(outFileName, size, debug)
+        self.write_bdf(out_filename=outFileName, interspersed=False, size=size, debug=debug)
 
     def writeBDFAsPatran(self, outFileName='fem.out.bdf', size=8, debug=False):
         """
@@ -48,7 +24,7 @@ class WriteMeshDeprecated(object):
         """
         warnings.warn('writeBDFAsPatran has been deprecated; use '
                       'write_bdf_as_patran', DeprecationWarning, stacklevel=2)
-        self.write_bdf_as_patran(outFileName, size, debug)
+        self.write_bdf_as_patran(outFileName, interspersed=True, size=size, debug=debug)
 
     def echoBDF(self, infileName):
         """

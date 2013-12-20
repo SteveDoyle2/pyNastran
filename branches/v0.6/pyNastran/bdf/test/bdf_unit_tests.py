@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
@@ -69,7 +45,7 @@ class TestBDF(Tester):
             assert len(fem.methods) == 0, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)
         mass, cg, I = fem1.mass_properties()
-        
+
         assert allclose(mass, 6.0), 'mass = %s' % mass
         cg_exact = array([0.5, 1., 1.5])
         for i, (cgi, cgie) in enumerate(zip(cg, cg_exact)):
@@ -275,26 +251,26 @@ class CaseControlTest(unittest.TestCase):
         mesh = BDF(debug=True,log=None)
         mesh.readBDF(bdf_filename, includeDir=None, xref=True)
         str(mesh.caseControlDeck)
-        
+
         mesh.caseControlDeck.create_new_subcase(1)
 
         #with self.assertRaises(AssertionError):
         str(mesh.caseControlDeck)
         subcase1 = mesh.caseControlDeck.subcases[1]
         str(subcase1)
-        
+
         mesh.caseControlDeck.add_parameter_to_local_subcase(1, 'LOAD=1')
         str(mesh.caseControlDeck)
-        
+
         mesh.caseControlDeck.create_new_subcase(2)
         mesh.caseControlDeck.add_parameter_to_local_subcase(2, 'LOAD=2')
         mesh.write_bdf(bdf_filename2)
         #print("---cc 3---\n%s" % str(mesh.caseControlDeck))
-        
+
         f = open(bdf_filename2, 'r')
         lines = f.readlines()
         f.close()
-        
+
         lines_expected = [
             '$EXECUTIVE CONTROL DECK',
             'SOL 101',
@@ -394,7 +370,7 @@ class CaseControlTest(unittest.TestCase):
             msg += 'expected = %r' % line_expected
             self.assertEqual(line, line_expected, msg)
         #print('%s' % deck)
-    
+
 
     def test_case_control_04(self):
         lines = [

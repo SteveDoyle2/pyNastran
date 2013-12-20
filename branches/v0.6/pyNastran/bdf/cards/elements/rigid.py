@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 """
 All rigid elements are defined in this file.  This includes:
@@ -187,7 +163,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
         # loop till UM, no field9,field10
         #print("iUm = %s" % iUm)
-        
+
         n = 1
         i = 0
         offset = 2
@@ -204,7 +180,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             else:
                 assert cni is None
             i += 2
-        
+
         #print('Gni =', self.Gni)
         #print('Cni =', self.Cni)
         self.Gmi = []
@@ -255,7 +231,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
                 #print "---"
                 j -= 3
             j += 1
-        
+
         if self.alpha > 0.:  # handles default alpha value
             nSpaces = 8 - (len(list_fields) - 1) % 8  # puts ALPHA onto next line
             if nSpaces == 1:
@@ -301,7 +277,7 @@ class RBE2(RigidElement):
                 #: Grid point identification numbers at which dependent
                 #: degrees-of-freedom are assigned. (Integer > 0)
                 self.alpha = alpha
-                
+
                 # the last field is not part of Gmi
                 n = 1
             else:
@@ -335,7 +311,7 @@ class RBE2(RigidElement):
         .. math:: -A_i u_i + A_j u_j = 0
 
         where :math:`u_i` are the base DOFs (max=6)::
-        
+
           mpc sid   g1 c1 a1  g2 c2 a2
           rbe2 eid  gn cm g1  g2 g3 g4
         """
@@ -450,11 +426,11 @@ class RBE3(RigidElement):
             if wt is not None:
                 cname = 'c'+str(n)
                 ci = components_or_blank(card, i + 1, cname)
-                
+
                 #print("%s=%s %s=%s" % (wtname, wt, cname, ci))
                 i += 2
                 gij = 0
-                
+
                 j = 0
                 while isinstance(gij, int) and i < iWtMax:
                     j += 1
@@ -481,7 +457,7 @@ class RBE3(RigidElement):
             n = 1
             #print("i=%s iUmStop=%s" % (i,iUmStop))
             for j in xrange(i, iUmStop, 2):
-                
+
                 gm_name = 'gm' + str(n)
                 cm_name = 'cm' + str(n)
                 gmi = integer_or_blank(card, j, gm_name)

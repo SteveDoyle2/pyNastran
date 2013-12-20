@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-##
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-##
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-##
-## This file is part of pyNastran.
-##
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-##
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-##
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-##
 # pylint: disable=C0103,R0902,R0904,R0914,C0302
 """
 All shell elements are defined in this file.  This includes:
@@ -224,6 +200,17 @@ class CTRIA3(TriShell):
     type = 'CTRIA3'
     asterType = 'TRIA3'
     calculixType = 'S3'
+    _field_map = {1: 'eid', 2:'pid', 6:'thetaMcid', 7:'zOffset', 10:'TFlag', 11:'T1', 12:'T2', 13:'T3'}
+
+    def _update_field_helper(n, value):
+        if n == 3:
+            self.nodes[0] = value
+        elif n == 4:
+            self.nodes[1] = value
+        elif n == 5:
+            self.nodes[2] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type)
 
     def __init__(self, card=None, data=None, comment=''):
         TriShell.__init__(self, card, data)
@@ -1404,6 +1391,19 @@ class CQUAD4(QuadShell):
     type = 'CQUAD4'
     asterType = 'QUAD4 # CQUAD4'
     calculixType = 'S4'
+    _field_map = {1: 'eid', 2:'pid', 7:'thetaMcid', 8:'zOffset', 10:'TFlag', 11:'T1', 12:'T2', 13:'T3'}
+
+    def _update_field_helper(n, value):
+        if n == 3:
+            self.nodes[0] = value
+        elif n == 4:
+            self.nodes[1] = value
+        elif n == 5:
+            self.nodes[2] = value
+        elif n == 6:
+            self.nodes[3] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type)
 
     def __init__(self, card=None, data=None, comment=''):
         QuadShell.__init__(self, card, data)

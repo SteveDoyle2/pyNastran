@@ -270,7 +270,7 @@ class TabularLoad(BaseCard):
 class SLOAD(Load):
     """
     Static Scalar Load
-    
+
     Defines concentrated static loads on scalar or grid points.
 
     .. note:: Can be used in statics OR dynamics.
@@ -329,12 +329,12 @@ class SLOAD(Load):
 class TLOAD1(TabularLoad):
     r"""
     Transient Response Dynamic Excitation, Form 1
-    
+
     Defines a time-dependent dynamic load or enforced motion of the form:
-    
+
     .. math::
       \left\{ P(t) \right\} = \left\{ A \right\} \cdot F(t-\tau)
-    
+
     for use in transient response analysis.
     """
     type = 'TLOAD1'
@@ -661,7 +661,7 @@ class RLOAD2(TabularLoad):
 
     .. math:: \left\{ P(f)  \right\}  = \left\{A\right\} * B(f)
         e^{  i \left\{ \phi(f) + \theta - 2 \pi f \tau \right\} }
-    
+
     ::
 
       RLOAD2 SID EXCITEID DELAY DPHASE TB TP TYPE
@@ -750,7 +750,7 @@ class RANDPS(RandomLoad):
 
     Defines load set power spectral density factors for use in random analysis
     having the frequency dependent form:
-    
+
     .. math:: S_{jk}(F) = (X+iY)G(F)
     """
     type = 'RANDPS'
