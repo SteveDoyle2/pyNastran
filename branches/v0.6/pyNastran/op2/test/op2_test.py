@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 import os
 import sys
 from pyNastran.op2.test.test_op2 import get_failed_files,run_lots_of_files
@@ -31,7 +7,7 @@ def parse_skipped_cards(fname):
     f = open(fname,'r')
     lines = f.readlines()
     f.close()
-    
+
     results = {}
     for line in lines:
         if 'OES' in line[0:3]:
@@ -46,11 +22,11 @@ def parse_skipped_cards(fname):
             key = (eName,eType,form)
             if key not in results:
                 results[key] = fpath
-    
+
     filesToAnalyze = []
     for (key,value) in sorted(results.iteritems()):
         filesToAnalyze.append(value)
-    
+
     f = open('newElements.in','wb')
     for fname in filesToAnalyze:
         f.write(fname+'\n')
@@ -73,7 +49,7 @@ def get_all_files(foldersFile,fileType):
 if __name__=='__main__':
     # works
     files = get_files_of_type('tests','.op2')
-    
+
     foldersFile = 'tests/foldersRead.txt'
 
     iSubcases = []
@@ -98,7 +74,7 @@ if __name__=='__main__':
     else:
         files2 = get_failed_files('failedCases.in')
     files = files2
-    
+
     skipFiles = ['nltrot99.op2','rot12901.op2','plan20s.op2'] # giant
 
     nStart = 0
@@ -113,5 +89,5 @@ if __name__=='__main__':
                    print_results,debug,saveCases,skipFiles,stopOnFailure,
                    nStart,nStop)
     sys.exit('final stop...')
-    
+
 

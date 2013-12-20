@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
@@ -71,7 +47,7 @@ class OPG(object):
         ## number of words per entry in record
         ## .. note:: is this needed for this table ???
         self.add_data_parameter(data, 'num_wide', 'i', 10, False)
-        
+
         ## undefined in DMAP...
         self.add_data_parameter(data, 'oCode', 'i', 11, False)
         ## thermal flag; 1 for heat transfer, 0 otherwise
@@ -97,7 +73,7 @@ class OPG(object):
             self.apply_data_code_value('dataNames', ['mode', 'eign', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
         #    ## load set number
-        #    self.lsdvmn = self.get_values(data,'i',5) 
+        #    self.lsdvmn = self.get_values(data,'i',5)
         #elif self.analysis_code == 4: # differential stiffness
         #    ## load set number
         #    self.lsdvmn = self.get_values(data,'i',5)

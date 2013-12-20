@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 import os
 import sys
 import time
@@ -47,7 +23,7 @@ def get_failed_files(filename):
     infile = open(filename, 'r')
     lines = infile.readlines()
     infile.close()
-    
+
     files = []
     for line in lines:
         files.append(line.strip())
@@ -91,14 +67,14 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
         for op2file in failedCases:
             f.write('%s\n' % op2file)
         f.close()
-    
+
     seconds = time.time()-t0
     minutes = seconds/60.
     print("dt = %s seconds = %s minutes" % (seconds, minutes))
-    
+
     #op2 = OP2('test_tet10_subcase_1.op2')
     #op2.read_op2()
-    
+
     msg = '-----done with all models %s/%s=%.2f%%  nFailed=%s-----' %(nPassed,nTotal,100.*nPassed/float(nTotal),nTotal-nPassed)
     print(msg)
     sys.exit(msg)
@@ -227,7 +203,7 @@ def run_arg_parse():
     parser.add_argument('-z','--is_mag_phase', dest='is_mag_phase',   action='store_true', help='F06/Matlab Writer writes Magnitude/Phase instead of Real/Imaginary (still stores Real/Imag)')
     parser.add_argument('-p','--print_results',dest='print_results',  action='store_true', help='Prints objects to screen which can require lots of memory')
     parser.add_argument('-v','--version',action='version',version=ver)
-    
+
     if len(sys.argv)==1:
         parser.print_help()
         sys.exit()

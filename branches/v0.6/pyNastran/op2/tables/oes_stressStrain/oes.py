@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 #pylint: disable=C0301,C0111,C0324,R0912,R0915,W0223,E1101
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -273,13 +249,13 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                 self.table_name, self.isubcase))
             self.skipOES_Element()
             return
-        
+
         if not self.is_sort1():
             if isRelease:
                 self.not_implemented_or_skip('skipping OES SORT2')
             else:
                 raise NotImplementedError('SORT2')
-            
+
 
         if self.table_name in ['OES1', 'OES1X', 'OES1X1', 'OES1C',
                               'OESNLXR', 'OESNLXD', 'OESNL1X', 'OESCP', 'OESTRCP',
@@ -638,7 +614,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
         print("numWideReal=%s numWideImag=%s numWideRandom=%s" %(numWideReal, numWideImag, numWideRandom))
         print('element_type=%s' %(self.element_type))
         print('self.num_wide = %s' %(self.num_wide))
-        
+
         if self.element_type == 95:
             self.OESRT_CQUAD4_95()
         asdf
@@ -646,7 +622,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
     def readOES_Data(self):
         #msg = '%s-OES element_type=%-3s -> %-6s\n' % (self.table_name,self.element_type,self.get_element_type(self.element_type))
         msg = ''
-        
+
         readCase = True
         if self.isubcase in self.expected_times and len(self.expected_times[self.isubcase]) > 0:
             readCase = self.update_dt_map()
@@ -931,7 +907,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             resultName = self.makeOES_Object(self.nonlinearSpringStress, NonlinearSpringStressObject, 'nonlinearSpringStress',
                                              self.nonlinearSpringStress, NonlinearSpringStressObject, 'nonlinearSpringStress')
             self.handle_results_buffer(self.OES_CELAS_224_225, resultName)
-            
+
         #elif self.element_type in [2,53,61,70,86,88,90,94,102,189,232,]:
             #element_type=53  -> TRIAX6  is not supported
             #element_type=61  -> DUM9    is not supported
