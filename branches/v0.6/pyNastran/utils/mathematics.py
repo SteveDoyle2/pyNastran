@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-##
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-##
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-##
-## This file is part of pyNastran.
-##
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-##
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-##
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-##
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103
 from __future__ import print_function
@@ -200,21 +176,21 @@ def print_annotated_matrix(A, row_names=None, col_names=None, tol=1e-8):
 
     rwidth = max([len(str(row_names[i])) for i in range(len(row_names))])
     row_fmt = '%%-%ss' % rwidth
-    
+
     header = ''
     if col_names is not None:
         col_name_list = [str(col_names[i]) for i in col_names]
         cwidth = max([len(name) for name in col_name_list])
-        
+
         cwidth = 5
         col_fmt = '%%-%ss ' % cwidth
         #print("col_fmt = ", col_fmt)
         header = row_fmt % '' + '   ' + col_fmt * len(col_names) % tuple(col_name_list) + '\n'
         float_fmt = '%%-%i.2f' % cwidth
-        
+
     c= header + ''.join([row_fmt % (str(row_names[i])) + ' ' + list_print(B[i, :], tol, float_fmt=float_fmt)
                               + '\n' for i in xrange(B.shape[0])])
-    return c                          
+    return c
 
 
 def print_matrix(A, tol=1e-8):

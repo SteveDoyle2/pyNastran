@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 #!/usr/bin/env python
 #
 # Test the libop4 <-> matlab interface by writing random matrices to
@@ -47,12 +23,12 @@
 #
 import numpy        as np
 import scipy.sparse as S
-import cop4 
+import cop4
 
 nTests      = 200
 approx_size =  20
-nErrors     =   0 
-max_E       =   0 
+nErrors     =   0
+max_E       =   0
 filename    = 'junk.op4'
 
 for iSet in range(nTests):
@@ -66,7 +42,7 @@ for iSet in range(nTests):
         nRows = np.random.randint(approx_size) + 1
         nCols = np.random.randint(approx_size) + 1
 
-    # Category II:  sparse or dense 
+    # Category II:  sparse or dense
     #    matrix values will be random between -10..10
     if np.random.random() < 0.5:  #  sparse
         cat_2   = 'sparse'
@@ -111,7 +87,7 @@ for iSet in range(nTests):
             # happens when input is 1x1, or error is exactly zero
             pass
         else:
-            if error.getnnz() == 0: 
+            if error.getnnz() == 0:
                 error = 0.0
             else:
                 error = np.max(error.data)

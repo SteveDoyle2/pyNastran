@@ -1,27 +1,3 @@
-## GNU Lesser General Public License
-## 
-## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2012  Steven Doyle, Al Danial
-## 
-## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
-## 
-## This file is part of pyNastran.
-## 
-## pyNastran is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Lesser General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-## 
-## pyNastran is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-## 
-## You should have received a copy of the GNU Lesser General Public License
-## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
-## 
 import sys
 import platform
 import os
@@ -34,17 +10,17 @@ def make_log(display=False):
     :param display: do not only create file but also print log information
     """
     smsg = [("sys.version", sys.version), ("sys.version_info", sys.version_info)]
-    pmsg = ["machine", "platform", "processor", "architecture", "python_branch", 
+    pmsg = ["machine", "platform", "processor", "architecture", "python_branch",
            "python_revision", "win32_ver", "version", "uname", "system",
            "python_build", "python_compiler", "python_implementation", "system",
            "mac_ver", "linux_distribution", "libc_ver"]
-    
+
     fmt = "%-{0}s = %s\n".format(max(map(len, pmsg + [j[0] for j in smsg])))
     msg = "".join([fmt % (i, str(j).replace("\n", "; ")) for (i, j) in smsg])
     msg += "".join([fmt % (i, str(getattr(platform, i)())) for i in pmsg])
     if display:
         print(msg)
-    
+
     with open('pyNastran.log', 'wb') as fil:
         fil.write(msg)
 
@@ -54,7 +30,7 @@ def stderr_logging(typ, msg):
     Default logging function. Takes a text and outputs to stderr.
     :param typ: messeage type
     :param msg: message to be displayed
-    
+
     Message will have format 'typ: msg'
     """
     name = '%-8s' % (typ + ':')  # max length of 'INFO', 'DEBUG', 'WARNING',.etc.
@@ -66,7 +42,7 @@ class SimpleLogger(object):
     Simple logger object. In future might be changed to use Python logging module.
     Two levels are supported: 'debug' and 'info'. Info level discards debug
     messages, 'debug' level displays all messages.
-    
+
     .. note:: Logging module is currently not supported because I don't
       know how to repoint the log file if the program is called a second
       time.  Poor logging can result in:\n
@@ -100,9 +76,9 @@ class SimpleLogger(object):
         if self.level != 'debug':
             return
         lines = str(msg).split('\n')
-        self.msg_typ('DEBUG', ''.join([lines[0]] + [' ' * 54 + line + '\n' 
+        self.msg_typ('DEBUG', ''.join([lines[0]] + [' ' * 54 + line + '\n'
                                                    for line in lines[1:]]))
-        
+
     def msg_typ(self, typ, msg):
         """
         Log message of a given type
@@ -111,7 +87,7 @@ class SimpleLogger(object):
         """
         n, fn = self.properties()
         self.log_func(typ, '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg))
- 
+
     def simple_msg(self,msg, typ = None):
         """
         Log message directly without any altering.
