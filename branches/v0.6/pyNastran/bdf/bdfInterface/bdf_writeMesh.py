@@ -24,7 +24,7 @@ class WriteMeshDeprecated(object):
         """
         warnings.warn('writeBDFAsPatran has been deprecated; use '
                       'write_bdf_as_patran', DeprecationWarning, stacklevel=2)
-        self.write_bdf_as_patran(outFileName, interspersed=True, size=size, debug=debug)
+        self.write_bdf(outFileName, interspersed=True, size=size, debug=debug)
 
     def echoBDF(self, infileName):
         """

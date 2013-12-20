@@ -969,7 +969,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
         .. note:: Doesn't allow reuse of the same bdf/dat file twice.
         """
-        bdf_filename = os.path.join(self.include_dir, str(bdf_filename))
+        if len(self.active_filenames) > 1:
+            bdf_filename = os.path.join(self.include_dir, str(bdf_filename))
         if not os.path.exists(bdf_filename):
             msg = 'No such bdf_filename: %r\n' % bdf_filename
             msg += 'cwd: %r' % os.getcwd()
