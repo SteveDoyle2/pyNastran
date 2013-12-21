@@ -51,19 +51,24 @@ class BDFUpdater(BDF):
             'PSOLID': self.properties,
             'PLSOLID': self.properties,
 
-            # rod/bar/beam/bush
-            'CROD': self.elements,
+            # rod
             'CONROD': self.elements,
-            'CBEAM': self.elements,
-            'CBAR': self.elements,
-            'CBUSH': self.elements,
-
+            'CROD': self.elements,
             'PROD' : self.properties,
+
+            # beam
+            'CBEAM': self.elements,
             'PBEAM' : self.properties,
             'PBEAML' : self.properties,
+            # bar
+            'CBAR': self.elements,
             'PBAR' : self.properties,
             'PBARL' : self.properties,
+
+            # bush
+            'CBUSH': self.elements,
             'PBUSH': self.properties,
+            #'PBUSHT': self.properties,
 
             # spring
             'CELAS1': self.elements,
@@ -117,7 +122,7 @@ class BDFUpdater(BDF):
         try:
             objs = self._type_map[Type]
         except KeyError:
-            raise KeyError('Type=%r is not supported' % Type)
+            raise KeyError('Updating card Type=%r is not supported' % Type)
         
         # get the specific card
         try:
@@ -143,7 +148,12 @@ class TestOpenMDAO(unittest.TestCase):
             ['PSOLID', 4, 1, 2],   # 1 is material_id
             ['PARAM','WTMASS', 1, 'WTMASs'],  # key
             ['PARAM','WTMASS', 2, 0.0025],  # value1
-            ['PARAM','WTMASS', 3, 0.005],  # value2; technically invalid
+            ['PCOMP', 1, 2, 1.],
+            ['PCOMP', 1, 3, 2.],
+            ['PCOMP', 1, 12, 'YES_A'],
+            ['PCOMP', 1, 16, 'YES_B'],
+            ['PCOMP', 1, 20, 'YES_C'],
+            ['PCOMP', 1, 24, 'YES_D'],
         ]
         #GRID           1       0      0.      0.      0.       0
         #GRID           2       0      1.      0.      0.       0
@@ -166,6 +176,7 @@ class TestOpenMDAO(unittest.TestCase):
             ['GRID', 1, 0, 20.0],
             ['GRID', 1, 10, 20.0],
             ['CHEXA', 100, 3, 20],
+            ['FAKECARD', 100, 3, 20],
         ]
         bdf_filename = os.path.join(test_path, 'unit', 'test_mass.dat')
         
@@ -175,6 +186,20 @@ class TestOpenMDAO(unittest.TestCase):
         for iupdate in updates:
             Type, iType, ifield, value = iupdate
             self.assertRaises(KeyError, model.update_card, Type, iType, ifield, value)
+            print "tried to apply %r=%s" % (Type, iType)
+
+    def test_openmdao_bad_2(self):
+        updates = [  # IndexError
+            ['PARAM','WTMASS', 3, 0.005],  # value2; technically invalid
+        ]
+        bdf_filename = os.path.join(test_path, 'unit', 'test_mass.dat')
+        
+        model = BDFUpdater()
+        model.read_bdf(bdf_filename)
+        
+        for iupdate in updates:
+            Type, iType, ifield, value = iupdate
+            self.assertRaises(IndexError, model.update_card, Type, iType, ifield, value)
             print "tried to apply %r=%s" % (Type, iType)
 
 if __name__ == '__main__':

@@ -33,6 +33,7 @@ class CompositeShellProperty(ShellProperty):
     def cross_reference(self, model):
         """
         Links the Material IDs to the materials.
+
         :param self:  the PCOMP/PCOMPG object
         :param model: a BDF object
         """
@@ -43,6 +44,7 @@ class CompositeShellProperty(ShellProperty):
     def isSymmetrical(self):
         """
         Is the laminate symmetrical?
+
         :returns; True or False
         """
         if self.lam == 'SYM':
@@ -364,6 +366,26 @@ class PCOMP(CompositeShellProperty):
                 300705      .5   0.0+0     YES
     """
     type = 'PCOMP'
+    _field_map = {
+        1: 'pid', 2: 'z0', 3:'nsm', 4:'sb', 5:'ft', 6:'TRef',
+        7: 'ge', 8:'lam',
+    }
+
+    def _update_field_helper(self, n, value):
+        nnew = n - 9
+        if nnew <= 0:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
+        ilayer = nnew // 4
+        try:
+            ply = self.plies[ilayer]
+        except IndexError:
+            msg = 'On PCOMP pid=%r, ply %i is not defined.  iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies))
+            raise IndexError(msg)
+
+        # ply = [mid, t, theta, sout]
+        slot = nnew % 4
+        ply[slot] = value
 
     def __init__(self, card=None, data=None, comment=''):  # not done, cleanup
         ShellProperty.__init__(self, card, data)
@@ -527,6 +549,26 @@ class PCOMP(CompositeShellProperty):
 
 class PCOMPG(CompositeShellProperty):
     type = 'PCOMPG'
+    _field_map = {
+        1: 'pid', 2: 'z0', 3:'nsm', 4:'sb', 5:'ft', 6:'TRef',
+        7: 'ge', 8:'lam',
+    }
+
+    def _update_field_helper(self, n, value):
+        nnew = n - 9
+        if nnew <= 0:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
+        ilayer = nnew // 5
+        try:
+            ply = self.plies[ilayer]
+        except IndexError:
+            msg = 'On PCOMPG pid=%r, ply %i is not defined.  iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies))
+            raise IndexError(msg)
+
+        #ply = [mid, thickness, theta, sout, gPlyID]
+        slot = nnew % 5
+        ply[slot] = value
 
     def __init__(self, card=None, data=None, comment=''):
         ShellProperty.__init__(self, card, data)
@@ -643,6 +685,7 @@ class PCOMPG(CompositeShellProperty):
 
 class PLPLANE(ShellProperty):
     type = 'PLPLANE'
+    _field_map = {1: 'pid', 2:'mid', 6:'cid', 7:'str'}
 
     def __init__(self, card=None, data=None, comment=''):
         ShellProperty.__init__(self, card, data)
@@ -694,6 +737,7 @@ class PLPLANE(ShellProperty):
 
 class PSHEAR(ShellProperty):
     type = 'PSHEAR'
+    _field_map = {1: 'pid', 2:'mid', 3:'t', 4:'nsm', 5:'f1', 6:'f2'}
 
     def __init__(self, card=None, data=None, comment=''):
         """
@@ -748,6 +792,10 @@ class PSHELL(ShellProperty):
       Z1 Z2 MID4
       PSHELL   41111   1      1.0000   1               1               0.02081"""
     type = 'PSHELL'
+    _field_map = {
+        1: 'pid', 2:'mid1', 3:'t', 4:'mid2', 5:'twelveIt3', 6:'mid3',
+        7: 'tst', 8:'nsm', 9:'z1', 10:'z2',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         ShellProperty.__init__(self, card, data)

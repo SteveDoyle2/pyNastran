@@ -135,6 +135,10 @@ class MAT1(IsotropicMaterial):
     +-----+-----+-----+-----+-------+-----+------+------+-----+
     """
     type = 'MAT1'
+    _field_map = {
+        1: 'mid', 2:'e', 3:'g', 4:'nu', 5: 'rho', 6:'a', 7:'TRef', 8:'ge',
+        9: 'St', 10:'Sc', 11:'Ss', 12:'Mcsid',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         IsotropicMaterial.__init__(self, card, data)
@@ -314,6 +318,11 @@ class MAT2(AnisotropicMaterial):
     +-----+-------+-----+-----+------+-----+------+-----+-----+
     """
     type = 'MAT2'
+    _field_map = {
+        1: 'mid', 2:'G11', 3:'G12', 4:'G13', 5: 'G22', 6:'G23', 7:'G33', 
+        8:'rho', 9:'a1', 10:'a2', 11:'a3', 12:'TRef',13:'ge',
+        14: 'St', 15:'Sc', 16:'Ss', 17:'Mcsid',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         AnisotropicMaterial.__init__(self, card, data)
@@ -478,6 +487,11 @@ class MAT3(OrthotropicMaterial):
     +-----+-----+----+-----+----+-------+-------+------+-----+
     """
     type = 'MAT3'
+    _field_map = {
+        1: 'mid', 2:'ex', 3:'eth', 4:'ez', 5: 'nuxth', 6:'nuthz', 7:'nuzx', 
+        8:'rho', 11:'gzx', 12:'ax', 13:'ath', 14:'az',15:'TRef',
+        16: 'ge',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         OrthotropicMaterial.__init__(self, card, data)
@@ -552,6 +566,10 @@ class MAT4(ThermalMaterial):
     +-----+-----+--------+------+-----+----+-----+------+---------+
     """
     type = 'MAT4'
+    _field_map = {
+        1: 'mid', 2:'k', 3:'cp', 4:'rho', 5: 'mu', 6:'H', 7:'hgen', 
+        8:'refEnthalpy', 9:'tch', 10:'tdelta', 11:'qlat',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         ThermalMaterial.__init__(self, card, data)
@@ -611,6 +629,9 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
     +-----+-----+-------+-----+-----+-----+-----+-----+----+
     """
     type = 'MAT5'
+    _field_map = {
+        1: 'mid', 2:'kxx', 3:'kxy', 4:'kxz', 5: 'kyy', 6:'kyz', 7:'kzz', 
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         ThermalMaterial.__init__(self, card, data)
@@ -688,6 +709,11 @@ class MAT8(OrthotropicMaterial):
     +-----+-----+-----+------+------+-----+-----+-----+-----+
     """
     type = 'MAT8'
+    _field_map = {
+        1: 'mid', 2:'e11', 3:'e22', 4:'nu12', 5: 'g12', 6:'g1z', 7:'g2z',
+        8: 'rho', 9:'a1', 10:'a2', 11:'TRef', 12:'Xt', 13:'Xc', 14:'Yt',
+        15:'Yc', 16: 'S', 17:'ge', 18:'F12', 19:'strn',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         OrthotropicMaterial.__init__(self, card, data)
@@ -831,6 +857,9 @@ class MAT9(AnisotropicMaterial):
     +-----+-----+-----+-----+-----+-----+------+-----+-----+
     """
     type = 'MAT9'
+    _field_map = {
+        1: 'mid',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         AnisotropicMaterial.__init__(self, card, data)
@@ -959,6 +988,9 @@ class MAT10(Material):
     +------+-----+------+-----+-----+-----+-----+-----+-----+
     """
     type = 'MAT10'
+    _field_map = {
+        1: 'mid', 2:'bulk', 3:'rho', 4:'c', 5:'ge',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         Material.__init__(self, card, data)
@@ -1044,6 +1076,11 @@ class MAT11(Material):
     """
     type = 'MAT11'
 
+    _field_map = {
+        1: 'mid', 2:'e1', 3:'e2', 4:'e3', 5: 'nu12', 6:'nu13', 7:'nu23',
+        8: 'g12', 9:'g13', 10:'g23', 11:'rho', 12:'a1', 13:'a2', 14:'a3',
+        15:'TRef', 16: 'ge',
+    }
     def __init__(self, card=None, data=None, comment=''):
         Material.__init__(self, card, data)
         if comment:
