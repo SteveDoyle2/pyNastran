@@ -31,7 +31,8 @@ def make_f06_header():
         n + '/*                                                                      */\n',
         n + '/*              A Python reader/editor/writer for the various           */\n',
         n + '/*                        NASTRAN file formats.                         */\n',
-        n + '/*                  Copyright (C) 2011-2013 Steven Doyle                */\n',
+        n + '/*                       Copyright (C) 2011-2013                        */\n',
+        n + '/*               Steven Doyle, Al Danial, Marcin Garrozik               */\n',
         n + '/*                                                                      */\n',
         n + '/*    This program is free software; you can redistribute it and/or     */\n',
         n + '/*    modify it under the terms of the GNU Lesser General Public        */\n',
@@ -79,6 +80,12 @@ def make_f06_header():
         n + '* * * * * * * * * * * * * * * * * * * *\n\n\n']
     return ''.join(lines1 + lines2)
 
+
+def sorted_bulk_data_header():
+    msg = '0                                                 S O R T E D   B U L K   D A T A   E C H O                                         \n'
+    msg += '                 ENTRY                                                                                                              \n'
+    msg += '                 COUNT        .   1  ..   2  ..   3  ..   4  ..   5  ..   6  ..   7  ..   8  ..   9  ..  10  .                      \n'
+    return msg
 
 def make_end(end_flag=False):
     lines = []

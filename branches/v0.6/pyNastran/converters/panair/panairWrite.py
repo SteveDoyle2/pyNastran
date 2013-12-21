@@ -171,3 +171,16 @@ class PanairWrite(object):
         msg2 += '         %4s = total number of panels\n' % (totalPanels)
 
         return msg + msg2 + msg3
+
+    def write_data_check(self):
+        msg = '$datacheck\n'
+        msg += '%s.\n' % (self.dataCheck)
+        return msg
+
+    def write_printout(self):
+        msg = '$printout options\n'
+        msg += "%-10s%-10s%-10s%-10s%-10s%-10s\n" % (self.isings, self.igeomp,
+                                                     self.isingp, self.icontp, self.ibconp, self.iedgep)
+        msg += "%-10s%-10s%-10s%-10s%-10s\n" % (self.ipraic,
+                                                self.nexdgn, self.ioutpr, self.ifmcpr, self.icostp)
+        return msg
