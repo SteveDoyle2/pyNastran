@@ -37,6 +37,7 @@ class RINGAX(Ring):
     +-------+-----+-----+-----+----+-----+-----+------+-----+
     """
     type = 'RINGAX'
+    _field_map = {1: 'mid', 3:'R', 4:'z', 7:'ps'}
 
     def __init__(self, card=None, data=None, comment=''):  # this card has missing fields
         Ring.__init__(self, card, data)
@@ -154,6 +155,7 @@ class GRDSET(Node):
     +--------+-----+----+----+----+----+----+----+------+
     """
     type = 'GRDSET'
+    _field_map = {1: 'nid', 2:'cp', 6:'cd', 7:'ps', 8:'seid'}
 
     def __init__(self, card=None, data=None, comment=''):
         if comment:
@@ -223,6 +225,7 @@ class GRDSET(Node):
 
 class GRIDB(Node):
     type = 'GRIDB'
+    _field_map = {1: 'nid', 4:'phi', 6:'cd', 7:'ps', 8:'idf'}
 
     def __init__(self, card=None, data=None, comment=''):
         """
@@ -287,13 +290,13 @@ class GRID(Node):
     type = 'GRID'
     _field_map = {1: 'nid', 2:'cp', 6:'cd', 7:'ps', 8:'seid'}
 
-    def _update_field_helper(n, value):
+    def _update_field_helper(self, n, value):
         if n == 3:
-            xyz[0] = value
+            self.xyz[0] = value
         elif n == 4:
-            xyz[1] = value
+            self.xyz[1] = value
         elif n == 5:
-            xyz[2] = value
+            self.xyz[2] = value
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
@@ -468,6 +471,7 @@ class POINT(Node):
     +-------+-----+----+----+----+----+----+----+-----+
     """
     type = 'POINT'
+    _field_map = {1: 'nid', 2:'cp'}
 
     def __init__(self, card=None, data=None, comment=''):
         """

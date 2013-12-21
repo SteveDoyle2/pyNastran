@@ -212,7 +212,7 @@ class NLPCI(BaseCard):
         self.scale = double_or_blank(card, 5, 'scale', 0.0)
         blank(card, 6, 'blank')
         self.desiter = double_or_blank(card, 7, 'minalr', 12)
-        self.mxinc = integer_or_blank(card, 7, 'minalr', 20)
+        self.mxinc = integer_or_blank(card, 8, 'minalr', 20)
 
     def rawFields(self):
         list_fields = ['NLPCI', self.nlparm_id, self.Type, self.minalr,

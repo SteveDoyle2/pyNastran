@@ -18,7 +18,17 @@ class BaseCard(object):
             return '%s' % self._comment
         return ''
 
-    def update_field(n, value):
+    def _test_update_fields(self):
+        n = 1
+        while 1:
+            try:
+                self.update_field(n, 1.0)  # dummy updating the field
+            except IndexError:
+                return
+            except KeyError:
+                return
+                
+    def update_field(self, n, value):
         try:
             key_name = self._field_map[n]
             setattr(self, key_name, value)

@@ -10,6 +10,16 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer_or_blank,
 
 class PARAM(BaseCard):
     type = 'PARAM'
+    _field_map = {1: 'key'}
+
+    def _update_field_helper(self, n, value):
+        if n - 2 >= 0:
+            try:
+                self.values[n - 2] = value
+            except IndexError:
+                raise IndexError('Field %r=%r is an invalid %s entry for key=%r.' % (n, value, self.type, self.key.upper()))
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card, data=None, comment=''):
         """

@@ -58,8 +58,16 @@ def area_centroid(n1, n2, n3, n4):
     return(area, centroid)
 
 class SolidElement(Element):
+    _field_map = {1: 'nid', 2:'pid'}
+
     def __init__(self, card, data):
         Element.__init__(self, card, data)
+
+    def _update_field_helper(self, n, value):
+        if n - 3 < len(self.nodes):
+            self.nodes[n - 3] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)

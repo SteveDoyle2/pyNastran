@@ -425,5 +425,6 @@ class CaseControlTest(unittest.TestCase):
             msg += 'expected = %r' % line_expected
             self.assertEqual(line, line_expected, msg)
 
+
 if __name__ == '__main__':
     unittest.main()
