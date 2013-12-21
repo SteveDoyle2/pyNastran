@@ -44,22 +44,30 @@ class BDFUpdater(BDF):
             'CSHEAR': self.elements,
             'PSHEAR': self.properties,
             
+            # plane
+            #'PLPLANE' : self.elements,
+            
             # solid
-            'CTETRA': self.elements,
-            'CPENTA': self.elements,
-            'CHEXA': self.elements,
-            'PSOLID': self.properties,
+            'CTETRA' : self.elements,
+            'CPENTA' : self.elements,
+            'CHEXA'  : self.elements,
+            'PSOLID' : self.properties,
             'PLSOLID': self.properties,
 
             # rod
             'CONROD': self.elements,
-            'CROD': self.elements,
-            'PROD' : self.properties,
+            'CROD'  : self.elements,
+            'PROD'  : self.properties,
+
+            # tube
+            'CTUBE' : self.elements,
+            'PTUBE' : self.properties,
 
             # beam
-            'CBEAM': self.elements,
-            'PBEAM' : self.properties,
+            'CBEAM'  : self.elements,
+            'PBEAM'  : self.properties,
             'PBEAML' : self.properties,
+
             # bar
             'CBAR': self.elements,
             'PBAR' : self.properties,
@@ -67,7 +75,11 @@ class BDFUpdater(BDF):
 
             # bush
             'CBUSH': self.elements,
+            'CBUSH1D': self.elements,
+            'CBUSH2D': self.elements,
             'PBUSH': self.properties,
+            'PBUSH1D': self.properties,
+            #'PBUSH2D': self.properties,
             #'PBUSHT': self.properties,
 
             # spring
@@ -78,16 +90,38 @@ class BDFUpdater(BDF):
             'PELAS': self.properties,
 
             # dampers
+            'CFAST': self.elements,
+            'PFAST': self.properties,
+
+            # dampers
             'CDAMP1': self.elements,
             'CDAMP2': self.elements,
             'CDAMP3': self.elements,
             'CDAMP4': self.elements,
+            'CDAMP5': self.elements,
             'PDAMP': self.properties,
             'PDAMPT': self.properties,
             
+            #'CRAC2D' : self.elements,
+            #'CRAC3D' : self.elements,
+            #'PRAC2D' : self.properties,
+            #'PRAC3D' : self.properties,
+
+            # mass
+            #'CONM1': self.elements,
+            'CONM2': self.elements,
+            'CMASS1': self.elements,
+            'CMASS2': self.elements,
+            'CMASS3': self.elements,
+            'CMASS4': self.elements,
+            'PMASS' : self.properties,
+
             # rigid elements
             'RBAR' : self.rigidElements,
             'RBAR1' : self.rigidElements,
+            'RBE1' : self.rigidElements,
+            'RBE2' : self.rigidElements,
+            'RBE3' : self.rigidElements,
 
             # methods
             'EIGB': self.methods,
@@ -106,9 +140,32 @@ class BDFUpdater(BDF):
             # ========= remove these =============
             # loads
             'FORCE' : self.loads,
+            'FORCE1' : self.loads,
+            'FORCE2' : self.loads,
+            'MOMENT' : self.loads,
+            'MOMENT1' : self.loads,
+            'MOMENT2' : self.loads,
+            'RFORCE' : self.loads,
+            'LOAD' : self.loads,
+            'DLOAD' : self.loads,
+            'SLOAD' : self.loads,
+            'TLOAD1' : self.loads,
+            'TLOAD2' : self.loads,
+            'RLOAD1' : self.loads,
+            'RLOAD2' : self.loads,
+            'GRAV' : self.loads,
+            #'ACCEL' : self.loads,
+            'ACCEL1' : self.loads,
             
             # constraints
             'SPC1' : self.spcObject,
+            'SPC' : self.spcObject,
+            'SPCADD' : self.spcObject,
+            'SPCAX' : self.spcObject,
+
+            'MPC' : self.mpcObject,
+            'MPCADD' : self.mpcObject,
+
         }
         for key in self._type_map:
             assert key in self.cardsToRead, 'key=%r is not a valid card' % key
@@ -153,7 +210,6 @@ class TestOpenMDAO(unittest.TestCase):
             ['PCOMP', 1, 12, 'YES_A'],
             ['PCOMP', 1, 16, 'YES_B'],
             ['PCOMP', 1, 20, 'YES_C'],
-            ['PCOMP', 1, 24, 'YES_D'],
         ]
         #GRID           1       0      0.      0.      0.       0
         #GRID           2       0      1.      0.      0.       0
@@ -190,7 +246,8 @@ class TestOpenMDAO(unittest.TestCase):
 
     def test_openmdao_bad_2(self):
         updates = [  # IndexError
-            ['PARAM','WTMASS', 3, 0.005],  # value2; technically invalid
+            ['PARAM','WTMASS', 3, 0.005],  # value2; invalid b/c WTMASS
+            ['PCOMP', 1, 24, 'YES_D'],  # too many plies
         ]
         bdf_filename = os.path.join(test_path, 'unit', 'test_mass.dat')
         
