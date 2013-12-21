@@ -69,25 +69,28 @@ class BDFUpdater(BDF):
             'PBEAML' : self.properties,
 
             # bar
-            'CBAR': self.elements,
-            'PBAR' : self.properties,
+            'CBAR'  : self.elements,
+            'PBAR'  : self.properties,
             'PBARL' : self.properties,
 
+            # bend
+            'CBEND': self.elements,
+            'PBEND': self.properties,
             # bush
-            'CBUSH': self.elements,
+            'CBUSH'  : self.elements,
             'CBUSH1D': self.elements,
             'CBUSH2D': self.elements,
-            'PBUSH': self.properties,
+            'PBUSH'  : self.properties,
             'PBUSH1D': self.properties,
             #'PBUSH2D': self.properties,
-            #'PBUSHT': self.properties,
+            #'PBUSHT' : self.properties,
 
             # spring
             'CELAS1': self.elements,
             'CELAS2': self.elements,
             'CELAS3': self.elements,
             'CELAS4': self.elements,
-            'PELAS': self.properties,
+            'PELAS' : self.properties,
 
             # dampers
             'CFAST': self.elements,
@@ -99,8 +102,10 @@ class BDFUpdater(BDF):
             'CDAMP3': self.elements,
             'CDAMP4': self.elements,
             'CDAMP5': self.elements,
-            'PDAMP': self.properties,
+            'PDAMP' : self.properties,
             'PDAMPT': self.properties,
+            'PDAMP5': self.properties,
+            'PVISC' : self.properties,
             
             #'CRAC2D' : self.elements,
             #'CRAC3D' : self.elements,
@@ -109,24 +114,26 @@ class BDFUpdater(BDF):
 
             # mass
             #'CONM1': self.elements,
-            'CONM2': self.elements,
+            'CONM2' : self.elements,
             'CMASS1': self.elements,
             'CMASS2': self.elements,
             'CMASS3': self.elements,
             'CMASS4': self.elements,
             'PMASS' : self.properties,
+            #'NSM'   : self.elements, # ???
 
             # rigid elements
-            'RBAR' : self.rigidElements,
+            'RBAR'  : self.rigidElements,
             'RBAR1' : self.rigidElements,
-            'RBE1' : self.rigidElements,
-            'RBE2' : self.rigidElements,
-            'RBE3' : self.rigidElements,
+            'RBE1'  : self.rigidElements,
+            'RBE2'  : self.rigidElements,
+            'RBE3'  : self.rigidElements,
 
             # methods
-            'EIGB': self.methods,
-            'EIGC': self.methods,
-            'EIGR': self.methods,
+            'EIGB' : self.methods,
+            'EIGC' : self.methods,
+            'EIGP' : self.methods,
+            'EIGR' : self.methods,
             'EIGRL': self.methods,
 
             # frequencies
@@ -139,31 +146,32 @@ class BDFUpdater(BDF):
 
             # ========= remove these =============
             # loads
-            'FORCE' : self.loads,
-            'FORCE1' : self.loads,
-            'FORCE2' : self.loads,
-            'MOMENT' : self.loads,
+            'FORCE'   : self.loads,
+            'FORCE1'  : self.loads,
+            'FORCE2'  : self.loads,
+            'MOMENT'  : self.loads,
             'MOMENT1' : self.loads,
             'MOMENT2' : self.loads,
-            'RFORCE' : self.loads,
-            'LOAD' : self.loads,
-            'DLOAD' : self.loads,
-            'SLOAD' : self.loads,
-            'TLOAD1' : self.loads,
-            'TLOAD2' : self.loads,
-            'RLOAD1' : self.loads,
-            'RLOAD2' : self.loads,
-            'GRAV' : self.loads,
-            #'ACCEL' : self.loads,
-            'ACCEL1' : self.loads,
+            'RFORCE'  : self.loads,
+            'LOAD'    : self.loads,
+            'DLOAD'   : self.loads,
+            'SLOAD'   : self.loads,
+            'TLOAD1'  : self.loads,
+            'TLOAD2'  : self.loads,
+            'RLOAD1'  : self.loads,
+            'RLOAD2'  : self.loads,
+            'DAREA'   : self.loads,
+            'GRAV'    : self.loads,
+            #'ACCEL'  : self.loads,
+            'ACCEL1'  : self.loads,
             
             # constraints
-            'SPC1' : self.spcObject,
-            'SPC' : self.spcObject,
+            'SPC1'   : self.spcObject,
+            'SPC'    : self.spcObject,
             'SPCADD' : self.spcObject,
-            'SPCAX' : self.spcObject,
+            'SPCAX'  : self.spcObject,
 
-            'MPC' : self.mpcObject,
+            'MPC'    : self.mpcObject,
             'MPCADD' : self.mpcObject,
 
         }
@@ -210,6 +218,10 @@ class TestOpenMDAO(unittest.TestCase):
             ['PCOMP', 1, 12, 'YES_A'],
             ['PCOMP', 1, 16, 'YES_B'],
             ['PCOMP', 1, 20, 'YES_C'],
+            ['CTETRA', 8, 3, 1], # nid[0]
+            ['CTETRA', 8, 4, 2], # nid[1]
+            ['CTETRA', 8, 5, 3], # nid[2]
+            ['CTETRA', 8, 6, 4], # nid[3]
         ]
         #GRID           1       0      0.      0.      0.       0
         #GRID           2       0      1.      0.      0.       0
@@ -217,6 +229,8 @@ class TestOpenMDAO(unittest.TestCase):
         #GRID           4       0      0.      1.      0.       0
         #CPENTA         9       4      21      22      23      24      25      26
         #PSOLID   4       1       0
+        #CTETRA         8       4      11      12      13      15
+
         bdf_filename = os.path.join(test_path, 'unit', 'test_mass.dat')
         
         model = BDFUpdater()

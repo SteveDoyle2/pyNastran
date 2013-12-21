@@ -19,6 +19,10 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 
 class CFAST(Element):
     type = 'CFAST'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'Type', 4:'ida', 5:'idb', 6:'gs', 7:'ga', 8:'gb',
+        9:'xs', 10:'ys', 11:'zs',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         Element.__init__(self, card, data)
@@ -59,6 +63,10 @@ class CFAST(Element):
 
 class CGAP(Element):
     type = 'CGAP'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'ga', 4:'gb',
+    }
+    ## todo:: not done...
 
     def __init__(self, card=None, data=None, comment=''):
         Element.__init__(self, card, data)
@@ -149,6 +157,10 @@ class CrackElement(Element):
 
 class CRAC2D(CrackElement):
     type = 'CRAC2D'
+    _field_map = {
+        1: 'eid', 2:'pid',
+    }
+    ## todo:: not done
 
     def __init__(self, card=None, data=None, comment=''):
         CrackElement.__init__(self, card, data)
@@ -188,6 +200,10 @@ class CRAC2D(CrackElement):
 
 class CRAC3D(CrackElement):
     type = 'CRAC3D'
+    _field_map = {
+        1: 'eid', 2:'pid',
+    }
+    ## todo:: not done
 
     def __init__(self, card=None, data=None, comment=''):
         CrackElement.__init__(self, card, data)

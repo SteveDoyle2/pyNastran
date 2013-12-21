@@ -500,6 +500,18 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
 
 class CROD(RodElement):
     type = 'CROD'
+    _field_map = {
+        1: 'eid', 2:'pid',
+    }
+
+    def _update_field_helper(self, n, value):
+        if n == 3:
+            self.nodes[0] = value
+        elif n == 4:
+            self.nodes[1] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
     def __init__(self, card=None, data=None, comment=''):
         RodElement.__init__(self, card, data)
         if comment:
@@ -575,6 +587,17 @@ class CROD(RodElement):
 
 class CTUBE(RodElement):
     type = 'CTUBE'
+    _field_map = {
+        1: 'eid', 2:'pid',
+    }
+
+    def _update_field_helper(self, n, value):
+        if n == 3:
+            self.nodes[0] = value
+        elif n == 4:
+            self.nodes[1] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         RodElement.__init__(self, card, data)
@@ -636,6 +659,17 @@ class CTUBE(RodElement):
 
 class CONROD(RodElement):
     type = 'CONROD'
+    _field_map = {
+        1: 'eid', 4:'mid', 5:'A', 6:'j', 7:'c', 8:'nsm',
+    }
+
+    def _update_field_helper(self, n, value):
+        if n == 2:
+            self.nodes[0] = value
+        elif n == 3:
+            self.nodes[1] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         RodElement.__init__(self, card, data)
@@ -783,6 +817,28 @@ class CBAR(LineElement):
     """
     type = 'CBAR'
     asterType = 'CBAR'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'ga', 4:'gb',
+        8:'offt', 9:'pa', 10:'pb', 11:'w1a', 12:'w2a', 13:'w3a', 
+        14:'w1b', 15:'w2b', 16:'w3b', 
+    }
+
+    def _update_field_helper(self, n, value):
+        if self.g0 is not None:
+            if n == 5:
+                self.g0 = value
+            else:
+                raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+        else:
+            if n == 5:
+                self.x1 = value
+            elif n == 6:
+                self.x2 = value
+            elif n == 7:
+                self.x3 = value
+            else:
+                raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
     def __init__(self, card=None, data=None, comment=''):
         LineElement.__init__(self, card, data)
         if comment:
@@ -1281,6 +1337,28 @@ class CBEAM(CBAR):
       SA SB
     """
     type = 'CBEAM'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'ga', 4:'gb', #5:'x_g0', 6:'g1', 7:'g2',
+        #8:'offt', 
+        9:'pa', 10:'pb', 11:'w1a', 12:'w2a', 13:'w3a', 
+        14:'w1b', 15:'w2b', 16:'w3b', 17:'sa', 18:'sb',
+    }
+
+    def _update_field_helper(self, n, value):
+        if self.g0 is not None:
+            if n == 5:
+                self.g0 = value
+            else:  # offt
+                raise KeyError('Field %r=%r is an invalid %s entry or is unsupported.' % (n, value, self.type))
+        else:
+            if n == 5:
+                self.x1 = value
+            elif n == 6:
+                self.x2 = value
+            elif n == 7:
+                self.x3 = value
+            else:
+                raise KeyError('Field %r=%r is an invalid %s entry or is unsupported.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         LineElement.__init__(self, card, data)
@@ -1798,6 +1876,25 @@ class CBEAM(CBAR):
 
 class CBEND(LineElement):
     type = 'CBEND'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'ga', 4:'gb', 8:'geom', 
+    }
+
+    def _update_field_helper(self, n, value):
+        if self.g0 is not None:
+            if n == 5:
+                self.g0 = value
+            else:
+                raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+        else:
+            if n == 5:
+                self.x1 = value
+            elif n == 6:
+                self.x2 = value
+            elif n == 7:
+                self.x3 = value
+            else:
+                raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         LineElement.__init__(self, card, data)

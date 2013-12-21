@@ -28,6 +28,9 @@ class DamperProperty(Property):
 
 class PDAMP(DamperProperty):
     type = 'PDAMP'
+    _field_map = {
+        1: 'pid', 2:'b',
+    }
 
     def __init__(self, card=None, nPDAMP=0, data=None, comment=''):
         DamperProperty.__init__(self, card, data)
@@ -56,6 +59,9 @@ class PDAMP(DamperProperty):
 
 class PDAMP5(DamperProperty):
     type = 'PDAMP5'
+    _field_map = {
+        1: 'pid', 2:'mid', 3:'b',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         """
@@ -98,6 +104,9 @@ class PDAMP5(DamperProperty):
 
 class PDAMPT(DamperProperty):
     type = 'PDAMPT'
+    _field_map = {
+        1: 'pid', 2:'tbid',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         DamperProperty.__init__(self, card, data)
@@ -134,6 +143,9 @@ class PDAMPT(DamperProperty):
 
 class PVISC(DamperProperty):
     type = 'PVISC'
+    _field_map = {
+        1: 'pid', 2:'ce', 3:'cr',
+    }
 
     def __init__(self, card=None, nPVISC=0, data=None, comment=''):
         DamperProperty.__init__(self, card, data)

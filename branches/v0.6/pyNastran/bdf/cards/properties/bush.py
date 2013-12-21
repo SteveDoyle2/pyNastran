@@ -30,6 +30,9 @@ class BushingProperty(Property):
 
 class PBUSH(BushingProperty):
     type = 'PBUSH'
+    _field_map = {
+        1: 'pid',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         BushingProperty.__init__(self, card, data)

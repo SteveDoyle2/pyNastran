@@ -36,6 +36,16 @@ class LineDamper(DamperElement):
 
 class CDAMP1(LineDamper):
     type = 'CDAMP1'
+    _field_map = {
+        1: 'eid', 2:'pid', 'c1':4, 'c2':6,
+    }
+    def _update_field_helper(self, n, value):
+        if n == 3:
+            self.nodes[0] = value
+        elif n == 5:
+            self.nodes[1] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         LineDamper.__init__(self, card, data)
@@ -93,6 +103,16 @@ class CDAMP1(LineDamper):
 
 class CDAMP2(LineDamper):
     type = 'CDAMP2'
+    _field_map = {
+        1: 'eid', 2:'b', 'c1':4, 'c2':6,
+    }
+    def _update_field_helper(self, n, value):
+        if n == 3:
+            self.nodes[0] = value
+        elif n == 5:
+            self.nodes[1] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         LineDamper.__init__(self, card, data)
@@ -142,6 +162,16 @@ class CDAMP2(LineDamper):
 
 class CDAMP3(LineDamper):
     type = 'CDAMP3'
+    _field_map = {
+        1: 'eid', 2:'pid',
+    }
+    def _update_field_helper(self, n, value):
+        if n == 3:
+            self.nodes[0] = value
+        elif n == 4:
+            self.nodes[1] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         LineDamper.__init__(self, card, data)
@@ -150,9 +180,9 @@ class CDAMP3(LineDamper):
         if card:
             self.eid = integer(card, 1, 'eid')
             self.pid = integer(card, 2, 'pid')
-            nids = [integer_or_blank(card, 3, 'n1', 0),
-                    integer_or_blank(card, 5, 'n2', 0)]
-            assert len(card) <= 6, 'len(CDAMP3 card) = %i' % len(card)
+            nids = [integer_or_blank(card, 3, 's1', 0),
+                    integer_or_blank(card, 4, 's2', 0)]
+            assert len(card) <= 5, 'len(CDAMP3 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -164,7 +194,7 @@ class CDAMP3(LineDamper):
         return self.pid.b
 
     def cross_reference(self, model):
-        msg = ' which is required by CDAMP4 eid=%s' % self.eid
+        msg = ' which is required by CDAMP3 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
@@ -179,6 +209,16 @@ class CDAMP3(LineDamper):
 
 class CDAMP4(LineDamper):
     type = 'CDAMP4'
+    _field_map = {
+        1: 'eid', 2:'b',
+    }
+    def _update_field_helper(self, n, value):
+        if n == 3:
+            self.nodes[0] = value
+        elif n == 4:
+            self.nodes[1] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         LineDamper.__init__(self, card, data)
@@ -216,6 +256,16 @@ class CDAMP4(LineDamper):
 
 class CDAMP5(LineDamper):
     type = 'CDAMP5'
+    _field_map = {
+        1: 'eid', 2:'pid',
+    }
+    def _update_field_helper(self, n, value):
+        if n == 3:
+            self.nodes[0] = value
+        elif n == 4:
+            self.nodes[1] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         LineDamper.__init__(self, card, data)
@@ -251,6 +301,16 @@ class CDAMP5(LineDamper):
 
 class CVISC(LineDamper):
     type = 'CVISC'
+    _field_map = {
+        1: 'eid', 2:'pid',
+    }
+    def _update_field_helper(self, n, value):
+        if n == 3:
+            self.nodes[0] = value
+        elif n == 4:
+            self.nodes[1] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         LineDamper.__init__(self, card, data)

@@ -28,6 +28,10 @@ class NSM(PointProperty):
     Defines a set of non structural mass.
     """
     type = 'NSM'
+    _field_map = {
+        1: 'sid', 2:'Type', 3:'id', 4:'value'
+    }
+
     #: Set points to either Property entries or Element entries.
     #: Properties are:
     validProperties = [
@@ -65,6 +69,10 @@ class NSM(PointProperty):
 
 class PMASS(PointProperty):
     type = 'PMASS'
+    _field_map = {
+        1: 'pid', 2:'mass',
+    }
+
     def __init__(self, card=None, nOffset=0, data=None, comment=''):
         PointProperty.__init__(self, card, data)
         if comment:

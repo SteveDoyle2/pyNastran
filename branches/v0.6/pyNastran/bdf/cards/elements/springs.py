@@ -68,6 +68,16 @@ class SpringElement(Element):
 class CELAS1(SpringElement):
     type = 'CELAS1'
     asterType = 'CELAS1'
+    _field_map = {
+        1: 'eid', 2:'pid', 4:'c1', 6:'c2',
+    }
+    def _update_field_helper(self, n, value):
+        if n == 3:
+            self.nodes[0] = value
+        elif n == 5:
+            self.nodes[1] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         SpringElement.__init__(self, card, data)
@@ -197,6 +207,16 @@ class CELAS1(SpringElement):
 class CELAS2(SpringElement):
     type = 'CELAS2'
     asterType = 'CELAS2'
+    _field_map = {
+        1: 'eid', 2:'k', 4:'c1', 6:'c2',
+    }
+    def _update_field_helper(self, n, value):
+        if n == 3:
+            self.nodes[0] = value
+        elif n == 5:
+            self.nodes[1] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         SpringElement.__init__(self, card, data)
@@ -369,6 +389,9 @@ class CELAS2(SpringElement):
 class CELAS3(SpringElement):
     type = 'CELAS3'
     asterType = 'CELAS3'
+    _field_map = {
+        1: 'eid', 2:'pid', 4:'s1', 6:'s2',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         SpringElement.__init__(self, card, data)
@@ -458,6 +481,9 @@ class CELAS3(SpringElement):
 class CELAS4(SpringElement):
     type = 'CELAS4'
     asterType = 'CELAS4'
+    _field_map = {
+        1: 'eid', 2:'k', 4:'s1', 6:'s2',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         SpringElement.__init__(self, card, data)

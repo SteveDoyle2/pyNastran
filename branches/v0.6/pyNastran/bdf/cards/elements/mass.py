@@ -50,6 +50,9 @@ class CMASS1(PointMassElement):
     CMASS1 EID PID G1 C1 G2 C2
     """
     type = 'CMASS1'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'g1', 4:'c1', 5:'g2', 6:'c2',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         PointMassElement.__init__(self, card, data)
@@ -114,6 +117,9 @@ class CMASS2(PointMassElement):
     CMASS2 EID M G1 C1 G2 C2
     """
     type = 'CMASS2'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'g1', 4:'c1', 5:'g2', 6:'c2',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         PointMassElement.__init__(self, card, data)
@@ -204,6 +210,9 @@ class CMASS3(PointMassElement):
     CMASS3 EID PID S1 S2
     """
     type = 'CMASS3'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'s1', 4:'s2',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         PointMassElement.__init__(self, card, data)
@@ -255,6 +264,9 @@ class CMASS4(PointMassElement):
     CMASS4 EID M S1 S2
     """
     type = 'CMASS4'
+    _field_map = {
+        1: 'eid', 2:'mass', 3:'s1', 4:'s2',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         print("***")
@@ -300,6 +312,55 @@ class CMASS4(PointMassElement):
 
 class CONM1(PointMassElement):
     type = 'CONM1'
+    _field_map = {
+        1: 'eid', 2:'nid', 3:'cid',
+    }
+    def _update_field_helper(self, n, value):
+        m = self.massMatrix
+        if n == 4:
+            m[0, 0] = value
+        elif n == 5:
+            m[1, 0] = value
+        elif n == 6:
+            m[1, 1] = value
+        elif n == 7:
+            m[2, 0] = value
+        elif n == 8:
+            m[2, 1] = value
+        elif n == 9:
+            m[2, 2] = value
+        elif n == 10:
+            m[3, 0] = value
+        elif n == 11:
+            m[3, 1] = value
+        elif n == 12:
+            m[3, 2] = value
+        elif n == 13:
+            m[3, 3] = value
+        elif n == 14:
+            m[4, 0] = value
+        elif n == 15:
+            m[4, 1] = value
+        elif n == 16:
+            m[4, 2] = value
+        elif n == 17:
+            m[4, 3] = value
+        elif n == 18:
+            m[4, 4] = value
+        elif n == 19:
+            m[5, 0] = value
+        elif n == 20:
+            m[5, 1] = value
+        elif n == 21:
+            m[5, 2] = value
+        elif n == 22:
+            m[5, 3] = value
+        elif n == 23:
+            m[5, 4] = value
+        elif n == 24:
+            m[5, 5] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         """
@@ -436,6 +497,31 @@ class CONM2(PointMassElement):
       CONM2    501274  11064          132.274
     """
     type = 'CONM2'
+    _field_map = {
+        1: 'eid', 2:'nid', 3:'cid', 4:'mass',
+    }
+    def _update_field_helper(self, n, value):
+        if n == 5:
+            self.X[0] = value
+        elif n == 6:
+            self.X[1] = value
+        elif n == 7:
+            self.X[2] = value
+
+        elif n == 9:
+            self.I[0] = value
+        elif n == 10:
+            self.I[1] = value
+        elif n == 11:
+            self.I[2] = value
+        elif n == 12:
+            self.I[3] = value
+        elif n == 13:
+            self.I[4] = value
+        elif n == 14:
+            self.I[5] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         PointMassElement.__init__(self, card, data)

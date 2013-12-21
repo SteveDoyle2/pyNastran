@@ -301,6 +301,9 @@ class PRAC2D(CrackProperty):
     the CRAC2D structural element.
     """
     type = 'PRAC2D'
+    _field_map = {
+        1: 'pid', 2:'mid', 3:'thick', 4:'iPlane', 5:'nsm',6:'gamma', 7:'phi',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         CrackProperty.__init__(self, card, data)
@@ -355,6 +358,9 @@ class PRAC3D(CrackProperty):
     Defines the properties of the CRAC3D structural element.
     """
     type = 'PRAC3D'
+    _field_map = {
+        1: 'pid', 2:'mid', 3:'gamma', 4:'phi',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         CrackProperty.__init__(self, card, data)
@@ -397,6 +403,8 @@ class PCONEAX(Property):
         8: 'nsm', 9:'z1', 10:'z2',
     }
     def _update_field_helper(self, n, value):
+        if n <= 0:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
         self.phi[n - 10] = value
 
     def __init__(self, card=None, data=None, comment=''):

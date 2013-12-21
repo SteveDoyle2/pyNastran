@@ -47,6 +47,32 @@ class BushElement(Element):
 
 class CBUSH(BushElement):
     type = 'CBUSH'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'ga', 4:'gb', 8:'cid', 9:'s', 10:'ocid'
+    }
+
+    def _update_field_helper(self, n, value):
+        if n == 11:
+            self.si[0] = value
+        elif n == 12:
+            self.si[1] = value
+        elif n == 13:
+            self.si[2] = value
+        else:
+            if self.g0 is not None:
+                if n == 5:
+                    self.g0 = value
+                else:
+                    raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+            else:
+                if n == 5:
+                    self.x[0] = value
+                elif n == 6:
+                    self.x[1] = value
+                elif n == 7:
+                    self.x[2] = value
+                else:
+                    raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         BushElement.__init__(self, card, data)
@@ -166,6 +192,9 @@ class CBUSH(BushElement):
 
 class CBUSH1D(BushElement):
     type = 'CBUSH1D'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'ga', 4:'gb', 5:'cid',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         BushElement.__init__(self, card, data)
@@ -235,6 +264,9 @@ class CBUSH2D(BushElement):
     Defines the connectivity of a two-dimensional Linear-Nonlinear element.
     """
     type = 'CBUSH2D'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'ga', 4:'gb', 5:'cid', 6:'plane', 7:'sptid',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         BushElement.__init__(self, card, data)
@@ -252,7 +284,8 @@ class CBUSH2D(BushElement):
                 msg = ("plane not in required list, plane=|%s|\n"
                        "expected planes = ['XY','YZ','ZX']" % self.plane)
                 raise RuntimeError(msg)
-            assert len(card) <= 7, 'len(CBUSH2D card) = %i' % len(card)
+            self.sptid = integer_or_blank(card, 7, 'sptid')
+            assert len(card) <= 8, 'len(CBUSH2D card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -291,6 +324,8 @@ class CBUSH2D(BushElement):
         #self.pid = model.Property(self.pid)
         if self.cid is not None:
             self.cid = model.Coord(self.cid, msg=msg)
+        if self.sptid is not None:
+            pass
 
     def rawFields(self):
         list_fields = ['CBUSH2D', self.eid, self.Pid(), self.Ga(), self.Gb(),

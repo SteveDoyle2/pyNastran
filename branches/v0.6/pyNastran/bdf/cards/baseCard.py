@@ -35,6 +35,14 @@ class BaseCard(object):
         except KeyError:
             self._update_field_helper(n, value)
 
+    def get_field(self, n):
+        try:
+            key_name = self._field_map[n]
+            value = getattr(self, key_name)
+        except KeyError:
+            value = self._get_field_helper(n)
+        return value
+
     def writeCodeAster(self):
         return ('# skipping %s  because writeCodeAster is not implemented\n'
                 % self.type)
