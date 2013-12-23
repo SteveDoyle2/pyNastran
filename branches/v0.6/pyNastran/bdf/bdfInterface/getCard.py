@@ -205,21 +205,21 @@ class GetMethods(GetMethodsDeprecated):
     def propertyIDs(self):
         return self.properties.keys()
 
-    def Property(self, pid, msg):
+    def Property(self, pid, msg=''):
         try:
             return self.properties[pid]
         except KeyError:
             raise KeyError('pid=%s not found%s.  Allowed Pids=%s'
                            % (pid, msg, self.propertyIDs()))
 
-    def Properties(self, pids):
+    def Properties(self, pids, msg=''):
         properties = []
         #print "pids = ",pids
         for pid in pids:
             properties.append(self.properties[pid])
         return properties
 
-    def Phbdy(self, pid):
+    def Phbdy(self, pid, msg=''):
         return self.phbdys[pid]
 
     #--------------------
@@ -300,71 +300,71 @@ class GetMethods(GetMethodsDeprecated):
     def nCAeros(self):
         return len(self.caeros)
 
-    def Aero(self, acsid):
+    def Aero(self, acsid, msg=''):
         return self.aero[acsid]
 
-    def Aeros(self, acsid):
+    def Aeros(self, acsid, msg=''):
         return self.aeros[acsid]
 
-    def Spline(self, eid):
+    def Spline(self, eid, msg=''):
         return self.splines[eid]
 
-    def CAero(self, eid):
+    def CAero(self, eid, msg=''):
         return self.caeros[eid]
 
-    def PAero(self, pid):
+    def PAero(self, pid, msg=''):
         return self.paeros[pid]
 
-    def Gust(self, sid):
+    def Gust(self, sid, msg=''):
         return self.gusts[sid]
 
     #--------------------
     # AERO CONTROL SURFACE CARDS
-    def AEStat(self, aid):
+    def AEStat(self, aid, msg=''):
         return self.aestats[aid]
 
-    def AELink(self, linkID):
+    def AELink(self, linkID, msg=''):
         return self.aelinks[linkID]
 
-    def AEParam(self, aid):
+    def AEParam(self, aid, msg=''):
         return self.aeparams[aid]
 
     #--------------------
     # FLUTTER CARDS
 
-    def Flfact(self, sid):
+    def Flfact(self, sid, msg=''):
         return self.flfacts[sid]
 
-    def Flutter(self, fid):
+    def Flutter(self, fid, msg=''):
         return self.flutters[fid]
 
     #--------------------
     # OPTIMIZATION CARDS
 
-    def DConstr(self, oid):
+    def DConstr(self, oid, msg=''):
         return self.dconstrs[oid]
 
-    def Desvar(self, oid):
+    def Desvar(self, oid, msg=''):
         return self.desvars[oid]
 
-    def DDVal(self, oid):
+    def DDVal(self, oid, msg=''):
         return self.ddvals[oid]
 
     #--------------------
     # SET CARDS
 
-    def Set(self, sid):
+    def Set(self, sid, msg=''):
         return self.sets[sid]
 
-    def SetSuper(self, seid):
+    def SetSuper(self, seid, msg=''):
         return self.setsSuper[seid]
 
     #--------------------
     # METHOD CARDS
-    def Method(self, sid):
+    def Method(self, sid, msg=''):
         return self.methods[sid]
 
-    def CMethod(self, sid):
+    def CMethod(self, sid, msg=''):
         return self.cMethods[sid]
 
     #--------------------
@@ -378,10 +378,10 @@ class GetMethods(GetMethodsDeprecated):
     #--------------------
     # NONLINEAR CARDS
 
-    def NLParm(self, nid):
+    def NLParm(self, nid, msg=''):
         return self.nlparms[nid]
 
     #--------------------
     # MATRIX ENTRY CARDS
-    def DMIG(self, dname):
+    def DMIG(self, dname, msg=''):
         return self.dmig[dname]
