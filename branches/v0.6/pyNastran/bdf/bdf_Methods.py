@@ -119,10 +119,6 @@ class BDFMethods(BDFMethodsDeprecated):
                 try:
                     p = element.Centroid()
                 except:
-                    if element.type not in ['CBUSH']:
-                        print('****', element.type)
-                        print(str(element))
-                        raise
                     continue
 
                 try:
@@ -140,17 +136,14 @@ class BDFMethods(BDFMethodsDeprecated):
                     mass += m
                     cg += m * p
                 except:
-                    if element.type not in ['CBUSH']:
-                        raise
                     self.log.warning("could not get the inertia for element"
                                      "...\n%s" % element)
                     raise
             if mass:
                 cg = cg / mass
 
-        if sym_axis == None:
+        if sym_axis is None:
             for key, aero in self.aero.iteritems():
-                print("aero =", str(aero))
                 sym_axis = ''
                 if aero.IsSymmetricalXY():
                     sym_axis += 'y'
@@ -162,7 +155,6 @@ class BDFMethods(BDFMethodsDeprecated):
                     raise NotImplementedError('%s is antisymmetric about the XZ plane' % str(aero))
 
         if None is not sym_axis and 'x' in sym_axis:
-            #print("symx")
             I[0] *= 2.0
             I[1] *= 2.0
             I[2] *= 2.0
@@ -171,7 +163,6 @@ class BDFMethods(BDFMethodsDeprecated):
             I[5] *= 2.0  # Iyz
             cg[0] = 0.0
         if None is not sym_axis and 'y' in sym_axis:
-            #print("symy")
             I[0] *= 2.0
             I[1] *= 2.0
             I[2] *= 2.0
@@ -180,7 +171,6 @@ class BDFMethods(BDFMethodsDeprecated):
             I[5] *= 0.0  # Iyz
             cg[1] = 0.0
         if None is not sym_axis and 'z' in sym_axis:
-            #print("symz")
             I[0] *= 2.0
             I[1] *= 2.0
             I[2] *= 2.0
@@ -233,9 +223,6 @@ class BDFMethods(BDFMethodsDeprecated):
         pool.join()
 
         massi = mass.sum()
-
-        #print('xyz.shape =', xyz.shape)
-        #print('mass.shape =', mass.shape)
 
         #cg = (mass * xyz) / massi
         if massi == 0.0:

@@ -140,7 +140,6 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         node0 = self.nodes[0]
         node1 = self.nodes[1]
 
-
         p0 = model.Node(n0).xyz
         p1 = model.Node(n1).xyz
         L = norm(p0 - p1)

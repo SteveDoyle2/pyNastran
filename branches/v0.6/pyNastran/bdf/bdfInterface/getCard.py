@@ -243,13 +243,13 @@ class GetMethods(GetMethodsDeprecated):
             msg = '\n' + msg
             raise KeyError('Invalid Material ID:  mid=%s%s' % (mid, msg))
 
-    def StructuralMaterial(self, mid):
+    def StructuralMaterial(self, mid, msg=''):
         return self.materials[mid]
 
-    def ThermalMaterial(self, mid):
+    def ThermalMaterial(self, mid, msg=''):
         return self.thermalMaterials[mid]
 
-    def Materials(self, mids):
+    def Materials(self, mids, msg=''):
         materials = []
         for mid in mids:
             materials.append(self.Material(mid))
@@ -258,29 +258,29 @@ class GetMethods(GetMethodsDeprecated):
     #--------------------
     # LOADS
 
-    def Load(self, sid, msg):
+    def Load(self, sid, msg=''):
         #print 'sid=%s self.loads=%s' %(sid,(self.loads.keys()))
         assert isinstance(sid, int), 'sid=%s is not an integer\n' % sid
         if sid in self.loads:
             load = self.loads[sid]
         else:
-            raise KeyError('cannot find LoadID=|%s|%s.' % (sid, msg))
+            raise KeyError('cannot find LoadID=%r%s.' % (sid, msg))
         return load
 
-    def Grav(self, sid):
+    def Grav(self, sid, msg=''):
         raise DeprecationWarning('use Load(sid) instead of Grav(sid)')
         return self.Load(sid)
 
     #--------------------
     # SPCs
 
-    def SPC(self, conid):
+    def SPC(self, conid, msg=''):
         #print 'conid=%s self.spcs=%s' %(conid,(self.spcs.keys()))
         assert isinstance(conid, int), 'conid=%s is not an integer\n' % (conid)
         if conid in self.spcs:
             constraint = self.spcs[conid]
         else:
-            raise KeyError('cannot find ConstraintID=|%s|.' % (conid))
+            raise KeyError('cannot find ConstraintID=%r.\n%s' % (conid, msg))
         return constraint
 
     #--------------------

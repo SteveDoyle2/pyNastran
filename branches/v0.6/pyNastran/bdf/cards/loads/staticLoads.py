@@ -719,8 +719,8 @@ class FORCE2(Force):
         return self.g4.nid
 
     def rawFields(self):
-        (g1, g2, g3, g4) = self.nodeIDs([self.g1, self.g2, self.g3, self.g4])
-        list_fields = ['FORCE2', self.sid, self.NodeID(), self.mag, g1, g2, g3, g4]
+        (node, g1, g2, g3, g4) = self.nodeIDs([self.node, self.g1, self.g2, self.g3, self.g4])
+        list_fields = ['FORCE2', self.sid, node, self.mag, g1, g2, g3, g4]
         return list_fields
 
     def reprFields(self):
@@ -869,9 +869,6 @@ class MOMENT2(Moment):
             self.g2 = integer(card, 5, 'g2')
             self.g3 = integer(card, 6, 'g3')
             self.g4 = integer(card, 7, 'g4')
-            xyz = array([double_or_blank(card, 5, 'X1', 0.0),
-                         double_or_blank(card, 6, 'X2', 0.0),
-                         double_or_blank(card, 7, 'X3', 0.0)])
             assert len(card) <= 8, 'len(MOMENT2 card) = %i' % len(card)
         else:
             self.sid = data[0]
@@ -882,13 +879,14 @@ class MOMENT2(Moment):
             self.g3 = data[5]
             self.g4 = data[6]
             xyz = data[7:10]
-        assert len(xyz) == 3, 'xyz=%s' % (xyz)
-        self.xyz = array(xyz)
+            self.xyz = array(xyz)
+            assert len(xyz) == 3, 'xyz=%s' % xyz
 
     def cross_reference(self, model):
         """
         .. todo:: cross reference and fix repr function
         """
+        self.node = model.Node(self.node)
         self.g1 = model.Node(self.g1)
         self.g2 = model.Node(self.g2)
         self.g3 = model.Node(self.g3)
@@ -900,9 +898,35 @@ class MOMENT2(Moment):
         v34 = v34 / norm(v34)
         self.xyz = cross(v12, v34)
 
+    def NodeID(self):
+        if isinstance(self.node, int):
+            return self.node
+        return self.node.nid
+
+    def G1(self):
+        if isinstance(self.g1, int):
+            return self.g1
+        return self.g1.nid
+
+    def G2(self):
+        if isinstance(self.g2, int):
+            return self.g2
+        return self.g2.nid
+
+    def G3(self):
+        if isinstance(self.g3, int):
+            return self.g3
+        return self.g3.nid
+
+    def G4(self):
+        if isinstance(self.g4, int):
+            return self.g4
+        return self.g4.nid
+
     def rawFields(self):
-        (node, g1, g2, g3, g4) = self.nodeIDs([self.node, self.g1, self.g2,
+        (node, g1, g2, g3, g4) = self.nodeIDs(nodes=[self.node, self.g1, self.g2,
                                                self.g3, self.g4])
+        assert isinstance(g1, int), g1
         list_fields = ['MOMENT2', self.sid, node, self.mag, g1, g2, g3, g4]
         return list_fields
 

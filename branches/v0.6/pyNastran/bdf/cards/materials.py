@@ -1351,7 +1351,7 @@ class MATS1(MaterialDependence):
         MaterialDependence.__init__(self, card, data)
         if comment:
             self._comment = comment
-        print("card =", card)
+
         if card:
             #: Identification number of a MAT1, MAT2, or MAT9 entry.
             self.mid = integer(card, 1, 'mid')

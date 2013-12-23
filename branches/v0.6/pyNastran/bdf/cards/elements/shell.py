@@ -20,7 +20,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 
-from numpy import array, eye, cross, allclose, dot, transpose, zeros  # zeros,dot
+from numpy import array, eye, cross, allclose, dot, transpose, zeros
 from numpy.linalg import det, norm  # inv
 
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
