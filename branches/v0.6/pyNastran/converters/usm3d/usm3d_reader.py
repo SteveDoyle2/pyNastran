@@ -121,10 +121,12 @@ class Usm3dReader(object):
         except IOError:
             tris = None
             bcs = None
+            self.log.warning('Cannot find %r...skipping' % bc_filename)
         try:
             mapbc = self.read_mapbc(mapbc_filename)
         except IOError:
             mapbc = {}
+            self.log.warning('Cannot find %r...skipping' % mapbc_filename)
         self.tris = tris
         self.bcs = bcs
         self.mapbc = mapbc
@@ -378,7 +380,7 @@ class Usm3dReader(object):
             nvars = 5
             rhoi, rhoui, rhovi, rhowi = Float(sline1[1:], 4)
             sline2 = flo_file.readline().strip().split()
-            ei = Float(sline2, 1)
+            ei = Float(sline2, 1)[0]
 
         # set the i=0 values
         i = 0
@@ -408,10 +410,10 @@ class Usm3dReader(object):
                     node_id[i] = sline1[0]
                     rhoi, rhoui, rhovi, rhowi = Float(sline1[1:], 4)
 
-                    assert len(line) == 5, 'len(sline1)=%s' % len(sline1)
+                    assert len(sline1) == 5, 'len(sline1)=%s' % len(sline1)
 
                     sline2 = flo_file.readline().strip().split()
-                    ei = Float(sline2, 1)
+                    ei = Float(sline2, 1)[0]
 
                     rho[i] = rhoi
                     rhoU[i] = rhoui

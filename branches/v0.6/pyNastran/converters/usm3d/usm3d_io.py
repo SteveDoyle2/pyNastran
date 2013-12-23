@@ -1,4 +1,5 @@
 import os
+from collections import defaultdict
 
 import vtk
 from vtk import vtkTriangle, vtkTetra
@@ -150,12 +151,22 @@ class Usm3dIO(object):
 
         if bcs is not None and self.is_centroidal:
             cases[(ID, 'Region', 1, 'centroid', '%.0f')] = bcs
-            for key, value in sorted(mapbc.iteritems()):
+
+            mapbc_print = defaultdict(list)
+            for region, bcnum in sorted(mapbc.iteritems()):
+                mapbc_print[bcnum].append(region)
                 try:
-                    name = bcmap_to_bc_name[value]
+                    name = bcmap_to_bc_name[bcnum]
                 except KeyError:
                     name = '???'
-                self.log.info('Region=%i BC=%s name=%r' % (key, value, name))
+                #self.log.info('Region=%i BC=%s name=%r' % (region, bcnum, name))
+
+            for bcnum, regions in sorted(mapbc_print.iteritems()):
+                try:
+                    name = bcmap_to_bc_name[bcnum]
+                except KeyError:
+                    name = '???'
+                self.log.info('BC=%s Regions=%s name=%r' % (bcnum, regions, name))
             self.scalarBar.VisibilityOn()
 
         if self.is_nodal:
