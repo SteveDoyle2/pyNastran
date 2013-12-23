@@ -1,5 +1,6 @@
+import os
 from struct import pack, unpack
-from numpy import array, transpose, zeros
+from numpy import array, transpose, zeros, where
 from pyNastran.utils.log import get_logger
 
 def write_front(model):
@@ -9,6 +10,36 @@ def write_face(model):
     pass
 
 class Usm3dReader(object):
+    bcmap_to_bc_name = {
+        0 : 'Supersonic Inflow',
+        1 : 'Reflection plane',
+        2 : 'Supersonic Outflow',
+        3 : 'Subsonic Outer Boundaries',
+        4 : 'Viscous Surfaces',
+        5 : 'Inviscid aerodynamic surface',
+        44 : 'Blunt base',
+        55 : 'Thick Trailing Edges',
+
+        103 : 'Engine-exhaust (Fan)',
+        102 : 'Engine-exhaust (Jet Core)',
+        101 : 'Engine-intake',
+        203 : 'Engine-exhaust (Fan)',
+        202 : 'Engine-exhaust (Jet Core)',
+        201 : 'Engine-intake',
+
+        1001 : 'Special inflow',
+        1002 : 'Special Outflow (Fixed Pressure)',
+
+        #'0 - Freestream - Supersonic Inflow (Bounding Box)
+        #'2 - Extrapolation - Supersonic Outflow (Bounding Box)
+
+        #'1 - Reflection Plane - Tangent Flow - (Symmetry Plane)
+        #'3 - Characteristic Inflow - Subsonic Inflow/Outflow/Sideflow (Bounding Box)
+
+        #'4 - Inviscid Surface (Physical)
+        #'5', Viscous Surface (Physical)
+    }
+
     def __init__(self, log=None, debug=None):
         self.nodes = None
         self.tris = None
@@ -22,7 +53,7 @@ class Usm3dReader(object):
         else:
             asdf
 
-    def read_bc_format(self, bc_filename):
+    def read_mapbc(self, mapbc_filename):
         """
         0 - Supersonic Inflow
         1 - Reflection plane
@@ -59,26 +90,72 @@ class Usm3dReader(object):
         5              3              3              0            0        Sideflow -> Characteristic Inflow/Outflow
         7              1              1              0            0        Symmetry -> Reflection plane
         """
-        bc = open(bc_filename, 'r')
-        lines = bc.readlines()
+        mapbc_file = open(mapbc_filename, 'r')
+        lines = mapbc_file.readlines()
         lines2 = []
         for line in lines:
             if len(line.strip().split('#')[0]) > 0:
                 lines2.append(line)
         lines = lines2
 
-        for line in lines:
-            patch_id, bc, family, surf, surf_ids,  = line.split()
-        bc.close()
+        mapbc = {}
+        for line in lines[1:]:
+            sline = line.split()
+            #self.log.info(sline)
+            patch_id, bc, family, surf, surf_ids  = sline[:5]
+            mapbc[int(patch_id)] = int(bc)
+        mapbc_file.close()
+        return mapbc
 
     def read_usm3d(self, basename, dimension_flag):
-        cogsg_file = basename + '.cogsg'
-        face_file = basename + '.face'
-        front_file = basename + '.front'
+        cogsg_filename = basename + '.cogsg'
+        bc_filename = basename + '.bc'
+        face_filename = basename + '.face'
+        front_filename = basename + '.front'
+        mapbc_filename = basename + '.mapbc'
+        flo_filename = basename + '.flo'
 
-        return self.read_cogsg(cogsg_file)
+        nodes, elements = self.read_cogsg(cogsg_filename)
+        try:
+            tris, bcs = self.read_bc(bc_filename)
+        except IOError:
+            tris = None
+            bcs = None
+        try:
+            mapbc = self.read_mapbc(mapbc_filename)
+        except IOError:
+            mapbc = {}
+        self.tris = tris
+        self.bcs = bcs
+        self.mapbc = mapbc
+
+        loads = {}
+        if os.path.exists(flo_filename):
+            npoints, three = nodes.shape
+            loads = self.read_flo(flo_filename, n=npoints)
+        self.loads = loads
+
+        return nodes, elements, tris, bcs, mapbc, loads
         #self.read_front(front_file)
         #self.read_face(face_file)
+
+    def read_bc(self, bc_file):
+        f = open(bc_file, 'r')
+        lines = f.readlines()
+        f.close()
+        (ntris, dunnoA, dunnoB, dunnoC) = lines[0].strip().split()
+        ntris = int(ntris)
+        tris = zeros((ntris, 3), dtype='int32')
+        bcs  = zeros(ntris, dtype='int32')
+
+        for i in xrange(ntris):
+            (n, isurf, n1, n2, n3) = lines[i+2].split()
+            tris[i] = [n1, n2, n3]
+            bcs[i] = isurf
+        tris = tris - 1
+        return tris, bcs
+        #self.bcs = [tris, bcs]
+
 
     def read_cogsg(self, cogsg_file):
         f = open(cogsg_file, 'rb')
@@ -262,9 +339,149 @@ class Usm3dReader(object):
         self.tets = elements
         return nodes, elements
 
+    def read_flo(self, flo_filename, n=None):
+        """
+        ipltqn is a format code where:
+         - ipltqn = 0  (no printout)
+         - ipltqn = 1  (unformatted)
+         - ipltqn = 2  (formatted) - default
+
+        :param flo_filename: the name of the file to read
+        :param n:            the number of points to read (initializes the array)
+
+        nvars = 5
+          - (nodeID,rho,rhoU,rhoV,rhoW) = sline
+            (e) = line
+
+        nvars = 6
+          - (nodeID,rho,rhoU,rhoV,rhoW,e) = line
+        """
+        formatCode = 2
+
+        flo_file = open(flo_filename, 'r')
+        mach = float(flo_file.readline().strip())
+
+        node_id = zeros(n, 'int32')
+        rho = zeros(n, 'float32')
+        rhoU = zeros(n, 'float32')
+        rhoV = zeros(n, 'float32')
+        rhoW = zeros(n, 'float32')
+        e = zeros(n, 'float32')
+
+        # determine the number of variables on each line
+        sline1 = flo_file.readline().strip().split()
+        nvars = None
+        if len(sline1) == 6:
+            nvars = 6
+            rhoi, rhoui, rhovi, rhowi, ei = Float(sline1[1:], 5)
+        else:
+            nvars = 5
+            rhoi, rhoui, rhovi, rhowi = Float(sline1[1:], 4)
+            sline2 = flo_file.readline().strip().split()
+            ei = Float(sline2, 1)
+
+        # set the i=0 values
+        i = 0
+        node_id[i] = sline1[0]
+        rho[i] = rhoi
+        rhoU[i] = rhoui
+        rhoV[i] = rhovi
+        rhoW[i] = rhowi
+        e[i] = ei
+
+        # loop over the rest of the data in the flo file
+        if n:
+            if nvars == 6:
+                for i in xrange(1, n):
+                    sline1 = flo_file.readline().strip().split()
+                    rhoi, rhoui, rhovi, rhowi, ei = Float(sline1[1:], 5)
+                    node_id[i] = sline1[0]
+                    rho[i] = rhoi
+                    rhoU[i] = rhoui
+                    rhoV[i] = rhovi
+                    rhoW[i] = rhowi
+                    e[i] = ei
+                    assert len(sline1) == 6, 'len(sline1)=%s' % len(sline1)
+            else:  # nvars = 5
+                for i in xrange(1, n):
+                    sline1 = flo_file.readline().strip().split()
+                    node_id[i] = sline1[0]
+                    rhoi, rhoui, rhovi, rhowi = Float(sline1[1:], 4)
+
+                    assert len(line) == 5, 'len(sline1)=%s' % len(sline1)
+
+                    sline2 = flo_file.readline().strip().split()
+                    ei = Float(sline2, 1)
+
+                    rho[i] = rhoi
+                    rhoU[i] = rhoui
+                    rhoV[i] = rhovi
+                    rhoW[i] = rhowi
+                    e[i] = ei
+                    assert len(sline2) == 1, 'len(sline2)=%s' % len(sline2)
+        else:
+            raise RuntimeError('nnodes is not defined...')
+        flo_file.close()
+
+        # llimit the minimum density (to prevent division errors)
+        rho_min = 0.001
+        irho_zero = where(rho < rho_min)[0]
+        rho[irho_zero] = rho_min
+
+        result_names = ['Mach', 'U', 'V', 'W', 'T', 'rhoU', 'p', 'Cp']
+        loads = {}
+
+        gamma = 1.4
+        two_over_Mach2 = 2.0 / mach ** 2
+        one_over_gamma = 1.0 / gamma
+
+        gm1 = gamma - 1
+        rhoVV = (rhoU**2 + rhoV**2 + rhoW**2) / rho
+        if 'p' in result_names or 'Mach' in result_names or 'Cp' in result_names:
+            pND = gm1*(e - rhoVV/2. )
+            if 'p' in result_names:
+                loads['p'] = pND
+        if 'Mach' in result_names:
+            Mach = (rhoVV / (gamma * pND))**0.5
+            loads['Mach'] = Mach
+        if 'Cp' in result_names:
+            Cp = two_over_Mach2 * (pND - one_over_gamma)
+            loads['Cp'] = Cp
+
+        T = gamma * pND / rho # =a^2 as well
+        #a = T.sqrt()
+        if 'T' in result_names:
+            loads['T'] = T
+
+        if 'rho' in result_names:
+            loads['rho'] = rho
+
+        if 'rhoU' in result_names:
+            loads['rhoU'] = rhoU
+        if 'rhoV' in result_names:
+            loads['rhoV'] = rhoV
+        if 'rhoW' in result_names:
+            loads['rhoW'] = rhoW
+
+        if 'U' in result_names:
+            loads['U'] = rhoU / rho
+        if 'V' in result_names:
+            loads['V'] = rhoV / rho
+        if 'W' in result_names:
+            loads['W'] = rhoW / rho
+        return loads
 
 
 
+
+def Float(sline, n):
+    vals = []
+    for val in sline:
+        try:
+            vals.append(float(val))
+        except:
+            vals.append(0.0)
+    return vals
 
 def write_usm3d_volume(model, basename):
     cogsg_file = basename + '.cogsg'

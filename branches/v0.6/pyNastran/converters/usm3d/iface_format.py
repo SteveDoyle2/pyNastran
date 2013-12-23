@@ -159,90 +159,6 @@ class IFace(FortranFile):
         print self.print_section2(n, '>')
         pass
 
-    def read_flo(self, flo_filename, n=None, nvars=5):
-        """
-        ipltqn is a format code where:
-         - ipltqn = 0  (no printout)
-         - ipltqn = 1  (unformatted)
-         - ipltqn = 2  (formatted) - default
-
-        nvars = 5
-          - (nodeID,rho,rhoU,rhoV,rhoW) = sline
-            (e) = line
-
-        nvars = 6
-          - (nodeID,rho,rhoU,rhoV,rhoW,e) = line
-        """
-        formatCode = 2
-
-        f = open(flo_filename, 'r')
-        mach = float(f.readline().strip())
-
-        node_id = zeros(n, 'int32')
-        rho = zeros(n, 'float32')
-        rhoU = zeros(n, 'float32')
-        rhoV = zeros(n, 'float32')
-        rhoW = zeros(n, 'float32')
-        e = zeros(n, 'float32')
-
-        if n:
-            if nvars == 6:
-                for i in xrange(n):
-                    sline1 = f.readline().strip().split()
-                    #print sline1
-                    rhoi, rhoui, rhovi, rhowi, ei = Float(sline1[1:], 5)
-                    node_id[i] = sline1[0]
-                    rho[i] = rhoi
-                    rhoU[i] = rhoui
-                    rhoV[i] = rhovi
-                    rhoW[i] = rhowi
-                    e[i] = ei
-                    assert len(sline1) == 6, 'len(sline1)=%s' % len(sline1)
-            else:
-                for i in xrange(n):
-                    sline1 = f.readline().strip().split()
-                    node_id[i] = sline1[0]
-                    rhoi, rhoui, rhovi, rhowi = Float(sline1[1:], 4)
-
-                    assert len(line) == 5, 'len(sline1)=%s' % len(sline1)
-
-                    sline2 = f.readline().strip().split()
-                    ei = Float(sline2, 1)
-
-                    rho[i] = rhoi
-                    rhoU[i] = rhoui
-                    rhoV[i] = rhovi
-                    rhoW[i] = rhowi
-                    e[i] = ei
-                    assert len(sline2) == 1, 'len(sline2)=%s' % len(sline2)
-        else:
-            asdf
-
-        f.close()
-        gamma = 1.4
-        gm1 = gamma - 1
-        rhoVV = (rhoU**2+rhoV**2+rhoW**2) / rho
-        if 'p' in result_names or 'Mach' in result_names:
-            pND = gm1*(e - rhoVV/2. )
-            if 'p' in result_names:
-                loads['p'] = pND
-        if 'Mach' in result_names:
-            mach = (rhoVV/(gamma*pND))**0.5
-            loads['Mach'] = Mach
-
-        T = gamma*pND/rho # =a^2 as well
-        if 'T' in result_names:
-            loads['T'] = T
-        return loads
-
-def Float(sline, n):
-    vals = []
-    for val in sline:
-        try:
-            vals.append(float(val))
-        except:
-            vals.append(0.0)
-    return vals
 
 if __name__ == '__main__':
     cogsg_obj = Usm3dReader()
@@ -255,6 +171,6 @@ if __name__ == '__main__':
     #iface_obj.read_m2(model + '.m2')
     #iface_obj.read_iface(model + '.iface')
     if model == 'new2':
-        iface_obj.read_flo(model + '.flo', n=79734, nvars=6)
+        iface_obj.read_flo(model + '.flo', n=79734)
     elif model == 'box':
-        iface_obj.read_flo(model + '.flo', n=12440, nvars=5)
+        iface_obj.read_flo(model + '.flo', n=12440)

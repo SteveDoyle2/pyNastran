@@ -19,8 +19,8 @@ class Usm3dIO(object):
         model = Usm3dReader(log=self.log, debug=False)
 
         base_filename, ext = os.path.splitext(cogsg_filename)
-        node_filename = base_filename + '.node'
-        ele_filename = base_filename + '.ele'
+        #node_filename = base_filename + '.node'
+        #ele_filename = base_filename + '.ele'
         if '.cogsg' == ext:
             dimension_flag = 3
         #elif '.ele' == ext:
@@ -31,14 +31,22 @@ class Usm3dIO(object):
         nodes = model.nodes
         tris = model.tris
         tets = model.tets
+        bcs = model.bcs
+        mapbc = model.mapbc
+        loads = model.loads
+        bcmap_to_bc_name = model.bcmap_to_bc_name
 
         self.nNodes, three = nodes.shape
         ntris = 0
         ntets = 0
-        if dimension_flag == 2:
+        if tris is not None:
             ntris, three = tris.shape
+
+        if dimension_flag == 2:
+            pass
         elif dimension_flag == 3:
             ntets, four = tets.shape
+            ntets = 0
         else:
             raise RuntimeError()
         self.nElements = ntris + ntets
@@ -78,23 +86,27 @@ class Usm3dIO(object):
             nid += 1
 
         #elements -= 1
-        if dimension_flag == 2:
+        if ntris:
             for (n0, n1, n2) in tris:
-                elem = vtkTriangle()
-                #node_ids = elements[eid, :]
-                elem.GetPointIds().SetId(0, n0)
-                elem.GetPointIds().SetId(1, n1)
-                elem.GetPointIds().SetId(2, n2)
-                self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                 elem = vtkTriangle()
+                 #node_ids = elements[eid, :]
+                 elem.GetPointIds().SetId(0, n0)
+                 elem.GetPointIds().SetId(1, n1)
+                 elem.GetPointIds().SetId(2, n2)
+                 self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+
+        if dimension_flag == 2:
+            pass
         elif dimension_flag == 3:
-            for (n0, n1, n2, n3) in tets:
-                elem = vtkTetra()
-                assert elem.GetCellType() == 10, elem.GetCellType()
-                elem.GetPointIds().SetId(0, n0)
-                elem.GetPointIds().SetId(1, n1)
-                elem.GetPointIds().SetId(2, n2)
-                elem.GetPointIds().SetId(3, n3)
-                self.grid.InsertNextCell(10, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+            if ntets:
+                for (n0, n1, n2, n3) in tets:
+                    elem = vtkTetra()
+                    #assert elem.GetCellType() == 10, elem.GetCellType()
+                    elem.GetPointIds().SetId(0, n0)
+                    elem.GetPointIds().SetId(1, n1)
+                    elem.GetPointIds().SetId(2, n2)
+                    elem.GetPointIds().SetId(3, n3)
+                    self.grid.InsertNextCell(10, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
         else:
             raise RuntimeError()
 
@@ -103,24 +115,52 @@ class Usm3dIO(object):
         self.grid.Update()
         print("updated grid")
 
-        # loadSTLResults - regions/loads
+        # regions/loads
         self.TurnTextOn()
-        self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
 
+        if 'Mach' in loads:
+            avgMach = loads['Mach'].mean()
+            note = ':  avg(Mach)=%g' % avgMach
+        else:
+            note = ''
+
+        self.iSubcaseNameMap = {1: ['Usm3d%s' % note, '']}
         cases = {}
         ID = 1
 
-        #cases = self._fill_tetgen_case(cases, ID, elements)
+        cases = self._fill_usm3d_case(cases, ID, bcs, mapbc, bcmap_to_bc_name, loads)
 
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
         #print "caseKeys = ",self.caseKeys
         #print "type(caseKeys) = ",type(self.caseKeys)
-        self.nCases = min(0, len(self.resultCases) - 1)  # number of keys in dictionary
+        if len(self.resultCases) == 0:
+            self.nCases = 1
+        elif len(self.resultCases) == 1:
+            self.nCases = 1
+        else:
+            self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
+
         self.iCase = 0 if self.nCases == 0 else -1
         self.cycleResults()  # start at nCase=0
 
-    def _fill_usm3d_case(self, cases, ID, elements):
+    def _fill_usm3d_case(self, cases, ID, bcs, mapbc, bcmap_to_bc_name, loads):
+        self.scalarBar.VisibilityOff()
+
+        if bcs is not None and self.is_centroidal:
+            cases[(ID, 'Region', 1, 'centroid', '%.0f')] = bcs
+            for key, value in sorted(mapbc.iteritems()):
+                try:
+                    name = bcmap_to_bc_name[value]
+                except KeyError:
+                    name = '???'
+                self.log.info('Region=%i BC=%s name=%r' % (key, value, name))
+            self.scalarBar.VisibilityOn()
+
+        if self.is_nodal:
+            for key, load in loads.iteritems():
+                cases[(ID, key, 1, 'nodal', '%.3f')] = load
+            self.scalarBar.VisibilityOn()
         return cases
 
