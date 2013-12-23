@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
+from __future__ import division, unicode_literals, print_function
 
 # Qt
 try:
@@ -164,8 +164,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         if is_failed:
             return
         if output:
-            print "format=%r" % format
-            print "output=%r" % output
+            print("format=%r" % format)
+            print("output=%r" % output)
             self.on_load_results(output)
         self._simulate_key_press('r')
         self.vtk_interactor.Modified()
@@ -355,7 +355,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 #icon = os.path.join(icon_path, 'no.png')
 
             if icon is None:
-                print "missing_icon = %r!!!" % nam
+                print("missing_icon = %r!!!" % nam)
                 #print print_bad_path(icon)
             #elif not "/" in icon:
                 #ico = QtGui.QIcon.fromTheme(icon)
@@ -593,7 +593,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         #return scalarBar
 
     def on_reload(self):
-        print "self.infile_name =", self.infile_name
+        print("self.infile_name =", self.infile_name)
         self.on_load_geometry(self.infile_name, self.format)
 
     def on_load_geometry(self, infile_name=None, geometry_format=None):
@@ -601,7 +601,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         is_failed = False
         if infile_name:
             geometry_format = geometry_format.lower()
-            print "geometry_format = %r" % geometry_format
+            print("geometry_format = %r" % geometry_format)
             if geometry_format == 'nastran':
                 has_results = True
                 load_function = self.load_nastran_geometry
@@ -720,7 +720,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             except Exception as e:
                 msg = traceback.format_exc()
                 self.log_error(msg)
-                return
+                raise
+                #return
             #self.vtk_panel.Update()
             self.rend.ResetCamera()
 
@@ -735,7 +736,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             self.set_window_title(infile_name)
         else: # no file specified
             return
-        print "on_load_geometry(%r)" % infile_name
+        print("on_load_geometry(%r)" % infile_name)
         self.infile_name = infile_name
         self.log_command("on_load_geometry(%r, %r)" % (infile_name, self.format))
 
@@ -836,7 +837,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 #raise IOError(msg)
             self.last_dir = os.path.split(out_filename)[0]
             load_function(out_filename, self.last_dir)
-            print "on_load_results(%r)" % out_filename
+            print("on_load_results(%r)" % out_filename)
             self.out_filename = out_filename
             self.log_command("on_load_results(%r)" % out_filename)
 
@@ -921,7 +922,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
         :param key: a key that VTK should be informed about, e.g. 't'
         """
-        print "key = ", key
+        print("key = ", key)
         self.vtk_interactor._Iren.SetEventInformation(0, 0, 0, 0, key, 0, None)
         self.vtk_interactor._Iren.KeyPressEvent()
         self.vtk_interactor._Iren.CharEvent()
@@ -953,8 +954,10 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
 
     def cycleResults(self):
+        self.log_command('cycleResults()')
         #print("nCases = %i" %(self.nCases+1))
         if self.nCases == 0:
+            self.log.warning('nCases=0')
             self.scalarBar.SetVisibility(False)
             return
 
@@ -996,7 +999,17 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 caseName = ('case=NA', 'label=NA')
             (subtitle, label) = caseName
 
-            print("subcaseID=%s resultType=%s subtitle=%r label=%r" % (subcaseID, resultType, subtitle, label))
+            #name_map = {
+                #'rhoU' : 'ρU',
+                #'rhoV' : 'ρV',
+                #'rhoW' : 'ρW',
+            #}
+            #try:
+                #resultType = name_map[resultType]
+            #except KeyError:
+                #pass
+
+            print("subcaseID=%s resultType=%r subtitle=%r label=%r" % (subcaseID, resultType, subtitle, label))
 
             if isinstance(case, ndarray):
                 max_value = amax(case)
@@ -1028,7 +1041,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                     pass
                     #for value in case:
                     #    .gridResult.InsertNextTuple3(value)  # x,y,z
-                print "value_range", gridResult.GetValueRange()
+                print("value_range", gridResult.GetValueRange())
 
             print("max=%g min=%g norm=%g\n" % (max_value, min_value, norm_value))
 
@@ -1074,7 +1087,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             #elif location == 'nodal' and self.is_nodal:
                 if ncells:
                     cell_data = self.grid.GetCellData()
-                    print dir(cell_data)
+                    print(dir(cell_data))
                     cell_data.Reset()
                 if vectorSize == 1:
                     self.log_info("***nodal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
@@ -1082,7 +1095,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 else:
                     self.log_info("***nodal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                     self.grid.GetPointData().SetScalars(gridResult)
-                #print "***nodal skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label)
+                #print("***nodal skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label))
             else:
                 self.log_info("***D%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
                 self.scalarBar.SetVisibility(False)
@@ -1134,7 +1147,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         :param max_value:   the red value
         :param data_format: '%g','%f','%i', etc.
         """
-        print "UpdateScalarBar min=%s max=%s norm=%s" % (min_value, max_value, norm_value)
+        print("UpdateScalarBar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
         self.colorFunction.RemoveAllPoints()
         self.colorFunction.AddRGBPoint(min_value, 0.0, 0.0, 1.0)  # blue
         self.colorFunction.AddRGBPoint(max_value, 1.0, 0.0, 0.0)  # red
@@ -1162,7 +1175,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
     def update_camera(self, code):
         camera = self.GetCamera()
-        print "code =", code
+        print("code =", code)
         if code == '+x':  # set x-axis
             camera.SetFocalPoint(0., 0., 0.)
             camera.SetViewUp(0., 0., 1.)
