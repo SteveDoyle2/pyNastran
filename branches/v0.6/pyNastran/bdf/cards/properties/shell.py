@@ -189,7 +189,7 @@ class CompositeShellProperty(ShellProperty):
     def Material(self, iply):
         """
         Gets the material of the :math:`i^{th}` ply (not the ID unless
-        it's not cross-referenced)
+        it is not cross-referenced).
 
         :param self: the PCOMP/PCOMPG object
         :param iply: the ply ID (starts from 0)
@@ -211,7 +211,8 @@ class CompositeShellProperty(ShellProperty):
 
     def sout(self, iply):
         """
-        Gets the ply angle of the :math:`i^{th}` ply (not the ID)
+        Gets the the flag identifying stress/strain outpur of the
+        :math:`i^{th}` ply (not the ID).  default='NO'.
 
         :param self: the PCOMP/PCOMPG object
         :param iply: the ply ID (starts from 0)
