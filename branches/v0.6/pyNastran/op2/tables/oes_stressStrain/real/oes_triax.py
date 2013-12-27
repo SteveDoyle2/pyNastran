@@ -186,10 +186,9 @@ class TriaxStressObject(StressObject):
             msg.append('\n')
 
         msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return(''.join(msg), pageNum)
+        f.write(''.join(msg))
+        msg = ['']
+        return pageNum
 
     def _write_f06_transient(self, header, pageStamp,
                           pageNum=1, f=None, is_mag_phase=False):
@@ -221,11 +220,10 @@ class TriaxStressObject(StressObject):
                 msg.append('\n')
 
             msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return(''.join(msg), pageNum - 1)
+        return pageNum - 1
 
 
 class TriaxStrainObject(StrainObject):
@@ -415,8 +413,7 @@ class TriaxStrainObject(StrainObject):
                 msg.append('\n')
 
             msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return(''.join(msg), pageNum - 1)
+        return pageNum - 1

@@ -294,8 +294,8 @@ class CompositePlateStressObject(StressObject):
             triMsg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
 
-        msg = ''.join(quadMsg + triMsg)
-        return (msg, pageNum)
+        f.write(''.join(quadMsg + triMsg))
+        return pageNum
 
     def _write_f06_transient(self, header, pageStamp,
                              pageNum=1, f=None, is_mag_phase=False):
@@ -368,8 +368,10 @@ class CompositePlateStressObject(StressObject):
                 triMsg.append(pageStamp + str(pageNum) + '\n')
                 pageNum += 1
             msg += quadMsg + triMsg
+            f.write(''.join(msg))
+            msg = ['']
 
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
 
 class CompositePlateStrainObject(StrainObject):
@@ -602,8 +604,8 @@ class CompositePlateStrainObject(StrainObject):
             triMsg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
 
-        msg = ''.join(quadMsg + triMsg)
-        return (msg, pageNum)
+        f.write(''.join(quadMsg + triMsg))
+        return pageNum
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.isVonMises():
@@ -674,5 +676,7 @@ class CompositePlateStrainObject(StrainObject):
                 triMsg.append(pageStamp + str(pageNum) + '\n')
                 pageNum += 1
             msg += quadMsg + triMsg
+            f.write(''.join(msg))
+            msg = ['']
 
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1

@@ -91,9 +91,9 @@ class RealElementsStressStrain(object):
         #print "nTotal=%s dataFormat=%s len(data)=%s" % (nTotal,dataFormat,len(self.data))
         dataFormat = bytes(dataFormat)
 
+        nelements = len(self.data) // nTotal
         n = 0
-        nEntries = len(self.data) // nTotal
-        for i in xrange(nEntries):
+        for i in xrange(nelements):
             eData = self.data[n:n + nTotal]
             out = unpack(dataFormat, eData)
             #print "out = ",out
@@ -286,26 +286,26 @@ class RealElementsStressStrain(object):
         #term      = self.data[0:4] CEN/
         #self.data = self.data[4:]
         #print "*****"
-        ElementType = self.get_element_type(self.element_type)
+        element_type = self.get_element_type(self.element_type)
         nNodes = 1  # this is a minimum, it will be reset later
-        nNodesExpected = 1
+        nnodes_expected = 1
         #assert self.num_wide in [109,151,193],'invalid num_wide...num_wide=%s' % self.num_wide
 
         # overly complicated way to get the element type
         # so we can figure out how many elements there are
         if self.element_type == 39: # CTETRA
-            nNodesExpected = 5
+            nnodes_expected = 5
         elif self.element_type == 67: # CPENTA
-            nNodesExpected = 7
+            nnodes_expected = 7
         elif self.element_type == 68: # CHEXA
-            nNodesExpected = 9
+            nnodes_expected = 9
         else:
             msg = ('not supported....EType=%s eType=%s nNodes=%s'
-                   'num_wide=%s' % (ElementType, self.element_type,
+                   'num_wide=%s' % (element_type, self.element_type,
                                    nNodes, self.num_wide))
             raise NotImplementedError(msg)
 
-        ntotal = 16 + 84 * nNodesExpected
+        ntotal = 16 + 84 * nnodes_expected
         nelements = len(self.data) // ntotal
 
         ibase = 0
@@ -319,7 +319,7 @@ class RealElementsStressStrain(object):
             assert nNodes < 21,  self.print_block(self.data[ibase:ibase+16])
 
             ibase += 16
-            for nodeID in xrange(nNodesExpected):  # nodes pts, +1 for centroid (???)
+            for nodeID in xrange(nnodes_expected):  # nodes pts, +1 for centroid (???)
                 out = unpack(b'i20f',self.data[ibase:ibase + 84]) # 4*21 = 84
                 (grid_device, sxx, sxy, s1, a1, a2, a3, pressure, svm,
                               syy, syz, s2, b1, b2, b3,
@@ -331,10 +331,10 @@ class RealElementsStressStrain(object):
                     #grid = (grid_device - device_code) // 10
                     grid = grid_device
 
-                #print "%s eid=%s cid=%s grid=%s sxx=%-6i txy=%-5i s1=%-6i a1=%i a2=%i a3=%i press=%i vm=%s" % (element_type,eid,cid,grid,sxx,sxy,s1,a1,a2,a3,pressure,svm)
-                #print "%s eid=%s cid=%s grid=%s syy=%-6i tyz=%-5i s2=%-6i b1=%i b2=%i b3=%i"                % (element_type,eid,cid,grid,syy,syz,s2,b1,b2,b3)
-                #print "%s eid=%s cid=%s grid=%s szz=%-6i txz=%-5i s3=%-6i c1=%i c2=%i c3=%i"                % (element_type,eid,cid,grid,szz,sxz,s3,c1,c2,c3)
-                #print ""
+                #print("%s eid=%s cid=%s grid=%s sxx=%-6i txy=%-5i s1=%-6i a1=%i a2=%i a3=%i press=%i vm=%s" % (element_type,eid,cid,grid,sxx,sxy,s1,a1,a2,a3,pressure,svm))
+                #print("%s eid=%s cid=%s grid=%s syy=%-6i tyz=%-5i s2=%-6i b1=%i b2=%i b3=%i"                % (element_type,eid,cid,grid,syy,syz,s2,b1,b2,b3))
+                #print("%s eid=%s cid=%s grid=%s szz=%-6i txz=%-5i s3=%-6i c1=%i c2=%i c3=%i"                % (element_type,eid,cid,grid,szz,sxz,s3,c1,c2,c3))
+                #print("")
 
                 #smax = max(s1,s2,s3)
                 #smin = min(s1,s2,s3)
@@ -343,11 +343,12 @@ class RealElementsStressStrain(object):
                 bCos = []
                 cCos = []
                 if nodeID == 0:
-                    self.obj.add_new_eid(ElementType, cid, dt, eid2, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
+                    self.obj.add_new_eid(element_type, cid, dt, eid2, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
                 else:
                     self.obj.add(dt, eid2, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
                 ibase += 84
         n = nelements * ntotal
+        assert n == ibase, 'n=%s ibase=%s' % (n, ibase)
         self.data = self.data[n:]
 
     def OES_CTRIA3_74(self):
@@ -355,8 +356,7 @@ class RealElementsStressStrain(object):
         DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR,MINOR,VONMISES
         stress is extracted at the centroid
         """
-        assert self.num_wide == 17, ('invalid num_wide...num_wide=%s'
-                                    % self.num_wide)
+        assert self.num_wide == 17, 'invalid num_wide...num_wide=%s' % self.num_wide
 
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()

@@ -153,7 +153,8 @@ class ComplexRodStressObject(StressObject):
                 tuple(out[-1]))
             msg.append(outLine)
         msg.append(pageStamp + str(pageNum) + '\n')
-        return(''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         return 'ComplexRodStress _write_f06_transient not implemented...', pageNum
@@ -188,8 +189,9 @@ class ComplexRodStressObject(StressObject):
                     tuple(out[-1]))
                 msg.append(outLine)
             msg.append(pageStamp + str(pageNum) + '\n')
+            f.write(''.join(msg))
             pageNum += 1
-        return(''.join(msg), pageNum - 1)
+        return pageNum - 1
 
 
 class ComplexRodStrainObject(StrainObject):
@@ -305,7 +307,8 @@ class ComplexRodStrainObject(StrainObject):
                 tuple(out[-1]))
             msg.append(outLine)
         msg.append(pageStamp + str(pageNum) + '\n')
-        return(''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         return 'ComplexRodStress _write_f06_transient not implemented...', pageNum
@@ -339,4 +342,5 @@ class ComplexRodStrainObject(StrainObject):
                 msg.append(outLine)
             msg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
-        return(''.join(msg), pageNum - 1)
+            f.write(''.join(msg))
+        return pageNum - 1

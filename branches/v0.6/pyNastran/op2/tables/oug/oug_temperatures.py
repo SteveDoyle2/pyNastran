@@ -164,18 +164,15 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
                 msg += header + words
                 msg += self.print_temp_lines(temperatures)
                 msg.append(pageStamp + str(pageNum) + '\n')
-                if f is not None:
-                    f.write(''.join(msg))
-                    msg = ['']
+                f.write(''.join(msg))
+                msg = ['']
                 pageNum += 1
-            return(''.join(msg), pageNum - 1)  # transient
+            return pageNum - 1  # transient
 
         msg += self.print_temp_lines(self.temperatures)
         msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return(''.join(msg), pageNum)  # static
+        f.write(''.join(msg))
+        return pageNum  # static
 
     def print_temp_lines(self, temperatures):
         msg = []

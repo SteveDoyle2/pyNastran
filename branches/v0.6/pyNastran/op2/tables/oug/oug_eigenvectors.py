@@ -105,11 +105,10 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
             msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
 
 class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, thermal=0
@@ -220,8 +219,10 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
             msg.append(pageStamp + str(pageNum) + '\n')
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
 
 class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_code=0, thermal=0
@@ -291,8 +292,7 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
                 msg.append('%14s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
             msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1

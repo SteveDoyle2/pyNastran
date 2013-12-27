@@ -122,10 +122,8 @@ class gridPointForcesObject(scalarObject):
             zero = '0'
 
         msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None):
         msg = header + ['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
@@ -154,11 +152,10 @@ class gridPointForcesObject(scalarObject):
                 zero = '0'
 
             msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
 
 class complexGridPointForcesObject(scalarObject):

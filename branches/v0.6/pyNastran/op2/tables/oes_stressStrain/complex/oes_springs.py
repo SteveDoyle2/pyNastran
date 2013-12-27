@@ -4,6 +4,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from ..real.oes_objects import StressObject, StrainObject  # ,array
 #from oes_complexObjects import complexStressObject,complexStrainObject
 
+from pyNastran.f06.f06_formatting import writeImagFloats13E # writeFloats13E
+
 complexStressObject = StressObject
 complexStrainObject = StrainObject
 
@@ -134,11 +136,10 @@ class ComplexCelasStressObject(complexStressObject):
                     i = -1
                 i += 1
             msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def __reprTransient__(self):
         msg = '---CELASx STRESSES---\n'

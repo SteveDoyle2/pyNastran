@@ -179,8 +179,8 @@ class NonlinearQuadObject(StressObject):
             msg += header + e + msgStart + msgT[eid]
             msg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
-
-        return (''.join(msg), pageNum - 1)
+        f.write(''.join(msg))
+        return pageNum - 1
 
 
 class HyperelasticQuadObject(StressObject):
@@ -290,8 +290,8 @@ class HyperelasticQuadObject(StressObject):
                         msg.append('0%8i %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' % (eid, gauss, i + 1, oxx[i], oyy[i], txy[i], angle[i], majorP[i], minorP[i]))
                     else:
                         msg.append(' %8s %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' % ('', '', i + 1, oxx[i], oyy[i], txy[i], angle[i], majorP[i], minorP[i]))
-
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum
 
 
 class NonlinearRodObject(StressObject):
@@ -403,5 +403,5 @@ class NonlinearRodObject(StressObject):
         for eid, e in sorted(msgE.iteritems()):
             msg += header + [e] + msgStart + msgT[eid]
             msg.append(pageStamp + str(pageNum))
-
-        return (''.join(msg), pageNum)
+        f.write(''.join(msg))
+        return pageNum

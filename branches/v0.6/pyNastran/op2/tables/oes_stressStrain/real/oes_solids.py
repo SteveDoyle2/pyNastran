@@ -390,8 +390,8 @@ class SolidStressObject(StressObject):
                 'CPENTA', 6, pentaEids, header, pentaMsg, f)
             msg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
-
-        return (''.join(msg), pageNum - 1)
+        f.write(''.join(msg))
+        return pageNum - 1
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         msg = []
@@ -414,7 +414,8 @@ class SolidStressObject(StressObject):
                                                   6, pentaEids, dt, header, pentaMsg, f)
                 msg.append(pageStamp + str(pageNum) + '\n')
                 pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        f.write(''.join(msg))
+        return pageNum - 1
 
     def writeElement(self, eType, nNodes, eids, header, tetraMsg, f=None):
         msg = header + tetraMsg
@@ -903,7 +904,8 @@ class SolidStrainObject(StrainObject):
             msg.append(pageStamp + str(pageNum) + '\n')
             pageNum += 1
 
-        return (''.join(msg), pageNum - 1)
+        f.write(''.join(msg))
+        return pageNum - 1
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         msg = []
@@ -927,7 +929,8 @@ class SolidStrainObject(StrainObject):
                 msg.append(pageStamp + str(pageNum) + '\n')
                 pageNum += 1
 
-        return (''.join(msg), pageNum - 1)
+        f.write(''.join(msg))
+        return pageNum - 1
 
     def writeElement(self, eType, nNodes, eids, header, tetraMsg, f=None):
         msg = header + tetraMsg

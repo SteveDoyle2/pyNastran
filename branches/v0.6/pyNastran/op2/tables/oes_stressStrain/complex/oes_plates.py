@@ -368,12 +368,11 @@ class ComplexPlateStressObject(StressObject):
                     raise NotImplementedError('eType = |%r|' %
                                               (eType))  # CQUAD8, CTRIA6
                 msg.append(pageStamp + str(pageNum) + '\n')
-                if f is not None:
-                    f.write(''.join(msg))
-                    msg = ['']
+                f.write(''.join(msg))
+                msg = ['']
                 pageNum += 1
 
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if is_mag_phase:
@@ -473,9 +472,8 @@ class ComplexPlateStressObject(StressObject):
                                 msg.append(out)
                             msg.append(pageStamp + str(pageNum) + '\n')
                             pageNum += 1
-                            if f is not None:
-                                f.write(''.join(msg))
-                                msg = ['']
+                            f.write(''.join(msg))
+                            msg = ['']
                     else:
                         for dt in dts:
                             header[1] = ' %s = %10.4E\n' % (self.data_code[
@@ -486,9 +484,8 @@ class ComplexPlateStressObject(StressObject):
                                 msg.append(out)
                             msg.append(pageStamp + str(pageNum) + '\n')
                             pageNum += 1
-                            if f is not None:
-                                f.write(''.join(msg))
-                                msg = ['']
+                            f.write(''.join(msg))
+                            msg = ['']
                 elif eType in ['CTRIA3']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
@@ -500,9 +497,8 @@ class ComplexPlateStressObject(StressObject):
                             msg.append(out)
                         msg.append(pageStamp + str(pageNum) + '\n')
                         pageNum += 1
-                        if f is not None:
-                            f.write(''.join(msg))
-                            msg = ['']
+                        f.write(''.join(msg))
+                        msg = ['']
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
@@ -513,9 +509,8 @@ class ComplexPlateStressObject(StressObject):
                             msg.append(out)
                         msg.append(pageStamp + str(pageNum) + '\n')
                         pageNum += 1
-                        if f is not None:
-                            f.write(''.join(msg))
-                            msg = ['']
+                        f.write(''.join(msg))
+                        msg = ['']
                 elif eType in ['CQUAD8']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
@@ -526,17 +521,15 @@ class ComplexPlateStressObject(StressObject):
                             msg.append(out)
                         msg.append(pageStamp + str(pageNum) + '\n')
                         pageNum += 1
-                        if f is not None:
-                            f.write(''.join(msg))
-                            msg = ['']
+                        f.write(''.join(msg))
+                        msg = ['']
                 else:
                     raise NotImplementedError('eType = |%r|' %
                                               (eType))  # CQUAD8, CTRIA6
-                if f is not None:
-                    f.write(''.join(msg))
-                    msg = ['']
+                f.write(''.join(msg))
+                msg = ['']
 
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def writeF06_Quad4_Bilinear(self, eid, n, is_mag_phase):
         msg = ''
@@ -972,12 +965,11 @@ class ComplexPlateStrainObject(StrainObject):
 
                 msg.append(out)
                 msg.append(pageStamp + str(pageNum) + '\n')
-                if f is not None:
-                    f.write(''.join(msg))
-                    msg = ['']
+                f.write(''.join(msg))
+                msg = ['']
                 pageNum += 1
 
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.isVonMises():
@@ -1057,9 +1049,8 @@ class ComplexPlateStrainObject(StrainObject):
                                 out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4, is_mag_phase)
                                 msg.append(out)
                             msg.append(pageStamp + str(pageNum) + '\n')
-                            if f is not None:
-                                f.write(''.join(msg))
-                                msg = ['']
+                            f.write(''.join(msg))
+                            msg = ['']
                             pageNum += 1
                     else:
                         for dt in dts:
@@ -1069,9 +1060,8 @@ class ComplexPlateStrainObject(StrainObject):
                                 out = self.writeF06_Tri3Transient(dt, eid, is_mag_phase)
                                 msg.append(out)
                             msg.append(pageStamp + str(pageNum) + '\n')
-                            if f is not None:
-                                f.write(''.join(msg))
-                                msg = ['']
+                            f.write(''.join(msg))
+                            msg = ['']
                             pageNum += 1
                 elif eType in ['CTRIA3']:
                     for dt in dts:
@@ -1082,9 +1072,8 @@ class ComplexPlateStrainObject(StrainObject):
                                                               eid, is_mag_phase)
                             msg.append(out)
                         msg.append(pageStamp + str(pageNum) + '\n')
-                        if f is not None:
-                            f.write(''.join(msg))
-                            msg = ['']
+                        f.write(''.join(msg))
+                        msg = ['']
                         pageNum += 1
                 elif eType in ['CQUAD8']:
                     for dt in dts:
@@ -1094,9 +1083,8 @@ class ComplexPlateStrainObject(StrainObject):
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 5, is_mag_phase)
                             msg.append(out)
                         msg.append(pageStamp + str(pageNum) + '\n')
-                        if f is not None:
-                            f.write(''.join(msg))
-                            msg = ['']
+                        f.write(''.join(msg))
+                        msg = ['']
                         pageNum += 1
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for dt in dts:
@@ -1106,14 +1094,13 @@ class ComplexPlateStrainObject(StrainObject):
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3, is_mag_phase)
                             msg.append(out)
                         msg.append(pageStamp + str(pageNum) + '\n')
-                        if f is not None:
-                            f.write(''.join(msg))
-                            msg = ['']
+                        f.write(''.join(msg))
+                        msg = ['']
                         pageNum += 1
                 else:
-                    raise NotImplementedError('eType = |%r|' %
-                                              (eType))  # CQUAD8, CTRIA6
-        return (''.join(msg), pageNum - 1)
+                    raise NotImplementedError('eType = %r' %
+                                              eType)  # CQUAD8, CTRIA6
+        return pageNum - 1
 
     def writeF06_Quad4_Bilinear(self, eid, n, is_mag_phase):
         msg = ''

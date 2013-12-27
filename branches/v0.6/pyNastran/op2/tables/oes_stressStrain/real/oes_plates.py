@@ -566,11 +566,10 @@ class PlateStressObject(StressObject):
                     raise NotImplementedError('eType = |%r|' %
                                               (eType))  # CQUAD8, CTRIA6
                 msg.append(pageStamp + str(pageNum) + '\n')
-                if f is not None:
-                    f.write(''.join(msg))
-                    msg = ['']
+                f.write(''.join(msg))
+                msg = ['']
                 pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.isVonMises():
@@ -701,12 +700,10 @@ class PlateStressObject(StressObject):
                     raise NotImplementedError('eType = |%r|' % eType)  # CQUAD8, CTRIA6
 
                 msg.append(pageStamp + str(pageNum) + '\n')
-                if f is not None:
-                    f.write(''.join(msg))
-                    msg = ['']
+                f.write(''.join(msg))
+                msg = ['']
                 pageNum += 1
-
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def writeF06_Quad4_Bilinear(self, eid, n):
         msg = ''
@@ -1201,11 +1198,10 @@ class PlateStrainObject(StrainObject):
                                               eType)  # CQUAD8, CTRIA6
                 msg.append(out)
                 msg.append(pageStamp + str(pageNum) + '\n')
-                if f is not None:
-                    f.write(''.join(msg))
-                    msg = ['']
+                f.write(''.join(msg))
+                msg = ['']
                 pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.isVonMises():
@@ -1329,10 +1325,9 @@ class PlateStrainObject(StrainObject):
                 else:
                     raise NotImplementedError('eType = |%r|' %
                                               eType)  # CQUAD8, CTRIA6
-                if f is not None: # stream write the file to save memory
-                    f.write(''.join(msg))
-                    msg = ['']
-        return (''.join(msg), pageNum - 1)
+                f.write(''.join(msg))
+                msg = ['']
+        return pageNum - 1
 
     def writeF06_Quad4_Bilinear(self, eid, n):
         msg = ''
