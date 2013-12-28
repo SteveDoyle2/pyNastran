@@ -155,6 +155,9 @@ class CMASS2(PointMassElement):
         assert c1 is None or isinstance(c1, int), 'c1=%r' % c1
         assert c2 is None or isinstance(c2, int), 'c2=%r' % c2
 
+    def Eid(self):
+        return self.eid
+
     def nodeIDs(self):
         g1 = self.G1()
         g2 = self.G2()
@@ -245,6 +248,9 @@ class CMASS3(PointMassElement):
             self.s2 = data[3]
         assert self.s1 != self.s2
 
+    def Eid(self):
+        return self.eid
+
     def Mass(self):
         return self.pid.mass
 
@@ -299,6 +305,9 @@ class CMASS4(PointMassElement):
             self.s1 = data[2]
             self.s2 = data[3]
         assert self.s1 != self.s2
+
+    def Eid(self):
+        return self.eid
 
     def Mass(self):
         return self.mass
@@ -456,6 +465,9 @@ class CONM1(PointMassElement):
             m[5, 4] = m6e  # M65
             m[5, 5] = m6f  # M66
         self.massMatrix = m
+
+    def Eid(self):
+        return self.eid
 
     def nodeIDs(self):
         return [self.Nid()]

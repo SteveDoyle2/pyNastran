@@ -28,8 +28,9 @@ def is_same(value1, value2):
     """
     if is_string(value1) or value1 is None:
         return True if value1 == value2 else False
-    return True if (value1 == value2 or type(value1) == type(value2) and
-                    not isinf(value1) and allclose(value1, value2)) else False
+    if value1 == value2:
+        return True
+    return False
 
 
 def set_blank_if_default(value, default):

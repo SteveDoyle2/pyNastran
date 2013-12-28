@@ -362,18 +362,30 @@ class GetMethods(GetMethodsDeprecated):
     #--------------------
     # METHOD CARDS
     def Method(self, sid, msg=''):
-        return self.methods[sid]
+        try:
+            return self.methods[sid]
+        except KeyError:
+            raise KeyError('cannot find Method ID=%r.\n%s' % (sid, msg))
 
     def CMethod(self, sid, msg=''):
-        return self.cMethods[sid]
+        try:
+            return self.cMethods[sid]
+        except KeyError:
+            raise KeyError('cannot find CMethod ID=%r.\n%s' % (sid, msg))
 
     #--------------------
     # TABLE CARDS
     def Table(self, tid, msg=''):
-        return self.tables[tid]
+        try:
+            return self.tables[tid]
+        except KeyError:
+            raise KeyError('cannot find Table ID=%r.\n%s' % (tid, msg))
 
     def RandomTable(self, tid, msg=''):
-        return self.randomTables[tid]
+        try:
+            return self.randomTables[tid]
+        except KeyError:
+            raise KeyError('cannot find RandomTable ID=%r.\n%s' % (tid, msg))
 
     #--------------------
     # NONLINEAR CARDS

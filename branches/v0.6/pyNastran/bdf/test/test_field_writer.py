@@ -116,6 +116,9 @@ class TestFieldWriter(unittest.TestCase):
 
     def test_floats_positive_8(self):
         tol = 1.0
+        self.assertEqual(print_float_8(-.003607), '-.003607',
+                         print_float_8(-.003607))
+
         self.assertEqual(print_float_8(1.2), '     1.2',
                          print_float_8(1.2))
         self.assertEqual(print_float_8(0.5), '      .5',
@@ -132,10 +135,10 @@ class TestFieldWriter(unittest.TestCase):
         self.assertEqual(print_field(123456.28), '123456.3', 'g')
         self.assertEqual(print_field(1234567.25), '1234567.',
                          print_field(1234567.25))  # 1.2346+6
+        self.assertEqual(print_field(12345678.), '1.2346+7',
+                         '%r' % print_field(12345678.))
         self.assertEqual(print_field(
-            12345678.), '1.2346+7', '|%s|' % print_field(12345678.))
-        self.assertEqual(print_field(
-            123456789.), '1.2346+8', '|%s|' % print_field(12345678.))
+            123456789.), '1.2346+8', '%r' % print_field(12345678.))
 
         self.assertEqual(print_field(0.1), '      .1',
                          'A|%s|' % print_field(0.1))
@@ -244,6 +247,12 @@ class TestFieldWriter(unittest.TestCase):
                                      None, None,
                                      None,None,None,None,None,None,None,None,
                                      1, None]))
+
+    def test_same(self):
+        self.assertTrue(is_same(1.0, 1.000))
+        self.assertFalse(is_same(1.0, 1e-15 + 1))
+        self.assertTrue(is_same('MAT', 'MAT'))
+        self.assertFalse(is_same('MAT', 'MAT1'))
 
 def compare(valueIn):
     #print "a = |%s|" % valueIn
