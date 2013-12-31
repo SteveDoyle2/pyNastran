@@ -15,7 +15,7 @@ def parse_skipped_cards(fname):
             (oes,form,elementTypeNum) = fore.strip().split(' ')
             (element_type,eType) = elementTypeNum.strip().split('=')
             (msg,fpath) = aft.strip().split('-')
-            #print "fpath=|%s|" %(fpath)
+            #print("fpath=%r" % fpath)
             fpath = fpath.lstrip()[6:]
             eName = msg.split(' ')[0]
             #print "eName=%s eType=%s form=%s fpath=|%s|" %(eName,eType,form,fpath)

@@ -775,11 +775,10 @@ class ComplexTableObject(scalarObject):
             msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %
                        ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
-        msg.append(pageStamp + str(pageNum) + '\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg), pageNum)
+        msg.append(pageStamp % pageNum)
+        f.write(''.join(msg))
+        msg = ['']
+        return pageNum
 
     def _write_f06_transient_block(self, words, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if is_mag_phase:
@@ -812,12 +811,11 @@ class ComplexTableObject(scalarObject):
                     msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
                     msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
-            msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            msg.append(pageStamp % pageNum)
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return pageNum - 1
 
     def plot(self, nodeList=None, resultType='Translation', displayType='Real Imag', coord=3, markers=None,
              Title=None, hasLegend=True, Legend=None, xLabel=None, yLabel=None, alphaLegend=0.5):

@@ -111,6 +111,7 @@ class OP2(BDF,
          (.. seealso:: import logging)
         """
         BDF.__init__(self, debug=debug, log=log)
+        F06Writer.__init__(self)
         self.set_subcases()  # initializes the variables
 
         if op2FileName is None:
