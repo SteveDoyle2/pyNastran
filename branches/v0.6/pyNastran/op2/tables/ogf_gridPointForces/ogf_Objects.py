@@ -121,7 +121,7 @@ class gridPointForcesObject(scalarObject):
                 zero = ' '
             zero = '0'
 
-        msg.append(pageStamp + str(pageNum) + '\n')
+        msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum
 
@@ -151,7 +151,7 @@ class gridPointForcesObject(scalarObject):
                     zero = ' '
                 zero = '0'
 
-            msg.append(pageStamp + str(pageNum) + '\n')
+            msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             msg = ['']
             pageNum += 1

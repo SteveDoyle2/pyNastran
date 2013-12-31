@@ -33,7 +33,7 @@ class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
-        msg.append(pageStamp + str(pageNum) + '\n')
+        msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum
 
@@ -59,7 +59,7 @@ class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
                     [dx, dy, dz, rx, ry, rz] = vals2
                     msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
-            msg.append(pageStamp + str(pageNum) + '\n')
+            msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             msg = ['']
             pageNum += 1
@@ -130,7 +130,7 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
             msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
             msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '',           dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
-        msg.append(pageStamp + str(pageNum) + '\n')
+        msg.append(pageStamp % pageNum)
         return pageNum
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
@@ -188,12 +188,11 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
                     msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
                     msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
-            msg.append(pageStamp + str(pageNum) + '\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
+            msg.append(pageStamp % pageNum)
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return (''.join(msg), pageNum - 1)
+        return ageNum - 1
 
 
 class ThermalVector(TableObject):
@@ -219,7 +218,7 @@ class ThermalVector(TableObject):
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
-        msg.append(pageStamp + str(pageNum) + '\n')
+        msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum
 
@@ -245,7 +244,7 @@ class ThermalVector(TableObject):
                     [dx, dy, dz, rx, ry, rz] = vals2
                     msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
-            msg.append(pageStamp + str(pageNum) + '\n')
+            msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             msg = ['']
             pageNum += 1

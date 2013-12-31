@@ -186,8 +186,7 @@ class PlateStressObject(StressObject):
     def add_new_eid_sort1(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
         #print "***addNewEidTransient..."
         #msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
-        msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g major=%g vm=%g" % (
-            dt, eid, nodeID, fd, oxx, majorP, ovm)
+        msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g major=%g vm=%g" % (dt, eid, nodeID, fd, oxx, majorP, ovm)
         #print msg
         #if eid in self.ovmShear[dt]:
         #    return self.add(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
@@ -565,7 +564,7 @@ class PlateStressObject(StressObject):
                 else:
                     raise NotImplementedError('eType = |%r|' %
                                               (eType))  # CQUAD8, CTRIA6
-                msg.append(pageStamp + str(pageNum) + '\n')
+                msg.append(pageStamp % pageNum)
                 f.write(''.join(msg))
                 msg = ['']
                 pageNum += 1
@@ -655,58 +654,50 @@ class PlateStressObject(StressObject):
                 if eType in ['CQUAD4']:
                     if isBilinear:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (self.data_code[
-                                'name'], dt)
+                            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                             msg += header + msgPack
                             for eid in eids:
-                                out = self.writeF06_Quad4_BilinearTransient(dt,
-                                                                            eid, 4)
+                                out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4)
                                 msg.append(out)
                     else:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (
-                                self.data_code['name'], dt)
+                            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                             msg += header + msgPack
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid)
                                 msg.append(out)
                 elif eType in ['CTRIA3']:
                     for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (
-                            self.data_code['name'], dt)
+                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                         msg += header + msgPack
                         for eid in eids:
                             out = self.writeF06_Tri3Transient(dt, eid)
                             msg.append(out)
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (
-                            self.data_code['name'], dt)
+                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                         msg += header + msgPack
                         for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(
-                                dt, eid, 3)
+                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3)
                             msg.append(out)
                 elif eType in ['CQUAD8']:
                     for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'],
-                                                        dt)
+                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                         msg += header + msgPack
                         for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(
-                                dt, eid, 5)
+                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 5)
                             msg.append(out)
                 else:
                     raise NotImplementedError('eType = |%r|' % eType)  # CQUAD8, CTRIA6
 
-                msg.append(pageStamp + str(pageNum) + '\n')
+                msg.append(pageStamp % pageNum)
                 f.write(''.join(msg))
                 msg = ['']
                 pageNum += 1
         return pageNum - 1
 
     def writeF06_Quad4_Bilinear(self, eid, n):
-        msg = ''
+        msg = ['']
         k = self.oxx[eid].keys()
         k.remove('C')
         k.sort()
@@ -724,18 +715,17 @@ class PlateStressObject(StressObject):
                 ([angle], isAllZeros) = writeFloats8p4F([angle])
 
                 if nid == 'C' and iLayer == 0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, 'CEN/' + str(n), fd, oxx, oyy, txy, angle, major, minor, ovm)
+                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, 'CEN/' + str(n), fd, oxx, oyy, txy, angle, major, minor, ovm))
                 elif iLayer == 0:
-                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, oxx, oyy, txy, angle, major, minor, ovm)
+                    msg.append('   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, oxx, oyy, txy, angle, major, minor, ovm))
                 elif iLayer == 1:
-                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, oxx, oyy, txy, angle, major, minor, ovm)
+                    msg.append('   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, oxx, oyy, txy, angle, major, minor, ovm))
                 else:
                     raise Exception('Invalid option for cquad4')
-
-        return msg
+        return ''.join(msg)
 
     def writeF06_Quad4_BilinearTransient(self, dt, eid, n):
-        msg = ''
+        msg = ['']
         k = self.oxx[dt][eid].keys()
         k.remove('C')
         k.sort()
@@ -753,18 +743,17 @@ class PlateStressObject(StressObject):
                 ([angle], isAllZeros) = writeFloats8p4F([angle])
 
                 if nid == 'C' and iLayer == 0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, 'CEN/' + str(n), fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip())
+                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, 'CEN/' + str(n), fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip()))
                 elif iLayer == 0:
-                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip())
+                    msg.append('   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip()))
                 elif iLayer == 1:
-                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip())
+                    msg.append('   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip()))
                 else:
-                    #msg += '   %8s %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %('','',  fd,oxx,oyy,txy,angle,major,minor,ovm)
                     raise RuntimeError('Invalid option for cquad4')
-        return msg
+        return ''.join(msg)
 
     def writeF06_Tri3(self, eid):
-        msg = ''
+        msg = ['']
         oxxNodes = self.oxx[eid].keys()
         for nid in sorted(oxxNodes):
             for iLayer in xrange(len(self.oxx[eid][nid])):
@@ -780,13 +769,13 @@ class PlateStressObject(StressObject):
                 ([angle], isAllZeros) = writeFloats8p4F([angle])
 
                 if iLayer == 0:
-                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip())
+                    msg.append('0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip()))
                 else:
-                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip())
-        return msg
+                    msg.append('   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip()))
+        return ''.join(msg)
 
     def writeF06_Tri3Transient(self, dt, eid):
-        msg = ''
+        msg = ['']
         oxxNodes = self.oxx[dt][eid].keys()
         for nid in sorted(oxxNodes):
             for iLayer in xrange(len(self.oxx[dt][eid][nid])):
@@ -802,10 +791,10 @@ class PlateStressObject(StressObject):
                 ([angle], isAllZeros) = writeFloats8p4F([angle])
 
                 if iLayer == 0:
-                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm)
+                    msg.append('0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm))
                 else:
-                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm)
-        return msg
+                    msg.append('   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm))
+        return ''.join(msg)
 
 
 class PlateStrainObject(StrainObject):
@@ -936,7 +925,7 @@ class PlateStrainObject(StrainObject):
                         assert len(line) == 19, 'len(line)=%s' % len(line)
                         raise NotImplementedError()
                 else:
-                    msg = 'line=%s not supported...' % (line)
+                    msg = 'line=%s not supported...' % line
                     raise NotImplementedError(msg)
             return
         raise NotImplementedError('transient results not supported')
@@ -1181,23 +1170,26 @@ class PlateStrainObject(StrainObject):
                     if isBilinear:
                         for eid in eids:
                             out = self.writeF06_Quad4_Bilinear(eid, 4)
+                            msg.append(out)
                     else:
                         for eid in eids:
                             out = self.writeF06_Tri3(eid)
+                            msg.append(out)
                 elif eType in ['CTRIA3']:
                     for eid in eids:
                         out = self.writeF06_Tri3(eid)
+                        msg.append(out)
                 elif eType in ['CQUAD8']:
                     for eid in eids:
                         out = self.writeF06_Quad4_Bilinear(eid, 5)
+                        msg.append(out)
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for eid in eids:
                         out = self.writeF06_Quad4_Bilinear(eid, 3)
+                        msg.append(out)
                 else:
-                    raise NotImplementedError('eType = |%r|' %
-                                              eType)  # CQUAD8, CTRIA6
-                msg.append(out)
-                msg.append(pageStamp + str(pageNum) + '\n')
+                    raise NotImplementedError('eType = |%r|' % eType)  # CQUAD8, CTRIA6
+                msg.append(pageStamp % pageNum)
                 f.write(''.join(msg))
                 msg = ['']
                 pageNum += 1
@@ -1265,72 +1257,63 @@ class PlateStrainObject(StrainObject):
                       'CQUAD8', 'CQUADR']
         (typesOut, orderedETypes) = self.getOrderedETypes(validTypes)
 
-        msg = []
         dts = self.exx.keys()
         dts.sort()
         for eType in typesOut:
             eids = orderedETypes[eType]
             if eids:
+                msg = ['']
                 eids.sort()
                 eType = self.eType[eid]
                 if eType in ['CQUAD4']:
                     if isBilinear:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (
-                                self.data_code['name'], dt)
+                            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                             for eid in eids:
                                 out = self.writeF06_Quad4_BilinearTransient(dt,
                                                                             eid, 4)
                                 msg.append(out)
-                            msg.append(pageStamp + str(pageNum) + '\n')
+                            msg.append(pageStamp % pageNum)
                             pageNum += 1
                     else:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (
-                                self.data_code['name'], dt)
+                            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid)
                                 msg.append(out)
-                            msg.append(pageStamp + str(pageNum) + '\n')
+                            msg.append(pageStamp % pageNum)
                             pageNum += 1
                 elif eType in ['CTRIA3']:
                     for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'],
-                                                        dt)
+                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                         for eid in eids:
                             out = self.writeF06_Tri3Transient(dt, eid)
                             msg.append(out)
-                        msg.append(pageStamp + str(pageNum) + '\n')
+                        msg.append(pageStamp % pageNum)
                         pageNum += 1
                 elif eType in ['CQUAD8']:
                     for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'],
-                                                        dt)
+                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                         for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(
-                                dt, eid, 5)
+                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 5)
                             msg.append(out)
-                        msg.append(pageStamp + str(pageNum) + '\n')
+                        msg.append(pageStamp % pageNum)
                         pageNum += 1
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'],
-                                                        dt)
+                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                         for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(
-                                dt, eid, 3)
+                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3)
                             msg.append(out)
-                        msg.append(pageStamp + str(pageNum) + '\n')
+                        msg.append(pageStamp % pageNum)
                         pageNum += 1
                 else:
-                    raise NotImplementedError('eType = |%r|' %
-                                              eType)  # CQUAD8, CTRIA6
+                    raise NotImplementedError('eType = |%r|' % eType)  # CQUAD8, CTRIA6
                 f.write(''.join(msg))
-                msg = ['']
         return pageNum - 1
 
     def writeF06_Quad4_Bilinear(self, eid, n):
-        msg = ''
+        msg = ['']
         k = self.exx[eid].keys()
         k.remove('C')
         k.sort()
@@ -1348,17 +1331,17 @@ class PlateStrainObject(StrainObject):
                 ([angle], isAllZeros) = writeFloats8p4F([angle])
 
                 if nid == 'C' and iLayer == 0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, 'CEN/' + str(n), fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
+                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, 'CEN/' + str(n), fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
                 elif iLayer == 0:
-                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
+                    msg.append('   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
                 elif iLayer == 1:
-                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
+                    msg.append('   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
                 else:
                     raise RuntimeError('Invalid option for cquad4')
-        return msg
+        return ''.join(msg)
 
     def writeF06_Quad4_BilinearTransient(self, dt, eid, n):
-        msg = ''
+        msg = ['']
         k = self.exx[dt][eid].keys()
         k.remove('C')
         k.sort()
@@ -1377,17 +1360,17 @@ class PlateStrainObject(StrainObject):
                 ([angle], isAllZeros) = writeFloats8p4F([angle])
 
                 if nid == 'C' and iLayer == 0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, 'CEN/' + str(n), fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
+                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, 'CEN/' + str(n), fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
                 elif iLayer == 0:
-                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
+                    msg.append('   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
                 elif iLayer == 1:
-                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
+                    msg.append('   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
                 else:
                     raise RuntimeError('Invalid option for cquad4')
-        return msg
+        return ''.join(msg)
 
     def writeF06_Tri3(self, eid):
-        msg = ''
+        msg = ['']
         k = self.exx[eid].keys()
         for nid in sorted(k):
             for iLayer in xrange(len(self.exx[eid][nid])):
@@ -1403,13 +1386,13 @@ class PlateStrainObject(StrainObject):
                 ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
                 ([angle], isAllZeros) = writeFloats8p4F([angle])
                 if iLayer == 0:
-                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
+                    msg.append('0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
                 else:
-                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, exx, eyy, exy, angle, major, minor, evm.rstrip())
-        return msg
+                    msg.append('   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
+        return ''.join(msg)
 
     def writeF06_Tri3Transient(self, dt, eid):
-        msg = ''
+        msg = ['']
         exxNodes = self.exx[dt][eid]
         #k = exxNodes.keys()
         for nid in sorted(exxNodes):
@@ -1426,11 +1409,11 @@ class PlateStrainObject(StrainObject):
                 ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
                 ([angle], isAllZeros) = writeFloats8p4F([angle])
                 if iLayer == 0:
-                    msg += ('0  %6i   %13s     %13s  %13s  %13s   %8s   '
-                            '%13s   %13s  %-s\n' % (eid, fd, exx, eyy, exy,
+                    msg.append('0  %6i   %13s     %13s  %13s  %13s   %8s   '
+                               '%13s   %13s  %-s\n' % (eid, fd, exx, eyy, exy,
                                                     angle, major, minor, evm))
                 else:
-                    msg += ('   %6s   %13s     %13s  %13s  %13s   %8s   '
-                            '%13s   %13s  %-s\n' % ('', fd, exx, eyy, exy,
+                    msg.append('   %6s   %13s     %13s  %13s  %13s   %8s   '
+                               '%13s   %13s  %-s\n' % ('', fd, exx, eyy, exy,
                                                     angle, major, minor, evm))
-        return msg
+        return ''.join(msg)

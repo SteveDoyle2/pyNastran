@@ -33,7 +33,7 @@ class ForceVectorObject(TableObject):  # table_code=12, sort_code=0, thermal=0
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
-        msg.append(pageStamp + str(pageNum) + '\n')
+        msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum
 
@@ -59,7 +59,7 @@ class ForceVectorObject(TableObject):  # table_code=12, sort_code=0, thermal=0
                     [dx, dy, dz, rx, ry, rz] = vals2
                     msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
-            msg.append(pageStamp + str(pageNum) + '\n')
+            msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             msg = ['']
             pageNum += 1
@@ -134,7 +134,7 @@ class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_c
             msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
             msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '',           dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
-        msg.append(pageStamp + str(pageNum) + '\n')
+        msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum
 
@@ -174,7 +174,7 @@ class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_c
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
                 msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '',           dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
-            msg.append(pageStamp + str(pageNum) + '\n')
+            msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             msg = ['']
             pageNum += 1

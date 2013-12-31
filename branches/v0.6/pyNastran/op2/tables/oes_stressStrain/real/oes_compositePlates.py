@@ -288,10 +288,10 @@ class CompositePlateStressObject(StressObject):
             #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8LC
 
         if isQuad:
-            quadMsg.append(pageStamp + str(pageNum) + '\n')
+            quadMsg.append(pageStamp % pageNum)
             pageNum += 1
         if isTri:
-            triMsg.append(pageStamp + str(pageNum) + '\n')
+            triMsg.append(pageStamp % pageNum)
             pageNum += 1
 
         f.write(''.join(quadMsg + triMsg))
@@ -324,7 +324,6 @@ class CompositePlateStressObject(StressObject):
             isTri = False
             triWords = []
 
-        msg = []
         for dt, O11s in sorted(self.o11.iteritems()):
             quadMsg = []
             triMsg = []
@@ -362,14 +361,13 @@ class CompositePlateStressObject(StressObject):
                 #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8LC
 
             if isQuad:
-                quadMsg.append(pageStamp + str(pageNum) + '\n')
+                quadMsg.append(pageStamp % pageNum)
+                f.write(''.join(quadMsg))
                 pageNum += 1
             if isTri:
-                triMsg.append(pageStamp + str(pageNum) + '\n')
+                triMsg.append(pageStamp % pageNum)
+                f.write(''.join(triMsg))
                 pageNum += 1
-            msg += quadMsg + triMsg
-            f.write(''.join(msg))
-            msg = ['']
 
         return pageNum - 1
 
@@ -598,10 +596,10 @@ class CompositePlateStrainObject(StrainObject):
             #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8LC
 
         if isQuad:
-            quadMsg.append(pageStamp + str(pageNum) + '\n')
+            quadMsg.append(pageStamp % pageNum)
             pageNum += 1
         if isTri:
-            triMsg.append(pageStamp + str(pageNum) + '\n')
+            triMsg.append(pageStamp % pageNum)
             pageNum += 1
 
         f.write(''.join(quadMsg + triMsg))
@@ -633,7 +631,6 @@ class CompositePlateStrainObject(StrainObject):
             isTri = False
             triWords = []
 
-        msg = []
         for dt, e11s in sorted(self.e11.iteritems()):
             quadMsg = []
             triMsg = []
@@ -670,13 +667,13 @@ class CompositePlateStrainObject(StrainObject):
                     raise NotImplementedError('eType = |%r|' % (eType))
 
             if isQuad:
-                quadMsg.append(pageStamp + str(pageNum) + '\n')
+                quadMsg.append(pageStamp % pageNum)
                 pageNum += 1
+                f.write(''.join(quadMsg))
+            
             if isTri:
-                triMsg.append(pageStamp + str(pageNum) + '\n')
+                triMsg.append(pageStamp % pageNum)
                 pageNum += 1
-            msg += quadMsg + triMsg
-            f.write(''.join(msg))
-            msg = ['']
+                f.write(''.join(triMsg))
 
         return pageNum - 1

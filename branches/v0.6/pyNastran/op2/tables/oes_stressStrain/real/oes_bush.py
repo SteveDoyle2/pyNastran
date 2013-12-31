@@ -12,7 +12,6 @@ class BushStressObject(StressObject):
         self.eType = {}
 
         self.code = [self.format_code, self.sort_code, self.s_code]
-
         self.translations = {}
         self.rotations = {}
 
@@ -104,8 +103,7 @@ class BushStressObject(StressObject):
             vals = [tx, ty, tz, rx, ry, rz]
             (vals2, isAllZeros) = writeFloats13E(vals)
             [tx, ty, tz, rx, ry, rz] = vals2
-            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %-s\n' %
-                       (eid, tx, ty, tz, rx, ry, rz.rstrip()))
+            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %-s\n' % (eid, tx, ty, tz, rx, ry, rz.rstrip()))
 
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
@@ -127,8 +125,7 @@ class BushStressObject(StressObject):
                 vals = [tx, ty, tz, rx, ry, rz]
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 [tx, ty, tz, rx, ry, rz] = vals2
-                msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %-s\n' %
-                           (eid, tx, ty, tz, rx, ry, rz.rstrip()))
+                msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %-s\n' % (eid, tx, ty, tz, rx, ry, rz.rstrip()))
 
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
@@ -161,11 +158,9 @@ class BushStrainObject(StrainObject):
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.translations)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%s nelements=%s\n' % (self.__class__.__name__, ntimes, nelements))
         else:
-            msg.append('  imaginary type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
+            msg.append('  imaginary type=%s nelements=%s\n' % (self.__class__.__name__, nelements))
         msg.append('  eType, translations, rotations\n')
         return msg
 

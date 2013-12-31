@@ -163,14 +163,14 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
                 header[2] = dtLine
                 msg += header + words
                 msg += self.print_temp_lines(temperatures)
-                msg.append(pageStamp + str(pageNum) + '\n')
+                msg.append(pageStamp % pageNum)
                 f.write(''.join(msg))
                 msg = ['']
                 pageNum += 1
             return pageNum - 1  # transient
 
         msg += self.print_temp_lines(self.temperatures)
-        msg.append(pageStamp + str(pageNum) + '\n')
+        msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum  # static
 

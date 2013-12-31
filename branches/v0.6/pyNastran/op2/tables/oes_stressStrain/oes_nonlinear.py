@@ -177,7 +177,7 @@ class NonlinearQuadObject(StressObject):
         msg = []
         for eid, e in sorted(msgE.iteritems()):
             msg += header + e + msgStart + msgT[eid]
-            msg.append(pageStamp + str(pageNum) + '\n')
+            msg.append(pageStamp % pageNum)
             pageNum += 1
         f.write(''.join(msg))
         return pageNum - 1
@@ -402,6 +402,6 @@ class NonlinearRodObject(StressObject):
 
         for eid, e in sorted(msgE.iteritems()):
             msg += header + [e] + msgStart + msgT[eid]
-            msg.append(pageStamp + str(pageNum))
+            msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum

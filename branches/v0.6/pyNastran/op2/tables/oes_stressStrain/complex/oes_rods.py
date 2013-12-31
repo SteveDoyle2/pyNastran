@@ -152,7 +152,7 @@ class ComplexRodStressObject(StressObject):
             outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (
                 tuple(out[-1]))
             msg.append(outLine)
-        msg.append(pageStamp + str(pageNum) + '\n')
+        msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum
 
@@ -188,7 +188,7 @@ class ComplexRodStressObject(StressObject):
                 outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (
                     tuple(out[-1]))
                 msg.append(outLine)
-            msg.append(pageStamp + str(pageNum) + '\n')
+            msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             pageNum += 1
         return pageNum - 1
@@ -306,7 +306,7 @@ class ComplexRodStrainObject(StrainObject):
             outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (
                 tuple(out[-1]))
             msg.append(outLine)
-        msg.append(pageStamp + str(pageNum) + '\n')
+        msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum
 
@@ -340,7 +340,7 @@ class ComplexRodStrainObject(StrainObject):
                 outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E\n' % (
                     tuple(out[-1]))
                 msg.append(outLine)
-            msg.append(pageStamp + str(pageNum) + '\n')
+            msg.append(pageStamp % pageNum)
             pageNum += 1
             f.write(''.join(msg))
         return pageNum - 1

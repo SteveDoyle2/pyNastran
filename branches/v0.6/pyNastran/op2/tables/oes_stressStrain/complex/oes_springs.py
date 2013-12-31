@@ -135,7 +135,7 @@ class ComplexCelasStressObject(complexStressObject):
                     msg.append('%14i %13s / %13s  %14i %13s / %-s\n' % (elementID1, stress1Real, stress1Imag, elementID2, stress2Real, stress2Imag.rstrip()))
                     i = -1
                 i += 1
-            msg.append(pageStamp + str(pageNum) + '\n')
+            msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             msg = ['']
             pageNum += 1

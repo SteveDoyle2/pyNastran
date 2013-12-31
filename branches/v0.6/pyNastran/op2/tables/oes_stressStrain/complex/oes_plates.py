@@ -367,7 +367,7 @@ class ComplexPlateStressObject(StressObject):
                 else:
                     raise NotImplementedError('eType = |%r|' %
                                               (eType))  # CQUAD8, CTRIA6
-                msg.append(pageStamp + str(pageNum) + '\n')
+                msg.append(pageStamp % pageNum)
                 f.write(''.join(msg))
                 msg = ['']
                 pageNum += 1
@@ -470,7 +470,7 @@ class ComplexPlateStressObject(StressObject):
                             for eid in eids:
                                 out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4, is_mag_phase)
                                 msg.append(out)
-                            msg.append(pageStamp + str(pageNum) + '\n')
+                            msg.append(pageStamp % pageNum)
                             pageNum += 1
                             f.write(''.join(msg))
                             msg = ['']
@@ -482,7 +482,7 @@ class ComplexPlateStressObject(StressObject):
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid, is_mag_phase)
                                 msg.append(out)
-                            msg.append(pageStamp + str(pageNum) + '\n')
+                            msg.append(pageStamp % pageNum)
                             pageNum += 1
                             f.write(''.join(msg))
                             msg = ['']
@@ -495,7 +495,7 @@ class ComplexPlateStressObject(StressObject):
                             out = self.writeF06_Tri3Transient(dt,
                                                               eid, is_mag_phase)
                             msg.append(out)
-                        msg.append(pageStamp + str(pageNum) + '\n')
+                        msg.append(pageStamp % pageNum)
                         pageNum += 1
                         f.write(''.join(msg))
                         msg = ['']
@@ -507,7 +507,7 @@ class ComplexPlateStressObject(StressObject):
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3, is_mag_phase)
                             msg.append(out)
-                        msg.append(pageStamp + str(pageNum) + '\n')
+                        msg.append(pageStamp % pageNum)
                         pageNum += 1
                         f.write(''.join(msg))
                         msg = ['']
@@ -519,7 +519,7 @@ class ComplexPlateStressObject(StressObject):
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 8, is_mag_phase)
                             msg.append(out)
-                        msg.append(pageStamp + str(pageNum) + '\n')
+                        msg.append(pageStamp % pageNum)
                         pageNum += 1
                         f.write(''.join(msg))
                         msg = ['']
@@ -964,7 +964,7 @@ class ComplexPlateStrainObject(StrainObject):
                     raise NotImplementedError('eType = |%r|' % eType)  # CQUAD8, CTRIA6
 
                 msg.append(out)
-                msg.append(pageStamp + str(pageNum) + '\n')
+                msg.append(pageStamp % pageNum)
                 f.write(''.join(msg))
                 msg = ['']
                 pageNum += 1
@@ -1048,7 +1048,7 @@ class ComplexPlateStrainObject(StrainObject):
                             for eid in eids:
                                 out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4, is_mag_phase)
                                 msg.append(out)
-                            msg.append(pageStamp + str(pageNum) + '\n')
+                            msg.append(pageStamp % pageNum)
                             f.write(''.join(msg))
                             msg = ['']
                             pageNum += 1
@@ -1059,7 +1059,7 @@ class ComplexPlateStrainObject(StrainObject):
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid, is_mag_phase)
                                 msg.append(out)
-                            msg.append(pageStamp + str(pageNum) + '\n')
+                            msg.append(pageStamp % pageNum)
                             f.write(''.join(msg))
                             msg = ['']
                             pageNum += 1
@@ -1071,7 +1071,7 @@ class ComplexPlateStrainObject(StrainObject):
                             out = self.writeF06_Tri3Transient(dt,
                                                               eid, is_mag_phase)
                             msg.append(out)
-                        msg.append(pageStamp + str(pageNum) + '\n')
+                        msg.append(pageStamp % pageNum)
                         f.write(''.join(msg))
                         msg = ['']
                         pageNum += 1
@@ -1082,7 +1082,7 @@ class ComplexPlateStrainObject(StrainObject):
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 5, is_mag_phase)
                             msg.append(out)
-                        msg.append(pageStamp + str(pageNum) + '\n')
+                        msg.append(pageStamp % pageNum)
                         f.write(''.join(msg))
                         msg = ['']
                         pageNum += 1
@@ -1093,7 +1093,7 @@ class ComplexPlateStrainObject(StrainObject):
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3, is_mag_phase)
                             msg.append(out)
-                        msg.append(pageStamp + str(pageNum) + '\n')
+                        msg.append(pageStamp % pageNum)
                         f.write(''.join(msg))
                         msg = ['']
                         pageNum += 1

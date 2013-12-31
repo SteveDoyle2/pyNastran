@@ -1,4 +1,6 @@
-from numpy import array
+from math import sqrt
+
+from numpy import array, pi
 
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
@@ -89,7 +91,13 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
             msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
 
             if hasCycle:
-                msg.append('%16s = %13E         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', self.mode_cycle, iMode))
+                cycle = sqrt(abs(freq))/(2. * pi)
+                #if isinstance(self.mode_cycle, float):
+                    #msg.append('%16s = %13E         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', self.mode_cycle, iMode))
+                #else:
+                    #msg.append('%16s = %13i         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', self.mode_cycle, iMode))
+                msg.append('%16s = %13E         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', cycle, iMode))
+                #msg.append('%16s = %13E         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', self.mode_cycle, iMode))
             else:
                 msg.append('                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % (iMode))
 
@@ -104,7 +112,7 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
-            msg.append(pageStamp + str(pageNum) + '\n')
+            msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             msg = ['']
             pageNum += 1
@@ -218,7 +226,7 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
-            msg.append(pageStamp + str(pageNum) + '\n')
+            msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             msg = ['']
             pageNum += 1
@@ -291,7 +299,7 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
                 msg.append('%14s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
-            msg.append(pageStamp + str(pageNum) + '\n')
+            msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             msg = ['']
             pageNum += 1

@@ -32,7 +32,7 @@ class MPCForcesObject(TableObject):
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
-        msg.append(pageStamp + str(pageNum) + '\n')
+        msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum
 
@@ -56,7 +56,7 @@ class MPCForcesObject(TableObject):
                     [dx, dy, dz, rx, ry, rz] = vals2
                     msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
-            msg.append(pageStamp + str(pageNum) + '\n')
+            msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             pageNum += 1
         return pageNum - 1
@@ -98,7 +98,7 @@ class ComplexMPCForcesObject(ComplexTableObject):
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
-        msg.append(pageStamp + str(pageNum) + '\n')
+        msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum
 
@@ -126,7 +126,7 @@ class ComplexMPCForcesObject(ComplexTableObject):
                     msg.append('0%13i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, v1r, v2r, v3r, v4r, v5r, v6r.rstrip()))
                     msg.append(' %13i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, v1i, v2i, v3i, v4i, v5i, v6i.rstrip()))
 
-            msg.append(pageStamp + str(pageNum) + '\n')
+            msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             pageNum += 1
         return pageNum - 1
