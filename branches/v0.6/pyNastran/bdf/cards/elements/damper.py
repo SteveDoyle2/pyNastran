@@ -74,6 +74,23 @@ class CDAMP1(LineDamper):
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
 
+    def _verify(self, xref=True):
+        eid = self.Eid()
+        pid = self.Pid()
+        b = self.B()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        assert isinstance(b, float)
+        for i, nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+        if xref:
+            assert self.pid.type in ['PDAMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+
+    def Eid(self):
+        return self.eid
+
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
@@ -143,6 +160,19 @@ class CDAMP2(LineDamper):
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
 
+    def _verify(self, xref=True):
+        eid = self.Eid()
+        b = self.B()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(b, float)
+        for i, nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+
+    def Eid(self):
+        return self.eid
+
     def B(self):
         return self.b
 
@@ -189,6 +219,23 @@ class CDAMP3(LineDamper):
             nids = [data[2], data[3]]
         self.f(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
+
+    def _verify(self, xref=True):
+        eid = self.Eid()
+        pid = self.Pid()
+        b = self.B()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        assert isinstance(b, float)
+        for i, nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+        if xref:
+            assert self.pid.type in ['PDAMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+
+    def Eid(self):
+        return self.eid
 
     def B(self):
         return self.pid.b
@@ -238,6 +285,19 @@ class CDAMP4(LineDamper):
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
 
+    def _verify(self, xref=True):
+        eid = self.Eid()
+        b = self.B()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(b, float)
+        for i, nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+
+    def Eid(self):
+        return self.eid
+
     def B(self):
         return self.b
 
@@ -285,10 +345,30 @@ class CDAMP5(LineDamper):
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
 
+    def _verify(self, xref=True):
+        eid = self.Eid()
+        pid = self.Pid()
+        b = self.B()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        assert isinstance(b, float)
+        for i, nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+        if xref:
+            assert self.pid.type in ['PDAMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+
     def cross_reference(self, model):
         msg = ''
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+
+    def Eid(self):
+        return self.eid
+
+    def B(self):
+        return self.pid.b
 
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=True)
@@ -328,6 +408,23 @@ class CVISC(LineDamper):
             nids = data[2:4]
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 2
+
+    def _verify(self, xref=True):
+        eid = self.Eid()
+        pid = self.Pid()
+        b = self.B()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        assert isinstance(b, float)
+        for i, nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+        if xref:
+            assert self.pid.type in ['PVISC'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+
+    def Eid(self):
+        return self.eid
 
     def B(self):
         return self.pid.ce

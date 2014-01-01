@@ -56,12 +56,12 @@ class BDFMethodsDeprecated(object):
 
 def _mass_properties_mass_mp_func(element):
     try:
-        p = element.Centroid()
+        cg = element.Centroid()
         mass = element.Mass()
     except:
-        mass = 0.
         cg = array([0., 0., 0.])
-    return mass, p
+        mass = 0.
+    return mass, cg
 
 
 class BDFMethods(BDFMethodsDeprecated):
@@ -136,9 +136,8 @@ class BDFMethods(BDFMethodsDeprecated):
                     mass += m
                     cg += m * p
                 except:
-                    self.log.warning("could not get the inertia for element"
-                                     "...\n%s" % element)
-                    raise
+                    self.log.warning("could not get the inertia for element\n%s" % element)
+                    continue
             if mass:
                 cg = cg / mass
 
@@ -149,12 +148,20 @@ class BDFMethods(BDFMethodsDeprecated):
                     sym_axis += 'y'
                 if aero.IsSymmetricalXZ():
                     sym_axis += 'z'
-                if IsAntiSymmetricalXY():
+                if aero.IsAntiSymmetricalXY():
                     raise NotImplementedError('%s is antisymmetric about the XY plane' % str(aero))
-                if IsAntiSymmetricalXZ():
+                if aero.IsAntiSymmetricalXZ():
                     raise NotImplementedError('%s is antisymmetric about the XZ plane' % str(aero))
+        if sym_axis is not None:
+            print('Mass/MOI sym_axis = %r' % sym_axis)
+        
+        scale = 1.0
+        if 'WTMASS' in self.params:
+            scale = self.params['WTMASS'].values[0]
+            #print("mass scale =", scale)
 
         if None is not sym_axis and 'x' in sym_axis:
+            mass *= 2.0
             I[0] *= 2.0
             I[1] *= 2.0
             I[2] *= 2.0
@@ -163,6 +170,7 @@ class BDFMethods(BDFMethodsDeprecated):
             I[5] *= 2.0  # Iyz
             cg[0] = 0.0
         if None is not sym_axis and 'y' in sym_axis:
+            mass *= 2.0
             I[0] *= 2.0
             I[1] *= 2.0
             I[2] *= 2.0
@@ -171,6 +179,7 @@ class BDFMethods(BDFMethodsDeprecated):
             I[5] *= 0.0  # Iyz
             cg[1] = 0.0
         if None is not sym_axis and 'z' in sym_axis:
+            mass *= 2.0
             I[0] *= 2.0
             I[1] *= 2.0
             I[2] *= 2.0
@@ -178,6 +187,10 @@ class BDFMethods(BDFMethodsDeprecated):
             I[4] *= 0.0  # Ixz
             I[5] *= 0.0  # Iyz
             cg[2] = 0.0
+        
+        # these are strangely not included in the F06...
+        #mass *= scale
+        #I *= scale ** 2.0
         return (mass, cg, I)
 
 
@@ -209,7 +222,11 @@ class BDFMethods(BDFMethodsDeprecated):
         self.log.info("Creating %i-process pool!" % num_cpus)
 
         pool = mp.Pool(num_cpus)
-        result = pool.imap(_mass_properties_mass_mp_func, [(element) for element in self.elements.itervalues() if element.type not in ['CBUSH'] ])
+        result = pool.imap(_mass_properties_mass_mp_func, [(element) for element in self.elements.itervalues()
+                           if element.type not in ['CBUSH', 'CBUSH1D',
+                               'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                               'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+                           ]])
         #result = [_mass_properties_mass_mp_func(element) for element in self.elements.itervalues()]
 
         mass = zeros((nelements), 'float64')

@@ -118,7 +118,12 @@ class CHBDYE(ThermalElement):
         pass
 
     def _verify(self, xref=False):
-        pass
+        eid = self.Eid()
+        eid2 = self.Eid2()
+        pid = self.Pid()
+        assert isinstance(eid, int)
+        assert isinstance(eid2, int)
+        assert isinstance(pid, int)
 
     # def sideToEIDs(self, eid):
     #     sideIDs = self.sideMaps[eid.type][self.side]
@@ -128,6 +133,12 @@ class CHBDYE(ThermalElement):
     #     nodes = [enodes[id - 1] for id in xrange(len(eid.nodes))
     #              if id in sideIDs]
     #     return side
+
+    def Eid(self):
+        return self.eid
+
+    def Eid2(self):
+        return self.eid2
 
     def rawFields(self):
         list_fields = ['CHBDYE', self.eid, self.eid2, self.side,
@@ -199,13 +210,19 @@ class CHBDYG(ThermalElement):
             self.grids = data[6:14]
 
     def _verify(self, xref=False):
-        pass
+        eid = self.Eid()
+        pid = self.Pid()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
 
     def cross_reference(self, model):
         pass
         #msg = ' which is required by CHBDYG eid=%s' % self.eid
         #self.pid = model.Phbdy(self.pid)
         #self.grids
+
+    def Eid(self):
+        return self.eid
 
     def rawFields(self):
         list_fields = ['CHBDYG', self.eid, None, self.Type, self.iViewFront,
@@ -294,6 +311,15 @@ class CHBDYP(ThermalElement):
 
     def cross_reference(self, model):
         self.pid = model.Phbdy(self.pid)
+
+    def _verify(self, xref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+
+    def Eid(self):
+        return self.eid
 
     def rawFields(self):
         list_fields = ['CHBDYP', self.eid, self.Pid(), self.Type, self.iViewFront,

@@ -12,6 +12,7 @@ import traceback
 
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf import BDF, NastranMatrix
+from pyNastran.bdf.bdf_replacer import BDFReplacer
 from pyNastran.bdf.test.compare_card_content import compare_card_content
 
 import pyNastran.bdf.test
@@ -62,16 +63,20 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             #pass
         #except AttributeError:  # only temporarily uncomment this when running lots of tests
             #pass
-        #except SyntaxError:  # only temporarily uncomment this when running lots of tests
-            #pass
+        except SyntaxError:  # only temporarily uncomment this when running lots of tests
+            pass
         except SystemExit:
             sys.exit('sys.exit...')
         except:
             traceback.print_exc(file=sys.stdout)
             #raise
         print('-' * 80)
-        if not isPassed:
+        if isPassed:
+            sys.stderr.write(absFilename)
+        else:
+            sys.stderr.write('*' + absFilename)
             failedFiles.append(absFilename)
+        sys.stderr.write('\n')
 
     print('*' * 80)
     try:
@@ -83,15 +88,21 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
 
 
 def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False,
-            cid=None, meshForm='combined', isFolder=False, print_stats=False):
+            cid=None, meshForm='combined', isFolder=False, print_stats=False,
+            reject=False):
     bdfModel = str(bdfFilename)
-    print("bdfModel = %s" % (bdfModel))
+    print("bdfModel = %r" % bdfModel)
     if isFolder:
         bdfModel = os.path.join(test_path, folder, bdfFilename)
 
-    assert os.path.exists(bdfModel), '|%s| doesnt exist' % (bdfModel)
+    assert os.path.exists(bdfModel), '%r doesnt exist' % bdfModel
 
-    fem1 = BDF(debug=debug, log=None)
+    if reject:
+        fem1 = BDFReplacer(bdfModel + '.rej', debug=debug, log=None)
+    else:
+        fem1 = BDF(debug=debug, log=None)
+    
+    #print(type(fem1))
     fem1.log.info('starting fem1')
     sys.stdout.flush()
     fem2 = None
@@ -99,7 +110,7 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
     try:
         #print("xref = ", xref)
         (outModel) = run_fem1(fem1, bdfModel, meshForm, xref, punch, cid)
-        (fem2) = run_fem2(bdfModel, outModel, xref, punch, debug=debug, log=None)
+        (fem2) = run_fem2(bdfModel, outModel, xref, punch, reject, debug=debug, log=None)
         (diffCards) = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
 
     except KeyboardInterrupt:
@@ -108,8 +119,8 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
         pass
     #except AttributeError:  # only temporarily uncomment this when running lots of tests
         #pass
-    #except SyntaxError:  # only temporarily uncomment this when running lots of tests
-        #pass
+    except SyntaxError:  # only temporarily uncomment this when running lots of tests
+        pass
     #except AssertionError:  # only temporarily uncomment this when running lots of tests
         #pass
     except SystemExit:
@@ -152,10 +163,14 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, cid):
     return (outModel)
 
 
-def run_fem2(bdfModel, outModel, xref, punch, debug=False, log=None):
+def run_fem2(bdfModel, outModel, xref, punch, reject, debug=False, log=None):
     assert os.path.exists(bdfModel), bdfModel
     assert os.path.exists(outModel), outModel
-    fem2 = BDF(debug=debug, log=log)
+
+    if reject:
+        fem2 = BDFReplacer(bdfModel + '.rej', debug=debug, log=None)
+    else:
+        fem2 = BDF(debug=debug, log=None)
     fem2.log.info('starting fem2')
     sys.stdout.flush()
     try:
@@ -288,6 +303,11 @@ def get_element_stats(fem1, fem2):
                 raise
 
     fem1._verify_bdf()
+    
+    mass, cg, I = fem1.mass_properties(reference_point=None, sym_axis=None)
+    print("mass =", mass)
+    print("cg   =", cg)
+    print("I    =", I)
 
    # for (key, e) in sorted(fem1.elements.iteritems()):
    #     try:
@@ -355,49 +375,55 @@ def print_points(fem1, fem2):
 
 
 def main():
-    import argparse
+    from docopt import docopt
+    msg  = "Usage:\n"
+    msg += "  test_bdf [-q] [-x] [-p] [-c] BDF_FILENAME\n" # 
+    msg += "  test_bdf [-q] [-p] [-r] BDF_FILENAME\n" # 
+    #msg += "  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n" # 
+    msg += '  test_bdf -h | --help\n'
+    msg += '  test_bdf -v | --version\n'
+    msg += '\n'
 
-    ver = str(pyNastran.__version__)
-    parser = argparse.ArgumentParser(description='Tests to see if a BDF will '
-                                     'work with pyNastran.', add_help=True)
-    parser.add_argument('bdfFileName', metavar='bdfFileName', type=str,
-                        nargs=1, help='path to BDF/DAT file')
+    msg += "Positional Arguments:\n"
+    msg += "  BDF_FILENAME   path to BDF/DAT file\n"
+    msg += '\n'
+    
+    msg += "Options:\n"
+    msg += '  -q, --quiet    prints debug messages (default=False)\n'
+    msg += '  -x, --xref     disables cross-referencing and checks of the BDF.\n'
+    msg += '                  (default=False -> on)\n'
+    msg += '  -p, --punch    disables reading the executive and case control decks in the BDF\n'
+    msg += '                 (default=False -> reads entire deck)\n'
+    msg += '  -c, --check    disables BDF checks.  Checks run the methods on \n'
+    msg += '                 every element/property to test them.  May fails if a \n'
+    msg += '                 card is fully not supported (default=False).\n'
+    msg += '  -r, --reject   rejects all cards with the appropriate values applied;\n'
+    #msg += '  -o <VAR_VAL>, --openmdao <VAR_VAL>   rejects all cards with the appropriate values applied;\n'
+    #msg += '                 Uses the OpenMDAO %var syntax to replace it with value.\n'
+    #msg += '                 So test_bdf -r var1=val1 var2=val2\n'
 
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('-q', '--quiet', dest='quiet', action='store_true',
-                       help='Prints   debug messages (default=False)')
-    parser.add_argument('-x', '--xref', dest='xref', action='store_false',
-                       help='Disables cross-referencing and checks of the BDF')
-    parser.add_argument('-p', '--punch', dest='punch', action='store_true',
-                       help='Disables reading the executive and case control decks in the BDF')
-    parser.add_argument('-c', '--checks', dest='check', action='store_false',
-                       help='Disables BDF checks.  Checks run the methods on '
-                       'every element/property to test them.  May fails if a '
-                       'card is fully not supported.')
-    parser.add_argument('-v', '--version', action='version', version=ver,
-                       help="Shows pyNastran's version number and exits")
+    msg += '  -h, --help     show this help message and exit\n'
+    msg += "  -v, --version  show program's version number and exit\n"
 
     if len(sys.argv) == 1:
-        parser.print_help()
-        sys.exit()
-    args = parser.parse_args()
+        sys.exit(msg)
 
-    print("bdfFile     = %s" % args.bdfFileName[0])
-    print("punch       = %s" % args.punch)
-    print("xref        = %s" % args.xref)
-    print("check       = %s" % args.check)
-    print("debug       = %s" % (not(args.quiet)))
+    ver = str(pyNastran.__version__)
+    data = docopt(msg, version=ver)
+    #print("data", data)
 
-    xref = args.xref
-    punch = args.punch
-    check = args.check
-
-    debug = not(args.quiet)
-    bdf_filename = args.bdfFileName[0]
-
+    for key, value in sorted(data.iteritems()):
+        print("%-12s = %r" % (key.strip('--'), value))
+    
     import time
     t0 = time.time()
-    run_bdf('.', bdf_filename, debug=debug, xref=xref, check=check, punch=punch)
+    run_bdf('.', data['BDF_FILENAME'],
+                 debug=not(data['--quiet']),
+                 xref =not(data['--xref' ]),
+                 check=not(data['--check']),
+                 punch=data['--punch'],
+                 reject=not(data['--reject'])
+    )
     print("total time:  %.2f sec" % (time.time() - t0))
 
 

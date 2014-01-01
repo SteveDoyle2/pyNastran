@@ -19,7 +19,6 @@ from pyNastran.utils import list_print, is_string, object_attributes
 from pyNastran.utils.log import get_logger
 from pyNastran.utils.gui_io import load_file_dialog
 
-
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
                                           PRAC2D, PRAC3D, PCONEAX)
@@ -1248,6 +1247,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
     def add_card(self, card_lines, card_name, comment='', is_list=True):
         """
         Adds a card object to the BDF object.
+
         :param self:       the BDF object
         :param card_lines: the list of the card fields
          >>> ['GRID,1,2',]  # (is_list = False)
@@ -1285,6 +1285,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                                       else None for field in fields])
             card_obj = BDFCard(card)
 
+        if self._auto_reject:
+            self.reject_cards.append(card)
+            print('rejecting processed auto=rejected %s' % card)
+            return card_obj
+
         # function that gets by name the initialized object (from global scope)
         try:
             _get_cls = lambda name: globals()[name](card_obj, comment=comment)
@@ -1295,10 +1300,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             raise
         _cls = lambda name: globals()[name]
 
-        if self._auto_reject:
-            self.reject_cards.append(card)
-            print('rejecting processed auto=rejected %s' % card)
-            return card_obj
         try:
             # cards that have their own method add_CARDNAME to add them
             if card_name in ['LSEQ', 'PHBDY', 'AERO', 'AEROS', 'AEFACT',
@@ -1844,10 +1845,5 @@ def clean_empty_lines(lines):
 
 
 if __name__ == '__main__':
-    bdf = BDF()
-    import pyNastran
-    pkg_path = pyNastran.__path__[0]
-    bdfname = sys.argv[1]
-    #print "bdfname =", bdfname
-    bdf.read_bdf(bdfname)
-    bdf.write_bdf('fem.out.bdf')
+    from pyNastran.bdf.test.test_bdf import main
+    main()

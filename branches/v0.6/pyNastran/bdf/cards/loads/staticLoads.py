@@ -442,7 +442,13 @@ class Force(Load):
             normXYZ = norm(self.xyz)
             #mag = self.mag*normXYZ
             self.mag *= normXYZ
-            self.xyz = self.xyz / normXYZ
+            try:
+                self.xyz = self.xyz / normXYZ
+            except FloatingPointError:
+                msg = 'xyz = %s\n' % self.xyz
+                msg += 'normXYZ = %s\n' % normXYZ
+                msg += 'card =\n%s' % str(self)
+                raise FloatingPointError(msg)
 
     def transformLoad(self):
         #print("self.xyz = ",self.xyz)

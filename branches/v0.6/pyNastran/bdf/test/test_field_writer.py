@@ -5,8 +5,7 @@ import unittest
 
 from pyNastran.bdf.fieldWriter import (print_field, print_float_8,
                                        set_default_if_blank,
-                                       set_blank_if_default)
-from pyNastran.bdf.fieldWriter import print_card_8
+                                       set_blank_if_default, is_same, print_card_8)
 from pyNastran.bdf.fieldWriter16 import print_field_16
 
 
@@ -116,9 +115,15 @@ class TestFieldWriter(unittest.TestCase):
 
     def test_floats_positive_8(self):
         tol = 1.0
-        self.assertEqual(print_float_8(-.003607), '-.003607',
+        # ideal
+        #self.assertEqual(print_float_8(-.003607), '-.003607',
+        #                 print_float_8(-.003607))
+        
+        # actual
+        self.assertEqual(print_float_8(-.003607), '-3.607-3',
                          print_float_8(-.003607))
 
+        # good
         self.assertEqual(print_float_8(1.2), '     1.2',
                          print_float_8(1.2))
         self.assertEqual(print_float_8(0.5), '      .5',

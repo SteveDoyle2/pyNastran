@@ -327,7 +327,6 @@ class CTRIA3(TriShell):
         return stress, strain, F
 
     def Stiffness(self, model, node_ids, index0s, gravLoad, is3D, fnorm):
-
         assert is3D == True
 
         print("node_ids =", node_ids)
@@ -1588,7 +1587,7 @@ class CQUADR(QuadShell):
             #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid.type in ['PSHELL'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             t = self.Thickness()
             a,c,n = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t
