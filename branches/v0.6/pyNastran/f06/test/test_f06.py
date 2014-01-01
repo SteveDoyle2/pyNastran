@@ -49,7 +49,7 @@ def run_lots_of_files(files, debug=True, saveCases=True, skipFiles=[],
     sys.exit('-----done with all models %s/%s=%.2f%%  nFailed=%s-----' % (nPassed, nTotal, 100. * nPassed / float(nTotal), nTotal - nPassed))
 
 
-def run_f06(f06file, iSubcases=[], write_f06=True, printF06=False, debug=False,
+def run_f06(f06file, iSubcases=[], write_f06=True, print_f06=False, debug=False,
             stopOnFailure=True):
     isPassed = False
     stopOnFailure = False
@@ -59,19 +59,19 @@ def run_f06(f06file, iSubcases=[], write_f06=True, printF06=False, debug=False,
         #f06.set_subcases(iSubcases)  # TODO not supported
 
         #f06.readBDF(f06.bdf_filename,includeDir=None,xref=False)
-        f06.readF06()
+        f06.read_f06()
         #tableNamesF06 = parseTableNamesFromF06(f06.f06FileName)
         #tableNamesF06 = f06.getTableNamesFromF06()
+        assert write_f06 == True, write_f06
         if write_f06:
             (model, ext) = os.path.splitext(f06file)
-            f06.write_f06(model + '.f06.out')
+            f06.write_f06(model + '.test_f06.f06')
 
-        if printF06:
-            f06.print_results()
+        if print_f06:
+            print(f06.print_results())
         #print "subcases = ",f06.subcases
 
         #assert tableNamesF06==tableNamesF06,'tableNamesF06=%s tableNamesF06=%s' %(tableNamesF06,tableNamesF06)
-        pass
         #f06.caseControlDeck.sol = f06.sol
         #print f06.caseControlDeck.getF06Data()
         #print f06.print_results()
@@ -80,7 +80,7 @@ def run_f06(f06file, iSubcases=[], write_f06=True, printF06=False, debug=False,
     except KeyboardInterrupt:
         sys.stdout.flush()
         print_exc(file=sys.stdout)
-        sys.stderr.write('**file=%s\n' % (f06file))
+        sys.stderr.write('**file=%r\n' % f06file)
         sys.exit('keyboard stop...')
     #except AddNewElementError:
     #    raise
@@ -122,8 +122,8 @@ def run_f06(f06file, iSubcases=[], write_f06=True, printF06=False, debug=False,
     #    isPassed = True
     #except SyntaxError: # Param Parse:
     #    isPassed = True
-    except NotImplementedError:
-        isPassed = True
+    #except NotImplementedError:
+        #isPassed = True
     #except InvalidFieldError: # bad bdf field
     #    isPassed = True
     except:
@@ -133,46 +133,48 @@ def run_f06(f06file, iSubcases=[], write_f06=True, printF06=False, debug=False,
             raise
         else:
             isPassed = False
+    print "isPassed =", isPassed
     return isPassed
 
 
-def run_arg_parse():
-    import argparse
+def main():
+    from docopt import docopt
 
-    ver = str(pyNastran.__version__)
-    parser = argparse.ArgumentParser(description='Tests to see if an F06 will work with pyNastran.', add_help=True)  # ,version=ver)
-    parser.add_argument('f06FileName', metavar='f06FileName', type=str, nargs=1,
-                        help='path to F06 file')
-
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('-q', '--quiet', dest='quiet', action='store_true',
-                       help='Prints   debug messages (default=True)')
-    parser.add_argument('-f', '--write_f06', dest='write_f06',
-                        action='store_true', help='Writes the f06 to fem.f06.out')
-    parser.add_argument('-p', '--printF06', dest='printF06',
-                        action='store_true', help='Prints the F06 to the screen, slow & uses a lot of memory for large files')
-    parser.add_argument('-v', '--version', action='version', version=ver)
+    msg  = 'Tests to see if an F06 will work with pyNastran.\n'
+    msg += 'Usage:\n'
+    msg += '  f06.py [-f] [-p] [-q] F06_FILENAME'
+    msg += '  f06.py -h | --help\n'
+    msg += '  f06.py -v | --version\n'
+    msg += '\n'
+    msg += 'Positional Arguments:\n'
+    msg += '  F06_FILENAME         path to F06 file\n'
+    msg += '\n'
+    msg += 'Options:\n'
+    msg += '  -q, --quiet      prints debug messages (default=False)\n'
+    msg += '  -f, --write_f06  writes the f06 to fem.f06.out (default=True)\n'
+    msg += '  -p, --print_f06  prints objects to screen which can require lots of\n'
+    msg += '                    memory (default=True)\n'
+    msg += '  -h, --help       show this help message and exit\n'
+    msg += "  -v, --version    show program's version number and exit\n"
+   #msg += '  -z, --is_mag_phase      F06 Writer writes Magnitude/Phase instead of\n'
+   #msg += '                          Real/Imaginary (still stores Real/Imag)\n'
 
     if len(sys.argv) == 1:
-        parser.print_help()
-        sys.exit()
-    args = parser.parse_args()
-    print("f06FileName = %s" % (args.f06FileName[0]))
-    print("debug       = %s" % (not(args.quiet)))
+        sys.exit(msg)
 
-    debug = not(args.quiet)
-    write_f06 = args.write_f06
-    printF06 = args.printF06
-    f06FileName = args.f06FileName[0]
+    ver = str(pyNastran.__version__)
+    data = docopt(msg, version=ver)
+    
+    for key, value in sorted(data.iteritems()):
+        print("%-12s = %r" % (key.strip('--'), value))
 
-    return (f06FileName, write_f06, printF06, debug)
-
-
-def main():
-    (f06FileName, write_f06, printF06, debug) = run_arg_parse()
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
-    run_f06(f06FileName, write_f06=write_f06, printF06=printF06, debug=debug)
+    run_f06(data['F06_FILENAME'],
+            write_f06 = data['--write_f06'],
+            print_f06 = data['--print_f06'],
+            debug     = not(data['--quiet'])
+    )
 
 if __name__ == '__main__':  # f06
     main()

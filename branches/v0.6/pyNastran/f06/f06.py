@@ -2,6 +2,8 @@ import os
 import sys
 from itertools import izip
 
+from numpy import zeros
+
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import get_logger
 
@@ -20,7 +22,7 @@ from pyNastran.f06.f06Writer import F06Writer
 class F06Deprecated(object):
     def readF06(self):
         """... seealso::: read_f06"""
-        self.read_f06()
+        self.read_f06(self.f06_FileName)
 
 
 class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
@@ -35,12 +37,15 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
         .. seealso:: import logging
         """
+        self.card_count = {}
         self.f06FileName = f06FileName
-        if not os.path.exists(self.f06FileName):
-            msg = 'cant find F06FileName=|%s|\n%s' % (
-                self.f06FileName, print_bad_path(self.f06FileName))
+
+        self.f06_filename = self.f06FileName
+        if not os.path.exists(self.f06_filename):
+            msg = 'cant find f06_filename=%r\n%s' % (
+                self.f06FileName, print_bad_path(self.f06_filename))
             raise RuntimeError(msg)
-        self.infile = open(self.f06FileName, 'r')
+        self.infile = open(self.f06_filename, 'r')
         self.__initAlt__(debug, log)
 
         self.lineMarkerMap = {
@@ -112,6 +117,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
     def __initAlt__(self, debug=False, log=None):
         self.i = 0
+        self.pageNum = 1
         self.storedLines = []
 
         self.displacementsPSD = {}        # random
@@ -197,6 +203,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         # shear...not done
         self.shearStrain = {}
         self.shearStress = {}
+        self.shearForces = {}
 
         #-----------------------------------
         # GPSTRESS, GPFORCE
@@ -272,18 +279,140 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         #print self.disp[isubcase]
 
     def getGridWeight(self):  # .. todo:: not done
+        """
+         0-                                 REFERENCE POINT =        0
+         1-                                           M O
+         2- *  2.338885E+05  2.400601E-13 -7.020470E-15 -1.909968E-11  2.851745E+06 -5.229834E+07 *
+         3- *  2.400601E-13  2.338885E+05 -2.520547E-13 -2.851745E+06  2.151812E-10  2.098475E+08 *
+         4- * -7.020470E-15 -2.520547E-13  2.338885E+05  5.229834E+07 -2.098475E+08 -1.960403E-10 *
+         5- * -1.909968E-11 -2.851745E+06  5.229834E+07  2.574524E+10 -5.566238E+10 -4.054256E+09 *
+         6- *  2.851745E+06  2.151812E-10 -2.098475E+08 -5.566238E+10  2.097574E+11 -2.060162E+09 *
+         7- * -5.229834E+07  2.098475E+08 -1.960403E-10 -4.054256E+09 -2.060162E+09  2.336812E+11 *
+         8-                                           S
+         9-                      *  1.000000E+00  0.000000E+00  0.000000E+00 *
+        10-                      *  0.000000E+00  1.000000E+00  0.000000E+00 *
+        11-                      *  0.000000E+00  0.000000E+00  1.000000E+00 *
+        12-        DIRECTION
+        13-     MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.
+        14-             X            2.338885E+05     -8.166148E-17  2.236038E+02  1.219276E+01
+        15-             Y            2.338885E+05      8.972118E+02  9.200164E-16  1.219276E+01
+        16-             Z            2.338885E+05      8.972118E+02  2.236038E+02 -8.381786E-16
+        17-                                         I(S)
+        18-                    *  1.401636E+10  8.739690E+09  1.495636E+09 *
+                               *  8.739690E+09  2.144496E+10  1.422501E+09 *
+                               *  1.495636E+09  1.422501E+09  3.370946E+10 *
+                                                    I(Q)
+                               *  3.389001E+10                             *
+                               *                8.073297E+09               *
+                               *                              2.720748E+10 *
+                                                     Q
+                               * -3.599259E-02 -8.305739E-01  5.557441E-01 *
+                               * -8.850329E-02 -5.512702E-01 -8.296194E-01 *
+                               *  9.954254E-01 -7.904533E-02 -5.366689E-02 *
+        """
         line = ''
+        lines = []
         while 'PAGE' not in line:
-            line = self.infile.readline()[1:]
+            line = self.infile.readline()[1:].strip()
+            lines.append(line)
             self.i += 1
+        print '\n'.join(lines)
+        ref_point = lines[0].split('=')[1]
+        assert lines[1] == 'M O', lines[1]
+        
+        MO = zeros((6, 6), dtype='float64')
+        S  = zeros((3, 3), dtype='float64')
+
+        mass = zeros(3, dtype='float64')
+        cg = zeros((6, 6), dtype='float64')
+
+        IS = zeros((3, 3), dtype='float64')
+        IQ = zeros((3, 3), dtype='float64')
+        Q  = zeros((3, 3), dtype='float64')
+
+        #========================================
+        # MO
+        n = 2
+        for i in range(6):
+            line = lines[n + i][1:-1]  # get rid of the * characters
+            print line
+            sline = line.split()
+            for j in range(6):
+                MO[i, j] = sline[j]
+        print "MO =", MO
+        n += i + 1
+        
+        #========================================
+        # S
+        assert lines[n] == 'S', lines[n]
+        n += 1
+        for i in range(3):
+            line = lines[n + i][1:-1]  # get rid of the * characters
+            sline = line.split()
+            for j in range(3):
+                S[i, j] = sline[j]
+        print "S =", S
+        n += i + 1
+
+        #========================================
+        assert lines[n] == 'DIRECTION', lines[n]
+        n += 2
+        for i in range(3):
+            line = lines[n + i][1:-1]  # get rid of the * characters
+            sline = line.split()
+
+            mass[i] = sline[0]
+            for j in range(3):
+                cg[i, j] = sline[j + 1]
+                
+        print "mass =", mass
+        n += 3
+
+        #========================================
+        assert lines[n] == 'I(S)', lines[n]
+        n += 1
+        for i in range(3):
+            line = lines[n + i][1:-1]  # get rid of the * characters
+            sline = line.split()
+            for j in range(3):
+                IS[i, j] = sline[j]
+        print "IS =", IS
+        n += i + 1
+
+        #========================================
+        assert lines[n] == 'I(Q)', lines[n]
+        n += 1
+        for i in range(3):
+            line = lines[n + i][1:-1].strip()  # get rid of the * characters
+            IQ[i, i] = sline[i]
+        print "IQ =", IQ
+        n += i + 1
+
+        #========================================
+        # S
+        assert lines[n] == 'Q', lines[n]
+        n += 1
+        for i in range(3):
+            line = lines[n + i][1:-1]  # get rid of the * characters
+            sline = line.split()
+            for j in range(3):
+                Q[i, j] = sline[j]
+        print "Q =", Q
+        n += i
+
+        aaa
 
     def readSubcaseNameID(self):
-        subcaseName = self.storedLines[-3].strip()
-        #print ''.join(self.storedLines)
-        self.Title = subcaseName  # 'no title'
-        #print "Title = ",self.Title
-
-        #print "subcaseLine = |%r|" %(subcaseName)
+        subtitle = self.storedLines[-3].strip()
+        #print(''.join(self.storedLines))
+        try:
+            Title = self.storedLines[-4][1:75].strip()
+        except:
+            Title = ''
+        #self.Title = subcaseName  # 'no title'
+        
+        subcaseName = ''
+        #print("subcaseLine = %r" % subcaseName)
         if subcaseName == '':
             isubcase = 1
         else:
@@ -295,8 +424,24 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
             #assert isinstance(isubcase,int),'isubcase=|%r|' % (isubcase)
             #print "subcaseName=%s isubcase=%s" % (subcaseName, isubcase)
-        self.iSubcaseNameMap[isubcase] = [subcaseName,
-                                          'SUBCASE %s' % (isubcase)]
+        
+        #subtitle = 'SUBCASE %s' % isubcase
+        label = 'SUBCASE %s' % isubcase
+
+        #self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.label]
+
+#title      date_stamp  page_stamp
+#subtitle
+#label      ???
+
+        if self.Title == '':
+            self.Title = Title
+        #print("title    = %r" % self.Title)
+        #print("subtitle = %r" % subtitle)
+        #print("label    = %r" % label)
+
+        #assert self.Title == 'MSC.NASTRAN JOB CREATED ON 12-MAR-13 AT 12:52:23', self.Title
+        self.iSubcaseNameMap[isubcase] = [subtitle, subtitle]
         transient = self.storedLines[-1].strip()
         is_sort1 = False
         if transient:
@@ -336,8 +481,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             NO.       ORDER                                                                       MASS              STIFFNESS
                 1         1        6.158494E+07        7.847607E+03        1.248985E+03        1.000000E+00        6.158494E+07
         """
-        (subcaseName, isubcase, transient, dt, analysis_code,
-            is_sort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
 
         headers = self.skip(2)
         data = self.readTable([int, int, float, float, float, float, float])
@@ -425,7 +569,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         dataTypes = [int, str, float, float, float, float, float, float]
         data = self.readTable(dataTypes)
 
-        print("cycle=%-8s eigen=%s" % (cycle, eigenvalue_real))
+        #print("cycle=%-8s eigen=%s" % (cycle, eigenvalue_real))
         #print "isubcase = %s" % isubcase
         if isubcase in self.eigenvectors:
             self.eigenvectors[isubcase].read_f06_data(data_code, data)
@@ -594,12 +738,15 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             out.append(entry2)
         return out
 
-    def read_f06(self):
+    def read_f06(self, f06_filename=None):
         """
         Reads the F06 file
 
         :self: the object pointer
         """
+        if f06_filename is None:
+            f06_filename = self.f06_filename
+
         #print "reading..."
         blank = 0
         while 1:
@@ -608,16 +755,16 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             line = self.infile.readline()
             marker = line[1:].strip()
 
-            #print "marker = %s" %(marker)
+            #print("marker = %r" % marker)
             if marker in self.markers:
                 blank = 0
-                #print "\n*marker = %s" %(marker)
+                #print("\n1*marker = %r" % marker)
                 self.markerMap[marker]()
                 self.storedLines = []
-                #print "i=%i" %(self.i)
+                #print("i=%i" % self.i)
             elif 'R E A L   E I G E N V E C T O R   N O' in marker:
                 blank = 0
-                #print "\n*marker = %s" %(marker)
+                #print("\n2*marker = %r" % marker)
                 self.lineMarkerMap['R E A L   E I G E N V E C T O R   N O'](
                     marker)
                 self.storedLines = []
@@ -626,7 +773,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                 if blank == 20:
                     break
             elif self.isMarker(marker):  # marker with space in it (e.g. Model Summary)
-                print("***marker = |%s|" % marker)
+                print("***marker = %r" % marker)
 
             else:
                 blank = 0
@@ -683,11 +830,5 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         return msg
 
 if __name__ == '__main__':
-    f06Name = sys.argv[1]
-    model = f06Name.split('.f06')[0]
-    f06 = F06(f06Name)
-    f06.read_f06()
-
-    f06.write_f06(model + 'f06.out')
-    f06.print_results()
-    print("done...")
+    from pyNastran.f06.test.test_f06 import main
+    main()

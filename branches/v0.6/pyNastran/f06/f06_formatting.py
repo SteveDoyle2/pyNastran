@@ -87,5 +87,6 @@ def writeFloats8p4F(vals):
             v2 = '  0.0   '
         else:
             isAllZeros = False
+        assert len(v2) == 8, 'v=%r' % v2
         vals2.append(v2)
     return (vals2, isAllZeros)

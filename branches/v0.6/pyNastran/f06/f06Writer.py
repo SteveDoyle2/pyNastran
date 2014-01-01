@@ -259,7 +259,8 @@ class F06Writer(object):
 
 
     def write_summary(self, f, card_count=None):
-        summary = '                                        M O D E L   S U M M A R Y\n\n'
+        summary_header = '                                        M O D E L   S U M M A R Y\n\n'
+        summary = ''
 
         self.cardsToRead = set([
 
@@ -335,12 +336,14 @@ class F06Writer(object):
             if key_count:
                 summary += ' \n'
         #sys.exit(summary)
-        f.write(summary)
+        if summary:
+            f.write(summary_header)
+            f.write(summary)
 
-        pageStamp = self.make_stamp(self.Title)
-        f.write(pageStamp % self.pageNum)
-        self.pageNum += 1
-        print(summary)
+            pageStamp = self.make_stamp(self.Title)
+            f.write(pageStamp % self.pageNum)
+            self.pageNum += 1
+            print(summary)
 
     def write_f06(self, f06OutName, is_mag_phase=False, make_file=True,
                  delete_objects=True, end_flag=False):
@@ -365,22 +368,23 @@ class F06Writer(object):
             f06OutName = f.name
             print 'f06OutName =', f06OutName
 
-
         pageStamp = self.make_stamp(self.Title)
         #print "pageStamp = %r" % pageStamp
         #print "stamp     = %r" % stamp
 
         #is_mag_phase = False
-        #header = ['     DEFAULT                                                                                                                        \n',
-        #          '\n']
+        header = ['     DEFAULT                                                                                                                        \n',
+                  '\n', '']
         for isubcase, result in sorted(self.eigenvalues.iteritems()):  # goes first
             (subtitle, label) = self.iSubcaseNameMap[isubcase]
             subtitle = subtitle.strip()
-            #header[0] = '     %s\n' % subtitle
-            #header[1] = '0 %-32s                                                                            SUBCASE %i\n \n' % (label, isubcase)
+            header[0] = '     %s\n' % subtitle
+            header[1] = '0 %-32s                                                                            SUBCASE %i\n \n' % (label, isubcase)
+            #header[2] = complex/nonlinear
             print(result.__class__.__name__)
             self.pageNum = result.write_f06(header, pageStamp,
                                             pageNum=self.pageNum, f=f, is_mag_phase=is_mag_phase)
+            assert isinstance(self.pageNum, int), 'pageNum=%r' % str(self.pageNum)
             if delete_objects:
                 del result
             self.pageNum += 1
@@ -389,20 +393,21 @@ class F06Writer(object):
         for isubcase, result in sorted(self.eigenvectors.iteritems()):
             (subtitle, label) = self.iSubcaseNameMap[isubcase]
             subtitle = subtitle.strip()
-            #header[0] = '     %s\n' % subtitle
-            #header[1] = '0                                                                                                            SUBCASE %i\n' % isubcase
+            header[0] = '     %s\n' % subtitle
+            header[1] = '0                                                                                                            SUBCASE %i\n' % (isubcase)
+            #header[2] = complex/nonlinear
             print(result.__class__.__name__)
             self.pageNum = result.write_f06(header, pageStamp,
                                             pageNum=self.pageNum, f=f, is_mag_phase=is_mag_phase)
+            assert isinstance(self.pageNum, int), 'pageNum=%r' % str(self.pageNum)
             if delete_objects:
                 del result
-            f.write(msg)
-            pageNum += 1
+            self.pageNum += 1
 
         # subcase name, subcase ID, transient word & value
-        #headerOld = ['     DEFAULT                                                                                                                        \n',
-        #             '\n', ' \n']
-        #header = copy.deepcopy(headerOld)
+        headerOld = ['     DEFAULT                                                                                                                        \n',
+                     '\n', ' \n']
+        header = copy.deepcopy(headerOld)
         resTypes = [
                     self.displacements, self.displacementsPSD, self.displacementsATO, self.displacementsRMS,
                     self.scaledDisplacements,  # ???
@@ -486,7 +491,7 @@ class F06Writer(object):
                 (subtitle, label) = self.iSubcaseNameMap[isubcase]
                 label = label.strip()
                 subtitle = subtitle.strip()
-                header = ['','']
+                header = ['', '']
                 #header[0] = '     %s\n' % subtitle
                 header[0] = '      %-126s\n' % subtitle
                 header[1] = '0     %-32s                                                                       SUBCASE %-15i\n \n' % (label, isubcase)
