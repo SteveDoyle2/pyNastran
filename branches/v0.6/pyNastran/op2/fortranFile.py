@@ -205,8 +205,8 @@ class FortranFile(object):
         nFloats = n // 4
         iFormat = str(nFloats) + 'f'
         iFormat = bytes(iFormat)
-        ints = unpack(iFormat, data[:nFloats * 4])
-        return ints
+        floats = unpack(iFormat, data[:nFloats * 4])
+        return floats
 
     def get_floats2(self, data, endian):
         """
@@ -216,8 +216,8 @@ class FortranFile(object):
         nFloats = n // 4
         iFormat = endian + str(nFloats) + 'f'
         iFormat = bytes(iFormat)
-        ints = unpack(iFormat, data[:nFloats * 4])
-        return ints
+        floats = unpack(iFormat, data[:nFloats * 4])
+        return floats
 
     def get_doubles(self, data):
         """
@@ -261,8 +261,8 @@ class FortranFile(object):
 
     def print_block2(self, data, endian):
         """
-        Prints a data set in int/float/double/string format to
-        determine table info.  doesn't move cursor.
+        Prints a data set in int/float/double/string format to determine table
+        info.  This doesn't move the cursor.
 
         .. note:: this is a great function for debugging
         """
@@ -366,16 +366,16 @@ class FortranFile(object):
     def read_markers(self, markers, table_name=None, debug=False,
                      printErrorOnFailure=True):
         """
-        Reads a set of predefined markers e.g. [-3,1,0]
-        and makes sure it is correct.
+        Reads a set of predefined markers e.g. [-3,1,0] and makes sure it is
+        correct.
 
         A marker (e.g. a -3) is a series of 3 integers [4,-3,4].  Typically 3
         markers are put together (e.g. [-3,1,0]) such that the integers are
         [4,-3,4, 4,1,4, 4,0,4] to mark important parts of the table.
 
-        Markers will "increment" during table reading, such that the first marker
-        is [-1,1,0], then [-2,1,0], etc.  Tables will end (or really the next table starts)
-        when a [-1,1,0] or a [0,1,0] marker is found.
+        Markers will "increment" during table reading, such that the first
+        marker is [-1,1,0], then [-2,1,0], etc.  Tables will end (or really
+        the next table starts) when a [-1,1,0] or a [0,1,0] marker is found.
 
         # Verify the following statement...
         Occassionally, buffer markers will be embedded inside the
@@ -454,6 +454,7 @@ class FortranFile(object):
     def read_block(self):
         """
         Reads a fortran formatted data block
+
         nWords  data1 data2 data3 nWords
         """
         data = self.op2.read(4)
@@ -486,10 +487,10 @@ class FortranFile(object):
 
     def read_full_int_block(self):
         """
-        Reads a fortran formatted block
-        assumes that the data is made up of integers only
+        Reads a fortran formatted data block
 
-        reads a fortran formatted data block
+        ..note:: assumes that the data is made up of integers only
+
         nWords  data1 data2 data3 nWords
         includes nWords in the output
         """
@@ -514,7 +515,8 @@ class FortranFile(object):
     def read_string_block(self, debug=True):
         """
         Reads a fortran formatted block
-        assumes that the data is made up of characters only
+
+        ..note:: assumes that the data is made up of characters only
         """
         data = self.read_block()
         nLetters = len(data)
@@ -525,13 +527,14 @@ class FortranFile(object):
         #print "word = |%s|" % (word)
         #print "nLetters=%s word=|%s|" % (nLetters,word)
         if debug and self.make_op2_debug:
-            self.op2Debug.write('|%s|\n' % (str(word)))
+            self.op2Debug.write('%r\n' % str(word))
         return word
 
     def read_int_block(self):
         """
         Reads a fortran formatted block
-        assumes that the data is made up of integers only
+
+        ..note:: assumes that the data is made up of integers only
         """
         data = self.read_block()
         nInts = len(data) // 4
@@ -543,7 +546,8 @@ class FortranFile(object):
     def read_float_block(self):
         """
         Reads a fortran formatted block
-        assumes that the data is made up of floats only
+
+        ..note:: assumes that the data is made up of floats only
         """
         data = self.read_block()
         nFloats = len(data) // 4
@@ -555,7 +559,8 @@ class FortranFile(object):
     def read_double_block(self):
         """
         Reads a fortran formatted block
-        assumes that the data is made up of doubles only
+
+        ..note:: assumes that the data is made up of doubles only
         """
         data = self.read_block()
         nDoubles = len(data) // 8

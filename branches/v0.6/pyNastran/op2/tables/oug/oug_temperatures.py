@@ -5,7 +5,7 @@ from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 
 class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=1
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         scalarObject.__init__(self, data_code, isubcase)
         self.gridTypes = {}
         self.temperatures = {}

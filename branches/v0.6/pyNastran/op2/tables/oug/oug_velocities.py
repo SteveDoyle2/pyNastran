@@ -3,7 +3,7 @@ from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObj
 
 class VelocityObject(TableObject):  # approach_code=10, thermal=0
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_matlab(self, isubcase, f=None, is_mag_phase=False):
@@ -31,7 +31,7 @@ class VelocityObject(TableObject):  # approach_code=10, thermal=0
 
 
 class ComplexVelocityObject(ComplexTableObject):  # table_code=10, approach_code=???
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_matlab(self, isubcase, f=None, is_mag_phase=False):

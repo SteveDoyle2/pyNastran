@@ -103,9 +103,9 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
         #tableNamesOP2 = op2.getTableNamesFromOP2()
         if write_f06:
             (model, ext) = os.path.splitext(op2FileName)
-            op2.write_f06(model+'.f06.out', is_mag_phase=is_mag_phase)
+            op2.write_f06(model+'.test_op2.f06', is_mag_phase=is_mag_phase)
             if delete_f06:
-                os.remove(model+'.f06.out')
+                os.remove(model+'.test_op2.f06')
 
         if write_matlab:
             (model, ext) = os.path.splitext(op2FileName)

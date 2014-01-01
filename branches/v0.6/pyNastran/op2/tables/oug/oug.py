@@ -32,20 +32,20 @@ class OUG(object):
 
     def readTable_OUG2(self):  # OUGPSD
         #self.table_name = 'OUG'
-        table3 = self.readTable_OUG2_3
-        table4Data = self.readOUG2_Data
-        self.read_results_table(table3, table4Data)
+        table3 = self.read_table_OUG2_3
+        table4_data = self.read_OUG2_data
+        self.read_results_table(table3, table4_data)
         self._delete_attributes_OUG()
 
         sys.exit('stopping...')
 
-    def readOUG2_Data(self):
+    def read_OUG2_data(self):
         self.readOUG_Data_table1(debug=True)
 
-    def readTable_OUG2_3(self, iTable):  # iTable=-3
+    def read_table_OUG2_3(self, iTable):  # iTable=-3
         buffer_words = self.get_marker()
         if self.make_op2_debug:
-            self.op2Debug.write('buffer_words=%s\n' % (str(buffer_words)))
+            self.op2Debug.write('buffer_words=%s\n' % str(buffer_words))
         #print "2-buffer_words = ",buffer_words,buffer_words*4,'\n'
 
         data = self.get_data(4)
@@ -74,29 +74,29 @@ class OUG(object):
         #print("floatVal = %s" %(floatVal))
 
         if self.table_name == 'OUGRMS2' and self.analysis_code == 1:
-            self.add_data_parameter(data, 'nodeID', 'i',
-                                  5, fixDeviceCode=True)  # frequency
+            # frequency
+            self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)
             self.apply_data_code_value('dataNames', ['nodeID'])
             #print("nodeID = %s" %(self.nodeID))
 
         #self.isRegular = False
         elif self.analysis_code in [1, 5]:  # 5 # freq
-            self.add_data_parameter(data, 'nodeID', 'i',
-                                  5, fixDeviceCode=True)  # frequency
+            # frequency
+            self._add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)
             self.apply_data_code_value('dataNames', ['nodeID'])
             #print("nodeID = %s" %(self.nodeID))
             #sys.exit(self.nodeID)
         elif self.analysis_code == 6:  # transient dt
-            self.add_data_parameter(data, 'nodeID', 'i',
-                                  5, fixDeviceCode=True)  # time step
+            # time step
+            self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)
+                                  
             self.apply_data_code_value('dataNames', ['nodeID'])
         elif self.analysis_code == 10:  # freq/time step fqts
             self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)  # frequency / time step
             self.apply_data_code_value('dataNames', ['nodeID'])
         else:
             self.isRegular = True
-            self.add_data_parameter(data, 'nodeID', 'i',
-                                  5, fixDeviceCode=True)  # node ID
+            self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)
             self.apply_data_code_value('dataNames', ['nodeID'])
         # tCode=2
         #if self.analysis_code==2: # sort2
@@ -112,9 +112,9 @@ class OUG(object):
 
     def readTable_OUG(self):
         #self.table_name = 'OUG'
-        table3 = self.readTable_OUG_3
-        table4Data = self.readOUG_Data
-        self.read_results_table(table3, table4Data)
+        table3 = self.read_table_OUG_3
+        table4_data = self.read_OUG_data
+        self.read_results_table(table3, table4_data)
         self._delete_attributes_OUG()
 
     def _delete_attributes_OUG(self):
@@ -122,10 +122,10 @@ class OUG(object):
                   'thermal', 'randomCode', 'fCode', 'num_wide', 'acousticFlag']
         self._delete_attributes(params)
 
-    def readTable_OUG_3(self, iTable):  # iTable=-3
+    def read_table_OUG_3(self, iTable):  # iTable=-3
         buffer_words = self.get_marker()
         if self.make_op2_debug:
-            self.op2Debug.write('buffer_words=%s\n' % (str(buffer_words)))
+            self.op2Debug.write('buffer_words=%s\n' % str(buffer_words))
         #print "2-buffer_words = ",buffer_words,buffer_words*4,'\n'
 
         data = self.get_data(4)
@@ -149,79 +149,94 @@ class OUG(object):
         if self.is_sort1():
             ## assuming tCode=1
             if self.analysis_code == 1:   # statics / displacement / heat flux
-                self.add_data_parameter(data, 'lsdvmn', 'i',
-                                      5, False)  # load set number
+                # load set number
+                self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
                 self.apply_data_code_value('dataNames', ['lsdvmn'])
                 self.setNullNonlinearFactor()
             elif self.analysis_code == 2:  # real eigenvalues
-                self.add_data_parameter(data, 'mode',
-                                      'i', 5)  # mode number
-                self.add_data_parameter(data, 'eigr',
-                                      'f', 6, False)  # real eigenvalue
+                # mode number
+                self.add_data_parameter(data, 'mode', 'i', 5)
+                # real eigenvalue
+                self.add_data_parameter(data, 'eigr', 'f', 6, False)
                 self.add_data_parameter(data, 'mode_cycle', 'i', 7, False)  # mode or cycle .. todo:: confused on the type - F1???
-                self.apply_data_code_value('dataNames', [
-                    'mode', 'eigr', 'mode_cycle'])
+                self.apply_data_code_value('dataNames', ['mode', 'eigr', 'mode_cycle'])
             #elif self.analysis_code==3: # differential stiffness
                 #self.lsdvmn = self.get_values(data,'i',5) ## load set number
                 #self.data_code['lsdvmn'] = self.lsdvmn
             #elif self.analysis_code==4: # differential stiffness
                 #self.lsdvmn = self.get_values(data,'i',5) ## load set number
             elif self.analysis_code == 5:   # frequency
-                self.add_data_parameter(data, 'freq', 'f', 5)  # frequency
+                # frequency
+                self.add_data_parameter(data, 'freq', 'f', 5)
                 self.apply_data_code_value('dataNames', ['freq'])
             elif self.analysis_code == 6:  # transient
-                self.add_data_parameter(data, 'dt', 'f', 5)  # time step
+                # time step
+                self.add_data_parameter(data, 'dt', 'f', 5)
                 self.apply_data_code_value('dataNames', ['dt'])
             elif self.analysis_code == 7:  # pre-buckling
-                self.add_data_parameter(data, 'lsdvmn', 'i', 5)  # load set number
+                # load set number
+                self.add_data_parameter(data, 'lsdvmn', 'i', 5)
                 self.apply_data_code_value('dataNames', ['lsdvmn'])
             elif self.analysis_code == 8:  # post-buckling
-                self.add_data_parameter(data, 'lsdvmn', 'i', 5)  # load set number
-                self.add_data_parameter(data, 'eigr', 'f', 6, False)  # real eigenvalue
+                # load set number
+                self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+                # real eigenvalue
+                self.add_data_parameter(data, 'eigr', 'f', 6, False)
                 self.apply_data_code_value('dataNames', ['lsdvmn', 'eigr'])
             elif self.analysis_code == 9:  # complex eigenvalues
-                self.add_data_parameter(data, 'mode', 'i', 5)  # mode number
-                self.add_data_parameter(data, 'eigr', 'f', 6, False)  # real eigenvalue
-                self.add_data_parameter(data, 'eigi', 'f', 7, False)  # imaginary eigenvalue
+                # mode number
+                self.add_data_parameter(data, 'mode', 'i', 5)
+                # real eigenvalue
+                self.add_data_parameter(data, 'eigr', 'f', 6, False)
+                # imaginary eigenvalue
+                self.add_data_parameter(data, 'eigi', 'f', 7, False)
                 self.apply_data_code_value('dataNames', ['mode', 'eigr', 'eigi'])
             elif self.analysis_code == 10:  # nonlinear statics
-                self.add_data_parameter(data, 'lftsfq', 'f', 5)  # load step
+                # load step
+                self.add_data_parameter(data, 'lftsfq', 'f', 5)
                 self.apply_data_code_value('dataNames', ['lftsfq'])
             elif self.analysis_code == 11:  # old geometric nonlinear statics
-                self.add_data_parameter(data, 'lsdvmn', 'i', 5)  # load set number
+                # load set number
+                self.add_data_parameter(data, 'lsdvmn', 'i', 5)
                 self.apply_data_code_value('dataNames', ['lsdvmn'])
             elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-                self.add_data_parameter(data, 'lsdvmn', 'i', 5)  # load set number
+                # load set number
+                self.add_data_parameter(data, 'lsdvmn', 'i', 5)
                 self.apply_data_code_value('dataNames', ['lsdvmn'])
             else:
-                raise RuntimeError('invalid analysis_code...analysis_code=%s' %
-                                   (self.analysis_code))
+                msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
+                raise RuntimeError(msg)
         else:  # sort2
-            eidDevice = self.get_values(data, 'i', 5)
-            floatVal = self.get_values(data, 'f', 5)
-            #eid = (eidDevice-self.device_code)//10
-            #print("EID = %s" %(eidDevice))
-            #print("floatVal = %s" %(floatVal))
+            eid_device = self.get_values(data, 'i', 5)
+            float_val = self.get_values(data, 'f', 5)
+            #eid = (eid_device-self.device_code)//10
+            #print("EID = %s" % eid_device)
+            #print("float_val = %s" % float_val)
 
             if self.table_name == 'OUGRMS2' and self.analysis_code == 1:
-                self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)  # frequency
+                # frequency
+                self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)
                 self.apply_data_code_value('dataNames', ['nodeID'])
 
             #self.isRegular = False
             elif self.analysis_code in [1, 5]:  # 5 # freq
-                self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)  # frequency
+                # frequency
+                self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)
                 self.apply_data_code_value('dataNames', ['nodeID'])
                 #print("nodeID = %s" %(self.nodeID))
                 #sys.exit(self.nodeID)
             elif self.analysis_code == 6:  # transient dt
-                self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)  # time step
+                # time step
+                self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)
                 self.apply_data_code_value('dataNames', ['nodeID'])
             elif self.analysis_code == 10:  # freq/time step fqts
+                # frequency / time step
                 self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)  # frequency / time step
                 self.apply_data_code_value('dataNames', ['nodeID'])
             else:
                 self.isRegular = True
-                self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)  # node ID
+                # node ID
+                self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)
                 self.apply_data_code_value('dataNames', ['nodeID'])
         # tCode=2
         #if self.analysis_code==2: # sort2
@@ -249,8 +264,8 @@ class OUG(object):
                 format1 = 'f'  # SORT2
                 extract = self.extractSort2
             else:
-                raise KeyError('invalid analysis_code...analysis_code=%s' %
-                               (self.analysis_code))
+                msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
+                raise KeyError(msg)
         else:
             if is_sort1:
                 #print "SORT1 - %s" %(self.get_element_type(self.element_type))
@@ -273,11 +288,11 @@ class OUG(object):
                     extract = self.extractSort2
                 else:
                     raise KeyError('invalid analysis_code...analysis_code=%s' %
-                                   (self.analysis_code))
+                                   self.analysis_code)
                 #eid = self.nonlinear_factor
         return (format1, extract)
 
-    def readOUG_Data(self):
+    def read_OUG_data(self):
         #print "self.analysis_code=%s table_code(1)=%s thermal(23)=%g" %(self.analysis_code,self.table_code,self.thermal)
         #tfsCode = [self.table_code,self.format_code,self.sort_code]
 
@@ -348,35 +363,32 @@ class OUG(object):
                 #print self.data_code
                 if self.table_name in ['OUGV1', 'OUG1']:
                     resultName = 'displacements'
-                    self.create_transient_object(self.displacements,
-                                               DisplacementObject)
+                    self.create_transient_object(self.displacements, DisplacementObject)
                 elif self.table_name in ['OUGATO2']:
                     resultName = 'displacementsATO'
-                    self.create_transient_object(self.displacementsATO,
-                                               DisplacementObject)
+                    self.create_transient_object(self.displacementsATO, DisplacementObject)
                 elif self.table_name in ['OUGCRM2']:
                     resultName = 'displacementsCRM'
-                    self.create_transient_object(self.displacementsCRM,
-                                               DisplacementObject)
+                    self.create_transient_object(self.displacementsCRM, DisplacementObject)
                 elif self.table_name in ['OUGPSD2']:
                     resultName = 'displacementsPSD'
-                    self.create_transient_object(self.displacementsPSD,
-                                               DisplacementObject)
+                    self.create_transient_object(self.displacementsPSD, DisplacementObject)
                 elif self.table_name in ['OUGRMS2']:
                     resultName = 'displacementsRMS'
-                    self.create_transient_object(self.displacementsRMS,
-                                               DisplacementObject)
+                    self.create_transient_object(self.displacementsRMS, DisplacementObject)
                 elif self.table_name in ['OUGNO2']:
                     resultName = 'displacementsNO'
-                    self.create_transient_object(self.displacementsNO,
-                                               DisplacementObject)
+                    self.create_transient_object(self.displacementsNO, DisplacementObject)
                 else:
                     isSkip = True
-                    self.not_implemented_or_skip('***table=%s***\n%s' % (self.table_name, self.code_information()))
+                    msg = '***table=%s***\n%s' % (self.table_name, self.code_information())
+                    self.not_implemented_or_skip(msg)
                 if not isSkip:
+                    name = resultName + ': Subcase %s' % self.isubcase
                     self.handle_results_buffer(self.OUG_RealTable, resultName)
             elif self.thermal == 1:
                 resultName = 'temperatures'
+                name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(
                     self.temperatures, TemperatureObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName)
@@ -385,98 +397,99 @@ class OUG(object):
                 #self.create_transient_object(self.scaledDisplacements,displacementObject)
                 #self.handle_results_buffer(self.OUG_RealTable,resultName)
             else:
-                self.not_implemented_or_skip('***thermal=%s***\n%s' %
-                                          (self.thermal, self.code_information()))
+                msg = '***thermal=%s***\n%s' % (self.thermal, self.code_information())
+                self.not_implemented_or_skip(msg)
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'displacements'
-                self.create_transient_object(self.displacements,
-                                           ComplexDisplacementObject)
+                name = resultName + ': Subcase %s' % self.isubcase
+                self.create_transient_object(self.displacements, ComplexDisplacementObject)
                 self.handle_results_buffer(self.OUG_ComplexTable, resultName)
             else:
                 self.not_implemented_or_skip()
         else:
-            self.not_implemented_or_skip('only num_wide=8 or 14 is allowed  num_wide=%s' % (self.num_wide))
+            msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
+            self.not_implemented_or_skip(msg)
 
     def readOUG_Data_table7(self):  # eigenvector
         #is_sort1 = self.is_sort1()
         if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'eigenvectors'
-                self.create_transient_object(self.eigenvectors,
-                                           EigenVectorObject)
+                name = resultName + ': Subcase %s' % self.isubcase
+                self.create_transient_object(self.eigenvectors, EigenVectorObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName)
             else:
                 self.not_implemented_or_skip()
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'eigenvectors'
-                self.create_transient_object(self.eigenvectors,
-                                           ComplexEigenVectorObject)
+                name = resultName + ': Subcase %s' % self.isubcase
+                self.create_transient_object(self.eigenvectors, ComplexEigenVectorObject)
                 self.handle_results_buffer(self.OUG_ComplexTable, resultName)
             else:
                 self.not_implemented_or_skip()
         else:
-            self.not_implemented_or_skip('only num_wide=8 or 14 is allowed  num_wide=%s' % (self.num_wide))
+            msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
+            self.not_implemented_or_skip(msg)
 
     def readOUG_Data_table10(self):  # velocity
         if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'velocities'
-                self.create_transient_object(
-                    self.velocities, VelocityObject)
+                name = resultName + ': Subcase %s' % self.isubcase
+                self.create_transient_object(self.velocities, VelocityObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName)
             elif self.thermal == 1:
                 resultName = 'velocities'
-                self.create_transient_object(self.velocities,
-                                           ThermalVelocityVectorObject)
+                name = resultName + ': Subcase %s' % self.isubcase
+                self.create_transient_object(self.velocities, ThermalVelocityVectorObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName)
             else:
                 self.not_implemented_or_skip()
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'velocities'
-                self.create_transient_object(self.velocities,
-                                           ComplexVelocityObject)
+                name = resultName + ': Subcase %s' % self.isubcase
+                self.create_transient_object(self.velocities, ComplexVelocityObject)
                 self.handle_results_buffer(self.OUG_ComplexTable, resultName)
             else:
                 self.not_implemented_or_skip()
         else:
-            self.not_implemented_or_skip('only num_wide=8 or 14 is allowed  num_wide=%s' % (self.num_wide))
+            msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
+            self.not_implemented_or_skip(msg)
 
     def readOUG_Data_table11(self):  # acceleration
         if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'accelerations'
-                self.create_transient_object(self.accelerations,
-                                           AccelerationObject)
+                name = resultName + ': Subcase %s' % self.isubcase
+                self.create_transient_object(self.accelerations, AccelerationObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName)
             else:
                 self.not_implemented_or_skip()
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'accelerations'
-                self.create_transient_object(self.accelerations,
-                                           ComplexAccelerationObject)
+                name = resultName + ': Subcase %s' % self.isubcase
+                self.create_transient_object(self.accelerations, ComplexAccelerationObject)
                 self.handle_results_buffer(self.OUG_ComplexTable, resultName)
             else:
                 self.not_implemented_or_skip()
         else:
-            self.not_implemented_or_skip('only num_wide=8 or 14 is allowed  num_wide=%s' % (self.num_wide))
+            msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
+            self.not_implemented_or_skip(msg)
 
     def OUG_RealTable(self):
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
-        #format1 = 'f'
         format1 += 'i6f'
-        #print("format1 =",format1)
 
         nnodes = len(self.data) // 32
         istart = 0
         iend = 32
         for inode in xrange(nnodes):
             eData = self.data[istart:iend]
-
             out = unpack(format1, eData)
             (eid, gridType, tx, ty, tz, rx, ry, rz) = out
             eid2 = extract(eid, dt)
@@ -490,23 +503,20 @@ class OUG(object):
             self.obj.add(dt, dataIn)
             istart = iend
             iend += 32
-        iend = 32 * nnodes  # need to reset b/c last iend is wrong
-        self.data = self.data[iend:]
+        self.data = self.data[istart:]
 
     def OUG_ComplexTable(self):
         dt = self.nonlinear_factor
-
         (format1, extract) = self.getOUG_FormatStart()
-
         format1 += 'i12f'
-        #print "format1 = ",format1
         is_magnitude_phase = self.is_magnitude_phase()
 
         nnodes = len(self.data) // 56
         #print('nnodes =', nnodes)
         istart = 0
         iend = 56  # 14 * 4
-        for i in xrange(nnodes):
+
+        for inode in xrange(nnodes):
             eData = self.data[istart:iend]
 
             out = unpack(format1, eData)
@@ -529,7 +539,6 @@ class OUG(object):
                 rz = complex(rzr, rzi)
 
             eid2 = extract(eid, dt)
-            #print "eType=%s" %(eType)
 
             dataIn = [eid2, gridType, tx, ty, tz, rx, ry, rz]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
@@ -537,6 +546,5 @@ class OUG(object):
             self.obj.add(dt, dataIn)
             istart = iend
             iend += 56
-        iend = 56 * nnodes  # need to reset b/c last iend is wrong
-        self.data = self.data[iend:]
+        self.data = self.data[istart:]
 

@@ -22,6 +22,9 @@ from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 
 class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OESNLXR,OESNLXD,
 
+    def __init__(self):
+        pass
+
     def readTableA_DUMMY(self):
         """reads a dummy geometry table"""
         self.iTableMap = {}
@@ -65,22 +68,36 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         #grid_device, = unpack(b'i',data)
         return timeFreq
 
-    def add_data_parameter(self, data, Name, Type, fieldNum, applyNonlinearFactor=True, fixDeviceCode=False):
+    def add_data_parameter(self, data, name, Type, field_num, applyNonlinearFactor=True,
+                           fixDeviceCode=False):
         """
+        Extracts the binary value and adds it to the self.data_code dictionary.
+
+        :param data: the binary stream
+        :param name: the name of the parameter
+        :param Type: the type of the value 'i'=integer, 'f'=float, 'ssss'=string
+        :param field_num: the field where the parameter is located
+        :param applyNonlinearFactor: this parameter is the major nonlinear
+               parameter (e.g. time, frequency, mode) and will be applied
+               to self.nonlinear_factor; default=True (only 1 per nonlinear subcase)
+        :param  fixDeviceCode: removes the device_code from the parameter
+                        (e.g. eid = 201 -> 20); default=False
+        
         >>> self.mode = self.get_values(data,'i',5) ## mode number
         >>>
         """
-        value = self.get_values(data, Type, fieldNum)
+        value = self.get_values(data, Type, field_num)
         if fixDeviceCode:
             value = (value - self.device_code) // 10
-        #print "Name=%s Type=%s fieldNum=%s aCode=%s value=%s" %(Name,Type,fieldNum,self.analysis_code,value)
-        setattr(self, Name, value)
-        self.data_code[Name] = value
+        setattr(self, name, value)
+        self.data_code[name] = value
+        #if name == 'mode':
+            #print("table=%s name=%s Type=%s field_num=%s aCode=%s value=%s" %(self.table_name, name, Type, field_num, self.analysis_code, value))
 
         if applyNonlinearFactor:
             self.nonlinear_factor = value
             self.data_code['nonlinear_factor'] = value
-            self.data_code['name'] = Name
+            self.data_code['name'] = name
 
     def setNullNonlinearFactor(self):
         self.nonlinear_factor = None
@@ -95,11 +112,13 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 
         :param storageObj:  the dictionary to store the object in (e.g. self.bars)
         :param classObj:    the class object to instantiate
+        :param debug:       developer debug
+
         .. note:: dt can also be load_step depending on the class
         """
         if debug:
             print("create Transient Object")
-            print("***NF = %s" % (self.nonlinear_factor))
+            print("***NF = %s" % self.nonlinear_factor)
             #print "DC = ",self.data_code
 
         if hasattr(self,'isubcase'):
@@ -122,8 +141,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 #if self.isRegular:
                     #self.obj = classObj(self.data_code,not(self.isRegular),self.isubcase,self.nonlinear_factor)
                 #else:
-                self.obj = classObj(self.data_code, self.is_sort1(
-                ), self.isubcase, self.nonlinear_factor)
+                self.obj = classObj(self.data_code, self.is_sort1(), self.isubcase, self.nonlinear_factor)
                 #print "obj2 = ",self.obj.__class__.__name__
             storageObj[self.isubcase] = self.obj
         else:
@@ -184,7 +202,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             marker = self.get_marker()
             self.goto(n)
             if marker != 146:
-                self.log.debug("marker = %s" % (marker))
+                self.log.debug("marker = %s" % marker)
                 exitFast = True
                 break
 
@@ -216,7 +234,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 
         nOld = self.op2.tell()
         #try:
-        if not(exitFast):
+        if not exitFast:
             #print self.print_section(100000)
             self.read_markers([iTable, 1, 0], table_name)
             #self.get_marker()
@@ -297,8 +315,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         if self.is_valid_subcase():  # lets the user skip a certain subcase
             table4Data()
         else:
-            self.log.debug("***skipping table=%s isubcase=%s" %
-                           (self.table_name, self.isubcase))
+            self.log.debug("***skipping table=%s isubcase=%s" % (self.table_name, self.isubcase))
             self.skipOES_Element()
         return (isTable4Done, isBlockDone)
 
@@ -381,7 +398,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             #self.log.info("\n" + self.code_information())
             self.skipOES_Element()
 
-    def handle_results_buffer(self, f, resultName, debug=False):
+    def handle_results_buffer(self, func, resultName, name=None, debug=False):
         """
         Method for getting results without recursion, which for large OP2s
         is necessary to prevent going past the recursion limit.
@@ -396,17 +413,25 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         * the end of the final buffer block has
           - nothing!
 
-        :self:  the object pointer
-        :func:  the function to recursively call
-                (the function that called this)
-        :debug: developer debug
+        :param self:  the object pointer
+        :param func:  the function to recursively call
+                      (the function that called this)
+        :param result_name: the name of the result object the output will go to
+        :param name:  the unique name of the case, which will indicate to the
+                      user what data is being saved using a GUI (currently unused)
+        :param debug: developer debug
 
         .. note:: The code knows that the large buffer is the default size
           and the only way there will be a smaller buffer is if there are no
           more buffers.  So, the op2 is shifted by 1 word (4 bytes) to account
-          for this end shift.  An extra marker value is read, but no big deal
+          for this end shift.  An extra marker value is read, but no big deal.
           Beyond that it's just appending some data to the binary string and
-          calling the function that's passed in
+          calling the function that's passed in.
+          
+          We append the data since we read the first 10.5 blocks of data into
+          memory, but could only extract the first 10.0 blocks.  We take the
+          0.5 block and combine it with the next set of blocks until we have
+          no more blocks to read.
 
         .. warning:: Dont modify this without LOTS of testing.
                      It's a VERY important function
@@ -417,10 +442,10 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         #stopBuffer = False
         i = 0
         #print self.code_information()
-        while not(self.isBufferDone):
+        while not self.isBufferDone:
             #print "n=%s len(data)=%s" %(self.n,len(self.data))
             #sys.stdout.flush()
-            f()
+            func()
             nOld = self.n
             markers = self.read_header()
             #print "nOld=%s markers=%s" %(nOld,markers)

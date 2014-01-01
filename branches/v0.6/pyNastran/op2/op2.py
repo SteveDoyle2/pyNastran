@@ -236,6 +236,7 @@ class OP2(BDF,
         self.__objects_init__()
 
     def __objects_init__(self):
+        """More variable declarations"""
         #: ESE
         self.eigenvalues = {}
 
@@ -951,18 +952,18 @@ class OP2(BDF,
                     raise KeyError(msg)
                 #print("endTell   = ",self.op2.tell())
                 #print("---isAnotherTable---")
-                (isAnotherTable) = self.has_more_tables()
-                #isAnotherTable = True
+                (is_another_table) = self.has_more_tables()
+                #is_another_table = True
             except EOFError:
-                isAnotherTable = False
+                is_another_table = False
         else:
             if table_name not in [None]:
                 raise NotImplementedError('%s is not supported' % table_name)
-            (isAnotherTable) = self.skip_next_table()
+            (is_another_table) = self.skip_next_table()
             #return isAnotherTable
         #print(self.print_section(140))
         self.log.debug("*** finished table_name = |%r|" % table_name)
-        return isAnotherTable
+        return is_another_table
 
     def read_monitor(self):
         table_name = self.read_table_name(rewind=False)  # LAMA
@@ -1012,12 +1013,10 @@ class OP2(BDF,
         #word = self.read_string_block()  # MONITOR
         #print("word = |%s|" %(word))
 
-
-
         #print(self.print_section(200))
         #sys.exit()
 
-    def parse_sort_code(self):
+    def _parse_sort_code(self):
         """
         sort_code = 0 -> sort_bits = [0,0,0]
         sort_code = 1 -> sort_bits = [0,0,1]
@@ -1090,7 +1089,7 @@ class OP2(BDF,
                          'log': self.log,
                          }
         #print("isubcase = ",self.isubcase)
-        self.parse_sort_code()
+        self._parse_sort_code()
 
         #print('aCode(1)=%s analysis_code=%s device_code=%s '
         #      'tCode(2)=%s table_code=%s sort_code=%s isubcase(4)=%s'
@@ -1153,8 +1152,8 @@ class OP2(BDF,
     def get_values(self, data, iFormat, iWordStart, iWordStop=None):
         """
         Extracts the ith word from the data structure as the provided type
-        supports multiple inputs with iWordStop (note this is words,
-        not outputs)
+        supports multiple inputs with iWordStop (note this is words, not
+        outputs)
 
         :param self: the object pointer
         :param data: the binary data that is as long as the buffer size
@@ -1175,8 +1174,8 @@ class OP2(BDF,
 
     def _delete_attributes(self, params):
         """
-        Deletes any parameters before going to the next table to avoid
-        messing up data
+        Deletes any parameters before going to the next table to avoid messing
+        up data
         """
         params += ['data_code', 'device_code', 'analysis_code', 'table_code',
                    'sort_code', 'isubcase', 'data', 'num_wide',
@@ -1221,8 +1220,7 @@ class OP2(BDF,
 
         if hasattr(self,'isubcase'):
             if self.isubcase not in self.iSubcaseNameMap:
-                self.iSubcaseNameMap[self.isubcase] = [self.subtitle,
-                                                       self.label]
+                self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.label]
         else:
             pass
 

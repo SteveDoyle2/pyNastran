@@ -25,7 +25,6 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
         self.update_dt = self.update_mode
         #print "mode = %s" %(mode)
         #print "data_code = ",self.data_code
-        self.set_data_members()
 
         #assert mode>=0.
         self.gridTypes = {}
@@ -133,7 +132,6 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
         #self.caseVal = mode
         #print "mode = %s" %(iMode)
         self.caseVal = self.getUnsteadyValue()
-        self.set_data_members()
 
         #assert mode>=0.
         self.gridTypes = {}
@@ -238,7 +236,6 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, iMode)
         self.caseVal = iMode
         self.update_dt = self.update_mode
-        self.set_data_members()
 
         #print "mode = %s" %(mode)
 

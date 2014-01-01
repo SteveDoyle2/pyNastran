@@ -1,4 +1,7 @@
-from numpy import array
+from math import sqrt
+
+from numpy import array, pi, allclose
+
 from pyNastran.op2.resultObjects.op2_Objects import baseScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 #from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
@@ -13,7 +16,7 @@ class RealEigenvalues(baseScalarObject):
         self.extractionOrder = {}
         self.eigenvalues = {}
         self.radians = {}
-        self.cycles = {}
+        #self.cycles = {}
         self.generalizedMass = {}
         self.generalizedStiffness = {}
 
@@ -34,10 +37,13 @@ class RealEigenvalues(baseScalarObject):
 
     def addF06Line(self, data):
         (modeNum, extractOrder, eigenvalue, radian, cycle, genM, genK) = data
+        #print('data =', data)
         self.extractionOrder[modeNum] = extractOrder
         self.eigenvalues[modeNum] = eigenvalue
         self.radians[modeNum] = radian
-        self.cycles[modeNum] = cycle
+        cyclei = sqrt(abs(eigenvalue)) / (2. * pi)
+        assert allclose(cycle, cyclei), 'cycle=%s cyclei=%s' % (cycle, cyclei)
+        #self.cycles[modeNum] = cycle
         self.generalizedMass[modeNum] = genM
         self.generalizedStiffness[modeNum] = genK
 
@@ -55,11 +61,14 @@ class RealEigenvalues(baseScalarObject):
         stiffMsg = 'fem.eigenvalues(%i).stiffness = [' % isubcase
 
         for (iMode, order) in sorted(self.extractionOrder.iteritems()):
+            eigenvalue = self.eigenvalues[iMode]
+            cycle = sqrt(abs(eigenvalue)) / (2. * pi)
+
             iModesMsg += '%s,' % iMode
             orderMsg += '%s,' % order
-            modesMsg += '%s,' % self.eigenvalues[iMode]
+            modesMsg += '%s,' % eigenvalue
             omegaMsg += '%s,' % self.radians[iMode]
-            cyclesMsg += '%s,' % self.cycles[iMode]
+            cyclesMsg += '%s,' % cycle
             massMsg += '%s,' % self.generalizedMass[iMode]
             stiffMsg += '%s,' % self.generalizedStiffness[iMode]
         f.write(iModesMsg + '];\n')
@@ -75,15 +84,18 @@ class RealEigenvalues(baseScalarObject):
                         '   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED\n',
                         '    NO.       ORDER                                                                       MASS              STIFFNESS\n']
         for (iMode, order) in sorted(self.extractionOrder.iteritems()):
-            eigen = self.eigenvalues[iMode]
+            eigenvalue = self.eigenvalues[iMode]
+            cycle = sqrt(abs(eigenvalue)) / (2. * pi)
+
             omega = self.radians[iMode]
-            freq = self.cycles[iMode]
+            #freq = self.cycles[iMode]
             mass = self.generalizedMass[iMode]
             stiff = self.generalizedStiffness[iMode]
-            ([eigen, omega, freq, mass, stiff], isAllZeros) = writeFloats13E([eigen, omega, freq, mass, stiff])
+            ([eigen, omega, freq, mass, stiff], isAllZeros) = writeFloats13E([eigenvalue, omega, cycle, mass, stiff])
             msg.append(' %8s  %8s       %13s       %13s       %13s       %13s       %13s\n' % (iMode, order, eigen, omega, freq, mass, stiff))
 
         msg.append(pageStamp % pageNum)
+        f.write(''.join(msg))
         return pageNum
 
     def __repr__(self):
@@ -91,7 +103,9 @@ class RealEigenvalues(baseScalarObject):
         for modeNum, extractOrder in sorted(self.extractionOrder.iteritems()):
             eigenvalue = self.eigenvalues[modeNum]
             radian = self.radians[modeNum]
-            cycle = self.cycles[modeNum]
+
+            cycle = sqrt(abs(eigenvalue)) / (2. * pi)
+            #cycle = self.cycles[modeNum]
             genM = self.generalizedMass[modeNum]
             genK = self.generalizedStiffness[modeNum]
             msg += '%-7s %15s %15s %10s %10s %10s %15s\n' % (modeNum, extractOrder, eigenvalue, radian, cycle, genM, genK)
@@ -150,8 +164,7 @@ class ComplexEigenvalues(baseScalarObject):
         return pageNum
 
     def __repr__(self):
-        msg = '%-7s %15s %15s %10s %10s %10s\n' % ('RootNum',
-                                                   'ExtractionOrder', 'Eigenvalue', '', 'Cycles', 'Damping')
+        msg = '%-7s %15s %15s %10s %10s %10s\n' % ('RootNum', 'ExtractionOrder', 'Eigenvalue', '', 'Cycles', 'Damping')
         msg += '%-7s %15s %15s %10s\n' % ('', '', 'Real', 'Imaginary')
         for rootNum, extractOrder in sorted(self.extractionOrder.iteritems()):
             eigenvalue = self.eigenvalues[rootNum]

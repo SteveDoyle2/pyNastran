@@ -790,6 +790,8 @@ class ComplexTableObject(scalarObject):
         #words += self.getTableMarker()
 
         msg = []
+        if not len(header) >= 3:
+            header.append('')
         #assert f is not None
         for dt, translations in sorted(self.translations.iteritems()):
             #print "dt = ",dt

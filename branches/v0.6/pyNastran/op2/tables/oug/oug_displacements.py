@@ -1,6 +1,5 @@
 from struct import pack
-from pyNastran.op2.resultObjects.tableObject import (TableObject,
-                                                     ComplexTableObject)
+from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
 
 
 
@@ -35,7 +34,7 @@ def make_pack_form(data):
     return form
 
 class DisplacementObject(TableObject):  # approach_code=1, thermal=0
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_matlab(self, isubcase, f, is_mag_phase=False):
@@ -203,7 +202,7 @@ class DisplacementObject(TableObject):  # approach_code=1, thermal=0
 
 
 class ComplexDisplacementObject(ComplexTableObject):  # approach_code=1, sort_code=0, thermal=0
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_matlab(self, isubcase, f=None, is_mag_phase=False):

@@ -1,5 +1,5 @@
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
-from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats10E
+from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats10E, writeFloats8p4F
 
 
 class GridPointStressesObject(scalarObject):
@@ -157,7 +157,9 @@ class GridPointStressesObject(scalarObject):
                 [nx, ny, txy, majorP, minorP, tmax, ovm] = vals2
                 if eid == 0:
                     eid = zero
-                msg.append('%s%8s  %8s   %4s    %s %s %s   %7.4f %s %s %s  %-s\n' % (zero, eKey2, eid, elemName, nx, ny, txy, angle, majorP, minorP, tmax, ovm.rstrip()))
+                angle, isAllZero = writeFloats8p4F([angle])
+                anglei = angle[0]
+                msg.append('%s%8s  %8s   %4s    %s %s %s   %8s %s %s %s  %-s\n' % (zero, eKey2, eid, elemName, nx, ny, txy, anglei, majorP, minorP, tmax, ovm.rstrip()))
                 zero = ' '
                 eKey2 = ' '
 

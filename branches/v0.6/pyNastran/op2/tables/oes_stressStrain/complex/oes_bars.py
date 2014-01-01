@@ -136,7 +136,7 @@ class ComplexBarStressObject(StressObject):
         #if nodeID==0: raise Exception(msg)
 
     def add_new_eid(self, eType, dt, eid, s1a, s2a, s3a, s4a, axial,
-                  s1b, s2b, s3b, s4b,):
+                  s1b, s2b, s3b, s4b):
         #print "Bar Stress add..."
         self.eType[eid] = eType
 
@@ -149,7 +149,7 @@ class ComplexBarStressObject(StressObject):
         #if nodeID==0: raise Exception(msg)
 
     def add_new_eid_sort1(self, eType, dt, eid, s1a, s2a, s3a, s4a, axial,
-                       s1b, s2b, s3b, s4b,):
+                       s1b, s2b, s3b, s4b):
         msg = "dt=%s eid=%s s1a=%s" % (dt, eid, s1a)
         #print msg
         if dt not in self.s1:
