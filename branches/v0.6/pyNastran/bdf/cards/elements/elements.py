@@ -113,17 +113,15 @@ class CGAP(Element):
         pid = self.Pid()
         nids = self.nodeIDs()
 
-        assert isinstance(cid, int)
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert cid is None or isinstance(cid, int), 'cid=%r\n%s' % (cid, str(self))
+        assert isinstance(eid, int), 'eid=%r\n%s' % (eid, str(self))
+        assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
         for i, nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
             assert self.pid.type in ['PGAP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
-            if isinstance(self.cid):
-                assert self.cid in [0, None], self.cid
-            else:
+            if self.cid is not None:
                 assert self.cid.type in ['CORD1R', 'CORD1C', 'CORD1S', 'CORD2R', 'CORD2C', 'CORD2S'], 'cid=%i self.cid.type=%s' % (cid, self.cid.type)
 
     def cross_reference(self, model):

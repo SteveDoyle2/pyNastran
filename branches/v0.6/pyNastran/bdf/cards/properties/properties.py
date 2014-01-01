@@ -141,6 +141,10 @@ class PGAP(Property):
             self.mar = data[9]
             self.trmin = data[10]
 
+    def _verify(self, xref=True):
+        pid = self.Pid()
+        assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
+
     def cross_reference(self, model):
         pass
 

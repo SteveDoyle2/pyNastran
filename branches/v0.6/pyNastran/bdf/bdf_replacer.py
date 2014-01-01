@@ -16,6 +16,9 @@ class BDFReplacer(BDF):
         self._auto_reject = True
         self.bdf_out_filename = bdf_out_filename
 
+    def is_reject(self, card_name):
+        return False
+
     def _start_writing(self):
         self.bdf_out_file = open(self.bdf_out_filename, 'wb')
         msg = self._write_header()
@@ -80,6 +83,7 @@ class BDFReplacer(BDF):
                 
             card = wipe_empty_fields([interpret_value(field, fields) if field is not None
                                       else None for field in fields])
+            #print(card)
             card_obj = BDFCard(card)
             self.bdf_out_file.write(print_card_8(card_obj))
 
@@ -93,7 +97,6 @@ class BDFReplacer(BDF):
                         #              'cards\ncard=%s\n' % reject_card)
                 #raise
 
-        #self.bdf_out_file.write(str(card_obj))
         #self.reject_cards.append(card)
         #print('rejecting processed auto=rejected %s' % card)
         return card_obj

@@ -108,7 +108,6 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
     fem2 = None
     diffCards = []
     try:
-        #print("xref = ", xref)
         (outModel) = run_fem1(fem1, bdfModel, meshForm, xref, punch, cid)
         (fem2) = run_fem2(bdfModel, outModel, xref, punch, reject, debug=debug, log=None)
         (diffCards) = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
@@ -149,17 +148,20 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, cid):
         raise
     #fem1.sumForces()
     #fem1.sumMoments()
-    outModel = bdfModel + '_out'
-    if cid is not None and xref:
-        fem1.resolveGrids(cid=cid)
-    if meshForm == 'combined':
-        fem1.write_bdf(outModel, interspersed=True)
-    elif meshForm == 'separate':
-        fem1.write_bdf(outModel, interspersed=False)
+    if fem1._auto_reject:
+        outModel = bdfModel + '.rej'
     else:
-        msg = "meshForm=|%r| allowedForms=['combined','separate']" % (meshForm)
-        raise NotImplementedError(msg)
-    #fem1.writeAsCTRIA3(outModel)
+        outModel = bdfModel + '_out'
+        if cid is not None and xref:
+            fem1.resolveGrids(cid=cid)
+        if meshForm == 'combined':
+            fem1.write_bdf(outModel, interspersed=True)
+        elif meshForm == 'separate':
+            fem1.write_bdf(outModel, interspersed=False)
+        else:
+            msg = "meshForm=%r allowedForms=['combined','separate']" % (meshForm)
+            raise NotImplementedError(msg)
+        #fem1.writeAsCTRIA3(outModel)
     return (outModel)
 
 
@@ -176,7 +178,7 @@ def run_fem2(bdfModel, outModel, xref, punch, reject, debug=False, log=None):
     try:
         fem2.read_bdf(outModel, xref=xref, punch=punch)
     except:
-        print("failed reading |%s|" % (outModel))
+        print("failed reading %r" % (outModel))
         raise
 
     #fem2.sumForces()
@@ -397,7 +399,7 @@ def main():
     msg += '  -c, --check    disables BDF checks.  Checks run the methods on \n'
     msg += '                 every element/property to test them.  May fails if a \n'
     msg += '                 card is fully not supported (default=False).\n'
-    msg += '  -r, --reject   rejects all cards with the appropriate values applied;\n'
+    msg += '  -r, --reject   rejects all cards with the appropriate values applied (default=False).\n'
     #msg += '  -o <VAR_VAL>, --openmdao <VAR_VAL>   rejects all cards with the appropriate values applied;\n'
     #msg += '                 Uses the OpenMDAO %var syntax to replace it with value.\n'
     #msg += '                 So test_bdf -r var1=val1 var2=val2\n'
@@ -422,7 +424,7 @@ def main():
                  xref =not(data['--xref' ]),
                  check=not(data['--check']),
                  punch=data['--punch'],
-                 reject=not(data['--reject'])
+                 reject=data['--reject'],
     )
     print("total time:  %.2f sec" % (time.time() - t0))
 
