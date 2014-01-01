@@ -1,14 +1,11 @@
-import unittest
-
 #bdf
 from pyNastran.bdf.test.all_tests import *
 
 #op2
-from pyNastran.op2.test.op2_unit_tests import TestOP2
+from pyNastran.op2.test.all_tests import *
 
 #f06
-from pyNastran.f06.test.f06_test import main as F06
-from pyNastran.f06.test.f06_unit_tests import TestF06
+from pyNastran.f06.test.all_tests import *
 
 
 #op4
@@ -19,5 +16,5 @@ from pyNastran.op4.test.op4_test import TestOP4
 
 
 if __name__ == "__main__":
+    import unittest
     unittest.main()
-    #F06()
