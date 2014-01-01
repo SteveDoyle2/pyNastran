@@ -6,7 +6,8 @@ from numpy import matrix as Matrix
 from scipy.sparse import coo_matrix
 
 
-def write_DMIG(f, name, matrix, form, precision='default'):
+def write_DMIG(f, name, matrix, form, precision='default',
+        row_index_to_component_id, col_index_to_component_id):
     """
     ==== ===============
     Form Definition
@@ -81,39 +82,24 @@ def write_DMIG(f, name, matrix, form, precision='default'):
     index_to_component_id = {}
 
     if isinstance(matrix, coo_matrix):
-        for i in matrix.row:
-            index_to_node_id[i] = i + 1
-        for i in matrix.col:
-            index_to_component_id[i] = 1 + i % 6
-
-        row_index_to_node_id = index_to_node_id
-        col_index_to_node_id = index_to_node_id
-
-        row_index_to_component_id = index_to_component_id
-        col_index_to_component_id = index_to_component_id
-
         if is_complex:
             reals = real(matrix.data)
             imags = imag(matrix.data)
             for i, j, reali, imagi in izip(matrix.row, matrix.col, reals, imags):
-                GJ = col_index_to_node_id[i]
-                CJ = col_index_to_node_id[i]
-                G1 = row_index_to_node_id[i]
-                C1 = row_index_to_node_id[i]
+                GJ, CJ = col_index_to_node_component_id[i]
+                G1, C1 = row_index_to_node_component_id[i]
                 card = ['DMIG', name, GJ, CJ, G1, C1, reali, imagi]
                 f.write(print_card(card))
         else:
             for i, j, reali in izip(matrix.row, matrix.col, matrix.data):
-                GJ = col_index_to_node_id[i]
-                CJ = col_index_to_node_id[i]
-                G1 = row_index_to_node_id[i]
-                C1 = row_index_to_node_id[i]
+                GJ, CJ = col_index_to_node_component_id[i]
+                G1, C1 = row_index_to_node_component_id[i]
                 card = ['DMIG', name, GJ, CJ, G1, C1, reali]
                 f.write(print_card(card))
     elif isinstance(matrix, Matrix):
         nrows, ncols = matrix.shape
-        if name == 'EYE5CD':
-            pass
+        #if name == 'EYE5CD':
+            #pass
         if is_complex:
             for icol in xrange(ncols):
                 ii = where(matrix[:, icol] != 0.0)[0]
@@ -121,20 +107,14 @@ def write_DMIG(f, name, matrix, form, precision='default'):
                 imags = imag(matrix[:, icol])
                 if ii.shape[1]: #len(ii) > 0:  # Matrix is 2D
                     #index_range = [ii.min(), ii.max()]
-                    #GJ = col_index_to_node_id[icol]
-                    #CJ = col_index_to_node_id[icol]
-                    GJ = icol
-                    CJ = icol
+                    GJ, CJ = col_index_to_node_component_id[icol]
                     card = ['DMIG', name, GJ, CJ, '']
                     ii_max = ii.max()
                     ii_min = ii.min()
                     if ii_max == ii_min:
                         ii_max += 1
                     for iirow, irow in enumerate(arange(ii_min, ii_max)):
-                        #G1 = row_index_to_node_id[irow]
-                        #C1 = row_index_to_node_id[irow]
-                        G1 = irow
-                        C1 = irow
+                        G1, C1 = row_index_to_node_component_id[irow]
                         card.append(G1)
                         card.append(C1)
                         card.append(reals[iirow, 0])
@@ -145,10 +125,7 @@ def write_DMIG(f, name, matrix, form, precision='default'):
                 ii = where(matrix[:, icol] != 0.0)[0]
                 if ii.shape[1]: #len(ii) > 0:  # Matrix is 2D
                     #index_range = [ii.min(), ii.max()]
-                    #GJ = col_index_to_node_id[icol]
-                    #CJ = col_index_to_node_id[icol]
-                    GJ = icol
-                    CJ = icol
+                    GJ, CJ = col_index_to_node_component_id[icol]
                     card = ['DMIG', name, GJ, CJ, '']
                     #for i, j, reali in izip(matrix.row, matrix.col, matrix.data):
                     ii_max = ii.max()
@@ -156,10 +133,7 @@ def write_DMIG(f, name, matrix, form, precision='default'):
                     if ii_max == ii_min:
                         ii_max += 1
                     for iirow, irow in enumerate(arange(ii_min, ii_max)):
-                        #G1 = row_index_to_node_id[irow]
-                        #C1 = row_index_to_node_id[irow]
-                        G1 = irow
-                        C1 = irow
+                        G1, C1 = row_index_to_node_component_id[irow]
                         card.append(G1)
                         card.append(C1)
                         card.append(matrix[irow, icol])  # real number
