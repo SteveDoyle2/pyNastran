@@ -171,7 +171,7 @@ def integer(card, n, fieldname):
     try:
         svalue = card.field(n)
     except IndexError:
-        raise SyntaxError('%s (field #%s) on card must be an integer.' % (fieldname, n) )
+        raise SyntaxError('%s (field #%s) on card must be an integer, but doesnt exist.' % (fieldname, n) )
 
     if isinstance(svalue, float):
         Type = getType(svalue)
@@ -231,7 +231,7 @@ def double(card, n, fieldname):
     try:
         svalue = card.field(n)
     except IndexError:
-        raise SyntaxError('%s (field #%s) on card must be a float.\ncard=%s' % (fieldname, n, card) )
+        raise SyntaxError('%s (field #%s) on card must be a float, but doesnt exist..\ncard=%s' % (fieldname, n, card) )
 
     if isinstance(svalue, float):
         return svalue
@@ -543,10 +543,10 @@ def integer_double_or_string(card, n, fieldname):
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
-    #try:
-    svalue = card.field(n)
-    #except IndexError:
-        #raise SyntaxError('%s (field #%s) on card must be an integer, float, or string.\ncard=%s' % (fieldname, n, card) )
+    try:
+        svalue = card.field(n)
+    except IndexError:
+        raise SyntaxError('%s (field #%s) on card must be an integer, float, or string, but doesnt exist.\ncard=%s' % (fieldname, n, card) )
     if isinstance(svalue, int) or isinstance(svalue, float):
         return svalue
 

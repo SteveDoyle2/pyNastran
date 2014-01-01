@@ -1281,8 +1281,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 fields = [self._parse_dynamic_syntax(field) if '%' in
                           field[0:1] else field for field in fields]
 
-            card = wipe_empty_fields([interpret_value(field, fields) if field is not None
-                                      else None for field in fields])
+                card = wipe_empty_fields([interpret_value(field, fields) if field is not None
+                                          else None for field in fields])
+            else:  # leave everything as strings
+                card = wipe_empty_fields(fields)
+                #card = fields
             card_obj = BDFCard(card)
 
         if self._auto_reject:

@@ -24,7 +24,8 @@ class TestRigid(unittest.TestCase):
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
         self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
-            self.assertEqual(actual, expected)
+            self.assertEqual(actual, expected, msg)
+
     def test_rbe2_02(self):
         lines = ['RBE2      100045  166007  123456  117752  101899  117766  101898 117748',
                  '+         117765  117764  117763  109821  117743  117744  117750 117751',
@@ -44,7 +45,7 @@ class TestRigid(unittest.TestCase):
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
         self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
-            self.assertEqual(actual, expected)
+            self.assertEqual(actual, expected, msg)
     #-------------------------------------------------------------------------
     def test_rbe1_01(self):
         lines = ['RBE1    10201   10201   123     10202   456',
@@ -67,7 +68,7 @@ class TestRigid(unittest.TestCase):
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
         self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
-            self.assertEqual(actual, expected)
+            self.assertEqual(actual, expected, msg)
 
     def test_rbe1_02(self):
         lines = ['RBE1        1001    1000  123456',
@@ -96,7 +97,30 @@ class TestRigid(unittest.TestCase):
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
         self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
-            self.assertEqual(actual, expected)
+            self.assertEqual(actual, expected, msg)
+
+    def test_rbe1_03(self):
+        lines = ['rbe1,46,3,123456, , , , , ,+rbe46',
+                '+rbe46,UM,4,123456,5,123456,2.0-6']
+        card = bdf.process_card(lines)
+        #print(print_card(card))
+        card = BDFCard(card)
+        #print(card)
+        card2 = RBE1(card)
+        fields = card2.rawFields()
+        msg = print_card(fields).rstrip()
+        #print(msg)
+
+        lines_expected = ['RBE1          46       3  123456',
+                          '              UM       4  123456       5  123456 .000002']
+
+        lines_actual = msg.rstrip().split('\n')
+        msg = '\n%s\n\n%s\n' % ('\n'.join(lines_expected), msg)
+        msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
+        self.assertEqual(len(lines_actual), len(lines_expected), msg)
+        for actual, expected in zip(lines_actual, lines_expected):
+            self.assertEqual(actual, expected, msg)
+
 
 if __name__ == '__main__':
     unittest.main()

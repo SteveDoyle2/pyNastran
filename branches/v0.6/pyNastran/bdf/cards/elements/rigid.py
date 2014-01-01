@@ -19,7 +19,8 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     integer_or_double, integer_double_or_blank, integer_or_blank,
-    double_or_blank, components, components_or_blank, blank, fields, string)
+    double_or_blank, integer_double_or_string, components, components_or_blank,
+    blank, fields, string)
 # integer_or_double, double,
 
 class RigidElement(Element):
@@ -144,7 +145,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         RigidElement.__init__(self, card, data)
         if comment:
             self._comment = comment
-
+    
         self.eid = integer(card, 1, 'eid')
         self.Gni = []
         self.Cni = []
@@ -154,11 +155,12 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         if iUm > 0:
             assert string(card, iUm, 'UM') == 'UM'
 
-        if isinstance(card[-1], float):
-            self.alpha = card.fields[-1].pop()  # the last field is not part of fields
-            #nfields = len(card) - 1
+        #assert isinstance(card[-1], str), 'card[-1]=%r type=%s' %(card[-1], type(card[-1]))
+        alpha_last = integer_double_or_string(card, -1, 'alpha_last')
+        if isinstance(alpha_last, float):
+            self.alpha = alpha_last
+            card.pop()  # remove the last field so len(card) will not include alpha
         else:
-            #nfields = len(card)
             self.alpha = 0.
 
         # loop till UM, no field9,field10
