@@ -6,6 +6,7 @@ from itertools import izip
 from pyNastran.bdf.fieldWriter import print_card, is_same
                                #print_card_8, set_default_if_blank, print_card
 #from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
 
 
@@ -403,7 +404,7 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
     """
     fields = [field.upper() if isinstance(field, basestring) else field for field in fields]
     if len(fields) == 1:
-        return [int(fields[0])]
+        return [interpret_value(fields[0])]
     out = []
     nFields = len(fields)
     i = 0
@@ -413,12 +414,12 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
             by = 1
             byCase = False
             if i + 2 < nFields and fields[i + 2] == 'BY':
-                by = int(fields[i + 3])
+                by = interpret_value(fields[i + 3])
             else:
                 by = 1
                 byCase = True
-            minValue = int(fields[i - 1])
-            maxValue = int(fields[i + 1])
+            minValue = interpret_value(fields[i - 1])
+            maxValue = interpret_value(fields[i + 1])
             maxR = int((maxValue - minValue) // by + 1)  # max range value
 
             for j in xrange(0, maxR):  # +1 is to include final point
@@ -430,7 +431,7 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
             else:     # BY case
                 i += 3
         else:
-            out.append(int(fields[i]))
+            out.append(interpret_value(fields[i]))
             i += 1
 
     if set_fields:
@@ -447,7 +448,7 @@ def expand_thru_exclude(self, fields):
 
     .. warning:: hasnt been tested
     """
-    fields = [field.upper() if isinstance(field, basestring) else field for field in fields]
+    fields = [interpret_value(field.upper()) if isinstance(field, basestring) else field for field in fields]
     fieldsOut = []
     nFields = len(fields)
     for i in xrange(nFields):

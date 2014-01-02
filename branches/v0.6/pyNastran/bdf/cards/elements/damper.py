@@ -92,7 +92,7 @@ class CDAMP1(LineDamper):
         return self.eid
 
     def nodeIDs(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True) ]
 
     def isSameCard(self, elem, debug=False):
         if self.type != elem.type:
@@ -181,7 +181,7 @@ class CDAMP2(LineDamper):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
 
     def nodeIDs(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True) ]
 
     def rawFields(self):
         nodes = self.nodeIDs()
@@ -246,7 +246,7 @@ class CDAMP3(LineDamper):
         self.pid = model.Property(self.pid, msg=msg)
 
     def nodeIDs(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True) ]
 
     def rawFields(self):
         nodes = self.nodeIDs()
@@ -371,7 +371,7 @@ class CDAMP5(LineDamper):
         return self.pid.b
 
     def nodeIDs(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True) ]
 
     def rawFields(self):
         nodes = self.nodeIDs()
@@ -430,7 +430,7 @@ class CVISC(LineDamper):
         return self.pid.ce
 
     def nodeIDs(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True) ]
 
     def rawFields(self):
         list_fields = ['CVISC', self.eid, self.Pid()] + self.nodeIDs()

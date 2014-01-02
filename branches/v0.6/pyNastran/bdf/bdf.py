@@ -2,9 +2,6 @@
 """
 Main BDF class
 """
-#from __future__ import (nested_scopes, generators, division, absolute_import,
-#                        unicode_literals)
-
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
@@ -19,7 +16,7 @@ from pyNastran.utils import list_print, is_string, object_attributes
 from pyNastran.utils.log import get_logger
 from pyNastran.utils.gui_io import load_file_dialog
 
-from pyNastran.bdf.bdfInterface.assign_type import string
+from pyNastran.bdf.bdfInterface.assign_type import integer, integer_or_string, string
 
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
@@ -1419,8 +1416,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                     raise
                 for i in _dct[card_name]:
                     if card_obj.field(i):
-                        self.add_property(_cls(card_name)(card_obj, 1,
-                                          comment=comment))
+                        self.add_property(_cls(card_name)(card_obj, 1, comment=comment))
                 return card_obj
 
             if card_name in ['DEQATN']:  # buggy for commas
@@ -1435,8 +1431,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 self.doptprm = DOPTPRM(card_obj, comment=comment)
 
             elif card_name == 'DMIG':  # not done...
-                from pyNastran.bdf.bdfInterface.assign_type import integer_or_string
-
                 field2 = integer_or_string(card_obj, 2, 'flag')
                 if field2 == 'UACCEL':  # special DMIG card
                     self.reject_cards.append(card)
@@ -1452,8 +1446,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                     dmig.addColumn(card_obj, comment=comment)
 
             elif card_name in ['DMI', 'DMIJ', 'DMIJI', 'DMIK']:
-                from pyNastran.bdf.bdfInterface.assign_type import integer
-
                 field2 = integer(card_obj, 2, 'flag')
                 if field2 == 0:
                     getattr(self, 'add_' + card_name)(_get_cls(card_name))
@@ -1748,7 +1740,7 @@ def to_fields(card_lines, card_name):
     else:  # small field
         if ',' in line:  # csv
             new_fields = line[:72].split(',')[:9]
-            for i in range(9-len(new_fields)):
+            for i in range(9 - len(new_fields)):
                 new_fields.append('')
         else:  # standard
             new_fields = [line[0:8], line[8:16], line[16:24], line[24:32],
@@ -1774,7 +1766,7 @@ def to_fields(card_lines, card_name):
         if '*' in line:  # large field
             if ',' in line:  # csv
                 new_fields = line[:72].split(',')[1:5]
-                for i in range(4-len(new_fields)):
+                for i in range(4 - len(new_fields)):
                     new_fields.append('')
             else:  # standard
                 new_fields = [line[8:24], line[24:40], line[40:56], line[56:72]]
@@ -1782,7 +1774,7 @@ def to_fields(card_lines, card_name):
         else:  # small field
             if ',' in line:  # csv
                 new_fields = line[:72].split(',')[1:9]
-                for i in range(8-len(new_fields)):
+                for i in range(8 - len(new_fields)):
                     new_fields.append('')
             else:  # standard
                 new_fields = [line[8:16], line[16:24], line[24:32], line[32:40],

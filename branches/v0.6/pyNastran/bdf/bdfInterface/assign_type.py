@@ -665,6 +665,10 @@ def interpret_value(valueRaw, card='', debug=False):
     if debug:
         print("v1 = |%s|" % valueRaw)
     #lvalue = valueRaw.lstrip()
+
+    if valueRaw is None:
+        return None
+
     try:
         valueIn = valueRaw.lstrip().rstrip(' *').upper()
     except AttributeError:  # it's already an int/float

@@ -1379,7 +1379,6 @@ class PBEAM(IntegratedLineProperty):
         if comment:
             self._comment = comment
 
-        print('card!!!!', card)
         if card:
             #: Property ID
             self.pid = integer(card, 1, 'pid')
