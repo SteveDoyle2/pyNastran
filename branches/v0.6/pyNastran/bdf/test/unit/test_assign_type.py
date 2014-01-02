@@ -5,7 +5,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_or_double, integer_double_or_blank,
     string, string_or_blank,
     integer_or_string, integer_string_or_blank, integer_double_or_string,
-    double_or_string, double_string_or_blank,
+    double_or_string, double_string_or_blank, 
     blank, components, getType, interpret_value)
 
 class ExtendedTestCase(unittest.TestCase):
@@ -91,9 +91,7 @@ class Test(ExtendedTestCase):
             double(BDFCard(['1']), 0, 'field')
 
         # float
-        self.assertEqual(1.0, double(BDFCard([1.]  ), 0, 'field'))
-        self.assertEqual(1.0, double(BDFCard(['1.']), 0, 'field'))
-        self.assertEqual(-9.31e-4, double(BDFCard(['-9.31-4']), 0, 'field'))
+        self.check_double(double)
 
         # string
         with self.assertRaises(SyntaxError):
@@ -116,8 +114,7 @@ class Test(ExtendedTestCase):
         value = integer(card, n, fieldname)
         """
         # integer
-        integer(BDFCard([1]  ), 0, 'field')
-        integer(BDFCard(['1']), 0, 'field')
+        self.check_integer(integer)
 
         # float
         with self.assertRaises(SyntaxError):
@@ -177,8 +174,7 @@ class Test(ExtendedTestCase):
         value = integer_or_blank(card, n, fieldname)
         """
         # integer
-        self.assertEqual(1, integer_or_blank(BDFCard([1]   ), 0, 'field'))
-        self.assertEqual(2, integer_or_blank(BDFCard(['2'] ), 0, 'field'))
+        self.check_integer(integer_or_blank)
 
         # float
         with self.assertRaises(SyntaxError):
@@ -202,11 +198,21 @@ class Test(ExtendedTestCase):
         default = [None, None,        None,        None, None, None]
         self.run_function_default(integer_or_blank, card, exact, default)
 
+
+    def check_integer(self, method):
+        # integer
+        self.assertEqual(1, method(BDFCard([1]    ), 0, 'field'))
+        self.assertEqual(2, method(BDFCard(['2']  ), 0, 'field'))
+
     def check_double(self, method):
         # float
         method(BDFCard([3.0]  ), 0, 'field')
         method(BDFCard(['4.0']), 0, 'field')
         method(BDFCard(['5.'] ), 0, 'field')
+
+        self.assertEqual(1.0, double(BDFCard([1.]  ), 0, 'field'))
+        self.assertEqual(1.0, double(BDFCard(['1.']), 0, 'field'))
+        self.assertEqual(-9.31e-4, double(BDFCard(['-9.31-4']), 0, 'field'))
 
         # float
         val = method(BDFCard([1.]  ), 0, 'field')
@@ -245,9 +251,9 @@ class Test(ExtendedTestCase):
         value = double_or_blank(card, n, fieldname, default=None)
         """
         # integer
-        integer_double_or_blank(BDFCard([1]    ), 0, 'field')
-        integer_double_or_blank(BDFCard(['2']  ), 0, 'field')
+        self.check_integer(integer_double_or_blank)
 
+        # float
         self.check_double(integer_double_or_blank)
 
         # error - string
@@ -269,8 +275,7 @@ class Test(ExtendedTestCase):
 
     def test_integer_string_or_blank(self):
         # integer
-        self.assertEqual(1, integer_string_or_blank(BDFCard([1]    ), 0, 'field'))
-        self.assertEqual(2, integer_string_or_blank(BDFCard(['2']  ), 0, 'field'))
+        self.check_integer(integer_string_or_blank)
 
         # float
         #print type(integer_string_or_blank(BDFCard(['4.0']), 0, 'field'))
@@ -286,24 +291,21 @@ class Test(ExtendedTestCase):
         self.assertEqual('LOAD', integer_string_or_blank(BDFCard(['load']  ), 0, 'field'))
 
         # blank
-        double_or_blank(BDFCard(['   ']), 0, 'field')
-        double_or_blank(BDFCard([None]), 0, 'field')
+        integer_string_or_blank(BDFCard(['   ']), 0, 'field')
+        integer_string_or_blank(BDFCard([None]), 0, 'field')
 
 
     #def test_double_string_or_blank(self):
 
     def test_integer_double_or_string(self):
         # integer
-        self.assertEqual(1, integer_double_or_string(BDFCard([1]    ), 0, 'field'))
-        self.assertEqual(2, integer_double_or_string(BDFCard(['2']  ), 0, 'field'))
+        self.check_integer(integer_double_or_string)
 
         # float
-        self.assertEqual(3.0, integer_double_or_string(BDFCard([3.0]  ), 0, 'field'))
-        self.assertEqual(4.0, integer_double_or_string(BDFCard(['4.0']), 0, 'field'))
-        self.assertEqual(5.0, integer_double_or_string(BDFCard(['5.'] ), 0, 'field'))
+        self.check_double(integer_double_or_string)
 
         # string
-        self.assertEqual('LOAD', integer_string_or_blank(BDFCard(['load']  ), 0, 'field'))
+        self.assertEqual('LOAD', integer_double_or_string(BDFCard(['load']  ), 0, 'field'))
 
     def test_components(self):
         # single ints

@@ -569,7 +569,7 @@ def integer_double_or_string(card, n, fieldname):
             except ValueError:
                 raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or string (not blank).\ncard=%s' % (fieldname, svalue, n, card) )
         else:
-            value = svalue
+            value = interpret_value(svalue)
         return value
     Type = getType(svalue)
     raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
