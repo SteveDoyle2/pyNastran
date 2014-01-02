@@ -617,7 +617,7 @@ class OP2(BDF,
             block = self.read_new_block()
             #print("len(block) = %s" % len(block))
             table_name, = unpack(b'8s', block)
-            print("table_name=%s self.n=%s" % (table_name, self.n))
+            self.log.debug("table_name=%r self.n=%s" % (table_name, self.n))
 
             marker = self.read_marker()
             print('marker = %s' % marker)
@@ -645,7 +645,7 @@ class OP2(BDF,
             self.n = 0
             self.op2.seek(self.n)
             table_name, = unpack(b'8s', block)
-            print("table_name = |%s|\n" % table_name)
+            self.log.debug("table_name = %r\n" % table_name)
             #sys.exit('stoppingA')
 
             block = self.read_new_block()
@@ -678,7 +678,7 @@ class OP2(BDF,
 
         foundMoreTables = True
         while foundMoreTables and table_name:
-            print("table_name=%s self.n=%s" % (table_name, self.n))
+            self.log.debug("table_name=%r self.n=%s" % (table_name, self.n))
             print("-----------------------------")
             try:
                 n = self.n
@@ -703,7 +703,7 @@ class OP2(BDF,
 
         self.op2.seek(self.n)
         table_name, = unpack(b'8s', data)
-        print("table_name = %r\n" % table_name)
+        self.log.debug("table_name = %r\n" % table_name)
 
         self.read_markers([-1])
         block = self.read_new_block()
@@ -776,9 +776,8 @@ class OP2(BDF,
             while isAnotherTable:
                 self.log.debug('-' * 80)
                 try:
-                    table_name = self.read_table_name(rewind=True,
-                                                     stopOnFailure=False)
-                    print("table_name = %s" % table_name)
+                    table_name = self.read_table_name(rewind=True, stopOnFailure=False)
+                    self.log.debug("table_name = %r" % table_name)
                 except EOFError:  # the isAnotherTable method sucks...
                     isAnotherTable = False
                     self.log.debug("***ok exit, but it could be better...")
@@ -790,7 +789,7 @@ class OP2(BDF,
                     break
                 except:
                     raise
-                self.log.debug("table_name = |%r|" % table_name)
+                self.log.debug("table_name = %r" % table_name)
                 #print("table_name = |%r|" % table_name)
 
                 if table_name is None:
@@ -948,7 +947,7 @@ class OP2(BDF,
                 elif table_name in ['BGPDT', 'BGPDTS', 'EDTS', 'CONTACT']:
                     self.readTable_DUMMY_GEOM(table_name)
                 else:
-                    msg = 'unhandled table_name=|%s|' % table_name
+                    msg = 'unhandled table_name=%r' % table_name
                     raise KeyError(msg)
                 #print("endTell   = ",self.op2.tell())
                 #print("---isAnotherTable---")
@@ -958,11 +957,11 @@ class OP2(BDF,
                 is_another_table = False
         else:
             if table_name not in [None]:
-                raise NotImplementedError('%s is not supported' % table_name)
+                raise NotImplementedError('%r is not supported' % table_name)
             (is_another_table) = self.skip_next_table()
             #return isAnotherTable
         #print(self.print_section(140))
-        self.log.debug("*** finished table_name = |%r|" % table_name)
+        self.log.debug("*** finished table_name = %r" % table_name)
         return is_another_table
 
     def read_monitor(self):
@@ -1140,7 +1139,7 @@ class OP2(BDF,
                          'log': self.log,
                          }
         #print("isubcase = ",self.isubcase)
-        self.parse_sort_code()
+        self._parse_sort_code()
 
         #print('aCode(1)=%s analysis_code=%s device_code=%s '
         #      'tCode(2)=%s table_code=%s sort_code=%s isubcase(4)=%s'

@@ -491,19 +491,21 @@ class F06Writer(object):
                 (subtitle, label) = self.iSubcaseNameMap[isubcase]
                 label = label.strip()
                 subtitle = subtitle.strip()
-                header = ['', '']
-                #header[0] = '     %s\n' % subtitle
-                header[0] = '      %-126s\n' % subtitle
-                header[1] = '0     %-32s                                                                       SUBCASE %-15i\n \n' % (label, isubcase)
 
                 #header[0] = '     %-127s\n' % subtitle
                 #header[1] = '0    %-72s                                SUBCASE %-15i\n' % (label, isubcase)
                 #header[1] = '0    %-72s                                SUBCASE %-15i\n' %('',isubcase)
                 for resType in resTypes:
+                    header = ['', '']
+                    #header[0] = '     %s\n' % subtitle
+                    header[0] = '      %-126s\n' % subtitle
+                    header[1] = '0     %-32s                                                                       SUBCASE %-15i\n \n' % (label, isubcase)
                     #print "resType = ",resType
                     if isubcase in resType:
                         #header = copy.deepcopy(headerOld)  # fixes bug in case
                         result = resType[isubcase]
+                        if result.nonlinear_factor is not None:
+                            header.append('')
                         try:
                             print(result.__class__.__name__)
                             self.pageNum = result.write_f06(header, pageStamp, pageNum=self.pageNum, f=f, is_mag_phase=False)

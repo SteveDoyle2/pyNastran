@@ -276,6 +276,5 @@ class BushStrainObject(StrainObject):
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             msg = ['']
-            return pageNum
             pageNum += 1
         return pageNum - 1

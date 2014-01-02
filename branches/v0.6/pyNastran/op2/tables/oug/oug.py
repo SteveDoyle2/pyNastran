@@ -82,7 +82,7 @@ class OUG(object):
         #self.isRegular = False
         elif self.analysis_code in [1, 5]:  # 5 # freq
             # frequency
-            self._add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)
+            self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)
             self.apply_data_code_value('dataNames', ['nodeID'])
             #print("nodeID = %s" %(self.nodeID))
             #sys.exit(self.nodeID)

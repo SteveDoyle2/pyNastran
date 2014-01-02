@@ -105,7 +105,14 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
             (model, ext) = os.path.splitext(op2FileName)
             op2.write_f06(model+'.test_op2.f06', is_mag_phase=is_mag_phase)
             if delete_f06:
-                os.remove(model+'.test_op2.f06')
+                try:
+                    os.remove(model+'.test_op2.f06')
+                except:
+                    pass
+                try:
+                    os.remove(model+'.f06')
+                except:
+                    pass
 
         if write_matlab:
             (model, ext) = os.path.splitext(op2FileName)
@@ -185,52 +192,55 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
 
     return isPassed
 
-def run_arg_parse():
-    import argparse
-
-    ver = str(pyNastran.__version__)
-    parser = argparse.ArgumentParser(description='Tests to see if an OP2 will work with pyNastran.',add_help=True) #,version=ver)
-    parser.add_argument('op2FileName', metavar='op2FileName', type=str, nargs=1,
-                       help='path to OP2 file')
-
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument( '-q','--quiet',    dest='quiet',    action='store_true',help='Prints   debug messages (default=True)')
-
-    #group2 = parser.add_mutually_exclusive_group()  # should this be exclusive???
-    parser.add_argument('-g','--geometry',     dest='geometry',       action='store_true', help='Reads the OP2 for geometry, which can be written out')
-    parser.add_argument('-w','--write_bdf',    dest='write_bdf',      action='store_true', help='Writes the bdf to fem.bdf.out')
-    parser.add_argument('-f','--write_f06',    dest='write_f06',      action='store_true', help='Writes the f06 to fem.f06.out')
-    parser.add_argument('-z','--is_mag_phase', dest='is_mag_phase',   action='store_true', help='F06/Matlab Writer writes Magnitude/Phase instead of Real/Imaginary (still stores Real/Imag)')
-    parser.add_argument('-p','--print_results',dest='print_results',  action='store_true', help='Prints objects to screen which can require lots of memory')
-    parser.add_argument('-v','--version',action='version',version=ver)
-
-    if len(sys.argv)==1:
-        parser.print_help()
-        sys.exit()
-    args = parser.parse_args()
-    print("op2FileName = %s" %(args.op2FileName[0]))
-    print("debug       = %s" %(not(args.quiet)))
-
-    debug         = not(args.quiet)
-    make_geom     = args.geometry
-    write_bdf     = args.write_bdf
-    write_f06     = args.write_f06
-    is_mag_phase  = args.is_mag_phase
-    write_matlab  = False
-    print_results = args.print_results
-    op2FileName   = args.op2FileName[0]
-
-    return (op2FileName,make_geom,write_bdf,write_f06,write_matlab,is_mag_phase,print_results,debug)
 
 def main():
-    (op2FileName,make_geom,write_bdf,write_f06,write_matlab,is_mag_phase,print_results,debug) = run_arg_parse()
+    from docopt import docopt
+    msg  = "Usage:\n"
+    msg += "test_op2 [-q] [-g] [-w] [-f] [-z] [-p] OP2_FILENAME\n"
+    msg += "  test_op2 -h | --help\n"
+    msg += "  test_op2 -v | --version\n"
+    msg += "\n"
+    msg += "Tests to see if an OP2 will work with pyNastran.\n"
+    msg += "\n"
+    msg += "Positional Arguments:\n"
+    msg += "  OP2_FILENAME         Path to OP2 file\n"
+    msg += "\n"
+    msg += "Options:\n"
+    msg += "  -q, --quiet          Suppresses debug messages (default=False)\n"
+    msg += "  -g, --geometry       Reads the OP2 for geometry, which can be written out (default=False)\n"
+    msg += "  -w, --write_bdf      Writes the bdf to fem.bdf.out (default=False)\n"
+    msg += "  -f, --write_f06      Writes the f06 to fem.f06.out (default=True)\n"
+    msg += "  -z, --is_mag_phase   F06 Writer writes Magnitude/Phase instead of\n"
+    msg += "                       Real/Imaginary (still stores Real/Imag); (default=False)\n"
+    msg += "  -p, --print_results  Prints objects to screen which can require lots of\n"
+    msg += "                       memory (default=False).\n"
+    msg += "  -h, --help           Show this help message and exit\n"
+    msg += "  -v, --version        Show program's version number and exit\n"
 
+    if len(sys.argv) == 1:
+        aadf
+        sys.exit(msg)
+
+    ver = str(pyNastran.__version__)
+    data = docopt(msg, version=ver)
+    #print("data", data)
+
+    for key, value in sorted(data.iteritems()):
+        print("%-12s = %r" % (key.strip('--'), value))
+    
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
 
     import time
     t0 = time.time()
-    run_op2(op2FileName,make_geom=make_geom,write_bdf=write_bdf,write_f06=write_f06,write_matlab=write_matlab,is_mag_phase=is_mag_phase,print_results=print_results,debug=debug)
+    run_op2(data['OP2_FILENAME'],
+            make_geom     = data['--geometry'],
+            write_bdf     = data['--write_bdf'],
+            write_f06     = data['--write_f06'],
+            write_matlab  = False, #data['--write_matlab'],
+            is_mag_phase  = data['--is_mag_phase'],
+            print_results = data['--print_results'],
+            debug         = not(data['--quiet']))
     print("dt = %f" %(time.time() - t0))
 
 if __name__=='__main__':  # op2

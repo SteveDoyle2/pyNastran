@@ -23,8 +23,8 @@ __email__   = 'mesheb82@gmail.com'
 __desc__    = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
 __copyright__   = 'Copyright 2011-2013, pyNastran; %s' % __author__
 __license__     = 'LGPLv3'
-__releaseDate__ = '2013/6/xx'
-__releaseDate2__ = 'JUNE xx, 2013'
+__releaseDate__ = '2014/6/xx'
+__releaseDate2__ = 'JUNE xx, 2014'
 __version__     = '0.6.2'
 __website__     = 'http://code.google.com/p/pynastran/'
 

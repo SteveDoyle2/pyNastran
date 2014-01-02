@@ -42,6 +42,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             filenames2.append(filename)
 
     failedFiles = []
+    n = 1
     for filename in filenames2:
         absFilename = os.path.abspath(os.path.join(folder, filename))
         if folder != '':
@@ -72,7 +73,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             #raise
         print('-' * 80)
         if isPassed:
-            sys.stderr.write(absFilename)
+            sys.stderr.write('%i %s' % (n, absFilename))
+            n += 1
         else:
             sys.stderr.write('*' + absFilename)
             failedFiles.append(absFilename)
@@ -387,7 +389,7 @@ def main():
     msg += '\n'
 
     msg += "Positional Arguments:\n"
-    msg += "  BDF_FILENAME   path to BDF/DAT file\n"
+    msg += "  BDF_FILENAME   path to BDF/DAT/NAS file\n"
     msg += '\n'
     
     msg += "Options:\n"

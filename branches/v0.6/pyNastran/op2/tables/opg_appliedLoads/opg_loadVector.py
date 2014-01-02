@@ -192,7 +192,7 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
             f.write(''.join(msg))
             msg = ['']
             pageNum += 1
-        return ageNum - 1
+        return pageNum - 1
 
 
 class ThermalVector(TableObject):

@@ -369,6 +369,7 @@ class SolidStressObject(StressObject):
         return (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        assert f is not None
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
 
@@ -390,8 +391,7 @@ class SolidStressObject(StressObject):
         return pageNum - 1
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
-        (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
-            pentaEids) = self.getF06_Header()
+        (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids) = self.getF06_Header()
         dts = self.oxx.keys()
         for dt in dts:
             if tetraEids:
@@ -408,7 +408,7 @@ class SolidStressObject(StressObject):
                 pageNum += 1
         return pageNum - 1
 
-    def writeElement(self, eType, nNodes, eids, header, tetraMsg, f=None):
+    def writeElement(self, eType, nNodes, eids, header, tetraMsg, f):
         msg = header + tetraMsg
         for eid in eids:
             #eType = self.eType[eid]
@@ -445,7 +445,7 @@ class SolidStressObject(StressObject):
                 msg.append('               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n' % ('', ozz, txz, o3, v[2, 1], v[2, 2], v[2, 0]))
         f.write(''.join(msg))
 
-    def writeElementTransient(self, eType, nNodes, eids, dt, header, tetraMsg, f=None):
+    def writeElementTransient(self, eType, nNodes, eids, dt, header, tetraMsg, f):
         dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
         header[1] = dtLine
         msg = header + tetraMsg
@@ -866,6 +866,7 @@ class SolidStrainObject(StrainObject):
         return (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        assert f is not None
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
         msg = []
@@ -909,7 +910,7 @@ class SolidStrainObject(StrainObject):
         f.write(''.join(msg))
         return pageNum - 1
 
-    def writeElement(self, eType, nNodes, eids, header, tetraMsg, f=None):
+    def writeElement(self, eType, nNodes, eids, header, tetraMsg, f):
         msg = header + tetraMsg
         for eid in eids:
             #eType = self.eType[eid]
@@ -946,7 +947,7 @@ class SolidStrainObject(StrainObject):
                 msg.append('               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n' % ('', ezz, exz, e3, v[2, 1], v[2, 2], v[2, 0]))
         f.write(''.join(msg))
 
-    def writeElementTransient(self, eType, nNodes, eids, dt, header, tetraMsg, pageStamp=1, f=None):
+    def writeElementTransient(self, eType, nNodes, eids, dt, header, tetraMsg, f):
         dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
         header[1] = dtLine
         msg = header + tetraMsg
