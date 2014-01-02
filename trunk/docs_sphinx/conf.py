@@ -20,7 +20,7 @@ try:
     import pyNastran
     pkg_path = pyNastran.__path__[0]
 except ImportError:  # hopefully makes readthedocs work
-    pkg_path2 = os.path.join(os.path.dirname(cwd), 'pyNastran')
+    pkg_path = os.path.join(os.path.dirname(cwd), 'pyNastran')
 print "cwd", cwd
 print "pkg_path", pkg_path
 sys.stdout.flush()
@@ -316,7 +316,7 @@ epub_copyright = u'2012, Steven Doyle, Al Danial'
 # Allow duplicate toc entries.
 #epub_tocdup = True
 
-# Convert comments from doxygen style to spnix/reStructuredText 
+# Convert comments from doxygen style to spnix/reStructuredText
 regex_param = re.compile("@param (\w+)")
 regex_see   = re.compile("@see (\w+)")
 regex_math  = re.compile("\\\\f\\[(.*)\\\\f\\]")
@@ -341,58 +341,58 @@ def convert_doxygen_comments(app, what, name, obj, options, lines):
         if not line:
             res_lines.append(line)
             continue
-        
+
         #function parameters
         new_line = regex_param.sub("\n:param \\1:", line)
-        
+
         # multiline latex mathematics: begining of block
         if "\\f[" in new_line and "\\f]" not in new_line:
             new_line = new_line.replace("\\f[", "\n.. math::\n")
             _need_indent = True
-        
+
         # multiline latex mathematics: end of block
         elif "\\f]" in new_line and "\\f[" not in new_line:
             new_line = new_line.replace("\\f]", "\n\n")
             _need_indent = False
-            
+
         # blocks of 'verbatim code' also needs  indent
         if "@code" in new_line:
             _need_indent = True
         elif "@endcode" in new_line:
             _need_indent = False
-        
+
         # add indent if necessary
         if _need_indent:
             new_line = " "+new_line
-        
+
         # single line latex mathematics
         new_line = regex_math.sub("\n.. math:: \\1\n\n", new_line)
         new_line = regex_math_inline.sub(":math:`\\1`", new_line)
-        
-            
-        # simple subsitutions    
+
+
+        # simple subsitutions
         new_line = reduce(lambda s, l: s.replace(*l), substitutions, new_line)
-        
+
         # other links
         if "@see" in new_line:
             # links in their own frame
             if new_line.startswith("@see"):
                 new_line = "\n.. seealso:: " + new_line
-            
+
             # sphinx automatically treats http://... as link
-            if "http" in new_line: 
-                new_line = new_line.replace("@see", "see") 
+            if "http" in new_line:
+                new_line = new_line.replace("@see", "see")
             elif "pdf" in new_line: ## todo: what is refman.pdf?
                 new_line = new_line.replace("@see", "see")
             elif "import logging" in new_line: ## todo: what is that?
                 new_line = new_line.replace("@see", "see")
             else:
                 new_line = regex_see.sub("see :py:func:`\\1`", new_line)
-            
+
         res_lines += new_line.splitlines()
-        
+
     lines[:] = res_lines
 
 
 def setup(app):
-    app.connect('autodoc-process-docstring', convert_doxygen_comments) 
+    app.connect('autodoc-process-docstring', convert_doxygen_comments)
