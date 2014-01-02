@@ -11,6 +11,7 @@ from pyNastran.utils.log import get_logger
 from pyNastran.op2.tables.oug.oug_eigenvectors import EigenVectorObject  # ,ComplexEigenVectorObject
 from pyNastran.op2.tables.lama_eigenvalues.lama_objects import RealEigenvalues, ComplexEigenvalues
 
+
 from pyNastran.f06.tables.oes import OES  # OES
 from pyNastran.f06.tables.oug import OUG  # OUG
 from pyNastran.f06.tables.oqg import OQG  # OUG
@@ -18,6 +19,8 @@ from pyNastran.f06.f06_classes import MaxDisplacement  # classes not in op2
 from pyNastran.f06.f06Writer import F06Writer
 
 
+class FatalError(RuntimeError):
+    pass
 
 class F06Deprecated(object):
     def readF06(self):
@@ -46,7 +49,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                 self.f06FileName, print_bad_path(self.f06_filename))
             raise RuntimeError(msg)
         self.infile = open(self.f06_filename, 'r')
-        self.__initAlt__(debug, log)
+        self.__init_data__(debug, log)
 
         self.lineMarkerMap = {
             'R E A L   E I G E N V E C T O R   N O': self.getRealEigenvectors,
@@ -115,115 +118,14 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         }
         self.markers = self.markerMap.keys()
 
-    def __initAlt__(self, debug=False, log=None):
+    def __init_data__(self, debug=False, log=None):
         self.i = 0
-        self.pageNum = 1
         self.storedLines = []
-
-        self.displacementsPSD = {}        # random
-        self.displacementsATO = {}        # random
-        self.displacementsRMS = {}        # random
-        self.displacementsCRM = {}        # random
-        self.displacementsNO = {}        # random
-        self.scaledDisplacements = {}     # tCode=1 thermal=8
-
-        #-----------------------------------
-        self.velocities = {}
-        self.accelerations = {}
-        self.eigenvalues = {}
-        self.eigenvectors = {}
-
-        self.thermalLoadVectors = {}
-        self.forceVectors = {}
-        self.barForces = {}
-
-        self.beamForces = {}
-        self.springForces = {}
-        self.damperForces = {}
-        self.solidPressureForces = {}
-
-        #-----------------------------------
-        # OEF - loads
-        self.rodForces = {}
-        self.conrodForces = {}
-        self.ctubeForces = {}
-
-        #-----------------------------------
-        # OES - strain
-
-        # rods
-        self.rodStrain = {}
-        self.conrodStrain = {}
-        self.ctubeStrain = {}
-        self.nonlinearRodStress = {}
-
-        # bush
-        self.bushStrain = {}
-
-        # bars/beams
-        self.barStrain = {}
-        self.beamStrain = {}
-
-        # plates
-        self.plateStrain = {}
-        self.nonlinearPlateStrain = {}
-        self.compositePlateStrain = {}
-        self.ctriaxStrain = {}
-        self.hyperelasticPlateStress = {}
-
-        # solids
-        self.solidStrain = {}
-
-        #-----------------------------------
-        # OES - stress
-
-        # rods
-        self.rodStress = {}
-        self.conrodStress = {}
-        self.ctubeStress = {}
-        self.nonlinearRodStrain = {}
-
-        # bush
-        self.bushStress = {}
-
-        # bars/beams
-        self.barStress = {}
-        self.beamStress = {}
-
-        # plates
-        self.plateStress = {}
-        self.nonlinearPlateStress = {}
-        self.compositePlateStress = {}
-
-        # solids
-        self.solidStress = {}
-        self.ctriaxStress = {}
-        self.hyperelasticPlateStrain = {}
-
-        # shear...not done
-        self.shearStrain = {}
-        self.shearStress = {}
-        self.shearForces = {}
-
-        #-----------------------------------
-        # GPSTRESS, GPFORCE
-        self.gridPointStresses = {}
-        self.gridPointVolumeStresses = {}
-        self.gridPointForces = {}
-        #-----------------------------------
-
-        self.iSubcases = []
-        self.temperatureGrad = {}
-
-        self.iSubcaseNameMap = {}
-        self.loadVectors = {}
-        self.gridPointForces = {}
-
-        self.bush1dStressStrain = {}
 
         OES.__init__(self)
         OQG.__init__(self)
         OUG.__init__(self)
+        F06Writer.__init__(self)
 
         ## the TITLE in the Case Control Deck
         self.Title = ''
@@ -279,128 +181,14 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         #print self.disp[isubcase]
 
     def getGridWeight(self):  # .. todo:: not done
-        """
-         0-                                 REFERENCE POINT =        0
-         1-                                           M O
-         2- *  2.338885E+05  2.400601E-13 -7.020470E-15 -1.909968E-11  2.851745E+06 -5.229834E+07 *
-         3- *  2.400601E-13  2.338885E+05 -2.520547E-13 -2.851745E+06  2.151812E-10  2.098475E+08 *
-         4- * -7.020470E-15 -2.520547E-13  2.338885E+05  5.229834E+07 -2.098475E+08 -1.960403E-10 *
-         5- * -1.909968E-11 -2.851745E+06  5.229834E+07  2.574524E+10 -5.566238E+10 -4.054256E+09 *
-         6- *  2.851745E+06  2.151812E-10 -2.098475E+08 -5.566238E+10  2.097574E+11 -2.060162E+09 *
-         7- * -5.229834E+07  2.098475E+08 -1.960403E-10 -4.054256E+09 -2.060162E+09  2.336812E+11 *
-         8-                                           S
-         9-                      *  1.000000E+00  0.000000E+00  0.000000E+00 *
-        10-                      *  0.000000E+00  1.000000E+00  0.000000E+00 *
-        11-                      *  0.000000E+00  0.000000E+00  1.000000E+00 *
-        12-        DIRECTION
-        13-     MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.
-        14-             X            2.338885E+05     -8.166148E-17  2.236038E+02  1.219276E+01
-        15-             Y            2.338885E+05      8.972118E+02  9.200164E-16  1.219276E+01
-        16-             Z            2.338885E+05      8.972118E+02  2.236038E+02 -8.381786E-16
-        17-                                         I(S)
-        18-                    *  1.401636E+10  8.739690E+09  1.495636E+09 *
-                               *  8.739690E+09  2.144496E+10  1.422501E+09 *
-                               *  1.495636E+09  1.422501E+09  3.370946E+10 *
-                                                    I(Q)
-                               *  3.389001E+10                             *
-                               *                8.073297E+09               *
-                               *                              2.720748E+10 *
-                                                     Q
-                               * -3.599259E-02 -8.305739E-01  5.557441E-01 *
-                               * -8.850329E-02 -5.512702E-01 -8.296194E-01 *
-                               *  9.954254E-01 -7.904533E-02 -5.366689E-02 *
-        """
         line = ''
         lines = []
         while 'PAGE' not in line:
             line = self.infile.readline()[1:].strip()
             lines.append(line)
             self.i += 1
-        print '\n'.join(lines)
-        ref_point = lines[0].split('=')[1]
-        assert lines[1] == 'M O', lines[1]
-        
-        MO = zeros((6, 6), dtype='float64')
-        S  = zeros((3, 3), dtype='float64')
-
-        mass = zeros(3, dtype='float64')
-        cg = zeros((6, 6), dtype='float64')
-
-        IS = zeros((3, 3), dtype='float64')
-        IQ = zeros((3, 3), dtype='float64')
-        Q  = zeros((3, 3), dtype='float64')
-
-        #========================================
-        # MO
-        n = 2
-        for i in range(6):
-            line = lines[n + i][1:-1]  # get rid of the * characters
-            print line
-            sline = line.split()
-            for j in range(6):
-                MO[i, j] = sline[j]
-        print "MO =", MO
-        n += i + 1
-        
-        #========================================
-        # S
-        assert lines[n] == 'S', lines[n]
-        n += 1
-        for i in range(3):
-            line = lines[n + i][1:-1]  # get rid of the * characters
-            sline = line.split()
-            for j in range(3):
-                S[i, j] = sline[j]
-        print "S =", S
-        n += i + 1
-
-        #========================================
-        assert lines[n] == 'DIRECTION', lines[n]
-        n += 2
-        for i in range(3):
-            line = lines[n + i][1:-1]  # get rid of the * characters
-            sline = line.split()
-
-            mass[i] = sline[0]
-            for j in range(3):
-                cg[i, j] = sline[j + 1]
-                
-        print "mass =", mass
-        n += 3
-
-        #========================================
-        assert lines[n] == 'I(S)', lines[n]
-        n += 1
-        for i in range(3):
-            line = lines[n + i][1:-1]  # get rid of the * characters
-            sline = line.split()
-            for j in range(3):
-                IS[i, j] = sline[j]
-        print "IS =", IS
-        n += i + 1
-
-        #========================================
-        assert lines[n] == 'I(Q)', lines[n]
-        n += 1
-        for i in range(3):
-            line = lines[n + i][1:-1].strip()  # get rid of the * characters
-            IQ[i, i] = sline[i]
-        print "IQ =", IQ
-        n += i + 1
-
-        #========================================
-        # S
-        assert lines[n] == 'Q', lines[n]
-        n += 1
-        for i in range(3):
-            line = lines[n + i][1:-1]  # get rid of the * characters
-            sline = line.split()
-            for j in range(3):
-                Q[i, j] = sline[j]
-        print "Q =", Q
-        n += i
-
-        aaa
+        #print '\n'.join(lines)
+        self.grid_point_weight.read_grid_point_weight(lines)
 
     def readSubcaseNameID(self):
         subtitle = self.storedLines[-3].strip()
@@ -410,7 +198,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         except:
             Title = ''
         #self.Title = subcaseName  # 'no title'
-        
+
         subcaseName = ''
         #print("subcaseLine = %r" % subcaseName)
         if subcaseName == '':
@@ -424,7 +212,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
             #assert isinstance(isubcase,int),'isubcase=|%r|' % (isubcase)
             #print "subcaseName=%s isubcase=%s" % (subcaseName, isubcase)
-        
+
         #subtitle = 'SUBCASE %s' % isubcase
         label = 'SUBCASE %s' % isubcase
 
@@ -714,8 +502,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             try:
                 entry2 = iFormat(entry)
             except:
-                #print "sline=|%s|\n entry=|%s| format=%s" %(sline, entry,
-                #                                            iFormat)
+                #print "sline=|%s|\n entry=|%s| format=%s" %(sline, entry, iFormat)
                 #raise
                 return None
             out.append(entry2)
@@ -756,6 +543,20 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             marker = line[1:].strip()
 
             #print("marker = %r" % marker)
+            if 'FATAL' in marker:
+                msg = [marker]
+                blank = 0
+                while 1:
+                    line = self.infile.readline().rstrip()
+                    #print "blank = %s" % blank
+                    if line == '':
+                        blank += 1
+                        if blank == 20:
+                            break
+                    else:
+                        msg.append(line)
+                raise FatalError('\n'.join(msg))
+
             if marker in self.markers:
                 blank = 0
                 #print("\n1*marker = %r" % marker)

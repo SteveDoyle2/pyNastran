@@ -3,6 +3,7 @@ import copy
 from datetime import date
 
 import pyNastran
+from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 
 
 def make_stamp(Title):
@@ -11,7 +12,7 @@ def make_stamp(Title):
     t = date.today()
     months = ['January', 'February', 'March', 'April', 'May', 'June',
               'July', 'August', 'September', 'October', 'November', 'December']
-    today = '%-8s %-2s, %4s' % (months[t.month - 1].upper(), t.day, t.year)
+    today = '%-8s %2s, %4s' % (months[t.month - 1].upper(), t.day, t.year)
     today = today.strip()
     'September 14, 2013' # 18
 
@@ -165,7 +166,173 @@ class F06Writer(object):
     def __init__(self, model='tria3'):
         self.Title = ''
         self.pageNum = 1
+
+        #: a dictionary that maps an integer of the subcaseName to the
+        #: subcaseID
+        self.iSubcaseNameMap = {}
+
         self.set_f06_name(model)
+
+        # F06
+        self.grid_point_weight = GridPointWeight()
+
+        self.iSubcases = []
+        self.__objects_init__()
+
+    def __objects_init__(self):
+        """More variable declarations"""
+        #: ESE
+        self.eigenvalues = {}
+
+        #: OUG - displacement
+        self.displacements = {}           # tCode=1 thermal=0
+        self.displacementsPSD = {}        # random
+        self.displacementsATO = {}        # random
+        self.displacementsRMS = {}        # random
+        self.displacementsCRM = {}        # random
+        self.displacementsNO = {}        # random
+        self.scaledDisplacements = {}     # tCode=1 thermal=8
+
+        #: OUG - temperatures
+        self.temperatures = {}           # tCode=1 thermal=1
+
+        #: OUG - eigenvectors
+        self.eigenvectors = {}            # tCode=7 thermal=0
+
+        #: OUG - velocity
+        self.velocities = {}              # tCode=10 thermal=0
+
+        #: OUG - acceleration
+        self.accelerations = {}           # tCode=11 thermal=0
+
+        # OEF - Forces - tCode=4 thermal=0
+        # rods
+        self.rodForces = {}
+        self.conrodForces = {}
+        self.ctubeForces = {}
+
+        self.barForces = {}
+        self.bar100Forces = {}
+        self.beamForces = {}
+        self.bendForces = {}
+        self.bushForces = {}
+        self.coneAxForces = {}
+        self.damperForces = {}
+        self.gapForces = {}
+        self.plateForces = {}
+        self.plateForces2 = {}
+        self.shearForces = {}
+        self.solidPressureForces = {}
+        self.springForces = {}
+        self.viscForces = {}
+
+        self.force_VU = {}
+        self.force_VU_2D = {}
+
+        #OEF - Fluxes - tCode=4 thermal=1
+        self.thermalLoad_CONV = {}
+        self.thermalLoad_CHBDY = {}
+        self.thermalLoad_1D = {}
+        self.thermalLoad_2D_3D = {}
+        self.thermalLoad_VU = {}
+        self.thermalLoad_VU_3D = {}
+        self.thermalLoad_VUBeam = {}
+        #self.temperatureForces = {}
+
+        # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
+        #: OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
+        self.celasStress = {}
+        #: OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
+        self.celasStrain = {}
+
+        #: OES - CTRIAX6
+        self.ctriaxStress = {}
+        self.ctriaxStrain = {}
+
+        #: OES - isotropic CROD/CONROD/CTUBE stress
+        self.rodStress = {}
+        self.conrodStress = {}
+        self.ctubeStress = {}
+
+        #: OES - isotropic CROD/CONROD/CTUBE strain
+        self.rodStrain = {}
+        self.conrodStrain = {}
+        self.ctubeStrain = {}
+
+        #: OES - nonlinear CROD/CONROD/CTUBE stress
+        self.nonlinearRodStress = {}
+        #: OES - nonlinear CROD/CONROD/CTUBE strain
+        self.nonlinearRodStrain = {}
+        #: OES - isotropic CBAR stress
+        self.barStress = {}
+        #: OES - isotropic CBAR strain
+        self.barStrain = {}
+        #: OES - isotropic CBEAM stress
+        self.beamStress = {}
+        #: OES - isotropic CBEAM strain
+        self.beamStrain = {}
+        #: OES - isotropic CBUSH stress
+        self.bushStress = {}
+        #: OES - isotropic CBUSH strain
+        self.bushStrain = {}
+         #: OES - isotropic CBUSH1D strain/strain
+        self.bush1dStressStrain = {}
+
+        #: OES - isotropic CTRIA3/CQUAD4 stress
+        self.plateStress = {}
+        #: OES - isotropic CTRIA3/CQUAD4 strain
+        self.plateStrain = {}
+        #: OESNLXR - CTRIA3/CQUAD4 stress
+        self.nonlinearPlateStress = {}
+        #: OESNLXR - CTRIA3/CQUAD4 strain
+        self.nonlinearPlateStrain = {}
+        self.hyperelasticPlateStress = {}
+        self.hyperelasticPlateStrain = {}
+
+        #: OES - isotropic CTETRA/CHEXA/CPENTA stress
+        self.solidStress = {}
+        #: OES - isotropic CTETRA/CHEXA/CPENTA strain
+        self.solidStrain = {}
+        #: OES - composite CTRIA3/CQUAD4 stress
+        self.compositePlateStress = {}
+        #: OES - composite CTRIA3/CQUAD4 strain
+        self.compositePlateStrain = {}
+
+        #: OES - CSHEAR stress
+        self.shearStress = {}
+        #: OES - CSHEAR strain
+        self.shearStrain = {}
+
+        #: OES - CELAS1 224, CELAS3 225,
+        self.nonlinearSpringStress = {}
+        #: OES - GAPNL 86
+        self.nonlinearGapStress = {}
+        #: OES - CBUSH 226
+        self.nolinearBushStress = {}
+
+        # OQG - spc/mpc forces
+        self.spcForces = {}  # tCode=3?
+        self.mpcForces = {}  # tCode=39
+
+        # OQG - thermal forces
+        self.thermalGradientAndFlux = {}
+
+        #: OGF - grid point forces
+        self.gridPointForces = {}  # tCode=19
+
+        #: OGS1 - grid point stresses
+        self.gridPointStresses = {}       # tCode=26
+        self.gridPointVolumeStresses = {}  # tCode=27
+
+        #: OPG - summation of loads for each element
+        self.loadVectors = {}       # tCode=2  thermal=0
+        self.thermalLoadVectors = {}  # tCode=2  thermal=1
+        self.appliedLoads = {}       # tCode=19 thermal=0
+        self.forceVectors = {}       # tCode=12 thermal=0
+
+        #: OEE - strain energy density
+        self.strainEnergy = {}  # tCode=18
+
 
     def set_f06_name(self, model):
         self.model = model
@@ -371,6 +538,8 @@ class F06Writer(object):
         pageStamp = self.make_stamp(self.Title)
         #print "pageStamp = %r" % pageStamp
         #print "stamp     = %r" % stamp
+
+        self.pageNum = self.grid_point_weight.write_f06(f, pageStamp, self.pageNum)
 
         #is_mag_phase = False
         header = ['     DEFAULT                                                                                                                        \n',

@@ -52,7 +52,7 @@ def run_lots_of_files(files, debug=True, saveCases=True, skipFiles=[],
 def run_f06(f06file, iSubcases=[], write_f06=True, print_f06=False, debug=False,
             stopOnFailure=True):
     isPassed = False
-    stopOnFailure = False
+    #stopOnFailure = False
     #debug = True
     try:
         f06 = F06(f06file, debug=debug)
@@ -164,7 +164,7 @@ def main():
 
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
-    
+
     for key, value in sorted(data.iteritems()):
         print("%-12s = %r" % (key.strip('--'), value))
 

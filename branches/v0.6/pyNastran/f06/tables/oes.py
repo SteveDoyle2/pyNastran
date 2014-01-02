@@ -411,7 +411,7 @@ class OES(object):
         """
         (isubcase, transient, data_code) = self.getQuadHeader(3, False, 144)
         #print(self.getQuadHeader(3, False, 144))
-        print("data_code =", data_code)
+        #print("data_code =", data_code)
 
         data_code['table_name'] = 'OES1X'
         data = self.readQuadBilinear()

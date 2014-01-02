@@ -224,10 +224,6 @@ class OP2(BDF,
             'DBCOPT','CONTACT',
         ]
 
-        #: a dictionary that maps an integer of the subcaseName to the
-        #: subcaseID
-        self.iSubcaseNameMap = {}
-
         #: list of OP2 tables that were read
         #: mainly for debugging
         self.tablenames = []

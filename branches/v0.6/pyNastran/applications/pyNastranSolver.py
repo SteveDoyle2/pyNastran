@@ -221,7 +221,7 @@ class Solver(F06, OP2):
           - no tables created
     """
     def __init__(self):
-        F06.__initAlt__(self)
+        F06.__init_data__(self)
         OP2.__init__(self, '')
 
         self.pageNum = 1

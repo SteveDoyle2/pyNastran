@@ -222,7 +222,7 @@ class Solver(F06, OP2):
           - no tables created
     """
     def __init__(self, fargs):
-        F06.__initAlt__(self)
+        F06.__init_data__(self)
         OP2.__init__(self, '')
 
         self.pageNum = 1
@@ -322,7 +322,7 @@ class Solver(F06, OP2):
 
         #------------------------------------------
         # start of analysis
-        
+
         self.model = BDF()
         self.model.cards_to_read = get_cards()
         self.model.f06 = self.f06_file
@@ -582,7 +582,7 @@ class Solver(F06, OP2):
         if self.is_stress or self.is_strain or self.is_force:
             # SPRINGS
             nsprings = 0
-            elementTypes = [model.elements_spring.celas1, 
+            elementTypes = [model.elements_spring.celas1,
                             model.elements_spring.celas2,
                             model.elements_spring.celas3,
                             model.elements_spring.celas4
@@ -1307,7 +1307,7 @@ class Solver(F06, OP2):
             nid = model.grid.nid[i]
             self.positions[nid] = model.grid.xyz[i]
             index0s[nid] = 6 * i
-        
+
         for i in xrange(model.elements_spring.celas1.n):
             K, dofs, nijv = model.elements_spring.celas1.get_stiffness(i, model, self.positions, index0s)
             print("Kcelas1 =\n", K)
