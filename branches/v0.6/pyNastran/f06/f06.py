@@ -554,6 +554,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                         if blank == 20:
                             break
                     else:
+                        blank = 0
                         msg.append(line)
                 raise FatalError('\n'.join(msg))
 
