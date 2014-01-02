@@ -168,8 +168,8 @@ class GridPointWeight(object):
         assert lines[n] == 'I(Q)', lines[n]
         n += 1
         for i in range(3):
-            line = lines[n + i][1:-1].strip()  # get rid of the * characters
-            self.IQ[i, i] = sline[i]
+            sline = lines[n + i][1:-1].strip().split()  # get rid of the * characters
+            self.IQ[i, i] = sline[0]
         #print "IQ =", self.IQ
         n += i + 1
 
@@ -200,11 +200,11 @@ class GridPointWeight(object):
         for i in range(3):
             msg.append('                                           * %13.6E %13.6E %13.6E *' % tuple(self.S[i, :]))
 
-        msg.append('        DIRECTION')
-        msg.append('   MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.')
-        msg.append('           X            %12.6E     %13.6E %13.6E %13.6E' % (self.mass[0], self.cg[0, 0], self.cg[0, 1], self.cg[0, 2]))
-        msg.append('           Y            %12.6E     %13.6E %13.6E %13.6E' % (self.mass[1], self.cg[1, 0], self.cg[1, 1], self.cg[1, 2]))
-        msg.append('           Z            %12.6E     %13.6E %13.6E %13.6E' % (self.mass[2], self.cg[2, 0], self.cg[2, 1], self.cg[2, 2]))
+        msg.append('                               DIRECTION')
+        msg.append('                          MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.')
+        msg.append('                                  X            %12.6E     %13.6E %13.6E %13.6E' % (self.mass[0], self.cg[0, 0], self.cg[0, 1], self.cg[0, 2]))
+        msg.append('                                  Y            %12.6E     %13.6E %13.6E %13.6E' % (self.mass[1], self.cg[1, 0], self.cg[1, 1], self.cg[1, 2]))
+        msg.append('                                  Z            %12.6E     %13.6E %13.6E %13.6E' % (self.mass[2], self.cg[2, 0], self.cg[2, 1], self.cg[2, 2]))
 
         msg.append('                                                                I(S)')
         for i in range(3):
@@ -219,7 +219,7 @@ class GridPointWeight(object):
         msg.append('                                                                 Q')
         for i in range(3):
             msg.append('                                           * %13.6E %13.6E %13.6E *' % tuple(self.Q[i, :]))
-        msg.append(pageStamp % pageNum + '\n')
+        msg.append('\n' + pageStamp % pageNum + '\n')
         f.write('\n'.join(msg))
         #print '\n'.join(msg)
         return pageNum + 1
