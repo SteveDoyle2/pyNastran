@@ -103,25 +103,25 @@ class TestCoords(unittest.TestCase):
                  ]
         self.getNodes(grids, grids_expected, coords)
 
-    @unittest.skip('skipping test_rid_1')
-    def test_rid_1(self):  # did i mess up the transform???
+    #@unittest.skip('skipping test_rid_1')
+    def test_rid_1(self):
         #print('test_rid_1')
         grids = [
-                     [2, 10., 5., 3.],  # cid, x,y,z
-                    #[3,    10., 5.,  3.],
+                    [2, 10., 5., 3.],  # cid, x,y,z
+                    [3, 10., 5., 3.],
                  ]
         grids_expected = [
-                     ['x', 11., 6., 4.],  # ??? x,y,z
-                    #['x',  11., 6.,  4.],
+                    ['x', 11., 6., 4.],  # ??? x,y,z
+                    ['x', 11., 6., 4.],
                  ]
 
         coords = [  # rid origin,     zaxis        xaxis
-                   [0, [0., 0., 0.], [0., 0., -1.], [1., 0., 0.]],  # cid=1
+                   [0, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.]],  # cid=1
                    [1, [1., 1., 1.], [1., 1., 2.], [2., 1., 1.]],  # cid=2
-                  #[  1,  [0.,0.,0.], [0.,0., 1.], [1.,0.,0.]  ],  # cid=2,equiv
+                  #[1, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.]],  # cid=2,equiv
 
                    [0, [1., 1., 1.], [1., 1., 2.], [2., 1., 1.]],  # cid=3
-                  #[  0,  [0.,0.,0.], [0.,0., 1.], [1.,0.,0.]  ],  # cid=3,equiv
+                  #[0, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.]],  # cid=3,equiv
                  ]
         self.getNodes(grids, grids_expected, coords)
 
@@ -140,6 +140,9 @@ class TestCoords(unittest.TestCase):
 
         g = model.Node(20143)
         #print(g.Position(debug=False))
+
+        # by running it through Patran...
+        #GRID     20143          1.1067  .207647 -.068531
         diff = g.Position() - array([1.106704, .207647, -0.068531])
 
         msg = 'diff=%s' % diff
