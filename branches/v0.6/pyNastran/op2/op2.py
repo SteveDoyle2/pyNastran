@@ -13,7 +13,6 @@ from struct import unpack
 from pyNastran.op2.fortranFile import FortranFile
 from pyNastran.op2.op2Codes import Op2Codes
 
-
 from pyNastran.op2.tables.resultTable import ResultTable
 from pyNastran.op2.tables.geom.geometryTables import GeometryTables
 

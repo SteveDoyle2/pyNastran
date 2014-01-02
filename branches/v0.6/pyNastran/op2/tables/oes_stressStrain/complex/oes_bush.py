@@ -270,7 +270,6 @@ class ComplexBushStrainObject(StrainObject):
         self.translations[dt][eid] = [tx, ty, tz]
         self.rotations[dt][eid] = [rx, ry, rz]
 
-
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         #raise NotImplementedError('CBUSH')
         f.write('ComplexBarStress write_f06 not implemented...\n')

@@ -3,6 +3,7 @@ import sys
 from pyNastran.op2.test.test_op2 import get_failed_files,run_lots_of_files
 from pyNastran.utils import get_files_of_type
 
+
 def parse_skipped_cards(fname):
     f = open(fname,'r')
     lines = f.readlines()
@@ -33,6 +34,7 @@ def parse_skipped_cards(fname):
     f.close()
     return filesToAnalyze
 
+
 def get_all_files(foldersFile,fileType):
     f = open(foldersFile,'r')
     lines = f.readlines()
@@ -45,6 +47,7 @@ def get_all_files(foldersFile,fileType):
             assert os.path.exists(moveDir), '%s doesnt exist' % (moveDir)
             files2 += get_files_of_type(moveDir, fileType, maxSize=4.2)
     return files2
+
 
 if __name__=='__main__':
     # works
@@ -89,5 +92,3 @@ if __name__=='__main__':
                    print_results,debug,saveCases,skipFiles,stopOnFailure,
                    nStart,nStop)
     sys.exit('final stop...')
-
-

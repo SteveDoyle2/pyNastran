@@ -214,7 +214,6 @@ class BushStrainObject(StrainObject):
         self.translations[dt][eid] = [tx, ty, tz]
         self.rotations[dt][eid] = [rx, ry, rz]
 
-
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         raise NotImplementedError('CBUSH')
         return 'BushStress write_f06 not implemented...', pageNum

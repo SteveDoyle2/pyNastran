@@ -6,6 +6,7 @@ from traceback import print_exc
 import pyNastran
 from pyNastran.op2.op2 import OP2
 
+
 def parse_table_names_from_F06(f06Name):
     """gets the op2 names from the f06"""
     infile = open(f06Name,'r')
@@ -19,6 +20,7 @@ def parse_table_names_from_F06(f06Name):
     infile.close()
     return names
 
+
 def get_failed_files(filename):
     infile = open(filename, 'r')
     lines = infile.readlines()
@@ -28,6 +30,7 @@ def get_failed_files(filename):
     for line in lines:
         files.append(line.strip())
     return files
+
 
 def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
                    write_matlab=True, delete_f06=True, print_results=True,
@@ -78,6 +81,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
     msg = '-----done with all models %s/%s=%.2f%%  nFailed=%s-----' %(nPassed,nTotal,100.*nPassed/float(nTotal),nTotal-nPassed)
     print(msg)
     sys.exit(msg)
+
 
 def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
             write_matlab=True, is_mag_phase=False, delete_f06=False,
