@@ -169,7 +169,7 @@ class Usm3dIO(object):
                 self.log.info('BC=%s Regions=%s name=%r' % (bcnum, regions, name))
             self.scalarBar.VisibilityOn()
 
-        if self.is_nodal:
+        if self.is_nodal and len(loads):
             for key, load in loads.iteritems():
                 cases[(ID, key, 1, 'nodal', '%.3f')] = load
             self.scalarBar.VisibilityOn()

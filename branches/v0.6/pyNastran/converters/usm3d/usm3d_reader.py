@@ -113,7 +113,31 @@ class Usm3dReader(object):
         face_filename = basename + '.face'
         front_filename = basename + '.front'
         mapbc_filename = basename + '.mapbc'
-        flo_filename = basename + '.flo'
+
+        if 1:
+            # pick the highest N value or use "basename.flo"
+            dirname = os.path.dirname(basename)
+            if dirname == '':
+                dirname = os.getcwd()
+            flo_filenames = os.listdir(dirname)
+
+            # get the max N value
+            nmax = -1
+            for flo_filename in flo_filenames:
+                base, ext = os.path.splitext(flo_filename)
+                if ext == '.flo':
+                    n = base.split('_')[-1]
+                    n = int(n)
+                    nmax = max(n, nmax)
+
+            # determine .flo file name
+            if nmax > 0:
+                flo_filename = basename + '_%s.flo' % (nmax)
+            else:
+                flo_filename = basename + '.flo'
+        else:
+            # hardcoded flo file
+            flo_filename = basename + '_160.flo'
 
         nodes, elements = self.read_cogsg(cogsg_filename)
         try:
@@ -135,6 +159,8 @@ class Usm3dReader(object):
         if os.path.exists(flo_filename):
             npoints, three = nodes.shape
             loads = self.read_flo(flo_filename, n=npoints)
+        else:
+            self.log.warning('Cannot find %r...skipping' % flo_filename)
         self.loads = loads
 
         return nodes, elements, tris, bcs, mapbc, loads
