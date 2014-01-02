@@ -164,14 +164,16 @@ class F06WriterDeprecated(object):
 
 class F06Writer(object):
     def __init__(self, model='tria3'):
+        #self.set_f06_name(model)
+
+        #: BDF Title
         self.Title = ''
-        self.pageNum = 1
 
         #: a dictionary that maps an integer of the subcaseName to the
         #: subcaseID
         self.iSubcaseNameMap = {}
 
-        self.set_f06_name(model)
+        self.pageNum = 1
 
         # F06
         self.grid_point_weight = GridPointWeight()
