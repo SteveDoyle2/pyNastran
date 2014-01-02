@@ -366,7 +366,7 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
     if isinstance(fields, int):
         return [fields]
     if len(fields) == 1:
-        return fields
+        return [int(fields[0])]
     out = []
     nFields = len(fields)
     i = 0
@@ -403,7 +403,7 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
     """
     fields = [field.upper() if isinstance(field, basestring) else field for field in fields]
     if len(fields) == 1:
-        return fields
+        return [int(fields[0])]
     out = []
     nFields = len(fields)
     i = 0
@@ -417,8 +417,8 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
             else:
                 by = 1
                 byCase = True
-            minValue = fields[i - 1]
-            maxValue = fields[i + 1]
+            minValue = int(fields[i - 1])
+            maxValue = int(fields[i + 1])
             maxR = int((maxValue - minValue) // by + 1)  # max range value
 
             for j in xrange(0, maxR):  # +1 is to include final point
@@ -430,7 +430,7 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
             else:     # BY case
                 i += 3
         else:
-            out.append(fields[i])
+            out.append(int(fields[i]))
             i += 1
 
     if set_fields:

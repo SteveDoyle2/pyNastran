@@ -11,7 +11,7 @@ from scipy.sparse import coo_matrix
 
 from pyNastran.bdf.cards.baseCard import BaseCard, print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, string, blank, components)
+    double, string, blank, components, interpret_value)
 
 def ssq(*listA):
     """
@@ -489,7 +489,7 @@ class DMI(BaseCard):
 
         # counter
         i = 0
-        fields = card[3:]
+        fields = [interpret_value(field) for field in card[3:] ]
 
         # Real, starts at A(i1,j), goes to A(i2,j) in a column
         while i < len(fields):
@@ -533,7 +533,7 @@ class DMI(BaseCard):
     #
     #     # counter
     #     i = 0
-    #     fields = card[3:]
+    #     fields = [interpret_value(field) for field in card[3:] ]
     #
     #     # Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
     #     while i < len(fields):

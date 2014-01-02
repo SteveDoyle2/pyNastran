@@ -713,6 +713,28 @@ class CTRIAR(TriShell):
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
+    def _verify(self, xref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+
+        if xref:
+            assert self.pid.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            t = self.Thickness()
+            a,c,n = self.AreaCentroidNormal()
+            assert isinstance(t, float), 'thickness=%r' % t
+            assert isinstance(a, float), 'Area=%r' % a
+            for i in range(3):
+                assert isinstance(c[i], float)
+                assert isinstance(n[i], float)
+            mass = self.Mass()
+            assert isinstance(mass, float), 'mass=%r' % mass
+
     def Thickness(self):
         """
         Returns the thickness
@@ -740,6 +762,29 @@ class CTRIAR(TriShell):
         T2 = set_blank_if_default(self.T2, 1.0)
         T3 = set_blank_if_default(self.T3, 1.0)
         return (thetaMcid, zOffset, TFlag, T1, T2, T3)
+
+    def _verify(self, xref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        #for i,nid in enumerate(nids):
+            #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+
+        if xref:
+            # PSHELL/PCOMP
+            assert self.pid.type in ['PSHELL'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            t = self.Thickness()
+            a,c,n = self.AreaCentroidNormal()
+            assert isinstance(t, float), 'thickness=%r' % t
+            assert isinstance(a, float), 'Area=%r' % a
+            for i in range(3):
+                assert isinstance(c[i], float)
+                #assert isinstance(n[i], float)
+            mass = self.Mass()
+            assert isinstance(mass, float), 'mass=%r' % mass
 
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=False)
@@ -1748,6 +1793,28 @@ class CQUAD8(QuadShell):
         msg = ' which is required by CQUAD8 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+
+    def _verify(self, xref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        #for i,nid in enumerate(nids):
+            #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+
+        if xref:
+            assert self.pid.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            t = self.Thickness()
+            a,c,n = self.AreaCentroidNormal()
+            assert isinstance(t, float), 'thickness=%r' % t
+            assert isinstance(a, float), 'Area=%r' % a
+            for i in range(3):
+                assert isinstance(c[i], float)
+                #assert isinstance(n[i], float)
+            mass = self.Mass()
+            assert isinstance(mass, float), 'mass=%r' % mass
 
     def Thickness(self):
         """

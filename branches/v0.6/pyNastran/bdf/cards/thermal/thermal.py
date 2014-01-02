@@ -699,6 +699,7 @@ class RADBC(ThermalBC):
         ThermalBC.__init__(self, card, data)
         if comment:
             self._comment = comment
+
         if card:
             #: NODAMB Ambient point for radiation exchange. (Integer > 0)
             self.nodamb = integer(card, 1, 'nodamb')
@@ -720,6 +721,11 @@ class RADBC(ThermalBC):
         else:
             raise NotImplementedError(data)
 
+        min_eid = min(self.eids)
+        if min_eid < 1:
+            msg = 'min(eids)=%i' % min_eid
+            raise ValueError(msg)
+
     def cross_reference(self, model):
         for i, eid in enumerate(self.eids):
             self.eids[i] = model.Element(eid)
@@ -731,6 +737,7 @@ class RADBC(ThermalBC):
         return eids
 
     def Eid(self, eid):
+        print("eid =", eid, self.type)
         if isinstance(eid, int):
             return eid
         return eid.eid

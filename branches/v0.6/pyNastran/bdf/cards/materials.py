@@ -368,6 +368,9 @@ class MAT2(AnisotropicMaterial):
             self.Ss = data[15]
             self.Mcsid = data[16]
 
+    def _verify(self, xref=True):
+        pass
+
     def Dsolid(self):
         """
         Eq 9.4.7 in Finite Element Method using Matlab

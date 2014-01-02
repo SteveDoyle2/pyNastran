@@ -20,7 +20,7 @@ from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     integer_or_double, integer_double_or_blank, integer_or_blank,
     double_or_blank, integer_double_or_string, components, components_or_blank,
-    blank, fields, string)
+    blank, fields, string, interpret_value)
 # integer_or_double, double,
 
 class RigidElement(Element):
@@ -150,7 +150,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.Gni = []
         self.Cni = []
 
-        #fields = card[2:]
+        #fields = [interpret_value(field) for field in card[2:] ]
         iUm = card.index('UM')
         if iUm > 0:
             assert string(card, iUm, 'UM') == 'UM'

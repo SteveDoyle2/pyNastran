@@ -21,7 +21,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string, string_or_blank,
     components, components_or_blank,
-    integer_double_string_or_blank, blank)
+    integer_double_string_or_blank, blank, interpret_value)
 
 class Method(BaseCard):
     """
@@ -156,7 +156,7 @@ class EIGC(Method):
             self.ndo = integer_double_string_or_blank(card, 7, 'ND0')
 
             # ALPHAAJ OMEGAAJ ALPHABJ OMEGABJ LJ NEJ NDJ
-            fields = card[9:]
+            fields = [interpret_value(field) for field in card[9:] ]
             self.alphaAjs = []
             self.omegaAjs = []
             nFields = len(fields)
@@ -423,7 +423,7 @@ class EIGRL(Method):
             #: Method for normalizing eigenvectors (Character: 'MASS' or 'MAX')
             self.norm = string_or_blank(card, 8, 'norm')
 
-            optionValues = card[9:]
+            optionValues = [interpret_value(field) for field in card[9:] ]
             self.options = []
             self.values = []
             #print "optionValues = ",optionValues

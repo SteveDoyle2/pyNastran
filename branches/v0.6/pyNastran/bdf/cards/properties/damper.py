@@ -49,6 +49,15 @@ class PDAMP(DamperProperty):
             self.pid = data[0]
             self.b = data[1]
 
+    def B(self):
+        return self.b
+
+    def _verify(self, xref=True):
+        pid = self.Pid()
+        b = self.B()
+        assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
+        assert isinstance(b, float), 'b=%r\n%s' % (b, str(self))
+
     def rawFields(self):
         list_fields = ['PDAMP', self.pid, self.b]
         return list_fields
@@ -123,6 +132,10 @@ class PDAMPT(DamperProperty):
             self.pid = data[0]
             self.tbid = data[1]
 
+    def _verify(self, xref=False):
+        pid = self.Pid()
+        assert isinstance(pid, int), 'pid=%r' % pid
+
     def cross_reference(self, model):
         self.tbid = model.Table(self.tbid)
 
@@ -162,6 +175,10 @@ class PVISC(DamperProperty):
 
     def cross_reference(self, model):
         pass
+
+    def _verify(self, xref=False):
+        pid = self.Pid()
+        assert isinstance(pid, int), 'pid=%r' % pid
 
     def rawFields(self):
         list_fields = ['PVISC', self.pid, self.ce, self.cr]

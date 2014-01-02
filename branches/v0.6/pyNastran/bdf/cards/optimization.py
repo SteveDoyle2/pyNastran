@@ -11,7 +11,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, i
     integer_string_or_blank, double, double_or_blank, string,
     string_or_blank, integer_double_or_blank,
     integer_double_string_or_blank, # integer_or_double,
-    double_string_or_blank)
+    double_string_or_blank, interpret_value)
 
 class OptConstraint(BaseCard):
     def __init__(self):
@@ -272,7 +272,7 @@ class DRESP1(OptConstraint):
         self.atta = integer_double_string_or_blank(card, 6, 'atta')
         self.attb = integer_double_string_or_blank(card, 7, 'attb')
         self.atti = integer_double_string_or_blank(card, 8, 'atti')
-        self.others = card[9:]
+        self.others = [interpret_value(field) for field in card[9:] ]
         #if self.others:
             #print("self.others = %s" %(self.others))
             #print(str(self))
@@ -305,7 +305,7 @@ class DRESP2(OptConstraint):
         self.c3 = double_or_blank(card, 8, 'c3') #: .. todo:: or blank?
 
         i = 0
-        fields = card[9:]
+        fields = [interpret_value(field) for field in card[9:] ]
         key = '$NULL$'  # dummy key
         self.params = {key: []}
         valueList = []
@@ -429,7 +429,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
 
         self.dvids = []
         self.coeffs = []
-        endFields = card[9:]
+        endFields = [interpret_value(field) for field in card[9:] ]
         #print "endFields = ",endFields
         nFields = len(endFields) - 1
         if nFields % 2 == 1:
@@ -499,7 +499,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
         self.dvids = []
         self.coeffs = []
-        endFields = card[9:]
+        endFields = [interpret_value(field) for field in card[9:] ]
 
         nFields = len(endFields) - 1
         if nFields % 2 == 1:
@@ -582,7 +582,7 @@ class DVPREL2(OptConstraint):
         #: DEQATN entry identification number. (Integer > 0)
         self.eqID = integer_or_blank(card, 7, 'eqID') #: .. todo:: or blank?
 
-        fields = card[9:]
+        fields = [interpret_value(field) for field in card[9:] ]
         #print "fields = ",fields
         iOffset = 9
         iEnd = len(fields) + iOffset

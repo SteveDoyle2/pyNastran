@@ -227,6 +227,10 @@ class PBUSH1D(BushingProperty):
             self.b = data[1]
             raise NotImplementedError('PBUSH1D data...')
 
+    def _verify(self, xref=False):
+        pid = self.Pid()
+        assert isinstance(pid, int), 'pid=%r' % pid
+
     def getShockA(self, card, iStart):
         self.shockType = string_or_blank(card, iStart + 1, 'shockType')
         self.shockCVT = double(card, iStart + 2, 'shockCVT')

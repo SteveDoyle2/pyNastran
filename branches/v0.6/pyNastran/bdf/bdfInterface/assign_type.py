@@ -78,7 +78,7 @@ def blank(card, n, fieldname, default=None):
         return default
 
     if is_string(svalue):
-        svalue = svalue.strip()
+        svalue = svalue.strip().upper()
         if len(svalue) == 0:
            return default
     Type = getType(svalue)
@@ -117,7 +117,7 @@ def integer_double_string_or_blank(card, n, fieldname, default=None):
     elif isinstance(svalue, float):
         return svalue
 
-    svalue = svalue.strip()
+    svalue = svalue.strip().upper()
     if svalue:  # integer/float/string
         if '.' in svalue:  # float
             value = double(card, n, fieldname)
@@ -296,7 +296,7 @@ def double_or_blank(card, n, fieldname, default=None):
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     elif is_string(svalue):
-        svalue = svalue.strip()
+        svalue = svalue.strip().upper()
         if not svalue:
             return default
         try:
@@ -326,7 +326,7 @@ def double_or_string(card, n, fieldname):
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an float or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     elif is_string(svalue):
-        svalue = svalue.strip()
+        svalue = svalue.strip().upper()
 
     if '.' in svalue: # float
         try:
@@ -337,7 +337,7 @@ def double_or_string(card, n, fieldname):
     elif svalue.isdigit(): # fail
         pass
     elif svalue: # string
-        return svalue
+        return str(svalue)
     Type = getType(svalue)
     raise SyntaxError('%s = %r (field #%s) on card must be an float or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
 
@@ -363,7 +363,7 @@ def double_string_or_blank(card, n, fieldname, default=None):
     elif svalue is None:
         return default
     elif is_string(svalue):
-        svalue = svalue.strip()
+        svalue = svalue.strip().upper()
     elif isinstance(svalue, int):
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an float, string, or blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
@@ -397,6 +397,7 @@ def integer_or_double(card, n, fieldname):
     svalue = card.field(n)
     #except IndexError:
         #raise SyntaxError('%s (field #%s) on card must be an integer or float.\ncard=%s' % (fieldname, n, card) )
+
     if isinstance(svalue, int) or isinstance(svalue, float):
         return svalue
     elif svalue is None:
@@ -413,6 +414,9 @@ def integer_or_double(card, n, fieldname):
         try:
             value = int(svalue)
         except:
+            value = interpret_value(svalue)
+            if isinstance(value, int) or isinstance(value, float):
+                return value
             Type = getType(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an integer or a float (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     return value
@@ -478,7 +482,12 @@ def integer_or_string(card, n, fieldname):
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     else:  # string
-        return str(svalue)
+        value = double_or_string(card, n, fieldname)
+        if isinstance(value, float):
+            Type = getType(svalue)
+            raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
+        
+        return str(svalue.upper())
     return value
 
 def integer_string_or_blank(card, n, fieldname, default=None):
@@ -526,7 +535,7 @@ def getType(value):
     elif isinstance(value, int):
         Type = 'an integer'
     elif isinstance(value, float):
-        Type = 'a double'
+        Type = 'a double value=%r' % value
     elif is_string(value):
         Type = 'a string'
     else:
@@ -608,7 +617,7 @@ def string_or_blank(card, n, fieldname, default=None):
     if svalue is None:
         return default
     elif is_string(svalue):
-        svalue = svalue.strip()
+        svalue = svalue.strip().upper()
     else:
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )

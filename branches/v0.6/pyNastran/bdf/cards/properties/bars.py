@@ -23,7 +23,7 @@ from pyNastran.bdf.cards.baseCard import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string, string_or_blank,
-    integer_or_double, double_string_or_blank, fields)
+    integer_or_double, double_string_or_blank, fields, integer_double_string_or_blank)
 from pyNastran.utils import is_string
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
 
@@ -1378,6 +1378,8 @@ class PBEAM(IntegratedLineProperty):
         IntegratedLineProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
+
+        print('card!!!!', card)
         if card:
             #: Property ID
             self.pid = integer(card, 1, 'pid')
@@ -1413,7 +1415,7 @@ class PBEAM(IntegratedLineProperty):
                 isFooter = True
             except SyntaxError:
                 pass
-            #print("f9=%s f17=%s" % (field9, field17))
+            print("f9=%s f17=%s" % (field9, field17))
 
             #nlines = nfields // 8
 
@@ -1435,7 +1437,7 @@ class PBEAM(IntegratedLineProperty):
 
             #print("isCDEF=%s isContinue=%s" % (isCDEF, isContinue))
             #if isCDEF:
-            self.c1 = [double_or_blank(card, 9, 'c1', 0.0)]
+            self.c1 = [double_or_blank(card,  9, 'c1', 0.0)]
             self.c2 = [double_or_blank(card, 10, 'c2', 0.0)]
             self.d1 = [double_or_blank(card, 11, 'd1', 0.0)]
             self.d2 = [double_or_blank(card, 12, 'd2', 0.0)]
@@ -1479,7 +1481,8 @@ class PBEAM(IntegratedLineProperty):
                 # The fourth and fifth continuation entries, which
                 # contain fields K1 through N2(B), are optional
                 # and may be omitted if the default values are appropriate.
-                if card.field(x) in ['YES', 'YESA', 'NO']:  # there is no footer
+                val = integer_double_string_or_blank(card, x, 'YES/YESA/NO')
+                if val in ['YES', 'YESA', 'NO']:  # there is no footer
                     nmajor += 1
                     x += 16
                 else:
@@ -1494,7 +1497,8 @@ class PBEAM(IntegratedLineProperty):
                     nmajor = 1
                 x = nmajor * 8 + 1
 
-                if card.field(x) in ['YES', 'YESA', 'NO']:  # there is no footer
+                val = integer_double_string_or_blank(card, x, 'YES/YESA/NO')
+                if val in ['YES', 'YESA', 'NO']:  # there is no footer
                     nmajor += 1
                     x += 8
                 else:
@@ -1806,6 +1810,7 @@ class PBEAML(IntegratedLineProperty):
         IntegratedLineProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
+
         if card:
             #: Property ID
             self.pid = integer(card, 1, 'pid')
@@ -1875,6 +1880,18 @@ class PBEAML(IntegratedLineProperty):
 
             #print("nsm = %s" %(self.nsm))
             #print self
+
+    def _verify(self, xref=False):
+        pid = self.Pid()
+        rho = self.Rho()
+        nsm = self.Nsm()
+        area = self.Area()
+        mass_per_length = self.MassPerLength()
+        assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
+        assert isinstance(rho, float), 'rho=%r\n%s' % (rho, str(self))
+        assert isinstance(nsm, float), 'nsm=%r\n%s' % (nsm, str(self))
+        assert isinstance(area, float), 'area=%r\n%s' % (area, str(self))
+        assert isinstance(mass_per_length, float), 'mass/L=%r\n%s' % (mass_per_length, str(self))
 
     def MassPerLength(self):
         r"""

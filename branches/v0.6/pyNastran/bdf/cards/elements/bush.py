@@ -228,7 +228,7 @@ class CBUSH1D(BushElement):
         cid = self.Cid()
         pid = self.Pid()
         assert isinstance(ga, int), 'ga=%r' % ga
-        assert isinstance(gb, int), 'gb=%r' % gb
+        assert isinstance(gb, int) or gb is None, 'gb=%r' % gb
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(cid, int) or cid is None, 'cid=%r' % cid
 

@@ -19,6 +19,8 @@ from pyNastran.utils import list_print, is_string, object_attributes
 from pyNastran.utils.log import get_logger
 from pyNastran.utils.gui_io import load_file_dialog
 
+from pyNastran.bdf.bdfInterface.assign_type import string
+
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
                                           PRAC2D, PRAC3D, PCONEAX)
@@ -1284,8 +1286,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 card = wipe_empty_fields([interpret_value(field, fields) if field is not None
                                           else None for field in fields])
             else:  # leave everything as strings
-                #card = wipe_empty_fields([interpret_value(field, fields) if field is not None
-                #                          else None for field in fields])
+                #if 1:
+                #    card = wipe_empty_fields([interpret_value(field, fields) if field is not None
+                #                              else None for field in fields])
+                #else:
                 card = wipe_empty_fields(fields)
                 #card = fields
             card_obj = BDFCard(card)
@@ -1431,20 +1435,31 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 self.doptprm = DOPTPRM(card_obj, comment=comment)
 
             elif card_name == 'DMIG':  # not done...
-                if card_obj.field(2) == 'UACCEL':  # special DMIG card
+                from pyNastran.bdf.bdfInterface.assign_type import integer_or_string
+
+                field2 = integer_or_string(card_obj, 2, 'flag')
+                if field2 == 'UACCEL':  # special DMIG card
                     self.reject_cards.append(card)
-                elif card_obj.field(2) == 0:
+                elif field2 == 0:
                     self.add_DMIG(DMIG(card_obj, comment=comment))
                 else:
-                    self.dmigs[card_obj.field(1)].addColumn(card_obj,
-                                                            comment=comment)
+                    name = string(card_obj, 1, 'name')
+                    try:
+                        dmig = self.dmigs[name]
+                    except KeyError:
+                        msg = 'cannot find DMIG name=%r in names=%s' % (name, self.dmigs.keys())
+                        raise KeyError(msg)
+                    dmig.addColumn(card_obj, comment=comment)
 
             elif card_name in ['DMI', 'DMIJ', 'DMIJI', 'DMIK']:
-                if card_obj.field(2) == 0:
+                from pyNastran.bdf.bdfInterface.assign_type import integer
+
+                field2 = integer(card_obj, 2, 'flag')
+                if field2 == 0:
                     getattr(self, 'add_' + card_name)(_get_cls(card_name))
                 else:
-                    getattr(self, card_name.lower() +
-                            's')[card_obj.field(1)].addColumn(card_obj)
+                    name = string(card_obj, 1, 'name')
+                    getattr(self, card_name.lower() + 's')[name].addColumn(card_obj)
             # dynamic
             elif card_name == 'DAREA':
                 self.add_DAREA(DAREA(card_obj, comment=comment))

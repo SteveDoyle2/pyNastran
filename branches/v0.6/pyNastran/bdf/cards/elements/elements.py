@@ -14,7 +14,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 
 from pyNastran.bdf.cards.baseCard import Element
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
     integer_double_or_blank, double_or_blank, string)  # double
 
 class CFAST(Element):
@@ -121,7 +121,7 @@ class CGAP(Element):
 
         if xref:
             assert self.pid.type in ['PGAP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
-            if self.cid is not None:
+            if self.cid is not None and self.cid != 0:
                 assert self.cid.type in ['CORD1R', 'CORD1C', 'CORD1S', 'CORD2R', 'CORD2C', 'CORD2S'], 'cid=%i self.cid.type=%s' % (cid, self.cid.type)
 
     def cross_reference(self, model):
@@ -238,7 +238,7 @@ class CRAC3D(CrackElement):
             # required 1-10, 19-28
             # optional 11-18, 29-36, 37-64
             # all/none 37-46
-            nids = card.fields(3, 67)  # cap at +3 = 67
+            nids = fields(integer_or_blank, card, 'nid', 3, 67)  # cap at +3 = 67
             assert len(card) <= 67, 'len(CRAC3D card) = %i' % len(card)
         else:
             self.eid = data[0]

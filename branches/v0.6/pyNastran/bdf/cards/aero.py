@@ -34,7 +34,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (fields,
     double, double_or_blank,
     string, string_or_blank,
     integer_or_string, double_string_or_blank,
-    blank)
+    blank, interpret_value)
 
 
 class AEFACT(BaseCard):
@@ -60,7 +60,7 @@ class AEFACT(BaseCard):
             #: Set identification number. (Unique Integer > 0)
             self.sid = integer(card, 1, 'sid')
             #: Number (float)
-            self.Di = card.fields(2)
+            self.Di = [interpret_value(field) for field in card.fields(2)]
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
@@ -105,7 +105,7 @@ class AELINK(BaseCard):
             #: linking coefficient (real)
             self.Cis = []
 
-            fields = card[3:]
+            fields = [interpret_value(field) for field in card[3:] ]
             assert len(fields) % 2 == 0, 'fields=%s' % fields
             for i in xrange(0, len(fields), 2):
                 independentLabel = fields[i]
@@ -1233,7 +1233,7 @@ class MKAERO1(BaseCard):
         if comment:
             self._comment = comment
         if card:
-            fields = card[1:]
+            fields = [interpret_value(field) for field in card[1:] ]
             nfields = len(fields) - 8
             self.machs = []
             self.rFreqs = []
@@ -1336,7 +1336,7 @@ class PAERO1(BaseCard):
             self._comment = comment
         if card:
             self.pid = integer(card, 1, 'pid')
-            Bi = card[2:]
+            Bi = [interpret_value(field) for field in card[2:] ]
             self.Bi = []
 
             for bi in Bi:
@@ -1413,7 +1413,7 @@ class PAERO2(BaseCard):
             self.lth2 = integer_or_blank(card, 8, 'lth2')
             self.thi = []
             self.thn = []
-            fields = card[9:]
+            fields = [interpret_value(field) for field in card[9:] ]
             nFields = len(fields)
             for i in xrange(9, 9 + nFields, 2):
                 self.thi.append(integer(card, i, 'lth'))
