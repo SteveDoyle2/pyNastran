@@ -544,7 +544,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
             #print("marker = %r" % marker)
             if 'FATAL' in marker:
-                msg = [marker]
+                msg = '\n' + marker
                 blank = 0
                 while 1:
                     line = self.infile.readline().rstrip()
@@ -553,10 +553,12 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                         blank += 1
                         if blank == 20:
                             break
+                    elif '* * * END OF JOB * * *' in line:
+                        break
                     else:
                         blank = 0
-                        msg.append(line)
-                raise FatalError('\n'.join(msg))
+                    msg += line + '\n'
+                raise FatalError(msg.rstrip())
 
             if marker in self.markers:
                 blank = 0
