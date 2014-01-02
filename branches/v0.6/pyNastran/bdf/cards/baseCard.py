@@ -362,6 +362,7 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
                         to a list? This is useful for [2, 'THRU' 5, 1] (default=True)
     :param sort_fields: should the fields be sorted at the end? (default=False)
     """
+    fields = [field.upper() if isinstance(field, basestring) else field for field in fields]
     if isinstance(fields, int):
         return [fields]
     if len(fields) == 1:
@@ -371,11 +372,13 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
     i = 0
     while(i < nFields):
         if fields[i] == 'THRU':
-            for j in xrange(fields[i - 1], fields[i + 1] + 1):
+            istart = int(fields[i - 1])
+            iend = int(fields[i + 1])
+            for j in xrange(istart, iend + 1): # adding 1 to iend for the xrange offset
                 out.append(j)
             i += 2
         else:
-            out.append(fields[i])
+            out.append(int(fields[i]))
             i += 1
 
     if set_fields:
@@ -398,6 +401,7 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
     .. todo:: not tested
     .. note:: used for QBDY3, ???
     """
+    fields = [field.upper() if isinstance(field, basestring) else field for field in fields]
     if len(fields) == 1:
         return fields
     out = []
@@ -409,7 +413,7 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
             by = 1
             byCase = False
             if i + 2 < nFields and fields[i + 2] == 'BY':
-                by = fields[i + 3]
+                by = int(fields[i + 3])
             else:
                 by = 1
                 byCase = True
@@ -443,6 +447,7 @@ def expand_thru_exclude(self, fields):
 
     .. warning:: hasnt been tested
     """
+    fields = [field.upper() if isinstance(field, basestring) else field for field in fields]
     fieldsOut = []
     nFields = len(fields)
     for i in xrange(nFields):

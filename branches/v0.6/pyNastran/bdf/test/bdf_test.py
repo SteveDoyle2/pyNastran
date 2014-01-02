@@ -44,7 +44,7 @@ if __name__ == '__main__':
     debug = False
 
     saveCases = True
-    regenerate = False
+    regenerate = True
     stopOnFailure = False
 
     if regenerate:

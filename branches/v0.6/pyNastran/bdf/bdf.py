@@ -1284,6 +1284,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 card = wipe_empty_fields([interpret_value(field, fields) if field is not None
                                           else None for field in fields])
             else:  # leave everything as strings
+                #card = wipe_empty_fields([interpret_value(field, fields) if field is not None
+                #                          else None for field in fields])
                 card = wipe_empty_fields(fields)
                 #card = fields
             card_obj = BDFCard(card)

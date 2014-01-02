@@ -396,8 +396,7 @@ class RBE3(RigidElement):
         self.refc = components_or_blank(card, 4, 'refc')
         #iUM = fields.index('UM')
 
-        fields = card[5:]
-        #print "fields = ",fields
+        fields = [field.upper() if isinstance(field, basestring) else field for field in card[5:]]
         iOffset = 5
         iWtMax = len(fields) + iOffset
         try:

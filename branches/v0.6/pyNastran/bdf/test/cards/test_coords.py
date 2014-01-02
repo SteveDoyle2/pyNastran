@@ -133,6 +133,7 @@ class TestCoords(unittest.TestCase):
         model = BDF()
         card = model.process_card(grid)
         model.add_card(card, card[0])
+
         card = model.process_card(coord)
         model.add_card(card, card[0])
         model.cross_reference()
@@ -141,7 +142,8 @@ class TestCoords(unittest.TestCase):
         #print(g.Position(debug=False))
         diff = g.Position() - array([1.106704, .207647, -0.068531])
 
-        assert allclose(diff, 0.)
+        msg = 'diff=%s' % diff
+        assert allclose(diff, 0.), msg
 
     #def makeNodes(self, grids, coords):
         #grids2 = []

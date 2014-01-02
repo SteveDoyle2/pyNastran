@@ -63,8 +63,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             #pass
         #except AttributeError:  # only temporarily uncomment this when running lots of tests
             #pass
-        except SyntaxError:  # only temporarily uncomment this when running lots of tests
-            pass
+        #except SyntaxError:  # only temporarily uncomment this when running lots of tests
+            #pass
         except SystemExit:
             sys.exit('sys.exit...')
         except:
@@ -118,8 +118,8 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
         pass
     #except AttributeError:  # only temporarily uncomment this when running lots of tests
         #pass
-    except SyntaxError:  # only temporarily uncomment this when running lots of tests
-        pass
+    #except SyntaxError:  # only temporarily uncomment this when running lots of tests
+        #pass
     #except AssertionError:  # only temporarily uncomment this when running lots of tests
         #pass
     except SystemExit:

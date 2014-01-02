@@ -1,10 +1,30 @@
 import unittest
-from pyNastran.bdf.bdf import BDF, BDFCard, RBE1, RBE2
+from pyNastran.bdf.bdf import BDF, BDFCard, RBE1, RBE2, RBE3
 from pyNastran.bdf.fieldWriter import print_card
 
 bdf = BDF()
 class TestRigid(unittest.TestCase):
 
+    def test_rbe3_01(self):
+        lines = ['rbe3,6, ,3,123456,1.0,123456,41,4,+rbe3',
+                 '+rbe3,alpha,2.0e-4',]
+        card = bdf.process_card(lines)
+        card = BDFCard(card)
+        #print(card)
+        card2 = RBE3(card)
+        fields = card2.rawFields()
+        msg = print_card(fields).rstrip()
+        #print(msg)
+        lines_expected = ['RBE3           6               3  123456      1.  123456      41       4',
+                          '           ALPHA   .0002']
+        lines_actual = msg.rstrip().split('\n')
+        msg = '\n%s\n\n%s\n' % ('\n'.join(lines_expected), msg)
+        msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
+        self.assertEqual(len(lines_actual), len(lines_expected), msg)
+        for actual, expected in zip(lines_actual, lines_expected):
+            self.assertEqual(actual, expected, msg)
+
+    #-------------------------------------------------------------------------
     def test_rbe2_01(self):
         lines = ['RBE2      100045  166007  123456  117752  101899  117766  101898 117748',
                  '+         117765  117764  117763  109821  117743  117744  117750 117751',

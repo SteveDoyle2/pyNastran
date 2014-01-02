@@ -262,8 +262,8 @@ def double(card, n, fieldname):
             # 1.0+3, 1.0-3
             sign = ''
             if '+' in svalue[0] or '-' in svalue[0]:
-                svalue = svalue[1:]
                 sign = svalue[0]
+                svalue = svalue[1:]
             if '+' in svalue:
                 svalue = sign + svalue.replace('+','E+')
             elif '-' in svalue:
@@ -588,7 +588,7 @@ def string(card, n, fieldname):
         raise SyntaxError('%s = %r (field #%s) on card must be an string with a character (not %s).\ncard=%s' % (fieldname, value, n, Type, card) )
 
     if svalue:  # string
-        return str(svalue)
+        return str(svalue.upper())
     Type = getType(svalue)
     msg = '%s = %r (field #%s) on card must be an string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card)
     raise SyntaxError(msg)
@@ -619,7 +619,7 @@ def string_or_blank(card, n, fieldname, default=None):
         raise SyntaxError('%s = %r (field #%s) on card must be an string or blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
 
     if svalue:  # string
-        return str(svalue)
+        return str(svalue.upper())
     return default
 
 # int                    - done

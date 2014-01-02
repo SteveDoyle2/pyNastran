@@ -91,8 +91,9 @@ class Test(ExtendedTestCase):
             double(BDFCard(['1']), 0, 'field')
 
         # float
-        double(BDFCard([1.]  ), 0, 'field')
-        double(BDFCard(['1.']), 0, 'field')
+        self.assertEqual(1.0, double(BDFCard([1.]  ), 0, 'field'))
+        self.assertEqual(1.0, double(BDFCard(['1.']), 0, 'field'))
+        self.assertEqual(-9.31e-4, double(BDFCard(['-9.31-4']), 0, 'field'))
 
         # string
         with self.assertRaises(SyntaxError):
@@ -157,8 +158,8 @@ class Test(ExtendedTestCase):
             string(BDFCard(['1.']), 0, 'field')
 
         # string
-        string(BDFCard(['a'] ), 0, 'field')
-        string(BDFCard(['1b']), 0, 'field')
+        self.assertEqual('A',  string(BDFCard(['a'] ), 0, 'field'))
+        self.assertEqual('1B', string(BDFCard(['1b']), 0, 'field'))
 
         # blank
         with self.assertRaises(SyntaxError):
@@ -167,7 +168,7 @@ class Test(ExtendedTestCase):
             string(BDFCard([None] ), 0, 'field')
 
         card =  ['a', 'b1', '3.',        'C',       None,         '', 'frog']
-        exact = ['a', 'b1', SyntaxError, 'C',SyntaxError,SyntaxError, 'frog']
+        exact = ['A', 'B1', SyntaxError, 'C',SyntaxError,SyntaxError, 'FROG']
         self.run_function(string, card, exact)
 
     #-------------------------------------------------------
