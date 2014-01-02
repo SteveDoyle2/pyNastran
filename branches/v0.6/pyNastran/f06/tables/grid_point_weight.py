@@ -94,13 +94,20 @@ class GridPointWeight(object):
                                *  9.954254E-01 -7.904533E-02 -5.366689E-02 *
 
         ..note::
-            pyNastran uses the following:
+            pyNastran's BDF mass_properties method uses the following:
 
                                DIRECTION
                           MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.
                                   X            mass              0.000000E+00  ycg           zcg
                                   Y            mass              xcg           0.000000E+00  zcg
                                   Z            nass              xcg           ycg           0.000000E+00
+
+            The inertias are close to I(S), but not exact as the method doesn't
+            use the mass matrix, but is close for sufficiently complex models.  The terms are:
+                *  Ixx  Ixy  Ixz *
+                *  Iyy  Iyy  Iyz *
+                *  Izz  Izy  Izz *
+            or inertia = [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
         """
         self.reference_point = int(lines[0].split('=')[1])
         assert lines[1] == 'M O', lines[1]
