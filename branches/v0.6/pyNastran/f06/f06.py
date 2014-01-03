@@ -246,8 +246,15 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                 analysis_code = 2
             elif transWord == 'FREQ':  # TODO check name
                 analysis_code = 5
+            elif transWord == 'FREQUENCY':
+                analysis_code = 5
             elif transWord == 'POINT-ID':
                 is_sort1 = True
+                analysis_code = None
+            elif transWord == 'ELEMENT-ID':
+                is_sort1 = True
+                #is_sort1 = False
+                #is_sort2 = True
                 analysis_code = None
             else:
                 raise NotImplementedError('transientWord=|%r| is not supported...' % (transWord))
@@ -545,18 +552,15 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             #print("marker = %r" % marker)
             if 'FATAL' in marker:
                 msg = '\n' + marker
-                blank = 0
+                fatal_count = 0
                 while 1:
                     line = self.infile.readline().rstrip()
                     #print "blank = %s" % blank
-                    if line == '':
-                        blank += 1
-                        if blank == 20:
-                            break
-                    elif '* * * END OF JOB * * *' in line:
+                    fatal_count += 1
+                    if fatal_count == 20 or '* * * END OF JOB * * *' in line:
                         break
-                    else:
-                        blank = 0
+                    #else:
+                        #blank = 0
                     msg += line + '\n'
                 raise FatalError(msg.rstrip())
 

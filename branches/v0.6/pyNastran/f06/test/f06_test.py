@@ -1,6 +1,6 @@
 import os
 import sys
-#import time
+
 from pyNastran.op2.test.test_op2 import get_failed_files
 from pyNastran.f06.test.test_f06 import run_lots_of_files
 from pyNastran.utils import get_files_of_type
@@ -53,7 +53,7 @@ def main():
     iSubcases = []
     debug = False
     saveCases = True
-    regenerate = False
+    regenerate = True
     stopOnFailure = False
     getSkipCards = False
 
@@ -61,9 +61,20 @@ def main():
         files2 = parse_skipped_cards('skippedCards.out')
     elif regenerate:
         files2 = get_files_of_type(moveDir, '.f06')
+        for fname in files2:
+            if 'test_f06' in fname:
+                os.remove(fname)
+        
+        files3 = []
+        for fname in files2:
+            if 'test_f06' not in fname:
+                files3.append(fname)
+        #files2 = [fname if 'test_f06' not in fname for fname in files2]
+        files2 = files3
         #print files2
         #files2 = []
         files2 += files
+        files2.sort()
     else:
         files2 = get_failed_files('failedCases.in')
 
@@ -87,9 +98,10 @@ def main():
         pass
 
     print("nFiles = %s" % len(files))
+    print files
     run_lots_of_files(files, debug, saveCases, skipFiles,
-                   stopOnFailure, nStart, nStop)
-    #run_lots_of_files(files,debug,saveCases,stopOnFailure,nStart,nStop)
+                      stopOnFailure, nStart, nStop)
+    #run_lots_of_files(files, debug, saveCases, stopOnFailure, nStart, nStop)
     sys.exit('final stop...')
 
 if __name__ == '__main__':

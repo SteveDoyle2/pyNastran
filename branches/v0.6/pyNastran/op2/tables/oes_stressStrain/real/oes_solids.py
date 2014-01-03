@@ -80,8 +80,10 @@ class SolidStressObject(StressObject):
                 self.data = []
             self.data += data
         else:
+            #print('data', data)
             if not hasattr(self, 'data'):
                 self.data = {}
+            #print(self.data)
             if dt not in self.data:
                 self.data[dt] = []
             for line in data:
