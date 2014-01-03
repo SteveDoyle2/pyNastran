@@ -11,5 +11,5 @@ pyNastran Package
     pyNastran.mesh
     pyNastran.op2
     pyNastran.op4
-    pyNastran.sovler
+    pyNastran.applications
 
