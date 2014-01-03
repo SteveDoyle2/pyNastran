@@ -52,13 +52,19 @@ class TestF06(unittest.TestCase):
         if len(outputs) == 1: return outputs[0]
         return outputs
 
-    def test_blade2dv_fatal(self):
+    def test_blade2dv_fatal_1(self):
+        f06_name = os.path.join(testpath, 'blade_2dv', 'blade_2dv.f06_fatal')
+        f06 = F06(f06_name, debug=False, log=None)
+        f06.readF06()
+
+    def test_blade2dv_fatal_2(self):
         f06_name = os.path.join(testpath, 'blade_2dv', 'blade_2dv.f06_fatal')
         bdf_name = os.path.join(testpath, 'blade_2dv', 'blade_2dv.bdf')
         #bdf2 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
         #self.assertEquals(bdf2.properties[1].t, 42., 't=%s' % bdf2.properties[1].t)
 
         f06 = F06(f06_name, debug=False, log=None)
+
         try:  # this is supposed to raise a FatalError
             f06.read_f06()
             assert False, 'a FATAL should have been raised'

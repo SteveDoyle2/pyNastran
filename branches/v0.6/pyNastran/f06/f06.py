@@ -25,7 +25,7 @@ class FatalError(RuntimeError):
 class F06Deprecated(object):
     def readF06(self):
         """... seealso::: read_f06"""
-        self.read_f06(self.f06_FileName)
+        self.read_f06(self.f06_filename)
 
 
 class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
@@ -42,8 +42,8 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         """
         self.card_count = {}
         self.f06FileName = f06FileName
-
         self.f06_filename = self.f06FileName
+
         if not os.path.exists(self.f06_filename):
             msg = 'cant find f06_filename=%r\n%s' % (
                 self.f06FileName, print_bad_path(self.f06_filename))
