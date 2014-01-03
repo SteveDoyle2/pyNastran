@@ -39,7 +39,10 @@ sys.path.append(os.path.join(pkg_path, 'f06'))
 #sys.path.insert(0, os.path.abspath('.'))
 
 # ---3rd party modules don't work, so we hack them in --------------------------
-MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'vtk', 'wx', 'PyQt4', 'PySide', 'docopt']
+MOCK_MODULES = ['numpy', 'numpy.linalg',
+                'scipy', 'scipy.sparse',
+                'pandas',
+                'matplotlib', 'vtk', 'wx', 'PyQt4', 'PySide', 'docopt']
 
 class Mock(object):
     def __init__(self, *args, **kwargs):
