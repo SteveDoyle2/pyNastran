@@ -34,6 +34,28 @@ f06 Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`f06_formatting` Module
+----------------------------
+
+.. inheritance-diagram:: pyNastran.f06.f06_formatting
+
+.. automodule:: pyNastran.f06.f06_formatting
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`matlabWriter` Module
+--------------------------
+
+.. inheritance-diagram:: pyNastran.f06.matlabWriter
+
+.. automodule:: pyNastran.f06.matlabWriter
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`matlabWriter` Module
 --------------------------
 
@@ -51,4 +73,5 @@ Subpackages
 .. toctree::
 
     pyNastran.f06.tables
+    pyNastran.f06.test
 

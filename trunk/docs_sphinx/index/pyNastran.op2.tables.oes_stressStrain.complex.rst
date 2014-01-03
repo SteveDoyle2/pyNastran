@@ -23,6 +23,28 @@ complex Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`oes_bush` Module
+----------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.complex.oes_bush
+
+.. automodule:: pyNastran.op2.tables.oes_stressStrain.complex.oes_bush
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`oes_bush1d` Module
+------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d
+
+.. automodule:: pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`oes_plates` Module
 ------------------------
 

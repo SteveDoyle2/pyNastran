@@ -12,17 +12,6 @@ oug Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`oug_Objects` Module
--------------------------
-
-.. inheritance-diagram:: pyNastran.op2.tables.oug.oug_Objects
-
-.. automodule:: pyNastran.op2.tables.oug.oug_Objects
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`oug_accelerations` Module
 -------------------------------
 
@@ -51,6 +40,17 @@ oug Package
 .. inheritance-diagram:: pyNastran.op2.tables.oug.oug_eigenvectors
 
 .. automodule:: pyNastran.op2.tables.oug.oug_eigenvectors
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`oug_Objects` Module
+-------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oug.oug_Objects
+
+.. automodule:: pyNastran.op2.tables.oug.oug_Objects
     :members:
     :private-members:
     :undoc-members:

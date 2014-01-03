@@ -34,3 +34,14 @@ oqg_constraintForces Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`oqg_thermalGradientAndFlux` Module
+----------------------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oqg_constraintForces.oqg_thermalGradientAndFlux
+
+.. automodule:: pyNastran.op2.tables.oqg_constraintForces.oqg_thermalGradientAndFlux
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
