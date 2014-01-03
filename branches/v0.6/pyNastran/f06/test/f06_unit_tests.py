@@ -55,7 +55,8 @@ class TestF06(unittest.TestCase):
     def test_blade2dv_fatal_1(self):
         f06_name = os.path.join(testpath, 'blade_2dv', 'blade_2dv.f06_fatal')
         f06 = F06(f06_name, debug=False, log=None)
-        f06.readF06()
+        with self.assertRaises(FatalError):
+            f06.readF06()
 
     def test_blade2dv_fatal_2(self):
         f06_name = os.path.join(testpath, 'blade_2dv', 'blade_2dv.f06_fatal')
