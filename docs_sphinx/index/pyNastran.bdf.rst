@@ -34,10 +34,10 @@ bdf Package
     :undoc-members:
     :show-inheritance:
 
-
 :mod:`fieldWriter` Module
 -------------------------
 
+.. inheritance-diagram:: pyNastran.bdf.fieldWriter
 
 .. automodule:: pyNastran.bdf.fieldWriter
     :members:
@@ -48,6 +48,7 @@ bdf Package
 :mod:`fieldWriter16` Module
 ---------------------------
 
+.. inheritance-diagram:: pyNastran.bdf.fieldWriter16
 
 .. automodule:: pyNastran.bdf.fieldWriter16
     :members:
@@ -66,6 +67,28 @@ bdf Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`writePath` Module
+-----------------------
+
+.. inheritance-diagram:: pyNastran.bdf.writePath
+
+.. automodule:: pyNastran.bdf.writePath
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`writePath` Module
+-----------------------
+
+.. inheritance-diagram:: pyNastran.bdf.writePath
+
+.. automodule:: pyNastran.bdf.writePath
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 Subpackages
 -----------
 
@@ -73,5 +96,5 @@ Subpackages
 
     pyNastran.bdf.bdfInterface
     pyNastran.bdf.cards
-    pyNastran.bdf.dmap
+    pyNastran.bdf.test
 

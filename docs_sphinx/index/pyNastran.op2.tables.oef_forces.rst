@@ -23,17 +23,6 @@ oef_forces Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`oef_Objects` Module
--------------------------
-
-.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.oef_Objects
-
-.. automodule:: pyNastran.op2.tables.oef_forces.oef_Objects
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`oef_complexForceObjects` Module
 -------------------------------------
 
@@ -51,6 +40,17 @@ oef_forces Package
 .. inheritance-diagram:: pyNastran.op2.tables.oef_forces.oef_forceObjects
 
 .. automodule:: pyNastran.op2.tables.oef_forces.oef_forceObjects
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`oef_Objects` Module
+-------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.oef_Objects
+
+.. automodule:: pyNastran.op2.tables.oef_forces.oef_Objects
     :members:
     :private-members:
     :undoc-members:

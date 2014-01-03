@@ -56,6 +56,17 @@ tables Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`resultTable` Module
+-------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.resultTable
+
+.. automodule:: pyNastran.op2.tables.resultTable
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 Subpackages
 -----------
 

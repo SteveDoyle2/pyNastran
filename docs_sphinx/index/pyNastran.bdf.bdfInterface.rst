@@ -1,17 +1,6 @@
 bdfInterface Package
 ====================
 
-:mod:`BDF_Card` Module
-----------------------
-
-.. inheritance-diagram:: pyNastran.bdf.bdfInterface.BDF_Card
-
-.. automodule:: pyNastran.bdf.bdfInterface.BDF_Card
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`addCard` Module
 ---------------------
 
@@ -23,12 +12,23 @@ bdfInterface Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`bdf_Reader` Module
-------------------------
+:mod:`assign_type` Module
+-------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.bdfInterface.bdf_Reader
+.. inheritance-diagram:: pyNastran.bdf.bdfInterface.assign_type
 
-.. automodule:: pyNastran.bdf.bdfInterface.bdf_Reader
+.. automodule:: pyNastran.bdf.bdfInterface.assign_type
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`BDF_Card` Module
+----------------------
+
+.. inheritance-diagram:: pyNastran.bdf.bdfInterface.BDF_Card
+
+.. automodule:: pyNastran.bdf.bdfInterface.BDF_Card
     :members:
     :private-members:
     :undoc-members:
