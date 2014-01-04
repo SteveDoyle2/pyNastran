@@ -6,8 +6,9 @@ from numpy import matrix as Matrix
 from scipy.sparse import coo_matrix
 
 
-def write_DMIG(f, name, matrix, form, precision='default',
-        row_index_to_component_id, col_index_to_component_id):
+def write_DMIG(f, name, matrix, form,
+               row_index_to_component_id, col_index_to_component_id,
+               precision='default'):
     """
     ==== ===============
     Form Definition
