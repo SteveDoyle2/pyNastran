@@ -82,7 +82,7 @@ from .cards.tables import (TABLED1, TABLED2, TABLED3,
                            TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                            TABLES1, TABLEST, TABRND1, TABRNDG, TIC)
 from .cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS
-from .caseControlDeck import CaseControlDeck
+from .caseControlDeck2 import CaseControlDeck
 from .bdf_Methods import BDFMethods
 from .bdfInterface.getCard import GetMethods
 from .bdfInterface.addCard import AddMethods
