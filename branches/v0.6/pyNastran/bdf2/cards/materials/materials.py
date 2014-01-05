@@ -1,3 +1,5 @@
+from numpy import zeros
+
 #from .mat1 import MAT1
 #from .mats1 import MATS1
 #from .mat4 import MAT4
@@ -75,6 +77,25 @@ class Materials(object):
             #if nmat:
                 #msg.append('  %-8s: %i' % (mat.type, nmat))
         return msg
+
+    def get_E(self, material_ids):
+        E = zeros(len(material_ids))
+        for i, material_id in enumerate(material_ids):
+            mat = self.get_shell_material(material_id)
+            E[i] = mat.E()
+        return E
+
+    def get_G(self, material_ids):
+        G = zeros(len(material_ids))
+        for i, material_id in enumerate(material_ids):
+            mat = self.get_shell_material(material_id)
+            G[i] = mat.G()
+        return G
+
+    #def get_index(self, property_ids):
+        #if property_ids is None:
+            #return arange(self.n)
+        #return searchsorted(property_ids, self.property_id)
 
     def get_shell_material(self, material_id):
         if material_id in self.mats1:

@@ -1,4 +1,6 @@
-from numpy import zeros, unique
+from itertools import izip
+
+from numpy import array, zeros, unique, searchsorted, arange
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.fieldWriter import print_card
@@ -72,9 +74,46 @@ class PROD(object):
             msg.append('  %-8s: %i' % ('PROD', self.n))
         return msg
 
+    def get_Area(self, property_ids):
+        i = self.get_index(property_ids)
+        A = self.A[i]
+        return A
+
+    def get_E(self, property_ids):
+        i = self.get_index(property_ids)
+        material_id = self.material_id[i]
+        E = self.model.materials.get_E(material_id)
+        return E
+
+    def get_G(self, property_ids):
+        i = self.get_index(property_ids)
+        material_id = self.material_id[i]
+        G = self.model.materials.get_G(material_id)
+        return G
+
+    def get_J(self, property_ids):
+        i = self.get_index(property_ids)
+        J = self.J[i]
+        return J
+
+    def get_c(self, property_ids):
+        i = self.get_index(property_ids)
+        c = self.c[i]
+        return c
+
+    def get_index(self, property_ids):
+        if isinstance(property_ids, int):
+            property_ids = array([property_ids])
+        if property_ids is None:
+            return arange(self.n)
+        
+        indexs = searchsorted(self.property_id, property_ids)
+        assert len(indexs) == len(property_ids), 'indexs=%s pids=%s' % (indexs, property_ids)
+        return indexs
+        
     def write_bdf(self, f, size=8, pids=None):
         if self.n:
-            for (pid, mid, A, J, c, nsm) in zip(
+            for (pid, mid, A, J, c, nsm) in izip(
                  self.property_id, self.material_id, self.A, self.J, self.c, self.nsm):
 
                 #self.mid = integer(card, 4, 'mid')

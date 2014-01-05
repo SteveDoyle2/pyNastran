@@ -22,8 +22,12 @@ def run_arg_parse(mode=''):
     msg += "  -q, --quiet       Prints debug messages (default: True)\n"
     msg += "  -v, --version     Show program's version number and exit\n"
 
+    if len(sys.argv) == 1:
+        sys.exit(msg)
+
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
+
     print data
     
     

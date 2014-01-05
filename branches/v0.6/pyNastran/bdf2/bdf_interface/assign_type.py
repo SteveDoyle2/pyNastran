@@ -741,7 +741,7 @@ def interpret_value(valueRaw, card='', debug=False):
         sline = valueLeft.split('+')
         expFactor = 1.
     else:
-        msg = ("I thought this was in scientific notation, but i can't find "
+        msg = ("I thought this was in scientific notation, but I can't find "
                "the exponent sign...valueRaw=|%s| valueLeft=|%s| "
                "card=%s\nYou also might have mixed tabs/spaces/commas."
                % (valueRaw, valueLeft, card))

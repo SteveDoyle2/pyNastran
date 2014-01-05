@@ -17,6 +17,7 @@ from scipy.sparse import coo_matrix
 from pyNastran.f06.f06Writer import sorted_bulk_data_header
 from pyNastran.utils import list_print
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
+#from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf2.bdf import BDF, SPC, SPC1
 from pyNastran.f06.f06 import F06
 from pyNastran.op2.op2 import OP2
@@ -121,7 +122,6 @@ def reverse_dict(A):
 
 class Solver(F06, OP2):
     """
-
     Goals:
       - Solves SOL 101
         - calculate Kgg, Fg matrix
@@ -161,7 +161,7 @@ class Solver(F06, OP2):
        - @todo analysis & output coordinate system != 0
 
       CONROD, CROD/PROD, CTUBE/PTUBE
-       - @todo CROD/CTUBE not tested
+       - @todo CTUBE not tested
 
       CELAS1, CELAS2, CELAS3, CELAS4, PELAS
        - ge not supported (it's damping, so not an issue)
@@ -188,8 +188,7 @@ class Solver(F06, OP2):
        - @todo static load at x1=0.5
 
       SPC, SPC1
-       - @todo not supported
-       - @todo constraints in coordinate system
+       - @todo constraints in alternate coordinate system (specified by GRID cards)
 
       MPC/RBE2/RBE3/RBAR
        - @todo not supported
@@ -203,7 +202,7 @@ class Solver(F06, OP2):
        - @todo PLOAD, PLOAD4
 
     Results:
-      CONROD, CROD, PROD
+      CONROD, CROD/PROD
        - FORCE
        - STRESS/STRAIN
          - margins not supported
@@ -313,8 +312,11 @@ class Solver(F06, OP2):
         self.op2_pack_name = bdf_base + '_pack.op2'
 
         self.f06_file = open(self.f06_name, 'wb')
-        self.op2_file = open(self.op2_name, 'wb')
-        self.op2_pack_file = open(self.op2_pack_name, 'w')
+        #self.op2_file = open(self.op2_name, 'wb')
+        #self.op2_pack_file = open(self.op2_pack_name, 'w')
+        self.op2_file = None
+        self.op2_pack_file = None
+
 
         self.f06_file.write(self.make_f06_header())
         #self.f06_file.write(sorted_bulk_data_header())
@@ -327,6 +329,18 @@ class Solver(F06, OP2):
         self.model.cards_to_read = get_cards()
         self.model.f06 = self.f06_file
 
+        if 1:
+            data = {
+                'bar1_a': 1.0,
+                'bar2_a': 1.0,
+                'bar3_a': 1.0,
+                'youngs': 5e6,
+                'loadmag': 1000.0,
+                'loadx': 0.5,
+                'loady': 1.0,
+                'rho' : 2.0,
+            }
+            self.model.set_dynamic_syntax(data)
         self.model.read_bdf(bdf_filename)
         cc = self.model.caseControlDeck
         #print cc.subcases
@@ -352,6 +366,10 @@ class Solver(F06, OP2):
                 #integrate(B.T*E*alpha*dt*Ads)
             #sys.exit('starting case')
             self.run_case(self.model, case)
+        self.f06_file.close()
+        if self.op2_file is not None:
+            self.op2_file.close()
+            self.op2_pack_file.close()
 
     def run_case(self, model, case):
         sols = {101: self.run_sol_101}
@@ -504,12 +522,12 @@ class Solver(F06, OP2):
         else:
             coupmass = -1
 
-        if self.subcase.has_parameter('FMETHOD'):
+        if case.has_parameter('FMETHOD'):
             iflutter = self.subcase.get_parameter('FMETHOD')
             self.flutter[iflutter]
             self.flfact[iflutter]
 
-        if self.subcase.has_parameter('METHOD'):
+        if case.has_parameter('METHOD'):
             imethod = self.subcase.get_parameter('METHOD')
             self.eigb[imethod]
             self.eigc[imethod]
@@ -517,13 +535,13 @@ class Solver(F06, OP2):
             self.eigrl[imethod]
 
         if "GRDPNT" in model.params and model.params["GRDPNT"] >= 0:
-            g0 = model.parameter["GRDPNT"]
+            g0 = model.params["GRDPNT"]
             reference_point = None
             if g0 in model.nodes:
                 reference_point = model.nodes[g0].Position()
-            (mass, cg, I) = model.mass_properties(reference_point, sym_axis=None, num_cpus=1)
-            mass *= wtmass
-            I *= wtmass
+            #(mass, cg, I) = model.mass_properties(reference_point, sym_axis=None, num_cpus=1)
+            #mass *= wtmass
+            #I *= wtmass
             # calculate mass - really should use the Mass matrix...
 
         ## define IDs of grid point components in matrices
@@ -584,8 +602,8 @@ class Solver(F06, OP2):
             nsprings = 0
             elementTypes = [model.elements_spring.celas1,
                             model.elements_spring.celas2,
-                            model.elements_spring.celas3,
-                            model.elements_spring.celas4
+                            #model.elements_spring.celas3,
+                            #model.elements_spring.celas4
                             ]
             for elementType in elementTypes:
                 nsprings += elementType.n
@@ -747,6 +765,7 @@ class Solver(F06, OP2):
             f.write(str(data)+'\n')
 
     def write_op2(self, f, packing=False):
+        return
         results = [self.displacements]
         header = None
         pageStamp = None
@@ -758,9 +777,9 @@ class Solver(F06, OP2):
                 case.write_op2(header, pageStamp, f, is_mag_phase=False, packing=packing)
                 if not packing:
                     f.write('\n')
-        marker1 = [4,  0, 4]
-        marker2 = [4,  0, 4]
-        marker3 = [4,  0, 4]
+        marker1 = [4, 0, 4]
+        marker2 = [4, 0, 4]
+        marker3 = [4, 0, 4]
         marker = marker1 + marker2 + marker3
         if packing:
             nmarker = len(marker)
@@ -787,7 +806,7 @@ class Solver(F06, OP2):
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
                     'element_name': elementType, 'format_code':format_code,
                     's_code': s_code,
-                    'nonlinear_factor': None}
+                    'nonlinear_factor': None, 'dataNames':['lsdvmn']}
         if Type == 'stress':
             if elementType == 'CBEAM':
                 stress = BeamStressObject(data_code, is_sort1, isubcase, dt=False)
@@ -838,7 +857,7 @@ class Solver(F06, OP2):
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OEF',
                     'element_name': elementType, 'format_code':format_code,
                     #'s_code': s_code,
-                    'nonlinear_factor': None}
+                    'nonlinear_factor': None, 'dataNames':['lsdvmn']}
 
         if elementType == 'CBEAM':
             forces = RealCBeamForce(data_code, is_sort1, isubcase, dt=False)
@@ -882,7 +901,7 @@ class Solver(F06, OP2):
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OEF',
                     'element_name': elementType, 'format_code':format_code,
                     #'s_code': s_code,
-                    'nonlinear_factor': None}
+                    'nonlinear_factor': None, 'dataNames':['lsdvmn']}
         return data_code
 
     def _store_cshear_oef(self, model, eids, force, case, elementType):
@@ -941,7 +960,7 @@ class Solver(F06, OP2):
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
                     'element_name': elementType, 'format_code':format_code,
                     's_code': s_code,
-                    'nonlinear_factor': None}
+                    'nonlinear_factor': None, 'dataNames':['lsdvmn']}
 
         if Type == 'stress':
             #if elementType == 'CELAS2':
@@ -989,7 +1008,7 @@ class Solver(F06, OP2):
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
                     'element_name': elementType, 'format_code':format_code,
                     's_code': s_code,
-                    'nonlinear_factor': None}
+                    'nonlinear_factor': None, 'dataNames':['lsdvmn']}
 
         if Type == 'stress':
             #if elementType == 'CELAS2':
@@ -1099,7 +1118,7 @@ class Solver(F06, OP2):
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
                     'element_name': elementType, 'format_code':format_code,
                     's_code': s_code,
-                    'nonlinear_factor': None}
+                    'nonlinear_factor': None, 'dataNames':['lsdvmn']}
         if Type == 'stress':
             if elementType == 'CROD':
                 stress = RodStressObject(data_code, is_sort1, isubcase, dt=False)
@@ -1154,7 +1173,7 @@ class Solver(F06, OP2):
         data_code = {'log': self.log, 'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 1, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OUG',
-                    'nonlinear_factor': None}
+                    'nonlinear_factor': None, 'dataNames':['lsdvmn']}
         disp = DisplacementObject(data_code, is_sort1, isubcase, dt=None)
 
         data = []
@@ -1184,7 +1203,6 @@ class Solver(F06, OP2):
         #mpcDOFs = self.iUm
 
         #Mgg = zeros((i, i), 'float64')
-
         Kgg, Kgg_sparse = self.assemble_global_stiffness(model, i, self.nidComponentToID)
         Fg = self.assemble_forces(model, i, case, self.nidComponentToID)
         return Kgg, Fg, i
@@ -1308,6 +1326,7 @@ class Solver(F06, OP2):
             self.positions[nid] = model.grid.xyz[i]
             index0s[nid] = 6 * i
 
+        # spring
         for i in xrange(model.elements_spring.celas1.n):
             K, dofs, nijv = model.elements_spring.celas1.get_stiffness(i, model, self.positions, index0s)
             print("Kcelas1 =\n", K)
@@ -1317,32 +1336,34 @@ class Solver(F06, OP2):
             K, dofs, nijv = model.elements_spring.celas2.get_stiffness(i, model, self.positions, index0s)
             self.add_stiffness(K, dofs, nijv)
 
-        for i in xrange(model.elements_spring.celas3.n):
-            K, dofs, nijv = model.elements_spring.celas3.get_stiffness(i, model, self.positions, index0s)
-            self.add_stiffness(K, dofs, nijv)
+        if 0:
+            for i in xrange(model.elements_spring.celas3.n):
+                K, dofs, nijv = model.elements_spring.celas3.get_stiffness(i, model, self.positions, index0s)
+                self.add_stiffness(K, dofs, nijv)
 
-        for i in xrange(model.elements_spring.celas4.n):
-            K, dofs, nijv = model.elements_spring.celas4.get_stiffness(i, model, self.positions, index0s)
-            self.add_stiffness(K, dofs, nijv)
+            for i in xrange(model.elements_spring.celas4.n):
+                K, dofs, nijv = model.elements_spring.celas4.get_stiffness(i, model, self.positions, index0s)
+                self.add_stiffness(K, dofs, nijv)
 
-        #celas3
-        #celas4
+        # conrod
         for i in xrange(model.conrod.n):
             K, dofs, nijv = model.conrod.get_stiffness(i, model, self.positions, index0s)
             self.add_stiffness(K, dofs, nijv)
 
+        # crod
         for i in xrange(model.crod.n):
             K, dofs, nijv = model.crod.get_stiffness(i, model, self.positions, index0s)
             self.add_stiffness(K, dofs, nijv)
 
+        # ctube
 
         # shells
         for i in xrange(model.elements_shell.ctria3.n):
-            K, dofs, nijv = model.crod.get_stiffness(i, model, self.positions, index0s)
+            K, dofs, nijv = model.ctria3.get_stiffness(i, model, self.positions, index0s)
             self.add_stiffness(K, dofs, nijv)
 
         for i in xrange(model.elements_shell.cquad4.n):
-            K, dofs, nijv = model.crod.get_stiffness(i, model, self.positions, index0s)
+            K, dofs, nijv = model.cquad4.get_stiffness(i, model, self.positions, index0s)
             self.add_stiffness(K, dofs, nijv)
 
         #Kgg_sparse = coo_matrix((entries, (rows, cols)), shape=(i, i))
@@ -1350,70 +1371,38 @@ class Solver(F06, OP2):
         Kgg = self.Kgg
         return Kgg, Kgg_sparse
 
-    def apply_SPCs2(self, model, case, nidComponentToID):
-        if case.has_parameter('SPC'):
-            # get the value, 1 is the options (SPC has no options)
-            spcID = case.get_parameter('SPC')[0]
-            SpcSet = model.SPC(spcID)
-
-            print(SpcSet)
-            for spcSet in SpcSet:
-                (typesFound, positionSPCs) = spcSet.organizeConstraints(model)
-        return
-
     def apply_SPCs(self, model, case, nidComponentToID):
-        return self.apply_SPCs2(model, case, nidComponentToID)
-        isSPC = False
-        print('*Us', self.Us)
-        print('*iUs', self.iUs)
-        if case.has_parameter('SPC'):
-            isSPC = True
-            spcs = model.spcObject2.constraints
+        has_spcs = False
+        if not case.has_parameter('SPC'):
+            spc_ids = self.model.get_SPCx_ids(exclude_spcadd=True)
+            has_spcs = True
+            ## todo:  is this correct???
+        else:
             # get the value, 1 is the options (SPC has no options)
-            spcID = case.get_parameter('SPC')[0]
-            print("SPC = ", spcID)
-            #print model.spcObject2.constraints
-            spcset = spcs[spcID]
+            spc_ids = [ case.get_parameter('SPC')[0] ]
 
-            for spc in spcset:
-                print(spc)
-                if isinstance(spc, SPC):
-                    ps = spc.constraints
-                    print("spc.constraints = ", spc.constraints)
-                    print("spc.enforced    = ", spc.enforced)
-                    raise NotImplementedError('no support for SPC...')
-                    self.Us.append(self.enforced)
-                    for ips in ps:
-                        key = (nid, int(ips))
-                        i = nidComponentToID(key)
-                        self.iUs.append(i)
-                        self.Us.append(0.0)
+        if case.has_parameter('SPC') or has_spcs:
+            for spc_id in spc_ids:
+                self.log.debug('applying SPC=%i' % spc_id)
+                SpcSet = model.SPC(spc_id)
 
-                elif isinstance(spc, SPC1):
-                    ps = spc.constraints
-                    #print("ps = |%s|" % ps)
-                    nodes = spc.nodes
-                    for nid in nodes:
-                        for ips in ps:
-                            ips = int(ips)
-
-                            key = (nid, ips)
-                            i = nidComponentToID[key]
-                            #print("i=%s Us=%s" % (i, 0.0))
-                            if i not in self.iUs:
-                                self.iUs.append(i)
-                                self.Us.append(0.0)
-
-                else:
-                    raise NotImplementedError('Invalid SPC...spc=\n%s' % spc)
-
-            print("iUs = ", self.iUs)
-            print("Us  = ", self.Us)
-            sys.exit('stopping in apply_SPCs')
-
-        print("iUs = ", self.iUs)
-        print("Us  = ", self.Us)
-        return (isSPC)
+                print("spc_set =", SpcSet)
+                for spc in SpcSet:
+                    if spc.type == 'SPC1':
+                        for dof, node_ids in spc.components.iteritems():
+                            print("dof =", dof)
+                            for dofi in dof:
+                                dofi = int(dofi)
+                                for nid in node_ids:
+                                    key = (nid, dofi)
+                                    i = nidComponentToID[key]
+                                    print("i=%s Us=%s" % (i, 0.0))
+                                    if i not in self.iUs:
+                                        self.iUs.append(i)
+                                        self.Us.append(0.0)
+                    else:
+                        raise NotImplementedError(spc.type)
+        return
 
     def apply_MPCs(self, model, case, nidComponentToID):
         isMPC = False
@@ -1556,33 +1545,47 @@ class Solver(F06, OP2):
                 if 'PLOT' in options:
                     op2.write(result.write_op2(self.Title, self.Subtitle))
 
+        assert case.has_parameter('SPCFORCES') == True
         if case.has_parameter('SPCFORCES'):
             (value, options) = case.get_parameter('SPCFORCES')
             if options is not []:
-                SPCForces = Ksa * Ua + Kss * Us
-                if isMPC:
-                    SPCForces += Ksm * Um
+                if value != 'NONE':
+                    SPCForces = Ksa * Ua + Kss * Us
+                    if isMPC:
+                        SPCForces += Ksm * Um
 
-                result = SPCForcesObject(data_code, transient)
-                result.add_f06_data()
-                if 'PRINT' in options:
-                    f06.write(result.write_f06(header, pageStamp, pageNum))
-                if 'PLOT' in options:
-                    op2.write(result.write_op2(Title, Subtitle))
+                    result = SPCForcesObject(data_code, transient)
+                    result.add_f06_data()
+                
+                    flag = 0
+                    if 'PRINT' in options:
+                        f06.write(result.write_f06(header, pageStamp, pageNum))
+                        flag += 1
+                    if 'PLOT' in options:
+                        op2.write(result.write_op2(Title, Subtitle))
+                        flag += 1
+                    if not flag:
+                        f06.write(result.write_f06(header, pageStamp, pageNum))
 
         if case.has_parameter('MPCFORCES'):
             if options is not []:
                 (value, options) = case.get_parameter('MPCFORCES')
-                MPCForces = Kma * Ua + Kmm * Um
-                if isSPC:
-                    MPCForces += Kms * Us
+                if value != 'NONE':
+                    MPCForces = Kma * Ua + Kmm * Um
+                    if isSPC:
+                        MPCForces += Kms * Us
 
-                result = MPCForcesObject(data_code, transient)
-                result.add_f06_data()
-                if 'PRINT' in options:
-                    f06.write(result.write_f06(header, pageStamp, pageNum))
-                if 'PLOT' in options:
-                    f06.write(result.write_op2(Title, Subtitle))
+                    result = MPCForcesObject(data_code, transient)
+                    result.add_f06_data()
+                    flag = 0
+                    if 'PRINT' in options:
+                        f06.write(result.write_f06(header, pageStamp, pageNum))
+                        flag += 1
+                    if 'PLOT' in options:
+                        f06.write(result.write_op2(Title, Subtitle))
+                        flag += 1
+                    if not flag:
+                        f06.write(result.write_f06(header, pageStamp, pageNum))
 
         if case.has_parameter('GPFORCE'):
             if options is not []:
@@ -1664,7 +1667,7 @@ def get_cards():
                       ])
     return cardsToRead
 
-if __name__ == '__main__':
+def main():
     from pyNastran.bdf2.solver.solver_args import run_arg_parse
     fargs = run_arg_parse()
 
@@ -1679,3 +1682,6 @@ if __name__ == '__main__':
         #op2 = OP2(op2_name)
         #op2.make_op2_debug = True
         #op2.read_op2()
+
+if __name__ == '__main__':
+    main()

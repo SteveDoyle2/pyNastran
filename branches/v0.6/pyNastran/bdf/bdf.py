@@ -816,6 +816,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
         :param self:         the BDF object
         :param dict_of_vars: dictionary of 7 character variable names to map.
+
         ::
 
           GRID, 1, %xVar, %yVar, %zVar
@@ -836,7 +837,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         for (key, value) in sorted(dict_of_vars.iteritems()):
             assert len(key) <= 7, ('max length for key is 7; '
                                    'len(%s)=%s' % (key, len(key)))
-            assert len(key) <= 1, ('max length for key is 1; '
+            assert len(key) >= 1, ('min length for key is 1; '
                                    'len(%s)=%s' % (key, len(key)))
             assert isinstance(key, str), 'key=%s must be a string' % key
             self.dict_of_vars[key] = value
@@ -855,8 +856,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         self.log.info("dynamic key = %r" % key)
         #self.dict_of_vars = {'P5':0.5,'ONEK':1000.}
         if key not in self.dict_of_vars:
-            msg = "key=%r not found in keys=%s" % (key,
-                                                     self.dict_of_vars.keys())
+            msg = "key=%r not found in keys=%s" % (key, self.dict_of_vars.keys())
             raise KeyError(msg)
         return self.dict_of_vars[key]
 
@@ -1782,8 +1782,8 @@ def to_fields(card_lines, card_name):
             assert len(new_fields) == 8, 'nFields=%s new_fields=%s' % (len(new_fields), new_fields)
 
         fields += new_fields
+    return [field.strip() for field in fields]
 
-    return fields
 
 def get_include_filename(card_lines, include_dir=''):
     """

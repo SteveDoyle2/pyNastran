@@ -14,6 +14,10 @@ import warnings
 import traceback
 from collections import defaultdict
 
+from numpy import unique
+
+from pyNastran.bdf.bdf import (to_fields, get_include_filename,
+    parse_executive_control_deck, clean_empty_lines)
 
 from pyNastran.utils import list_print, is_string, object_attributes
 from pyNastran.utils.log import get_logger
@@ -1063,7 +1067,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         for (key, value) in sorted(dict_of_vars.iteritems()):
             assert len(key) <= 7, ('max length for key is 7; '
                                    'len(%s)=%s' % (key, len(key)))
-            assert len(key) <= 1, ('max length for key is 1; '
+            assert len(key) >= 1, ('min length for key is 1; '
                                    'len(%s)=%s' % (key, len(key)))
             assert isinstance(key, str), 'key=%s must be a string' % key
             self.dict_of_vars[key] = value
@@ -1084,8 +1088,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.log.info("dynamic key = |%r|" % key)
         #self.dict_of_vars = {'P5':0.5,'ONEK':1000.}
         if key not in self.dict_of_vars:
-            msg = "key=|%r| not found in keys=%s" % (key,
-                                                     self.dict_of_vars.keys())
+            msg = "key=|%r| not found in keys=%s" % (key, self.dict_of_vars.keys())
             raise KeyError(msg)
         return self.dict_of_vars[key]
 
@@ -2138,21 +2141,21 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             pass
         #========================
         # freq
-        elif name == 'EIGB':
-            pass
-        elif name == 'EIGC':
-            pass
-        elif name == 'EIGR':
-            pass
-        elif name == 'EIGRL':
-            pass
+        #elif name == 'EIGB':
+            #pass
+        #elif name == 'EIGC':
+            #pass
+        #elif name == 'EIGR':
+            #pass
+        #elif name == 'EIGRL':
+            #pass
 
-        elif name == 'FREQ':
-            pass
-        elif name == 'FREQ1':
-            pass
-        elif name == 'FREQ2':
-            pass
+        #elif name == 'FREQ':
+            #pass
+        #elif name == 'FREQ1':
+            #pass
+        #elif name == 'FREQ2':
+            #pass
 
         #========================
         # materials
@@ -2281,6 +2284,73 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         else:
             return msg
 
+    def get_SPCx_ids(self, exclude_spcadd=False):
+        """
+        :param exclude_spcadd: you can exclude SPCADD if you just want a
+            list of all the SPCs in the model.  For example, apply all the
+            SPCs when there is no SPC=N in the case control deck, but you
+            don't need to apply SPCADD=N twice.
+        """
+        spcs = {
+            'SPC': self.spc,
+            'SPC1': self.spc1,
+            #'SPCAX': self.spcax,
+            'SPCD': self.spcd,
+        }
+        if not exclude_spcadd:
+            spcs['SPCADD'] = self.spcadd,
+
+        spc_ids = []
+        for spc_type, spc in spcs.iteritems():
+            spc_ids.extend(spc.keys())
+        return unique(spc_ids)
+
+    def SPC(self, spc_id, used_ids=[]):
+        used_ids.append(spc_id)
+        spcs = {
+            'SPCADD' : self.spcadd,
+            'SPC': self.spc,
+            'SPC1': self.spc1,
+            #'SPCAX': self.spcax,
+            'SPCD': self.spcd,
+        }
+        spc_out = []
+        for spc_type, spc in spcs.iteritems():
+            if spc_id in spc:
+                out = spc[spc_id]
+                if spc_type == 'SPCADD':
+                    for spci in out.spc_ids:
+                        if spci in used_ids:
+                            raise RuntimeError('duplicate SPC id=%i' % spci)
+                        spc_outi = self.SPC(spci, used_ids)
+                        for spcii in spc_outi:
+                            spc_out.append(spcii)
+                else:
+                    spc_out.append(out)
+        print("spc_out =", spc_out)
+        return spc_out
+
+    def MPC(self, mpc_id, used_ids=[]):
+        used_ids.append(mpc_id)
+        mpcs = {
+            'MPCADD' : self.mpcadd,
+            'MPC': self.mpc,
+        }
+        mpc_out = []
+        for mpc_type, mpc in mpcs.iteritems():
+            if mpc_id in mpc:
+                out = mpc[mpc_id]
+                if mpc_type == 'MPCADD':
+                    for spci in out.mpc_ids:
+                        if mpci in used_ids:
+                            raise RuntimeError('duplicate MPC id=%i' % mpci)
+                        mpc_outi = self.MPC(mpci, used_ids)
+                        for mpcii in mpc_outi:
+                            mpc_out.append(mpcii)
+                else:
+                    mpc_out.append(out)
+        print("mpc_out =", mpc_out)
+        return mpc_out
 
 def _clean_comment(comment, end=-1):
     """
@@ -2303,175 +2373,6 @@ def _clean_comment(comment, end=-1):
                    '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES']:
         comment = ''
     return comment
-
-
-def to_fields(card_lines, card_name):
-    """
-    Converts a series of lines in a card into string versions of the field.
-    Handles large, small, and CSV formatted cards.
-
-    :param lines:     the lines of the BDF card object
-    :param card_name: the card_name -> 'GRID'
-    :returns fields:  the string formatted fields of the card
-    """
-    fields = []
-    #print('---------------')
-    # first line
-    line = card_lines.pop(0)
-    #print "first line=|%s|" % line.rstrip()
-    if '=' in line:
-            raise SyntaxError('card_name=%s\nequal signs are not supported...'
-                              'line=|%r|' % (card_name, line))
-
-    if '\t' in line:
-        line = line.expandtabs()
-        if ',' in line:
-            raise SyntaxError('tabs and commas in the same line are '
-                              'not supported...line=|%r|' % line)
-
-    if '*' in line:  # large field
-        if ',' in line:  # csv
-            new_fields = line[:72].split(',')[:5]
-            for i in range(5-len(new_fields)):
-                new_fields.append('')
-        else:  # standard
-            new_fields = [line[0:8], line[8:24], line[24:40], line[40:56],
-                          line[56:72]]
-        fields += new_fields
-        assert len(fields) == 5
-    else:  # small field
-        #print "small line=|%s|" % line.rstrip()
-        if ',' in line:  # csv
-            new_fields = line[:72].split(',')[:9]
-            for i in range(9-len(new_fields)):
-                new_fields.append('')
-        else:  # standard
-            new_fields = [line[0:8], line[8:16], line[16:24], line[24:32],
-                          line[32:40], line[40:48], line[48:56], line[56:64],
-                          line[64:72]]
-        fields += new_fields
-        assert len(fields) == 9
-
-    #print("new_fieldsA =",new_fields)
-
-    for j, line in enumerate(card_lines): # continuation lines
-        #for i, field in enumerate(fields):
-        #    if field.strip() == '+':
-        #        raise RuntimeError('j=%s field[%s] is a +' % (j,i))
-
-        #print "card_name = %r" % card_name
-        if '=' in line and card_name != 'EIGRL':
-            raise SyntaxError('card_name=%s\nequal signs are not supported...'
-                              'line=|%r|' % (card_name, line))
-        if '\t' in line:
-            line = line.expandtabs()
-            if ',' in line:
-                raise SyntaxError('tabs and commas in the same line are '
-                                  'not supported...line=|%r|' % line)
-
-        if '*' in line:  # large field
-            if ',' in line:  # csv
-                new_fields = line[:72].split(',')[1:5]
-                for i in range(4-len(new_fields)):
-                    new_fields.append('')
-            else:  # standard
-                new_fields = [line[8:24], line[24:40], line[40:56], line[56:72]]
-            assert len(new_fields) == 4
-        else:  # small field
-            #print "small lin2=|%s|" % line.rstrip()
-            if ',' in line:  # csv
-                new_fields = line[:72].split(',')[1:9]
-                for i in range(8-len(new_fields)):
-                    new_fields.append('')
-            else:  # standard
-                new_fields = [line[8:16], line[16:24], line[24:32], line[32:40],
-                              line[40:48], line[48:56], line[56:64], line[64:72]]
-            assert len(new_fields) == 8, 'nFields=%s new_fields=%s' % (len(new_fields), new_fields)
-
-        fields += new_fields
-        #print("new_fieldsB =", new_fields)
-
-    return fields
-
-def get_include_filename(card_lines, include_dir=''):
-    """
-    Parses an INCLUDE file split into multiple lines (as a list).
-
-    :param card_lines:  the list of lines in the include card (all the lines!)
-    :param include_dir: the include directory (default='')
-    :returns filename:  the INCLUDE filename
-    """
-    cardLines2 = []
-    for line in card_lines:
-        line = line.strip('\t\r\n ')
-        cardLines2.append(line)
-
-    cardLines2[0] = cardLines2[0][7:].strip()  # truncate the cardname
-    filename = ''.join(cardLines2)
-    filename = filename.strip('"').strip("'")
-    if ':' in filename:
-        ifilepaths = filename.split(':')
-        filename = os.path.join(*ifilepaths)
-    filename = os.path.join(include_dir, filename)
-    return filename
-
-
-def parse_executive_control_deck(executive_control_lines):
-    """
-    Extracts the solution from the executive control deck
-    """
-    sol = None
-    method = None
-    iSolLine = None
-    for (i, eline) in enumerate(executive_control_lines):
-        uline = eline.strip().upper()  # uppercase line
-        uline = uline.split('$')[0].expandtabs()
-        #print("uline = %r" % uline)
-        if uline[:4] in ['SOL ']:
-            if ',' in uline:
-                sline = uline.split(',')  # SOL 600,method
-                solValue = sline[0].strip()
-                method = sline[1].strip()
-            else:
-                solValue = uline
-                method = None
-
-            #print("sol =", sol)
-            if sol is None:
-                sol = solValue[3:].strip()
-            else:
-                raise ValueError('cannot overwrite solution existing='
-                                 '|SOL %s| new =|%s|' % (sol, uline))
-            iSolLine = i
-    #print("sol = ", sol)
-    return sol, method, iSolLine
-
-
-def clean_empty_lines(lines):
-    """
-    removes leading and trailing empty lines
-    don't remove internally blank lines
-    """
-    found_lines = False
-    #print "**lines1 = %r" % lines
-    if len(lines) < 2:
-        return lines
-
-    for i, line in enumerate(lines):
-        if not found_lines and line:
-            found_lines = True
-            n1 = i
-            n2 = i + 1
-            #print "setting n1",n1
-            #print "setting n2",n2
-        elif found_lines and line:
-            n2 = i + 1
-            #print "setting n2",n2
-    #print "n1=%s n2=%s" % (n1, n2)
-    lines2 = lines[n1:n2]
-    #lines2 = wipe_empty_fields(lines2)
-    #print "**lines2 = %r" % lines2
-    return lines2
 
 
 if __name__ == '__main__':

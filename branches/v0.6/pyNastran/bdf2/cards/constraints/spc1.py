@@ -33,6 +33,7 @@ class SPC1(object):
       SPC1 SID C    G1 THRU G2
       SPC1 313 12456 6 THRU 32
     """
+    type = 'SPC1'
     def __init__(self, model):
         self.model = model
         self.components = defaultdict(list)
@@ -56,3 +57,9 @@ class SPC1(object):
         for comp, nodes in self.components.iteritems():
             card = ['SPC1', self.constraint_id, comp] + list(nodes)
             f.write(print_card(card))
+
+    def __repr__(self):
+        import StringIO
+        f = StringIO.StringIO()
+        self.write_bdf(f)
+        return f.getvalue().rstrip()

@@ -112,7 +112,6 @@ class CONROD(object):
         v = divide_2d_array_by_column_vector(L, n)
         mass = n * self.A * rho + self.nsm
 
-
         A = self.A
         J = self.J
         c = self.c
@@ -180,7 +179,7 @@ class CONROD(object):
     def get_material_from_index(self, i):
         return self.model.materials.mat1
 
-    def get_stiffness(self, i, model, positions, index0s, fnorm=1.0):  # CROD/CONROD
+    def get_stiffness(self, i, model, positions, index0s, knorm=1.0):  # CROD/CONROD
         #print("----------------")
         A = self.get_area_from_index(i)
         #mat = self.get_material_from_index(i)
@@ -209,12 +208,12 @@ class CONROD(object):
         p1 = positions[n1]
 
         v1 = p0 - p1
-        L = norm(p0 - p1)
+        L = norm(v1)
         if L == 0.0:
             msg = 'invalid CROD length=0.0\n%s' % (self.__repr__())
             raise ZeroDivisionError(msg)
         #========================
-        print("A=%r E=%r G=%r J=%r L=%r" % (A, E, G, J, L))
+        #print("A=%r E=%r G=%r J=%r L=%r" % (A, E, G, J, L))
         k_axial = A * E / L
         k_torsion = G * J / L
         #k_axial = 1.0
@@ -222,7 +221,7 @@ class CONROD(object):
 
         k = array([[1., -1.], [-1., 1.]])  # 1D rod
 
-        Lambda = _Lambda(v1, debug=True)
+        Lambda = _Lambda(v1, debug=False)
         K = dot(dot(transpose(Lambda), k), Lambda)
         Ki, Kj = K.shape
 
@@ -282,16 +281,16 @@ class CONROD(object):
             ]
 
         #Fg = dot(dot(transpose(Lambda), grav), Lambda)
-        #print("K=\n", K / fnorm)
-        #print("K2=\n", K2 / fnorm)
+        #print("K=\n", K / knorm)
+        #print("K2=\n", K2 / knorm)
 
         #========================
 
-        #print(K / fnorm)
-        #print("K[%s] = \n%s\n" % (self.eid, list_print(K/fnorm)))
+        #print(K / knorm)
+        #print("K[%s] = \n%s\n" % (self.eid, list_print(K/knorm)))
 
         print('dofs =', dofs)
-        #print('K =\n', list_print(K / fnorm))
+        #print('K =\n', list_print(K / knorm))
 
         return(K2, dofs, nIJV)
 

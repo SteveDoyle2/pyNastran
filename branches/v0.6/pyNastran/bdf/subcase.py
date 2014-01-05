@@ -368,8 +368,8 @@ class Subcase(object):
 
     def _add_data(self, key, value, options, param_type):
         key = update_param_name(key)
-        #print("adding isubcase=%s key=|%s| value=|%s| options=|%s| "
-        #      "param_type=%s" %(self.id, key, value, options, param_type))
+        #print("adding isubcase=%s key=%r value=%r options=%r "
+        #      "param_type=%r" %(self.id, key, value, options, param_type))
         if is_string(value) and value.isdigit():
             value = int(value)
 
@@ -527,6 +527,7 @@ class Subcase(object):
         if self.id > 0:
             spaces = '    '
 
+        #print('key=%s param=%s param_type=%s' % (key, param, param_type))
         if param_type == 'SUBCASE-type':
             if self.id > 0:
                 msg += 'SUBCASE %s\n' % (self.id)
@@ -535,7 +536,12 @@ class Subcase(object):
         elif param_type == 'KEY-type':
             #print "KEY-TYPE:  |%s|" %(value)
             assert value is not None, param
-            msg += spaces + '%s\n' % (value)
+            if ',' in value:
+                sline = value.split(',')
+                two_spaces = ',\n' + 2 * spaces
+                msg += spaces + two_spaces.join(sline) + '\n'
+            else:
+                msg += spaces + '%s\n' % value
         elif param_type == 'STRING-type':
             msg += spaces + '%s = %s\n' % (key, value)
         elif param_type == 'CSV-type':
@@ -545,10 +551,14 @@ class Subcase(object):
             #print("sOptions = |%s|" %(sOptions))
             #print("STRESSTYPE key=%s value=%s options=%s"
             #    %(key, value, options))
-            if len(sOptions) > 0:
-                msg += '%s(%s) = %s\n' % (key, sOptions, value)
+            if value is None:
+                val = ''
             else:
-                msg += '%s = %s\n' % (key, value)
+                val = ' = %s' % value
+            if len(sOptions) > 0:
+                msg += '%s(%s)%s\n' % (key, sOptions, val)
+            else:
+                msg += '%s%s\n' % (key, val)
             msg = spaces + msg
 
         elif param_type == 'SET-type':

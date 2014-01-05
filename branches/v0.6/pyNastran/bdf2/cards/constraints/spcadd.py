@@ -22,28 +22,34 @@ class SPCADD(object):
     """
     ::
 
-      SPCADD SID G1 G2 G3 G4 G5 G6
-      G7 G8 G9 -etc.-
+      SPCADD SID S1 S2 S3 S4 S5 S6
+      S7 S8 S9 -etc.-
 
-      SPCADD SID G1 THRU G2
-      SPCADD 313 6 THRU 32
+      SPCADD SID S1 S2 S2
+      SPCADD 313  1  2  3
     """
+    type = 'SPCADD'
     def __init__(self, model):
         self.model = model
-        self.constraint_id = None
-        self.node_ids = []
+        self.spc_id = None
+        self.spc_ids = []
 
-    def add(self, constraint_id, node_ids, comment):
+    def add(self, spc_id, spc_ids, comment):
         #if comment:
             #self._comment = comment
-        assert isinstance(constraint_id, int), constraint_id
-        self.constraint_id = constraint_id
-        self.node_ids += node_ids
+        assert isinstance(spc_id, int), spc_id
+        self.spc_id = spc_id
+        self.spc_ids += spc_ids
 
     def build(self):
-        self.node_ids.sort()
+        self.spc_ids.sort()
 
     def write_bdf(self, f, size=8):
-        card = ['SPCADD', self.constraint_id] + self.node_ids
+        card = ['SPCADD', self.spc_id] + self.spc_ids
         #print "card = ", card
         f.write(print_card(card))
+    def __repr__(self):
+        import StringIO
+        f = StringIO.StringIO()
+        self.write_bdf(f)
+        return f.getvalue().rstrip()

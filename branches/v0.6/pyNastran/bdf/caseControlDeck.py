@@ -267,7 +267,15 @@ class CaseControlDeck(object):
                      follow that when it's written out
         """
         isubcase = 0
+        #print('---------------')
+        #print('?' + '\n?'.join(lines))
         lines = _clean_lines(self, lines)
+        #print('---------------')
+        #print('$' + '\n$'.join(lines))
+        #print('---------------')
+        
+        #aaa
+        
         self.output_lines = []
         i = 0
         is_output_lines = False
@@ -276,9 +284,15 @@ class CaseControlDeck(object):
 
             lines2 = [line]
             while ',' in lines[i][-1]:
-                #print "lines[%s] = %s" %(i,lines[i])
                 i += 1
+                #print("**lines[%s] = %s" %(i, lines[i]))
                 lines2.append(lines[i])
+
+                #print('---------------')
+                #print(lines2)
+                #print('---------------')
+            
+            #print("lines[%s] = %s" %(i, lines2))
             (j, key, value, options, paramType) = self._parse_entry(lines2)
             i += 1
             if key == 'BEGIN':
@@ -289,15 +303,24 @@ class CaseControlDeck(object):
                 self.begin_bulk = [key, value]
                 self._begin_count += 1
                 continue
-            elif is_output_lines or line.startswith('OUTPUT'):
+            elif line.startswith('OUTPUT'):
                 is_output_lines = True
                 #output_line = '%s(%s) = %s\n' % (key, options, value)
+                key = 'OUTPUT'
+
+                # OUTPUT(POST) -> POST
+                post = line.split('OUTPUT')[1].strip('( )')
+                options = [post]
+                value = None
+                paramType = 'STRESS-type'
+
+                isubcase = self._add_parameter_to_subcase(key, value, options,
+                    paramType, isubcase)
                 self.output_lines.append(line)
                 continue
             #print("")
-            #print("key=|%s| value=|%s| options=|%s| paramType=%s" %(key, value,
-            #                                                        options,
-            #                                                          paramType))
+            #print("key=%-12r icase=%i value=%r options=%r paramType=%r" %(key,
+            #    isubcase, value, options, paramType))
             isubcase = self._add_parameter_to_subcase(key, value, options,
                                                       paramType, isubcase)
 
@@ -717,7 +740,36 @@ def _clean_lines(case_control, lines):
         line = line.strip(' \n\r').split('$')[0].rstrip()
         if line:
             lines2.append(line)
-    return lines2
+
+    lines3 = []  # TODO: line, comment
+    lines_pack = []
+    for line in lines2:
+        #print("@@@@@@", line)
+        #if 'ECHO' in line:
+            #asdf
+
+        if len(lines_pack) == 0:
+            #print('0--', line)
+            lines_pack.append(line)
+            if not line.endswith(','):
+                #print('next...')
+                lines3.append(lines_pack)
+                lines_pack = []
+        elif line.endswith(','):
+            #print('C--', line)
+            lines_pack.append(line)
+        else:
+            if lines_pack[-1][-1] == ',':  # continued
+                #print('xx--', line)
+                lines_pack.append(line)
+                lines3.append(lines_pack)
+                #print('pack =', lines_pack)
+                lines_pack = []
+            else:  # new card
+                #print('new--', line)
+                lines3.append(lines_pack)
+                lines_pack = [line]
+    return [''.join(pack) for pack in lines3]
 
 
 if __name__ == '__main__':  # pragma: no cover
