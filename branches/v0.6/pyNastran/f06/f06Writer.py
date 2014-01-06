@@ -7,6 +7,8 @@ from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 
 
 def make_stamp(Title):
+    if 'Title' is None:
+        Title = ''
     #pageStamp = '1    MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23                      NOVEMBER  14, 2011  MSC.NASTRAN  6/17/05   PAGE '
     #Title = 'MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23'
     t = date.today()
@@ -167,7 +169,7 @@ class F06Writer(object):
         #self.set_f06_name(model)
 
         #: BDF Title
-        self.Title = ''
+        self.Title = None
 
         #: a dictionary that maps an integer of the subcaseName to the
         #: subcaseID

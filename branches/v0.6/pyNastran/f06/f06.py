@@ -191,22 +191,36 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         self.grid_point_weight.read_grid_point_weight(lines)
 
     def readSubcaseNameID(self):
+        """
+        -4 -> 1                                                     JANUARY   5, 2014  MSC.NASTRAN 11/25/11   PAGE    14
+        -3 -> DEFAULT
+        -2 -> xxx             subcase 1
+        """
         subtitle = self.storedLines[-3].strip()
-        #print(''.join(self.storedLines))
-        try:
-            Title = self.storedLines[-4][1:75].strip()
-        except:
-            Title = ''
+        #print(''.join(self.storedLines[-3:]))
+        if self.Title is None or self.Title == '' and len(self.storedLines) > 4:
+            self.Title = self.storedLines[-4][1:75].rstrip()
+            msg = ''
+            for i, line in enumerate(self.storedLines[-4:]):
+                msg += '%i -> %s\n' % (-4 + i, line.rstrip())
+            assert 'D I S P L A C' not in self.Title, msg
         #self.Title = subcaseName  # 'no title'
 
         subcaseName = ''
         #print("subcaseLine = %r" % subcaseName)
         if subcaseName == '':
-            isubcase = 1
-        else:
             isubcase = self.storedLines[-2].strip()[1:]
             if isubcase == '':  # no subcase specified
-                isubcase = 1
+                raise RuntimeError('missing subcaseLine...\n%s' % msg)
+            else:
+                isubcase = int(isubcase.strip('SUBCASE '))
+            #raise RuntimeError('missing subcaseLine...\n%s' % msg)
+            #isubcase = 1
+            #pass
+        #else:
+            isubcase = self.storedLines[-2].strip()[1:]
+            if isubcase == '':  # no subcase specified
+                raise RuntimeError('missing subcaseLine...\n%s' % msg)
             else:
                 isubcase = int(isubcase.strip('SUBCASE '))
 
@@ -222,8 +236,6 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 #subtitle
 #label      ???
 
-        if self.Title == '':
-            self.Title = Title
         #print("title    = %r" % self.Title)
         #print("subtitle = %r" % subtitle)
         #print("label    = %r" % label)
@@ -566,7 +578,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
             if marker in self.markers:
                 blank = 0
-                #print("\n1*marker = %r" % marker)
+                print("\n1*marker = %r" % marker)
                 self.markerMap[marker]()
                 self.storedLines = []
                 #print("i=%i" % self.i)

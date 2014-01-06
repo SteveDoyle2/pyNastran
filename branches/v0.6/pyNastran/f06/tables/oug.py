@@ -27,6 +27,7 @@ class OUG(object):
         * num_wide      = 8 (???)
         """
         (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        #print "subcaseName=%r isubcase=%s"  % (subcaseName, isubcase)
         headers = self.skip(2)
         data_code = {'log': self.log, 'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 1,
