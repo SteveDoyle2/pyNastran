@@ -1,3 +1,4 @@
+import StringIO
 from itertools import izip
 
 from numpy import zeros, searchsorted, unique
@@ -104,3 +105,8 @@ class FORCE(object):
 
                 card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2] ]
                 f.write(print_card(card))
+
+    def __repr__(self):
+        f = StringIO.StringIO()
+        self.write_bdf(f)
+        return f.getvalue().rstrip()

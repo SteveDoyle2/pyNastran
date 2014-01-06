@@ -413,5 +413,3 @@ class CONROD(object):
         return (e1, e4,
                 o1, o4,
                 f1, f4)
-
-

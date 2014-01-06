@@ -1,5 +1,6 @@
 from collections import defaultdict
 from itertools import izip, count
+import StringIO
 
 from numpy import array
 
@@ -48,8 +49,8 @@ class SPCADD(object):
         card = ['SPCADD', self.spc_id] + self.spc_ids
         #print "card = ", card
         f.write(print_card(card))
+
     def __repr__(self):
-        import StringIO
         f = StringIO.StringIO()
         self.write_bdf(f)
         return f.getvalue().rstrip()

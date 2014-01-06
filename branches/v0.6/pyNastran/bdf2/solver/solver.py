@@ -239,15 +239,71 @@ class Solver(F06, OP2):
         self.nUs = 0
         self.nUm = 0
 
-        # displacements
-        self.U = []
-        self.Us = []
-        self.Um = []
+        #==============================
+        #: displacements
+        self.U = None
+        
+        
+        #==============================
+        #: Degrees-of-freedom eliminated by single-point constraints that are
+        #: included in boundary condition changes and by the AUTOSPC feature.
+        self.iUsb = []
+        self.Usb = []
+        #==============================
+        #: Degrees-of-freedom eliminated by single-point constraints that are
+        #: specified on the PS field on GRID Bulk Data entries.
+        self.iUsg = []
+        self.Usg = []
+        #==============================
+        #: s = sb + sg
+        #: all degrees-of-freedom eliminated by single point constraints
+        self.Us = None
+        self.iUs = None
+        #==============================
+        
+        #==============================
+        
+        
+        #==============================
+        #: Degrees-of-freedom eliminated by multipoint constraints.
+        self.Ump = []
+        self.iUmp = []
+    
+        #: Degrees-of-freedom eliminated by multipoint constraints created by the
+        #: rigid elements using the LGELIM method on the Case Control command
+        #: RIGID.
+        self.Umr = []
+        self.iUmr = []
 
-        # indicies in U that correspond to Us/Um
-        self.iUs = []
-        self.iUm = []
+        # m = mp + mr
+        # all degrees-of-freedom eliminated by multiple constraints
+        self.iUm = None
+        self.Um = None
 
+        #==============================
+        
+        self.Ub = []
+        self.iUb = []
+        self.Uc = []
+        self.iUc = []
+        self.Ue = []
+        self.iUe = []
+        self.Uj = []
+        self.iUj = []
+        self.Uk = []
+        self.iUk = []
+        self.Ulm = []
+        self.iUlm = []
+
+        self.Uq = []
+        self.iUq = []
+        self.Ur = []
+        self.iUr = []
+        self.Uo = []
+        self.iUo = []
+        self.Usa = []
+        self.iUsa = []
+        #==============================
         self.case_result_flags = {}
 
     def _solve(self, K, F, dofs):  # can be overwritten
@@ -487,8 +543,8 @@ class Solver(F06, OP2):
 
             while ps > 0:
                 psi = ps % 10
-                self.iUs.append(i + psi - 1)
-                self.Us.append(0.0)
+                self.iUsg.append(i + psi - 1)
+                self.Usg.append(0.0)
                 ps = ps // 10
 
             nidComponentToID[(nid, 1)] = i
@@ -498,7 +554,7 @@ class Solver(F06, OP2):
             nidComponentToID[(nid, 5)] = i + 4
             nidComponentToID[(nid, 6)] = i + 5
             i += 6
-            #print('iUs[%i] = %s' % (nid, self.iUs))
+            #print('iUsg[%i] = %s' % (nid, self.iUsg))
 
         spoint = model.spoint
         if spoint.n:
@@ -548,6 +604,7 @@ class Solver(F06, OP2):
         if 1:
             # analysis
             (Kgg, Fg, n) = self.setup_sol_101(model, case)
+            self.build_dof_sets()
             print("------------------------\n")
             print("solving...")
             Ua = self.solve_sol_101(Kgg, Fg)
@@ -1184,7 +1241,7 @@ class Solver(F06, OP2):
             nid = model.grid.nid[ni]
             line = [nid, 'G']
             xyz = U[i:i + 6]  # 1,2,3,4,5,6
-            print("nid=%s xyz=%s" % ( nid, xyz))
+            print("nid=%s txyz,rxyz=%s" % ( nid, xyz))
             line += xyz
             i += 6
             data.append(line)
@@ -1397,11 +1454,73 @@ class Solver(F06, OP2):
                                     key = (nid, dofi)
                                     i = nidComponentToID[key]
                                     print("i=%s Us=%s" % (i, 0.0))
-                                    if i not in self.iUs:
-                                        self.iUs.append(i)
-                                        self.Us.append(0.0)
+                                    if i not in self.iUsb:
+                                        self.iUsb.append(i)
+                                        self.Usb.append(0.0)
+                                    #else:
+                                        #raise RuntimeError('duplicate ')
                     else:
                         raise NotImplementedError(spc.type)
+
+    def build_dof_sets(self):
+        # s = sb + sg
+        self.Us = self.Usb + self.Usg
+        self.iUs = self.iUsb + self.iUsg
+        
+        # l = b + c + lm
+        self.Ul = self.Uc + self.Ulm
+        self.iUl = self.iUc + self.iUlm
+
+        # t = l + r
+        self.Ut = self.Ul + self.Ur
+        self.iUt = self.iUl + self.iUr
+
+        # a = t + q
+        self.Ua = self.Ut + self.Uq
+        self.iUa = self.iUt + self.iUq
+
+        # d = a + e
+        self.Ud = self.Ua + self.Ue
+        self.iUd = self.iUa + self.iUe
+
+        # f = a + o
+        self.Uf = self.Ua + self.Uo
+        self.iUf = self.iUa + self.iUo
+
+        # fe = f + e
+        self.Ufe = self.Uf + self.Ue
+        self.iUfe = self.iUf + self.iUe
+
+        # n = f + s
+        self.Un = self.Uf + self.Us
+        self.iUn = self.iUf + self.iUs
+
+        # ne = n + e
+        self.Une = self.Un + self.Ue
+        self.iUne = self.iUn + self.iUe
+
+        # m = mp + mr
+        self.Um = self.Ump + self.Umr
+        self.iUm = self.iUmp + self.iUmr
+        
+        # g = n + m
+        self.Ug = self.Un + self.Um
+        self.iUg = self.iUn + self.iUm
+        
+        # p = g + e
+        self.Up = self.Ug + self.Ue
+        self.iUp = self.iUg + self.iUe
+        
+        # ks = k + sa
+        self.Uks = self.Uk + self.Usa
+        self.iUks = self.iUk + self.iUsa
+
+        # js = j + sa
+        self.Ujs = self.Uj + self.Usa
+        self.iUjs = self.iUj + self.iUsa
+
+        # fr = o + l = f - q - r
+        # v = o + c + r
         return
 
     def apply_MPCs(self, model, case, nidComponentToID):
@@ -1418,6 +1537,8 @@ class Solver(F06, OP2):
 
             for mpc in mpcset:
                 print(mpc, type(mpc))
+                self.Ump.append(0.0)
+                self.iUmp.append(i)
 
             msg = 'MPCs are not supported...stopping in apply_MPCs'
             raise NotImplementedError(msg)
