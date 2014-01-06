@@ -82,7 +82,7 @@ from .cards.tables import (TABLED1, TABLED2, TABLED3,
                            TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                            TABLES1, TABLEST, TABRND1, TABRNDG, TIC)
 from .cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS
-from .caseControlDeck2 import CaseControlDeck
+from .caseControlDeck import CaseControlDeck
 from .bdf_Methods import BDFMethods
 from .bdfInterface.getCard import GetMethods
 from .bdfInterface.addCard import AddMethods
@@ -839,7 +839,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                                    'len(%s)=%s' % (key, len(key)))
             assert len(key) >= 1, ('min length for key is 1; '
                                    'len(%s)=%s' % (key, len(key)))
-            assert isinstance(key, str), 'key=%s must be a string' % key
+            assert isinstance(key, basestring), 'key=%r must be a string.  type=%s' % (key, type(key))
             self.dict_of_vars[key] = value
         self._is_dynamic_syntax = True
 

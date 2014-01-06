@@ -7,7 +7,7 @@ class OQG(object):
         self.spcForces = {}
         self.mpcForces = {}
 
-    def getSpcForces(self):
+    def _forces_of_single_point_constraints(self):
         (subcaseName, isubcase, transient, dt, analysis_code,
             is_sort1) = self.readSubcaseNameID()
         headers = self.skip(2)
@@ -31,7 +31,7 @@ class OQG(object):
             self.spcForces[isubcase] = spc
         self.iSubcases.append(isubcase)
 
-    def getMpcForces(self):
+    def _forces_of_multi_point_constraints(self):
         (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)

@@ -51,7 +51,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         try:
             (fem1, fem2, diffCards2) = run_bdf(folder, filename, debug=debug,
                                                xref=xref, check=check, punch=punch,
-                                               cid=cid, isFolder=True)
+                                               cid=cid, isFolder=True, dynamic_vars={})
             del fem1
             del fem2
             diffCards += diffCards
@@ -91,7 +91,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
 
 def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False,
             cid=None, meshForm='combined', isFolder=False, print_stats=False,
-            reject=False):
+            reject=False, dynamic_vars={}):
     bdfModel = str(bdfFilename)
     print("bdfModel = %r" % bdfModel)
     if isFolder:
@@ -103,7 +103,9 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
         fem1 = BDFReplacer(bdfModel + '.rej', debug=debug, log=None)
     else:
         fem1 = BDF(debug=debug, log=None)
-    
+    #if dynamic_vars:
+    fem1.set_dynamic_syntax(dynamic_vars)
+
     #print(type(fem1))
     fem1.log.info('starting fem1')
     sys.stdout.flush()
@@ -307,7 +309,7 @@ def get_element_stats(fem1, fem2):
                 raise
 
     fem1._verify_bdf()
-    
+
     mass, cg, I = fem1.mass_properties(reference_point=None, sym_axis=None)
     print("mass =", mass)
     print("cg   =", cg)
@@ -381,9 +383,9 @@ def print_points(fem1, fem2):
 def main():
     from docopt import docopt
     msg  = "Usage:\n"
-    msg += "  test_bdf [-q] [-x] [-p] [-c] BDF_FILENAME\n" # 
-    msg += "  test_bdf [-q] [-p] [-r] BDF_FILENAME\n" # 
-    #msg += "  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n" # 
+    msg += "  test_bdf [-q] [-x] [-p] [-c] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-p] [-r] BDF_FILENAME\n" #
+    #msg += "  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n" #
     msg += '  test_bdf -h | --help\n'
     msg += '  test_bdf -v | --version\n'
     msg += '\n'
@@ -391,7 +393,7 @@ def main():
     msg += "Positional Arguments:\n"
     msg += "  BDF_FILENAME   path to BDF/DAT/NAS file\n"
     msg += '\n'
-    
+
     msg += "Options:\n"
     msg += '  -q, --quiet    prints debug messages (default=False)\n'
     msg += '  -x, --xref     disables cross-referencing and checks of the BDF.\n'
@@ -418,7 +420,7 @@ def main():
 
     for key, value in sorted(data.iteritems()):
         print("%-12s = %r" % (key.strip('--'), value))
-    
+
     import time
     t0 = time.time()
     run_bdf('.', data['BDF_FILENAME'],

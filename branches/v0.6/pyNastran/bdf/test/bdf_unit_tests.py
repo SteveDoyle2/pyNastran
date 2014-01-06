@@ -18,11 +18,11 @@ from pyNastran.bdf.test.test_bdf import run_bdf, run_all_files_in_folder
 class Tester(unittest.TestCase):
 
     def run_bdf(self, folder, bdfFilename, xref=False, cid=None,
-                meshForm='combined', debug=False):
+                meshForm='combined', debug=False, dynamic_vars={}):
         cid = 0
         #xref = False
         return run_bdf(folder, bdfFilename, xref=xref, cid=cid, isFolder=True,
-                       meshForm=meshForm, debug=debug)
+                       meshForm=meshForm, dynamic_vars=dynamic_vars, debug=debug)
 
     def run_all_files_in_folder(self, folder, xref=False, cid=None, debug=False):
         run_all_files_in_folder(folder, xref=xref, cid=cid, debug=debug)
@@ -81,7 +81,7 @@ class TestBDF(Tester):
         self._compare_mass_cg_I(fem1, reference_point=u'cg')
 
 
-    def test_bdf_04(self):
+    def test_bdf_03(self):
         bdfFilename = os.path.join('cbush', 'cbush.dat')
         folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
         (fem1, fem2, diffCards2) = self.run_bdf(folder, bdfFilename)
@@ -100,7 +100,7 @@ class TestBDF(Tester):
 
         self.run_bdf(folder, bdfFilename, xref=True)
 
-    def test_bdf_03(self):
+    def test_bdf_04(self):
         bdfFilename = os.path.join('beam_modes', 'beam_modes.dat')
         folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
         (fem1, fem2, diffCards2) = self.run_bdf(folder, bdfFilename)
@@ -123,6 +123,36 @@ class TestBDF(Tester):
         folder = os.path.abspath(os.path.join(pkg_path, 'bdf', 'test', 'unit'))
         self.run_bdf(folder, bdfFilename)
         #self.run_bdf(folder, bdfFilename, xref=True) # PBEAML is not supported
+
+    def test_bdf_06(self):
+        bdfFilename = os.path.join('bar3truss', 'vared_bar3.bdf')
+        folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
+
+        dynamic_vars = {
+            'bar1_a': 1.0,
+            'bar2_a': 1.0,
+            'bar3_a': 1.0,
+            'loadx': 1.0,
+            'loady': 1.0,
+            'loadmag': 10000.,
+            'youngs' : 1e7,
+            'rho': 0.01,
+        }
+        (fem1, fem2, diffCards2) = self.run_bdf(folder, bdfFilename, dynamic_vars=dynamic_vars)
+
+        for fem in [fem1, fem2]:
+            assert len(fem.params) == 4, 'len(params) = %i' % len(fem.params)
+            assert len(fem.coords) == 1, 'len(coords) = %i' % len(fem.coords)
+            assert len(fem.nodes) == 4, 'len(nodes) = %i' % len(fem.nodes)
+            assert len(fem.materials) == 1, 'len(materials) = %i' % len(fem.materials)
+            assert len(fem.elements) == 3, 'len(elements) = %i' % len(fem.elements)
+            assert len(fem.methods) == 0, 'len(methods) = %i' % len(fem.methods)
+            assert len(fem.properties) == 3, 'len(properties) = %i' % len(fem.properties)  # PBEAML issue
+
+        self._compare_mass_cg_I(fem1)
+        self._compare_mass_cg_I(fem1, reference_point=u'cg')
+        self._compare_mass_cg_I(fem1, reference_point='cg')
+
 
 class BaseCard_Test(Tester):
     def test_base_card_01_collapse_thru(self):

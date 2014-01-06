@@ -43,7 +43,7 @@ class OES(object):
         self.hyperelasticPlateStress = {}  # CTRIA3, CTRIA6, CQUAD4, CQUAD8
         self.hyperelasticPlateStrain = {}
 
-    def getRodStress(self):
+    def _stresses_in_crod_elements(self):
         """
         ::
 
@@ -63,7 +63,7 @@ class OES(object):
             self.rodStress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def getRodStrain(self):
+    def _strains_in_crod_elements(self):
         (isubcase, transient, data_code) = self.getRodHeader(False)
         data_code['table_name'] = 'OSTR1X'
         data = self.readRodStress()
@@ -127,7 +127,7 @@ class OES(object):
 
         return data
 
-    def getBarStress(self):
+    def _stresses_in_cbar_elements(self):
         """
         ::
 
@@ -157,7 +157,7 @@ class OES(object):
             self.barStress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def getBarStrain(self):
+    def _strains_in_cbar_elements(self):
         (isubcase, transient, dt, data_code) = self.getBarHeader(False)
         data_code['table_name'] = 'OSTR1X'
 
@@ -220,7 +220,7 @@ class OES(object):
 
         return data
 
-    def getQuadCompositeStress(self):
+    def _stresses_in_cquad4_composite_elements(self):
         """
         ::
 
@@ -264,7 +264,7 @@ class OES(object):
                 data, transient, 'CQUAD4')
         self.iSubcases.append(isubcase)
 
-    def getTriStress(self):
+    def _stresses_in_ctria3_elements(self):
         """
         ::
 
@@ -293,7 +293,7 @@ class OES(object):
             self.plateStress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def getTriStrain(self):
+    def _strains_in_ctria3_elements(self):
         (isubcase, transient, data_code) = self.getTriHeader(True)
         data_code['table_name'] = 'OST1X'
         data = self.readTriStress(['CTRIA3'])
@@ -370,7 +370,7 @@ class OES(object):
             self.i += 2
         return data
 
-    def getQuadStress(self):
+    def _stresses_in_cquad4_elements(self):
         (isubcase, transient, data_code) = self.getQuadHeader(2, False, 33)
         data_code['table_name'] = 'OES1X'
         data = self.readTriStress(['CQUAD4'])
@@ -383,7 +383,7 @@ class OES(object):
             self.plateStress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def getQuadStrains(self):
+    def _strains_in_cquad4_elements(self):
         (isubcase, transient, data_code) = self.getQuadHeader(2, True, 33)
         data_code['table_name'] = 'OSTR1X'
         data = self.readTriStress(['CQUAD4'])
@@ -395,7 +395,7 @@ class OES(object):
             self.plateStrain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def getQuadStressBilinear(self):
+    def _stresses_in_cquad4_bilinear_elements(self):
         """
         ::
 
@@ -483,22 +483,22 @@ class OES(object):
 
         return data
 
-    def getSolidStressHexa(self):
+    def _stresses_in_chexa_elements(self):
         return self.readSolidStress('CHEXA', 8)
 
-    def getSolidStressPenta(self):
+    def _stresses_in_cpenta_elements(self):
         return self.readSolidStress('CPENTA', 6)
 
-    def getSolidStressTetra(self):
+    def _stresses_in_ctetra_elements(self):
         return self.readSolidStress('CTETRA', 4)
 
-    def getSolidStrainHexa(self):
+    def _strains_in_chexa_elements(self):
         return self.readSolidStrain('CHEXA', 8)
 
-    def getSolidStrainPenta(self):
+    def _strains_in_cpenta_elements(self):
         return self.readSolidStrain('CPENTA', 6)
 
-    def getSolidStrainTetra(self):
+    def _strains_in_ctetra_elements(self):
         return self.readSolidStrain('CTETRA', 4)
 
     def readSolidStress(self, eType, n):

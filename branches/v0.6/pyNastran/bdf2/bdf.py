@@ -258,7 +258,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         :param log:   a python logging module object
         """
         assert debug in [True, False], 'debug=%r' % debug
-        
+
         if precision == 'double':
             self.float = 'float64'
         elif precision == 'single':
@@ -318,7 +318,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.executive_control_lines = []
         #: list of case control deck lines
         self.case_control_lines = []
-        
+
         self.echo = False
 
         self.__init_attributes()
@@ -577,7 +577,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # main structural block
         #: stores SPOINT, GRID cards
         self.nodes = {}
-        
+
         model = self
         self.grid = GRID(model)
         self.point = POINT(model)
@@ -585,9 +585,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.spoint = SPOINT(model)
         self.epoint = EPOINT(model)
         self.pointax = POINTAX(model)
-        
+
         self.coords = {0 : CORD2R() }
-        
+
         #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
         #: etc.)
         self.elements = {}
@@ -595,12 +595,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.rigidElements = {}
         #: stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}
-        
+
         #self.properties_spring = PropertiesSpring(model)
         #self.proeprties_rod = PropertiesRod(v)
         #self.properties_bar = PropertiesBar(model)
         #self.properties_solid = PropertiesSolid(model)
-        
+
         #self.elements_spring = ElementsSpring(model)
         #self.elements_rod = ElementsRod(model)
         #self.elements_bar = ElementsBar(model)
@@ -625,11 +625,11 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.conrod = CONROD(model)
         self.prod = PROD(model)
         self.crod = CROD(model)
-        
+
         # mass
         #: stores CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5, PMASS
         self.mass = Mass(model)
-        
+
         # bars
         #: stores CBAR
         self.cbar = CBAR(model)
@@ -664,7 +664,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #===================================
         # optimization
         #self.dconstr = DCONSTR(model)
-        
+
         #===================================
         # loads
         #self.loadcase = LoadCase(model)
@@ -672,7 +672,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.load = defaultdict(list)
         self.dload = defaultdict(list)
         #self.loadset = LOADSET(model)
-        
+
         self.force = FORCE(model)
         #self.force1 = FORCE1(model)
         #self.force2 = FORCE2(model)
@@ -681,19 +681,19 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #self.moment2 = MOMENT2(model)
         self.grav = GRAV(model)
         self.rforce = RFORCE(model)
-        
+
         self.pload = PLOAD(model)
         self.pload1 = PLOAD1(model)
         self.pload2 = PLOAD2(model)
         #self.pload3 = PLOAD3(model)
         #self.pload4 = PLOAD4(model)
-        
+
         self.ploadx1 = PLOADX1(model)
 
         #: stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
         #self.materials = {}
         self.materials = Materials(model)
-        
+
         #: stores MATS1
         self.materialDeps = {}
         #: stores the CREEP card
@@ -717,7 +717,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #self.spcObject = ConstraintObject()
         #: stores MPCADD,MPC
         #self.mpcObject = ConstraintObject()
-        
+
         # these work
         #self.spc = defaultdict(SPC)
         self.spc = {} #class_obj_defaultdict(SPC, model)
@@ -933,7 +933,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             raise IOError('cannot find bdf_filename=%r' % bdf_filename)
         if bdf_filename.lower().endswith('.pch'):
             punch = True
-        
+
         #: is this a punch file (no executive control deck)
         self._punch = punch
         try:
@@ -1076,7 +1076,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                                    'len(%s)=%s' % (key, len(key)))
             assert len(key) >= 1, ('min length for key is 1; '
                                    'len(%s)=%s' % (key, len(key)))
-            assert isinstance(key, str), 'key=%s must be a string' % key
+            assert isinstance(key, basestring), 'key=%s must be a string' % key
             self.dict_of_vars[key] = value
         self._is_dynamic_syntax = True
 
@@ -1662,11 +1662,11 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             card_obj = BDFCard(card)
 
         # function that gets by name the initialized object (from global scope)
-        
+
         name = card[0]
         self.write_sorted_card(card_obj, icard)
 
-        
+
         if icard % 10000 == 0:
             self.log.debug('icard = %i' % icard)
         #print(card_obj)
@@ -1834,7 +1834,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             pass
         elif name == 'DRESP2':
             pass
-        
+
         #========================
         #aero...
         elif name == 'MONPNT1':
@@ -1959,7 +1959,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.pdampt.add(card_obj, comment=comment)
         elif name == 'CDAMP':
             self.cdampt.add(card_obj, comment=comment)
-        
+
         #========================
         # bars
         elif name == 'CBAR':
@@ -2001,7 +2001,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'CMASS5':
             self.mass.add_cmass5(card_obj, comment=comment)
         #========================
-        
+
         # load combinations
         elif name == 'DLOAD':
             load = DLOAD(self)
@@ -2023,7 +2023,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.load[load.load_id].append(load)
             #self.load.add(card_obj, comment=comment)
             pass
-        
+
         #========================
         # applied loads
         elif name == 'FORCE':
@@ -2280,7 +2280,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         msg += self.properties_solid.get_stats()
 
         msg += self.materials.get_stats()
-        
+
         # rejects
         if self.rejects:
             msg.append('Rejected Cards')

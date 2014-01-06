@@ -10,7 +10,7 @@ class OUG(object):
         self.displacements = {}
         self.temperatures = {}
 
-    def getDisplacement(self):
+    def _displacement_vector(self):
         """
         ::
                                                D I S P L A C E M E N T   V E C T O R
@@ -48,7 +48,7 @@ class OUG(object):
             self.displacements[isubcase] = disp
         self.iSubcases.append(isubcase)
 
-    def getComplexDisplacement(self):
+    def _complex_displacement_vector(self):
         """
         ::
 
@@ -116,7 +116,7 @@ class OUG(object):
             self.displacements[isubcase] = disp
         self.iSubcases.append(isubcase)
 
-    def getTemperatureVector(self):
+    def _temperature_vector(self):
         """
         @code
         LOAD STEP =  1.00000E+00

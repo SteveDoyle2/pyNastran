@@ -52,7 +52,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         self.__init_data__(debug, log)
 
         self.lineMarkerMap = {
-            'R E A L   E I G E N V E C T O R   N O': self.getRealEigenvectors,
+            'R E A L   E I G E N V E C T O R   N O': self._real_eigenvectors,
         }
         self.markerMap = {
             #'N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O':self.fileSystem,
@@ -61,7 +61,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             #'M O D E L   S U M M A R Y':self.summary,
 
             #'E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y'
-            'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R': self.getGridWeight,
+            'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R': self._grid_point_weight_generator,
             #'OLOAD    RESULTANT':self.oload,
             #'MAXIMUM  SPCFORCES':self.getMaxSpcForces,
             #'MAXIMUM  DISPLACEMENTS': self.getMaxDisplacements,
@@ -70,49 +70,49 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
 
             #------------------------
-            #    N O N - D I M E N S I O N A L   S T A B I L I T Y   A N D   C O N T R O L   D E R I V A T I V E   C O E F F I C I E N T S
-            #          N O N - D I M E N S I O N A L    H I N G E    M O M E N T    D E R I V A T I V E   C O E F F I C I E N T S
-            #                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
-            #                              S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S
+            #'N O N - D I M E N S I O N A L   S T A B I L I T Y   A N D   C O N T R O L   D E R I V A T I V E   C O E F F I C I E N T S' : self._nondimensional_stability_and_control_deriv_coeffs,
+            #'N O N - D I M E N S I O N A L    H I N G E    M O M E N T    D E R I V A T I V E   C O E F F I C I E N T S':  self._nondimensional_hinge_moment_derivative_coeffs,
+            #'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S': self._aerostatic_data_recovery_output_tables,
+            #'S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S': self._structural_monitor_point_integrated_loads,
             #------------------------
             #                                    R O T O R   D Y N A M I C S   S U M M A R Y
             #                              R O T O R   D Y N A M I C S   M A S S   S U M M A R Y
             #                           E I G E N V A L U E  A N A L Y S I S   S U M M A R Y   (COMPLEX LANCZOS METHOD)
             #------------------------
 
-            'R E A L   E I G E N V A L U E S': self.getRealEigenvalues,
+            'R E A L   E I G E N V A L U E S': self._real_eigenvalues,
             #'C O M P L E X   E I G E N V A L U E   S U M M A R Y':self.getComplexEigenvalues,
-            'E L E M E N T   S T R A I N   E N E R G I E S': self.getElementStrainEnergies,
-            'D I S P L A C E M E N T   V E C T O R': self.getDisplacement,
-            'C O M P L E X   D I S P L A C E M E N T   V E C T O R': self.getComplexDisplacement,
-            'F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T': self.getSpcForces,
-            'F O R C E S   O F   M U L T I P O I N T   C O N S T R A I N T': self.getMpcForces,
+            'E L E M E N T   S T R A I N   E N E R G I E S': self._element_strain_energies,
+            'D I S P L A C E M E N T   V E C T O R': self._displacement_vector,
+            'C O M P L E X   D I S P L A C E M E N T   V E C T O R': self._complex_displacement_vector,
+            'F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T': self._forces_of_single_point_constraints,
+            'F O R C E S   O F   M U L T I P O I N T   C O N S T R A I N T': self._forces_of_multi_point_constraints,
             #'G R I D   P O I N T   F O R C E   B A L A N C E':self.getGridPointForces,
 
-            'S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )': self.getBarStress,
-            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )': self.getRodStress,
+            'S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )': self._stresses_in_cbar_elements,
+            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )': self._stresses_in_crod_elements,
 
-            'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self.getTriStress,
-            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self.getQuadStress,
-            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN': self.getQuadStressBilinear,
-            'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )': self.getQuadCompositeStress,
+            'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self._stresses_in_ctria3_elements,
+            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self._stresses_in_cquad4_elements,
+            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN': self._stresses_in_cquad4_bilinear_elements,
+            'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )': self._stresses_in_cquad4_composite_elements,
 
-            'S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )': self.getSolidStressTetra,
-            'S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )': self.getSolidStressHexa,
-            'S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )': self.getSolidStressPenta,
+            'S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )': self._stresses_in_ctetra_elements,
+            'S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )': self._stresses_in_chexa_elements,
+            'S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )': self._stresses_in_cpenta_elements,
 
-            'S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )': self.getBarStrain,
-            'S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )': self.getRodStrain,
+            'S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )': self._strains_in_cbar_elements,
+            'S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )': self._strains_in_crod_elements,
 
-            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self.getQuadStrains,
-            'S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self.getTriStrain,
+            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self._strains_in_cquad4_elements,
+            'S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self._strains_in_ctria3_elements,
 
-            'S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )': self.getSolidStrainTetra,
-            'S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )': self.getSolidStrainHexa,
-            'S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )': self.getSolidStrainPenta,
+            'S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )': self._strains_in_ctetra_elements,
+            'S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )': self._strains_in_chexa_elements,
+            'S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )': self._strains_in_cpenta_elements,
 
-            'T E M P E R A T U R E   V E C T O R': self.getTemperatureVector,
-            'F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S': self.getTempGradientsFluxes,
+            'T E M P E R A T U R E   V E C T O R': self._temperature_vector,
+            'F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S': self._temperature_gradients_and_fluxes,
 
             #'* * * END OF JOB * * *': self.end(),
         }
@@ -180,7 +180,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         #self.disp[isubcase] = DisplacementObject(isubcase,data)
         #print self.disp[isubcase]
 
-    def getGridWeight(self):  # .. todo:: not done
+    def _grid_point_weight_generator(self):
         line = ''
         lines = []
         while 'PAGE' not in line:
@@ -279,7 +279,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             dt = transient[1]
         return (subcaseName, isubcase, transient, dt, analysis_code, is_sort1)
 
-    def getRealEigenvalues(self):
+    def _real_eigenvalues(self):
         """
         ::
 
@@ -324,7 +324,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             self.eigenvalues[isubcase].add_f06_data(data)
         self.iSubcases.append(isubcase)
 
-    def getRealEigenvectors(self, marker):
+    def _real_eigenvectors(self, marker):
         """
         ::
                                                                                                                  SUBCASE 1
@@ -386,7 +386,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                                                             isubcase, iMode)
             self.eigenvectors[isubcase].read_f06_data(data_code, data)
 
-    def getElementStrainEnergies(self):
+    def _element_strain_energies(self):
         """
         ::
 
@@ -450,7 +450,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             sed.readF06Data(data, transient)
             self.strainEnergyDensity[isubcase] = sed
 
-    def getTempGradientsFluxes(self):
+    def _temperature_gradients_and_fluxes(self):
         (subcaseName, isubcase, transient, dt, analysis_code,
             is_sort1) = self.readSubcaseNameID()
         #print transient
@@ -578,7 +578,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
             if marker in self.markers:
                 blank = 0
-                print("\n1*marker = %r" % marker)
+                #print("\n1*marker = %r" % marker)
                 self.markerMap[marker]()
                 self.storedLines = []
                 #print("i=%i" % self.i)
