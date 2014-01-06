@@ -53,13 +53,16 @@ class PSHELL(object):
 
                 #: Material identification number for bending
                 self.material_id2[i] = integer_or_blank(card, 4, 'material_id2', -1)
+
+                # ..todo:: poor name
+                #: ..math:: I = \frac{12I}{t^3} I_{plate}
                 #: Scales the moment of interia of the element based on the
                 #: moment of interia for a plate
-                #:
-                #: ..math:: I = \frac{12I}{t^3} I_{plate}
-                self.twelveIt3[i] = double_or_blank(card, 5, '12*I/t^3', 1.0)  # poor name
+                self.twelveIt3[i] = double_or_blank(card, 5, '12*I/t^3', 1.0)
+
                 self.material_id3[i] = integer_or_blank(card, 6, 'material_id3', -1)
                 self.tst[i] = double_or_blank(card, 7, 'ts/t', 0.833333)
+
                 #: Non-structural Mass
                 self.nsm[i] = double_or_blank(card, 8, 'nsm', 0.0)
 

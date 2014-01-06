@@ -657,11 +657,12 @@ class Solver(F06, OP2):
         if self.is_stress or self.is_strain or self.is_force:
             # SPRINGS
             nsprings = 0
-            elementTypes = [model.elements_spring.celas1,
-                            model.elements_spring.celas2,
-                            #model.elements_spring.celas3,
-                            #model.elements_spring.celas4
-                            ]
+            elementTypes = [
+                model.elements_spring.celas1,
+                model.elements_spring.celas2,
+                model.elements_spring.celas3,
+                model.elements_spring.celas4,
+            ]
             for elementType in elementTypes:
                 nsprings += elementType.n
 
@@ -736,7 +737,31 @@ class Solver(F06, OP2):
                 del force
 
             #=========================
-            # BARS / BEAMS
+            # BARS
+            ncbars = 0
+            if ncbars:
+                print("ncbars", ncbars)
+                o1 = zeros(ncbars, 'float64')
+                e1 = zeros(ncbars, 'float64')
+                f1 = zeros(ncbars, 'float64')
+                for i, eid in enumerate(cbars):
+                    element = elements[eid]
+                    (exi, oxi, fxi) = element.displacement_stress(model, q, self.nidComponentToID)
+                    o1[i] = oxi
+                    e1[i] = exi
+                    f1[i] = fxi
+                #if self.is_strain:
+                self._store_bar_oes(model, cbars, e1, case, Type='strain')
+                #if self.is_stress:
+                self._store_bar_oes(model, cbars, o1, case, Type='stress')
+                #if self.is_force:
+                self._store_bar_oef(model, cbars, f1, case)
+                del e1
+                del o1
+                del f1
+
+            #=========================
+            # BEAMS
             ncbeams = 0
             if ncbeams:
                 print("ncbeams", ncbeams)
@@ -1252,9 +1277,8 @@ class Solver(F06, OP2):
     def setup_sol_101(self, model, case):
         # the (GridID,componentID) -> internalID
         (self.nidComponentToID, i) = self.build_nid_component_to_id(model)
-        #=====================
-        isSPC = self.apply_SPCs(model, case, self.nidComponentToID)
-        isMPC = self.apply_MPCs(model, case, self.nidComponentToID)
+        self.apply_SPCs(model, case, self.nidComponentToID)
+        self.apply_MPCs(model, case, self.nidComponentToID)
 
         #spcDOFs = self.iUs
         #mpcDOFs = self.iUm
@@ -1443,11 +1467,11 @@ class Solver(F06, OP2):
                 self.log.debug('applying SPC=%i' % spc_id)
                 SpcSet = model.SPC(spc_id)
 
-                print("spc_set =", SpcSet)
+                #print("spc_set =", SpcSet)
                 for spc in SpcSet:
                     if spc.type == 'SPC1':
                         for dof, node_ids in spc.components.iteritems():
-                            print("dof =", dof)
+                            #print("dof =", dof)
                             for dofi in dof:
                                 dofi = int(dofi)
                                 for nid in node_ids:
@@ -1459,69 +1483,15 @@ class Solver(F06, OP2):
                                         self.Usb.append(0.0)
                                     #else:
                                         #raise RuntimeError('duplicate ')
+                    elif spc.type == 'SPC':
+                        for dof, node_id in spc.components:
+                            key = (node_id, dof)
+                            i = nidComponentToID[key]
+                            if i not in self.iUsb:
+                                self.iUsb.append(i)
+                                self.Usb.append(0.0)
                     else:
                         raise NotImplementedError(spc.type)
-
-    def build_dof_sets(self):
-        # s = sb + sg
-        self.Us = self.Usb + self.Usg
-        self.iUs = self.iUsb + self.iUsg
-        
-        # l = b + c + lm
-        self.Ul = self.Uc + self.Ulm
-        self.iUl = self.iUc + self.iUlm
-
-        # t = l + r
-        self.Ut = self.Ul + self.Ur
-        self.iUt = self.iUl + self.iUr
-
-        # a = t + q
-        self.Ua = self.Ut + self.Uq
-        self.iUa = self.iUt + self.iUq
-
-        # d = a + e
-        self.Ud = self.Ua + self.Ue
-        self.iUd = self.iUa + self.iUe
-
-        # f = a + o
-        self.Uf = self.Ua + self.Uo
-        self.iUf = self.iUa + self.iUo
-
-        # fe = f + e
-        self.Ufe = self.Uf + self.Ue
-        self.iUfe = self.iUf + self.iUe
-
-        # n = f + s
-        self.Un = self.Uf + self.Us
-        self.iUn = self.iUf + self.iUs
-
-        # ne = n + e
-        self.Une = self.Un + self.Ue
-        self.iUne = self.iUn + self.iUe
-
-        # m = mp + mr
-        self.Um = self.Ump + self.Umr
-        self.iUm = self.iUmp + self.iUmr
-        
-        # g = n + m
-        self.Ug = self.Un + self.Um
-        self.iUg = self.iUn + self.iUm
-        
-        # p = g + e
-        self.Up = self.Ug + self.Ue
-        self.iUp = self.iUg + self.iUe
-        
-        # ks = k + sa
-        self.Uks = self.Uk + self.Usa
-        self.iUks = self.iUk + self.iUsa
-
-        # js = j + sa
-        self.Ujs = self.Uj + self.Usa
-        self.iUjs = self.iUj + self.iUsa
-
-        # fr = o + l = f - q - r
-        # v = o + c + r
-        return
 
     def apply_MPCs(self, model, case, nidComponentToID):
         isMPC = False
@@ -1542,7 +1512,72 @@ class Solver(F06, OP2):
 
             msg = 'MPCs are not supported...stopping in apply_MPCs'
             raise NotImplementedError(msg)
-        return (isMPC)
+
+    def build_dof_sets(self):
+        # s = sb + sg
+        self.Us  = self.Usb  + self.Usg
+        self.iUs = self.iUsb + self.iUsg
+        
+        # l = b + c + lm
+        self.Ul  = self.Uc  + self.Ulm
+        self.iUl = self.iUc + self.iUlm
+
+        # t = l + r
+        self.Ut  = self.Ul  + self.Ur
+        self.iUt = self.iUl + self.iUr
+
+        # a = t + q
+        self.Ua  = self.Ut  + self.Uq
+        self.iUa = self.iUt + self.iUq
+
+        # d = a + e
+        self.Ud  = self.Ua  + self.Ue
+        self.iUd = self.iUa + self.iUe
+
+        # f = a + o
+        self.Uf  = self.Ua  + self.Uo
+        self.iUf = self.iUa + self.iUo
+
+        # fe = f + e
+        self.Ufe  = self.Uf  + self.Ue
+        self.iUfe = self.iUf + self.iUe
+
+        # n = f + s
+        self.Un  = self.Uf  + self.Us
+        self.iUn = self.iUf + self.iUs
+
+        # ne = n + e
+        self.Une  = self.Un  + self.Ue
+        self.iUne = self.iUn + self.iUe
+
+        # m = mp + mr
+        self.Um  = self.Ump  + self.Umr
+        self.iUm = self.iUmp + self.iUmr
+        
+        # g = n + m
+        self.Ug  = self.Un  + self.Um
+        self.iUg = self.iUn + self.iUm
+        
+        # p = g + e
+        self.Up  = self.Ug  + self.Ue
+        self.iUp = self.iUg + self.iUe
+        
+        # ks = k + sa
+        self.Uks  = self.Uk  + self.Usa
+        self.iUks = self.iUk + self.iUsa
+
+        # js = j + sa
+        self.Ujs  = self.Uj  + self.Usa
+        self.iUjs = self.iUj + self.iUsa
+
+        # fr = o + l = f - q - r
+        self.Ufr  = self.Uo  + self.Ul
+        self.iUfr = self.iUo + self.iUl
+
+        # v = o + c + r
+        self.Uv  = self.Uo  + self.Uc  + self.Ur
+        self.iUv = self.iUo + self.iUc + self.iUr
+        return
 
     def assemble_forces(self, model, i, case, Dofs):
         """very similar to writeCodeAster loads"""

@@ -332,7 +332,10 @@ def get_matrix_stats(fem1, fem2):
 
 def compare(fem1, fem2, xref=True, check=True, print_stats=True):
     diffCards = compare_card_count(fem1, fem2, print_stats=print_stats)
-    if xref and check:
+    
+    #if xref and check:
+    if check:
+        fem1.mass_properties()
         get_element_stats(fem1, fem2)
         get_matrix_stats(fem1, fem2)
     compare_card_content(fem1, fem2)

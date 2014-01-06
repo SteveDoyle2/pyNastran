@@ -1,4 +1,6 @@
-from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
+from numpy import (array, zeros, arange, concatenate, searchsorted,
+    where, unique, cross, dot)
+from pyNastran.utils.mathematics import norm_axis as norm
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -60,28 +62,8 @@ class CQUAD4(object):
             self._cards = []
             self._comments = []
 
-    def write_bdf(self, f, size=8, element_ids=None):
-        if self.n:
-            if element_ids is None:
-                i = arange(self.n)
-            else:
-                assert len(unique(element_ids))==len(element_ids), unique(element_ids)
-                i = searchsorted(self.element_id, element_ids)
-
-            for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
-                card = ['CQUAD4', eid, pid, n[0], n[1], n[2], n[3]]
-                f.write(print_card(card, size=size))
-
-
-    def _verify(self, xref=True):
-        self.mass()
-        self.area()
-        self.normal()
-
-    def rebuild(self):
-        raise NotImplementedError()
-
-    def mass(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
+    #=========================================================================
+    def get_mass(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
         """
         Gets the mass of the CQUAD4s on a total or per element basis.
         
@@ -105,7 +87,7 @@ class CQUAD4(object):
         else:
             return mass
     
-    def area(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
+    def get_area(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
         """
         Gets the area of the CQUAD4s on a total or per element basis.
         
@@ -129,7 +111,7 @@ class CQUAD4(object):
         else:
             return area
 
-    def normal(self, element_ids=None, node_ids=None, grids_cid0=None):
+    def get_normal(self, element_ids=None, node_ids=None, grids_cid0=None):
         """
         Gets the normals of the CQUAD4s on per element basis.
         
@@ -172,28 +154,68 @@ class CQUAD4(object):
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
-        if nodes_cid0 is None:
-            node_ids = self.model.grid.node_ids
+        if grids_cid0 is None:
+            node_ids = self.model.grid.node_id
             grids_cid0 = self.model.grid.position()
-
-        p1 = self._positions(grids_cid0, self.node_ids[:, 0])
-        p2 = self._positions(grids_cid0, self.node_ids[:, 1])
-        p3 = self._positions(grids_cid0, self.node_ids[:, 2])
-        p4 = self._positions(grids_cid0, self.node_ids[:, 3])
+        #print(grids_cid0)
+        p1 = self._positions(self.node_ids[:, 0])
+        p2 = self._positions(self.node_ids[:, 1])
+        p3 = self._positions(self.node_ids[:, 2])
+        p4 = self._positions(self.node_ids[:, 3])
         
+        #print p1, p1.dtype
+        #print p2, p2.dtype
         v12 = p2 - p1
         v13 = p3 - p1
         v123 = cross(v12, v13)
-        if calculate_normal or calculate_area:
-            normal = v123 / n
-        if calculate_area:
+        #print "v123", v123
+        
+        #if calculate_normal or calculate_area or calculate_mass:
+        #print "v123.shape =%s n=%s" % (v123.shape, norm(v123, axis=1).shape)
+        _norm = norm(v123, axis=1)
+
+        massi = None
+        A = None
+        
+        # normal = v123 / _norm
+        #print _norm
+        n = len(_norm)
+        normal = v123.copy()
+        for i in xrange(n):
+            normal[i] /= _norm[i]
+        
+        if calculate_area or calculate_mass:
             A = 0.5 * n
         if calculate_mass:
-            t = self.model.pid.get_thickness(self.pid)
-            massi = A * t
-        return massi
+            t = self.model.elements_shell.get_thickness(self.property_id)
+            assert t is not None
+            massi = A * t #+ nsm
+        #print "massi =", massi
+        return massi, A, normal
+        
+    #=========================================================================
+    def write_bdf(self, f, size=8, element_ids=None):
+        if self.n:
+            if element_ids is None:
+                i = arange(self.n)
+            else:
+                assert len(unique(element_ids))==len(element_ids), unique(element_ids)
+                i = searchsorted(self.element_id, element_ids)
+
+            for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
+                card = ['CQUAD4', eid, pid, n[0], n[1], n[2], n[3]]
+                f.write(print_card(card, size=size))
+
+
+    def _verify(self, xref=True):
+        self.mass()
+        self.area()
+        self.normal()
+
+    def rebuild(self):
+        raise NotImplementedError()
     
-    def _positions(self, nids_to_get, node_ids, grids_cid0):
+    def _positions(self, nids_to_get):
         """
         Gets the positions of a list of nodes
         
@@ -205,5 +227,7 @@ class CQUAD4(object):
         :returns grids2_cid_0 : the corresponding positins of the requested
                                 GRIDs
         """
-        grids2_cid_0 = grids_cid0[searchsorted(nids_to_get, node_ids), :]
-        return grids2_cid_0
+        positions = self.model.grid.position(nids_to_get)
+        #grids2_cid_0 = grids_cid0[searchsorted(node_ids, nids_to_get), :]
+        #return grids2_cid_0
+        return positions

@@ -1,3 +1,4 @@
+import StringIO
 from itertools import izip
 
 from numpy import zeros, array, arange, unique, searchsorted, where
@@ -12,6 +13,7 @@ class CONM1(object):
         self.model = model
         self._cards = []
         self._comments = []
+        self.n = 0
 
     def add(self, card, comment):
         self._cards.append(card)
@@ -75,3 +77,8 @@ class CONM1(object):
                               m[3, 3], m[4, 0], m[4, 1], m[4, 2], m[4, 3], m[4, 4],
                               m[5, 0], m[5, 1], m[5, 2], m[5, 3], m[5, 4], m[5, 5]]
                     f.write(print_card(card, size=size))
+
+    def __repr__(self):
+        f = StringIO.StringIO()
+        self.write_bdf(f)
+        return f.getvalue()

@@ -1,3 +1,5 @@
+from itertools import izip
+
 from numpy import arange, zeros, unique
 from numpy.linalg import norm
 from numpy import dot, searchsorted, array, transpose
@@ -102,40 +104,47 @@ class CONROD(object):
             if len(unique_eids) != len(self.element_id):
                 raise RuntimeError('There are duplicate CROD IDs...')
 
-    def _displacement_stress(self, q):
-        grid_cid0 = self.grid.position()
-        p1 = grid_cid0[self.node_ids[:, 0]]
-        p2 = grid_cid0[self.node_ids[:, 1]]
-        L = p2 - p1
-        n = norm(L, axis=1)
+    #=========================================================================
+    def get_Area_from_index(self, i):
+        return self.A[i]
 
-        v = divide_2d_array_by_column_vector(L, n)
-        mass = n * self.A * rho + self.nsm
+    #def get_E_from_index(self, i):
+        #return self.a[i]
 
+    def get_material_from_index(self, i):
+        return self.model.materials.mat1
+
+    def get_Area(self, property_ids=None):
         A = self.A
-        J = self.J
-        c = self.c
-        ki_torsion = G * J / L
-        ki_axial   = A * E / L
-        E = self.Materials.get_E(self.material_id)
-        k = array([[1, -1],
-                   [-1, 1]])
-        Kall = []
-        for (vx, vy) in v[:, 1:2]:
-            L = array([[vx, vy,  0,  0],
-                         0,  0, vx, vy])
-            K = dot(transpose(L), dot(k, L))
+        return A
 
-        #nijv = zeros((len(self.eid), 4)
-        #nijv = [1, 2, 3, 4, 5, 6]
-        #nijv[dof1, dof2, dof3, dof4, dof5, dof6]
+    def get_E(self, property_ids=None):
+        mat = self.model.materials.mat1[self.material_id[i]]
+        E = mat.E()
+        G = mat.G()
+        return E
 
-        return K
+    def get_G(self, property_ids=None):
+        mat = self.model.materials.mat1[self.material_id[i]]
+        E = mat.E()
+        G = mat.G()
+        return G
 
-    def mass(self, total=False):
+    def get_J(self, property_ids=None):
+        J = self.model.prod.get_J(property_ids)
+        return J
+
+    def get_c(self, property_ids=None):
+        c = self.model.prod.get_c(property_ids)
+        return c
+
+    def get_mass(self, total=False):
         """
         mass = rho * A * L + nsm
         """
+        if self.n == 0:
+            return 0.0
+
         grid_cid0 = self.grid.position()
         p1 = grid_cid0[self.node_ids[:, 0]]
         p2 = grid_cid0[self.node_ids[:, 1]]
@@ -147,17 +156,18 @@ class CONROD(object):
         else:
             return mass
 
+    #=========================================================================
     def get_stats(self):
         msg = []
         if self.n:
             msg.append('  %-8s: %i' % ('CROD', self.n))
         return msg
 
-    def write_bdf(self, f, size=8, eids=None):
+    def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
-            if eids is None:
+            if element_ids is None:
                 i = arange(self.n)
-            for (eid, n12, mid, A, J, c, nsm) in zip(
+            for (eid, n12, mid, A, J, c, nsm) in izip(
                  self.element_id, self.node_ids, self.material_id, self.A, self.J,
                  self.c, self.nsm):
 
@@ -170,18 +180,9 @@ class CONROD(object):
                 card = ['CONROD', eid, n12[0], n12[1], mid, A, J, c, nsm ]
                 f.write(print_card(card))
 
-    def get_area_from_index(self, i):
-        return self.A[i]
-
-    #def get_E_from_index(self, i):
-        #return self.a[i]
-
-    def get_material_from_index(self, i):
-        return self.model.materials.mat1
-
     def get_stiffness(self, i, model, positions, index0s, knorm=1.0):  # CROD/CONROD
         #print("----------------")
-        A = self.get_area_from_index(i)
+        A = self.get_Area_from_index(i)
         #mat = self.get_material_from_index(i)
         #print mat
         #print mat.material_id[se]

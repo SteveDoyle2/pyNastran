@@ -14,10 +14,11 @@ import warnings
 import traceback
 from collections import defaultdict
 
-from numpy import unique
+from numpy import unique, array
 
 from pyNastran.bdf.bdf import (to_fields, get_include_filename,
     parse_executive_control_deck, clean_empty_lines)
+from pyNastran.bdf.bdf import EIGRL
 
 from pyNastran.utils import list_print, is_string, object_attributes
 from pyNastran.utils.log import get_logger
@@ -57,8 +58,9 @@ from .cards.elements.shear.pshear import PSHEAR
 
 # bar
 from .cards.elements.bar.cbar import CBAR #, CBAROR
-#from .cards.properties.pbar import PBAR
-#from .cards.properties.pbarl import PBARL
+#from .cards.elements.bar.pbar import PBAR
+#from .cards.elements.bar.pbarl import PBARL
+from .cards.elements.bar.properties_bar import PropertiesBar
 
 # beams
 
@@ -631,17 +633,22 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # bars
         #: stores CBAR
         self.cbar = CBAR(model)
-        #self.pbar = PBAR(model)
-        #self.pbarl = PBARL(model)
-        
+        #: stores PBAR, PBARL
+        self.properties_bar = PropertiesBar(model)
+
+        # beams
 
         # solids
-
         #: stores CTETRA4, CPENTA6, CHEXA8, CTETRA10, CPENTA15, CHEXA20
         self.elements_solid = ElementsSolid(self)
         #: stores PSOLID, PLSOLID
         self.properties_solid = PropertiesSolid(self)
 
+        #===================================
+        # methods
+        self.eigrl = {}
+        self.eigb = {}
+        self.eigc = {}
         #===================================
         # aero
 
@@ -1958,11 +1965,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'CBAR':
             self.cbar.add(card_obj, comment=comment)
         elif name == 'PBAR':
-            #self.pbar.add(card_obj, comment=comment)
-            pass
+            self.properties_bar.add_pbar(card_obj, comment=comment)
         elif name == 'PBARL':
-            #self.pbarl.add(card_obj, comment=comment)
-            pass
+            self.properties_bar.add_pbarl(card_obj, comment=comment)
 
         # beams
         elif name == 'CBEAM':
@@ -2141,14 +2146,18 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             pass
         #========================
         # freq
-        #elif name == 'EIGB':
-            #pass
-        #elif name == 'EIGC':
-            #pass
-        #elif name == 'EIGR':
-            #pass
-        #elif name == 'EIGRL':
-            #pass
+        elif name == 'EIGB':
+            card = EIGB(card_obj, comment=comment)
+            self.eigb[card.sid] = card
+        elif name == 'EIGC':
+            card = EIGC(card_obj, comment=comment)
+            self.eigc[card.sid] = card
+        elif name == 'EIGR':
+            card = EIGR(card_obj, comment=comment)
+            self.eigr[card.sid] = card
+        elif name == 'EIGRL':
+            card = EIGRL(card_obj, comment=comment)
+            self.eigrl[card.sid] = card
 
         #elif name == 'FREQ':
             #pass
@@ -2183,18 +2192,18 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             pass
         #========================
         elif name == 'CORD1R':
-            pass
+            self.cord1r.add(card, comment)
         elif name == 'CORD1C':
-            pass
+            self.cord1c.add(card, comment)
         elif name == 'CORD1S':
-            pass
+            self.cord1s.add(card, comment)
 
         elif name == 'CORD2R':
-            pass
+            self.cord2r.add(card, comment)
         elif name == 'CORD2C':
-            pass
+            self.cord2c.add(card, comment)
         elif name == 'CORD2S':
-            pass
+            self.cord2s.add(card, comment)
 
         #========================
         elif name == 'ACMODL':
@@ -2351,6 +2360,78 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                     mpc_out.append(out)
         print("mpc_out =", mpc_out)
         return mpc_out
+
+    def _get_mass_types(self):
+        types = [
+            # O-D
+            self.mass,
+
+            # 1-D
+            self.cbar, self.conrod, self.crod, #self.ctube, self.cbeam,
+
+            # 2-D
+            self.elements_shell,
+
+            # 3-D
+            self.elements_solid,]
+        return reduce_types(types)
+
+    def _get_stiffness_types(self):
+        types = [
+            # O-D
+            self.elements_spring,
+            #celas1, self.celas2, self.celas3, self.celas4,
+
+            # 1-D
+            self.cbar, self.conrod, self.crod,
+
+            # 2-D
+            self.elements_shell,
+
+            # 3-D
+            self.elements_solid,]
+        return reduce_types(types)
+
+    def _get_damping_types(self):
+        types = [
+            # O-D
+            self.cdamp1, self.cdamp2, self.cdamp3, self.cdamp4, self.cdamp5,
+
+            # 1-D
+            self.cbar, self.conrod, self.crod,
+
+            # 2-D
+            self.elements_shell,
+
+            # 3-D
+            self.elements_solid,]
+        return reduce_types(types)
+
+    def mass_properties(self, total=False):
+        mass_types = self._get_mass_types()
+        massi = []
+        for mass_type in mass_types:
+            massii = mass_type.get_mass(total=False)
+            assert massii is not None, mass_type
+            assert not isinstance(massii, float), mass_type
+            #print("f massii =", massii)
+            massi.extend(massii)
+
+        massi = array(massi)
+        total = True
+        if total:
+            mass = massi.sum()
+        else:
+            mass = massi
+        #print('mass =', mass, type(mass))
+        return mass
+
+def reduce_types(types):
+    types2 = []
+    for etype in types:
+        if etype.n:
+            types2.append(etype)
+    return types2
 
 def _clean_comment(comment, end=-1):
     """

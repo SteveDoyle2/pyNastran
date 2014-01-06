@@ -263,10 +263,12 @@ class WriteMesh(object):
             self.prod.write_bdf(f)
             
             self.mass.write_bdf(f, size)
+            print(self.mass)
+            aa
 
-            #self.properties_bars.write_bdf(f)
             #self.elements_bars.write_bdf(f)
             self.cbar.write_bdf(f, size)
+            self.properties_bar.write_bdf(f)
 
             self.properties_shell.write_bdf(f, size)
             self.elements_shell.write_bdf(f)

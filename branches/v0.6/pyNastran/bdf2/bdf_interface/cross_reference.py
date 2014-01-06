@@ -41,7 +41,9 @@ class XRefMesh(object):
         self.elements_spring.build()
         #self.elements_bar.build()
         self.cbar.build()
+        self.properties_bar.build()
 
+        self.mass.build()
         self.elements_shell.build()
         self.elements_solid.build()
 

@@ -1,3 +1,4 @@
+from numpy import zeros, array, union1d, searchsorted, concatenate
 from .conm1 import CONM1
 from .conm2 import CONM2
 
@@ -19,6 +20,7 @@ class Mass(object):
         self.model = model
         self.conm1 = CONM1(model)
         self.conm2 = CONM2(model)
+        self.n = 0
         #self.pmass = PMASS(model)
         #self.cmass1 = CMASS1(model)
         #self.cmass2 = CMASS2(model)
@@ -27,10 +29,12 @@ class Mass(object):
         #self.cmass5 = CMASS5(model)
 
     def build(self):
-        types = self._get_types()
+        #self.n = 0
+        types = self._get_types(nlimit=False)
+        #print('bt', types)
         for elems in types:
             elems.build()
-
+            self.n += elems.n
         #eid = concatenate(pshell.pid, pcomp.pid)
         #unique_eids = unique(eid)
         #if unique_eids != len(eid):
@@ -63,24 +67,71 @@ class Mass(object):
     def add_pmass(self, card, comment):
         self.pmass.add(card, comment)
 
-    #===========
+    #=========================================================================
+    def get_indexs(self, element_ids=None):
+        #mass_types = self._get_types()
+        #for mass_type in mass_types:
+            #element_ids.extend(mass_type.element_id)
+
+        types = self._get_types()
+        if types:
+            _element_ids = concatenate([mtype.element_id for mtype in types])
+            i = argsort(_element_ids)
+            return _element_ids, i
+        return None, None
+    
+    def get_mass(self, element_ids=None, total=False):
+        assert element_ids is None
+        mass_types = self._get_types()
+        
+        element_ids, i = self.get_indexs(element_ids)
+        if element_ids is None:
+            return 0.0
+
+        n = len(element_ids)
+
+        for mass_type in mass_types:
+            element_ids2 = union1d(element_ids, mass_type.element_id)
+            massi = mass_type.get_mass(element_ids2, total)
+
+        if total:
+            mass = massi.sum()
+        else:
+            mass = massi
+
+        return mass
+
+    #=========================================================================
     def write_bdf(self, f, size=8, element_ids=None):
         f.write('$ELEMENTS_MASS\n')
         types = self._get_types()
+        
+        print("types", types)
         for elems in types:
             print "MASS", elems.type
             elems.write_bdf(f, size=size, element_ids=element_ids)
 
-    def _get_types(self):
-        types = [self.conm1, self.conm2,
+    def _get_types(self, nlimit=True):
+        mtypes = [self.conm1, self.conm2,
                 # self.cmass1, self.cmass2, self.cmass3, self.cmass4, self.cmass5,
                 # self.pmass,
-                 ]
-        return types
+        ]
+        if nlimit:
+            d = []
+            for mtype in mtypes:
+                    print('type=%s n=%s' % (mtype.type, mtype.n))
+                #if mtype.n > 0:
+                    d.append(mtype)
+            #mtypes = d
+            return d
+        else:
+            return mtypes
+            #return [mtype if mtype.n > 0 for mtype in mtypes]
+        #return mtypes
 
     def get_stats(self):
         msg = []
-        types = self._get_types()
+        types = self._get_types(nlimit=True)
         for element in types:
             nele = element.n
             if nele:
@@ -91,3 +142,6 @@ class Mass(object):
         types = self._get_types()
         for elems in types:
             elems._verify(xref=xref)
+
+    def __repr__(self):
+        return 'hi' + '\n'.join(self.get_stats())

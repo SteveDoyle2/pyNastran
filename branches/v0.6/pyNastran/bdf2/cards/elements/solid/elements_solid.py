@@ -14,6 +14,7 @@ class ElementsSolid(object):
         :param model: the BDF object
         """
         self.model = model
+        self.n = 0
 
         self.ctetra4 = CTETRA4(self.model)
         self.cpenta6 = CPENTA6(self.model)
@@ -24,9 +25,11 @@ class ElementsSolid(object):
         #self.chexa20  = CHEXA20(self.model)
 
     def build(self):
+        self.n = 0
         types = self._get_types()
         for elems in types:
             elems.build()
+            self.n += elems.n
 
         #eid = concatenate(pshell.pid, pcomp.pid)
         #unique_eids = unique(eid)
@@ -55,7 +58,21 @@ class ElementsSolid(object):
     def add_chexa20(self, card, comment):
         self.chexa20.add(card, comment)
 
-    #===========
+    #=========================================================================
+    def get_mass(self, element_ids=None, total=False):
+        types = self._get_types()
+        massi = []
+        for elems in types:
+            if elems.n > 0:
+                massi = elems.get_mass()
+
+        if total:
+            mass = massi.sum()
+        else:
+            mass = massi
+        return mass
+
+    #=========================================================================
     def write_bdf(self, f, size=8, element_ids=None):
         f.write('$ELEMENTS_SOLID\n')
         types = self._get_types()

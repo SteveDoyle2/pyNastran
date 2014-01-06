@@ -1,11 +1,8 @@
 from .celas1 import CELAS1
 from .celas2 import CELAS2
 
-#from .celas1 import CELAS1 as CELAS3
-#from .celas1 import CELAS1 as CELAS4
-
-#from .celas3 import CELAS3
-#from .celas4 import CELAS4
+from .celas3 import CELAS3
+from .celas4 import CELAS4
 
 class ElementsSpring(object):
     def __init__(self, model):
@@ -19,8 +16,8 @@ class ElementsSpring(object):
 
         self.celas1 = CELAS1(self.model)
         self.celas2 = CELAS2(self.model)
-        #self.celas3 = CELAS3(self.model)
-        #self.celas4 = CELAS4(self.model)
+        self.celas3 = CELAS3(self.model)
+        self.celas4 = CELAS4(self.model)
 
     def build(self):
         types = self._get_types()
@@ -42,12 +39,12 @@ class ElementsSpring(object):
         self.celas2.add(card, comment)
 
     def add_celas3(self, card, comment):
-        raise NotImplementedError()
         self.celas3.add(card, comment)
+        raise NotImplementedError()
 
     def add_celas4(self, card, comment):
-        raise NotImplementedError()
         self.celas4.add(card, comment)
+        raise NotImplementedError()
 
     def write_bdf(self, f, size=8, eids=None):
         f.write('$ELEMENTS\n')
@@ -58,8 +55,8 @@ class ElementsSpring(object):
     def _get_types(self):
         types = [self.celas1,
                  self.celas2,
-                 #self.celas3,
-                 #self.celas4
+                 self.celas3,
+                 self.celas4,
                  ]
         return types
 

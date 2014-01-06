@@ -1,3 +1,5 @@
+import StringIO
+
 from numpy import array, dot, arange, zeros, unique, searchsorted
 
 from pyNastran.bdf.fieldWriter import print_card
@@ -20,17 +22,25 @@ class CONM2(object):
         self._comments = []
 
     def add(self, card, comment=None):
+        print('adding CONM2', card)
         self._cards.append(card)
         self._comments.append(comment)
+        assert len(self._cards) > 0
 
     def build(self):
         """
         :param self: the CONM2 object
         """
+        #asfd
+        assert len(self._cards) > 0
         cards = self._cards
         ncards = len(cards)
+        assert ncards > 0, cards
         self.n = ncards
+        assert self.n > 0
+        print('CONM2 self.n=%s' % self.n)
         if ncards:
+            print "CONM2", self.n
             float_fmt = self.model.float
 
             #: Element ID
@@ -61,7 +71,7 @@ class CONM2(object):
                 assert len(card) <= 15, 'len(CONM2 card) = %i' % len(card)
 
             i = self.element_id.argsort()
-            print "i", i, type(i)
+            #print "iconm2", i, type(i)
             self.element_id = self.element_id[i]
             self.node_id = self.node_id[i]
             self.coord_id = self.coord_id[i]
@@ -97,11 +107,12 @@ class CONM2(object):
         return msg
 
     def write_bdf(self, f, size=8, element_ids=None):
+        assert self.n > 0, self.n
         if self.n:
             if element_ids is None:
                 i = arange(self.n)
             else:
-                i = searchsorted(self.element_id, self.element_id)
+                i = searchsorted(self.element_id, element_ids)
 
             cid = [cid if cid != 0 else '' for cid in self.coord_id]
 
@@ -114,13 +125,18 @@ class CONM2(object):
             I1 = [x if x != 0.0 else '' for x in self.I[i, 1]]
             I2 = [x if x != 0.0 else '' for x in self.I[i, 2]]
             I3 = [x if x != 0.0 else '' for x in self.I[i, 3]]
-            I= [x if x != 0.0 else '' for x in self.I[i, 4]]
+            I4 = [x if x != 0.0 else '' for x in self.I[i, 4]]
             I5 = [x if x != 0.0 else '' for x in self.I[i, 5]]
             for (eid, n, cid, mass, x0, x1, x2, i0, i1, i2, i3, i4, i5) in zip(self.element_id[i], self.node_id[i],
                     cid, Mass, X0, X1, X2, I0, I1, I2, I3, I4, I5):
                 card = ['CONM2', eid, pid, n, cid, mass, x0, x1, x2,
                         None, i0, i1, i2, i3, i4, i5]
                 f.write(print_card(card))
+
+    def __repr__(self):
+        f = StringIO.StringIO()
+        self.write_bdf(f)
+        return f.getvalue()
 
     def get_stiffness(self, model, node_ids, index0s, fnorm=1.0):
         return(K, dofs, nIJV)

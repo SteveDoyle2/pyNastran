@@ -59,6 +59,7 @@ class CROD(object):
             self._cards = []
             self._comments = []
 
+    #=========================================================================
     def get_Area(self, property_ids):
         A = self.model.prod.get_Area(property_ids)
         return A
@@ -79,10 +80,14 @@ class CROD(object):
         c = self.model.prod.get_c(property_ids)
         return c
 
-    def mass(self, total=False):
+    def get_mass(self, element_ids=None, total=False):
         """
         mass = rho * A * L + nsm
         """
+        if self.n == 0:
+            return 0.0
+
+        assert element_ids is None
         grid_cid0 = self.grid.position()
         p1 = grid_cid0[self.node_ids[:, 0]]
         p2 = grid_cid0[self.node_ids[:, 1]]
@@ -102,6 +107,7 @@ class CROD(object):
         else:
             return mass
 
+    #=========================================================================
     def get_stats(self):
         msg = []
         if self.n:
@@ -119,6 +125,7 @@ class CROD(object):
                 card = ['CROD', eid, pid, n[0], n[1] ]
                 f.write(print_card(card))
 
+    #=========================================================================
     def get_stiffness(self, i, model, positions, index0s, knorm=1.0):
         #print("----------------")
         pid = self.property_id[i]

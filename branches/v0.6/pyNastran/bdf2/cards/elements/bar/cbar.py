@@ -83,20 +83,24 @@ class CBAR(object):
             self._cards = []
             self._comments = []
 
-    def mass(self, grid_cid0=None, total=False):
+    #=========================================================================
+    def get_mass(self, grid_cid0=None, total=False):
         """
         mass = rho * A * L + nsm
         """
+        if self.n == 0:
+            return 0.0
+
         if grid_cid0 is None:
-            grid_cid0 = self.grid.position()
+            grid_cid0 = self.model.grid.position()
         p1 = grid_cid0[self.node_ids[:, 0]]
         p2 = grid_cid0[self.node_ids[:, 1]]
         L = p2 - p1
-        i = self.model.pbar.get_index(pid)
-        A = self.model.pbar.A[i]
-        mid = self.model.pbar.mid[i]
+        i = self.model.properties_bar.get_index(self.property_id)
+        A = self.model.properties_bar.get_Area[i]
+        material_id = self.model.properties_bar.material_id[i]
 
-        rho, E, J = self.model.Materials.get_rho_E_J(self.mid)
+        rho, E, J = self.model.Materials.get_rho_E_J(material_id)
         rho = self.model.Materials.get_rho(self.mid)
         E   = self.model.Materials.get_E(self.mid)
         J   = self.model.Materials.get_J(self.mid)
@@ -107,6 +111,7 @@ class CBAR(object):
         else:
             return mass
 
+    #=========================================================================
     def get_stats(self):
         msg = []
         if self.n:

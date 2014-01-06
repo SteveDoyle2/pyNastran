@@ -42,8 +42,9 @@ class SPC(object):
 
         self._comments = []
         self.constraint_id = None
-        self.grid_id = None
+        self.grid_id = []
         self.components = defaultdict(list)
+        self.value = []
 
     def add(self, constraint_id, node_id, dofs, enforced_motion, comment):
         if node_id is None:
@@ -51,6 +52,7 @@ class SPC(object):
         assert enforced_motion == 0.0
 
         self._comments.append(comment)
+        print('dofs=%r node_id=%r' % (dofs, node_id))
         self.components[dofs].append(node_id)
 
         if self.constraint_id is None:

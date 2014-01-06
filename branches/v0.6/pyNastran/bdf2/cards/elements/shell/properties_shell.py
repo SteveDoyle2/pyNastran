@@ -1,3 +1,5 @@
+from numpy import concatenate, argsort, searchsorted, ndarray
+
 from .pshell import PSHELL
 from .pcomp import PCOMP
 from .pcomp import PCOMP as PCOMPG
@@ -28,7 +30,7 @@ class PropertiesShell(object):
         if npshell and npcomp and npcompg:
             asdf
         if npshell and npcomp:
-            pid = concatenate(self.pshell.pid, self.pcomp.pid)
+            pid = concatenate(self.pshell.property_id, self.pcomp.property_id)
             unique_pids = unique(pid)
             print unique_pids
             if len(unique_pids) != len(pid):
@@ -39,6 +41,7 @@ class PropertiesShell(object):
     def rebuild(self):
         raise NotImplementedError()
 
+    #=========================================================================
     def add_pshell(self, card, comment):
         self.pshell.add(card, comment)
 
@@ -49,8 +52,40 @@ class PropertiesShell(object):
         raise NotImplementedError(card)
         self.pcompg.add(card, comment)
 
-    def _get_types(self):
-        return [self.pshell, self.pcomp, self.pcompg]
+    #=========================================================================
+    def get_thickness(self, property_ids=None):
+        """
+        Gets the thickness of the PSHELLs/PCOMPs.
+        
+        :param self: the ShellProperties object
+        :param property_ids: the property IDs to consider (default=None -> all)
+        """
+        types = self._get_types(nlimit=True)
+        _property_ids = concatenate([ptype.property_id for ptype in types])
+        t = concatenate([ptype.get_thickness() for ptype in types] )
+        if property_ids is None:
+            return t
+            #property_ids = _property_ids
+        
+        assert isinstance(property_ids, ndarray), type(property_ids)
+        i = argsort(_property_ids)
+        
+        print(_property_ids[i])
+        print(property_ids)
+        j = searchsorted(property_ids, _property_ids[i])
+        t2 = t[j]
+        return t2
+
+    #=========================================================================
+    def _get_types(self, nlimit=True):
+        types = [self.pshell, self.pcomp, self.pcompg]
+        if nlimit:
+            types2 = []
+            for ptype in types:
+                if ptype.n:
+                    types2.append(ptype)
+            types = types2
+        return types
 
     def get_stats(self):
         msg = []
@@ -60,22 +95,6 @@ class PropertiesShell(object):
             if nprop:
                 msg.append('  %-8s: %i' % (prop.type, nprop))
         return msg
-
-    def get_thickness(self, property_ids):
-        """
-        Gets the thickness of the PSHELLs/PCOMPs.
-        
-        :param self: the ShellProperties object
-        :param property_ids: the property IDs to consider (default=None -> all)
-        """
-        _pids = concatenate(self.pshell.property_id,
-                           self.pcomp.property_id)
-        t = concatenate(self.pshell.get_thickness(),
-                        self.pcomp.get_thickness() )
-        i = argsort(_pids)
-        
-        t2 = t[searchsorted(pids, _pids)]
-        return t2
 
     def write_bdf(self, f, size=8, property_ids=None):
         f.write('$PROPERTIES_SHELL\n')

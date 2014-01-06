@@ -1,4 +1,4 @@
-from numpy import array, zeros, searchsorted, unique, concatenate, argsort
+from numpy import array, unique, searchsorted
 
 from .ctria3 import CTRIA3
 #from .ctria6 import CTRIA6
@@ -21,7 +21,6 @@ class ElementsShell(object):
         :param model: the BDF object
         """
         self.model = model
-        self.n = 0
 
         self.ctria3 = CTRIA3(self.model)
         #self.ctria6 = CTRIA6(self.model)
@@ -35,11 +34,9 @@ class ElementsShell(object):
         self.ctriax6 = CTRIAX6(self.model)
 
     def build(self):
-        types = self._get_types(nlimit=False)
-        self.n = 0
+        types = self._get_types()
         for elems in types:
             elems.build()
-            self.n += elems.n
             
         #eid = concatenate(pshell.pid, pcomp.pid)
         #unique_eids = unique(eid)
@@ -85,113 +82,100 @@ class ElementsShell(object):
     # helper methods
     def _get_element_property_ids(self, element_ids):
         # figure out the element ids
-        if element_ids is None:
-            element_ids = []
+        if self.element_ids is None:
             property_ids = []
+            element_ids = []
             types = self._get_types()
             for element in types:
-                if element.n:
-                    element_ids.extend(element.element_id)
-                    property_ids.extend(element.property_id)
+                element_ids.extend(element.element_id)
+                property_ids.extend(element.property_id)
             element_ids = array(element_ids)
             property_ids = array(property_ids)
         else:
             # figure out the property ids
-            #raise NotImplementedError()
-            element_ids = []
-            property_ids = []
-            types = self._get_types()
-            for element in types:
-                if element.n:
-                    element_ids.extend(element.element_id)
-                    property_ids.extend(element.property_id)
-            element_ids2 = array(element_ids)
-            property_ids2 = array(property_ids)
-            i = searchsorted(element_ids, element_ids2)
-            property_ids = property_ids2[i]
-            
+            raise NotImplementedError()
         return element_ids, property_ids
 
     def _unique_property_ids(self, element_ids=None):
         types = self._get_types()
         pids = []
         for element in types:
-            if element.n:
-                pids.extend(element.property_id)
+            pids.extend(element.property_id)
         return unique(pids)
+        
     #=========================================================================
-
-    def get_area(self, element_ids=None):
-        pass
-
     def get_thickness(self, element_ids=None):
-        element_ids, property_ids = self._get_element_property_ids(element_ids)
+        (element_ids, property_ids) = self._get_element_property_ids(element_ids)
 
         # lessen the work
         unique_pids = unique(property_ids)
-        if unique_pids is None:
-            raise RuntimeError('there are no properties...')
         
         # makes searchsorted work
-        unique_pids.sort()
+        unique_pids = unique_pids.sort()
 
         # now that we have the reduced seget the p
         pids = self._unique_property_ids(element_ids)
-        isort = argsort(pids)
         unique_thickness = self.model.properties_shell.get_thickness(unique_pids)
 
         n = len(element_ids)
         thickness = zeros(n, 'float64')
         for i, property_id in enumerate(property_ids):
-            #print "unique=%s pid=%s" % (unique_pids, property_id)
-            j = searchsorted(unique_pids, property_id)
+            j = searchsorted(property_id, unique_pids)
             thickness[i] = unique_thickness[j]
         return thickness
-            
-
+        
     def get_mass(self, element_ids=None, total=False):
-        types = self._get_types(nlimit=True)
-        if element_ids is None:
-            element_ids = []
-            for etype in types:
-                element_ids.extend(etype.element_id)
-        
-        n = len(element_ids)
-        massi = zeros(n, dtype='float64')
+        (element_ids, property_ids) = self._get_element_property_ids(element_ids)
 
-        etypes = [etype.type for type in types]
-        #print "etypes =", etypes
-        massi = zeros(n, dtype='float64')
+        # lessen the work
+        unique_pids = unique(property_ids)
         
-        n0 = 0
-        for elems in types:
-            #if elems.n > 0:
-            massi[n0:n0 + elems.n] = elems.get_mass()
-            n0 += elems.n
-        assert massi.sum() > 0, elems.type
-        #print "massii =", massi
+        # makes searchsorted work
+        unique_pids = unique_pids.sort()
+
+        # now that we have the reduced seget the p
+        pids = self._unique_property_ids(element_ids)
+        unique_thickness = self.model.properties_shell.get_thickness(unique_pids)
+        unique_nsm = self.model.properties_shell.get_non_structural_mass(unique_pids)
+        unique_rho = self.model.properties_shell.get_rho(unique_pids)
+
+        (unique_thickness, unique_rho, unique_nsm) = self.model.properties_shell.get_thickness_rho_nsm(unique_pids)
+
+        n = len(element_ids)
+        thickness = zeros(n, 'float64')
+        nsm = zeros(n, 'float64')
+        rho = zeros(n, 'float64')
+        for i, property_id in enumerate(property_ids):
+            j = searchsorted(property_id, unique_pids)
+            thickness[i] = unique_thickness[j]
+            nsm[i] = unique_nsm[j]
+            rho[i] = unique_rho[j]
+        
+        A = self.get_area(element_ids)
+        #nsm = self.get_non_structural_mass(unique_nsm)
+        #mass = thickness * area + nsm
+
+        mass = norm(L, axis=1) * A * rho + self.nsm
         if total:
-            mass = massi.sum()
+            return mass.sum()
         else:
-            mass = massi
-        return mass
+            return mass
+        return thickness
+
+    def get_area(self, element_ids=None):
+        raise NotImplementedError()
+
     #=========================================================================
     def write_bdf(self, f, size=8, element_ids=None):
         f.write('$ELEMENTS\n')
-        types = self._get_types(nlimit=True)
+        types = self._get_types()
         for element in types:
             if element.n:
                 print element.type
-                element.write_bdf(f, size=size, element_ids=element_ids)
+            element.write_bdf(f, size=size, element_ids=element_ids)
 
-    def _get_types(self, nlimit=True):
+    def _get_types(self):
         types = [self.ctria3, self.cquad4, self.ctriax6] #, cquad8
-        if nlimit:
-            types2 = []
-            for etype in types:
-                if etype.n > 0:
-                    types2.append(etype)
-            types = types2
         return types
 
     def get_stats(self):

@@ -1,4 +1,4 @@
-from numpy import zeros
+from numpy import zeros, arange, where, searchsorted
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -115,7 +115,7 @@ class GRID(object):
         self.n = ncards
         if ncards:
             float_fmt = self.model.float
-            self.nid = zeros(ncards, 'int32')
+            self.node_id = zeros(ncards, 'int32')
             self.xyz = zeros((ncards, 3), float_fmt)
             self.cp = zeros(ncards, 'int32')
             self.cd = zeros(ncards, 'int32')
@@ -128,7 +128,7 @@ class GRID(object):
             seid0 = self.model.grdset.seid
             for i, card in enumerate(cards):
                 #: Node ID
-                self.nid[i] = integer(card, 1, 'nid')
+                self.node_id[i] = integer(card, 1, 'nid')
 
                 #: Grid point coordinate system
                 self.cp[i] = integer_or_blank(card, 2, 'cp', cp0)
@@ -148,24 +148,34 @@ class GRID(object):
                 #: Superelement ID
                 self.seid[i] = integer_or_blank(card, 8, 'seid', seid0)
 
-    def positions(self, nids=None):
-        if nids is None:
-            nids = self.nids
-        xyz = xyz.copy()
+    def position(self, node_ids=None):
+        if node_ids is None:
+            node_ids = self.node_id
+            xyz = self.xyz.copy()
+            # indexs
+            n = arange(self.n)
+        else:
+            # indexs
+            n = searchsorted(self.node_id, node_ids)
+            assert len(node_ids) == len(n), 'n1=%s n2=%s'  %(len(node_ids), len(n))
+            xyz = self.xyz[n, :].copy()
+            print "n =", n
 
-        n = arange(self.n)
-        i = where(self.cid != 0)[0]
+        cpn = self.cp[n]
+        i = where(cpn != 0)[0]
         if i:
-            n = n[i]
-            cids = set(list(unique(self.cid)))
-            for cid in cids:
-                i = where(self.cid != 0)[0]
-                T = self.model.coord.transform(cid)
-                xyzi = xyz[n[i], :]
+            n2 = n[i]
+            cps = set(list(unique(cpn)))
+            for cp in cps:
+                i = where(cpn != 0)[0]
+                T = self.model.coord.transform(cp)
+                xyzi = xyz[n2[i], :]
                 xyzi = dot(transpose(T), dot(xyzi, T))
+        
+        assert len(node_ids) == len(cpn), 'n1=%s n2=%s'  %(len(node_ids), len(cpn))
         return xyz
 
-    def positions_wrt(self, nids=None, cids=None):
+    def positions_wrt(self, node_ids=None, coord_ids=None):
         raise NotImplementedError()
 
     def get_stats(self):
@@ -186,7 +196,7 @@ class GRID(object):
             Cd   = [cdi   if cdi   != cd0   else '' for cdi   in self.cd]
             Ps   = [psi   if psi   != ps0   else '' for psi   in self.ps]
             Seid = [seidi if seidi != seid0 else '' for seidi in self.seid]
-            for (nid, cp, xyz, cd, ps, seid) in zip(self.nid, Cp, self.xyz, Cd, Ps, Seid):
+            for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz, Cd, Ps, Seid):
                 card = ['GRID', nid, cp, xyz[0], xyz[1], xyz[2], cd, ps, seid]
                 f.write(print_card(card, size))
 
