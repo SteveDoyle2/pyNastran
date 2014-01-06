@@ -103,8 +103,8 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
         fem1 = BDFReplacer(bdfModel + '.rej', debug=debug, log=None)
     else:
         fem1 = BDF(debug=debug, log=None)
-    #if dynamic_vars:
-    fem1.set_dynamic_syntax(dynamic_vars)
+    if dynamic_vars:
+        fem1.set_dynamic_syntax(dynamic_vars)
 
     #print(type(fem1))
     fem1.log.info('starting fem1')
