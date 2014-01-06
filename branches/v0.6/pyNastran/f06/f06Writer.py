@@ -554,7 +554,7 @@ class F06Writer(object):
             header[0] = '     %s\n' % subtitle
             header[1] = '0 %-32s                                                                            SUBCASE %i\n \n' % (label, isubcase)
             #header[2] = complex/nonlinear
-            print(result.__class__.__name__)
+            print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
             self.pageNum = result.write_f06(header, pageStamp,
                                             pageNum=self.pageNum, f=f, is_mag_phase=is_mag_phase)
             assert isinstance(self.pageNum, int), 'pageNum=%r' % str(self.pageNum)
@@ -569,7 +569,7 @@ class F06Writer(object):
             header[0] = '     %s\n' % subtitle
             header[1] = '0                                                                                                            SUBCASE %i\n' % (isubcase)
             #header[2] = complex/nonlinear
-            print(result.__class__.__name__)
+            print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
             self.pageNum = result.write_f06(header, pageStamp,
                                             pageNum=self.pageNum, f=f, is_mag_phase=is_mag_phase)
             assert isinstance(self.pageNum, int), 'pageNum=%r' % str(self.pageNum)
@@ -680,7 +680,7 @@ class F06Writer(object):
                         if result.nonlinear_factor is not None:
                             header.append('')
                         try:
-                            print(result.__class__.__name__)
+                            print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
                             self.pageNum = result.write_f06(header, pageStamp, pageNum=self.pageNum, f=f, is_mag_phase=False)
                             assert isinstance(self.pageNum, int), 'pageNum=%r' % str(self.pageNum)
                         except:
