@@ -530,7 +530,7 @@ class Usm3dReader(object):
         irho_zero = where(rho < rho_min)[0]
         rho[irho_zero] = rho_min
 
-        result_names = ['Mach', 'U', 'V', 'W', 'T', 'rhoU', 'p', 'Cp']
+        result_names = ['Mach', 'U', 'V', 'W', 'T', 'rhoU', 'rhoV', 'rhoW', 'p', 'Cp']
         loads = {}
 
         gamma = 1.4
@@ -697,7 +697,7 @@ def main():
 
         #model.read_usm3d(basename, 3)
 
-        loads = model.read_flo(flo_filename, node_ids=[10])
+        node_ids, loads = model.read_flo(flo_filename, node_ids=[10])
 
 
 if __name__ == '__main__':
