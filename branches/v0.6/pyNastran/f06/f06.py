@@ -29,6 +29,9 @@ class F06Deprecated(object):
 
 
 class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
+    def stop_after_reading_grid_point_weight(stop=True):
+        self._stop_after_reading_mass = True
+
     def __init__(self, f06FileName, debug=False, log=None):
         """
         Initializes the F06 object
@@ -43,10 +46,10 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         self.card_count = {}
         self.f06FileName = f06FileName
         self.f06_filename = self.f06FileName
+        self._stop_after_reading_mass = False
 
         if not os.path.exists(self.f06_filename):
-            msg = 'cant find f06_filename=%r\n%s' % (
-                self.f06FileName, print_bad_path(self.f06_filename))
+            msg = 'cant find f06_filename=%r\n%s' % self.f06FileName, print_bad_path(self.f06_filename)
             raise RuntimeError(msg)
         self.infile = open(self.f06_filename, 'r')
         self.__init_data__(debug, log)
@@ -90,7 +93,14 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             #'G R I D   P O I N T   F O R C E   B A L A N C E':self.getGridPointForces,
 
             'S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )': self._stresses_in_cbar_elements,
-            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )': self._stresses_in_crod_elements,
+
+            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )'     : self._stresses_in_crod_elements,
+            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C O N R O D )' : self._stresses_in_crod_elements,
+
+            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )': self._stresses_in_celas2_elements,
+            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )': self._stresses_in_celas2_elements,
+            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )': self._stresses_in_celas2_elements,
+            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )': self._stresses_in_celas2_elements,
 
             'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self._stresses_in_ctria3_elements,
             'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self._stresses_in_cquad4_elements,
@@ -103,6 +113,12 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
             'S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )': self._strains_in_cbar_elements,
             'S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )': self._strains_in_crod_elements,
+            'S T R A I N S   I N   R O D   E L E M E N T S      ( C O N R O D )': self._strains_in_crod_elements,
+
+            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 1 )':self._strains_in_celas2_elements,
+            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 2 )':self._strains_in_celas2_elements,
+            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 3 )':self._strains_in_celas2_elements,
+            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 4 )':self._strains_in_celas2_elements,
 
             'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self._strains_in_cquad4_elements,
             'S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self._strains_in_ctria3_elements,
@@ -561,7 +577,6 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             line = self.infile.readline()
             marker = line[1:].strip()
 
-            #print("marker = %r" % marker)
             if 'FATAL' in marker:
                 msg = '\n' + marker
                 fatal_count = 0
@@ -576,10 +591,18 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                     msg += line + '\n'
                 raise FatalError(msg.rstrip())
 
+            if(marker != '' and 'SUBCASE' not in marker and 'PAGE' not in marker and 'FORTRAN' not in marker
+               and 'USER INFORMATION MESSAGE' not in marker and 'TOTAL DATA WRITTEN FOR DATA BLOCK' not in marker
+               and marker not in self.markers):
+                print("marker = %r" % marker)
+
             if marker in self.markers:
                 blank = 0
                 #print("\n1*marker = %r" % marker)
                 self.markerMap[marker]()
+                if(self._stop_after_reading_mass and
+                   marker in 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R'):
+                    break
                 self.storedLines = []
                 #print("i=%i" % self.i)
             elif 'R E A L   E I G E N V E C T O R   N O' in marker:

@@ -5,7 +5,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import BarStressObject,
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import SolidStressObject, SolidStrainObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import PlateStressObject, PlateStrainObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import CompositePlateStressObject
-
+from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import CelasStressObject, CelasStrainObject
 #strain...
 
 
@@ -52,7 +52,7 @@ class OES(object):
             ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
                14    2.514247E+04              1.758725E+02                     15    2.443757E+04              2.924619E+01
         """
-        (isubcase, transient, data_code) = self.getRodHeader(False)
+        (isubcase, transient, dt, data_code) = self.getRodHeader(False)
         data_code['table_name'] = 'OES1X'
         data = self.readRodStress()
         if isubcase in self.rodStress:
@@ -64,7 +64,7 @@ class OES(object):
         self.iSubcases.append(isubcase)
 
     def _strains_in_crod_elements(self):
-        (isubcase, transient, data_code) = self.getRodHeader(False)
+        (isubcase, transient, dt, data_code) = self.getRodHeader(False)
         data_code['table_name'] = 'OSTR1X'
         data = self.readRodStress()
         if isubcase in self.rodStrain:
@@ -73,6 +73,30 @@ class OES(object):
             is_sort1 = True
             self.rodStrain[isubcase] = RodStrainObject(data_code, is_sort1, isubcase, transient)
             self.rodStrain[isubcase].add_f06_data(data, transient)
+        self.iSubcases.append(isubcase)
+
+    def _stresses_in_celas2_elements(self):
+        (isubcase, transient, dt, data_code) = self.getSpringHeader(False)
+        data_code['table_name'] = 'OSTR1X'
+        data = self.readSpringStress()
+        if isubcase in self.celasStrain:
+            self.celasStrain[isubcase].add_f06_data(data, transient)
+        else:
+            is_sort1 = True
+            self.celasStrain[isubcase] = CelasStressObject(data_code, is_sort1, isubcase, transient)
+            self.celasStrain[isubcase].add_f06_data(data, transient)
+        self.iSubcases.append(isubcase)
+
+    def _strains_in_celas2_elements(self):
+        (isubcase, transient, dt, data_code) = self.getSpringHeader(False)
+        data_code['table_name'] = 'OSTR1X'
+        data = self.readSpringStress()
+        if isubcase in self.celasStrain:
+            self.celasStrain[isubcase].add_f06_data(data, transient)
+        else:
+            is_sort1 = True
+            self.celasStrain[isubcase] = CelasStrainObject(data_code, is_sort1, isubcase, transient)
+            self.celasStrain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
     def getRodHeader(self, isStrain):
@@ -85,8 +109,7 @@ class OES(object):
         * s_code        = 0 (Stress)
         * num_wide      = 8 (???)
         """
-        (subcaseName, isubcase, transient, dt, analysis_code,
-            is_sort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
@@ -99,7 +122,7 @@ class OES(object):
                     'element_name': 'ROD', 'element_type': 1, 'nonlinear_factor': dt,
                     'dataNames':['lsdvmn']}
 
-        return (isubcase, transient, data_code)
+        return (isubcase, transient, dt, data_code)
 
     def readRodStress(self):
         """
@@ -123,6 +146,39 @@ class OES(object):
             data.append(out[:5])
             if isinstance(out[5], int):
                 data.append(out[5:])
+            self.i += 1
+
+        return data
+
+    def readSpringStress(self):
+        """
+        ::
+
+                                     S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 2 )
+            ELEMENT         STRAIN           ELEMENT         STRAIN           ELEMENT         STRAIN           ELEMENT         STRAIN
+              ID.                              ID.                              ID.                              ID.
+              20001      0.0                   20002      0.0                   20003      0.0                   20004      0.0
+              20005      0.0                   20006      0.0
+         """
+        data = []
+        while 1:
+            line = self.infile.readline()[1:].rstrip('\r\n ')
+            sline = line.strip().split()
+            #sline = [line[0:13], line[13:29], line[29:42], line[42:55], line[55:67], line[67:78], line[78:94], line[94:107], line[107:120], line[120:131]]
+            if 'PAGE' in line:
+                break
+            #print sline
+            n = len(sline) // 2
+            assert len(sline) % 2 == 0, sline
+
+            dataTypes = [int, float] * n
+            out = self.parseLineBlanks(sline, dataTypes)  # line 1
+            #print out
+
+            while out:
+                strain = out.pop()
+                eid = out.pop()
+                data.append([eid, strain])
             self.i += 1
 
         return data
@@ -176,8 +232,7 @@ class OES(object):
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
-        (stress_bits, s_code) = self.make_stress_bits(
-            isStrain=isStrain, isRodOrSolid=True)
+        (stress_bits, s_code) = self.make_stress_bits(isStrain=isStrain, isRodOrSolid=True)
         data_code = {'log': self.log, 'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 5, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 's_code': s_code,
@@ -186,6 +241,22 @@ class OES(object):
                     'nonlinear_factor': dt,
                     'dataNames':['lsdvmn']}
 
+        return (isubcase, transient, dt, data_code)
+
+    def getSpringHeader(self, isStrain):
+        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        headers = self.skip(2)
+        #print "headers = %s" %(headers)
+
+        (stress_bits, s_code) = self.make_stress_bits(isStrain=isStrain, isRodOrSolid=False)
+        data_code = {'log': self.log, 'analysis_code': analysis_code,
+                    'device_code': 1, 'table_code': 5, 'sort_code': 0,
+                    'sort_bits': [0, 0, 0], 'num_wide': 2, 's_code': s_code,
+                    'thermal': 0,
+                    'stress_bits': stress_bits, 'format_code': 1,
+                    'element_name': 'ELAS2', 'element_type': 12,
+                    'nonlinear_factor': dt,
+                    'dataNames':['lsdvmn']}
         return (isubcase, transient, dt, data_code)
 
     def readBarStress(self):
@@ -321,10 +392,17 @@ class OES(object):
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
-        isFiberDistance = False
-        isMaxShear = False  # Von Mises/Max Shear
+        isFiberDistance = None
+        isMaxShear = None  # Von Mises/Max Shear
         if 'DISTANCE' in headers:
             isFiberDistance = True
+        elif 'CURVATURE' in headers:
+            isFiberDistance = False
+        else:
+            raise RuntimeError(headers)
+
+        if 'VON MISES' in headers:
+            isMaxShear = False
         elif 'MAX SHEAR' in headers:
             isMaxShear = True
         else:
@@ -429,12 +507,19 @@ class OES(object):
         headers = self.skip(nHeaderLines)
         #print "headers = %s" %(headers)
 
-        isFiberDistance = False
-        isMaxShear = False  # Von Mises/Max Shear
+        isFiberDistance = None
+        isMaxShear = None  # Von Mises/Max Shear
         if 'DISTANCE' in headers:
             isFiberDistance = True
-        elif 'MAX SHEAR' in headers:
+        elif 'CURVATURE' in headers:
+            isFiberDistance = False
+        else:
+            raise RuntimeError(headers)
+
+        if 'MAX SHEAR' in headers:
             isMaxShear = True
+        elif 'VON MISES' in headers:
+            isMaxShear = False
         else:
             raise RuntimeError(headers)
         (stress_bits, s_code) = self.make_stress_bits(isFiberDistance, isMaxShear, isStrain)
@@ -572,21 +657,25 @@ class OES(object):
         return data
 
     def make_stress_bits(self, isFiberDistance=False, isMaxShear=True, isStrain=True, isRodOrSolid=False):
-        #print "isMaxShear=%s isFiberDistance=%s" %(isMaxShear,isFiberDistance)
+        """
+        ..todo:: add explanation...
+        """
+        #print "isMaxShear=%s isFiberDistance=%s" %(isMaxShear, isFiberDistance)
 
-       #code = (isVonMises,isFiberCurvatur,isStress,isNotRod)
+       #code = (isVonMises, isFiberCurvatur, isStress, isNotRod)
         code = (isMaxShear, isFiberDistance, isStrain, isRodOrSolid)
         mapper = {
             # element coordinate system (no material support)
-            (True, False, False, True): ([0, 0, 0, 0, 0], 0),  # 0,  rod/csolid
-            (False, False, False, True): ([0, 0, 0, 0, 1], 1),  # 1,  rod/csolid
-            (True, False, True, False): ([0, 1, 0, 1, 0], 10),  # 10
-            (False, False, True, False): ([0, 1, 0, 1, 1], 11),  # 11
-            (True, True, True, False): ([0, 1, 1, 1, 0], 14),  # 14
-            (False, True, True, False): ([0, 1, 1, 1, 1], 15),  # 15
+            (True,  False, False,  True): ([0, 0, 0, 0, 0], 0),  # 0,  rod/csolid
+            (False, False, False,  True): ([0, 0, 0, 0, 1], 1),  # 1,  rod/csolid
+            (True,  False,  True, False): ([0, 1, 0, 1, 0], 10),  # 10
+            (False, False,  True, False): ([0, 1, 0, 1, 1], 11),  # 11
+            (True,  True,   True, False): ([0, 1, 1, 1, 0], 14),  # 14
+            (False, True,   True, False): ([0, 1, 1, 1, 1], 15),  # 15
+            (False, False,  True,  True): ([0, 0, 0, 0, 1], 1),   # ???
 
             (True, False, False, False): ([0, 0, 0, 0, 0], 0),  # 0,  composite
-            (False, True, False, False): ([0, 0, 0, 0, 1], 1),  # cquad4 bilinear ??? why do i need this...
+            (False, True, False, False): ([0, 0, 0, 0, 1], 0),  # cquad4 bilinear ??? why do i need this...
         }
         (stress_bits, s_code) = mapper[code]
 

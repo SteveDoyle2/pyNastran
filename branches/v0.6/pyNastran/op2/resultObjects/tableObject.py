@@ -49,10 +49,27 @@ class TableObject(scalarObject):  # displacement style table
     def add_f06_data(self, data, transient):
         if transient is None:
             for line in data:
-                (nodeID, gridType, t1, t2, t3, r1, r2, r3) = line
-                self.gridTypes[nodeID] = gridType
-                self.translations[nodeID] = array([t1, t2, t3])
-                self.rotations[nodeID] = array([r1, r2, r3])
+                node_id, gridType, t1 = line[:3]
+                if gridType == 'G':
+                    (t2, t3, r1, r2, r3) = line[3:]
+                    self.gridTypes[node_id] = gridType
+                    self.translations[node_id] = array([t1, t2, t3])
+                    self.rotations[node_id] = array([r1, r2, r3])
+                elif gridType == 'S':
+                    t2 = t3 = r1 = r2 = r3 = 0.0
+
+                    self.gridTypes[node_id] = gridType
+                    self.translations[node_id] = array([t1, t2, t3])
+                    self.rotations[node_id] = array([r1, r2, r3])
+
+                    for i, t1 in enumerate(line[3:]):
+                        node_id2 = node_id + i + 1
+                        self.gridTypes[node_id2] = gridType
+                        self.translations[node_id2] = array([t1, t2, t3])
+                        self.rotations[node_id2] = array([r1, r2, r3])
+                else:
+                    raise NotImplementedError(line)
+
             return
 
         (dtName, dt) = transient
@@ -390,10 +407,10 @@ class TableObject(scalarObject):  # displacement style table
             (rx, ry, rz) = rotation
             vals = [dx, dy, dz, rx, ry, rz]
             (vals2, isAllZeros) = writeFloats13E(vals)
-            if not isAllZeros:
-                [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n'
-                        % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+            #if not isAllZeros:
+            [dx, dy, dz, rx, ry, rz] = vals2
+            msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n'
+                    % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
@@ -418,9 +435,9 @@ class TableObject(scalarObject):  # displacement style table
                 (rx, ry, rz) = rotation
                 vals = [dx, dy, dz, rx, ry, rz]
                 (vals2, isAllZeros) = writeFloats13E(vals)
-                if not isAllZeros:
-                    [dx, dy, dz, rx, ry, rz] = vals2
-                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                #if not isAllZeros:
+                [dx, dy, dz, rx, ry, rz] = vals2
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
 
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
