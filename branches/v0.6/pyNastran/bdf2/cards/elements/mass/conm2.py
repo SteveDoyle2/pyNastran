@@ -2,6 +2,7 @@ import StringIO
 
 from numpy import array, dot, arange, zeros, unique, searchsorted
 
+from pyNastran.utils.mathematics import norm_axis as norm
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
@@ -31,8 +32,6 @@ class CONM2(object):
         """
         :param self: the CONM2 object
         """
-        #asfd
-        assert len(self._cards) > 0
         cards = self._cards
         ncards = len(cards)
         assert ncards > 0, cards
@@ -50,7 +49,7 @@ class CONM2(object):
             self.node_id = zeros(ncards, 'int32')
             self.coord_id = zeros(ncards, 'int32')
             self.mass = zeros(ncards, float_fmt)
-            self.X = zeros((ncards, 3), float_fmt)
+            self.x = zeros((ncards, 3), float_fmt)
             self.I = zeros((ncards, 6), float_fmt)
 
             for i, card in enumerate(cards):
@@ -58,7 +57,7 @@ class CONM2(object):
                 self.node_id[i] = integer(card, 2, 'node_id')
                 self.coord_id[i] = integer_or_blank(card, 3, 'coord_id', 0)
                 self.mass[i] = double_or_blank(card, 4, 'mass', 0.)
-                self.X[i, :] = [double_or_blank(card, 5, 'x1', 0.0),
+                self.x[i, :] = [double_or_blank(card, 5, 'x1', 0.0),
                                 double_or_blank(card, 6, 'x2', 0.0),
                                 double_or_blank(card, 7, 'x3', 0.0)]
 
@@ -76,7 +75,7 @@ class CONM2(object):
             self.node_id = self.node_id[i]
             self.coord_id = self.coord_id[i]
             self.mass = self.mass[i]
-            self.X = self.X[i, :]
+            self.x = self.x[i, :]
             self.I = self.I[i, :]
 
             unique_eids = unique(self.element_id)
@@ -85,16 +84,16 @@ class CONM2(object):
             self._cards = []
             self._comments = []
 
-    def mass(self, total=False):
+    def get_mass(self, element_ids=None, total=False):
         """
         mass = rho * A * L + nsm
         """
-        asdf
-        grid_cid0 = self.grid.position()
-        p1 = grid_cid0[self.node_ids[:, 0]]
-        p2 = grid_cid0[self.node_ids[:, 1]]
+        if element_ids is None:
+            element_ids = arange(self.n)
+        #grid_cid0 = self.model.grid.position()
+        #p = grid_cid0[self.node_id]
 
-        mass = norm(L, axis=1) * A * rho + self.nsm
+        mass = self.mass
         if total:
             return mass.sum()
         else:
@@ -127,9 +126,9 @@ class CONM2(object):
             I3 = [x if x != 0.0 else '' for x in self.I[i, 3]]
             I4 = [x if x != 0.0 else '' for x in self.I[i, 4]]
             I5 = [x if x != 0.0 else '' for x in self.I[i, 5]]
-            for (eid, n, cid, mass, x0, x1, x2, i0, i1, i2, i3, i4, i5) in zip(self.element_id[i], self.node_id[i],
+            for (eid, nid, cid, mass, x0, x1, x2, i0, i1, i2, i3, i4, i5) in zip(self.element_id[i], self.node_id[i],
                     cid, Mass, X0, X1, X2, I0, I1, I2, I3, I4, I5):
-                card = ['CONM2', eid, pid, n, cid, mass, x0, x1, x2,
+                card = ['CONM2', eid, nid, cid, mass, x0, x1, x2,
                         None, i0, i1, i2, i3, i4, i5]
                 f.write(print_card(card))
 

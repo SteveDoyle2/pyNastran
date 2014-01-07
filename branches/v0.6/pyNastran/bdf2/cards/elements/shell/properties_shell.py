@@ -2,7 +2,7 @@ from numpy import concatenate, argsort, searchsorted, ndarray
 
 from .pshell import PSHELL
 from .pcomp import PCOMP
-from .pcomp import PCOMP as PCOMPG
+from .pcompg import PCOMPG
 
 class PropertiesShell(object):
     def __init__(self, model):

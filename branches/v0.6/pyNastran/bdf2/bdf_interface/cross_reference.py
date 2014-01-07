@@ -28,7 +28,6 @@ class XRefMesh(object):
     def _build_aero(self):
         self.caero.build()
         self.paero.build()
-        self.mass.build()
         #self.trim.build()
         #self.aero.build()
         #self.aeros.build()
@@ -43,7 +42,6 @@ class XRefMesh(object):
         self.cbar.build()
         self.properties_bar.build()
 
-        self.mass.build()
         self.elements_shell.build()
         self.elements_solid.build()
 

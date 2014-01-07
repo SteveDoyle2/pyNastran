@@ -210,7 +210,6 @@ class WriteMesh(object):
             
         #..todo:: finish...
         f.write('$UNASSOCIATED_ELEMENTS\n')
-        aaa
         # missing elements...
 
     def _write_nodes(self, f, size):
@@ -262,13 +261,13 @@ class WriteMesh(object):
             self.crod.write_bdf(f)
             self.prod.write_bdf(f)
             
+            
             self.mass.write_bdf(f, size)
             print(self.mass)
-            aa
 
             #self.elements_bars.write_bdf(f)
             self.cbar.write_bdf(f, size)
-            self.properties_bar.write_bdf(f)
+            self.properties_bar.write_bdf(f, size)
 
             self.properties_shell.write_bdf(f, size)
             self.elements_shell.write_bdf(f)

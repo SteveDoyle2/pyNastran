@@ -1,9 +1,6 @@
 """
 Main BDF class
 """
-#from __future__ import (nested_scopes, generators, division, absolute_import,
-#                        unicode_literals)
-
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
@@ -1664,6 +1661,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # function that gets by name the initialized object (from global scope)
 
         name = card[0]
+        print("name = %r" % name)
         self.write_sorted_card(card_obj, icard)
 
 

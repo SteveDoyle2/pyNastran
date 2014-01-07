@@ -72,7 +72,6 @@ class PropertiesBar(object):
 
     def write_bdf(self, f, size=8, property_ids=None):
         f.write('$PROPERTIES_BAR\n')
-        types = self._get_types()
+        types = self._get_types(nlimit=False)
         for prop in types:
-            #print('*SHELL', prop.type)
             prop.write_bdf(f, size=size, property_ids=property_ids)

@@ -28,16 +28,19 @@ class PBARL(object):
         cards = self._cards
         ncards = len(cards)
         self.n = ncards
-        #return
+
         if ncards:
             #: Property ID
             self.property_id = zeros(ncards, 'int32')
+            self.material_id = zeros(ncards, 'int32')
 
             ncards = len(cards)
             for i, card in enumerate(cards):
                 self.property_id[i] = integer(card, 1, 'property_id')
+                self.material_id[i] = integer(card, 2, 'material_id')
             i = self.property_id.argsort()
             self.property_id = self.property_id[i]
+            self.material_id = self.material_id[i]
             unique_pids = unique(self.property_id)
 
             if len(unique_pids) != len(self.property_id):
@@ -58,4 +61,14 @@ class PBARL(object):
 
     #=========================================================================
     def write_bdf(self, f, size=8, property_ids=None):
-        pass
+        if self.n:
+            if property_ids is None:
+                i = arange(self.n)
+            else:
+                i = searchsorted(self.property_id, property_ids)
+
+            #cid = [cid if cid != 0 else '' for cid in self.coord_id]
+
+            for (pid, mid) in zip(self.property_id[i], self.material_id[i]):
+                card = ['PBARL', pid, mid,]
+                f.write(print_card(card))

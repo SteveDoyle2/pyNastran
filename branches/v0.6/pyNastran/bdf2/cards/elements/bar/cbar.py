@@ -90,7 +90,7 @@ class CBAR(object):
         """
         if self.n == 0:
             return 0.0
-
+        return [0.0]
         if grid_cid0 is None:
             grid_cid0 = self.model.grid.position()
         p1 = grid_cid0[self.node_ids[:, 0]]

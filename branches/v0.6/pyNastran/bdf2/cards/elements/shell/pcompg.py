@@ -8,7 +8,13 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 class PCOMPG(object):
     type = 'PCOMPG'
     def __init__(self, model):
+        self.n = 0
+
+    def add(self, card, comment):
         pass
 
+    def build(self):
+        pass
+    
     def write_bdf(self, f, size=8, property_ids=None):
         pass

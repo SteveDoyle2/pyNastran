@@ -1,4 +1,4 @@
-from numpy import zeros, array, union1d, searchsorted, concatenate
+from numpy import zeros, array, union1d, searchsorted, concatenate, argsort
 from .conm1 import CONM1
 from .conm2 import CONM2
 
@@ -82,11 +82,11 @@ class Mass(object):
     
     def get_mass(self, element_ids=None, total=False):
         assert element_ids is None
-        mass_types = self._get_types()
+        mass_types = self._get_types(nlimit=True)
         
         element_ids, i = self.get_indexs(element_ids)
         if element_ids is None:
-            return 0.0
+            return None
 
         n = len(element_ids)
 
@@ -119,8 +119,8 @@ class Mass(object):
         if nlimit:
             d = []
             for mtype in mtypes:
-                    print('type=%s n=%s' % (mtype.type, mtype.n))
-                #if mtype.n > 0:
+                #print('type=%s n=%s' % (mtype.type, mtype.n))
+                if mtype.n > 0:
                     d.append(mtype)
             #mtypes = d
             return d
@@ -144,4 +144,4 @@ class Mass(object):
             elems._verify(xref=xref)
 
     def __repr__(self):
-        return 'hi' + '\n'.join(self.get_stats())
+        return '\n'.join(self.get_stats())
