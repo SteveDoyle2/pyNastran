@@ -127,9 +127,11 @@ class Usm3dReader(object):
                 base, ext = os.path.splitext(flo_filename)
                 if ext == '.flo':
                     n = base.split('_')[-1]
-                    n = int(n)
-                    nmax = max(n, nmax)
-
+                    try: # get the incrementation index
+                        n = int(n)
+                        nmax = max(n, nmax)
+                    except ValueError: # don't bother incrementing
+                        pass
             # determine .flo file name
             if nmax > 0:
                 flo_filename = basename + '_%s.flo' % (nmax)
@@ -158,7 +160,7 @@ class Usm3dReader(object):
         loads = {}
         if os.path.exists(flo_filename):
             npoints, three = nodes.shape
-            loads = self.read_flo(flo_filename, n=npoints)
+            node_ids_volume, loads = self.read_flo(flo_filename, n=npoints)
         else:
             self.log.warning('Cannot find %r...skipping' % flo_filename)
         self.loads = loads
@@ -183,7 +185,6 @@ class Usm3dReader(object):
         tris = tris - 1
         return tris, bcs
         #self.bcs = [tris, bcs]
-
 
     def read_cogsg(self, cogsg_file):
         f = open(cogsg_file, 'rb')
@@ -367,7 +368,7 @@ class Usm3dReader(object):
         self.tets = elements
         return nodes, elements
 
-    def read_flo(self, flo_filename, n=None):
+    def read_flo(self, flo_filename, n=None, node_ids=None):
         """
         ipltqn is a format code where:
          - ipltqn = 0  (no printout)
@@ -376,6 +377,10 @@ class Usm3dReader(object):
 
         :param flo_filename: the name of the file to read
         :param n:            the number of points to read (initializes the array)
+                             n is typically the number of points, but is not required to be
+                             this lets you read nodes 1...n, but not greater than n+1.
+                             node_ids must be set to None.
+        :param node_ids:     the specific points to read (n must be set to None).
 
         nvars = 5
           - (nodeID,rho,rhoU,rhoV,rhoW) = sline
@@ -383,11 +388,25 @@ class Usm3dReader(object):
 
         nvars = 6
           - (nodeID,rho,rhoU,rhoV,rhoW,e) = line
+
+        Also, stupid Nastran-esque float formatting is sometimes used,
+        so 5.0-100 exists, which is 5.0E-100.  We just assume it's 0.
         """
+        is_sparse = None
+        if n is None:
+            assert node_ids is not None, node_ids
+            assert len(node_ids) > 0, node_ids
+            n = len(node_ids)
+            is_sparse = True
+        else:
+            assert node_ids is None, node_ids
+            is_sparse = False
+
         formatCode = 2
 
         flo_file = open(flo_filename, 'r')
-        mach = float(flo_file.readline().strip())
+        line = flo_file.readline().strip()
+        mach = float(line)
 
         node_id = zeros(n, 'int32')
         rho = zeros(n, 'float32')
@@ -409,17 +428,34 @@ class Usm3dReader(object):
             ei = Float(sline2, 1)[0]
 
         # set the i=0 values
-        i = 0
-        node_id[i] = sline1[0]
-        rho[i] = rhoi
-        rhoU[i] = rhoui
-        rhoV[i] = rhovi
-        rhoW[i] = rhowi
-        e[i] = ei
+        if not is_sparse:
+            nmax = n
+            i = 0
+            node_id[i] = sline1[0]
+            rho[i] = rhoi
+            rhoU[i] = rhoui
+            rhoV[i] = rhovi
+            rhoW[i] = rhowi
+            e[i] = ei
+        else:
+            ni = 0
+            node_ids_minus_1 = array(node_ids) - 1
+            nmax = node_ids_minus_1.max() + 1
+            if 0 in node_ids_minus_1:
+                i = 0
+                node_id[i] = sline1[0]
+                rho[i] = rhoi
+                rhoU[i] = rhoui
+                rhoV[i] = rhovi
+                rhoW[i] = rhowi
+                e[i] = ei
+                ni += 1
 
         # loop over the rest of the data in the flo file
-        if n:
-            if nvars == 6:
+        if node_ids is None:
+            ni = n
+            # extract nodes 1, 2, ... 10, but not 11+
+            if nvars == 6:  # sequential nvars=6
                 for i in xrange(1, n):
                     sline1 = flo_file.readline().strip().split()
                     rhoi, rhoui, rhovi, rhowi, ei = Float(sline1[1:], 5)
@@ -430,17 +466,16 @@ class Usm3dReader(object):
                     rhoW[i] = rhowi
                     e[i] = ei
                     assert len(sline1) == 6, 'len(sline1)=%s' % len(sline1)
-            else:  # nvars = 5
+            else:  # sequential nvars=5
                 for i in xrange(1, n):
                     sline1 = flo_file.readline().strip().split()
-                    node_id[i] = sline1[0]
                     rhoi, rhoui, rhovi, rhowi = Float(sline1[1:], 4)
-
                     assert len(sline1) == 5, 'len(sline1)=%s' % len(sline1)
 
                     sline2 = flo_file.readline().strip().split()
                     ei = Float(sline2, 1)[0]
 
+                    node_id[i] = sline1[0]
                     rho[i] = rhoi
                     rhoU[i] = rhoui
                     rhoV[i] = rhovi
@@ -448,8 +483,47 @@ class Usm3dReader(object):
                     e[i] = ei
                     assert len(sline2) == 1, 'len(sline2)=%s' % len(sline2)
         else:
-            raise RuntimeError('nnodes is not defined...')
+            # extract node 1, 2, and 10
+            if nvars == 6:  # dynamic nvars=6
+                for i in xrange(1, nmax):
+                    if i in node_ids_minus_1:
+                        sline1 = flo_file.readline().strip().split()
+                        rhoi, rhoui, rhovi, rhowi, ei = Float(sline1[1:], 5)
+
+                        node_id[ni] = sline1[0]
+                        rho[ni] = rhoi
+                        rhoU[ni] = rhoui
+                        rhoV[ni] = rhovi
+                        rhoW[ni] = rhowi
+                        e[ni] = ei
+                        assert len(sline1) == 6, 'len(sline1)=%s' % len(sline1)
+                        ni += 1
+                    else:
+                        line1 = flo_file.readline()
+            else:  # dynamic nvars=5
+                for i in xrange(1, nmax):
+                    if i in node_ids_minus_1:
+                        sline1 = flo_file.readline().strip().split()
+                        rhoi, rhoui, rhovi, rhowi = Float(sline1[1:], 4)
+                        assert len(sline1) == 5, 'len(sline1)=%s' % len(sline1)
+
+                        sline2 = flo_file.readline().strip().split()
+                        ei = Float(sline2, 1)[0]
+
+                        node_id[ni] = sline1[0]
+                        rho[ni] = rhoi
+                        rhoU[ni] = rhoui
+                        rhoV[ni] = rhovi
+                        rhoW[ni] = rhowi
+                        e[ni] = ei
+                        assert len(sline2) == 1, 'len(sline2)=%s' % len(sline2)
+                        ni += 1
+                else:
+                    line1 = flo_file.readline()
+                    line2 = flo_file.readline()
         flo_file.close()
+
+        assert len(rho) == ni
 
         # llimit the minimum density (to prevent division errors)
         rho_min = 0.001
@@ -464,6 +538,8 @@ class Usm3dReader(object):
         one_over_gamma = 1.0 / gamma
 
         gm1 = gamma - 1
+
+        # node_id, rhoi, rhoui, rhovi, rhowi, ei
         rhoVV = (rhoU**2 + rhoV**2 + rhoW**2) / rho
         if 'p' in result_names or 'Mach' in result_names or 'Cp' in result_names:
             pND = gm1*(e - rhoVV/2. )
@@ -497,7 +573,7 @@ class Usm3dReader(object):
             loads['V'] = rhoV / rho
         if 'W' in result_names:
             loads['W'] = rhoW / rho
-        return loads
+        return node_id, loads
 
 
 
@@ -601,12 +677,27 @@ def write_cogsg_volume(model, cogsg_file):
 
 def main():
     model = Usm3dReader()
-    #basename = 'HSCT_inviscid'
-    basename = 'box'
-    model.read_usm3d(basename, 3)
-    model.write_usm3d(basename + '_2')
+    if 1:
+        #basename = 'HSCT_inviscid'
+        #basename = 'box'
+        basename = 'new2'
+        model.read_usm3d(basename, 3)
+        model.write_usm3d(basename + '_2')
 
-    model.read_usm3d(basename + '_2', 3)
+        model.read_usm3d(basename + '_2', 3)
+    else:
+        basename = 'new2'
+
+        #cogsg_filename = basename + '.cogsg'
+        #bc_filename = basename + '.bc'
+        #face_filename = basename + '.face'
+        #front_filename = basename + '.front'
+        #mapbc_filename = basename + '.mapbc'
+        flo_filename = basename + '.flo'
+
+        #model.read_usm3d(basename, 3)
+
+        loads = model.read_flo(flo_filename, node_ids=[10])
 
 
 if __name__ == '__main__':
