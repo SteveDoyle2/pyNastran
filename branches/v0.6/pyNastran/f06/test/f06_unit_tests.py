@@ -125,15 +125,70 @@ class TestF06(unittest.TestCase):
                           [ 0.,          0.,          0.8740444 ]])
         self.assertTrue(array_equiv(IQ, IQ_exact))
 
-        #outputs.append(f06)
+    def test_blade2dv_fatal_3(self):
+        f06_name = os.path.join(testpath, 'blade_2dv', 'blade_2dv.f06_fatal')
+        bdf_name = os.path.join(testpath, 'blade_2dv', 'blade_2dv.bdf')
+        #bdf2 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
+        #self.assertEquals(bdf2.properties[1].t, 42., 't=%s' % bdf2.properties[1].t)
 
-        #dynamic_vars = {'t' : 42}
-        #with self.assertRaises(SyntaxError):
-            #bdf3 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
+        f06 = F06(f06_name, debug=False, log=None)
 
-        #dynamic_vars = {'t' : 'asdddddddf'}
-        #with self.assertRaises(SyntaxError):
-            #bdf3 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
+        # we skip the fatal by stopping after reading the matrices
+        f06.stop_after_reading_grid_point_weight()
+        f06.read_f06()
+
+        f06.write_f06(f06_name+'.out')
+
+        ref_point = f06.grid_point_weight.reference_point
+        #print "ref_point", ref_point
+        ref_point_exact = 0
+        self.assertEqual(ref_point, ref_point_exact)
+
+        MO = f06.grid_point_weight.MO
+        #print "MO", MO
+        MO_exact = array(
+            [[  1.22085800e-01,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00,  5.33146300e-01,  -1.22767700e-05],
+             [  0.00000000e+00,   1.22085800e-01,   0.00000000e+00,  -5.33146300e-01,  0.00000000e+00,   1.57186600e-01],
+             [  0.00000000e+00,   0.00000000e+00,   1.22085800e-01,   1.22767700e-05, -1.57186600e-01,   0.00000000e+00],
+             [  0.00000000e+00,  -5.33146300e-01,   1.22767700e-05,   3.20227600e+00, -7.13340800e-06,  -6.83890800e-01],
+             [  5.33146300e-01,   0.00000000e+00,  -1.57186600e-01,  -7.13340800e-06,  3.45033400e+00,  -7.35886500e-05],
+             [ -1.22767700e-05,   1.57186600e-01,   0.00000000e+00,  -6.83890800e-01, -7.35886500e-05,   2.50287600e-01]])
+
+
+        S = f06.grid_point_weight.S
+        S_exact = array([[ 1.,  0.,  0.],
+                         [ 0.,  1.,  0.],
+                         [ 0.,  0.,  1.]])
+        #print "S", S
+
+        mass = f06.grid_point_weight.mass
+        mass_exact = array([ 0.1220858,  0.1220858,  0.1220858])
+        self.assertTrue(array_equiv(mass, mass_exact))
+        #print "mass =", mass
+
+        cg = f06.grid_point_weight.cg
+        cg_exact = array(
+            [[  0.00000000e+00,   1.00558600e-04,   4.36698100e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
+             [  1.28751000e+00,   0.00000000e+00,   4.36698100e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
+             [  1.28751000e+00,   1.00558600e-04,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
+             [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
+             [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
+             [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00]])
+        #print "cg =", cg
+        self.assertTrue(array_equiv(cg, cg_exact))
+
+        IS = f06.grid_point_weight.IS
+        #print "IS", IS
+        IS_exact = array([[  8.74036600e-01,  -8.67305300e-06,  -2.54028500e-03],
+                          [ -8.67305300e-06,   9.19714300e-01,   1.99762300e-05],
+                          [ -2.54028500e-03,   1.99762300e-05,   4.79082500e-02]])
+
+        IQ = f06.grid_point_weight.IQ
+        #print "IQ", IQ
+        IQ_exact = array([[ 0.04790044,  0.,          0.        ],
+                          [ 0.,          0.9197143,   0.        ],
+                          [ 0.,          0.,          0.8740444 ]])
+        self.assertTrue(array_equiv(IQ, IQ_exact))
 
     def test_plate_openmdao(self):
         bdfname2 = os.path.join(testpath, 'plate', 'plate_openmdao.bdf')

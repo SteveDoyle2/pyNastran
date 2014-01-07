@@ -4,7 +4,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import BarStressObject,
 #from pyNastran.op2.tables.oes_stressStrain.real.oes_shear   import shearStressObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import SolidStressObject, SolidStrainObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import PlateStressObject, PlateStrainObject
-from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import CompositePlateStressObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import CompositePlateStressObject, CompositePlateStrainObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import CelasStressObject, CelasStrainObject
 #strain...
 
@@ -291,7 +291,21 @@ class OES(object):
 
         return data
 
-    def _stresses_in_cquad4_composite_elements(self):
+    #==========================================================================
+    # COMPOSITE
+    def _stresses_in_composite_ctria3_elements(self):
+        element_name = 'CTRIA3'
+        element_type = 97
+        is_strain = False
+        self._composites_helper(element_name, element_type, is_strain)
+
+    def _strains_in_composite_ctria3_elements(self):
+        element_name = 'CTRIA3'
+        element_type = 97
+        is_strain = True
+        self._composites_helper(element_name, element_type, is_strain)
+
+    def _stresses_in_composite_cquad4_elements(self):
         """
         ::
 
@@ -303,8 +317,30 @@ class OES(object):
 
         element_type = 33 b/c not bilinear
         """
-        (subcaseName, isubcase, transient, dt, analysis_code,
-            is_sort1) = self.readSubcaseNameID()
+        element_name = 'CQUAD4'
+        element_type = 95
+        is_strain = False
+        self._composites_helper(element_name, element_type, is_strain)
+
+    def _strains_in_composite_cquad4_elements(self):
+        """
+        ::
+
+                         S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+          ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+            ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+              181    1   3.18013E+04  5.33449E+05  1.01480E+03   -7.06668E+01  1.90232E+04   89.88  5.33451E+05  3.17993E+04  2.50826E+05
+              181    2   1.41820E+05  1.40805E+05  1.25412E+05   -1.06000E+02  2.85348E+04   44.88  2.66726E+05  1.58996E+04  1.25413E+05
+
+        element_type = 33 b/c not bilinear
+        """
+        element_name = 'CQUAD4'
+        element_type = 95
+        is_strain = True
+        self._composites_helper(element_name, element_type, is_strain)
+
+    def _composites_helper(self, element_name, element_type, is_strain):
+        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         dataTypes = [int, int, float, float, float, float,
@@ -315,25 +351,34 @@ class OES(object):
         sHeaders = headers.rstrip()
         if 'SHEAR' in sHeaders[-5:]:  # last 5 letters of the line to avoid 'SHEAR YZ-MAT'
             isMaxShear = True
-        (stress_bits, s_code) = self.make_stress_bits(
-            isMaxShear=isMaxShear, isStrain=False)
+        else:
+            raise RuntimeError(sHeader)
+
+        isFiberDistance = True
+        (stress_bits, s_code) = self.make_stress_bits(isFiberDistance=isFiberDistance, isMaxShear=isMaxShear, isStrain=is_strain)
         data_code = {'log': self.log, 'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 5, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 's_code': s_code,
                     'stress_bits': stress_bits, 'format_code': 1,
-                    'element_name': 'CQUAD4', 'element_type': 33,
+                    'element_name': element_name, 'element_type': element_type,
                     'table_name': 'OES1X', 'nonlinear_factor': dt,
                     'dataNames':['lsdvmn']}
 
-        if isubcase in self.compositePlateStress:
-            self.compositePlateStress[isubcase].add_f06_data(
-                data, transient, 'CQUAD4')
+        if is_strain:
+            dictA = self.compositePlateStrain
+            class_obj = CompositePlateStrainObject
+        else:
+            dictA = self.compositePlateStress
+            class_obj = CompositePlateStressObject
+
+        if isubcase in dictA:
+            dictA[isubcase].add_f06_data(data, transient, element_name)
         else:
             assert 'nonlinear_factor' in data_code
-            self.compositePlateStress[isubcase] = CompositePlateStressObject(data_code, isubcase, transient)
-            self.compositePlateStress[isubcase].add_f06_data(
-                data, transient, 'CQUAD4')
+            dictA[isubcase] = class_obj(data_code, isubcase, transient)
+            dictA[isubcase].add_f06_data(data, transient, element_name)
         self.iSubcases.append(isubcase)
+    #==========================================================================
 
     def _stresses_in_ctria3_elements(self):
         """
@@ -448,6 +493,8 @@ class OES(object):
             self.i += 2
         return data
 
+    #==========================================================================
+    # CQUAD4
     def _stresses_in_cquad4_elements(self):
         (isubcase, transient, data_code) = self.getQuadHeader(2, False, 33)
         data_code['table_name'] = 'OES1X'
@@ -568,6 +615,7 @@ class OES(object):
 
         return data
 
+    #==========================================================================
     def _stresses_in_chexa_elements(self):
         return self.readSolidStress('CHEXA', 8)
 
@@ -668,11 +716,14 @@ class OES(object):
             # element coordinate system (no material support)
             (True,  False, False,  True): ([0, 0, 0, 0, 0], 0),  # 0,  rod/csolid
             (False, False, False,  True): ([0, 0, 0, 0, 1], 1),  # 1,  rod/csolid
+            (False, False,  True,  True): ([0, 0, 0, 0, 1], 1),   # ???
+
             (True,  False,  True, False): ([0, 1, 0, 1, 0], 10),  # 10
             (False, False,  True, False): ([0, 1, 0, 1, 1], 11),  # 11
+
+            (True,  True,  False, False): ([0, 1, 1, 1, 0], 14),  # 14 - ???
             (True,  True,   True, False): ([0, 1, 1, 1, 0], 14),  # 14
             (False, True,   True, False): ([0, 1, 1, 1, 1], 15),  # 15
-            (False, False,  True,  True): ([0, 0, 0, 0, 1], 1),   # ???
 
             (True, False, False, False): ([0, 0, 0, 0, 0], 0),  # 0,  composite
             (False, True, False, False): ([0, 0, 0, 0, 1], 0),  # cquad4 bilinear ??? why do i need this...

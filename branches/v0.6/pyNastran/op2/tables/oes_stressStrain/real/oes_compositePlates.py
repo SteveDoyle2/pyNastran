@@ -77,12 +77,11 @@ class CompositePlateStressObject(StressObject):
             #sys.exit()
             for line in data:
                 #print line
-                if eType == 'CQUAD4':
-                    (eid, iLayer, o11, o22, t12, t1z, t2z, angle,
-                        majorP, minorP, ovmShear) = line
+                if eType in ['CQUAD4', 'CTRIA3']:
+                    (eid, iLayer, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovmShear) = line
                     #if nid=='CEN/4': nid='C'
                     if eid not in self.eType:
-                        self.eType[eid] = 'CQUAD4'
+                        self.eType[eid] = eType
                         self.o11[eid] = [o11]
                         self.o22[eid] = [o22]
                         self.t12[eid] = [t12]
@@ -103,7 +102,7 @@ class CompositePlateStressObject(StressObject):
                         self.minorP[eid].append(minorP)
                         self.ovmShear[eid].append(ovmShear)
                 else:
-                    msg = 'line=%s not supported...' % (line)
+                    msg = 'etype=%r is not supported...' % eType
                     raise NotImplementedError(msg)
             return
         #for line in data:
@@ -424,6 +423,53 @@ class CompositePlateStrainObject(StrainObject):
         msg.append('  eType, e11, e22, e12, e1z, e2z, angle, majorP, minorP\n')
         return msg
 
+    def add_f06_data(self, data, transient, eType):
+        """
+        ::
+
+                         S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+          ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+            ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+              151    1  -1.02406E+04  4.18348E+05  4.14359E+02   -8.62021E+00  1.86352E+04   89.94  4.18348E+05 -1.02410E+04  2.14295E+05
+        """
+        if transient is None:
+            #for line in data:
+                #print line
+            #sys.exit()
+            for line in data:
+                #print line
+                if eType in ['CQUAD4', 'CTRIA3']:
+                    (eid, iLayer, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evmShear) = line
+                    #if nid=='CEN/4': nid='C'
+                    if eid not in self.eType:
+                        self.eType[eid] = eType
+                        self.e11[eid] = [e11]
+                        self.e22[eid] = [e22]
+                        self.e12[eid] = [e12]
+                        self.e1z[eid] = [e1z]
+                        self.e2z[eid] = [e2z]
+                        self.angle[eid] = [angle]
+                        self.majorP[eid] = [majorP]
+                        self.minorP[eid] = [minorP]
+                        self.evmShear[eid] = [evmShear]
+                    else:
+                        self.e11[eid].append(e11)
+                        self.e22[eid].append(e22)
+                        self.e12[eid].append(e12)
+                        self.e1z[eid].append(e1z)
+                        self.e2z[eid].append(e2z)
+                        self.angle[eid].append(angle)
+                        self.majorP[eid].append(majorP)
+                        self.minorP[eid].append(minorP)
+                        self.evmShear[eid].append(evmShear)
+                else:
+                    msg = 'etype=%r is not supported...' % eType
+                    raise NotImplementedError(msg)
+            return
+        #for line in data:
+            #print line
+        raise NotImplementedError('transient results not supported')
+
     def delete_transient(self, dt):
         del self.e11[dt]
         del self.e22[dt]
@@ -670,7 +716,7 @@ class CompositePlateStrainObject(StrainObject):
                 quadMsg.append(pageStamp % pageNum)
                 pageNum += 1
                 f.write(''.join(quadMsg))
-            
+
             if isTri:
                 triMsg.append(pageStamp % pageNum)
                 pageNum += 1

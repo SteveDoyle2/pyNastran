@@ -29,7 +29,7 @@ class F06Deprecated(object):
 
 
 class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
-    def stop_after_reading_grid_point_weight(stop=True):
+    def stop_after_reading_grid_point_weight(self, stop=True):
         self._stop_after_reading_mass = True
 
     def __init__(self, f06FileName, debug=False, log=None):
@@ -58,21 +58,26 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             'R E A L   E I G E N V E C T O R   N O': self._real_eigenvectors,
         }
         self.markerMap = {
-            #'N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O':self.fileSystem,
-            #'N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O':self.executiveControl,
-            #'C A S E    C O N T R O L    E C H O ':self.caseControl,
+            #====================================================================
+            # debug info
+            'N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O' : self._nastran_file_and_system_parameter_echo,
+            'N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O':self._executive_control_echo,
+            'C A S E    C O N T R O L    E C H O' : self._case_control_echo,
             #'M O D E L   S U M M A R Y':self.summary,
+            'G R I D   P O I N T   S I N G U L A R I T Y   T A B L E': self._grid_point_singularity_table,
 
+            #====================================================================
+            # useful info
             #'E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y'
             'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R': self._grid_point_weight_generator,
             #'OLOAD    RESULTANT':self.oload,
             #'MAXIMUM  SPCFORCES':self.getMaxSpcForces,
             #'MAXIMUM  DISPLACEMENTS': self.getMaxDisplacements,
             #'MAXIMUM  APPLIED LOADS': self.getMaxAppliedLoads,
-            #'G R I D   P O I N T   S I N G U L A R I T Y   T A B L E': self.gridPointSingularities,
 
 
-            #------------------------
+            #====================================================================
+            # F06 specific tables
             #'N O N - D I M E N S I O N A L   S T A B I L I T Y   A N D   C O N T R O L   D E R I V A T I V E   C O E F F I C I E N T S' : self._nondimensional_stability_and_control_deriv_coeffs,
             #'N O N - D I M E N S I O N A L    H I N G E    M O M E N T    D E R I V A T I V E   C O E F F I C I E N T S':  self._nondimensional_hinge_moment_derivative_coeffs,
             #'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S': self._aerostatic_data_recovery_output_tables,
@@ -82,7 +87,9 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             #                              R O T O R   D Y N A M I C S   M A S S   S U M M A R Y
             #                           E I G E N V A L U E  A N A L Y S I S   S U M M A R Y   (COMPLEX LANCZOS METHOD)
             #------------------------
+            #====================================================================
 
+            # OUG tables
             'R E A L   E I G E N V A L U E S': self._real_eigenvalues,
             #'C O M P L E X   E I G E N V A L U E   S U M M A R Y':self.getComplexEigenvalues,
             'E L E M E N T   S T R A I N   E N E R G I E S': self._element_strain_energies,
@@ -92,43 +99,56 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             'F O R C E S   O F   M U L T I P O I N T   C O N S T R A I N T': self._forces_of_multi_point_constraints,
             #'G R I D   P O I N T   F O R C E   B A L A N C E':self.getGridPointForces,
 
+            'T E M P E R A T U R E   V E C T O R': self._temperature_vector,
+            'F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S': self._temperature_gradients_and_fluxes,
+
+            #====================================================================
+            # OES O-D
             'S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )': self._stresses_in_cbar_elements,
+            'S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )': self._strains_in_cbar_elements,
 
             'S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )'     : self._stresses_in_crod_elements,
-            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C O N R O D )' : self._stresses_in_crod_elements,
+            'S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )': self._strains_in_crod_elements,
 
+            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C O N R O D )' : self._stresses_in_crod_elements,
+            'S T R A I N S   I N   R O D   E L E M E N T S      ( C O N R O D )': self._strains_in_crod_elements,
+            #====================================================================
+            # OES 1-D
             'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )': self._stresses_in_celas2_elements,
             'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )': self._stresses_in_celas2_elements,
             'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )': self._stresses_in_celas2_elements,
             'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )': self._stresses_in_celas2_elements,
 
-            'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self._stresses_in_ctria3_elements,
-            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self._stresses_in_cquad4_elements,
-            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN': self._stresses_in_cquad4_bilinear_elements,
-            'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )': self._stresses_in_cquad4_composite_elements,
-
-            'S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )': self._stresses_in_ctetra_elements,
-            'S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )': self._stresses_in_chexa_elements,
-            'S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )': self._stresses_in_cpenta_elements,
-
-            'S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )': self._strains_in_cbar_elements,
-            'S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )': self._strains_in_crod_elements,
-            'S T R A I N S   I N   R O D   E L E M E N T S      ( C O N R O D )': self._strains_in_crod_elements,
-
             'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 1 )':self._strains_in_celas2_elements,
             'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 2 )':self._strains_in_celas2_elements,
             'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 3 )':self._strains_in_celas2_elements,
             'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 4 )':self._strains_in_celas2_elements,
+            #====================================================================
+            # OES 2-D
+            'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self._stresses_in_ctria3_elements,
+            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self._stresses_in_cquad4_elements,
+            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN': self._stresses_in_cquad4_bilinear_elements,
 
+            'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )': self._stresses_in_composite_ctria3_elements,
+            'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )': self._stresses_in_composite_cquad4_elements,
+
+            #==
+            # partial...
             'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self._strains_in_cquad4_elements,
             'S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self._strains_in_ctria3_elements,
+
+            'S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )' : self._strains_in_composite_ctria3_elements,
+            'S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )' : self._strains_in_composite_cquad4_elements,
+            #====================================================================
+            # OES 3-D
+            'S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )': self._stresses_in_ctetra_elements,
+            'S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )': self._stresses_in_chexa_elements,
+            'S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )': self._stresses_in_cpenta_elements,
 
             'S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )': self._strains_in_ctetra_elements,
             'S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )': self._strains_in_chexa_elements,
             'S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )': self._strains_in_cpenta_elements,
-
-            'T E M P E R A T U R E   V E C T O R': self._temperature_vector,
-            'F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S': self._temperature_gradients_and_fluxes,
+            #====================================================================
 
             #'* * * END OF JOB * * *': self.end(),
         }
@@ -206,6 +226,42 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         #print '\n'.join(lines)
         self.grid_point_weight.read_grid_point_weight(lines)
 
+    def _case_control_echo(self):
+        line = ''
+        lines = []
+        while 'PAGE' not in line:
+            line = self.infile.readline()[1:].strip()
+            lines.append(line)
+            self.i += 1
+        #self.grid_point_weight.read_grid_point_weight(lines)
+
+    def _executive_control_echo(self):
+        line = ''
+        lines = []
+        while 'PAGE' not in line:
+            line = self.infile.readline()[1:].strip()
+            lines.append(line)
+            self.i += 1
+        #self.grid_point_weight.read_grid_point_weight(lines)
+
+    def _nastran_file_and_system_parameter_echo(self):
+        line = ''
+        lines = []
+        while 'PAGE' not in line:
+            line = self.infile.readline()[1:].strip()
+            lines.append(line)
+            self.i += 1
+        #self.grid_point_weight.read_grid_point_weight(lines)
+
+    def _grid_point_singularity_table(self):
+        line = ''
+        lines = []
+        while 'PAGE' not in line:
+            line = self.infile.readline()[1:].strip()
+            lines.append(line)
+            self.i += 1
+        #self.grid_point_weight.read_grid_point_weight(lines)
+
     def readSubcaseNameID(self):
         """
         -4 -> 1                                                     JANUARY   5, 2014  MSC.NASTRAN 11/25/11   PAGE    14
@@ -215,7 +271,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         subtitle = self.storedLines[-3].strip()
         #print(''.join(self.storedLines[-3:]))
         if self.Title is None or self.Title == '' and len(self.storedLines) > 4:
-            self.Title = self.storedLines[-4][1:75].rstrip()
+            self.Title = self.storedLines[-4][1:75].strip()
             msg = ''
             for i, line in enumerate(self.storedLines[-4:]):
                 msg += '%i -> %s\n' % (-4 + i, line.rstrip())
