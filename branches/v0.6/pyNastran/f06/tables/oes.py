@@ -569,6 +569,7 @@ class OES(object):
             isMaxShear = False
         else:
             raise RuntimeError(headers)
+
         (stress_bits, s_code) = self.make_stress_bits(isFiberDistance, isMaxShear, isStrain)
         data_code = {'log': self.log, 'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 5, 'sort_code': 0,
@@ -577,6 +578,8 @@ class OES(object):
                     'element_name': 'CQUAD4', 'element_type': elementNumber,
                     'nonlinear_factor': dt,
                     'dataNames':['lsdvmn']}
+        if transient is not None:
+            data_code['name'] = transient[0]
         return (isubcase, transient, data_code)
 
     def readQuadBilinear(self):

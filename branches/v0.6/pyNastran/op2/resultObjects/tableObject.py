@@ -421,11 +421,11 @@ class TableObject(scalarObject):  # displacement style table
         #assert f is not None # remove
         for dt, translations in sorted(self.translations.iteritems()):
             if isinstance(dt, float):  # fix
-                header[1] = ' %s = %10.4E float %s\n' % (self.data_code[
-                    'name'], dt, self.analysis_code)
+                #header[1] = ' %s = %10.4E float %s\n' % (self.data_code['name'], dt, self.analysis_code)
+                header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             else:
-                header[1] = ' %s = %10i integer %s\n' % (self.data_code[
-                    'name'], dt, self.analysis_code)
+                #header[1] = ' %s = %10i integer %s\n' % (self.data_code['name'], dt, self.analysis_code)
+                header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
             msg += header + words
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]

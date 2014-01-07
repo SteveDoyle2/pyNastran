@@ -43,6 +43,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
         .. seealso:: import logging
         """
+        self._subtitle = None
         self.card_count = {}
         self.f06FileName = f06FileName
         self.f06_filename = self.f06FileName
@@ -56,6 +57,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
         self.lineMarkerMap = {
             'R E A L   E I G E N V E C T O R   N O': self._real_eigenvectors,
+            'News file -' : self._executive_control_echo,
         }
         self.markerMap = {
             #====================================================================
@@ -66,14 +68,22 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             #'M O D E L   S U M M A R Y':self.summary,
             'G R I D   P O I N T   S I N G U L A R I T Y   T A B L E': self._grid_point_singularity_table,
 
+            # dummy
+            'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._grid_point_singularity_table,
+            'G R I D   P O I N T   F O R C E   B A L A N C E' : self._executive_control_echo,
             #====================================================================
             # useful info
             #'E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y'
             'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R': self._grid_point_weight_generator,
-            #'OLOAD    RESULTANT':self.oload,
-            #'MAXIMUM  SPCFORCES':self.getMaxSpcForces,
-            #'MAXIMUM  DISPLACEMENTS': self.getMaxDisplacements,
-            #'MAXIMUM  APPLIED LOADS': self.getMaxAppliedLoads,
+
+            # dummy
+            'MAXIMUM  SPCFORCES':self.getMaxSpcForces,
+            #'OLOAD    RESULTANT':self.getMaxMpcForces,
+            'MAXIMUM  MPCFORCES':self.getMaxMpcForces,
+            'SPCFORCE RESULTANT':self.getMaxMpcForces,
+            'MPCFORCE RESULTANT':self.getMaxMpcForces,
+            'MAXIMUM  DISPLACEMENTS': self.getMaxDisplacements,
+            'MAXIMUM  APPLIED LOADS': self.getMaxAppliedLoads,
 
 
             #====================================================================
@@ -97,7 +107,6 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             'C O M P L E X   D I S P L A C E M E N T   V E C T O R': self._complex_displacement_vector,
             'F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T': self._forces_of_single_point_constraints,
             'F O R C E S   O F   M U L T I P O I N T   C O N S T R A I N T': self._forces_of_multi_point_constraints,
-            #'G R I D   P O I N T   F O R C E   B A L A N C E':self.getGridPointForces,
 
             'T E M P E R A T U R E   V E C T O R': self._temperature_vector,
             'F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S': self._temperature_gradients_and_fluxes,
@@ -149,7 +158,9 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             'S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )': self._strains_in_chexa_elements,
             'S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )': self._strains_in_cpenta_elements,
             #====================================================================
-
+            # TRIAX - not done
+            'S T R E S S E S   I N   T R I A X 6   E L E M E N T S' : self._executive_control_echo,
+            'L O A D   V E C T O R' : self._executive_control_echo,
             #'* * * END OF JOB * * *': self.end(),
         }
         self.markers = self.markerMap.keys()
@@ -191,6 +202,14 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         pass
 
     def getMaxSpcForces(self):  # .. todo:: not done
+        headers = self.skip(2)
+        #print "headers = %s" %(headers)
+        data = self.readTable([int, float, float, float, float, float, float])
+        #print "max SPC Forces   ",data
+        #self.disp[isubcase] = DisplacementObject(isubcase,data)
+        #print self.disp[isubcase]
+
+    def getMaxMpcForces(self):  # .. todo:: not done
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int, float, float, float, float, float, float])
@@ -313,6 +332,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         #print("label    = %r" % label)
 
         #assert self.Title == 'MSC.NASTRAN JOB CREATED ON 12-MAR-13 AT 12:52:23', self.Title
+        self._subtitle = subtitle
         self.iSubcaseNameMap[isubcase] = [subtitle, subtitle]
         transient = self.storedLines[-1].strip()
         is_sort1 = False
@@ -429,8 +449,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         #isubcase = self.storedLines[-2].strip()[1:]
         #isubcase = int(isubcase.strip('SUBCASE '))
         #print "subcaseName=%s isubcase=%s" %(subcaseName,isubcase)
-        (subcaseName, isubcase, transient, dt, analysis_code,
-            is_sort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
         eigenvalue_real = transient[1]
         headers = self.skip(2)
 
@@ -454,8 +473,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             self.eigenvectors[isubcase].read_f06_data(data_code, data)
         else:
             is_sort1 = True
-            self.eigenvectors[isubcase] = EigenVectorObject(data_code, is_sort1,
-                                                            isubcase, iMode)
+            self.eigenvectors[isubcase] = EigenVectorObject(data_code, is_sort1, isubcase, iMode)
             self.eigenvectors[isubcase].read_f06_data(data_code, data)
 
     def _element_strain_energies(self):
@@ -649,8 +667,9 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
             if(marker != '' and 'SUBCASE' not in marker and 'PAGE' not in marker and 'FORTRAN' not in marker
                and 'USER INFORMATION MESSAGE' not in marker and 'TOTAL DATA WRITTEN FOR DATA BLOCK' not in marker
-               and marker not in self.markers):
+               and marker not in self.markers and marker != self._subtitle):
                 print("marker = %r" % marker)
+                #print('Title  = %r' % self.subtitle)
 
             if marker in self.markers:
                 blank = 0
@@ -664,8 +683,11 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             elif 'R E A L   E I G E N V E C T O R   N O' in marker:
                 blank = 0
                 #print("\n2*marker = %r" % marker)
-                self.lineMarkerMap['R E A L   E I G E N V E C T O R   N O'](
-                    marker)
+                self.lineMarkerMap['R E A L   E I G E N V E C T O R   N O'](marker)
+                self.storedLines = []
+            elif 'News file -' in marker:
+                blank = 0
+                self.lineMarkerMap['News file -']()
                 self.storedLines = []
             elif marker == '':
                 blank += 1

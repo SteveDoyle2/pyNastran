@@ -126,12 +126,57 @@ class PlateStressObject(StressObject):
                         assert len(line) == 19, 'line=%s len(line)=%s' % (line, len(line))
                         raise NotImplementedError()
                 else:
-                    msg = 'line=%s not supported...' % (line)
+                    msg = 'eType=%r not supported...' % eType
                     raise NotImplementedError(msg)
             return
         #for line in data:
             #print line
-        raise NotImplementedError('transient results not supported')
+
+        dt = transient[1]
+        if dt not in self.oxx:
+            self.fiberCurvature[dt] = {}
+            self.oxx[dt] = {}
+            self.oyy[dt] = {}
+            self.txy[dt] = {}
+            self.angle[dt] = {}
+            self.majorP[dt] = {}
+            self.minorP[dt] = {}
+            self.ovmShear[dt] = {}
+
+        eType = data[0][0]
+        for line in data:
+            if eType == 'CTRIA3':
+                (eType, eid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
+                 f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                self.eType[eid] = eType
+                self.fiberCurvature[eid] = {'C': [f1, f2]}
+                self.oxx[dt][eid] = {'C': [ox1, ox2]}
+                self.oyy[dt][eid] = {'C': [oy1, oy2]}
+                self.txy[dt][eid] = {'C': [txy1, txy2]}
+                self.angle[dt][eid] = {'C': [angle1, angle2]}
+                self.majorP[dt][eid] = {'C': [o11, o12]}
+                self.minorP[dt][eid] = {'C': [o21, o22]}
+                self.ovmShear[dt][eid] = {'C': [ovm1, ovm2]}
+            elif eType == 'CQUAD4':
+                if len(line) == 18:  # Centroid
+                    (eType, eid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
+                                 f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                    nid = 'C'
+                    self.eType[eid] = eType
+                    self.fiberCurvature[eid] = {nid: [f1, f2]}
+                    self.oxx[dt][eid] = {nid: [ox1, ox2]}
+                    self.oyy[dt][eid] = {nid: [oy1, oy2]}
+                    self.txy[dt][eid] = {nid: [txy1, txy2]}
+                    self.angle[dt][eid] = {nid: [angle1, angle2]}
+                    self.majorP[dt][eid] = {nid: [o11, o12]}
+                    self.minorP[dt][eid] = {nid: [o21, o22]}
+                    self.ovmShear[dt][eid] = {nid: [ovm1, ovm2]}
+                else:
+                    msg = 'line=%r not supported...' % line
+                    raise NotImplementedError(msg)
+            else:
+                msg = 'eType=%r not supported...' % eType
+                raise NotImplementedError(msg)
 
     def delete_transient(self, dt):
         #del self.fiberCurvature[dt]
@@ -644,6 +689,10 @@ class PlateStressObject(StressObject):
         msg = []
         dts = self.oxx.keys()
         dts.sort()
+        if isinstance(dts[0], int):
+            dt_msg =  ' %s = %%-10i\n' % self.data_code['name']
+        else:
+            dt_msg =  ' %s = %%10.4E\n' % self.data_code['name']
         for eType in typesOut:
             #print "eType = ",eType
             eids = orderedETypes[eType]
@@ -654,28 +703,28 @@ class PlateStressObject(StressObject):
                 if eType in ['CQUAD4']:
                     if isBilinear:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+                            header[1] = dt_msg % dt
                             msg += header + msgPack
                             for eid in eids:
                                 out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4)
                                 msg.append(out)
                     else:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+                            header[1] = dt_msg % dt
                             msg += header + msgPack
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid)
                                 msg.append(out)
                 elif eType in ['CTRIA3']:
                     for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+                        header[1] = dt_msg % dt
                         msg += header + msgPack
                         for eid in eids:
                             out = self.writeF06_Tri3Transient(dt, eid)
                             msg.append(out)
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+                        header[1] = dt_msg % dt
                         msg += header + msgPack
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3)
@@ -688,7 +737,7 @@ class PlateStressObject(StressObject):
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 5)
                             msg.append(out)
                 else:
-                    raise NotImplementedError('eType = |%r|' % eType)  # CQUAD8, CTRIA6
+                    raise NotImplementedError('eType = %r' % eType)  # CQUAD8, CTRIA6
 
                 msg.append(pageStamp % pageNum)
                 f.write(''.join(msg))
@@ -861,7 +910,7 @@ class PlateStrainObject(StrainObject):
                    'majorP, minorP, evmShear\n')
         return msg
 
-    def add_f06_data(self, data, transient):
+    def add_f06_data(self, data, transient, data_code=None):
         if transient is None:
             eType = data[0][0]
             for line in data:
@@ -928,7 +977,54 @@ class PlateStrainObject(StrainObject):
                     msg = 'line=%s not supported...' % line
                     raise NotImplementedError(msg)
             return
-        raise NotImplementedError('transient results not supported')
+        eType = data[0][0]
+        assert 'name' in self.data_code, self.data_code
+
+        dt = transient[1]
+        if dt not in self.exx:
+            self.exx[dt] = {}
+            self.eyy[dt] = {}
+            self.exy[dt] = {}
+            self.angle[dt] = {}
+            self.majorP[dt] = {}
+            self.minorP[dt] = {}
+            self.evmShear[dt] = {}
+
+        for line in data:
+            eType = data[0][0]
+            if eType == 'CTRIA3':
+                (eType, eid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
+                 f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                self.eType[eid] = eType
+                self.fiberCurvature[eid] = {'C': [f1, f2]}
+                self.exx[dt][eid] = {'C': [ex1, ex2]}
+                self.eyy[dt][eid] = {'C': [ey1, ey2]}
+                self.exy[dt][eid] = {'C': [exy1, exy2]}
+                self.angle[dt][eid] = {'C': [angle1, angle2]}
+                self.majorP[dt][eid] = {'C': [e11, e12]}
+                self.minorP[dt][eid] = {'C': [e21, e22]}
+                self.evmShear[dt][eid] = {'C': [evm1, evm2]}
+            elif eType == 'CQUAD4':
+                if len(line) == 18:  # Centroid
+                    (
+                        eType, eid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
+                        f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                    nid = 'C'
+                    self.eType[eid] = eType
+                    self.fiberCurvature[eid] = {nid: [f1, f2]}
+                    self.exx[dt][eid] = {nid: [ex1, ex2]}
+                    self.eyy[dt][eid] = {nid: [ey1, ey2]}
+                    self.exy[dt][eid] = {nid: [exy1, exy2]}
+                    self.angle[dt][eid] = {nid: [angle1, angle2]}
+                    self.majorP[dt][eid] = {nid: [e11, e12]}
+                    self.minorP[dt][eid] = {nid: [e21, e22]}
+                    self.evmShear[dt][eid] = {nid: [evm1, evm2]}
+                else:
+                    msg = 'line=%s not supported...' % line
+                    raise NotImplementedError(msg)
+            else:
+                msg = 'eType=%r is not supported...' % eType
+                raise NotImplementedError(msg)
 
     def delete_transient(self, dt):
         #del self.fiberCurvature[dt]
@@ -1259,25 +1355,32 @@ class PlateStrainObject(StrainObject):
 
         dts = self.exx.keys()
         dts.sort()
+        if isinstance(dts[0], int):
+            dt_msg =  ' %s = %%-10i\n' % self.data_code['name']
+        else:
+            dt_msg =  ' %s = %%10.4E\n' % self.data_code['name']
+
         for eType in typesOut:
             eids = orderedETypes[eType]
             if eids:
-                msg = ['']
+                msg = []
+                msg_pack = msgPacks[eType]
                 eids.sort()
                 eType = self.eType[eid]
                 if eType in ['CQUAD4']:
                     if isBilinear:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+                            header[1] = dt_msg % dt
+                            msg.append('\n'.join(header + msg_pack))
                             for eid in eids:
-                                out = self.writeF06_Quad4_BilinearTransient(dt,
-                                                                            eid, 4)
+                                out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4)
                                 msg.append(out)
                             msg.append(pageStamp % pageNum)
                             pageNum += 1
                     else:
                         for dt in dts:
-                            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+                            header[1] = dt_msg % dt
+                            msg.append('\n'.join(header + msg_pack))
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid)
                                 msg.append(out)
@@ -1285,7 +1388,8 @@ class PlateStrainObject(StrainObject):
                             pageNum += 1
                 elif eType in ['CTRIA3']:
                     for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+                        header[1] = dt_msg % dt
+                        msg.append('\n'.join(header + msg_pack))
                         for eid in eids:
                             out = self.writeF06_Tri3Transient(dt, eid)
                             msg.append(out)
@@ -1293,7 +1397,8 @@ class PlateStrainObject(StrainObject):
                         pageNum += 1
                 elif eType in ['CQUAD8']:
                     for dt in dts:
-                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+                        header[1] = dt_msg % dt
+                        msg.append('\n'.join(header + msg_pack))
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 5)
                             msg.append(out)
@@ -1302,6 +1407,7 @@ class PlateStrainObject(StrainObject):
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+                        msg.append('\n'.join(header + msg_pack))
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3)
                             msg.append(out)

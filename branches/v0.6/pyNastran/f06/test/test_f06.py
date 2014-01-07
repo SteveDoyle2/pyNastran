@@ -22,7 +22,7 @@ def run_lots_of_files(files, debug=True, saveCases=True, skipFiles=[],
         #if baseName not in skipFiles and not baseName.startswith('acms') and i not in nSkip:
         if baseName not in skipFiles:
             print("%" * 80)
-            print('file=%s\n' % (f06file))
+            print('file=%s\n' % f06file)
             n = '%s ' % (i)
             sys.stderr.write('%sfile=%s\n' % (n, f06file))
             nTotal += 1
