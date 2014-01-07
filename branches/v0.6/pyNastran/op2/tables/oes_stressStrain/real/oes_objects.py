@@ -21,7 +21,7 @@ class OES_Object(scalarObject):
             return False
         elif self.s_code in [10, 11, 26, ]:  # fiber curvature
             return True
-        raise NotImplementedError('add s_code=%s' % (self.s_code))
+        raise NotImplementedError('add s_code=%s' % self.s_code)
 
     def isFiberDistance(self):
         return not(self.isCurvature())
@@ -52,9 +52,9 @@ class OES_Object(scalarObject):
         #validTypes = ['CTRIA3','CTRIA6','CQUAD4','CQUAD8']
         for eType in validTypes:
             orderedETypes[eType] = []
-        for eid, eType in sorted(self.eType.items()):
+        for eid, eType in sorted(self.eType.iteritems()):
             #print "eType = ",eType
-            assert eType in validTypes, 'unsupported eType=%s' % (eType)
+            assert eType in validTypes, 'unsupported eType=%s' % eType
             orderedETypes[eType].append(eid)
 
         minVals = []
@@ -76,7 +76,7 @@ class OES_Object(scalarObject):
         #print "minVals    = %s" %(minVals)
         #print "argList    = %s" %(argList)
         #print "TypesOut   = %s" %(TypesOut)
-        #print "orderedETypes.keys = %s" %(orderedETypes.keys())
+        #print("orderedETypes.keys = %s" % orderedETypes.keys())
         return (TypesOut, orderedETypes)
 
 
