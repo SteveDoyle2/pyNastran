@@ -549,7 +549,11 @@ class F06Writer(object):
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n', '']
         for isubcase, result in sorted(self.eigenvalues.iteritems()):  # goes first
-            (subtitle, label) = self.iSubcaseNameMap[isubcase]
+            try:
+                (subtitle, label) = self.iSubcaseNameMap[isubcase]
+            except KeyError:  # rarely happens (only eigenvalues were read), but...
+                subtitle = ''
+                label = ''
             subtitle = subtitle.strip()
             header[0] = '     %s\n' % subtitle
             header[1] = '0 %-32s                                                                            SUBCASE %i\n \n' % (label, isubcase)

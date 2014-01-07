@@ -57,6 +57,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
         self.lineMarkerMap = {
             'R E A L   E I G E N V E C T O R   N O': self._real_eigenvectors,
+            'C O M P L E X   E I G E N V E C T O R   NO' : self._complex_eigenvectors,
             'News file -' : self._executive_control_echo,
         }
         self.markerMap = {
@@ -433,6 +434,10 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             self.eigenvalues[isubcase].add_f06_data(data)
         self.iSubcases.append(isubcase)
 
+    def _complex_eigenvectors(self, marker):
+        headers = self.skip(2)
+        self.readTableDummy()
+
     def _real_eigenvectors(self, marker):
         """
         ::
@@ -617,6 +622,19 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             data.append(sline)
         return data
 
+    def readTableDummy(self):
+        sline = True
+        data = []
+        while sline:
+            sline = self.infile.readline()[1:].strip().split()
+            self.i += 1
+            if 'PAGE' in sline:
+                return data
+            if sline is None:
+                return data
+            data.append(sline)
+        return data
+
     def parseLine(self, sline, Format):
         """
         :self:   the object pointer
@@ -702,6 +720,12 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                 #print("\n2*marker = %r" % marker)
                 self.lineMarkerMap['R E A L   E I G E N V E C T O R   N O'](marker)
                 self.storedLines = []
+            elif 'C O M P L E X   E I G E N V E C T O R   NO' in marker:
+                blank = 0
+                #print("\n2*marker = %r" % marker)
+                self.lineMarkerMap['C O M P L E X   E I G E N V E C T O R   NO'](marker)
+                self.storedLines = []
+
             elif 'News file -' in marker:
                 blank = 0
                 self.lineMarkerMap['News file -']()

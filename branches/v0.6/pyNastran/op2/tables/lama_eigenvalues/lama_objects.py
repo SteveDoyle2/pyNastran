@@ -125,8 +125,7 @@ class ComplexEigenvalues(baseScalarObject):
     def get_stats(self):
         neigenvalues = len(self.extractionOrder)
         msg = []
-        msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__,
-                                                 neigenvalues))
+        msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__, neigenvalues))
         msg.append('  isubcase, extractionOrder, eigenvalues, '
                    'cycles, damping\n')
         return msg
@@ -149,18 +148,22 @@ class ComplexEigenvalues(baseScalarObject):
             self.addF06Line(line)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):  # not proper msg start
-        msg = header + ['                                        C O M P L E X   E I G E N V A L U E S\n',
-                        '   MODE    EXTRACTION      EIGENVALUE            CYCLES            DAMPING\n',
-                        '    NO.       ORDER\n']
-        #raise NotImplementedError()
+        msg = header + ['                                        C O M P L E X   E I G E N V A L U E   S U M M A R Y\n',
+                        '0                ROOT     EXTRACTION                  EIGENVALUE                     FREQUENCY              DAMPING\n',
+                        '                  NO.        ORDER             (REAL)           (IMAG)                (CYCLES)            COEFFICIENT\n']
+
         for (iMode, order) in sorted(self.extractionOrder.iteritems()):
-            eigen = self.eigenvalues[iMode]
+            eigr = self.eigenvalues[iMode][0]
+            eigi = self.eigenvalues[iMode][1]
+
             freq = self.cycles[iMode]
             damping = self.damping[iMode]
-            ([eigen, freq, damping], isAllZeros) = writeFloats13E([eigen, freq, damping])
-            msg.append(' %8s  %8s       %13s       %13s       %13s       %13s       %13s\n' % (iMode, order, eigen, freq, damping))
+            ([eigr, eigi, freq, damping], isAllZeros) = writeFloats13E([eigr, eigi, freq, damping])
+            #            imode order      eigr    eigi         freq        damping
+            msg.append(' %22s  %10s       %15s    %13s         %13s         %s\n' % (iMode, order, eigr, eigi, freq, damping.rstrip()))
 
         msg.append(pageStamp % pageNum)
+        f.write(''.join(msg))
         return pageNum
 
     def __repr__(self):
