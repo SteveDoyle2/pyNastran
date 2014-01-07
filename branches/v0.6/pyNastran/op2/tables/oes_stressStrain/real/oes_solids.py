@@ -76,11 +76,11 @@ class SolidStressObject(StressObject):
 
     def add_f06_data(self, data, transient):
         if transient is None:
+            dt = transient[1]
             if not hasattr(self, 'data'):
                 self.data = []
             self.data += data
         else:
-            #print('data', data)
             if not hasattr(self, 'data'):
                 self.data = {}
             #print(self.data)
@@ -150,6 +150,7 @@ class SolidStressObject(StressObject):
                     self.ovmShear[eid][nodeID] = float(ovmShear)
                     n += 3
             return
+        return
         raise NotImplementedError()
 
         (dtName, dt) = transient

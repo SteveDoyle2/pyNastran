@@ -83,8 +83,12 @@ class CelasStressObject(StressObject):
         self.eType[eid] = self.element_name
         self.stress[dt][eid] = stress
 
-    def add_f06_data(self, data, dt):
-        if dt is not None:
+    def add_f06_data(self, data, transient):
+        if transient is not None:
+            dt = transient[1]
+            assert not isinstance(dt, list)
+            if dt not in self.stress:
+                self.stress[dt] = {}
             for datai in data:
                 (eid, stressi) = datai
                 self.stress[dt][eid] = stressi
@@ -168,8 +172,11 @@ class CelasStrainObject(StrainObject):
         k.sort()
         return k
 
-    def add_f06_data(self, data, dt):
-        if dt is not None:
+    def add_f06_data(self, data, transient):
+        if transient is not None:
+            dt = transient[1]
+            if dt not in self.strain:
+                self.strain[dt] = {}
             for datai in data:
                 (eid, straini) = datai
                 self.strain[dt][eid] = straini

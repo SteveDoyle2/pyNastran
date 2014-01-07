@@ -65,10 +65,12 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             'N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O' : self._nastran_file_and_system_parameter_echo,
             'N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O':self._executive_control_echo,
             'C A S E    C O N T R O L    E C H O' : self._case_control_echo,
-            #'M O D E L   S U M M A R Y':self.summary,
             'G R I D   P O I N T   S I N G U L A R I T Y   T A B L E': self._grid_point_singularity_table,
 
             # dummy
+            'E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y': self._executive_control_echo,
+            'M O D E L   S U M M A R Y':self._executive_control_echo,
+            'M O D E L   S U M M A R Y          BULK = 0':self._executive_control_echo,
             'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._grid_point_singularity_table,
             'G R I D   P O I N T   F O R C E   B A L A N C E' : self._executive_control_echo,
             #====================================================================
@@ -92,6 +94,11 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             #'N O N - D I M E N S I O N A L    H I N G E    M O M E N T    D E R I V A T I V E   C O E F F I C I E N T S':  self._nondimensional_hinge_moment_derivative_coeffs,
             #'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S': self._aerostatic_data_recovery_output_tables,
             #'S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S': self._structural_monitor_point_integrated_loads,
+
+            'N O N - D I M E N S I O N A L   S T A B I L I T Y   A N D   C O N T R O L   D E R I V A T I V E   C O E F F I C I E N T S' : self._executive_control_echo,
+            'N O N - D I M E N S I O N A L    H I N G E    M O M E N T    D E R I V A T I V E   C O E F F I C I E N T S':  self._executive_control_echo,
+            'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S': self._executive_control_echo,
+            'S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S': self._executive_control_echo,
             #------------------------
             #                                    R O T O R   D Y N A M I C S   S U M M A R Y
             #                              R O T O R   D Y N A M I C S   M A S S   S U M M A R Y
@@ -101,7 +108,8 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
             # OUG tables
             'R E A L   E I G E N V A L U E S': self._real_eigenvalues,
-            #'C O M P L E X   E I G E N V A L U E   S U M M A R Y':self.getComplexEigenvalues,
+            'C O M P L E X   E I G E N V A L U E   S U M M A R Y':self._complex_eigenvalue_summary,
+
             'E L E M E N T   S T R A I N   E N E R G I E S': self._element_strain_energies,
             'D I S P L A C E M E N T   V E C T O R': self._displacement_vector,
             'C O M P L E X   D I S P L A C E M E N T   V E C T O R': self._complex_displacement_vector,
@@ -133,33 +141,42 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 3 )':self._strains_in_celas2_elements,
             'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 4 )':self._strains_in_celas2_elements,
             #====================================================================
-            # OES 2-D
+            # OES 2-D (no support for CQUAD8, CQUAD, CQUADR, CTRIAR, CTRAI6, CTRIAX, CTRIAX6)
             'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self._stresses_in_ctria3_elements,
             'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self._stresses_in_cquad4_elements,
             'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN': self._stresses_in_cquad4_bilinear_elements,
 
-            'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )': self._stresses_in_composite_ctria3_elements,
-            'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )': self._stresses_in_composite_cquad4_elements,
-
-            #==
-            # partial...
             'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self._strains_in_cquad4_elements,
             'S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self._strains_in_ctria3_elements,
 
+            #==
+            # composite partial ??? (e.g. bilinear quad)
+            'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )': self._stresses_in_composite_ctria3_elements,
+            'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )': self._stresses_in_composite_cquad4_elements,
+
             'S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )' : self._strains_in_composite_ctria3_elements,
             'S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )' : self._strains_in_composite_cquad4_elements,
+
+            #===
+            # ..todo:: not implemented
+            'S T R E S S E S   I N   T R I A X 6   E L E M E N T S' : self._executive_control_echo,
             #====================================================================
             # OES 3-D
-            'S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )': self._stresses_in_ctetra_elements,
-            'S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )': self._stresses_in_chexa_elements,
-            'S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )': self._stresses_in_cpenta_elements,
+            'S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )' : self._stresses_in_ctetra_elements,
+            'S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )' : self._stresses_in_chexa_elements,
+            'S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )' : self._stresses_in_cpenta_elements,
 
-            'S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )': self._strains_in_ctetra_elements,
-            'S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )': self._strains_in_chexa_elements,
-            'S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )': self._strains_in_cpenta_elements,
+            'S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )' : self._strains_in_ctetra_elements,
+            'S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )' : self._strains_in_chexa_elements,
+            'S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )' : self._strains_in_cpenta_elements,
             #====================================================================
-            # TRIAX - not done
-            'S T R E S S E S   I N   T R I A X 6   E L E M E N T S' : self._executive_control_echo,
+
+            # more not implemented...
+            'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )': self._executive_control_echo,
+            'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )': self._executive_control_echo,
+            'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )': self._executive_control_echo,
+            'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )': self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )' : self._executive_control_echo,
             'L O A D   V E C T O R' : self._executive_control_echo,
             #'* * * END OF JOB * * *': self.end(),
         }
@@ -304,7 +321,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             if isubcase == '':  # no subcase specified
                 raise RuntimeError('missing subcaseLine...\n%s' % msg)
             else:
-                isubcase = int(isubcase.strip('SUBCASE '))
+                isubcase = int(isubcase.split()[-1])
             #raise RuntimeError('missing subcaseLine...\n%s' % msg)
             #isubcase = 1
             #pass
@@ -313,7 +330,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             if isubcase == '':  # no subcase specified
                 raise RuntimeError('missing subcaseLine...\n%s' % msg)
             else:
-                isubcase = int(isubcase.strip('SUBCASE '))
+                isubcase = int(isubcase.split()[-1])
 
             #assert isinstance(isubcase,int),'isubcase=|%r|' % (isubcase)
             #print "subcaseName=%s isubcase=%s" % (subcaseName, isubcase)
@@ -392,7 +409,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             self.eigenvalues[isubcase].add_f06_data(data)
         self.iSubcases.append(isubcase)
 
-    def getComplexEigenvalues(self):
+    def _complex_eigenvalue_summary(self):
         """
         ::
 
