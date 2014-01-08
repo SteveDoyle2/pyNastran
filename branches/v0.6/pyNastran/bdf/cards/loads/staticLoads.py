@@ -1474,7 +1474,10 @@ class PLOAD4(Load):
 
     def write_bdf(self, size, card_writer):
         card = self.rawFields()
-        return card_writer(card)
+        if size == 8:
+            return print_card_8(card)
+        return print_card_16(card)
+        #return card_writer(card)
 
 
 class PLOADX1(Load):

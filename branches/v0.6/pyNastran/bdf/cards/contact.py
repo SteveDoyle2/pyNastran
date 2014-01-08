@@ -156,6 +156,11 @@ class BSURFS(BaseCard):
             fields += [eid, g1, g2, g3]
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)  # I think this is right...
+
+
 class BCTSET(BaseCard):
     """
     3D Contact Set Definition (SOLs 101, 601 and 701 only)
@@ -215,6 +220,10 @@ class BCTSET(BaseCard):
             fields += [sid, tid, fric, mind, maxd, None, None]
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class BCRPARA(BaseCard):
     """
@@ -253,6 +262,10 @@ class BCRPARA(BaseCard):
     def rawFields(self):
         fields = ['BCRPARA', self.crid, self.surf, self.offset, self.Type, self.mgp]
         return fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
 
 
 class BCTPARA(BaseCard):
@@ -332,6 +345,10 @@ class BCTPARA(BaseCard):
             fields.append(value)
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class BCTADD(BaseCard):
     """
@@ -375,3 +392,7 @@ class BCTADD(BaseCard):
     def rawFields(self):
         fields = ['BCTADD'] + self.S
         return fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)

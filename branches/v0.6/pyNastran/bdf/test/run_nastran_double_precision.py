@@ -2,22 +2,25 @@ import os
 import sys
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.f06.f06 import F06
+from pyNastran.f06.f06 import F06, FatalError
 
 
-if __name__ == '__main__':
-    bdf_name = sys.argv[1]
+def main(bdf_name, run_first_nastran=True):
     base, ext = os.path.splitext(bdf_name)
 
     print "len(sys.argv) =", len(sys.argv)
     #===========================
-    if len(sys.argv) == 2:
+    if run_first_nastran:
         # run nastran and verify the starting model is correct
         os.system('nastran scr=yes bat=no news=no old=no %s' % bdf_name)
 
         f06_name = base + '.f06'
-        model2 = F06(f06_name)
-        model2.read_f06()
+        try:
+            model2 = F06(f06_name)
+            model2.read_f06()
+        except FatalError as e:
+            print(e)
+            #return
     else:
         pass
     #===========================
@@ -35,5 +38,14 @@ if __name__ == '__main__':
     out_f06 = 'out.f06'
     model4 = F06(out_f06)
     model4.read_f06()
-
     print('\n\npassed!!')
+
+
+if __name__ == '__main__':
+    bdf_name = sys.argv[1]
+
+    run_first_nastran = False
+    if len(sys.argv) == 2:
+        run_first_nastran = True
+
+    main(bdf_name, run_first_nastran=run_first_nastran)

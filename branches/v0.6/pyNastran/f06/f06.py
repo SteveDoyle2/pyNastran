@@ -281,6 +281,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             line = self.infile.readline()[1:].strip()
             lines.append(line)
             self.i += 1
+            self.fatal_check(line)
         #print '\n'.join(lines)
         self.grid_point_weight.read_grid_point_weight(lines)
 
@@ -291,6 +292,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             line = self.infile.readline()[1:].strip()
             lines.append(line)
             self.i += 1
+            self.fatal_check(line)
         #self.grid_point_weight.read_grid_point_weight(lines)
 
     def _executive_control_echo(self):
@@ -314,6 +316,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             line = self.infile.readline()[1:].strip()
             lines.append(line)
             self.i += 1
+            self.fatal_check(line)
         #self.grid_point_weight.read_grid_point_weight(lines)
 
     def _grid_point_singularity_table(self):
@@ -323,6 +326,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             line = self.infile.readline()[1:].strip()
             lines.append(line)
             self.i += 1
+            self.fatal_check(line)
         #self.grid_point_weight.read_grid_point_weight(lines)
 
     def readSubcaseNameID(self):
