@@ -16,7 +16,8 @@ from pyNastran.bdf.cards.baseCard import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string, string_or_blank, blank, fields)
-
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 class BushingProperty(Property):
     type = 'BushingProperty'
@@ -154,7 +155,10 @@ class PBUSH(BushingProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        if size == 8:
+            return print_card_8(card)
+        return print_card_16(card)
+        #return card_writer(card)
 
 
 class PBUSH1D(BushingProperty):
@@ -360,6 +364,9 @@ class PBUSH1D(BushingProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
+        #if size == 8:
+            #return print_card_8(card)
+        #return print_card_16(card)
         return card_writer(card)
 
 
@@ -377,6 +384,9 @@ class PBUSH2D(BushingProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
+        #if size == 8:
+            #return print_card_8(card)
+        #return print_card_16(card)
         return card_writer(card)
 
 

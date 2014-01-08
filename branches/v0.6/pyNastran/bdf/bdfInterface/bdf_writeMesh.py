@@ -429,7 +429,8 @@ class WriteMesh(WriteMeshDeprecated):
         if self.materials:
             msg.append('$MATERIALS\n')
             for (mid, material) in sorted(self.materials.iteritems()):
-                msg.append(material.print_card(size))
+                #msg.append(material.print_card(size))
+                msg.append(material.write_bdf(size, card_writer))
             for (mid, material) in sorted(self.creepMaterials.iteritems()):
                 msg.append(material.print_card(size))
             for (mid, material) in sorted(self.materialDeps.iteritems()):
@@ -507,11 +508,14 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(bctpara.print_card(size))
 
             for (ID, bctset) in sorted(self.bctsets.iteritems()):
-                msg.append(bctset.print_card(size))
+                #msg.append(bctset.print_card(size))
+                msg.append(bctset.write_bdf(size, card_writer))
             for (ID, bsurfi) in sorted(self.bsurf.iteritems()):
-                msg.append(bsurfi.print_card(size))
+                #msg.append(bsurfi.print_card(size))
+                msg.append(bsurfi.write_bdf(size, card_writer))
             for (ID, bsurfsi) in sorted(self.bsurfs.iteritems()):
-                msg.append(bsurfsi.print_card(size))
+                #msg.append(bsurfsi.print_card(size))
+                msg.append(bsurfsi.write_bdf(size, card_writer))
         return ''.join(msg)
 
     def _write_optimization(self, size, card_writer):
@@ -581,13 +585,17 @@ class WriteMesh(WriteMeshDeprecated):
             self.cMethods or self.tsteps or self.tstepnls):
             msg.append('$DYNAMIC\n')
             for (ID, method) in sorted(self.methods.iteritems()):
-                msg.append(method.print_card(size))
+                #msg.append(method.print_card(size))
+                msg.append(method.write_bdf(size, card_writer))
             for (ID, cMethod) in sorted(self.cMethods.iteritems()):
-                msg.append(cMethod.print_card(size))
+                #msg.append(cMethod.print_card(size))
+                msg.append(cMethod.write_bdf(size, card_writer))
             for (ID, darea) in sorted(self.dareas.iteritems()):
-                msg.append(darea.print_card(size))
+                #msg.append(darea.print_card(size))
+                msg.append(darea.write_bdf(size, card_writer))
             for (ID, nlparm) in sorted(self.nlparms.iteritems()):
-                msg.append(nlparm.print_card(size))
+                #msg.append(nlparm.print_card(size))
+                msg.append(nlparm.write_bdf(size, card_writer))
             for (ID, nlpci) in sorted(self.nlpcis.iteritems()):
                 msg.append(nlpci.print_card(size))
             for (ID, tstep) in sorted(self.tsteps.iteritems()):

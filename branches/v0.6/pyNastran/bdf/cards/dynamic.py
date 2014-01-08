@@ -24,6 +24,7 @@ from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string_or_blank, blank, fields)
+from pyNastran.bdf.fieldWriter import print_card_8
 
 
 class FREQ(BaseCard):
@@ -525,3 +526,7 @@ class NLPARM(BaseCard):
                   fStress, lsTol, maxBisect, None, None, None, maxR, None,
                   rTolB]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card) # having trouble with double precision...

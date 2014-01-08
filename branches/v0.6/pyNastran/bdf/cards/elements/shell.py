@@ -1568,7 +1568,7 @@ class CQUAD4(QuadShell):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        if size == 8:
+        if size == 8 or len(card) == 7: # to last node
             return print_card_8(card)
         return print_card_16(card)
 

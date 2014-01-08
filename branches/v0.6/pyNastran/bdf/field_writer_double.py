@@ -83,6 +83,7 @@ def print_card_double(fields):
                 out += '*'
             out += '\n*       '
     out = out.rstrip(' \n*') + '\n'  # removes blank lines at the end of cards
+    #out = out.rstrip(' *')  # removes blank lines at the end of cards
     return out
 
 if __name__ == '__main__':

@@ -21,6 +21,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (fields,
     string, string_or_blank,
     integer_or_string, double_string_or_blank,
     blank)
+from pyNastran.bdf.fieldWriter import print_card_8
 
 
 class BSURF(BaseCard):
@@ -28,15 +29,15 @@ class BSURF(BaseCard):
     3D Contact Region Definition by Shell Elements (SOLs 101, 601 and 701)
 
     Defines a 3D contact region by shell element IDs.
-    
+
     1 2 3 4 5 6 7 8 9 10
     BSURF ID EID1 EID2 EID3 EID4 EID5 EID6 EID7
           EID8 EID9 EID10 -etc-
-    
+
     BSURF ID EID1 THRU EID2 BY INC
     EID8 EID9 EID10 EID11 -etc.-
     EID8 THRU EID9 BY INC
-    
+
     BSURF 15 5 THRU 21 BY 4
     27 30 32 33
     35 THRU 44
@@ -65,6 +66,9 @@ class BSURF(BaseCard):
 
     def rawFields(self):
         fields = ['BSURF', self.sid, None, None, None, None, None, None, None]
+        return fields + list(self.eids)
+
+        # is this right???
         packs = collapse_thru_by(self.eids, get_packs=True)
 
         pack = packs[0]
@@ -84,20 +88,24 @@ class BSURF(BaseCard):
                 if dv == 1:
                     fields += [minv, 'THRU', maxv, None, None, None, None]
                 else:
-                    fields += [minv, 'THRU', maxv, 'BY', dv, None, None]
+                    fields += [minv, 'THRU', maxv, 'BY',   dv, None, None]
             else:
-                fields += pack + [None]*8-len(pack)
+                fields += pack + [None]* (8 - len(pack))
         #for sid, tid, fric, mind, maxd in zip(self.sids, self.tids, self.frictions,
         #                                      self.min_distances, self.max_distances):
         #    fields += [sid, tid, fric, mind, maxd, None, None]
         return fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)
 
 
 class BSURFS(BaseCard):
     """
     Defines a 3D contact region by the faces of the CHEXA, CPENTA or CTETRA
     elements.
-    
+
     Remarks
     -------
     Remarks:
@@ -115,7 +123,7 @@ class BSURFS(BaseCard):
             #: Identification number of a contact region. See Remarks 2 and 3.
             #: (Integer > 0)
             self.id = integer(card, 1, 'id')
-            
+
             #: Element identification numbers of solid elements. (Integer > 0)
             self.eids = []
             #: Identification numbers of 3 corner grid points on the face (triangular
@@ -152,7 +160,7 @@ class BCTSET(BaseCard):
     """
     3D Contact Set Definition (SOLs 101, 601 and 701 only)
     Defines contact pairs of a 3D contact set.
-    
+
       1      2   3    4     5     6     7   8   9   10
     BCTSET CSID SID1 TID1 FRIC1 MIND1 MAXD1
                 SID2 TID2 FRIC2 MIND2 MAXD2
@@ -164,23 +172,23 @@ class BCTSET(BaseCard):
         if card:
             #: CSID Contact set identification number. (Integer > 0)
             self.csid = integer(card, 1, 'csid')
-            
+
             #: SIDi Source region (contactor) identification number for contact pair i.
             #: (Integer > 0)
             self.sids = []
-            
+
             #: TIDi Target region identification number for contact pair i. (Integer > 0)
             self.tids = []
-            
+
             #: FRICi Static coefficient of friction for contact pair i. (Real; Default = 0.0)
             self.frictions = []
-            
+
             #: MINDi Minimum search distance for contact. (Real) (Sol 101 only)
             self.min_distances = []
-            
+
             #: MAXDi Maximum search distance for contact. (Real) (Sol 101 only)
             self.max_distances = []
-            
+
             n = card.nFields()
             i = 2
             j = 1
@@ -309,7 +317,7 @@ class BCTPARA(BaseCard):
                     # ...
                     value = integer_double_or_blank(card, i, 'value%s' % j)
                     assert value is not None, '%s%i must not be None' % (param, j)
-                
+
                 self.params[param] = value
                 i += 2
                 j += 1
@@ -348,11 +356,11 @@ class BCTADD(BaseCard):
         if card:
             #: Contact set identification number. (Integer > 0)
             self.csid = integer(card, 1, 'csid')
-            
+
             #: Identification numbers of contact sets defined via BCTSET entries.
             #: (Integer > 0)
             self.S = []
-            
+
             i = 1
             j = 1
             while i < card.nFields():

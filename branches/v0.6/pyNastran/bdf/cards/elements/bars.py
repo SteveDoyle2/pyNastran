@@ -14,6 +14,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_double_or_blank, double, double_or_blank,
     string_or_blank, integer_double_string_or_blank, integer_or_double)
 from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 
 def _Lambda(model, n1, n2, debug=True):
@@ -1246,7 +1247,10 @@ class CBAR(LineElement):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        if size == 8:
+            return print_card_8(card)
+        return print_card_16(card)
+        #return card_writer(card)
 
 
 class CBEAM3(CBAR):
@@ -1895,7 +1899,10 @@ class CBEAM(CBAR):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        if size == 8:
+            return print_card_8(card)
+        return print_card_16(card)
+        #return card_writer(card)
 
 
 class CBEND(LineElement):

@@ -22,7 +22,7 @@ class NLPARM(object):
 
     def __init__(self):
         pass
-    
+
     def add(self, card=None, comment=''):
         if comment:
             self._comment = comment

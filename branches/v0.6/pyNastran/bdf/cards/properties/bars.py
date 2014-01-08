@@ -27,6 +27,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 from pyNastran.utils import is_string
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
 from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 def IyyBeam(b, h):
     return 1 / 12. * b * h ** 3
@@ -1290,7 +1291,10 @@ class PBARL(LineProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        if size == 8:
+            return print_card_8(card)
+        return print_card_16(card)
+        #return card_writer(card)
 
 
 class PBCOMP(LineProperty):
@@ -2038,8 +2042,13 @@ class PBEAML(IntegratedLineProperty):
         return list_fields
 
     def write_bdf(self, size, card_writer):
+        """..todo:: having bug with PBEAML"""
+        #if size == 8:
         card = self.reprFields()
-        return card_writer(card)
+        return print_card_8(card)
+        #card = self.rawFields()
+        #return print_card_16(card)
+        #return card_writer(card)
 
 
 class PBEAM3(LineProperty):  # not done, cleanup

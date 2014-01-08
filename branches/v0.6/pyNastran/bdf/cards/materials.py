@@ -25,6 +25,9 @@ from pyNastran.bdf.cards.tables import Table
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string, string_or_blank, blank)
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
+
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""
@@ -307,7 +310,10 @@ class MAT1(IsotropicMaterial):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        if size == 8:
+            return print_card_8(card)
+        return print_card_16(card)
+        #return card_writer(card)
 
 
 class MAT2(AnisotropicMaterial):
@@ -1097,7 +1103,10 @@ class MAT10(Material):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        if size == 8:
+            return print_card_8(card)
+        return print_card_16(card)
+        #return card_writer(card)
 
 
 class MAT11(Material):
@@ -1370,6 +1379,10 @@ class MATHP(HyperelasticMaterial):
                   self.tab1, self.tab2, self.tab3, self.tab4,
                   None, None, None, self.tabd]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
 
 
 class MaterialDependence(BaseCard):

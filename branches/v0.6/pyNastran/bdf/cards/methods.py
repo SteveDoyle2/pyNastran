@@ -22,6 +22,8 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     string, string_or_blank,
     components, components_or_blank,
     integer_double_string_or_blank, blank, interpret_value)
+#from pyNastran.bdf.fieldWriter import print_card_8
+
 
 class Method(BaseCard):
     """
@@ -101,6 +103,10 @@ class EIGB(Method):
         list_fields = ['EIGB', self.sid, self.method, self.L1, self.L2, nep, ndp,
                   ndn, None, norm, self.G, self.C]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
 
 
 class EIGC(Method):
@@ -273,6 +279,10 @@ class EIGC(Method):
         list_fields += self.reprMethod()
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class EIGP(Method):
     """
@@ -318,6 +328,10 @@ class EIGP(Method):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
 
 
 class EIGR(Method):
@@ -390,6 +404,10 @@ class EIGR(Method):
         list_fields = ['EIGR', self.sid, method, self.f1, self.f2, self.ne,
                   self.nd, None, None, norm, self.G, self.C]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
 
 
 class EIGRL(Method):
@@ -475,3 +493,7 @@ class EIGRL(Method):
         for (option, value) in izip(self.options, self.values):
             list_fields += [option + '=' + str(value)]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
