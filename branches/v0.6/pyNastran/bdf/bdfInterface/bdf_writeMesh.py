@@ -283,7 +283,7 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(self.gridSet.print_card(size))
             for (nid, node) in sorted(self.nodes.iteritems()):
                 #msg.append(node.print_card(size))
-                msg.append(node.write_bdf(card_writer))
+                msg.append(node.write_bdf(size, card_writer))
         if 0:
             self._write_nodes_associated(size)
 

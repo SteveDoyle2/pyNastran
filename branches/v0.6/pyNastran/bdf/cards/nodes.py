@@ -88,9 +88,9 @@ class SPOINT(Node):
             list_fields = ['SPOINT'] + collapse_thru(self.nid)
         return list_fields
 
-    def write_bdf(self, f, method):
+    def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        f.write(print_card_8(card))
+        return print_card_8(card)
 
 
 class SPOINTs(Node):
@@ -151,9 +151,9 @@ class SPOINTs(Node):
     def reprFields(self):
         return self.rawFields()
 
-    def write_bdf(self, f, method):
+    def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        f.write(print_card_8(card))
+        return print_card_8(card)
 
 
 class GRDSET(Node):
@@ -294,9 +294,9 @@ class GRIDB(Node):
                        idf]
         return list_fields
 
-    def write_bdf(self, f, method):
+    def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        f.write(method(card))
+        return card_writer(card)
 
 
 class GRID(Node):
@@ -481,9 +481,9 @@ class GRID(Node):
                                                                  seid]
         return list_fields
 
-    def write_bdf(self, method):
+    def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return method(card)
+        return card_writer(card)
 
 
 class POINT(Node):
@@ -602,6 +602,6 @@ class POINT(Node):
         list_fields = ['POINT', self.nid, cp] + list(self.xyz)
         return list_fields
 
-    def write_bdf(self, f, method):
+    def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        f.write(method(card))
+        return card_writer(card)
