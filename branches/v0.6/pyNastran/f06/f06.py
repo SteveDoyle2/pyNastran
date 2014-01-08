@@ -8,7 +8,6 @@ from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import get_logger
 
 #ComplexEigenvalues,strainEnergyDensity,TemperatureGradientObject
-from pyNastran.op2.tables.oug.oug_eigenvectors import EigenVectorObject  # ,ComplexEigenVectorObject
 from pyNastran.op2.tables.lama_eigenvalues.lama_objects import RealEigenvalues, ComplexEigenvalues
 
 
@@ -179,8 +178,18 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             'S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )' : self._strains_in_chexa_elements,
             'S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )' : self._strains_in_cpenta_elements,
             #====================================================================
-
             # more not implemented...
+
+            # STRESS
+            'S T R E S S E S   I N   H Y P E R E L A S T I C   H E X A H E D R O N   E L E M E N T S  ( HEXA8FD )' : self._executive_control_echo,
+
+            'N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUAD4FD )' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S  IN  H Y P E R E L A S T I C   A X I S Y M M.  Q U A D R I L A T E R A L  ELEMENTS (QUADXFD)' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )' : self._executive_control_echo,
+
+            # FORCE
             'F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )' : self._executive_control_echo,
             'F O R C E S   I N   R O D   E L E M E N T S     ( C R O D )': self._executive_control_echo,
             'F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )':  self._executive_control_echo,
@@ -189,7 +198,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )': self._executive_control_echo,
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )': self._executive_control_echo,
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )': self._executive_control_echo,
-            'N O N L I N E A R   S T R E S S E S   I N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )' : self._executive_control_echo,
+
             'L O A D   V E C T O R' : self._executive_control_echo,
             #'* * * END OF JOB * * *': self.end(),
         }
@@ -291,7 +300,12 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             line = self.infile.readline()[1:].strip()
             lines.append(line)
             self.i += 1
+            self.fatal_check(line)
         #self.grid_point_weight.read_grid_point_weight(lines)
+
+    def fatal_check(self, line):
+        if 'FATAL' in line:
+            raise FatalError(line)
 
     def _nastran_file_and_system_parameter_echo(self):
         line = ''
@@ -319,11 +333,13 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         """
         subtitle = self.storedLines[-3].strip()
         #print(''.join(self.storedLines[-3:]))
+
+        msg = ''
+        for i, line in enumerate(self.storedLines[-4:]):
+            msg += '%i -> %s\n' % (-4 + i, line.rstrip())
+
         if self.Title is None or self.Title == '' and len(self.storedLines) > 4:
             self.Title = self.storedLines[-4][1:75].strip()
-            msg = ''
-            for i, line in enumerate(self.storedLines[-4:]):
-                msg += '%i -> %s\n' % (-4 + i, line.rstrip())
             assert 'D I S P L A C' not in self.Title, msg
         #self.Title = subcaseName  # 'no title'
 
@@ -450,66 +466,6 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         headers = self.skip(2)
         self.readTableDummy()
 
-    def _real_eigenvectors(self, marker):
-        """
-        ::
-                                                                                                                 SUBCASE 1
-          EIGENVALUE =  6.158494E+07
-              CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
-
-          POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
-                 1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
-              2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
-
-        * analysis_code = 2 (Normal modes)
-        * table_code    = 7 (Eigenvector)
-        * device_code   = 1 (Print)
-        * sort_code     = 0 (Sort2,Real,Sorted Results) => sort_bits = [0,0,0]
-        * format_code   = 1 (Real)
-        * #s_code        = 0 (Stress)
-        * num_wide      = 8 (???)
-        """
-        cycle, iMode = marker.strip().split('R E A L   E I G E N V E C T O R   N O .')
-        iMode = int(iMode)
-
-        cycles = cycle.strip().split('=')
-        #print smarker
-        assert 'CYCLES' == cycles[0].strip(), 'marker=%s' % marker
-        cycle = float(cycles[1])
-
-        #print "marker = |%s|" %(marker)
-        #subcaseName = '???'
-        #print self.storedLines
-        #isubcase = self.storedLines[-2].strip()[1:]
-        #isubcase = int(isubcase.strip('SUBCASE '))
-        #print "subcaseName=%s isubcase=%s" %(subcaseName,isubcase)
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
-        eigenvalue_real = transient[1]
-        headers = self.skip(2)
-
-        data_code = {'log': self.log, 'analysis_code': analysis_code,
-                    'device_code': 1, 'table_code': 7, 'sort_code': 0,
-                    'sort_bits': [0, 0, 0], 'num_wide': 8, 'format_code': 1,
-                    'mode': iMode, 'eigr': eigenvalue_real, 'mode_cycle': cycle,
-                    'dataNames': ['mode', 'eigr', 'mode_cycle'],
-                    'name': 'mode', 'table_name': 'OUGV1',
-                    'nonlinear_factor': iMode,
-                    #'s_code':0,
-                    #'element_name':'CBAR','element_type':34,'stress_bits':stress_bits,
-                    }
-
-        dataTypes = [int, str, float, float, float, float, float, float]
-        data = self.readTable(dataTypes)
-
-        #print("cycle=%-8s eigen=%s" % (cycle, eigenvalue_real))
-        #print "isubcase = %s" % isubcase
-        if isubcase in self.eigenvectors:
-            self.eigenvectors[isubcase].read_f06_data(data_code, data)
-        else:
-            is_sort1 = True
-            self.eigenvectors[isubcase] = EigenVectorObject(data_code, is_sort1, isubcase, iMode)
-            self.eigenvectors[isubcase].read_f06_data(data_code, data)
-
     def _element_strain_energies(self):
         """
         ::
@@ -614,7 +570,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                 out.append(entry2)
         return out
 
-    def readTable(self, Format):
+    def readTable(self, Format, debug=False):
         """
         Reads displacement, spc/mpc forces
 
@@ -625,6 +581,8 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         data = []
         while sline:
             sline = self.infile.readline()[1:].strip().split()
+            if debug:
+                print sline
             self.i += 1
             if 'PAGE' in sline:
                 return data

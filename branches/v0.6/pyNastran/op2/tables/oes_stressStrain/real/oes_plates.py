@@ -172,7 +172,7 @@ class PlateStressObject(StressObject):
                     self.minorP[dt][eid] = {nid: [o21, o22]}
                     self.ovmShear[dt][eid] = {nid: [ovm1, ovm2]}
                 else:
-                    msg = 'line=%r not supported...' % line
+                    msg = 'line=%r not supported...len=%i' % (line, len(line))
                     raise NotImplementedError(msg)
             else:
                 msg = 'eType=%r not supported...' % eType
@@ -478,7 +478,7 @@ class PlateStressObject(StressObject):
                         out = self._write_matlab_quad4_bilinear(eid, 3)
                         msg.append(out)
                 else:
-                    raise NotImplementedError('eType = |%r|' % eType)  # CQUAD8, CTRIA6
+                    raise NotImplementedError('eType = %r' % eType)  # CQUAD8, CTRIA6
                 f.write(''.join(msg))
                 msg = []
 
@@ -607,8 +607,8 @@ class PlateStressObject(StressObject):
                         out = self.writeF06_Quad4_Bilinear(eid, 3)
                         msg.append(out)
                 else:
-                    raise NotImplementedError('eType = |%r|' %
-                                              (eType))  # CQUAD8, CTRIA6
+                    raise NotImplementedError('eType = %r' % eType)  # CQUAD8, CTRIA6
+
                 msg.append(pageStamp % pageNum)
                 f.write(''.join(msg))
                 msg = ['']
@@ -971,8 +971,9 @@ class PlateStrainObject(StrainObject):
                         self.minorP[eid][nid] = [e21, e22]
                         self.evmShear[eid][nid] = [evm1, evm2]
                     else:
-                        assert len(line) == 19, 'len(line)=%s' % len(line)
-                        raise NotImplementedError()
+                        #assert len(line) == 19, 'len(line)=%s' % len(line)
+                        msg = 'line=%r not supported...len=%i' % (line, len(line))
+                        raise NotImplementedError(msg)
                 else:
                     msg = 'line=%s not supported...' % line
                     raise NotImplementedError(msg)

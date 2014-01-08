@@ -614,14 +614,18 @@ class ComplexTableObject(scalarObject):
     def add_f06_data(self, data, transient):
         if transient is None:
             for line in data:
-                try:
-                    (nodeID, gridType, v1, v2, v3, v4, v5, v6) = line
-                except:
-                    print('line = %r' % line)
-                    raise
-                self.gridTypes[nodeID] = gridType
-                self.translations[self.dt][nodeID] = [v1, v2, v3]  # dx,dy,dz
-                self.rotations[self.dt][nodeID] = [v4, v5, v6]  # rx,ry,rz
+                nodeID, gridType = line[:2]
+                if gridType == 'G':
+                    try:
+                        (v1, v2, v3, v4, v5, v6) = line[2:]
+                    except:
+                        print('line = %r' % line)
+                        raise
+                    self.gridTypes[nodeID] = gridType
+                    self.translations[self.dt][nodeID] = [v1, v2, v3]  # dx,dy,dz
+                    self.rotations[self.dt][nodeID] = [v4, v5, v6]  # rx,ry,rz
+                else:
+                    raiseNotImplementedError(gridType)
             return
 
         (dtName, dt) = transient

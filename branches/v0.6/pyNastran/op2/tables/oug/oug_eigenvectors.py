@@ -37,11 +37,21 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
             self.update_mode(data_code, imode)
 
         for line in data:
-            (nid, gridType, t1, t2, t3, r1, r2, r3) = line
-            self.gridTypes[nid] = gridType
-            self.translations[imode][nid] = array([t1, t2, t3])
-            self.rotations[imode][nid] = array([r1, r2, r3])
-        assert self.eigrs[-1] == data_code['eigr']
+            (node_id, gridType, t1) = line[:3]
+            self.gridTypes[node_id] = gridType
+
+            if gridType == 'G':
+                t2, t3, r1, r2, r3 = line[3:]
+                self.translations[imode][node_id] = array([t1, t2, t3])
+                self.rotations[imode][node_id] = array([r1, r2, r3])
+            else:
+                t2 = t3 = r1 = r2 = r3 = 0.0
+                for i, t1 in enumerate(line[3:]):
+                    node_id2 = node_id + i + 1
+                    self.translations[imode][node_id2] = array([t1, t2, t3])
+                    self.rotations[imode][node_id2] = array([r1, r2, r3])
+
+        assert self.eigrs[-1] == data_code['eigr'], 'eigrs=%s\ndata_code[eigrs]=%s' %(self.eigrs, data_code['eigr'])
 
     def update_mode(self, data_code, imode):
         """

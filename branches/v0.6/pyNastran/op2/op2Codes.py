@@ -382,8 +382,8 @@ class Op2Codes(object):
         elif format_code == 3:
             formatWord = "Magnitude/Phase"
         else:
-            formatWord = '???'
-            #msg = 'unsupported format_code:  format_code=%s\n' %(format_code)
+            formatWord = '\n%18s1 - Real\n%18s2-Real/Imaginary\n%18s3-Magnitude/Phase\n' % ('','','')
+            #msg = 'unsupported format_code:  format_code=%s\n' % format_code
             #raise InvalidFormatCodeError(msg)
 
         if   self.sort_bits[0] == 0:
@@ -476,8 +476,10 @@ class Op2Codes(object):
             DispTemp = 'Displacement'
         elif thermal == 1:
             DispTemp = 'Temperature'
+        elif thermal is None:
+            raise RuntimeError('thermal_code is not specified; thermal_code=None')
         else:
-            DispTemp = 'Displacement/Temperature'
+            DispTemp = 'Displacement/Temperature; thermal=%r' % thermal
 
         table = '???'
         if self.table_code == 1:

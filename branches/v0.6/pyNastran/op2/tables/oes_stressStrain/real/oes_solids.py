@@ -565,6 +565,7 @@ class SolidStrainObject(StrainObject):
         else:
             if not hasattr(self, 'data'):
                 self.data = {}
+            dt = transient[1]
             if dt not in self.data:
                 self.data[dt] = []
             for line in data:
