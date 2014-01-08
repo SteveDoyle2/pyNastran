@@ -13,6 +13,7 @@ from pyNastran.bdf.cards.baseCard import Element #, Mid
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_double_or_blank, double, double_or_blank,
     string_or_blank, integer_double_string_or_blank, integer_or_double)
+from pyNastran.bdf.fieldWriter import print_card_8
 
 
 def _Lambda(model, n1, n2, debug=True):
@@ -583,6 +584,10 @@ class CROD(RodElement):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)
+
 
 class CTUBE(RodElement):
     type = 'CTUBE'
@@ -654,6 +659,10 @@ class CTUBE(RodElement):
     def rawFields(self):
         list_fields = ['CTUBE', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)
 
 
 class CONROD(RodElement):
@@ -796,6 +805,10 @@ class CONROD(RodElement):
                   self.A, j, c, nsm]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class CBAR(LineElement):
     """
@@ -818,8 +831,8 @@ class CBAR(LineElement):
     asterType = 'CBAR'
     _field_map = {
         1: 'eid', 2:'pid', 3:'ga', 4:'gb',
-        8:'offt', 9:'pa', 10:'pb', 11:'w1a', 12:'w2a', 13:'w3a', 
-        14:'w1b', 15:'w2b', 16:'w3b', 
+        8:'offt', 9:'pa', 10:'pb', 11:'w1a', 12:'w2a', 13:'w3a',
+        14:'w1b', 15:'w2b', 16:'w3b',
     }
 
     def _update_field_helper(self, n, value):
@@ -1231,6 +1244,10 @@ class CBAR(LineElement):
                   x3, offt, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class CBEAM3(CBAR):
     """
@@ -1320,6 +1337,10 @@ class CBEAM3(CBAR):
                   twa, twb, twc, self.sa, self.sb, self.sc]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class CBEAM(CBAR):
     """
@@ -1338,8 +1359,8 @@ class CBEAM(CBAR):
     type = 'CBEAM'
     _field_map = {
         1: 'eid', 2:'pid', 3:'ga', 4:'gb', #5:'x_g0', 6:'g1', 7:'g2',
-        #8:'offt', 
-        9:'pa', 10:'pb', 11:'w1a', 12:'w2a', 13:'w3a', 
+        #8:'offt',
+        9:'pa', 10:'pb', 11:'w1a', 12:'w2a', 13:'w3a',
         14:'w1b', 15:'w2b', 16:'w3b', 17:'sa', 18:'sb',
     }
 
@@ -1872,11 +1893,15 @@ class CBEAM(CBAR):
                   w1b, w2b, w3b, self.sa, self.sb]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class CBEND(LineElement):
     type = 'CBEND'
     _field_map = {
-        1: 'eid', 2:'pid', 3:'ga', 4:'gb', 8:'geom', 
+        1: 'eid', 2:'pid', 3:'ga', 4:'gb', 8:'geom',
     }
 
     def _update_field_helper(self, n, value):
@@ -1946,3 +1971,7 @@ class CBEND(LineElement):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)

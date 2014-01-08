@@ -152,6 +152,10 @@ class PBUSH(BushingProperty):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class PBUSH1D(BushingProperty):
     type = 'PBUSH1D'
@@ -354,6 +358,10 @@ class PBUSH1D(BushingProperty):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class PBUSH2D(BushingProperty):
     type = 'PBUSH2D'
@@ -367,6 +375,10 @@ class PBUSH2D(BushingProperty):
         else:
             raise NotImplementedError()
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class PBUSHT(BushingProperty):
     type = 'PBUSHT'
@@ -379,3 +391,7 @@ class PBUSHT(BushingProperty):
             raise NotImplementedError()
         else:
             raise NotImplementedError()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)

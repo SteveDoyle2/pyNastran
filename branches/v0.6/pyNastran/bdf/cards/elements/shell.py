@@ -30,7 +30,8 @@ from pyNastran.utils import list_print
 from pyNastran.utils.mathematics import Area, norm, centroid_triangle
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
-
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 def _triangle_area_centroid_normal(nodes):
     """
@@ -1564,6 +1565,12 @@ class CQUAD4(QuadShell):
         list_fields = (['CQUAD4', self.eid, self.Pid()] + self.nodeIDs() +
                   [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return print_card_8(card)
+        return print_card_16(card)
 
 
 class CQUADR(QuadShell):

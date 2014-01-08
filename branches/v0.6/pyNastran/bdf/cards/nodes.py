@@ -8,7 +8,7 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string)
-
+from pyNastran.bdf.fieldWriter import print_card_8
 
 class Ring(BaseCard):
     """Generic Ring base class"""
@@ -60,6 +60,10 @@ class RINGAX(Ring):
                   None, self.ps]
         return list_fields
 
+    def write_bdf(self, f, method):
+        card = self.reprFields()
+        f.write(method(card))
+
 
 class SPOINT(Node):
     type = 'SPOINT'
@@ -83,6 +87,10 @@ class SPOINT(Node):
         else:
             list_fields = ['SPOINT'] + collapse_thru(self.nid)
         return list_fields
+
+    def write_bdf(self, f, method):
+        card = self.reprFields()
+        f.write(print_card_8(card))
 
 
 class SPOINTs(Node):
@@ -142,6 +150,10 @@ class SPOINTs(Node):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, f, method):
+        card = self.reprFields()
+        f.write(print_card_8(card))
 
 
 class GRDSET(Node):
@@ -222,6 +234,10 @@ class GRDSET(Node):
         list_fields = ['GRDSET', None, cp, None, None, None, cd, ps, seid]
         return list_fields
 
+    def write_bdf(self, f, method):
+        card = self.reprFields()
+        f.write(print_card_8(card))
+
 
 class GRIDB(Node):
     type = 'GRIDB'
@@ -277,6 +293,10 @@ class GRIDB(Node):
         list_fields = ['GRIDB', self.nid, None, None, self.phi, None, cd, ps,
                        idf]
         return list_fields
+
+    def write_bdf(self, f, method):
+        card = self.reprFields()
+        f.write(method(card))
 
 
 class GRID(Node):
@@ -461,6 +481,10 @@ class GRID(Node):
                                                                  seid]
         return list_fields
 
+    def write_bdf(self, method):
+        card = self.reprFields()
+        return method(card)
+
 
 class POINT(Node):
     """
@@ -577,3 +601,7 @@ class POINT(Node):
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = ['POINT', self.nid, cp] + list(self.xyz)
         return list_fields
+
+    def write_bdf(self, f, method):
+        card = self.reprFields()
+        f.write(method(card))

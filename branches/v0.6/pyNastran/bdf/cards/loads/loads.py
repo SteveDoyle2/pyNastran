@@ -25,6 +25,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_string_or_blank,
     string_or_blank, integer_double_or_blank,
     components_or_blank)
+from pyNastran.bdf.fieldWriter import print_card_8
 
 
 class Load(BaseCard):
@@ -210,6 +211,10 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return print_card_8(card)
+
 
 class DLOAD(LoadCombination):
     type = 'DLOAD'
@@ -227,6 +232,10 @@ class DLOAD(LoadCombination):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return print_card_8(card)
 
 
 class DAREA(BaseCard):
@@ -325,6 +334,10 @@ class SLOAD(Load):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, f, size=8):
+        card = self.rawFields()
+        f.write(print_card_8(card))
+
 
 class TLOAD1(TabularLoad):
     r"""
@@ -412,6 +425,10 @@ class TLOAD1(TabularLoad):
         list_fields = ['TLOAD1', self.sid, self.exciteID, self.delay, self.Type,
                   self.Tid(), us0, vs0]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
 
 
 class TLOAD2(TabularLoad):
@@ -509,6 +526,10 @@ class TLOAD2(TabularLoad):
         list_fields = ['TLOAD2', self.sid, self.exciteID, self.delay, self.Type,
                   self.T1, self.T2, frequency, phase, c, b, us0, vs0]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
 
 
 class RFORCE(Load):
@@ -653,6 +674,10 @@ class RLOAD1(TabularLoad):
                   self.Tc(), self.Td(), Type]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class RLOAD2(TabularLoad):
     r"""
@@ -738,6 +763,10 @@ class RLOAD2(TabularLoad):
                   self.Tb(), self.Tp(), Type]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class RandomLoad(BaseCard):
     def __init__(self, card, data):
@@ -802,3 +831,7 @@ class RANDPS(RandomLoad):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)

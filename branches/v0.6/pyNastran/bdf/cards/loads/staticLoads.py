@@ -30,6 +30,9 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     string, string_or_blank,
     integer_or_string, fields,
     integer_string_or_blank)
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
+
 
 class LOAD(LoadCombination):
     type = 'LOAD'
@@ -266,6 +269,14 @@ class LOAD(LoadCombination):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        if size == 8:
+            return print_card_8(card)
+        else:
+            return print_card_16(card)
+        #return card_writer(card)
+
 
 class GRAV(BaseCard):
     """
@@ -363,6 +374,11 @@ class GRAV(BaseCard):
         list_fields = ['GRAV', self.sid, self.Cid(), self.scale] + N + [mb]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return card_writer(card)
+
+
 
 class ACCEL1(BaseCard):
     """
@@ -425,6 +441,10 @@ class ACCEL1(BaseCard):
                   ] + self.nodeIDs()
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return card_writer(card)
+
 
 class Force(Load):
     """Generic class for all Forces"""
@@ -481,6 +501,10 @@ class Force(Load):
                 forceConstraints, momentConstraints,
                 gravityLoads)
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return card_writer(card)
+
 
 class Moment(Load):
     """Generic class for all Moments"""
@@ -531,6 +555,10 @@ class Moment(Load):
 
     def M(self):
         return self.xyz * self.mag
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return card_writer(card)
 
 
 class FORCE(Force):
@@ -592,6 +620,13 @@ class FORCE(Force):
                        self.mag] + list(self.xyz)
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        if size == 8:
+            return print_card_8(card)
+        return print_card_16(card)
+        #return card_writer(card)
+
 
 class FORCE1(Force):
     """
@@ -650,6 +685,10 @@ class FORCE1(Force):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return card_writer(card)
 
 
 class FORCE2(Force):
@@ -732,6 +771,10 @@ class FORCE2(Force):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return card_writer(card)
+
 
 class MOMENT(Moment):
     type = 'MOMENT'
@@ -783,6 +826,10 @@ class MOMENT(Moment):
         list_fields = ['MOMENT', self.sid, self.node, cid,
                   self.mag] + list(self.xyz)
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return card_writer(card)
 
 
 class MOMENT1(Moment):
@@ -852,6 +899,10 @@ class MOMENT1(Moment):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return card_writer(card)
 
 
 class MOMENT2(Moment):
@@ -939,6 +990,10 @@ class MOMENT2(Moment):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return card_writer(card)
+
 
 class PLOAD(Load):
     type = 'PLOAD'
@@ -981,6 +1036,10 @@ class PLOAD(Load):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return card_writer(card)
 
 
 class PLOAD1(Load):
@@ -1188,6 +1247,10 @@ class PLOAD1(Load):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return card_writer(card)
+
 
 class PLOAD2(Load):
     type = 'PLOAD2'
@@ -1232,6 +1295,10 @@ class PLOAD2(Load):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return card_writer(card)
 
 
 class PLOAD4(Load):
@@ -1405,6 +1472,10 @@ class PLOAD4(Load):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return card_writer(card)
+
 
 class PLOADX1(Load):
     type = 'PLOADX1'
@@ -1442,3 +1513,7 @@ class PLOADX1(Load):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return card_writer(card)

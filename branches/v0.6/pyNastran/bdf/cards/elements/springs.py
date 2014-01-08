@@ -19,6 +19,7 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                        double, double_or_blank)
+from pyNastran.bdf.fieldWriter import print_card_8
 
 
 class SpringElement(Element):
@@ -153,7 +154,6 @@ class CELAS1(SpringElement):
                   self.c1, nodes[1], self.c2]
         return list_fields
 
-
     def Stiffness(self, model, node_ids, index0s, fnorm):
         ki = self.K()
         k = ki * array([[1, -1,],
@@ -202,6 +202,10 @@ class CELAS1(SpringElement):
         axial_stress = axial_force * s
 
         return (axial_strain, axial_stress, axial_force)
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)
 
 
 class CELAS2(SpringElement):
@@ -385,6 +389,10 @@ class CELAS2(SpringElement):
 
         return (axial_strain, axial_stress, axial_force)
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)
+
 
 class CELAS3(SpringElement):
     type = 'CELAS3'
@@ -476,6 +484,10 @@ class CELAS3(SpringElement):
         #s2 = set_blank_if_default(self.s2,0)
         #list_fields = ['CELAS3',self.eid,self.Pid(),s1,s2]
         #return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)
 
 
 class CELAS4(SpringElement):
@@ -569,3 +581,7 @@ class CELAS4(SpringElement):
         #s2 = set_blank_if_default(self.s2,0)
         #list_fields = ['CELAS4',self.eid,self.Pid(),s1,s2]
         #return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)

@@ -17,6 +17,7 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_double_or_blank, double_or_blank, string_or_blank) # double
+from pyNastran.bdf.fieldWriter import print_card_8
 
 
 class BushElement(Element):
@@ -189,6 +190,10 @@ class CBUSH(BushElement):
                   x + [self.Cid(), s, ocid] + self.si)
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)
+
 
 class CBUSH1D(BushElement):
     type = 'CBUSH1D'
@@ -256,6 +261,10 @@ class CBUSH1D(BushElement):
 
     #def reprFields(self):
         #return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)
 
 
 class CBUSH2D(BushElement):
@@ -334,3 +343,7 @@ class CBUSH2D(BushElement):
 
     #def reprFields(self):
         #return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)

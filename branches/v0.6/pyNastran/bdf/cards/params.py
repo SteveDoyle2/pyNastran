@@ -7,6 +7,8 @@ from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer_or_blank,
     double_or_blank, string, string_or_blank,
     integer_double_or_string)
+from pyNastran.bdf.fieldWriter import print_card_8
+
 
 class PARAM(BaseCard):
     type = 'PARAM'
@@ -190,3 +192,8 @@ class PARAM(BaseCard):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        #return print_card_8(card)  # works
+        return card_writer(card)

@@ -15,7 +15,7 @@ def print_scientific_double(value):
     svalue = format % value
     #left, right = svalue.split('e')
     #field = '%16s' % ('%sd%s' % (left.strip('0'), right))
-    field = svalue.replace('e', 'd')
+    field = svalue.replace('e', 'D')
 
     assert len(field) == 16, ('value=%r field=%r is not 16 characters '
                               'long, its %s' % (value, field, len(field)))

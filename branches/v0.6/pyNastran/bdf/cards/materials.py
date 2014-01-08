@@ -121,6 +121,10 @@ class CREEP(Material):
                   self.a, self.b, self.c, self.d, self.e, self.f, self.g]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class MAT1(IsotropicMaterial):
     """
@@ -301,6 +305,10 @@ class MAT1(IsotropicMaterial):
                   St, Sc, Ss, Mcsid]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class MAT2(AnisotropicMaterial):
     """
@@ -319,7 +327,7 @@ class MAT2(AnisotropicMaterial):
     """
     type = 'MAT2'
     _field_map = {
-        1: 'mid', 2:'G11', 3:'G12', 4:'G13', 5: 'G22', 6:'G23', 7:'G33', 
+        1: 'mid', 2:'G11', 3:'G12', 4:'G13', 5: 'G22', 6:'G23', 7:'G33',
         8:'rho', 9:'a1', 10:'a2', 11:'a3', 12:'TRef',13:'ge',
         14: 'St', 15:'Sc', 16:'Ss', 17:'Mcsid',
     }
@@ -475,6 +483,10 @@ class MAT2(AnisotropicMaterial):
                   self.St, self.Sc, self.Ss, self.Mcsid]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class MAT3(OrthotropicMaterial):
     """
@@ -491,7 +503,7 @@ class MAT3(OrthotropicMaterial):
     """
     type = 'MAT3'
     _field_map = {
-        1: 'mid', 2:'ex', 3:'eth', 4:'ez', 5: 'nuxth', 6:'nuthz', 7:'nuzx', 
+        1: 'mid', 2:'ex', 3:'eth', 4:'ez', 5: 'nuxth', 6:'nuthz', 7:'nuzx',
         8:'rho', 11:'gzx', 12:'ax', 13:'ath', 14:'az',15:'TRef',
         16: 'ge',
     }
@@ -552,6 +564,10 @@ class MAT3(OrthotropicMaterial):
                   ax, ath, az, TRef, ge]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class MAT4(ThermalMaterial):
     """
@@ -570,7 +586,7 @@ class MAT4(ThermalMaterial):
     """
     type = 'MAT4'
     _field_map = {
-        1: 'mid', 2:'k', 3:'cp', 4:'rho', 5: 'mu', 6:'H', 7:'hgen', 
+        1: 'mid', 2:'k', 3:'cp', 4:'rho', 5: 'mu', 6:'H', 7:'hgen',
         8:'refEnthalpy', 9:'tch', 10:'tdelta', 11:'qlat',
     }
 
@@ -618,6 +634,10 @@ class MAT4(ThermalMaterial):
                   self.refEnthalpy, self.tch, self.tdelta, self.qlat]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class MAT5(ThermalMaterial):  # also AnisotropicMaterial
     """
@@ -633,7 +653,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
     """
     type = 'MAT5'
     _field_map = {
-        1: 'mid', 2:'kxx', 3:'kxy', 4:'kxz', 5: 'kyy', 6:'kyz', 7:'kzz', 
+        1: 'mid', 2:'kxx', 3:'kxy', 4:'kxz', 5: 'kyy', 6:'kyz', 7:'kzz',
     }
 
     def __init__(self, card=None, data=None, comment=''):
@@ -694,6 +714,10 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         list_fields = ['MAT5', self.mid, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho,
                   hgen]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
 
 
 class MAT8(OrthotropicMaterial):
@@ -840,6 +864,10 @@ class MAT8(OrthotropicMaterial):
                   G2z, rho, a1, a2, TRef, Xt, Xc, Yt, Yc, S, ge, F12, strn]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class MAT9(AnisotropicMaterial):
     """
@@ -978,6 +1006,10 @@ class MAT9(AnisotropicMaterial):
                   + A + [TRef, ge])
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class MAT10(Material):
     """
@@ -1062,6 +1094,10 @@ class MAT10(Material):
         ge = set_blank_if_default(self.ge, 0.0)
         list_fields = ['MAT10', self.mid, self.bulk, self.rho, self.c, ge]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
 
 
 class MAT11(Material):

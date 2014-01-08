@@ -82,6 +82,10 @@ class QBDY1(ThermalLoad):
         list_fields = ['QBDY1', self.sid, self.qFlux] + eids
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class QBDY2(ThermalLoad):  # not tested
     """
@@ -136,6 +140,10 @@ class QBDY2(ThermalLoad):  # not tested
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
 
 
 class QBDY3(ThermalLoad):
@@ -201,6 +209,10 @@ class QBDY3(ThermalLoad):
         """
         return []
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class QHBDY(ThermalLoad):
     """
@@ -253,6 +265,10 @@ class QHBDY(ThermalLoad):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
 
 
 class TEMP(ThermalLoad):
@@ -317,6 +333,10 @@ class TEMP(ThermalLoad):
         """
         return []
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 # Loads
 #-------------------------------------------------------
 # Default Loads
@@ -365,3 +385,7 @@ class TEMPD(ThermalLoadDefault):
             if i % 4 == 3 and nTemps > i:  # start a new TEMP card
                 list_fields += ['TEMPD']
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)

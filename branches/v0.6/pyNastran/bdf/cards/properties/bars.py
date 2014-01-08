@@ -26,6 +26,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_or_double, double_string_or_blank, fields, integer_double_string_or_blank)
 from pyNastran.utils import is_string
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
+from pyNastran.bdf.fieldWriter import print_card_8
 
 def IyyBeam(b, h):
     return 1 / 12. * b * h ** 3
@@ -613,6 +614,10 @@ class PROD(LineProperty):
         list_fields = ['PROD', self.pid, self.Mid(), self.A, j, c, nsm]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)
+
 
 class PTUBE(LineProperty):
     type = 'PTUBE'
@@ -732,6 +737,10 @@ class PTUBE(LineProperty):
         OD2 = set_blank_if_default(self.OD2, self.OD1)
         list_fields = ['PTUBE', self.pid, self.Mid(), self.OD1, t, nsm, OD2]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)
 
 
 class PBAR(LineProperty):
@@ -906,6 +915,10 @@ class PBAR(LineProperty):
         list_fields = ['PBAR', self.pid, self.Mid(), self.A, i1, i2, j, nsm,
                        None, C1, C2, D1, D2, E1, E2, F1, F2, K1, K2, i12]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
 
 
 class PBARL(LineProperty):
@@ -1275,6 +1288,10 @@ class PBARL(LineProperty):
                        None, None, None] + self.dim + [self.nsm]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class PBCOMP(LineProperty):
     type = 'PBCOMP'
@@ -1366,6 +1383,10 @@ class PBCOMP(LineProperty):
             ci = set_blank_if_default(ci, 0.0)
             list_fields += [yi, zi, ci, mid, None, None, None, None]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
 
 
 class PBEAM(IntegratedLineProperty):
@@ -1778,6 +1799,10 @@ class PBEAM(IntegratedLineProperty):
         list_fields += footer
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class PBEAML(IntegratedLineProperty):
     type = 'PBEAML'
@@ -2012,6 +2037,10 @@ class PBEAML(IntegratedLineProperty):
         list_fields[3] = group
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class PBEAM3(LineProperty):  # not done, cleanup
     type = 'PBEAM3'
@@ -2170,3 +2199,7 @@ class PBEND(LineProperty):
         else:
             raise ValueError('only beamType=1 and 2 supported')
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)

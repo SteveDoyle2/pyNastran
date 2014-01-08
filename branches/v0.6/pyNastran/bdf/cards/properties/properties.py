@@ -266,7 +266,7 @@ class PSOLID(SolidProperty):
         mid = self.Mid()
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(mid, int), 'mid=%r' % mid
-        
+
         if xref:
             assert self.mid.type in ['MAT1', 'MAT4', 'MAT9', 'MAT10'], 'mid=%i self.mid.type=%s' % (mid, self.mid.type)
 
@@ -287,6 +287,9 @@ class PSOLID(SolidProperty):
                   self.stress, self.isop, fctn]
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
 
 class CrackProperty(Property):
     def __init__(self, card, data):

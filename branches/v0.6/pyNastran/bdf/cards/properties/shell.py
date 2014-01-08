@@ -20,7 +20,7 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property, Material
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, double,
     double_or_blank, string_or_blank)
-
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 class ShellProperty(Property):
     def __init__(self, card, data):
@@ -547,6 +547,10 @@ class PCOMP(CompositeShellProperty):
             list_fields += [mid, t, theta, sout]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class PCOMPG(CompositeShellProperty):
     type = 'PCOMPG'
@@ -683,6 +687,10 @@ class PCOMPG(CompositeShellProperty):
             list_fields += [gPlyID, mid, t, theta, sout, None, None, None]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class PLPLANE(ShellProperty):
     type = 'PLPLANE'
@@ -735,6 +743,10 @@ class PLPLANE(ShellProperty):
         list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(), self.str]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)
+
 
 class PSHEAR(ShellProperty):
     type = 'PSHEAR'
@@ -783,6 +795,10 @@ class PSHEAR(ShellProperty):
         list_fields = ['PSHEAR', self.pid, self.Mid(), self.t, self.nsm,
                   self.f1, self.f2]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
 
 
 class PSHELL(ShellProperty):
@@ -1020,3 +1036,9 @@ class PSHELL(ShellProperty):
         list_fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
                   twelveIt3, self.Mid3(), tst, nsm, z1, z2, self.Mid4()]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 16:
+            return print_card_16(card)
+        return card_writer(card)

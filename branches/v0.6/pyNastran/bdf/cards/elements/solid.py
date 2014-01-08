@@ -19,11 +19,13 @@ from numpy.linalg import solve, norm
 from pyNastran.bdf.cards.elements.elements import Element
 from pyNastran.utils.mathematics import Area, gauss
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, fields)
+from pyNastran.bdf.fieldWriter import print_card_8
+
 
 def volume4(n1, n2, n3, n4):
     r"""
     Gets the volume, :math:`V`, of the tetrahedron.
-    
+
     .. math:: V = \frac{(a-d) \cdot \left( (b-d) \times (c-d) \right) }{6}
     """
     V = -dot((n1 - n4), cross(n2 - n4, n3 - n4)) / 6.
@@ -32,7 +34,7 @@ def volume4(n1, n2, n3, n4):
 def area_centroid(n1, n2, n3, n4):
     """
     Gets the area, :math:`A`, and centroid of a quad.::
-    
+
       1-----2
       |   / |
       | /   |
@@ -119,6 +121,10 @@ class SolidElement(Element):
     def rawFields(self):
         list_fields = [self.type, self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)
 
 
 class CHEXA8(SolidElement):
@@ -267,7 +273,7 @@ class CHEXA20(CHEXA8):
 class CPENTA6(SolidElement):
     """
     ::
-    
+
       CPENTA EID PID G1 G2 G3 G4 G5 G6
         *----------*
        / \        / \
@@ -569,7 +575,7 @@ class CTETRA4(SolidElement):
                 x_3 & y_3 & z_3 \\
                 x_4 & y_4 & z_4 \\
               \end{array} \right]
-        
+
          .. warning:: this has got to be wrong
         """
         m = matrix((6, 6), 'd')
