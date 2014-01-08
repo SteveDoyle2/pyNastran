@@ -432,8 +432,7 @@ class OES(object):
         * s_code        = 0 (Stress)
         * num_wide      = 8 (???)
         """
-        (subcaseName, isubcase, transient, dt, analysis_code,
-            is_sort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
@@ -448,7 +447,7 @@ class OES(object):
 
         if 'VON MISES' in headers:
             isMaxShear = False
-        elif 'MAX SHEAR' in headers:
+        elif 'SHEAR' in headers:
             isMaxShear = True
         else:
             raise RuntimeError(headers)
@@ -496,7 +495,10 @@ class OES(object):
     #==========================================================================
     # CQUAD4
     def _stresses_in_cquad4_elements(self):
-        (isubcase, transient, data_code) = self.getQuadHeader(2, False, 33)
+        elementType = 'CQUAD4'
+        elementNumber = 33
+        is_strain = False
+        (isubcase, transient, data_code) = self.getQuadHeader(2, elementType, elementNumber, is_strain)
         data_code['table_name'] = 'OES1X'
         data = self.readTriStress(['CQUAD4'])
         if isubcase in self.plateStress:
@@ -509,7 +511,10 @@ class OES(object):
         self.iSubcases.append(isubcase)
 
     def _strains_in_cquad4_elements(self):
-        (isubcase, transient, data_code) = self.getQuadHeader(2, True, 33)
+        elementType = 'CQUAD4'
+        elementNumber = 33
+        is_strain = True
+        (isubcase, transient, data_code) = self.getQuadHeader(2, elementType, elementNumber, is_strain)
         data_code['table_name'] = 'OSTR1X'
         data = self.readTriStress(['CQUAD4'])
         if isubcase in self.plateStrain:
@@ -520,7 +525,19 @@ class OES(object):
             self.plateStrain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
+    def _strains_in_cquad4_bilinear_elements(self):
+        is_strain = True
+        elementType = 'CQUAD4'
+        elementNum = 144
+        self._stress_strain_cquad4_bilinear_helper(elementType, elementNum, is_strain)
+
     def _stresses_in_cquad4_bilinear_elements(self):
+        is_strain = False
+        elementType = 'CQUAD4'
+        elementNum = 144
+        self._stress_strain_cquad4_bilinear_helper(elementType, elementNum, is_strain)
+
+    def _stress_strain_cquad4_bilinear_helper(self, elementType, elementNum, is_strain):
         """
         ::
 
@@ -534,12 +551,20 @@ class OES(object):
                          4  -1.250000E-01  -8.871141E+02  7.576036E+03 -1.550089E+02   -88.9511   7.578874E+03 -8.899523E+02  8.060780E+03
                              1.250000E-01  -8.924081E+01  1.187899E+04 -4.174177E+01   -89.8002   1.187913E+04 -8.938638E+01  1.192408E+04
         """
-        (isubcase, transient, data_code) = self.getQuadHeader(3, False, 144)
+        (isubcase, transient, data_code) = self.getQuadHeader(3, elementType, elementNum, is_strain)
         #print(self.getQuadHeader(3, False, 144))
         #print("data_code =", data_code)
 
         data_code['table_name'] = 'OES1X'
         data = self.readQuadBilinear()
+
+        if is_strain:
+            dictA = self.plateStrain
+            class_obj = PlateStrainObject
+        else:
+            dictA = self.plateStress
+            class_obj = PlateStressObject
+
         if isubcase in self.plateStress:
             self.plateStress[isubcase].add_f06_data(data, transient)
         else:
@@ -549,7 +574,7 @@ class OES(object):
             self.plateStress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def getQuadHeader(self, nHeaderLines, isStrain, elementNumber):
+    def getQuadHeader(self, nHeaderLines, elementType, elementNumber, is_strain):
         (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
         headers = self.skip(nHeaderLines)
         #print "headers = %s" %(headers)
@@ -563,14 +588,14 @@ class OES(object):
         else:
             raise RuntimeError(headers)
 
-        if 'MAX SHEAR' in headers:
+        if 'SHEAR' in headers:
             isMaxShear = True
         elif 'VON MISES' in headers:
             isMaxShear = False
         else:
             raise RuntimeError(headers)
 
-        (stress_bits, s_code) = self.make_stress_bits(isFiberDistance, isMaxShear, isStrain)
+        (stress_bits, s_code) = self.make_stress_bits(isFiberDistance, isMaxShear, is_strain)
         data_code = {'log': self.log, 'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 5, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 's_code': s_code,

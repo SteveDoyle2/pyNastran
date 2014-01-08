@@ -1,6 +1,7 @@
 import os
 import sys
-from pyNastran.op2.test.test_op2 import get_failed_files,run_lots_of_files
+
+from pyNastran.op2.test.test_op2 import get_failed_files, run_lots_of_files
 from pyNastran.utils import get_files_of_type
 
 
@@ -49,7 +50,7 @@ def get_all_files(foldersFile,fileType):
     return files2
 
 
-if __name__=='__main__':
+def main():
     # works
     files = get_files_of_type('tests','.op2')
 
@@ -74,6 +75,7 @@ if __name__=='__main__':
     elif regenerate:
         files2 = get_all_files(foldersFile,'.op2')
         files2 += files
+        files2.sort()
     else:
         files2 = get_failed_files('failedCases.in')
     files = files2
@@ -87,8 +89,11 @@ if __name__=='__main__':
     except:
         pass
 
-    print("nFiles = %s" %(len(files)))
+    print("nFiles = %s" % len(files))
     run_lots_of_files(files,make_geom,write_bdf,write_f06,write_matlab,delete_f06,
                    print_results,debug,saveCases,skipFiles,stopOnFailure,
                    nStart,nStop)
     sys.exit('final stop...')
+
+if __name__=='__main__':
+    main()

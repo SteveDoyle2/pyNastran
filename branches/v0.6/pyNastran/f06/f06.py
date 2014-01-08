@@ -74,6 +74,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             'M O D E L   S U M M A R Y          BULK = 0':self._executive_control_echo,
             'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._grid_point_singularity_table,
             'G R I D   P O I N T   F O R C E   B A L A N C E' : self._executive_control_echo,
+            'N A S T R A N   S O U R C E   P R O G R A M   C O M P I L A T I O N             SUBDMAP  =  SESTATIC' : self._executive_control_echo,
             #====================================================================
             # useful info
             #'E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y'
@@ -100,10 +101,16 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             'N O N - D I M E N S I O N A L    H I N G E    M O M E N T    D E R I V A T I V E   C O E F F I C I E N T S':  self._executive_control_echo,
             'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S': self._executive_control_echo,
             'S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S': self._executive_control_echo,
+            'FLUTTER  SUMMARY' : self._executive_control_echo,
             #------------------------
-            #                                    R O T O R   D Y N A M I C S   S U M M A R Y
-            #                              R O T O R   D Y N A M I C S   M A S S   S U M M A R Y
-            #                           E I G E N V A L U E  A N A L Y S I S   S U M M A R Y   (COMPLEX LANCZOS METHOD)
+            #'R O T O R   D Y N A M I C S   S U M M A R Y'
+            #'R O T O R   D Y N A M I C S   M A S S   S U M M A R Y'
+            #'E I G E N V A L U E  A N A L Y S I S   S U M M A R Y   (COMPLEX LANCZOS METHOD)'
+
+            'R O T O R   D Y N A M I C S   S U M M A R Y': self._executive_control_echo,
+            'R O T O R   D Y N A M I C S   M A S S   S U M M A R Y': self._executive_control_echo,
+            'E I G E N V A L U E  A N A L Y S I S   S U M M A R Y   (COMPLEX LANCZOS METHOD)': self._executive_control_echo,
+
             #------------------------
             #====================================================================
 
@@ -147,8 +154,9 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self._stresses_in_cquad4_elements,
             'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN': self._stresses_in_cquad4_bilinear_elements,
 
-            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self._strains_in_cquad4_elements,
             'S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self._strains_in_ctria3_elements,
+            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self._strains_in_cquad4_elements,
+            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN' : self._strains_in_cquad4_bilinear_elements,
 
             #==
             # composite partial ??? (e.g. bilinear quad)
@@ -173,6 +181,10 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             #====================================================================
 
             # more not implemented...
+            'F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )' : self._executive_control_echo,
+            'F O R C E S   I N   R O D   E L E M E N T S     ( C R O D )': self._executive_control_echo,
+            'F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )':  self._executive_control_echo,
+            'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN':  self._executive_control_echo,
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )': self._executive_control_echo,
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )': self._executive_control_echo,
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )': self._executive_control_echo,
@@ -686,7 +698,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             line = self.infile.readline()
             marker = line[1:].strip()
 
-            if 'FATAL' in marker:
+            if 'FATAL' in marker and 'IF THE FLAG IS FATAL' not in marker:
                 msg = '\n' + marker
                 fatal_count = 0
                 while 1:
@@ -703,7 +715,8 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             if(marker != '' and 'SUBCASE' not in marker and 'PAGE' not in marker and 'FORTRAN' not in marker
                and 'USER INFORMATION MESSAGE' not in marker and 'TOTAL DATA WRITTEN FOR DATA BLOCK' not in marker
                and marker not in self.markers and marker != self._subtitle):
-                print("marker = %r" % marker)
+                #print("marker = %r" % marker)
+                pass
                 #print('Title  = %r' % self.subtitle)
 
             if marker in self.markers:

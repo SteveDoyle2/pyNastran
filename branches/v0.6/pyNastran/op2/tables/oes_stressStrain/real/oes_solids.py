@@ -76,11 +76,11 @@ class SolidStressObject(StressObject):
 
     def add_f06_data(self, data, transient):
         if transient is None:
-            dt = transient[1]
             if not hasattr(self, 'data'):
                 self.data = []
             self.data += data
         else:
+            dt = transient[1]
             if not hasattr(self, 'data'):
                 self.data = {}
             #print(self.data)

@@ -2,6 +2,7 @@ import os
 import sys
 
 from pyNastran.op2.test.test_op2 import get_failed_files
+from pyNastran.op2.test.op2_test import get_all_files
 from pyNastran.f06.test.test_f06 import run_lots_of_files
 from pyNastran.utils import get_files_of_type
 
@@ -14,15 +15,12 @@ def parse_skipped_cards(fname):
     results = {}
     for line in lines:
         if 'OES' in line[0:3]:
-            #print line
             (fore, aft) = line.strip().split('->')
             (oes, form, elementTypeNum) = fore.strip().split(' ')
             (element_type, eType) = elementTypeNum.strip().split('=')
             (msg, fpath) = aft.strip().split('-')
             #print "fpath=|%s|" %(fpath)
             fpath = fpath.lstrip()[6:]
-            #print fpath
-
             eName = msg.split(' ')[0]
             #print "eName=%s eType=%s form=%s fpath=|%s|" %(eName,eType,form,fpath)
             key = (eName, eType, form)
@@ -31,7 +29,6 @@ def parse_skipped_cards(fname):
 
     filesToAnalyze = []
     for (key, value) in sorted(results.iteritems()):
-        #print key,value
         filesToAnalyze.append(value)
 
     f = open('newElements.in', 'wb')
@@ -45,9 +42,7 @@ def main():
     # works
     files = get_files_of_type('tests', '.f06')
 
-    #moveDir = r'D:\work\move\hard_demo'
-    moveDir = r'D:\work\move\move_tpl'
-    #moveDir = r'D:\work\move\solid_shell_bar'
+    foldersFile = 'tests/foldersRead.txt'
     #files2 = ['ann6611.f06']
 
     iSubcases = []
@@ -60,7 +55,7 @@ def main():
     if getSkipCards:
         files2 = parse_skipped_cards('skippedCards.out')
     elif regenerate:
-        files2 = get_files_of_type(moveDir, '.f06')
+        files2 = get_all_files(foldersFile, '.f06')
         for fname in files2:
             if 'test_f06' in fname:
                 os.remove(fname)
@@ -101,7 +96,6 @@ def main():
     print files
     run_lots_of_files(files, debug, saveCases, skipFiles,
                       stopOnFailure, nStart, nStop)
-    #run_lots_of_files(files, debug, saveCases, stopOnFailure, nStart, nStop)
     sys.exit('final stop...')
 
 if __name__ == '__main__':
