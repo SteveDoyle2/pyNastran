@@ -35,6 +35,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (fields,
     string, string_or_blank,
     integer_or_string, double_string_or_blank,
     blank, interpret_value)
+from pyNastran.bdf.fieldWriter import print_card_8
 
 
 class AEFACT(BaseCard):
@@ -72,6 +73,9 @@ class AEFACT(BaseCard):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)
 
 class AELINK(BaseCard):
     r"""
@@ -173,6 +177,10 @@ class AELIST(BaseCard):
     def rawFields(self):
         list_fields = ['AELIST', self.sid] + self.elements
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)
 
 
 class AEPARM(BaseCard):
@@ -1841,3 +1849,7 @@ class TRIM(BaseCard):
             if i == 1:
                 list_fields += [self.aeqr]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)

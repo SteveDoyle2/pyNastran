@@ -591,6 +591,10 @@ class RFORCE(Load):
                   mb, idrf]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class RLOAD1(TabularLoad):
     r"""

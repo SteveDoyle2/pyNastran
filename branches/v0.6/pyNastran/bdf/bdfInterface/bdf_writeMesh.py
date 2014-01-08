@@ -619,7 +619,8 @@ class WriteMesh(WriteMeshDeprecated):
             for (ID, spline) in sorted(self.splines.iteritems()):
                 msg.append(spline.print_card(size))
             for (ID, trim) in sorted(self.trims.iteritems()):
-                msg.append(trim.print_card(size))
+                #msg.append(trim.print_card(size))
+                msg.append(trim.write_bdf(size, card_writer))
 
             for (ID, aero) in sorted(self.aero.iteritems()):
                 msg.append(aero.print_card(size))
@@ -645,11 +646,13 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(aestat.print_card(size))
 
             for (ID, aelist) in sorted(self.aelists.iteritems()):
-                msg.append(aelist.print_card(size))
+                #msg.append(aelist.print_card(size))
+                msg.append(aelist.write_bdf(size, card_writer))
             for (ID, aesurf) in sorted(self.aesurfs.iteritems()):
                 msg.append(aesurf.print_card(size))
             for (ID, aefact) in sorted(self.aefacts.iteritems()):
-                msg.append(aefact.print_card(size))
+                #msg.append(aefact.print_card(size))
+                msg.append(aefact.write_bdf(size, card_writer))
         return ''.join(msg)
 
     def _write_flutter(self, size, card_writer):

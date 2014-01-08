@@ -514,6 +514,11 @@ class CTRIA3(TriShell):
                   [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8 or len(card) == 6: # to last node
+            return print_card_8(card)
+        return print_card_16(card)
 
 class CTRIA6(TriShell):
     type = 'CTRIA6'
