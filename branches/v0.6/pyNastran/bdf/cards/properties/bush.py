@@ -156,8 +156,8 @@ class PBUSH(BushingProperty):
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
         if size == 8:
-            return print_card_8(card)
-        return print_card_16(card)
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
         #return self.comment() + card_writer(card)
 
 
@@ -365,8 +365,8 @@ class PBUSH1D(BushingProperty):
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
         #if size == 8:
-            #return print_card_8(card)
-        #return print_card_16(card)
+            #return self.comment() + print_card_8(card)
+        #return self.comment() + print_card_16(card)
         return self.comment() + card_writer(card)
 
 
@@ -385,8 +385,8 @@ class PBUSH2D(BushingProperty):
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
         #if size == 8:
-            #return print_card_8(card)
-        #return print_card_16(card)
+            #return self.comment() + print_card_8(card)
+        #return self.comment() + print_card_16(card)
         return self.comment() + card_writer(card)
 
 

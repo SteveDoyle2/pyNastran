@@ -214,7 +214,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
 
     def write_bdf(self, size, card_writer):
         card = self.rawFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
 
 
 class DLOAD(LoadCombination):
@@ -236,7 +236,7 @@ class DLOAD(LoadCombination):
 
     def write_bdf(self, size, card_writer):
         card = self.rawFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
 
 
 class DAREA(BaseCard):
@@ -595,8 +595,8 @@ class RFORCE(Load):
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
         if size == 8:
-            return print_card_8(card)
-        return print_card_16(card)
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
         #return self.comment() + card_writer(card)
 
 
