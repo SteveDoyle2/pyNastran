@@ -42,11 +42,13 @@ def main(bdf_name, run_first_nastran=True):
     print('\n\npassed!!')
 
 
-if __name__ == '__main__':
+def cmd_line():
     bdf_name = sys.argv[1]
 
     run_first_nastran = False
     if len(sys.argv) == 2:
         run_first_nastran = True
-
     main(bdf_name, run_first_nastran=run_first_nastran)
+
+if __name__ == '__main__':
+    cmd_line()
