@@ -376,8 +376,9 @@ class GRAV(BaseCard):
 
     def write_bdf(self, size, card_writer):
         card = self.rawFields()
-        return card_writer(card)
-
+        if size == 8:
+            return print_card_8(card)
+        return print_card_16(card)
 
 
 class ACCEL1(BaseCard):

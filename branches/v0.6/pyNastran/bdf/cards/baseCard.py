@@ -28,7 +28,7 @@ class BaseCard(object):
                 return
             except KeyError:
                 return
-                
+
     def update_field(self, n, value):
         try:
             key_name = self._field_map[n]
@@ -505,6 +505,15 @@ def collapse_thru(fields):
     #assert fields == expand_thru_by(fields2), fields2  # why doesn't this work?
     return fields2
 
+def collapse_thru_packs(fields):
+    assert 'THRU' not in fields, fields
+    fields.sort()
+    packs = condense(fields)
+    singles, doubles = build_thru_packs(packs, maxDV=1)
+
+    #assert fields == expand_thru_by(fields2), fields2  # why doesn't this work?
+    return singles, doubles
+
 
 def condense(valueList):
     """
@@ -552,6 +561,33 @@ def condense(valueList):
         packs.append([firstVal, val, dvOld])
     return packs
 
+def build_thru_packs(packs, maxDV=1):
+    """
+    # invalid
+    SET1,4000, 1, 3, THRU, 10, 20, THRU, 30
+
+    # valid
+    SET1,4000, 1
+    SET1,4000, 3,  THRU, 10
+    SET1,4000, 20, THRU, 30
+
+    returns
+      singles = [1]
+      doubles = [[3, 'THRU', 10], [20, 'THRU', 30]]
+    """
+    singles = []
+    doubles = []
+    for (firstVal, lastVal, by) in packs:
+        if firstVal == lastVal:
+            singles.append(firstVal)
+        else:
+            if lastVal - firstVal > 2:
+                double = [firstVal, 'THRU', lastVal]
+                doubles.append(double)
+            else:
+                for val in xrange(lastVal, firstVal+1, by):
+                    singles.append(val)
+    return singles, doubles
 
 def build_thru(packs, maxDV=None):
     """
@@ -595,6 +631,8 @@ def build_thru(packs, maxDV=None):
                 for v in xrange(firstVal, lastVal + dv, dv):
                     fields.append(v)
     return fields
+
+
 
 
 def build_thru_float(packs, maxDV=None):

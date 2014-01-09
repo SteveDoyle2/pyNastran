@@ -7,6 +7,7 @@ from pyNastran.bdf.fieldWriter import (print_field, print_float_8,
                                        set_default_if_blank,
                                        set_blank_if_default, is_same, print_card_8)
 from pyNastran.bdf.fieldWriter16 import print_field_16
+from pyNastran.bdf.field_writer_double import print_card_double
 
 
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
@@ -118,7 +119,7 @@ class TestFieldWriter(unittest.TestCase):
         # ideal
         #self.assertEqual(print_float_8(-.003607), '-.003607',
         #                 print_float_8(-.003607))
-        
+
         # actual
         self.assertEqual(print_float_8(-.003607), '-3.607-3',
                          print_float_8(-.003607))
@@ -258,6 +259,13 @@ class TestFieldWriter(unittest.TestCase):
         self.assertFalse(is_same(1.0, 1e-15 + 1))
         self.assertTrue(is_same('MAT', 'MAT'))
         self.assertFalse(is_same('MAT', 'MAT1'))
+
+    def test_card_double(self):
+        card = print_card_double(['GRID', 1, None, 120.322,-4.82872,1.13362,])
+        card_expected = 'GRID*                  1                1.2032200000D+02-4.828720000D+00\n'
+        card_expected += '*       1.1336200000D+00\n'
+        self.assertEqual(card, card_expected)
+        print('1')
 
 def compare(valueIn):
     #print "a = |%s|" % valueIn

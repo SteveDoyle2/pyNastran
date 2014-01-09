@@ -26,6 +26,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     string_or_blank, integer_double_or_blank,
     components_or_blank)
 from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 
 class Load(BaseCard):
@@ -593,7 +594,10 @@ class RFORCE(Load):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        if size == 8:
+            return print_card_8(card)
+        return print_card_16(card)
+        #return card_writer(card)
 
 
 class RLOAD1(TabularLoad):

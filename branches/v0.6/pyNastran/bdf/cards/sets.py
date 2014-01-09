@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import izip
 
-from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
+from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru, collapse_thru_packs
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     components, components_or_blank, fields,
@@ -28,12 +28,17 @@ class Set(BaseCard):
         """gets the IDs of the SETx"""
         return collapse_thru(self.IDs)
 
+
     def reprFields(self):
         list_fields = self.rawFields()
         return list_fields
 
     def __repr__(self):
         return print_card_8(self.reprFields())
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)
 
 
 class SetSuper(Set):
@@ -296,13 +301,28 @@ class SET1(Set):
     def IsSkin(self):
         return self.isSkin
 
-    def rawFields(self):
-        """gets the "raw" card without any processing as a list for printing"""
-        list_fields = ['SET1', self.sid]
+    #def rawFields(self):
+        #"""gets the "raw" card without any processing as a list for printing"""
+
+    def write_bdf(self, size, card_writer):
+        skin = []
         if self.isSkin:
-            list_fields.append('SKIN')
-        list_fields += self.SetIDs()
-        return list_fields
+            skin = ['SKIN']
+
+        if 1:
+            return print_card_8(['SET1', self.sid] + skin + self.IDs)
+        field_packs = []
+        singles, doubles = collapse_thru_packs(self.IDs)
+        if singles:
+            field_packs.append(['SET1', self.sid] + skin + singles)
+        if doubles:
+            for pack in doubles:
+                field_packs.append(['SET1', self.sid] + skin + pack)
+
+        msg = []
+        for field_pack in field_packs:
+            msg.append(print_card_8(field_pack))
+        return ''.join(msg)
 
 
 class SET3(Set):

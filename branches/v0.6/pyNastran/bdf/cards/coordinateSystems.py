@@ -828,6 +828,10 @@ class CORD1C(Cord1x, CylindricalCoord):
         list_fields = ['CORD1C', self.cid] + self.NodeIDs()
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class CORD1S(Cord1x, SphericalCoord):
     """
@@ -854,6 +858,10 @@ class CORD1S(Cord1x, SphericalCoord):
     def rawFields(self):
         list_fields = ['CORD1S', self.cid] + self.NodeIDs()
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
 
 
 class CORD2R(Cord2x, RectangularCoord):
@@ -884,6 +892,10 @@ class CORD2R(Cord2x, RectangularCoord):
             self.e2) + list(self.e3)
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class CORD2S(Cord2x, SphericalCoord):
     type = 'CORD2S'
@@ -912,6 +924,10 @@ class CORD2S(Cord2x, SphericalCoord):
                   list(self.e3))
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class CORD2C(Cord2x, CylindricalCoord):
     type = 'CORD2C'
@@ -939,3 +955,7 @@ class CORD2C(Cord2x, CylindricalCoord):
         list_fields = (['CORD2C', self.cid, rid] + list(self.e1) + list(self.e2) +
                   list(self.e3))
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)

@@ -919,7 +919,10 @@ class PBAR(LineProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        if size == 8:
+            return print_card_8(card)
+        return print_card_16(card)
+        #return card_writer(card)
 
 
 class PBARL(LineProperty):

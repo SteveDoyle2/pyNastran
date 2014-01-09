@@ -22,6 +22,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer,
     double_or_blank, integer_double_or_string, components, components_or_blank,
     blank, fields, string, interpret_value)
 # integer_or_double, double,
+from pyNastran.bdf.fieldWriter import print_card_8
 
 class RigidElement(Element):
     def cross_reference(self, model):
@@ -100,6 +101,10 @@ class RBAR(RigidElement):
                   self.cma, self.cmb, alpha]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class RBAR1(RigidElement):
     type = 'RBAR1'
@@ -137,6 +142,10 @@ class RBAR1(RigidElement):
         list_fields = ['RBAR1', self.eid, self.ga, self.gb, self.cb, alpha]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
+
 
 class RBE1(RigidElement):  # maybe not done, needs testing
     type = 'RBE1'
@@ -145,7 +154,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         RigidElement.__init__(self, card, data)
         if comment:
             self._comment = comment
-    
+
         self.eid = integer(card, 1, 'eid')
         self.Gni = []
         self.Cni = []
@@ -243,6 +252,10 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return card_writer(card)
 
 
 class RBE2(RigidElement):
@@ -369,6 +382,10 @@ class RBE2(RigidElement):
         alpha = set_blank_if_default(self.alpha, 0.)
         list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [alpha]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)
 
 
 class RBE3(RigidElement):
@@ -530,3 +547,7 @@ class RBE3(RigidElement):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return print_card_8(card)

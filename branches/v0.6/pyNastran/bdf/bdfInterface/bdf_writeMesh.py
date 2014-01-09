@@ -348,7 +348,7 @@ class WriteMesh(WriteMeshDeprecated):
             msg = ['$RIGID ELEMENTS\n']
             for (eid, element) in sorted(self.rigidElements.iteritems()):
                 try:
-                    msg.append(element.print_card(size))
+                    msg.append(element.write_bdf(size, card_writer))
                 except:
                     print('failed printing element...'
                           'type=%s eid=%s' % (element.type, eid))
@@ -508,10 +508,8 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(bctpara.print_card(size))
 
             for (ID, bctset) in sorted(self.bctsets.iteritems()):
-                #msg.append(bctset.print_card(size))
                 msg.append(bctset.write_bdf(size, card_writer))
             for (ID, bsurfi) in sorted(self.bsurf.iteritems()):
-                #msg.append(bsurfi.print_card(size))
                 msg.append(bsurfi.write_bdf(size, card_writer))
             for (ID, bsurfsi) in sorted(self.bsurfs.iteritems()):
                 #msg.append(bsurfsi.print_card(size))
@@ -526,23 +524,24 @@ class WriteMesh(WriteMeshDeprecated):
             or self.ddvals):
             msg.append('$OPTIMIZATION\n')
             for (ID, dconstr) in sorted(self.dconstrs.iteritems()):
-                msg.append(dconstr.print_card(size))
+                msg.append(dconstr.write_bdf(size, card_writer))
             for (ID, desvar) in sorted(self.desvars.iteritems()):
-                msg.append(desvar.print_card(size))
+                msg.append(desvar.write_bdf(size, card_writer))
             for (ID, ddval) in sorted(self.ddvals.iteritems()):
-                msg.append(ddval.print_card(size))
+                msg.append(ddval.write_bdf(size, card_writer))
             for (ID, dlink) in sorted(self.dlinks.iteritems()):
-                msg.append(dlink.print_card(size))
+                msg.append(dlink.write_bdf(size, card_writer))
             for (ID, dresp) in sorted(self.dresps.iteritems()):
-                msg.append(dresp.print_card(size))
+                msg.append(dresp.write_bdf(size, card_writer))
             for (ID, dvmrel) in sorted(self.dvmrels.iteritems()):
-                msg.append(dvmrel.print_card(size))
+                msg.append(dvmrel.write_bdf(size, card_writer))
             for (ID, dvprel) in sorted(self.dvprels.iteritems()):
-                msg.append(dvprel.print_card(size))
+                msg.append(dvprel.write_bdf(size, card_writer))
             for (ID, equation) in sorted(self.dequations.iteritems()):
                 msg.append(str(equation))
             if self.doptprm is not None:
-                msg.append(self.doptprm.print_card(size))
+                msg.append(self.doptprm.write_bdf(size, card_writer))
+
         return ''.join(msg)
 
     def _write_tables(self, size, card_writer):
@@ -551,11 +550,12 @@ class WriteMesh(WriteMeshDeprecated):
         if self.tables:
             msg.append('$TABLES\n')
             for (ID, table) in sorted(self.tables.iteritems()):
-                msg.append(table.print_card(size))
+                msg.append(table.write_bdf(size, card_writer))
+
         if self.randomTables:
             msg.append('$RANDOM TABLES\n')
             for (ID, table) in sorted(self.randomTables.iteritems()):
-                msg.append(table.print_card(size))
+                msg.append(table.write_bdf(size, card_writer))
         return ''.join(msg)
 
     def _write_sets(self, size, card_writer):
@@ -565,17 +565,17 @@ class WriteMesh(WriteMeshDeprecated):
             self.csets or self.qsets):
             msg.append('$SETS\n')
             for (ID, setObj) in sorted(self.sets.iteritems()):  # dict
-                msg.append(str(setObj))
+                msg.append(setObj.write_bdf(size, card_writer))
             for setObj in self.asets:  # list
-                msg.append(str(setObj))
+                msg.append(setObj.write_bdf(size, card_writer))
             for setObj in self.bsets:  # list
-                msg.append(str(setObj))
+                msg.append(setObj.write_bdf(size, card_writer))
             for setObj in self.csets:  # list
-                msg.append(str(setObj))
+                msg.append(setObj.write_bdf(size, card_writer))
             for setObj in self.qsets:  # list
-                msg.append(str(setObj))
+                msg.append(setObj.write_bdf(size, card_writer))
             for (ID, setObj) in sorted(self.setsSuper.iteritems()):  # dict
-                msg.append(str(setObj))
+                msg.append(setObj.write_bdf(size, card_writer))
         return ''.join(msg)
 
     def _write_dynamic(self, size, card_writer):
@@ -698,7 +698,7 @@ class WriteMesh(WriteMeshDeprecated):
             msg.append('$COORDS\n')
         for (ID, coord) in sorted(self.coords.iteritems()):
             if ID != 0:
-                msg.append(coord.print_card(size))
+                msg.append(coord.write_bdf(size, card_writer))
         return ''.join(msg)
 
     def _write_rejects(self, size, card_writer):

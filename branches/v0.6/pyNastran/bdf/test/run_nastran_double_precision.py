@@ -29,6 +29,7 @@ def main(bdf_name, run_first_nastran=True):
     model3 = BDF()
     model3.read_bdf(bdf_name)
     model3.write_bdf(out_bdf, size=16, precision='double')
+    #model3.write_bdf(out_bdf, size=8, precision='single')
     print "---wrote the bdf---"
     #===========================
     # run nastran again
