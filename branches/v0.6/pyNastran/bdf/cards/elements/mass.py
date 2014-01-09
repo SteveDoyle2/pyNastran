@@ -19,6 +19,8 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element #, BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                        double_or_blank)
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 
 class PointElement(Element):
@@ -109,6 +111,10 @@ class CMASS1(PointMassElement):
         fields = ['CMASS1', self.eid, self.Pid(), self.g1, self.c1,
                   self.g2, self.c2]
         return fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 
 class CMASS2(PointMassElement):
@@ -220,6 +226,10 @@ class CMASS2(PointMassElement):
                   self.G2(), self.c2]
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class CMASS3(PointMassElement):
     """
@@ -276,6 +286,10 @@ class CMASS3(PointMassElement):
         fields = ['CMASS3', self.eid, self.Pid(), self.s1, self.s2]
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class CMASS4(PointMassElement):
     """
@@ -331,6 +345,10 @@ class CMASS4(PointMassElement):
     def rawFields(self):
         fields = ['CMASS4', self.eid, self.mass, self.s1, self.s2]
         return fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 
 class CONM1(PointMassElement):
@@ -508,6 +526,10 @@ class CONM1(PointMassElement):
             list_fields2.append(val)
         return list_fields2
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class CONM2(PointMassElement):
     """
@@ -677,3 +699,10 @@ class CONM2(PointMassElement):
         list_fields = (['CONM2', self.eid, self.Nid(), cid, self.mass] + X +
                   [None] + I)
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)

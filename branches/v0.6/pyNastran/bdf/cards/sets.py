@@ -34,11 +34,11 @@ class Set(BaseCard):
         return list_fields
 
     def __repr__(self):
-        return print_card_8(self.reprFields())
+        return self.comment() + print_card_8(self.reprFields())
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
 
 
 class SetSuper(Set):
@@ -86,7 +86,7 @@ class ABCQSet(Set):
 
     def __repr__(self):
         list_fields = self.rawFields()
-        return print_card_8(list_fields)
+        return self.comment() + print_card_8(list_fields)
 
 
 class ASET(ABCQSet):
@@ -183,7 +183,7 @@ class ABQSet1(Set):
 
     def __repr__(self):
         list_fields = self.rawFields()
-        return print_card_8(list_fields)
+        return self.comment() + print_card_8(list_fields)
 
 
 class ASET1(ABQSet1):
@@ -240,7 +240,7 @@ class CSET1(Set):
 
     def __repr__(self):
         list_fields = self.rawFields()
-        return print_card_8(list_fields)
+        return self.comment() + print_card_8(list_fields)
 
 
 class QSET1(ABQSet1):
@@ -310,7 +310,7 @@ class SET1(Set):
             skin = ['SKIN']
 
         if 1:
-            return print_card_8(['SET1', self.sid] + skin + self.IDs)
+            return self.comment() + print_card_8(['SET1', self.sid] + skin + self.IDs)
         field_packs = []
         singles, doubles = collapse_thru_packs(self.IDs)
         if singles:
@@ -382,7 +382,7 @@ class SET3(Set):
 
     def __repr__(self):
         list_fields = ['SET3', self.sid, self.desc] + self.SetIDs()
-        return print_card_8(list_fields)
+        return self.comment() + print_card_8(list_fields)
 
 
 class SESET(SetSuper):
@@ -495,7 +495,7 @@ class SEBSET1(Set):
 
     def __repr__(self):
         list_fields = self.rawFields()
-        return print_card_8(list_fields)
+        return self.comment() + print_card_8(list_fields)
 
 class SEQSET1(Set):
     """

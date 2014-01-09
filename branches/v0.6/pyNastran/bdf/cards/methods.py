@@ -22,7 +22,8 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     string, string_or_blank,
     components, components_or_blank,
     integer_double_string_or_blank, blank, interpret_value)
-#from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 
 class Method(BaseCard):
@@ -106,7 +107,7 @@ class EIGB(Method):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class EIGC(Method):
@@ -281,7 +282,7 @@ class EIGC(Method):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class EIGP(Method):
@@ -331,7 +332,7 @@ class EIGP(Method):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class EIGR(Method):
@@ -407,7 +408,7 @@ class EIGR(Method):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class EIGRL(Method):
@@ -496,4 +497,7 @@ class EIGRL(Method):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)

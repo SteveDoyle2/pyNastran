@@ -403,7 +403,7 @@ class WriteMesh(WriteMeshDeprecated):
             for eid in sorted(eids_missing):
                 element = self.Element(eid)
                 try:
-                    msg.append(element.print_card(size))
+                    msg.append(element.write_bdf(size, card_writer))
                 except:
                     print('failed printing element...'
                           'type=%s eid=%s' % (element.type, eid))
@@ -646,12 +646,10 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(aestat.print_card(size))
 
             for (ID, aelist) in sorted(self.aelists.iteritems()):
-                #msg.append(aelist.print_card(size))
                 msg.append(aelist.write_bdf(size, card_writer))
             for (ID, aesurf) in sorted(self.aesurfs.iteritems()):
                 msg.append(aesurf.print_card(size))
             for (ID, aefact) in sorted(self.aefacts.iteritems()):
-                #msg.append(aefact.print_card(size))
                 msg.append(aefact.write_bdf(size, card_writer))
         return ''.join(msg)
 

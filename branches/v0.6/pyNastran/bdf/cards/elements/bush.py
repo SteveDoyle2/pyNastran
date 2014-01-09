@@ -192,7 +192,7 @@ class CBUSH(BushElement):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
 
 
 class CBUSH1D(BushElement):
@@ -264,7 +264,7 @@ class CBUSH1D(BushElement):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
 
 
 class CBUSH2D(BushElement):
@@ -346,4 +346,4 @@ class CBUSH2D(BushElement):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)

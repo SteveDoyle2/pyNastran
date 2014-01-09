@@ -75,7 +75,7 @@ class AEFACT(BaseCard):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
 
 class AELINK(BaseCard):
     r"""
@@ -180,7 +180,7 @@ class AELIST(BaseCard):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
 
 
 class AEPARM(BaseCard):
@@ -1852,4 +1852,4 @@ class TRIM(BaseCard):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)

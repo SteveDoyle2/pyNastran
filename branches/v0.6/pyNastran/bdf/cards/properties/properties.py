@@ -289,7 +289,7 @@ class PSOLID(SolidProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 class CrackProperty(Property):
     def __init__(self, card, data):

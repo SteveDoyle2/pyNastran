@@ -517,8 +517,8 @@ class CTRIA3(TriShell):
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
         if size == 8 or len(card) == 6: # to last node
-            return print_card_8(card)
-        return print_card_16(card)
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 class CTRIA6(TriShell):
     type = 'CTRIA6'
@@ -1574,8 +1574,8 @@ class CQUAD4(QuadShell):
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
         if size == 8 or len(card) == 7: # to last node
-            return print_card_8(card)
-        return print_card_16(card)
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class CQUADR(QuadShell):

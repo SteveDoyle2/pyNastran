@@ -830,7 +830,7 @@ class CORD1C(Cord1x, CylindricalCoord):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class CORD1S(Cord1x, SphericalCoord):
@@ -861,7 +861,7 @@ class CORD1S(Cord1x, SphericalCoord):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class CORD2R(Cord2x, RectangularCoord):
@@ -894,7 +894,7 @@ class CORD2R(Cord2x, RectangularCoord):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class CORD2S(Cord2x, SphericalCoord):
@@ -926,7 +926,7 @@ class CORD2S(Cord2x, SphericalCoord):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class CORD2C(Cord2x, CylindricalCoord):
@@ -958,4 +958,4 @@ class CORD2C(Cord2x, CylindricalCoord):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)

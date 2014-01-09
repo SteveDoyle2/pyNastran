@@ -84,7 +84,7 @@ class QBDY1(ThermalLoad):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class QBDY2(ThermalLoad):  # not tested
@@ -143,7 +143,7 @@ class QBDY2(ThermalLoad):  # not tested
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class QBDY3(ThermalLoad):
@@ -211,7 +211,7 @@ class QBDY3(ThermalLoad):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class QHBDY(ThermalLoad):
@@ -268,7 +268,7 @@ class QHBDY(ThermalLoad):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class TEMP(ThermalLoad):
@@ -335,7 +335,7 @@ class TEMP(ThermalLoad):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 # Loads
 #-------------------------------------------------------
@@ -388,4 +388,4 @@ class TEMPD(ThermalLoadDefault):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)

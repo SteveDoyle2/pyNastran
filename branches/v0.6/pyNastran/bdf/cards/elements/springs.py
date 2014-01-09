@@ -205,7 +205,7 @@ class CELAS1(SpringElement):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
 
 
 class CELAS2(SpringElement):
@@ -391,7 +391,7 @@ class CELAS2(SpringElement):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
 
 
 class CELAS3(SpringElement):
@@ -487,7 +487,7 @@ class CELAS3(SpringElement):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
 
 
 class CELAS4(SpringElement):
@@ -584,4 +584,4 @@ class CELAS4(SpringElement):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)

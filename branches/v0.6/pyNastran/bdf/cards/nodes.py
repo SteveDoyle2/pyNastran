@@ -90,7 +90,7 @@ class SPOINT(Node):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
 
 
 class SPOINTs(Node):
@@ -153,7 +153,7 @@ class SPOINTs(Node):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
 
 
 class GRDSET(Node):
@@ -296,7 +296,7 @@ class GRIDB(Node):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class GRID(Node):
@@ -483,7 +483,7 @@ class GRID(Node):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class POINT(Node):
@@ -604,4 +604,4 @@ class POINT(Node):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)

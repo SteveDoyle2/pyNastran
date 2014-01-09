@@ -124,7 +124,7 @@ class SolidElement(Element):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + card_writer(card)
 
 
 class CHEXA8(SolidElement):

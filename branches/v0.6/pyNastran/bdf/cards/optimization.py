@@ -57,7 +57,7 @@ class DCONSTR(OptConstraint):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class DESVAR(OptConstraint):
@@ -93,9 +93,9 @@ class DESVAR(OptConstraint):
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
         if size == 8:
-            return print_card_8(card)
-        return print_card_16(card)
-        #return card_writer(card)
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)
 
 
 class DDVAL(OptConstraint):
@@ -124,7 +124,7 @@ class DDVAL(OptConstraint):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class DOPTPRM(OptConstraint):
@@ -219,7 +219,7 @@ class DOPTPRM(OptConstraint):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class DLINK(OptConstraint):
@@ -268,7 +268,7 @@ class DLINK(OptConstraint):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class DRESP1(OptConstraint):
@@ -311,7 +311,7 @@ class DRESP1(OptConstraint):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class DRESP2(OptConstraint):
@@ -407,7 +407,7 @@ class DRESP2(OptConstraint):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class DSCREEN(OptConstraint):
@@ -437,7 +437,7 @@ class DSCREEN(OptConstraint):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class DVMREL1(OptConstraint):  # similar to DVPREL1
@@ -513,7 +513,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class DVPREL1(OptConstraint):  # similar to DVMREL1
@@ -587,9 +587,9 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
         #if size == 8:
-        return print_card_8(card)
-        #return print_card_16(card)
-        #return card_writer(card)
+        return self.comment() + print_card_8(card)
+        #return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)
 
 
 class DVPREL2(OptConstraint):
@@ -709,4 +709,4 @@ class DVPREL2(OptConstraint):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)

@@ -67,7 +67,7 @@ class PDAMP(DamperProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class PDAMP5(DamperProperty):
@@ -116,7 +116,7 @@ class PDAMP5(DamperProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class PDAMPT(DamperProperty):
@@ -163,7 +163,7 @@ class PDAMPT(DamperProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class PVISC(DamperProperty):
@@ -203,4 +203,4 @@ class PVISC(DamperProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)

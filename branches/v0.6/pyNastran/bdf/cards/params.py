@@ -197,6 +197,6 @@ class PARAM(BaseCard):
     def write_bdf(self, size, card_writer):
         card = self.rawFields()
         if size == 8:
-            return print_card_8(card)  # works
-        return print_card_16(card)
-        #return card_writer(card)
+            return self.comment() + print_card_8(card)  # works
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)

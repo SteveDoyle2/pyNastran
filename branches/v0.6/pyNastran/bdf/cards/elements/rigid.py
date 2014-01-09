@@ -103,7 +103,7 @@ class RBAR(RigidElement):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class RBAR1(RigidElement):
@@ -144,7 +144,7 @@ class RBAR1(RigidElement):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class RBE1(RigidElement):  # maybe not done, needs testing
@@ -255,7 +255,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class RBE2(RigidElement):
@@ -385,7 +385,7 @@ class RBE2(RigidElement):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
 
 
 class RBE3(RigidElement):
@@ -550,4 +550,4 @@ class RBE3(RigidElement):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)

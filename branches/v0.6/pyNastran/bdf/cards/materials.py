@@ -126,7 +126,7 @@ class CREEP(Material):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class MAT1(IsotropicMaterial):
@@ -311,9 +311,9 @@ class MAT1(IsotropicMaterial):
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
         if size == 8:
-            return print_card_8(card)
-        return print_card_16(card)
-        #return card_writer(card)
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)
 
 
 class MAT2(AnisotropicMaterial):
@@ -491,7 +491,7 @@ class MAT2(AnisotropicMaterial):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class MAT3(OrthotropicMaterial):
@@ -572,7 +572,7 @@ class MAT3(OrthotropicMaterial):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class MAT4(ThermalMaterial):
@@ -642,7 +642,7 @@ class MAT4(ThermalMaterial):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class MAT5(ThermalMaterial):  # also AnisotropicMaterial
@@ -723,7 +723,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class MAT8(OrthotropicMaterial):
@@ -872,8 +872,10 @@ class MAT8(OrthotropicMaterial):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
-
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)
 
 class MAT9(AnisotropicMaterial):
     """
@@ -1014,7 +1016,7 @@ class MAT9(AnisotropicMaterial):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class MAT10(Material):
@@ -1104,9 +1106,9 @@ class MAT10(Material):
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
         if size == 8:
-            return print_card_8(card)
-        return print_card_16(card)
-        #return card_writer(card)
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)
 
 
 class MAT11(Material):
@@ -1382,7 +1384,7 @@ class MATHP(HyperelasticMaterial):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class MaterialDependence(BaseCard):

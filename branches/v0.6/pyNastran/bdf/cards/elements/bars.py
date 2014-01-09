@@ -587,7 +587,7 @@ class CROD(RodElement):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
 
 
 class CTUBE(RodElement):
@@ -663,7 +663,7 @@ class CTUBE(RodElement):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
 
 
 class CONROD(RodElement):
@@ -808,7 +808,7 @@ class CONROD(RodElement):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class CBAR(LineElement):
@@ -1248,9 +1248,9 @@ class CBAR(LineElement):
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
         if size == 8:
-            return print_card_8(card)
-        return print_card_16(card)
-        #return card_writer(card)
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)
 
 
 class CBEAM3(CBAR):
@@ -1343,7 +1343,7 @@ class CBEAM3(CBAR):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class CBEAM(CBAR):
@@ -1900,9 +1900,9 @@ class CBEAM(CBAR):
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
         if size == 8:
-            return print_card_8(card)
-        return print_card_16(card)
-        #return card_writer(card)
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)
 
 
 class CBEND(LineElement):
@@ -1981,4 +1981,4 @@ class CBEND(LineElement):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)

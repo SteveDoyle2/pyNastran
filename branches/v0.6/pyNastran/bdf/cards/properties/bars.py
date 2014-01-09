@@ -617,7 +617,7 @@ class PROD(LineProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
 
 
 class PTUBE(LineProperty):
@@ -741,7 +741,7 @@ class PTUBE(LineProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
 
 
 class PBAR(LineProperty):
@@ -920,9 +920,9 @@ class PBAR(LineProperty):
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
         if size == 8:
-            return print_card_8(card)
-        return print_card_16(card)
-        #return card_writer(card)
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)
 
 
 class PBARL(LineProperty):
@@ -1295,9 +1295,9 @@ class PBARL(LineProperty):
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
         if size == 8:
-            return print_card_8(card)
-        return print_card_16(card)
-        #return card_writer(card)
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)
 
 
 class PBCOMP(LineProperty):
@@ -1393,7 +1393,7 @@ class PBCOMP(LineProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class PBEAM(IntegratedLineProperty):
@@ -1808,7 +1808,7 @@ class PBEAM(IntegratedLineProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class PBEAML(IntegratedLineProperty):
@@ -2048,10 +2048,10 @@ class PBEAML(IntegratedLineProperty):
         """..todo:: having bug with PBEAML"""
         #if size == 8:
         card = self.reprFields()
-        return print_card_8(card)
+        return self.comment() + print_card_8(card)
         #card = self.rawFields()
-        #return print_card_16(card)
-        #return card_writer(card)
+        #return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)
 
 
 class PBEAM3(LineProperty):  # not done, cleanup
@@ -2214,4 +2214,4 @@ class PBEND(LineProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)

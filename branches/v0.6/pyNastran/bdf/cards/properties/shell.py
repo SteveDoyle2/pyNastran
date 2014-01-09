@@ -549,7 +549,7 @@ class PCOMP(CompositeShellProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class PCOMPG(CompositeShellProperty):
@@ -689,7 +689,7 @@ class PCOMPG(CompositeShellProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class PLPLANE(ShellProperty):
@@ -798,7 +798,7 @@ class PSHEAR(ShellProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return card_writer(card)
+        return self.comment() + card_writer(card)
 
 
 class PSHELL(ShellProperty):
@@ -1040,5 +1040,5 @@ class PSHELL(ShellProperty):
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
         if size == 16:
-            return print_card_16(card)
-        return card_writer(card)
+            return self.comment() + print_card_16(card)
+        return self.comment() + card_writer(card)
