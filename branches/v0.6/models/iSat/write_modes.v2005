@@ -1,0 +1,192 @@
+$-----------------------------------------------------------------------
+$  Rigid Format 103 - Normal modes analysis
+$  MSC/NASTRAN Version 2005
+$
+$
+$     ******************************************************
+$     *****            COPYRIGHT  (C)  2003            *****
+$     *****          BY ATA ENGINEERING INC.           *****
+$     *****             ALL RIGHTS RESERVED            *****
+$     ******************************************************
+$
+$     09-03- ATA/Paul Blelloch
+$
+$  Description:
+$
+$  This alter writes the LAMA table (frequencies) and mode shapes
+$  out in a choice of formats for later processing.  Optionally the user
+$  can output a subset of the modes using a 'U2' set.
+$
+$  Special instructions to use this alter:
+$-----------------------------------------------------------------------
+$  FILE MANAGEMENT SECTION (FMS)
+$
+$    If OUTPUT2 or OUTPUT4 formats are chosen these files should be
+$    assigned as follows:
+$
+$    ASSIGN OUTPUT4=fem_modes.op4 UNIT=11 DELETE
+$
+$    or 
+$
+$    ASSIGN OUTPUT2=fem_modes.op2 UNIT=11 DELETE
+$
+$    Note that a formatted OUTPUT4 file can be chosen as follows:
+$
+$    ASSIGN OUTPUT4=fem_modes.op4 UNIT=11 DELETE FORMATTED
+$
+$-----------------------------------------------------------------------
+$  EXECUTIVE CONTROL DECK
+$
+$    SOL 103
+$    Include this alter immediately before the CEND statement
+$
+$-----------------------------------------------------------------------
+$  CASE CONTROL DECK
+$
+$    No special input is required.  The Case Control deck must include
+$    standard modal solution requests (SPC, METHOD, etc.).  Some output
+$    request such as DISP(PLOT)=ALL is required to force data recovery.
+$
+$-----------------------------------------------------------------------
+$  BULK DATA DECK
+$
+$    Optional parameters:
+$
+$    PARAM,OMODES,I  <0 : Write modes to OUTPUT2 file UNIT = |OMODES|
+$                     0 : Write modes to PCH file in DMIG format
+$                    >0 : Write modes to OUTPUT4 file UNIT = OMODES 
+$
+$    If desired, only a subset of the DOF can be exported using a 'U2'
+$    set
+$
+$-----------------------------------------------------------------------
+$  EXAMPLE NASTRAN DECK
+$
+$    ASSIGN  OUTPUT4='gpsc_modes.op4' UNIT=11 DELETE
+$    ASSIGN  MASTER='gpsc.MASTER'
+$    ASSIGN  DBALL ='gpsc.DBALL'
+$    RESTART
+$    $
+$    SOL     103
+$    INCLUDE write_modes.v2001
+$    CEND
+$    $
+$    TITLE    = GENERAL PURPOSE SPACECRAFT
+$    SUBTITLE = NORMAL MODES DATA RECOVERY RESTART
+$    LABEL    = WRITE FEM MODES
+$    $
+$    SPC = 1
+$    METHOD = 50                 $ Modes to 50 Hz
+$    $
+$    DISP(PLOT) = ALL            $ Recover but don't print displacements
+$    $
+$    BEGIN BULK
+$    $
+$    PARAM,OMODES,11             $ Write modes to OUTPUT4 file on unit 11
+$    $
+$    USET1,U2,123,1,1000         $ Limit DOF
+$    $
+$    ENDDATA
+$
+$-----------------------------------------------------------------------
+$
+ECHOOFF $
+$
+COMPILE SEDRCVR $
+$
+ALTER 'STATICS*=*(APP'
+$
+IF (SEID = 0) THEN $
+$
+TYPE    PARM,,I,Y,OMODES=0        $
+TYPE    PARM,,I,Y,OLDSEQ=-9999    $ Resequence flag
+$
+$ If OUTPUT4 or DMIG options are chosen covert LAMA table to matrix
+$
+IF (OMODES >= 0) THEN $
+$
+  LAMX    ,,OLAMA/XLM1/-1 $          Create matrix
+  MATMOD  XLM1,,,,,/XFRQ,/1/3/4/1 $  Extract frequency and generalized mass
+  MATGEN  ,/V23/6/3/1/1/1 $          Create partition vector
+  MERGE   XFRQ,,,,V23,/XFRQ1/1 $     Add null 2nd column
+  TRNSP   XFRQ1/FLAMA $              Transpose
+  MATPRN  FLAMA// $
+$
+ENDIF $ (OMODES >= 0)
+$
+$ If a U1 or U2 set exists in the model partition both modes and mass matrix to this set
+$
+PARAML USET//'USET'////S,N,NUSETX//'U2'/S,N,NU2SET $
+PARAML USET//'USET'////S,N,NUSETX//'U1'/S,N,NU1SET $
+IF ( NU2SET > 0 ) THEN $
+  MESSAGE //'PARTITIONING SHAPES TO'/NU2SET/' DOF IN U2 SET' $
+  UPARTN USET,UG/UGU2,,,/'G'/'U2'/'COMP'/1 $
+  UMERGE USET,UGU2,/UGFEM/'G'/'U2'/'COMP' $
+  UPARTN USET,MGG/MUU,,,/'G'/'U2'/'COMP' $
+  UMERGE1 USET,MUU,,,/MFEM/'G'/'U2'/'COMP' $
+ELSE IF ( NU1SET > 0) THEN $
+  MESSAGE //'PARTITIONING SHAPES TO'/NU1SET/' DOF IN U1 SET' $
+  UPARTN USET,UG/UGU2,,,/'G'/'U1'/'COMP'/1 $
+  UMERGE USET,UGU2,/UGFEM/'G'/'U1'/'COMP' $
+  UPARTN USET,MGG/MUU,,,/'G'/'U1'/'COMP' $
+  UMERGE1 USET,MUU,,,/MFEM/'G'/'U1'/'COMP' $
+ELSE
+  EQUIVX UG/UGFEM/ALWAYS $
+  EQUIVX MGG/MFEM/ALWAYS $
+ENDIF $ (NU2SET > 0)
+$
+$ If OUTPUT2 or OUTPUT4 option is chosen convert UGFEM and MFEM matrices to external sort
+$
+IF ( OMODES <> 0 ) THEN $
+$
+   IF ( OLDSEQ > -1 ) THEN $
+      MATGEN EQEXINS/INTEXT/9/0/LUSETS $
+      MPYAD  INTEXT,UGFEM,/UGEXT/1 $
+      SMPYAD INTEXT,MFEM,INTEXT,,,/MEXT/3////1////6 $
+$
+   ELSE $
+$
+      EQUIVX UGFEM/UGEXT/-1 $
+      EQUIVX MFEM/MEXT/-1 $
+$
+   ENDIF $ (OLDSEQ > -1)
+$
+ENDIF $ OMODES>0
+$
+IF (OMODES > 0) THEN $
+$
+$ Write LAMA matrix and mode shapes to OUTPUT4 file
+$
+  MESSAGE //'WRITING MODES IN OUTPUT4 FORMAT TO UNIT'/OMODES $
+  OUTPUT4 FLAMA,UGEXT,,,//-1/OMODES $
+$
+ELSE IF (OMODES < 0) THEN $
+$
+$ Write LAMA table and mode shapes to OUTPUT2 file
+$
+  OMODES = -OMODES $
+  MESSAGE //'WRITING MODES IN OUTPUT2 FORMAT TO UNIT'/OMODES $
+  MATMOD  UGEXT,EQEXINS,,,,/UGDMIG,/16 $
+  MATMOD  MEXT,EQEXINS,,,,/MDMIG,/16 $
+  OUTPUT2 OLAMA,UGDMIG,MDMIG,,//-1/OMODES $
+$
+ELSE $
+  MESSAGE //'WRITING MODES IN DMIG FORMAT TO PUNCH FILE' $
+$
+$ Write LAMA matrix to PCH file in DMI format
+$
+  MATPCH  FLAMA// $
+$
+$ Write mode shapes to PCH file in DMIG format
+$
+  MATMOD  UGFEM,EQEXINS,,,,/MATPOOL,/16/1 $
+$
+ENDIF $ (OMODES > 0)
+$
+ENDIF $ (SEID = 0) 
+$
+ENDALTER $
+$
+ECHOON $
+$
+
