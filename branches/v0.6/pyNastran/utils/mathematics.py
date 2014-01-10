@@ -31,7 +31,8 @@ if sys.version_info < (3, 0):
     import scipy.weave
 
 import numpy
-numpy_version = tuple([int(i) for i in numpy.__version__ if i != '.'])
+ver = numpy.__version__.split('.')
+numpy_version = tuple([int(i) for i in v])
 if numpy.__version__ < (1, 8):
     def norm_axis(x, ord=None, axis=None):
         """A modified form of numpy.norm to work in numpy <= 1.8.0
