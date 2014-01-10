@@ -1,6 +1,7 @@
 import os
 from pyNastran.bdf.bdf import BDF
 from pyNastran.f06.f06 import F06
+from pyNastran.op2.op2 import OP2
 from math import sqrt
 
 def calculate_stress(ax, tors):
@@ -26,6 +27,16 @@ def main():
     model.read_bdf('vared_bar3.bdf')
     out_bdf = 'out.bdf'
     out_f06 = 'out.f06'
+    out_op2 = 'out.op2'
+
+    if 'POST' in model.params:
+        # change "PARAM, POST, 0"  to "PARAM, POST, -1"
+
+        # option 1
+        #model.params['POST'].update_field(2, -1)
+
+        # option 2
+        model.params['POST'].update_values(value1=-1, value2=None)
 
     model.write_bdf(out_bdf, size=16, precision='double')
     os.system('nastran scr=yes bat=no news=no old=no %s' % out_bdf)
@@ -46,17 +57,22 @@ def main():
     print "mass = %s" % model2.grid_point_weight.mass
 
     #========================================
-    subcase1 = model2.rodStress[1]
+    model3 = OP2(out_op2)
+    model3.read_op2()
+    #========================================
+    for form, modeli in [('f06', model2), ('op2', model3)]:
+        print "---%s---" % form
+        subcase1 = modeli.rodStress[1]
 
-    eid = 2
-    print 'axial   stress[%s] = %s' % (eid, subcase1.axial[eid])
-    print 'torsion stress[%s] = %s' % (eid, subcase1.torsion[eid])
-    print '        stress[%s] = %s\n' % (eid, calculate_stress(subcase1.axial[eid], subcase1.torsion[eid]))
+        eid = 2
+        print 'axial   stress[%s] = %s' % (eid, subcase1.axial[eid])
+        print 'torsion stress[%s] = %s' % (eid, subcase1.torsion[eid])
+        print '        stress[%s] = %s\n' % (eid, calculate_stress(subcase1.axial[eid], subcase1.torsion[eid]))
 
-    eid = 3
-    print 'axial   stress[%s] = %s' % (eid, subcase1.axial[eid])
-    print 'torsion stress[%s] = %s' % (eid, subcase1.torsion[eid])
-    print '        stress[%s] = %s\n' % (eid, calculate_stress(subcase1.axial[eid], subcase1.torsion[eid]))
+        eid = 3
+        print 'axial   stress[%s] = %s' % (eid, subcase1.axial[eid])
+        print 'torsion stress[%s] = %s' % (eid, subcase1.torsion[eid])
+        print '        stress[%s] = %s\n' % (eid, calculate_stress(subcase1.axial[eid], subcase1.torsion[eid]))
 
 if __name__ == '__main__':
     main()
