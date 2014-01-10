@@ -77,8 +77,8 @@ def main():
     f = open('usm3d.csv', 'wb')
     for node_id, Cpi in sorted(Cp.iteritems()):
         f.write("node_id=%i\n" % node_id)
-        f.write('Cp[%s]\t' % node_id);  savetxt(f, Cpi,        delimiter='', newline='\t')
-        f.write('\np[%s]\t' % node_id); savetxt(f, p[node_id], delimiter='', newline='\t')
+        f.write('Cp[%s],' % node_id);  savetxt(f, Cpi,        delimiter='', newline=',')
+        f.write('\np[%s],' % node_id); savetxt(f, p[node_id], delimiter='', newline=',')
         f.write('\n\n')
     f.close()
 
