@@ -14,7 +14,7 @@ class Usm3dIO(object):
     def load_usm3d_results(self, flo_filename, dirname):
         model = Usm3dReader(log=self.log, debug=False)
         #self.resultCases = {}
-        npoints = self.nElements
+        npoints = self.nNodes
         node_ids_volume, loads = model.read_flo(flo_filename, n=npoints)
 
         cases = self.resultCases
