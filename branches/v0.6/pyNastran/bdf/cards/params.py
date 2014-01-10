@@ -90,7 +90,7 @@ class PARAM(BaseCard):
             if len(card) != 4:
                 raise RuntimeError('len(PARAM card)=%i card=%r' % (len(card), card))
 
-    def update_values(value1=None, value2=None):
+    def update_values(self, value1=None, value2=None):
         """
         Updates value1 and value2.  Performs type checking based on the PARAM
         type after setting any default value(s).
