@@ -31,10 +31,14 @@ def main():
     os.system('nastran scr=yes bat=no news=no old=no %s' % out_bdf)
 
     model2 = F06(out_f06)
-    #model2.markerMap = {
-    #    'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R': model2._grid_point_weight_generator,
-    #}
-    #model2.markers = model2.markerMap.keys()
+    if 0:
+        model2.markerMap = {
+            'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R': model2._grid_point_weight_generator,
+        }
+        model2.markers = model2.markerMap.keys()
+
+    if 0:
+        model2.stop_after_reading_grid_point_weight(stop=True)
     model2.read_f06()
 
     #print '\n'.join(dir(subcase1))
