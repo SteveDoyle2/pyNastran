@@ -11,6 +11,19 @@ class Usm3dIO(object):
     def __init__(self):
         pass
 
+    def load_usm3d_results(self, flo_filename, dirname):
+        model = Usm3dReader(log=self.log, debug=False)
+        #self.resultCases = {}
+        npoints = self.nElements
+        node_ids_volume, loads = model.read_flo(flo_filename, n=npoints)
+
+        cases = self.resultCases
+        bcs = None
+        mapbc = None
+        bcmap_to_bc_name = None
+        self._fill_usm3d_results(cases, bcs, mapbc, bcmap_to_bc_name, loads)
+
+
     def load_usm3d_geometry(self, cogsg_filename, dirname):
         print "load_usm3d_geometry..."
         skipReading = self.removeOldGeometry(cogsg_filename)
@@ -89,12 +102,12 @@ class Usm3dIO(object):
         #elements -= 1
         if ntris:
             for (n0, n1, n2) in tris:
-                 elem = vtkTriangle()
-                 #node_ids = elements[eid, :]
-                 elem.GetPointIds().SetId(0, n0)
-                 elem.GetPointIds().SetId(1, n1)
-                 elem.GetPointIds().SetId(2, n2)
-                 self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                elem = vtkTriangle()
+                #node_ids = elements[eid, :]
+                elem.GetPointIds().SetId(0, n0)
+                elem.GetPointIds().SetId(1, n1)
+                elem.GetPointIds().SetId(2, n2)
+                self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
 
         if dimension_flag == 2:
             pass
@@ -120,21 +133,28 @@ class Usm3dIO(object):
         self.TurnTextOn()
         self.scalarBar.Modified()
 
+        cases = {}
+        #cases = self.resultCases
+        self._fill_usm3d_results(cases, bcs, mapbc, bcmap_to_bc_name, loads)
+
+    def _fill_usm3d_results(self, cases, bcs, mapbc, bcmap_to_bc_name, loads):
         if 'Mach' in loads:
             avgMach = loads['Mach'].mean()
             note = ':  avg(Mach)=%g' % avgMach
         else:
             note = ''
 
-        self.iSubcaseNameMap = {1: ['Usm3d%s' % note, '']}
-        cases = {}
-        ID = 1
+        self.iSubcaseNameMap = {
+            1: ['Usm3d%s' % note, ''],
+            2: ['Usm3d%s' % note, ''],
+        }
 
-        cases = self._fill_usm3d_case(cases, ID, bcs, mapbc, bcmap_to_bc_name, loads)
+        #ID = 1
+        cases = self._fill_usm3d_case(cases, bcs, mapbc, bcmap_to_bc_name, loads)
 
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
-        #print "caseKeys = ",self.caseKeys
+        print("caseKeys = ",self.caseKeys)
         #print "type(caseKeys) = ",type(self.caseKeys)
         if len(self.resultCases) == 0:
             self.nCases = 1
@@ -146,9 +166,10 @@ class Usm3dIO(object):
         self.iCase = 0 if self.nCases == 0 else -1
         self.cycleResults()  # start at nCase=0
 
-    def _fill_usm3d_case(self, cases, ID, bcs, mapbc, bcmap_to_bc_name, loads):
+    def _fill_usm3d_case(self, cases, bcs, mapbc, bcmap_to_bc_name, loads):
         self.scalarBar.VisibilityOff()
 
+        ID = 1
         if bcs is not None and self.is_centroidal:
             cases[(ID, 'Region', 1, 'centroid', '%.0f')] = bcs
 
@@ -169,9 +190,10 @@ class Usm3dIO(object):
                 self.log.info('BC=%s Regions=%s name=%r' % (bcnum, regions, name))
             self.scalarBar.VisibilityOn()
 
+        #==============================
+        ID = 2
         if self.is_nodal and len(loads):
             for key, load in loads.iteritems():
                 cases[(ID, key, 1, 'nodal', '%.3f')] = load
             self.scalarBar.VisibilityOn()
         return cases
-

@@ -317,9 +317,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
         for nam, txt, icon, shortcut, tip, func in [
           ('exit', '&Exit', os.path.join(icon_path, 'texit.png'), 'Ctrl+Q', 'Exit application', QtGui.qApp.quit),
-          ('open_bdf', '&Open BDF', os.path.join(icon_path, 'tbdf.png'), 'Ctrl+O', 'Loads a Geometry input file', self.on_load_geometry),
-          ('open_op2', '&Open OP2', os.path.join(icon_path, 'top2.png'), None, 'Loads a OP2 results file', self.load_op2),
-          ('open_f06', '&Open F06', None, None, 'Loads a F06 results file', self.load_f06),  ## @todo no picture...
+          ('load_geometry', 'Load &Geometry', os.path.join(icon_path, 'load_geometry.png'), 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),  ## @todo no picture...
+          ('load_results', 'Load &Results',   os.path.join(icon_path, 'load_results.png'), 'Ctrl+R', 'Loads a results file', self.on_load_results),  ## @todo no picture...
           ('back_col', 'Change background color', os.path.join(icon_path, 'tcolorpick.png'), None, 'Choose a background color', self.change_background_col),
 
           ('wireframe', 'Wireframe Model', os.path.join(icon_path, 'twireframe.png'), 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
@@ -382,11 +381,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
 
         # populate menus and toolbar
-        for menu, items in [(self.menu_file, ('open_bdf', 'open_op2', 'open_f06', '', 'exit')),
+        for menu, items in [(self.menu_file, ('load_geometry', 'load_results', '', 'exit')),
                            (self.menu_view,  ('scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col')),
                            (self.menu_window,('toolbar', 'reswidget', 'logwidget')),
                            (self.menu_help,  ('about',)),
-                           (self.toolbar, ('cell_pick', 'reload', 'open_bdf', 'open_op2', 'cycle_res',
+                           (self.toolbar, ('cell_pick', 'reload', 'load_geometry', 'load_results', 'cycle_res',
                                            'x', 'y', 'z', 'X', 'Y', 'Z',
                                            'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
                                            'wireframe', 'surface', 'edges', 'creset', 'scshot', '', 'exit'))]:
@@ -670,12 +669,12 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 has_results_list.append(False)
                 load_functions.append(self.load_tetgen_geometry)
             if is_usm3d:
-                wildcard_list.append("USM3D (*.cogsg)")
+                wildcard_list.append("USM3D (*.cogsg; *.front)")
                 formats.append('USM3D')
-                has_results_list.append(False)
+                has_results_list.append(True)
                 load_functions.append(self.load_usm3d_geometry)
             if is_plot3d:
-                wildcard_list.append("Plot3D (*.p3d, *.p3da)")
+                wildcard_list.append("Plot3D (*.p3d; *.p3da)")
                 formats.append('Plot3D')
                 has_results_list.append(False)
                 load_functions.append(self.load_plot3d_geometry)
@@ -687,8 +686,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             else:
                 Title = 'Choose a Geometry File to Load'
                 wildcard_index, infile_name = self._create_load_file_dialog(wildcard, Title)
-                #print "infile_name = %r" % infile_name
-                #print "wildcard_index = %r" % wildcard_index
+                #print("infile_name = %r" % infile_name)
+                #print("wildcard_index = %r" % wildcard_index)
                 if not infile_name:
                     is_failed = True
                     return is_failed # user clicked cancel
@@ -697,7 +696,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             geometry_format = formats[filter_index]
             load_function = load_functions[filter_index]
             has_results = has_results_list[filter_index]
-            return is_failed
+            #return is_failed
 
         if load_function is not None:
             self.last_dir = os.path.split(infile_name)[0]
@@ -768,7 +767,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 self.log_error(msg)
                 raise RuntimeError(msg)
 
-            if out_filename is None:
+            if out_filename in [None, False]:
                 Title = 'Select a Results File for %s' % self.format
                 if geometry_format == 'nastran':
                     has_results = True
@@ -793,8 +792,9 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                     has_results = False
                     load_functions = [None]
                 elif geometry_format == 'usm3d':
-                    has_results = False
-                    load_functions = [None]
+                    wildcard = "Usm3d (*.flo)"
+                    has_results = True
+                    load_functions = [self.load_usm3d_results]
                 elif geometry_format == 'plot3d':
                     has_results = False
                     load_functions = [None]
@@ -821,8 +821,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                     #load_function = None
                 #elif geometry_format == 'tetgen':
                     #load_function = None
-                #elif geometry_format == 'usm3d':
-                    #load_function = None
+                elif geometry_format == 'usm3d':
+                    load_function = self.load_usm3d_results
                 #elif geometry_format == 'plot3d':
                     #load_function = None
                 else:

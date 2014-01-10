@@ -160,7 +160,11 @@ class Usm3dReader(object):
         loads = {}
         if os.path.exists(flo_filename):
             npoints, three = nodes.shape
-            node_ids_volume, loads = self.read_flo(flo_filename, n=npoints)
+            try:
+                node_ids_volume, loads = self.read_flo(flo_filename, n=npoints)
+            except:
+                self.log.error('Had trouble reading %r...' % flo_filename)
+                raise
         else:
             self.log.warning('Cannot find %r...skipping' % flo_filename)
         self.loads = loads
