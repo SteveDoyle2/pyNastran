@@ -16,9 +16,17 @@ packages = find_packages()+['gui/icons/*.*']
 
 py2_scripts = []
 if sys.version_info <= (3,):
-    py2_scripts = ['pyNastranGUI = pyNastran.gui.gui:main',
-                   'pyNastranGUI_wx = pyNastran.gui.gui_wx:main',
-                   'pyNastranGUI_qt = pyNastran.gui.gui_qt:main',]
+    py2_gui_scripts = ['pyNastranGUI = pyNastran.gui.gui:main',
+                       'pyNastranGUI_wx = pyNastran.gui.gui_wx:main',
+                       'pyNastranGUI_qt = pyNastran.gui.gui_qt:main',]
+
+# set up all icons
+icon_path = os.path.join('pyNastran', 'gui', 'icons')
+icon_files = os.listdir(icon_path)
+icon_files2 = []
+for icon_file in icon_files:
+    if icon_file.endswith('.png'):
+        icon_files2.append(os.path.join(icon_path, icon_file))
 
 setup(name='pyNastran',
       version=pyNastran.__version__,
@@ -42,7 +50,7 @@ setup(name='pyNastran',
       install_requires=[
           # -*- Extra requirements: -*-
           'docopt == 0.6.1',
-          'numpy >= 1.8.0',
+          'numpy >= 1.6.2',
           'scipy >= 0.6.0',
 #          'matplotlib >= 1.1.0',
           'vtk >= 5.8.0',
@@ -51,29 +59,20 @@ setup(name='pyNastran',
 #          'cython',
       ],#{'': ['license.txt']}
       #package_data={'': ['*.png']},
-      data_files=[('pyNastran/gui/icons',
-        [
-            'pyNastran/gui/icons/topen.png',
-            'pyNastran/gui/icons/tbdf.png',
-            'pyNastran/gui/icons/top2.png',
-            #'pyNastran/gui/icons/topen.png',
-            'pyNastran/gui/icons/twireframe.png',
-            'pyNastran/gui/icons/tsolid.png',
-            #'pyNastran/gui/icons/tsave.png',
-            #'pyNastran/gui/icons/tsaveas.png',
-            'pyNastran/gui/icons/texit.png',
-            'pyNastran/gui/icons/tcamera.png',
-            #'pitz/pitztypes/tracpitz.py.sample',
-        ])],
+      data_files=[tuple([icon_path] + icon_files2)],
 
       entry_points = {
         'console_scripts': [
                             'run_nastran_double_precision = pyNastran.bdf.test.run_nastran_double_precision:cmd_line',
-                            'test_bdf = pyNastran.bdf.test.test_bdf:main',
-                            'test_op2 = pyNastran.op2.test.test_op2:main',
-                            'test_f06 = pyNastran.f06.test.test_f06:main',
+                            'test_bdf  = pyNastran.bdf.test.test_bdf:main',
+                            'test_op2  = pyNastran.op2.test.test_op2:main',
+                            'test_f06  = pyNastran.f06.test.test_f06:main',
+                            'pyNastran  = pyNastran.applications.pyNastranSolver:main',
+
+                            'test_bdf2 = pyNastran.bdf2.test.test_bdf:main',
+                            'pyNastran2 = pyNastran.bdf2.solver.solver:main',
                            #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
-                           ] + py2_scripts
+                           ] + py2_gui_scripts
       },
       test_suite = 'pyNastran.all_tests',
       )
