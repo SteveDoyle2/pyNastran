@@ -349,27 +349,11 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
         subcaseName = ''
         #print("subcaseLine = %r" % subcaseName)
-        if subcaseName == '':
-            isubcase = self.storedLines[-2].strip()[1:]
-            if isubcase == '':  # no subcase specified
-                raise RuntimeError('missing subcaseLine...\n%s' % msg)
-            else:
-                isubcase = int(isubcase.split()[-1])
-            #raise RuntimeError('missing subcaseLine...\n%s' % msg)
-            #isubcase = 1
-            #pass
-        #else:
-            isubcase = self.storedLines[-2].strip()[1:]
-            if isubcase == '':  # no subcase specified
-                raise RuntimeError('missing subcaseLine...\n%s' % msg)
-            else:
-                isubcase = int(isubcase.split()[-1])
-
-            #assert isinstance(isubcase,int),'isubcase=|%r|' % (isubcase)
-            #print "subcaseName=%s isubcase=%s" % (subcaseName, isubcase)
+        label, isubcase = _parse_label_isubcase(self.storedLines)
 
         #subtitle = 'SUBCASE %s' % isubcase
-        label = 'SUBCASE %s' % isubcase
+        #label = 'SUBCASE %s' % isubcase
+        assert label == 'MYLABEL', label
 
         #self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.label]
 
@@ -377,6 +361,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 #subtitle
 #label      ???
 
+        #print('------------')
         #print("title    = %r" % self.Title)
         #print("subtitle = %r" % subtitle)
         #print("label    = %r" % label)
@@ -765,6 +750,17 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                 if isubcase in result:
                     msg += str(result[isubcase])
         return msg
+
+def _parse_label_isubcase(storedLines):
+    label = storedLines[-2][1:65].strip()
+    isubcase = storedLines[-2][65:].strip()
+    if isubcase:
+        isubcase = int(isubcase.split()[-1])
+    else:
+        isubcase = 1
+    return label, isubcase
+    #assert isinstance(isubcase,int),'isubcase=|%r|' % (isubcase)
+    #print "subcaseName=%s isubcase=%s" % (subcaseName, isubcase)
 
 if __name__ == '__main__':
     from pyNastran.f06.test.test_f06 import main
