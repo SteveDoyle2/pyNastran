@@ -3,9 +3,9 @@ import sys
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.f06.f06 import F06, FatalError
+from pyNastran.op2.op2 import OP2
 
-
-def main(bdf_name, run_first_nastran=True):
+def main(bdf_name, run_first_nastran=True, debug=True):
     base, ext = os.path.splitext(bdf_name)
 
     print "len(sys.argv) =", len(sys.argv)
@@ -25,20 +25,37 @@ def main(bdf_name, run_first_nastran=True):
         pass
     #===========================
     # read/write the model in double precision
-    out_bdf = 'out.bdf'
+    out_bdf_8 = base + '_8.bdf'
+    out_bdf_16 = base + '_16.bdf'
     model3 = BDF()
     model3.read_bdf(bdf_name)
-    model3.write_bdf(out_bdf, size=16, precision='double')
-    #model3.write_bdf(out_bdf, size=8, precision='single')
-    print "---wrote the bdf---"
+    if 'POST' in model3.params:
+        model3.params['POST'].update_values(value1=-1)
+    else:
+        model3.rejects.append(['PARAM,POST,-1'])
+
+    model3.write_bdf(out_bdf_8, size=8, precision='single')
+    model3.write_bdf(out_bdf_16, size=16, precision='double')
+    if debug:
+        print "---wrote the bdf---"
     #===========================
     # run nastran again
-    os.system('nastran scr=yes bat=no news=no old=no %s' % out_bdf)
+    os.system('nastran scr=yes bat=no news=no old=no %s' % out_bdf_8)
+    os.system('nastran scr=yes bat=no news=no old=no %s' % out_bdf_16)
     #===========================
     # verify it's correct
-    out_f06 = 'out.f06'
-    model4 = F06(out_f06)
+    out_f06_8 = base + '_8.f06'
+    out_f06_16 = base + '_16.f06'
+    out_op2_16 = base + '_16.op2'
+
+    model4 = F06(out_f06_8, debug=False)
     model4.read_f06()
+
+    model5 = F06(out_f06_16, debug=False)
+    model5.read_f06()
+
+    model6 = OP2(out_op2_16, debug=False)
+    model6.read_op2()
     print('\n\npassed!!')
 
 

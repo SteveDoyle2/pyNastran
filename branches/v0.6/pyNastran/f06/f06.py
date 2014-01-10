@@ -353,7 +353,6 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
         #subtitle = 'SUBCASE %s' % isubcase
         #label = 'SUBCASE %s' % isubcase
-        assert label == 'MYLABEL', label
 
         #self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.label]
 
