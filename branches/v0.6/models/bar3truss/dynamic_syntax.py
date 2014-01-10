@@ -31,12 +31,18 @@ def main():
     os.system('nastran scr=yes bat=no news=no old=no %s' % out_bdf)
 
     model2 = F06(out_f06)
+    #model2.markerMap = {
+    #    'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R': model2._grid_point_weight_generator,
+    #}
+    #model2.markers = model2.markerMap.keys()
     model2.read_f06()
-
-    subcase1 = model2.rodStress[1]
 
     #print '\n'.join(dir(subcase1))
     print ""
+    print "mass = %s" % model2.grid_point_weight.mass
+
+    #========================================
+    subcase1 = model2.rodStress[1]
 
     eid = 2
     print 'axial   stress[%s] = %s' % (eid, subcase1.axial[eid])
