@@ -1,5 +1,6 @@
 import os
 from collections import defaultdict
+from numpy import savetxt
 
 from pyNastran.converters.usm3d.usm3d_reader import Usm3dReader
 
@@ -30,13 +31,13 @@ def get_flo_files(dirname, model_name, include_dirname_in_path=True):
 
 def main():
     model = Usm3dReader()
-    node_ids = [1000]
+    node_ids = [517]
 
-    dirname = r'W:\usm3d\usm3d\spw4\nan_2'
+    dirname = r'W:\usm3d\usm3d\spw4'
     model_name = 'spw4'
 
     flo_filenames = get_flo_files(dirname, model_name)
-    print "flo_filenames =", flo_filenames
+    #print "flo_filenames =", flo_filenames
 
     Cp = {}
     Mach = {}
@@ -56,8 +57,11 @@ def main():
         p[node_id] = []
         rhoU[node_id] = []
 
-    for flo_filename in flo_filenames:
-        #print('flo_filename =', flo_filename)
+    #flo_filenames = flo_filenames[:10]
+    for iflo, flo_filename in enumerate(flo_filenames):
+        if iflo % 100 == 0:
+            print('iflo=%s flo_filename=%s' % (iflo, flo_filename))
+
         node_ids2, loads = model.read_flo(flo_filename, node_ids=node_ids)
         for i, node_id in enumerate(node_ids):
             Cp[node_id].append(loads['Cp'][i])
@@ -69,9 +73,15 @@ def main():
             p[node_id].append(loads['p'][i])
             rhoU[node_id].append(loads['rhoU'][i])
 
-    print "loads.keys() = ", sorted(loads.keys())
+    #print "loads.keys() = ", sorted(loads.keys())
+    f = open('usm3d.csv', 'wb')
     for node_id, Cpi in sorted(Cp.iteritems()):
-        print "node_id=%i Cp=%s" % (node_id, Cpi)
+        f.write("node_id=%i\n" % node_id)
+        f.write('Cp[%s]\t' % node_id);  savetxt(f, Cpi,        delimiter='', newline='\t')
+        f.write('\np[%s]\t' % node_id); savetxt(f, p[node_id], delimiter='', newline='\t')
+        f.write('\n\n')
+    f.close()
+
 
 if __name__ == '__main__':
     main()
