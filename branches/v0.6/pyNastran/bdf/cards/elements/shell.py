@@ -203,7 +203,7 @@ class CTRIA3(TriShell):
     calculixType = 'S3'
     _field_map = {1: 'eid', 2:'pid', 6:'thetaMcid', 7:'zOffset', 10:'TFlag', 11:'T1', 12:'T2', 13:'T3'}
 
-    def _update_field_helper(n, value):
+    def _update_field_helper(self, n, value):
         if n == 3:
             self.nodes[0] = value
         elif n == 4:
@@ -1443,7 +1443,7 @@ class CQUAD4(QuadShell):
     calculixType = 'S4'
     _field_map = {1: 'eid', 2:'pid', 7:'thetaMcid', 8:'zOffset', 10:'TFlag', 11:'T1', 12:'T2', 13:'T3'}
 
-    def _update_field_helper(n, value):
+    def _update_field_helper(self, n, value):
         if n == 3:
             self.nodes[0] = value
         elif n == 4:
